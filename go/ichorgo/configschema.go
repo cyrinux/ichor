@@ -128,7 +128,7 @@ func MachineConfigSchemaPrepare(configYAML, contextName, node string) (out strin
 
 // configTalosVersion is the Talos version tag node runs.
 func configTalosVersion(configYAML, contextName, node string) (string, error) {
-	if isDemoContext(configYAML, contextName) {
+	if isTalosDemoContext(configYAML, contextName) {
 		return demoTalosVersion, nil
 	}
 

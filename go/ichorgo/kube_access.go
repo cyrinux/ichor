@@ -167,9 +167,9 @@ func KubeWhoAmI(configYAML, contextName, kubeServer string) (out string, err err
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, func() kubeWhoAmI {
-		return kubeWhoAmI{User: "demo", Groups: []string{"system:masters"}}
-	}, func(ctx context.Context, k *kubeClient) (kubeWhoAmI, error) {
+	target := kubeTarget{configYAML, contextName, kubeServer}
+
+	return kubeReadJSON(target, demoKubeWhoAmI(target), func(ctx context.Context, k *kubeClient) (kubeWhoAmI, error) {
 		return readWhoAmI(ctx, k), nil
 	})
 }

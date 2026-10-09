@@ -1368,6 +1368,8 @@
     <string name="ai_disclaimer">Le risposte dell’IA possono essere sbagliate. Controlla un comando prima di eseguirlo, soprattutto se reimposta un nodo o modifica etcd.</string>
     <string name="ai_health_diagnose">Diagnostica con l’IA</string>
     <string name="demo_try">Prova la demo</string>
+    <string name="demo_talos">Cluster Talos</string>
+    <string name="demo_kube">Cluster Kubernetes (EKS)</string>
     <string name="demo_notice">Cluster dimostrativo · Dati di esempio. Le modifiche al cluster non sono disponibili. Rimuovi la demo da Gestisci cluster al termine.</string>
     <string name="overview_discovered_nodes_hint">Tocca per aggiungerli al talosconfig.</string>
     <string name="discover_nodes_title">Aggiungi i nodi rilevati</string>

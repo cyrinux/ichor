@@ -53,8 +53,17 @@ func DemoConfig() (out string, err error) {
 	return fmt.Sprintf("context: Demo cluster\ncontexts:\n  Demo cluster:\n    endpoints: [%s]\n    nodes: [192.0.2.10, 192.0.2.11, 192.0.2.12, 192.0.2.20, 192.0.2.21]\n    ca: %s\n    crt: %s\n    key: %s\n", demoEndpoint, crt, crt, encode("PRIVATE KEY", priv)), nil
 }
 
+// isDemoContext reports whether the named context is one of the built-in demos, the Talos
+// one or the Kubernetes one (demo_kube.go): the Kubernetes reads and refusals key on it.
 func isDemoContext(yaml, name string) bool {
-	if !strings.Contains(yaml, demoEndpoint) {
+	return isTalosDemoContext(yaml, name) || isKubeDemoContext(yaml, name)
+}
+
+// isTalosDemoContext is isDemoContext for the Talos demo alone: the gates of Talos reads
+// that do not go through demoRead (which refuses a kubeconfig itself), so the Kubernetes
+// demo fails them with errTalosUnavailable like any kubeconfig cluster.
+func isTalosDemoContext(yaml, name string) bool {
+	if !strings.Contains(yaml, demoEndpoint) || isKubeconfig(yaml) {
 		return false
 	}
 	_, c, err := resolveContext(yaml, name)

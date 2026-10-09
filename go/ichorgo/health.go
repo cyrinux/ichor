@@ -53,7 +53,7 @@ func StartClusterHealth(configYAML, contextName string, listener HealthListener)
 }
 
 func runHealth(ctx context.Context, configYAML, contextName string, listener HealthListener) string {
-	if isDemoContext(configYAML, contextName) {
+	if isTalosDemoContext(configYAML, contextName) {
 		for _, message := range []string{"waiting for etcd to be healthy: OK", "waiting for all k8s nodes to report ready: OK", "waiting for all control plane components to be ready: OK"} {
 			if ctx.Err() != nil {
 				return ""

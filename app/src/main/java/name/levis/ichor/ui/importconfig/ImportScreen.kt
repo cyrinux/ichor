@@ -64,6 +64,8 @@ fun ImportScreen(
     onImported: () -> Unit,
     onBack: (() -> Unit)? = null,
     autoStartDemo: Boolean = false,
+    /** With [autoStartDemo]: the Kubernetes demo rather than the Talos one. */
+    kubeDemo: Boolean = false,
     incoming: String? = null,
     onIncomingTaken: () -> Unit = {},
     vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository, app.kubeAuthRepository, onBrowserDone = app::bringToFront) }),
@@ -83,7 +85,7 @@ fun ImportScreen(
     var form by remember { mutableStateOf(TalosForm()) }
 
     LaunchedEffect(autoStartDemo) {
-        if (autoStartDemo && state is ImportState.Idle) vm.startDemo()
+        if (autoStartDemo && state is ImportState.Idle) vm.startDemo(kubeDemo)
     }
 
     // A config opened with the app (a file manager, a mail): straight to its preview.

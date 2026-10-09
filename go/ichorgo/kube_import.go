@@ -92,6 +92,7 @@ func summarizeKubeContext(doc *kubeconfigDoc, name string) kubeContextSummary {
 	if hasCluster {
 		s.Endpoints = []string{cluster.Cluster.Server}
 		s.Insecure = cluster.Cluster.InsecureSkipTLSVerify
+		s.Demo = isDemoServer(cluster)
 	}
 
 	if hasUser {

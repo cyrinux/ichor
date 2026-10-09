@@ -1469,6 +1469,8 @@
     <string name="ai_disclaimer">Відповіді ШІ можуть бути хибними. Перевіряйте команду перед виконанням, особливо якщо вона скидає вузол або змінює etcd.</string>
     <string name="ai_health_diagnose">Діагностувати за допомогою ШІ</string>
     <string name="demo_try">Спробувати демо</string>
+    <string name="demo_talos">Кластер Talos</string>
+    <string name="demo_kube">Кластер Kubernetes (EKS)</string>
     <string name="demo_notice">Демонстраційний кластер · Приклад даних. Зміни кластера недоступні. Видаліть демо в розділі Керування кластерами після завершення.</string>
     <string name="overview_discovered_nodes_hint">Торкніться, щоб додати їх до talosconfig.</string>
     <string name="discover_nodes_title">Додати знайдені вузли</string>

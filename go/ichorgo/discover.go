@@ -47,7 +47,7 @@ func DiscoverNodes(configYAML, contextName string) (out string, err error) {
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	if isDemoContext(configYAML, contextName) {
+	if isTalosDemoContext(configYAML, contextName) {
 		return demoDiscovery(configYAML, contextName)
 	}
 

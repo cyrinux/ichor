@@ -371,6 +371,10 @@ to learn its mechanisms, not to copy code. What it does and how we do it better:
 
 - Demo stays a Talos cluster; add a second demo context of kind `kube` (fixtures already exist
   through `kubeReadJSON`'s demo function) so screenshots and UI tests cover the gated navigation.
+  **Done** (CYR-23): `DemoKubeconfig()` (`demo_kube.go`) is an EKS-like kubeconfig context at the
+  reserved demo endpoint; `isDemoContext` covers both demos, Talos-only gates use
+  `isTalosDemoContext` so the kube demo gets `errTalosUnavailable`. "Try demo" offers both on
+  Android and iOS; `ichor://demo/kube` adds it on Android.
 - Go unit tests: kubeconfig sniffing, `ParseKubeconfig` preview per auth form, exec recognition
   table (aws, aws-iam-authenticator, gke plugin, kubectl oidc-login, kubelogin, unknown), SigV4
   presign against AWS's published test vectors, OIDC refresh with an `httptest` IdP, 401 →

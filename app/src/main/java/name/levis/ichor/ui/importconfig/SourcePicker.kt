@@ -24,6 +24,8 @@ import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -78,7 +80,7 @@ internal fun SourcePicker(
     onSubmitForm: (TalosForm) -> Unit,
     onSource: (ImportSource) -> Unit,
     onYaml: (String) -> Unit,
-    onDemo: () -> Unit,
+    onDemo: (kube: Boolean) -> Unit,
     onDiscover: (DiscoveryProvider) -> Unit,
     restore: (@Composable () -> Unit)?,
 ) {
@@ -112,7 +114,7 @@ internal fun SourcePicker(
 private fun Sources(
     onSource: (ImportSource) -> Unit,
     onYaml: (String) -> Unit,
-    onDemo: () -> Unit,
+    onDemo: (kube: Boolean) -> Unit,
     onDiscover: (DiscoveryProvider) -> Unit,
     restore: (@Composable () -> Unit)?,
 ) {
@@ -149,8 +151,27 @@ private fun Sources(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.Top,
         ) {
-            TextButton(onClick = onDemo) { Text(stringResource(R.string.demo_try)) }
+            DemoButton(onDemo)
             restore?.invoke()
+        }
+    }
+}
+
+/** "Try demo", then which one: the Talos demo, or the Kubernetes one (an EKS-like kubeconfig cluster). */
+@Composable
+private fun DemoButton(onDemo: (kube: Boolean) -> Unit) {
+    var choosing by rememberSaveable { mutableStateOf(false) }
+    Box {
+        TextButton(onClick = { choosing = true }) { Text(stringResource(R.string.demo_try)) }
+        DropdownMenu(expanded = choosing, onDismissRequest = { choosing = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.demo_talos)) },
+                onClick = { choosing = false; onDemo(false) },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.demo_kube)) },
+                onClick = { choosing = false; onDemo(true) },
+            )
         }
     }
 }

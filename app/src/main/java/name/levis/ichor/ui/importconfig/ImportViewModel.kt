@@ -280,11 +280,12 @@ class ImportViewModel(
         _state.value = ImportState.Idle
     }
 
-    fun startDemo() {
+    /** Adds the Talos demo, or with [kube] the Kubernetes one (a kubeconfig cluster). */
+    fun startDemo(kube: Boolean) {
         if (_state.value is ImportState.Validating || _state.value is ImportState.Saved) return
         _state.value = ImportState.Validating
         viewModelScope.launch {
-            _state.value = runCatching { configs.saveDemo() }.fold(
+            _state.value = runCatching { if (kube) configs.saveKubeDemo() else configs.saveDemo() }.fold(
                 onSuccess = { ImportState.Saved },
                 onFailure = { ImportState.Invalid(it.userMessage()) },
             )
