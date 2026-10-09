@@ -29,9 +29,15 @@ const (
 	watchRetryMax = 30 * time.Second
 )
 
-// watchPollInterval is how often the list is read again when the role may list but not
-// watch (a 403 on the watch alone): the same events, later. A variable for the tests.
-var watchPollInterval = 5 * time.Second
+// Variables for the tests.
+var (
+	// watchPollInterval is how often the list is read again when the role may list but not
+	// watch (a 403 on the watch alone): the same events, later.
+	watchPollInterval = 5 * time.Second
+	// watchStallAfter is how long a watch request may last before the client gives it up as
+	// stalled: the server's own timeout plus watchStreamGrace.
+	watchStallAfter = watchTimeoutSeconds*time.Second + watchStreamGrace
+)
 
 // Event types, as the API server names them, and watchSync for the list itself.
 const (
@@ -182,7 +188,7 @@ func (w *watcher) poll(ctx context.Context) error {
 // (a 410 kubeAPIError), or it failed. A request outliving the server's timeout by
 // watchStreamGrace is stalled: given up like one the server ended.
 func (w *watcher) stream(ctx context.Context) error {
-	streamCtx, cancel := context.WithTimeout(ctx, watchTimeoutSeconds*time.Second+watchStreamGrace)
+	streamCtx, cancel := context.WithTimeout(ctx, watchStallAfter)
 	defer cancel()
 
 	err := w.streamOnce(streamCtx)

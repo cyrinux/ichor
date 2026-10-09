@@ -270,9 +270,12 @@ func TestWatchListPollsWhenTheWatchIsRefused(t *testing.T) {
 	}
 }
 
-// A stream the server stopped answering is given up once its timeout has passed, and
-// followed again from the last version seen.
+// A stream the server stopped answering is given up once its timeout has passed, like one
+// the server ended: followed again from the last version seen.
 func TestWatchListGivesUpAStalledStream(t *testing.T) {
+	watchStallAfter = 50 * time.Millisecond
+	t.Cleanup(func() { watchStallAfter = watchTimeoutSeconds*time.Second + watchStreamGrace })
+
 	var watches atomic.Int32
 
 	f := newWatchKubeAPI(t, func(w http.ResponseWriter, r *http.Request) {
@@ -294,11 +297,14 @@ func TestWatchListGivesUpAStalledStream(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	stalled, stop := context.WithTimeout(ctx, 50*time.Millisecond)
-	defer stop()
+	start := time.Now()
 
-	if err := w.streamOnce(stalled); ctx.Err() != nil || !errors.Is(stalled.Err(), context.DeadlineExceeded) || err == nil {
-		t.Fatalf("a stalled stream ended with %v", err)
+	if err := w.stream(ctx); err != nil || watches.Load() != 1 {
+		t.Fatalf("a stalled stream ended with %v after %d requests", err, watches.Load())
+	}
+
+	if time.Since(start) > time.Second {
+		t.Error("the stalled stream was not given up at watchStallAfter")
 	}
 }
 
