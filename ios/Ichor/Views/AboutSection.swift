@@ -43,6 +43,22 @@ struct AboutSection: View {
     }
 }
 
+/// Where this build's updates come from: Apple for the App Store build, the user otherwise
+/// (a sideloaded app cannot update itself).
+struct UpdatesSection: View {
+    var body: some View {
+        Section {
+            Text(Distribution.appStore
+                 ? LocalizedStringKey("This build gets its updates from the App Store, or from TestFlight for a beta.")
+                 : LocalizedStringKey("This build cannot update itself: install each new release from GitHub again, with Sideloadly or AltStore."))
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        } header: {
+            Text("Updates")
+        }
+    }
+}
+
 extension Donation {
     var title: LocalizedStringKey {
         switch self {
