@@ -3389,4 +3389,6 @@
     <string name="kube_whoami_user">Kubernetes user</string>
     <string name="mono_text_larger">Larger text</string>
     <string name="mono_text_smaller">Smaller text</string>
+    <string name="pod_debug_toggle">Debug container</string>
+    <string name="pod_debug_note">For images without a shell (distroless): adds a temporary container that sees this pod\'s processes. Kubernetes keeps it in the pod until the pod is deleted.</string>
 </resources>

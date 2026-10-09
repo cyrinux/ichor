@@ -68,15 +68,25 @@ func (d *DebugSession) runExec(ctx context.Context, target kubeTarget, namespace
 
 	ws, err := k.dialExec(ctx, namespace, pod, container, argv, true)
 	if err != nil {
-		if ctx.Err() != nil {
-			d.exit(-1, "closed")
-		} else {
-			d.exit(-1, err.Error())
-		}
+		d.exitDialFailed(ctx, err)
 
 		return
 	}
 
+	d.serveTTY(ctx, ws, cols, rows, false)
+}
+
+func (d *DebugSession) exitDialFailed(ctx context.Context, err error) {
+	if ctx.Err() != nil {
+		d.exit(-1, "closed")
+	} else {
+		d.exit(-1, err.Error())
+	}
+}
+
+// serveTTY carries the terminal over ws until it ends: input and resizes one way, output the
+// other. attached: a stream from attach, whose end without a status is the process exiting.
+func (d *DebugSession) serveTTY(ctx context.Context, ws *websocket.Conn, cols, rows int, attached bool) {
 	// Closing the connection is what ends a blocked Receive when the session is closed.
 	stop := context.AfterFunc(ctx, func() { _ = ws.Close() })
 	defer stop()
@@ -90,7 +100,7 @@ func (d *DebugSession) runExec(ctx context.Context, target kubeTarget, namespace
 
 	go d.forwardExecInput(ctx, ws)
 
-	d.receiveExec(ctx, ws)
+	d.receiveExec(ctx, ws, attached)
 }
 
 func (d *DebugSession) forwardExecInput(ctx context.Context, ws *websocket.Conn) {
@@ -115,8 +125,9 @@ func (in shellInput) execFrame() []byte {
 }
 
 // receiveExec hands the terminal output to the listener until the command ends: its exit
-// code comes on the status channel, just before the server closes the stream.
-func (d *DebugSession) receiveExec(ctx context.Context, ws *websocket.Conn) {
+// code comes on the status channel, just before the server closes the stream. attached: an
+// attach stream, which may end without a status when the process exits.
+func (d *DebugSession) receiveExec(ctx context.Context, ws *websocket.Conn, attached bool) {
 	var status bytes.Buffer
 
 	for {
@@ -127,6 +138,10 @@ func (d *DebugSession) receiveExec(ctx context.Context, ws *websocket.Conn) {
 		switch {
 		case ctx.Err() != nil:
 			d.exit(-1, "closed")
+
+			return
+		case errors.Is(err, io.EOF) && status.Len() == 0 && attached:
+			d.exit(0, "")
 
 			return
 		case errors.Is(err, io.EOF) && status.Len() == 0:

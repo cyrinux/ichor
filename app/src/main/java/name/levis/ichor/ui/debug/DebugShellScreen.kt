@@ -1,5 +1,11 @@
 package name.levis.ichor.ui.debug
 
+import name.levis.ichor.ui.components.rememberKubeDenial
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.model.KubeAction
+import androidx.compose.ui.semantics.Role
+import androidx.compose.material3.Switch
+import androidx.compose.foundation.selection.toggleable
 import name.levis.ichor.ui.asString
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -52,6 +58,9 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import org.connectbot.terminal.Terminal
 
 private const val DEFAULT_IMAGE = "nicolaka/netshoot:latest"
+
+/** The debug container's default image: small, with a shell and the usual tools. */
+private const val DEFAULT_POD_DEBUG_IMAGE = "busybox:1.37"
 private const val DEFAULT_ARGS = "/bin/sh"
 
 /**
@@ -108,7 +117,7 @@ fun DebugShellScreen(
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize().imePadding()) {
             when (val s = state) {
-                ShellState.Setup -> if (key.isPod) PodSetupForm(hostname, onStart = vm::start) else SetupForm(hostname, onStart = vm::start)
+                ShellState.Setup -> if (key.isPod) PodSetupForm(hostname, key.namespace, onStart = vm::start) else SetupForm(hostname, onStart = vm::start)
                 else -> Column(Modifier.fillMaxSize().background(TerminalBackground)) {
                     StatusLine(s, onRestart = vm::reset)
                     Terminal(
@@ -178,21 +187,27 @@ private fun SetupForm(hostname: String, onStart: (String, String) -> Unit) {
     }
 }
 
-/** `kubectl exec -it`: the command only; empty runs bash, or sh when the image lacks it. */
+/**
+ * `kubectl exec -it`: the command only; empty runs bash, or sh when the image lacks it. Or
+ * `kubectl debug -it`: a debug container from an image, for images with no shell at all.
+ */
 @Composable
-private fun PodSetupForm(pod: String, onStart: (String, String) -> Unit) {
+private fun PodSetupForm(pod: String, namespace: String, onStart: (String, String) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val prefs = remember { context.getSharedPreferences("ichor-debug", Context.MODE_PRIVATE) }
     var command by rememberSaveable { mutableStateOf(prefs.getString("pod-command", "").orEmpty()) }
+    var debug by rememberSaveable { mutableStateOf(false) }
+    var debugImage by rememberSaveable { mutableStateOf(prefs.getString("pod-debug-image", DEFAULT_POD_DEBUG_IMAGE) ?: DEFAULT_POD_DEBUG_IMAGE) }
     var error by remember { mutableStateOf<String?>(null) }
     val appLock = (context.applicationContext as TalosApp).appLock
+    val debugDenial = rememberKubeDenial(KubeAction.DEBUG_POD, namespace)
 
     fun start() {
-        prefs.edit().putString("pod-command", command.trim()).apply()
+        prefs.edit().putString("pod-command", command.trim()).putString("pod-debug-image", debugImage.trim()).apply()
         // A shell can read the container's secrets: with the app lock on, it asks like the node's.
         authenticated(context, appLock.enabled.value, scope, context.getString(R.string.pod_shell_on, pod), onError = { error = it }) {
-            onStart("", command)
+            if (debug) onStart(debugImage.trim(), "") else onStart("", command)
         }
     }
 
@@ -201,7 +216,25 @@ private fun PodSetupForm(pod: String, onStart: (String, String) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(stringResource(R.string.pod_shell_intro, pod), style = MaterialTheme.typography.bodyMedium)
-        OutlinedTextField(
+        Row(
+            Modifier.fillMaxWidth().toggleable(value = debug, enabled = debugDenial == null, role = Role.Switch) { debug = it },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.pod_debug_toggle), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Switch(checked = debug, onCheckedChange = null, enabled = debugDenial == null)
+        }
+        KubeDenialNote(debugDenial)
+        if (debug) {
+            Text(stringResource(R.string.pod_debug_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedTextField(
+                value = debugImage,
+                onValueChange = { debugImage = it },
+                label = { Text(stringResource(R.string.debug_image)) },
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        } else OutlinedTextField(
             value = command,
             onValueChange = { command = it },
             label = { Text(stringResource(R.string.debug_command)) },
@@ -211,7 +244,7 @@ private fun PodSetupForm(pod: String, onStart: (String, String) -> Unit) {
             modifier = Modifier.fillMaxWidth(),
         )
         error?.let { Text(it, color = LocalStatusColors.current.bad) }
-        Button(onClick = ::start, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.debug_start)) }
+        Button(onClick = ::start, enabled = !debug || debugImage.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.debug_start)) }
     }
 }
 

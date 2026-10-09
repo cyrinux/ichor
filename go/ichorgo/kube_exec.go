@@ -120,7 +120,21 @@ func (k *kubeClient) dialExec(ctx context.Context, namespace, pod, container str
 		query.Set("stderr", "true")
 	}
 
-	u, err := k.endpoint(podPath(namespace, pod) + "/exec?" + query.Encode())
+	return k.dialStream(ctx, podPath(namespace, pod)+"/exec?"+query.Encode())
+}
+
+// dialAttach attaches a terminal to the main process of a running container (stdin, stdout
+// and a tty): the container's own process, not a new command, as `kubectl attach -it` does.
+func (k *kubeClient) dialAttach(ctx context.Context, namespace, pod, container string) (*websocket.Conn, error) {
+	query := url.Values{"container": {container}, "stdin": {"true"}, "stdout": {"true"}, "tty": {"true"}}
+
+	return k.dialStream(ctx, podPath(namespace, pod)+"/attach?"+query.Encode())
+}
+
+// dialStream opens a Kubernetes stream (exec or attach) at path, with its query, over a
+// WebSocket in the channel protocol.
+func (k *kubeClient) dialStream(ctx context.Context, path string) (*websocket.Conn, error) {
+	u, err := k.endpoint(path)
 	if err != nil {
 		return nil, err
 	}
