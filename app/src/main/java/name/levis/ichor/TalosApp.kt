@@ -30,6 +30,10 @@ import name.levis.ichor.data.TalosUpdateChecker
 import name.levis.ichor.data.UpgradeManager
 import name.levis.ichor.data.MaintenanceManager
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.DataServicesRepository
+import name.levis.ichor.data.GitOpsRepository
+import name.levis.ichor.data.GoCall
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.SupportBundleRepository
 import name.levis.ichor.data.SupportPrompt
 import name.levis.ichor.data.FundingHistory
@@ -108,7 +112,12 @@ class TalosApp : Application() {
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { kubeAuthStore.reseal() }
     }
     val kubeAuthRepository by lazy { KubeAuthRepository(configRepository) }
-    val talosRepository by lazy { TalosRepository(configRepository, kubeServers, offlineCache) }
+    /** The Go core's credentials and the results cache, shared by the repositories below. */
+    private val goCall by lazy { GoCall(configRepository, kubeServers, offlineCache) }
+    val talosRepository by lazy { TalosRepository(goCall) }
+    val kubeRepository by lazy { KubeRepository(goCall) }
+    val gitOpsRepository by lazy { GitOpsRepository(goCall) }
+    val dataServicesRepository by lazy { DataServicesRepository(goCall) }
 
     /** Last known cluster data on disk, only while "Keep last known state" is on (Settings → Privacy). */
     private val offlineCache by lazy {

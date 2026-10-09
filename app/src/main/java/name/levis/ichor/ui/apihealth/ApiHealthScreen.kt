@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.ApiCount
 import name.levis.ichor.model.ApiHealthReport
 import name.levis.ichor.model.formatMs
@@ -47,8 +47,8 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.components.pageContent
 
 /** Reading it scrapes /metrics twice a few seconds apart: loaded on demand, never polled. */
-class ApiHealthViewModel(private val talos: TalosRepository) : LoadingViewModel<ApiHealthReport>() {
-    override suspend fun fetch() = talos.apiHealth()
+class ApiHealthViewModel(private val kube: KubeRepository) : LoadingViewModel<ApiHealthReport>() {
+    override suspend fun fetch() = kube.apiHealth()
 }
 
 /**
@@ -62,7 +62,7 @@ class ApiHealthViewModel(private val talos: TalosRepository) : LoadingViewModel<
 fun ApiHealthScreen(
     onBack: () -> Unit,
     onAudit: () -> Unit,
-    vm: ApiHealthViewModel = viewModel(factory = factory { ApiHealthViewModel(app.talosRepository) }),
+    vm: ApiHealthViewModel = viewModel(factory = factory { ApiHealthViewModel(app.kubeRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }

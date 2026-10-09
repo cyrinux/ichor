@@ -37,7 +37,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.GitOpsRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.isMeteredNetwork
 import name.levis.ichor.data.workloadsKey
 import name.levis.ichor.model.KubeAction
@@ -61,17 +62,18 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
 
-class WorkloadsViewModel(talos: TalosRepository, metered: () -> Boolean) : PagedListViewModel<KubeWorkload>(talos, metered) {
+class WorkloadsViewModel(kube: KubeRepository, gitOps: GitOpsRepository, metered: () -> Boolean) :
+    PagedListViewModel<KubeWorkload>(kube, metered) {
     override fun key(namespace: String?) = workloadsKey(namespace)
 
     // The three kinds side by side, one page each, merged.
     override suspend fun page(namespace: String?, token: String) =
-        fetchWorkloadPage(token) { kind, kindToken -> talos.workloadsPage(kind, namespace, kindToken) }
+        fetchWorkloadPage(token) { kind, kindToken -> kube.workloadsPage(kind, namespace, kindToken) }
 
     // Show the rollout starting: the controller already bumped the generation.
-    val restarts = WorkloadRestarts(viewModelScope, talos) { refresh() }
+    val restarts = WorkloadRestarts(viewModelScope, kube) { refresh() }
 
-    val actions = WorkloadActions(viewModelScope, talos, restarts) { refresh() }
+    val actions = WorkloadActions(viewModelScope, kube, gitOps, restarts) { refresh() }
 }
 
 /**
@@ -86,7 +88,7 @@ fun WorkloadsTab(
     query: String,
     onQuery: (String) -> Unit,
     modifier: Modifier = Modifier,
-    vm: WorkloadsViewModel = viewModel(factory = factory { WorkloadsViewModel(app.talosRepository) { isMeteredNetwork(app) } }),
+    vm: WorkloadsViewModel = viewModel(factory = factory { WorkloadsViewModel(app.kubeRepository, app.gitOpsRepository) { isMeteredNetwork(app) } }),
     focusKey: String? = null,
     onFocused: () -> Unit = {},
 ) {

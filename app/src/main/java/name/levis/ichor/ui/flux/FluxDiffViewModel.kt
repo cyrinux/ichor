@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.refreshFailed
@@ -23,7 +23,7 @@ enum class DiffTool { FLUX, ARGO }
  * (Argo CD may take longer: it renders in its own pod first); the result on screen stays while
  * a refresh runs.
  */
-class FluxDiffViewModel(private val talos: TalosRepository, private val tool: DiffTool = DiffTool.FLUX) : ViewModel() {
+class FluxDiffViewModel(private val gitOps: GitOpsRepository, private val tool: DiffTool = DiffTool.FLUX) : ViewModel() {
     private val _state = MutableStateFlow<UiState<FluxDiff>>(UiState.Loading)
     val state: StateFlow<UiState<FluxDiff>> = _state.asStateFlow()
     private var job: Job? = null
@@ -44,8 +44,8 @@ class FluxDiffViewModel(private val talos: TalosRepository, private val tool: Di
             _state.value = try {
                 UiState.Loaded(
                     when (tool) {
-                        DiffTool.FLUX -> talos.fluxDiff(kind, namespace, name)
-                        DiffTool.ARGO -> talos.argoDiff(namespace, name)
+                        DiffTool.FLUX -> gitOps.fluxDiff(kind, namespace, name)
+                        DiffTool.ARGO -> gitOps.argoDiff(namespace, name)
                     },
                 )
             } catch (e: CancellationException) {

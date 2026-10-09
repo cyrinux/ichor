@@ -76,7 +76,7 @@ import name.levis.ichor.ui.components.pageContent
 @Composable
 fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) -> Unit, onWindows: () -> Unit) {
     val app = LocalContext.current.applicationContext as TalosApp
-    val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(app.talosRepository, freezeReminderHook(app)) })
+    val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(app.gitOpsRepository, app.kubeRepository, freezeReminderHook(app)) })
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()

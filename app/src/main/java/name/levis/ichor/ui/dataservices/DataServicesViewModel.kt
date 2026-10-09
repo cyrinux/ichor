@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import name.levis.ichor.data.DATA_SERVICES
 import name.levis.ichor.data.INVENTORY
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.dataServiceHints
@@ -14,22 +15,22 @@ import name.levis.ichor.ui.LoadingViewModel
  * screen. Reading it lists custom resources and runs the Garage CLI in a pod: loaded on
  * demand, never polled.
  */
-class DataServicesViewModel(private val talos: TalosRepository) : LoadingViewModel<DataServices>() {
-    override fun cached(): TalosRepository.Timed<DataServices>? = talos.cached(DATA_SERVICES)
-    override val restores get() = talos.restores
-    override suspend fun fetch() = talos.dataServices(hints)
+class DataServicesViewModel(private val dataServices: DataServicesRepository) : LoadingViewModel<DataServices>() {
+    override fun cached(): TalosRepository.Timed<DataServices>? = dataServices.cached(DATA_SERVICES)
+    override val restores get() = dataServices.restores
+    override suspend fun fetch() = dataServices.dataServices(hints)
 
     /** Garage maintenance; a change shows in a fresh reading (tranquility, repairs running). */
-    val garage = GarageActions(viewModelScope, talos, onChanged = { refresh() })
+    val garage = GarageActions(viewModelScope, dataServices, onChanged = { refresh() })
 
     /** Longhorn volume and node actions; their progress shows in a fresh reading. */
-    val longhorn = LonghornActions(viewModelScope, talos, onChanged = { refresh() })
+    val longhorn = LonghornActions(viewModelScope, dataServices, onChanged = { refresh() })
 
     /** Certificate details and forced renewals; an issuance shows in a fresh reading. */
-    val certificates = CertificateActions(viewModelScope, talos, onChanged = { refresh() })
+    val certificates = CertificateActions(viewModelScope, dataServices, onChanged = { refresh() })
 
     /** On-demand CloudNativePG backups; the new backup shows in a fresh reading once done. */
-    val cnpg = CnpgActions(viewModelScope, talos, onChanged = { refresh() })
+    val cnpg = CnpgActions(viewModelScope, dataServices, onChanged = { refresh() })
 
     /** Catalog ids from the inventory; "" checks everything (Garage needs a listing of every pod then). */
     private var hints = ""
@@ -49,5 +50,5 @@ class DataServicesViewModel(private val talos: TalosRepository) : LoadingViewMod
     }
 
     /** The hints of the inventory the overview already loaded, if any. */
-    fun inventoryHints(): String = talos.cached<Inventory>(INVENTORY)?.value?.dataServiceHints().orEmpty()
+    fun inventoryHints(): String = dataServices.cached<Inventory>(INVENTORY)?.value?.dataServiceHints().orEmpty()
 }

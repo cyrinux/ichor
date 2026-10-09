@@ -94,7 +94,7 @@ fun ArgoAppScreen(
     onDiff: (() -> Unit)? = null,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
-    val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(talos.talosRepository, freezeReminderHook(talos)) })
+    val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(talos.gitOpsRepository, talos.kubeRepository, freezeReminderHook(talos)) })
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val config by talos.configRepository.config.collectAsStateWithLifecycle()

@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.GitOpsRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoNetwork
 import name.levis.ichor.model.KubePod
@@ -26,7 +27,7 @@ import name.levis.ichor.ui.workloads.DeleteResult
  * time the app itself reloads (pull to refresh, the polling while a sync runs). A reload never
  * interrupts one in flight, so a slow cluster still gets an answer between two polls.
  */
-class ArgoNetworkViewModel(private val talos: TalosRepository) : ViewModel() {
+class ArgoNetworkViewModel(private val gitOps: GitOpsRepository, private val kube: KubeRepository) : ViewModel() {
     private val _state = MutableStateFlow<UiState<ArgoNetwork>>(UiState.Loading)
     val state: StateFlow<UiState<ArgoNetwork>> = _state.asStateFlow()
     private var job: Job? = null
@@ -50,7 +51,7 @@ class ArgoNetworkViewModel(private val talos: TalosRepository) : ViewModel() {
     private fun fetch(app: ArgoApp) {
         job = viewModelScope.launch {
             _state.value = try {
-                UiState.Loaded(talos.argoNetwork(app))
+                UiState.Loaded(gitOps.argoNetwork(app))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
@@ -65,7 +66,7 @@ class ArgoNetworkViewModel(private val talos: TalosRepository) : ViewModel() {
         if (pod.key in _deleting.value) return
         _deleting.update { it + pod.key }
         viewModelScope.launch {
-            val outcome = runCatching { talos.deletePod(pod) }
+            val outcome = runCatching { kube.deletePod(pod) }
             _deleting.update { it - pod.key }
             outcome.exceptionOrNull().takeIf { it is CancellationException }?.let { throw it }
             _results.send(DeleteResult(pod, outcome.exceptionOrNull()?.uiText()))

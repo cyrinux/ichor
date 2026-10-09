@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.KubeScope
 import name.levis.ichor.model.PagedLoad
@@ -26,11 +27,11 @@ import name.levis.ichor.ui.uiText
  * starts again silently; only a complete list is kept as the last known one.
  */
 abstract class PagedListViewModel<T>(
-    protected val talos: TalosRepository,
+    protected val kube: KubeRepository,
     private val metered: () -> Boolean,
 ) : LoadingViewModel<PagedLoad<T>>() {
     override val keepsDataOnFailure = true
-    override val restores get() = talos.restores
+    override val restores get() = kube.restores
 
     /** The namespace listed; set by the screen ([setScope]). */
     var scope: KubeScope = KubeScope()
@@ -46,7 +47,7 @@ abstract class PagedListViewModel<T>(
 
     private var more: Job? = null
 
-    /** The cache key of [namespace]'s complete list (see [TalosRepository.keeper]). */
+    /** The cache key of [namespace]'s complete list (see [KubeRepository.keeper]). */
     protected abstract fun key(namespace: String?): String
 
     /** One page of [namespace] ("" [token] for the first). */
@@ -59,7 +60,7 @@ abstract class PagedListViewModel<T>(
     protected open fun detailed(items: List<T>): Boolean = true
 
     override fun cached(): TalosRepository.Timed<PagedLoad<T>>? =
-        talos.cached<List<T>>(key(scope.namespace))?.let { TalosRepository.Timed(PagedLoad.complete(it.value, detailed(it.value)), it.at) }
+        kube.cached<List<T>>(key(scope.namespace))?.let { TalosRepository.Timed(PagedLoad.complete(it.value, detailed(it.value)), it.at) }
 
     /** Lists [scope] from now on; loads it the first time and when it changes, else nothing. */
     fun setScope(scope: KubeScope) {
@@ -73,7 +74,7 @@ abstract class PagedListViewModel<T>(
 
     override suspend fun fetch(): PagedLoad<T> {
         val scope = scope
-        val keep = talos.keeper(key(scope.namespace))
+        val keep = kube.keeper(key(scope.namespace))
         val owner = startProgress()
         try {
             val load = loadPages(eagerRows(scope), { token -> page(scope.namespace, token) }) { partial ->
@@ -98,7 +99,7 @@ abstract class PagedListViewModel<T>(
         val start = loaded.data
         if (!start.hasMore || loaded.refreshing || more?.isActive == true) return
         val scope = scope
-        val keep = talos.keeper(key(scope.namespace))
+        val keep = kube.keeper(key(scope.namespace))
         more = viewModelScope.launch {
             val owner = if (all) startProgress() else null
             var shown = start

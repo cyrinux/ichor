@@ -56,7 +56,7 @@ import name.levis.ichor.ui.components.pageContent
 @Composable
 fun FluxScreen(onBack: () -> Unit, onApp: (kind: String, namespace: String, name: String) -> Unit) {
     val app = LocalContext.current.applicationContext as TalosApp
-    val vm: FluxViewModel = viewModel(factory = factory { FluxViewModel(app.talosRepository) })
+    val vm: FluxViewModel = viewModel(factory = factory { FluxViewModel(app.gitOpsRepository, app.kubeRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()

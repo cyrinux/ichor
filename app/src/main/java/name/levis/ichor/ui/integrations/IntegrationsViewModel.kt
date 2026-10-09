@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.update
 import name.levis.ichor.BuildConfig
 import name.levis.ichor.data.REPO_URL_BASE
 import name.levis.ichor.data.TalosJson
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.IntegrationFamily
 import name.levis.ichor.model.IntegrationReport
 import name.levis.ichor.model.picking
@@ -21,14 +21,14 @@ val INTEGRATION_FORM_URL = "$REPO_URL_BASE${BuildConfig.UPDATE_REPO}/issues/new?
  * The operators this cluster runs that Ichor does not show, and the API groups the user picked
  * for a request (none at first: nothing is named unless chosen). Loaded on demand, never polled.
  */
-class IntegrationsViewModel(private val talos: TalosRepository) : LoadingViewModel<IntegrationReport>() {
+class IntegrationsViewModel(private val kube: KubeRepository) : LoadingViewModel<IntegrationReport>() {
     private val _picked = MutableStateFlow<Set<String>>(emptySet())
     /** Names of the groups ticked, across families (a group belongs to one family). */
     val picked: StateFlow<Set<String>> = _picked.asStateFlow()
 
     private var source: Any? = null
 
-    override suspend fun fetch() = talos.integrations()
+    override suspend fun fetch() = kube.integrations()
 
     /** Loads once per [key] (context, config generation); [refresh] forces it. */
     fun load(key: Any) {

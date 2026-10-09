@@ -57,7 +57,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 @Composable
 fun FluxDiffScreen(kind: String, namespace: String, name: String, onBack: () -> Unit, tool: DiffTool = DiffTool.FLUX) {
     val talos = LocalContext.current.applicationContext as TalosApp
-    val vm: FluxDiffViewModel = viewModel(key = tool.name, factory = factory { FluxDiffViewModel(talos.talosRepository, tool) })
+    val vm: FluxDiffViewModel = viewModel(key = tool.name, factory = factory { FluxDiffViewModel(talos.gitOpsRepository, tool) })
     val state by vm.state.collectAsStateWithLifecycle()
     val config by talos.configRepository.config.collectAsStateWithLifecycle()
     val generation by talos.configRepository.generation.collectAsStateWithLifecycle()

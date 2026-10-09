@@ -55,7 +55,7 @@ import name.levis.ichor.ui.components.pageContent
 @Composable
 fun IntegrationsScreen(onBack: () -> Unit) {
     val app = LocalContext.current.applicationContext as TalosApp
-    val vm: IntegrationsViewModel = viewModel(factory = factory { IntegrationsViewModel(app.talosRepository) })
+    val vm: IntegrationsViewModel = viewModel(factory = factory { IntegrationsViewModel(app.kubeRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
     val picked by vm.picked.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()

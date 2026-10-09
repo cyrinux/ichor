@@ -46,9 +46,9 @@ private const val EVENTS_PREVIEW = 8
  */
 @Composable
 fun KubeEventsList(namespace: String, kind: String, name: String, modifier: Modifier = Modifier) {
-    val talos = (LocalContext.current.applicationContext as TalosApp).talosRepository
+    val kube = (LocalContext.current.applicationContext as TalosApp).kubeRepository
     val state by produceState<UiState<List<KubeEvent>>>(UiState.Loading, namespace, kind, name) {
-        value = uiStateOf { talos.kubeEvents(namespace, kind, name) }
+        value = uiStateOf { kube.kubeEvents(namespace, kind, name) }
     }
     val now = remember(state) { System.currentTimeMillis() }
 

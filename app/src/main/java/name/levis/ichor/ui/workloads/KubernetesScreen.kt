@@ -27,7 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.isMeteredNetwork
 import name.levis.ichor.data.realFingerprint
 import name.levis.ichor.model.KubeFocus
@@ -87,10 +87,10 @@ fun KubernetesScreen(
 
     val app = LocalContext.current.applicationContext as TalosApp
     val metered = { isMeteredNetwork(app) }
-    val workloads: WorkloadsViewModel = viewModel(factory = factory { WorkloadsViewModel(app.talosRepository, metered) })
-    val pods: PodsViewModel = viewModel(factory = factory { PodsViewModel(app.talosRepository, metered) })
-    val cronJobs: CronJobsViewModel = viewModel(factory = factory { CronJobsViewModel(app.talosRepository, metered) })
-    val namespaces: NamespacesViewModel = viewModel(factory = factory { NamespacesViewModel(app.talosRepository) })
+    val workloads: WorkloadsViewModel = viewModel(factory = factory { WorkloadsViewModel(app.kubeRepository, app.gitOpsRepository, metered) })
+    val pods: PodsViewModel = viewModel(factory = factory { PodsViewModel(app.kubeRepository, metered) })
+    val cronJobs: CronJobsViewModel = viewModel(factory = factory { CronJobsViewModel(app.kubeRepository, app.gitOpsRepository, metered) })
+    val namespaces: NamespacesViewModel = viewModel(factory = factory { NamespacesViewModel(app.kubeRepository) })
     val netPerf = netPerfViewModel()
     val cilium: CiliumViewModel = viewModel(factory = factory { CiliumViewModel(app.ciliumRepository) })
     val ciliumState by cilium.state.collectAsStateWithLifecycle()
@@ -196,8 +196,8 @@ fun KubernetesScreen(
 }
 
 /** The cluster's namespaces, to pick the scope of the lists; forbidden is an answer, not a failure. */
-class NamespacesViewModel(private val talos: TalosRepository) : LoadingViewModel<KubeNamespaces>() {
-    override suspend fun fetch() = talos.namespaces()
+class NamespacesViewModel(private val kube: KubeRepository) : LoadingViewModel<KubeNamespaces>() {
+    override suspend fun fetch() = kube.namespaces()
 }
 
 /**

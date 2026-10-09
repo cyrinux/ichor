@@ -119,7 +119,7 @@ fun HelmReleasesScreen(
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val state by vm.state.collectAsStateWithLifecycle()
-    val namespaces: NamespacesViewModel = viewModel(factory = factory { NamespacesViewModel(app.talosRepository) })
+    val namespaces: NamespacesViewModel = viewModel(factory = factory { NamespacesViewModel(app.kubeRepository) })
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
     val control = rememberKubeScope(app, namespaces, mask.enabled)
     LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setNamespace(control.scope.namespace) }

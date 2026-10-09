@@ -4,7 +4,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import name.levis.ichor.data.FLUX
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.GitOpsRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.FluxAction
 import name.levis.ichor.model.FluxResource
 import name.levis.ichor.model.FluxStatus
@@ -25,7 +26,7 @@ data class FluxActionResult(val action: FluxAction, val name: String, val error:
  * demand from the cached result first, polls quietly (no refresh indicator) while a controller
  * reconciles or right after an action, and runs actions with their outcome as one-shot [results].
  */
-class FluxViewModel(talos: TalosRepository) : PolledStatusViewModel<FluxStatus>(talos, FLUX) {
+class FluxViewModel(gitOps: GitOpsRepository, kube: KubeRepository) : PolledStatusViewModel<FluxStatus>(gitOps, kube, FLUX) {
     private val actions = KeyedActions<FluxActionResult>(viewModelScope)
     /** Keys ([fluxKey]) of the objects whose action request is in flight. */
     val busy: StateFlow<Set<String>> get() = actions.busy
@@ -33,16 +34,16 @@ class FluxViewModel(talos: TalosRepository) : PolledStatusViewModel<FluxStatus>(
     val results: Flow<FluxActionResult> get() = actions.results
 
     /** Rollout restarts of a Kustomization's workloads, followed like an action. */
-    val restarts = WorkloadRestarts(viewModelScope, talos) { boost() }
+    val restarts = WorkloadRestarts(viewModelScope, kube) { boost() }
 
-    override fun fetcher(): suspend () -> FluxStatus = { talos.flux() }
+    override fun fetcher(): suspend () -> FluxStatus = { gitOps.flux() }
 
     /** Something reconciles or waits for it. */
     override fun isBusy(data: FluxStatus): Boolean = data.anyBusy
 
     /** Runs [action] on the object [kind] [namespace]/[name], then follows the outcome. */
     fun act(kind: String, namespace: String, name: String, action: FluxAction) {
-        actions.launch(fluxKey(kind, namespace, name), { talos.fluxAction(kind, namespace, name, action) }, {
+        actions.launch(fluxKey(kind, namespace, name), { gitOps.fluxAction(kind, namespace, name, action) }, {
             FluxActionResult(action, name, it.exceptionOrNull()?.uiText())
         }, ::boost)
     }

@@ -42,7 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KubeBrowserRepository
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.isMeteredNetwork
 import name.levis.ichor.model.ApiResource
 import name.levis.ichor.model.KubePage
@@ -77,11 +77,11 @@ import name.levis.ichor.ui.components.pageContent
 
 /** The objects of one resource, page by page in the server's order, as its Table shows them. */
 class ResourceListViewModel(
-    talos: TalosRepository,
+    kube: KubeRepository,
     metered: () -> Boolean,
     private val browser: KubeBrowserRepository,
     private val type: ApiResource,
-) : PagedListViewModel<ResourceRow>(talos, metered) {
+) : PagedListViewModel<ResourceRow>(kube, metered) {
     // In memory only: the browser's lists are not kept offline (no serializer for them).
     override fun key(namespace: String?) = "kube-browser|${type.groupVersion}/${type.resource}|${namespace ?: "*"}"
 
@@ -102,7 +102,7 @@ fun ResourceListScreen(
     onObject: (ResourceRow) -> Unit,
     vm: ResourceListViewModel = viewModel(
         key = "kube-browser-${type.groupVersion}/${type.resource}",
-        factory = factory { ResourceListViewModel(app.talosRepository, { isMeteredNetwork(app) }, app.kubeBrowser, type) },
+        factory = factory { ResourceListViewModel(app.kubeRepository, { isMeteredNetwork(app) }, app.kubeBrowser, type) },
     ),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
@@ -129,7 +129,7 @@ fun ResourceListScreen(
             Rows(s, query, wide, onWide = { wide = it }, showNamespace = type.namespaced && vm.scope.namespace == null, vm = vm, onObject = onObject)
         }
         if (type.namespaced) {
-            val namespaces: NamespacesViewModel = viewModel(factory = factory { NamespacesViewModel(app.talosRepository) })
+            val namespaces: NamespacesViewModel = viewModel(factory = factory { NamespacesViewModel(app.kubeRepository) })
             val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
             val control = rememberKubeScope(app, namespaces, mask.enabled)
             LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setScope(control.scope) }
