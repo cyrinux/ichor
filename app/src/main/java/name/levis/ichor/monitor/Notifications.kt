@@ -52,8 +52,16 @@ fun canPostNotifications(context: Context): Boolean =
  * With [hideOnLockScreen] (app lock on), the lock screen only shows a generic text. [clusterId]:
  * the cluster the alert is about (see [name.levis.ichor.model.ContextSummary.clusterId]), whose
  * screen of the alert's subject a tap opens like a share link; null opens the app only.
+ * [actions]: its buttons (see [Alert.actions]), for the cluster of fingerprint [fingerprint].
  */
-fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean, clusterId: String?) {
+fun postAlert(
+    context: Context,
+    alert: Alert,
+    hideOnLockScreen: Boolean,
+    clusterId: String?,
+    actions: List<AlertAction> = emptyList(),
+    fingerprint: String = "",
+) {
     if (!canPostNotifications(context)) return
     ensureAlertChannels(context)
     val res = AppLocale.wrap(context)
@@ -71,14 +79,15 @@ fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean, cluster
     }
     val open = PendingIntent.getActivity(
         context,
-        alert.key.hashCode(), // distinct request codes: the links and extras differ
+        alertNotificationId(alert.key), // distinct request codes: the links and extras differ
         intent,
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
     val builder = alertNotification(context, alert.channel, title, text, open, hideOnLockScreen)
+    actions.mapNotNull { alertActionButton(context, alert, it, fingerprint, link) }.forEach(builder::addAction)
 
     try {
-        NotificationManagerCompat.from(context).notify(alert.key.hashCode(), builder.build())
+        NotificationManagerCompat.from(context).notify(alertNotificationId(alert.key), builder.build())
     } catch (_: SecurityException) {
         // Permission revoked between the check and the post; nothing to do.
     }

@@ -59,6 +59,7 @@ struct ArgoAppView: View {
         .navigationDestination(item: $openNode) { NodeDetailView(ref: $0) }
         .navigationDestination(for: ArgoWindowsRoute.self) { _ in ArgoWindowsView() }
         .loadsKubeActionAccess(namespace: namespace)
+        .onChange(of: NotificationRouter.shared.alertActionRequest) { _, _ in takeAlertAction() }
     }
 
     private func content(_ app: ArgoApp, status: ArgoStatus) -> some View {
@@ -203,7 +204,17 @@ struct ArgoAppView: View {
         await store.refresh($state, key: key, currentKey: { model.argoKey }) {
             try await store.load(with: client, key: key, cluster: cluster)
         }
+        takeAlertAction()
         await traffic
+    }
+
+    /// Sync chosen on this app's alert: the sync sheet, as its Sync button opens it, once the app
+    /// is read; nothing when it cannot sync now (an operation runs, for one).
+    private func takeAlertAction() {
+        guard let request = NotificationRouter.shared.alertActionRequest, request.isSync(namespace: namespace, name: name),
+              case .loaded(let status, _, _) = state else { return }
+        NotificationRouter.shared.alertActionRequest = nil
+        if let app = status.app(namespace: namespace, name: name), app.canSync { syncSheet = SyncRequest(resources: []) }
     }
 
     /// What ending the freeze puts back (the hand-made changes), and how many apps resume.

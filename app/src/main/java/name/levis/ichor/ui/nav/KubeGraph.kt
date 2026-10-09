@@ -41,8 +41,12 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
     composable(Routes.METRICS) {
         name.levis.ichor.ui.metrics.MetricsScreen(onBack = { nav.popBackStack() }, onSettings = { nav.navigate(Routes.SETTINGS) })
     }
-    composable(Routes.ALERTS) {
-        AlertsScreen(onBack = { nav.popBackStack() }, links = remember(nav) { alertLinks(nav, app) })
+    composable(Routes.ALERTS, arguments = listOf(navArgument("silence") { type = NavType.StringType; defaultValue = "" })) { entry ->
+        AlertsScreen(
+            onBack = { nav.popBackStack() },
+            links = remember(nav) { alertLinks(nav, app) },
+            silenceFingerprint = entry.arguments?.getString("silence").orEmpty(),
+        )
     }
     composable(Routes.KUBE_NODES, arguments = listOf(navArgument("filter") { type = NavType.StringType; defaultValue = "" })) { entry ->
         // The Kubernetes home's data and refresh: only ever opened from it, so it is below on the stack.

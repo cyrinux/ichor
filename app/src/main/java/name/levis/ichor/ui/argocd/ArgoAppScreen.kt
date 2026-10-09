@@ -82,7 +82,8 @@ import name.levis.ichor.ui.components.pageContent
 /**
  * One Argo CD Application: the hero, its conditions, the running or last sync, the sync-waves
  * timeline with its resources (selective sync, rollout restarts), the pods that are not ready,
- * and the deployment history with rollback. Polls while a sync runs.
+ * and the deployment history with rollback. Polls while a sync runs. [initialSync]: its sync
+ * sheet opens once the app is read (an alert's Sync button).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,6 +94,7 @@ fun ArgoAppScreen(
     onNode: ((NodeOverview, Int) -> Unit)? = null,
     onWindows: (() -> Unit)? = null,
     onDiff: (() -> Unit)? = null,
+    initialSync: Boolean = false,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
     val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(talos.gitOpsRepository, talos.kubeRepository, freezeReminderHook(talos)) })
@@ -137,7 +139,7 @@ fun ArgoAppScreen(
                         val network = NetworkContext(s.fetchedAt, downNodes, overview?.nodes.orEmpty(), onNode)
                         val project = s.data.projectOf(app)
                         val freeze = FreezeContext(s.data, project, vm.freezeBusy(busy, project), onWindows)
-                        AppDetail(app, downNodes, app.key in busy, vm, network, freeze, onDiff)
+                        AppDetail(app, downNodes, app.key in busy, vm, network, freeze, onDiff, initialSync)
                     }
                 }
                 DataFreshness(s, edgeToEdge = false)
@@ -147,7 +149,16 @@ fun ArgoAppScreen(
 }
 
 @Composable
-private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: ArgoViewModel, network: NetworkContext, freeze: FreezeContext, onDiff: (() -> Unit)?) {
+private fun AppDetail(
+    app: ArgoApp,
+    downNodes: Set<String>,
+    busy: Boolean,
+    vm: ArgoViewModel,
+    network: NetworkContext,
+    freeze: FreezeContext,
+    onDiff: (() -> Unit)?,
+    initialSync: Boolean,
+) {
     var selecting by rememberSaveable { mutableStateOf(false) }
     var freezeSheet by remember { mutableStateOf(false) }
     var endFreeze by remember { mutableStateOf(false) }
@@ -161,6 +172,12 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
     // Sync, refresh, auto-sync and rollback all patch the Application.
     val argoDenial = rememberKubeDenial(KubeAction.ARGO_SYNC, app.namespace)
     val denied = argoDenial != null
+    // Asked from an alert: the sheet once (not again on rotation), unless a sync already runs.
+    var initialSyncShown by rememberSaveable { mutableStateOf(false) }
+    if (!initialSyncShown && initialSync) {
+        initialSyncShown = true
+        if (!app.isRunning) sheet = true
+    }
 
     if (sheet) {
         ArgoSyncSheet(

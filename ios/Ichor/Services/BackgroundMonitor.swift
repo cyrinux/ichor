@@ -170,11 +170,35 @@ enum BackgroundMonitor {
         SharedStore.save(result.next)
         guard alertsEnabled else { return }
         let hide = UserDefaults.standard.bool(forKey: "appLockEnabled")
-        for alert in result.alerts {
+        // A snoozed alert posts nothing, neither the problem nor its end (its notification's Snooze).
+        let fingerprint = context?.fingerprint ?? ""
+        let alerts = AlertSnoozeStore.current(now: now).notSnoozed(result.alerts, cluster: fingerprint, now: now)
+        for alert in alerts {
             let link = alertLink(alert, snapshot: result.next, cluster: context?.clusterID ?? "")
             let text = localized(alert, snapshot: result.next, previous: previous, now: now)
-            await post(alert, localized: text, link: link, hideDetails: hide)
+            let wake = await canWake(alert, cluster: fingerprint)
+            await post(alert, localized: text, link: link, actions: alertActions(key: alert.key, problem: alert.problem, canWake: wake),
+                       info: actionInfo(alert, snapshot: result.next, cluster: fingerprint), hideDetails: hide)
         }
+    }
+
+    /// Whether the node of a node alert can be woken: a Wake-on-LAN setting or a MAC seen.
+    private static func canWake(_ alert: Alert, cluster: String) async -> Bool {
+        guard alert.problem, !cluster.isEmpty, alert.key.hasPrefix("node:") else { return false }
+        let address = String(alert.key.dropFirst("node:".count))
+        return await MainActor.run {
+            WakeOnLanStore.shared.loadIfNeeded()
+            return !WakeOnLanStore.shared.wakeTargets(fingerprint: cluster, node: address).isEmpty
+        }
+    }
+
+    /// What the notification's Snooze and Wake need: the cluster, the alert, a node's hostname.
+    private static func actionInfo(_ alert: Alert, snapshot: ClusterSnapshot, cluster: String) -> [String: String] {
+        var info = [AlertNotificationActions.clusterKey: cluster, AlertNotificationActions.alertKey: alert.key]
+        if alert.key.hasPrefix("node:"), let state = snapshot.nodes[String(alert.key.dropFirst("node:".count))] {
+            info[AlertNotificationActions.hostKey] = state.hostname
+        }
+        return info
     }
 
     /// Argo CD and Flux issues (a tool not installed reads fine and adds nothing); nil when neither
@@ -304,42 +328,54 @@ enum BackgroundMonitor {
     /// summarize them per kind.
     static let alertKinds = ["node", "etcd", "cert", "data", "gitops", "checkup", "alertmanager"]
 
-    /// The category of an alert: its kind's, "….private" with details hidden; "private" for a kind
-    /// this version does not know. Alertmanager alerts ("am:…") are of the kind "alertmanager".
-    static func category(alertKey: String, hideDetails: Bool) -> String {
+    /// The category of an alert: its kind's with its `actions` (see alertCategory), "….private"
+    /// with details hidden; "private" for a kind this version does not know. Alertmanager alerts
+    /// ("am:…") are of the kind "alertmanager".
+    static func category(alertKey: String, actions: [AlertAction] = [], hideDetails: Bool) -> String {
         let prefix = String(alertKey.split(separator: ":", maxSplits: 1).first ?? "")
         let kind = prefix == "am" ? "alertmanager" : prefix
         guard alertKinds.contains(kind) else { return hideDetails ? "private" : "" }
-        return hideDetails ? "alert.\(kind).private" : "alert.\(kind)"
+        return alertCategory(kind: kind, actions: actions, hideDetails: hideDetails)
     }
 
     /// With the app lock on, details are hidden on the lock screen (iOS shows "Notification").
-    /// `link` (userInfo "link") is the share link the tap opens.
-    private static func post(_ alert: Alert, localized: (title: String, text: String), link: URL?, hideDetails: Bool) async {
+    /// `link` (userInfo "link") is the share link the tap opens; `info` what its actions need.
+    private static func post(_ alert: Alert, localized: (title: String, text: String), link: URL?, actions: [AlertAction],
+                             info: [String: String], hideDetails: Bool) async {
         let content = UNMutableNotificationContent()
         content.title = localized.title
         content.body = localized.text
         content.sound = alert.problem ? .default : nil
-        content.categoryIdentifier = category(alertKey: alert.key, hideDetails: hideDetails)
-        if let link { content.userInfo = ["link": link.absoluteString] }
+        content.categoryIdentifier = category(alertKey: alert.key, actions: actions, hideDetails: hideDetails)
+        var userInfo = info
+        if let link { userInfo["link"] = link.absoluteString }
+        content.userInfo = userInfo
         let request = UNNotificationRequest(identifier: alert.key, content: content, trigger: nil)
         try? await UNUserNotificationCenter.current().add(request)
     }
 
-    /// Registers a category per alert kind, plain and ".private": the private ones keep their
-    /// previews hidden until the device is unlocked. The title is hidden with the body (no
-    /// `.hiddenPreviewsShowTitle`): it names the node. "private" stays for the notifications
-    /// an older version delivered.
+    /// Registers a category per alert kind and set of actions (alertActionSets), plain and
+    /// ".private": the private ones keep their previews hidden until the device is unlocked. The
+    /// title is hidden with the body (no `.hiddenPreviewsShowTitle`): it names the node. The ones
+    /// without actions take the resolved alerts and, like "private", the notifications an older
+    /// version delivered.
     static func registerCategories() {
         let placeholder = String(localized: "Talos cluster alert")
-        func make(_ id: String, hidden: Bool) -> UNNotificationCategory {
-            hidden
-                ? UNNotificationCategory(identifier: id, actions: [], intentIdentifiers: [],
+        func make(_ id: String, actions: [AlertAction], hidden: Bool) -> UNNotificationCategory {
+            let buttons = AlertNotificationActions.notificationActions(actions)
+            return hidden
+                ? UNNotificationCategory(identifier: id, actions: buttons, intentIdentifiers: [],
                                          hiddenPreviewsBodyPlaceholder: placeholder, options: [])
-                : UNNotificationCategory(identifier: id, actions: [], intentIdentifiers: [], options: [])
+                : UNNotificationCategory(identifier: id, actions: buttons, intentIdentifiers: [], options: [])
         }
-        let alerts = alertKinds.flatMap { [make("alert.\($0)", hidden: false), make("alert.\($0).private", hidden: true)] }
-        let categories = Set(alerts + [make("private", hidden: true), FreezeReminders.notificationCategory])
+        let alerts = alertKinds.flatMap { kind in
+            alertActionSets(kind: kind).flatMap { actions in
+                [false, true].map { hidden in
+                    make(alertCategory(kind: kind, actions: actions, hideDetails: hidden), actions: actions, hidden: hidden)
+                }
+            }
+        }
+        let categories = Set(alerts + [make("private", actions: [], hidden: true), FreezeReminders.notificationCategory])
         UNUserNotificationCenter.current().setNotificationCategories(categories)
     }
 }
