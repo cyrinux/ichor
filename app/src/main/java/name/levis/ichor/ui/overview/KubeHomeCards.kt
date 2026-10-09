@@ -103,7 +103,8 @@ internal fun KubeSummaryCard(name: String, cluster: ContextSummary, nodes: KubeN
             rememberKubeWhoAmI(cluster.name)?.let { who ->
                 InfoRow(stringResource(R.string.kube_whoami_user), listOf(who.user, who.groups.joinToString(", ")).filter { it.isNotEmpty() }.joinToString("\n"), mono = true)
             }
-            if (cluster.namespace.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_namespace), cluster.namespace)
+            // No namespace row: the context's namespace only scopes the lists when namespaces
+            // cannot be listed, it says nothing about the cluster (the import preview still shows it).
             if (cluster.certNotAfter > 0) InfoRow(stringResource(R.string.import_kube_expires), certExpiry(cluster.certNotAfter))
         }
     }
