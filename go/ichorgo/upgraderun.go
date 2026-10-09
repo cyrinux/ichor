@@ -87,9 +87,16 @@ func StartUpgrade(configYAML, contextName, kubeServer, node, image string, stage
 		defer onPanic(func(msg string) { listener.OnDone("", msg) })
 
 		opts := upgradeOptions{image: strings.TrimSpace(image), stage: stage, force: force, acknowledged: acknowledged}
-		version, err := runUpgrade(ctx, kubeTarget{configYAML, contextName, kubeServer}, node, opts, listener)
 
-		recordOutcome(configYAML, contextName, auditAction{Action: "upgrade", Node: node, Params: fmt.Sprintf("image=%s stage=%t force=%t", opts.image, stage, force)}, err)
+		var version string
+
+		err := recordedRun(configYAML, contextName, func() auditAction {
+			return auditAction{Action: "upgrade", Node: node, Params: fmt.Sprintf("image=%s stage=%t force=%t", opts.image, stage, force)}
+		}, func() (err error) {
+			version, err = runUpgrade(ctx, kubeTarget{configYAML, contextName, kubeServer}, node, opts, listener)
+
+			return err
+		})
 
 		errMessage := errText(err)
 

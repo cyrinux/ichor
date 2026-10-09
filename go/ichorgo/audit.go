@@ -70,6 +70,26 @@ func recordAction(err *error, configYAML, contextName string, a auditAction) {
 	recordOutcome(configYAML, contextName, a, *err)
 }
 
+// recordedRun runs a background run's work and records it, built by action once the work
+// ended, before the listener hears of it. A panic is recorded as a failure too, then raised
+// again for the run's onPanic to report.
+func recordedRun(configYAML, contextName string, action func() auditAction, work func() error) (err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			err = panicError(r)
+		}
+
+		recordOutcome(configYAML, contextName, action(), err)
+
+		if r != nil {
+			panic(r)
+		}
+	}()
+
+	return work()
+}
+
 // recordOutcome records an action that ended with err (nil: it succeeded); for the runs
 // that end in the background. Best effort: a log that cannot be written loses the entry.
 func recordOutcome(configYAML, contextName string, a auditAction, err error) {

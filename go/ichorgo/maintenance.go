@@ -219,9 +219,9 @@ func StartNodeMaintenance(configYAML, contextName, kubeServer, node, action stri
 			listener:     listener,
 		}
 
-		err := m.run(ctx)
-
-		recordOutcome(configYAML, contextName, auditAction{Action: "maintenance-" + m.action, Node: node, Params: fmt.Sprintf("include-bare=%t", includeBare)}, err)
+		err := recordedRun(configYAML, contextName, func() auditAction {
+			return auditAction{Action: "maintenance-" + m.action, Node: node, Params: fmt.Sprintf("include-bare=%t", includeBare)}
+		}, func() error { return m.run(ctx) })
 
 		errMessage := errText(err)
 
