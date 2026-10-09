@@ -389,6 +389,14 @@ final class AppModel {
         apply(talos: yaml, talosSummary: talosSummary, kube: merged, kubeSummary: parsed, preferred: parsed.current)
     }
 
+    /// Adds the built-in Kubernetes demo next to the stored clusters, replacing one added before.
+    func saveKubeDemo() async throws {
+        let added = try await TalosClient.demoKubeconfig()
+        let conflicts = try await TalosClient.kubeImportConflicts(stored: kubeYAML ?? "", talos: yaml ?? "", added: added)
+        let choices = conflicts.filter { $0.sameAs != nil }.map { KubeImportChoice(index: $0.index, replace: true) }
+        try await saveKube(added: added, choices: choices)
+    }
+
     /// Replaces both stored configs with those of a restored backup (nil: none of that kind)
     /// and shows the context at `activeIndex`. Both are checked before anything is written, and
     /// a failed write puts the previous configs back, so a failure leaves everything as it was.

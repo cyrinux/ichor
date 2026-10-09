@@ -65,7 +65,7 @@ func KubeArgoFreeze(configYAML, contextName, kubeServer, namespace, project, act
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, project = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(project))
 
-	defer recordAction(&err, configYAML, contextName, auditAction{Action: "argo-" + action, Namespace: namespace, Object: "AppProject/" + project})
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "argo-" + action, Namespace: namespace, Object: "AppProject/" + project})
 
 	if !slices.Contains(argoFreezeActions, action) {
 		return fmt.Errorf("unsupported Argo CD freeze action %q", action)

@@ -281,7 +281,7 @@ func KubeRolloutRestart(configYAML, contextName, kubeServer, kind, namespace, na
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
-	defer recordAction(&err, configYAML, contextName, auditAction{Action: "rollout-restart", Namespace: namespace, Object: kind + "/" + name})
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "rollout-restart", Namespace: namespace, Object: kind + "/" + name})
 
 	wk, err := findWorkloadKind(kind)
 	if err != nil {

@@ -80,7 +80,7 @@ func KubeObjectUpdate(configYAML, contextName, kubeServer, group, version, resou
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
-	defer recordAction(&err, configYAML, contextName, auditAction{Action: "edit", Namespace: namespace, Object: resource + "/" + name})
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "edit", Namespace: namespace, Object: resource + "/" + name})
 
 	path, obj, err := editTarget(group, version, resource, namespace, name, edited)
 	if err != nil {

@@ -31,6 +31,11 @@ extension TalosClient {
     }
 
     /// The contexts of `added` named like a stored cluster of either store.
+    /// The built-in Kubernetes demo: a kubeconfig cluster (EKS-like) answered locally, never dialled.
+    static func demoKubeconfig() async throws -> String {
+        try await run { IchorgoDemoKubeconfig($0) }
+    }
+
     static func kubeImportConflicts(stored: String, talos: String, added: String) async throws -> [KubeImportConflict] {
         try await json { IchorgoKubeImportConflicts(stored, talos, added, $0) }
     }

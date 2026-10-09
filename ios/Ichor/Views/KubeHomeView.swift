@@ -98,6 +98,12 @@ struct KubeHomeView: View {
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
             List {
+                if model.activeSummary?.demo == true {
+                    Section {
+                        Text("Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.")
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
+                }
                 if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
                     Section { KubeExpiryBanner(notAfter: ctx.certNotAfter) }
                 }
@@ -241,7 +247,6 @@ struct KubeHomeView: View {
                 LabeledContent("Sign-in", value: ctx.localizedAuthLabel)
                 if let user = ctx.user, !user.isEmpty { LabeledContent("Signed in as", value: user) }
                 if let whoAmI, whoAmI.isKnown { whoAmIRow(whoAmI) }
-                if let namespace = ctx.namespace, !namespace.isEmpty { LabeledContent("Namespace", value: namespace) }
                 if ctx.certNotAfter > 0 { LabeledContent("Expires", value: localizedCertExpiry(ctx.certNotAfter)) }
             }
         } header: {

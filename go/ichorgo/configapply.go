@@ -221,7 +221,7 @@ func MachineConfigPreview(configYAML, contextName, node, baseYAML, draftYAML str
 		return "", errConfigPrivacy
 	}
 
-	if isDemoContext(configYAML, contextName) {
+	if isTalosDemoContext(configYAML, contextName) {
 		preview, err := previewConfig(context.Background(), demoConfigApplier{baseYAML}, baseYAML, draftYAML)
 		if err != nil {
 			return "", err

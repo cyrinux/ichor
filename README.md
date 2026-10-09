@@ -63,6 +63,12 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   first if wanted), suspend or resume any of them, and force or reset a HelmRelease that gave up.
   Like Argo CD, Ichor writes the annotations and `spec.suspend` the `flux` CLI does, with the
   admin kubeconfig: nothing to install in the cluster.
+- **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
+  rollbacks…) is kept 90 days on the phone, encrypted, with its outcome. Optionally
+  (Settings → Privacy, off by default) each Kubernetes object the app changes also gets a
+  Kubernetes Event, reason `IchorAction`, so the cluster's own history shows what the phone
+  did (`kubectl get events`, the Argo CD timeline); node reboots and Talos changes have no
+  object to attach it to and send nothing.
 - **Network policies:** every NetworkPolicy and, with Cilium, CiliumNetworkPolicy and
   CiliumClusterwideNetworkPolicy, with Calico its NetworkPolicy and GlobalNetworkPolicy
   (selectors in Calico's own language, Allow/Deny/Pass/Log rules, read from its CRDs or its

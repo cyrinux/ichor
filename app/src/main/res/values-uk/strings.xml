@@ -1469,6 +1469,8 @@
     <string name="ai_disclaimer">Відповіді ШІ можуть бути хибними. Перевіряйте команду перед виконанням, особливо якщо вона скидає вузол або змінює etcd.</string>
     <string name="ai_health_diagnose">Діагностувати за допомогою ШІ</string>
     <string name="demo_try">Спробувати демо</string>
+    <string name="demo_talos">Кластер Talos</string>
+    <string name="demo_kube">Кластер Kubernetes (EKS)</string>
     <string name="demo_notice">Демонстраційний кластер · Приклад даних. Зміни кластера недоступні. Видаліть демо в розділі Керування кластерами після завершення.</string>
     <string name="overview_discovered_nodes_hint">Торкніться, щоб додати їх до talosconfig.</string>
     <string name="discover_nodes_title">Додати знайдені вузли</string>
@@ -1598,6 +1600,8 @@
     <string name="settings_remote_icons_desc">Близько 250 поширених застосунків мають вбудовані значки. Якщо увімкнено, значки інших розпізнаних застосунків завантажуються з jsDelivr (Dashboard Icons). Надсилається лише публічна назва значка, ніколи — назви ваших образів чи дані кластера. Також завантажуються значки, на які застосунок Argo CD посилається в анотації ichor.levis.name/icon.</string>
     <string name="settings_offline_cache">Зберігати останній відомий стан</string>
     <string name="settings_offline_cache_desc">Зберігає на цьому телефоні в зашифрованому вигляді останні дані, отримані від кожного кластера, щоб показувати їх, коли кластер недосяжний. Зберігаються 24 години, ніколи не потрапляють у резервні копії.</string>
+    <string name="settings_audit_events">Записувати дії в кластері</string>
+    <string name="settings_audit_events_desc">Також записує Kubernetes Event (причина IchorAction) на кожен об’єкт, який змінює застосунок, щоб історія самого кластера показувала, що зробив телефон: kubectl get events, хронології Argo CD чи Lens. Лише для об’єктів Kubernetes: перезавантаження вузлів і зміни Talos нічого не надсилають. За можливості, ніколи не блокує дію.</string>
     <string name="about_icon_credits">Значки застосунків: Dashboard Icons (Apache 2.0) і selfh.st/icons (CC BY 4.0). Назви й логотипи застосунків є торговими марками їхніх власників.</string>
     <string name="apps_category_system">Система</string>
     <string name="apps_category_networking">Мережа</string>

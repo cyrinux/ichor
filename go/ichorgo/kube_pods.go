@@ -278,7 +278,7 @@ func KubeDeletePod(configYAML, contextName, kubeServer, namespace, name string) 
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
-	defer recordAction(&err, configYAML, contextName, auditAction{Action: "delete-pod", Namespace: namespace, Object: "Pod/" + name})
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "delete-pod", Namespace: namespace, Object: "Pod/" + name})
 
 	if err := validateKubeName("pod", namespace, name); err != nil {
 		return err

@@ -1368,6 +1368,8 @@
     <string name="ai_disclaimer">Le risposte dell’IA possono essere sbagliate. Controlla un comando prima di eseguirlo, soprattutto se reimposta un nodo o modifica etcd.</string>
     <string name="ai_health_diagnose">Diagnostica con l’IA</string>
     <string name="demo_try">Prova la demo</string>
+    <string name="demo_talos">Cluster Talos</string>
+    <string name="demo_kube">Cluster Kubernetes (EKS)</string>
     <string name="demo_notice">Cluster dimostrativo · Dati di esempio. Le modifiche al cluster non sono disponibili. Rimuovi la demo da Gestisci cluster al termine.</string>
     <string name="overview_discovered_nodes_hint">Tocca per aggiungerli al talosconfig.</string>
     <string name="discover_nodes_title">Aggiungi i nodi rilevati</string>
@@ -1490,6 +1492,8 @@
     <string name="settings_remote_icons_desc">Circa 250 app comuni hanno l’icona inclusa. Se attivo, le icone delle altre app riconosciute vengono scaricate da jsDelivr (Dashboard Icons). Viene inviato solo il nome pubblico dell’icona, mai i nomi delle tue immagini o i dettagli del cluster. Vengono scaricate anche le icone che un’app Argo CD collega nella sua annotazione ichor.levis.name/icon.</string>
     <string name="settings_offline_cache">Conserva l\'ultimo stato noto</string>
     <string name="settings_offline_cache_desc">Salva su questo telefono, cifrati, gli ultimi dati ricevuti da ogni cluster, per mostrarli anche quando il cluster è irraggiungibile. Conservati 24 ore e mai inclusi nei backup.</string>
+    <string name="settings_audit_events">Registrare le azioni nel cluster</string>
+    <string name="settings_audit_events_desc">Scrive anche un Event Kubernetes (motivo IchorAction) su ogni oggetto che l’app modifica, così la cronologia del cluster stesso mostra cosa ha fatto il telefono: kubectl get events, le timeline di Argo CD o Lens. Solo per gli oggetti Kubernetes: i riavvii dei nodi e le modifiche Talos non inviano nulla. Best effort, non blocca mai un’azione.</string>
     <string name="about_icon_credits">Icone delle app: Dashboard Icons (Apache 2.0) e selfh.st/icons (CC BY 4.0). I nomi e i loghi delle app sono marchi dei rispettivi proprietari.</string>
     <string name="apps_category_system">Sistema</string>
     <string name="apps_category_networking">Rete</string>

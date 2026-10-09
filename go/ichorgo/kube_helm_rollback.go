@@ -149,7 +149,7 @@ func KubeHelmRollback(configYAML, contextName, kubeServer, namespace, name strin
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
-	defer recordAction(&err, configYAML, contextName, auditAction{Action: "helm-rollback", Namespace: namespace, Object: "HelmRelease/" + name, Params: fmt.Sprintf("revision=%d", revision)})
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "helm-rollback", Namespace: namespace, Object: "HelmRelease/" + name, Params: fmt.Sprintf("revision=%d", revision)})
 
 	if err := validateHelmRollback(namespace, name, revision); err != nil {
 		return err

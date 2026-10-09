@@ -61,7 +61,7 @@ func StartEvents(configYAML, contextName, nodes string, tail int, listener Event
 }
 
 func runEvents(ctx context.Context, configYAML, contextName, nodes string, tail int, listener EventListener) string {
-	if isDemoContext(configYAML, contextName) {
+	if isTalosDemoContext(configYAML, contextName) {
 		targets := demoNodes()
 		selected := func(node string) bool {
 			return strings.TrimSpace(nodes) == "" || slices.Contains(splitCSV(nodes), node)

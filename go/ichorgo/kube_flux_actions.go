@@ -70,7 +70,7 @@ func KubeFluxAction(configYAML, contextName, kubeServer, kind, namespace, name, 
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
-	defer recordAction(&err, configYAML, contextName, auditAction{Action: "flux-" + action, Namespace: namespace, Object: kind + "/" + name})
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "flux-" + action, Namespace: namespace, Object: kind + "/" + name})
 
 	if !slices.Contains(fluxActions, action) {
 		return fmt.Errorf("unsupported Flux action %q", action)

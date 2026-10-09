@@ -45,7 +45,7 @@ func KubeCertManagerRenew(configYAML, contextName, kubeServer, namespace, name s
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
-	defer recordAction(&err, configYAML, contextName, auditAction{Action: "cert-renew", Namespace: namespace, Object: "Certificate/" + name})
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "cert-renew", Namespace: namespace, Object: "Certificate/" + name})
 
 	if err := validateKubeName("certificate", namespace, name); err != nil {
 		return err

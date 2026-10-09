@@ -1367,6 +1367,8 @@
     <string name="ai_disclaimer">AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd.</string>
     <string name="ai_health_diagnose">Diagnose with AI</string>
     <string name="demo_try">Try demo</string>
+    <string name="demo_talos">Talos cluster</string>
+    <string name="demo_kube">Kubernetes cluster (EKS)</string>
     <string name="demo_notice">Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.</string>
     <string name="overview_discovered_nodes_hint">Tap to add them to the talosconfig.</string>
     <string name="discover_nodes_title">Add discovered nodes</string>
@@ -1488,6 +1490,8 @@
     <string name="settings_remote_icons_desc">About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details. Icons an Argo CD app links in its ichor.levis.name/icon annotation are downloaded too.</string>
     <string name="settings_offline_cache">Keep last known state</string>
     <string name="settings_offline_cache_desc">Save the last data fetched from each cluster on this phone, encrypted, so it still shows when the cluster can\'t be reached. Kept for 24 hours and never backed up.</string>
+    <string name="settings_audit_events">Record actions in the cluster</string>
+    <string name="settings_audit_events_desc">Also write a Kubernetes Event (reason IchorAction) on each object the app changes, so the cluster’s own history shows what the phone did: kubectl get events, the Argo CD or Lens timelines. Only for Kubernetes objects: node reboots and Talos changes send nothing. Best effort, never blocks an action.</string>
     <string name="about_icon_credits">App icons: Dashboard Icons (Apache 2.0) and selfh.st/icons (CC BY 4.0). App names and logos are trademarks of their owners.</string>
     <string name="apps_category_system">System</string>
     <string name="apps_category_networking">Networking</string>
