@@ -41,6 +41,11 @@ enum PrivacyKeys {
     static let words = "privacyMaskWords"
 }
 
+/// UserDefaults key of the Kubernetes Events setting (TalosClient.setAuditEvents).
+enum AuditEventKeys {
+    static let enabled = "auditEvents"
+}
+
 /// Swift face of the gomobile framework. Go calls block, so they run off the main actor.
 /// Signatures come from the generated Ichorgo.objc.h (C functions with NSError**).
 struct TalosClient: Sendable {
@@ -145,6 +150,15 @@ struct TalosClient: Sendable {
     static func applyStoredPrivacyMask() {
         let defaults = UserDefaults.standard
         setPrivacyMask(enabled: defaults.bool(forKey: PrivacyKeys.enabled), extraWords: defaults.string(forKey: PrivacyKeys.words) ?? "")
+    }
+
+    /// Also writes a Kubernetes Event (reason IchorAction) on each object the app changes.
+    static func setAuditEvents(_ enabled: Bool) {
+        IchorgoSetAuditEvents(enabled)
+    }
+
+    static func applyStoredAuditEvents() {
+        setAuditEvents(UserDefaults.standard.bool(forKey: AuditEventKeys.enabled))
     }
 
     func driftSnapshot() async throws -> String {

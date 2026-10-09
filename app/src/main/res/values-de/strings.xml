@@ -1484,6 +1484,8 @@
     <string name="settings_remote_icons_desc">Etwa 250 gängige Apps haben ein mitgeliefertes Symbol. Wenn aktiviert, werden die Symbole weiterer erkannter Apps von jsDelivr (Dashboard Icons) geladen. Gesendet wird nur der öffentliche Symbolname, nie deine Image-Namen oder Cluster-Details. Auch Symbole, die eine Argo-CD-App in ihrer Annotation ichor.levis.name/icon verlinkt, werden geladen.</string>
     <string name="settings_offline_cache">Letzten bekannten Zustand behalten</string>
     <string name="settings_offline_cache_desc">Speichert die zuletzt abgerufenen Daten jedes Clusters verschlüsselt auf diesem Telefon, damit sie auch angezeigt werden, wenn der Cluster nicht erreichbar ist. 24 Stunden aufbewahrt, nie gesichert.</string>
+    <string name="settings_audit_events">Aktionen im Cluster festhalten</string>
+    <string name="settings_audit_events_desc">Schreibt zusätzlich ein Kubernetes-Event (Grund IchorAction) auf jedes Objekt, das die App ändert, damit die Historie des Clusters selbst zeigt, was das Telefon getan hat: kubectl get events, die Zeitleisten von Argo CD oder Lens. Nur für Kubernetes-Objekte: Node-Neustarts und Talos-Änderungen senden nichts. Best effort, blockiert nie eine Aktion.</string>
     <string name="about_icon_credits">App-Symbole: Dashboard Icons (Apache 2.0) und selfh.st/icons (CC BY 4.0). App-Namen und Logos sind Marken ihrer Inhaber.</string>
     <string name="apps_category_system">System</string>
     <string name="apps_category_networking">Netzwerk</string>

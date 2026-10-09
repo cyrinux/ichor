@@ -147,7 +147,7 @@ func KubeGarageRepairBlocks(configYAML, contextName, kubeServer, namespace, pod 
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, pod = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(pod))
 
-	defer recordAction(&err, configYAML, contextName, auditAction{Action: "garage-repair-blocks", Namespace: namespace, Object: "Pod/" + pod})
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "garage-repair-blocks", Namespace: namespace, Object: "Pod/" + pod})
 
 	if err := validateKubeName("pod", namespace, pod); err != nil {
 		return "", err
@@ -174,7 +174,7 @@ func KubeGarageSetTranquility(configYAML, contextName, kubeServer, namespace, po
 	namespace, pod = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(pod))
 	garageNode = strings.TrimSpace(garageNode)
 
-	defer recordAction(&err, configYAML, contextName, auditAction{Action: "garage-tranquility", Namespace: namespace, Object: "Pod/" + pod, Params: fmt.Sprintf("node=%s tranquility=%d", garageNode, value)})
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "garage-tranquility", Namespace: namespace, Object: "Pod/" + pod, Params: fmt.Sprintf("node=%s tranquility=%d", garageNode, value)})
 
 	if err := validateKubeName("pod", namespace, pod); err != nil {
 		return err

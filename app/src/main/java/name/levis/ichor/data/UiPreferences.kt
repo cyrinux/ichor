@@ -76,6 +76,10 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _remoteAppIcons = MutableStateFlow(prefs.getBoolean(KEY_REMOTE_APP_ICONS, false))
     val remoteAppIcons: StateFlow<Boolean> = _remoteAppIcons.asStateFlow()
 
+    /** Also writes a Kubernetes Event (IchorAction) on each object the app changes. Off by default. */
+    private val _auditEvents = MutableStateFlow(prefs.getBoolean(KEY_AUDIT_EVENTS, false))
+    val auditEvents: StateFlow<Boolean> = _auditEvents.asStateFlow()
+
     /**
      * Keeps the last results of each cluster on disk, encrypted, to show them when it cannot
      * be reached. Off by default: otherwise cluster data never leaves memory.
@@ -134,6 +138,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
     fun setRemoteAppIcons(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_REMOTE_APP_ICONS, enabled).apply()
         _remoteAppIcons.value = enabled
+    }
+
+    fun setAuditEvents(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_AUDIT_EVENTS, enabled).apply()
+        _auditEvents.value = enabled
     }
 
     fun setOfflineCache(enabled: Boolean) {
@@ -203,6 +212,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_PRIVACY_WORDS = "privacy_mask_words"
         private const val KEY_LIVE_CLUSTER_STATS = "live_cluster_stats"
         private const val KEY_REMOTE_APP_ICONS = "remote_app_icons"
+        private const val KEY_AUDIT_EVENTS = "audit_events"
         private const val KEY_OFFLINE_CACHE = "offline_cache"
         private const val KEY_OVERVIEW_LAYOUT = "overview_layout"
         private const val KEY_NODES_EXPANDED = "overview_nodes_expanded"

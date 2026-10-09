@@ -1492,6 +1492,8 @@
     <string name="settings_remote_icons_desc">Environ 250 applications courantes ont leur icône intégrée. Activé, les icônes des autres applications reconnues sont téléchargées depuis jsDelivr (Dashboard Icons). Seul le nom public de l’icône est envoyé, jamais vos noms d’images ni les détails du cluster. Les icônes qu’une app Argo CD lie dans son annotation ichor.levis.name/icon sont aussi téléchargées.</string>
     <string name="settings_offline_cache">Garder le dernier état connu</string>
     <string name="settings_offline_cache_desc">Enregistre sur ce téléphone, chiffrées, les dernières données reçues de chaque cluster, pour les afficher encore quand il est injoignable. Conservées 24 heures, jamais sauvegardées.</string>
+    <string name="settings_audit_events">Consigner les actions dans le cluster</string>
+    <string name="settings_audit_events_desc">Écrit aussi un Event Kubernetes (raison IchorAction) sur chaque objet modifié par l’app, pour que l’historique du cluster montre ce que le téléphone a fait : kubectl get events, les chronologies d’Argo CD ou de Lens. Seulement pour les objets Kubernetes : les redémarrages de nœuds et les changements Talos n’envoient rien. Au mieux, ne bloque jamais une action.</string>
     <string name="about_icon_credits">Icônes d’applications : Dashboard Icons (Apache 2.0) et selfh.st/icons (CC BY 4.0). Les noms et logos des applications sont des marques de leurs propriétaires.</string>
     <string name="apps_category_system">Système</string>
     <string name="apps_category_networking">Réseau</string>

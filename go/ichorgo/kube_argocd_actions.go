@@ -70,7 +70,7 @@ func KubeArgoAction(configYAML, contextName, kubeServer, namespace, name, action
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
-	defer recordAction(&err, configYAML, contextName, auditAction{Action: "argo-" + action, Namespace: namespace, Object: "Application/" + name, Params: strings.TrimSpace(optionsJSON)})
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "argo-" + action, Namespace: namespace, Object: "Application/" + name, Params: strings.TrimSpace(optionsJSON)})
 
 	if !slices.Contains(argoActions, action) {
 		return fmt.Errorf("unsupported Argo CD action %q", action)

@@ -393,6 +393,12 @@ class TalosApp : Application() {
 
     private fun applyPrivacyMask(mask: PrivacyMask) = Ichorgo.setPrivacyMask(mask.enabled, mask.words)
 
+    /** Turns the Kubernetes Events on changed objects on or off, in Go and in the saved settings. */
+    fun setAuditEvents(enabled: Boolean) {
+        uiPreferences.setAuditEvents(enabled)
+        Ichorgo.setAuditEvents(enabled)
+    }
+
     /**
      * The key the Go core encrypts what it remembers with, created once and kept encrypted by
      * a Keystore key ([SecureStore]). One that no longer decrypts is replaced: what was sealed
@@ -444,6 +450,7 @@ class TalosApp : Application() {
         // Before any Go call: the monitor worker and the widget run in this process too.
         Ichorgo.setAuthStore(kubeAuthStore)
         applyPrivacyMask(uiPreferences.privacyMask.value)
+        Ichorgo.setAuditEvents(uiPreferences.auditEvents.value)
         // Where Go remembers node names, so a node that is down still shows its hostname.
         Ichorgo.setDataDir(noBackupFilesDir.path, coreDataKey() ?: ByteArray(0))
         launchSync()
