@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
+import name.levis.ichor.model.KubeChange
 import name.levis.ichor.model.ApiHealthReport
 import name.levis.ichor.model.CheckupReport
 import name.levis.ichor.model.KubeTopNodes
@@ -123,6 +124,16 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
     fun nodePodsWatch(kubeNode: String, phase: PodPhaseFilter): Flow<StreamItem<KubeWatchEvent<KubePod>>> =
         kubeWatchFlow(go::kubeTarget, KubePod.serializer(), { TalosJson.decodeFromString(KubePodPage.serializer(), it).pods }) { cfg, ctx, server, listener ->
             Ichorgo.startKubeNodePodsWatch(cfg, ctx, server, kubeNode, phase.query, listener)
+        }
+
+    /**
+     * A signal each time one of [kinds] changes in [namespace] (null: every namespace), at most
+     * every 2 s and never for the lists read at the start, until the collector cancels or the
+     * watch ends: for the lists that cannot be merged row by row, read again on each signal.
+     */
+    fun changeWatch(namespace: String?, kinds: List<String>): Flow<StreamItem<KubeChange>> =
+        kubeLiveFlow(go::kubeTarget, KubeChange.serializer()) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeChangeWatch(cfg, ctx, server, namespace.orEmpty(), kinds.joinToString(","), listener)
         }
 
     /**

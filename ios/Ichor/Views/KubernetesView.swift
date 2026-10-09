@@ -289,6 +289,7 @@ private struct WorkloadsList: View {
     @Binding var focus: String?
 
     @Environment(AppModel.self) private var model
+    @Environment(\.scenePhase) private var scenePhase
     @State private var confirm: KubeWorkload?
     @State private var restarting: Set<String> = []
     @State private var resultMessage: String?
@@ -326,7 +327,32 @@ private struct WorkloadsList: View {
             actions = workload
             self.focus = nil
         }
+        .task(id: ChangeTrigger(settles: list.settles, active: scenePhase == .active, namespace: control.scope.namespace)) {
+            await followChanges()
+        }
         .messageAlert($resultMessage)
+    }
+
+    private struct ChangeTrigger: Hashable {
+        let settles: Int
+        let active: Bool
+        let namespace: String?
+    }
+
+    /// Reads the list again each time a workload of the scope changes, while on screen and the
+    /// app active: the Go core signals at most every 2 s, never for the lists it reads at the
+    /// start. Restarted after each load (the refresh it causes too); a watch that ends is
+    /// followed again after a while. Pull-to-refresh stays.
+    private func followChanges() async {
+        guard scenePhase == .active, list.settles > 0 else { return }
+        let namespace = control.scope.namespace
+        while !Task.isCancelled {
+            guard let client = model.client else { return }
+            for await event in client.changeWatch(namespace: namespace, kinds: KubeChange.workloadKinds) {
+                if case .update = event { await list.refresh(model: model) }
+            }
+            try? await Task.sleep(for: .seconds(kubeWatchRetrySeconds))
+        }
     }
 
     private func load() async {
