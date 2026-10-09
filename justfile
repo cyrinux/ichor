@@ -118,6 +118,11 @@ build-play:
 check:
     ./build.sh check
 
+# Go functions nothing reaches: neither the Go tests nor the Android and iOS apps (their
+# gomobile calls are found in app/ and ios/ and count as roots). Fails on any.
+deadcode:
+    python3 scripts/deadcode.py
+
 # Every UI string translated (fr, es, uk, de, it) with matching placeholders, Android and iOS,
 # and every website string in docs-i18n/.
 i18n-check:
