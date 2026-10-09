@@ -15,6 +15,7 @@ import name.levis.ichor.model.DeletePropagation
 import name.levis.ichor.model.KUBE_PAGE_SIZE
 import name.levis.ichor.model.KubeDeletePreview
 import name.levis.ichor.model.KubeEditPreview
+import name.levis.ichor.model.KubeExplain
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubeObjectSummary
 import name.levis.ichor.model.KubePage
@@ -73,6 +74,12 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     /** Saves [edited] as [ref]; refused when the object changed since it was read. */
     suspend fun update(ref: KubeObjectRef, edited: String) = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeObjectUpdate(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, edited)
+    }
+
+    /** The schema help for [fieldPath] ("spec.template", "" for the kind) of [ref]'s kind, from OpenAPI v3. */
+    suspend fun explain(ref: KubeObjectRef, fieldPath: String): KubeExplain = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubeExplain(cfg, ctx, server, ref.group, ref.version, ref.kind, fieldPath)
+        TalosJson.decodeFromString(KubeExplain.serializer(), json)
     }
 
     /** What deleting [ref] would do: protection, finalizers, the objects it owns. Read-only. */

@@ -75,7 +75,6 @@ import name.levis.ichor.ui.components.rememberKubeCanDenial
 import name.levis.ichor.ui.components.shareText
 import name.levis.ichor.ui.diff.DiffLines
 import name.levis.ichor.ui.factory
-import name.levis.ichor.ui.machineconfig.ConfigYamlEditor
 
 /**
  * One object of any kind ([ref]): first its summary (health, conditions, owners up the chain
@@ -107,6 +106,7 @@ fun KubeObjectScreen(
     val revealed by vm.revealed.collectAsStateWithLifecycle()
     val edit by vm.edit.collectAsStateWithLifecycle()
     val deletion by vm.delete.collectAsStateWithLifecycle()
+    val help by vm.help.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
         if (state == UiState.Loading) vm.refresh()
         if (summary == UiState.Loading) vm.refreshSummary()
@@ -225,7 +225,15 @@ fun KubeObjectScreen(
                 current != null -> {
                     MutedText(stringResource(R.string.kb_edit_hint), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                     KubeDenialNote(saveDenial, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-                    ConfigYamlEditor(current.draft, null, vm::changeDraft)
+                    KubeYamlEditor(
+                        draft = current.draft,
+                        kind = ref.kind,
+                        help = help,
+                        onChange = vm::changeDraft,
+                        onOpenHelp = vm::openHelp,
+                        onRetryHelp = vm::retryHelp,
+                        onCloseHelp = vm::closeHelp,
+                    )
                 }
                 else -> {
                     PrimaryTabRow(selectedTabIndex = tab) {

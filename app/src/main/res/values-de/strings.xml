@@ -3187,6 +3187,15 @@
     <string name="kb_edit_hint">metadata.resourceVersion behalten: Eine zwischenzeitliche Änderung wird abgelehnt, nicht überschrieben.</string>
     <string name="kb_edit_reveal_first">Zuerst die Secret-Werte anzeigen: Verborgene Werte würden so gespeichert, wie sie dastehen.</string>
     <string name="kb_review">Prüfen</string>
+    <string name="kb_explain_field">Feld erklären</string>
+    <string name="kb_add_field">Feld hinzufügen</string>
+    <string name="kb_schema_add_title">Zu %1$s hinzufügen</string>
+    <string name="kb_schema_required">erforderlich</string>
+    <string name="kb_schema_values">Erlaubte Werte</string>
+    <string name="kb_schema_fields">Felder</string>
+    <string name="kb_schema_no_fields">Hier gibt es nichts hinzuzufügen: Dieses Feld enthält einen Wert, keine weiteren Felder.</string>
+    <string name="kb_schema_add_hint">Tippe auf ein Feld, um es am Cursor einzufügen, erforderliche zuerst.</string>
+    <string name="kb_schema_unavailable">Schema-Hilfe nicht verfügbar</string>
     <string name="kb_review_loading">Der API-Server wird gefragt, was sich ändern würde…</string>
     <string name="kb_no_changes">Keine Änderungen zu speichern.</string>
     <string name="kb_back_to_editor">Zurück zum Editor</string>

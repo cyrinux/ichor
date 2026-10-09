@@ -3395,6 +3395,15 @@
     <string name="kb_edit_hint">Збережіть metadata.resourceVersion: зміну, зроблену тим часом, буде відхилено, а не перезаписано.</string>
     <string name="kb_edit_reveal_first">Спершу покажіть значення секрету: приховані значення буде збережено як є.</string>
     <string name="kb_review">Переглянути</string>
+    <string name="kb_explain_field">Пояснити поле</string>
+    <string name="kb_add_field">Додати поле</string>
+    <string name="kb_schema_add_title">Додати до %1$s</string>
+    <string name="kb_schema_required">обовʼязкове</string>
+    <string name="kb_schema_values">Допустимі значення</string>
+    <string name="kb_schema_fields">Поля</string>
+    <string name="kb_schema_no_fields">Тут нічого додавати: це поле містить значення, а не інші поля.</string>
+    <string name="kb_schema_add_hint">Торкніться поля, щоб додати його в позиції курсора, спершу обовʼязкові.</string>
+    <string name="kb_schema_unavailable">Довідка схеми недоступна</string>
     <string name="kb_review_loading">Запит до API-сервера, що зміниться…</string>
     <string name="kb_no_changes">Немає змін для збереження.</string>
     <string name="kb_back_to_editor">Назад до редактора</string>
