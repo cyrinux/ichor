@@ -41,6 +41,14 @@ extension TalosClient {
         }
     }
 
+    /// A Secret or ConfigMap key by key, with the pods using it. A Secret's value comes only for
+    /// `key` ("" for none; refused in screenshot mode). Never cached.
+    func configData(_ resource: KubeAPIResource, namespace: String, name: String, key: String) async throws -> KubeConfigData {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeConfigData(config, context, kubeServer, resource.configDataKind, namespace, name, key, $0)
+        }
+    }
+
     /// One object summed up: conditions, owners and managers, metadata, spec highlights, events.
     func objectSummary(_ resource: KubeAPIResource, namespace: String, name: String) async throws -> KubeObjectSummary {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in

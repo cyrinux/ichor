@@ -13,7 +13,9 @@ import name.levis.ichor.model.HelmReleaseList
 import name.levis.ichor.model.HelmRollbackPlan
 import name.levis.ichor.model.DeletePropagation
 import name.levis.ichor.model.KUBE_PAGE_SIZE
+import name.levis.ichor.model.KubeConfigData
 import name.levis.ichor.model.KubeDeletePreview
+import name.levis.ichor.model.configDataKind
 import name.levis.ichor.model.KubeEditPreview
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubeObjectSummary
@@ -56,6 +58,15 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     /** [ref] as YAML; a Secret's values only when [reveal]. Never cached: it may hold secrets. */
     suspend fun objectYaml(ref: KubeObjectRef, reveal: Boolean): String = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeObjectYAML(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, reveal)
+    }
+
+    /**
+     * A Secret or ConfigMap ([ref]) key by key, with the pods using it. A Secret's value comes
+     * only for [revealKey] ("" for none; refused in screenshot mode). Never cached.
+     */
+    suspend fun configData(ref: KubeObjectRef, revealKey: String = ""): KubeConfigData = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubeConfigData(cfg, ctx, server, ref.configDataKind, ref.namespace, ref.name, revealKey)
+        TalosJson.decodeFromString(KubeConfigData.serializer(), json)
     }
 
     /** [ref] summed up: conditions, owners and managers, metadata, spec highlights and events. */
