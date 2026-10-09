@@ -228,6 +228,12 @@ data class KubeObjectRef(
             KubeObjectRef("", "v1", "persistentvolumeclaims", "PersistentVolumeClaim", namespace, name, editable = true)
 
         fun service(namespace: String, name: String) = KubeObjectRef("", "v1", "services", "Service", namespace, name, editable = true)
+
+        /** A Job scales its parallelism, as the browser offers it. */
+        fun job(namespace: String, name: String) =
+            KubeObjectRef("batch", "v1", "jobs", "Job", namespace, name, editable = true, scalable = true)
+
+        fun cronJob(namespace: String, name: String) = KubeObjectRef("batch", "v1", "cronjobs", "CronJob", namespace, name, editable = true)
     }
 }
 
