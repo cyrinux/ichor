@@ -20,9 +20,13 @@ import name.levis.ichor.ui.components.shareText
 import name.levis.ichorgo.Ichorgo
 
 /** The link to [target] on the cluster on screen; null when there is none to name. */
-fun TalosApp.shareLinkOf(target: ShareTarget): String? {
-    val cluster = configRepository.config.value?.activeSummary?.clusterId?.takeIf { it.isNotBlank() } ?: return null
-    return runCatching { Ichorgo.buildShareLink(TalosJson.encodeToString(ShareTarget.serializer(), target.copy(cluster = cluster))) }.getOrNull()
+fun TalosApp.shareLinkOf(target: ShareTarget): String? =
+    configRepository.config.value?.activeSummary?.clusterId?.let { shareLinkFor(target, it) }
+
+/** The link to [target] on the cluster [clusterId]; null when it names none or the target is invalid. */
+fun shareLinkFor(target: ShareTarget, clusterId: String): String? {
+    if (clusterId.isBlank()) return null
+    return runCatching { Ichorgo.buildShareLink(TalosJson.encodeToString(ShareTarget.serializer(), target.copy(cluster = clusterId))) }.getOrNull()
 }
 
 /** The screen an ichor://open or https share link names; null for anything else or an invalid one. */

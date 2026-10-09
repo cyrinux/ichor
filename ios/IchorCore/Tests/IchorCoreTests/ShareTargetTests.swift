@@ -60,4 +60,40 @@ final class ShareTargetTests: XCTestCase {
                        KubeFocus(tab: .cronJobs, id: "ops/backup", namespace: "ops", name: "backup"))
         XCTAssertNil(ShareTarget.argoApp(namespace: "argocd", name: "guestbook").kubeFocus)
     }
+
+    func testDataTargetNamesItsTabByCatalogID() throws {
+        let json = String(decoding: try JSONEncoder().encode(ShareTarget.data(.cnpg)), as: UTF8.self)
+        XCTAssertTrue(json.contains(#""kind":"cloudnative-pg""#))
+        XCTAssertEqual(try TalosJSON.decode(ShareTarget.self, from: json).dataServiceKind, .cnpg)
+        // A system this app does not know, or none: the first tab.
+        XCTAssertNil(ShareTarget(target: .data, kind: "newdb").dataServiceKind)
+        XCTAssertEqual(ShareTarget.data(nil), ShareTarget(target: .data))
+        XCTAssertEqual(try TalosJSON.decode(ShareTarget.self, from: #"{"target":"checkup"}"#), .screen(.checkup))
+    }
+
+    func testDataAlertSystemsMapToCatalogIDs() {
+        let systems = ["longhorn", "garage", "cnpg", "dragonfly", "mariadb", "percona", "certmanager", "velero", "ceph", "castai"]
+        XCTAssertEqual(systems.map { DataServiceKind(alertKey: "\($0)|x")?.catalogID },
+                       ["longhorn", "garage", "cloudnative-pg", "dragonfly", "mariadb", "percona-xtradb", "cert-manager",
+                        "velero", "rook", "castai"])
+        XCTAssertNil(DataServiceKind(alertKey: "other|x"))
+    }
+
+    func testAlertsOpenWhatTheyAreAbout() {
+        let talos = ClusterSnapshot(context: "lab", takenAt: Date(), nodes: ["10.0.0.2": NodeState(hostname: "cp-1", health: .notReady)])
+        var kube = talos
+        kube.kube = true
+        func target(_ key: String, _ snapshot: ClusterSnapshot = talos) -> ShareTarget? { .forAlert(key: key, snapshot: snapshot) }
+        XCTAssertEqual(target("node:10.0.0.2"), .node(address: "10.0.0.2", hostname: "cp-1", tab: ""))
+        XCTAssertEqual(target("etcd:cp-1:NOSPACE"), .screen(.etcd))
+        XCTAssertNil(target("cert"))
+        XCTAssertEqual(target("cert", kube), .screen(.cluster))
+        XCTAssertEqual(target("data:velero|BackupStorageLocation/default"), .data(.velero))
+        XCTAssertEqual(target("data:other|x"), .data(nil))
+        XCTAssertEqual(target("gitops:argocd|argocd/guestbook"), .argoApp(namespace: "argocd", name: "guestbook"))
+        XCTAssertEqual(target("gitops:flux|HelmRelease flux-system/podinfo"),
+                       .fluxApp(kind: "HelmRelease", namespace: "flux-system", name: "podinfo"))
+        XCTAssertEqual(target("checkup:pods|CrashLoopBackOff|db/postgres-0"), .screen(.checkup))
+        XCTAssertNil(target("other"))
+    }
 }

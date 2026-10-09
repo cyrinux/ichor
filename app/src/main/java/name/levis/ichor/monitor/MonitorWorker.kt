@@ -102,7 +102,8 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
 
         if (store.alertsEnabled.value) {
             val hide = app.appLock.enabled.value
-            evaluation.alerts.forEach { postAlert(applicationContext, it, hideOnLockScreen = hide) }
+            val clusterId = stored.activeSummary?.clusterId
+            evaluation.alerts.forEach { postAlert(applicationContext, it, hideOnLockScreen = hide, clusterId = clusterId) }
         }
         ClusterWidget().updateAll(applicationContext)
         return Result.success()

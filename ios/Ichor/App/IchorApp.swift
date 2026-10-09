@@ -162,6 +162,8 @@ enum Route: Hashable {
     case fluxApp(kind: String, namespace: String, name: String)
     /// Flux Kustomizations, HelmReleases and sources (os:admin); downNodes as for dataServices.
     case flux(downNodes: Set<String>)
+    /// The cluster checkup (a share link; the Kubernetes screens push their own).
+    case checkup
     case health
     case settings
     case importConfig
@@ -244,6 +246,7 @@ struct MainNavigation: View {
                     case .argoApp(let namespace, let name): ArgoAppView(namespace: namespace, name: name, downNodes: [])
                     case .fluxApp(let kind, let namespace, let name): FluxAppView(kind: kind, namespace: namespace, name: name, downNodes: [])
                     case .flux(let downNodes): FluxView(downNodes: downNodes)
+                    case .checkup: CheckupView()
                     case .health: HealthView()
                     case .settings: SettingsView()
                     case .diagnosis(let note): DiagnosisView(initialNote: note)

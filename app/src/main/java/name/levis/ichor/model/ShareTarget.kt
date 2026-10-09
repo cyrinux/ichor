@@ -32,6 +32,8 @@ data class ShareTarget(
         const val WORKLOAD = "workload"
         const val POD = "pod"
         const val CRONJOB = "cronjob"
+        const val DATA = "data"
+        const val CHECKUP = "checkup"
 
         /** The node screen's tabs, by their index there. */
         val NODE_TABS = listOf("services", "resources", "live", "processes", "pods", "cgroups", "kube-pods")
@@ -57,6 +59,9 @@ data class ShareTarget(
         fun pod(namespace: String, name: String) = ShareTarget(target = POD, namespace = namespace, name = name)
 
         fun cronJob(namespace: String, name: String) = ShareTarget(target = CRONJOB, namespace = namespace, name = name)
+
+        /** The data services screen on the tab of [catalogId] (see [DataServiceKind.catalogId]); "" for the first. */
+        fun dataServices(catalogId: String = "") = ShareTarget(target = DATA, kind = catalogId)
     }
 }
 

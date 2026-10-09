@@ -68,6 +68,9 @@ func TestShareLinkRoundTrip(t *testing.T) {
 		{Cluster: c, Target: "workload", Kind: "StatefulSet", Namespace: "db", Name: "postgres"},
 		{Cluster: c, Target: "pod", Namespace: "db", Name: "postgres-0"},
 		{Cluster: c, Target: "cronjob", Namespace: "ops", Name: "backup.nightly"},
+		{Cluster: c, Target: "data", Kind: "cloudnative-pg"},
+		{Cluster: c, Target: "data"},
+		{Cluster: c, Target: "checkup"},
 	}
 
 	for _, want := range targets {
@@ -136,6 +139,9 @@ func TestShareLinkRefusesInvalid(t *testing.T) {
 		base + "t=workload&k=Job&ns=a&n=b",
 		base + "t=flux-app&k=HelmChart&ns=a&n=b",
 		base + "t=flux-app&ns=a&n=b",
+		base + "t=data&k=Longhorn",
+		base + "t=data&k=" + url.QueryEscape("a/b"),
+		base + "t=data&k=" + strings.Repeat("a", 64),
 		base + "t=etcd&pad=" + strings.Repeat("a", shareLinkMaxLen),
 		"ichor://open?v=1&c=abcdefghijklmnop&t=etcd&bad=%zz",
 	}

@@ -67,7 +67,13 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             }
             return
         }
-        // Alert keys are the request identifiers (BackgroundMonitor.post); "cert" is the expiry alert.
+        // The screen the alert is about, on its cluster (BackgroundMonitor.post).
+        if let link = (content.userInfo["link"] as? String).flatMap(URL.init(string:)) {
+            await MainActor.run { NotificationRouter.shared.pendingShareLink = link }
+            return
+        }
+        // Posted by an older version, without a link: alert keys are the request identifiers;
+        // "cert" is the expiry alert.
         if let destination = GitOpsDestination(alertKey: response.notification.request.identifier) {
             await MainActor.run { NotificationRouter.shared.pendingGitOps = destination }
             return
