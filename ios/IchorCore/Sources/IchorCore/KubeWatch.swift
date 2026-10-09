@@ -62,3 +62,26 @@ extension PagedLoad where T: Sendable {
         return replacing(items: items.applying(event, key: key))
     }
 }
+
+/// One event of a browser list's watch (StartKubeWatch on any resource but pods, as Table
+/// rows): the change, and the columns a SYNC carries; nil on a single change, since the watch
+/// sends them with the list only.
+public struct KubeResourceWatchEvent: Equatable, Sendable {
+    public let change: KubeWatchEvent<KubeResourceRow>
+    public let columns: [KubeResourceColumn]?
+
+    public init(change: KubeWatchEvent<KubeResourceRow>, columns: [KubeResourceColumn]? = nil) {
+        self.change = change
+        self.columns = columns
+    }
+
+    /// What the listener got as `eventType` and `json`; nil for an unknown type or JSON the
+    /// models cannot read.
+    public static func decode(_ eventType: String, json: String) -> KubeResourceWatchEvent? {
+        guard eventType == "SYNC" else {
+            return KubeWatchEvent<KubeResourceRow>.decode(eventType, json: json) { _ in [] }.map { KubeResourceWatchEvent(change: $0) }
+        }
+        guard let page = try? TalosJSON.decode(KubeResourcePage.self, from: json) else { return nil }
+        return KubeResourceWatchEvent(change: .sync(page.rows), columns: page.columns)
+    }
+}

@@ -29,6 +29,14 @@ fun <T> kubeWatchFlow(
     item: KSerializer<T>,
     list: (String) -> List<T>,
     start: (yaml: String, context: String, server: String, listener: KubeWatchListener) -> KubeWatchRun,
+): Flow<StreamItem<KubeWatchEvent<T>>> = kubeWatchFlow(target, { TalosJson.decodeFromString(item, it) }, list, start)
+
+/** [kubeWatchFlow] with items decoded by [item] (rows that need what the SYNC carried). */
+fun <T> kubeWatchFlow(
+    target: () -> KubeTarget,
+    item: (String) -> T,
+    list: (String) -> List<T>,
+    start: (yaml: String, context: String, server: String, listener: KubeWatchListener) -> KubeWatchRun,
 ): Flow<StreamItem<KubeWatchEvent<T>>> = callbackFlow {
     val t = target()
     val run = start(
@@ -37,7 +45,7 @@ fun <T> kubeWatchFlow(
         t.server,
         object : KubeWatchListener {
             override fun onEvent(eventType: String, json: String) {
-                KubeWatchEvent.decode(eventType, json, { TalosJson.decodeFromString(item, it) }, list)?.let { trySend(StreamItem.Item(it)) }
+                KubeWatchEvent.decode(eventType, json, item, list)?.let { trySend(StreamItem.Item(it)) }
             }
 
             override fun onDone(errMessage: String) {

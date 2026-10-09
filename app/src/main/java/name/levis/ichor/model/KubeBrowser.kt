@@ -81,10 +81,23 @@ data class ResourcePageJson(
     val remaining: Long = -1,
 ) {
     /** Each row carries the page's columns (one shared list) so it can show itself. */
-    fun toPage(): KubePage<ResourceRow> {
-        val rows = rows.map { ResourceRow(it.name, it.namespace, it.cells, it.created, it.deleting, columns) }
-        return KubePage(rows, continueToken, remaining, complete = continueToken.isEmpty())
+    fun toPage(): KubePage<ResourceRow> =
+        KubePage(rows.map { it.toRow(columns) }, continueToken, remaining, complete = continueToken.isEmpty())
+}
+
+/**
+ * The rows of one Table watch (StartKubeWatch): a SYNC page sets the columns, and each row
+ * after it gets them, since the watch sends them with the list only. One per watch.
+ */
+class ResourceWatchRows {
+    private var columns: List<ResourceColumn> = emptyList()
+
+    fun page(page: ResourcePageJson): List<ResourceRow> {
+        columns = page.columns
+        return page.toPage().items
     }
+
+    fun row(row: ResourceRowJson): ResourceRow = row.toRow(columns)
 }
 
 @Serializable
@@ -95,7 +108,9 @@ data class ResourceRowJson(
     /** Unix seconds. */
     val created: Long = 0,
     val deleting: Boolean = false,
-)
+) {
+    fun toRow(columns: List<ResourceColumn>) = ResourceRow(name, namespace, cells, created, deleting, columns)
+}
 
 /** One object of a resource list, with the Table's [columns] its [cells] follow. */
 data class ResourceRow(

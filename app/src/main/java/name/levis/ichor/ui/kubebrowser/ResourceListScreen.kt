@@ -39,20 +39,26 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.data.KubeRepository
+import name.levis.ichor.data.StreamItem
+import name.levis.ichor.data.watchForever
 import name.levis.ichor.data.isMeteredNetwork
 import name.levis.ichor.model.ApiResource
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.KubeScope
 import name.levis.ichor.model.PagedLoad
 import name.levis.ichor.model.ResourceRow
+import name.levis.ichor.model.applying
 import name.levis.ichor.model.cellTone
 import name.levis.ichor.model.filteredRows
 import name.levis.ichor.model.hasWideColumns
 import name.levis.ichor.model.rowFields
+import name.levis.ichor.ui.PollWhileStarted
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.checkup.ageSince
@@ -87,6 +93,25 @@ class ResourceListViewModel(
 
     override suspend fun page(namespace: String?, token: String): KubePage<ResourceRow> =
         browser.resourcePage(type.group, type.version, type.resource, namespace.takeIf { type.namespaced }, token)
+
+    /**
+     * Keeps the list live while called (the screen is visible), as `SelectedPodsViewModel.follow`
+     * does: the Go core's watch replaces the rows (and the columns) on SYNC, then adds, updates
+     * and removes rows by namespace/name. It starts once a load settled, and over again after
+     * each one. Followed only when a namespace is chosen or the load holds every object, so the
+     * watch never lists more than what was already shown; events never (their own stream).
+     */
+    suspend fun follow() {
+        if (type.resource == "events") return
+        settled.filter { it > 0 }.collectLatest {
+            val namespace = scope.namespace.takeIf { type.namespaced }
+            val load = (state.value as? UiState.Loaded)?.data ?: return@collectLatest
+            if (namespace == null && load.hasMore) return@collectLatest
+            watchForever(start = { browser.resourceWatch(type.group, type.version, type.resource, namespace) }) { item ->
+                if (item is StreamItem.Item) updateLoaded { it.applying(item.value) { row -> row.key } }
+            }
+        }
+    }
 }
 
 /**
@@ -112,6 +137,7 @@ fun ResourceListScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var wide by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(deleted) { if (deleted != 0L) vm.refresh() }
+    PollWhileStarted { vm.follow() }
 
     Scaffold(
         topBar = {
