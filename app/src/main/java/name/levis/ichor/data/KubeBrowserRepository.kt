@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.model.KubeStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -126,6 +127,11 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
      */
     suspend fun delete(ref: KubeObjectRef, propagation: DeletePropagation, resourceVersion: String, force: Boolean) = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeObjectDelete(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, propagation.api, resourceVersion, -1L, force)
+    }
+
+    /** The PersistentVolumeClaims of [namespace] (null for every one), with volume, pods and fill. */
+    suspend fun storage(namespace: String?): KubeStorage = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeStorage.serializer(), Ichorgo.kubeStorage(cfg, ctx, server, namespace.orEmpty()))
     }
 
     /** The latest revision of each Helm release of [namespace] (null for every one). */

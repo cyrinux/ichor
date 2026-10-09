@@ -94,6 +94,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
                 onFlows = { ns, pod -> nav.navigate(Routes.flows(ns, pod)) },
                 onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
                 onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
+                onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
             )
         }
     }

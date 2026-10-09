@@ -97,6 +97,8 @@ class KubeHomeNavigation(
     val onChangelog: () -> Unit,
     val onResources: () -> Unit,
     val onHelm: () -> Unit,
+    /** The PersistentVolumeClaims with their volume, pods and fill. */
+    val onStorage: () -> Unit,
     /** The drain of a node, by its Kubernetes name. */
     val onDrain: (node: String) -> Unit,
     /** The Kubernetes nodes screen of a large cluster, on one filter (null: all). */
