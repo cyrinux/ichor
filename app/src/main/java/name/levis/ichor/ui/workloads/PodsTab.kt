@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.isMeteredNetwork
 import name.levis.ichor.data.podsKey
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.filteredPods
 import name.levis.ichor.model.podNamespaces
@@ -72,25 +72,25 @@ import name.levis.ichor.ui.uiText
 /** Outcome of a pod deletion, shown once. */
 data class DeleteResult(val pod: KubePod, val error: UiText?)
 
-class PodsViewModel(talos: TalosRepository, metered: () -> Boolean) : PagedListViewModel<KubePod>(talos, metered) {
+class PodsViewModel(kube: KubeRepository, metered: () -> Boolean) : PagedListViewModel<KubePod>(kube, metered) {
     override fun key(namespace: String?) = podsKey(namespace)
 
     // The first page as full objects: a small cluster, loaded in one page, keeps its images
     // and containers; the next pages as Table rows, 10-20 times smaller (L9, L10).
-    override suspend fun page(namespace: String?, token: String) = talos.podsPage(namespace, token, table = token.isNotEmpty())
+    override suspend fun page(namespace: String?, token: String) = kube.podsPage(namespace, token, table = token.isNotEmpty())
 
     // Kept rows of Table pages have no images: image search would miss them.
     override fun detailed(items: List<KubePod>) = items.all { it.images.isNotEmpty() }
 
     /** Deletions of its pods; a success shows the pod terminating, and soon its replacement. */
-    val deletions = PodDeletions(viewModelScope, talos) { refresh() }
+    val deletions = PodDeletions(viewModelScope, kube) { refresh() }
 }
 
 /**
  * Pod deletions in [scope] (a ViewModel's): those in flight ([deleting]) and their outcome,
  * shown once ([results]). [onDeleted] runs after a success.
  */
-class PodDeletions(private val scope: CoroutineScope, private val talos: TalosRepository, private val onDeleted: () -> Unit) {
+class PodDeletions(private val scope: CoroutineScope, private val kube: KubeRepository, private val onDeleted: () -> Unit) {
     private val _deleting = MutableStateFlow<Set<String>>(emptySet())
     /** Keys of the pods whose deletion is in flight. */
     val deleting: StateFlow<Set<String>> = _deleting.asStateFlow()
@@ -102,7 +102,7 @@ class PodDeletions(private val scope: CoroutineScope, private val talos: TalosRe
         if (pod.key in _deleting.value) return
         _deleting.update { it + pod.key }
         scope.launch {
-            val outcome = cancellableCatching { talos.deletePod(pod) }
+            val outcome = cancellableCatching { kube.deletePod(pod) }
             _deleting.update { it - pod.key }
             _results.send(DeleteResult(pod, outcome.exceptionOrNull()?.uiText()))
             if (outcome.isSuccess) onDeleted()
@@ -156,7 +156,7 @@ fun PodsTab(
     onQuery: (String) -> Unit,
     modifier: Modifier = Modifier,
     onFlows: ((KubePod) -> Unit)? = null,
-    vm: PodsViewModel = viewModel(factory = factory { PodsViewModel(app.talosRepository) { isMeteredNetwork(app) } }),
+    vm: PodsViewModel = viewModel(factory = factory { PodsViewModel(app.kubeRepository) { isMeteredNetwork(app) } }),
     focusKey: String? = null,
     onFocused: () -> Unit = {},
 ) {

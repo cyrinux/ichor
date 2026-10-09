@@ -54,7 +54,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.POD_LOG_TAIL
@@ -87,7 +87,7 @@ data class PodLogQuery(val container: String = "", val previous: Boolean = false
  * The log of the pod the sheet shows ([open]), through the Kubernetes API; for a pod with
  * several containers, the one picked. One for every pod: [close] drops the text.
  */
-class PodLogViewModel(private val talos: TalosRepository) : ViewModel() {
+class PodLogViewModel(private val kube: KubeRepository) : ViewModel() {
     private var pod: KubePod? = null
 
     private val _query = MutableStateFlow(PodLogQuery())
@@ -116,7 +116,7 @@ class PodLogViewModel(private val talos: TalosRepository) : ViewModel() {
         if (pod.containerNames.isNotEmpty()) return start(pod)
         _state.value = UiState.Loading
         job = viewModelScope.launch {
-            val full = cancellableCatching { talos.pod(pod.namespace, pod.name) }.getOrNull() ?: pod
+            val full = cancellableCatching { kube.pod(pod.namespace, pod.name) }.getOrNull() ?: pod
             this@PodLogViewModel.pod = full
             _detail.value = full
             start(full)
@@ -145,7 +145,7 @@ class PodLogViewModel(private val talos: TalosRepository) : ViewModel() {
         _query.value = query
         _state.value = UiState.Loading
         job = viewModelScope.launch {
-            val outcome = cancellableCatching { talos.podLogs(pod, query.container, query.previous, POD_LOG_TAIL) }
+            val outcome = cancellableCatching { kube.podLogs(pod, query.container, query.previous, POD_LOG_TAIL) }
             val choices = outcome.exceptionOrNull()?.message?.let(::containersToChoose).orEmpty()
             // Several containers the pod list did not name (older core): the API names them.
             if (query.container.isEmpty() && choices.isNotEmpty()) {
@@ -168,7 +168,7 @@ class PodLogViewModel(private val talos: TalosRepository) : ViewModel() {
 fun PodLogSheet(
     pod: KubePod,
     onDismiss: () -> Unit,
-    vm: PodLogViewModel = viewModel(key = "pod-log", factory = factory { PodLogViewModel(app.talosRepository) }),
+    vm: PodLogViewModel = viewModel(key = "pod-log", factory = factory { PodLogViewModel(app.kubeRepository) }),
     followVm: PodLogFollowViewModel = viewModel(key = "pod-log-follow", factory = factory { PodLogFollowViewModel(app.kubeBrowser) }),
 ) {
     val context = LocalContext.current

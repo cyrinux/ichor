@@ -21,7 +21,7 @@ import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.data.MetricsStore
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.MetricsConfig
 import name.levis.ichor.model.PromPanel
 import name.levis.ichor.model.PromResult
@@ -60,7 +60,7 @@ data class MetricsState(
  * cluster and, when it finds one, starts with the built-in panels.
  */
 class MetricsViewModel(
-    private val talos: TalosRepository,
+    private val kube: KubeRepository,
     private val store: MetricsStore,
     private val fingerprint: String,
     /** The message when a query is tried before a source is set. */
@@ -76,7 +76,7 @@ class MetricsViewModel(
         if (_state.value.loaded) return@launch
         try {
             val config = withContext(Dispatchers.IO) { store.read(fingerprint) }
-            val presets = talos.promPresets()
+            val presets = kube.promPresets()
             _state.update { it.copy(loaded = true, config = config, presets = presets) }
             if (config.source == null) discover(autoSelect = true) else refresh()
         } catch (e: CancellationException) {
@@ -90,7 +90,7 @@ class MetricsViewModel(
     fun discover(autoSelect: Boolean = false) = viewModelScope.launch {
         _state.update { it.copy(discovering = true, discoveryError = null) }
         try {
-            val sources = talos.promDiscover()
+            val sources = kube.promDiscover()
             _state.update { it.copy(discovered = sources, discovering = false) }
             val first = sources.firstOrNull()
             if (autoSelect && first != null && _state.value.config.source == null) setSource(first)
@@ -103,7 +103,7 @@ class MetricsViewModel(
 
     /** Checks [source] (Go), saves it and reloads; the first source brings the built-in panels. Null when saved, else why not. */
     suspend fun setSource(source: PromSource): String? = try {
-        val checked = talos.normalizePromSource(source)
+        val checked = kube.normalizePromSource(source)
         val current = _state.value.config
         val panels = current.panels.ifEmpty { _state.value.presets.map { it.copy(id = newId()) } }
         save(current.copy(source = checked, panels = panels))
@@ -117,9 +117,9 @@ class MetricsViewModel(
 
     /** Runs a trivial query against [source]: null when it answers, else why not. */
     suspend fun test(source: PromSource): String? = try {
-        val checked = talos.normalizePromSource(source)
+        val checked = kube.normalizePromSource(source)
         val now = System.currentTimeMillis() / 1000
-        talos.promRange(checked, "vector(1)", now - 60, now)
+        kube.promRange(checked, "vector(1)", now - 60, now)
         null
     } catch (e: CancellationException) {
         throw e
@@ -196,7 +196,7 @@ class MetricsViewModel(
     private suspend fun runQuery(source: PromSource, query: String): Result<PromResult> {
         val end = System.currentTimeMillis() / 1000
         return try {
-            Result.success(talos.promRange(source, query, end - _state.value.range.seconds, end))
+            Result.success(kube.promRange(source, query, end - _state.value.range.seconds, end))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

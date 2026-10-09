@@ -58,7 +58,7 @@ import name.levis.ichor.ui.components.pageContent
 @Composable
 fun DataServicesScreen(initial: DataServiceKind? = null, onBack: () -> Unit) {
     val app = LocalContext.current.applicationContext as TalosApp
-    val vm: DataServicesViewModel = viewModel(factory = factory { DataServicesViewModel(app.talosRepository) })
+    val vm: DataServicesViewModel = viewModel(factory = factory { DataServicesViewModel(app.dataServicesRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val generation by app.configRepository.generation.collectAsStateWithLifecycle()

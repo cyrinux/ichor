@@ -80,7 +80,7 @@ fun MetricsScreen(onBack: () -> Unit, onSettings: () -> Unit) {
     val fingerprint = config?.activeSummary?.fingerprint ?: return
     val key = "metrics-$fingerprint-$invalidations"
     val noSource = stringResource(R.string.metrics_none_found)
-    val vm: MetricsViewModel = viewModel(key = key, factory = factory { MetricsViewModel(app.talosRepository, app.metricsStore, fingerprint, noSource) })
+    val vm: MetricsViewModel = viewModel(key = key, factory = factory { MetricsViewModel(app.kubeRepository, app.metricsStore, fingerprint, noSource) })
     val state by vm.state.collectAsStateWithLifecycle()
     /** The editor's draft while it is open. */
     var editing by remember { mutableStateOf<PromPanel?>(null) }

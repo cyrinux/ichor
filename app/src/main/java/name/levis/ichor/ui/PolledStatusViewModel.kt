@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.GitOpsRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.KubeWorkload
 
 /**
@@ -16,7 +17,11 @@ import name.levis.ichor.model.KubeWorkload
  * demand from the result cached under [cacheKey] first, and polls quietly (no refresh
  * indicator) while [isBusy] or right after an action ([boost]).
  */
-abstract class PolledStatusViewModel<T>(protected val talos: TalosRepository, private val cacheKey: String) : ViewModel() {
+abstract class PolledStatusViewModel<T>(
+    protected val gitOps: GitOpsRepository,
+    protected val kube: KubeRepository,
+    private val cacheKey: String,
+) : ViewModel() {
     private val _state = MutableStateFlow<UiState<T>>(UiState.Loading)
     val state: StateFlow<UiState<T>> = _state.asStateFlow()
     private var job: Job? = null
@@ -45,7 +50,7 @@ abstract class PolledStatusViewModel<T>(protected val talos: TalosRepository, pr
     /** Like [load], but a result already fetched is shown as is, without asking the cluster again: for a sheet opened often. */
     fun loadOrReuse(key: Any) {
         if (key == source) return
-        val cached = talos.cached<T>(cacheKey)
+        val cached = gitOps.cached<T>(cacheKey)
         if (cached == null) return load(key)
         source = key
         _state.value = UiState.Loaded(cached.value, fetchedAt = cached.at)
@@ -75,7 +80,7 @@ abstract class PolledStatusViewModel<T>(protected val talos: TalosRepository, pr
         if (!quiet) {
             _state.value = when {
                 !reset && previous is UiState.Loaded -> previous.copy(refreshing = true)
-                else -> talos.cached<T>(cacheKey)?.let { UiState.Loaded(it.value, refreshing = true, fetchedAt = it.at) } ?: UiState.Loading
+                else -> gitOps.cached<T>(cacheKey)?.let { UiState.Loaded(it.value, refreshing = true, fetchedAt = it.at) } ?: UiState.Loading
             }
         }
         val fetchStatus = fetcher()
@@ -85,7 +90,7 @@ abstract class PolledStatusViewModel<T>(protected val talos: TalosRepository, pr
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
-                _state.value.refreshFailed(e.uiText(), talos.cached<T>(cacheKey)?.let { it.value to it.at })
+                _state.value.refreshFailed(e.uiText(), gitOps.cached<T>(cacheKey)?.let { it.value to it.at })
             }
         }
     }
@@ -101,7 +106,7 @@ abstract class PolledStatusViewModel<T>(protected val talos: TalosRepository, pr
      * (its replicas matter to the restart confirmation).
      */
     protected fun workloadOf(kind: String, namespace: String, name: String): KubeWorkload =
-        talos.cachedWorkload(kind, namespace, name)
+        kube.cachedWorkload(kind, namespace, name)
             ?: KubeWorkload(kind = kind, namespace = namespace, name = name, desired = UNKNOWN_REPLICAS)
 
     private companion object {

@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.ui.UiText
@@ -38,7 +38,7 @@ data class RestartResult(val workload: KubeWorkload, val error: UiText?)
  */
 class WorkloadRestarts(
     private val scope: CoroutineScope,
-    private val talos: TalosRepository,
+    private val kube: KubeRepository,
     private val onRestarted: () -> Unit,
 ) {
     private val _restarting = MutableStateFlow<Set<String>>(emptySet())
@@ -55,13 +55,13 @@ class WorkloadRestarts(
 
     /** [workload] as it is now (replicas, state), for its confirmation; [workload] if it cannot be read. */
     suspend fun current(workload: KubeWorkload): KubeWorkload =
-        cancellableCatching { talos.workload(workload.kind, workload.namespace, workload.name) }.getOrDefault(workload)
+        cancellableCatching { kube.workload(workload.kind, workload.namespace, workload.name) }.getOrDefault(workload)
 
     fun restart(workload: KubeWorkload) {
         if (workload.key in _restarting.value) return
         _restarting.update { it + workload.key }
         scope.launch {
-            val outcome = runCatching { talos.rolloutRestart(workload) }
+            val outcome = runCatching { kube.rolloutRestart(workload) }
             _restarting.update { it - workload.key }
             _results.send(RestartResult(workload, outcome.exceptionOrNull()?.uiText()))
             if (outcome.isSuccess) {
@@ -71,7 +71,7 @@ class WorkloadRestarts(
         }
     }
 
-    suspend fun rolloutStatus(workload: KubeWorkload): KubeRolloutStatus = talos.rolloutStatus(workload)
+    suspend fun rolloutStatus(workload: KubeWorkload): KubeRolloutStatus = kube.rolloutStatus(workload)
 
     /** Follows [workload]'s rollout live, e.g. after a rollback. */
     fun follow(workload: KubeWorkload) {

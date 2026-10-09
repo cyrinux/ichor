@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import name.levis.ichor.data.ARGO_CD
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoFreezeAction
 import name.levis.ichor.model.ArgoProject
@@ -34,14 +34,14 @@ data class ArgoSelfHealer(val app: ArgoApp, val project: ArgoProject)
  * The Argo CD app that would undo a change to [kind] [namespace]/[name] (self-heal on, not
  * frozen), from the Argo CD status already loaded; null when none or not loaded.
  */
-fun TalosRepository.argoSelfHealer(kind: String, namespace: String, name: String): ArgoSelfHealer? {
+fun GitOpsRepository.argoSelfHealer(kind: String, namespace: String, name: String): ArgoSelfHealer? {
     val status = cached<ArgoStatus>(ARGO_CD)?.value ?: return null
     val app = status.selfHealingOwner(kind, namespace, name) ?: return null
     return status.projectOf(app)?.let { ArgoSelfHealer(app, it) }
 }
 
 /** Freezes the healer's app for an hour with [reason] (stored on the cluster: no masked name). */
-suspend fun TalosRepository.freezeForHandChange(healer: ArgoSelfHealer, reason: String) {
+suspend fun GitOpsRepository.freezeForHandChange(healer: ArgoSelfHealer, reason: String) {
     val options = freezeOptions(healer.app, FreezeScope.APP, FREEZE_EXTEND_MINUTES, manualSync = true, reason = reason)
     argoFreeze(healer.project.namespace, healer.project.name, ArgoFreezeAction.FREEZE, options)
 }

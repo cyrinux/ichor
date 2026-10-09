@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.isMeteredNetwork
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.KubePod
@@ -57,8 +58,12 @@ import name.levis.ichor.ui.factory
  * order: the first page at once, the next ones on scroll (plans/roadmap/large-clusters.md,
  * Phase 5). Kept in memory only, per phase.
  */
-class SelectedPodsViewModel(talos: TalosRepository, metered: () -> Boolean, private val selection: PodSelection) :
-    PagedListViewModel<KubePod>(talos, metered) {
+class SelectedPodsViewModel(
+    private val talos: TalosRepository,
+    kube: KubeRepository,
+    metered: () -> Boolean,
+    private val selection: PodSelection,
+) : PagedListViewModel<KubePod>(kube, metered) {
     private val _phase = MutableStateFlow(PodPhaseFilter.ALL)
     /** The phase the list is narrowed to. */
     val phase: StateFlow<PodPhaseFilter> = _phase.asStateFlow()
@@ -75,8 +80,8 @@ class SelectedPodsViewModel(talos: TalosRepository, metered: () -> Boolean, priv
         val table = token.isNotEmpty()
         val phase = _phase.value
         return when (selection) {
-            is PodSelection.OnNode -> talos.nodePodsPage(kubeNode(selection.node), phase, token, table)
-            is PodSelection.OfWorkload -> talos.workloadPodsPage(selection, phase, token, table)
+            is PodSelection.OnNode -> kube.nodePodsPage(kubeNode(selection.node), phase, token, table)
+            is PodSelection.OfWorkload -> kube.workloadPodsPage(selection, phase, token, table)
         }
     }
 
@@ -85,7 +90,7 @@ class SelectedPodsViewModel(talos: TalosRepository, metered: () -> Boolean, priv
     private suspend fun kubeNode(node: String): String = kubeNode ?: talos.kubeNodeName(node).also { kubeNode = it }
 
     /** Deletions of its pods; a success shows the pod terminating, and soon its replacement. */
-    val deletions = PodDeletions(viewModelScope, talos) { refresh() }
+    val deletions = PodDeletions(viewModelScope, kube) { refresh() }
 
     /** Loads the list the first time, else nothing. */
     fun start() = setScope(KubeScope())
@@ -105,7 +110,7 @@ fun SelectedPodsList(
     modifier: Modifier = Modifier,
     vm: SelectedPodsViewModel = viewModel(
         key = selection.key(PodPhaseFilter.ALL),
-        factory = factory { SelectedPodsViewModel(app.talosRepository, { isMeteredNetwork(app) }, selection) },
+        factory = factory { SelectedPodsViewModel(app.talosRepository, app.kubeRepository, { isMeteredNetwork(app) }, selection) },
     ),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()

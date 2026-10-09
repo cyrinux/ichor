@@ -11,7 +11,8 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.data.ARGO_CD
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.GitOpsRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoFreezeAction
@@ -39,10 +40,11 @@ data class ArgoFreezeResult(val action: ArgoFreezeAction, val error: UiText?)
  * or right after an action, and runs actions with their outcome as one-shot [results].
  */
 class ArgoViewModel(
-    talos: TalosRepository,
+    gitOps: GitOpsRepository,
+    kube: KubeRepository,
     /** Called as a load starts; what it returns gets the status loaded (the freeze reminders). */
     private val onLoad: () -> (ArgoStatus) -> Unit = { {} },
-) : PolledStatusViewModel<ArgoStatus>(talos, ARGO_CD) {
+) : PolledStatusViewModel<ArgoStatus>(gitOps, kube, ARGO_CD) {
     private val _busy = MutableStateFlow<Set<String>>(emptySet())
     /** Keys of the apps whose action request is in flight. */
     val busy: StateFlow<Set<String>> = _busy.asStateFlow()
@@ -58,7 +60,7 @@ class ArgoViewModel(
     private val cleared = mutableSetOf<String>()
 
     /** Rollout restarts of the app's workloads, followed like an action. */
-    val restarts = WorkloadRestarts(viewModelScope, talos) { boost() }
+    val restarts = WorkloadRestarts(viewModelScope, kube) { boost() }
 
     // Another cluster, or a new configuration.
     override fun onNewSource() = cleared.clear()
@@ -66,7 +68,7 @@ class ArgoViewModel(
     override fun fetcher(): suspend () -> ArgoStatus {
         val onStatus = onLoad()
         return {
-            talos.argoCD().also { status ->
+            gitOps.argoCD().also { status ->
                 onStatus(status)
                 clearExpired(status)
             }
@@ -83,7 +85,7 @@ class ArgoViewModel(
         _busy.update { it + keys }
         viewModelScope.launch {
             val errors = apps.mapNotNull { app ->
-                runCatching { talos.argoAction(app, action, options) }.exceptionOrNull()
+                runCatching { gitOps.argoAction(app, action, options) }.exceptionOrNull()
                     ?.takeUnless { it is CancellationException }?.uiText()
             }
             _busy.update { it - keys }
@@ -103,7 +105,7 @@ class ArgoViewModel(
         _busy.update { it + key }
         viewModelScope.launch {
             val error = options.firstNotNullOfOrNull { o ->
-                runCatching { talos.argoFreeze(project.namespace, project.name, action, o) }.exceptionOrNull()
+                runCatching { gitOps.argoFreeze(project.namespace, project.name, action, o) }.exceptionOrNull()
                     ?.takeUnless { it is CancellationException }?.uiText()
             }
             _busy.update { it - key }
@@ -122,7 +124,7 @@ class ArgoViewModel(
     private fun clearExpired(status: ArgoStatus) {
         status.projectsToClear.filter { FREEZE_BUSY + it.key !in _busy.value && cleared.add(it.key) }.forEach { project ->
             viewModelScope.launch {
-                runCatching { talos.argoFreeze(project.namespace, project.name, ArgoFreezeAction.CLEAR_EXPIRED) }
+                runCatching { gitOps.argoFreeze(project.namespace, project.name, ArgoFreezeAction.CLEAR_EXPIRED) }
             }
         }
     }

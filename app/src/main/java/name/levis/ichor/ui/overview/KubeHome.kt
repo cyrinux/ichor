@@ -35,6 +35,7 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KUBE_NODES
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ContextSummary
@@ -70,11 +71,11 @@ import name.levis.ichor.model.signInNeeded
 import androidx.compose.runtime.produceState
 import name.levis.ichor.ui.components.pageContent
 
-class KubeHomeViewModel(val talos: TalosRepository) : LoadingViewModel<KubeNodesOverview>() {
+class KubeHomeViewModel(val kube: KubeRepository) : LoadingViewModel<KubeNodesOverview>() {
     override val keepsDataOnFailure = true
-    override fun cached(): TalosRepository.Timed<KubeNodesOverview>? = talos.cached(KUBE_NODES)
-    override val restores get() = talos.restores
-    override suspend fun fetch() = talos.kubeNodes()
+    override fun cached(): TalosRepository.Timed<KubeNodesOverview>? = kube.cached(KUBE_NODES)
+    override val restores get() = kube.restores
+    override suspend fun fetch() = kube.kubeNodes()
 }
 
 /** Where the Kubernetes home leads: Kubernetes screens only, the Talos ones cannot be read. */
@@ -115,15 +116,15 @@ class KubeHomeNavigation(
 @Composable
 fun KubeHomeScreen(
     nav: KubeHomeNavigation,
-    vm: KubeHomeViewModel = viewModel(factory = factory { KubeHomeViewModel(app.talosRepository) }),
-    argoVm: ArgoViewModel = viewModel(key = "overview-argocd", factory = factory { ArgoViewModel(app.talosRepository, freezeReminderHook(app)) }),
-    fluxVm: FluxViewModel = viewModel(key = "overview-flux", factory = factory { FluxViewModel(app.talosRepository) }),
-    dataVm: DataServicesViewModel = viewModel(key = "overview-data-services", factory = factory { DataServicesViewModel(app.talosRepository) }),
+    vm: KubeHomeViewModel = viewModel(factory = factory { KubeHomeViewModel(app.kubeRepository) }),
+    argoVm: ArgoViewModel = viewModel(key = "overview-argocd", factory = factory { ArgoViewModel(app.gitOpsRepository, app.kubeRepository, freezeReminderHook(app)) }),
+    fluxVm: FluxViewModel = viewModel(key = "overview-flux", factory = factory { FluxViewModel(app.gitOpsRepository, app.kubeRepository) }),
+    dataVm: DataServicesViewModel = viewModel(key = "overview-data-services", factory = factory { DataServicesViewModel(app.dataServicesRepository) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val generation by app.configRepository.generation.collectAsStateWithLifecycle()
-    val invalidations by vm.talos.invalidations.collectAsStateWithLifecycle()
+    val invalidations by vm.kube.invalidations.collectAsStateWithLifecycle()
     val state by vm.state.collectAsStateWithLifecycle()
     val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
     val clusterLabels = rememberClusterLabels()

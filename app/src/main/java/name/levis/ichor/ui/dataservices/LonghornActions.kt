@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.model.LonghornAction
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
@@ -52,7 +52,7 @@ data class LonghornActionResult(val action: LonghornAction, val label: String, v
  */
 class LonghornActions(
     private val scope: CoroutineScope,
-    private val talos: TalosRepository,
+    private val dataServices: DataServicesRepository,
     private val onChanged: () -> Unit,
 ) {
     private val actions = KeyedActions<LonghornActionResult>(scope)
@@ -62,7 +62,7 @@ class LonghornActions(
     val results: Flow<LonghornActionResult> get() = actions.results
 
     fun run(key: String, namespace: String, name: String, label: String, action: LonghornAction, value: Int = 0) {
-        actions.launch(key, { talos.longhornAction(namespace, name, action, value) }, {
+        actions.launch(key, { dataServices.longhornAction(namespace, name, action, value) }, {
             LonghornActionResult(action, label, value, it.exceptionOrNull()?.uiText())
         }, onChanged)
     }

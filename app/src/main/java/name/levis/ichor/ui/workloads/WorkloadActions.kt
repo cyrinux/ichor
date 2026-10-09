@@ -11,7 +11,8 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.GitOpsRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.KubeRevision
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.ui.UiText
@@ -34,7 +35,8 @@ data class ActionMessage(val text: UiText, val error: Boolean)
  */
 class WorkloadActions(
     private val scope: CoroutineScope,
-    private val talos: TalosRepository,
+    private val kube: KubeRepository,
+    private val gitOps: GitOpsRepository,
     private val restarts: WorkloadRestarts,
     private val onChanged: () -> Unit,
 ) {
@@ -49,7 +51,7 @@ class WorkloadActions(
     val messages: Flow<ActionMessage> = _messages.receiveAsFlow()
 
     fun scale(workload: KubeWorkload, replicas: Int) = run(workload) {
-        val outcome = cancellableCatching { talos.scale(workload, replicas) }
+        val outcome = cancellableCatching { kube.scale(workload, replicas) }
         val error = outcome.exceptionOrNull()?.uiText()
         _lastScale.value = ScaleOutcome(workload.key, replicas, outcome.getOrDefault(""), error)
         _messages.send(
@@ -63,15 +65,15 @@ class WorkloadActions(
     }
 
     /** The Argo CD app that would revert a scale of [workload], from the status already loaded. */
-    fun argoOwner(workload: KubeWorkload): ArgoSelfHealer? = talos.argoSelfHealer(workload.kind, workload.namespace, workload.name)
+    fun argoOwner(workload: KubeWorkload): ArgoSelfHealer? = gitOps.argoSelfHealer(workload.kind, workload.namespace, workload.name)
 
     /** Freezes the [healer]'s app for an hour ([reason] recorded with it), then scales [workload] if that worked. */
     fun freezeThenScale(workload: KubeWorkload, replicas: Int, healer: ArgoSelfHealer, reason: String) = run(workload) {
-        cancellableCatching { talos.freezeForHandChange(healer, reason) }.exceptionOrNull()?.let {
+        cancellableCatching { gitOps.freezeForHandChange(healer, reason) }.exceptionOrNull()?.let {
             _messages.send(ActionMessage(UiText.Res(R.string.workloads_scale_freeze_failed, healer.app.name, it.uiText()), error = true))
             return@run
         }
-        val outcome = cancellableCatching { talos.scale(workload, replicas) }
+        val outcome = cancellableCatching { kube.scale(workload, replicas) }
         val error = outcome.exceptionOrNull()?.uiText()
         _lastScale.value = ScaleOutcome(workload.key, replicas, outcome.getOrDefault(""), error)
         _messages.send(
@@ -84,10 +86,10 @@ class WorkloadActions(
         onChanged()
     }
 
-    suspend fun revisions(workload: KubeWorkload): List<KubeRevision> = talos.deploymentRevisions(workload)
+    suspend fun revisions(workload: KubeWorkload): List<KubeRevision> = kube.deploymentRevisions(workload)
 
     fun rollback(workload: KubeWorkload, revision: KubeRevision) = run(workload) {
-        val outcome = cancellableCatching { talos.rollbackDeployment(workload, revision.revision) }
+        val outcome = cancellableCatching { kube.rollbackDeployment(workload, revision.revision) }
         outcome.exceptionOrNull()?.let {
             _messages.send(ActionMessage(UiText.Res(R.string.workloads_rollback_failed, workload.name, it.uiText()), error = true))
             return@run

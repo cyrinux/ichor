@@ -126,7 +126,7 @@ class FreezeReminderWorker(context: Context, params: WorkerParameters) : Corouti
         val app = applicationContext as TalosApp
         val stored = app.configRepository.config.value ?: runCatching { app.configRepository.load() }.getOrElse { return true }
         if (stored?.activeSummary?.fingerprint != inputData.getString(KEY_CLUSTER)) return true
-        val status = runCatching { app.talosRepository.argoCD() }.getOrNull() ?: return true
+        val status = runCatching { app.gitOpsRepository.argoCD() }.getOrNull() ?: return true
         val window = inputData.getString(KEY_WINDOW)
         return status.runningIchorFreezes.any { it.window.id == window && it.project.name == inputData.getString(KEY_PROJECT) }
     }
@@ -166,14 +166,14 @@ class FreezeExtendWorker(context: Context, params: WorkerParameters) : Coroutine
         }
         val options = ArgoFreezeOptions(window = inputData.getString(KEY_WINDOW).orEmpty(), minutes = FREEZE_EXTEND_MINUTES)
         val error = runCatching {
-            app.talosRepository.argoFreeze(inputData.getString(KEY_PROJECT_NS).orEmpty(), inputData.getString(KEY_PROJECT).orEmpty(), ArgoFreezeAction.EXTEND, options)
+            app.gitOpsRepository.argoFreeze(inputData.getString(KEY_PROJECT_NS).orEmpty(), inputData.getString(KEY_PROJECT).orEmpty(), ArgoFreezeAction.EXTEND, options)
         }.exceptionOrNull()
         val end = inputData.getLong(KEY_END, 0) + FREEZE_EXTEND_MINUTES * 60_000L
         val text = if (error == null) res.getString(R.string.argo_freeze_extended_until, clock(end))
         else res.getString(R.string.argo_freeze_extend_failed, error.uiText().resolve(res))
         postFreezeNotice(applicationContext, id, title, text)
         // The extended window has a new id: read the freezes again to schedule its reminder.
-        if (error == null) runCatching { syncFreezeReminders(app, inputData.getString(KEY_CLUSTER), app.talosRepository.argoCD()) }
+        if (error == null) runCatching { syncFreezeReminders(app, inputData.getString(KEY_CLUSTER), app.gitOpsRepository.argoCD()) }
         return Result.success()
     }
 }
