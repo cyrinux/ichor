@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.model.KubeServices
 import name.levis.ichor.model.KubeStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -151,6 +152,11 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     /** The PersistentVolumeClaims of [namespace] (null for every one), with volume, pods and fill. */
     suspend fun storage(namespace: String?): KubeStorage = kubeCall { cfg, ctx, server ->
         TalosJson.decodeFromString(KubeStorage.serializer(), Ichorgo.kubeStorage(cfg, ctx, server, namespace.orEmpty()))
+    }
+
+    /** The Services of [namespace] (null for every one), with addresses, ready endpoints and routes. */
+    suspend fun services(namespace: String?): KubeServices = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeServices.serializer(), Ichorgo.kubeServices(cfg, ctx, server, namespace.orEmpty()))
     }
 
     /** The latest revision of each Helm release of [namespace] (null for every one). */

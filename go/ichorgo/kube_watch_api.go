@@ -116,6 +116,33 @@ func StartKubeWorkloadPodsWatch(configYAML, contextName, kubeServer, kind, names
 	}, demo)
 }
 
+// StartKubeNodePodsWatch follows the pods of the Kubernetes node nodeName in every namespace,
+// narrowed to phase ("" for all), as KubeNodePodsPage lists them. Events as in StartKubeWatch,
+// items as kubePod. An account that may not list pods cluster-wide gets the list polled.
+func StartKubeNodePodsWatch(configYAML, contextName, kubeServer, nodeName, phase string, listener KubeWatchListener) *KubeWatchRun {
+	contextName = unmaskContext(configYAML, contextName)
+	listener = maskedKubeWatchListener{listener}
+	nodeName = privacy.reveal(strings.TrimSpace(nodeName))
+
+	var err error
+	if !kubeNamePattern.MatchString(nodeName) || strings.Contains(nodeName, "..") {
+		err = fmt.Errorf("invalid Kubernetes node name %q", nodeName)
+	}
+
+	var fields string
+	if err == nil {
+		fields, err = podFieldSelector("spec.nodeName="+nodeName, phase)
+	}
+
+	demo := func() (string, error) {
+		return toJSON(demoSelectedPods(phase, func(p kubePod) bool { return p.Node == nodeName }))
+	}
+
+	return startWatch(kubeTarget{configYAML, contextName, kubeServer}, err, listener, podWatchItems, func(ctx context.Context, k *kubeClient, emit func(watchEvent) error) error {
+		return watchList(ctx, k, watchSpec{path: "/api/v1/pods", fieldSelector: fields}, emit)
+	}, demo)
+}
+
 // startWatch runs follow with the context's client until it ends or the run is cancelled,
 // mapping each event with items for listener (masked by the caller); in the demo inventory
 // it sends demo() as the one SYNC and waits. err, when set, ends the run at once.

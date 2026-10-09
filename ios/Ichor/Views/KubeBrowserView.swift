@@ -22,6 +22,9 @@ struct KubeBrowserView: View {
                         NavigationLink { KubeStorageView() } label: {
                             Label("Storage", systemImage: "externaldrive")
                         }
+                        NavigationLink { KubeServicesView() } label: {
+                            Label("Services", systemImage: "network")
+                        }
                     }
                 }
                 if !list.failed.isEmpty && query.isEmpty {

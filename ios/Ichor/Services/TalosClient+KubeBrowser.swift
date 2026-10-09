@@ -116,13 +116,19 @@ extension TalosClient {
         }
     }
 
-    /// The latest revision of each Helm release; `namespace` nil for every namespace.
     /// The PersistentVolumeClaims of `namespace` (nil for every one), with volume, pods and fill.
     func storage(namespace: String?) async throws -> KubeStorage {
         let ns = namespace ?? ""
         return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeStorage(config, context, kubeServer, ns, $0) }
     }
 
+    /// The Services of `namespace` (nil for every one), with addresses, ready endpoints and routes.
+    func services(namespace: String?) async throws -> KubeServices {
+        let ns = namespace ?? ""
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeServices(config, context, kubeServer, ns, $0) }
+    }
+
+    /// The latest revision of each Helm release; `namespace` nil for every namespace.
     func helmReleases(namespace: String?) async throws -> HelmReleaseList {
         let ns = namespace ?? ""
         return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeHelmReleases(config, context, kubeServer, ns, $0) }

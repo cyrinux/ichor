@@ -3439,4 +3439,15 @@
     <string name="storage_kube_not_measured">remplissage non mesuré</string>
     <string name="storage_kube_pods">Utilisé par %1$s</string>
     <string name="storage_kube_open">Ouvrir dans %1$s</string>
+    <string name="kube_services_title">Services</string>
+    <string name="kube_services_search">Rechercher des services, adresses ou routes</string>
+    <string name="kube_services_empty">Aucun service.</string>
+    <string name="kube_services_no_match">Aucun service ne correspond.</string>
+    <string name="kube_services_partial">Ces identifiants ne peuvent pas lire les endpoints ou les routes : certains détails manquent.</string>
+    <string name="kube_services_no_address">Pas d’adresse</string>
+    <string name="kube_services_hint_metallb">Un répartiteur de charge n’a pas d’adresse : vérifiez l’IPAddressPool de MetalLB et une L2Advertisement ou BGPAdvertisement qui l’annonce.</string>
+    <string name="kube_services_hint_cilium">Un répartiteur de charge n’a pas d’adresse : vérifiez le CiliumLoadBalancerIPPool (adresses restantes, son sélecteur de services) et que le LB IPAM de Cilium est actif.</string>
+    <string name="kube_services_hint_none">Un répartiteur de charge n’a pas d’adresse et aucun contrôleur n’a été trouvé pour lui en donner une : installez MetalLB, activez le LB IPAM de Cilium ou utilisez le répartiteur d’un cloud.</string>
+    <string name="kube_services_ready">Endpoints prêts : %1$s</string>
+    <string name="kube_services_headless">headless</string>
 </resources>

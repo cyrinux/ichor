@@ -96,6 +96,80 @@ func TestStartKubeWorkloadPodsWatch(t *testing.T) {
 	}
 }
 
+func TestStartKubeNodePodsWatch(t *testing.T) {
+	f := newWatchKubeAPI(t, func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+
+		switch {
+		case r.URL.Path != "/api/v1/pods" || q.Get("fieldSelector") != "spec.nodeName=worker-1,status.phase=Running":
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = io.WriteString(w, `{"kind":"Status","message":"unexpected `+r.URL.String()+`"}`)
+		case q.Get("watch") == "":
+			_, _ = io.WriteString(w, `{"metadata":{"resourceVersion":"5"},"items":[`+jsonPod("shop", "web-1", "nginx")+`]}`)
+		case q.Get("resourceVersion") != "5":
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = io.WriteString(w, `{"kind":"Status","message":"watch from `+q.Get("resourceVersion")+`"}`)
+		default:
+			streamEvents(w, `{"type":"DELETED","object":`+podWithVersion("web-1", "6")+`}`)
+			holdOpen(w, r)
+		}
+	})
+
+	rec := newWatchRecorder()
+	run := StartKubeNodePodsWatch(kubeStoreFor(t, f), "admin@test", "", "worker-1", "Running", rec)
+
+	var page kubePodPage
+	if first := rec.next(t); first.eventType != watchSync || json.Unmarshal([]byte(first.json), &page) != nil || len(page.Pods) != 1 || page.Pods[0].Name != "web-1" {
+		t.Fatalf("first event %+v", first)
+	}
+
+	var pod kubePod
+	if second := rec.next(t); second.eventType != watchDeleted || json.Unmarshal([]byte(second.json), &pod) != nil || pod.Name != "web-1" {
+		t.Fatalf("second event %+v", second)
+	}
+
+	run.Cancel()
+
+	if msg := rec.ended(t); msg != "" {
+		t.Errorf("cancelled with %q", msg)
+	}
+}
+
+func TestStartKubeNodePodsWatchRefusalsAndDemo(t *testing.T) {
+	for _, tc := range []struct{ node, phase, want string }{
+		{"../etc", "", "invalid Kubernetes node name"},
+		{"", "", "invalid Kubernetes node name"},
+		{"worker-1", "Sleeping", "phase"},
+	} {
+		rec := newWatchRecorder()
+		StartKubeNodePodsWatch("", "", "", tc.node, tc.phase, rec)
+
+		if msg := rec.ended(t); !strings.Contains(msg, tc.want) {
+			t.Errorf("%q %q ended with %q, want %q", tc.node, tc.phase, msg, tc.want)
+		}
+	}
+
+	rec := newWatchRecorder()
+	run := StartKubeNodePodsWatch(demoKubeconfigForTest(t), "", "", "demo-worker-1", "", rec)
+
+	var page kubePodPage
+	if ev := rec.next(t); ev.eventType != watchSync || json.Unmarshal([]byte(ev.json), &page) != nil || len(page.Pods) == 0 {
+		t.Fatalf("demo pods %+v", ev)
+	}
+
+	for _, p := range page.Pods {
+		if p.Node != "demo-worker-1" {
+			t.Errorf("demo pod %s on %s", p.Name, p.Node)
+		}
+	}
+
+	run.Cancel()
+
+	if msg := rec.ended(t); msg != "" {
+		t.Errorf("demo ended with %q", msg)
+	}
+}
+
 func TestStartKubeWatchValidatesAndDemo(t *testing.T) {
 	rec := newWatchRecorder()
 	StartKubeWatch("", "", "", "", "v1", "Pods!", "", "", "", rec)

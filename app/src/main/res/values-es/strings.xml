@@ -3439,4 +3439,15 @@
     <string name="storage_kube_not_measured">ocupación no medida</string>
     <string name="storage_kube_pods">Usado por %1$s</string>
     <string name="storage_kube_open">Abrir en %1$s</string>
+    <string name="kube_services_title">Servicios</string>
+    <string name="kube_services_search">Buscar servicios, direcciones o rutas</string>
+    <string name="kube_services_empty">No hay servicios.</string>
+    <string name="kube_services_no_match">Ningún servicio coincide.</string>
+    <string name="kube_services_partial">Estas credenciales no pueden leer endpoints o rutas: faltan algunos detalles.</string>
+    <string name="kube_services_no_address">Sin dirección</string>
+    <string name="kube_services_hint_metallb">Un balanceador de carga no tiene dirección: revisa el IPAddressPool de MetalLB y un L2Advertisement o BGPAdvertisement que lo anuncie.</string>
+    <string name="kube_services_hint_cilium">Un balanceador de carga no tiene dirección: revisa el CiliumLoadBalancerIPPool (direcciones libres, su selector de servicios) y que el LB IPAM de Cilium esté activo.</string>
+    <string name="kube_services_hint_none">Un balanceador de carga no tiene dirección y no se encontró ningún controlador que le dé una: instala MetalLB, activa el LB IPAM de Cilium o usa el balanceador de una nube.</string>
+    <string name="kube_services_ready">Endpoints listos: %1$s</string>
+    <string name="kube_services_headless">headless</string>
 </resources>

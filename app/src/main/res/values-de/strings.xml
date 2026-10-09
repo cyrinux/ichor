@@ -3431,4 +3431,15 @@
     <string name="storage_kube_not_measured">Füllstand nicht gemessen</string>
     <string name="storage_kube_pods">Verwendet von %1$s</string>
     <string name="storage_kube_open">In %1$s öffnen</string>
+    <string name="kube_services_title">Services</string>
+    <string name="kube_services_search">Services, Adressen oder Routen suchen</string>
+    <string name="kube_services_empty">Keine Services.</string>
+    <string name="kube_services_no_match">Kein Service passt.</string>
+    <string name="kube_services_partial">Diese Zugangsdaten dürfen Endpoints oder Routen nicht lesen: einige Angaben fehlen.</string>
+    <string name="kube_services_no_address">Keine Adresse</string>
+    <string name="kube_services_hint_metallb">Ein Load Balancer hat keine Adresse: prüfen Sie den IPAddressPool von MetalLB und eine L2Advertisement oder BGPAdvertisement, die ihn ankündigt.</string>
+    <string name="kube_services_hint_cilium">Ein Load Balancer hat keine Adresse: prüfen Sie den CiliumLoadBalancerIPPool (freie Adressen, sein Service-Selektor) und ob Ciliums LB-IPAM aktiv ist.</string>
+    <string name="kube_services_hint_none">Ein Load Balancer hat keine Adresse und es wurde kein Controller gefunden, der eine vergibt: installieren Sie MetalLB, aktivieren Sie Ciliums LB-IPAM oder nutzen Sie den Load Balancer einer Cloud.</string>
+    <string name="kube_services_ready">Bereite Endpoints: %1$s</string>
+    <string name="kube_services_headless">headless</string>
 </resources>

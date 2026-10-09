@@ -3639,4 +3639,15 @@
     <string name="storage_kube_not_measured">заповненість не виміряно</string>
     <string name="storage_kube_pods">Використовують: %1$s</string>
     <string name="storage_kube_open">Відкрити в %1$s</string>
+    <string name="kube_services_title">Сервіси</string>
+    <string name="kube_services_search">Шукати сервіси, адреси або маршрути</string>
+    <string name="kube_services_empty">Немає сервісів.</string>
+    <string name="kube_services_no_match">Жоден сервіс не відповідає.</string>
+    <string name="kube_services_partial">Ці облікові дані не можуть читати ендпоінти або маршрути: деяких відомостей бракує.</string>
+    <string name="kube_services_no_address">Немає адреси</string>
+    <string name="kube_services_hint_metallb">Балансувальник не має адреси: перевірте IPAddressPool у MetalLB і L2Advertisement або BGPAdvertisement, що його оголошує.</string>
+    <string name="kube_services_hint_cilium">Балансувальник не має адреси: перевірте CiliumLoadBalancerIPPool (вільні адреси, його селектор сервісів) і чи ввімкнено LB IPAM у Cilium.</string>
+    <string name="kube_services_hint_none">Балансувальник не має адреси, і не знайдено контролера, який би її видав: встановіть MetalLB, увімкніть LB IPAM у Cilium або використайте балансувальник хмари.</string>
+    <string name="kube_services_ready">Готові ендпоінти: %1$s</string>
+    <string name="kube_services_headless">headless</string>
 </resources>
