@@ -99,6 +99,8 @@ class KubeHomeNavigation(
     val onHelm: () -> Unit,
     /** The PersistentVolumeClaims with their volume, pods and fill. */
     val onStorage: () -> Unit,
+    /** The Services with their addresses, ready endpoints and routes. */
+    val onServices: () -> Unit,
     /** The drain of a node, by its Kubernetes name. */
     val onDrain: (node: String) -> Unit,
     /** A root shell on a node through a privileged pod, by its Kubernetes name. */

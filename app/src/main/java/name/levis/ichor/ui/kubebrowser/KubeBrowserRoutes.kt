@@ -21,6 +21,7 @@ object KubeBrowserRoutes {
     private const val OBJECT = "kube-object?g={g}&v={v}&r={r}&k={k}&ns={ns}&name={name}&edit={edit}"
     const val HELM = "kube-helm"
     const val STORAGE = "kube-storage"
+    const val SERVICES = "kube-services"
     private const val HELM_RELEASE = "kube-helm-release?ns={ns}&name={name}"
     private const val FORWARD = "kube-forward?ns={ns}&pod={pod}"
 
@@ -87,6 +88,9 @@ object KubeBrowserRoutes {
                 onClaim = links.onObject,
                 onDataService = { nav.navigate(Routes.dataServices(it)) },
             )
+        }
+        composable(SERVICES) {
+            ServicesScreen(onBack = { nav.popBackStack() }, onService = links.onObject)
         }
         composable(HELM) {
             HelmReleasesScreen(onBack = { nav.popBackStack() }, onRelease = { nav.navigate(helmRelease(it.namespace, it.name)) })

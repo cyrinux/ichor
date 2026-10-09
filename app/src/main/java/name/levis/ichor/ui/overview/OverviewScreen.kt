@@ -161,6 +161,7 @@ fun OverviewScreen(
     onResources: () -> Unit,
     onHelm: () -> Unit,
     onStorage: () -> Unit,
+    onServices: () -> Unit,
     onDrain: (node: String) -> Unit,
     onNodeDebug: (node: String) -> Unit,
     /** The action audit log of a cluster, by its context name. */
@@ -196,6 +197,7 @@ fun OverviewScreen(
                 onResources = onResources,
                 onHelm = onHelm,
                 onStorage = onStorage,
+                onServices = onServices,
                 onDrain = onDrain,
                 onNodeDebug = onNodeDebug,
                 onAllNodes = onKubeNodes,

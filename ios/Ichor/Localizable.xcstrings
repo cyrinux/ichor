@@ -1,6 +1,356 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Search services, addresses or routes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Services, Adressen oder Routen suchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar servicios, direcciones o rutas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher des services, adresses ou routes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca servizi, indirizzi o route"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукати сервіси, адреси або маршрути"
+          }
+        }
+      }
+    },
+    "No services." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Services."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay servicios."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun service."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun servizio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає сервісів."
+          }
+        }
+      }
+    },
+    "No service matches." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Service passt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún servicio coincide."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun service ne correspond."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun servizio corrisponde."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жоден сервіс не відповідає."
+          }
+        }
+      }
+    },
+    "These credentials may not read endpoints or routes: some details are missing." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Zugangsdaten dürfen Endpoints oder Routen nicht lesen: einige Angaben fehlen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estas credenciales no pueden leer endpoints o rutas: faltan algunos detalles."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ces identifiants ne peuvent pas lire les endpoints ou les routes : certains détails manquent."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queste credenziali non possono leggere endpoint o route: mancano alcuni dettagli."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ці облікові дані не можуть читати ендпоінти або маршрути: деяких відомостей бракує."
+          }
+        }
+      }
+    },
+    "No address" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Adresse"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin dirección"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas d’adresse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun indirizzo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає адреси"
+          }
+        }
+      }
+    },
+    "A load balancer has no address: check MetalLB’s IPAddressPool, and an L2Advertisement or BGPAdvertisement that announces it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Load Balancer hat keine Adresse: prüfen Sie den IPAddressPool von MetalLB und eine L2Advertisement oder BGPAdvertisement, die ihn ankündigt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un balanceador de carga no tiene dirección: revisa el IPAddressPool de MetalLB y un L2Advertisement o BGPAdvertisement que lo anuncie."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un répartiteur de charge n’a pas d’adresse : vérifiez l’IPAddressPool de MetalLB et une L2Advertisement ou BGPAdvertisement qui l’annonce."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un bilanciatore non ha indirizzo: controlla l’IPAddressPool di MetalLB e una L2Advertisement o BGPAdvertisement che lo annunci."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Балансувальник не має адреси: перевірте IPAddressPool у MetalLB і L2Advertisement або BGPAdvertisement, що його оголошує."
+          }
+        }
+      }
+    },
+    "A load balancer has no address: check the CiliumLoadBalancerIPPool (addresses left, its service selector) and that Cilium’s LB IPAM is on." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Load Balancer hat keine Adresse: prüfen Sie den CiliumLoadBalancerIPPool (freie Adressen, sein Service-Selektor) und ob Ciliums LB-IPAM aktiv ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un balanceador de carga no tiene dirección: revisa el CiliumLoadBalancerIPPool (direcciones libres, su selector de servicios) y que el LB IPAM de Cilium esté activo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un répartiteur de charge n’a pas d’adresse : vérifiez le CiliumLoadBalancerIPPool (adresses restantes, son sélecteur de services) et que le LB IPAM de Cilium est actif."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un bilanciatore non ha indirizzo: controlla il CiliumLoadBalancerIPPool (indirizzi liberi, il suo selettore di servizi) e che il LB IPAM di Cilium sia attivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Балансувальник не має адреси: перевірте CiliumLoadBalancerIPPool (вільні адреси, його селектор сервісів) і чи ввімкнено LB IPAM у Cilium."
+          }
+        }
+      }
+    },
+    "A load balancer has no address and no controller was found to give one: install MetalLB, turn on Cilium’s LB IPAM, or use a cloud’s load balancer." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Load Balancer hat keine Adresse und es wurde kein Controller gefunden, der eine vergibt: installieren Sie MetalLB, aktivieren Sie Ciliums LB-IPAM oder nutzen Sie den Load Balancer einer Cloud."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un balanceador de carga no tiene dirección y no se encontró ningún controlador que le dé una: instala MetalLB, activa el LB IPAM de Cilium o usa el balanceador de una nube."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un répartiteur de charge n’a pas d’adresse et aucun contrôleur n’a été trouvé pour lui en donner une : installez MetalLB, activez le LB IPAM de Cilium ou utilisez le répartiteur d’un cloud."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un bilanciatore non ha indirizzo e non è stato trovato alcun controller che gliene dia uno: installa MetalLB, attiva il LB IPAM di Cilium o usa il bilanciatore di un cloud."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Балансувальник не має адреси, і не знайдено контролера, який би її видав: встановіть MetalLB, увімкніть LB IPAM у Cilium або використайте балансувальник хмари."
+          }
+        }
+      }
+    },
+    "Ready endpoints: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereite Endpoints: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoints listos: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoints prêts : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoint pronti: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готові ендпоінти: %@"
+          }
+        }
+      }
+    },
+    "headless" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "headless"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "headless"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "headless"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "headless"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "headless"
+          }
+        }
+      }
+    },
     "Search PVCs, classes or pods" : {
       "extractionState" : "manual",
       "localizations" : {

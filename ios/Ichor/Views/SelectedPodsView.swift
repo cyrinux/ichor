@@ -73,17 +73,25 @@ struct SelectedPodsView: View {
         .loadsKubeActionAccess(namespace: accessNamespace)
     }
 
-    /// Keeps a workload's pods live while on screen and the app active: the Go core's watch
-    /// replaces the list, then adds, updates and removes rows as the API server reports them.
-    /// It starts once a load settled, and over again after each one (a refresh, a phase
-    /// change): the list the watch sends then is newer than the load's, so no change seen
+    /// Keeps the pods live while on screen and the app active, a workload's or a node's: the Go
+    /// core's watch replaces the list, then adds, updates and removes rows as the API server
+    /// reports them. It starts once a load settled, and over again after each one (a refresh, a
+    /// phase change): the list the watch sends then is newer than the load's, so no change seen
     /// meanwhile is lost. A watch that ends (a refusal, the network) is followed again after a
-    /// while; pull-to-refresh stays. A node's pods are not followed.
+    /// while; pull-to-refresh stays. A node whose Kubernetes name cannot be found is not followed.
     private func follow() async {
-        guard scenePhase == .active, list.settles > 0, case .workload(let kind, let namespace, let name) = selection else { return }
+        guard scenePhase == .active, list.settles > 0 else { return }
         while !Task.isCancelled {
             guard let client = model.client else { return }
-            for await event in client.workloadPodsWatch(kind: kind, namespace: namespace, name: name, phase: phase) {
+            let events: AsyncStream<KubeWatchStreamEvent<KubePod>>
+            switch selection {
+            case .workload(let kind, let namespace, let name):
+                events = client.workloadPodsWatch(kind: kind, namespace: namespace, name: name, phase: phase)
+            case .node(let address):
+                guard let name = try? await kubeNode.resolve({ try await client.kubeNodeName(node: address) }) else { return }
+                events = client.nodePodsWatch(kubeNode: name, phase: phase)
+            }
+            for await event in events {
                 if case .change(let change) = event {
                     list.apply { $0.applying(change, key: \.id) }
                 }
