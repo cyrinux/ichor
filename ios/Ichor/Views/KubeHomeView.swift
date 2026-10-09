@@ -241,7 +241,6 @@ struct KubeHomeView: View {
                 LabeledContent("Sign-in", value: ctx.localizedAuthLabel)
                 if let user = ctx.user, !user.isEmpty { LabeledContent("Signed in as", value: user) }
                 if let whoAmI, whoAmI.isKnown { whoAmIRow(whoAmI) }
-                if let namespace = ctx.namespace, !namespace.isEmpty { LabeledContent("Namespace", value: namespace) }
                 if ctx.certNotAfter > 0 { LabeledContent("Expires", value: localizedCertExpiry(ctx.certNotAfter)) }
             }
         } header: {
