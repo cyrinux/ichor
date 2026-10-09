@@ -133,6 +133,14 @@ private struct SupportSection: View {
                     }
                 }
             }
+            // On this device only, whatever the cluster: no role needed.
+            NavigationLink(value: Route.activity(cluster: "")) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Activity log")
+                    Text("Every change Ichor made to your clusters (reboots, scaling, syncs, rollbacks…), kept 90 days on this device.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
             Link(destination: IntegrationLinks.reportBug) { Label("Report a bug", systemImage: "ladybug") }
         } header: {
             Text("Support")

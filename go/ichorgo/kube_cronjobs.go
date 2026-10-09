@@ -404,6 +404,8 @@ func KubeTriggerCronJob(configYAML, contextName, kubeServer, namespace, name str
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: "trigger-cronjob", Namespace: namespace, Object: "CronJob/" + name})
+
 	if err := validateKubeName("CronJob", namespace, name); err != nil {
 		return "", err
 	}

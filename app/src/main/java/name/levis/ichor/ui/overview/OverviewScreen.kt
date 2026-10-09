@@ -161,6 +161,8 @@ fun OverviewScreen(
     onResources: () -> Unit,
     onHelm: () -> Unit,
     onDrain: (node: String) -> Unit,
+    /** The action audit log of a cluster, by its context name. */
+    onActivity: (cluster: String) -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
     liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
@@ -193,6 +195,7 @@ fun OverviewScreen(
                 onHelm = onHelm,
                 onDrain = onDrain,
                 onAllNodes = onKubeNodes,
+                onActivity = onActivity,
             ),
         )
         return
@@ -387,6 +390,7 @@ fun OverviewScreen(
                 onAddCluster = onAddCluster,
                 onClustersCleared = onClustersCleared,
                 onEndpoints = { editingEndpoints = it.name },
+                onActivity = { onActivity(it.name) },
             )
         }
         config?.let { stored ->

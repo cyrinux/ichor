@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"time"
 )
@@ -16,6 +17,8 @@ func KubeNodeCordon(configYAML, contextName, kubeServer, kubeNode string, on boo
 	defer maskErr(&err)
 
 	contextName, kubeNode = unmaskTarget(configYAML, contextName, kubeNode)
+
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: auditVerb(on, "cordon", "uncordon"), Node: kubeNode})
 
 	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
 		return setUnschedulable(ctx, k, kubeNode, on)
@@ -85,7 +88,11 @@ func StartKubeDrain(configYAML, contextName, kubeServer, kubeNode string, includ
 		defer cancel()
 		defer onPanic(listener.OnDone)
 
-		listener.OnDone(errText(runKubeDrain(ctx, kubeTarget{configYAML, contextName, kubeServer}, kubeNode, includeBare, listener)))
+		err := runKubeDrain(ctx, kubeTarget{configYAML, contextName, kubeServer}, kubeNode, includeBare, listener)
+
+		recordOutcome(configYAML, contextName, auditAction{Action: "drain", Node: kubeNode, Params: fmt.Sprintf("include-bare=%t", includeBare)}, err)
+
+		listener.OnDone(errText(err))
 	}()
 
 	return &MaintenanceRun{cancel: cancel}

@@ -3313,6 +3313,20 @@
     <string name="omni_field_url">URL di Omni (https://…omni.siderolabs.io)</string>
     <string name="omni_field_email">E-mail dell\'account</string>
     <string name="omni_mode_account">Account</string>
+    <string name="activity_title">Attività</string>
+    <string name="activity_empty">Nessuna azione registrata. Ogni modifica che Ichor apporta a un cluster compare qui per 90 giorni, solo su questo dispositivo.</string>
+    <string name="activity_empty_filtered">Nessuna azione corrisponde a questi filtri.</string>
+    <string name="activity_filter_all">Tutte</string>
+    <string name="activity_filter_failed">Non riuscite</string>
+    <string name="activity_share">Condividi l\'attività</string>
+    <string name="activity_clear">Cancella</string>
+    <string name="activity_clear_title">Cancellare il registro attività?</string>
+    <string name="activity_clear_body">Le azioni registrate vengono eliminate da questo dispositivo. L\'operazione è irreversibile.</string>
+    <string name="activity_demo">Demo</string>
+    <string name="activity_settings_desc">Ogni modifica fatta da Ichor ai tuoi cluster (riavvii, scalature, sincronizzazioni, rollback…), conservata 90 giorni su questo dispositivo.</string>
+    <string name="activity_open">Registro attività</string>
+    <string name="clusters_menu_activity">Attività</string>
+||||||| b9b4f161
     <string name="kb_tab_summary">Riepilogo</string>
     <string name="kb_summary_conditions">Condizioni</string>
     <string name="kb_summary_no_conditions">Questo tipo non riporta condizioni.</string>

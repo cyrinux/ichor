@@ -3513,6 +3513,20 @@
     <string name="omni_field_url">URL Omni (https://…omni.siderolabs.io)</string>
     <string name="omni_field_email">Email облікового запису</string>
     <string name="omni_mode_account">Обліковий запис</string>
+    <string name="activity_title">Активність</string>
+    <string name="activity_empty">Ще немає записаних дій. Кожна зміна, яку Ichor вносить у кластер, відображається тут 90 днів, лише на цьому пристрої.</string>
+    <string name="activity_empty_filtered">Жодна дія не відповідає цим фільтрам.</string>
+    <string name="activity_filter_all">Усі</string>
+    <string name="activity_filter_failed">Невдалі</string>
+    <string name="activity_share">Поділитися активністю</string>
+    <string name="activity_clear">Очистити</string>
+    <string name="activity_clear_title">Очистити журнал активності?</string>
+    <string name="activity_clear_body">Записані дії буде видалено з цього пристрою. Цю дію не можна скасувати.</string>
+    <string name="activity_demo">Демо</string>
+    <string name="activity_settings_desc">Кожна зміна, яку Ichor вніс у ваші кластери (перезавантаження, масштабування, синхронізації, відкати…), зберігається 90 днів на цьому пристрої.</string>
+    <string name="activity_open">Журнал активності</string>
+    <string name="clusters_menu_activity">Активність</string>
+||||||| b9b4f161
     <string name="kb_tab_summary">Огляд</string>
     <string name="kb_summary_conditions">Умови</string>
     <string name="kb_summary_no_conditions">Цей тип не повідомляє умов.</string>

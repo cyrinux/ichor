@@ -89,6 +89,8 @@ func StartUpgrade(configYAML, contextName, kubeServer, node, image string, stage
 		opts := upgradeOptions{image: strings.TrimSpace(image), stage: stage, force: force, acknowledged: acknowledged}
 		version, err := runUpgrade(ctx, kubeTarget{configYAML, contextName, kubeServer}, node, opts, listener)
 
+		recordOutcome(configYAML, contextName, auditAction{Action: "upgrade", Node: node, Params: fmt.Sprintf("image=%s stage=%t force=%t", opts.image, stage, force)}, err)
+
 		errMessage := errText(err)
 
 		listener.OnDone(version, errMessage)

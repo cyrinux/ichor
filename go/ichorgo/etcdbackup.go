@@ -217,6 +217,8 @@ func EtcdAlarmDisarm(configYAML, contextName, node string) (err error) {
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: "etcd-alarm-disarm", Node: node})
+
 	return nodeAction(configYAML, contextName, node, callTimeout, func(ctx context.Context, c *client.Client) error {
 		_, err := c.EtcdAlarmDisarm(ctx)
 
