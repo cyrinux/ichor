@@ -685,6 +685,15 @@ class TalosRepository(
         TalosJson.decodeFromString(FluxDiff.serializer(), Ichorgo.kubeFluxDiff(cfg, ctx, server, kind, namespace, name))
     }
 
+    /**
+     * What syncing the Argo CD Application [namespace]/[name] now would change, object by
+     * object (os:admin, read only): what the application controller compared last, read from
+     * Argo CD's Redis through a port-forward. Not cached on the phone: always fresh.
+     */
+    suspend fun argoDiff(namespace: String, name: String): FluxDiff = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(FluxDiff.serializer(), Ichorgo.kubeArgoDiff(cfg, ctx, server, namespace, name))
+    }
+
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
     suspend fun deletePod(pod: KubePod) = kubeCall { cfg, ctx, server -> Ichorgo.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
 

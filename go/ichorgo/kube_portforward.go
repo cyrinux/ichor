@@ -259,3 +259,95 @@ func pumpFromPod(ws *websocket.Conn, conn net.Conn) error {
 		}
 	}
 }
+
+// podStream is one forwarded connection used in-process (no local port): a Redis read, say.
+// Reads return the data channel; an error frame ends the stream with the pod's message.
+type podStream struct {
+	ws     *websocket.Conn
+	stop   func() bool
+	buf    []byte
+	seen   map[byte]bool
+	failed error
+}
+
+// dialPodPort opens a stream to port of the pod through the API server's port-forward.
+func (k *kubeClient) dialPodPort(ctx context.Context, namespace, pod string, port int) (io.ReadWriteCloser, error) {
+	if err := validateKubeName("pod", namespace, pod); err != nil {
+		return nil, err
+	}
+
+	cfg, err := k.portForwardConfig(ctx, namespace, pod, port)
+	if err != nil {
+		return nil, err
+	}
+
+	ws, err := cfg.DialContext(ctx)
+	if err != nil {
+		var dialErr *websocket.DialError
+		if errors.As(err, &dialErr) && errors.Is(dialErr.Err, websocket.ErrBadStatus) {
+			return nil, errors.New("port-forward refused by the Kubernetes API (forbidden, or the pod is gone)")
+		}
+
+		return nil, err
+	}
+
+	ws.PayloadType = websocket.BinaryFrame
+
+	if deadline, ok := ctx.Deadline(); ok {
+		_ = ws.SetDeadline(deadline)
+	}
+
+	return &podStream{ws: ws, stop: context.AfterFunc(ctx, func() { _ = ws.Close() }), seen: map[byte]bool{}}, nil
+}
+
+func (s *podStream) Write(p []byte) (int, error) {
+	if err := websocket.Message.Send(s.ws, append([]byte{0}, p...)); err != nil {
+		return 0, err
+	}
+
+	return len(p), nil
+}
+
+func (s *podStream) Read(p []byte) (int, error) {
+	for len(s.buf) == 0 {
+		if s.failed != nil {
+			return 0, s.failed
+		}
+
+		var frame []byte
+		if err := websocket.Message.Receive(s.ws, &frame); err != nil {
+			return 0, err
+		}
+
+		if len(frame) == 0 {
+			continue
+		}
+
+		channel, payload := frame[0], frame[1:]
+		if !s.seen[channel] {
+			s.seen[channel] = true // the first frame of each channel is the port number
+
+			continue
+		}
+
+		switch channel {
+		case 0:
+			s.buf = append(s.buf, payload...)
+		case 1:
+			if msg := strings.TrimSpace(string(payload)); msg != "" {
+				s.failed = errors.New(msg)
+			}
+		}
+	}
+
+	n := copy(p, s.buf)
+	s.buf = s.buf[n:]
+
+	return n, nil
+}
+
+func (s *podStream) Close() error {
+	s.stop()
+
+	return s.ws.Close()
+}

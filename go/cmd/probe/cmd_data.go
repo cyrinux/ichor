@@ -109,6 +109,12 @@ var dataCommands = []command{
 
 		return out, err
 	}},
+	{name: "argo-diff", args: "NAMESPACE NAME", run: func(e env) (out string, err error) {
+		// argo-diff NAMESPACE NAME, e.g. "argocd web": reads the controller's compared state from Argo CD's Redis.
+		out, err = ichorgo.KubeArgoDiff(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+
+		return out, err
+	}},
 	{name: "cilium", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.KubeCilium(e.cfg, e.context, e.kubeServer)
 

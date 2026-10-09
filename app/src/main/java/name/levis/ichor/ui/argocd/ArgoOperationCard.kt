@@ -55,6 +55,9 @@ fun ArgoOperationCard(app: ArgoApp, op: ArgoOperation, busy: Boolean, onTerminat
                 Column(Modifier.weight(1f).padding(start = 10.dp)) {
                     Text(stringResource(R.string.argo_operation, op.phase), style = MaterialTheme.typography.titleMedium, color = color)
                     MutedText(subtitle(op))
+                    if (op.revisionUrl.isNotEmpty()) {
+                        RevisionText(op.revision, op.revisionUrl, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
                 Text(elapsed(op), style = MaterialTheme.typography.labelLarge, fontFamily = FontFamily.Monospace)
             }
@@ -99,7 +102,8 @@ private fun Progress(app: ArgoApp, op: ArgoOperation, color: Color) {
 @Composable
 private fun subtitle(op: ArgoOperation): String = listOfNotNull(
     op.initiatedBy.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.argo_by, it) },
-    op.revision.takeIf { it.isNotEmpty() }?.let(::shortRevision),
+    // With a link, the revision has its own row under the subtitle.
+    op.revision.takeIf { it.isNotEmpty() && op.revisionUrl.isEmpty() }?.let(::shortRevision),
     op.retryCount.takeIf { it > 0 }?.let { stringResource(R.string.argo_retry, it) },
     stringResource(R.string.argo_dry_run).takeIf { op.dryRun },
 ).joinToString(" · ")

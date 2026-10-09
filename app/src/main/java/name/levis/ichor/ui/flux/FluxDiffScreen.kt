@@ -33,6 +33,7 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.shortFluxRevision
+import name.levis.ichor.model.shortRevisions
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.InfoRow
@@ -46,16 +47,17 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
- * What reconciling a Flux Kustomization now would change, like `flux diff kustomization`: the
- * revisions compared, a count per kind of change, then each object that would change with its
- * diff (the first few unfolded), and the unchanged ones folded. Built in the cluster with a
- * server-side dry run: nothing is written.
+ * What reconciling a Flux Kustomization (or syncing an Argo CD Application, [tool]) now would
+ * change, like `flux diff kustomization` or `argocd app diff`: the revisions compared, a count
+ * per kind of change, then each object that would change with its diff (the first few
+ * unfolded), and the unchanged ones folded. Built in the cluster with a server-side dry run:
+ * nothing is written.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FluxDiffScreen(kind: String, namespace: String, name: String, onBack: () -> Unit) {
+fun FluxDiffScreen(kind: String, namespace: String, name: String, onBack: () -> Unit, tool: DiffTool = DiffTool.FLUX) {
     val talos = LocalContext.current.applicationContext as TalosApp
-    val vm: FluxDiffViewModel = viewModel(factory = factory { FluxDiffViewModel(talos.talosRepository) })
+    val vm: FluxDiffViewModel = viewModel(key = tool.name, factory = factory { FluxDiffViewModel(talos.talosRepository, tool) })
     val state by vm.state.collectAsStateWithLifecycle()
     val config by talos.configRepository.config.collectAsStateWithLifecycle()
     val generation by talos.configRepository.generation.collectAsStateWithLifecycle()
@@ -78,7 +80,7 @@ fun FluxDiffScreen(kind: String, namespace: String, name: String, onBack: () -> 
     ) { padding ->
         val modifier = Modifier.padding(padding)
         Loaded(state, refresh, modifier, freshness = true) { data ->
-            DiffBody(data)
+            DiffBody(data, tool)
         }
     }
 }
@@ -87,7 +89,7 @@ fun FluxDiffScreen(kind: String, namespace: String, name: String, onBack: () -> 
 private const val UNFOLDED_AT_FIRST = 3
 
 @Composable
-private fun DiffBody(diff: FluxDiff) {
+private fun DiffBody(diff: FluxDiff, tool: DiffTool) {
     val colors = LocalStatusColors.current
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val changed = remember(diff) { diff.changed }
@@ -99,9 +101,10 @@ private fun DiffBody(diff: FluxDiff) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item(key = "summary") {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (diff.revision.isNotEmpty()) InfoRow(stringResource(R.string.flux_diff_built), shortFluxRevision(diff.revision), mono = true)
+                val short = { rev: String -> if (tool == DiffTool.ARGO) shortRevisions(rev) else shortFluxRevision(rev) }
+                if (diff.revision.isNotEmpty()) InfoRow(stringResource(R.string.flux_diff_built), short(diff.revision), mono = true)
                 if (diff.applied.isNotEmpty()) {
-                    InfoRow(stringResource(R.string.flux_diff_applied), shortFluxRevision(diff.applied), mono = true, valueColor = if (diff.newRevision) colors.warn else Color.Unspecified)
+                    InfoRow(stringResource(R.string.flux_diff_applied), short(diff.applied), mono = true, valueColor = if (diff.newRevision) colors.warn else Color.Unspecified)
                 }
                 if (diff.inSync) {
                     Text(stringResource(R.string.flux_diff_in_sync), style = MaterialTheme.typography.bodyMedium, color = colors.ok)
@@ -121,7 +124,7 @@ private fun DiffBody(diff: FluxDiff) {
             if (showUnchanged) item(key = "unchanged") { UnchangedList(unchanged) }
         }
         item(key = "footnote") {
-            Text(stringResource(R.string.flux_diff_dry_run), style = MaterialTheme.typography.labelSmall, color = muted)
+            Text(stringResource(if (tool == DiffTool.ARGO) R.string.argo_diff_dry_run else R.string.flux_diff_dry_run), style = MaterialTheme.typography.labelSmall, color = muted)
         }
     }
 }

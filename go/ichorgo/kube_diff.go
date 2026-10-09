@@ -22,7 +22,7 @@ import (
 // What a GitOps tool would change in the cluster, object by object: the manifests it would
 // apply are sent to the API server as a server-side apply dry run (defaults, webhooks and
 // field ownership applied, nothing written), and the answer is compared with the live object.
-// Shared by the Flux diff, and later Argo CD's.
+// Shared by the Flux diff and the Argo CD diff.
 
 const (
 	diffChangeCreated   = "created"
@@ -48,6 +48,19 @@ const (
 	// unrelated text, and they reveal little.
 	diffMaskMinLen = 6
 )
+
+// gitOpsDiff is what reconciling one GitOps object (a Flux Kustomization, an Argo CD
+// Application) would change, object by object.
+type gitOpsDiff struct {
+	Kind      string `json:"kind"`
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+	// Revision is the source revision built; Applied the one the controller last applied.
+	Revision  string             `json:"revision"`
+	Applied   string             `json:"applied"`
+	Resources []kubeDiffResource `json:"resources"`
+	Warnings  []string           `json:"warnings"`
+}
 
 // kubeDiffResource is one object of a diff.
 type kubeDiffResource struct {
@@ -338,4 +351,19 @@ func diffObjects(r *kubeDiffResource, live, wanted map[string]any, masker *kubeD
 	}
 
 	r.Diff = d
+}
+
+// diffRenderRaw renders an object as sorted YAML without stripping anything: for a change
+// the normalisation would hide.
+func diffRenderRaw(obj map[string]any) string {
+	var buf bytes.Buffer
+
+	enc := yaml.NewEncoder(&buf)
+	enc.SetIndent(2)
+
+	if err := enc.Encode(obj); err != nil {
+		return fmt.Sprintf("# not shown: %v\n", err)
+	}
+
+	return buf.String()
 }

@@ -47,7 +47,9 @@ type argoSpec struct {
 	Source      *argoSourceObject  `json:"source"`
 	Sources     []argoSourceObject `json:"sources"`
 	Destination argoDest           `json:"destination"`
-	SyncPolicy  *struct {
+	// IgnoreDifferences are the fields Argo CD leaves out of its comparison.
+	IgnoreDifferences []argoIgnoreDifference `json:"ignoreDifferences"`
+	SyncPolicy        *struct {
 		Automated *struct {
 			Prune    bool  `json:"prune"`
 			SelfHeal bool  `json:"selfHeal"`
@@ -55,6 +57,18 @@ type argoSpec struct {
 		} `json:"automated"`
 		SyncOptions []string `json:"syncOptions"`
 	} `json:"syncPolicy"`
+}
+
+// argoIgnoreDifference is one spec.ignoreDifferences entry: which objects (group and kind,
+// optionally one name and namespace) and which fields of them.
+type argoIgnoreDifference struct {
+	Group                 string   `json:"group"`
+	Kind                  string   `json:"kind"`
+	Name                  string   `json:"name"`
+	Namespace             string   `json:"namespace"`
+	JSONPointers          []string `json:"jsonPointers"`
+	JQPathExpressions     []string `json:"jqPathExpressions"`
+	ManagedFieldsManagers []string `json:"managedFieldsManagers"`
 }
 
 type argoSourceObject struct {
@@ -71,6 +85,7 @@ type argoHealth struct {
 
 type argoResourceStatus struct {
 	Group           string      `json:"group"`
+	Version         string      `json:"version"`
 	Kind            string      `json:"kind"`
 	Namespace       string      `json:"namespace"`
 	Name            string      `json:"name"`
@@ -165,9 +180,12 @@ func mapArgoApp(o argoObject, apps map[string]bool) argoApp {
 		a.Revision = st.Sync.Revisions[0]
 	}
 
-	for _, s := range argoSourcesOf(o.Spec) {
-		a.Sources = append(a.Sources, argoSrc{Repo: s.RepoURL, Path: s.Path, Chart: s.Chart, TargetRevision: s.TargetRevision})
+	sources := argoSourcesOf(o.Spec)
+	for _, s := range sources {
+		a.Sources = append(a.Sources, argoSrc{Repo: s.RepoURL, RepoURL: argoRepoWebURL(s.RepoURL), Path: s.Path, Chart: s.Chart, TargetRevision: s.TargetRevision})
 	}
+
+	a.RevisionURL = argoRevisionURL(sources, st.Sync.Revisions, a.Revision)
 
 	if p := o.Spec.SyncPolicy; p != nil {
 		a.SyncOptions = orEmpty(p.SyncOptions)
@@ -183,6 +201,10 @@ func mapArgoApp(o argoObject, apps map[string]bool) argoApp {
 	results := argoSyncResults(st.OperationState)
 	a.Resources = argoResources(st.Resources, results)
 	a.Operation = argoOp(st.OperationState, a.Resources, results)
+	if a.Operation != nil {
+		a.Operation.RevisionURL = argoRevisionURL(sources, nil, a.Operation.Revision)
+	}
+
 	a.History = argoHistoryOf(st.History)
 	if custom, ok := customIcon(o.Metadata.Annotations, o.Metadata.Labels); ok {
 		a.Icon, a.RemoteIcon, a.IconURL = custom.icon, custom.remote, custom.url
@@ -426,15 +448,33 @@ func argoHistoryOf(list []argoHistoryObject) []argoHistory {
 			e.InitiatedBy = "automated"
 		}
 
-		var src argoSourceObject
-		if len(h.Source) > 0 && json.Unmarshal(h.Source, &src) == nil {
-			e.TargetRevision, e.Chart = src.TargetRevision, src.Chart
+		sources := argoHistorySources(h)
+		if len(sources) > 0 {
+			e.TargetRevision, e.Chart = sources[0].TargetRevision, sources[0].Chart
 		}
+
+		e.URL = argoRevisionURL(sources, h.Revisions, h.Revision)
 
 		out = append(out, e)
 	}
 
 	return out
+}
+
+// argoHistorySources are the sources a deployment used: the single one, or the list of a
+// multi-source app (paired by position with its revisions).
+func argoHistorySources(h argoHistoryObject) []argoSourceObject {
+	var single argoSourceObject
+	if len(h.Source) > 0 && json.Unmarshal(h.Source, &single) == nil && single.RepoURL != "" {
+		return []argoSourceObject{single}
+	}
+
+	var list []argoSourceObject
+	if len(h.Sources) > 0 && json.Unmarshal(h.Sources, &list) == nil {
+		return list
+	}
+
+	return nil
 }
 
 // argoIcon names the app's icon from the catalog: by its Helm chart, its name, then the

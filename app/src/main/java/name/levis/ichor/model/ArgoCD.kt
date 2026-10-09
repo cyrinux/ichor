@@ -40,6 +40,8 @@ data class ArgoApp(
     /** Synced, OutOfSync or Unknown. */
     val sync: String = "",
     val revision: String = "",
+    /** The commit page of [revision] on its forge, "" when it cannot be linked. */
+    val revisionUrl: String = "",
     /** The pending refresh: normal, hard or "". */
     val refreshing: String = "",
     val sources: List<ArgoSource> = emptyList(),
@@ -107,6 +109,8 @@ data class ArgoOwner(
 @Serializable
 data class ArgoSource(
     val repo: String = "",
+    /** The browsable https page of [repo], "" for an OCI registry or a local path. */
+    val repoUrl: String = "",
     val path: String = "",
     val chart: String = "",
     val targetRevision: String = "",
@@ -137,6 +141,8 @@ data class ArgoOperation(
     /** A user name, or "automated". */
     val initiatedBy: String = "",
     val revision: String = "",
+    /** The commit page of [revision], "" when it cannot be linked. */
+    val revisionUrl: String = "",
     val retryCount: Int = 0,
     val dryRun: Boolean = false,
     /** Resources synced so far, out of [total] (hooks included once run). */
@@ -196,6 +202,8 @@ private val RESTARTABLE_KINDS = setOf("Deployment", "StatefulSet", "DaemonSet")
 data class ArgoHistory(
     val id: Long = 0,
     val revision: String = "",
+    /** The commit page of [revision], "" for a chart version or an unknown repository. */
+    val url: String = "",
     val targetRevision: String = "",
     val chart: String = "",
     /** Unix millis. */
@@ -367,6 +375,9 @@ enum class ArgoSync(val wire: String) {
 /** A Git SHA cut to 7 characters; versions and tags stay whole. */
 fun shortRevision(revision: String): String =
     if (revision.length >= 40 && revision.all { it.isDigit() || it in 'a'..'f' }) revision.take(7) else revision
+
+/** [shortRevision] of each of a comma-separated list (a multi-source app's revisions). */
+fun shortRevisions(revisions: String): String = revisions.split(", ").joinToString(", ") { shortRevision(it) }
 
 /** The inventory's catalog id for Argo CD. */
 const val ARGO_CD_CATALOG_ID = "argo-cd"
