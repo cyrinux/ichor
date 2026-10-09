@@ -15,8 +15,22 @@ LANGUAGES = ["fr", "es", "uk", "de", "it"]
 ANDROID_RES = ROOT / "app/src/main/res"
 ANDROID_PLACEHOLDER = re.compile(r"%(\d+\$)?[sdf]")
 IOS_PLACEHOLDER = re.compile(r"%(\d+\$)?(@|lld|ld|d|lf|f)")
+# What a merge leaves when a conflict was resolved by hand but not cleaned (diff3 base included).
+CONFLICT_MARKER = re.compile(r"^(<{7}|\|{7}|={7}|>{7})(\s|$)")
 
 errors: list[str] = []
+
+
+def conflict_markers(text: str) -> list[int]:
+    """Line numbers (from 1) of the merge conflict markers left in text."""
+    return [n for n, line in enumerate(text.splitlines(), 1) if CONFLICT_MARKER.match(line)]
+
+
+def check_markers() -> None:
+    files = sorted(ANDROID_RES.glob("values*/strings.xml")) + sorted((ROOT / "ios").rglob("Localizable.xcstrings"))
+    for path in files:
+        for n in conflict_markers(path.read_text()):
+            errors.append(f"{path.relative_to(ROOT)}:{n}: merge conflict marker")
 
 
 def android_entries(path: Path) -> dict[str, list[str]]:
@@ -90,10 +104,16 @@ def check_ios() -> int:
     return total
 
 
-android = check_android()
-ios = check_ios()
-if errors:
-    print("\n".join(errors), file=sys.stderr)
-    print(f"{len(errors)} translation problem(s)", file=sys.stderr)
-    sys.exit(1)
-print(f"translations OK: {android} Android keys, {ios} iOS keys, languages en + {', '.join(LANGUAGES)}")
+def main() -> None:
+    check_markers()
+    android = check_android()
+    ios = check_ios()
+    if errors:
+        print("\n".join(errors), file=sys.stderr)
+        print(f"{len(errors)} translation problem(s)", file=sys.stderr)
+        sys.exit(1)
+    print(f"translations OK: {android} Android keys, {ios} iOS keys, languages en + {', '.join(LANGUAGES)}")
+
+
+if __name__ == "__main__":
+    main()
