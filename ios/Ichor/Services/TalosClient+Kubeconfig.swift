@@ -77,4 +77,16 @@ extension TalosClient {
     func kubeNodes() async throws -> KubeNodesOverview {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeNodes(config, context, kubeServer, $0) }
     }
+
+    /// CPU and memory each node uses (metrics-server).
+    func topNodes() async throws -> KubeTopNodes {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeTopNodes(config, context, kubeServer, $0) }
+    }
+
+    /// CPU and memory the pods of `namespace` (nil: all) use, with their requests and limits.
+    func topPods(namespace: String?) async throws -> KubeTopPods {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeTopPods(config, context, kubeServer, namespace ?? "", "", $0)
+        }
+    }
 }

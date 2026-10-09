@@ -92,12 +92,14 @@ class ResourceListViewModel(
 /**
  * The objects of [type] like `kubectl get`: the server's columns (the `-o wide` ones behind
  * a toggle) as label/value chips under each name, the namespace picker of the Kubernetes
- * screens for a namespaced kind, more pages on scroll. Tapping an object opens it ([onObject]).
+ * screens for a namespaced kind, more pages on scroll. Tapping an object opens it ([onObject]);
+ * [deleted] changes when one was deleted there, and the list is read again.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResourceListScreen(
     type: ApiResource,
+    deleted: Long,
     onBack: () -> Unit,
     onObject: (ResourceRow) -> Unit,
     vm: ResourceListViewModel = viewModel(
@@ -109,6 +111,7 @@ fun ResourceListScreen(
     val state by vm.state.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var wide by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(deleted) { if (deleted != 0L) vm.refresh() }
 
     Scaffold(
         topBar = {

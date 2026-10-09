@@ -186,6 +186,41 @@ data class KubeEditPreview(val changed: Boolean = false, val diff: String = "") 
     val lines: List<DiffLine> get() = parseDiffLines(diff)
 }
 
+/** What [propagation] does with what the deleted object owns (DeleteOptions.propagationPolicy). */
+enum class DeletePropagation(val api: String) {
+    /** The object goes now, the garbage collector deletes what it owned afterwards. */
+    BACKGROUND("Background"),
+
+    /** What the object owns is deleted first; the object waits for it. */
+    FOREGROUND("Foreground"),
+
+    /** What the object owns is kept, without an owner. */
+    ORPHAN("Orphan"),
+}
+
+/** An object a deletion's propagation decides about: it is owned by the deleted one. */
+@Serializable
+data class KubeDeleteDependent(val kind: String = "", val namespace: String = "", val name: String = "")
+
+/** What deleting an object would do (KubeObjectDeletePreview). */
+@Serializable
+data class KubeDeletePreview(
+    @SerialName("protected") val isProtected: Boolean = false,
+    /** Why it is protected: deleting it breaks the cluster or more than the object. */
+    val reason: String = "",
+    val clusterScoped: Boolean = false,
+    val finalizers: List<String> = emptyList(),
+    val dependents: List<KubeDeleteDependent> = emptyList(),
+    val moreDependents: Int = 0,
+    /** The version the preview read: the delete is refused if the object changed since. */
+    val resourceVersion: String = "",
+    /** A deletion is already pending, held by [finalizers]. */
+    val deleting: Boolean = false,
+) {
+    /** A cluster-scoped or protected object is deleted only once its name is typed. */
+    val needsTypedName: Boolean get() = isProtected || clusterScoped
+}
+
 /** One object the browser opens: its resource and name ([namespace] "" for a cluster-scoped one). */
 data class KubeObjectRef(
     val group: String,

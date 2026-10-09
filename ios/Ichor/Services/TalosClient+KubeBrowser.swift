@@ -80,6 +80,24 @@ extension TalosClient {
         }
     }
 
+    /// What deleting the object would do: protection, finalizers, the objects it owns. Read-only.
+    func objectDeletePreview(_ resource: KubeAPIResource, namespace: String, name: String) async throws -> KubeDeletePreview {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeObjectDeletePreview(config, context, kubeServer, resource.group, resource.version, resource.resource,
+                                           namespace, name, $0)
+        }
+    }
+
+    /// Deletes the object with `propagation`; refused when it changed since `resourceVersion`
+    /// (the preview's) was read, and for a protected object unless `force`.
+    func deleteObject(_ resource: KubeAPIResource, namespace: String, name: String, propagation: KubeDeletePropagation,
+                      resourceVersion: String, force: Bool) async throws {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeObjectDelete(config, context, kubeServer, resource.group, resource.version, resource.resource,
+                                        namespace, name, propagation.rawValue, resourceVersion, -1, force, error)
+        }
+    }
+
     /// The latest revision of each Helm release; `namespace` nil for every namespace.
     func helmReleases(namespace: String?) async throws -> HelmReleaseList {
         let ns = namespace ?? ""

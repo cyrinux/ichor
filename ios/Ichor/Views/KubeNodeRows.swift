@@ -11,12 +11,14 @@ struct KubeNodeActionRow: View {
     let node: KubeNodeInfo
     @Binding var path: [Route]
     @Binding var cordoning: KubeNodeInfo?
+    /// CPU and memory in use, from metrics-server when there is one.
+    var usage: KubeTopNode?
 
     var body: some View {
         Menu {
             KubeNodeMenu(node: node, path: $path, cordoning: $cordoning)
         } label: {
-            KubeNodeRow(node: node)
+            KubeNodeRow(node: node, usage: usage)
         }
         .tint(.primary)
     }
@@ -45,6 +47,7 @@ struct KubeNodeMenu: View {
 /// type, spot).
 struct KubeNodeRow: View {
     let node: KubeNodeInfo
+    var usage: KubeTopNode?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -56,6 +59,7 @@ struct KubeNodeRow: View {
             }
             Text(verbatim: details).font(.caption).foregroundStyle(.secondary)
             if let provenance { Text(verbatim: provenance).font(.caption).foregroundStyle(.secondary) }
+            if let usage { NodeUsageView(top: usage) }
             if !node.pressure.isEmpty {
                 Text(verbatim: node.pressure.joined(separator: ", ")).font(.caption).foregroundStyle(.statusWarn)
             }

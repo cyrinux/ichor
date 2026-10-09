@@ -71,7 +71,9 @@ struct KubeResourceListView: View {
             Section {
                 ForEach(shown) { row in
                     NavigationLink {
-                        KubeObjectView(resource: resource, namespace: row.namespace, name: row.name)
+                        KubeObjectView(resource: resource, namespace: row.namespace, name: row.name) {
+                            Task { await list.refresh(model: model) }
+                        }
                     } label: {
                         KubeResourceRowView(row: row, columns: columns.columns, indices: indices, showNamespace: showNamespace, now: now)
                     }
