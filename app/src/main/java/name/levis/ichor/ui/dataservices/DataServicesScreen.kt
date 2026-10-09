@@ -1,12 +1,19 @@
 package name.levis.ichor.ui.dataservices
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import name.levis.ichor.ui.components.AppTab
@@ -40,7 +47,7 @@ import name.levis.ichor.model.likelyCauses
 import name.levis.ichor.model.notReadyNames
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.BackButton
-import name.levis.ichor.ui.components.EmptyText
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.KubeServerDialog
@@ -56,7 +63,12 @@ import name.levis.ichor.ui.components.pageContent
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DataServicesScreen(initial: DataServiceKind? = null, onBack: () -> Unit) {
+fun DataServicesScreen(
+    initial: DataServiceKind? = null,
+    onBack: () -> Unit,
+    onSupportedIntegrations: () -> Unit,
+    onRequestIntegration: () -> Unit,
+) {
     val app = LocalContext.current.applicationContext as TalosApp
     val vm: DataServicesViewModel = viewModel(factory = factory { DataServicesViewModel(app.dataServicesRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
@@ -114,7 +126,23 @@ fun DataServicesScreen(initial: DataServiceKind? = null, onBack: () -> Unit) {
                 if (kube) app.talosRepository.cached<KubeNodesOverview>(KUBE_NODES)?.value?.notReadyNames().orEmpty()
                 else app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
             }
-            Systems(data, downNodes, initial, vm.garage, vm.longhorn, vm.certificates, vm.cnpg)
+            if (data.detected.isEmpty()) NoDataServices(onSupportedIntegrations, onRequestIntegration)
+            else Systems(data, downNodes, initial, vm.garage, vm.longhorn, vm.certificates, vm.cnpg)
+        }
+    }
+}
+
+/** None of the systems the app reads runs here: which ones it reads, and how to ask for another. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun NoDataServices(onSupportedIntegrations: () -> Unit, onRequestIntegration: () -> Unit) {
+    // Scrollable, so the pull-to-refresh around it still reacts.
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.data_services_none), style = MaterialTheme.typography.titleMedium)
+        MutedText(stringResource(R.string.data_services_none_hint))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = onSupportedIntegrations) { Text(stringResource(R.string.supported_integrations_title)) }
+            OutlinedButton(onClick = onRequestIntegration) { Text(stringResource(R.string.settings_integrations_open)) }
         }
     }
 }
@@ -122,10 +150,6 @@ fun DataServicesScreen(initial: DataServiceKind? = null, onBack: () -> Unit) {
 @Composable
 private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions, cnpg: CnpgActions) {
     val kinds = services.detected
-    if (kinds.isEmpty()) {
-        EmptyText(stringResource(R.string.data_services_none))
-        return
-    }
     // Picked once: a system detected later, before it in the list, doesn't take its place.
     var selected by rememberSaveable { mutableStateOf(initial ?: kinds.first()) }
     val tab = selected.takeIf { it in kinds } ?: kinds.first()

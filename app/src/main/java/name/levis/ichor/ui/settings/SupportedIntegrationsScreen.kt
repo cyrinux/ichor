@@ -19,11 +19,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -60,8 +63,11 @@ import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.data.TalosJson
 import name.levis.ichor.ui.components.pageContent
 
-/** What the screen shows: the list, and why the cluster could not be asked when it could not. */
-private data class SupportedIntegrationsView(val list: SupportedIntegrations, val problem: UiText? = null)
+/**
+ * What the screen shows: the list, and why the cluster could not be asked when it could not;
+ * [retryable] when asking failed (not when it needs another config).
+ */
+private data class SupportedIntegrationsView(val list: SupportedIntegrations, val problem: UiText? = null, val retryable: Boolean = false)
 
 /**
  * The projects the app reads through the Kubernetes API, with their websites, and which ones
@@ -73,7 +79,8 @@ fun SupportedIntegrationsScreen(configs: ConfigRepository, kube: KubeRepository,
     val config by configs.config.collectAsStateWithLifecycle()
     val canAsk = config?.activeSummary?.allows(Feature.WORKLOADS) == true
     val static = remember { staticSupportedIntegrations() }
-    val view by produceState(SupportedIntegrationsView(static), config?.activeContext, canAsk) {
+    var attempt by remember { mutableIntStateOf(0) }
+    val view by produceState(SupportedIntegrationsView(static), config?.activeContext, canAsk, attempt) {
         value = SupportedIntegrationsView(static)
         if (!canAsk) {
             value = SupportedIntegrationsView(static, UiText.Res(R.string.supported_integrations_needs_admin))
@@ -85,7 +92,7 @@ fun SupportedIntegrationsScreen(configs: ConfigRepository, kube: KubeRepository,
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            SupportedIntegrationsView(static, e.uiText())
+            SupportedIntegrationsView(static, e.uiText(), retryable = true)
         }
     }
 
@@ -105,6 +112,9 @@ fun SupportedIntegrationsScreen(configs: ConfigRepository, kube: KubeRepository,
             item {
                 MutedText(stringResource(R.string.supported_integrations_desc))
                 view.problem?.let { MutedText(it.asString(), Modifier.padding(top = 4.dp)) }
+                if (view.retryable) {
+                    TextButton(onClick = { attempt++ }) { Text(stringResource(R.string.common_retry)) }
+                }
             }
             items(view.list.items, key = { it.id }) { SupportedIntegrationRow(it, checked = view.list.checked) }
         }

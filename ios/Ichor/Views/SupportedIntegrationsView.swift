@@ -7,6 +7,8 @@ struct SupportedIntegrationsView: View {
     @Environment(AppModel.self) private var model
     @State private var list = TalosClient.supportedIntegrations()
     @State private var problem: String?
+    /// Asking the cluster failed (not: it needs another config).
+    @State private var retryable = false
 
     var body: some View {
         List {
@@ -18,6 +20,7 @@ struct SupportedIntegrationsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("The projects Ichor reads through the Kubernetes API, found on the cluster by their API groups, their running pods or their Services. Tap one to open its website.")
                     if let problem { Text(verbatim: problem) }
+                    if retryable { Button("Retry") { Task { await load() } } }
                 }
             }
         }
@@ -29,6 +32,7 @@ struct SupportedIntegrationsView: View {
     private func load() async {
         guard model.allows(.workloads) else {
             problem = String(localized: "Detecting them on the cluster needs an os:admin config.")
+            retryable = false
             return
         }
         guard let client = model.client else { return }
@@ -36,9 +40,11 @@ struct SupportedIntegrationsView: View {
         do {
             list = try await client.supportedIntegrations(hints: hints)
             problem = nil
+            retryable = false
         } catch is CancellationError {
         } catch {
             problem = error.localizedDescription
+            retryable = true
         }
     }
 }

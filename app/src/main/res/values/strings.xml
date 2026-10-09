@@ -1643,6 +1643,7 @@
     <string name="data_services_search">Filter by namespace or name</string>
     <string name="data_services_no_match">Nothing matches “%1$s”.</string>
     <string name="data_services_none">No data services found.</string>
+    <string name="data_services_none_hint">None of the systems Ichor can read runs on this cluster. See the supported ones, or ask for the one you use.</string>
     <string name="data_services_all_fine">Nothing needs attention.</string>
     <string name="data_services_on_node">on %1$s</string>
     <string name="data_services_health_ok">healthy</string>

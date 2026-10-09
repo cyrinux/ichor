@@ -24,8 +24,17 @@ struct DataServicesView: View {
         LoadStateView(state: state, retry: load) { services in
             let kinds = services.detected
             if kinds.isEmpty {
-                ContentUnavailableView("No data services found.", systemImage: "externaldrive.badge.questionmark")
-                    .themedBackground()
+                // None of the systems the app reads runs here: which ones it reads, and how to ask for another.
+                ContentUnavailableView {
+                    Label("No data services found.", systemImage: "externaldrive.badge.questionmark")
+                } description: {
+                    Text("None of the systems Ichor can read runs on this cluster. See the supported ones, or ask for the one you use.")
+                } actions: {
+                    NavigationLink("Integrations", value: Route.supportedIntegrations)
+                    NavigationLink("Request an integration…", value: Route.integrations)
+                }
+                .buttonStyle(.bordered)
+                .themedBackground()
             } else {
                 let tab = selected.flatMap { kinds.contains($0) ? $0 : nil } ?? kinds[0]
                 Group {

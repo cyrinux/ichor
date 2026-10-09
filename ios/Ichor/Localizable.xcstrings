@@ -98385,6 +98385,47 @@
           }
         }
       }
+    },
+    "None of the systems Ichor can read runs on this cluster. See the supported ones, or ask for the one you use." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None of the systems Ichor can read runs on this cluster. See the supported ones, or ask for the one you use."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun des systèmes qu’Ichor sait lire ne tourne sur ce cluster. Consultez ceux qui sont pris en charge, ou demandez celui que vous utilisez."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ninguno de los sistemas que Ichor sabe leer se ejecuta en este clúster. Consulta los compatibles o pide el que usas."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keines der Systeme, die Ichor lesen kann, läuft auf diesem Cluster. Sieh dir die unterstützten an oder frag nach dem, das du nutzt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuno dei sistemi che Ichor sa leggere è in esecuzione su questo cluster. Guarda quelli supportati o chiedi quello che usi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У цьому кластері не працює жодна із систем, які Ichor уміє читати. Перегляньте підтримувані або попросіть ту, якою користуєтеся."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
