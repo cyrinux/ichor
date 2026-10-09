@@ -27,7 +27,7 @@ const (
 // Keychain) and only joined in for a query.
 type promSource struct {
 	Mode string `json:"mode"`
-	// Kind is a display hint: prometheus, mimir, thanos, victoriametrics.
+	// Kind is a display hint: prometheus, mimir, thanos, victoriametrics, alertmanager.
 	Kind string `json:"kind,omitempty"`
 
 	// Proxy mode: the Service and the HTTP port of the query API.
@@ -74,7 +74,7 @@ func parsePromSource(sourceJSON string) (promSource, error) {
 	return src.normalize()
 }
 
-var promKinds = []string{"", "prometheus", "mimir", "thanos", "victoriametrics"}
+var promKinds = []string{"", "prometheus", "mimir", "thanos", "victoriametrics", "alertmanager"}
 
 func (src promSource) normalize() (promSource, error) {
 	if !slices.Contains(promKinds, src.Kind) {
