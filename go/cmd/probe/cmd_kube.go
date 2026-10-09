@@ -37,6 +37,12 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "jobs", args: "[NAMESPACE]", run: func(e env) (out string, err error) {
+		// jobs [NAMESPACE]: every namespace when omitted.
+		out, err = ichorgo.KubeJobs(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+
+		return out, err
+	}},
 	{name: "top-nodes", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.KubeTopNodes(e.cfg, e.context, e.kubeServer)
 

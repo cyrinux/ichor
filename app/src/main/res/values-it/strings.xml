@@ -3444,4 +3444,10 @@
     <string name="kube_services_hint_none">Un bilanciatore non ha indirizzo e non è stato trovato alcun controller che gliene dia uno: installa MetalLB, attiva il LB IPAM di Cilium o usa il bilanciatore di un cloud.</string>
     <string name="kube_services_ready">Endpoint pronti: %1$s</string>
     <string name="kube_services_headless">headless</string>
+    <string name="kube_jobs_title">Job</string>
+    <string name="kube_jobs_search">Cerca job, CronJob o motivi</string>
+    <string name="kube_jobs_empty">Nessun job.</string>
+    <string name="kube_jobs_no_match">Nessun job corrisponde.</string>
+    <string name="kube_jobs_completions">Completamenti: %1$s</string>
+    <string name="kube_jobs_owner">CronJob %1$s</string>
 </resources>

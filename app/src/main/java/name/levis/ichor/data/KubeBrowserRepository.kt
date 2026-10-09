@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.model.KubeJobs
 import name.levis.ichor.model.KubeServices
 import name.levis.ichor.model.KubeStorage
 import kotlinx.coroutines.Dispatchers
@@ -138,6 +139,11 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     /** The Services of [namespace] (null for every one), with addresses, ready endpoints and routes. */
     suspend fun services(namespace: String?): KubeServices = kubeCall { cfg, ctx, server ->
         TalosJson.decodeFromString(KubeServices.serializer(), Ichorgo.kubeServices(cfg, ctx, server, namespace.orEmpty()))
+    }
+
+    /** The Jobs of [namespace] (null for every one), failures first. */
+    suspend fun jobs(namespace: String?): KubeJobs = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeJobs.serializer(), Ichorgo.kubeJobs(cfg, ctx, server, namespace.orEmpty()))
     }
 
     /** The latest revision of each Helm release of [namespace] (null for every one). */

@@ -77,6 +77,7 @@ fun KubernetesScreen(
     onHelm: () -> Unit,
     onStorage: () -> Unit,
     onServices: () -> Unit,
+    onJobs: () -> Unit,
     focus: KubeFocus = KubeFocus(0),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(focus.tab) }
@@ -150,6 +151,7 @@ fun KubernetesScreen(
                                 KubernetesAction.HELM -> onHelm()
                                 KubernetesAction.STORAGE -> onStorage()
                                 KubernetesAction.SERVICES -> onServices()
+                                KubernetesAction.JOBS -> onJobs()
                                 KubernetesAction.API_ADDRESS -> editing = true
                             }
                         },

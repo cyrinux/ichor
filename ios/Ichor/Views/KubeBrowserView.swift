@@ -25,6 +25,9 @@ struct KubeBrowserView: View {
                         NavigationLink { KubeServicesView() } label: {
                             Label("Services", systemImage: "network")
                         }
+                        NavigationLink { KubeJobsView() } label: {
+                            Label("Jobs", systemImage: "checklist")
+                        }
                     }
                 }
                 if !list.failed.isEmpty && query.isEmpty {
