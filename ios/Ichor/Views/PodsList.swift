@@ -16,17 +16,25 @@ struct PodsList: View {
 
     @Environment(AppModel.self) private var model
     @State private var actions = PodActions()
+    /// Pod usage from metrics-server, by pod id; empty without it (no bars nor sort then).
+    @State private var top: [String: KubeTopPod] = [:]
+    @State private var topRefreshes = 0
+    @State private var sort = TopSort.name
 
     var body: some View {
         KubeListFrame(control: control, list: list, query: query, namespaces: podNamespaces) { load in
             let selected = control.scope.namespace
             // Sorted once complete; image search only when every row carries its images.
-            let shown = filterPods(load.items, namespace: selected, query: query, sorted: load.done, searchImages: load.detailed)
+            let filtered = filterPods(load.items, namespace: selected, query: query, sorted: load.done, searchImages: load.detailed)
+            let shown = filtered.sortedByUsage(sort) { top[$0.id] }
             List {
                 KubeDeniedSection(actions: [.deletePod], namespace: selected ?? "")
+                if !top.isEmpty {
+                    TopSortPicker(sort: $sort).listRowSeparator(.hidden)
+                }
                 Section {
                     ForEach(shown) { pod in
-                        PodRow(pod: pod, showNamespace: selected == nil, deleting: actions.deleting.contains(pod.id),
+                        PodRow(pod: pod, showNamespace: selected == nil, usage: top[pod.id], deleting: actions.deleting.contains(pod.id),
                                onLogs: { actions.logsPod = pod }) { actions.confirm = pod }
                             .podLogsSwipe { actions.logsPod = pod }
                             .contextMenu {
@@ -43,8 +51,15 @@ struct PodsList: View {
                 }
             }
             .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No pods", systemImage: "cube") }
-            .refreshable { await list.refresh(model: model) }
+            .refreshable {
+                await list.refresh(model: model)
+                topRefreshes += 1
+            }
             .themedBackground()
+            .task(id: "\(selected ?? "")#\(topRefreshes)") {
+                let usage = try? await model.client?.topPods(namespace: selected)
+                top = usage?.available == true ? usage?.byKey ?? [:] : [:]
+            }
         }
         .podActions(actions) { await list.refresh(model: model) }
         .task(id: list.loadedItems.map(\.id)) {
@@ -130,6 +145,8 @@ struct PodRow: View {
     let pod: KubePod
     let showNamespace: Bool
     var showNode = true
+    /// CPU and memory in use, from metrics-server when there is one.
+    var usage: KubeTopPod?
     let deleting: Bool
     let onLogs: () -> Void
     let onDelete: () -> Void
@@ -158,6 +175,7 @@ struct PodRow: View {
                 }
                 .font(.caption)
                 .monospacedDigit()
+                if let usage { PodUsageView(top: usage).padding(.trailing, 8) }
             }
             Spacer()
             Button(action: onLogs) {

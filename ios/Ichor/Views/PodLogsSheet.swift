@@ -40,6 +40,8 @@ struct PodLogsSheet: View {
     @State private var display = LogDisplay()
     @State private var forwarding = false
     @State private var shelling = false
+    /// CPU and memory in use (metrics-server); nil without it.
+    @State private var usage: KubeTopPod?
 
     /// The pod with its containers and last termination when known.
     private var shown: KubePod { detail ?? pod }
@@ -47,6 +49,7 @@ struct PodLogsSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                if let usage { PodUsageView(top: usage).padding(.horizontal).padding(.top, 8) }
                 if containers.count > 1 || shown.restarts > 0 {
                     options.padding(.horizontal).padding(.vertical, 8)
                 }
@@ -57,6 +60,10 @@ struct PodLogsSheet: View {
                 }
             }
             .themedBackground()
+            .task(id: pod.id) {
+                let top = try? await model.client?.topPods(namespace: pod.namespace)
+                usage = top?.available == true ? top?.byKey[pod.id] : nil
+            }
             .navigationTitle(Text(verbatim: pod.name))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
