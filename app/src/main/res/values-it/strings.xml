@@ -3205,6 +3205,9 @@
     <string name="kb_discard_confirm">Annulla modifiche</string>
     <string name="kb_delete">Elimina</string>
     <string name="kb_delete_title">Eliminare %1$s?</string>
+    <string name="kb_scale_title">Scala %1$s</string>
+    <string name="kb_scale_running">In esecuzione: %1$s</string>
+    <string name="kb_scale_job_hint">Un Job esegue questi pod contemporaneamente; 0 lo mette in pausa.</string>
     <string name="kb_delete_loading">Lettura di ciò che l\'eliminazione toccherebbe…</string>
     <string name="kb_delete_protected">Protetto: %1$s</string>
     <string name="kb_delete_pending">La sua eliminazione è già in attesa: la trattengono i finalizzatori qui sotto.</string>
@@ -3389,6 +3392,24 @@
     <string name="kube_whoami_user">Utente Kubernetes</string>
     <string name="mono_text_larger">Testo più grande</string>
     <string name="mono_text_smaller">Testo più piccolo</string>
+    <string name="kb_tab_data">Dati</string>
+    <string name="kb_data_type">Tipo: %1$s</string>
+    <string name="kb_data_keys">Chiavi</string>
+    <string name="kb_data_no_keys">Nessuna chiave.</string>
+    <string name="kb_data_hint_text">Testo</string>
+    <string name="kb_data_hint_binary">Binario</string>
+    <string name="kb_data_show_value">Mostra il valore</string>
+    <string name="kb_data_hide_value">Nascondi il valore</string>
+    <string name="kb_data_copy_value">Copia il valore</string>
+    <string name="kb_data_base64">Valore binario, mostrato in base64.</string>
+    <string name="kb_data_cert_chain">Certificati nella catena: %1$d</string>
+    <string name="kb_data_registries">Registri</string>
+    <string name="kb_data_registry_user">Utente: %1$s</string>
+    <string name="kb_data_used_by">Usato da</string>
+    <string name="kb_data_used_by_unknown">Impossibile elencare i pod di questo namespace.</string>
+    <string name="kb_data_used_by_none">Nessun pod di questo namespace lo usa.</string>
+    <string name="kb_data_reveal_auth">Mostra %1$s di %2$s</string>
+||||||| 62d80f4f
     <string name="pod_debug_toggle">Container di debug</string>
     <string name="pod_debug_note">Per immagini senza shell (distroless): aggiunge un container temporaneo che vede i processi di questo pod. Kubernetes lo mantiene nel pod finché il pod non viene eliminato.</string>
     <string name="storage_kube_search">Cerca PVC, classi o pod</string>

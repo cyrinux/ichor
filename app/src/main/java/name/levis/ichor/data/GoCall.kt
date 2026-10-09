@@ -38,9 +38,12 @@ class GoCall(
      * kubeconfig's), through the cluster's Kubernetes access when set (K5, see [kubeTarget]).
      */
     suspend fun <T> kube(block: (config: String, context: String, kubeServer: String) -> T): T {
-        val target = kubeServers.targetFor(configs.forCall())
+        val target = kubeTarget()
         return withContext(Dispatchers.IO) { block(target.yaml, target.context, target.server) }
     }
+
+    /** Where a Kubernetes call goes now (see [kube]); for the streams started outside a call. */
+    fun kubeTarget(): KubeTarget = kubeServers.targetFor(configs.forCall())
 
     /** A call that needs both Talos and Kubernetes (maintenance, the admin kubeconfig): always the Talos path. */
     suspend fun <T> talosKube(block: (config: String, context: String, kubeServer: String) -> T): T {

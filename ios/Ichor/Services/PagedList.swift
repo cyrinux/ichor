@@ -21,6 +21,8 @@ final class PagedList<T: Codable & Sendable> {
     /// The namespace listed; nil until the screen sets one (`show`).
     private(set) var scope: KubeScope?
     private(set) var loadingMore = false
+    /// Bumped each time a load ended, well or not: what follows the rows live starts over then.
+    private(set) var settles = 0
 
     /// The last known state key prefix ("pods"...), see kubeListKey.
     private let base: String
@@ -60,6 +62,13 @@ final class PagedList<T: Codable & Sendable> {
     /// Loads the scope again, keeping the rows on screen until the new load completes.
     func refresh(model: AppModel) async {
         await reload(model: model, reset: false)
+    }
+
+    /// Replaces the rows on screen with `transform` of them (a change seen live), fresh as of
+    /// now; nothing while none are. A load in flight replaces them when it completes.
+    func apply(_ transform: (PagedLoad<T>) -> PagedLoad<T>) {
+        guard case .loaded(let load, _, _) = state else { return }
+        state = .loaded(transform(load), at: Date())
     }
 
     private static func source(of model: AppModel) -> String {
@@ -104,11 +113,13 @@ final class PagedList<T: Codable & Sendable> {
             guard generation == mine else { return }
             progress = nil
             state = .loaded(load, at: Date())
+            settles += 1
             if load.done { keep(load.items, key: key, target: target, model: model) }
         } catch {
             guard generation == mine, !(error is CancellationError) else { return }
             progress = nil
             state = state.refreshed(with: .failed(error.localizedDescription))
+            settles += 1
         }
     }
 
