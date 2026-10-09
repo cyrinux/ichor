@@ -211,3 +211,30 @@ func demoArgoProjects(now time.Time) []argoProjectObject {
 		project("infra", "Cluster infrastructure", argoWindowEntry{raw: raw, window: nightly, id: argoWindowID(raw)}),
 	}
 }
+
+// demoArgoDiff is the diff of a demo Application: a new commit that bumps an image and adds a
+// ConfigMap, a Service dropped from Git (pruned), a Secret with a new key, a hook left aside,
+// around unchanged objects.
+func demoArgoDiff(namespace, name string) gitOpsDiff {
+	const rev = "4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d"
+	const oldRev = "91c0a7e6d5b4c3a29180f7e6d5c4b3a291807f6e"
+
+	return gitOpsDiff{
+		Kind: "Application", Namespace: namespace, Name: name, Revision: rev, Applied: oldRev,
+		Warnings: []string{"Secret values are not compared: Argo CD hides them when it renders. Only their keys and metadata are."},
+		Resources: []kubeDiffResource{
+			{Group: "", Version: "v1", Kind: "ConfigMap", Namespace: "demo", Name: name + "-settings", Change: diffChangeCreated,
+				Diff: "--- live\n+++ wanted\n@@ -0,0 +1,10 @@\n+apiVersion: v1\n+data:\n+  CACHE_TTL: \"300\"\n+  LOG_LEVEL: info\n+kind: ConfigMap\n+metadata:\n+  labels:\n+    app.kubernetes.io/instance: " + name + "\n+  name: " + name + "-settings\n+  namespace: demo\n"},
+			{Group: "apps", Version: "v1", Kind: "Deployment", Namespace: "demo", Name: name, Change: diffChangeChanged,
+				Diff: "--- live\n+++ wanted\n@@ -38,9 +38,11 @@\n     spec:\n       containers:\n-      - image: ghcr.io/example/" + name + ":1.8.2\n+      - envFrom:\n+        - configMapRef:\n+            name: " + name + "-settings\n+        image: ghcr.io/example/" + name + ":1.9.0\n         imagePullPolicy: IfNotPresent\n         name: " + name + "\n         ports:\n"},
+			{Group: "", Version: "v1", Kind: "Service", Namespace: "demo", Name: name + "-legacy", Change: diffChangeDeleted,
+				Diff: "--- live\n+++ wanted\n@@ -1,13 +0,0 @@\n-apiVersion: v1\n-kind: Service\n-metadata:\n-  labels:\n-    app.kubernetes.io/instance: " + name + "\n-  name: " + name + "-legacy\n-  namespace: demo\n-spec:\n-  ports:\n-  - port: 80\n-    protocol: TCP\n-    targetPort: 8080\n-  selector:\n-    app: " + name + "\n"},
+			{Group: "", Version: "v1", Kind: "Secret", Namespace: "demo", Name: name + "-credentials", Change: diffChangeChanged,
+				Diff: "--- live\n+++ wanted\n@@ -2,4 +2,5 @@\n data:\n   password: redacted hmac:7f3a9c21\n+  smtp-token: redacted hmac:0b4e1d77\n   username: redacted hmac:c91e02aa\n kind: Secret\n"},
+			{Group: "batch", Version: "v1", Kind: "Job", Namespace: "demo", Name: name + "-migrate", Change: diffChangeIgnored},
+			{Group: "", Version: "v1", Kind: "Namespace", Name: "demo", Change: diffChangeUnchanged},
+			{Group: "", Version: "v1", Kind: "Service", Namespace: "demo", Name: name, Change: diffChangeUnchanged},
+			{Group: "networking.k8s.io", Version: "v1", Kind: "Ingress", Namespace: "demo", Name: name, Change: diffChangeUnchanged},
+		},
+	}
+}

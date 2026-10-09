@@ -15,6 +15,15 @@ extension TalosClient {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeArgoNetwork(config, context, kubeServer, namespace, name, $0) }
     }
 
+    /// What syncing the Application namespace/name now would change, object by object (os:admin,
+    /// read only): what the application controller compared last, read from Argo CD's Redis
+    /// through a port-forward. Not cached on the phone: always fresh.
+    func argoDiff(namespace: String, name: String) async throws -> FluxDiff {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeArgoDiff(config, context, kubeServer, namespace, name, $0)
+        }
+    }
+
     /// Runs action on the Application namespace/name (os:admin): one merge patch the
     /// application controller picks up. options: the sync sheet's choices, or the rollback target.
     func argoAction(namespace: String, name: String, action: ArgoAction, options: ArgoSyncOptions? = nil) async throws {

@@ -2144,6 +2144,11 @@
     <string name="argo_chart">Chart</string>
     <string name="argo_path">Path</string>
     <string name="argo_open_link">Open</string>
+    <string name="argo_show_diff">Show diff</string>
+    <string name="argo_diff_hint">What a sync would change now, compared in the cluster without changing anything.</string>
+    <string name="argo_diff_hint_out_of_sync">The app is out of sync: see what a sync would change before running it.</string>
+    <string name="argo_diff_dry_run">What Argo CD itself compared last: the live state and the state after a sync, read from Argo CD’s cache through a port-forward. Nothing ran in the cluster, nothing was changed. Secret values are hidden.</string>
+    <string name="argo_open_commit">Open commit</string>
     <string name="argo_auto_sync">Auto-sync</string>
     <string name="argo_owned">Managed by %1$s %2$s: change it in Git</string>
     <string name="argo_auto_prune">prune</string>

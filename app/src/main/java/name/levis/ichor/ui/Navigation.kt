@@ -58,6 +58,7 @@ import name.levis.ichor.ui.etcd.EtcdScreen
 import name.levis.ichor.ui.events.EventsScreen
 import name.levis.ichor.ui.flows.FlowsScreen
 import name.levis.ichor.ui.flux.FluxAppScreen
+import name.levis.ichor.ui.flux.DiffTool
 import name.levis.ichor.ui.flux.FluxDiffScreen
 import name.levis.ichor.ui.flux.FluxScreen
 import name.levis.ichor.ui.funding.FundingScreen
@@ -167,6 +168,8 @@ private object Routes {
     const val ARGO_WINDOWS = "argocd-windows"
 
     fun argoApp(namespace: String, name: String) = "argocd-app?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
+    const val ARGO_DIFF = "argocd-diff?ns={ns}&name={name}"
+    fun argoDiff(namespace: String, name: String) = "argocd-diff?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
     const val FLUX = "flux"
     const val FLUX_APP = "flux-app?kind={kind}&ns={ns}&name={name}"
 
@@ -762,12 +765,30 @@ fun Navigation(
                 navArgument("name") { type = NavType.StringType; defaultValue = "" },
             ),
         ) { entry ->
+            val ns = entry.arguments?.getString("ns").orEmpty()
+            val name = entry.arguments?.getString("name").orEmpty()
             ArgoAppScreen(
-                namespace = entry.arguments?.getString("ns").orEmpty(),
-                name = entry.arguments?.getString("name").orEmpty(),
+                namespace = ns,
+                name = name,
                 onBack = { nav.popBackStack() },
                 onNode = { n, tab -> nav.navigate(Routes.node(n.node, n.hostname, n.role, tab)) },
                 onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
+                onDiff = { nav.navigate(Routes.argoDiff(ns, name)) },
+            )
+        }
+        composable(
+            Routes.ARGO_DIFF,
+            arguments = listOf(
+                navArgument("ns") { type = NavType.StringType; defaultValue = "" },
+                navArgument("name") { type = NavType.StringType; defaultValue = "" },
+            ),
+        ) { entry ->
+            FluxDiffScreen(
+                kind = "Application",
+                namespace = entry.arguments?.getString("ns").orEmpty(),
+                name = entry.arguments?.getString("name").orEmpty(),
+                onBack = { nav.popBackStack() },
+                tool = DiffTool.ARGO,
             )
         }
         composable(Routes.FLUX) {

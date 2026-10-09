@@ -2308,6 +2308,11 @@
     <string name="argo_chart">Chart</string>
     <string name="argo_path">Шлях</string>
     <string name="argo_open_link">Відкрити</string>
+    <string name="argo_show_diff">Показати diff</string>
+    <string name="argo_diff_hint">Що змінила б синхронізація зараз, порівняно в кластері без жодних змін.</string>
+    <string name="argo_diff_hint_out_of_sync">Застосунок не синхронізований: подивіться, що змінить синхронізація, перш ніж запускати її.</string>
+    <string name="argo_diff_dry_run">Те, що Argo CD порівняв останнім: поточний стан і стан після синхронізації, прочитані з кешу Argo CD через port-forward. У кластері нічого не виконувалось, нічого не змінено. Значення Secret приховано.</string>
+    <string name="argo_open_commit">Відкрити коміт</string>
     <string name="argo_auto_sync">Auto-sync</string>
     <string name="argo_owned">Керується %1$s %2$s: змініть це в Git</string>
     <string name="argo_auto_prune">prune</string>

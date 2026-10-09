@@ -41,16 +41,8 @@ var (
 	fluxVarName = regexp.MustCompile(`^[_[:alpha:]][_[:alpha:][:digit:]]*$`)
 )
 
-type fluxDiff struct {
-	Kind      string `json:"kind"`
-	Namespace string `json:"namespace"`
-	Name      string `json:"name"`
-	// Revision is the source revision built; Applied the one the controller last applied.
-	Revision  string             `json:"revision"`
-	Applied   string             `json:"applied"`
-	Resources []kubeDiffResource `json:"resources"`
-	Warnings  []string           `json:"warnings"`
-}
+// fluxDiff is the Flux shape of a GitOps diff.
+type fluxDiff = gitOpsDiff
 
 // fluxDiffObject is the Kustomization as the diff reads it.
 type fluxDiffObject struct {

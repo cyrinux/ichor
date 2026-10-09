@@ -18,7 +18,9 @@ struct ArgoHero: View {
                 AppIconView(app: app.iconApp, size: 64)
                 VStack(spacing: 2) {
                     Text(verbatim: app.name).font(.title2.bold()).multilineTextAlignment(.center).accessibilityAddTraits(.isHeader)
-                    Text(verbatim: app.revisionLabel).font(.subheadline.monospaced()).foregroundStyle(.secondary)
+                    RevisionLink(label: app.revisionLabel, url: app.revisionURL)
+                        .font(.subheadline.monospaced())
+                        .foregroundStyle(.secondary)
                 }
                 HStack(spacing: 8) {
                     ArgoBadge(label: app.health.label, symbol: app.health.symbol, color: app.health.color)
@@ -40,7 +42,14 @@ struct ArgoHero: View {
                 let source = app.sources[i]
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Source").font(.caption).foregroundStyle(.secondary)
-                    Text(verbatim: source.repo).font(.callout.monospaced()).lineLimit(2).truncationMode(.middle).textSelection(.enabled)
+                    if let url = webURL(source.repoURL) {
+                        Link(destination: url) {
+                            Label { Text(verbatim: source.repo).lineLimit(2).truncationMode(.middle) } icon: { Image(systemName: "arrow.up.forward.square") }
+                                .font(.callout.monospaced())
+                        }
+                    } else {
+                        Text(verbatim: source.repo).font(.callout.monospaced()).lineLimit(2).truncationMode(.middle).textSelection(.enabled)
+                    }
                     Text(verbatim: [source.chart.isEmpty ? source.path : source.chart, source.targetRevision].filter { !$0.isEmpty }.joined(separator: " @ "))
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
@@ -168,7 +177,9 @@ struct ArgoOperationSection: View {
             }
             LabeledContent("Started by", value: operation.initiatedBy == "automated" ? String(localized: "auto-sync") : operation.initiatedBy)
             if !operation.revision.isEmpty {
-                LabeledContent("Revision") { Text(verbatim: shortRevision(operation.revision)).font(.callout.monospaced()) }
+                LabeledContent("Revision") {
+                    RevisionLink(label: shortRevision(operation.revision), url: operation.revisionURL).font(.callout.monospaced())
+                }
             }
             if operation.retryCount > 0 { LabeledContent("Retries", value: "\(operation.retryCount)") }
             ForEach(operation.failed) { failed in
@@ -231,6 +242,33 @@ struct ArgoPodsSection: View {
 }
 
 /// The deployments, newest (current) first, with "Roll back to this" when the app allows it.
+/// An http(s) URL the system can open, nil for anything else (or "").
+func webURL(_ string: String) -> URL? {
+    guard let url = URL(string: string), url.scheme == "https" || url.scheme == "http" else { return nil }
+    return url
+}
+
+/// A revision label that opens its commit page when the Go core found one.
+struct RevisionLink: View {
+    let label: String
+    let url: String
+
+    var body: some View {
+        if let url = webURL(url) {
+            Link(destination: url) {
+                HStack(spacing: 4) {
+                    Text(verbatim: label)
+                    Image(systemName: "arrow.up.forward.square").imageScale(.small)
+                }
+            }
+            .accessibilityLabel(Text("Open commit"))
+            .accessibilityValue(Text(verbatim: label))
+        } else {
+            Text(verbatim: label)
+        }
+    }
+}
+
 struct ArgoHistorySection: View {
     let app: ArgoApp
     let rollback: (ArgoHistory) -> Void
@@ -245,7 +283,7 @@ struct ArgoHistorySection: View {
                         .padding(.top, 2)
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 6) {
-                            Text(verbatim: entry.label).font(.callout.monospaced())
+                            RevisionLink(label: entry.label, url: entry.url).font(.callout.monospaced())
                             if index == 0 { InfoChip(text: String(localized: "current"), color: .green) }
                         }
                         Text(verbatim: [relativeTime(entry.deployedAt),

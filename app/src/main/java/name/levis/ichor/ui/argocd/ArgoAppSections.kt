@@ -73,10 +73,10 @@ fun HistoryRow(entry: ArgoHistory, current: Boolean, last: Boolean, onRollback: 
         }
         Column(Modifier.weight(1f).padding(start = 8.dp, bottom = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    shortRevision(entry.revision),
+                RevisionText(
+                    entry.revision,
+                    entry.url,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontFamily = FontFamily.Monospace,
                     color = if (current) accent else MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
                 )

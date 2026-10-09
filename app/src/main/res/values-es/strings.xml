@@ -2146,6 +2146,11 @@
     <string name="argo_chart">Chart</string>
     <string name="argo_path">Ruta</string>
     <string name="argo_open_link">Abrir</string>
+    <string name="argo_show_diff">Ver diff</string>
+    <string name="argo_diff_hint">Lo que cambiaría una sincronización ahora, comparado en el clúster sin modificar nada.</string>
+    <string name="argo_diff_hint_out_of_sync">La app no está sincronizada: mira lo que cambiaría una sincronización antes de lanzarla.</string>
+    <string name="argo_diff_dry_run">Lo que el propio Argo CD comparó por última vez: el estado actual y el estado tras una sincronización, leídos de la caché de Argo CD mediante un port-forward. Nada se ejecutó en el clúster, nada se cambió. Los valores de los Secrets están ocultos.</string>
+    <string name="argo_open_commit">Abrir commit</string>
     <string name="argo_auto_sync">Auto-sync</string>
     <string name="argo_owned">Gestionado por %1$s %2$s: cámbialo en Git</string>
     <string name="argo_auto_prune">prune</string>

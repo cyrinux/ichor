@@ -1,6 +1,15 @@
 # D5. Argo CD diff and commit links
 
-Status: **missing** (left out of v1 on purpose, `plans/argocd/README.md` D7). Size M.
+Status: **implemented** (CYR-64). Commit links: `kube_argocd_links.go`. Diff: `kube_argocd_diff.go`
+with none of the options below: the application controller already computes the diff on every
+reconciliation and caches it in Argo CD's Redis (`app|managed-resources|<app>|<version>`: per
+resource the normalised live state and the predicted state after a sync, ignoreDifferences
+applied, Secret values hidden). Ichor reads that key through a port-forward to the Redis pod
+(`kube_redis.go`, a SCAN and a GET, the password from the `argocd-redis` Secret) and renders
+each pair with the Flux diff's engine (`kube_diff.go`), so both tools share one redaction and
+one screen. Option A (exec in an Argo CD pod) was built first and dropped: `argocd --core`
+starts a headless API server inside the control-plane pod, heavy and hard to defend. Open:
+Redis with TLS, and a per-resource diff in the sync sheet.
 
 ## What exists today
 

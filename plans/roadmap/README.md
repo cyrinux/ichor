@@ -16,7 +16,7 @@ Every idea was checked against the code (Go core, Android, iOS) on 2026-10-04. S
 | D2 | Small kubectl actions (scale, suspend CronJob, Deployment rollback, previous logs, pod logs from Workloads) | **implemented** | [02-kubectl-actions.md](devops/02-kubectl-actions.md) | M |
 | D3 | Machineconfig edits in try mode | **partial**: one node's config is edited field by field or as YAML and tried with an automatic revert (`config*.go`, `ui/machineconfig`); staged and reboot modes, several nodes, snippets and the drift link remain | [03-machineconfig-try-patches.md](devops/03-machineconfig-try-patches.md) | L |
 | D4 | Rolling Talos upgrade (whole cluster), extension check, later `upgrade-k8s` | **partial**: one node at a time with a pre-flight plan, lock, progress (`upgrade*.go`, `ui/upgrade`) | [04-rolling-upgrade.md](devops/04-rolling-upgrade.md) | L |
-| D5 | Argo CD diff and commit links | **missing** (deliberately left out of v1, `plans/argocd` D7) | [05-argocd-diff.md](devops/05-argocd-diff.md) | M |
+| D5 | Argo CD diff and commit links | **implemented** (`kube_argocd_diff.go`, `kube_argocd_links.go`; both apps) | [05-argocd-diff.md](devops/05-argocd-diff.md) | M |
 | D6 | Flux | **implemented** (Go, Android, iOS); alerts and diff (phase 5) remain | [06-flux.md](devops/06-flux.md) | L |
 | D7 | cert-manager renew, Ingress/Gateway TLS expiry | **partial**: certificates and alerts exist read-only (`kube_certmanager.go`) | [07-certificates.md](devops/07-certificates.md) | S |
 | D8 | Image hygiene (unpinned list, ImagePullBackOff explained) | **partial**: per-app `unpinned`/`drift` flags on Android only | [08-image-hygiene.md](devops/08-image-hygiene.md) | S |
