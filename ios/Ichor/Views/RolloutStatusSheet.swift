@@ -1,17 +1,21 @@
 import SwiftUI
 import IchorCore
 
-/// The live rollout of a workload just restarted, like `kubectl rollout status`: polled until
-/// every pod runs the new template and is ready. Closing it only stops following; the rollout
-/// goes on in the cluster. `ended` runs once it is done, to refresh the list behind.
+/// The live rollout of a workload just restarted, like `kubectl rollout status`: the Go core
+/// reads it again each time the workload or one of its pods changes, until every pod runs the
+/// new template and is ready. Closing it only stops following; the rollout goes on in the
+/// cluster. `ended` runs once it is done, to refresh the list behind.
 struct RolloutStatusSheet: View {
     let workload: KubeWorkload
     let ended: () async -> Void
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     @State private var status: KubeRolloutStatus?
     @State private var error: String?
+    /// Whether `ended` ran: once, when the rollout was first seen done.
+    @State private var reported = false
 
     var body: some View {
         NavigationStack {
@@ -50,7 +54,7 @@ struct RolloutStatusSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
-        .task { await follow() }
+        .task(id: scenePhase == .active) { await follow() }
     }
 
     @ViewBuilder private var progress: some View {
@@ -92,20 +96,24 @@ struct RolloutStatusSheet: View {
         return status.done ? .green : status.failed ? .red : .orange
     }
 
-    /// Polls every 2 s until done; cancelled when the sheet closes.
+    /// Follows the rollout live while the app is active; a watch that ends (the network) is
+    /// followed again after 2 s. Cancelled when the sheet closes.
     private func follow() async {
-        guard let client = model.client else { return }
+        guard scenePhase == .active else { return }
         while !Task.isCancelled {
-            do {
-                status = try await client.rolloutStatus(workload)
-                error = nil
-            } catch {
-                if Task.isCancelled { return }
-                self.error = error.localizedDescription
-            }
-            if status?.done == true {
-                await ended()
-                return
+            guard let client = model.client else { return }
+            for await event in client.rolloutWatch(workload) {
+                switch event {
+                case .update(let latest):
+                    status = latest
+                    error = nil
+                    if latest.done, !reported {
+                        reported = true
+                        await ended()
+                    }
+                case .done(let message):
+                    if let message { error = message }
+                }
             }
             try? await Task.sleep(for: .seconds(2))
         }

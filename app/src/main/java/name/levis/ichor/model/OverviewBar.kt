@@ -44,7 +44,7 @@ typealias KubernetesBar = ActionBar<KubernetesAction>
  * What a Kubernetes object's app bar offers (the resource browser's object screen). Delete
  * comes last: in the menu, away from a stray tap.
  */
-enum class KubeObjectAction { EDIT, REFRESH, COPY, SHARE, PORT_FORWARD, DELETE;
+enum class KubeObjectAction { EDIT, REFRESH, COPY, SHARE, PORT_FORWARD, SCALE, DELETE;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 3)

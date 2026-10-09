@@ -61,6 +61,7 @@ data class ObjectOwner(
     val namespaced: Boolean = false,
     val verbs: List<String> = emptyList(),
     val controller: Boolean = false,
+    val scalable: Boolean = false,
 ) {
     val isHelmRelease: Boolean get() = via == VIA_HELM
 
@@ -69,7 +70,7 @@ data class ObjectOwner(
 
     /** The browser's reference to it, null when it cannot open as an object. */
     fun toRef(): KubeObjectRef? =
-        if (openable) KubeObjectRef(group, version, resource, kind, namespace, name, editable = "update" in verbs && "get" in verbs) else null
+        if (openable) KubeObjectRef(group, version, resource, kind, namespace, name, editable = "update" in verbs && "get" in verbs, scalable) else null
 
     companion object {
         const val VIA_OWNER = "owner"

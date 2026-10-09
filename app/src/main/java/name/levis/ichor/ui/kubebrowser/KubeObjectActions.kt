@@ -7,6 +7,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SettingsEthernet
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -19,6 +20,7 @@ private fun kubeObjectActionIcon(action: KubeObjectAction): ImageVector = when (
     KubeObjectAction.COPY -> Icons.Outlined.ContentCopy
     KubeObjectAction.SHARE -> Icons.Outlined.Share
     KubeObjectAction.PORT_FORWARD -> Icons.Outlined.SettingsEthernet
+    KubeObjectAction.SCALE -> Icons.Outlined.UnfoldMore
     KubeObjectAction.DELETE -> Icons.Outlined.Delete
 }
 
@@ -31,6 +33,7 @@ val kubeObjectActionLook = ActionLook<KubeObjectAction>(::kubeObjectActionIcon) 
             KubeObjectAction.COPY -> R.string.kb_copy
             KubeObjectAction.SHARE -> R.string.kb_share
             KubeObjectAction.PORT_FORWARD -> R.string.kb_forward_title
+            KubeObjectAction.SCALE -> R.string.workloads_scale
             KubeObjectAction.DELETE -> R.string.kb_delete
         },
     )

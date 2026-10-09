@@ -27,6 +27,10 @@ abstract class LoadingViewModel<T> : ViewModel() {
     val state: StateFlow<UiState<T>> = _state.asStateFlow()
     private var job: Job? = null
 
+    private val _settled = MutableStateFlow(0)
+    /** Bumped each time a [fetch] ended, well or not: what follows the data live starts over then. */
+    protected val settled: StateFlow<Int> = _settled.asStateFlow()
+
     protected abstract suspend fun fetch(): T
 
     /** Last cached value to show instantly while [fetch] runs (stale-while-revalidate). */
@@ -73,6 +77,7 @@ abstract class LoadingViewModel<T> : ViewModel() {
                     UiState.Failed(e.uiText())
                 }
             }
+            _settled.value++
         }
     }
 
@@ -87,6 +92,15 @@ abstract class LoadingViewModel<T> : ViewModel() {
             _state.value = UiState.Loaded(value, refreshing = true)
             partial = true
         }
+    }
+
+    /**
+     * Replaces the data on screen with [transform] of it (a change seen live), fresh as of now;
+     * nothing while none is on screen. A refresh in flight replaces it when it completes.
+     */
+    protected fun updateLoaded(transform: (T) -> T) {
+        val current = _state.value as? UiState.Loaded ?: return
+        _state.value = current.copy(data = transform(current.data), fetchedAt = System.currentTimeMillis(), error = null)
     }
 
     /**

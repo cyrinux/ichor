@@ -41,6 +41,14 @@ extension TalosClient {
         }
     }
 
+    /// A Secret or ConfigMap key by key, with the pods using it. A Secret's value comes only for
+    /// `key` ("" for none; refused in screenshot mode). Never cached.
+    func configData(_ resource: KubeAPIResource, namespace: String, name: String, key: String) async throws -> KubeConfigData {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeConfigData(config, context, kubeServer, resource.configDataKind, namespace, name, key, $0)
+        }
+    }
+
     /// One object summed up: conditions, owners and managers, metadata, spec highlights, events.
     func objectSummary(_ resource: KubeAPIResource, namespace: String, name: String) async throws -> KubeObjectSummary {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
@@ -80,6 +88,23 @@ extension TalosClient {
         try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubeObjectDelete(config, context, kubeServer, resource.group, resource.version, resource.resource,
                                         namespace, name, propagation.rawValue, resourceVersion, -1, force, error)
+        }
+    }
+
+    /// How many pods the object wants and runs (a Job: its parallelism).
+    func objectScale(_ resource: KubeAPIResource, namespace: String, name: String) async throws -> KubeObjectScale {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeObjectScale(config, context, kubeServer, resource.group, resource.version, resource.resource,
+                                   namespace, name, $0)
+        }
+    }
+
+    /// `kubectl scale` for any scalable object (a Job: its parallelism): returns a warning when a
+    /// HorizontalPodAutoscaler manages the count ("" when none).
+    func scaleObject(_ resource: KubeAPIResource, namespace: String, name: String, replicas: Int) async throws -> String {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+            IchorgoKubeScaleObject(config, context, kubeServer, resource.group, resource.version, resource.resource, resource.kind,
+                                   namespace, name, replicas, error)
         }
     }
 

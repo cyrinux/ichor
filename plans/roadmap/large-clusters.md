@@ -116,5 +116,9 @@ Phases 1–5 are done.
 
 ## Out of scope
 
-- Watch / informers (pull-to-refresh is enough for now).
+- Informers / caches across screens. Watches exist (`kube_watch.go`: the list, then `watch=1`
+  from its `resourceVersion` with bookmarks, the list again on `410`): a workload's pods, its
+  rollout and the object summary follow them while on screen and the app in the foreground
+  (`StartKubeWatch`, `StartKubeWorkloadPodsWatch`, `StartKubeRolloutWatch`,
+  `StartKubeObjectWatch`); every other list still polls or waits for pull-to-refresh.
 - Server-side text search (the API has none).

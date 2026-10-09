@@ -34,16 +34,23 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import name.levis.ichor.R
+import name.levis.ichor.data.KUBE_WATCH_RETRY_MILLIS
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.KubeRepository
+import name.levis.ichor.data.StreamItem
 import name.levis.ichor.data.isMeteredNetwork
+import name.levis.ichor.data.watchForever
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubeScope
 import name.levis.ichor.model.PodPhaseFilter
 import name.levis.ichor.model.PodSelection
 import name.levis.ichor.model.SELECTED_PODS_PAGE
+import name.levis.ichor.model.applying
+import name.levis.ichor.ui.PollWhileStarted
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.DataFreshness
@@ -95,6 +102,24 @@ class SelectedPodsViewModel(
     /** Loads the list the first time, else nothing. */
     fun start() = setScope(KubeScope())
 
+    /**
+     * Keeps a workload's pods live while called (the screen is visible): the Go core's watch
+     * replaces the list, then adds, updates and removes rows as the API server reports them,
+     * for the phase chosen. It starts once a load settled, and over again after each one (a
+     * refresh, a phase change): the list the watch sends then is newer than the load's, so no
+     * change seen meanwhile is lost. A watch that ends (a refusal, the network) is followed
+     * again after [KUBE_WATCH_RETRY_MILLIS]; pull-to-refresh stays. A node's pods are not followed.
+     */
+    suspend fun follow() {
+        val workload = selection as? PodSelection.OfWorkload ?: return
+        settled.filter { it > 0 }.collectLatest {
+            val phase = _phase.value
+            watchForever(start = { kube.workloadPodsWatch(workload, phase) }) { item ->
+                if (item is StreamItem.Item) updateLoaded { it.applying(item.value) { pod -> pod.key } }
+            }
+        }
+    }
+
     /** Narrows the list to [phase], loading it again from its first page. */
     fun choose(phase: PodPhaseFilter) {
         if (phase == _phase.value) return
@@ -118,6 +143,7 @@ fun SelectedPodsList(
     val deleting by vm.deletions.deleting.collectAsStateWithLifecycle()
     val phase by vm.phase.collectAsStateWithLifecycle()
     LaunchedEffect(vm) { vm.start() }
+    PollWhileStarted { vm.follow() }
     val actions = remember { PodActionState() }
     PodActionDialogs(actions, vm.deletions)
 
