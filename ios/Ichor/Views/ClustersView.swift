@@ -168,6 +168,12 @@ struct ClustersView: View {
                                     .foregroundStyle(Color.secondary)
                                     .accessibilityLabel(Text("VPN only"))
                             }
+                            if !model.watchesInBackground(context) {
+                                Image(systemName: "bell.slash")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.secondary)
+                                    .accessibilityLabel(Text("Not watched in the background"))
+                            }
                         }
                         let cloud = model.labels.cloud(context)
                         // Renamed: which talosconfig context that is.
@@ -223,6 +229,11 @@ struct ClustersView: View {
             Toggle(isOn: Binding(get: { model.vpnOnly.contains(context.fingerprint) },
                                  set: { model.setVpnOnly($0, for: context) })) {
                 Label("VPN only", systemImage: "lock.shield")
+            }
+            // Per cluster: off on any of its contexts, the background checks skip it.
+            Toggle(isOn: Binding(get: { model.watchesInBackground(context) },
+                                 set: { model.setWatchInBackground($0, for: context) })) {
+                Label("Watch in the background", systemImage: "bell.badge")
             }
         }
         // Not in screenshot mode (the endpoints shown are fake), nor for the demo; Talos endpoints

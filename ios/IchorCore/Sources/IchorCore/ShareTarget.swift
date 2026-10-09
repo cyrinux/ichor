@@ -123,6 +123,7 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
             }
         case "checkup": return .screen(.checkup)
         case "am": return .screen(.alerts)
+        case "unreachable": return .screen(.cluster)
         default: return nil
         }
     }

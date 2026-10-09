@@ -4,32 +4,95 @@ import IchorCore
 import UserNotifications
 import WidgetKit
 
-/// Shared with the widget extension (App Group).
+/// Shared with the widget extension (App Group): a snapshot per cluster (by monitor key, see
+/// monitorClusterKey), the clusters the widget can pick and the active one.
 enum SharedStore {
-    private static let snapshotKey = SharedSnapshot.key
-
     static var defaults: UserDefaults { UserDefaults(suiteName: SharedSnapshot.suite) ?? .standard }
 
-    static func snapshot() -> ClusterSnapshot? {
-        SharedSnapshot.load(from: defaults)
+    /// Every cluster's last snapshot; the single one of older versions goes to `activeCluster`.
+    static func snapshots(activeCluster: String?) -> [String: ClusterSnapshot] {
+        migratedSnapshots(SharedSnapshot.loadAll(from: defaults), legacy: SharedSnapshot.load(from: defaults), activeCluster: activeCluster)
     }
 
-    static func save(_ snapshot: ClusterSnapshot?) {
-        if let snapshot, let data = try? JSONEncoder().encode(snapshot) {
-            defaults.set(data, forKey: snapshotKey)
+    /// Stores `snapshots` (the older versions' single one goes) and reloads the widget.
+    static func save(_ snapshots: [String: ClusterSnapshot]) {
+        if !snapshots.isEmpty, let data = try? JSONEncoder().encode(snapshots) {
+            defaults.set(data, forKey: SharedSnapshot.snapshotsKey)
         } else {
-            defaults.removeObject(forKey: snapshotKey)
+            defaults.removeObject(forKey: SharedSnapshot.snapshotsKey)
         }
+        defaults.removeObject(forKey: SharedSnapshot.key)
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    /// Only the state of the clusters still stored (monitor keys): a removed cluster's snapshot
+    /// and unreachable count go with it.
+    static func keep(clusters: [String]) {
+        let stored = SharedSnapshot.loadAll(from: defaults)
+        let kept = keepingClusters(stored, clusters: clusters)
+        if kept.count != stored.count { save(kept) }
+        let reach = BackgroundMonitor.reachability()
+        let keptReach = keepingClusters(reach, clusters: clusters)
+        if keptReach.count != reach.count { BackgroundMonitor.saveReachability(keptReach) }
+    }
+
+    /// Forgets every snapshot (a config replaced, the screenshot mode toggled): the next run is a baseline.
+    static func clear() {
+        save([:])
+        BackgroundMonitor.saveReachability([:])
+    }
+
+    /// The clusters the widget can pick, named as on screen, and the active one (its default).
+    static func publish(clusters: [WidgetCluster], active: String?) {
+        let data = clusters.isEmpty ? nil : (try? JSONEncoder().encode(clusters))
+        guard data != defaults.data(forKey: SharedSnapshot.clustersKey) || active != SharedSnapshot.activeCluster(from: defaults) else { return }
+        if let data { defaults.set(data, forKey: SharedSnapshot.clustersKey) } else { defaults.removeObject(forKey: SharedSnapshot.clustersKey) }
+        if let active { defaults.set(active, forKey: SharedSnapshot.activeKey) } else { defaults.removeObject(forKey: SharedSnapshot.activeKey) }
         WidgetCenter.shared.reloadAllTimelines()
     }
 }
 
 /// Best-effort background checks: iOS decides when refresh tasks run (often every 15-60
 /// minutes). The config can only be decrypted while the device is unlocked, so checks made
-/// while it is locked are skipped. Same alert rules as Android (IchorCore.evaluate).
+/// while it is locked are skipped (and with a security key required, once iOS closed the app).
+/// Each run checks every cluster not turned off. Same alert rules as Android (IchorCore.evaluate).
 enum BackgroundMonitor {
     static let taskID = "name.levis.ichor.refresh"
     static let alertsKey = "monitor.alerts"
+    /// The clusters turned off with "Watch in the background", by context fingerprint (AppModel).
+    static let unwatchedKey = "monitorUnwatchedClusters"
+
+    static let unreachableKey = "monitor.unreachable"
+    /// Opt-in: an alert when a cluster did not answer `unreachableRuns` runs in a row.
+    static var unreachableWatched: Bool {
+        get { UserDefaults.standard.bool(forKey: unreachableKey) }
+        set { UserDefaults.standard.set(newValue, forKey: unreachableKey) }
+    }
+
+    static let unreachableRunsKey = "monitor.unreachableRuns"
+    static var unreachableRuns: Int {
+        get {
+            let stored = UserDefaults.standard.integer(forKey: unreachableRunsKey)
+            return unreachableRunsRange.contains(stored) ? stored : unreachableRunsDefault
+        }
+        set { UserDefaults.standard.set(newValue, forKey: unreachableRunsKey) }
+    }
+
+    /// The runs each cluster did not answer in a row (by monitor key), in the App Group.
+    private static let reachabilityKey = "monitor.reachability"
+
+    static func reachability() -> [String: Reachability] {
+        SharedStore.defaults.data(forKey: reachabilityKey)
+            .flatMap { try? JSONDecoder().decode([String: Reachability].self, from: $0) } ?? [:]
+    }
+
+    static func saveReachability(_ map: [String: Reachability]) {
+        if !map.isEmpty, let data = try? JSONEncoder().encode(map) {
+            SharedStore.defaults.set(data, forKey: reachabilityKey)
+        } else {
+            SharedStore.defaults.removeObject(forKey: reachabilityKey)
+        }
+    }
 
     static var alertsEnabled: Bool {
         get { UserDefaults.standard.bool(forKey: alertsKey) }
@@ -83,102 +146,227 @@ enum BackgroundMonitor {
         try? BGTaskScheduler.shared.submit(request)
     }
 
-    /// One check: overview + etcd (a cluster added from a kubeconfig: its Kubernetes node list),
-    /// diffed with the previous snapshot. Silent if the cluster is unreachable as a whole (e.g. off VPN).
+    /// One cluster to check, with what that takes.
+    private struct ClusterJob: Sendable {
+        let context: ContextSummary
+        /// Its monitor key (monitorClusterKey): what its snapshot and unreachable count are kept under.
+        let key: String
+        let client: TalosClient
+        /// Its role may use the Kubernetes API (the opt-in parts need it).
+        let kubeAllowed: Bool
+        let previous: ClusterSnapshot?
+    }
+
+    /// What a run learnt of one cluster.
+    private enum ClusterRead: Sendable {
+        /// Read: its fresh snapshot (where no node may have answered: unreachable then too).
+        case read(ClusterSnapshot)
+        /// No answer, or none in time.
+        case unreachable
+        /// Not tried to the end (iOS ended the run): nothing changes for it.
+        case skipped
+    }
+
+    /// The alerts of one cluster, with the snapshots they are worded from.
+    private struct ClusterAlerts {
+        let job: ClusterJob
+        let alerts: [Alert]
+        let snapshot: ClusterSnapshot
+        let previous: ClusterSnapshot?
+    }
+
+    /// One run: every cluster not turned off (one context each, see monitoredContexts), at most
+    /// monitorParallel at a time within the refresh budget, each diffed with its own previous
+    /// snapshot. Silent on a cluster unreachable as a whole (e.g. off VPN), past the opt-in
+    /// "unreachable" alert after a few runs in a row.
     static func check() async {
         TalosClient.applyStoredPrivacyMask() // also set at launch; keeps this path self-contained
         // Both stores, as the app lists them: the saved position counts kubeconfig clusters too.
         let stored = StoredConfigs.load()
         let parsed = await stored.parsed()
         guard parsed.unreadable.isEmpty, let summary = ConfigSummary.combined(talos: parsed.talos, kube: parsed.kube) else { return }
-        let contextName = summary.selectedContext(index: AppModel.savedContextIndex, name: UserDefaults.standard.string(forKey: "activeContext"))
-        let context = summary.context(named: contextName)
-        // A Talos cluster without an endpoint yet cannot be checked: the widget stops showing the
-        // cluster checked before (Android's clearSnapshot).
-        if context?.needsEndpoint == true {
-            if SharedStore.snapshot() != nil { SharedStore.save(nil) }
-            return
+        let activeName = summary.selectedContext(index: AppModel.savedContextIndex, name: UserDefaults.standard.string(forKey: "activeContext"))
+        // A cluster removed since drops its snapshot, unreachable count and snoozes (the app does too).
+        let clusterKeys = summary.contexts.map(monitorClusterKey)
+        AlertSnoozeStore.keep(clusters: summary.contexts.map(\.fingerprint))
+        var snapshots = keepingClusters(SharedStore.snapshots(activeCluster: summary.context(named: activeName).map(monitorClusterKey)),
+                                        clusters: clusterKeys)
+        let unwatched = Set(UserDefaults.standard.stringArray(forKey: unwatchedKey) ?? [])
+        let contexts = monitoredContexts(summary.contexts, active: activeName, unwatched: unwatched)
+        // A Talos cluster without an endpoint yet cannot be checked: the widget stops showing what
+        // it showed (Android's clearSnapshot).
+        for context in contexts where context.needsEndpoint { snapshots[monitorClusterKey(context)] = nil }
+        let jobs = await checkJobs(for: contexts.filter { !$0.needsEndpoint }, stored: stored,
+                              kubeContexts: parsed.kube?.contexts ?? [], snapshots: snapshots)
+        let reads = await read(jobs)
+        let now = Date()
+        var reach = keepingClusters(reachability(), clusters: clusterKeys)
+        let runs = unreachableRuns
+        var outcomes: [ClusterAlerts] = []
+        for job in jobs {
+            guard let result = reads[job.key] else { continue }
+            var alerts: [Alert] = []
+            var latest = job.previous
+            let reachable: Bool
+            switch result {
+            case .skipped:
+                continue
+            case .unreachable:
+                reachable = false
+            case .read(let current):
+                let evaluated = evaluate(previous: job.previous, current: current, now: now)
+                snapshots[job.key] = evaluated.next
+                latest = evaluated.next
+                alerts = evaluated.alerts
+                reachable = !current.unreachableAsAWhole
+            }
+            // Counted even with the alert off, so turning it on knows the runs already missed.
+            let counted = evaluateReachability(previous: reach[job.key], reachable: reachable, runs: runs,
+                                               enabled: alertsEnabled && unreachableWatched)
+            reach[job.key] = counted.next == Reachability() ? nil : counted.next
+            if let alert = counted.alert { alerts.insert(alert, at: 0) }
+            guard !alerts.isEmpty else { continue }
+            let snapshot = latest ?? ClusterSnapshot(context: job.context.name, takenAt: now, nodes: [:], kube: job.context.isKube)
+            outcomes.append(ClusterAlerts(job: job, alerts: alerts, snapshot: snapshot, previous: job.previous))
         }
-        let kube = context?.isKube == true
-        guard let yaml = kube ? stored.kube : stored.talos else { return }
-        // A VPN-only cluster waits for its VPN: without it the check could only time out.
+        SharedStore.save(snapshots)
+        saveReachability(reach)
+        guard alertsEnabled else { return }
+        await post(outcomes, now: now)
+    }
+
+    /// The clusters of `contexts` to check now: a VPN-only one waits for its VPN (without it the
+    /// check could only time out), and a cluster whose config is not stored is left out.
+    private static func checkJobs(for contexts: [ContextSummary], stored: StoredConfigs, kubeContexts: [ContextSummary],
+                                  snapshots: [String: ClusterSnapshot]) async -> [ClusterJob] {
         let vpnOnly = Set(UserDefaults.standard.stringArray(forKey: "vpnOnlyClusters") ?? [])
-        if let fingerprint = context?.fingerprint, vpnOnly.contains(fingerprint) {
-            let vpnUp = await VpnMonitor.currentlyUp()
-            if heldBackForVpn(vpnOnly: vpnOnly, fingerprint: fingerprint, vpnUp: vpnUp) { return }
-        }
-        // The Kubernetes API address the user set for this cluster, as the app uses it.
+        var vpnUp = true
+        if contexts.contains(where: { vpnOnly.contains($0.fingerprint) }) { vpnUp = await VpnMonitor.currentlyUp() }
+        // The Kubernetes API address the user set for each cluster, as the app uses it.
         let servers = UserDefaults.standard.dictionary(forKey: "kubeServers") as? [String: String] ?? [:]
         // And its Kubernetes access: a linked kubeconfig cluster (K5). A sign-in it needs is never
         // started from here: its calls fail and the app asks the user to sign in.
         let links = UserDefaults.standard.dictionary(forKey: "kubeAccess") as? [String: String] ?? [:]
-        let link = kube ? nil : stored.kube.flatMap { kube in
-            kubeAccessContext(of: context, links: links, kubeContexts: parsed.kube?.contexts ?? []).map { KubeLink(config: kube, context: $0) }
+        return contexts.compactMap { context -> ClusterJob? in
+            guard !heldBackForVpn(vpnOnly: vpnOnly, fingerprint: context.fingerprint, vpnUp: vpnUp),
+                  let yaml = stored.config(for: context) else { return nil }
+            let link = context.isKube ? nil : stored.kube.flatMap { kube in
+                kubeAccessContext(of: context, links: links, kubeContexts: kubeContexts).map { KubeLink(config: kube, context: $0) }
+            }
+            let client = TalosClient(config: yaml, context: context.name, kubeServer: servers[context.fingerprint] ?? "", kubeLink: link)
+            let key = monitorClusterKey(context)
+            return ClusterJob(context: context, key: key, client: client,
+                              kubeAllowed: context.allows(.workloads, kubeLinked: link != nil), previous: snapshots[key])
         }
-        let client = TalosClient(config: yaml, context: contextName, kubeServer: context.flatMap { servers[$0.fingerprint] } ?? "",
-                                 kubeLink: link)
-        let kubeAllowed = context?.allows(.workloads, kubeLinked: link != nil) == true
-        // The Talos overview, or the Kubernetes node list of a cluster added from a kubeconfig.
-        // Unreadable (off VPN, a sign-in needed): nothing to compare, the previous snapshot stays.
+    }
+
+    /// Reads `jobs`, at most monitorParallel at a time, each within monitorClusterTimeout. Once
+    /// iOS ends the run (the task cancelled) no other one starts and those under way are skipped.
+    private static func read(_ jobs: [ClusterJob]) async -> [String: ClusterRead] {
+        let timeout = monitorClusterTimeout(clusters: jobs.count)
+        return await withTaskGroup(of: (String, ClusterRead).self) { group in
+            var reads: [String: ClusterRead] = [:]
+            var waiting = jobs[...]
+            for job in waiting.prefix(monitorParallel) {
+                group.addTask { (job.key, await read(job, timeout: timeout)) }
+            }
+            waiting = waiting.dropFirst(monitorParallel)
+            while let done = await group.next() {
+                reads[done.0] = done.1
+                if let job = waiting.first, !Task.isCancelled {
+                    waiting = waiting.dropFirst()
+                    group.addTask { (job.key, await read(job, timeout: timeout)) }
+                }
+            }
+            return reads
+        }
+    }
+
+    /// One cluster: the Talos overview and etcd (a cluster added from a kubeconfig: its Kubernetes
+    /// node list) within `timeout`, then the opt-in parts in what is left of it, side by side. A
+    /// part not read in time keeps what the last snapshot knew of it, as one that failed.
+    private static func read(_ job: ClusterJob, timeout: TimeInterval) async -> ClusterRead {
+        let deadline = Date().addingTimeInterval(timeout)
+        let client = job.client
+        let context = job.context
+        // Unreadable (off VPN, a sign-in needed, too slow): nothing to compare, the previous snapshot stays.
         var overview: ClusterOverview?
         var kubeNodes: KubeNodesOverview?
-        if kube {
-            guard let nodes = try? await client.kubeNodes() else { return }
-            kubeNodes = nodes
+        if context.isKube {
+            kubeNodes = await withDeadline(max(0, deadline.timeIntervalSinceNow)) { try? await client.kubeNodes() }
         } else {
-            guard let read = try? await client.overview() else { return }
-            overview = read
+            overview = await withDeadline(max(0, deadline.timeIntervalSinceNow)) { try? await client.overview() }
         }
+        guard overview != nil || kubeNodes != nil else { return Task.isCancelled ? .skipped : .unreachable }
         var etcd: EtcdOverview?
-        if !kube { etcd = try? await client.etcd() }
+        if !context.isKube { etcd = await withDeadline(max(0, deadline.timeIntervalSinceNow)) { try? await client.etcd() } }
+        let left = max(0, deadline.timeIntervalSinceNow)
+        let previous = job.previous
         // Opt-in, and only for roles that may use the Kubernetes API: each check then lists custom
         // resources and runs the Garage CLI in a pod.
-        let watchData = dataServicesWatched && kubeAllowed
-        let dataServices = watchData ? try? await client.dataServices(hints: "") : nil
+        let watchData = dataServicesWatched && job.kubeAllowed
         // Same gate for Argo CD and Flux apps, read through their custom resources.
-        let watchGitOps = gitopsWatched && kubeAllowed
-        let previous = SharedStore.snapshot()
-        let known = knownGitOpsIssues(previous, context: contextName)
-        let gitopsIssues = watchGitOps ? await readGitOps(client, known: known) : nil
+        let watchGitOps = gitopsWatched && job.kubeAllowed
+        let known = knownGitOpsIssues(previous, context: context.name)
         // And for the checkup: it lists the cluster's pods and asks every kubelet.
-        let watchCheckup = checkupWatched && kubeAllowed
-        let knownCheckup = knownCheckupIssues(previous, context: contextName)
-        let checkupIssues = watchCheckup ? await readCheckup(client, known: knownCheckup) : nil
+        let watchCheckup = checkupWatched && job.kubeAllowed
+        let knownCheckup = knownCheckupIssues(previous, context: context.name)
         // And for the Alertmanager, reached like the metrics through the service proxy or a URL.
-        let watchAlertmanager = alertmanagerWatched && kubeAllowed
-        let knownAlertmanager = knownAlertmanagerIssues(previous, context: contextName)
-        let alertmanagerIssues = watchAlertmanager
-            ? await readAlertmanager(client, fingerprint: context?.fingerprint ?? "", known: knownAlertmanager) : nil
-        let now = Date()
-        let current: ClusterSnapshot
-        if let kubeNodes {
-            current = kubeSnapshotOf(kubeNodes, context: contextName, certNotAfter: context?.certNotAfter ?? 0, takenAt: now,
-                                     dataWatched: watchData, dataServices: dataServices,
-                                     gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
-                                     checkupWatched: watchCheckup, checkupIssues: checkupIssues,
-                                     alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues)
-        } else if let overview {
-            current = snapshotOf(overview, etcd: etcd, certNotAfter: context?.certNotAfter ?? 0, takenAt: now,
-                                 dataWatched: watchData, dataServices: dataServices,
-                                 gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
-                                 checkupWatched: watchCheckup, checkupIssues: checkupIssues,
-                                 alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues)
-        } else {
-            return
+        let watchAlertmanager = alertmanagerWatched && job.kubeAllowed
+        let knownAlertmanager = knownAlertmanagerIssues(previous, context: context.name)
+        let fingerprint = context.fingerprint
+        async let dataRead = ifWatched(watchData, within: left) { try? await client.dataServices(hints: "") }
+        async let gitopsRead = ifWatched(watchGitOps, within: left) { await readGitOps(client, known: known) }
+        async let checkupRead = ifWatched(watchCheckup, within: left) { await readCheckup(client, known: knownCheckup) }
+        async let alertmanagerRead = ifWatched(watchAlertmanager, within: left) {
+            await readAlertmanager(client, fingerprint: fingerprint, known: knownAlertmanager)
         }
-        let result = evaluate(previous: previous, current: current, now: now)
-        SharedStore.save(result.next)
-        guard alertsEnabled else { return }
+        let dataServices = await dataRead
+        let gitopsIssues = await gitopsRead
+        let checkupIssues = await checkupRead
+        let alertmanagerIssues = await alertmanagerRead
+        let now = Date()
+        if let kubeNodes {
+            return .read(kubeSnapshotOf(kubeNodes, context: context.name, certNotAfter: context.certNotAfter, takenAt: now,
+                                        dataWatched: watchData, dataServices: dataServices,
+                                        gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
+                                        checkupWatched: watchCheckup, checkupIssues: checkupIssues,
+                                        alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues))
+        }
+        guard let overview else { return .unreachable }
+        return .read(snapshotOf(overview, etcd: etcd, certNotAfter: context.certNotAfter, takenAt: now,
+                                dataWatched: watchData, dataServices: dataServices,
+                                gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
+                                checkupWatched: watchCheckup, checkupIssues: checkupIssues,
+                                alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues))
+    }
+
+    /// `work` within `seconds` when `on`; nil when off, failed or too slow.
+    private static func ifWatched<T: Sendable>(_ on: Bool, within seconds: TimeInterval,
+                                               _ work: @escaping @Sendable () async -> T?) async -> T? {
+        guard on else { return nil }
+        return await withDeadline(seconds, work)
+    }
+
+    /// Posts each cluster's alerts, named after their cluster (the notification's subtitle).
+    private static func post(_ outcomes: [ClusterAlerts], now: Date) async {
         let hide = UserDefaults.standard.bool(forKey: "appLockEnabled")
-        // A snoozed alert posts nothing, neither the problem nor its end (its notification's Snooze).
-        let fingerprint = context?.fingerprint ?? ""
-        let alerts = AlertSnoozeStore.current(now: now).notSnoozed(result.alerts, cluster: fingerprint, now: now)
-        for alert in alerts {
-            let link = alertLink(alert, snapshot: result.next, cluster: context?.clusterID ?? "")
-            let text = localized(alert, snapshot: result.next, previous: previous, now: now)
-            let wake = await canWake(alert, cluster: fingerprint)
-            await post(alert, localized: text, link: link, actions: alertActions(key: alert.key, problem: alert.problem, canWake: wake),
-                       info: actionInfo(alert, snapshot: result.next, cluster: fingerprint), hideDetails: hide)
+        let names = UserDefaults.standard.dictionary(forKey: "clusterNames") as? [String: String] ?? [:]
+        let labels = ClusterLabels(names: names, masked: UserDefaults.standard.bool(forKey: PrivacyKeys.enabled))
+        let snoozes = AlertSnoozeStore.current(now: now)
+        for outcome in outcomes {
+            let context = outcome.job.context
+            let fingerprint = context.fingerprint
+            // A snoozed alert posts nothing, neither the problem nor its end (its notification's Snooze).
+            for alert in snoozes.notSnoozed(outcome.alerts, cluster: fingerprint, now: now) {
+                let link = alertLink(alert, snapshot: outcome.snapshot, cluster: context.clusterID)
+                let text = localized(alert, snapshot: outcome.snapshot, previous: outcome.previous, now: now)
+                let wake = await canWake(alert, cluster: fingerprint)
+                await post(alert, localized: text, cluster: labels.of(context),
+                           id: alertNotificationID(cluster: outcome.job.key, alertKey: alert.key), link: link,
+                           actions: alertActions(key: alert.key, problem: alert.problem, canWake: wake),
+                           info: actionInfo(alert, snapshot: outcome.snapshot, cluster: fingerprint), hideDetails: hide)
+            }
         }
     }
 
@@ -283,6 +471,12 @@ enum BackgroundMonitor {
             let section = CheckupSectionID(rawValue: finding.section)?.title ?? finding.section
             let severity = snapshot.checkupIssues[subject] == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
             return ("\(section): \(finding.subject)", "\(CheckupText.checkupTitle) · \(severity)")
+        case "unreachable":
+            // The cluster is named in the subtitle.
+            guard alert.problem else {
+                return (String(localized: "Cluster reachable again"), String(localized: "It answers the background checks again."))
+            }
+            return (String(localized: "Cluster unreachable"), String(localized: "No answer to the last \(unreachableRuns) checks."))
         default:
             return (alert.title, alert.text)
         }
@@ -326,31 +520,32 @@ enum BackgroundMonitor {
 
     /// The alert kinds, one notification category each ("alert.node"…), so iOS can group and
     /// summarize them per kind.
-    static let alertKinds = ["node", "etcd", "cert", "data", "gitops", "checkup", "alertmanager"]
+    static let alertKinds = ["node", "etcd", "cert", "data", "gitops", "checkup", "alertmanager", "cluster"]
 
     /// The category of an alert: its kind's with its `actions` (see alertCategory), "….private"
     /// with details hidden; "private" for a kind this version does not know. Alertmanager alerts
-    /// ("am:…") are of the kind "alertmanager".
+    /// ("am:…") are of the kind "alertmanager", "unreachable" of the kind "cluster" (alertKind).
     static func category(alertKey: String, actions: [AlertAction] = [], hideDetails: Bool) -> String {
-        let prefix = String(alertKey.split(separator: ":", maxSplits: 1).first ?? "")
-        let kind = prefix == "am" ? "alertmanager" : prefix
+        let kind = alertKind(key: alertKey)
         guard alertKinds.contains(kind) else { return hideDetails ? "private" : "" }
         return alertCategory(kind: kind, actions: actions, hideDetails: hideDetails)
     }
 
     /// With the app lock on, details are hidden on the lock screen (iOS shows "Notification").
+    /// `cluster` names the cluster (the subtitle), `id` keeps the same alert of two clusters apart;
     /// `link` (userInfo "link") is the share link the tap opens; `info` what its actions need.
-    private static func post(_ alert: Alert, localized: (title: String, text: String), link: URL?, actions: [AlertAction],
-                             info: [String: String], hideDetails: Bool) async {
+    private static func post(_ alert: Alert, localized: (title: String, text: String), cluster: String, id: String, link: URL?,
+                             actions: [AlertAction], info: [String: String], hideDetails: Bool) async {
         let content = UNMutableNotificationContent()
         content.title = localized.title
+        content.subtitle = cluster
         content.body = localized.text
         content.sound = alert.problem ? .default : nil
         content.categoryIdentifier = category(alertKey: alert.key, actions: actions, hideDetails: hideDetails)
         var userInfo = info
         if let link { userInfo["link"] = link.absoluteString }
         content.userInfo = userInfo
-        let request = UNNotificationRequest(identifier: alert.key, content: content, trigger: nil)
+        let request = UNNotificationRequest(identifier: id, content: content, trigger: nil)
         try? await UNUserNotificationCenter.current().add(request)
     }
 

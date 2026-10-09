@@ -101,13 +101,13 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             }
             return
         }
-        // Posted by an older version, without a link: alert keys are the request identifiers;
-        // "cert" is the expiry alert.
-        if let destination = GitOpsDestination(alertKey: response.notification.request.identifier) {
+        // Without a link: the alert key (from an older version, the request identifier);
+        // "cert" is the expiry alert. Identifiers now name the cluster too (alertNotificationID).
+        if let destination = GitOpsDestination(alertKey: alertKey) {
             await MainActor.run { NotificationRouter.shared.pendingGitOps = destination }
             return
         }
-        guard response.notification.request.identifier == "cert" else { return }
+        guard alertKey == "cert" else { return }
         await MainActor.run { NotificationRouter.shared.pendingRenewal = true }
     }
 }

@@ -26,6 +26,13 @@ enum AlertSnoozeStore {
         save(load().pruned(now: now).snoozing(cluster: cluster, key: alertKey, hours: hours, now: now))
     }
 
+    /// Only the snoozes of `clusters` (fingerprints): a removed cluster's go with it.
+    static func keep(clusters: [String]) {
+        let stored = load()
+        let kept = stored.keeping(clusters: clusters)
+        if kept != stored { save(kept) }
+    }
+
     /// The snoozes still running at `now`; the ones over are dropped from the store.
     static func current(now: Date) -> AlertSnoozes {
         let stored = load()
@@ -108,7 +115,9 @@ enum AlertNotificationActions {
         content.body = text
         // Hidden on the lock screen with the app lock on, like the alert it answers.
         if UserDefaults.standard.bool(forKey: "appLockEnabled") { content.categoryIdentifier = "private" }
-        let request = UNNotificationRequest(identifier: wakePrefix + alertKey, content: content, trigger: nil)
+        // Per cluster, like the alerts: two clusters' nodes may share an address.
+        let request = UNNotificationRequest(identifier: wakePrefix + alertNotificationID(cluster: cluster, alertKey: alertKey),
+                                            content: content, trigger: nil)
         try? await UNUserNotificationCenter.current().add(request)
     }
 }
