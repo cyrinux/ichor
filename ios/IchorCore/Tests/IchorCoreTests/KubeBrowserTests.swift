@@ -143,4 +143,23 @@ final class KubeBrowserTests: XCTestCase {
         XCTAssertEqual(resourceRowNamespaces(rows), ["apps", "web"])
         XCTAssertEqual(resourceRowNamespaces([]), [])
     }
+
+    func testDecodesDeletePreview() throws {
+        let preview = try TalosJSON.decode(KubeDeletePreview.self, from: """
+        {"protected":true,"reason":"needed","clusterScoped":false,"finalizers":["example.com/hold"],
+         "dependents":[{"kind":"Pod","namespace":"shop","name":"api-1"}],"moreDependents":2,"resourceVersion":"7"}
+        """)
+        XCTAssertTrue(preview.isProtected)
+        XCTAssertTrue(preview.needsTypedName)
+        XCTAssertEqual(preview.dependents, [KubeDeleteDependent(kind: "Pod", namespace: "shop", name: "api-1")])
+        XCTAssertEqual(preview.moreDependents, 2)
+        XCTAssertEqual(preview.resourceVersion, "7")
+
+        let plain = try TalosJSON.decode(KubeDeletePreview.self, from: "{}")
+        XCTAssertEqual(plain, KubeDeletePreview())
+        XCTAssertFalse(plain.needsTypedName)
+        XCTAssertTrue(KubeDeletePreview(clusterScoped: true).needsTypedName)
+        XCTAssertEqual(KubeDeletePropagation.allCases.map(\.rawValue), ["Background", "Foreground", "Orphan"])
+        XCTAssertTrue(isKubeDeleteConflict("the object changed since you looked at it: review it again before deleting"))
+    }
 }

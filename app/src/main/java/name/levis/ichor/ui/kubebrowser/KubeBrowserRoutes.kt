@@ -2,6 +2,8 @@ package name.levis.ichor.ui.kubebrowser
 
 import android.net.Uri
 import android.os.Bundle
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -19,6 +21,9 @@ object KubeBrowserRoutes {
     const val HELM = "kube-helm"
     private const val HELM_RELEASE = "kube-helm-release?ns={ns}&name={name}"
     private const val FORWARD = "kube-forward?ns={ns}&pod={pod}"
+
+    /** Set on the screen an object was opened from once it is deleted: a list reads itself again. */
+    private const val DELETED = "kube-object-deleted"
 
     fun list(r: ApiResource) =
         "kube-browser-list?g=${e(r.group)}&v=${e(r.version)}&r=${e(r.resource)}&k=${e(r.kind)}&namespaced=${r.namespaced}&edit=${r.editable}"
@@ -45,6 +50,7 @@ object KubeBrowserRoutes {
         }
         composable(LIST, arguments = strings("g", "v", "r", "k") + flags("namespaced", "edit")) { entry ->
             val a = entry.arguments
+            val deleted by entry.savedStateHandle.getStateFlow(DELETED, 0L).collectAsStateWithLifecycle()
             val type = ApiResource(
                 group = a.str("g"),
                 version = a.str("v"),
@@ -53,7 +59,7 @@ object KubeBrowserRoutes {
                 namespaced = a?.getBoolean("namespaced") == true,
                 verbs = if (a?.getBoolean("edit") == true) listOf("update") else emptyList(),
             )
-            ResourceListScreen(type, onBack = { nav.popBackStack() }, onObject = { row ->
+            ResourceListScreen(type, deleted, onBack = { nav.popBackStack() }, onObject = { row ->
                 links.onObject(KubeObjectRef(type.group, type.version, type.resource, type.kind, row.namespace, row.name, type.editable))
             })
         }
@@ -66,6 +72,10 @@ object KubeBrowserRoutes {
                 onPortForward = { links.onPortForward(ref.namespace, ref.name) },
                 onOwner = links.onObject,
                 onHelmRelease = { ns, name -> nav.navigate(helmRelease(ns, name)) },
+                onDeleted = {
+                    nav.previousBackStackEntry?.savedStateHandle?.set(DELETED, System.currentTimeMillis())
+                    nav.popBackStack()
+                },
             )
         }
         composable(HELM) {

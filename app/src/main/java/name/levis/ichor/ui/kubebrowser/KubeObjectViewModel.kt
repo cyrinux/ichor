@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.KubeBrowserRepository
+import name.levis.ichor.model.DeletePropagation
+import name.levis.ichor.model.KubeDeletePreview
 import name.levis.ichor.model.KubeEditPreview
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubeObjectSummary
@@ -34,6 +36,17 @@ data class ObjectEdit(
 ) {
     val changed: Boolean get() = draft != original
 }
+
+/**
+ * A deletion being confirmed: what it would do ([preview]), the [propagation] chosen, then
+ * [deleting] while it runs and [error] when it was refused.
+ */
+data class ObjectDelete(
+    val preview: UiState<KubeDeletePreview> = UiState.Loading,
+    val propagation: DeletePropagation = DeletePropagation.BACKGROUND,
+    val deleting: Boolean = false,
+    val error: UiText? = null,
+)
 
 /**
  * One object of the browser ([ref]): its summary (conditions, owners, events), its YAML,
@@ -59,7 +72,16 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
     /** One-off messages (saved, refused) for a snackbar. */
     val messages: Flow<UiText> = _messages.receiveAsFlow()
 
+    private val _delete = MutableStateFlow<ObjectDelete?>(null)
+    /** The deletion being confirmed, null when none is. */
+    val delete: StateFlow<ObjectDelete?> = _delete.asStateFlow()
+
+    private val _deleted = Channel<Unit>(Channel.CONFLATED)
+    /** Once the object is deleted: the screen leaves. */
+    val deleted: Flow<Unit> = _deleted.receiveAsFlow()
+
     private var load: Job? = null
+    private var deletePreview: Job? = null
     private var summaryLoad: Job? = null
     private var review: Job? = null
 
@@ -150,6 +172,50 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
                 refreshAll()
             } else {
                 _edit.update { it?.copy(saving = false, saveError = outcome.exceptionOrNull()?.uiText()) }
+            }
+        }
+    }
+
+    /** Opens the deletion's confirmation and reads what it would do. */
+    fun startDelete() {
+        if (_delete.value != null) return
+        _delete.value = ObjectDelete()
+        loadDeletePreview()
+    }
+
+    fun loadDeletePreview() {
+        deletePreview?.cancel()
+        _delete.update { it?.copy(preview = UiState.Loading, error = null) }
+        deletePreview = viewModelScope.launch {
+            val result = cancellableCatching { browser.deletePreview(ref) }
+                .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
+            _delete.update { it?.copy(preview = result) }
+        }
+    }
+
+    fun choosePropagation(propagation: DeletePropagation) = _delete.update { it?.copy(propagation = propagation, error = null) }
+
+    fun cancelDelete() {
+        deletePreview?.cancel()
+        _delete.value = null
+    }
+
+    /**
+     * Deletes the object at the version the preview read; [force] for a protected one (its
+     * name typed). On success the screen leaves ([deleted]).
+     */
+    fun confirmDelete(force: Boolean) {
+        val current = _delete.value ?: return
+        val preview = (current.preview as? UiState.Loaded)?.data ?: return
+        if (current.deleting) return
+        _delete.value = current.copy(deleting = true, error = null)
+        viewModelScope.launch {
+            val outcome = cancellableCatching { browser.delete(ref, current.propagation, preview.resourceVersion, force) }
+            if (outcome.isSuccess) {
+                _delete.value = null
+                _deleted.send(Unit)
+            } else {
+                _delete.update { it?.copy(deleting = false, error = outcome.exceptionOrNull()?.uiText()) }
             }
         }
     }

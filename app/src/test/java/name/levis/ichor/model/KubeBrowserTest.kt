@@ -198,4 +198,20 @@ class KubeBrowserTest {
         assertFalse(plan.copy(blockers = listOf("pending")).canRun)
         assertEquals(HelmRollbackPlan(), TalosJson.decodeFromString(HelmRollbackPlan.serializer(), "{}"))
     }
+
+    @Test
+    fun deletePreviewDecodesAndAsksForTheName() {
+        val json = """{"protected":true,"reason":"needed","clusterScoped":false,"finalizers":["example.com/hold"],
+            "dependents":[{"kind":"Pod","namespace":"shop","name":"api-1"}],"moreDependents":2,"resourceVersion":"7"}"""
+        val p = TalosJson.decodeFromString(KubeDeletePreview.serializer(), json)
+        assertTrue(p.isProtected)
+        assertTrue(p.needsTypedName)
+        assertEquals(listOf(KubeDeleteDependent("Pod", "shop", "api-1")), p.dependents)
+        assertEquals("7", p.resourceVersion)
+
+        val plain = TalosJson.decodeFromString(KubeDeletePreview.serializer(), "{}")
+        assertFalse(plain.needsTypedName)
+        assertTrue(plain.copy(clusterScoped = true).needsTypedName)
+        assertEquals(listOf("Background", "Foreground", "Orphan"), DeletePropagation.entries.map { it.api })
+    }
 }
