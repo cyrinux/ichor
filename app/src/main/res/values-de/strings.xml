@@ -1639,6 +1639,7 @@
     <string name="data_services_search">Nach Namespace oder Name filtern</string>
     <string name="data_services_no_match">Nichts passt zu „%1$s“.</string>
     <string name="data_services_none">Keine Datendienste gefunden.</string>
+    <string name="data_services_none_hint">Keines der Systeme, die Ichor lesen kann, läuft auf diesem Cluster. Sieh dir die unterstützten an oder frag nach dem, das du nutzt.</string>
     <string name="data_services_all_fine">Alles in Ordnung.</string>
     <string name="data_services_on_node">auf %1$s</string>
     <string name="data_services_health_ok">fehlerfrei</string>

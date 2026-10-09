@@ -6,6 +6,7 @@ extension KubeHomeAction: BarActionLook {
         switch self {
         case .workloads: "square.stack.3d.up"
         case .resources: "square.grid.3x3"
+        case .gitOps: "arrow.triangle.2.circlepath"
         case .metrics: "chart.xyaxis.line"
         case .helm: "shippingbox"
         case .dataServices: "externaldrive.connected.to.line.below"
@@ -20,6 +21,7 @@ extension KubeHomeAction: BarActionLook {
         switch self {
         case .workloads: Text("Kubernetes workloads")
         case .resources: Text("Resources")
+        case .gitOps: Text(verbatim: "GitOps")
         case .metrics: Text("Metrics")
         case .helm: Text("Helm releases")
         case .dataServices: Text("Data services")
@@ -158,18 +160,19 @@ struct KubeHomeView: View {
             }
             ToolbarItemGroup(placement: .primaryAction) {
                 // As arranged: the bar's icons, the rest behind ⋯ (with the arrangement itself).
-                ForEach(bar.icons) { action in
+                ForEach(bar.icons.filter(offered)) { action in
                     Button { open(action) } label: {
                         Label { action.title } icon: { Image(systemName: action.systemImage) }
                     }
                 }
                 Menu {
-                    ForEach(bar.menu) { action in
+                    let menu = bar.menu.filter(offered)
+                    ForEach(menu) { action in
                         Button { open(action) } label: {
                             Label { action.title } icon: { Image(systemName: action.systemImage) }
                         }
                     }
-                    if !bar.menu.isEmpty { Divider() }
+                    if !menu.isEmpty { Divider() }
                     Button { customizing = true } label: { Label("Customize home", systemImage: "pencil") }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -325,6 +328,7 @@ struct KubeHomeView: View {
         switch action {
         case .workloads: path.append(.workloads)
         case .resources: screen = .resources
+        case .gitOps: if let route = gitOpsRoute { path.append(route) }
         case .metrics: path.append(.metrics)
         case .helm: screen = .helm
         case .dataServices: path.append(.dataServices(hints: "", downNodes: loadedNotReadyNodes))
@@ -347,6 +351,18 @@ struct KubeHomeView: View {
 
     private var layout: KubeHomeLayout { .parse(layoutText) }
     private var bar: KubeHomeBar { .parse(barText) }
+
+    /// GitOps only once the cluster answered that it runs Argo CD or Flux.
+    private func offered(_ action: KubeHomeAction) -> Bool {
+        action != .gitOps || gitOpsRoute != nil
+    }
+
+    /// Argo CD when installed, else Flux: the same screens as their sections; nil for neither.
+    private var gitOpsRoute: Route? {
+        if case .loaded(let status, _, _)? = argo, status.installed { return .argoCD(downNodes: loadedNotReadyNodes) }
+        if case .loaded(let status, _, _)? = flux, status.installed { return .flux(downNodes: loadedNotReadyNodes) }
+        return nil
+    }
 
     /// Sections the cluster has nothing for, left out of the editor too; each offered until its answer came.
     private var absentCards: Set<KubeHomeCard> {

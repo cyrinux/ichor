@@ -1645,6 +1645,7 @@
     <string name="data_services_search">Filter by namespace or name</string>
     <string name="data_services_no_match">Nothing matches “%1$s”.</string>
     <string name="data_services_none">No data services found.</string>
+    <string name="data_services_none_hint">None of the systems Ichor can read runs on this cluster. See the supported ones, or ask for the one you use.</string>
     <string name="data_services_all_fine">Nothing needs attention.</string>
     <string name="data_services_on_node">on %1$s</string>
     <string name="data_services_health_ok">healthy</string>
@@ -2906,6 +2907,8 @@
     <string name="audit_unauthorized">Refused %1$d times (401): its credentials are not valid</string>
     <string name="audit_unauthorized_fix">Its token or certificate expired or was deleted (a removed service account, an old kubeconfig): give it new credentials, or stop it. The log only knows its address.</string>
     <string name="checkup_title">Cluster checkup</string>
+    <!-- A product name and a version number: the same in every language. -->
+    <string name="checkup_kube_version" translatable="false">Kubernetes %1$s</string>
     <string name="checkup_intro">What the other screens do not show, read from the Kubernetes API. Nothing is changed.</string>
     <string name="checkup_verdict_critical">Needs attention</string>
     <string name="checkup_verdict_warning">Warnings</string>

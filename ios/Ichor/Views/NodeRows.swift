@@ -2,7 +2,8 @@ import SwiftUI
 import IchorCore
 
 /// A node's full row in a list (the overview, the Nodes screen). Swipe right: live graphs. Swipe
-/// left: logs, shell, reboot (which only opens its confirmation). Long press: everything, plus Copy IP.
+/// left: reboot and shut down (each only opens its confirmation), shell, logs. Long press:
+/// everything, plus Copy IP.
 struct NodeListRow: View {
     let node: NodeOverview
     /// The version every node runs, which the summary shows: left out of the row.
@@ -32,6 +33,8 @@ struct NodeListRow: View {
                 if model.allows(.power) {
                     Button { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot", systemImage: "power") }
                         .tint(.red)
+                    Button { path.append(.nodePower(ref, .shutdown)) } label: { Label("Shut down", systemImage: "power") }
+                        .tint(.orange)
                 }
                 if model.allows(.debugShell) {
                     Button { path.append(.debugShell(node: node.node, hostname: node.hostname)) } label: {
@@ -49,11 +52,8 @@ struct NodeListRow: View {
             }
         }
         .contextMenu { NodeMenu(node: node, path: $path) }
-        // VoiceOver already lists the swipe actions; these are only in the context menu.
+        // VoiceOver already lists the swipe actions; this one is only in the context menu.
         .accessibilityActions {
-            if node.reachable && model.allows(.power) {
-                Button("Shut down…") { path.append(.nodePower(ref, .shutdown)) }
-            }
             Button("Copy IP") { UIPasteboard.general.string = node.node }
         }
     }

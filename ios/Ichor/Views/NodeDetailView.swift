@@ -246,6 +246,8 @@ extension NodeDetailView {
     @ViewBuilder
     private var menuItems: some View {
         ShareLinkButton(target: .node(address: ref.address, hostname: ref.hostname, tab: tab.rawValue.lowercased()))
+        // As in the node row's long press.
+        Button { UIPasteboard.general.string = ref.address } label: { Label("Copy IP", systemImage: "doc.on.doc") }
         Section("Inspect") {
             Button { showingKernelLog = true } label: {
                 Label("Kernel log", systemImage: "terminal")

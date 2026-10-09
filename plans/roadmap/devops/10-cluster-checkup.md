@@ -93,8 +93,7 @@ Not in the checkup, but part of the same work:
 
 ## Out of scope, kept for later
 
-- **Port-forward from the phone** (a local listener to a pod's port): its own plan, it needs a
-  foreground service on Android and a background story on iOS.
+- ~~**Port-forward from the phone**~~: shipped since (`kube_portforward.go`).
 - **Editing taints and labels**: shown here, edited later with node maintenance (D1).
-- **Helm rollback**, **MetalLB pools** (no status to read), **BGP peers** (needs `cilium bgp
+- ~~**Helm rollback**~~ shipped since ([11-helm.md](11-helm.md)); **MetalLB pools** (no status to read), **BGP peers** (needs `cilium bgp
   peers` in each agent).

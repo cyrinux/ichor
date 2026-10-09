@@ -1773,6 +1773,7 @@
     <string name="data_services_search">Фільтр за простором імен або назвою</string>
     <string name="data_services_no_match">Нічого не відповідає «%1$s».</string>
     <string name="data_services_none">Сервісів даних не знайдено.</string>
+    <string name="data_services_none_hint">У цьому кластері не працює жодна із систем, які Ichor уміє читати. Перегляньте підтримувані або попросіть ту, якою користуєтеся.</string>
     <string name="data_services_all_fine">Усе гаразд.</string>
     <string name="data_services_on_node">на %1$s</string>
     <string name="data_services_health_ok">справний</string>

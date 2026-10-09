@@ -118,6 +118,11 @@ build-play:
 check:
     ./build.sh check
 
+# Go functions nothing reaches: neither the Go tests nor the Android and iOS apps (their
+# gomobile calls are found in app/ and ios/ and count as roots). Fails on any.
+deadcode:
+    python3 scripts/deadcode.py
+
 # Image-only buttons labelled and no text below 12 (sp or pt), Android and iOS.
 a11y-check:
     python3 scripts/check-accessibility.py

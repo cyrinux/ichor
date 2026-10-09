@@ -119,6 +119,11 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
         arguments = listOf(navArgument("kind") { type = NavType.StringType; defaultValue = "" }),
     ) { entry ->
         val kind = entry.arguments?.getString("kind")?.let { k -> DataServiceKind.entries.firstOrNull { it.name == k } }
-        name.levis.ichor.ui.dataservices.DataServicesScreen(initial = kind, onBack = { nav.popBackStack() })
+        name.levis.ichor.ui.dataservices.DataServicesScreen(
+            initial = kind,
+            onBack = { nav.popBackStack() },
+            onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
+            onRequestIntegration = { nav.navigate(Routes.INTEGRATIONS) },
+        )
     }
 }

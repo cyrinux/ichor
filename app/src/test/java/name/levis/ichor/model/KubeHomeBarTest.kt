@@ -3,6 +3,7 @@ package name.levis.ichor.model
 import name.levis.ichor.model.KubeHomeAction.API_HEALTH
 import name.levis.ichor.model.KubeHomeAction.CHECKUP
 import name.levis.ichor.model.KubeHomeAction.DATA_SERVICES
+import name.levis.ichor.model.KubeHomeAction.GITOPS
 import name.levis.ichor.model.KubeHomeAction.HELM
 import name.levis.ichor.model.KubeHomeAction.METRICS
 import name.levis.ichor.model.KubeHomeAction.NETWORK_POLICIES
@@ -17,9 +18,9 @@ import org.junit.Test
 class KubeHomeBarTest {
 
     @Test
-    fun defaultKeepsThreeIconsSoTheClusterNameFits() {
+    fun defaultKeepsFourIconsWithGitOps() {
         val bar = KubeHomeAction.bar.default
-        assertEquals(listOf(WORKLOADS, RESOURCES, METRICS), bar.icons)
+        assertEquals(listOf(WORKLOADS, RESOURCES, GITOPS, METRICS), bar.icons)
         assertEquals(listOf(HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SETTINGS), bar.menu)
         assertTrue(bar.isDefault)
     }
@@ -27,8 +28,16 @@ class KubeHomeBarTest {
     @Test
     fun encodeRoundTrips() {
         val bar = KubeHomeAction.bar.default.toBar(DATA_SERVICES).toMenu(RESOURCES)
-        assertEquals("WORKLOADS,METRICS,DATA_SERVICES|RESOURCES,HELM,CHECKUP,API_HEALTH,NETWORK_POLICIES,SETTINGS", bar.encode())
+        assertEquals("WORKLOADS,GITOPS,METRICS,DATA_SERVICES|RESOURCES,HELM,CHECKUP,API_HEALTH,NETWORK_POLICIES,SETTINGS", bar.encode())
         assertEquals(bar, KubeHomeAction.bar.parse(bar.encode()))
+        assertFalse(bar.isDefault)
+    }
+
+    @Test
+    fun aBarSavedBeforeGitOpsKeepsItsArrangement() {
+        val bar = KubeHomeAction.bar.parse("WORKLOADS,RESOURCES,METRICS|HELM,DATA_SERVICES,CHECKUP,API_HEALTH,NETWORK_POLICIES,SETTINGS")
+        assertEquals(listOf(WORKLOADS, RESOURCES, METRICS), bar.icons)
+        assertEquals(listOf(HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SETTINGS, GITOPS), bar.menu)
         assertFalse(bar.isDefault)
     }
 

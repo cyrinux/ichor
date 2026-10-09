@@ -195,7 +195,9 @@ fun KubeHomeScreen(
                         }
                     }
                 },
-                actions = { KubeHomeActions(bar, nav, onCustomize = { customizing = true }) },
+                actions = {
+                    KubeHomeActions(bar, nav, argo = argoShown != null, flux = fluxShown != null, onCustomize = { customizing = true })
+                },
             )
         },
     ) { padding ->
