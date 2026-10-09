@@ -36,6 +36,11 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "top-pod", args: "NAMESPACE POD", run: func(e env) (out string, err error) {
+		out, err = ichorgo.KubeTopPod(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+
+		return out, err
+	}},
 	{name: "rollout-restart", args: "KIND NAMESPACE NAME", run: func(e env) (out string, err error) {
 		// rollout-restart KIND NAMESPACE NAME
 		if err = ichorgo.KubeRolloutRestart(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3)); err == nil {

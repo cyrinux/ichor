@@ -1,6 +1,6 @@
 package name.levis.ichor.ui.workloads
 
-import name.levis.ichor.ui.components.rememberKubeTopPods
+import name.levis.ichor.ui.components.rememberKubeTopPod
 import name.levis.ichor.ui.components.PodUsage
 import android.content.Context
 import android.widget.Toast
@@ -224,7 +224,7 @@ fun PodLogSheet(
                 })
             }
             // CPU and memory now, against its limit or request (metrics-server, when there is one).
-            rememberKubeTopPods(pod.namespace, pod.key)?.byKey?.get(pod.key)?.let { PodUsage(it, Modifier.padding(horizontal = 16.dp)) }
+            rememberKubeTopPod(pod.namespace, pod.name)?.let { PodUsage(it, Modifier.padding(horizontal = 16.dp)) }
             run {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(containers, key = { "c-$it" }) { c ->

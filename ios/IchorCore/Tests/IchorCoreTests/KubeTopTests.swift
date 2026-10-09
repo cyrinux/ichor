@@ -6,6 +6,8 @@ final class KubeTopTests: XCTestCase {
         let json = #"{"available":true,"forbidden":false,"pods":[{"namespace":"web","name":"api","node":"w1","cpu":0.125,"memory":230686720,"cpuRequest":0.3,"cpuLimit":1.1,"memoryRequest":335544320,"memoryLimit":671088640}]}"#
         let top = try JSONDecoder().decode(KubeTopPods.self, from: Data(json.utf8))
         XCTAssertTrue(top.available)
+        XCTAssertFalse(top.boundsRead)
+        XCTAssertTrue(try JSONDecoder().decode(KubeTopPods.self, from: Data(#"{"boundsRead":true}"#.utf8)).boundsRead)
         XCTAssertEqual(top.pods.first?.id, "web/api")
         XCTAssertEqual(top.byKey["web/api"]?.cpu ?? 0, 0.125, accuracy: 1e-9)
     }

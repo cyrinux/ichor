@@ -38,10 +38,13 @@ type kubeTopNode struct {
 }
 
 // kubeTopPods is KubeTopPods' answer, Available and Forbidden as in kubeTopNodes.
+// BoundsRead: the pods' requests and limits were read (one namespace or one pod); false for
+// every namespace, where only the usage is (the bounds would mean every pod's full object).
 type kubeTopPods struct {
-	Available bool         `json:"available"`
-	Forbidden bool         `json:"forbidden"`
-	Pods      []kubeTopPod `json:"pods"`
+	Available  bool         `json:"available"`
+	Forbidden  bool         `json:"forbidden"`
+	BoundsRead bool         `json:"boundsRead"`
+	Pods       []kubeTopPod `json:"pods"`
 }
 
 // kubeTopPod is one pod's usage (summed over its containers) with its requests and limits.
@@ -108,7 +111,8 @@ func KubeTopNodes(configYAML, contextName, kubeServer string) (out string, err e
 }
 
 // KubeTopPods is the CPU and memory the pods of namespace ("" for all) matching selector
-// ("" for all, `app=web,tier!=db` form) use, as a JSON kubeTopPods.
+// ("" for all, `app=web,tier!=db` form) use, as a JSON kubeTopPods. The requests and limits
+// are joined for one namespace only (see kubeTopPods.BoundsRead).
 func KubeTopPods(configYAML, contextName, kubeServer, namespace, selector string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -207,10 +211,14 @@ func readTopPods(ctx context.Context, k *kubeClient, namespace, selector string)
 		})
 	}
 
-	// Full objects, not Table rows: only they carry the containers' resources.
+	// Every namespace: the usage only. The bounds come from the pods' full objects (Table rows
+	// do not carry them), the whole cluster's on a phone, on every refresh.
 	var pods kubeList[podResources]
-	if err := getList(ctx, k, scopedPath("/api/v1", namespace, "pods")+query, &pods); err != nil {
-		return kubeTopPods{}, err
+
+	if namespace != "" {
+		if err := getList(ctx, k, scopedPath("/api/v1", namespace, "pods")+query, &pods); err != nil {
+			return kubeTopPods{}, err
+		}
 	}
 
 	specs := map[string]podResources{}
@@ -218,7 +226,7 @@ func readTopPods(ctx context.Context, k *kubeClient, namespace, selector string)
 		specs[p.Metadata.Namespace+"/"+p.Metadata.Name] = p
 	}
 
-	out := kubeTopPods{Available: true, Pods: []kubeTopPod{}}
+	out := kubeTopPods{Available: true, BoundsRead: namespace != "", Pods: []kubeTopPod{}}
 
 	for _, m := range metrics.Items {
 		p := topPodOf(m, specs[m.Metadata.Namespace+"/"+m.Metadata.Name])
@@ -235,6 +243,40 @@ func readTopPods(ctx context.Context, k *kubeClient, namespace, selector string)
 	})
 
 	return out, nil
+}
+
+// KubeTopPod is the CPU and memory one pod uses, with its requests and limits, as a JSON
+// kubeTopPods holding that pod (none when metrics-server has none for it yet): two reads, the
+// pod's metrics and the pod, as `kubectl top pod NAME` does.
+func KubeTopPod(configYAML, contextName, kubeServer, namespace, name string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName = unmaskContext(configYAML, contextName)
+	namespace, name = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.revealName(strings.TrimSpace(name))
+
+	if err := validateKubeName("pod", namespace, name); err != nil {
+		return "", err
+	}
+
+	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demoTopPod(namespace, name), func(ctx context.Context, k *kubeClient) (kubeTopPods, error) {
+		return readTopPod(ctx, k, namespace, name)
+	})
+}
+
+func readTopPod(ctx context.Context, k *kubeClient, namespace, name string) (kubeTopPods, error) {
+	var m podMetrics
+	if err := k.get(ctx, scopedPath(metricsGroup, namespace, "pods")+"/"+url.PathEscape(name), &m); err != nil {
+		return metricsUnavailable[kubeTopPods](err, func(forbidden bool) kubeTopPods {
+			return kubeTopPods{Forbidden: forbidden, Pods: []kubeTopPod{}}
+		})
+	}
+
+	var spec podResources
+	if err := k.get(ctx, podPath(namespace, name), &spec); err != nil {
+		return kubeTopPods{}, err
+	}
+
+	return kubeTopPods{Available: true, BoundsRead: true, Pods: []kubeTopPod{topPodOf(m, spec)}}, nil
 }
 
 func topPodOf(m podMetrics, spec podResources) kubeTopPod {
