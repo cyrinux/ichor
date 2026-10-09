@@ -60,6 +60,8 @@ var shareTargets = map[string]shareFields{
 	"checkup": {},
 	// The Alertmanager alerts of the cluster.
 	"alerts": {},
+	// A node's Storage screen (its volumes, mounts and disks).
+	"storage": {node: true},
 }
 
 var (
