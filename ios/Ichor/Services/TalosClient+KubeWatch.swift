@@ -73,6 +73,16 @@ extension TalosClient {
         }
     }
 
+    /// A signal each time one of `kinds` changes in `namespace` (nil: every namespace), at most
+    /// every 2 s and never for the lists read at the start: for the lists that cannot be merged
+    /// row by row, read again on each signal.
+    func changeWatch(namespace: String?, kinds: [String]) -> AsyncStream<KubeLiveEvent<KubeChange>> {
+        let joined = kinds.joined(separator: ",")
+        return live { bridge in
+            IchorgoStartKubeChangeWatch(kubeConfig, kubeContext, kubeAPIServer, namespace ?? "", joined, bridge)
+        }
+    }
+
     /// A view kept live by the Go run `start` makes for the bridge: each update decoded as `T`,
     /// only the latest one kept for a slow consumer.
     private func live<T: Decodable & Sendable>(_ start: (KubeLiveBridge) -> IchorgoKubeLiveRun?) -> AsyncStream<KubeLiveEvent<T>> {

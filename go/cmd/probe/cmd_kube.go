@@ -188,6 +188,12 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "change-watch", args: "NAMESPACE|all KINDS", run: func(e env) (out string, err error) {
+		// change-watch NAMESPACE|all GROUP/VERSION/RESOURCE,...: prints each change signal for 30 s.
+		out = changeWatchRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+
+		return out, err
+	}},
 	{name: "node-pods-watch", args: "KUBENODE [PHASE]", run: func(e env) (out string, err error) {
 		// node-pods-watch KUBENODE [PHASE]: prints the node's pod events for 30 s.
 		out = nodePodsWatchRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
