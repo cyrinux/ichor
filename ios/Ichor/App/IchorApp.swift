@@ -180,6 +180,8 @@ enum Route: Hashable {
     case issueConfig(renew: Bool)
     /// AI diagnosis (optional, see AISettings); note: what the opening screen already knows.
     case diagnosis(note: String)
+    /// The action audit log; cluster: a context name, "" for every cluster.
+    case activity(cluster: String)
 }
 
 /// The home screen: the Talos overview, or the Kubernetes home of a cluster added from a kubeconfig.
@@ -252,6 +254,7 @@ struct MainNavigation: View {
                     case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
                     case .apps(let hostnames, let filter): AppsView(hostnames: hostnames, filter: filter)
                     case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)
+                    case .activity(let cluster): ActivityView(cluster: cluster)
                     }
                 }
         }

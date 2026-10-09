@@ -3306,4 +3306,17 @@
     <string name="omni_field_url">Omni URL (https://…omni.siderolabs.io)</string>
     <string name="omni_field_email">Account email</string>
     <string name="omni_mode_account">Account</string>
+    <string name="activity_title">Activity</string>
+    <string name="activity_empty">No action recorded yet. Every change Ichor makes to a cluster is listed here for 90 days, on this device only.</string>
+    <string name="activity_empty_filtered">No action matches these filters.</string>
+    <string name="activity_filter_all">All</string>
+    <string name="activity_filter_failed">Failed</string>
+    <string name="activity_share">Share activity</string>
+    <string name="activity_clear">Clear</string>
+    <string name="activity_clear_title">Clear the activity log?</string>
+    <string name="activity_clear_body">The recorded actions are deleted from this device. This cannot be undone.</string>
+    <string name="activity_demo">Demo</string>
+    <string name="activity_settings_desc">Every change Ichor made to your clusters (reboots, scaling, syncs, rollbacks…), kept 90 days on this device.</string>
+    <string name="activity_open">Activity log</string>
+    <string name="clusters_menu_activity">Activity</string>
 </resources>

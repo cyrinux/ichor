@@ -99,6 +99,8 @@ class KubeHomeNavigation(
     val onDrain: (node: String) -> Unit,
     /** The Kubernetes nodes screen of a large cluster, on one filter (null: all). */
     val onAllNodes: (NodeFilter?) -> Unit,
+    /** The action audit log of a cluster, by its context name. */
+    val onActivity: (cluster: String) -> Unit,
 )
 
 /**
@@ -203,6 +205,7 @@ fun KubeHomeScreen(
                 onClose = { showClusters = false },
                 onAddCluster = nav.onAddCluster,
                 onClustersCleared = nav.onClustersCleared,
+                onActivity = { nav.onActivity(it.name) },
             )
         }
         val refresh = {

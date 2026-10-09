@@ -37,6 +37,7 @@ import name.levis.ichor.model.contextFor
 import name.levis.ichor.model.kubeFocus
 import name.levis.ichor.model.nodeTab
 import name.levis.ichor.model.sensitive
+import name.levis.ichor.ui.activity.ActivityScreen
 import name.levis.ichor.ui.apihealth.ApiHealthScreen
 import name.levis.ichor.ui.apihealth.AuditScreen
 import name.levis.ichor.ui.apps.AppsScreen
@@ -222,6 +223,11 @@ private object Routes {
         "pod-shell?ctx=${Uri.encode(context)}&ns=${Uri.encode(namespace)}&pod=${Uri.encode(pod)}&c=${Uri.encode(container)}"
     const val HEALTH = "health"
     const val SETTINGS = "settings"
+
+    /** The action audit log; empty [cluster]: every cluster. */
+    const val ACTIVITY = "activity?cluster={cluster}"
+
+    fun activity(cluster: String = "") = "activity?cluster=${Uri.encode(cluster)}"
     const val DIAGNOSIS = "diagnosis?note={note}"
 
     /** [note]: what to tell the model up front, e.g. a failed health check. */
@@ -421,6 +427,7 @@ fun Navigation(
                 onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
                 onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
                 onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
+                onActivity = { nav.navigate(Routes.activity(it)) },
             )
             // After an update: what changed since the build that ran before.
             WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
@@ -822,6 +829,9 @@ fun Navigation(
                 onSettings = { nav.navigate(Routes.SETTINGS) },
             )
         }
+        composable(Routes.ACTIVITY, arguments = listOf(navArgument("cluster") { type = NavType.StringType; defaultValue = "" })) { entry ->
+            ActivityScreen(cluster = entry.arguments?.getString("cluster").orEmpty(), onBack = { nav.popBackStack() })
+        }
         composable(Routes.SETTINGS) {
             SettingsScreen(
                 configs = app.configRepository,
@@ -832,6 +842,7 @@ fun Navigation(
                 onReimport = { nav.navigate(Routes.IMPORT) },
                 onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
                 onSupportBundle = { nav.navigate(Routes.SUPPORT_BUNDLE) },
+                onActivity = { nav.navigate(Routes.activity()) },
                 onIntegrations = { nav.navigate(Routes.INTEGRATIONS) },
                 onChangelog = { nav.navigate(Routes.CHANGELOG) },
                 onLicenses = { nav.navigate(Routes.LICENSES) },

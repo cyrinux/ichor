@@ -83,6 +83,8 @@ struct ClustersView: View {
     @State private var newName = ""
     @State private var error: String?
     @State private var editingEndpoints: ContextSummary?
+    /// The cluster whose action audit log is open.
+    @State private var activityOf: String?
     @State private var scanning = false
     /// The sign-in of each kubeconfig cluster that signs in through a method, by fingerprint.
     @State private var signIns: [String: KubeSignInInfo] = [:]
@@ -119,6 +121,7 @@ struct ClustersView: View {
         }
         .endpointTools(editing: $editingEndpoints, scanning: $scanning)
         .sheet(item: $signingIn) { KubeSignInSheet(target: $0) }
+        .navigationDestination(item: $activityOf) { ActivityView(cluster: $0) }
         .task(id: "\(model.summary?.contexts.map(\.fingerprint) ?? [])#\(model.dataGeneration)") { await loadSignIns() }
         .themedBackground()
         .navigationTitle("Clusters")
@@ -237,6 +240,7 @@ struct ClustersView: View {
         if context.isKube || context.omni, let target = model.signInTarget(for: context) {
             Button { signingIn = target } label: { Label("Sign in", systemImage: "person.badge.key") }
         }
+        Button { activityOf = context.name } label: { Label("Activity", systemImage: "clock.arrow.circlepath") }
         Button(role: .destructive) { removing = context } label: { Label("Delete", systemImage: "trash") }
     }
 
