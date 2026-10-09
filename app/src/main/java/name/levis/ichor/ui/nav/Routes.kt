@@ -30,6 +30,7 @@ internal object Routes {
     const val INSIGHTS = "insights"
     const val APPS = "apps?attention={attention}"
     const val METRICS = "metrics"
+    const val ALERTS = "alerts"
 
     /** [attention]: open on the "needs attention" chip. */
     fun apps(attention: Boolean = false) = "apps?attention=$attention"

@@ -48,6 +48,7 @@ fun MonitoringSection(app: TalosApp) {
     val dataWatched by store.dataServicesWatched.collectAsStateWithLifecycle()
     val gitopsWatched by store.gitopsWatched.collectAsStateWithLifecycle()
     val checkupWatched by store.checkupWatched.collectAsStateWithLifecycle()
+    val alertmanagerWatched by store.alertmanagerWatched.collectAsStateWithLifecycle()
     val interval by store.intervalMinutes.collectAsStateWithLifecycle()
     val securityKeys by app.appLock.securityKeys.collectAsStateWithLifecycle()
     var error by remember { mutableStateOf<String?>(null) }
@@ -121,6 +122,19 @@ fun MonitoringSection(app: TalosApp) {
                 Switch(
                     checked = checkupWatched,
                     onCheckedChange = { store.setCheckupWatched(it) },
+                    enabled = enabled,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            // And for the Alertmanager: its alerts are read at every check.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_alertmanager), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_alertmanager_desc))
+                }
+                Switch(
+                    checked = alertmanagerWatched,
+                    onCheckedChange = { store.setAlertmanagerWatched(it) },
                     enabled = enabled,
                     modifier = Modifier.padding(start = 12.dp),
                 )

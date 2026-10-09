@@ -54,6 +54,17 @@ data class ClusterSnapshot(
     val checkupIssues: Map<String, String> = emptyMap(),
     /** Checkup warnings seen once and not notified yet. */
     val checkupPending: List<String> = emptyList(),
+    /** Watching the Alertmanager's alerts was on for this check (opt-in). */
+    val amWatched: Boolean = false,
+    /** Its alerts could be read this time (an Alertmanager was found and answered). */
+    val amChecked: Boolean = false,
+    /**
+     * Firing Alertmanager alerts (fingerprint → "severity|alertname|where", see [amIssuesOf]),
+     * kept like [dataIssues].
+     */
+    val amIssues: Map<String, String> = emptyMap(),
+    /** Alertmanager warnings seen once and not notified yet. */
+    val amPending: List<String> = emptyList(),
     /**
      * The cluster was added from a kubeconfig: its nodes come from the Kubernetes API (ready or
      * not, never unreachable), there is no etcd, and [certNotAfter] is the kubeconfig's credentials.
@@ -90,7 +101,13 @@ fun snapshotOf(
     /** The checkup watched ([checkupIssues] null when watched but unreadable). */
     checkupWatched: Boolean = false,
     checkupIssues: Map<String, String>? = null,
+    /** The Alertmanager watched ([amIssues] null when watched but unreadable or not found). */
+    amWatched: Boolean = false,
+    amIssues: Map<String, String>? = null,
 ): ClusterSnapshot = ClusterSnapshot(
+    amWatched = amWatched,
+    amChecked = amWatched && amIssues != null,
+    amIssues = amIssues?.takeIf { amWatched }.orEmpty(),
     checkupWatched = checkupWatched,
     checkupChecked = checkupWatched && checkupIssues != null,
     checkupIssues = checkupIssues?.takeIf { checkupWatched }.orEmpty(),
@@ -131,8 +148,13 @@ fun kubeSnapshotOf(
     gitopsIssues: Map<String, String>? = null,
     checkupWatched: Boolean = false,
     checkupIssues: Map<String, String>? = null,
+    amWatched: Boolean = false,
+    amIssues: Map<String, String>? = null,
 ): ClusterSnapshot = ClusterSnapshot(
     kube = true,
+    amWatched = amWatched,
+    amChecked = amWatched && amIssues != null,
+    amIssues = amIssues?.takeIf { amWatched }.orEmpty(),
     checkupWatched = checkupWatched,
     checkupChecked = checkupWatched && checkupIssues != null,
     checkupIssues = checkupIssues?.takeIf { checkupWatched }.orEmpty(),

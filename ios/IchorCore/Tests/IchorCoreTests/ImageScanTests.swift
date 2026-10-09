@@ -105,4 +105,24 @@ final class ImageScanTests: XCTestCase {
         XCTAssertTrue(name.hasSuffix(".cdx.json"), name)
         XCTAssertEqual(imageScanFilename(app: "***", date: date, format: .csv).prefix(20), "app-vulnerabilities-")
     }
+
+    // As go/ichorgo/images_system.go writes it.
+    func testDecodesSystemImages() throws {
+        let images = try TalosJSON.decode([SystemImage].self, from: """
+            [{"role":"installer","image":"ghcr.io/example/installer:v1.14.0","ref":"ghcr.io/example/installer:v1.14.0","digest":""},
+             {"role":"kubelet","image":"ghcr.io/example/kubelet:v1.34.1","ref":"ghcr.io/example/kubelet@sha256:a1","digest":"sha256:a1"},
+             {"role":"etcd","image":"registry.example/etcd:3.6.5-0","ref":"registry.example/etcd:3.6.5-0"}]
+            """)
+        XCTAssertEqual(images.count, 3)
+        XCTAssertEqual(images[1], SystemImage(role: "kubelet", image: "ghcr.io/example/kubelet:v1.34.1",
+                                              ref: "ghcr.io/example/kubelet@sha256:a1", digest: "sha256:a1"))
+        XCTAssertEqual(images[2].digest, "")
+        XCTAssertEqual(systemImagesScanID(node: "192.0.2.10"), "talos:192.0.2.10")
+    }
+
+    func testImageScanOptions() throws {
+        XCTAssertEqual(try imageScanOptions(images: []), "")
+        let options = try imageScanOptions(images: ["ghcr.io/example/kubelet@sha256:a1"])
+        XCTAssertEqual(try TalosJSON.decode([String: [String]].self, from: options), ["images": ["ghcr.io/example/kubelet@sha256:a1"]])
+    }
 }

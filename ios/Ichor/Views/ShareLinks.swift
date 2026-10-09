@@ -50,6 +50,7 @@ extension ShareTarget {
         case .workloads, .workload, .pod, .cronJob: kubeFocus.map { Route.kubernetes($0) }
         case .data: .dataServices(hints: "", downNodes: [], kind: dataServiceKind)
         case .checkup: .checkup
+        case .alerts: .alerts
         }
     }
 }

@@ -9,6 +9,7 @@ extension OverviewAction: BarActionLook {
         case .workloads: "square.stack.3d.up"
         case .gitOps: "arrow.triangle.2.circlepath"
         case .metrics: "chart.xyaxis.line"
+        case .alerts: "bell.badge"
         case .kubespan: "point.3.connected.trianglepath.dotted"
         case .etcd: "cylinder.split.1x2"
         case .settings: "gearshape"
@@ -22,6 +23,7 @@ extension OverviewAction: BarActionLook {
         case .workloads: Text("Kubernetes workloads")
         case .gitOps: Text(verbatim: "GitOps")
         case .metrics: Text("Metrics")
+        case .alerts: Text("Alerts")
         case .kubespan: Text(verbatim: "KubeSpan")
         case .etcd: Text(verbatim: "etcd")
         case .settings: Text("Settings")
@@ -40,6 +42,7 @@ extension OverviewCard {
         case .flux: Text(verbatim: "Flux")
         case .nodes: Text("Nodes")
         case .timeDrift: Text("Clock drift")
+        case .alerts: Text("Alerts")
         }
     }
 
@@ -54,6 +57,7 @@ extension OverviewCard {
         case .flux: Text("Ready, reconciling and failing Kustomizations and HelmReleases")
         case .nodes: Text("Every node with its state")
         case .timeDrift: Text("Clock offset of each node against NTP")
+        case .alerts: Text("Alertmanager alerts firing by severity, and those silenced")
         }
     }
 }

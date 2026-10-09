@@ -71,7 +71,7 @@ private fun ScanBody(ui: AppScanUi) {
     val session = ui.session
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (session?.running == true) {
-            Running(session, ui.onStop)
+            ScanProgressLines(session, ui.onStop)
             return@Column
         }
         session?.error?.let { Text(stringResource(R.string.imagescan_failed, coreErrorText(it)), color = LocalStatusColors.current.bad) }
@@ -82,7 +82,7 @@ private fun ScanBody(ui: AppScanUi) {
         if (shown == null) {
             MutedText(stringResource(R.string.imagescan_hint, IMAGESCAN_NAMESPACE))
         } else {
-            Summary(shown.first)
+            ScanSummary(shown.first)
         }
         if (ui.busyElsewhere) MutedText(stringResource(R.string.imagescan_busy_elsewhere))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -105,7 +105,7 @@ private fun ScanBody(ui: AppScanUi) {
 
 /** Severity pills, then where the report comes from and the images it could not scan. */
 @Composable
-private fun Summary(report: ImageScanReport) {
+fun ScanSummary(report: ImageScanReport) {
     SeverityPills(report.summary)
     MutedText(reportSource(report))
     if (report.failed > 0) {
@@ -117,8 +117,9 @@ private fun Summary(report: ImageScanReport) {
     }
 }
 
+/** The running scan's phase, a progress bar (by image while scanning) and Stop. */
 @Composable
-private fun Running(session: ImageScanSession, onStop: () -> Unit) {
+fun ScanProgressLines(session: ImageScanSession, onStop: () -> Unit) {
     val p = session.progress
     Text(if (session.stopping) stringResource(R.string.imagescan_stopping) else phaseText(p))
     if (p?.phase == IMAGESCAN_PHASE_SCANNING && p.steps > 0) {

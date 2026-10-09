@@ -137,6 +137,20 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> gitopsAlertTitle(context, alert)
     AlertKind.CHECKUP_PROBLEM -> checkupAlertTitle(context, alert)
     AlertKind.CHECKUP_OK -> context.getString(R.string.monitor_checkup_ok, alert.subject)
+    AlertKind.AM_FIRING -> context.getString(R.string.monitor_am_firing, alert.subject)
+    AlertKind.AM_RESOLVED -> context.getString(R.string.monitor_am_resolved, alert.subject)
+}
+
+/** "demo/worker-6f4b8 · critical": what the alert is about, and how bad while it fires. */
+private fun amAlertText(context: Context, alert: Alert): String {
+    val detail = AmDetail.parse(alert.detail)
+    val where = detail.where.ifEmpty { context.getString(R.string.alerts_title) }
+    if (!alert.problem) return where
+    val severity = when (detail.severity) {
+        DATA_CRITICAL -> context.getString(R.string.data_services_health_critical)
+        else -> context.getString(R.string.data_services_health_warning)
+    }
+    return context.getString(R.string.monitor_data_text, where, severity)
 }
 
 /** "Volumes: shop/data-postgres-0", from a checkup alert's "section|kind|severity" detail and its subject. */
@@ -213,4 +227,5 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.DATA_PROBLEM, AlertKind.DATA_OK -> dataAlertText(context, alert)
     AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> gitopsAlertText(context, alert)
     AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK -> checkupAlertText(context, alert)
+    AlertKind.AM_FIRING, AlertKind.AM_RESOLVED -> amAlertText(context, alert)
 }

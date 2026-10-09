@@ -7,8 +7,9 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
     public enum Target: String, Codable, Sendable {
         case cluster, etcd, health, argoCD = "argocd", flux, node, workloads
         case argoApp = "argo-app", fluxApp = "flux-app", workload, pod, cronJob = "cronjob"
-        /// The data services screen, on the tab `kind` names (a catalog id); the cluster checkup.
-        case data, checkup
+        /// The data services screen, on the tab `kind` names (a catalog id); the cluster checkup;
+        /// the Alertmanager alerts.
+        case data, checkup, alerts
     }
 
     public var cluster: String
@@ -121,6 +122,7 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
             default: return nil
             }
         case "checkup": return .screen(.checkup)
+        case "am": return .screen(.alerts)
         default: return nil
         }
     }

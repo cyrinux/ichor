@@ -57,6 +57,13 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: checkupKey) }
     }
 
+    static let alertmanagerKey = "monitor.alertmanager"
+    /// Opt-in: also read the Alertmanager's alerts (the cluster's source, else the first one found).
+    static var alertmanagerWatched: Bool {
+        get { UserDefaults.standard.bool(forKey: alertmanagerKey) }
+        set { UserDefaults.standard.set(newValue, forKey: alertmanagerKey) }
+    }
+
     /// Call once, before the app finishes launching.
     static func register() {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: taskID, using: nil) { task in
@@ -137,18 +144,25 @@ enum BackgroundMonitor {
         let watchCheckup = checkupWatched && kubeAllowed
         let knownCheckup = knownCheckupIssues(previous, context: contextName)
         let checkupIssues = watchCheckup ? await readCheckup(client, known: knownCheckup) : nil
+        // And for the Alertmanager, reached like the metrics through the service proxy or a URL.
+        let watchAlertmanager = alertmanagerWatched && kubeAllowed
+        let knownAlertmanager = knownAlertmanagerIssues(previous, context: contextName)
+        let alertmanagerIssues = watchAlertmanager
+            ? await readAlertmanager(client, fingerprint: context?.fingerprint ?? "", known: knownAlertmanager) : nil
         let now = Date()
         let current: ClusterSnapshot
         if let kubeNodes {
             current = kubeSnapshotOf(kubeNodes, context: contextName, certNotAfter: context?.certNotAfter ?? 0, takenAt: now,
                                      dataWatched: watchData, dataServices: dataServices,
                                      gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
-                                     checkupWatched: watchCheckup, checkupIssues: checkupIssues)
+                                     checkupWatched: watchCheckup, checkupIssues: checkupIssues,
+                                     alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues)
         } else if let overview {
             current = snapshotOf(overview, etcd: etcd, certNotAfter: context?.certNotAfter ?? 0, takenAt: now,
                                  dataWatched: watchData, dataServices: dataServices,
                                  gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
-                                 checkupWatched: watchCheckup, checkupIssues: checkupIssues)
+                                 checkupWatched: watchCheckup, checkupIssues: checkupIssues,
+                                 alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues)
         } else {
             return
         }
@@ -158,7 +172,8 @@ enum BackgroundMonitor {
         let hide = UserDefaults.standard.bool(forKey: "appLockEnabled")
         for alert in result.alerts {
             let link = alertLink(alert, snapshot: result.next, cluster: context?.clusterID ?? "")
-            await post(alert, localized: localized(alert, snapshot: result.next, now: now), link: link, hideDetails: hide)
+            let text = localized(alert, snapshot: result.next, previous: previous, now: now)
+            await post(alert, localized: text, link: link, hideDetails: hide)
         }
     }
 
@@ -177,9 +192,20 @@ enum BackgroundMonitor {
         return checkupIssuesWithGaps(report, known: known)
     }
 
+    /// The Alertmanager's alerts worth a notification; nil when it could not be read (or none was
+    /// found): the last snapshot's then stand. Past 1000 alerts, a known one missing from the
+    /// answer is kept rather than reported resolved.
+    private static func readAlertmanager(_ client: TalosClient, fingerprint: String, known: [String: String]) async -> [String: String]? {
+        guard let source = try? await AlertmanagerStore.resolve(fingerprint, with: client),
+              let alerts = try? await client.alertmanagerAlerts(source) else { return nil }
+        return alertmanagerIssuesWithGaps(alerts, known: known)
+    }
+
     /// IchorCore builds English alerts; this rebuilds their text in the user's
     /// language from the alert key and the snapshot (same wording, keys in Localizable.xcstrings).
-    static func localized(_ alert: Alert, snapshot: ClusterSnapshot, now: Date) -> (title: String, text: String) {
+    /// `previous`: the snapshot before the check, which still names an Alertmanager alert that resolved.
+    static func localized(_ alert: Alert, snapshot: ClusterSnapshot, previous: ClusterSnapshot? = nil,
+                          now: Date) -> (title: String, text: String) {
         let parts = alert.key.split(separator: ":", maxSplits: 1).map(String.init)
         guard let kind = parts.first else { return (alert.title, alert.text) }
         let subject = parts.count > 1 ? parts[1] : ""
@@ -218,6 +244,14 @@ enum BackgroundMonitor {
             return (String(localized: "\(label) needs attention"), "\(system) · \(severity)")
         case "gitops":
             return localizedGitOps(alert, subject: subject, value: snapshot.gitopsIssues[subject])
+        case "am":
+            // "am:fingerprint": named from the issue kept, the current one or, once resolved, the last.
+            guard let value = snapshot.amIssues[subject] ?? previous?.amIssues[subject] else { return (alert.title, alert.text) }
+            let issue = AMIssue(value: value)
+            guard alert.problem else { return (String(localized: "Alertmanager: \(issue.alertname) resolved"), issue.subject) }
+            let severity = issue.severity == dataCritical ? AMSeverity.critical.label : AMSeverity.warning.label
+            let line = issue.line(severity: severity)
+            return (String(localized: "Alertmanager: \(issue.alertname)"), issue.summary.isEmpty ? line : "\(line)\n\(issue.summary)")
         case "checkup":
             // "section|kind|subject": the section names what kind of trouble, the subject what has it.
             let finding = CheckupSubject(key: subject)
@@ -268,12 +302,13 @@ enum BackgroundMonitor {
 
     /// The alert kinds, one notification category each ("alert.node"…), so iOS can group and
     /// summarize them per kind.
-    static let alertKinds = ["node", "etcd", "cert", "data", "gitops", "checkup"]
+    static let alertKinds = ["node", "etcd", "cert", "data", "gitops", "checkup", "alertmanager"]
 
     /// The category of an alert: its kind's, "….private" with details hidden; "private" for a kind
-    /// this version does not know.
+    /// this version does not know. Alertmanager alerts ("am:…") are of the kind "alertmanager".
     static func category(alertKey: String, hideDetails: Bool) -> String {
-        let kind = String(alertKey.split(separator: ":", maxSplits: 1).first ?? "")
+        let prefix = String(alertKey.split(separator: ":", maxSplits: 1).first ?? "")
+        let kind = prefix == "am" ? "alertmanager" : prefix
         guard alertKinds.contains(kind) else { return hideDetails ? "private" : "" }
         return hideDetails ? "alert.\(kind).private" : "alert.\(kind)"
     }

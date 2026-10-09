@@ -600,6 +600,7 @@ final class AppModel {
         LastKnownStore.wipe()
         PublicIPStore.wipe()
         MetricsStore.keep(fingerprints: []) // their credentials go with the config
+        AlertmanagerStore.keep(fingerprints: [])
         WakeOnLanStore.shared.wipe()
         KubeAuthStore.shared.wipe() // its sealed item went with the others
         storeVpnOnly([])
@@ -715,6 +716,7 @@ final class AppModel {
         WakeOnLanStore.shared.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         LastKnownStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         MetricsStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
+        AlertmanagerStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         let kept = publicIPReports.filter { report in newSummary.contexts.contains { $0.fingerprint == report.key } }
         if kept.count != publicIPReports.count {
             publicIPReports = kept

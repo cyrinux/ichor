@@ -462,7 +462,7 @@
     <string name="monitor_channel_nodes">Avvisi dei nodi</string>
     <string name="monitor_channel_nodes_desc">Un nodo si ferma, non risponde più o torna pronto</string>
     <string name="monitor_channel_cluster">Avvisi del cluster</string>
-    <string name="monitor_channel_cluster_desc">Allarmi etcd e problemi rilevati dal controllo del cluster</string>
+    <string name="monitor_channel_cluster_desc">Allarmi etcd, problemi rilevati dal controllo del cluster e avvisi di Alertmanager</string>
     <string name="monitor_channel_data">Avvisi dei servizi dati</string>
     <string name="monitor_channel_data_desc">Longhorn, database, storage a oggetti e backup che richiedono attenzione</string>
     <string name="monitor_channel_gitops">Avvisi GitOps</string>
@@ -3183,7 +3183,6 @@
     <string name="kube_discover_find">Trova cluster</string>
     <string name="kube_signin_required_error">Accedi a questo cluster per continuare (%1$s).</string>
     <string name="kube_signin_required_error_plain">Accedi a questo cluster per continuare.</string>
-||||||| a1506f3c
     <!-- kube browser -->
     <string name="kb_title">Tutte le risorse</string>
     <string name="kb_search_kinds">Cerca tipi (pod, deploy, gruppo…)</string>
@@ -3382,7 +3381,6 @@
     <string name="activity_settings_desc">Ogni modifica fatta da Ichor ai tuoi cluster (riavvii, scalature, sincronizzazioni, rollback…), conservata 90 giorni su questo dispositivo.</string>
     <string name="activity_open">Registro attività</string>
     <string name="clusters_menu_activity">Attività</string>
-||||||| b9b4f161
     <string name="kb_tab_summary">Riepilogo</string>
     <string name="kb_summary_conditions">Condizioni</string>
     <string name="kb_summary_no_conditions">Questo tipo non riporta condizioni.</string>
@@ -3412,6 +3410,94 @@
     <string name="kube_whoami_user">Utente Kubernetes</string>
     <string name="mono_text_larger">Testo più grande</string>
     <string name="mono_text_smaller">Testo più piccolo</string>
+    <!-- Alertmanager -->
+    <string name="alerts_title">Avvisi</string>
+    <string name="alerts_unreadable">Impossibile leggere gli avvisi: %1$s</string>
+    <string name="alerts_loading">Lettura degli avvisi…</string>
+    <string name="alerts_none_firing">Nessun avviso attivo.</string>
+    <string name="alerts_severity_critical">Critico</string>
+    <string name="alerts_severity_warning">Attenzione</string>
+    <string name="alerts_severity_info">Info</string>
+    <string name="alerts_severity_other">Altro</string>
+    <string name="alerts_state_firing">Attivo</string>
+    <string name="alerts_state_silenced">Silenziato</string>
+    <string name="alerts_state_inhibited">Inibito</string>
+    <string name="alerts_state_silenced_inhibited">Silenziato, inibito</string>
+    <string name="alerts_silence_active">Attivo</string>
+    <string name="alerts_silence_pending">In attesa</string>
+    <string name="alerts_silence_expired">Scaduto</string>
+    <string name="alerts_started">Inizio</string>
+    <string name="alerts_receivers">Destinatari</string>
+    <string name="alerts_runbook">Runbook</string>
+    <string name="alerts_generator">Grafico della regola</string>
+    <string name="alerts_open_pod">Pod</string>
+    <string name="alerts_open_namespace">Namespace %1$s</string>
+    <string name="alerts_open_node">Nodo %1$s</string>
+    <string name="alerts_silence">Silenzia</string>
+    <string name="alerts_labels">Etichette</string>
+    <string name="alerts_annotations">Annotazioni</string>
+    <string name="alerts_silence_title">Silenzia %1$s</string>
+    <string name="alerts_silence_matchers">Corrispondenza</string>
+    <string name="alerts_silence_remove_matcher">Rimuovi %1$s</string>
+    <string name="alerts_silence_no_matchers">Nessun criterio rimasto: un silenzio ne richiede almeno uno.</string>
+    <string name="alerts_silence_matchers_hint">Silenzia esattamente questo avviso. Rimuovi un criterio per silenziare altri avvisi dello stesso tipo.</string>
+    <string name="alerts_silence_for">Per</string>
+    <string name="alerts_silence_custom">Altra durata</string>
+    <string name="alerts_silence_hours">Ore</string>
+    <string name="alerts_silence_hours_hint">Da 1 a 720 ore (30 giorni)</string>
+    <string name="alerts_silence_comment">Commento</string>
+    <string name="alerts_silence_comment_hint">Obbligatorio: spiega perché, per chi vedrà il silenzio.</string>
+    <string name="alerts_expire_title">Far scadere questo silenzio?</string>
+    <string name="alerts_expire_text">Gli avvisi che silenzia torneranno a notificare: %1$s</string>
+    <string name="alerts_expire">Fai scadere</string>
+    <string name="alerts_silences_show_expired">Mostra i silenzi scaduti</string>
+    <string name="alerts_silences_none">Nessun silenzio.</string>
+    <string name="alerts_silence_by">Da %1$s</string>
+    <string name="alerts_silence_starts">Inizia %1$s (%2$s)</string>
+    <string name="alerts_silence_ends">Termina %1$s (%2$s)</string>
+    <string name="alerts_silence_ended">Terminato %1$s (%2$s)</string>
+    <string name="alerts_search">Cerca negli avvisi e nelle etichette</string>
+    <string name="alerts_truncated">Sono mostrati i primi 1000 avvisi su %1$d.</string>
+    <string name="alerts_none">Alertmanager non contiene avvisi.</string>
+    <string name="alerts_none_match">Nessun avviso corrisponde ai filtri.</string>
+    <string name="alerts_source">Alertmanager</string>
+    <string name="alerts_source_line">Da %1$s</string>
+    <string name="alerts_tab_alerts">Avvisi</string>
+    <string name="alerts_tab_silences">Silenzi</string>
+    <string name="alerts_tab_silences_count">Silenzi (%1$d)</string>
+    <string name="alerts_none_found">Nessun Alertmanager trovato nel cluster</string>
+    <string name="alerts_none_found_hint">Scegli un Service a mano, o indica l\'URL di un Alertmanager raggiungibile dal telefono.</string>
+    <string name="alerts_searching">Ricerca di Alertmanager nel cluster…</string>
+    <string name="alerts_reachable">Alertmanager risponde.</string>
+    <string name="alerts_expire_failed">Impossibile far scadere il silenzio: %1$s</string>
+    <string name="alerts_silence_failed">Impossibile silenziare: %1$s</string>
+    <string name="alerts_expired">Silenzio scaduto</string>
+    <string name="alerts_silenced">Silenzio creato</string>
+    <string name="overview_card_desc_alerts">Gli avvisi attivi di Alertmanager per gravità, e quelli silenziati</string>
+    <string name="monitor_alertmanager">Avvisi di Alertmanager</string>
+    <string name="monitor_alertmanager_desc">Notifica anche gli avvisi dell\'Alertmanager del cluster né silenziati né inibiti: quelli critici subito, gli altri dopo due controlli di fila, quelli informativi mai. Ogni controllo li legge tramite l\'API Kubernetes (os:admin) o all\'URL scelto nella schermata Avvisi.</string>
+    <string name="monitor_am_firing">Attivo: %1$s</string>
+    <string name="monitor_am_resolved">Risolto: %1$s</string>
+    <plurals name="alerts_suppressed">
+        <item quantity="one">%1$d avviso silenziato o inibito</item>
+        <item quantity="other">%1$d avvisi silenziati o inibiti</item>
+    </plurals>
+    <plurals name="alerts_hours">
+        <item quantity="one">%1$d ora</item>
+        <item quantity="other">%1$d ore</item>
+    </plurals>
+    <plurals name="alerts_days">
+        <item quantity="one">%1$d giorno</item>
+        <item quantity="other">%1$d giorni</item>
+    </plurals>
+    <plurals name="alerts_weeks">
+        <item quantity="one">%1$d settimana</item>
+        <item quantity="other">%1$d settimane</item>
+    </plurals>
+    <plurals name="alerts_group_count">
+        <item quantity="one">%1$d di %2$d attivo</item>
+        <item quantity="other">%1$d di %2$d attivi</item>
+    </plurals>
     <string name="kb_tab_data">Dati</string>
     <string name="kb_data_type">Tipo: %1$s</string>
     <string name="kb_data_keys">Chiavi</string>
@@ -3429,7 +3515,6 @@
     <string name="kb_data_used_by_unknown">Impossibile elencare i pod di questo namespace.</string>
     <string name="kb_data_used_by_none">Nessun pod di questo namespace lo usa.</string>
     <string name="kb_data_reveal_auth">Mostra %1$s di %2$s</string>
-||||||| 62d80f4f
     <string name="pod_debug_toggle">Container di debug</string>
     <string name="pod_debug_note">Per immagini senza shell (distroless): aggiunge un container temporaneo che vede i processi di questo pod. Kubernetes lo mantiene nel pod finché il pod non viene eliminato.</string>
     <string name="storage_kube_search">Cerca PVC, classi o pod</string>
@@ -3456,4 +3541,10 @@
     <string name="kube_jobs_no_match">Nessun job corrisponde.</string>
     <string name="kube_jobs_completions">Completamenti: %1$s</string>
     <string name="kube_jobs_owner">CronJob %1$s</string>
+    <string name="imagescan_system_title">Immagini di sistema</string>
+    <string name="imagescan_system_loading">Lettura delle immagini di sistema del nodo…</string>
+    <string name="imagescan_system_unavailable">Le immagini di sistema richiedono il ruolo os:admin: %1$s</string>
+    <string name="imagescan_system_hint">Controlla con Trivy, per digest, le vulnerabilità note delle immagini che Talos esegue su questo nodo (kubelet, etcd, il control plane). Viene eseguito come Job nel namespace %1$s, che poi si elimina.</string>
+    <string name="imagescan_system_scan">Analizza le immagini di sistema</string>
+    <string name="images_kubernetes_title">Immagini Kubernetes</string>
 </resources>

@@ -509,7 +509,7 @@
     <string name="monitor_channel_nodes">Сповіщення про вузли</string>
     <string name="monitor_channel_nodes_desc">Вузол падає, перестає відповідати або знову готовий</string>
     <string name="monitor_channel_cluster">Сповіщення кластера</string>
-    <string name="monitor_channel_cluster_desc">Тривоги etcd і знахідки перевірки кластера</string>
+    <string name="monitor_channel_cluster_desc">Тривоги etcd, знахідки перевірки кластера і сповіщення Alertmanager</string>
     <string name="monitor_channel_data">Сповіщення сервісів даних</string>
     <string name="monitor_channel_data_desc">Longhorn, бази даних, об’єктне сховище та резервні копії, що потребують уваги</string>
     <string name="monitor_channel_gitops">Сповіщення GitOps</string>
@@ -3383,7 +3383,6 @@
     <string name="kube_discover_find">Знайти кластери</string>
     <string name="kube_signin_required_error">Увійдіть у цей кластер, щоб продовжити (%1$s).</string>
     <string name="kube_signin_required_error_plain">Увійдіть у цей кластер, щоб продовжити.</string>
-||||||| a1506f3c
     <!-- kube browser -->
     <string name="kb_title">Усі ресурси</string>
     <string name="kb_search_kinds">Пошук типів (pod, deploy, група…)</string>
@@ -3582,7 +3581,6 @@
     <string name="activity_settings_desc">Кожна зміна, яку Ichor вніс у ваші кластери (перезавантаження, масштабування, синхронізації, відкати…), зберігається 90 днів на цьому пристрої.</string>
     <string name="activity_open">Журнал активності</string>
     <string name="clusters_menu_activity">Активність</string>
-||||||| b9b4f161
     <string name="kb_tab_summary">Огляд</string>
     <string name="kb_summary_conditions">Умови</string>
     <string name="kb_summary_no_conditions">Цей тип не повідомляє умов.</string>
@@ -3612,6 +3610,104 @@
     <string name="kube_whoami_user">Користувач Kubernetes</string>
     <string name="mono_text_larger">Більший текст</string>
     <string name="mono_text_smaller">Менший текст</string>
+    <!-- Alertmanager -->
+    <string name="alerts_title">Сповіщення</string>
+    <string name="alerts_unreadable">Не вдалося прочитати сповіщення: %1$s</string>
+    <string name="alerts_loading">Читання сповіщень…</string>
+    <string name="alerts_none_firing">Жодне сповіщення не спрацьовує.</string>
+    <string name="alerts_severity_critical">Критичне</string>
+    <string name="alerts_severity_warning">Попередження</string>
+    <string name="alerts_severity_info">Інфо</string>
+    <string name="alerts_severity_other">Інше</string>
+    <string name="alerts_state_firing">Спрацьовує</string>
+    <string name="alerts_state_silenced">Заглушене</string>
+    <string name="alerts_state_inhibited">Пригнічене</string>
+    <string name="alerts_state_silenced_inhibited">Заглушене, пригнічене</string>
+    <string name="alerts_silence_active">Активне</string>
+    <string name="alerts_silence_pending">Очікує</string>
+    <string name="alerts_silence_expired">Завершене</string>
+    <string name="alerts_started">Початок</string>
+    <string name="alerts_receivers">Отримувачі</string>
+    <string name="alerts_runbook">Runbook</string>
+    <string name="alerts_generator">Графік правила</string>
+    <string name="alerts_open_pod">Под</string>
+    <string name="alerts_open_namespace">Простір імен %1$s</string>
+    <string name="alerts_open_node">Вузол %1$s</string>
+    <string name="alerts_silence">Заглушити</string>
+    <string name="alerts_labels">Мітки</string>
+    <string name="alerts_annotations">Анотації</string>
+    <string name="alerts_silence_title">Заглушити %1$s</string>
+    <string name="alerts_silence_matchers">Відповідність</string>
+    <string name="alerts_silence_remove_matcher">Прибрати %1$s</string>
+    <string name="alerts_silence_no_matchers">Не лишилося жодного критерію: заглушенню потрібен хоча б один.</string>
+    <string name="alerts_silence_matchers_hint">Глушить саме це сповіщення. Прибери критерій, щоб заглушити більше сповіщень такого типу.</string>
+    <string name="alerts_silence_for">На</string>
+    <string name="alerts_silence_custom">Інший час</string>
+    <string name="alerts_silence_hours">Години</string>
+    <string name="alerts_silence_hours_hint">Від 1 до 720 годин (30 днів)</string>
+    <string name="alerts_silence_comment">Коментар</string>
+    <string name="alerts_silence_comment_hint">Обов\'язково: поясни чому, для тих, хто побачить заглушення.</string>
+    <string name="alerts_expire_title">Завершити це заглушення?</string>
+    <string name="alerts_expire_text">Сповіщення, які воно глушить, знову надсилатимуться: %1$s</string>
+    <string name="alerts_expire">Завершити</string>
+    <string name="alerts_silences_show_expired">Показати завершені заглушення</string>
+    <string name="alerts_silences_none">Жодного заглушення.</string>
+    <string name="alerts_silence_by">Автор: %1$s</string>
+    <string name="alerts_silence_starts">Почнеться %1$s (%2$s)</string>
+    <string name="alerts_silence_ends">Завершиться %1$s (%2$s)</string>
+    <string name="alerts_silence_ended">Завершилося %1$s (%2$s)</string>
+    <string name="alerts_search">Пошук у сповіщеннях і мітках</string>
+    <string name="alerts_truncated">Показано перші 1000 із %1$d сповіщень.</string>
+    <string name="alerts_none">В Alertmanager немає сповіщень.</string>
+    <string name="alerts_none_match">Жодне сповіщення не відповідає фільтрам.</string>
+    <string name="alerts_source">Alertmanager</string>
+    <string name="alerts_source_line">Джерело: %1$s</string>
+    <string name="alerts_tab_alerts">Сповіщення</string>
+    <string name="alerts_tab_silences">Заглушення</string>
+    <string name="alerts_tab_silences_count">Заглушення (%1$d)</string>
+    <string name="alerts_none_found">У кластері не знайдено Alertmanager</string>
+    <string name="alerts_none_found_hint">Вибери Service вручну або вкажи URL Alertmanager, до якого телефон має доступ.</string>
+    <string name="alerts_searching">Пошук Alertmanager у кластері…</string>
+    <string name="alerts_reachable">Alertmanager відповідає.</string>
+    <string name="alerts_expire_failed">Не вдалося завершити заглушення: %1$s</string>
+    <string name="alerts_silence_failed">Не вдалося заглушити: %1$s</string>
+    <string name="alerts_expired">Заглушення завершено</string>
+    <string name="alerts_silenced">Заглушення створено</string>
+    <string name="overview_card_desc_alerts">Сповіщення Alertmanager, що спрацьовують, за важливістю, і заглушені</string>
+    <string name="monitor_alertmanager">Сповіщення Alertmanager</string>
+    <string name="monitor_alertmanager_desc">Також повідомляє про сповіщення Alertmanager кластера, які не заглушені й не пригнічені: критичні одразу, інші після двох перевірок поспіль, інформаційні ніколи. Кожна перевірка читає їх через Kubernetes API (os:admin) або за URL, вибраним на екрані «Сповіщення».</string>
+    <string name="monitor_am_firing">Спрацьовує: %1$s</string>
+    <string name="monitor_am_resolved">Вирішено: %1$s</string>
+    <plurals name="alerts_suppressed">
+        <item quantity="one">%1$d сповіщення заглушене або пригнічене</item>
+        <item quantity="few">%1$d сповіщення заглушені або пригнічені</item>
+        <item quantity="many">%1$d сповіщень заглушені або пригнічені</item>
+        <item quantity="other">%1$d сповіщення заглушені або пригнічені</item>
+    </plurals>
+    <plurals name="alerts_hours">
+        <item quantity="one">%1$d година</item>
+        <item quantity="few">%1$d години</item>
+        <item quantity="many">%1$d годин</item>
+        <item quantity="other">%1$d години</item>
+    </plurals>
+    <plurals name="alerts_days">
+        <item quantity="one">%1$d день</item>
+        <item quantity="few">%1$d дні</item>
+        <item quantity="many">%1$d днів</item>
+        <item quantity="other">%1$d дня</item>
+    </plurals>
+    <plurals name="alerts_weeks">
+        <item quantity="one">%1$d тиждень</item>
+        <item quantity="few">%1$d тижні</item>
+        <item quantity="many">%1$d тижнів</item>
+        <item quantity="other">%1$d тижня</item>
+    </plurals>
+    <plurals name="alerts_group_count">
+        <item quantity="one">%1$d із %2$d спрацьовує</item>
+        <item quantity="few">%1$d із %2$d спрацьовують</item>
+        <item quantity="many">%1$d із %2$d спрацьовують</item>
+        <item quantity="other">%1$d із %2$d спрацьовують</item>
+    </plurals>
     <string name="kb_tab_data">Дані</string>
     <string name="kb_data_type">Тип: %1$s</string>
     <string name="kb_data_keys">Ключі</string>
@@ -3629,7 +3725,6 @@
     <string name="kb_data_used_by_unknown">Не вдалося отримати список подів цього простору імен.</string>
     <string name="kb_data_used_by_none">Жоден под цього простору імен його не використовує.</string>
     <string name="kb_data_reveal_auth">Показати %1$s з %2$s</string>
-||||||| 62d80f4f
     <string name="pod_debug_toggle">Контейнер налагодження</string>
     <string name="pod_debug_note">Для образів без оболонки (distroless): додає тимчасовий контейнер, який бачить процеси цього пода. Kubernetes зберігає його в поді, доки под не буде видалено.</string>
     <string name="storage_kube_search">Пошук PVC, класів або подів</string>
@@ -3656,4 +3751,10 @@
     <string name="kube_jobs_no_match">Жодне завдання не відповідає.</string>
     <string name="kube_jobs_completions">Завершено: %1$s</string>
     <string name="kube_jobs_owner">CronJob %1$s</string>
+    <string name="imagescan_system_title">Системні образи</string>
+    <string name="imagescan_system_loading">Читання системних образів вузла…</string>
+    <string name="imagescan_system_unavailable">Системні образи потребують ролі os:admin: %1$s</string>
+    <string name="imagescan_system_hint">Перевіряє за digest образи, які Talos запускає на цьому вузлі (kubelet, etcd, площина керування), на відомі вразливості за допомогою Trivy. Працює як Job у просторі імен %1$s, який потім видаляє себе.</string>
+    <string name="imagescan_system_scan">Перевірити системні образи</string>
+    <string name="images_kubernetes_title">Образи Kubernetes</string>
 </resources>

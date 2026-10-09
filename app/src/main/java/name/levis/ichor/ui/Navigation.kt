@@ -221,6 +221,7 @@ fun Navigation(
                 onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
                 onWorkloads = { nav.navigate(Routes.workloads()) },
                 onMetrics = { nav.navigate(Routes.METRICS) },
+                onAlerts = { nav.navigate(Routes.ALERTS) },
                 onDataServices = { nav.navigate(Routes.dataServices(it)) },
                 onArgoCD = { nav.navigate(Routes.ARGO_CD) },
                 onFlux = { nav.navigate(Routes.FLUX) },
@@ -295,5 +296,6 @@ private suspend fun ShareTarget.route(app: TalosApp): String? = when (target) {
     ShareTarget.FLUX_APP -> Routes.fluxApp(kind, namespace, name)
     ShareTarget.DATA -> Routes.dataServices(DataServiceKind.entries.firstOrNull { it.catalogId == kind })
     ShareTarget.CHECKUP -> Routes.CHECKUP
+    ShareTarget.ALERTS -> Routes.ALERTS
     else -> kubeFocus?.let { Routes.workloads(it) }
 }

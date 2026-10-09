@@ -21,7 +21,7 @@ enum class AlertChannel(val id: String, val importance: Int, val title: Int, val
 val Alert.channel: AlertChannel
     get() = when (kind) {
         AlertKind.NODE_READY, AlertKind.NODE_NOT_READY, AlertKind.NODE_UNREACHABLE -> AlertChannel.NODES
-        AlertKind.ETCD_ALARM, AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK -> AlertChannel.CLUSTER
+        AlertKind.ETCD_ALARM, AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK, AlertKind.AM_FIRING, AlertKind.AM_RESOLVED -> AlertChannel.CLUSTER
         AlertKind.DATA_PROBLEM, AlertKind.DATA_OK -> AlertChannel.DATA
         AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> AlertChannel.GITOPS
         AlertKind.CERT_EXPIRING, AlertKind.CERT_EXPIRED, AlertKind.KUBECONFIG_EXPIRING, AlertKind.KUBECONFIG_EXPIRED -> AlertChannel.CERTS
@@ -43,6 +43,7 @@ fun Alert.shareTarget(): ShareTarget? = when (kind) {
     }
     AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> gitopsTarget()
     AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK -> ShareTarget.screen(ShareTarget.CHECKUP)
+    AlertKind.AM_FIRING, AlertKind.AM_RESOLVED -> ShareTarget.screen(ShareTarget.ALERTS)
 }
 
 /** Argo CD: "namespace/name"; Flux: "Kind namespace/name" (see [Alert.subject]). */
