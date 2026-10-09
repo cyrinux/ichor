@@ -1,6 +1,7 @@
 package name.levis.ichor.data
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.model.ApiHealthReport
@@ -25,6 +26,7 @@ import name.levis.ichor.model.KubeRevisionList
 import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.KubeRouteList
+import name.levis.ichor.model.KubeWatchEvent
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.KubeWorkloadPage
@@ -86,6 +88,25 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
     suspend fun rolloutStatus(workload: KubeWorkload): KubeRolloutStatus = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(KubeRolloutStatus.serializer(), Ichorgo.kubeRolloutStatus(cfg, ctx, server, workload.kind, workload.namespace, workload.name))
     }
+
+    /**
+     * [rolloutStatus] kept live (os:admin): the status at the start, then again each time the
+     * workload or one of its pods changes, until the collector cancels or the watch ends.
+     */
+    fun rolloutWatch(workload: KubeWorkload): Flow<StreamItem<KubeRolloutStatus>> =
+        kubeLiveFlow(go::kubeTarget, KubeRolloutStatus.serializer()) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeRolloutWatch(cfg, ctx, server, workload.kind, workload.namespace, workload.name, listener)
+        }
+
+    /**
+     * The pods of [selection] narrowed to [phase] kept live (os:admin): the whole list first,
+     * then each pod added, changed or gone as the API server reports it, until the collector
+     * cancels or the watch ends. Full objects, like the first page of [workloadPodsPage].
+     */
+    fun workloadPodsWatch(selection: PodSelection.OfWorkload, phase: PodPhaseFilter): Flow<StreamItem<KubeWatchEvent<KubePod>>> =
+        kubeWatchFlow(go::kubeTarget, KubePod.serializer(), { TalosJson.decodeFromString(KubePodPage.serializer(), it).pods }) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeWorkloadPodsWatch(cfg, ctx, server, selection.kind, selection.namespace, selection.name, phase.query, listener)
+        }
 
     /**
      * `kubectl scale KIND/NAME --replicas=N -n NAMESPACE` (os:admin): a warning ("" when none)

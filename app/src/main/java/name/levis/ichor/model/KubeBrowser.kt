@@ -17,6 +17,8 @@ data class ApiResource(
     val verbs: List<String> = emptyList(),
     val shortNames: List<String> = emptyList(),
     val categories: List<String> = emptyList(),
+    /** It serves /scale (any CRD declaring it), or is a Job (its parallelism). */
+    val scalable: Boolean = false,
 ) {
     val groupVersion: String get() = if (group.isEmpty()) version else "$group/$version"
     val key: String get() = "$group/$resource"
@@ -209,13 +211,29 @@ data class KubeObjectRef(
     val namespace: String,
     val name: String,
     val editable: Boolean,
+    /** The object screen offers Scale: see [ApiResource.scalable]. */
+    val scalable: Boolean = false,
 ) {
     val isSecret: Boolean get() = group.isEmpty() && resource == "secrets"
     val isPod: Boolean get() = group.isEmpty() && resource == "pods"
+    val isJob: Boolean get() = group == "batch" && resource == "jobs"
+
+    /** The resource a scale patches, as KubeCan takes it: a Job itself, the /scale subresource otherwise. */
+    val scaleResource: String get() = if (isJob) resource else "$resource/scale"
 
     companion object {
         fun pod(namespace: String, name: String) = KubeObjectRef("", "v1", "pods", "Pod", namespace, name, editable = true)
     }
+}
+
+/**
+ * How many pods an object wants ([replicas]) and runs ([current]) (KubeObjectScale). A Job's
+ * count is its parallelism ([field] "parallelism"): how many of its pods run at once.
+ */
+@Serializable
+data class KubeObjectScale(val replicas: Int = 0, val current: Int = 0, val field: String = "replicas") {
+    // `this.`: a bare `field` in a getter is the backing field.
+    val isParallelism: Boolean get() = this.field == "parallelism"
 }
 
 /** A container port of a pod's YAML: [name] "" when unnamed. */

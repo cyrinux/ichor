@@ -3,8 +3,9 @@ import UniformTypeIdentifiers
 import IchorCore
 
 /// One object of any kind: first its summary (health, conditions, owners up the chain, events,
-/// metadata), then its YAML (numbered, searchable, copy and share) without managedFields, and
-/// Edit when the kind may be updated. A Secret's
+/// metadata), for a Secret or ConfigMap its data key by key (KubeConfigDataView), then its YAML
+/// (numbered, searchable, copy and share) without managedFields, and Edit when the kind may be
+/// updated. A Secret's
 /// values stay hidden until asked for, behind Face ID / the passcode when the app lock is on,
 /// and it cannot be edited while they are hidden. A pod also opens its logs and a port-forward.
 /// Delete confirms with what the deletion would touch, then goes back (`onDeleted` first).
@@ -24,10 +25,11 @@ struct KubeObjectView: View {
         self.onDeleted = onDeleted
     }
 
-    private enum Tab: Hashable { case summary, yaml }
+    private enum Tab: Hashable { case summary, data, yaml }
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     @State private var tab = Tab.summary
     @State private var state: LoadState<String> = .loading
     @State private var summary: LoadState<KubeObjectSummary> = .loading
@@ -38,6 +40,9 @@ struct KubeObjectView: View {
     @State private var logsPod: KubePod?
     @State private var forwarding = false
     @State private var confirmingDelete = false
+    @State private var scaling = false
+    /// What refuses the scale, once asked; nil while asking, when allowed, unknown or not scalable.
+    @State private var scaleDenial: KubeAccess?
     @State private var deleted = false
     /// What refuses the delete, once asked; nil while asking, when allowed or unknown.
     @State private var deleteDenial: KubeAccess?
@@ -52,6 +57,8 @@ struct KubeObjectView: View {
                         .themedBackground()
                         .refreshable { await loadSummary() }
                 }
+            case .data:
+                KubeConfigDataView(resource: resource, namespace: namespace, name: name)
             case .yaml:
                 LoadStateView(state: state, retry: load) { yaml in
                     ConfigYamlLines(yaml: yaml, query: query, refresh: load)
@@ -78,13 +85,23 @@ struct KubeObjectView: View {
                 deleted = true
             }
         }
+        .sheet(isPresented: $scaling) {
+            KubeObjectScaleSheet(resource: resource, namespace: namespace, name: name, denial: scaleDenial) {
+                Task {
+                    await load()
+                    await loadSummary()
+                }
+            }
+        }
         .navigationDestination(isPresented: $forwarding) {
             PortForwardView(namespace: namespace, pod: name)
         }
         .messageAlert($message)
         .task(id: "\(kubeNamespacesKey(model))|\(reveal)") { await load() }
         .task(id: kubeNamespacesKey(model)) { await loadSummary() }
+        .task(id: "\(kubeNamespacesKey(model))|\(scenePhase == .active)") { await followSummary() }
         .task(id: kubeNamespacesKey(model)) { await loadDeleteAccess() }
+        .task(id: kubeNamespacesKey(model)) { await loadScaleAccess() }
     }
 
     @ViewBuilder private var header: some View {
@@ -98,6 +115,9 @@ struct KubeObjectView: View {
             .lineLimit(1)
             Picker(selection: $tab) {
                 Text(verbatim: SummaryText.tabSummary).tag(Tab.summary)
+                if resource.hasConfigData {
+                    Text("Data").tag(Tab.data)
+                }
                 Text(verbatim: "YAML").tag(Tab.yaml)
             } label: {
                 EmptyView()
@@ -141,6 +161,19 @@ struct KubeObjectView: View {
                         Label("Port forward", systemImage: "arrow.left.arrow.right.circle")
                     }
                 }
+                if resource.scalable {
+                    if let scaleDenial {
+                        Button {} label: {
+                            Text("Scale")
+                            Text(verbatim: scaleDenial.deniedText)
+                        }
+                        .disabled(true)
+                    } else {
+                        Button { scaling = true } label: {
+                            Label("Scale", systemImage: "arrow.up.and.down")
+                        }
+                    }
+                }
                 Divider()
                 if let deleteDenial {
                     Button(role: .destructive) {} label: {
@@ -178,6 +211,20 @@ struct KubeObjectView: View {
         summary = summary.refreshed(with: result)
     }
 
+    /// Keeps the summary live while the app is active: the Go core reads it again whenever the
+    /// object or its events change. A watch that ends is followed again after a while; one
+    /// refused leaves the one-shot read on screen.
+    private func followSummary() async {
+        guard scenePhase == .active else { return }
+        while !Task.isCancelled {
+            guard let client = model.client else { return }
+            for await event in client.objectSummaryWatch(resource, namespace: namespace, name: name) {
+                if case .update(let latest) = event { summary = .loaded(latest, at: Date()) }
+            }
+            try? await Task.sleep(for: .seconds(kubeWatchRetrySeconds))
+        }
+    }
+
     /// Asks whether the credentials may delete this object; an answer that cannot be had
     /// leaves Delete offered (the API server still decides).
     private func loadDeleteAccess() async {
@@ -186,6 +233,16 @@ struct KubeObjectView: View {
                                                      namespace: namespace, name: name),
               !Task.isCancelled else { return }
         deleteDenial = access.isDenied ? access : nil
+    }
+
+    /// Asks whether the credentials may scale this object (a scalable kind only); an answer
+    /// that cannot be had leaves Scale offered.
+    private func loadScaleAccess() async {
+        guard resource.scalable, let client = model.client else { return }
+        guard let access = try? await client.kubeCan(verb: "patch", group: resource.group, resource: resource.scaleResource,
+                                                     namespace: namespace, name: name),
+              !Task.isCancelled else { return }
+        scaleDenial = access.isDenied ? access : nil
     }
 
     /// Once the delete sheet closed after a deletion: tells the list, then goes back to it.

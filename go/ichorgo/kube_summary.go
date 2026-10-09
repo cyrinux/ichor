@@ -73,6 +73,8 @@ type kubeOwner struct {
 	Namespaced bool     `json:"namespaced"`
 	Verbs      []string `json:"verbs"`
 	Controller bool     `json:"controller"`
+	// Scalable as in kubeBrowserResource.
+	Scalable bool `json:"scalable,omitempty"`
 }
 
 // kubeHighlight is a spec field worth seeing first: Key names it for the app to label.
@@ -312,6 +314,7 @@ func resolveOwners(ctx context.Context, r *kindResolver, obj map[string]any, s k
 
 func withResource(o kubeOwner, res kubeBrowserResource, namespace string) kubeOwner {
 	o.Group, o.Version, o.Resource, o.Namespaced, o.Verbs = res.Group, res.Version, res.Resource, res.Namespaced, nonNil(res.Verbs)
+	o.Scalable = res.Scalable
 	o.Namespace = ""
 
 	if res.Namespaced {

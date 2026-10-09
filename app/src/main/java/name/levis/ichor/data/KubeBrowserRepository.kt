@@ -13,10 +13,13 @@ import name.levis.ichor.model.HelmReleaseList
 import name.levis.ichor.model.HelmRollbackPlan
 import name.levis.ichor.model.DeletePropagation
 import name.levis.ichor.model.KUBE_PAGE_SIZE
+import name.levis.ichor.model.KubeConfigData
 import name.levis.ichor.model.KubeDeletePreview
+import name.levis.ichor.model.configDataKind
 import name.levis.ichor.model.KubeEditPreview
 import name.levis.ichor.model.KubeExplain
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.KubeObjectScale
 import name.levis.ichor.model.KubeObjectSummary
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.ResourcePageJson
@@ -59,11 +62,29 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
         Ichorgo.kubeObjectYAML(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, reveal)
     }
 
+    /**
+     * A Secret or ConfigMap ([ref]) key by key, with the pods using it. A Secret's value comes
+     * only for [revealKey] ("" for none; refused in screenshot mode). Never cached.
+     */
+    suspend fun configData(ref: KubeObjectRef, revealKey: String = ""): KubeConfigData = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubeConfigData(cfg, ctx, server, ref.configDataKind, ref.namespace, ref.name, revealKey)
+        TalosJson.decodeFromString(KubeConfigData.serializer(), json)
+    }
+
     /** [ref] summed up: conditions, owners and managers, metadata, spec highlights and events. */
     suspend fun objectSummary(ref: KubeObjectRef): KubeObjectSummary = kubeCall { cfg, ctx, server ->
         val json = Ichorgo.kubeObjectSummary(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name)
         TalosJson.decodeFromString(KubeObjectSummary.serializer(), json)
     }
+
+    /**
+     * [objectSummary] kept live: the summary at the start, then again each time the object or
+     * its events change, until the collector cancels or the watch ends ([StreamItem.Done]).
+     */
+    fun objectSummaryWatch(ref: KubeObjectRef): Flow<StreamItem<KubeObjectSummary>> =
+        kubeLiveFlow(::target, KubeObjectSummary.serializer()) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeObjectWatch(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, listener)
+        }
 
     /** What saving [edited] as [ref] would store, from a dry run. */
     suspend fun updatePreview(ref: KubeObjectRef, edited: String): KubeEditPreview = kubeCall { cfg, ctx, server ->
@@ -80,6 +101,17 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     suspend fun explain(ref: KubeObjectRef, fieldPath: String): KubeExplain = kubeCall { cfg, ctx, server ->
         val json = Ichorgo.kubeExplain(cfg, ctx, server, ref.group, ref.version, ref.kind, fieldPath)
         TalosJson.decodeFromString(KubeExplain.serializer(), json)
+    }
+
+    /** How many pods [ref] wants and runs (a Job: its parallelism). */
+    suspend fun objectScale(ref: KubeObjectRef): KubeObjectScale = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubeObjectScale(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name)
+        TalosJson.decodeFromString(KubeObjectScale.serializer(), json)
+    }
+
+    /** Sets [ref]'s replicas (a Job's parallelism); returns the autoscaler warning, "" when none. */
+    suspend fun scale(ref: KubeObjectRef, replicas: Int): String = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeScaleObject(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.kind, ref.namespace, ref.name, replicas.toLong())
     }
 
     /** What deleting [ref] would do: protection, finalizers, the objects it owns. Read-only. */

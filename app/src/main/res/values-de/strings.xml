@@ -3206,6 +3206,9 @@
     <string name="kb_discard_confirm">Verwerfen</string>
     <string name="kb_delete">Löschen</string>
     <string name="kb_delete_title">%1$s löschen?</string>
+    <string name="kb_scale_title">%1$s skalieren</string>
+    <string name="kb_scale_running">Laufen jetzt: %1$s</string>
+    <string name="kb_scale_job_hint">Ein Job führt so viele Pods gleichzeitig aus; 0 pausiert ihn.</string>
     <string name="kb_delete_loading">Lese, was das Löschen betreffen würde …</string>
     <string name="kb_delete_protected">Geschützt: %1$s</string>
     <string name="kb_delete_pending">Das Löschen steht schon an: Die Finalizer unten halten es auf.</string>
@@ -3390,6 +3393,24 @@
     <string name="kube_whoami_user">Kubernetes-Benutzer</string>
     <string name="mono_text_larger">Größerer Text</string>
     <string name="mono_text_smaller">Kleinerer Text</string>
+    <string name="kb_tab_data">Daten</string>
+    <string name="kb_data_type">Typ: %1$s</string>
+    <string name="kb_data_keys">Schlüssel</string>
+    <string name="kb_data_no_keys">Keine Schlüssel.</string>
+    <string name="kb_data_hint_text">Text</string>
+    <string name="kb_data_hint_binary">Binär</string>
+    <string name="kb_data_show_value">Wert anzeigen</string>
+    <string name="kb_data_hide_value">Wert ausblenden</string>
+    <string name="kb_data_copy_value">Wert kopieren</string>
+    <string name="kb_data_base64">Binärer Wert, als Base64 angezeigt.</string>
+    <string name="kb_data_cert_chain">Zertifikate in der Kette: %1$d</string>
+    <string name="kb_data_registries">Registries</string>
+    <string name="kb_data_registry_user">Benutzer: %1$s</string>
+    <string name="kb_data_used_by">Verwendet von</string>
+    <string name="kb_data_used_by_unknown">Die Pods dieses Namespace konnten nicht aufgelistet werden.</string>
+    <string name="kb_data_used_by_none">Kein Pod dieses Namespace verwendet es.</string>
+    <string name="kb_data_reveal_auth">%1$s von %2$s anzeigen</string>
+||||||| 62d80f4f
     <string name="pod_debug_toggle">Debug-Container</string>
     <string name="pod_debug_note">Für Images ohne Shell (distroless): fügt einen temporären Container hinzu, der die Prozesse dieses Pods sieht. Kubernetes behält ihn im Pod, bis der Pod gelöscht wird.</string>
 </resources>

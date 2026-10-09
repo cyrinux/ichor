@@ -108,6 +108,7 @@ public struct ObjectOwner: Decodable, Equatable, Hashable, Sendable {
     public let namespaced: Bool
     public let verbs: [String]
     public let controller: Bool
+    public let scalable: Bool
 
     public var isHelmRelease: Bool { via == Self.viaHelm }
 
@@ -115,10 +116,11 @@ public struct ObjectOwner: Decodable, Equatable, Hashable, Sendable {
     /// Helm release, which has a screen of its own).
     public var apiResource: KubeAPIResource? {
         guard !resource.isEmpty, !version.isEmpty, !name.isEmpty else { return nil }
-        return KubeAPIResource(group: group, version: version, resource: resource, kind: kind, namespaced: namespaced, verbs: verbs)
+        return KubeAPIResource(group: group, version: version, resource: resource, kind: kind, namespaced: namespaced, verbs: verbs,
+                               scalable: scalable)
     }
 
-    private enum CodingKeys: String, CodingKey { case via, group, version, resource, kind, namespace, name, namespaced, verbs, controller }
+    private enum CodingKeys: String, CodingKey { case via, group, version, resource, kind, namespace, name, namespaced, verbs, controller, scalable }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -132,6 +134,7 @@ public struct ObjectOwner: Decodable, Equatable, Hashable, Sendable {
         namespaced = try c.field(.namespaced, false)
         verbs = try c.field(.verbs, [])
         controller = try c.field(.controller, false)
+        scalable = try c.field(.scalable, false)
     }
 }
 

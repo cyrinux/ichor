@@ -51,10 +51,12 @@ import name.levis.ichor.model.KubeObjectAction
 import name.levis.ichor.model.KubeObjectBar
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubePermission
+import name.levis.ichor.model.hasConfigData
 import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.SecureWhile
 import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
+import name.levis.ichor.ui.PollWhileStarted
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
@@ -107,17 +109,33 @@ fun KubeObjectScreen(
     val edit by vm.edit.collectAsStateWithLifecycle()
     val deletion by vm.delete.collectAsStateWithLifecycle()
     val help by vm.help.collectAsStateWithLifecycle()
+    val scaling by vm.scale.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
         if (state == UiState.Loading) vm.refresh()
         if (summary == UiState.Loading) vm.refreshSummary()
     }
+    PollWhileStarted { vm.followSummary() }
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var confirmingDiscard by remember { mutableStateOf(false) }
     val yaml = (state as? UiState.Loaded)?.data
+    val dataVm: KubeConfigDataViewModel? = if (ref.hasConfigData) {
+        viewModel(
+            key = "kube-config-data-${ref.resource}/${ref.namespace}/${ref.name}",
+            factory = factory { KubeConfigDataViewModel(app.kubeBrowser, ref) },
+        )
+    } else {
+        null
+    }
+    val dataRevealed = dataVm?.revealed?.collectAsStateWithLifecycle()?.value
 
-    SecureWhile(revealed)
+    SecureWhile(revealed || dataRevealed != null)
+    // A Secret value read on the data tab leaves memory once another tab shows.
+    LaunchedEffect(tab) { if (tab != TAB_DATA) dataVm?.hide() }
+    LaunchedEffect(dataVm) {
+        dataVm?.messages?.collectLatest { snackbar.showSnackbar(it.resolve(context), withDismissAction = true, duration = SnackbarDuration.Long) }
+    }
     LaunchedEffect(vm) {
         vm.messages.collectLatest { snackbar.showSnackbar(it.resolve(context), withDismissAction = true, duration = SnackbarDuration.Long) }
     }
@@ -136,6 +154,12 @@ fun KubeObjectScreen(
         )
     }
 
+    // Asked only for a kind that scales: a refused scale shows disabled, with the reason.
+    val scaleDenial = if (ref.scalable) rememberKubeCanDenial("patch", ref.group, ref.scaleResource, ref.namespace, ref.name) else null
+    scaling?.let { s ->
+        KubeObjectScaleDialog(ref, s, scaleDenial, onTarget = vm::chooseScale, onApply = vm::applyScale, onRetry = vm::loadScale, onDismiss = vm::cancelScale)
+    }
+
     // With the app lock on, showing a Secret's values needs a fresh fingerprint/PIN.
     fun toggleReveal(on: Boolean) {
         val activity = context.findFragmentActivity()
@@ -143,6 +167,19 @@ fun KubeObjectScreen(
         scope.launch {
             when (val auth = authenticate(activity, context.getString(R.string.kb_reveal_auth, ref.name))) {
                 AuthResult.Success -> vm.reveal(true)
+                is AuthResult.Failure -> snackbar.showSnackbar(auth.message)
+            }
+        }
+    }
+
+    // Likewise for one key of the data tab.
+    fun revealKey(key: String) {
+        val data = dataVm ?: return
+        val activity = context.findFragmentActivity()
+        if (!app.appLock.enabled.value || activity == null) return data.reveal(key)
+        scope.launch {
+            when (val auth = authenticate(activity, context.getString(R.string.kb_data_reveal_auth, key, ref.name))) {
+                AuthResult.Success -> data.reveal(key)
                 is AuthResult.Failure -> snackbar.showSnackbar(auth.message)
             }
         }
@@ -202,9 +239,14 @@ fun KubeObjectScreen(
                             bar,
                             onPortForward,
                             deleteRefusal = deleteDenial?.denialText()?.asString(),
+                            scaleRefusal = scaleDenial?.denialText()?.asString(),
                             onEdit = vm::startEdit,
+                            onScale = vm::startScale,
                             onDelete = vm::startDelete,
-                            onRefresh = vm::refreshAll,
+                            onRefresh = {
+                                vm.refreshAll()
+                                dataVm?.refresh()
+                            },
                             onCustomize = { customizing = true },
                         )
                         current.review == null -> TextButton(onClick = vm::review) { Text(stringResource(R.string.kb_review)) }
@@ -236,11 +278,16 @@ fun KubeObjectScreen(
                     )
                 }
                 else -> {
-                    PrimaryTabRow(selectedTabIndex = tab) {
-                        AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.kb_tab_summary)) })
-                        AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.kb_tab_yaml)) })
+                    PrimaryTabRow(selectedTabIndex = tabIndex(tab, hasData = dataVm != null)) {
+                        AppTab(selected = tab == TAB_SUMMARY, onClick = { tab = TAB_SUMMARY }, text = { Text(stringResource(R.string.kb_tab_summary)) })
+                        if (dataVm != null) {
+                            AppTab(selected = tab == TAB_DATA, onClick = { tab = TAB_DATA }, text = { Text(stringResource(R.string.kb_tab_data)) })
+                        }
+                        AppTab(selected = tab == TAB_YAML, onClick = { tab = TAB_YAML }, text = { Text(stringResource(R.string.kb_tab_yaml)) })
                     }
-                    if (tab == 0) {
+                    if (tab == TAB_DATA && dataVm != null) {
+                        ConfigDataTab(dataVm, ::revealKey, onPod = { onOwner(KubeObjectRef.pod(ref.namespace, it)) }, Modifier.weight(1f))
+                    } else if (tab == TAB_SUMMARY) {
                         ObjectSummaryContent(
                             summary,
                             onRetry = vm::refreshSummary,
@@ -267,6 +314,17 @@ fun KubeObjectScreen(
     }
 }
 
+/** The tabs, by id (saved): the data tab shows only for a Secret or ConfigMap, before the YAML. */
+private const val TAB_SUMMARY = 0
+private const val TAB_YAML = 1
+private const val TAB_DATA = 2
+
+private fun tabIndex(tab: Int, hasData: Boolean): Int = when (tab) {
+    TAB_SUMMARY -> 0
+    TAB_DATA -> 1
+    else -> if (hasData) 2 else 1
+}
+
 @Composable
 private fun ViewActions(
     ref: KubeObjectRef,
@@ -275,7 +333,9 @@ private fun ViewActions(
     bar: KubeObjectBar,
     onPortForward: (() -> Unit)?,
     deleteRefusal: String?,
+    scaleRefusal: String?,
     onEdit: () -> Unit,
+    onScale: () -> Unit,
     onDelete: () -> Unit,
     onRefresh: () -> Unit,
     onCustomize: () -> Unit,
@@ -291,6 +351,7 @@ private fun ViewActions(
                 KubeObjectAction.COPY -> copyWithToast(context, ref.name, yaml.orEmpty(), sensitive = ref.isSecret && revealed)
                 KubeObjectAction.SHARE -> shareText(context, yaml.orEmpty(), context.getString(R.string.kb_share))
                 KubeObjectAction.PORT_FORWARD -> onPortForward?.invoke()
+                KubeObjectAction.SCALE -> onScale()
                 KubeObjectAction.DELETE -> onDelete()
             }
         },
@@ -300,12 +361,19 @@ private fun ViewActions(
             when (action) {
                 KubeObjectAction.EDIT -> ref.editable
                 KubeObjectAction.PORT_FORWARD -> onPortForward != null && ref.isPod
+                KubeObjectAction.SCALE -> ref.scalable
                 else -> true
             }
         },
         // Nothing to copy, share or edit before the YAML is read.
-        enabled = { action -> action == KubeObjectAction.REFRESH || action == KubeObjectAction.PORT_FORWARD || yaml != null },
-        refusal = { action -> deleteRefusal.takeIf { action == KubeObjectAction.DELETE } },
+        enabled = { action -> action == KubeObjectAction.REFRESH || action == KubeObjectAction.PORT_FORWARD || action == KubeObjectAction.SCALE || yaml != null },
+        refusal = { action ->
+            when (action) {
+                KubeObjectAction.DELETE -> deleteRefusal
+                KubeObjectAction.SCALE -> scaleRefusal
+                else -> null
+            }
+        },
     )
 }
 
