@@ -3606,4 +3606,7 @@
     <string name="kb_data_used_by_unknown">Не вдалося отримати список подів цього простору імен.</string>
     <string name="kb_data_used_by_none">Жоден под цього простору імен його не використовує.</string>
     <string name="kb_data_reveal_auth">Показати %1$s з %2$s</string>
+||||||| 62d80f4f
+    <string name="pod_debug_toggle">Контейнер налагодження</string>
+    <string name="pod_debug_note">Для образів без оболонки (distroless): додає тимчасовий контейнер, який бачить процеси цього пода. Kubernetes зберігає його в поді, доки под не буде видалено.</string>
 </resources>

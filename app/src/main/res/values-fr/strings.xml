@@ -3406,4 +3406,7 @@
     <string name="kb_data_used_by_unknown">Impossible de lister les pods de ce namespace.</string>
     <string name="kb_data_used_by_none">Aucun pod de ce namespace ne l\'utilise.</string>
     <string name="kb_data_reveal_auth">Afficher %1$s de %2$s</string>
+||||||| 62d80f4f
+    <string name="pod_debug_toggle">Conteneur de débogage</string>
+    <string name="pod_debug_note">Pour les images sans shell (distroless) : ajoute un conteneur temporaire qui voit les processus de ce pod. Kubernetes le garde dans le pod jusqu’à la suppression du pod.</string>
 </resources>

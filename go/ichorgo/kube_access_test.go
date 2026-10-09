@@ -86,7 +86,7 @@ func TestActionAccessFollowsRBAC(t *testing.T) {
 		t.Error("deletePod allowed")
 	}
 
-	for _, name := range []string{"execPod", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync", "fluxReconcile", "cordonNode", "drainNode"} {
+	for _, name := range []string{"execPod", "debugPod", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync", "fluxReconcile", "cordonNode", "drainNode"} {
 		if _, ok := access.Actions[name]; !ok {
 			t.Errorf("%s not checked", name)
 		}

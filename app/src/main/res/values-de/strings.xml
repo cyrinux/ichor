@@ -3398,4 +3398,7 @@
     <string name="kb_data_used_by_unknown">Die Pods dieses Namespace konnten nicht aufgelistet werden.</string>
     <string name="kb_data_used_by_none">Kein Pod dieses Namespace verwendet es.</string>
     <string name="kb_data_reveal_auth">%1$s von %2$s anzeigen</string>
+||||||| 62d80f4f
+    <string name="pod_debug_toggle">Debug-Container</string>
+    <string name="pod_debug_note">Für Images ohne Shell (distroless): fügt einen temporären Container hinzu, der die Prozesse dieses Pods sieht. Kubernetes behält ihn im Pod, bis der Pod gelöscht wird.</string>
 </resources>
