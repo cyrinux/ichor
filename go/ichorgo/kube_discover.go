@@ -214,6 +214,10 @@ func discoverGKEClusters(ctx context.Context, s map[string]string) ([]discovered
 		ProjectID string `json:"project_id"`
 	}
 
+	if gcpCredentialType(s[gcpFieldServiceAccount]) == "authorized_user" || s[gcpFieldUserCredentials] != "" {
+		return nil, errors.New("GKE discovery needs a service account key; cluster discovery with a Google account is coming")
+	}
+
 	if err := json.Unmarshal([]byte(s[gcpFieldServiceAccount]), &sa); err != nil || sa.ProjectID == "" {
 		return nil, errors.New("the service account key names no project")
 	}
