@@ -103,14 +103,20 @@ fun Navigation(
         val active = app.configRepository.config.value?.activeContext.orEmpty()
         val key = shell.key
         val args = top?.arguments
-        val showing = if (key.isPod) {
+        val showing = if (key.kubeNode) {
+            top?.destination?.route == Routes.KUBE_NODE_DEBUG && args?.getString("ctx") == key.context && args.getString("node") == key.node
+        } else if (key.isPod) {
             top?.destination?.route == Routes.POD_SHELL && args?.getString("ctx") == key.context &&
                 args.getString("ns") == key.namespace && args.getString("pod") == key.pod && args.getString("c").orEmpty() == key.container
         } else {
             top?.destination?.route == Routes.DEBUG && args?.getString("addr") == key.node &&
                 args.getString("ctx").orEmpty().ifEmpty { active } == key.context
         }
-        val route = if (key.isPod) Routes.podShell(key.context, key.namespace, key.pod, key.container) else Routes.debug(key.node, shell.hostname, key.context)
+        val route = when {
+            key.kubeNode -> Routes.kubeNodeDebug(key.context, key.node, key.namespace)
+            key.isPod -> Routes.podShell(key.context, key.namespace, key.pod, key.container)
+            else -> Routes.debug(key.node, shell.hostname, key.context)
+        }
         if (!startWithImport && !showing) nav.navigate(route)
         onShellOpened()
     }
@@ -238,6 +244,7 @@ fun Navigation(
                 onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
                 onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
                 onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
+                onNodeDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
                 onActivity = { nav.navigate(Routes.activity(it)) },
             )
             // After an update: what changed since the build that ran before.

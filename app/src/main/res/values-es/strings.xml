@@ -420,6 +420,8 @@
     <string name="settings_kube_export">Exportar kubeconfig…</string>
     <string name="settings_kube_saved">Guardado. En kubenav, añade un clúster desde ese archivo.</string>
     <string name="settings_kube_open_kubenav">Abrir kubenav</string>
+    <string name="settings_node_debug_shell">Shell de depuración de nodos</string>
+    <string name="settings_node_debug_shell_desc">En clústeres sin Talos, añade «Shell de depuración…» al menú de un nodo: un pod privilegiado en los namespaces del nodo da una shell root en el nodo. El pod se borra al cerrar la shell. Desactivado por defecto.</string>
     <string name="settings_kube_open_failed">No se ha podido abrir el archivo elegido</string>
     <string name="settings_section_config">Configuración</string>
     <string name="settings_encryption_key">Clave de cifrado</string>
@@ -612,6 +614,9 @@
 
     <!-- Debug shell -->
     <string name="debug_title">Shell de depuración</string>
+    <string name="node_debug_title">Shell root</string>
+    <string name="node_debug_auth">Shell root en %1$s</string>
+    <string name="node_debug_intro">Un pod privilegiado se ejecuta en %1$s en el namespace %2$s, en los namespaces del propio nodo, y nsenter abre una shell root en el nodo. El pod se borra al terminar la shell. El namespace debe admitir pods privilegiados.</string>
     <string name="debug_stop">Detener</string>
     <string name="debug_auth">Shell de depuración en %1$s</string>
     <string name="debug_intro">Ejecuta la imagen como contenedor privilegiado en %1$s, con acceso al host, y abre un terminal en él. Talos descarga primero la imagen si el nodo no la tiene.</string>
@@ -2552,6 +2557,7 @@
     <string name="node_menu_cordon">Acordonar</string>
     <string name="node_menu_uncordon">Desacordonar</string>
     <string name="node_menu_drain">Drenar…</string>
+    <string name="node_menu_kube_debug_shell">Shell de depuración…</string>
     <string name="node_menu_group_inspect">Inspeccionar</string>
     <string name="node_menu_group_troubleshoot">Diagnosticar</string>
     <string name="node_menu_group_operate">Administrar</string>

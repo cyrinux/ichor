@@ -415,6 +415,8 @@
     <string name="settings_kube_export">Export kubeconfig…</string>
     <string name="settings_kube_saved">Saved. In kubenav, add a cluster from that file.</string>
     <string name="settings_kube_open_kubenav">Open kubenav</string>
+    <string name="settings_node_debug_shell">Node debug shell</string>
+    <string name="settings_node_debug_shell_desc">On clusters without Talos, adds “Debug shell…” to a node’s menu: a privileged pod in the node’s namespaces gives a root shell on the node. The pod is deleted when the shell closes. Off by default.</string>
     <string name="settings_kube_open_failed">Could not open the chosen file</string>
     <string name="settings_section_config">Config</string>
     <string name="settings_encryption_key">Encryption key</string>
@@ -607,6 +609,9 @@
 
     <!-- Debug shell -->
     <string name="debug_title">Debug shell</string>
+    <string name="node_debug_title">Root shell</string>
+    <string name="node_debug_auth">Root shell on %1$s</string>
+    <string name="node_debug_intro">A privileged pod runs on %1$s in namespace %2$s, in the node’s own namespaces, and nsenter opens a root shell on the node. The pod is deleted when the shell ends. The namespace must admit privileged pods.</string>
     <string name="debug_stop">Stop</string>
     <string name="debug_auth">Debug shell on %1$s</string>
     <string name="debug_intro">Runs the image as a privileged container on %1$s, with host access, and opens a terminal in it. Talos pulls the image first if the node does not have it.</string>
@@ -2550,6 +2555,7 @@
     <string name="node_menu_cordon">Cordon</string>
     <string name="node_menu_uncordon">Uncordon</string>
     <string name="node_menu_drain">Drain…</string>
+    <string name="node_menu_kube_debug_shell">Debug shell…</string>
     <string name="node_menu_group_inspect">Inspect</string>
     <string name="node_menu_group_troubleshoot">Troubleshoot</string>
     <string name="node_menu_group_operate">Operate</string>
