@@ -34,7 +34,10 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import name.levis.ichor.ui.components.expandable
-import name.levis.ichor.ui.theme.monoSmall
+import name.levis.ichor.ui.components.MonoScreen
+import name.levis.ichor.ui.components.ScalableMonoText
+import name.levis.ichor.ui.components.monoTextStyle
+import name.levis.ichor.ui.components.monoTextActions
 
 private val StripeWidth = 3.dp
 private const val DEBUG_ALPHA = 0.6f
@@ -120,11 +123,12 @@ fun LogEntryRow(row: LogRow.Entry, palette: LogPalette, zone: ZoneId, expanded: 
         Modifier
             .fillMaxWidth()
             .expandable(expanded, onToggle = onToggle)
+            .monoTextActions()
             .then(if (level == LogLevel.DEBUG) Modifier.alpha(DEBUG_ALPHA) else Modifier)
             .drawBehind { if (stripe != null) drawRect(stripe, size = Size(StripeWidth.toPx(), size.height)) }
             .padding(start = StripeWidth + 5.dp, top = 1.dp, bottom = 1.dp),
     ) {
-        Text(text, style = MaterialTheme.typography.monoSmall)
+        Text(text, style = monoTextStyle())
         if (expanded) {
             SelectionContainer {
                 Column(
@@ -141,7 +145,7 @@ fun LogEntryRow(row: LogRow.Entry, palette: LogPalette, zone: ZoneId, expanded: 
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Text(row.entry.text, style = MaterialTheme.typography.monoSmall)
+                    Text(row.entry.text, style = monoTextStyle())
                 }
             }
         }

@@ -30,9 +30,6 @@ struct LogDocument: Sendable {
 
 /// Colors and text of a log entry: level tag, source, message and key=value fields.
 enum LogStyle {
-    static let font = Font.system(size: 11, design: .monospaced)
-    private static let boldFont = Font.system(size: 11, weight: .bold, design: .monospaced)
-
     static func color(_ level: LogLevel) -> Color? {
         switch level {
         case .error: .red
@@ -63,7 +60,7 @@ enum LogStyle {
         if let tag = tag(level), let color = color(level) {
             var run = AttributedString(tag + " ")
             run.foregroundColor = color
-            run.font = boldFont
+            run.inlinePresentationIntent = .stronglyEmphasized
             result.append(run)
         }
         if !entry.source.isEmpty {
@@ -116,7 +113,7 @@ struct LogEntryRow: View {
                     .textSelection(.enabled)
             }
         }
-        .font(LogStyle.font)
+        .monoFont()
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.leading, 7)
         .background(alignment: .leading) {
@@ -136,7 +133,7 @@ struct LogEntryRow: View {
         if group.count > 1 {
             var count = AttributedString("×\(group.count) ")
             count.foregroundColor = Color.secondary
-            count.font = Font.system(size: 11, weight: .semibold, design: .monospaced)
+            count.inlinePresentationIntent = .stronglyEmphasized
             result.append(count)
         }
         result.append(text ?? LogStyle.text(group.entry))
@@ -163,7 +160,7 @@ struct LogRawLine: View {
 
     var body: some View {
         Text(verbatim: text)
-            .font(LogStyle.font)
+            .monoFont()
             .textSelection(.enabled)
     }
 }

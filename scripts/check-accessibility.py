@@ -4,7 +4,8 @@
 iOS (ios/Ichor/**/*.swift):
 - a Button whose whole label is an SF Symbol needs .accessibilityLabel (or .help), else
   VoiceOver reads the symbol's name ("arrow.up");
-- a .font(.system(size:)) below 12 is too small and ignores Dynamic Type: use a text style.
+- a literal .system(size:) below 12 (in .font() or a Font constant) is too small and ignores
+  Dynamic Type: use a text style or a @ScaledMetric size.
 
 Android (app/src/main/java/**/*.kt):
 - a fixed .sp below 12 ignores the theme's typography: use MaterialTheme.typography;
@@ -29,7 +30,7 @@ ONE_LINE = re.compile(
     r"\bButton\s*(\([^{}]*\))?\s*\{\s*Image\(systemName:[^{}]*\}"
     r"|\blabel:\s*\{\s*Image\(systemName:[^{}]*\}\s*$"
 )
-FIXED_SWIFT_FONT = re.compile(r"\.font\(\.system\(size:\s*(\d+(?:\.\d+)?)\b(?!\s*\*)")
+FIXED_SWIFT_FONT = re.compile(r"\.system\(size:\s*(\d+(?:\.\d+)?)\b(?!\s*\*)")
 SMALL_SP = re.compile(r"\b(\d+(?:\.\d+)?)\.sp\b")
 SP_EXEMPT = re.compile(r"(letterSpacing|minFontSize)\s*=\s*$")
 MIN_SP = 12

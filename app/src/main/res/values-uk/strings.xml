@@ -3567,4 +3567,6 @@
     <string name="kube_access_denied">Ваш обліковий запис не може виконати %1$s для %2$s у %3$s</string>
     <string name="kube_access_denied_cluster">Ваш обліковий запис не може виконати %1$s для %2$s у всьому кластері</string>
     <string name="kube_whoami_user">Користувач Kubernetes</string>
+    <string name="mono_text_larger">Більший текст</string>
+    <string name="mono_text_smaller">Менший текст</string>
 </resources>

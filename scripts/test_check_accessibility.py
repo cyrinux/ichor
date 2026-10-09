@@ -54,8 +54,10 @@ class SwiftFontTest(unittest.TestCase):
 Image(systemName: "lock").font(.system(size: 44))
 Text(initials).font(.system(size: size * 0.36))
 Text("a").font(.system(size: 11))
+static let font = Font.system(size: 11, design: .monospaced)
+.font(.system(size: base, design: .monospaced))
 """
-        self.assertEqual(check.small_swift_fonts(src), [1, 4])
+        self.assertEqual(check.small_swift_fonts(src), [1, 4, 5])
 
 
 class SpTest(unittest.TestCase):
