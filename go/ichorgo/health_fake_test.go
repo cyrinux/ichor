@@ -53,6 +53,7 @@ func (r *healthRecorder) wait(t *testing.T) string {
 }
 
 func healthStep(host, msg string) *clusterapi.HealthCheckProgress {
+	//lint:ignore SA1019 the fake answer carries the per-node metadata a real multiplexed one does
 	return &clusterapi.HealthCheckProgress{Metadata: &common.Metadata{Hostname: host}, Message: msg}
 }
 
@@ -89,6 +90,7 @@ func TestStartClusterHealthFake(t *testing.T) {
 		{
 			name: "fails on the runner",
 			health: func(node string, stream grpc.ServerStreamingServer[clusterapi.HealthCheckProgress]) error {
+				//lint:ignore SA1019 the fake answer carries the per-node metadata a real multiplexed one does
 				return stream.Send(&clusterapi.HealthCheckProgress{Metadata: &common.Metadata{Hostname: node, Error: "etcd is not healthy"}})
 			},
 			wantErr: "etcd is not healthy",
