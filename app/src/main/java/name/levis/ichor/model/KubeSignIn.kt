@@ -107,6 +107,7 @@ private val FIELDS = listOf(
     CredentialField("awsRoleName", R.string.kube_field_aws_role_name, FieldKind.TEXT),
     CredentialField("awsRegion", R.string.kube_field_aws_region, FieldKind.TEXT),
     CredentialField("gcpServiceAccountJson", R.string.kube_field_gcp_service_account, FieldKind.JSON),
+    CredentialField(GCP_USER_CREDENTIALS, R.string.kube_field_gcp_user_credentials, FieldKind.JSON),
     CredentialField("azureTenantId", R.string.kube_field_azure_tenant, FieldKind.TEXT),
     CredentialField("azureSubscriptionId", R.string.kube_field_azure_subscription, FieldKind.TEXT),
     CredentialField("azureClientId", R.string.kube_field_azure_client_id, FieldKind.TEXT),
@@ -130,11 +131,19 @@ fun credentialsComplete(fields: List<String>, values: Map<String, String>): Bool
 fun credentialsFor(fields: List<String>, values: Map<String, String>): Map<String, String> =
     fields.mapNotNull { name -> values[name]?.trim()?.takeIf { it.isNotEmpty() }?.let { name to it } }.toMap()
 
-/** The label of an alternative field set: EKS asks for IAM Identity Center or access keys. */
+/** GKE's field for the application_default_credentials.json gcloud writes for a Google account. */
+const val GCP_USER_CREDENTIALS = "gcpUserCredentialsJson"
+
+/**
+ * The label of an alternative field set: EKS asks for IAM Identity Center or access keys, GKE
+ * for a service account key or gcloud user credentials.
+ */
 @StringRes
 fun fieldSetLabel(fields: List<String>): Int = when {
     "awsSsoStartUrl" in fields -> R.string.kube_signin_option_aws_sso
     "awsAccessKeyId" in fields -> R.string.kube_signin_option_aws_keys
+    "gcpServiceAccountJson" in fields -> R.string.kube_signin_option_gcp_service_account
+    GCP_USER_CREDENTIALS in fields -> R.string.kube_signin_option_gcp_user
     else -> R.string.kube_signin_option_other
 }
 

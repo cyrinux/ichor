@@ -215,6 +215,11 @@ struct KubeCredentialsForm: View {
             }
         }
         KubeFieldsSection(fields: fields, values: $values)
+        if let hint = fields.lazy.compactMap(KubeAuthWording.fieldHint).first {
+            Section {
+                Text(hint).font(.footnote).foregroundStyle(.secondary)
+            }
+        }
         Section {
             Button("Save and sign in") { onSubmit(kubeSecretsJSON(fields: fields, values: values)) }
                 .disabled(busy || !kubeFieldsComplete(fields, values: values))

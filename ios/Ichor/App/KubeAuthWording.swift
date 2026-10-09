@@ -15,6 +15,7 @@ enum KubeAuthWording {
         case "awsRoleName": String(localized: "Role name")
         case "awsRegion": String(localized: "AWS region")
         case "gcpServiceAccountJson": String(localized: "Service account key (JSON)")
+        case "gcpUserCredentialsJson": String(localized: "gcloud user credentials (application_default_credentials.json)")
         case "azureClientId": String(localized: "Client ID")
         case "azureClientSecret": String(localized: "Client secret")
         case "azureTenantId": String(localized: "Tenant ID")
@@ -39,11 +40,23 @@ enum KubeAuthWording {
         }
     }
 
-    /// The name of a credentials option by its first field (EKS: IAM Identity Center or keys).
+    /// How to get what a field asks for, nil when its label says enough.
+    static func fieldHint(_ field: String) -> String? {
+        switch field {
+        case "gcpUserCredentialsJson":
+            String(localized: "Bring your gcloud session: on your computer run gcloud auth application-default login, then import ~/.config/gcloud/application_default_credentials.json. When Google ends the session, run it again and import the new file.")
+        default: nil
+        }
+    }
+
+    /// The name of a credentials option by its first field (EKS: IAM Identity Center or keys,
+    /// GKE: a service account key or gcloud user credentials).
     static func optionLabel(_ fields: [String]) -> String {
         switch fields.first {
         case "awsSsoStartUrl": String(localized: "IAM Identity Center")
         case "awsAccessKeyId": String(localized: "Access keys")
+        case "gcpServiceAccountJson": String(localized: "Service account key")
+        case "gcpUserCredentialsJson": String(localized: "gcloud user credentials")
         default: fields.map(fieldLabel).joined(separator: ", ")
         }
     }

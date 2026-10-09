@@ -351,6 +351,146 @@
         }
       }
     },
+    "gcloud user credentials (application_default_credentials.json)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identifiants utilisateur gcloud (application_default_credentials.json)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credenciales de usuario de gcloud (application_default_credentials.json)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gcloud-Benutzeranmeldedaten (application_default_credentials.json)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credenziali utente gcloud (application_default_credentials.json)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Облікові дані користувача gcloud (application_default_credentials.json)"
+          }
+        }
+      }
+    },
+    "Service account key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clé de compte de service"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clave de cuenta de servicio"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dienstkontoschlüssel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiave dell'account di servizio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключ сервісного облікового запису"
+          }
+        }
+      }
+    },
+    "gcloud user credentials" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identifiants utilisateur gcloud"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credenciales de usuario de gcloud"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gcloud-Benutzeranmeldedaten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credenziali utente gcloud"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Облікові дані користувача gcloud"
+          }
+        }
+      }
+    },
+    "Bring your gcloud session: on your computer run gcloud auth application-default login, then import ~/.config/gcloud/application_default_credentials.json. When Google ends the session, run it again and import the new file." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprenez votre session gcloud : sur votre ordinateur, lancez gcloud auth application-default login, puis importez ~/.config/gcloud/application_default_credentials.json. Quand Google met fin à la session, relancez la commande et importez le nouveau fichier."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa tu sesión de gcloud: en tu ordenador ejecuta gcloud auth application-default login y luego importa ~/.config/gcloud/application_default_credentials.json. Cuando Google cierre la sesión, vuelve a ejecutarlo e importa el archivo nuevo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nutze deine gcloud-Sitzung: Führe auf deinem Computer gcloud auth application-default login aus und importiere dann ~/.config/gcloud/application_default_credentials.json. Wenn Google die Sitzung beendet, führe den Befehl erneut aus und importiere die neue Datei."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa la tua sessione gcloud: sul computer esegui gcloud auth application-default login, poi importa ~/.config/gcloud/application_default_credentials.json. Quando Google chiude la sessione, eseguilo di nuovo e importa il nuovo file."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використайте свою сесію gcloud: на компʼютері виконайте gcloud auth application-default login, потім імпортуйте ~/.config/gcloud/application_default_credentials.json. Коли Google завершить сесію, виконайте команду знову й імпортуйте новий файл."
+          }
+        }
+      }
+    },
     "Snooze %lld h" : {
       "extractionState" : "manual",
       "localizations" : {

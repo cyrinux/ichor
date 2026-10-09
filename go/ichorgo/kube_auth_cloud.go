@@ -22,10 +22,11 @@ import (
 // an API token, Rancher with an API key. Each replaces the CLI plugin the kubeconfig names.
 
 const (
-	gcpFieldServiceAccount = "gcpServiceAccountJson"
-	doFieldToken           = "doApiToken"
-	rancherFieldKey        = "rancherApiKey"
-	gcpScope               = "https://www.googleapis.com/auth/cloud-platform"
+	gcpFieldServiceAccount  = "gcpServiceAccountJson"
+	gcpFieldUserCredentials = "gcpUserCredentialsJson"
+	doFieldToken            = "doApiToken"
+	rancherFieldKey         = "rancherApiKey"
+	gcpScope                = "https://www.googleapis.com/auth/cloud-platform"
 )
 
 var (
@@ -65,14 +66,16 @@ func cloudJSON(req *http.Request, out any) error {
 
 		_ = json.Unmarshal(data, &e) //nolint:errcheck
 
-		return &cloudHTTPError{status: resp.StatusCode, message: cmpOr(e.Description, e.Message, e.Error, http.StatusText(resp.StatusCode))}
+		return &cloudHTTPError{status: resp.StatusCode, code: e.Error, message: cmpOr(e.Description, e.Message, e.Error, http.StatusText(resp.StatusCode))}
 	}
 
 	return json.Unmarshal(data, out)
 }
 
 type cloudHTTPError struct {
-	status  int
+	status int
+	// code is the OAuth error code ("invalid_grant"), when the answer has one.
+	code    string
 	message string
 }
 
@@ -84,13 +87,16 @@ func unauthorized(err error) bool {
 	return errors.As(err, &e) && (e.status == http.StatusUnauthorized || e.status == http.StatusForbidden)
 }
 
-// gkeMethod signs in like gke-gcloud-auth-plugin with a service account key: a signed JWT
-// exchanged for an access token (OAuth 2.0 JWT bearer grant).
+// gkeMethod signs in like gke-gcloud-auth-plugin, with a service account key (a signed JWT
+// exchanged for an access token, the OAuth 2.0 JWT bearer grant) or with the user credentials
+// `gcloud auth application-default login` writes (kube_auth_gke_user.go).
 type gkeMethod struct{}
 
 func (gkeMethod) name() string { return authGKE }
 
-func (gkeMethod) fieldSets() [][]string { return [][]string{{gcpFieldServiceAccount}} }
+func (gkeMethod) fieldSets() [][]string {
+	return [][]string{{gcpFieldServiceAccount}, {gcpFieldUserCredentials}}
+}
 
 type gcpServiceAccount struct {
 	Type        string `json:"type"`
@@ -133,6 +139,14 @@ func parseServiceAccount(raw string) (gcpServiceAccount, *rsa.PrivateKey, error)
 }
 
 func (gkeMethod) fromSecrets(s map[string]string) (kubeAuthState, error) {
+	if s[gcpFieldUserCredentials] != "" {
+		return userCredentialsState(s)
+	}
+
+	if gcpCredentialType(s[gcpFieldServiceAccount]) == "authorized_user" {
+		return kubeAuthState{}, errors.New("this is a gcloud user credential: choose gcloud user credentials")
+	}
+
 	sa, _, err := parseServiceAccount(s[gcpFieldServiceAccount])
 	if err != nil {
 		return kubeAuthState{}, err
@@ -142,6 +156,10 @@ func (gkeMethod) fromSecrets(s map[string]string) (kubeAuthState, error) {
 }
 
 func (gkeMethod) mint(ctx context.Context, state kubeAuthState) (string, time.Time, kubeAuthState, error) {
+	if state.secret(gcpFieldUserCredentials) != "" {
+		return mintForGoogleUser(ctx, state)
+	}
+
 	raw := state.secret(gcpFieldServiceAccount)
 	if raw == "" {
 		return "", time.Time{}, state, signInRequired(authGKE, "")
