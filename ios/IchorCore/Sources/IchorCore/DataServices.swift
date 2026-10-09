@@ -14,10 +14,11 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let certManager: CertManagerStatus?
     public let velero: VeleroStatus?
     public let ceph: CephStatus?
+    public let castai: CastAIStatus?
 
     public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil, dragonfly: DragonflyStatus? = nil,
                 mariadb: MariaDbStatus? = nil, percona: PerconaStatus? = nil, certManager: CertManagerStatus? = nil,
-                velero: VeleroStatus? = nil, ceph: CephStatus? = nil) {
+                velero: VeleroStatus? = nil, ceph: CephStatus? = nil, castai: CastAIStatus? = nil) {
         self.longhorn = longhorn
         self.garage = garage
         self.cnpg = cnpg
@@ -27,6 +28,7 @@ public struct DataServices: Decodable, Equatable, Sendable {
         self.certManager = certManager
         self.velero = velero
         self.ceph = ceph
+        self.castai = castai
     }
 }
 
@@ -1048,6 +1050,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     case certManager = "cert-manager"
     case velero = "velero"
     case ceph = "rook"
+    case castai = "castai"
 
     public var id: String { rawValue }
     public var catalogID: String { rawValue }
@@ -1064,6 +1067,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
         case .certManager: "cert-manager"
         case .velero: "Velero"
         case .ceph: "Rook Ceph"
+        case .castai: "CAST AI"
         }
     }
 
@@ -1116,7 +1120,7 @@ public extension DataServices {
         [longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil,
          dragonfly != nil ? .dragonfly : nil, mariadb != nil ? .mariadb : nil, percona != nil ? .percona : nil,
          certManager != nil ? .certManager : nil, velero != nil ? .velero : nil,
-         ceph != nil ? .ceph : nil].compactMap { $0 }
+         ceph != nil ? .ceph : nil, castai != nil ? .castai : nil].compactMap { $0 }
     }
 
     func summary(_ kind: DataServiceKind) -> ServiceSummary? {
@@ -1168,6 +1172,8 @@ public extension DataServices {
             // Clusters are the items; a pool that is not ready needs a look as much as a cluster.
             let healths = c.clusters.map(\.health) + c.pools.map(\.health)
             return ServiceSummary(total: c.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: c.error)
+        case .castai:
+            return castai?.summary
         }
     }
 

@@ -65,6 +65,11 @@ func dataServiceSummary(_ kind: DataServiceKind, _ services: DataServices) -> St
     case .certManager: head = String(localized: "\(summary.total) certificates")
     case .velero: head = String(localized: "\(summary.total) Velero schedules")
     case .ceph: head = String(localized: "\(summary.total) Ceph clusters")
+    case .castai:
+        let castai = services.castai
+        let saving = castai.flatMap { $0.compared > 0 && $0.cpuDeltaMilli != 0 ? String(localized: "\(formatMilliCores($0.cpuDeltaMilli, signed: true)) CPU") : nil }
+        let stuck = castai.flatMap { $0.stuck.isEmpty ? nil : String(localized: "stuck nodes: \(String($0.stuck.count))") }
+        return [String(localized: "\(summary.total) workloads right-sized"), saving, attention, stuck].compactMap { $0 }.joined(separator: " · ")
     case .garage:
         // One Garage cluster: its own state says more than "1 cluster".
         if let single = services.garage?.instances.first, services.garage?.instances.count == 1 {
@@ -196,6 +201,7 @@ struct KindIcon: View {
         case .certManager: "checkmark.seal"
         case .velero: "clock.arrow.circlepath"
         case .ceph: "internaldrive"
+        case .castai: "slider.horizontal.3"
         }
     }
 }
