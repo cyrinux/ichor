@@ -32,6 +32,7 @@ import name.levis.ichor.model.ServiceInfo
 import name.levis.ichor.model.ProcessSample
 import name.levis.ichor.model.ContainerSample
 import name.levis.ichor.model.ServiceAction
+import name.levis.ichor.model.SystemImage
 import name.levis.ichor.model.TalosEvent
 import name.levis.ichor.model.ClusterTime
 import name.levis.ichor.model.ConnectionInfo
@@ -408,6 +409,11 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
 
     suspend fun images(node: String): List<ImageInfo> = remember(imagesKey(node)) {
         call { cfg, ctx -> TalosJson.decodeFromString(ListSerializer(ImageInfo.serializer()), Ichorgo.nodeImages(cfg, ctx, node)) }
+    }
+
+    /** The images Talos runs on node outside of any app, with their digests (os:admin: the machine config). */
+    suspend fun systemImages(node: String): List<SystemImage> = call { cfg, ctx ->
+        TalosJson.decodeFromString(ListSerializer(SystemImage.serializer()), Ichorgo.talosSystemImages(cfg, ctx, node))
     }
 
     /** The apps running in the cluster. One container listing per node: on demand, never polled. */

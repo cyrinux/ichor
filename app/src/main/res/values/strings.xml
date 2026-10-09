@@ -3541,4 +3541,10 @@
     <string name="kube_jobs_no_match">No job matches.</string>
     <string name="kube_jobs_completions">Completions: %1$s</string>
     <string name="kube_jobs_owner">CronJob %1$s</string>
+    <string name="imagescan_system_title">System images</string>
+    <string name="imagescan_system_loading">Reading the node\'s system images…</string>
+    <string name="imagescan_system_unavailable">System images need the os:admin role: %1$s</string>
+    <string name="imagescan_system_hint">Checks the images Talos runs on this node (kubelet, etcd, the control plane), by digest, for known vulnerabilities with Trivy. It runs as a Job in the %1$s namespace, which deletes itself afterwards.</string>
+    <string name="imagescan_system_scan">Scan system images</string>
+    <string name="images_kubernetes_title">Kubernetes images</string>
 </resources>

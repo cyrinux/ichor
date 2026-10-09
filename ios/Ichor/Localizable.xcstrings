@@ -2101,6 +2101,210 @@
         }
       }
     },
+    "System images" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Images système"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imágenes del sistema"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System-Images"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Immagini di sistema"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Системні образи"
+          }
+        }
+      }
+    },
+    "Reading the node's system images…" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture des images système du nœud…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leyendo las imágenes del sistema del nodo…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System-Images des Knotens werden gelesen…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lettura delle immagini di sistema del nodo…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читання системних образів вузла…"
+          }
+        }
+      }
+    },
+    "System images need the os:admin role: %@" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les images système nécessitent le rôle os:admin : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las imágenes del sistema requieren el rol os:admin: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System-Images erfordern die Rolle os:admin: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le immagini di sistema richiedono il ruolo os:admin: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Системні образи потребують ролі os:admin: %@"
+          }
+        }
+      }
+    },
+    "Checks the images Talos runs on this node (kubelet, etcd, the control plane), by digest, for known vulnerabilities with Trivy. It runs as a Job in the %@ namespace, which deletes itself afterwards." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherche les vulnérabilités connues des images que Talos exécute sur ce nœud (kubelet, etcd, le plan de contrôle), par digest, avec Trivy. L'analyse tourne comme Job dans le namespace %@, qui se supprime ensuite."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprueba con Trivy, por digest, las vulnerabilidades conocidas de las imágenes que Talos ejecuta en este nodo (kubelet, etcd, el plano de control). Se ejecuta como un Job en el namespace %@, que se elimina después."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüft die Images, die Talos auf diesem Knoten ausführt (kubelet, etcd, die Control Plane), per Digest mit Trivy auf bekannte Schwachstellen. Läuft als Job im Namespace %@, der sich danach selbst löscht."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlla con Trivy, per digest, le vulnerabilità note delle immagini che Talos esegue su questo nodo (kubelet, etcd, il control plane). Viene eseguito come Job nel namespace %@, che poi si elimina."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевіряє за digest образи, які Talos запускає на цьому вузлі (kubelet, etcd, площина керування), на відомі вразливості за допомогою Trivy. Працює як Job у просторі імен %@, який потім видаляє себе."
+          }
+        }
+      }
+    },
+    "Scan system images" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyser les images système"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analizar las imágenes del sistema"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System-Images prüfen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analizza le immagini di sistema"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірити системні образи"
+          }
+        }
+      }
+    },
+    "Kubernetes images" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Images Kubernetes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imágenes de Kubernetes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes-Images"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Immagini Kubernetes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Образи Kubernetes"
+          }
+        }
+      }
+    },
     "Jobs" : {
       "extractionState" : "manual",
       "localizations" : {
