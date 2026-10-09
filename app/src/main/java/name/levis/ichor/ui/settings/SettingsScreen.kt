@@ -35,7 +35,10 @@ import name.levis.ichor.model.Feature
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.notice
 import name.levis.ichor.ui.components.BackButton
-import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.backup.backupViewModel
+import name.levis.ichor.ui.backup.rememberBackupAction
+import name.levis.ichor.ui.node.HostnameConfirmDialog
+import androidx.compose.material3.TextButton
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.rememberClusterSupport
@@ -80,6 +83,8 @@ fun SettingsScreen(
     val keyProtection by produceState<KeyProtection?>(null, config) { value = withContext(Dispatchers.IO) { configs.keyProtection() } }
     val scope = rememberCoroutineScope()
     var confirmDelete by remember { mutableStateOf(false) }
+    val backupVm = backupViewModel()
+    val backup = rememberBackupAction(backupVm)
 
     Scaffold(
         topBar = {
@@ -113,7 +118,7 @@ fun SettingsScreen(
                 InfoRow(stringResource(R.string.settings_encryption_key), stringResource(R.string.settings_encryption_value, stringResource(it.label)))
             }
             OutlinedButton(onClick = onReimport, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_import_new)) }
-            BackupSection(hasConfig = config != null)
+            BackupSection(hasConfig = config != null, vm = backupVm)
             OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.settings_delete_config))
             }
@@ -148,11 +153,12 @@ fun SettingsScreen(
         }
     }
 
+    // Every cluster's client keys go, for good without a backup: typed, like a reboot.
     if (confirmDelete) {
-        ConfirmDialog(
+        HostnameConfirmDialog(
             title = stringResource(R.string.settings_delete_title),
-            text = stringResource(R.string.settings_delete_body),
-            confirm = stringResource(R.string.common_delete),
+            hostname = DELETE_ALL_TOKEN,
+            confirmLabel = stringResource(R.string.common_delete),
             onConfirm = {
                 confirmDelete = false
                 scope.launch {
@@ -161,7 +167,17 @@ fun SettingsScreen(
                 }
             },
             onDismiss = { confirmDelete = false },
-            destructive = true,
-        )
+        ) {
+            Text(stringResource(R.string.settings_delete_body))
+            if (config != null) {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    backup()
+                }) { Text(stringResource(R.string.settings_delete_backup_first)) }
+            }
+        }
     }
 }
+
+/** What to type to delete every cluster; not translated, like a hostname. */
+private const val DELETE_ALL_TOKEN = "DELETE"

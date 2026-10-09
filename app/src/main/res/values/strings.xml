@@ -426,6 +426,7 @@
     <string name="settings_delete_config">Delete stored talosconfig</string>
     <string name="settings_delete_title">Delete talosconfig?</string>
     <string name="settings_delete_body">The encrypted config of every cluster, with their client keys, will be removed from this device.</string>
+    <string name="settings_delete_backup_first">Back up first</string>
 
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Monitoring</string>

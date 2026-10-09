@@ -31,29 +31,15 @@ import kotlinx.coroutines.launch
 
 /** Settings: back up the clusters and settings to a passphrase-sealed file, or restore one over them. */
 @Composable
-fun BackupSection(hasConfig: Boolean, vm: BackupViewModel = viewModel(factory = factory { BackupViewModel(app.backupManager) })) {
-    val context = LocalContext.current
-    val appLock = (context.applicationContext as TalosApp).appLock
-    val scope = rememberCoroutineScope()
+fun BackupSection(hasConfig: Boolean, vm: BackupViewModel = backupViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     var confirmRestore by remember { mutableStateOf(false) }
     val pickBackup = BackupFlow(vm)
     val busy = state == BackupState.Sealing || state == BackupState.Restoring
-
-    // The file holds the clusters' credentials: with the app lock on, prove it is the owner first.
-    fun backup() {
-        val activity = context.findFragmentActivity()
-        if (!appLock.enabled.value || activity == null) return vm.startBackup()
-        scope.launch {
-            when (val auth = authenticate(activity, context.getString(R.string.backup_auth))) {
-                AuthResult.Success -> vm.startBackup()
-                is AuthResult.Failure -> vm.fail(UiText.Raw(auth.message))
-            }
-        }
-    }
+    val backup = rememberBackupAction(vm)
 
     MutedText(stringResource(R.string.backup_desc))
-    OutlinedButton(onClick = ::backup, enabled = hasConfig && !busy, modifier = Modifier.fillMaxWidth()) {
+    OutlinedButton(onClick = backup, enabled = hasConfig && !busy, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.backup_create))
     }
     OutlinedButton(onClick = { confirmRestore = true }, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
@@ -75,9 +61,39 @@ fun BackupSection(hasConfig: Boolean, vm: BackupViewModel = viewModel(factory = 
     }
 }
 
+/** The screen's backup view model: [BackupSection] and whoever starts a backup for it share it. */
+@Composable
+fun backupViewModel(): BackupViewModel = viewModel(factory = factory { BackupViewModel(app.backupManager) })
+
+/**
+ * Starts a backup on [vm]. The file holds the clusters' credentials: with the app lock on,
+ * the owner proves it is them first.
+ */
+@Composable
+fun rememberBackupAction(vm: BackupViewModel): () -> Unit {
+    val context = LocalContext.current
+    val appLock = (context.applicationContext as TalosApp).appLock
+    val scope = rememberCoroutineScope()
+    return remember(vm, context, scope) {
+        {
+            val activity = context.findFragmentActivity()
+            if (!appLock.enabled.value || activity == null) {
+                vm.startBackup()
+            } else {
+                scope.launch {
+                    when (val auth = authenticate(activity, context.getString(R.string.backup_auth))) {
+                        AuthResult.Success -> vm.startBackup()
+                        is AuthResult.Failure -> vm.fail(UiText.Raw(auth.message))
+                    }
+                }
+            }
+        }
+    }
+}
+
 /** First launch: restore a backup instead of importing a talosconfig. */
 @Composable
-fun RestoreBackupButton(onRestored: () -> Unit, vm: BackupViewModel = viewModel(factory = factory { BackupViewModel(app.backupManager) })) {
+fun RestoreBackupButton(onRestored: () -> Unit, vm: BackupViewModel = backupViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val pickBackup = BackupFlow(vm, onRestored)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {

@@ -129,15 +129,17 @@ struct ArgoAppView: View {
                 selection = []
             }
         }
-        .confirmationDialog(confirmRollback.map { String(localized: "Roll \(app.name) back to \($0.label)?") } ?? "",
-                            isPresented: $confirmRollback.isPresent(),
-                            titleVisibility: .visible, presenting: confirmRollback) { entry in
-            Button("Roll back", role: .destructive) {
+        // The running revision changes for the whole app: typed, like a scale to zero.
+        .sheet(item: $confirmRollback) { entry in
+            HostnameConfirmationSheet(
+                title: String(localized: "Roll \(app.name) back to \(entry.label)?"),
+                message: String(localized: "Argo CD syncs \(entry.label) now. Auto-sync stays paused, so the app stays on it until you sync again."),
+                hostname: app.name,
+                actionTitle: String(localized: "Roll back")
+            ) {
+                confirmRollback = nil
                 Task { await run(.rollback, on: app, options: ArgoSyncOptions(historyId: entry.id)) }
             }
-            Button("Cancel", role: .cancel) {}
-        } message: { entry in
-            Text("Argo CD syncs \(entry.label) now. Auto-sync stays paused, so the app stays on it until you sync again.")
         }
         .confirmationDialog(String(localized: "Terminate the sync of \(app.name)?"), isPresented: $confirmTerminate,
                             titleVisibility: .visible) {

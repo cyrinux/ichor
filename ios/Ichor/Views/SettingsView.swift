@@ -5,6 +5,9 @@ struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openURL) private var openURL
     @State private var confirmDelete = false
+    /// "Back up first" was chosen: the backup starts once the delete sheet is gone.
+    @State private var backupAfterSheet = false
+    @State private var backupRequested = false
     @State private var lockError: String?
 
     var body: some View {
@@ -62,19 +65,34 @@ struct SettingsView: View {
                     confirmDelete = true
                 }
             }
-            BackupSection()
+            BackupSection(requested: $backupRequested)
             SupportSection()
             AboutSection()
         }
         .themedBackground()
         .navigationTitle("Settings")
-        .confirmationDialog(model.kubeYAML == nil ? LocalizedStringKey("Delete talosconfig?") : "Delete all clusters?",
-                            isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { model.clear() }
-        } message: {
-            Text("The config of every cluster, with their client keys, will be removed from this device.")
+        // Every cluster's client keys go, for good without a backup: typed, like a reboot.
+        .sheet(isPresented: $confirmDelete, onDismiss: {
+            if backupAfterSheet {
+                backupAfterSheet = false
+                backupRequested = true
+            }
+        }) {
+            HostnameConfirmationSheet(
+                title: model.kubeYAML == nil ? String(localized: "Delete talosconfig?") : String(localized: "Delete all clusters?"),
+                message: String(localized: "The config of every cluster, with their client keys, will be removed from this device."),
+                hostname: Self.deleteAllToken,
+                actionTitle: String(localized: "Delete"),
+                alternative: model.hasConfig ? (title: String(localized: "Back up first"), action: { backupAfterSheet = true }) : nil
+            ) {
+                confirmDelete = false
+                model.clear()
+            }
         }
     }
+
+    /// What to type to delete every cluster; not translated, like a hostname.
+    private static let deleteAllToken = "DELETE"
 
     /// The language the app is shown in, named in that language ("Français", "Deutsch"…).
     private static var currentLanguage: String {
