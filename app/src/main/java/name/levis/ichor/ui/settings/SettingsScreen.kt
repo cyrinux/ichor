@@ -67,6 +67,7 @@ fun SettingsScreen(
     onReimport: () -> Unit,
     onIssueConfig: () -> Unit,
     onSupportBundle: () -> Unit,
+    onActivity: () -> Unit,
     onIntegrations: () -> Unit,
     onChangelog: () -> Unit,
     onLicenses: () -> Unit,
@@ -125,6 +126,11 @@ fun SettingsScreen(
                     Text(stringResource(R.string.settings_support_bundle_open))
                 }
                 support.notice?.let { InfoNotice(it.text()) }
+            }
+            // On this device only, whatever the cluster: no role needed.
+            MutedText(stringResource(R.string.activity_settings_desc))
+            OutlinedButton(onClick = onActivity, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.activity_open))
             }
             // Listing the cluster's API groups needs the admin kubeconfig.
             if (config?.activeSummary?.allows(Feature.WORKLOADS) == true) {

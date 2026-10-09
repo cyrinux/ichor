@@ -17,6 +17,8 @@ func EtcdDefragment(configYAML, contextName, node string) (err error) {
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: "etcd-defrag", Node: node})
+
 	return nodeAction(configYAML, contextName, node, defragTimeout, func(ctx context.Context, c *client.Client) error {
 		_, err := c.EtcdDefragment(ctx)
 

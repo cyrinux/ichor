@@ -200,7 +200,8 @@ public let dataWarning = "warning"
 /// before it expires) is critical; one expiring, overdue or not ready, or an issuer not ready, is a
 /// warning. A Velero schedule whose last backup failed or whose storage location is unavailable is
 /// critical, a stale, partially failed or invalid one a warning. A Ceph cluster alerts when
-/// critical, or on HEALTH_WARN, near-full capacity or an OSD down; a pool only when failed.
+/// critical, or on HEALTH_WARN, near-full capacity or an OSD down; a pool only when failed. A CAST AI
+/// recommendation alerts only when the autoscaler cannot apply it.
 public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     var out: [String: String] = [:]
     for v in services.longhorn?.volumes ?? [] {
@@ -282,6 +283,8 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     }
     // A pool alerts only when Rook reports it failed.
     for p in services.ceph?.pools ?? [] where p.health == .critical { out["ceph|\(p.kind)/\(p.label)"] = dataCritical }
+    // A recommendation CAST AI cannot apply is critical; a read-only or HPA one was chosen: shown, not alerted.
+    for r in services.castai?.recommendations ?? [] where r.health == .critical { out["castai|\(r.label)"] = dataCritical }
     return out
 }
 
@@ -297,6 +300,7 @@ public func dataSystemTitle(_ key: String) -> String {
     case "certmanager": "cert-manager"
     case "velero": "Velero"
     case "ceph": "Rook Ceph"
+    case "castai": "CAST AI"
     default: "CloudNativePG"
     }
 }

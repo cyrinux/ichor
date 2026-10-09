@@ -137,6 +137,11 @@ internal object Routes {
         "pod-shell?ctx=${Uri.encode(context)}&ns=${Uri.encode(namespace)}&pod=${Uri.encode(pod)}&c=${Uri.encode(container)}"
     const val HEALTH = "health"
     const val SETTINGS = "settings"
+
+    /** The action audit log; empty [cluster]: every cluster. */
+    const val ACTIVITY = "activity?cluster={cluster}"
+
+    fun activity(cluster: String = "") = "activity?cluster=${Uri.encode(cluster)}"
     const val DIAGNOSIS = "diagnosis?note={note}"
 
     /** [note]: what to tell the model up front, e.g. a failed health check. */

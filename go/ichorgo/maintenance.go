@@ -174,6 +174,8 @@ func KubeCordon(configYAML, contextName, kubeServer, node string, on bool) (err 
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: auditVerb(on, "cordon", "uncordon"), Node: node})
+
 	if isDemoContext(configYAML, contextName) {
 		return errDemoUnavailable
 	}
@@ -217,7 +219,11 @@ func StartNodeMaintenance(configYAML, contextName, kubeServer, node, action stri
 			listener:     listener,
 		}
 
-		errMessage := errText(m.run(ctx))
+		err := m.run(ctx)
+
+		recordOutcome(configYAML, contextName, auditAction{Action: "maintenance-" + m.action, Node: node, Params: fmt.Sprintf("include-bare=%t", includeBare)}, err)
+
+		errMessage := errText(err)
 
 		listener.OnDone(errMessage)
 	}()

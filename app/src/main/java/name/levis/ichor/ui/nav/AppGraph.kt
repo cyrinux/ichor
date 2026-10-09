@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
+import name.levis.ichor.ui.activity.ActivityScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
 import name.levis.ichor.ui.diagnosis.DiagnosisScreen
 import name.levis.ichor.ui.funding.FundingScreen
@@ -37,6 +38,9 @@ internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kub
             onSettings = { nav.navigate(Routes.SETTINGS) },
         )
     }
+    composable(Routes.ACTIVITY, arguments = listOf(navArgument("cluster") { type = NavType.StringType; defaultValue = "" })) { entry ->
+        ActivityScreen(cluster = entry.arguments?.getString("cluster").orEmpty(), onBack = { nav.popBackStack() })
+    }
     composable(Routes.SETTINGS) {
         SettingsScreen(
             configs = app.configRepository,
@@ -47,6 +51,7 @@ internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kub
             onReimport = { nav.navigate(Routes.IMPORT) },
             onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
             onSupportBundle = { nav.navigate(Routes.SUPPORT_BUNDLE) },
+            onActivity = { nav.navigate(Routes.activity()) },
             onIntegrations = { nav.navigate(Routes.INTEGRATIONS) },
             onChangelog = { nav.navigate(Routes.CHANGELOG) },
             onLicenses = { nav.navigate(Routes.LICENSES) },

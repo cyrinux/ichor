@@ -38,7 +38,7 @@ var nodeNames struct {
 const dataKeySize = 32
 
 // SetDataDir sets the private directory where the core keeps what it remembers across
-// launches (node names), and the 32-byte key that encrypts it (AES-256-GCM), which the app
+// launches (node names, the action audit log), and the 32-byte key that encrypts it (AES-256-GCM), which the app
 // keeps in its Keystore or Keychain. Call it once at startup, before any other call; until
 // then, or with an empty directory or a key of another size, nothing is remembered.
 func SetDataDir(dir string, key []byte) {
@@ -69,6 +69,14 @@ func dataDir() string {
 	defer nodeNames.Unlock()
 
 	return nodeNames.dir
+}
+
+// dataStore is the directory and cipher given to SetDataDir (nil cipher when there is none).
+func dataStore() (string, cipher.AEAD) {
+	nodeNames.Lock()
+	defer nodeNames.Unlock()
+
+	return nodeNames.dir, nodeNames.aead
 }
 
 // rememberNodeNames records the names of the nodes that said them and gives those that could
@@ -187,24 +195,14 @@ func readKnownNodes(path string, aead cipher.AEAD) (known knownNodes, plaintext 
 	return out, false
 }
 
-// writeKnownNodes replaces the file atomically, so a crash never leaves half of it.
+// writeKnownNodes replaces the file atomically (see writeSealed).
 func writeKnownNodes(path string, known knownNodes, aead cipher.AEAD) error {
 	data, err := json.Marshal(known)
 	if err != nil {
 		return err
 	}
 
-	sealed, err := seal(aead, data)
-	if err != nil {
-		return err
-	}
-
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, sealed, 0o600); err != nil {
-		return err
-	}
-
-	return os.Rename(tmp, path)
+	return writeSealed(path, data, aead)
 }
 
 // seal is a fresh random nonce followed by data encrypted and authenticated with aead.

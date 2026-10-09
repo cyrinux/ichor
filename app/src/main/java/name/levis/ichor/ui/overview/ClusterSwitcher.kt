@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Palette
@@ -246,6 +247,7 @@ fun ClusterSheet(
     signInNeeded: Set<String> = emptySet(),
     onAccount: ((ContextSummary) -> Unit)? = null,
     removingNames: Set<String> = emptySet(),
+    onActivity: ((ContextSummary) -> Unit)? = null,
 ) {
     var removing by remember { mutableStateOf<ContextSummary?>(null) }
     var renaming by remember { mutableStateOf<ContextSummary?>(null) }
@@ -284,6 +286,7 @@ fun ClusterSheet(
                     signInNeeded = context.name in signInNeeded,
                     account = onAccount?.let { open -> clusterAccount(context, contexts)?.let { it to { open(context) } } },
                     beingRemoved = context.name in removingNames,
+                    onActivity = onActivity?.let { open -> { open(context) } },
                 )
             }
             // What the lock on a row means, once there is one.
@@ -365,6 +368,7 @@ private fun ClusterRow(
     signInNeeded: Boolean,
     account: Pair<Int, () -> Unit>?,
     beingRemoved: Boolean,
+    onActivity: (() -> Unit)?,
 ) {
     val label = labels.of(context)
     ListItem(
@@ -413,6 +417,7 @@ private fun ClusterRow(
                 onVpnOnly = onVpnOnly,
                 onEndpoints = onEndpoints,
                 account = account,
+                onActivity = onActivity,
                 onRemove = onRemove,
             )
         },
@@ -437,6 +442,7 @@ private fun ClusterRowMenu(
     onVpnOnly: ((Boolean) -> Unit)?,
     onEndpoints: (() -> Unit)?,
     account: Pair<Int, () -> Unit>?,
+    onActivity: (() -> Unit)?,
     onRemove: () -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
@@ -483,6 +489,13 @@ private fun ClusterRowMenu(
                     text = { Text(stringResource(title)) },
                     leadingIcon = { Icon(Icons.Outlined.Key, contentDescription = null) },
                     onClick = item(onOpen),
+                )
+            }
+            onActivity?.let {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.clusters_menu_activity)) },
+                    leadingIcon = { Icon(Icons.Outlined.History, contentDescription = null) },
+                    onClick = item(it),
                 )
             }
             HorizontalDivider()
