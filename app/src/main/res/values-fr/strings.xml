@@ -2050,6 +2050,7 @@
     <string name="netperf_stop">Arrêter</string>
     <string name="netperf_stopping">Arrêt : suppression du namespace de test…</string>
     <string name="netperf_stopped">Test arrêté.</string>
+    <string name="netperf_cleanup_failed">Échec du nettoyage : %1$s</string>
     <string name="netperf_failed">Le test a échoué : %1$s</string>
     <string name="netperf_again">Nouveau test</string>
     <string name="netperf_history">Tests précédents</string>
@@ -2911,7 +2912,7 @@
     <string name="audit_unauthorized">Refusé %1$d fois (401) : ses identifiants ne sont pas valides</string>
     <string name="audit_unauthorized_fix">Son jeton ou certificat a expiré ou a été supprimé (compte de service retiré, ancien kubeconfig) : donnez-lui de nouveaux identifiants, ou arrêtez-le. Le journal ne connaît que son adresse.</string>
     <string name="checkup_title">Bilan du cluster</string>
-    <string name="checkup_intro">Ce que les autres écrans ne montrent pas, lu depuis l’API Kubernetes. Rien n’est modifié.</string>
+    <string name="checkup_intro">Ce que les autres écrans ne montrent pas, lu depuis l’API Kubernetes. Rien n’est modifié sauf si vous touchez une action.</string>
     <string name="checkup_verdict_critical">À traiter</string>
     <string name="checkup_verdict_warning">Avertissements</string>
     <string name="checkup_verdict_ok">Rien à signaler</string>
@@ -2992,6 +2993,10 @@
     <string name="checkup_lbPoolExhausted">Plus aucune adresse (pool de %1$s)</string>
     <string name="checkup_lbPoolConflict">Chevauche un autre pool</string>
     <string name="checkup_terminating">En suppression depuis %1$s</string>
+    <string name="checkup_netperfLeftover">Laissé par un test réseau il y a %1$s</string>
+    <string name="checkup_netperfLeftover_fix">L’app a été fermée avant que le test ne fasse le ménage. Rien d’autre ne vit dans ce namespace : le supprimer est sans risque.</string>
+    <string name="checkup_delete_namespace_title">Supprimer le namespace %1$s ?</string>
+    <string name="checkup_delete_namespace_text">Les pods du test réseau qu’il contient sont supprimés avec lui.</string>
     <string name="checkup_csrPending">%1$s demandes de certificat attendent une approbation (%2$s)</string>
     <string name="checkup_csrDenied">%1$s demandes de certificat ont été refusées (%2$s)</string>
     <string name="checkup_externalSecretFailed">Ne se synchronise pas depuis le store %1$s</string>

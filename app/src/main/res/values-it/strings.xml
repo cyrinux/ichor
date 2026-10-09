@@ -2050,6 +2050,7 @@
     <string name="netperf_stop">Interrompi</string>
     <string name="netperf_stopping">Interruzione: eliminazione del namespace di test…</string>
     <string name="netperf_stopped">Test interrotto.</string>
+    <string name="netperf_cleanup_failed">Pulizia non riuscita: %1$s</string>
     <string name="netperf_failed">Test non riuscito: %1$s</string>
     <string name="netperf_again">Nuovo test</string>
     <string name="netperf_history">Test precedenti</string>
@@ -2911,7 +2912,7 @@
     <string name="audit_unauthorized">Rifiutato %1$d volte (401): le sue credenziali non sono valide</string>
     <string name="audit_unauthorized_fix">Il suo token o certificato è scaduto o è stato eliminato (un service account rimosso, un vecchio kubeconfig): dagli nuove credenziali o fermalo. Il log conosce solo il suo indirizzo.</string>
     <string name="checkup_title">Controllo del cluster</string>
-    <string name="checkup_intro">Ciò che le altre schermate non mostrano, letto dall’API Kubernetes. Nulla viene modificato.</string>
+    <string name="checkup_intro">Ciò che le altre schermate non mostrano, letto dall’API Kubernetes. Nulla viene modificato a meno che tu non tocchi un’azione.</string>
     <string name="checkup_verdict_critical">Richiede attenzione</string>
     <string name="checkup_verdict_warning">Avvisi</string>
     <string name="checkup_verdict_ok">Tutto a posto</string>
@@ -2992,6 +2993,10 @@
     <string name="checkup_lbPoolExhausted">Nessun indirizzo rimasto (pool da %1$s)</string>
     <string name="checkup_lbPoolConflict">Si sovrappone a un altro pool</string>
     <string name="checkup_terminating">In eliminazione da %1$s</string>
+    <string name="checkup_netperfLeftover">Lasciato da un test di rete %1$s fa</string>
+    <string name="checkup_netperfLeftover_fix">L’app è stata chiusa prima che il test facesse pulizia. In questo namespace non c’è altro; eliminarlo è sicuro.</string>
+    <string name="checkup_delete_namespace_title">Eliminare il namespace %1$s?</string>
+    <string name="checkup_delete_namespace_text">I pod del test di rete al suo interno vengono eliminati con esso.</string>
     <string name="checkup_csrPending">%1$s richieste di certificato attendono l’approvazione (%2$s)</string>
     <string name="checkup_csrDenied">%1$s richieste di certificato sono state rifiutate (%2$s)</string>
     <string name="checkup_externalSecretFailed">Non si sincronizza dallo store %1$s</string>

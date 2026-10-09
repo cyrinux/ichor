@@ -31,6 +31,8 @@ public enum CheckupKind: String, Sendable {
     case nodeNotReady, nodePressure, nodeCordoned, nodeVersionSkew
     case lbPending, lbPoolExhausted, lbPoolConflict
     case namespaceTerminating, podTerminating, pvcTerminating
+    /// A network test namespace the app could not delete (it was closed mid-run).
+    case netperfLeftover
     case csrPending, csrDenied
     case externalSecretFailed, secretStoreNotReady
     case helmFailed, helmPending

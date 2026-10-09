@@ -262,6 +262,9 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
     suspend fun deletePod(pod: KubePod) = go.kube { cfg, ctx, server -> Ichorgo.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
 
+    /** Deletes an `ichor-netperf-*` namespace a network test left behind (os:admin); the core refuses any other. */
+    suspend fun deleteNetPerfNamespace(name: String) = go.kube { cfg, ctx, server -> Ichorgo.netPerfDeleteNamespace(cfg, ctx, server, name) }
+
     /** Prometheus-compatible query APIs among the cluster's Services, the likeliest first. */
     suspend fun promDiscover(): List<PromSource> = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(PromDiscovery.serializer(), Ichorgo.promDiscover(cfg, ctx, server)).sources

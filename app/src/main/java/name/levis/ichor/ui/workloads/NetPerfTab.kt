@@ -99,6 +99,14 @@ fun NetPerfTab(vm: NetPerfViewModel, modifier: Modifier = Modifier) {
                     if (current.running) KeepScreenOn()
                     NetPerfStatus(current, onStop = vm::stop, onReset = vm::reset)
                     NetPerfResults(current.setup, current.results, current.running)
+                    current.report?.cleanup?.takeIf { it.isNotEmpty() }?.let {
+                        Text(
+                            stringResource(R.string.netperf_cleanup_failed, it),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                        )
+                    }
                 }
             }
         }

@@ -128,7 +128,7 @@ func createRunNamespace(ctx context.Context, k *kubeClient, app string, hostNetw
 	ns := app + "-" + string(suffix)
 	labels := map[string]string{
 		"app.kubernetes.io/name":       app,
-		"app.kubernetes.io/managed-by": "ichor",
+		"app.kubernetes.io/managed-by": netPerfManagedBy,
 	}
 
 	if hostNetwork {
@@ -144,12 +144,79 @@ func createRunNamespace(ctx context.Context, k *kubeClient, app string, hostNetw
 	return ns, k.post(ctx, "/api/v1/namespaces", body, nil)
 }
 
-// deleteNetPerfNamespace deletes ns and the pods in it, also when ctx is already done.
-func deleteNetPerfNamespace(ctx context.Context, k *kubeClient, ns string) {
+// deleteNetPerfNamespace deletes ns and the pods in it, also when ctx is already done. A
+// DELETE that gets no answer or a server error is tried again, within netPerfCleanupTimeout;
+// a namespace already gone is deleted.
+func deleteNetPerfNamespace(ctx context.Context, k *kubeClient, ns string) error {
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), netPerfCleanupTimeout)
 	defer cancel()
 
-	_ = k.do(ctx, http.MethodDelete, netPerfNamespacePath(ns), "", nil, nil) //nolint:errcheck
+	var err error
+
+	for attempt := 1; ; attempt++ {
+		err = k.do(ctx, http.MethodDelete, netPerfNamespacePath(ns), "", nil, nil)
+		if err == nil || isNotFound(err) {
+			return nil
+		}
+
+		if attempt == netPerfCleanupAttempts || !retryableCleanup(err) {
+			return err
+		}
+
+		select {
+		case <-ctx.Done():
+			return err
+		case <-time.After(netPerfCleanupRetry):
+		}
+	}
+}
+
+// NetPerfDeleteNamespace deletes a namespace a network test left behind (the app was closed
+// mid-run), as the checkup lists it. Only an ichor-netperf-* namespace Ichor labelled as its
+// own is deleted, whatever the caller passes. kubeServer: see KubePods.
+func NetPerfDeleteNamespace(configYAML, contextName, kubeServer, namespace string) (err error) {
+	defer maskErr(&err)
+
+	contextName = unmaskContext(configYAML, contextName)
+	namespace = privacy.reveal(strings.TrimSpace(namespace))
+
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "delete-netperf-namespace", Object: "Namespace/" + namespace})
+
+	if !kubeNamePattern.MatchString(namespace) || strings.Contains(namespace, "..") {
+		return fmt.Errorf("invalid Kubernetes name %q", namespace)
+	}
+
+	if !strings.HasPrefix(namespace, netPerfName+"-") {
+		return fmt.Errorf("%s is not a network test namespace", namespace)
+	}
+
+	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
+		var obj struct {
+			Metadata checkMeta `json:"metadata"`
+		}
+
+		if err := k.get(ctx, netPerfNamespacePath(namespace), &obj); err != nil {
+			if isNotFound(err) {
+				return nil
+			}
+
+			return err
+		}
+
+		if obj.Metadata.Labels["app.kubernetes.io/managed-by"] != netPerfManagedBy {
+			return fmt.Errorf("%s was not created by Ichor: not deleted", namespace)
+		}
+
+		return deleteNetPerfNamespace(ctx, k, namespace)
+	})
+}
+
+// retryableCleanup tells a DELETE worth trying again (no answer, a server error, throttled)
+// from one the API server refused for good (permission denied).
+func retryableCleanup(err error) bool {
+	code := kubeCode(err)
+
+	return code == 0 || code == http.StatusTooManyRequests || code >= http.StatusInternalServerError
 }
 
 // sweepNetPerfNamespaces deletes the test namespaces of runs the app could not finish.
@@ -172,7 +239,7 @@ func sweepRunNamespaces(ctx context.Context, k *kubeClient, app string, now time
 	var list kubeList[runNamespace]
 
 	// Only namespaces this app created: a name prefix and an app label alone may match others.
-	selector := url.QueryEscape("app.kubernetes.io/name=" + app + ",app.kubernetes.io/managed-by=ichor")
+	selector := url.QueryEscape("app.kubernetes.io/name=" + app + ",app.kubernetes.io/managed-by=" + netPerfManagedBy)
 	if getList(ctx, k, "/api/v1/namespaces?labelSelector="+selector, &list) != nil {
 		return
 	}
@@ -180,7 +247,7 @@ func sweepRunNamespaces(ctx context.Context, k *kubeClient, app string, now time
 	for _, ns := range list.Items {
 		m := ns.Metadata
 		if m.DeletionTimestamp == nil && strings.HasPrefix(m.Name, app+"-") && now.Sub(m.CreationTimestamp) > netPerfStaleAge {
-			deleteNetPerfNamespace(ctx, k, m.Name)
+			_ = deleteNetPerfNamespace(ctx, k, m.Name) //nolint:errcheck // the next run sweeps again
 		}
 	}
 }

@@ -73,6 +73,7 @@ func demoCheckup(now time.Time) checkupReport {
 		}),
 		newSection(checkTerminating, 20, []checkupFinding{
 			{Kind: findNamespaceTerminating, Severity: sevWarning, Name: "old-staging", Message: "Some resources are remaining: widgets.example.com has 2 resource instances. Some content in the namespace has finalizers remaining: example.com/cleanup in 2 resource instances.", Since: ago(6 * 24 * time.Hour)},
+			{Kind: findNetPerfLeftover, Severity: sevWarning, Name: "ichor-netperf-k7x2q", Since: ago(2 * 24 * time.Hour)},
 		}),
 		newSection(checkCertificates, 14, []checkupFinding{
 			{Kind: findCSRPending, Severity: sevWarning, Name: "system:node:demo-worker-1", Extra: "kubernetes.io/kubelet-serving", Count: 12, Since: ago(3 * time.Hour)},
