@@ -10,11 +10,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,9 +24,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import name.levis.ichor.TalosApp
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.Feature
@@ -116,6 +121,48 @@ fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: Co
                 else -> Unit
             }
             OutlinedButton(onClick = { openKubenav(context) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_kube_open_kubenav)) }
+        }
+    }
+    NodeDebugShellSetting(appLock)
+}
+
+/**
+ * Opt-in: a root shell on the nodes of a cluster without Talos, through a privileged pod.
+ * With the app lock on, turning it on asks for a fresh fingerprint/PIN.
+ */
+@Composable
+private fun NodeDebugShellSetting(appLock: AppLock) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val prefs = (context.applicationContext as TalosApp).uiPreferences
+    val enabled by prefs.nodeDebugShell.collectAsStateWithLifecycle()
+    var error by remember { mutableStateOf<String?>(null) }
+
+    fun set(on: Boolean) {
+        error = null
+        val activity = context.findFragmentActivity()
+        if (!on || !appLock.enabled.value || activity == null) {
+            prefs.setNodeDebugShell(on)
+            return
+        }
+        scope.launch {
+            when (val auth = authenticate(activity, context.getString(R.string.settings_node_debug_shell))) {
+                AuthResult.Success -> prefs.setNodeDebugShell(true)
+                is AuthResult.Failure -> error = auth.message
+            }
+        }
+    }
+
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.settings_node_debug_shell), style = MaterialTheme.typography.titleMedium)
+                    MutedText(stringResource(R.string.settings_node_debug_shell_desc))
+                }
+                Switch(checked = enabled, onCheckedChange = ::set, modifier = Modifier.padding(start = 12.dp))
+            }
+            error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }
         }
     }
 }

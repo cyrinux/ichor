@@ -176,6 +176,12 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "node-debug-pod", args: "KUBENODE [NAMESPACE] [IMAGE]", run: func(e env) (out string, err error) {
+		// node-debug-pod KUBENODE [NAMESPACE] [IMAGE]: a privileged pod on the node, runs hostname, deleted.
+		out = nodeDebugRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+
+		return out, err
+	}},
 	{name: "delete-pod", args: "NAMESPACE NAME", run: func(e env) (out string, err error) {
 		// delete-pod NAMESPACE NAME
 		if err = ichorgo.KubeDeletePod(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2)); err == nil {

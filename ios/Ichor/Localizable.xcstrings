@@ -100573,6 +100573,187 @@
           }
         }
       }
+    },
+    "Node debug shell" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell de débogage des nœuds"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell de depuración de nodos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налагоджувальна оболонка вузла"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug-Shell für Knoten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell di debug dei nodi"
+          }
+        }
+      }
+    },
+    "On clusters without Talos, adds “Debug shell…” to a node’s menu: a privileged pod in the node’s namespaces gives a root shell on the node. The pod is deleted when the shell closes. Off by default." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur les clusters sans Talos, ajoute « Shell de débogage… » au menu d’un nœud : un pod privilégié dans les namespaces du nœud donne un shell root sur le nœud. Le pod est supprimé à la fermeture du shell. Désactivé par défaut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En clústeres sin Talos, añade «Shell de depuración…» al menú de un nodo: un pod privilegiado en los namespaces del nodo da una shell root en el nodo. El pod se borra al cerrar la shell. Desactivado por defecto."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На кластерах без Talos додає «Налагоджувальна оболонка…» до меню вузла: привілейований под у просторах імен вузла дає root-оболонку на вузлі. Под видаляється, коли оболонку закрито. Вимкнено за замовчуванням."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Clustern ohne Talos fügt dies „Debug-Shell…“ zum Menü eines Knotens hinzu: Ein privilegierter Pod in den Namespaces des Knotens gibt eine Root-Shell auf dem Knoten. Der Pod wird beim Schließen der Shell gelöscht. Standardmäßig aus."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sui cluster senza Talos, aggiunge «Shell di debug…» al menu di un nodo: un pod privilegiato nei namespace del nodo dà una shell root sul nodo. Il pod viene eliminato alla chiusura della shell. Disattivato per impostazione predefinita."
+          }
+        }
+      }
+    },
+    "Debug shell…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell de débogage…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell de depuración…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налагоджувальна оболонка…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug-Shell…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell di debug…"
+          }
+        }
+      }
+    },
+    "Root shell on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell root sur %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell root en %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root-оболонка на %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root-Shell auf %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell root su %@"
+          }
+        }
+      }
+    },
+    "A privileged pod runs on %@ in namespace %@, in the node’s own namespaces, and nsenter opens a root shell on the node. The pod is deleted when the shell ends. The namespace must admit privileged pods." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A privileged pod runs on %1$@ in namespace %2$@, in the node’s own namespaces, and nsenter opens a root shell on the node. The pod is deleted when the shell ends. The namespace must admit privileged pods."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un pod privilégié s’exécute sur %1$@ dans le namespace %2$@, dans les namespaces du nœud lui-même, et nsenter ouvre un shell root sur le nœud. Le pod est supprimé à la fin du shell. Le namespace doit admettre les pods privilégiés."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un pod privilegiado se ejecuta en %1$@ en el namespace %2$@, en los namespaces del propio nodo, y nsenter abre una shell root en el nodo. El pod se borra al terminar la shell. El namespace debe admitir pods privilegiados."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Привілейований под запускається на %1$@ у просторі імен %2$@, у власних просторах імен вузла, і nsenter відкриває root-оболонку на вузлі. Под видаляється, коли оболонка завершується. Простір імен має допускати привілейовані поди."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein privilegierter Pod läuft auf %1$@ im Namespace %2$@, in den eigenen Namespaces des Knotens, und nsenter öffnet eine Root-Shell auf dem Knoten. Der Pod wird gelöscht, wenn die Shell endet. Der Namespace muss privilegierte Pods zulassen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un pod privilegiato gira su %1$@ nel namespace %2$@, nei namespace del nodo stesso, e nsenter apre una shell root sul nodo. Il pod viene eliminato quando la shell termina. Il namespace deve ammettere pod privilegiati."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

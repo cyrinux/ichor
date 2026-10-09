@@ -413,6 +413,8 @@
     <string name="settings_kube_export">kubeconfig exportieren…</string>
     <string name="settings_kube_saved">Gespeichert. Füge in kubenav einen Cluster aus dieser Datei hinzu.</string>
     <string name="settings_kube_open_kubenav">kubenav öffnen</string>
+    <string name="settings_node_debug_shell">Debug-Shell für Knoten</string>
+    <string name="settings_node_debug_shell_desc">Auf Clustern ohne Talos fügt dies „Debug-Shell…“ zum Menü eines Knotens hinzu: Ein privilegierter Pod in den Namespaces des Knotens gibt eine Root-Shell auf dem Knoten. Der Pod wird beim Schließen der Shell gelöscht. Standardmäßig aus.</string>
     <string name="settings_kube_open_failed">Die ausgewählte Datei konnte nicht geöffnet werden</string>
     <string name="settings_section_config">Konfiguration</string>
     <string name="settings_encryption_key">Verschlüsselungsschlüssel</string>
@@ -605,6 +607,9 @@
 
     <!-- Debug shell -->
     <string name="debug_title">Debug-Shell</string>
+    <string name="node_debug_title">Root-Shell</string>
+    <string name="node_debug_auth">Root-Shell auf %1$s</string>
+    <string name="node_debug_intro">Ein privilegierter Pod läuft auf %1$s im Namespace %2$s, in den eigenen Namespaces des Knotens, und nsenter öffnet eine Root-Shell auf dem Knoten. Der Pod wird gelöscht, wenn die Shell endet. Der Namespace muss privilegierte Pods zulassen.</string>
     <string name="debug_stop">Beenden</string>
     <string name="debug_auth">Debug-Shell auf %1$s</string>
     <string name="debug_intro">Führt das Image als privilegierten Container mit Host-Zugriff auf %1$s aus und öffnet darin ein Terminal. Talos lädt das Image zuerst herunter, falls der Knoten es nicht hat.</string>
@@ -2544,6 +2549,7 @@
     <string name="node_menu_cordon">Absperren (cordon)</string>
     <string name="node_menu_uncordon">Freigeben (uncordon)</string>
     <string name="node_menu_drain">Leeren…</string>
+    <string name="node_menu_kube_debug_shell">Debug-Shell…</string>
     <string name="node_menu_group_inspect">Untersuchen</string>
     <string name="node_menu_group_troubleshoot">Fehlersuche</string>
     <string name="node_menu_group_operate">Verwalten</string>

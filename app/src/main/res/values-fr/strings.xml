@@ -420,6 +420,8 @@
     <string name="settings_kube_export">Exporter le kubeconfig…</string>
     <string name="settings_kube_saved">Enregistré. Dans kubenav, ajoutez un cluster à partir de ce fichier.</string>
     <string name="settings_kube_open_kubenav">Ouvrir kubenav</string>
+    <string name="settings_node_debug_shell">Shell de débogage des nœuds</string>
+    <string name="settings_node_debug_shell_desc">Sur les clusters sans Talos, ajoute « Shell de débogage… » au menu d’un nœud : un pod privilégié dans les namespaces du nœud donne un shell root sur le nœud. Le pod est supprimé à la fermeture du shell. Désactivé par défaut.</string>
     <string name="settings_kube_open_failed">Impossible d\'ouvrir le fichier choisi</string>
     <string name="settings_section_config">Configuration</string>
     <string name="settings_encryption_key">Clé de chiffrement</string>
@@ -612,6 +614,9 @@
 
     <!-- Debug shell -->
     <string name="debug_title">Shell de débogage</string>
+    <string name="node_debug_title">Shell root</string>
+    <string name="node_debug_auth">Shell root sur %1$s</string>
+    <string name="node_debug_intro">Un pod privilégié s’exécute sur %1$s dans le namespace %2$s, dans les namespaces du nœud lui-même, et nsenter ouvre un shell root sur le nœud. Le pod est supprimé à la fin du shell. Le namespace doit admettre les pods privilégiés.</string>
     <string name="debug_stop">Arrêter</string>
     <string name="debug_auth">Shell de débogage sur %1$s</string>
     <string name="debug_intro">Exécute l\'image dans un conteneur privilégié sur %1$s, avec accès à l\'hôte, et y ouvre un terminal. Talos télécharge d\'abord l\'image si le nœud ne l\'a pas.</string>
@@ -2552,6 +2557,7 @@
     <string name="node_menu_cordon">Isoler (cordon)</string>
     <string name="node_menu_uncordon">Lever l\'isolement</string>
     <string name="node_menu_drain">Drainer…</string>
+    <string name="node_menu_kube_debug_shell">Shell de débogage…</string>
     <string name="node_menu_group_inspect">Inspecter</string>
     <string name="node_menu_group_troubleshoot">Dépanner</string>
     <string name="node_menu_group_operate">Administrer</string>

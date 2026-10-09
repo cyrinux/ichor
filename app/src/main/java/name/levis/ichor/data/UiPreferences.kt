@@ -81,6 +81,13 @@ class UiPreferences(private val prefs: SharedPreferences) {
     val auditEvents: StateFlow<Boolean> = _auditEvents.asStateFlow()
 
     /**
+     * Offers a root shell on the nodes of a cluster without Talos, through a privileged pod
+     * (`kubectl debug node/`). Off by default: it is root on the node.
+     */
+    private val _nodeDebugShell = MutableStateFlow(prefs.getBoolean(KEY_NODE_DEBUG_SHELL, false))
+    val nodeDebugShell: StateFlow<Boolean> = _nodeDebugShell.asStateFlow()
+
+    /**
      * Keeps the last results of each cluster on disk, encrypted, to show them when it cannot
      * be reached. Off by default: otherwise cluster data never leaves memory.
      */
@@ -143,6 +150,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
     fun setAuditEvents(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_AUDIT_EVENTS, enabled).apply()
         _auditEvents.value = enabled
+    }
+
+    fun setNodeDebugShell(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_NODE_DEBUG_SHELL, enabled).apply()
+        _nodeDebugShell.value = enabled
     }
 
     fun setOfflineCache(enabled: Boolean) {
@@ -213,6 +225,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_LIVE_CLUSTER_STATS = "live_cluster_stats"
         private const val KEY_REMOTE_APP_ICONS = "remote_app_icons"
         private const val KEY_AUDIT_EVENTS = "audit_events"
+        private const val KEY_NODE_DEBUG_SHELL = "node_debug_shell"
         private const val KEY_OFFLINE_CACHE = "offline_cache"
         private const val KEY_OVERVIEW_LAYOUT = "overview_layout"
         private const val KEY_NODES_EXPANDED = "overview_nodes_expanded"

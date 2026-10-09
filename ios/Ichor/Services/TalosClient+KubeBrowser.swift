@@ -179,6 +179,13 @@ extension TalosClient {
         IchorgoStartPodDebug(kubeConfig, kubeContext, kubeAPIServer, namespace, pod, targetContainer, image, cols, rows, listener)
     }
 
+    /// `kubectl debug node/`: a privileged pod on `node` in `namespace`, in the host's
+    /// namespaces, then nsenter for a root shell on the node; the pod is deleted when it ends.
+    func startNodeDebug(node: String, namespace: String, image: String, cols: Int, rows: Int,
+                        listener: IchorgoDebugListenerProtocol) -> IchorgoDebugSession? {
+        IchorgoStartNodeDebug(kubeConfig, kubeContext, kubeAPIServer, node, namespace, image, cols, rows, listener)
+    }
+
     /// Forwards a port of the phone's loopback address to `remotePort` of the pod until the
     /// consuming task is cancelled; nothing listens on the network the phone is on.
     func portForward(namespace: String, pod: String, remotePort: Int) -> AsyncStream<PortForwardEvent> {

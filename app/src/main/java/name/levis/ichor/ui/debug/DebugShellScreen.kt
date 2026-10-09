@@ -98,7 +98,15 @@ fun DebugShellScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(stringResource(if (key.isPod) R.string.pod_shell_title else R.string.debug_title))
+                        Text(
+                            stringResource(
+                                when {
+                                    key.kubeNode -> R.string.node_debug_title
+                                    key.isPod -> R.string.pod_shell_title
+                                    else -> R.string.debug_title
+                                },
+                            ),
+                        )
                         Text(
                             if (key.isPod) listOf(key.namespace, hostname, key.container).filter { it.isNotEmpty() }.joinToString(" / ") else hostname,
                             style = MaterialTheme.typography.labelMedium,
@@ -117,7 +125,11 @@ fun DebugShellScreen(
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize().imePadding()) {
             when (val s = state) {
-                ShellState.Setup -> if (key.isPod) PodSetupForm(hostname, key.namespace, onStart = vm::start) else SetupForm(hostname, onStart = vm::start)
+                ShellState.Setup -> when {
+                    key.kubeNode -> KubeNodeSetupForm(hostname, key.namespace, onStart = vm::start)
+                    key.isPod -> PodSetupForm(hostname, key.namespace, onStart = vm::start)
+                    else -> SetupForm(hostname, onStart = vm::start)
+                }
                 else -> Column(Modifier.fillMaxSize().background(TerminalBackground)) {
                     StatusLine(s, onRestart = vm::reset)
                     Terminal(
@@ -131,7 +143,7 @@ fun DebugShellScreen(
                         ExtraKeys(
                             onKey = vm::send,
                             // The snippets are node diagnostics, for netshoot: not for any pod's image.
-                            onSnippets = if (key.isPod || vm.snippets.isEmpty()) null else ({ showSnippets = true }),
+                            onSnippets = if (key.isPod || key.kubeNode || vm.snippets.isEmpty()) null else ({ showSnippets = true }),
                         )
                     }
                 }
@@ -245,6 +257,49 @@ private fun PodSetupForm(pod: String, namespace: String, onStart: (String, Strin
         )
         error?.let { Text(it, color = LocalStatusColors.current.bad) }
         Button(onClick = ::start, enabled = !debug || debugImage.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.debug_start)) }
+    }
+}
+
+/**
+ * `kubectl debug node/`: a privileged pod on [node] in [namespace], in the host's namespaces,
+ * then nsenter for a root shell on the node. Only the image is asked: it must have nsenter.
+ */
+@Composable
+private fun KubeNodeSetupForm(node: String, namespace: String, onStart: (String, String) -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val prefs = remember { context.getSharedPreferences("ichor-debug", Context.MODE_PRIVATE) }
+    var image by rememberSaveable { mutableStateOf(prefs.getString("node-debug-image", DEFAULT_POD_DEBUG_IMAGE) ?: DEFAULT_POD_DEBUG_IMAGE) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val appLock = (context.applicationContext as TalosApp).appLock
+    val denial = rememberKubeDenial(KubeAction.DEBUG_NODE, namespace)
+
+    fun start() {
+        prefs.edit().putString("node-debug-image", image.trim()).apply()
+        // Root on the node: with the app lock on, a fresh fingerprint/PIN first, like a Talos shell.
+        authenticated(context, appLock.enabled.value, scope, context.getString(R.string.node_debug_auth, node), onError = { error = it }) {
+            onStart(image.trim(), "")
+        }
+    }
+
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(stringResource(R.string.node_debug_intro, node, namespace), style = MaterialTheme.typography.bodyMedium)
+        KubeDenialNote(denial)
+        OutlinedTextField(
+            value = image,
+            onValueChange = { image = it },
+            label = { Text(stringResource(R.string.debug_image)) },
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        error?.let { Text(it, color = LocalStatusColors.current.bad) }
+        Button(onClick = ::start, enabled = image.isNotBlank() && denial == null, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.debug_start))
+        }
     }
 }
 

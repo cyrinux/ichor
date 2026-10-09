@@ -24,11 +24,13 @@ struct KubeNodeActionRow: View {
     }
 }
 
-/// The cordon (or uncordon) and the drain of `node`: the menu's items.
+/// The cordon (or uncordon) and the drain of `node`, and a root shell when the setting is on:
+/// the menu's items.
 struct KubeNodeMenu: View {
     let node: KubeNodeInfo
     @Binding var path: [Route]
     @Binding var cordoning: KubeNodeInfo?
+    @AppStorage(NodeDebugKeys.enabled) private var nodeDebug = false
 
     var body: some View {
         // Cluster-wide: the access the screen loaded for "" (see loadsKubeActionAccess).
@@ -38,6 +40,14 @@ struct KubeNodeMenu: View {
         }
         KubeGatedMenuButton(String(localized: "Drain…"), systemImage: "rectangle.portrait.and.arrow.right", action: .drainNode) {
             path.append(.drain(node: node.name, hostname: node.name))
+        }
+        if nodeDebug {
+            // The pod's namespace, not the cluster-wide answer this screen loaded: offered unless
+            // refused there; the shell's screen asks about it.
+            KubeGatedMenuButton(String(localized: "Debug shell…"), systemImage: "terminal", action: .debugNode,
+                                in: NodeDebugKeys.namespace) {
+                path.append(.kubeNodeDebug(node: node.name))
+            }
         }
     }
 }

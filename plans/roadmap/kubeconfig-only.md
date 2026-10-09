@@ -364,7 +364,7 @@ to learn its mechanisms, not to copy code. What it does and how we do it better:
 | Resource browser | hardcoded kinds, one widget each; CRDs via CRD list + client-side `additionalPrinterColumns` jsonPath; no watch, refresh button | `/api` + `/apis` discovery, server-side Table (`as=Table`) for every kind incl. CRDs, so no per-kind code and the columns match `kubectl get`; watch for live lists on open screens |
 | Edit | YAML → JSON Patch diff, no `resourceVersion` check (overwrites a concurrent change) | server-side apply with `dryRun=All` first, show the diff (we have `kube_diff*.go`), apply with field manager `ichor`; conflict = clear message, never a silent overwrite |
 | Helm | Helm SDK (list, history, rollback, uninstall) | decoding `sh.helm.release.v1` Secrets ourselves (base64 → gzip → JSON, no Helm SDK in the binary); rollback done the same way, with a dry-run plan ([D11](devops/11-helm.md)) |
-| Node shell | privileged busybox `chroot /host` pod | Talos clusters keep the Talos API (no shell needed); for other clusters, an ephemeral debug container on the node with an explicit "privileged pod" warning, off by default |
+| Node shell | privileged busybox `chroot /host` pod | Talos clusters keep the Talos API (no shell needed); for other clusters, an ephemeral debug container on the node with an explicit "privileged pod" warning, off by default. **Shipped:** Settings → Kubernetes → Node debug shell, a privileged pod in the host's namespaces with `nsenter`, deleted when the shell ends (`kube_node_debug.go`) |
 | Help content | advises a cluster-admin ServiceAccount | least-privilege SA templates (read-only, read + restart, etc.) with copyable YAML |
 
 ## 8. Demo, tests, probe

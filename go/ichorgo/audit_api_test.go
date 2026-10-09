@@ -22,7 +22,7 @@ var auditedEntryPoints = []string{
 	"KubeHelmRollback", "KubeLonghornAction", "KubeNodeCordon", "KubeObjectUpdate",
 	"KubeRollbackDeployment", "KubeRolloutRestart", "KubeScale", "KubeSuspendCronJob",
 	"KubeTriggerCronJob", "NetPerfDeleteNamespace", "Reboot", "Rollback", "ServiceAction", "Shutdown", "StartConfigTry",
-	"StartKubeDrain", "StartNodeMaintenance", "StartPodDebug", "StartUpgrade",
+	"StartKubeDrain", "StartNodeDebug", "StartNodeMaintenance", "StartPodDebug", "StartUpgrade",
 }
 
 // mutationPrimitives are the internal helpers only a change to a cluster goes through.

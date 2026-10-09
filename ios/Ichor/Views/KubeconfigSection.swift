@@ -10,9 +10,18 @@ struct KubeconfigSection: View {
     @State private var exporting = false
     @State private var busy = false
     @State private var message: String?
+    @AppStorage(NodeDebugKeys.enabled) private var nodeDebug = false
 
     var body: some View {
         Section {
+            Toggle(isOn: Binding(get: { nodeDebug }, set: { on in Task { await setNodeDebug(on) } })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Node debug shell")
+                    Text("On clusters without Talos, adds “Debug shell…” to a node’s menu: a privileged pod in the node’s namespaces gives a root shell on the node. The pod is deleted when the shell closes. Off by default.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
             Button(busy ? String(localized: "Exporting…") : String(localized: "Export kubeconfig…")) { Task { await export() } }
                 .disabled(busy)
             if !model.activeIsKube {
@@ -36,6 +45,15 @@ struct KubeconfigSection: View {
             }
             document = nil // don't keep the credential around
         }
+    }
+
+    /// Root on the nodes: with the app lock on, turning it on asks for Face ID first.
+    private func setNodeDebug(_ on: Bool) async {
+        if on, model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Node debug shell")) {
+            message = failure
+            return
+        }
+        nodeDebug = on
     }
 
     private func export() async {
