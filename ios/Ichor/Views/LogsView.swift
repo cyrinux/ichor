@@ -231,6 +231,7 @@ private struct SnapshotList: View {
                 LogListRows(content: content, texts: document.texts, expanded: $expanded)
             }
             .listStyle(.plain)
+            .scalableMonoText(.logs)
             .themedBackground()
             .modifier(LevelBar(display: $display, counts: content.counts))
             .overlay {
@@ -279,6 +280,7 @@ struct FollowList: View {
                 .onAppear { pinned = true }
             }
             .listStyle(.plain)
+            .scalableMonoText(.logs)
             .themedBackground()
             .modifier(LevelBar(display: $display, counts: content.counts))
             .modifier(PinnedToBottom(pinned: $pinned))

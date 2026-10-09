@@ -2,7 +2,6 @@ package name.levis.ichor.ui.logs
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -44,7 +43,10 @@ import name.levis.ichor.model.logRows
 import name.levis.ichor.model.matchingText
 import java.time.ZoneId
 import name.levis.ichor.ui.components.EmptyText
-import name.levis.ichor.ui.theme.monoSmall
+import name.levis.ichor.ui.components.MonoScreen
+import name.levis.ichor.ui.components.ScalableMonoText
+import name.levis.ichor.ui.components.monoTextStyle
+import name.levis.ichor.ui.components.monoTextActions
 
 /** How the log is shown: text [filter], [level] filter, or the [raw] lines as received. */
 data class LogView(val filter: String, val level: LogLevelFilter, val raw: Boolean, val onLevel: (LogLevelFilter) -> Unit)
@@ -55,7 +57,7 @@ fun LogContent(entries: List<SeqLogEntry>, truncated: Boolean, view: LogView, li
     if (view.raw) {
         val lines = remember(matched) { matched.map { it.entry.text } }
         LogBody(lines.size, truncated && view.filter.isBlank(), lines, view, live) {
-            items(lines) { line -> Text(line, style = MaterialTheme.typography.monoSmall) }
+            items(lines) { line -> Text(line, style = monoTextStyle(), modifier = Modifier.monoTextActions()) }
         }
         return
     }
@@ -130,7 +132,7 @@ private fun LogBody(count: Int, header: Boolean, version: Any, view: LogView, li
     // Open at the newest lines, like `tail`, and follow new ones.
     LaunchedEffect(version) { if (stickToEnd) listState.scrollToItem(lastIndex) }
 
-    Box(Modifier.fillMaxSize()) {
+    ScalableMonoText(MonoScreen.LOGS, Modifier.fillMaxSize()) {
         val list = @Composable {
             LazyColumn(
                 state = listState,
