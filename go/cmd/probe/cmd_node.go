@@ -114,6 +114,11 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "system-images", args: "NODE", run: func(e env) (out string, err error) {
+		out, err = ichorgo.TalosSystemImages(e.cfg, e.context, flag.Arg(1))
+
+		return out, err
+	}},
 	{name: "topology", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.ClusterTopology(e.cfg, e.context)
 

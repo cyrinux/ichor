@@ -168,6 +168,12 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "image-scan", args: "REF...", run: func(e env) (out string, err error) {
+		// image-scan REF...: scans image refs with no pod behind them (Trivy in a Job).
+		out = imageScanRun(e.cfg, e.context, e.kubeServer, flag.Args()[1:])
+
+		return out, err
+	}},
 	{name: "netperf-cleanup", args: "NAMESPACE", run: func(e env) (out string, err error) {
 		// netperf-cleanup NAMESPACE: deletes an ichor-netperf-* namespace a test left behind.
 		if err = ichorgo.NetPerfDeleteNamespace(e.cfg, e.context, e.kubeServer, flag.Arg(1)); err == nil {
