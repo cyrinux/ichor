@@ -11,6 +11,9 @@ struct CheckupView: View {
     /// The sections shown open; those in trouble until the user chooses.
     @State private var open: Set<String> = []
     @State private var chosen = false
+    /// The leftover namespace whose deletion waits for a confirmation.
+    @State private var confirmDelete: String?
+    @State private var message: String?
 
     var body: some View {
         LoadStateView(state: state, retry: load) { report in
@@ -20,7 +23,7 @@ struct CheckupView: View {
                 ForEach(report.shownSections) { section in
                     Section {
                         DisclosureGroup(isExpanded: expanded(section.id)) {
-                            CheckupSectionBody(section: section, report: report, now: now)
+                            CheckupSectionBody(section: section, report: report, now: now) { confirmDelete = $0 }
                         } label: {
                             CheckupSectionLabel(section: section)
                         }
@@ -33,6 +36,16 @@ struct CheckupView: View {
         .task { await load() }
         // A new API address (set on the Kubernetes screen): read again through it.
         .id(model.client?.kubeServer)
+        .confirmationDialog(confirmDelete.map(CheckupText.checkupDeleteNamespaceTitle) ?? "",
+                            isPresented: $confirmDelete.isPresent(),
+                            titleVisibility: .visible,
+                            presenting: confirmDelete) { namespace in
+            Button("Delete", role: .destructive) { Task { await deleteLeftover(namespace) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text(verbatim: CheckupText.checkupDeleteNamespaceText)
+        }
+        .messageAlert($message)
         .navigationTitle(Text(verbatim: CheckupText.checkupTitle))
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -45,6 +58,18 @@ struct CheckupView: View {
                 if on { open.insert(id) } else { open.remove(id) }
             }
         )
+    }
+
+    /// Deletes a namespace a network test left behind, then reads the checkup again.
+    private func deleteLeftover(_ namespace: String) async {
+        guard let client = model.client else { return }
+        do {
+            try await client.deleteNetPerfNamespace(namespace)
+            message = String(localized: "\(namespace) is being deleted")
+            await load()
+        } catch {
+            message = String(localized: "Could not delete \(namespace): \(error.localizedDescription)")
+        }
     }
 
     private func load() async {
@@ -144,6 +169,8 @@ private struct CheckupSectionBody: View {
     let section: CheckupSection
     let report: CheckupReport
     let now: Int64
+    /// Asks to delete a namespace a network test left behind.
+    let onDeleteLeftover: (String) -> Void
 
     var body: some View {
         if !section.error.isEmpty {
@@ -153,7 +180,8 @@ private struct CheckupSectionBody: View {
             Text(verbatim: CheckupText.checkupNothingIn("\(section.checked)")).font(.caption).foregroundStyle(.secondary)
         }
         ForEach(Array(section.findings.enumerated()), id: \.offset) { _, finding in
-            CheckupFindingRow(finding: finding, now: now)
+            CheckupFindingRow(finding: finding, now: now,
+                              onDelete: finding.kind == .netperfLeftover ? { onDeleteLeftover(finding.name) } : nil)
         }
         if section.truncated > 0 {
             Text(verbatim: CheckupText.checkupTruncated("\(section.truncated)")).font(.caption).foregroundStyle(.secondary)
@@ -178,10 +206,12 @@ private struct CheckupSectionBody: View {
     }
 }
 
-/// One problem: what it is about, what happens, Kubernetes' own words and what to do.
+/// One problem: what it is about, what happens, Kubernetes' own words and what to do, and
+/// `onDelete` when the checkup can remove it (a namespace a network test left behind).
 private struct CheckupFindingRow: View {
     let finding: CheckupFinding
     let now: Int64
+    var onDelete: (() -> Void)?
 
     private var subject: String {
         finding.kind == .event && !finding.extra.isEmpty ? "\(finding.extra) \(finding.subject)" : finding.subject
@@ -201,6 +231,11 @@ private struct CheckupFindingRow: View {
                 }
                 if let fix = finding.fix {
                     Text(verbatim: fix).font(.caption).foregroundStyle(.secondary)
+                }
+                if let onDelete {
+                    Button("Delete", role: .destructive, action: onDelete)
+                        .font(.callout)
+                        .buttonStyle(.borderless)
                 }
             }
         }

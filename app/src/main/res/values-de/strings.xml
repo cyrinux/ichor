@@ -2042,6 +2042,7 @@
     <string name="netperf_stop">Stoppen</string>
     <string name="netperf_stopping">Wird gestoppt: Test-Namespace wird gelöscht…</string>
     <string name="netperf_stopped">Test gestoppt.</string>
+    <string name="netperf_cleanup_failed">Aufräumen fehlgeschlagen: %1$s</string>
     <string name="netperf_failed">Test fehlgeschlagen: %1$s</string>
     <string name="netperf_again">Neuer Test</string>
     <string name="netperf_history">Frühere Tests</string>
@@ -2903,7 +2904,7 @@
     <string name="audit_unauthorized">%1$d-mal abgelehnt (401): seine Anmeldedaten sind ungültig</string>
     <string name="audit_unauthorized_fix">Sein Token oder Zertifikat ist abgelaufen oder gelöscht (ein entfernter Service-Account, eine alte Kubeconfig): geben Sie ihm neue Anmeldedaten oder stoppen Sie ihn. Das Log kennt nur seine Adresse.</string>
     <string name="checkup_title">Cluster-Check</string>
-    <string name="checkup_intro">Was die anderen Ansichten nicht zeigen, aus der Kubernetes-API gelesen. Nichts wird verändert.</string>
+    <string name="checkup_intro">Was die anderen Ansichten nicht zeigen, aus der Kubernetes-API gelesen. Nichts wird verändert, außer Sie tippen auf eine Aktion.</string>
     <string name="checkup_verdict_critical">Handlungsbedarf</string>
     <string name="checkup_verdict_warning">Warnungen</string>
     <string name="checkup_verdict_ok">Alles in Ordnung</string>
@@ -2984,6 +2985,10 @@
     <string name="checkup_lbPoolExhausted">Keine Adresse mehr frei (Pool mit %1$s)</string>
     <string name="checkup_lbPoolConflict">Überschneidet sich mit einem anderen Pool</string>
     <string name="checkup_terminating">Wird seit %1$s gelöscht</string>
+    <string name="checkup_netperfLeftover">Von einem Netzwerktest vor %1$s zurückgelassen</string>
+    <string name="checkup_netperfLeftover_fix">Die App wurde geschlossen, bevor der Test aufräumen konnte. Sonst liegt nichts in diesem Namespace; ihn zu löschen ist sicher.</string>
+    <string name="checkup_delete_namespace_title">Namespace %1$s löschen?</string>
+    <string name="checkup_delete_namespace_text">Die Pods des Netzwerktests darin werden mit ihm gelöscht.</string>
     <string name="checkup_csrPending">%1$s Zertifikatsanfragen warten auf Genehmigung (%2$s)</string>
     <string name="checkup_csrDenied">%1$s Zertifikatsanfragen wurden abgelehnt (%2$s)</string>
     <string name="checkup_externalSecretFailed">Wird nicht aus dem Store %1$s synchronisiert</string>

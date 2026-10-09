@@ -21,7 +21,7 @@ var auditedEntryPoints = []string{
 	"KubeDeletePod", "KubeFluxAction", "KubeGarageRepairBlocks", "KubeGarageSetTranquility",
 	"KubeHelmRollback", "KubeLonghornAction", "KubeNodeCordon", "KubeObjectUpdate",
 	"KubeRollbackDeployment", "KubeRolloutRestart", "KubeScale", "KubeSuspendCronJob",
-	"KubeTriggerCronJob", "Reboot", "Rollback", "ServiceAction", "Shutdown", "StartConfigTry",
+	"KubeTriggerCronJob", "NetPerfDeleteNamespace", "Reboot", "Rollback", "ServiceAction", "Shutdown", "StartConfigTry",
 	"StartKubeDrain", "StartNodeMaintenance", "StartPodDebug", "StartUpgrade",
 }
 

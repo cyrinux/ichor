@@ -80,7 +80,7 @@ func detectPublicIPs(ctx context.Context, k *kubeClient) (publicIPReport, error)
 		return publicIPReport{}, fmt.Errorf("create the namespace: %w", err)
 	}
 
-	defer deleteNetPerfNamespace(ctx, k, ns)
+	defer func() { _ = deleteNetPerfNamespace(ctx, k, ns) }() //nolint:errcheck // swept by the next run
 
 	nodes := make([]publicIPNode, len(list.Nodes))
 

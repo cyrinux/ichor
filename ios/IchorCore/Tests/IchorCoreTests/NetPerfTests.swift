@@ -18,6 +18,9 @@ final class NetPerfTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(report.results[1].latency).p99, 131)
         XCTAssertEqual(report.results[2].error, "no answer from netserver")
         XCTAssertEqual(try TalosJSON.decode(NetPerfReport.self, from: #"{"results":null}"#), NetPerfReport())
+        XCTAssertEqual(report.cleanup, "")
+        XCTAssertEqual(try TalosJSON.decode(NetPerfReport.self, from: #"{"cleanup":"namespace x could not be deleted"}"#).cleanup,
+                       "namespace x could not be deleted")
 
         let progress = try TalosJSON.decode(
             NetPerfProgress.self,

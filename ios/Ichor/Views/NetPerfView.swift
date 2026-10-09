@@ -17,6 +17,9 @@ struct NetPerfView: View {
                 if let run = session.run {
                     NetPerfStatusSection(run: run, stop: { session.stop() }, reset: { session.reset() })
                     NetPerfResultsSections(setup: run.setup, results: run.results, running: run.running)
+                    if let cleanup = run.report?.cleanup, !cleanup.isEmpty {
+                        Section { Text("Cleanup failed: \(cleanup)").font(.caption).foregroundStyle(.secondary) }
+                    }
                 } else if let report = session.viewing {
                     savedSections(report)
                 } else {

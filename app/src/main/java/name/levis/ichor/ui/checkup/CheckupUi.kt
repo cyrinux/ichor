@@ -54,9 +54,12 @@ import java.util.Locale
 /** How many rows of a measured list show before "Show all". */
 private const val LIST_PREVIEW = 6
 
-/** One problem: what it is about, what happens, Kubernetes' own words and what to do. */
+/**
+ * One problem: what it is about, what happens, Kubernetes' own words and what to do, and
+ * [onDelete] when the checkup can remove it (a namespace a network test left behind).
+ */
 @Composable
-fun FindingCard(f: CheckupFinding, now: Long) {
+fun FindingCard(f: CheckupFinding, now: Long, onDelete: (() -> Unit)? = null) {
     val colors = LocalStatusColors.current
     val (icon, tint) = when (f.level) {
         CheckupSeverity.CRITICAL -> Icons.Outlined.Error to colors.bad
@@ -80,6 +83,9 @@ fun FindingCard(f: CheckupFinding, now: Long) {
                     Text(it, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = colors.muted, maxLines = 6, overflow = TextOverflow.Ellipsis)
                 }
                 checkupFix(f.kind).takeIf { it != 0 }?.let { MutedText(stringResource(it)) }
+                if (onDelete != null) {
+                    TextButton(onClick = onDelete) { Text(stringResource(R.string.common_delete), color = colors.bad) }
+                }
             }
         }
     }

@@ -2212,6 +2212,7 @@
     <string name="netperf_stop">Зупинити</string>
     <string name="netperf_stopping">Зупинка: видалення namespace тесту…</string>
     <string name="netperf_stopped">Тест зупинено.</string>
+    <string name="netperf_cleanup_failed">Не вдалося прибрати: %1$s</string>
     <string name="netperf_failed">Тест не вдався: %1$s</string>
     <string name="netperf_again">Новий тест</string>
     <string name="netperf_history">Попередні тести</string>
@@ -3111,7 +3112,7 @@
     <string name="audit_unauthorized">Відмовлено %1$d разів (401): його облікові дані недійсні</string>
     <string name="audit_unauthorized_fix">Його токен чи сертифікат прострочений або видалений (видалений обліковий запис служби, старий kubeconfig): дайте йому нові облікові дані або зупиніть його. Журнал знає лише його адресу.</string>
     <string name="checkup_title">Перевірка кластера</string>
-    <string name="checkup_intro">Те, чого не показують інші екрани, прочитане з API Kubernetes. Нічого не змінюється.</string>
+    <string name="checkup_intro">Те, чого не показують інші екрани, прочитане з API Kubernetes. Нічого не змінюється, доки ви не торкнетеся дії.</string>
     <string name="checkup_verdict_critical">Потребує уваги</string>
     <string name="checkup_verdict_warning">Попередження</string>
     <string name="checkup_verdict_ok">Усе гаразд</string>
@@ -3192,6 +3193,10 @@
     <string name="checkup_lbPoolExhausted">Адрес не лишилося (пул із %1$s)</string>
     <string name="checkup_lbPoolConflict">Перетинається з іншим пулом</string>
     <string name="checkup_terminating">Видаляється вже %1$s</string>
+    <string name="checkup_netperfLeftover">Залишений мережевим тестом %1$s тому</string>
+    <string name="checkup_netperfLeftover_fix">Застосунок закрили до того, як тест прибрав за собою. Більше нічого в цьому namespace немає; видаляти його безпечно.</string>
+    <string name="checkup_delete_namespace_title">Видалити namespace %1$s?</string>
+    <string name="checkup_delete_namespace_text">Поди мережевого тесту в ньому видаляються разом із ним.</string>
     <string name="checkup_csrPending">Запитів сертифікатів, що чекають схвалення: %1$s (%2$s)</string>
     <string name="checkup_csrDenied">Відхилених запитів сертифікатів: %1$s (%2$s)</string>
     <string name="checkup_externalSecretFailed">Не синхронізується зі сховища %1$s</string>

@@ -143,9 +143,11 @@ public struct NetPerfReport: Codable, Equatable, Sendable {
     public let started: Int64
     public let finished: Int64
     public let results: [NetPerfResult]
+    /// Why the test namespace could not be deleted, "" when it was.
+    public let cleanup: String
 
     public init(server: String = "", client: String = "", hostNetwork: Bool = false, seconds: Int = 0, image: String = "",
-                started: Int64 = 0, finished: Int64 = 0, results: [NetPerfResult] = []) {
+                started: Int64 = 0, finished: Int64 = 0, results: [NetPerfResult] = [], cleanup: String = "") {
         self.server = server
         self.client = client
         self.hostNetwork = hostNetwork
@@ -154,6 +156,7 @@ public struct NetPerfReport: Codable, Equatable, Sendable {
         self.started = started
         self.finished = finished
         self.results = results
+        self.cleanup = cleanup
     }
 
     public init(from decoder: Decoder) throws {
@@ -166,9 +169,10 @@ public struct NetPerfReport: Codable, Equatable, Sendable {
         started = try c.field(.started, 0)
         finished = try c.field(.finished, 0)
         results = try c.field(.results, [])
+        cleanup = try c.field(.cleanup, "")
     }
 
-    private enum CodingKeys: String, CodingKey { case server, client, hostNetwork, seconds, image, started, finished, results }
+    private enum CodingKeys: String, CodingKey { case server, client, hostNetwork, seconds, image, started, finished, results, cleanup }
 }
 
 public struct NetPerfProgress: Decodable, Equatable, Sendable {
