@@ -118,6 +118,10 @@ build-play:
 check:
     ./build.sh check
 
+# Image-only buttons labelled and no text below 12 (sp or pt), Android and iOS.
+a11y-check:
+    python3 scripts/check-accessibility.py
+
 # Every UI string translated (fr, es, uk, de, it) with matching placeholders, Android and iOS,
 # and every website string in docs-i18n/.
 i18n-check:

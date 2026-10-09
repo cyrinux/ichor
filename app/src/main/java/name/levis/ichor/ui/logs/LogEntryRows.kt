@@ -20,11 +20,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import name.levis.ichor.R
 import name.levis.ichor.model.LogLevel
 import name.levis.ichor.model.LogRow
@@ -36,9 +34,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import name.levis.ichor.ui.components.expandable
+import name.levis.ichor.ui.theme.monoSmall
 
-private val LogFontSize = 11.sp
-private val LogLineHeight = 14.sp
 private val StripeWidth = 3.dp
 private const val DEBUG_ALPHA = 0.6f
 private val TimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS")
@@ -101,7 +98,7 @@ fun logRowText(row: LogRow.Entry, p: LogPalette, zone: ZoneId): AnnotatedString 
         append(' ')
     }
     if (entry.source.isNotEmpty()) {
-        withStyle(SpanStyle(color = p.dim, fontSize = 10.sp)) { append(entry.source) }
+        withStyle(SpanStyle(color = p.dim)) { append(entry.source) }
         append(' ')
     }
     withStyle(SpanStyle(color = p.text)) { append(entry.msg) }
@@ -127,7 +124,7 @@ fun LogEntryRow(row: LogRow.Entry, palette: LogPalette, zone: ZoneId, expanded: 
             .drawBehind { if (stripe != null) drawRect(stripe, size = Size(StripeWidth.toPx(), size.height)) }
             .padding(start = StripeWidth + 5.dp, top = 1.dp, bottom = 1.dp),
     ) {
-        Text(text, fontFamily = FontFamily.Monospace, fontSize = LogFontSize, lineHeight = LogLineHeight)
+        Text(text, style = MaterialTheme.typography.monoSmall)
         if (expanded) {
             SelectionContainer {
                 Column(
@@ -144,7 +141,7 @@ fun LogEntryRow(row: LogRow.Entry, palette: LogPalette, zone: ZoneId, expanded: 
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Text(row.entry.text, fontFamily = FontFamily.Monospace, fontSize = LogFontSize, lineHeight = LogLineHeight)
+                    Text(row.entry.text, style = MaterialTheme.typography.monoSmall)
                 }
             }
         }
