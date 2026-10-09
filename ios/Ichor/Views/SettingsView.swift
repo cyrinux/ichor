@@ -183,6 +183,7 @@ private struct SupportSection: View {
 private struct PrivacySection: View {
     @Environment(AppModel.self) private var model
     @AppStorage(AppIconSettings.remoteKey) private var remoteIcons = false
+    @AppStorage(AuditEventKeys.enabled) private var auditEvents = false
     @State private var words = ""
     @FocusState private var editingWords: Bool
 
@@ -208,6 +209,15 @@ private struct PrivacySection: View {
                     Text("Comma-separated, e.g. a domain or a customer name").font(.caption).foregroundStyle(.secondary)
                 }
             }
+            Toggle(isOn: $auditEvents) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Record actions in the cluster")
+                    Text("Also write a Kubernetes Event (reason IchorAction) on each object the app changes, so the cluster’s own history shows what the phone did: kubectl get events, the Argo CD or Lens timelines. Only for Kubernetes objects: node reboots and Talos changes send nothing. Best effort, never blocks an action.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .onChange(of: auditEvents) { _, on in TalosClient.setAuditEvents(on) }
             Toggle(isOn: $remoteIcons) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Download missing app icons")

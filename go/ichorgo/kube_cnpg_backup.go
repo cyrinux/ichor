@@ -65,7 +65,7 @@ func KubeCNPGBackup(configYAML, contextName, kubeServer, namespace, name string)
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
-	defer recordAction(&err, configYAML, contextName, auditAction{Action: "cnpg-backup", Namespace: namespace, Object: "Cluster/" + name})
+	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "cnpg-backup", Namespace: namespace, Object: "Cluster/" + name})
 
 	if err := validateKubeName("cluster", namespace, name); err != nil {
 		return "", err

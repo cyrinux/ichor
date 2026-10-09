@@ -45,13 +45,16 @@ type auditEntry struct {
 	Demo      bool   `json:"demo,omitempty"`
 }
 
-// auditAction is what an entry point says about the action it runs.
+// auditAction is what an entry point says about the action it runs. Server is the API
+// server address the user set for the cluster (see KubePods), for the Kubernetes Event the
+// entry may get (audit_event.go); "" for Talos actions and the default address.
 type auditAction struct {
 	Action    string
 	Node      string
 	Namespace string
 	Object    string
 	Params    string
+	Server    string
 }
 
 var (
@@ -107,6 +110,10 @@ func recordOutcome(configYAML, contextName string, a auditAction, err error) {
 
 	if err != nil {
 		e.Outcome, e.Error = auditFailed, redactSecrets(err.Error())
+	}
+
+	if auditEventWanted(e) {
+		postAuditEvent(kubeTarget{configYAML, contextName, a.Server}, e)
 	}
 
 	auditMu.Lock()
