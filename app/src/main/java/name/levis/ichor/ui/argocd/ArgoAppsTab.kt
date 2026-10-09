@@ -26,6 +26,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,14 +60,17 @@ import name.levis.ichor.ui.components.TooltipIconButton
 
 /**
  * Every Application, worst first: filter chips with counts, a search field and a group-by
- * menu above swipeable rows. A long press starts a multi-selection ([selection]); with the
- * OutOfSync chip on, "Sync all" asks [onSyncAll] for the apps it would sync.
+ * menu above swipeable rows. The header's Select button or a long press starts a
+ * multi-selection ([selecting], [selection]); with the OutOfSync chip on, "Sync all" asks
+ * [onSyncAll] for the apps it would sync.
  */
 @Composable
 fun ArgoAppsTab(
     status: ArgoStatus,
     downNodes: Set<String>,
     busy: Set<String>,
+    selecting: Boolean,
+    onSelecting: (Boolean) -> Unit,
     selection: Set<String>,
     onSelection: (Set<String>) -> Unit,
     onOpen: (ArgoApp) -> Unit,
@@ -80,13 +84,14 @@ fun ArgoAppsTab(
     val apps = remember(status) { status.sortedApps }
     val counts = remember(apps) { apps.filterCounts() }
     val groups = remember(apps, filter, query, groupBy) { apps.filtered(filter, query).grouped(groupBy) }
-    val selecting = selection.isNotEmpty()
     // Applications usually share Argo CD's namespace: its answer stands for the list.
     val listDenial = rememberKubeDenial(KubeAction.ARGO_SYNC, apps.firstOrNull()?.namespace.orEmpty())
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
         item(key = "controls") {
-            Controls(query, { query = it }, filter, { filter = it }, counts, groupBy, { groupBy = it })
+            Controls(query, { query = it }, filter, { filter = it }, counts, groupBy, { groupBy = it }) {
+                SelectButton(selecting, onSelecting, enabled = apps.isNotEmpty())
+            }
         }
         if (listDenial != null) item(key = "denied") {
             KubeDenialNote(listDenial, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
@@ -156,11 +161,13 @@ private fun Controls(
     counts: Map<ArgoFilter, Int>,
     groupBy: ArgoGroupBy,
     onGroupBy: (ArgoGroupBy) -> Unit,
+    trailing: @Composable () -> Unit,
 ) {
     Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(start = 16.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             SearchField(query, onQuery, stringResource(R.string.argo_search), Modifier.weight(1f))
             GroupByMenu(groupBy, onGroupBy, Modifier.padding(start = 8.dp))
+            trailing()
         }
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(ArgoFilter.entries.filter { it != ArgoFilter.ALL }, key = { it.name }) { f ->
@@ -180,6 +187,17 @@ private fun Controls(
                 )
             }
         }
+    }
+}
+
+/**
+ * Starts the multi-selection a long press on a row also starts (the visible way in), or ends it
+ * while one runs.
+ */
+@Composable
+private fun SelectButton(selecting: Boolean, onSelecting: (Boolean) -> Unit, enabled: Boolean) {
+    TextButton(onClick = { onSelecting(!selecting) }, enabled = enabled || selecting) {
+        Text(stringResource(if (selecting) R.string.common_cancel else R.string.argo_select))
     }
 }
 

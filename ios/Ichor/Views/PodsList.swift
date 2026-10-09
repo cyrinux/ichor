@@ -28,6 +28,7 @@ struct PodsList: View {
                     ForEach(shown) { pod in
                         PodRow(pod: pod, showNamespace: selected == nil, deleting: actions.deleting.contains(pod.id),
                                onLogs: { actions.logsPod = pod }) { actions.confirm = pod }
+                            .podLogsSwipe { actions.logsPod = pod }
                             .contextMenu {
                                 Button { actions.logsPod = pod } label: { Label("Logs", systemImage: "doc.text") }
                                 ShareLinkButton(target: .pod(namespace: pod.namespace, name: pod.name))
@@ -81,6 +82,14 @@ final class PodActions {
 }
 
 extension View {
+    /// Swipe right on a pod's row: its logs, as its Logs button and its long press.
+    func podLogsSwipe(_ onLogs: @escaping () -> Void) -> some View {
+        swipeActions(edge: .leading) {
+            Button(action: onLogs) { Label("Logs", systemImage: "doc.text") }
+                .tint(.blue)
+        }
+    }
+
     /// The delete confirmation, its outcome and the logs sheet of `actions`; `reload` loads the
     /// list again after a deletion.
     func podActions(_ actions: PodActions, reload: @escaping () async -> Void) -> some View {

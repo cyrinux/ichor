@@ -2901,6 +2901,8 @@
     <string name="audit_unauthorized">Refused %1$d times (401): its credentials are not valid</string>
     <string name="audit_unauthorized_fix">Its token or certificate expired or was deleted (a removed service account, an old kubeconfig): give it new credentials, or stop it. The log only knows its address.</string>
     <string name="checkup_title">Cluster checkup</string>
+    <!-- A product name and a version number: the same in every language. -->
+    <string name="checkup_kube_version" translatable="false">Kubernetes %1$s</string>
     <string name="checkup_intro">What the other screens do not show, read from the Kubernetes API. Nothing is changed.</string>
     <string name="checkup_verdict_critical">Needs attention</string>
     <string name="checkup_verdict_warning">Warnings</string>

@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.argocd
 
+import androidx.activity.compose.BackHandler
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.model.ShareTarget
@@ -90,6 +91,15 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
     ArgoFreezeMessages(vm.freezeResults) { snackbar.showSnackbar(it) }
     var freezing by remember { mutableStateOf<Pair<ArgoApp, FreezeScope>?>(null) }
     var selection by rememberSaveable { mutableStateOf(setOf<String>()) }
+    // Started from the apps tab's Select button: stays on with nothing picked yet. A long press
+    // starts one too, which ends with its last app unpicked.
+    var selectMode by rememberSaveable { mutableStateOf(false) }
+    val selecting = selectMode || selection.isNotEmpty()
+    val endSelection = {
+        selection = emptySet()
+        selectMode = false
+    }
+    BackHandler(enabled = selecting) { endSelection() }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var confirmSync by remember { mutableStateOf<List<ArgoApp>?>(null) }
     val loaded = (state as? UiState.Loaded)?.data
@@ -100,7 +110,7 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
             apps,
             onConfirm = {
                 confirmSync = null
-                selection = emptySet()
+                endSelection()
                 vm.act(apps, ArgoAction.SYNC)
             },
             onDismiss = { confirmSync = null },
@@ -143,15 +153,15 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
             )
         },
         bottomBar = {
-            if (selection.isNotEmpty()) {
+            if (selecting) {
                 SelectionBar(
                     count = selectedApps.size,
                     enabled = rememberKubeDenial(KubeAction.ARGO_SYNC, selectedApps.firstOrNull()?.namespace.orEmpty()) == null,
-                    onClear = { selection = emptySet() },
+                    onClear = endSelection,
                     onSync = { confirmSync = selectedApps.filterNot { it.isRunning }.takeIf { it.isNotEmpty() } },
                     onRefresh = {
                         vm.act(selectedApps, ArgoAction.REFRESH)
-                        selection = emptySet()
+                        endSelection()
                     },
                 )
             }
@@ -180,6 +190,8 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
                                 status = s.data,
                                 downNodes = downNodes,
                                 busy = busy,
+                                selecting = selecting,
+                                onSelecting = { if (it) selectMode = true else endSelection() },
                                 selection = selection,
                                 onSelection = { selection = it },
                                 onOpen = { onApp(it.namespace, it.name) },

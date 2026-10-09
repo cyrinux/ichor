@@ -1,10 +1,14 @@
 package name.levis.ichor.model
 
-/** The screens the overview's app bar leads to. */
-enum class OverviewAction { HEALTH, EVENTS, WORKLOADS, METRICS, KUBESPAN, ETCD, SETTINGS;
+/**
+ * The screens the overview's app bar leads to, in their default order: GitOps (Argo CD, else
+ * Flux) and etcd one tap away when the cluster has them. Saved by name: a bar arranged before
+ * keeps its order, an action it lacks goes last in its menu.
+ */
+enum class OverviewAction { HEALTH, WORKLOADS, GITOPS, ETCD, EVENTS, METRICS, KUBESPAN, SETTINGS;
 
     companion object {
-        val bar = ActionBarKind(entries, defaultIcons = 3)
+        val bar = ActionBarKind(entries, defaultIcons = 4)
     }
 }
 
@@ -13,12 +17,13 @@ typealias OverviewBar = ActionBar<OverviewAction>
 
 /**
  * The screens the Kubernetes home's app bar leads to (a cluster added from a kubeconfig): the
- * Kubernetes screens that work with its credentials alone, no Talos one.
+ * Kubernetes screens that work with its credentials alone, no Talos one. GitOps (Argo CD, else
+ * Flux) is one tap away when the cluster has it.
  */
-enum class KubeHomeAction { WORKLOADS, RESOURCES, METRICS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SETTINGS;
+enum class KubeHomeAction { WORKLOADS, RESOURCES, GITOPS, METRICS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SETTINGS;
 
     companion object {
-        val bar = ActionBarKind(entries, defaultIcons = 3)
+        val bar = ActionBarKind(entries, defaultIcons = 4)
     }
 }
 
