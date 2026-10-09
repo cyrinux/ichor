@@ -129,7 +129,8 @@ func TestSnapshotEncryptedForHardwareKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	x, y := elliptic.Unmarshal(elliptic.P256(), priv.PublicKey().Bytes()) //nolint:staticcheck // only to build a test key
+	//lint:ignore SA1019 only to build a test key
+	x, y := elliptic.Unmarshal(elliptic.P256(), priv.PublicKey().Bytes())
 	hw, err := tag.NewClassicRecipient(elliptic.MarshalCompressed(elliptic.P256(), x, y))
 	if err != nil {
 		t.Fatal(err)

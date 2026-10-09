@@ -27,6 +27,7 @@ var unmaskedListeners = []string{"StartDebugShell", "StartPodShell"}
 func TestExportedFuncsUsePrivacyHooks(t *testing.T) {
 	fset := token.NewFileSet()
 
+	//lint:ignore SA1019 the package has no build-tagged files, so ParseDir sees all of it
 	pkgs, err := parser.ParseDir(fset, ".", func(fi os.FileInfo) bool {
 		return !strings.HasSuffix(fi.Name(), "_test.go")
 	}, 0)

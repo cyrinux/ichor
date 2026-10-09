@@ -410,6 +410,7 @@ func recentProblemEvents(ctx context.Context, c *client.Client, nodes []string) 
 	done := make(chan error, 1)
 
 	go func() {
+		//lint:ignore SA1019 multi-node proxying, as in Events, until one stream per node
 		done <- safeCall(func() error { return watchEvents(client.WithNodes(ctx, nodes...), c, diagnosisEventTail, ch) })
 	}()
 

@@ -32,7 +32,7 @@ jobs:
 
       - uses: cachix/install-nix-action@v31
 
-      - name: Check (gofmt, vet, Go and Kotlin unit tests)
+      - name: Check (gofmt, vet, staticcheck, Go and Kotlin unit tests)
         run: ./build.sh check
 
       - name: Build debug APK

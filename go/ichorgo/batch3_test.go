@@ -128,6 +128,7 @@ func TestMapAddressesResolversTimeServers(t *testing.T) {
 	}
 
 	res := network.NewResolverStatus(network.NamespaceName, network.ResolverID)
+	//lint:ignore SA1019 NameServers wins over the legacy field
 	res.TypedSpec().DNSServers = []netip.Addr{netip.MustParseAddr("9.9.9.9")}
 	res.TypedSpec().NameServers = []network.NameServerSpec{
 		{Addr: netip.MustParseAddr("1.1.1.1")}, {Addr: netip.MustParseAddr("1.1.1.1")}, {Addr: netip.MustParseAddr("1.0.0.1")},
@@ -138,6 +139,7 @@ func TestMapAddressesResolversTimeServers(t *testing.T) {
 	}
 
 	legacy := network.NewResolverStatus(network.NamespaceName, network.ResolverID)
+	//lint:ignore SA1019 a Talos version without NameServers
 	legacy.TypedSpec().DNSServers = []netip.Addr{netip.MustParseAddr("9.9.9.9")}
 
 	if got := mapResolvers([]*network.ResolverStatus{legacy}); !slices.Equal(got, []string{"9.9.9.9"}) {

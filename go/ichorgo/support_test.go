@@ -231,6 +231,7 @@ func TestReadLogStream(t *testing.T) {
 	}
 
 	failing := func() (*common.Data, error) {
+		//lint:ignore SA1019 the fake answer carries the per-node metadata a real multiplexed one does
 		return &common.Data{Metadata: &common.Metadata{Error: "no such service"}}, nil
 	}
 	if _, err := readLogStream(failing, 4); err == nil || err.Error() != "no such service" {

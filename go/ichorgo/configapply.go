@@ -268,6 +268,7 @@ func previewConfig(ctx context.Context, a configApplier, baseYAML, draftYAML str
 
 // needsReboot reads the mode Talos chose for a config applied in AUTO mode.
 func needsReboot(r configApplyResult) bool {
+	//lint:ignore SA1019 still the mode Talos answers when an AUTO apply needs a reboot
 	return r.mode == machineapi.ApplyConfigurationRequest_REBOOT
 }
 

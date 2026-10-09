@@ -4,7 +4,7 @@
 #   ./build.sh            # debug APK, toolchain from the Nix flake if nix exists, else Docker
 #   ./build.sh release    # release APK (needs signing env, see app/build.gradle.kts)
 #   ./build.sh play       # Google Play App Bundle: release without self-update/donations
-#   ./build.sh check      # formatting, vet and all unit tests (Go + Kotlin), no APK
+#   ./build.sh check      # formatting, vet, staticcheck and all unit tests (Go + Kotlin), no APK
 #   BUILDER=docker ./build.sh   # force the container toolchain
 #   IN_CONTAINER=1 ./build.sh   # tools already on PATH (CI runner using build/Dockerfile)
 set -euo pipefail
@@ -76,6 +76,7 @@ build_inside() {
     unformatted="$(gofmt -l .)"
     [[ -z "$unformatted" ]] || { echo "gofmt needed:" >&2; echo "$unformatted" >&2; exit 1; }
     go vet ./...
+    staticcheck ./...
   fi
   go test ./...
   # gomobile/gobind versions are pinned by the tool directive in go/go.mod.
