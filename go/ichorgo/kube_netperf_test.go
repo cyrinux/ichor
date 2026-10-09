@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -114,6 +115,13 @@ type fakeNetPerfAPI struct {
 	deleted    []string
 	refuseHost bool   // the host network server is refused (pod security)
 	waitReason string // server containers stay waiting with this reason
+	failServer bool   // the pod network server pod fails to start
+	// deleteFails is how many namespace DELETEs answer 500 before one succeeds (-1: all).
+	deleteFails int
+	deleteCode  int // when set, every namespace DELETE answers this status
+	deleteCalls int
+	// namespaces answers GET /api/v1/namespaces/NAME (NAME -> body); absent names are 404.
+	namespaces map[string]string
 }
 
 func newFakeNetPerfAPI(t *testing.T) *fakeNetPerfAPI {
@@ -123,10 +131,10 @@ func newFakeNetPerfAPI(t *testing.T) *fakeNetPerfAPI {
 	f.Server = httptest.NewTLSServer(http.HandlerFunc(f.serve))
 	t.Cleanup(f.Close)
 
-	old := netPerfPoll
-	netPerfPoll = time.Millisecond
+	old, oldRetry := netPerfPoll, netPerfCleanupRetry
+	netPerfPoll, netPerfCleanupRetry = time.Millisecond, time.Millisecond
 
-	t.Cleanup(func() { netPerfPoll = old })
+	t.Cleanup(func() { netPerfPoll, netPerfCleanupRetry = old, oldRetry })
 
 	return f
 }
@@ -163,8 +171,24 @@ func (f *fakeNetPerfAPI) serve(w http.ResponseWriter, r *http.Request) {
 		f.posted[ns.Metadata.Name] = string(body)
 		write(201, string(body))
 	case r.Method == http.MethodDelete && len(parts) == 1:
-		f.deleted = append(f.deleted, parts[0])
-		write(200, `{}`)
+		f.deleteCalls++
+		switch {
+		case f.deleteCode != 0:
+			write(f.deleteCode, `{"kind":"Status","reason":"Refused","message":"refused"}`)
+		case f.deleteFails < 0 || f.deleteCalls <= f.deleteFails:
+			write(500, `{"kind":"Status","reason":"InternalError","message":"etcd timeout"}`)
+		default:
+			f.deleted = append(f.deleted, parts[0])
+			write(200, `{}`)
+		}
+	case r.Method == http.MethodGet && len(parts) == 1:
+		if obj, ok := f.namespaces[parts[0]]; ok {
+			write(200, obj)
+
+			return
+		}
+
+		write(404, `{"kind":"Status","reason":"NotFound","message":"namespace not found"}`)
 	case r.Method == http.MethodPost && len(parts) == 2 && parts[1] == "pods":
 		var pod struct {
 			Metadata struct{ Name string } `json:"metadata"`
@@ -199,6 +223,8 @@ func (f *fakeNetPerfAPI) serve(w http.ResponseWriter, r *http.Request) {
 
 func (f *fakeNetPerfAPI) podStatus(name string) string {
 	switch {
+	case name == "server-pod" && f.failServer:
+		return `{"status":{"phase":"Failed","containerStatuses":[{"state":{"terminated":{"exitCode":1,"reason":"Error"}}}]}}`
 	case strings.HasPrefix(name, "server-") && f.waitReason != "":
 		return `{"status":{"phase":"Pending","containerStatuses":[{"state":{"waiting":{"reason":"` + f.waitReason + `","message":"pull access denied"}}}]}}`
 	case name == "server-pod":
@@ -313,8 +339,173 @@ func TestRunNetPerfImagePullFails(t *testing.T) {
 		t.Fatalf("%+v", r)
 	}
 
-	if len(f.deleted) == 0 {
-		t.Fatal("namespace not deleted")
+	f.assertRunNamespaceDeleted(t)
+}
+
+// runNamespace is the ichor-netperf-* namespace the run created.
+func (f *fakeNetPerfAPI) runNamespace(t *testing.T) string {
+	t.Helper()
+
+	for name := range f.posted {
+		if strings.HasPrefix(name, "ichor-netperf-") {
+			return name
+		}
+	}
+
+	t.Fatalf("no namespace created: %v", f.posted)
+
+	return ""
+}
+
+// assertRunNamespaceDeleted checks the run's own namespace went, not only the swept one.
+func (f *fakeNetPerfAPI) assertRunNamespaceDeleted(t *testing.T) {
+	t.Helper()
+
+	if ns := f.runNamespace(t); !slices.Contains(f.deleted, ns) {
+		t.Fatalf("run namespace %s not deleted: %v", ns, f.deleted)
+	}
+}
+
+func TestRunNetPerfServerFails(t *testing.T) {
+	f := newFakeNetPerfAPI(t)
+	f.failServer = true
+
+	report, err := runNetPerf(context.Background(), f.client(t), netPerfOptions{server: "node-a", client: "node-b", seconds: 5}, func(netPerfProgress) {})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if r := report.Results; len(r) != 2 || r[0].Error == "" {
+		t.Fatalf("%+v", r)
+	}
+
+	if report.Cleanup != "" {
+		t.Fatalf("cleanup %q", report.Cleanup)
+	}
+
+	f.assertRunNamespaceDeleted(t)
+}
+
+func TestRunNetPerfCancelledDeletesNamespace(t *testing.T) {
+	f := newFakeNetPerfAPI(t)
+	f.waitReason = "ContainerCreating"
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	_, err := runNetPerf(ctx, f.client(t), netPerfOptions{server: "node-a", client: "node-a", seconds: 5}, func(p netPerfProgress) {
+		if p.Phase == netPerfPhaseStarting {
+			cancel()
+		}
+	})
+	if err == nil {
+		t.Fatal("cancelled run succeeded")
+	}
+
+	f.assertRunNamespaceDeleted(t)
+}
+
+func TestDeleteNetPerfNamespaceRetries(t *testing.T) {
+	f := newFakeNetPerfAPI(t)
+	f.deleteFails = 2
+
+	if err := deleteNetPerfNamespace(context.Background(), f.client(t), "ichor-netperf-abcde"); err != nil {
+		t.Fatal(err)
+	}
+
+	if f.deleteCalls != 3 || !slices.Equal(f.deleted, []string{"ichor-netperf-abcde"}) {
+		t.Fatalf("%d calls, deleted %v", f.deleteCalls, f.deleted)
+	}
+}
+
+func TestDeleteNetPerfNamespaceFinalAnswers(t *testing.T) {
+	for _, tc := range []struct {
+		code    int
+		wantErr bool
+	}{
+		{http.StatusNotFound, false}, // already gone
+		{http.StatusForbidden, true}, // not retried
+	} {
+		f := newFakeNetPerfAPI(t)
+		f.deleteCode = tc.code
+
+		err := deleteNetPerfNamespace(context.Background(), f.client(t), "ichor-netperf-abcde")
+		if (err != nil) != tc.wantErr || f.deleteCalls != 1 {
+			t.Errorf("%d: err %v after %d calls", tc.code, err, f.deleteCalls)
+		}
+	}
+}
+
+func TestRunNetPerfReportsFailedCleanup(t *testing.T) {
+	f := newFakeNetPerfAPI(t)
+	f.deleteFails = -1
+
+	var messages []string
+
+	report, err := runNetPerf(context.Background(), f.client(t), netPerfOptions{server: "node-a", client: "node-a", seconds: 5}, func(p netPerfProgress) {
+		if p.Phase == netPerfPhaseCleaning && p.Message != "" {
+			messages = append(messages, p.Message)
+		}
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ns := f.runNamespace(t)
+	if !strings.Contains(report.Cleanup, ns+" could not be deleted") || !strings.Contains(report.Cleanup, "etcd timeout") {
+		t.Fatalf("cleanup %q", report.Cleanup)
+	}
+
+	if len(messages) != 1 || messages[0] != report.Cleanup {
+		t.Fatalf("cleaning messages %v", messages)
+	}
+
+	// The sweep of old00 is tried as often as the run's own namespace.
+	if f.deleteCalls != 2*netPerfCleanupAttempts {
+		t.Fatalf("%d DELETE calls", f.deleteCalls)
+	}
+}
+
+func TestNetPerfDeleteNamespace(t *testing.T) {
+	f := newFakeNetPerfAPI(t)
+	f.namespaces = map[string]string{
+		"ichor-netperf-abcde": `{"metadata":{"name":"ichor-netperf-abcde","labels":{"app.kubernetes.io/managed-by":"ichor"}}}`,
+		"ichor-netperf-other": `{"metadata":{"name":"ichor-netperf-other","labels":{"app.kubernetes.io/managed-by":"someone"}}}`,
+	}
+	cfg := f.kubeconfigFor(f.URL)
+
+	for _, ns := range []string{"other-ns", "kube-system", "ichor-netperf-other", "../ichor-netperf-x", ""} {
+		if err := NetPerfDeleteNamespace(cfg, "admin@test", "", ns); err == nil {
+			t.Errorf("%q deleted", ns)
+		}
+	}
+
+	if len(f.deleted) != 0 {
+		t.Fatalf("deleted %v", f.deleted)
+	}
+
+	if err := NetPerfDeleteNamespace(cfg, "admin@test", "", "ichor-netperf-abcde"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Already gone: nothing to do.
+	if err := NetPerfDeleteNamespace(cfg, "admin@test", "", "ichor-netperf-gone0"); err != nil {
+		t.Fatal(err)
+	}
+
+	if !slices.Equal(f.deleted, []string{"ichor-netperf-abcde"}) {
+		t.Fatalf("deleted %v", f.deleted)
+	}
+}
+
+func TestNetPerfDeleteNamespaceDemo(t *testing.T) {
+	cfg, err := DemoConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := NetPerfDeleteNamespace(cfg, "", "", "ichor-netperf-k7x2q"); !errors.Is(err, errDemoUnavailable) {
+		t.Fatalf("got %v", err)
 	}
 }
 

@@ -2048,6 +2048,7 @@
     <string name="netperf_stop">Stop</string>
     <string name="netperf_stopping">Stopping: deleting the test namespace…</string>
     <string name="netperf_stopped">Test stopped.</string>
+    <string name="netperf_cleanup_failed">Cleanup failed: %1$s</string>
     <string name="netperf_failed">The test failed: %1$s</string>
     <string name="netperf_again">New test</string>
     <string name="netperf_history">Previous tests</string>
@@ -2911,7 +2912,7 @@
     <string name="checkup_title">Cluster checkup</string>
     <!-- A product name and a version number: the same in every language. -->
     <string name="checkup_kube_version" translatable="false">Kubernetes %1$s</string>
-    <string name="checkup_intro">What the other screens do not show, read from the Kubernetes API. Nothing is changed.</string>
+    <string name="checkup_intro">What the other screens do not show, read from the Kubernetes API. Nothing is changed unless you tap an action.</string>
     <string name="checkup_verdict_critical">Needs attention</string>
     <string name="checkup_verdict_warning">Warnings</string>
     <string name="checkup_verdict_ok">All clear</string>
@@ -2992,6 +2993,10 @@
     <string name="checkup_lbPoolExhausted">No address left (pool of %1$s)</string>
     <string name="checkup_lbPoolConflict">Overlaps another pool</string>
     <string name="checkup_terminating">Deleting for %1$s</string>
+    <string name="checkup_netperfLeftover">Left by a network test %1$s ago</string>
+    <string name="checkup_netperfLeftover_fix">The app was closed before the test cleaned up. Nothing else lives in this namespace; deleting it is safe.</string>
+    <string name="checkup_delete_namespace_title">Delete namespace %1$s?</string>
+    <string name="checkup_delete_namespace_text">The network test pods in it are deleted with it.</string>
     <string name="checkup_csrPending">%1$s certificate requests wait for approval (%2$s)</string>
     <string name="checkup_csrDenied">%1$s certificate requests were denied (%2$s)</string>
     <string name="checkup_externalSecretFailed">Does not sync from store %1$s</string>

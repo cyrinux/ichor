@@ -65,6 +65,8 @@ data class NetPerfReport(
     val started: Long = 0,
     val finished: Long = 0,
     val results: List<NetPerfResult> = emptyList(),
+    /** Why the test namespace could not be deleted, "" when it was. */
+    val cleanup: String = "",
 )
 
 @Serializable

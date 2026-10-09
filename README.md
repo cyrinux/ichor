@@ -288,6 +288,9 @@ where a failed upgrade can be rolled back.
 - **Webhooks:** a `failurePolicy: Fail` webhook whose Service has no ready endpoint refuses every
   request it matches, cluster-wide; `Ignore` silently skips it. Webhooks called by URL are not
   checked.
+- **Network test leftovers:** an `ichor-netperf-*` namespace Ichor created and could not delete
+  (the app was closed mid-test) shows under stuck deletions after 30 minutes, with a Delete
+  button; only such a namespace can be deleted from there.
 - **Room to drain:** a rough sum of requests over the schedulable nodes, without affinities: a
   note, never an alert.
 - **Alerts:** Settings → Alerts → Cluster checkup runs it at every background check (it lists every

@@ -78001,41 +78001,6 @@
         }
       }
     },
-    "What the other screens do not show, read from the Kubernetes API. Nothing is changed." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce que les autres écrans ne montrent pas, lu depuis l’API Kubernetes. Rien n’est modifié."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lo que las demás pantallas no muestran, leído de la API de Kubernetes. No se cambia nada."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Was die anderen Ansichten nicht zeigen, aus der Kubernetes-API gelesen. Nichts wird verändert."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ciò che le altre schermate non mostrano, letto dall’API Kubernetes. Nulla viene modificato."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Те, чого не показують інші екрани, прочитане з API Kubernetes. Нічого не змінюється."
-          }
-        }
-      }
-    },
     "Needs attention" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -99870,6 +99835,216 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показати %1$@ з %2$@"
+          }
+        }
+      }
+    },
+    "What the other screens do not show, read from the Kubernetes API. Nothing is changed unless you tap an action." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce que les autres écrans ne montrent pas, lu depuis l’API Kubernetes. Rien n’est modifié sauf si vous touchez une action."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo que las demás pantallas no muestran, leído de la API de Kubernetes. No se cambia nada salvo que toques una acción."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Те, чого не показують інші екрани, прочитане з API Kubernetes. Нічого не змінюється, доки ви не торкнетеся дії."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was die anderen Ansichten nicht zeigen, aus der Kubernetes-API gelesen. Nichts wird verändert, außer Sie tippen auf eine Aktion."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciò che le altre schermate non mostrano, letto dall’API Kubernetes. Nulla viene modificato a meno che tu non tocchi un’azione."
+          }
+        }
+      }
+    },
+    "Left by a network test %@ ago" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laissé par un test réseau il y a %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dejado por una prueba de red hace %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Залишений мережевим тестом %@ тому"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von einem Netzwerktest vor %@ zurückgelassen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lasciato da un test di rete %@ fa"
+          }
+        }
+      }
+    },
+    "The app was closed before the test cleaned up. Nothing else lives in this namespace; deleting it is safe." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’app a été fermée avant que le test ne fasse le ménage. Rien d’autre ne vit dans ce namespace : le supprimer est sans risque."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La app se cerró antes de que la prueba limpiara. No hay nada más en este namespace; borrarlo es seguro."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застосунок закрили до того, як тест прибрав за собою. Більше нічого в цьому namespace немає; видаляти його безпечно."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die App wurde geschlossen, bevor der Test aufräumen konnte. Sonst liegt nichts in diesem Namespace; ihn zu löschen ist sicher."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’app è stata chiusa prima che il test facesse pulizia. In questo namespace non c’è altro; eliminarlo è sicuro."
+          }
+        }
+      }
+    },
+    "Delete namespace %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer le namespace %@ ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Borrar el namespace %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити namespace %@?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespace %@ löschen?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminare il namespace %@?"
+          }
+        }
+      }
+    },
+    "The network test pods in it are deleted with it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les pods du test réseau qu’il contient sont supprimés avec lui."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los pods de la prueba de red que contiene se borran con él."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поди мережевого тесту в ньому видаляються разом із ним."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Pods des Netzwerktests darin werden mit ihm gelöscht."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I pod del test di rete al suo interno vengono eliminati con esso."
+          }
+        }
+      }
+    },
+    "Cleanup failed: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec du nettoyage : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falló la limpieza: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося прибрати: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufräumen fehlgeschlagen: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pulizia non riuscita: %@"
           }
         }
       }

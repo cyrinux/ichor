@@ -21,6 +21,9 @@ const (
 	findNamespaceTerminating = "namespaceTerminating"
 	findPodTerminating       = "podTerminating"
 	findPVCTerminating       = "pvcTerminating"
+	// findNetPerfLeftover is a network test namespace the app could not delete (it was
+	// closed mid-run): not deleted yet, but meant to be. Since: when it was made.
+	findNetPerfLeftover = "netperfLeftover"
 )
 
 // The findings of the certificates section, one per signer and requester. Name: who asks
@@ -155,6 +158,12 @@ func checkupTerminating(ctx context.Context, k *kubeClient, in checkupInput) che
 	findings := []checkupFinding{}
 
 	for _, ns := range namespaces {
+		if isNetPerfLeftover(ns.Metadata, in.now) {
+			findings = append(findings, checkupFinding{
+				Kind: findNetPerfLeftover, Severity: sevWarning, Name: ns.Metadata.Name, Since: milli(ns.Metadata.CreationTimestamp),
+			})
+		}
+
 		if !olderThan(ns.Metadata.deleted(), in.now, terminatingGrace) {
 			continue
 		}
@@ -193,6 +202,13 @@ func checkupTerminating(ctx context.Context, k *kubeClient, in checkupInput) che
 	}
 
 	return newSection(checkTerminating, len(namespaces)+len(in.pods)+len(in.pvcs), findings, err, in.podsErr, in.pvcsErr)
+}
+
+// isNetPerfLeftover tells a network test namespace that outlived its run: Ichor made it,
+// nobody deleted it, and no run lasts netPerfStaleAge.
+func isNetPerfLeftover(m checkMeta, now time.Time) bool {
+	return m.DeletionTimestamp == nil && strings.HasPrefix(m.Name, netPerfName+"-") &&
+		m.Labels["app.kubernetes.io/managed-by"] == netPerfManagedBy && olderThan(m.CreationTimestamp, now, netPerfStaleAge)
 }
 
 type csrObject struct {

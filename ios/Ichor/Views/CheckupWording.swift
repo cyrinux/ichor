@@ -139,6 +139,7 @@ extension CheckupFinding {
         case .lbPoolExhausted: return CheckupText.checkupLbPoolExhausted("\(Int(f.value.rounded()))")
         case .lbPoolConflict: return CheckupText.checkupLbPoolConflict
         case .namespaceTerminating, .podTerminating, .pvcTerminating: return CheckupText.checkupTerminating(age)
+        case .netperfLeftover: return CheckupText.checkupNetperfLeftover(age)
         case .csrPending: return CheckupText.checkupCsrPending("\(f.count)", f.extra)
         case .csrDenied: return CheckupText.checkupCsrDenied("\(f.count)", f.extra)
         case .externalSecretFailed: return CheckupText.checkupExternalSecretFailed(f.extra)
@@ -184,6 +185,7 @@ extension CheckupFinding {
         case .namespaceTerminating: return CheckupText.checkupNamespaceTerminatingFix
         case .podTerminating: return CheckupText.checkupPodTerminatingFix
         case .pvcTerminating: return CheckupText.checkupPvcTerminatingFix
+        case .netperfLeftover: return CheckupText.checkupNetperfLeftoverFix
         case .csrPending: return CheckupText.checkupCsrPendingFix
         case .csrDenied: return CheckupText.checkupCsrDeniedFix
         case .externalSecretFailed: return CheckupText.checkupExternalSecretFailedFix
