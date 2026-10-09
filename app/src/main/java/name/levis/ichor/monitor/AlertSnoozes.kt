@@ -6,7 +6,8 @@ import java.security.MessageDigest
 /**
  * The alerts snoozed from their notification: until when, per cluster (fingerprint) and alert
  * key. While snoozed, the monitor posts nothing for that key, problem or resolved. Keys name
- * nodes and apps: stored hashed, only the end time in clear. Expired entries are pruned.
+ * nodes and apps: stored hashed, only the end time in clear. Expired entries are pruned, and so
+ * are a removed cluster's.
  */
 class AlertSnoozes(private val prefs: SharedPreferences) {
 
@@ -29,10 +30,19 @@ class AlertSnoozes(private val prefs: SharedPreferences) {
         prefs.edit().apply { over.forEach { remove(it) } }.apply()
     }
 
-    private fun entry(cluster: String, key: String): String {
-        val digest = MessageDigest.getInstance("SHA-256").digest("$cluster|$key".toByteArray())
-        return PREFIX + digest.joinToString("") { "%02x".format(it) }
+    /** Forgets the snoozes of the clusters not among [clusters] (fingerprints): a removed cluster's go with it. */
+    fun retain(clusters: Collection<String>) {
+        val kept = clusters.map { PREFIX + hash(it) + ":" }
+        val gone = prefs.all.keys.filter { key -> key.startsWith(PREFIX) && kept.none { key.startsWith(it) } }
+        if (gone.isEmpty()) return
+        prefs.edit().apply { gone.forEach { remove(it) } }.apply()
     }
+
+    // The cluster's hash first, so its snoozes can be told apart without their keys.
+    private fun entry(cluster: String, key: String): String = PREFIX + hash(cluster) + ":" + hash("$cluster|$key")
+
+    private fun hash(text: String): String =
+        MessageDigest.getInstance("SHA-256").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }
 
     companion object {
         const val FILE = "ichor-alert-snoozes"

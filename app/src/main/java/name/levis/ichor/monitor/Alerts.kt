@@ -11,6 +11,8 @@ enum class AlertKind {
     DATA_PROBLEM, DATA_OK, GITOPS_PROBLEM, GITOPS_OK, CHECKUP_PROBLEM, CHECKUP_OK,
     /** An Alertmanager alert firing, or no longer (resolved, silenced or inhibited since). */
     AM_FIRING, AM_RESOLVED,
+    /** The cluster could not be read for several checks in a row ([Alert.detail]: how many), or answers again. */
+    CLUSTER_UNREACHABLE, CLUSTER_REACHABLE,
 }
 
 /**

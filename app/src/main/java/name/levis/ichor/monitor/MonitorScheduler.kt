@@ -49,11 +49,11 @@ suspend fun syncMonitoring(context: Context, runNow: Boolean = false) {
 }
 
 /**
- * Redraws the widget when [snapshot] turns stale, so an old "all ready" is dimmed even when
- * no check can run (no network). Replaced by every newer snapshot.
+ * Redraws the widgets when the first of [snapshots] turns stale, so an old "all ready" is dimmed
+ * even when no check can run (no network). Replaced by every newer run.
  */
-fun scheduleWidgetStaleRefresh(context: Context, snapshot: ClusterSnapshot?, now: Long) {
-    val delay = staleInMillis(snapshot, now) ?: return
+fun scheduleWidgetStaleRefresh(context: Context, snapshots: Collection<ClusterSnapshot>, now: Long) {
+    val delay = snapshots.mapNotNull { staleInMillis(it, now) }.minOrNull() ?: return
     WorkManager.getInstance(context).enqueueUniqueWork(
         WIDGET_STALE,
         ExistingWorkPolicy.REPLACE,

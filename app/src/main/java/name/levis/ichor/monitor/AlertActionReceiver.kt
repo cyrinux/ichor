@@ -30,8 +30,11 @@ private const val KEY_CLUSTER = "cluster"
 private const val KEY_ALERT = "alert"
 private const val KEY_HOST = "host"
 
-/** The notification an alert of [key] is posted as: a newer one replaces it. */
-fun alertNotificationId(key: String): Int = key.hashCode()
+/**
+ * The notification an alert of [key] on the cluster [cluster] (fingerprint) is posted as: a newer
+ * one replaces it, never another cluster's of the same key.
+ */
+fun alertNotificationId(cluster: String, key: String): Int = "$cluster|$key".hashCode()
 
 /**
  * The button [action] of [alert], posted for the cluster [fingerprint]; [link] is the alert's
@@ -39,7 +42,7 @@ fun alertNotificationId(key: String): Int = key.hashCode()
  */
 fun alertActionButton(context: Context, alert: Alert, action: AlertAction, fingerprint: String, link: String?): NotificationCompat.Action? {
     val res = AppLocale.wrap(context)
-    val requestCode = "${alert.key}|${action.name}".hashCode()
+    val requestCode = "$fingerprint|${alert.key}|${action.name}".hashCode()
     val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
     val intent = if (action.inApp) {
         val request = alert.actionRequest(action) ?: return null
@@ -86,7 +89,7 @@ class AlertActionReceiver : BroadcastReceiver() {
                 val now = System.currentTimeMillis()
                 snoozes.prune(now)
                 snoozes.snooze(cluster, key, now + SNOOZE_MILLIS)
-                NotificationManagerCompat.from(context).cancel(alertNotificationId(key))
+                NotificationManagerCompat.from(context).cancel(alertNotificationId(cluster, key))
             }
             ACTION_WAKE -> {
                 val data = workDataOf(KEY_CLUSTER to cluster, KEY_ALERT to key, KEY_HOST to intent.getStringExtra(KEY_HOST).orEmpty())
@@ -110,24 +113,25 @@ class AlertWakeWorker(context: Context, params: WorkerParameters) : CoroutineWor
         val res = AppLocale.wrap(applicationContext)
         val key = inputData.getString(KEY_ALERT).orEmpty()
         val host = inputData.getString(KEY_HOST).orEmpty()
-        val wol = wolKey(inputData.getString(KEY_CLUSTER).orEmpty(), key.substringAfter(':'))
+        val cluster = inputData.getString(KEY_CLUSTER).orEmpty()
+        val wol = wolKey(cluster, key.substringAfter(':'))
         val targets = wakeTargets(app.wakeOnLan.targets.value[wol], app.wakeOnLan.seen.value[wol].orEmpty())
         if (targets.isEmpty()) return Result.success()
-        postWakeNotice(applicationContext, key, res.getString(R.string.wol_title, host), sendWake(res, host, targets))
+        postWakeNotice(applicationContext, cluster, key, res.getString(R.string.wol_title, host), sendWake(res, host, targets))
         return Result.success()
     }
 }
 
 /** The outcome of a Wake, replacing the alert; a tap opens the app. */
-private fun postWakeNotice(context: Context, key: String, title: String, text: String) {
+private fun postWakeNotice(context: Context, cluster: String, key: String, title: String, text: String) {
     if (!canPostNotifications(context)) return
     ensureAlertChannels(context)
     val app = context.applicationContext as TalosApp
     val intent = Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-    val open = PendingIntent.getActivity(context, "$key|wake".hashCode(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+    val open = PendingIntent.getActivity(context, "$cluster|$key|wake".hashCode(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     val builder = alertNotification(context, AlertChannel.NODES, title, text, open, hideOnLockScreen = app.appLock.enabled.value)
     try {
-        NotificationManagerCompat.from(context).notify(alertNotificationId(key), builder.build())
+        NotificationManagerCompat.from(context).notify(alertNotificationId(cluster, key), builder.build())
     } catch (_: SecurityException) {
         // Permission revoked between the check and the post; nothing to do.
     }

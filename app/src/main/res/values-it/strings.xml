@@ -462,7 +462,7 @@
     <string name="monitor_channel_nodes">Avvisi dei nodi</string>
     <string name="monitor_channel_nodes_desc">Un nodo si ferma, non risponde più o torna pronto</string>
     <string name="monitor_channel_cluster">Avvisi del cluster</string>
-    <string name="monitor_channel_cluster_desc">Allarmi etcd, problemi rilevati dal controllo del cluster e avvisi di Alertmanager</string>
+    <string name="monitor_channel_cluster_desc">Allarmi etcd, problemi rilevati dal controllo del cluster, avvisi di Alertmanager e cluster non raggiungibili</string>
     <string name="monitor_channel_data">Avvisi dei servizi dati</string>
     <string name="monitor_channel_data_desc">Longhorn, database, storage a oggetti e backup che richiedono attenzione</string>
     <string name="monitor_channel_gitops">Avvisi GitOps</string>
@@ -3478,6 +3478,17 @@
     <string name="monitor_alertmanager_desc">Notifica anche gli avvisi dell\'Alertmanager del cluster né silenziati né inibiti: quelli critici subito, gli altri dopo due controlli di fila, quelli informativi mai. Ogni controllo li legge tramite l\'API Kubernetes (os:admin) o all\'URL scelto nella schermata Avvisi.</string>
     <string name="monitor_am_firing">Attivo: %1$s</string>
     <string name="monitor_am_resolved">Risolto: %1$s</string>
+    <string name="monitor_cluster_unreachable">Cluster non raggiungibile</string>
+    <string name="monitor_cluster_unreachable_text">Nessuna risposta da %1$s controlli di fila</string>
+    <string name="monitor_cluster_reachable">Cluster di nuovo raggiungibile</string>
+    <string name="monitor_cluster_reachable_text">Risponde di nuovo ai controlli in background</string>
+    <string name="monitor_unreachable">Cluster non raggiungibili</string>
+    <string name="monitor_unreachable_desc">Avvisa una volta quando un cluster non ha risposto a diversi controlli di fila (nessun nodo, nessuna API o troppo lento), e una volta quando risponde di nuovo. Nel frattempo gli avvisi sui nodi tacciono.</string>
+    <string name="monitor_unreachable_runs">Dopo %1$s controlli di fila</string>
+    <string name="clusters_watch">Controlla in background</string>
+    <string name="widget_config_title">Cluster mostrato dal widget</string>
+    <string name="widget_config_active">Cluster sullo schermo</string>
+    <string name="widget_config_active_desc">Segue il cluster aperto nell\'app</string>
     <plurals name="alerts_suppressed">
         <item quantity="one">%1$d avviso silenziato o inibito</item>
         <item quantity="other">%1$d avvisi silenziati o inibiti</item>

@@ -4,7 +4,10 @@ import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.model.NodeHealth.NOT_READY
 import name.levis.ichor.model.NodeHealth.READY
 import name.levis.ichor.model.NodeHealth.UNREACHABLE
+import name.levis.ichor.model.ConfigSummary
+import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.monitor.ClusterSnapshot
+import name.levis.ichor.monitor.MonitorState
 import name.levis.ichor.monitor.NodeState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -79,5 +82,36 @@ class WidgetStatusTest {
         assertFalse(isStale(snap(READY), now))
         assertFalse(isStale(snap(READY, takenAt = now - WIDGET_STALE_AFTER_MS), now))
         assertTrue(isStale(snap(READY, takenAt = now - WIDGET_STALE_AFTER_MS - 1), now))
+    }
+
+    private val admin = ContextSummary(name = "lab-admin", fingerprint = "fa", clusterId = "lab")
+    private val reader = ContextSummary(name = "lab-reader", fingerprint = "fr", clusterId = "lab")
+    private val prod = ContextSummary(name = "prod", fingerprint = "fp", clusterId = "prod")
+    private val summary = ConfigSummary(current = "lab-admin", contexts = listOf(admin, reader, prod))
+
+    @Test
+    fun aWidgetShowsItsOwnClusterElseTheOneOnScreen() {
+        assertEquals(listOf("fp"), widgetKeys("fp", summary, activeContext = "lab-admin", lastActive = ""))
+        assertEquals(listOf("fa", "fr"), widgetKeys(null, summary, activeContext = "lab-admin", lastActive = ""))
+        // The config not loaded yet: the cluster on screen at the last check.
+        assertEquals(listOf("fa"), widgetKeys(null, null, activeContext = null, lastActive = "fa"))
+    }
+
+    @Test
+    fun aWidgetOnItsOwnClusterOpensThatCluster() {
+        assertEquals("prod", widgetClusterId("fp", summary))
+        assertEquals("lab", widgetClusterId("fr", summary))
+        // On the cluster on screen, or a cluster no longer stored (or not loaded): the app as is.
+        assertEquals(null, widgetClusterId(null, summary))
+        assertEquals(null, widgetClusterId("gone", summary))
+        assertEquals(null, widgetClusterId("fp", null))
+    }
+
+    @Test
+    fun theSnapshotMayBeUnderAnotherContextOfTheCluster() {
+        val state = MonitorState(mapOf("fr" to snap(READY), "fp" to snap(NOT_READY)))
+        assertEquals(state.clusters["fr"], widgetSnapshot(state, widgetKeys("fa", summary, "prod", "")))
+        assertEquals(state.clusters["fp"], widgetSnapshot(state, widgetKeys(null, summary, "prod", "")))
+        assertEquals(null, widgetSnapshot(state, listOf("other")))
     }
 }

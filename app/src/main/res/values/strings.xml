@@ -457,7 +457,7 @@
     <string name="monitor_channel_nodes">Node alerts</string>
     <string name="monitor_channel_nodes_desc">A node goes down, stops answering or is ready again</string>
     <string name="monitor_channel_cluster">Cluster alerts</string>
-    <string name="monitor_channel_cluster_desc">etcd alarms, cluster checkup findings and Alertmanager alerts</string>
+    <string name="monitor_channel_cluster_desc">etcd alarms, cluster checkup findings, Alertmanager alerts and unreachable clusters</string>
     <string name="monitor_channel_data">Data service alerts</string>
     <string name="monitor_channel_data_desc">Longhorn, databases, object storage and backups that need attention</string>
     <string name="monitor_channel_gitops">GitOps alerts</string>
@@ -3478,6 +3478,17 @@
     <string name="monitor_alertmanager_desc">Also notifies the cluster\'s Alertmanager alerts that are neither silenced nor inhibited: critical ones at once, others once seen on two checks in a row, info ones never. Each check reads them through the Kubernetes API (os:admin) or at the URL set on the Alerts screen.</string>
     <string name="monitor_am_firing">Firing: %1$s</string>
     <string name="monitor_am_resolved">Resolved: %1$s</string>
+    <string name="monitor_cluster_unreachable">Cluster unreachable</string>
+    <string name="monitor_cluster_unreachable_text">No answer for %1$s checks in a row</string>
+    <string name="monitor_cluster_reachable">Cluster reachable again</string>
+    <string name="monitor_cluster_reachable_text">It answers the background checks again</string>
+    <string name="monitor_unreachable">Unreachable clusters</string>
+    <string name="monitor_unreachable_desc">Notifies once when a cluster has not answered for several checks in a row (no node, no API, or too slow), and once when it answers again. Node alerts stay silent meanwhile.</string>
+    <string name="monitor_unreachable_runs">After %1$s checks in a row</string>
+    <string name="clusters_watch">Watch in the background</string>
+    <string name="widget_config_title">Cluster shown on the widget</string>
+    <string name="widget_config_active">Cluster on screen</string>
+    <string name="widget_config_active_desc">Follows the cluster open in the app</string>
     <plurals name="alerts_suppressed">
         <item quantity="one">%1$d alert silenced or inhibited</item>
         <item quantity="other">%1$d alerts silenced or inhibited</item>

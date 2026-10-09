@@ -455,7 +455,7 @@
     <string name="monitor_channel_nodes">Knoten-Warnungen</string>
     <string name="monitor_channel_nodes_desc">Ein Knoten fällt aus, antwortet nicht mehr oder ist wieder bereit</string>
     <string name="monitor_channel_cluster">Cluster-Warnungen</string>
-    <string name="monitor_channel_cluster_desc">etcd-Alarme, Befunde des Cluster-Checks und Alarme von Alertmanager</string>
+    <string name="monitor_channel_cluster_desc">etcd-Alarme, Befunde des Cluster-Checks, Alarme von Alertmanager und nicht erreichbare Cluster</string>
     <string name="monitor_channel_data">Warnungen zu Datendiensten</string>
     <string name="monitor_channel_data_desc">Longhorn, Datenbanken, Objektspeicher und Backups, die Aufmerksamkeit brauchen</string>
     <string name="monitor_channel_gitops">GitOps-Warnungen</string>
@@ -3470,6 +3470,17 @@
     <string name="monitor_alertmanager_desc">Meldet auch die Alarme des Alertmanagers im Cluster, die weder stummgeschaltet noch unterdrückt sind: kritische sofort, andere erst nach zwei Prüfungen in Folge, Info-Alarme nie. Jede Prüfung liest sie über die Kubernetes-API (os:admin) oder unter der URL, die du im Alarme-Bildschirm gewählt hast.</string>
     <string name="monitor_am_firing">Aktiv: %1$s</string>
     <string name="monitor_am_resolved">Behoben: %1$s</string>
+    <string name="monitor_cluster_unreachable">Cluster nicht erreichbar</string>
+    <string name="monitor_cluster_unreachable_text">Seit %1$s Prüfungen in Folge keine Antwort</string>
+    <string name="monitor_cluster_reachable">Cluster wieder erreichbar</string>
+    <string name="monitor_cluster_reachable_text">Er antwortet wieder auf die Prüfungen im Hintergrund</string>
+    <string name="monitor_unreachable">Nicht erreichbare Cluster</string>
+    <string name="monitor_unreachable_desc">Benachrichtigt dich einmal, wenn ein Cluster mehrere Prüfungen in Folge nicht geantwortet hat (kein Node, keine API oder zu langsam), und einmal, wenn er wieder antwortet. Node-Warnungen bleiben so lange stumm.</string>
+    <string name="monitor_unreachable_runs">Nach %1$s Prüfungen in Folge</string>
+    <string name="clusters_watch">Im Hintergrund überwachen</string>
+    <string name="widget_config_title">Vom Widget gezeigter Cluster</string>
+    <string name="widget_config_active">Cluster auf dem Bildschirm</string>
+    <string name="widget_config_active_desc">Folgt dem in der App geöffneten Cluster</string>
     <plurals name="alerts_suppressed">
         <item quantity="one">%1$d Alarm stummgeschaltet oder unterdrückt</item>
         <item quantity="other">%1$d Alarme stummgeschaltet oder unterdrückt</item>

@@ -6,10 +6,11 @@ import name.levis.ichor.data.TalosJson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.Serializable
 
 /**
- * Background monitoring preferences plus the last snapshot (shared with the widget). The
- * snapshot names the cluster's nodes and addresses: it is kept encrypted, in [snapshotFile].
+ * Background monitoring preferences plus the last snapshot of each watched cluster (shared with
+ * the widget). They name the clusters' nodes and addresses: kept encrypted, in [snapshotFile].
  */
 class MonitorStore(private val prefs: SharedPreferences, private val snapshotFile: SealedValue) {
     init {
@@ -72,28 +73,47 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         _intervalMinutes.value = minutes
     }
 
-    private val _snapshotState = MutableStateFlow(readSnapshot())
+    private val _unreachableAlerts = MutableStateFlow(prefs.getBoolean(KEY_UNREACHABLE, false))
 
-    /** The last snapshot, observable: the widget redraws from it while its session is alive. */
-    val snapshotState: StateFlow<ClusterSnapshot?> = _snapshotState.asStateFlow()
+    /** Opt-in: alert once a cluster could not be read for [unreachableRuns] checks in a row, and once it answers again. */
+    val unreachableAlerts: StateFlow<Boolean> = _unreachableAlerts.asStateFlow()
 
-    fun snapshot(): ClusterSnapshot? = _snapshotState.value
-
-    /** Best effort: with the Keystore unavailable, the widget and alerts use it until the app stops. */
-    fun saveSnapshot(snapshot: ClusterSnapshot) {
-        runCatching { snapshotFile.write(TalosJson.encodeToString(ClusterSnapshot.serializer(), snapshot)) }
-        _snapshotState.value = snapshot
+    fun setUnreachableAlerts(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_UNREACHABLE, enabled).apply()
+        _unreachableAlerts.value = enabled
     }
 
-    fun clearSnapshot() {
+    private val _unreachableRuns = MutableStateFlow(prefs.getInt(KEY_UNREACHABLE_RUNS, UNREACHABLE_RUNS_DEFAULT).coerceIn(UNREACHABLE_RUNS))
+    val unreachableRuns: StateFlow<Int> = _unreachableRuns.asStateFlow()
+
+    fun setUnreachableRuns(runs: Int) {
+        val kept = runs.coerceIn(UNREACHABLE_RUNS)
+        prefs.edit().putInt(KEY_UNREACHABLE_RUNS, kept).apply()
+        _unreachableRuns.value = kept
+    }
+
+    private val _state = MutableStateFlow(readState())
+
+    /** What the last checks saw of each cluster, observable: the widget redraws from it while its session is alive. */
+    val state: StateFlow<MonitorState> = _state.asStateFlow()
+
+    /** The last snapshot of the cluster [fingerprint]. */
+    fun snapshot(fingerprint: String): ClusterSnapshot? = _state.value.clusters[fingerprint]
+
+    /** Best effort: with the Keystore unavailable, the widget and alerts use it until the app stops. */
+    fun saveState(state: MonitorState) {
+        runCatching { snapshotFile.write(TalosJson.encodeToString(MonitorState.serializer(), state)) }
+        _state.value = state
+    }
+
+    /** Forgets every cluster's snapshot (and how often it could not be read). */
+    fun clearSnapshots() {
         snapshotFile.delete()
-        _snapshotState.value = null
+        _state.value = MonitorState.EMPTY
     }
 
     // The plaintext one is only left when it could not be moved (Keystore unavailable).
-    private fun readSnapshot(): ClusterSnapshot? = (snapshotFile.read() ?: prefs.getString(KEY_SNAPSHOT, null))?.let {
-        runCatching { TalosJson.decodeFromString(ClusterSnapshot.serializer(), it) }.getOrNull()
-    }
+    private fun readState(): MonitorState = (snapshotFile.read() ?: prefs.getString(KEY_SNAPSHOT, null))?.let(::decodeMonitorState) ?: MonitorState.EMPTY
 
     /** Versions before encryption kept the snapshot in plaintext preferences: moved once, then removed. */
     private fun migrateSnapshot() {
@@ -112,5 +132,33 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_GITOPS = "gitops_watched"
         private const val KEY_CHECKUP = "checkup_watched"
         private const val KEY_ALERTMANAGER = "alertmanager_watched"
+        private const val KEY_UNREACHABLE = "unreachable_alerts"
+        private const val KEY_UNREACHABLE_RUNS = "unreachable_runs"
     }
+}
+
+/**
+ * What the background checks keep: each watched cluster's last snapshot and [reach], by context
+ * fingerprint, and [active], the fingerprint of the cluster on screen at the last check (what a
+ * widget without a cluster of its own shows while the config is not loaded). [clusters] has no
+ * default, so a single snapshot (an older version's file) never decodes as an empty state.
+ */
+@Serializable
+data class MonitorState(
+    val clusters: Map<String, ClusterSnapshot>,
+    val reach: Map<String, Reach> = emptyMap(),
+    val active: String = "",
+) {
+    companion object {
+        val EMPTY = MonitorState(emptyMap())
+    }
+}
+
+/** The stored file, of this version or of one that kept the active cluster's snapshot only (moved to its fingerprint). */
+internal fun decodeMonitorState(json: String): MonitorState? {
+    runCatching { TalosJson.decodeFromString(MonitorState.serializer(), json) }.getOrNull()?.let { return it }
+    val legacy = runCatching { TalosJson.decodeFromString(ClusterSnapshot.serializer(), json) }.getOrNull() ?: return null
+    // Without its fingerprint it cannot be told whose it was: the next check is a baseline.
+    if (legacy.fingerprint.isBlank()) return MonitorState.EMPTY
+    return MonitorState(clusters = mapOf(legacy.fingerprint to legacy), active = legacy.fingerprint)
 }
