@@ -213,6 +213,17 @@ func TestAuditRedactsSecrets(t *testing.T) {
 	}
 }
 
+func TestAuditKeepsDigestsAndLongNames(t *testing.T) {
+	schematic := strings.Repeat("376567988ad370138ad8b2698212367b", 2)
+	name := "very-long-deployment-name-that-goes-past-forty-characters"
+
+	for _, s := range []string{"image=factory.talos.dev/installer/" + schematic + ":v1.11.2", "Deployment/" + name} {
+		if got := redactSecrets(s); got != s {
+			t.Errorf("redactSecrets(%q) = %q", s, got)
+		}
+	}
+}
+
 func TestAuditExport(t *testing.T) {
 	withDataDir(t)
 	withAuditClock(t, time.Date(2026, 10, 1, 12, 0, 0, 0, time.UTC))

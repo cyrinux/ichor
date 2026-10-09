@@ -226,7 +226,7 @@ func writeSealed(path string, data []byte, aead cipher.AEAD) error {
 }
 
 // secretPatterns match what could be a credential in a parameter summary or an error: a
-// value after a secret-sounding key, a bearer token, a long base64 or hex run.
+// value after a secret-sounding key, a bearer token, a long base64 run.
 var secretPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)\b(token|password|passwd|secret|api[-_]?key|private[-_]?key|key)(\s*[:=]\s*)\S+`),
 	regexp.MustCompile(`(?i)\b(bearer|basic)\s+\S+`),
@@ -238,7 +238,24 @@ func redactSecrets(s string) string {
 	s = secretPatterns[0].ReplaceAllString(s, "$1$2<redacted>")
 	s = secretPatterns[1].ReplaceAllString(s, "$1 <redacted>")
 
-	return secretPatterns[2].ReplaceAllString(s, "<redacted>")
+	return secretPatterns[2].ReplaceAllStringFunc(s, func(run string) string {
+		if !looksEncoded(run) {
+			return run
+		}
+
+		return "<redacted>"
+	})
+}
+
+// looksEncoded tells a base64 run (a token, a key: one long mixed-case word) from a hex
+// digest or Image Factory schematic ID (one case) or a path of names (short words), which
+// say nothing secret.
+func looksEncoded(run string) bool {
+	words := strings.FieldsFunc(run, func(r rune) bool { return strings.ContainsRune("/-_.", r) })
+
+	return slices.ContainsFunc(words, func(w string) bool {
+		return len(w) >= 32 && strings.ToLower(w) != w && strings.ToUpper(w) != w
+	})
 }
 
 // auditMarkdown is entries as a Markdown table, times in UTC.
