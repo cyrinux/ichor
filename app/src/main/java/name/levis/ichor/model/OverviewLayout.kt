@@ -19,9 +19,10 @@ enum class OverviewCard : HomeCard {
     FLUX,
     NODES,
     TIME_DRIFT,
+    ALERTS,
     ;
 
-    override val whenDetected: Boolean get() = this == DATA_SERVICES || this == ARGO_CD || this == FLUX
+    override val whenDetected: Boolean get() = this == DATA_SERVICES || this == ARGO_CD || this == FLUX || this == ALERTS
 
     override val leadsWhenNew: Boolean get() = this == TALOS_UPDATE
 
@@ -33,7 +34,7 @@ enum class OverviewCard : HomeCard {
 /**
  * The cards of the Kubernetes home (a cluster added from a kubeconfig): the API server and the
  * credentials, the nodes as Kubernetes lists them, the Kubernetes screens, and the operators
- * found on the cluster.
+ * (and the Alertmanager) found on the cluster.
  */
 enum class KubeHomeCard : HomeCard {
     SUMMARY,
@@ -42,9 +43,10 @@ enum class KubeHomeCard : HomeCard {
     DATA_SERVICES,
     ARGO_CD,
     FLUX,
+    ALERTS,
     ;
 
-    override val whenDetected: Boolean get() = this == DATA_SERVICES || this == ARGO_CD || this == FLUX
+    override val whenDetected: Boolean get() = this == DATA_SERVICES || this == ARGO_CD || this == FLUX || this == ALERTS
 
     override val leadsWhenNew: Boolean get() = false
 

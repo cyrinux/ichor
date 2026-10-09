@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.data.sourceFor
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.needsEndpoint
@@ -78,6 +79,20 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             null
         }
 
+        // And for the Alertmanager: the one chosen for the cluster, else the likeliest found (a
+        // Service list). Only alerts neither silenced nor inhibited; none found or unreadable
+        // keeps what was known, and so does a truncated read for the alerts past its cut.
+        val watchAm = store.alertmanagerWatched.value && active?.allows(Feature.WORKLOADS) == true
+        val amIssues = if (watchAm) {
+            runCatching {
+                app.alertmanagerRepository.sourceFor(app.alertmanagerStore, active?.fingerprint.orEmpty())
+                    ?.let { app.alertmanagerRepository.alerts(it, active = true, silenced = false, inhibited = false) }
+                    ?.let { amIssuesWithGaps(it, known = knownAmIssues(store.snapshot(), context)) }
+            }.getOrNull()
+        } else {
+            null
+        }
+
         val now = System.currentTimeMillis()
         val current = if (kubeNodes != null) {
             kubeSnapshotOf(
@@ -86,6 +101,8 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                 gitopsIssues = gitopsIssues,
                 checkupWatched = watchCheckup,
                 checkupIssues = checkupIssues,
+                amWatched = watchAm,
+                amIssues = amIssues,
             )
         } else {
             snapshotOf(
@@ -94,6 +111,8 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                 gitopsIssues = gitopsIssues,
                 checkupWatched = watchCheckup,
                 checkupIssues = checkupIssues,
+                amWatched = watchAm,
+                amIssues = amIssues,
             )
         }
         val evaluation = evaluate(store.snapshot(), current, now)

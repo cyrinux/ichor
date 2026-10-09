@@ -1,5 +1,6 @@
 package name.levis.ichor.model
 
+import name.levis.ichor.model.OverviewAction.ALERTS
 import name.levis.ichor.model.OverviewAction.ETCD
 import name.levis.ichor.model.OverviewAction.EVENTS
 import name.levis.ichor.model.OverviewAction.GITOPS
@@ -20,21 +21,21 @@ class OverviewBarTest {
     fun defaultKeepsFourIconsWithGitOpsAndEtcd() {
         val bar = OverviewAction.bar.default
         assertEquals(listOf(HEALTH, WORKLOADS, GITOPS, ETCD), bar.icons)
-        assertEquals(listOf(EVENTS, METRICS, KUBESPAN, SETTINGS), bar.menu)
+        assertEquals(listOf(EVENTS, METRICS, ALERTS, KUBESPAN, SETTINGS), bar.menu)
         assertTrue(bar.isDefault)
     }
 
     @Test
     fun movesWithinTheBarAndTheMenu() {
         assertEquals(listOf(WORKLOADS, HEALTH, GITOPS, ETCD), OverviewAction.bar.default.down(HEALTH).icons)
-        assertEquals(listOf(EVENTS, KUBESPAN, METRICS, SETTINGS), OverviewAction.bar.default.up(KUBESPAN).menu)
+        assertEquals(listOf(EVENTS, METRICS, KUBESPAN, ALERTS, SETTINGS), OverviewAction.bar.default.up(KUBESPAN).menu)
     }
 
     @Test
     fun movingPastTheLineCrossesIntoTheMenuAndBack() {
         val down = OverviewAction.bar.default.down(ETCD)
         assertEquals(listOf(HEALTH, WORKLOADS, GITOPS), down.icons)
-        assertEquals(listOf(ETCD, EVENTS, METRICS, KUBESPAN, SETTINGS), down.menu)
+        assertEquals(listOf(ETCD, EVENTS, METRICS, ALERTS, KUBESPAN, SETTINGS), down.menu)
         val up = OverviewAction.bar.default.up(EVENTS)
         assertEquals(listOf(HEALTH, WORKLOADS, GITOPS, ETCD, EVENTS), up.icons)
         assertEquals(OverviewAction.bar.default, down.up(ETCD))
@@ -51,10 +52,10 @@ class OverviewBarTest {
     fun toMenuAndToBarJumpToTheLine() {
         val bar = OverviewAction.bar.default.toMenu(HEALTH)
         assertEquals(listOf(WORKLOADS, GITOPS, ETCD), bar.icons)
-        assertEquals(listOf(HEALTH, EVENTS, METRICS, KUBESPAN, SETTINGS), bar.menu)
+        assertEquals(listOf(HEALTH, EVENTS, METRICS, ALERTS, KUBESPAN, SETTINGS), bar.menu)
         val back = OverviewAction.bar.default.toBar(SETTINGS)
         assertEquals(listOf(HEALTH, WORKLOADS, GITOPS, ETCD, SETTINGS), back.icons)
-        assertEquals(listOf(EVENTS, METRICS, KUBESPAN), back.menu)
+        assertEquals(listOf(EVENTS, METRICS, ALERTS, KUBESPAN), back.menu)
         assertSame(bar, bar.toMenu(METRICS))
         assertSame(back, back.toBar(SETTINGS))
     }
@@ -62,7 +63,7 @@ class OverviewBarTest {
     @Test
     fun encodeRoundTrips() {
         val bar = OverviewAction.bar.default.toBar(KUBESPAN).toMenu(HEALTH)
-        assertEquals("WORKLOADS,GITOPS,ETCD,KUBESPAN|HEALTH,EVENTS,METRICS,SETTINGS", bar.encode())
+        assertEquals("WORKLOADS,GITOPS,ETCD,KUBESPAN|HEALTH,EVENTS,METRICS,ALERTS,SETTINGS", bar.encode())
         assertEquals(bar, OverviewAction.bar.parse(bar.encode()))
         val empty = OverviewAction.bar.default.toMenu(HEALTH).toMenu(WORKLOADS).toMenu(GITOPS).toMenu(ETCD)
         assertEquals(empty, OverviewAction.bar.parse(empty.encode()))
@@ -80,7 +81,7 @@ class OverviewBarTest {
     fun parseSkipsUnknownAndRepeatedAndAppendsMissingToTheMenu() {
         val bar = OverviewAction.bar.parse("SETTINGS,GONE,SETTINGS|ETCD,SETTINGS")
         assertEquals(listOf(SETTINGS), bar.icons)
-        assertEquals(listOf(ETCD, HEALTH, WORKLOADS, GITOPS, EVENTS, METRICS, KUBESPAN), bar.menu)
+        assertEquals(listOf(ETCD, HEALTH, WORKLOADS, GITOPS, EVENTS, METRICS, ALERTS, KUBESPAN), bar.menu)
         assertFalse(bar.isDefault)
     }
 
@@ -88,7 +89,7 @@ class OverviewBarTest {
     fun aBarSavedBeforeGitOpsKeepsItsArrangement() {
         val bar = OverviewAction.bar.parse("HEALTH,EVENTS,WORKLOADS|METRICS,KUBESPAN,ETCD,SETTINGS")
         assertEquals(listOf(HEALTH, EVENTS, WORKLOADS), bar.icons)
-        assertEquals(listOf(METRICS, KUBESPAN, ETCD, SETTINGS, GITOPS), bar.menu)
+        assertEquals(listOf(METRICS, KUBESPAN, ETCD, SETTINGS, GITOPS, ALERTS), bar.menu)
         assertFalse(bar.isDefault)
     }
 }

@@ -12,6 +12,14 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.NodeFilter
+import name.levis.ichor.data.OVERVIEW
+import name.levis.ichor.data.activeIsKube
+import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.model.kubeFocus
+import name.levis.ichor.ui.alerts.AlertObjectLinks
+import name.levis.ichor.ui.alerts.AlertsScreen
 import name.levis.ichor.ui.apihealth.ApiHealthScreen
 import name.levis.ichor.ui.apihealth.AuditScreen
 import name.levis.ichor.ui.apps.AppsScreen
@@ -32,6 +40,9 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
     with(KubeBrowserRoutes) { kubeBrowserScreens(nav, kubeLinks) }
     composable(Routes.METRICS) {
         name.levis.ichor.ui.metrics.MetricsScreen(onBack = { nav.popBackStack() }, onSettings = { nav.navigate(Routes.SETTINGS) })
+    }
+    composable(Routes.ALERTS) {
+        AlertsScreen(onBack = { nav.popBackStack() }, links = remember(nav) { alertLinks(nav, app) })
     }
     composable(Routes.KUBE_NODES, arguments = listOf(navArgument("filter") { type = NavType.StringType; defaultValue = "" })) { entry ->
         // The Kubernetes home's data and refresh: only ever opened from it, so it is below on the stack.
@@ -127,3 +138,22 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
         )
     }
 }
+
+/**
+ * Where an alert's labels lead: a pod or a namespace on the Kubernetes screen (focused as a
+ * share link focuses it), a node on its screen (Talos), or its object (a cluster added from a
+ * kubeconfig, which has no node screen).
+ */
+private fun alertLinks(nav: NavHostController, app: TalosApp) = AlertObjectLinks(
+    onPod = { ns, pod -> ShareTarget.pod(ns, pod).kubeFocus?.let { nav.navigate(Routes.workloads(it)) } },
+    onNamespace = { ns -> nav.navigate(Routes.workloads(KubeFocus(0, namespace = ns))) },
+    onNode = { name ->
+        if (app.configRepository.config.value?.activeIsKube == true) {
+            nav.navigate(KubeBrowserRoutes.obj(KubeObjectRef("", "v1", "nodes", "Node", "", name, editable = false)))
+        } else {
+            app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.nodes
+                ?.firstOrNull { it.hostname == name || it.node == name }
+                ?.let { nav.navigate(Routes.node(it.node, it.hostname, it.role)) }
+        }
+    },
+)
