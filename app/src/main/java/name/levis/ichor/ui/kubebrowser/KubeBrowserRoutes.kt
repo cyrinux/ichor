@@ -22,6 +22,7 @@ object KubeBrowserRoutes {
     const val HELM = "kube-helm"
     const val STORAGE = "kube-storage"
     const val SERVICES = "kube-services"
+    const val JOBS = "kube-jobs"
     private const val HELM_RELEASE = "kube-helm-release?ns={ns}&name={name}"
     private const val FORWARD = "kube-forward?ns={ns}&pod={pod}"
 
@@ -91,6 +92,9 @@ object KubeBrowserRoutes {
         }
         composable(SERVICES) {
             ServicesScreen(onBack = { nav.popBackStack() }, onService = links.onObject)
+        }
+        composable(JOBS) {
+            JobsScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)
         }
         composable(HELM) {
             HelmReleasesScreen(onBack = { nav.popBackStack() }, onRelease = { nav.navigate(helmRelease(it.namespace, it.name)) })

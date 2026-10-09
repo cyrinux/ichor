@@ -127,6 +127,12 @@ extension TalosClient {
         return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeServices(config, context, kubeServer, ns, $0) }
     }
 
+    /// The Jobs of `namespace` (nil for every one), failures first.
+    func jobs(namespace: String?) async throws -> KubeJobs {
+        let ns = namespace ?? ""
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeJobs(config, context, kubeServer, ns, $0) }
+    }
+
     /// The latest revision of each Helm release; `namespace` nil for every namespace.
     func helmReleases(namespace: String?) async throws -> HelmReleaseList {
         let ns = namespace ?? ""

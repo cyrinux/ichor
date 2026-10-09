@@ -313,3 +313,87 @@ func TestStartKubeObjectWatchEventsOptional(t *testing.T) {
 		t.Errorf("a missing object ended with %q", msg)
 	}
 }
+
+// Any resource but pods comes as Table rows: the SYNC carries the columns, each change one
+// row with its cells in their order, and the list after a 410 brings them again.
+func TestStartKubeWatchTableRows(t *testing.T) {
+	var lists, watches atomic.Int32
+
+	row := func(name, data string) string {
+		return `{"cells":["` + name + `","` + data + `"],"object":{"metadata":{"name":"` + name + `","namespace":"shop"}}}`
+	}
+	table := func(version string, rows ...string) string {
+		return `{"kind":"Table","metadata":{"resourceVersion":"` + version + `"},"columnDefinitions":[{"name":"Name","type":"string"},{"name":"Data","type":"string"}],"rows":[` + strings.Join(rows, ",") + `]}`
+	}
+	event := func(eventType, name, data string) string {
+		return `{"type":"` + eventType + `","object":{"kind":"Table","metadata":{"resourceVersion":"11"},"rows":[` + row(name, data) + `]}}`
+	}
+
+	f := newWatchKubeAPI(t, func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+
+		switch {
+		case r.URL.Path != "/api/v1/namespaces/shop/configmaps" || !strings.Contains(r.Header.Get("Accept"), "as=Table"):
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = io.WriteString(w, `{"kind":"Status","message":"unexpected `+r.URL.String()+`"}`)
+		case q.Get("watch") == "" && lists.Add(1) == 1:
+			_, _ = io.WriteString(w, table("10", row("settings", "1")))
+		case q.Get("watch") == "":
+			_, _ = io.WriteString(w, table("20", row("settings", "2"), row("flags", "1")))
+		case watches.Add(1) == 1:
+			streamEvents(w, event("MODIFIED", "settings", "2"), `{"type":"ERROR","object":`+statusJSON(410, "expired")+`}`)
+		default:
+			streamEvents(w, event("ADDED", "limits", "3"))
+			holdOpen(w, r)
+		}
+	})
+
+	rec := newWatchRecorder()
+	run := StartKubeWatch(kubeStoreFor(t, f), "admin@test", "", "", "v1", "configmaps", "shop", "", "", rec)
+
+	sync := func(want int) {
+		t.Helper()
+
+		var page kubeResourcePage
+		if ev := rec.next(t); ev.eventType != watchSync || json.Unmarshal([]byte(ev.json), &page) != nil || len(page.Columns) != 2 || page.Columns[1].Name != "Data" || len(page.Rows) != want || page.Continue != "" {
+			t.Fatalf("sync %+v, want %d rows", ev, want)
+		}
+	}
+	change := func(eventType, cells string) {
+		t.Helper()
+
+		var r kubeResourceRow
+		if ev := rec.next(t); ev.eventType != eventType || json.Unmarshal([]byte(ev.json), &r) != nil || r.Namespace != "shop" || strings.Join(r.Cells, ",") != cells {
+			t.Fatalf("%s %+v", eventType, ev)
+		}
+	}
+
+	sync(1)
+	change(watchModified, "settings,2")
+	sync(2)
+	change(watchAdded, "limits,3")
+
+	if n := lists.Load(); n != 2 {
+		t.Errorf("listed %d times", n)
+	}
+
+	run.Cancel()
+
+	if msg := rec.ended(t); msg != "" {
+		t.Errorf("cancelled with %q", msg)
+	}
+
+	rec = newWatchRecorder()
+	demo := StartKubeWatch(demoKubeconfigForTest(t), "", "", "", "v1", "configmaps", "demo", "", "", rec)
+
+	var page kubeResourcePage
+	if ev := rec.next(t); ev.eventType != watchSync || json.Unmarshal([]byte(ev.json), &page) != nil || len(page.Columns) == 0 {
+		t.Errorf("demo rows %+v", ev)
+	}
+
+	demo.Cancel()
+
+	if msg := rec.ended(t); msg != "" {
+		t.Errorf("demo ended with %q", msg)
+	}
+}

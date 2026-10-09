@@ -60,13 +60,13 @@ func runImageScan(ctx context.Context, k *kubeClient, refs []routePod, opts imag
 
 	emit(imageScanProgress{Phase: imageScanPhasePreparing})
 
-	targets, err := readScanTargets(ctx, k, refs)
+	targets, err := scanTargets(ctx, k, refs, opts.Images)
 	if err != nil {
 		return report, err
 	}
 
 	if len(targets) > imageScanMaxImages {
-		return report, netPerfRefused("these pods run %d images, more than the %d one scan takes", len(targets), imageScanMaxImages)
+		return report, netPerfRefused("these pods and images make %d images, more than the %d one scan takes", len(targets), imageScanMaxImages)
 	}
 
 	report.Images = pendingImages(targets)

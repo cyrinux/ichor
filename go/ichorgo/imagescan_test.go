@@ -5,9 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -340,7 +342,7 @@ func TestRunPodSpecTolerations(t *testing.T) {
 }
 
 func TestDecodeImageScanOptions(t *testing.T) {
-	if o, err := decodeImageScanOptions(""); err != nil || o != (imageScanOptions{}) {
+	if o, err := decodeImageScanOptions(""); err != nil || !reflect.DeepEqual(o, imageScanOptions{}) {
 		t.Fatalf("%+v %v", o, err)
 	}
 
@@ -352,6 +354,101 @@ func TestDecodeImageScanOptions(t *testing.T) {
 		if _, err := decodeImageScanOptions(bad); err == nil {
 			t.Errorf("%s accepted", bad)
 		}
+	}
+}
+
+func TestDecodeImageScanOptionsImages(t *testing.T) {
+	digest := "@sha256:" + strings.Repeat("0a", 32)
+
+	o, err := decodeImageScanOptions(`{"images":["alpine:3.18.0"," ghcr.io/example/kubelet:v1.34.0 ","registry.lan:5000/team/etcd` + digest +
+		`","ghcr.io/example/kubelet:v1.34.0","nginx"]}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := []string{"alpine:3.18.0", "ghcr.io/example/kubelet:v1.34.0", "registry.lan:5000/team/etcd" + digest, "nginx"}
+	if !slices.Equal(o.Images, want) {
+		t.Fatalf("images %v", o.Images)
+	}
+
+	for _, bad := range []string{
+		"alpine 3.18", "alpine;id", "$(id)", "-config=/etc/x", "alpine:3`id`", "nginx@sha256:abc", "a|b", "",
+		strings.Repeat("a", 256),
+	} {
+		js, _ := json.Marshal(map[string][]string{"images": {bad}})
+		if _, err := decodeImageScanOptions(string(js)); err == nil {
+			t.Errorf("%q accepted", bad)
+		}
+	}
+
+	many := make([]string, imageScanMaxImages+1)
+	for i := range many {
+		many[i] = fmt.Sprintf("example.lan/img:%d", i)
+	}
+
+	js, _ := json.Marshal(map[string][]string{"images": many})
+	if _, err := decodeImageScanOptions(string(js)); err == nil {
+		t.Error("too many images accepted")
+	}
+}
+
+func TestRefScanTargets(t *testing.T) {
+	digest := "sha256:" + strings.Repeat("1b", 32)
+
+	got := refScanTargets([]string{"alpine:3.18.0", "ghcr.io/example/etcd@" + digest})
+	want := []scanTarget{
+		{image: "alpine:3.18.0", ref: "alpine:3.18.0"},
+		{image: "ghcr.io/example/etcd@" + digest, ref: "ghcr.io/example/etcd@" + digest, digest: digest},
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("targets %+v", got)
+	}
+}
+
+// Refs alone are scanned with no pod read and no pull credentials copied; a ref already
+// among the pods' images is scanned once.
+func TestRunImageScanRefsOnly(t *testing.T) {
+	f := newFakeImageScanAPI(t)
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	report, err := runImageScan(context.Background(), k, nil,
+		imageScanOptions{Images: []string{"docker.io/library/nginx@sha256:abc", "ghcr.io/x/app:2"}}, func(imageScanProgress) {})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(report.Images) != 2 || report.Images[0].Error != "" || len(report.Images[0].Vulnerabilities) != 4 ||
+		len(report.Images[0].Pods) != 0 || report.Images[0].Digest != "sha256:abc" {
+		t.Fatalf("report %+v", report.Images)
+	}
+
+	f.mu.Lock()
+	posted := slices.Clone(f.posted)
+	f.mu.Unlock()
+
+	if slices.ContainsFunc(posted, func(p string) bool { return strings.HasSuffix(p, "/secrets") }) {
+		t.Fatalf("credentials copied: %v", posted)
+	}
+
+	// A gone pod with refs is not a refusal; the pod's image equal to a ref is scanned once.
+	targets, err := scanTargets(context.Background(), k, []routePod{{Namespace: "web", Pod: "gone"}}, []string{"alpine:3.18.0"})
+	if err != nil || len(targets) != 1 {
+		t.Fatalf("%+v %v", targets, err)
+	}
+
+	targets, err = scanTargets(context.Background(), k, []routePod{{Namespace: "web", Pod: "a"}}, []string{"ghcr.io/x/app@sha256:def"})
+	if err != nil || len(targets) != 2 {
+		t.Fatalf("%+v %v", targets, err)
+	}
+
+	var refusal *netPerfRefusal
+	if _, err := scanTargets(context.Background(), k, nil, nil); !errors.As(err, &refusal) {
+		t.Fatalf("nothing to scan: %v", err)
 	}
 }
 
@@ -651,6 +748,33 @@ func TestStartImageScanCancelAndBadInput(t *testing.T) {
 
 	if done := <-rec.done; !strings.HasPrefix(done[1], "invalid pod list") {
 		t.Fatalf("got %q", done[1])
+	}
+
+	rec = &imageScanRecorder{done: make(chan [2]string, 1)}
+	StartImageScan(cfg, "", "", `[]`, `{"images":["alpine;id"]}`, rec)
+
+	if done := <-rec.done; !strings.HasPrefix(done[1], "invalid image") {
+		t.Fatalf("got %q", done[1])
+	}
+}
+
+// Image refs with no pod play the demo scan too.
+func TestStartImageScanDemoRefsOnly(t *testing.T) {
+	old := imageScanDemoStep
+	imageScanDemoStep = time.Millisecond
+
+	t.Cleanup(func() { imageScanDemoStep = old })
+
+	cfg, err := DemoConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rec := &imageScanRecorder{done: make(chan [2]string, 1)}
+	StartImageScan(cfg, "", "", `[]`, `{"images":["ghcr.io/siderolabs/kubelet:v1.34.1"]}`, rec)
+
+	if done := <-rec.done; done[1] != "" || !strings.Contains(done[0], `"source":"scan"`) {
+		t.Fatalf("got %q %s", done[1], done[0])
 	}
 }
 

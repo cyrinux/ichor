@@ -3442,4 +3442,10 @@
     <string name="kube_services_hint_none">Ein Load Balancer hat keine Adresse und es wurde kein Controller gefunden, der eine vergibt: installieren Sie MetalLB, aktivieren Sie Ciliums LB-IPAM oder nutzen Sie den Load Balancer einer Cloud.</string>
     <string name="kube_services_ready">Bereite Endpoints: %1$s</string>
     <string name="kube_services_headless">headless</string>
+    <string name="kube_jobs_title">Jobs</string>
+    <string name="kube_jobs_search">Jobs, CronJobs oder Gründe suchen</string>
+    <string name="kube_jobs_empty">Keine Jobs.</string>
+    <string name="kube_jobs_no_match">Kein Job passt.</string>
+    <string name="kube_jobs_completions">Abschlüsse: %1$s</string>
+    <string name="kube_jobs_owner">CronJob %1$s</string>
 </resources>
