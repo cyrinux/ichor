@@ -3,7 +3,7 @@ import IchorCore
 
 /// What the app changed on `cluster` ("" for every cluster, with a cluster filter): newest
 /// first, filtered by action or failures, shared as a Markdown table, or cleared.
-struct ActivityView: View {
+struct ActivityLogView: View {
     let cluster: String
     @State private var state: LoadState<[ActivityEntry]> = .loading
     @State private var filter = ActivityFilter()

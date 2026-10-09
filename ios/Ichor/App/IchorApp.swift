@@ -254,7 +254,7 @@ struct MainNavigation: View {
                     case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
                     case .apps(let hostnames, let filter): AppsView(hostnames: hostnames, filter: filter)
                     case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)
-                    case .activity(let cluster): ActivityView(cluster: cluster)
+                    case .activity(let cluster): ActivityLogView(cluster: cluster)
                     }
                 }
         }

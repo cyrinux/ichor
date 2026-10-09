@@ -121,7 +121,7 @@ struct ClustersView: View {
         }
         .endpointTools(editing: $editingEndpoints, scanning: $scanning)
         .sheet(item: $signingIn) { KubeSignInSheet(target: $0) }
-        .navigationDestination(item: $activityOf) { ActivityView(cluster: $0) }
+        .navigationDestination(item: $activityOf) { ActivityLogView(cluster: $0) }
         .task(id: "\(model.summary?.contexts.map(\.fingerprint) ?? [])#\(model.dataGeneration)") { await loadSignIns() }
         .themedBackground()
         .navigationTitle("Clusters")
