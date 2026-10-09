@@ -90,6 +90,15 @@ abstract class LoadingViewModel<T> : ViewModel() {
     }
 
     /**
+     * Replaces the data on screen with [transform] of it (a change seen live), fresh as of now;
+     * nothing while none is on screen. A refresh in flight replaces it when it completes.
+     */
+    protected fun updateLoaded(transform: (T) -> T) {
+        val current = _state.value as? UiState.Loaded ?: return
+        _state.value = current.copy(data = transform(current.data), fetchedAt = System.currentTimeMillis(), error = null)
+    }
+
+    /**
      * Replaces the data on screen, [expected], with [value] (a page loaded on scroll), or
      * marks it with [error]; nothing, and false, when a refresh replaced it meanwhile.
      */

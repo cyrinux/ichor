@@ -62,6 +62,13 @@ final class PagedList<T: Codable & Sendable> {
         await reload(model: model, reset: false)
     }
 
+    /// Replaces the rows on screen with `transform` of them (a change seen live), fresh as of
+    /// now; nothing while none are. A load in flight replaces them when it completes.
+    func apply(_ transform: (PagedLoad<T>) -> PagedLoad<T>) {
+        guard case .loaded(let load, _, _) = state else { return }
+        state = .loaded(transform(load), at: Date())
+    }
+
     private static func source(of model: AppModel) -> String {
         "\(model.activeContext)|\(model.client?.kubeServer ?? "")|\(model.dataGeneration)"
     }

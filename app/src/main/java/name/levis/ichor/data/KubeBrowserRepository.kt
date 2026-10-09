@@ -64,6 +64,15 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
         TalosJson.decodeFromString(KubeObjectSummary.serializer(), json)
     }
 
+    /**
+     * [objectSummary] kept live: the summary at the start, then again each time the object or
+     * its events change, until the collector cancels or the watch ends ([StreamItem.Done]).
+     */
+    fun objectSummaryWatch(ref: KubeObjectRef): Flow<StreamItem<KubeObjectSummary>> =
+        kubeLiveFlow(::target, KubeObjectSummary.serializer()) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeObjectWatch(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, listener)
+        }
+
     /** What saving [edited] as [ref] would store, from a dry run. */
     suspend fun updatePreview(ref: KubeObjectRef, edited: String): KubeEditPreview = kubeCall { cfg, ctx, server ->
         val json = Ichorgo.kubeObjectUpdatePreview(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, edited)

@@ -31,11 +31,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.CancellationException
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.delay
 import java.text.NumberFormat
 import name.levis.ichor.R
+import name.levis.ichor.data.StreamItem
 import name.levis.ichor.model.KubeRolloutPod
 import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeWorkload
@@ -45,15 +48,15 @@ import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
-import name.levis.ichor.ui.uiText
 
-/** How often a rollout is polled while the sheet is open. */
-private const val POLL_MILLIS = 2_000L
+/** How long the sheet waits before following again a watch that ended (the network). */
+private const val WATCH_RETRY_MILLIS = 2_000L
 
 /**
  * The live rollout of the workload [restarts] follows after a restart, like
- * `kubectl rollout status`: polled until every pod runs the new template and is ready.
- * Closing it only stops following; the rollout goes on in the cluster.
+ * `kubectl rollout status`: the Go core reads it again each time the workload or one of its
+ * pods changes, until every pod runs the new template and is ready. Closing it only stops
+ * following; the rollout goes on in the cluster.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,22 +65,28 @@ fun RolloutStatusSheet(restarts: WorkloadRestarts) {
     val workload = following ?: return
     var status by remember(workload.key) { mutableStateOf<KubeRolloutStatus?>(null) }
     var error by remember(workload.key) { mutableStateOf<UiText?>(null) }
+    var ended by remember(workload.key) { mutableStateOf(false) }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
 
-    LaunchedEffect(workload.key) {
-        while (true) {
-            try {
-                status = restarts.rolloutStatus(workload)
-                error = null
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                error = e.uiText()
+    // Followed while the sheet is visible; a watch that ends is followed again after a moment.
+    LaunchedEffect(workload.key, lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                restarts.rolloutWatch(workload).collect { item ->
+                    when (item) {
+                        is StreamItem.Item -> {
+                            status = item.value
+                            error = null
+                            if (item.value.done && !ended) {
+                                ended = true
+                                restarts.rolloutEnded()
+                            }
+                        }
+                        is StreamItem.Done -> item.error?.let { error = UiText.Raw(it) }
+                    }
+                }
+                delay(WATCH_RETRY_MILLIS)
             }
-            if (status?.done == true) {
-                restarts.rolloutEnded()
-                break
-            }
-            delay(POLL_MILLIS)
         }
     }
 

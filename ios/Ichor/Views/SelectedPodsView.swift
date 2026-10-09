@@ -9,6 +9,7 @@ struct SelectedPodsView: View {
     let selection: PodSelection
 
     @Environment(AppModel.self) private var model
+    @Environment(\.scenePhase) private var scenePhase
     @State private var phase = PodPhaseFilter.all
     /// The phase `list` loads.
     @State private var listed = PodPhaseFilter.all
@@ -23,6 +24,16 @@ struct SelectedPodsView: View {
         let context: String
         let server: String?
         let generation: Int
+    }
+
+    /// What decides whether the rows are followed live: the rows, and the app being active.
+    private struct LiveTrigger: Hashable {
+        let rows: Trigger
+        let active: Bool
+    }
+
+    private var trigger: Trigger {
+        Trigger(phase: phase, context: model.activeContext, server: model.client?.kubeServer, generation: model.dataGeneration)
     }
 
     init(selection: PodSelection) {
@@ -48,16 +59,33 @@ struct SelectedPodsView: View {
                 }
             }
         }
-        .task(id: Trigger(phase: phase, context: model.activeContext, server: model.client?.kubeServer,
-                          generation: model.dataGeneration)) {
+        .task(id: trigger) {
             if listed != phase {
                 list = Self.makeList(selection, phase: phase, kubeNode: kubeNode)
                 listed = phase
             }
             await list.show(KubeScope(), model: model)
         }
+        .task(id: LiveTrigger(rows: trigger, active: scenePhase == .active)) { await follow() }
         .podActions(actions) { await list.refresh(model: model) }
         .loadsKubeActionAccess(namespace: accessNamespace)
+    }
+
+    /// Keeps a workload's pods live while on screen and the app active: the Go core's watch
+    /// replaces the list, then adds, updates and removes rows as the API server reports them.
+    /// A watch that ends (a refusal, the network) is followed again after a while; pull-to-
+    /// refresh stays. A node's pods are not followed.
+    private func follow() async {
+        guard scenePhase == .active, case .workload(let kind, let namespace, let name) = selection else { return }
+        while !Task.isCancelled {
+            guard let client = model.client else { return }
+            for await event in client.workloadPodsWatch(kind: kind, namespace: namespace, name: name, phase: phase) {
+                if case .change(let change) = event {
+                    list.apply { $0.applying(change, key: \.id) }
+                }
+            }
+            try? await Task.sleep(for: .seconds(kubeWatchRetrySeconds))
+        }
     }
 
     /// The workload's namespace; "" for a node's pods (every namespace).

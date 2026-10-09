@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +13,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.data.KUBE_WATCH_RETRY_MILLIS
 import name.levis.ichor.data.KubeBrowserRepository
+import name.levis.ichor.data.StreamItem
 import name.levis.ichor.model.DeletePropagation
 import name.levis.ichor.model.KubeDeletePreview
 import name.levis.ichor.model.KubeEditPreview
@@ -98,6 +101,23 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
         summaryLoad = viewModelScope.launch {
             _summary.value = cancellableCatching { browser.objectSummary(ref) }
                 .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
+        }
+    }
+
+    /**
+     * Keeps the summary live while called (the screen is visible): the Go core reads it again
+     * whenever the object or its events change. A watch that ends is followed again after
+     * [KUBE_WATCH_RETRY_MILLIS]; one refused leaves the one-shot read on screen.
+     */
+    suspend fun followSummary() {
+        while (true) {
+            browser.objectSummaryWatch(ref).collect { item ->
+                when (item) {
+                    is StreamItem.Item -> _summary.value = UiState.Loaded(item.value)
+                    is StreamItem.Done -> if (_summary.value is UiState.Loading) item.error?.let { _summary.value = UiState.Failed(UiText.Raw(it)) }
+                }
+            }
+            delay(KUBE_WATCH_RETRY_MILLIS)
         }
     }
 
