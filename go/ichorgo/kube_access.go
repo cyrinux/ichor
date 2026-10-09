@@ -91,7 +91,10 @@ var kubeActionChecks = map[string][]accessNeed{
 	"fluxReconcileOCIRepository":  {{ssarAttributes{Verb: "patch", Group: groupFluxSource, Resource: "ocirepositories"}, true}},
 	"fluxReconcileHelmRepository": {{ssarAttributes{Verb: "patch", Group: groupFluxSource, Resource: "helmrepositories"}, true}},
 	"fluxReconcileBucket":         {{ssarAttributes{Verb: "patch", Group: groupFluxSource, Resource: "buckets"}, true}},
-	"cordonNode":                  {{ssarAttributes{Verb: "patch", Resource: "nodes"}, false}},
+	// Alertmanager through the Service proxy: a silence is a POST, an expire a DELETE.
+	"alertmanagerSilence": {{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy"}, true}},
+	"alertmanagerExpire":  {{ssarAttributes{Verb: "delete", Resource: "services", Subresource: "proxy"}, true}},
+	"cordonNode":          {{ssarAttributes{Verb: "patch", Resource: "nodes"}, false}},
 	// A drain cordons, then evicts the node's pods whatever their namespace.
 	"drainNode": {
 		{ssarAttributes{Verb: "patch", Resource: "nodes"}, false},

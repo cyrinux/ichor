@@ -94,6 +94,8 @@ final class ShareTargetTests: XCTestCase {
         XCTAssertEqual(target("gitops:flux|HelmRelease flux-system/podinfo"),
                        .fluxApp(kind: "HelmRelease", namespace: "flux-system", name: "podinfo"))
         XCTAssertEqual(target("checkup:pods|CrashLoopBackOff|db/postgres-0"), .screen(.checkup))
+        XCTAssertEqual(target("am:a1c3e5f7a9b1c3d5"), .screen(.alerts))
+        XCTAssertEqual(try TalosJSON.decode(ShareTarget.self, from: #"{"target":"alerts"}"#), .screen(.alerts))
         XCTAssertNil(target("other"))
     }
 }

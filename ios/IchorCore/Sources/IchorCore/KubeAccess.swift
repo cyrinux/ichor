@@ -10,6 +10,8 @@ public enum KubeAction: String, CaseIterable, Sendable {
     case deletePod, execPod, suspendCronJob, triggerCronJob, helmRollback, argoSync
     case fluxReconcile, fluxReconcileHelmRelease, fluxReconcileGitRepository, fluxReconcileOCIRepository
     case fluxReconcileHelmRepository, fluxReconcileBucket, cordonNode, drainNode
+    /// create and delete on services/proxy: an Alertmanager reached through the service proxy.
+    case alertmanagerSilence, alertmanagerExpire
 
     /// Asked in a namespace; the node actions are cluster-wide whatever the namespace.
     public var isNamespaced: Bool {

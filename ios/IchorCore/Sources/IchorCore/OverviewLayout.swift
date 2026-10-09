@@ -21,11 +21,13 @@ public enum OverviewCard: String, HomeCard {
     case flux = "FLUX"
     case nodes = "NODES"
     case timeDrift = "TIME_DRIFT"
+    /// The Alertmanager's alerts by severity: last, so saved layouts keep their order.
+    case alerts = "ALERTS"
 
     public var id: String { rawValue }
     public static let layoutStorageKey = "overview.layout"
 
-    public var whenDetected: Bool { self == .dataServices || self == .argoCD || self == .flux }
+    public var whenDetected: Bool { self == .dataServices || self == .argoCD || self == .flux || self == .alerts }
 
     public var leadsWhenNew: Bool { self == .talosUpdate }
 }
@@ -40,11 +42,13 @@ public enum KubeHomeCard: String, HomeCard {
     case dataServices = "DATA_SERVICES"
     case argoCD = "ARGO_CD"
     case flux = "FLUX"
+    /// The Alertmanager's alerts by severity.
+    case alerts = "ALERTS"
 
     public var id: String { rawValue }
     public static let layoutStorageKey = "kubeHome.layout"
 
-    public var whenDetected: Bool { self == .dataServices || self == .argoCD || self == .flux }
+    public var whenDetected: Bool { self == .dataServices || self == .argoCD || self == .flux || self == .alerts }
 
     public var leadsWhenNew: Bool { false }
 }

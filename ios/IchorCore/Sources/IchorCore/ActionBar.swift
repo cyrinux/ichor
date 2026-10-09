@@ -19,6 +19,7 @@ public enum OverviewAction: String, BarAction {
     case etcd = "ETCD"
     case events = "EVENTS"
     case metrics = "METRICS"
+    case alerts = "ALERTS"
     case kubespan = "KUBESPAN"
     case settings = "SETTINGS"
 
@@ -52,6 +53,7 @@ public enum KubeHomeAction: String, BarAction {
     case resources = "RESOURCES"
     case gitOps = "GITOPS"
     case metrics = "METRICS"
+    case alerts = "ALERTS"
     case helm = "HELM"
     case dataServices = "DATA_SERVICES"
     case checkup = "CHECKUP"

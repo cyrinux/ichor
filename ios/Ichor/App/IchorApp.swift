@@ -165,6 +165,8 @@ enum Route: Hashable {
     case flux(downNodes: Set<String>)
     /// The cluster checkup (a share link; the Kubernetes screens push their own).
     case checkup
+    /// The Alertmanager's alerts and silences (os:admin).
+    case alerts
     case health
     case settings
     case importConfig
@@ -248,6 +250,7 @@ struct MainNavigation: View {
                     case .fluxApp(let kind, let namespace, let name): FluxAppView(kind: kind, namespace: namespace, name: name, downNodes: [])
                     case .flux(let downNodes): FluxView(downNodes: downNodes)
                     case .checkup: CheckupView()
+                    case .alerts: AlertsView(path: $path)
                     case .health: HealthView()
                     case .settings: SettingsView()
                     case .diagnosis(let note): DiagnosisView(initialNote: note)
