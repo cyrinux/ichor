@@ -1,0 +1,2 @@
+• Object summary tab on Android and iOS (CYR-24)
+• KubeObjectSummary, conditions, owners and events of any object
