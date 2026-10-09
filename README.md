@@ -493,7 +493,7 @@ a fresh install. Backups move between Android and iOS.
 
 - **What it holds:** the talosconfig (every cluster's credentials), the cluster on screen,
   theme, language, screenshot mode, monitoring, and each cluster's name, color, VPN-only
-  setting and Wake-on-LAN targets (the last two exist on Android only).
+  setting and Wake-on-LAN targets.
 - **What it leaves out:** AI diagnosis settings and API keys, the app lock and "Allow
   screenshots" (set them again on the new phone).
 - **Encryption:** a passphrase of at least 12 characters. The key comes from Argon2id (64 MiB,

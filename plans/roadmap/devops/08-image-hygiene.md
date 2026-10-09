@@ -5,15 +5,16 @@ Status: **partial**. Size S.
 ## What exists today
 
 - `inventory.go` `imageFlags`: per app `Unpinned` (`:latest` or untagged without digest) and
-  `Drift` (one repository running several tags). Android shows them (`AppsGrid.kt`,
-  `model/Inventory.kt` `attention`); **iOS ignores them** although it gets the same JSON.
+  `Drift` (one repository running several tags). Both apps show them: Android
+  (`AppsGrid.kt`, `model/Inventory.kt` `attention`) and iOS (`AppDetailSheet.swift`: "Unpinned
+  image", "N versions running").
 - `images.go` `NodeImages`: the CRI image list of a node (Images screen), no analysis.
 - `kube_pods.go` `podStatus` shows `ImagePullBackOff`/`ErrImagePull` but drops the waiting
   message. Only netperf explains its own pull failures (`netPerfPullFailures`).
 
 ## Plan
 
-1. **iOS parity**: show the unpinned / drift badges and the attention state in `AppsView`.
+1. ~~**iOS parity**: show the unpinned / drift badges and the attention state in `AppsView`.~~ Done.
 2. **Images report** (Apps screen → "Images" filter, os:reader, from the inventory already loaded):
    unpinned images, repos with several tags (which nodes run which), images by registry
    (docker.io rate limits), and per node the CRI images no running container uses (disk space
