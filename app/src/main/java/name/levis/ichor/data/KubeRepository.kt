@@ -5,6 +5,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.model.ApiHealthReport
 import name.levis.ichor.model.CheckupReport
+import name.levis.ichor.model.KubeTopNodes
+import name.levis.ichor.model.KubeTopPods
 import name.levis.ichor.model.IntegrationReport
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.KUBE_PAGE_SIZE
@@ -48,6 +50,16 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
     /** The cluster's nodes as Kubernetes lists them: the home of a cluster added from a kubeconfig. */
     suspend fun kubeNodes(): KubeNodesOverview = go.remember(KUBE_NODES) {
         go.kube { cfg, ctx, server -> TalosJson.decodeFromString(KubeNodesOverview.serializer(), Ichorgo.kubeNodes(cfg, ctx, server)) }
+    }
+
+    /** CPU and memory each node uses (metrics-server); not cached: usage is live. */
+    suspend fun topNodes(): KubeTopNodes = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeTopNodes.serializer(), Ichorgo.kubeTopNodes(cfg, ctx, server))
+    }
+
+    /** CPU and memory the pods of [namespace] (null: all) use, with their requests and limits. */
+    suspend fun topPods(namespace: String?, selector: String = ""): KubeTopPods = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeTopPods.serializer(), Ichorgo.kubeTopPods(cfg, ctx, server, namespace.orEmpty(), selector))
     }
 
     /**
