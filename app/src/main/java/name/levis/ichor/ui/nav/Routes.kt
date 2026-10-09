@@ -13,6 +13,7 @@ import name.levis.ichor.ui.resources.ResourceRef
 internal object Routes {
     const val IMPORT = "import"
     const val DEMO = "demo"
+    const val DEMO_KUBE = "demo-kube"
     const val OVERVIEW = "overview"
     const val NODE = "node?addr={addr}&host={host}&role={role}&tab={tab}&action={action}"
     const val LOGS = "logs?addr={addr}&host={host}&service={service}&container={container}&title={title}&subtitle={subtitle}"

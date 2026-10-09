@@ -21,7 +21,7 @@ func KubeNodeName(configYAML, contextName, node string) (out string, err error) 
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
-	if isDemoContext(configYAML, contextName) {
+	if isTalosDemoContext(configYAML, contextName) {
 		return demoKubeNodeName(node)
 	}
 

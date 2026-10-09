@@ -83,7 +83,9 @@ func KubeNodes(configYAML, contextName, kubeServer string) (out string, err erro
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demoKubeNodes, listKubeNodes)
+	target := kubeTarget{configYAML, contextName, kubeServer}
+
+	return kubeReadJSON(target, demoKubeNodesFor(target), listKubeNodes)
 }
 
 func listKubeNodes(ctx context.Context, k *kubeClient) (kubeNodesOverview, error) {

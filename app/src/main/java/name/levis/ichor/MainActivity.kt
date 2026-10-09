@@ -205,10 +205,13 @@ private fun Intent.backupFile(): Uri? {
 
 private fun Intent.deepLink(): DeepLink? {
     val uri = data
+    // ichor://demo adds the Talos demo, ichor://demo/kube the Kubernetes one (screenshots, UI tests).
     if (action == Intent.ACTION_VIEW && uri?.scheme == "ichor" && uri.host == "demo" &&
-        uri.port == -1 && uri.userInfo == null && uri.path.orEmpty() in listOf("", "/") &&
-        uri.query == null && uri.fragment == null
-    ) return DeepLink.DEMO
+        uri.port == -1 && uri.userInfo == null && uri.query == null && uri.fragment == null
+    ) when (uri.path.orEmpty()) {
+        "", "/" -> return DeepLink.DEMO
+        "/kube" -> return DeepLink.DEMO_KUBE
+    }
     return getStringExtra(MainActivity.EXTRA_OPEN)?.let { name -> DeepLink.entries.firstOrNull { it.name == name } }
 }
 

@@ -1361,6 +1361,8 @@
     <string name="ai_disclaimer">KI-Antworten können falsch sein. Prüfen Sie einen Befehl, bevor Sie ihn ausführen, besonders wenn er einen Knoten zurücksetzt oder etcd verändert.</string>
     <string name="ai_health_diagnose">Mit KI diagnostizieren</string>
     <string name="demo_try">Demo ausprobieren</string>
+    <string name="demo_talos">Talos-Cluster</string>
+    <string name="demo_kube">Kubernetes-Cluster (EKS)</string>
     <string name="demo_notice">Demo-Cluster · Beispieldaten. Clusteränderungen sind nicht verfügbar. Entferne die Demo anschließend unter Cluster verwalten.</string>
     <string name="overview_discovered_nodes_hint">Tippen, um sie zur talosconfig hinzuzufügen.</string>
     <string name="discover_nodes_title">Gefundene Nodes hinzufügen</string>

@@ -135,12 +135,9 @@ struct ImportView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .disabled(busy)
                 HStack(spacing: 20) {
-                    Button("Try demo") {
-                        busy = true
-                        Task {
-                            do { await save(try await TalosClient.demoConfig(), replacingSameCluster: true) }
-                            catch { self.error = error.localizedDescription; busy = false }
-                        }
+                    Menu("Try demo") {
+                        Button("Talos cluster") { startDemo(kube: false) }
+                        Button("Kubernetes cluster (EKS)") { startDemo(kube: true) }
                     }
                     // A restore replaces every cluster: offered when there is none yet.
                     if !model.hasConfig {
@@ -266,6 +263,25 @@ struct ImportView: View {
                 error = nil
             } catch {
                 self.error = error.localizedDescription
+            }
+        }
+    }
+
+    /// Adds the Talos demo, or with `kube` the Kubernetes one (a kubeconfig cluster).
+    private func startDemo(kube: Bool) {
+        busy = true
+        Task {
+            do {
+                if kube {
+                    try await model.saveKubeDemo()
+                    busy = false
+                    onImported()
+                } else {
+                    await save(try await TalosClient.demoConfig(), replacingSameCluster: true)
+                }
+            } catch {
+                self.error = error.localizedDescription
+                busy = false
             }
         }
     }

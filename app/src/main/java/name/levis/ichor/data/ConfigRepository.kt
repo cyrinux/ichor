@@ -109,6 +109,12 @@ class ConfigRepository(
         save(yaml, importConflicts(yaml).filter { it.sameAs != null }.map { ImportChoice(it.index, replace = true) })
     }
 
+    /** Adds the local Kubernetes demo (a kubeconfig cluster, no Talos), replacing one added before. */
+    suspend fun saveKubeDemo() = withContext(Dispatchers.IO) {
+        val yaml = Ichorgo.demoKubeconfig()
+        saveKube(yaml, kubeImportConflicts(yaml).filter { it.sameAs != null }.map { ImportChoice(it.index, replace = true) })
+    }
+
     /** The contexts of the talosconfig [yaml] named like a stored cluster of either kind (none before the first import). */
     suspend fun importConflicts(yaml: String): List<ImportConflict> = withContext(Dispatchers.IO) {
         val current = _config.value ?: return@withContext emptyList()
