@@ -1,0 +1,7 @@
+• Upgrade Kubernetes from the phone, with a dry run first
+• Network tools on the node screen: DNS, ping, port, trace and HTTP/TLS
+• Upgrade every node of the cluster from the phone, one after the other
+• Import GKE credentials from QR codes
+• Add GKE clusters with Google sign-in on iOS
+• Add GKE clusters with Sign in with Google or your organisation's OAuth client on Android
+• Keep a multi-node config apply running in the background
