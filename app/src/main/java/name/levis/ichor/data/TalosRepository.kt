@@ -10,6 +10,8 @@ import name.levis.ichorgo.MaintenanceListener
 import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ConfigApplyEvent
+import name.levis.ichor.model.CpReplacePlan
+import name.levis.ichor.model.CpReplaceWait
 import name.levis.ichor.model.ConfigApplyMode
 import name.levis.ichor.model.ConfigApplyProgress
 import name.levis.ichor.model.ConfigEdit
@@ -625,6 +627,25 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** What removing [memberId] would leave (members, quorum) and what forbids it. Read-only. */
     suspend fun etcdMemberPlan(memberId: String): EtcdMemberPlan = call { cfg, ctx ->
         TalosJson.decodeFromString(EtcdMemberPlan.serializer(), Ichorgo.etcdMemberPlan(cfg, ctx, memberId))
+    }
+
+    /**
+     * Where replacing the failed etcd member [memberId] stands (steps from live state). [node]:
+     * the member's address as last seen, which names the old node once the member is removed. Read-only.
+     */
+    suspend fun controlPlaneReplacePlan(memberId: String, node: String): CpReplacePlan = call { cfg, ctx ->
+        TalosJson.decodeFromString(CpReplacePlan.serializer(), Ichorgo.controlPlaneReplacePlan(cfg, ctx, memberId, node))
+    }
+
+    /**
+     * Removes the failed member [memberId] as the replacement's step 2 (os:admin): Go reads the
+     * plan again and refuses a member that recovered or a removal that loses quorum.
+     */
+    suspend fun controlPlaneReplaceRemove(memberId: String) = call { cfg, ctx -> Ichorgo.controlPlaneReplaceRemove(cfg, ctx, memberId) }
+
+    /** Polls etcd up to [timeoutSec] until it has more healthy voting members than [membersBefore]. Read-only. */
+    suspend fun controlPlaneReplaceWait(membersBefore: Int, timeoutSec: Int): CpReplaceWait = call { cfg, ctx ->
+        TalosJson.decodeFromString(CpReplaceWait.serializer(), Ichorgo.controlPlaneReplaceWait(cfg, ctx, membersBefore.toLong(), timeoutSec.toLong()))
     }
 
     /** Resource types the node knows (`talosctl get rd`). */

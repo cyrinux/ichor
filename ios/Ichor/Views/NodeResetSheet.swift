@@ -22,10 +22,12 @@ struct NodeResetSheet: View {
     @State private var reboot = true
     @State private var typed = ""
 
-    init(node: String, hostname: String, onConfirm: @escaping (Request) -> Void) {
+    /// initialGraceful: `--graceful` preselected (off for a control plane already out of etcd).
+    init(node: String, hostname: String, initialGraceful: Bool = true, onConfirm: @escaping (Request) -> Void) {
         self.node = node
         self.hostname = hostname
         self.onConfirm = onConfirm
+        _graceful = State(initialValue: initialGraceful)
     }
 
     private var matches: Bool { typedConfirmationMatches(typed, token: hostname) }

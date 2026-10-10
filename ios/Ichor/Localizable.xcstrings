@@ -1,6 +1,601 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Replace this control plane…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplacer ce plan de contrôle…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reemplazar este plano de control…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Control Plane ersetzen…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sostituisci questo control plane…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінити цю control plane…"
+          }
+        }
+      }
+    },
+    "Replace a control plane" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplacer un plan de contrôle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reemplazar un plano de control"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Control Plane ersetzen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sostituisci un control plane"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінити control plane"
+          }
+        }
+      }
+    },
+    "Each step asks for its own confirmation. The steps are read from the cluster: leave and come back at any time." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque étape demande sa propre confirmation. Les étapes sont lues depuis le cluster : vous pouvez quitter et revenir à tout moment."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada paso pide su propia confirmación. Los pasos se leen del clúster: puedes salir y volver en cualquier momento."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeder Schritt verlangt eine eigene Bestätigung. Die Schritte werden aus dem Cluster gelesen: Sie können jederzeit gehen und zurückkehren."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni passaggio chiede la propria conferma. I passaggi sono letti dal cluster: puoi uscire e tornare in qualsiasi momento."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кожен крок потребує окремого підтвердження. Кроки зчитуються з кластера: можна вийти й повернутися будь-коли."
+          }
+        }
+      }
+    },
+    "Check etcd quorum" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifier le quorum etcd"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobar el quórum de etcd"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd-Quorum prüfen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica il quorum di etcd"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірити кворум etcd"
+          }
+        }
+      }
+    },
+    "Remove the etcd member" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer le membre etcd"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar el miembro de etcd"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd-Mitglied entfernen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovi il membro etcd"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити учасника etcd"
+          }
+        }
+      }
+    },
+    "Reset the old node" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser l'ancien nœud"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer el nodo antiguo"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alten Node zurücksetzen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reimposta il vecchio nodo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скинути старий вузол"
+          }
+        }
+      }
+    },
+    "Boot the new node" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrer le nouveau nœud"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrancar el nuevo nodo"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuen Node starten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvia il nuovo nodo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажити новий вузол"
+          }
+        }
+      }
+    },
+    "Wait for the new member" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attendre le nouveau membre"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperar al nuevo miembro"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf das neue Mitglied warten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attendi il nuovo membro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дочекатися нового учасника"
+          }
+        }
+      }
+    },
+    "To do" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À faire"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por hacer"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu erledigen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da fare"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "До виконання"
+          }
+        }
+      }
+    },
+    "The old node does not answer, so it cannot be reset from here: power it off yourself if it still runs." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'ancien nœud ne répond pas et ne peut donc pas être réinitialisé d'ici : éteignez-le vous-même s'il tourne encore."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nodo antiguo no responde, así que no se puede restablecer desde aquí: apágalo tú mismo si sigue en marcha."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der alte Node antwortet nicht und kann daher nicht von hier zurückgesetzt werden: Schalten Sie ihn selbst aus, falls er noch läuft."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il vecchio nodo non risponde, quindi non può essere reimpostato da qui: spegnilo tu se è ancora acceso."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Старий вузол не відповідає, тому його не можна скинути звідси: вимкніть його самі, якщо він ще працює."
+          }
+        }
+      }
+    },
+    "Boot the new machine from a Talos image (maintenance mode), then apply the machine config of %@ to it from a laptop. Joining a node from the phone comes later." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrez la nouvelle machine sur une image Talos (mode maintenance), puis appliquez-lui la configuration machine de %@ depuis un ordinateur. Rejoindre un nœud depuis le téléphone viendra plus tard."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arranca la nueva máquina con una imagen de Talos (modo mantenimiento) y aplícale la configuración de máquina de %@ desde un portátil. Unir un nodo desde el teléfono llegará más adelante."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starten Sie die neue Maschine mit einem Talos-Image (Wartungsmodus) und wenden Sie dann die Maschinenkonfiguration von %@ von einem Laptop aus an. Einen Node vom Telefon aus beitreten zu lassen, kommt später."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvia la nuova macchina da un'immagine Talos (modalità manutenzione), poi applicale la configurazione macchina di %@ da un portatile. L'aggiunta di un nodo dal telefono arriverà più avanti."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажте нову машину з образу Talos (режим обслуговування), потім застосуйте до неї конфігурацію машини %@ з ноутбука. Приєднання вузла з телефона з'явиться пізніше."
+          }
+        }
+      }
+    },
+    "Open the template config" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir la configuration modèle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir la configuración de plantilla"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlagenkonfiguration öffnen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri la configurazione modello"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити шаблонну конфігурацію"
+          }
+        }
+      }
+    },
+    "Copy the command" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier la commande"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar el comando"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Befehl kopieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia il comando"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопіювати команду"
+          }
+        }
+      }
+    },
+    "Start waiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commencer l'attente"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empezar a esperar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten starten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inizia ad attendere"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Почати очікування"
+          }
+        }
+      }
+    },
+    "Waiting for a new healthy etcd member…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente d'un nouveau membre etcd sain…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando un nuevo miembro de etcd sano…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warte auf ein neues gesundes etcd-Mitglied…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa di un nuovo membro etcd sano…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очікування нового справного учасника etcd…"
+          }
+        }
+      }
+    },
+    "The new member joined: etcd is healthy." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nouveau membre a rejoint le cluster : etcd est sain."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nuevo miembro se ha unido: etcd está sano."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das neue Mitglied ist beigetreten: etcd ist gesund."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il nuovo membro si è unito: etcd è sano."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новий учасник приєднався: etcd справний."
+          }
+        }
+      }
+    },
+    "Stop waiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter l'attente"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dejar de esperar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten beenden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smetti di attendere"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинити очікування"
+          }
+        }
+      }
+    },
     "Other nodes" : {
       "extractionState" : "manual",
       "localizations" : {

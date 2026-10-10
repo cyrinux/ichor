@@ -3837,6 +3837,27 @@
         <item quantity="one">Paused: %1$d new or changed event</item>
         <item quantity="other">Paused: %1$d new or changed events</item>
     </plurals>
+    <string name="cp_replace_entry">Replace this control plane…</string>
+    <string name="cp_replace_title">Replace a control plane</string>
+    <string name="cp_replace_intro">Each step asks for its own confirmation. The steps are read from the cluster: leave and come back at any time.</string>
+    <string name="cp_replace_step_quorum">Check etcd quorum</string>
+    <string name="cp_replace_step_remove">Remove the etcd member</string>
+    <string name="cp_replace_step_reset">Reset the old node</string>
+    <string name="cp_replace_step_boot">Boot the new node</string>
+    <string name="cp_replace_step_wait">Wait for the new member</string>
+    <string name="cp_replace_state_pending">Pending</string>
+    <string name="cp_replace_state_ready">To do</string>
+    <string name="cp_replace_state_done">Done</string>
+    <string name="cp_replace_state_skipped">Skipped</string>
+    <string name="cp_replace_state_blocked">Blocked</string>
+    <string name="cp_replace_power_off">The old node does not answer, so it cannot be reset from here: power it off yourself if it still runs.</string>
+    <string name="cp_replace_boot_body">Boot the new machine from a Talos image (maintenance mode), then apply the machine config of %1$s to it from a laptop. Joining a node from the phone comes later.</string>
+    <string name="cp_replace_open_template">Open the template config</string>
+    <string name="cp_replace_copy_command">Copy the command</string>
+    <string name="cp_replace_wait_start">Start waiting</string>
+    <string name="cp_replace_waiting">Waiting for a new healthy etcd member…</string>
+    <string name="cp_replace_joined">The new member joined: etcd is healthy.</string>
+    <string name="cp_replace_wait_stop">Stop waiting</string>
     <string name="image_pull_channel_name">Image pulls</string>
     <string name="image_pull_channel_desc">Progress of an image pull on your nodes</string>
     <string name="image_pull_notification_public">Pulling an image</string>

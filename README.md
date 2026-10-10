@@ -590,6 +590,23 @@ a fresh install. Backups move between Android and iOS.
   | Leave etcd first (`--graceful`, on by default) | Cordon, drain and leave etcd cleanly first. Off on a control plane, its etcd member stays behind: remove it from the etcd screen. |
   | Reboot after (`--reboot`, on by default) | Off, the node stays powered off once wiped. |
 
+- **Replacing a control plane (etcd → a failed member's menu → Replace this control plane…,
+  `os:admin`):** one screen walks through the replacement, step by step, read from the cluster
+  so that leaving and coming back resumes:
+  1. **Check etcd quorum:** the removal must leave enough healthy members. A healthy member is
+     never offered, and a removal that would lose quorum is blocked with the reason.
+  2. **Remove the etcd member:** the usual removal plan and typed hostname. The Go core reads
+     the plan again first, refuses a member that recovered, and sends the removal through a
+     healthy control plane.
+  3. **Reset the old node:** the reset sheet, without `--graceful` (the member already left).
+     A node that no longer answers is skipped: power it off yourself. So is an address that a
+     current member now uses (a replacement that took the old IP).
+  4. **Boot the new node:** by hand for now. Boot it from a Talos image, open the machine config
+     of a healthy control plane (secrets revealed only after the app lock), save it as
+     `controlplane.yaml`, then run `talosctl apply-config --insecure -n <new-node-ip> -f controlplane.yaml`
+     from a laptop.
+  5. **Wait for the new member:** the screen polls etcd until a new healthy voting member joins.
+
 - **Machine config changes (node menu → Machine config → Edit):**
   - **Review first:** the node checks every change with a dry run before anything is applied.
   - **Ways to apply it:**
