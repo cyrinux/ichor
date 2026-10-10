@@ -156,8 +156,14 @@ public let kubeGoogleSignInField = "gcpGoogleSignIn"
 
 /// What the GKE "Sign in with Google" option submits to the Go core (KubeSetCredentials):
 /// the browser sign-in then starts.
-public func kubeGoogleSignInSecretsJSON() -> String {
-    kubeSecretsJSON(fields: [kubeGoogleSignInField], values: [kubeGoogleSignInField: "ios"])
+public func kubeGoogleSignInSecretsJSON(projects: String = "") -> String {
+    kubeSecretsJSON(fields: [kubeGoogleSignInField, "gcpProjects"],
+                    values: [kubeGoogleSignInField: "ios", "gcpProjects": projects])
+}
+
+/// Discovery's OAuth and native iOS Google options need a browser round first.
+public func kubeDiscoverNeedsSignIn(_ fields: [String]) -> Bool {
+    fields.contains(kubeGoogleSignInField) || fields.contains("gcpOAuthClientId")
 }
 
 /// The URL scheme the in-app web session closes on for a sign-in coming back to
@@ -231,15 +237,9 @@ public struct DiscoveryProgress: Decodable, Equatable {
     }
 }
 
-/// A credential set that signs in in the browser before discovery (the OAuth client, Sign in
-/// with Google): the discovery sheet does not run that sign-in yet, so it is not offered.
-func kubeDiscoverNeedsSignIn(_ set: [String]) -> Bool {
-    set.contains("gcpOAuthClientId") || set.contains(kubeGoogleSignInField)
-}
-
 /// The credentials `provider` takes, as field sets: its options, else its one set of fields.
 public func kubeDiscoverOptionSets(provider: String, fields: [String: [String]], options: [String: [[String]]]) -> [[String]] {
-    let sets = (options[provider] ?? []).filter { !$0.isEmpty && !kubeDiscoverNeedsSignIn($0) }
+    let sets = (options[provider] ?? []).filter { !$0.isEmpty }
     if !sets.isEmpty { return sets }
     return fields[provider].map { [$0] } ?? []
 }
