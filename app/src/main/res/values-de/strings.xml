@@ -3902,4 +3902,7 @@
     <string name="etcd_recover_uploaded">%1$s von %2$s hochgeladen</string>
     <string name="etcd_recover_done">etcd läuft wieder mit einem Mitglied. Setze die anderen Control Planes zurück, damit sie beitreten.</string>
     <string name="etcd_recover_stopped">Wiederherstellung gestoppt</string>
+    <string name="kube_discover_signin_find">Anmelden und Cluster suchen</string>
+    <string name="kube_discover_google_body">Google listet die Projekte auf, die Ihr Konto sehen kann; Ichor liest deren Cluster.</string>
+    <string name="kube_discover_signin_first">Melden Sie sich zuerst an und suchen Sie dann die Cluster.</string>
 </resources>

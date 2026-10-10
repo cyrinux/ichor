@@ -9,6 +9,7 @@ import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.TalosForm
 import name.levis.ichor.model.DiscoveryProgress
 import name.levis.ichor.model.DiscoveryProvider
+import name.levis.ichor.model.signInNeeded
 import name.levis.ichor.model.discoveryFields
 import name.levis.ichor.model.discoveryOptions
 import name.levis.ichor.model.importedContextNames
@@ -81,9 +82,9 @@ sealed interface ImportState {
 
     /**
      * Adding clusters from a cloud account (K7): the credentials each provider takes, as
-     * field sets (GKE: a service account key or gcloud user credentials), starting on the
-     * [initial] provider; [running] while the account's clusters are listed, [error] when
-     * that failed.
+     * field sets (GKE: a service account key, gcloud user credentials, the organisation's
+     * OAuth client or Sign in with Google), starting on the [initial] provider; [running]
+     * while the account's clusters are listed, [error] when that failed.
      */
     data class Discover(
         val options: Map<DiscoveryProvider, List<List<String>>>,
@@ -92,6 +93,11 @@ sealed interface ImportState {
         val error: String? = null,
         /** How far the running discovery got; null before the first reading. */
         val progress: DiscoveryProgress? = null,
+        /** Waiting for the browser sign-in the credentials need, [prompt] once it has a page to open. */
+        val signingIn: Boolean = false,
+        val prompt: SignInPrompt? = null,
+        /** The account needs a sign-in first (the discovery said so): the card says to sign in. */
+        val needsSignIn: Boolean = false,
     ) : ImportState
 
     data class Invalid(val message: String) : ImportState
@@ -104,7 +110,8 @@ class ImportViewModel(
     /** The Omni sign-in worked: the user is still in the browser, bring the app back. */
     private val onBrowserDone: () -> Unit = {},
 ) : ViewModel() {
-    private var omniRun: Job? = null
+    /** The browser sign-in in progress (Omni account, cloud discovery); cancelled on reset. */
+    private var browserRun: Job? = null
 
     private val _state = MutableStateFlow<ImportState>(ImportState.Idle)
     val state: StateFlow<ImportState> = _state.asStateFlow()
@@ -193,16 +200,75 @@ class ImportViewModel(
     fun discover(provider: DiscoveryProvider, secrets: Map<String, String>) {
         val discover = _state.value as? ImportState.Discover ?: return
         if (discover.running) return
-        _state.value = discover.copy(running = true, error = null, progress = null)
+        _state.value = discover.copy(running = true, error = null, progress = null, needsSignIn = false)
         viewModelScope.launch {
             val poll = launch { pollDiscoverProgress() }
             val next = runCatching {
                 val yaml = auth.discover(provider.id, secrets)
                 ImportState.KubePreview(yaml, configs.validateKube(yaml), configs.kubeImportConflicts(yaml), discovery = secrets)
-            }.getOrElse { discover.copy(running = false, error = it.userMessage()) }
+            }.getOrElse {
+                if (signInNeeded(it.message) != null) {
+                    discover.copy(running = false, needsSignIn = true)
+                } else {
+                    discover.copy(running = false, error = it.userMessage())
+                }
+            }
             poll.cancel()
             _state.value = next
         }
+    }
+
+    /**
+     * Runs the browser sign-in the [provider] credentials [secrets] need (the organisation's
+     * OAuth client), then lists the account's clusters as [discover] does.
+     */
+    fun discoverWithSignIn(provider: DiscoveryProvider, secrets: Map<String, String>) {
+        val discover = _state.value as? ImportState.Discover ?: return
+        if (discover.running) return
+        val idle = discover.copy(running = false, signingIn = false, prompt = null, error = null, needsSignIn = false, progress = null)
+        _state.value = idle.copy(running = true, signingIn = true)
+        browserRun = viewModelScope.launch {
+            try {
+                var failure: String? = null
+                auth.discoverSignIn(provider.id, secrets).collect { event ->
+                    when (event) {
+                        is SignInEvent.Prompt -> _state.value = idle.copy(running = true, signingIn = true, prompt = event.prompt)
+                        is SignInEvent.Done -> failure = event.error
+                    }
+                }
+                val error = failure
+                if (error != null) {
+                    _state.value = idle.copy(error = error)
+                    return@launch
+                }
+                onBrowserDone()
+                _state.value = idle
+                discover(provider, secrets)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.value = idle.copy(error = e.userMessage())
+            }
+        }
+    }
+
+    /** Stops waiting for the discovery's browser sign-in; the credentials show again. */
+    fun cancelDiscoverSignIn() {
+        browserRun?.cancel()
+        browserRun = null
+        val discover = _state.value as? ImportState.Discover ?: return
+        _state.value = discover.copy(running = false, signingIn = false, prompt = null)
+    }
+
+    /** The sign-in code a web redirect page showed, pasted when the browser did not come back. */
+    fun completeSignInWithCode(code: String) {
+        if (code.isNotBlank()) auth.completeSignIn(code.trim())
+    }
+
+    /** Google's sign-in gave no token: [message] on the card. */
+    fun discoverFailed(message: String) {
+        val discover = _state.value as? ImportState.Discover ?: return
+        _state.value = discover.copy(running = false, error = message)
     }
 
     /** Shows how far the running discovery got until it is cancelled. */
@@ -220,7 +286,7 @@ class ImportViewModel(
         val omni = _state.value as? ImportState.Omni ?: return
         if (omni.running) return
         _state.value = omni.copy(running = true, error = null)
-        omniRun = viewModelScope.launch {
+        browserRun = viewModelScope.launch {
             try {
                 var failure: String? = null
                 auth.omniSignIn(endpoint, email).collect { event ->
@@ -250,7 +316,7 @@ class ImportViewModel(
         val omni = _state.value as? ImportState.Omni ?: return
         if (omni.running) return
         _state.value = omni.copy(running = true, error = null)
-        omniRun = viewModelScope.launch {
+        browserRun = viewModelScope.launch {
             try {
                 omniPreview(endpoint, auth.omniServiceAccount(endpoint, key))
             } catch (e: CancellationException) {
@@ -299,9 +365,14 @@ class ImportViewModel(
     }
 
     fun reset() {
-        omniRun?.cancel()
-        omniRun = null
+        browserRun?.cancel()
+        browserRun = null
+        auth.forgetDiscoverSignIn()
         _state.value = ImportState.Idle
+    }
+
+    override fun onCleared() {
+        auth.forgetDiscoverSignIn()
     }
 
     /** Adds the Talos demo, or with [kube] the Kubernetes one (a kubeconfig cluster). */
