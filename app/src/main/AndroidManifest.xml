@@ -218,6 +218,17 @@
                 android:value="Follows a Talos OS upgrade the user started on every node of their cluster, one node after the other (drain, install, reboot, health checks), while they switch apps, so the roll is not cut off halfway; it stops when the roll ends." />
         </service>
 
+        <!-- A Kubernetes upgrade changes each control plane, then each node's kubelet, waiting for
+             each one; same reasons as the upgrade service, and it runs only while it does. -->
+        <service
+            android:name=".ui.upgrade.K8sUpgradeService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Follows a Kubernetes version upgrade the user started on their Talos cluster (each control plane's components, then each node's kubelet, waited for one after the other) while they switch apps, so it is not cut off halfway; it stops when the upgrade ends." />
+        </service>
+
         <!-- Pulling an image on every node before an upgrade keeps the app talking to the nodes
              for minutes on a slow link; same reasons as the maintenance service, and it runs
              only while the pull does. -->

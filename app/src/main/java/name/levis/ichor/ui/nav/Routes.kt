@@ -124,6 +124,7 @@ internal object Routes {
     const val CAPTURE_FILE = "capturefile?name={name}"
     const val UPGRADE = "upgrade?addr={addr}&host={host}&version={version}"
     const val CLUSTER_UPGRADE = "clusterupgrade?version={version}"
+    const val K8S_UPGRADE = "k8supgrade"
     const val MAINTENANCE = "maintenance?addr={addr}&host={host}&drain={drain}"
 
     /** [drain]: a drain only, without the reboot or shutdown that a maintenance can add. */

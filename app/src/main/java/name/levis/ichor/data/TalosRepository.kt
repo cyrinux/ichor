@@ -5,6 +5,7 @@ import name.levis.ichor.ui.goErrorText
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.R
 import name.levis.ichorgo.ClusterUpgradeListener
+import name.levis.ichorgo.K8sUpgradeListener
 import name.levis.ichorgo.ConfigApplyListener
 import name.levis.ichorgo.ConfigTryListener
 import name.levis.ichorgo.MaintenanceListener
@@ -33,6 +34,8 @@ import name.levis.ichor.model.NetToolEvent
 import name.levis.ichor.model.NetToolOptions
 import name.levis.ichor.model.ClusterUpgradeCommand
 import name.levis.ichor.model.ClusterUpgradePlan
+import name.levis.ichor.model.K8sUpgradePlan
+import name.levis.ichor.model.K8sVersionChoice
 import name.levis.ichor.model.ClusterStorageHealth
 import name.levis.ichor.model.MaintenanceAction
 import name.levis.ichor.model.MaintenancePlan
@@ -501,6 +504,33 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
      * Every node of the context to [version], in the order the roll follows, with each node's
      * checks (ClusterUpgradePlan). Nodes already on [version] are "done": a rerun continues.
      */
+    /** The Kubernetes versions offered (K8sUpgradeVersions): one minor up at most, inside the Talos range. */
+    suspend fun k8sUpgradeVersions(): K8sVersionChoice = call { cfg, ctx ->
+        TalosJson.decodeFromString(K8sVersionChoice.serializer(), Ichorgo.k8sUpgradeVersions(cfg, ctx))
+    }
+
+    /** What upgrading Kubernetes to [version] would change (K8sUpgradePlan), read-only. */
+    suspend fun k8sUpgradePlan(version: String): K8sUpgradePlan = talosKubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(K8sUpgradePlan.serializer(), Ichorgo.k8sUpgradePlan(cfg, ctx, server, version))
+    }
+
+    /** StartK8sUpgrade: returns at once, the run reports to [onProgress] and [onDone] (once). */
+    fun startK8sUpgrade(version: String, dryRun: Boolean, onProgress: (String) -> Unit, onDone: (String) -> Unit): K8sUpgradeHandle {
+        val stored = configs.forCall()
+        val run = Ichorgo.startK8sUpgrade(
+            stored.yaml,
+            stored.activeContext,
+            kubeServers.serverFor(stored),
+            version,
+            dryRun,
+            object : K8sUpgradeListener {
+                override fun onProgress(json: String) = onProgress(json)
+                override fun onDone(errMessage: String) = onDone(errMessage)
+            },
+        )
+        return K8sUpgradeHandle { run.cancel() }
+    }
+
     suspend fun clusterUpgradePlan(version: String): ClusterUpgradePlan = talosKubeCall { cfg, ctx, server ->
         TalosJson.decodeFromString(ClusterUpgradePlan.serializer(), Ichorgo.clusterUpgradePlan(cfg, ctx, server, version))
     }

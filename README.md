@@ -372,6 +372,20 @@ where a failed upgrade can be rolled back.
     minutes, and the plan screen offers **Continue**, starting with the nodes left.
   - **In the background:** Android keeps the roll going in a notification ("Upgrading 3/7:
     worker-2, Rebooting"). iOS stops it once suspended, so keep Ichor open until the end.
+- **Kubernetes upgrade (cluster menu → Upgrade Kubernetes…), like `talosctl upgrade-k8s` (os:admin):**
+  - **Versions offered:** the latest patch of the minor the cluster runs and of the next one,
+    within what every node's Talos supports. Another version can be typed, inside the same limits.
+  - **The plan:** each control plane's API server, controller manager, scheduler and kube-proxy
+    images, then each node's kubelet, current version → new. Also the deprecated APIs still in
+    use (critical when the target removes them), and the blockers.
+  - **Dry run first (on by default):** each node checks its change without applying it; the
+    upgrade is then one tap away. Only the image fields change, and a change that would need a
+    reboot is refused.
+  - **The run:** one control plane at a time, waiting for its static pods to run the new version
+    and be Ready, then each kubelet, then the kube-proxy DaemonSet.
+  - **Cancel:** stops after the node being changed. The nodes done keep the new version, and
+    starting again continues with the others.
+  - **Going back:** there is no undo; returning to the previous version is another upgrade.
 
 ### Argo CD app icons
 

@@ -132,6 +132,9 @@ struct OverviewView: View {
                 Button { path.append(.clusterUpgrade(version: "")) } label: {
                     Label("Upgrade cluster…", systemImage: "arrow.up.circle")
                 }
+                Button { path.append(.k8sUpgrade) } label: {
+                    Label("Upgrade Kubernetes…", systemImage: "shippingbox")
+                }
             }
             ShareLinkButton(target: .screen(.cluster))
         }

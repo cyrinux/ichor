@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.SystemUpdateAlt
+import androidx.compose.material.icons.outlined.Upgrade
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -45,6 +46,8 @@ fun ClusterMenu(
     onDismiss: () -> Unit,
     /** "Upgrade cluster…": null when the role cannot upgrade (or the cluster has no Talos). */
     onUpgradeCluster: (() -> Unit)? = null,
+    /** "Upgrade Kubernetes…": null when the role cannot upgrade (or the cluster has no Talos). */
+    onUpgradeKubernetes: (() -> Unit)? = null,
 ) {
     var switching by remember(expanded) { mutableStateOf(false) }
     val contexts = config.summary.contexts
@@ -93,6 +96,16 @@ fun ClusterMenu(
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.cluster_upgrade_menu)) },
                     leadingIcon = { Icon(Icons.Outlined.SystemUpdateAlt, contentDescription = null) },
+                    onClick = {
+                        onDismiss()
+                        upgrade()
+                    },
+                )
+            }
+            onUpgradeKubernetes?.let { upgrade ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.k8s_upgrade_menu)) },
+                    leadingIcon = { Icon(Icons.Outlined.Upgrade, contentDescription = null) },
                     onClick = {
                         onDismiss()
                         upgrade()

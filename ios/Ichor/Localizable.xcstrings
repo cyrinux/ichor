@@ -1,6 +1,1109 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Upgrade Kubernetes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour Kubernetes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar Kubernetes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes aktualisieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna Kubernetes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити Kubernetes"
+          }
+        }
+      }
+    },
+    "Upgrade Kubernetes…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour Kubernetes…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar Kubernetes…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes aktualisieren…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna Kubernetes…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити Kubernetes…"
+          }
+        }
+      }
+    },
+    "Like talosctl upgrade-k8s: each control plane gets the new API server, controller manager, scheduler and kube-proxy images, one after the other, then every node gets the new kubelet. Each step is waited for." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comme talosctl upgrade-k8s : chaque plan de contrôle reçoit les nouvelles images de l'API server, du controller manager, du scheduler et de kube-proxy, l'un après l'autre, puis chaque nœud le nouveau kubelet. Chaque étape est attendue."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Como talosctl upgrade-k8s: cada plano de control recibe las nuevas imágenes de API server, controller manager, scheduler y kube-proxy, uno tras otro, y luego cada nodo el nuevo kubelet. Se espera cada paso."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie talosctl upgrade-k8s: Jede Control Plane bekommt nacheinander die neuen Images von API-Server, Controller Manager, Scheduler und kube-proxy, dann jeder Node das neue Kubelet. Jeder Schritt wird abgewartet."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Come talosctl upgrade-k8s: ogni control plane riceve le nuove immagini di API server, controller manager, scheduler e kube-proxy, uno dopo l'altro, poi ogni nodo il nuovo kubelet. Ogni passo viene atteso."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як talosctl upgrade-k8s: кожна площина керування по черзі отримує нові образи API-сервера, controller manager, scheduler і kube-proxy, потім кожен вузол — новий kubelet. Кожен крок очікується."
+          }
+        }
+      }
+    },
+    "Runs %@ · Talos supports %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runs %1$@ · Talos supports %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tourne en %1$@ · Talos prend en charge %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecuta %1$@ · Talos admite %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Läuft mit %1$@ · Talos unterstützt %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegue %1$@ · Talos supporta %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Працює на %1$@ · Talos підтримує %2$@"
+          }
+        }
+      }
+    },
+    "Other version" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autre version"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otra versión"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Andere Version"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Altra versione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інша версія"
+          }
+        }
+      }
+    },
+    "Not after the current version, more than one minor up, or outside what Talos supports." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas après la version actuelle, plus d'une version mineure au-dessus, ou hors de ce que Talos prend en charge."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No es posterior a la versión actual, sube más de una versión menor o está fuera de lo que admite Talos."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht nach der aktuellen Version, mehr als eine Minor-Version höher oder außerhalb dessen, was Talos unterstützt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non successiva alla versione attuale, più di una minor sopra o fuori da ciò che Talos supporta."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не новіша за поточну, більше ніж на одну мінорну версію вище або поза тим, що підтримує Talos."
+          }
+        }
+      }
+    },
+    "Kubelets" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubelets"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubelets"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubelets"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubelet"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubelet"
+          }
+        }
+      }
+    },
+    "Deprecated APIs still in use" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API obsolètes encore utilisées"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API obsoletas aún en uso"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch genutzte veraltete APIs"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API deprecate ancora in uso"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застарілі API, які ще використовуються"
+          }
+        }
+      }
+    },
+    "Removed in %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimée en %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminada en %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernt in %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimossa in %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалено в %@"
+          }
+        }
+      }
+    },
+    "Dry run first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simulation d'abord"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba en seco primero"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuerst Probelauf"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prima una prova"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спершу пробний запуск"
+          }
+        }
+      }
+    },
+    "Each node checks its change without applying it; then the upgrade is offered." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque nœud vérifie sa modification sans l'appliquer ; la mise à jour est proposée ensuite."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada nodo comprueba su cambio sin aplicarlo; después se ofrece la actualización."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeder Node prüft seine Änderung, ohne sie anzuwenden; danach wird das Update angeboten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni nodo verifica la modifica senza applicarla; poi viene proposto l'aggiornamento."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кожен вузол перевіряє зміну, не застосовуючи її; потім пропонується оновлення."
+          }
+        }
+      }
+    },
+    "Run the dry run" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancer la simulation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecutar la prueba"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probelauf starten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegui la prova"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити пробний запуск"
+          }
+        }
+      }
+    },
+    "Upgrade now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour maintenant"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar ahora"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt aktualisieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna ora"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити зараз"
+          }
+        }
+      }
+    },
+    "Upgrade Kubernetes on %@ to %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgrade Kubernetes on %1$@ to %2$@?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour Kubernetes sur %1$@ en %2$@ ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Actualizar Kubernetes en %1$@ a %2$@?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes auf %1$@ auf %2$@ aktualisieren?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornare Kubernetes su %1$@ a %2$@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити Kubernetes на %1$@ до %2$@?"
+          }
+        }
+      }
+    },
+    "The control planes restart their components one after the other, then each kubelet restarts. Going back to the previous version is another upgrade." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les plans de contrôle redémarrent leurs composants l'un après l'autre, puis chaque kubelet. Revenir à la version précédente est une autre mise à jour."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los planos de control reinician sus componentes uno tras otro y luego cada kubelet. Volver a la versión anterior es otra actualización."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Control Planes starten ihre Komponenten nacheinander neu, danach jedes Kubelet. Zurück zur vorigen Version geht nur mit einem weiteren Update."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I control plane riavviano i componenti uno dopo l'altro, poi ogni kubelet. Tornare alla versione precedente è un altro aggiornamento."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Площини керування по черзі перезапускають компоненти, потім кожен kubelet. Повернення до попередньої версії — це ще одне оновлення."
+          }
+        }
+      }
+    },
+    "Upgrade Kubernetes on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour Kubernetes sur %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar Kubernetes en %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes auf %@ aktualisieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna Kubernetes su %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити Kubernetes на %@"
+          }
+        }
+      }
+    },
+    "Upgrading Kubernetes to %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour de Kubernetes en %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizando Kubernetes a %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes wird auf %@ aktualisiert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamento di Kubernetes a %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення Kubernetes до %@"
+          }
+        }
+      }
+    },
+    "Dry run of Kubernetes %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simulation de Kubernetes %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba de Kubernetes %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probelauf für Kubernetes %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prova di Kubernetes %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пробний запуск Kubernetes %@"
+          }
+        }
+      }
+    },
+    "Every node accepted its change. Nothing was applied." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque nœud a accepté sa modification. Rien n'a été appliqué."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada nodo aceptó su cambio. No se aplicó nada."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeder Node hat seine Änderung akzeptiert. Nichts wurde angewendet."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni nodo ha accettato la modifica. Non è stato applicato nulla."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кожен вузол прийняв зміну. Нічого не застосовано."
+          }
+        }
+      }
+    },
+    "Kubernetes upgrade %lld/%lld: %@ %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes upgrade %1$lld/%2$lld: %3$@ %4$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour Kubernetes %1$lld/%2$lld : %3$@ %4$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualización de Kubernetes %1$lld/%2$lld: %3$@ %4$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes-Update %1$lld/%2$lld: %3$@ %4$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamento Kubernetes %1$lld/%2$lld: %3$@ %4$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення Kubernetes %1$lld/%2$lld: %3$@ %4$@"
+          }
+        }
+      }
+    },
+    "kube-proxy DaemonSet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DaemonSet kube-proxy"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DaemonSet kube-proxy"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-proxy-DaemonSet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DaemonSet kube-proxy"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DaemonSet kube-proxy"
+          }
+        }
+      }
+    },
+    "Every component runs %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les composants tournent en %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los componentes ejecutan %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Komponenten laufen mit %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutti i componenti eseguono %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі компоненти працюють на %@."
+          }
+        }
+      }
+    },
+    "The upgrade ended without an answer: open the plan again to see what changed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mise à jour s'est terminée sans réponse : rouvrez le plan pour voir ce qui a changé."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La actualización terminó sin respuesta: abre el plan de nuevo para ver qué cambió."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Update endete ohne Antwort: Öffne den Plan erneut, um zu sehen, was sich geändert hat."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'aggiornamento è terminato senza risposta: riapri il piano per vedere cosa è cambiato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення завершилося без відповіді: відкрийте план знову, щоб побачити зміни."
+          }
+        }
+      }
+    },
+    "Steps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Étapes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schritte"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кроки"
+          }
+        }
+      }
+    },
+    "Stopping after the current node…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêt après le nœud en cours…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deteniendo tras el nodo actual…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird nach dem aktuellen Node angehalten…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arresto dopo il nodo attuale…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинка після поточного вузла…"
+          }
+        }
+      }
+    },
+    "Cancel the Kubernetes upgrade?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler la mise à jour de Kubernetes ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Cancelar la actualización de Kubernetes?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes-Update abbrechen?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annullare l'aggiornamento di Kubernetes?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасувати оновлення Kubernetes?"
+          }
+        }
+      }
+    },
+    "It stops after the node being changed, which is finished and waited for. The nodes done keep the new version; start again later to continue." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle s'arrête après le nœud en cours de modification, qui est terminé et attendu. Les nœuds faits gardent la nouvelle version ; relancez plus tard pour continuer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se detiene tras el nodo que se está cambiando, que termina y se espera. Los nodos hechos conservan la nueva versión; vuelve a empezar más tarde para continuar."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es hält nach dem Node an, der gerade geändert wird; dieser wird fertig und abgewartet. Fertige Nodes behalten die neue Version; starte später erneut, um weiterzumachen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si ferma dopo il nodo in corso di modifica, che viene completato e atteso. I nodi fatti mantengono la nuova versione; ricomincia più tardi per continuare."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупиняється після вузла, що змінюється: його буде завершено й дочекано. Готові вузли зберігають нову версію; почніть знову пізніше, щоб продовжити."
+          }
+        }
+      }
+    },
+    "Stop after this node" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter après ce nœud"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener tras este nodo"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach diesem Node anhalten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ferma dopo questo nodo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинити після цього вузла"
+          }
+        }
+      }
+    },
+    "Keep going" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitermachen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continua"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Продовжити"
+          }
+        }
+      }
+    },
+    "The Kubernetes upgrade could not start." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mise à jour de Kubernetes n'a pas pu démarrer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La actualización de Kubernetes no pudo empezar."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Kubernetes-Update konnte nicht starten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'aggiornamento di Kubernetes non è potuto partire."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення Kubernetes не вдалося запустити."
+          }
+        }
+      }
+    },
+    "The Kubernetes upgrade stops while Ichor is in the background. Open it until every node is done." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mise à jour de Kubernetes s'arrête tant qu'Ichor est en arrière-plan. Ouvrez-le jusqu'à ce que tous les nœuds soient faits."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La actualización de Kubernetes se detiene mientras Ichor está en segundo plano. Ábrelo hasta que todos los nodos terminen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Kubernetes-Update hält an, solange Ichor im Hintergrund ist. Öffne es, bis alle Nodes fertig sind."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'aggiornamento di Kubernetes si ferma mentre Ichor è in background. Aprilo finché tutti i nodi non sono completati."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення Kubernetes зупиняється, поки Ichor у фоні. Відкрийте його, доки всі вузли не будуть готові."
+          }
+        }
+      }
+    },
     "Network tools" : {
       "extractionState" : "manual",
       "localizations" : {
