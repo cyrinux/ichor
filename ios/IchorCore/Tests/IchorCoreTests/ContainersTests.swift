@@ -11,6 +11,27 @@ final class ContainersTests: XCTestCase {
         XCTAssertEqual(sample.containers.first?.displayStatus, "running")
     }
 
+    func testNamespaceDefaultsToKubernetes() throws {
+        let json = #"{"at":1,"containers":[{"id":"apid","namespace":"system","name":"apid","status":"RUNNING"},{"id":"c1","pod":"web","name":"web"}]}"#
+        let sample = try TalosJSON.decode(ContainerSample.self, from: json)
+        XCTAssertEqual(sample.containers.map(\.namespace), [ContainerNamespace.system, ContainerNamespace.kubernetes])
+        XCTAssertEqual(sample.containers.map(\.isSystem), [true, false])
+        XCTAssertEqual(NodeContainer(id: "0123456789abcdef", pod: "p", name: "").displayName, "0123456789ab")
+    }
+
+    func testSystemContainersGroupFirst() {
+        let rows = [
+            ContainerRow(container: NodeContainer(id: "w", pod: "web", name: "web", memory: 500), cpuPercent: 50),
+            ContainerRow(container: NodeContainer(id: "apid", namespace: ContainerNamespace.system, podNamespace: "", pod: "", name: "apid", memory: 1), cpuPercent: 1),
+            ContainerRow(container: NodeContainer(id: "trustd", namespace: ContainerNamespace.system, podNamespace: "", pod: "", name: "trustd", memory: 1), cpuPercent: 1),
+        ]
+        let pods = sortPods(groupPods(rows), by: .cpu)
+        XCTAssertEqual(pods.map(\.id), ["system", "default/web"])
+        XCTAssertEqual(pods.map(\.isSystem), [true, false])
+        XCTAssertEqual(pods[0].containers.map(\.id), ["apid", "trustd"])
+        XCTAssertEqual(filterPods(pods, query: "trust").first?.isSystem, true)
+    }
+
     func testNullContainersDecodeAsEmpty() throws {
         XCTAssertEqual(try TalosJSON.decode(ContainerSample.self, from: #"{"at":1,"containers":null}"#).containers, [])
     }

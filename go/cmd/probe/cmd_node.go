@@ -90,6 +90,12 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "container-restart", args: "NODE NAMESPACE ID", run: func(e env) (out string, err error) {
+		// Restarts the container for real (NAMESPACE: system or k8s.io).
+		err = ichorgo.ContainerRestart(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+
+		return "restarted", err
+	}},
 	{name: "events", args: "NODE", run: func(e env) (out string, err error) {
 		l := &eventPrinter{done: make(chan string, 1), max: 15}
 		l.run = ichorgo.StartEvents(e.cfg, e.context, flag.Arg(1), 10, l)

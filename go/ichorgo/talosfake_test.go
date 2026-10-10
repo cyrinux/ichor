@@ -50,7 +50,8 @@ type fakeTalos struct {
 	health           func(node string, stream grpc.ServerStreamingServer[clusterapi.HealthCheckProgress]) error
 	snapshot         func(stream grpc.ServerStreamingServer[common.Data]) error
 	rebootErr        error
-	resets           []*machineapi.ResetRequest // the Reset requests received, in order
+	resets           []*machineapi.ResetRequest   // the Reset requests received, in order
+	restarts         []*machineapi.RestartRequest // the container Restart requests, in order
 	disarmErr        error
 	// alarms are the active etcd alarms; a disarm clears them.
 	alarms    []*machineapi.EtcdMemberAlarm
@@ -280,6 +281,18 @@ func (m fakeTalosMachine) ImagePull(ctx context.Context, req *machineapi.ImagePu
 	return &machineapi.ImagePullResponse{Messages: []*machineapi.ImagePull{{}}}, nil
 }
 
+func (m fakeTalosMachine) Restart(ctx context.Context, req *machineapi.RestartRequest) (*machineapi.RestartResponse, error) {
+	if _, err := m.f.enter(ctx, "Restart"); err != nil {
+		return nil, err
+	}
+
+	m.f.mu.Lock()
+	m.f.restarts = append(m.f.restarts, req)
+	m.f.mu.Unlock()
+
+	return &machineapi.RestartResponse{Messages: []*machineapi.Restart{{}}}, nil
+}
+
 func (m fakeTalosMachine) Reset(ctx context.Context, req *machineapi.ResetRequest) (*machineapi.ResetResponse, error) {
 	if _, err := m.f.enter(ctx, "Reset"); err != nil {
 		return nil, err
@@ -486,9 +499,20 @@ func (m fakeTalosMachine) Dmesg(_ *machineapi.DmesgRequest, stream grpc.ServerSt
 	return stream.Send(&common.Data{Bytes: []byte("[    0.000000] Linux version 6.12\n")})
 }
 
-func (m fakeTalosMachine) Containers(ctx context.Context, _ *machineapi.ContainersRequest) (*machineapi.ContainersResponse, error) {
+func (m fakeTalosMachine) Containers(ctx context.Context, req *machineapi.ContainersRequest) (*machineapi.ContainersResponse, error) {
 	if _, err := m.f.enter(ctx, "Containers"); err != nil {
 		return nil, err
+	}
+
+	if req.GetNamespace() == "system" {
+		if req.GetDriver() != common.ContainerDriver_CONTAINERD {
+			return nil, status.Error(codes.InvalidArgument, "system containers are listed through containerd")
+		}
+
+		return &machineapi.ContainersResponse{Messages: []*machineapi.Container{{Containers: []*machineapi.ContainerInfo{
+			{Id: "trustd", PodId: "trustd", Name: "trustd", Image: "talos/trustd", Status: "RUNNING", Pid: 104},
+			{Id: "apid", PodId: "apid", Image: "talos/apid", Status: "RUNNING", Pid: 102},
+		}}}}, nil
 	}
 
 	return &machineapi.ContainersResponse{Messages: []*machineapi.Container{{Containers: []*machineapi.ContainerInfo{

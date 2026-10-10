@@ -1,6 +1,13 @@
 import Foundation
 
-/// One sample of a node's Kubernetes containers from the Go core (NodeContainers).
+/// Containerd namespaces of a node's containers: Talos' own (apid, trustd, extension services)
+/// and the Kubernetes ones.
+public enum ContainerNamespace {
+    public static let system = "system"
+    public static let kubernetes = "k8s.io"
+}
+
+/// One sample of a node's system and Kubernetes containers from the Go core (NodeContainers).
 public struct ContainerSample: Decodable, Equatable, Sendable {
     /// Unix milliseconds, to turn CPU nanosecond deltas into a percentage.
     public let at: Int64
@@ -23,6 +30,8 @@ public struct ContainerSample: Decodable, Equatable, Sendable {
 
 public struct NodeContainer: Decodable, Equatable, Identifiable, Sendable {
     public let id: String
+    /// Containerd namespace: `ContainerNamespace.system` or `.kubernetes`.
+    public let namespace: String
     public let podNamespace: String
     public let pod: String
     public let name: String
@@ -34,9 +43,11 @@ public struct NodeContainer: Decodable, Equatable, Identifiable, Sendable {
     /// Cumulative CPU time, nanoseconds.
     public let cpuNanos: UInt64
 
-    public init(id: String, podNamespace: String = "default", pod: String, name: String, image: String = "",
-                status: String = "CONTAINER_RUNNING", pid: UInt32 = 0, memory: UInt64 = 0, cpuNanos: UInt64 = 0) {
+    public init(id: String, namespace: String = ContainerNamespace.kubernetes, podNamespace: String = "default", pod: String,
+                name: String, image: String = "", status: String = "CONTAINER_RUNNING", pid: UInt32 = 0, memory: UInt64 = 0,
+                cpuNanos: UInt64 = 0) {
         self.id = id
+        self.namespace = namespace
         self.podNamespace = podNamespace
         self.pod = pod
         self.name = name
@@ -46,6 +57,28 @@ public struct NodeContainer: Decodable, Equatable, Identifiable, Sendable {
         self.memory = memory
         self.cpuNanos = cpuNanos
     }
+
+    private enum CodingKeys: String, CodingKey { case id, namespace, podNamespace, pod, name, image, status, pid, memory, cpuNanos }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        namespace = try c.field(.namespace, ContainerNamespace.kubernetes)
+        podNamespace = try c.field(.podNamespace, "")
+        pod = try c.field(.pod, "")
+        name = try c.field(.name, "")
+        image = try c.field(.image, "")
+        status = try c.field(.status, "")
+        pid = try c.field(.pid, 0)
+        memory = try c.field(.memory, 0)
+        cpuNanos = try c.field(.cpuNanos, 0)
+    }
+
+    /// A Talos container (apid, trustd, an extension service), not a Kubernetes one.
+    public var isSystem: Bool { namespace == ContainerNamespace.system }
+
+    /// The name shown in lists and dialogs.
+    public var displayName: String { name.isEmpty ? String(id.prefix(12)) : name }
 
     /// "CONTAINER_RUNNING" (CRI) or "RUNNING".
     public var isRunning: Bool { status.uppercased().hasSuffix("RUNNING") }
@@ -90,18 +123,20 @@ public func containerRows(previous: ContainerSample?, current: ContainerSample) 
     }
 }
 
-/// A pod's containers with totals.
+/// A pod's containers, or Talos' own containers when `isSystem`, with totals.
 public struct PodGroup: Equatable, Identifiable, Sendable {
     public let namespace: String
     public let pod: String
     public let containers: [ContainerRow]
+    public let isSystem: Bool
 
-    public var id: String { "\(namespace)/\(pod)" }
+    public var id: String { isSystem ? ContainerNamespace.system : "\(namespace)/\(pod)" }
 
-    public init(namespace: String, pod: String, containers: [ContainerRow]) {
+    public init(namespace: String, pod: String, containers: [ContainerRow], isSystem: Bool = false) {
         self.namespace = namespace
         self.pod = pod
         self.containers = containers
+        self.isSystem = isSystem
     }
 
     public var memory: UInt64 { containers.reduce(UInt64(0)) { $0 &+ $1.container.memory } }
@@ -115,13 +150,14 @@ public struct PodGroup: Equatable, Identifiable, Sendable {
     public var allRunning: Bool { containers.allSatisfy(\.container.isRunning) }
 }
 
-/// Groups rows by namespace/pod, keeping the first-seen order of pods and containers.
+/// Groups rows by namespace/pod (Talos' system containers in one group), keeping the first-seen
+/// order of pods and containers.
 public func groupPods(_ rows: [ContainerRow]) -> [PodGroup] {
     var order: [String] = []
     var byPod: [String: [ContainerRow]] = [:]
     var names: [String: (String, String)] = [:]
     for row in rows {
-        let key = "\(row.container.podNamespace)/\(row.container.pod)"
+        let key = row.container.isSystem ? ContainerNamespace.system : "\(row.container.podNamespace)/\(row.container.pod)"
         if byPod[key] == nil {
             order.append(key)
             names[key] = (row.container.podNamespace, row.container.pod)
@@ -130,13 +166,16 @@ public func groupPods(_ rows: [ContainerRow]) -> [PodGroup] {
     }
     return order.compactMap { key in
         guard let (namespace, pod) = names[key], let containers = byPod[key] else { return nil }
-        return PodGroup(namespace: namespace, pod: pod, containers: containers)
+        let system = containers.first?.container.isSystem ?? false
+        return PodGroup(namespace: system ? "" : namespace, pod: system ? "" : pod, containers: containers, isSystem: system)
     }
 }
 
-/// Highest CPU (unknown last) or highest memory first; ties by memory then name.
+/// The system group first, then highest CPU (unknown last) or highest memory first; ties by
+/// memory then name.
 public func sortPods(_ pods: [PodGroup], by sort: ProcessSort) -> [PodGroup] {
     pods.sorted { a, b in
+        if a.isSystem != b.isSystem { return a.isSystem }
         if sort == .cpu {
             let ca = a.cpuPercent ?? -1
             let cb = b.cpuPercent ?? -1
@@ -156,6 +195,6 @@ public func filterPods(_ pods: [PodGroup], query: String) -> [PodGroup] {
     return pods.compactMap { pod in
         if has(pod.namespace) || has(pod.pod) || has(pod.id) { return pod }
         let matching = pod.containers.filter { has($0.container.name) || has($0.container.image) }
-        return matching.isEmpty ? nil : PodGroup(namespace: pod.namespace, pod: pod.pod, containers: matching)
+        return matching.isEmpty ? nil : PodGroup(namespace: pod.namespace, pod: pod.pod, containers: matching, isSystem: pod.isSystem)
     }
 }

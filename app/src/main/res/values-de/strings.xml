@@ -1078,6 +1078,17 @@
     <string name="service_done_stop">Stopp von %1$s auf %2$s angefordert.</string>
     <string name="service_done_start">Start von %1$s auf %2$s angefordert.</string>
     <string name="service_action_failed">„%1$s“ für %2$s fehlgeschlagen: %3$s</string>
+    <string name="common_feature_container_restart">Container-Neustart</string>
+    <string name="container_actions">Container-Aktionen</string>
+    <string name="container_open_log">Log öffnen</string>
+    <string name="container_restart">Container neu starten…</string>
+    <string name="container_restart_confirm">Container %1$s auf %2$s neu starten?</string>
+    <string name="container_restart_kubernetes_note">Das Kubelet startet den Container erneut; der Pod läuft weiter.</string>
+    <string name="container_restart_system_note">Dies ist ein Talos-Systemcontainer: Was er bereitstellt, steht still, bis er wieder läuft.</string>
+    <string name="container_restart_done">Neustart von Container %1$s auf %2$s angefordert.</string>
+    <string name="container_restart_failed">Neustart von Container %1$s fehlgeschlagen: %2$s</string>
+    <string name="node_pods_system">System</string>
+    <string name="node_pods_system_detail">Talos-Container</string>
     <string name="common_feature_issue_config">talosconfig ausstellen</string>
     <string name="node_menu_network">Netzwerk</string>
     <string name="node_menu_hardware">Über diesen Knoten</string>

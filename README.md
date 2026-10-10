@@ -669,6 +669,11 @@ a fresh install. Backups move between Android and iOS.
      from a laptop.
   5. **Wait for the new member:** the screen polls etcd until a new healthy voting member joins.
 
+- **Container restart (node → Pods → a container's menu → Restart container…, `os:admin`):**
+  `talosctl restart` without a reboot. A Talos system container (apid, trustd, an extension
+  service) asks for the typed hostname; a Kubernetes container asks a plain confirm, as the
+  kubelet starts it again. With the app lock on, you authenticate first.
+
 - **Machine config changes (node menu → Machine config → Edit):**
   - **Review first:** the node checks every change with a dry run before anything is applied.
   - **Ways to apply it:**

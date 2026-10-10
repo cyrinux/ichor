@@ -171,9 +171,14 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         TalosJson.decodeFromString(CgroupReport.serializer(), Ichorgo.nodeCgroups(cfg, ctx, node))
     }
 
-    /** One sample of the node's CRI containers for the Pods tab (not cached: always fresh). */
+    /** One sample of the node's system and CRI containers for the Pods tab (not cached: always fresh). */
     suspend fun containers(node: String): ContainerSample = call { cfg, ctx ->
         TalosJson.decodeFromString(ContainerSample.serializer(), Ichorgo.nodeContainers(cfg, ctx, node))
+    }
+
+    /** `talosctl -n NODE restart [-k] ID` (os:admin); [namespace] is `system` or `k8s.io`. */
+    suspend fun containerRestart(node: String, namespace: String, id: String) = call { cfg, ctx ->
+        Ichorgo.containerRestart(cfg, ctx, node, namespace, id)
     }
 
     /** `talosctl -n NODE service ID start|stop|restart` (os:operator or os:admin). */

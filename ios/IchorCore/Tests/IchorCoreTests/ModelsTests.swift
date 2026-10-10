@@ -85,6 +85,7 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(Feature.kubeconfig.minimumRole, "os:admin")
         XCTAssertEqual(Feature.resourceBrowser.minimumRole, "os:reader")
         XCTAssertFalse(operatorCtx.allows(.etcdMemberActions))
+        XCTAssertFalse(operatorCtx.allows(.containerRestart))
         XCTAssertTrue(operatorCtx.allows(.supportBundle))
         XCTAssertEqual(Feature.supportBundle.minimumRole, "os:reader")
         XCTAssertTrue(operatorCtx.allows(.resourceBrowser))

@@ -1085,6 +1085,17 @@
     <string name="service_done_stop">Arresto di %1$s richiesto su %2$s.</string>
     <string name="service_done_start">Avvio di %1$s richiesto su %2$s.</string>
     <string name="service_action_failed">«%1$s» non riuscito per %2$s: %3$s</string>
+    <string name="common_feature_container_restart">Riavvio dei container</string>
+    <string name="container_actions">Azioni del container</string>
+    <string name="container_open_log">Apri il log</string>
+    <string name="container_restart">Riavvia il container…</string>
+    <string name="container_restart_confirm">Riavviare il container %1$s su %2$s?</string>
+    <string name="container_restart_kubernetes_note">Il kubelet riavvia il container; il pod continua a funzionare.</string>
+    <string name="container_restart_system_note">È un container di sistema di Talos: ciò che fornisce si ferma finché non torna attivo.</string>
+    <string name="container_restart_done">Riavvio del container %1$s richiesto su %2$s.</string>
+    <string name="container_restart_failed">Riavvio del container %1$s non riuscito: %2$s</string>
+    <string name="node_pods_system">Sistema</string>
+    <string name="node_pods_system_detail">Container di Talos</string>
     <string name="common_feature_issue_config">Emissione di talosconfig</string>
     <string name="node_menu_network">Rete</string>
     <string name="node_menu_hardware">Informazioni sul nodo</string>

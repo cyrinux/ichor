@@ -142,7 +142,7 @@ func listNodeContainers(ctx context.Context, c *client.Client, node string) *nod
 
 	return &nodeContainers{
 		Node:       node,
-		Containers: mergeContainers(first(list.GetMessages()).GetContainers(), first(stats.GetMessages()).GetStats()),
+		Containers: mergeContainers(containerNSK8s, first(list.GetMessages()).GetContainers(), first(stats.GetMessages()).GetStats()),
 	}
 }
 
