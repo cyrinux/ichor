@@ -3902,4 +3902,7 @@
     <string name="etcd_recover_uploaded">%1$s von %2$s hochgeladen</string>
     <string name="etcd_recover_done">etcd läuft wieder mit einem Mitglied. Setze die anderen Control Planes zurück, damit sie beitreten.</string>
     <string name="etcd_recover_stopped">Wiederherstellung gestoppt</string>
+    <string name="kube_discover_scan">QR-Code der Anmeldedaten scannen</string>
+    <string name="kube_discover_scan_invalid">Scanne eine gcloud-Datei mit Nutzeranmeldedaten oder einen Dienstkontoschlüssel.</string>
+    <string name="kube_discover_credentials_warning">Diese Datei enthält ein Aktualisierungstoken oder einen privaten Schlüssel. Halte sie geheim; wer sie besitzt, kann auf dein Google-Konto oder Dienstkonto zugreifen.</string>
 </resources>

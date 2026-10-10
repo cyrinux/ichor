@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.KubeAuthRepository
 import name.levis.ichor.data.SignInEvent
+import name.levis.ichor.model.ImportTextRoute
+import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.TalosForm
 import name.levis.ichor.model.DiscoveryProgress
@@ -88,11 +90,14 @@ sealed interface ImportState {
     data class Discover(
         val options: Map<DiscoveryProvider, List<List<String>>>,
         val initial: DiscoveryProvider? = null,
+        val initialValues: Map<String, String> = emptyMap(),
         val running: Boolean = false,
         val error: String? = null,
         /** How far the running discovery got; null before the first reading. */
         val progress: DiscoveryProgress? = null,
-    ) : ImportState
+    ) : ImportState {
+        override fun toString() = "Discover($initial, running=$running)"
+    }
 
     data class Invalid(val message: String) : ImportState
     data object Saved : ImportState
@@ -135,6 +140,13 @@ class ImportViewModel(
         val (yaml, kube) = withContext(Dispatchers.IO) {
             val decoded = Ichorgo.decodeImportText(text)
             decoded to Ichorgo.isKubeconfig(decoded)
+        }
+        val route = withContext(Dispatchers.IO) { TalosJson.decodeFromString(ImportTextRoute.serializer(), Ichorgo.classifyImportText(yaml)) }
+        if (route.isGkeCredential) {
+            return ImportState.Discover(
+                discoveryOptions(auth.discoveryOptions(), discoveryFields(auth.discoveryFields())),
+                initial = DiscoveryProvider.GKE, initialValues = mapOf(route.field to yaml),
+            )
         }
         return if (kube) {
             ImportState.KubePreview(yaml, configs.validateKube(yaml), configs.kubeImportConflicts(yaml))

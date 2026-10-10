@@ -13,8 +13,12 @@ struct KubeImportConflict: Decodable, Sendable {
 /// Clusters added from a kubeconfig, without Talos (see TalosClient for the conventions). Their
 /// calls take the stored kubeconfig as `config`; the Talos ones then fail with a clear message.
 extension TalosClient {
-    /// The config a pasted, scanned or opened text holds: the text itself, or the YAML of a
-    /// compressed "ichor-config:" payload (too large a config for a QR code otherwise).
+    /// Routing metadata only, without the imported credentials.
+    static func classifyImportText(_ text: String) async throws -> ImportTextRoute {
+        try await json { IchorgoClassifyImportText(text, $0) }
+    }
+
+    /// Expands a compressed config payload; ordinary text passes through unchanged.
     static func decodeImportText(_ text: String) async throws -> String {
         try await run { IchorgoDecodeImportText(text, $0) }
     }

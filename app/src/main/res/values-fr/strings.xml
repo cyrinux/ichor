@@ -3910,4 +3910,7 @@
     <string name="etcd_recover_uploaded">%1$s sur %2$s envoyés</string>
     <string name="etcd_recover_done">etcd tourne de nouveau avec un membre. Réinitialisez les autres control planes pour qu\'ils le rejoignent.</string>
     <string name="etcd_recover_stopped">Restauration arrêtée</string>
+    <string name="kube_discover_scan">Scanner le code QR des identifiants</string>
+    <string name="kube_discover_scan_invalid">Scannez un fichier d’identifiants utilisateur gcloud ou une clé de compte de service.</string>
+    <string name="kube_discover_credentials_warning">Ce fichier contient un jeton de renouvellement ou une clé privée. Gardez-le confidentiel : quiconque le possède peut accéder à votre compte Google ou compte de service.</string>
 </resources>
