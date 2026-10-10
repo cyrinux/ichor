@@ -3816,4 +3816,25 @@
         <item quantity="one">En pause : %1$d événement nouveau ou modifié</item>
         <item quantity="other">En pause : %1$d événements nouveaux ou modifiés</item>
     </plurals>
+    <string name="cp_replace_entry">Remplacer ce plan de contrôle…</string>
+    <string name="cp_replace_title">Remplacer un plan de contrôle</string>
+    <string name="cp_replace_intro">Chaque étape demande sa propre confirmation. Les étapes sont lues depuis le cluster : vous pouvez quitter et revenir à tout moment.</string>
+    <string name="cp_replace_step_quorum">Vérifier le quorum etcd</string>
+    <string name="cp_replace_step_remove">Retirer le membre etcd</string>
+    <string name="cp_replace_step_reset">Réinitialiser l\'ancien nœud</string>
+    <string name="cp_replace_step_boot">Démarrer le nouveau nœud</string>
+    <string name="cp_replace_step_wait">Attendre le nouveau membre</string>
+    <string name="cp_replace_state_pending">En attente</string>
+    <string name="cp_replace_state_ready">À faire</string>
+    <string name="cp_replace_state_done">Terminé</string>
+    <string name="cp_replace_state_skipped">Ignoré</string>
+    <string name="cp_replace_state_blocked">Bloqué</string>
+    <string name="cp_replace_power_off">L\'ancien nœud ne répond pas et ne peut donc pas être réinitialisé d\'ici : éteignez-le vous-même s\'il tourne encore.</string>
+    <string name="cp_replace_boot_body">Démarrez la nouvelle machine sur une image Talos (mode maintenance), puis appliquez-lui la configuration machine de %1$s depuis un ordinateur. Rejoindre un nœud depuis le téléphone viendra plus tard.</string>
+    <string name="cp_replace_open_template">Ouvrir la configuration modèle</string>
+    <string name="cp_replace_copy_command">Copier la commande</string>
+    <string name="cp_replace_wait_start">Commencer l\'attente</string>
+    <string name="cp_replace_waiting">En attente d\'un nouveau membre etcd sain…</string>
+    <string name="cp_replace_joined">Le nouveau membre a rejoint le cluster : etcd est sain.</string>
+    <string name="cp_replace_wait_stop">Arrêter l\'attente</string>
 </resources>

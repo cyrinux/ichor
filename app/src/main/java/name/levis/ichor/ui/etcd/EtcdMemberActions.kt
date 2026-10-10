@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PersonRemove
+import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -133,27 +134,50 @@ class EtcdMemberActionsViewModel(private val talos: TalosRepository) : ViewModel
     }
 }
 
-/** What a member card offers; a null action is not offered (role, or not the leader). */
-data class MemberActions(val support: FeatureSupport, val enabled: Boolean, val onForfeit: (() -> Unit)?, val onRemove: (() -> Unit)?)
+/**
+ * What a member card offers; a null action is not offered (role, or not the leader).
+ * [onReplace]: the guided replacement, for a failed member only.
+ */
+data class MemberActions(
+    val support: FeatureSupport,
+    val enabled: Boolean,
+    val onForfeit: (() -> Unit)?,
+    val onRemove: (() -> Unit)?,
+    val onReplace: (() -> Unit)? = null,
+)
 
-/** The member's overflow menu: "Remove member…". */
+/** The member's overflow menu: "Replace this control plane…" (a failed member), "Remove member…". */
 @Composable
 fun MemberOverflow(actions: MemberActions) {
-    val onRemove = actions.onRemove ?: return
+    if (actions.onRemove == null && actions.onReplace == null) return
     var open by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { open = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.common_more)) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            FeatureMenuItem(
-                label = stringResource(R.string.etcd_remove_member),
-                icon = Icons.Outlined.PersonRemove,
-                support = actions.support,
-                enabled = actions.enabled,
-                onClick = {
-                    open = false
-                    onRemove()
-                },
-            )
+            actions.onReplace?.let { onReplace ->
+                FeatureMenuItem(
+                    label = stringResource(R.string.cp_replace_entry),
+                    icon = Icons.Outlined.SwapHoriz,
+                    support = actions.support,
+                    enabled = actions.enabled,
+                    onClick = {
+                        open = false
+                        onReplace()
+                    },
+                )
+            }
+            actions.onRemove?.let { onRemove ->
+                FeatureMenuItem(
+                    label = stringResource(R.string.etcd_remove_member),
+                    icon = Icons.Outlined.PersonRemove,
+                    support = actions.support,
+                    enabled = actions.enabled,
+                    onClick = {
+                        open = false
+                        onRemove()
+                    },
+                )
+            }
         }
     }
 }

@@ -4050,4 +4050,25 @@
         <item quantity="many">Призупинено: %1$d нових чи змінених подій</item>
         <item quantity="other">Призупинено: %1$d нової чи зміненої події</item>
     </plurals>
+    <string name="cp_replace_entry">Замінити цю control plane…</string>
+    <string name="cp_replace_title">Замінити control plane</string>
+    <string name="cp_replace_intro">Кожен крок потребує окремого підтвердження. Кроки зчитуються з кластера: можна вийти й повернутися будь-коли.</string>
+    <string name="cp_replace_step_quorum">Перевірити кворум etcd</string>
+    <string name="cp_replace_step_remove">Вилучити учасника etcd</string>
+    <string name="cp_replace_step_reset">Скинути старий вузол</string>
+    <string name="cp_replace_step_boot">Завантажити новий вузол</string>
+    <string name="cp_replace_step_wait">Дочекатися нового учасника</string>
+    <string name="cp_replace_state_pending">Очікує</string>
+    <string name="cp_replace_state_ready">До виконання</string>
+    <string name="cp_replace_state_done">Виконано</string>
+    <string name="cp_replace_state_skipped">Пропущено</string>
+    <string name="cp_replace_state_blocked">Заблоковано</string>
+    <string name="cp_replace_power_off">Старий вузол не відповідає, тому його не можна скинути звідси: вимкніть його самі, якщо він ще працює.</string>
+    <string name="cp_replace_boot_body">Завантажте нову машину з образу Talos (режим обслуговування), потім застосуйте до неї конфігурацію машини %1$s з ноутбука. Приєднання вузла з телефона з\'явиться пізніше.</string>
+    <string name="cp_replace_open_template">Відкрити шаблонну конфігурацію</string>
+    <string name="cp_replace_copy_command">Скопіювати команду</string>
+    <string name="cp_replace_wait_start">Почати очікування</string>
+    <string name="cp_replace_waiting">Очікування нового справного учасника etcd…</string>
+    <string name="cp_replace_joined">Новий учасник приєднався: etcd справний.</string>
+    <string name="cp_replace_wait_stop">Зупинити очікування</string>
 </resources>

@@ -3808,4 +3808,25 @@
         <item quantity="one">Pausiert: %1$d neues oder geändertes Ereignis</item>
         <item quantity="other">Pausiert: %1$d neue oder geänderte Ereignisse</item>
     </plurals>
+    <string name="cp_replace_entry">Diese Control Plane ersetzen…</string>
+    <string name="cp_replace_title">Eine Control Plane ersetzen</string>
+    <string name="cp_replace_intro">Jeder Schritt verlangt eine eigene Bestätigung. Die Schritte werden aus dem Cluster gelesen: Sie können jederzeit gehen und zurückkehren.</string>
+    <string name="cp_replace_step_quorum">etcd-Quorum prüfen</string>
+    <string name="cp_replace_step_remove">etcd-Mitglied entfernen</string>
+    <string name="cp_replace_step_reset">Alten Node zurücksetzen</string>
+    <string name="cp_replace_step_boot">Neuen Node starten</string>
+    <string name="cp_replace_step_wait">Auf das neue Mitglied warten</string>
+    <string name="cp_replace_state_pending">Ausstehend</string>
+    <string name="cp_replace_state_ready">Zu erledigen</string>
+    <string name="cp_replace_state_done">Erledigt</string>
+    <string name="cp_replace_state_skipped">Übersprungen</string>
+    <string name="cp_replace_state_blocked">Blockiert</string>
+    <string name="cp_replace_power_off">Der alte Node antwortet nicht und kann daher nicht von hier zurückgesetzt werden: Schalten Sie ihn selbst aus, falls er noch läuft.</string>
+    <string name="cp_replace_boot_body">Starten Sie die neue Maschine mit einem Talos-Image (Wartungsmodus) und wenden Sie dann die Maschinenkonfiguration von %1$s von einem Laptop aus an. Einen Node vom Telefon aus beitreten zu lassen, kommt später.</string>
+    <string name="cp_replace_open_template">Vorlagenkonfiguration öffnen</string>
+    <string name="cp_replace_copy_command">Befehl kopieren</string>
+    <string name="cp_replace_wait_start">Warten starten</string>
+    <string name="cp_replace_waiting">Warte auf ein neues gesundes etcd-Mitglied…</string>
+    <string name="cp_replace_joined">Das neue Mitglied ist beigetreten: etcd ist gesund.</string>
+    <string name="cp_replace_wait_stop">Warten beenden</string>
 </resources>

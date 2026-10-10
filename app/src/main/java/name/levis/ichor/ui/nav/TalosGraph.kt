@@ -12,6 +12,7 @@ import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.LogSource
 import name.levis.ichor.model.NodeFilter
+import name.levis.ichor.model.address
 import name.levis.ichor.model.containerLogSubtitle
 import name.levis.ichor.model.containerLogTitle
 import name.levis.ichor.model.sensitive
@@ -21,6 +22,7 @@ import name.levis.ichor.ui.capture.CapturesScreen
 import name.levis.ichor.ui.debug.DebugShellScreen
 import name.levis.ichor.ui.debug.ShellKey
 import name.levis.ichor.ui.etcd.EtcdScreen
+import name.levis.ichor.ui.etcd.ReplaceControlPlaneScreen
 import name.levis.ichor.ui.events.EventsScreen
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.hardware.HardwareScreen
@@ -277,7 +279,28 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             onNode = { n -> if (n.node.isNotBlank()) nav.navigate(Routes.node(n.node, n.hostname, n.role)) },
         )
     }
-    composable(Routes.ETCD) { EtcdScreen(onBack = { nav.popBackStack() }) }
+    composable(Routes.ETCD) {
+        EtcdScreen(
+            onBack = { nav.popBackStack() },
+            onReplace = { m -> nav.navigate(Routes.replaceControlPlane(m.id, m.address, m.hostname)) },
+        )
+    }
+    composable(
+        Routes.REPLACE_CONTROL_PLANE,
+        arguments = listOf(
+            navArgument("member") { type = NavType.StringType },
+            navArgument("addr") { type = NavType.StringType },
+            navArgument("host") { type = NavType.StringType },
+        ),
+    ) { entry ->
+        ReplaceControlPlaneScreen(
+            memberId = entry.arguments?.getString("member").orEmpty(),
+            node = entry.arguments?.getString("addr").orEmpty(),
+            hostname = entry.arguments?.getString("host").orEmpty(),
+            onBack = { nav.popBackStack() },
+            onOpenConfig = { addr, host -> nav.navigate(Routes.machineConfig(addr, host)) },
+        )
+    }
     composable(Routes.HEALTH) {
         HealthScreen(onBack = { nav.popBackStack() }, onDiagnose = { note -> nav.navigate(Routes.diagnosis(note)) })
     }
