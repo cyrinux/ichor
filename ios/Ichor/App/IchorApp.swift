@@ -137,6 +137,8 @@ enum Route: Hashable {
     case clusterUpgrade(version: String)
     /// The Kubernetes upgrade (talosctl upgrade-k8s).
     case k8sUpgrade
+    /// "Add a node…": a node in maintenance mode, booted from the Talos ISO.
+    case joinNode
     /// Node screen opened on its cordon / uncordon confirmation (from a row's menu).
     case nodeCordon(NodeRef)
     /// Node screen opened on a tab (a share link).
@@ -250,6 +252,7 @@ struct MainNavigation: View {
                     case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
                     case .clusterUpgrade(let version): ClusterUpgradePlanView(initialVersion: version)
                     case .k8sUpgrade: K8sUpgradePlanView()
+                    case .joinNode: JoinNodeView()
                     case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
                     case .nodeTab(let ref, let tab): NodeDetailView(ref: ref, initialTab: tab)
                     case .nodes(let filter, let nodes): NodesView(nodes: nodes, filter: filter, path: $path)

@@ -12,6 +12,10 @@ import (
 
 // Talos nodes and the cluster.
 var nodeCommands = []command{
+	{name: "join-inspect", args: "ADDRESS", noConfig: true, run: func(e env) (out string, err error) {
+		// Read-only: a node in maintenance mode over the insecure maintenance API.
+		return ichorgo.MaintenanceNodeInspect(flag.Arg(1), 0)
+	}},
 	{name: "upgrade-ext", args: "NODE IMAGE", run: func(e env) (out string, err error) {
 		// Read-only: the node's extensions against the Image Factory's list for IMAGE's version.
 		return ichorgo.UpgradeExtensionCheck(e.cfg, e.context, flag.Arg(1), flag.Arg(2))

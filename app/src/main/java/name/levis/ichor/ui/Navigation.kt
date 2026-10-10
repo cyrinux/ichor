@@ -245,6 +245,7 @@ fun Navigation(
                 onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
                 onUpgradeCluster = { version -> nav.navigate(Routes.clusterUpgrade(version)) },
                 onUpgradeKubernetes = { nav.navigate(Routes.K8S_UPGRADE) },
+                onAddNode = { nav.navigate(Routes.JOIN_NODE) },
                 onDiagnose = { nav.navigate(Routes.diagnosis()) },
                 onAddCluster = { nav.navigate(Routes.IMPORT) },
                 onClustersCleared = { nav.resetTo(Routes.IMPORT) },

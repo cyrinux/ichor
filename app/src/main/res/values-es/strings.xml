@@ -4060,4 +4060,17 @@
     <string name="kube_discover_scan">Escanear el código QR de credenciales</string>
     <string name="kube_discover_scan_invalid">Escanea un archivo de credenciales de usuario de gcloud o una clave de cuenta de servicio.</string>
     <string name="kube_discover_credentials_warning">Este archivo contiene un token de actualización o una clave privada. Mantenlo en privado; quien lo tenga puede acceder a tu cuenta de Google o de servicio.</string>
+    <string name="join_node_menu">Añadir un nodo…</string>
+    <string name="join_node_title">Añadir un nodo</string>
+    <string name="join_node_step_inspect">1. Inspeccionar el nuevo nodo</string>
+    <string name="join_node_intro">Arranca la nueva máquina con la ISO de Talos: espera en modo mantenimiento y su consola muestra su dirección IP. Tu teléfono debe estar en la misma red o en una VPN que llegue a ella.</string>
+    <string name="join_node_demo">En la demo, escribe demo para ver un nodo de ejemplo.</string>
+    <string name="join_node_address">Dirección del nodo</string>
+    <string name="join_node_inspect">Inspeccionar</string>
+    <string name="join_node_maintenance">Modo mantenimiento</string>
+    <string name="join_node_installed_pill">Ya instalado</string>
+    <string name="join_node_installed">%1$s ya está instalado: pide un certificado de cliente. Aquí solo se puede añadir un nodo arrancado con la ISO y aún no instalado.</string>
+    <string name="join_node_step_config">2. Configuración de máquina a partir de un nodo existente: rol, nombre de host y disco de instalación</string>
+    <string name="join_node_step_apply">3. Aplicarla y seguir el nodo hasta que se una al clúster</string>
+    <string name="join_node_coming">Llegará en una próxima versión.</string>
 </resources>

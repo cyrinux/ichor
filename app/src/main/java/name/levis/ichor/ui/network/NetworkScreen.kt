@@ -185,7 +185,7 @@ private fun Mono(text: String) {
 }
 
 @Composable
-private fun LinkRow(link: LinkInfo) {
+internal fun LinkRow(link: LinkInfo) {
     val colors = LocalStatusColors.current
     Column(Modifier.padding(vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
