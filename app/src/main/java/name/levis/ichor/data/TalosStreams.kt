@@ -1,12 +1,14 @@
 package name.levis.ichor.data
 
 import name.levis.ichor.ui.goErrorText
+import name.levis.ichorgo.EtcdFixListener
 import name.levis.ichorgo.EventListener
 import name.levis.ichorgo.HealthListener
 import name.levis.ichorgo.LogListener
 import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.TalosEvent
+import name.levis.ichor.model.EtcdFixProgress
 import name.levis.ichor.model.SnapshotEncryption
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -25,6 +27,12 @@ sealed interface SnapshotEvent {
     data class Progress(val bytes: Long) : SnapshotEvent
     data class Done(val path: String, val size: Long, val sha256: String) : SnapshotEvent
     data class Failed(val message: String) : SnapshotEvent
+}
+
+/** The NOSPACE fix's progress, then its end: [Done.error] null when it succeeded. */
+sealed interface EtcdFixEvent {
+    data class Progress(val progress: EtcdFixProgress) : EtcdFixEvent
+    data class Done(val error: String?) : EtcdFixEvent
 }
 
 /** Items of a live stream (events, followed log). [Done] ends it; [error] null when cancelled. */
@@ -124,6 +132,32 @@ internal class TalosStreams(private val configs: ConfigRepository) {
         }
         awaitClose { run.cancel() }
     }.buffer(Channel.CONFLATED) // progress may be dropped, the final event is always kept
+
+    /**
+     * StartEtcdNospaceFix: snapshot into [destPath] (none when empty) through [snapshotNode],
+     * defragment every member, disarm the alarm, read etcd again. Closing the flow cancels it.
+     */
+    fun etcdNospaceFix(snapshotNode: String, destPath: String, encryption: SnapshotEncryption): Flow<EtcdFixEvent> = callbackFlow {
+        val stored = configs.forCall()
+        val listener = object : EtcdFixListener {
+            override fun onProgress(json: String) {
+                runCatching { TalosJson.decodeFromString(EtcdFixProgress.serializer(), json) }.getOrNull()
+                    ?.let { trySend(EtcdFixEvent.Progress(it)) }
+            }
+
+            override fun onDone(errMessage: String) {
+                trySend(EtcdFixEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+                close()
+            }
+        }
+        val (recipients, passphrase) = when (encryption) {
+            SnapshotEncryption.None -> "" to ""
+            is SnapshotEncryption.Keys -> encryption.recipients to ""
+            is SnapshotEncryption.Passphrase -> "" to encryption.passphrase
+        }
+        val run = Ichorgo.startEtcdNospaceFix(stored.yaml, stored.activeContext, snapshotNode, destPath, recipients, passphrase, listener)
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED) // every step is kept: the timeline needs them
 
     fun health(): Flow<HealthEvent> = callbackFlow {
         val stored = configs.forCall()

@@ -255,6 +255,10 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
      */
     fun etcdSnapshot(node: String, destPath: String, encryption: SnapshotEncryption): Flow<SnapshotEvent> = streams.etcdSnapshot(node, destPath, encryption)
 
+    /** The one-tap NOSPACE fix (see [TalosStreams.etcdNospaceFix]); needs os:admin. */
+    fun etcdNospaceFix(snapshotNode: String, destPath: String, encryption: SnapshotEncryption): Flow<EtcdFixEvent> =
+        streams.etcdNospaceFix(snapshotNode, destPath, encryption)
+
     /**
      * The cluster's nodes. Those that no longer answer keep what the last overview knew of
      * them (see [withLastKnown]), read once the call returned so a restored one counts too.

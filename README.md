@@ -625,6 +625,20 @@ talosctl -n <control-plane-ip> bootstrap --recover-from=./etcd.snapshot
 
 Post-quantum `age1pq1…` / `age1tagpq1…` keys need age 1.3 or later to decrypt.
 
+### NOSPACE fix
+
+When etcd raises its `NOSPACE` alarm, the cluster accepts no more writes. **etcd → Alarms → Fix
+NOSPACE…** (os:admin) runs the usual sequence as one followed run:
+
+1. A snapshot, as above, unless you switch it off.
+2. A defragmentation of every member, one at a time: followers first, the leader last.
+3. The alarm disarmed.
+4. etcd read again.
+
+The run stops at the first failure and says which member failed. When the alarm comes back at
+once, the database is still over its quota: raise `quota-backend-bytes` in the machine config,
+or delete data.
+
 ## AI diagnosis (optional)
 
 Off by default. Turn it on in Settings → AI diagnosis; until then the app shows no trace of it
