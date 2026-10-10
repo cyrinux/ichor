@@ -3860,4 +3860,6 @@
     <string name="image_pull_start">Scarica</string>
     <string name="upgrade_prepull">Pre-scarica l\'immagine su tutti i nodi</string>
     <string name="upgrade_prepull_desc">Scaricala ora su ogni nodo, così ogni riavvio è breve.</string>
+    <string name="kube_discover_progress_looking">Ricerca dei cluster…</string>
+    <string name="kube_discover_progress_projects">%1$s progetti su %2$s analizzati · %3$s cluster trovati</string>
 </resources>

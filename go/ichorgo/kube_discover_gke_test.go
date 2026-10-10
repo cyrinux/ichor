@@ -9,17 +9,21 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
 )
 
-// fakeGoogleCloud serves a Google account's token, its projects (Cloud Resource Manager, two
-// pages) and each project's GKE clusters; refused projects answer 403.
+// fakeGoogleCloud serves a Google account's token, its projects (Cloud Resource Manager, one
+// page per entry) and each project's GKE clusters; refused projects answer 403.
 type fakeGoogleCloud struct {
 	google   fakeGoogle
 	projects [][]string
 	refused  map[string]bool
+	// clusterName names a project's cluster; nil is "<project>-gke".
+	clusterName func(project string) string
 
 	mu       sync.Mutex
 	crmCalls int
@@ -53,9 +57,14 @@ func (f *fakeGoogleCloud) handle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		page, next := 0, "p2"
-		if r.URL.Query().Get("pageToken") == "p2" {
-			page, next = 1, ""
+		page := 0
+		if token := r.URL.Query().Get("pageToken"); token != "" {
+			page, _ = strconv.Atoi(strings.TrimPrefix(token, "p"))
+		}
+
+		next := ""
+		if page+1 < len(f.projects) {
+			next = fmt.Sprintf("p%d", page+1)
 		}
 
 		var items []string
@@ -78,7 +87,18 @@ func (f *fakeGoogleCloud) handle(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		_, _ = io.WriteString(w, `{"error":{"code":403,"message":"Kubernetes Engine API has not been used in project"}}`)
 	default:
-		fmt.Fprintf(w, `{"clusters":[{"name":"%s-gke","location":"europe-west1","endpoint":"10.0.0.1","masterAuth":{"clusterCaCertificate":"Q0E="}}]}`, project)
+		name := project + "-gke"
+		if f.clusterName != nil {
+			name = f.clusterName(project)
+		}
+
+		if name == "" {
+			_, _ = io.WriteString(w, `{}`)
+
+			return
+		}
+
+		fmt.Fprintf(w, `{"clusters":[{"name":%q,"location":"europe-west1","endpoint":"10.0.0.1","masterAuth":{"clusterCaCertificate":"Q0E="}}]}`, name)
 	}
 }
 
@@ -242,5 +262,111 @@ func TestKubeDiscoverOptions(t *testing.T) {
 	gke := options[discoverGKE]
 	if len(gke) != 2 || gke[0][0] != gcpFieldServiceAccount || strings.Join(gke[1], ",") != gcpFieldUserCredentials+","+gcpFieldProjects {
 		t.Errorf("options %v", options)
+	}
+}
+
+// manyProjects is n sample project IDs in pages of 100, as Cloud Resource Manager gives them,
+// every one refused but those in withGKE.
+func manyProjects(n int, withGKE ...int) ([][]string, map[string]bool) {
+	var pages [][]string
+
+	refused := map[string]bool{}
+
+	for i := range n {
+		id := fmt.Sprintf("sample-proj-%03d", i)
+		if i%100 == 0 {
+			pages = append(pages, nil)
+		}
+
+		pages[len(pages)-1] = append(pages[len(pages)-1], id)
+		refused[id] = !slices.Contains(withGKE, i)
+	}
+
+	return pages, refused
+}
+
+// An organisation's account sees hundreds of projects, most without GKE: a cluster far down
+// the list is still found.
+func TestDiscoverGKEManyProjects(t *testing.T) {
+	f := newFakeGoogleCloud()
+	f.projects, f.refused = manyProjects(320, 3, 120, 299)
+	withFakeGoogleCloud(t, f)
+
+	s := discoverWith(t, discoverGKE, map[string]string{gcpFieldUserCredentials: adcJSON("authorized_user", "rt-1")})
+
+	var names []string
+	for _, c := range s.Contexts {
+		names = append(names, c.Name)
+	}
+
+	want := "sample-proj-003-gke.europe-west1.gke,sample-proj-120-gke.europe-west1.gke,sample-proj-299-gke.europe-west1.gke"
+	if strings.Join(names, ",") != want {
+		t.Fatalf("contexts %v", names)
+	}
+}
+
+// Past the cap with no cluster found, the error says to enter the project IDs: the cluster of
+// the project past the cap is never read.
+func TestDiscoverGKEProjectCapWithoutClusters(t *testing.T) {
+	f := newFakeGoogleCloud()
+	f.projects, _ = manyProjects(gcpMaxProjects + 1)
+	f.refused = nil
+	last := fmt.Sprintf("sample-proj-%03d", gcpMaxProjects)
+	f.clusterName = func(project string) string {
+		if project == last {
+			return "hidden"
+		}
+
+		return ""
+	}
+	withFakeGoogleCloud(t, f)
+
+	raw, _ := json.Marshal(map[string]string{gcpFieldUserCredentials: adcJSON("authorized_user", "rt-1")})
+	if _, err := DiscoverClusters(discoverGKE, string(raw)); err == nil || !strings.Contains(err.Error(), fmt.Sprintf("first %d projects", gcpMaxProjects)) {
+		t.Fatalf("cap without clusters: %v", err)
+	}
+}
+
+// Two projects holding a same-named cluster in the same location get the project in the name.
+func TestDiscoverGKESameNameInTwoProjects(t *testing.T) {
+	f := newFakeGoogleCloud()
+	f.clusterName = func(string) string { return "prod" }
+	withFakeGoogleCloud(t, f)
+
+	s := discoverWith(t, discoverGKE, map[string]string{gcpFieldUserCredentials: adcJSON("authorized_user", "rt-1")})
+
+	var names []string
+	for _, c := range s.Contexts {
+		names = append(names, c.Name)
+	}
+
+	if strings.Join(names, ",") != "prod.europe-west1.sample-proj-a.gke,prod.europe-west1.sample-proj-c.gke" {
+		t.Fatalf("contexts %v", names)
+	}
+}
+
+// While a Google account's discovery runs, DiscoverProgress counts the projects read and the
+// clusters found; after it, nothing runs.
+func TestDiscoverProgress(t *testing.T) {
+	f := newFakeGoogleCloud()
+	withFakeGoogleCloud(t, f)
+
+	discoverWith(t, discoverGKE, map[string]string{gcpFieldUserCredentials: adcJSON("authorized_user", "rt-1")})
+
+	var p struct {
+		Running                     bool
+		Projects, Scanned, Clusters int
+	}
+	raw, err := DiscoverProgress()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := json.Unmarshal([]byte(raw), &p); err != nil {
+		t.Fatal(err)
+	}
+
+	if p.Running || p.Projects != 3 || p.Scanned != 3 || p.Clusters != 2 {
+		t.Errorf("progress %+v", p)
 	}
 }

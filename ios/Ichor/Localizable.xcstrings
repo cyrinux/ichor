@@ -596,6 +596,82 @@
         }
       }
     },
+    "Looking for clusters…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherche des clusters…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando clústeres…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пошук кластерів…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster werden gesucht…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricerca dei cluster…"
+          }
+        }
+      }
+    },
+    "Scanned %@ of %@ projects · %@ clusters found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scanned %1$@ of %2$@ projects · %3$@ clusters found"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ projets sur %2$@ parcourus · %3$@ clusters trouvés"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ de %2$@ proyectos revisados · %3$@ clústeres encontrados"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переглянуто %1$@ з %2$@ проєктів · знайдено кластерів: %3$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ von %2$@ Projekten durchsucht · %3$@ Cluster gefunden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ progetti su %2$@ analizzati · %3$@ cluster trovati"
+          }
+        }
+      }
+    },
     "%lld of %lld nodes done" : {
       "extractionState" : "manual",
       "localizations" : {

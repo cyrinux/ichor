@@ -3860,4 +3860,6 @@
     <string name="image_pull_start">Descargar</string>
     <string name="upgrade_prepull">Descargar antes la imagen en todos los nodos</string>
     <string name="upgrade_prepull_desc">Descárgala ahora en cada nodo para que cada reinicio sea corto.</string>
+    <string name="kube_discover_progress_looking">Buscando clústeres…</string>
+    <string name="kube_discover_progress_projects">%1$s de %2$s proyectos revisados · %3$s clústeres encontrados</string>
 </resources>

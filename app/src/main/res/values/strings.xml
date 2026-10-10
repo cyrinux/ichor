@@ -3860,4 +3860,6 @@
     <string name="image_pull_start">Pull</string>
     <string name="upgrade_prepull">Pre-pull the image on all nodes</string>
     <string name="upgrade_prepull_desc">Download it on every node now, so each node\'s reboot is short.</string>
+    <string name="kube_discover_progress_looking">Looking for clusters…</string>
+    <string name="kube_discover_progress_projects">Scanned %1$s of %2$s projects · %3$s clusters found</string>
 </resources>

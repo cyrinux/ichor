@@ -71,6 +71,13 @@ extension TalosClient {
         try await run { IchorgoDiscoverClusters(provider, secrets, $0) }
     }
 
+    /// How far the running discoverClusters got.
+    static func discoverProgress() -> DiscoveryProgress? {
+        var error: NSError?
+        let json = IchorgoDiscoverProgress(&error)
+        return error == nil ? DiscoveryProgress.decode(json) : nil
+    }
+
     /// A running interactive sign-in: its events (finished after `done`), `complete` hands
     /// over a callback URL the app received, `cancel` stops waiting.
     typealias SignInRun = (events: AsyncStream<KubeSignInEvent>, complete: @Sendable (String) -> Void, cancel: @Sendable () -> Void)

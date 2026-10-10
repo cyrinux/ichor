@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -29,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.DiscoveryProgress
 import name.levis.ichor.model.DiscoveryProvider
 import name.levis.ichor.model.GCP_PROJECTS
 import name.levis.ichor.model.GCP_USER_CREDENTIALS
@@ -96,6 +99,7 @@ internal fun DiscoverCard(
         }
         if (GCP_PROJECTS in fields) MutedText(stringResource(R.string.kube_discover_gcp_projects_hint))
         MutedText(stringResource(R.string.kube_discover_least_privilege))
+        if (state.running) DiscoverProgressRow(state.progress)
         state.error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedButton(onClick = onCancel, enabled = !state.running, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
@@ -112,5 +116,33 @@ internal fun DiscoverCard(
             }
         }
         Box(Modifier.height(8.dp))
+    }
+}
+
+/**
+ * How far the running discovery got: a bar that fills as a Google account's projects are
+ * read (indeterminate while they are listed, and for the other clouds), and the counts.
+ */
+@Composable
+private fun DiscoverProgressRow(progress: DiscoveryProgress?) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        val projects = progress?.projects ?: 0
+        if (projects > 0) {
+            LinearProgressIndicator(
+                progress = { (progress?.scanned ?: 0).toFloat() / projects },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            MutedText(
+                stringResource(
+                    R.string.kube_discover_progress_projects,
+                    (progress?.scanned ?: 0).toString(),
+                    projects.toString(),
+                    (progress?.clusters ?: 0).toString(),
+                ),
+            )
+        } else {
+            LinearProgressIndicator(Modifier.fillMaxWidth())
+            MutedText(stringResource(R.string.kube_discover_progress_looking))
+        }
     }
 }
