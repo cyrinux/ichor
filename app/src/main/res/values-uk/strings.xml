@@ -1320,6 +1320,9 @@
     <string name="upgrade_same_version">%1$s уже встановлено.</string>
     <string name="upgrade_stage">Застосувати під час наступного перезавантаження</string>
     <string name="upgrade_stage_desc">Підготувати оновлення й установити його під час завантаження вузла (Talos перезавантажує його). Корисно, коли файли, що використовуються, блокують оновлення.</string>
+    <string name="upgrade_ext_missing">Ці розширення не мають збірки для %1$s: %2$s. Вузол повернеться без них.</string>
+    <string name="upgrade_ext_not_factory">Розширення не перевірено: образ не з Image Factory.</string>
+    <string name="upgrade_ext_ok">Кожне розширення має збірку для %1$s.</string>
     <string name="upgrade_drain_first">Спершу звільнити вузол</string>
     <string name="upgrade_drain_first_desc">Ізолювати й звільнити його, оновити, дочекатися готовності, потім зняти ізоляцію. Без цього ця версія Talos зупиняє поди вузла під час перезавантаження.</string>
     <string name="maintenance_action_upgrade_desc">Оновити Talos, дочекатися, поки вузол працюватиме на новій версії й буде готовий, потім зняти ізоляцію.</string>

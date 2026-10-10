@@ -316,6 +316,11 @@ where a failed upgrade can be rolled back.
 - **Rollback:** on a node's upgrade screen, the menu offers `talosctl rollback` (os:admin): the node
   reboots at once into the Talos it ran before its last upgrade, for an upgrade that boots but
   misbehaves. Talos rolls back by itself one that does not boot.
+- **Extensions before an upgrade:** once the target version is chosen, the upgrade screen
+  checks the node's system extensions against the Image Factory's official list for that
+  version. Any extension with no build is named, since the node would come back without it.
+  An image from another registry, or a factory that cannot be reached, is said to be
+  unchecked.
 - **Drain before an upgrade:** a Talos version that upgrades without draining the node first
   (1.18 and later, through the LifecycleService) gets a "Drain the node first" switch on the
   upgrade screen, on by default. The upgrade then runs as a node maintenance: cordon, drain
