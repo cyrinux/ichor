@@ -60,6 +60,12 @@ extension TalosClient {
         return try decodeKubeDiscoverFields(json)
     }
 
+    /// The field sets of the providers whose discovery takes one of several credentials.
+    static func discoverOptions() async throws -> [String: [[String]]] {
+        let json = try await run { IchorgoKubeDiscoverOptions($0) }
+        return try decodeKubeDiscoverOptions(json)
+    }
+
     /// A kubeconfig of the clusters of a cloud account, for the import preview.
     static func discoverClusters(provider: String, secrets: String) async throws -> String {
         try await run { IchorgoDiscoverClusters(provider, secrets, $0) }

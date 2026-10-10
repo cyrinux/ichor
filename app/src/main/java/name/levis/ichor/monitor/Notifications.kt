@@ -16,10 +16,12 @@ import androidx.core.content.ContextCompat
 import name.levis.ichor.MainActivity
 import name.levis.ichor.R
 import name.levis.ichor.model.dataServiceKindOf
+import name.levis.ichor.model.formatSlope
 import name.levis.ichor.model.title
 import name.levis.ichor.ui.DeepLink
 import name.levis.ichor.ui.checkup.sectionLook
 import name.levis.ichor.ui.share.shareLinkFor
+import name.levis.ichor.util.formatBytes
 
 /** The single channel every alert used before [AlertChannel]: its settings carry over once. */
 private const val LEGACY_CHANNEL_ID = "cluster-alerts"
@@ -52,8 +54,18 @@ fun canPostNotifications(context: Context): Boolean =
  * With [hideOnLockScreen] (app lock on), the lock screen only shows a generic text. [clusterId]:
  * the cluster the alert is about (see [name.levis.ichor.model.ContextSummary.clusterId]), whose
  * screen of the alert's subject a tap opens like a share link; null opens the app only.
+ * [actions]: its buttons (see [Alert.actions]), for the cluster of fingerprint [fingerprint].
+ * [cluster]: the cluster's name as the app shows it, in the notification's header.
  */
-fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean, clusterId: String?) {
+fun postAlert(
+    context: Context,
+    alert: Alert,
+    hideOnLockScreen: Boolean,
+    clusterId: String?,
+    actions: List<AlertAction> = emptyList(),
+    fingerprint: String = "",
+    cluster: String? = null,
+) {
     if (!canPostNotifications(context)) return
     ensureAlertChannels(context)
     val res = AppLocale.wrap(context)
@@ -71,14 +83,17 @@ fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean, cluster
     }
     val open = PendingIntent.getActivity(
         context,
-        alert.key.hashCode(), // distinct request codes: the links and extras differ
+        alertNotificationId(fingerprint, alert.key), // distinct request codes: the links and extras differ
         intent,
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
     val builder = alertNotification(context, alert.channel, title, text, open, hideOnLockScreen)
+    // Every watched cluster alerts: which one this is about, next to the app's name.
+    cluster?.takeIf { it.isNotBlank() }?.let(builder::setSubText)
+    actions.mapNotNull { alertActionButton(context, alert, it, fingerprint, link) }.forEach(builder::addAction)
 
     try {
-        NotificationManagerCompat.from(context).notify(alert.key.hashCode(), builder.build())
+        NotificationManagerCompat.from(context).notify(alertNotificationId(fingerprint, alert.key), builder.build())
     } catch (_: SecurityException) {
         // Permission revoked between the check and the post; nothing to do.
     }
@@ -139,6 +154,58 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.CHECKUP_OK -> context.getString(R.string.monitor_checkup_ok, alert.subject)
     AlertKind.AM_FIRING -> context.getString(R.string.monitor_am_firing, alert.subject)
     AlertKind.AM_RESOLVED -> context.getString(R.string.monitor_am_resolved, alert.subject)
+    AlertKind.CLUSTER_UNREACHABLE -> context.getString(R.string.monitor_cluster_unreachable)
+    AlertKind.CLUSTER_REACHABLE -> context.getString(R.string.monitor_cluster_reachable)
+    AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertTitle(context, alert)
+    AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertTitle(context, alert)
+}
+
+/**
+ * "EPHEMERAL on worker-1 full in ~3 days" ("critical in" when that comes first, "in < 1 day"
+ * below a day), or the cleared form, from a trend alert's [TrendDetail].
+ */
+private fun trendAlertTitle(context: Context, alert: Alert): String {
+    val d = TrendDetail.parse(alert.detail)
+    return when {
+        !alert.problem -> context.getString(R.string.monitor_storage_trend_ok, d.name, d.hostname)
+        d.days < 1 && d.critical -> context.getString(R.string.monitor_storage_trend_critical_soon, d.name, d.hostname)
+        d.days < 1 -> context.getString(R.string.monitor_storage_trend_full_soon, d.name, d.hostname)
+        d.critical -> context.resources.getQuantityString(R.plurals.monitor_storage_trend_critical, d.days, d.name, d.hostname, d.days)
+        else -> context.resources.getQuantityString(R.plurals.monitor_storage_trend_full, d.days, d.name, d.hostname, d.days)
+    }
+}
+
+/** "growing ~2.4 % a day, now at 81 %"; "Node storage" once cleared. */
+private fun trendAlertText(context: Context, alert: Alert): String {
+    if (!alert.problem) return context.getString(R.string.monitor_storage)
+    val d = TrendDetail.parse(alert.detail)
+    return context.getString(R.string.monitor_storage_trend_text, formatSlope(d.slopePerDay), d.percent)
+}
+
+/**
+ * "EPHEMERAL on worker-1 at 91 %" (", almost full" when critical), "SMART failing on sda
+ * (worker-2)", or the cleared forms, from a storage alert's [StorageDetail].
+ */
+private fun storageAlertTitle(context: Context, alert: Alert): String {
+    val d = StorageDetail.parse(alert.detail)
+    return when {
+        d.smart && alert.problem -> context.getString(R.string.monitor_storage_smart, d.name, d.hostname)
+        d.smart -> context.getString(R.string.monitor_storage_smart_ok, d.name, d.hostname)
+        !alert.problem -> context.getString(R.string.monitor_storage_fill_ok, d.name, d.hostname, d.warn)
+        d.severity == DATA_CRITICAL -> context.getString(R.string.monitor_storage_fill_critical, d.name, d.hostname, d.percent)
+        else -> context.getString(R.string.monitor_storage_fill, d.name, d.hostname, d.percent)
+    }
+}
+
+/** "9.0 GiB free of 100.0 GiB", the SMART reason (or the disk's model); "Node storage" once cleared. */
+private fun storageAlertText(context: Context, alert: Alert): String {
+    val d = StorageDetail.parse(alert.detail)
+    val fallback = context.getString(R.string.monitor_storage)
+    return when {
+        !alert.problem -> fallback
+        d.smart -> d.reason.ifBlank { fallback }
+        else -> context.getString(R.string.monitor_storage_fill_text, formatBytes(d.freeBytes), formatBytes(d.sizeBytes))
+    }
 }
 
 /** "demo/worker-6f4b8 · critical": what the alert is about, and how bad while it fires. */
@@ -228,4 +295,8 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> gitopsAlertText(context, alert)
     AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK -> checkupAlertText(context, alert)
     AlertKind.AM_FIRING, AlertKind.AM_RESOLVED -> amAlertText(context, alert)
+    AlertKind.CLUSTER_UNREACHABLE -> context.getString(R.string.monitor_cluster_unreachable_text, alert.detail)
+    AlertKind.CLUSTER_REACHABLE -> context.getString(R.string.monitor_cluster_reachable_text)
+    AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertText(context, alert)
+    AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertText(context, alert)
 }

@@ -32,6 +32,22 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Ichor">
 
+        <!-- A browser sign-in coming back (ichor://signin, from a Web OAuth client's redirect
+             page): handed to the sign-in in progress, which checks its state. -->
+        <activity
+            android:name=".SignInCallbackActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ichor" android:host="signin" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -175,6 +191,11 @@
             android:name=".monitor.FreezeExtendReceiver"
             android:exported="false" />
 
+        <!-- Snooze and Wake on an alert's notification. -->
+        <receiver
+            android:name=".monitor.AlertActionReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".widget.ClusterWidgetReceiver"
             android:exported="true">
@@ -185,5 +206,16 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/cluster_widget_info" />
         </receiver>
+
+        <!-- Picks the cluster a widget shows (launched by the home screen only). -->
+        <activity
+            android:name=".widget.WidgetConfigActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

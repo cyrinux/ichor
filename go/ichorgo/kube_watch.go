@@ -55,13 +55,33 @@ type watchSpec struct {
 	labelSelector, fieldSelector string
 	// table asks for Table rows (any resource, 10-20 times smaller) rather than full objects.
 	table bool
+	// maxItems stops the list after that many objects (whole pages), 0 for all: the watch
+	// still starts from the list's version, the rest is only never shown.
+	maxItems int
+	// onState, when set, is told where the watch stands: watchLive once the list is read or
+	// a watch request answers again, watchReconnecting before a retry, watchRelisting when the
+	// version expired, watchPolling for a role that may list but not watch. reason says why.
+	onState func(state, reason string)
 }
+
+// Where a watch stands, for watchSpec.onState.
+const (
+	watchLive         = "live"
+	watchReconnecting = "reconnecting"
+	watchRelisting    = "relisting"
+	watchPolling      = "polling"
+)
+
+// errListFull ends a list that reached watchSpec.maxItems.
+var errListFull = errors.New("list full")
 
 // watchEvent is one change: Type watchSync with the whole list (after the first list and
 // each one started over), else one object (one item, or a Table of one row).
 type watchEvent struct {
 	Type string
 	Page kubePage
+	// Partial tells a watchSync cut at watchSpec.maxItems.
+	Partial bool
 }
 
 // rawWatchEvent is one line of a watch answer.
@@ -80,6 +100,9 @@ type watcher struct {
 	// columns are the Table's, from the list: a watch sends them with its first event only.
 	columns []kubeTableColumn
 	wait    time.Duration
+	// state and reason are what onState was last told; polling once the watch was refused.
+	state, reason string
+	polling       bool
 }
 
 // watchList keeps spec live until ctx ends, handing each event to handle; an error of handle
@@ -107,9 +130,14 @@ func watchList(ctx context.Context, k *kubeClient, spec watchSpec, handle func(w
 		case ctx.Err() != nil:
 			return ctx.Err()
 		case isKubeExpired(err):
+			w.notify(watchRelisting, "the API server let the watched version go")
+
 			relist = true
 		case isForbidden(err):
 			// The list was allowed, the watch is not: the list again, every so often.
+			w.polling = true
+			w.notify(watchPolling, "this account may list but not watch: read again every "+watchPollInterval.String())
+
 			return w.poll(ctx)
 		case err != nil:
 			if err := w.pause(ctx, err); err != nil {
@@ -131,9 +159,15 @@ func (w *watcher) list(ctx context.Context) error {
 	err := w.k.listAll(ctx, w.spec.path, q, func() { merged = kubePage{} }, func(page kubePage) error {
 		merged = mergePages(merged, page)
 
+		if w.spec.maxItems > 0 && len(merged.items) >= w.spec.maxItems && page.continueToken != "" {
+			return errListFull
+		}
+
 		return nil
 	})
-	if err != nil {
+
+	partial := errors.Is(err, errListFull)
+	if err != nil && !partial {
 		return err
 	}
 
@@ -144,7 +178,21 @@ func (w *watcher) list(ctx context.Context) error {
 	w.resourceVersion = merged.resourceVersion
 	w.wait = watchRetryMin
 
-	return w.handle(watchEvent{Type: watchSync, Page: merged})
+	if !w.polling {
+		w.notify(watchLive, "")
+	}
+
+	return w.handle(watchEvent{Type: watchSync, Page: merged, Partial: partial})
+}
+
+// notify tells onState where the watch stands, once per change.
+func (w *watcher) notify(state, reason string) {
+	if w.spec.onState == nil || (state == w.state && reason == w.reason) {
+		return
+	}
+
+	w.state, w.reason = state, reason
+	w.spec.onState(state, reason)
 }
 
 // mergePages adds page to the pages read so far (none: page itself). The resourceVersion is
@@ -223,6 +271,9 @@ func (w *watcher) streamOnce(ctx context.Context) error {
 	}
 
 	return w.k.stream(ctx, w.spec.path+"?"+query.Encode(), accept, func(r io.Reader) error {
+		// The server answered: live again after a retry.
+		w.notify(watchLive, "")
+
 		dec := json.NewDecoder(r)
 
 		for {
@@ -304,6 +355,10 @@ func (w *watcher) pause(ctx context.Context, err error) error {
 	var apiErr *kubeAPIError
 	if errors.As(err, &apiErr) && apiErr.Code >= 400 && apiErr.Code < 500 && apiErr.Code != http.StatusGone {
 		return err
+	}
+
+	if !w.polling {
+		w.notify(watchReconnecting, err.Error())
 	}
 
 	select {

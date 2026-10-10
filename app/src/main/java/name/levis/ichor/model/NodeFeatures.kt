@@ -50,6 +50,7 @@ enum class TalosFeature(val key: String) {
     IMAGES("images"),
     MACHINE_CONFIG("machineConfig"),
     DEBUG_SHELL("debugShell"),
+    RESET("reset"),
 }
 
 /** Support of [feature] on this node; supported while unknown (features not loaded, new name). */

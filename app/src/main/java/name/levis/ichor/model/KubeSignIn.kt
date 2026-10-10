@@ -107,6 +107,11 @@ private val FIELDS = listOf(
     CredentialField("awsRoleName", R.string.kube_field_aws_role_name, FieldKind.TEXT),
     CredentialField("awsRegion", R.string.kube_field_aws_region, FieldKind.TEXT),
     CredentialField("gcpServiceAccountJson", R.string.kube_field_gcp_service_account, FieldKind.JSON),
+    CredentialField(GCP_USER_CREDENTIALS, R.string.kube_field_gcp_user_credentials, FieldKind.JSON),
+    CredentialField(GCP_PROJECTS, R.string.kube_field_gcp_projects, FieldKind.TEXT, optional = true),
+    CredentialField(GCP_OAUTH_CLIENT_ID, R.string.kube_field_gcp_oauth_client_id, FieldKind.TEXT),
+    CredentialField("gcpOAuthClientSecret", R.string.kube_field_gcp_oauth_client_secret, FieldKind.SECRET),
+    CredentialField("gcpOAuthRedirectUrl", R.string.kube_field_gcp_oauth_redirect, FieldKind.TEXT, optional = true),
     CredentialField("azureTenantId", R.string.kube_field_azure_tenant, FieldKind.TEXT),
     CredentialField("azureSubscriptionId", R.string.kube_field_azure_subscription, FieldKind.TEXT),
     CredentialField("azureClientId", R.string.kube_field_azure_client_id, FieldKind.TEXT),
@@ -130,11 +135,30 @@ fun credentialsComplete(fields: List<String>, values: Map<String, String>): Bool
 fun credentialsFor(fields: List<String>, values: Map<String, String>): Map<String, String> =
     fields.mapNotNull { name -> values[name]?.trim()?.takeIf { it.isNotEmpty() }?.let { name to it } }.toMap()
 
-/** The label of an alternative field set: EKS asks for IAM Identity Center or access keys. */
+/** GKE's field for the application_default_credentials.json gcloud writes for a Google account. */
+const val GCP_USER_CREDENTIALS = "gcpUserCredentialsJson"
+
+/** GKE discovery's optional project IDs, for a Google account in a large organisation. */
+const val GCP_PROJECTS = "gcpProjects"
+
+/** GKE's "Sign in with Google" option (Play build): a marker, never a text field. */
+const val GCP_GOOGLE_SIGN_IN = "gcpGoogleSignIn"
+
+/** GKE's field for the client ID of the organisation's own OAuth client (browser sign-in). */
+const val GCP_OAUTH_CLIENT_ID = "gcpOAuthClientId"
+
+/**
+ * The label of an alternative field set: EKS asks for IAM Identity Center or access keys, GKE
+ * for a service account key or gcloud user credentials.
+ */
 @StringRes
 fun fieldSetLabel(fields: List<String>): Int = when {
     "awsSsoStartUrl" in fields -> R.string.kube_signin_option_aws_sso
     "awsAccessKeyId" in fields -> R.string.kube_signin_option_aws_keys
+    "gcpServiceAccountJson" in fields -> R.string.kube_signin_option_gcp_service_account
+    GCP_USER_CREDENTIALS in fields -> R.string.kube_signin_option_gcp_user
+    GCP_OAUTH_CLIENT_ID in fields -> R.string.kube_signin_option_gcp_oauth
+    GCP_GOOGLE_SIGN_IN in fields -> R.string.kube_signin_option_google
     else -> R.string.kube_signin_option_other
 }
 
@@ -152,6 +176,13 @@ enum class DiscoveryProvider(val id: String, @StringRes val label: Int) {
 /** The fields each provider asks for (KubeDiscoverFields), only for the providers the app shows. */
 fun discoveryFields(byProvider: Map<String, List<String>>): Map<DiscoveryProvider, List<String>> =
     DiscoveryProvider.entries.mapNotNull { p -> byProvider[p.id]?.takeIf { it.isNotEmpty() }?.let { p to it } }.toMap()
+
+/**
+ * The credentials each provider of [fields] takes, as field sets: those KubeDiscoverOptions
+ * lists ([byProvider]; GKE: a service account key or gcloud user credentials), else its one set.
+ */
+fun discoveryOptions(byProvider: Map<String, List<List<String>>>, fields: Map<DiscoveryProvider, List<String>>): Map<DiscoveryProvider, List<List<String>>> =
+    fields.mapValues { (p, set) -> byProvider[p.id]?.filter { it.isNotEmpty() }?.takeIf { it.isNotEmpty() } ?: listOf(set) }
 
 /**
  * The stored names of the contexts an import added: names that were not stored [before] and

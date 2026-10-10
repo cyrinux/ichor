@@ -15,6 +15,11 @@ enum KubeAuthWording {
         case "awsRoleName": String(localized: "Role name")
         case "awsRegion": String(localized: "AWS region")
         case "gcpServiceAccountJson": String(localized: "Service account key (JSON)")
+        case "gcpUserCredentialsJson": String(localized: "gcloud user credentials (application_default_credentials.json)")
+        case "gcpProjects": String(localized: "Project IDs (optional)")
+        case "gcpOAuthClientId": String(localized: "OAuth client ID")
+        case "gcpOAuthClientSecret": String(localized: "OAuth client secret")
+        case "gcpOAuthRedirectUrl": String(localized: "Redirect URL (optional)")
         case "azureClientId": String(localized: "Client ID")
         case "azureClientSecret": String(localized: "Client secret")
         case "azureTenantId": String(localized: "Tenant ID")
@@ -35,15 +40,40 @@ enum KubeAuthWording {
         case "awsAccountId": "123456789012"
         case "rancherApiKey": "token-xxxxx:secret"
         case "rancherServer": "https://rancher.example.com"
+        case "gcpProjects": "sample-proj-1, sample-proj-2"
+        case "gcpOAuthClientId": "123-abc.apps.googleusercontent.com"
+        case "gcpOAuthRedirectUrl": "https://cyrinux.github.io/ichor/auth/google/"
         default: nil
         }
     }
 
-    /// The name of a credentials option by its first field (EKS: IAM Identity Center or keys).
+    /// How to get what a field asks for, nil when its label says enough.
+    static func fieldHint(_ field: String) -> String? {
+        switch field {
+        case "gcpUserCredentialsJson":
+            String(localized: "Bring your gcloud session: on your computer run gcloud auth application-default login, then import ~/.config/gcloud/application_default_credentials.json. When Google ends the session, run it again and import the new file.")
+                + "\n\n"
+                + String(localized: "A workforce identity session (gcloud auth application-default login --login-config=…) is imported the same way.")
+        case "gcpProjects":
+            String(localized: "Leave empty to search every project your account can see; list project IDs to go faster in a large organisation.")
+        case "gcpOAuthClientId":
+            String(localized: "Ask your Google Cloud admin for a Desktop app OAuth client (APIs & Services → Credentials) with an Internal consent screen. Sign in then opens your Google account in the browser.")
+                + "\n\n"
+                + String(localized: "With a Web application client instead, enter https://cyrinux.github.io/ichor/auth/google/ (or your organisation's own page) as redirect URL and add it to the client's authorised redirect URIs. Leave it empty for a Desktop app client.")
+        default: nil
+        }
+    }
+
+    /// The name of a credentials option by its first field (EKS: IAM Identity Center or keys,
+    /// GKE: a service account key or gcloud user credentials).
     static func optionLabel(_ fields: [String]) -> String {
         switch fields.first {
         case "awsSsoStartUrl": String(localized: "IAM Identity Center")
         case "awsAccessKeyId": String(localized: "Access keys")
+        case "gcpServiceAccountJson": String(localized: "Service account key")
+        case "gcpUserCredentialsJson": String(localized: "gcloud user credentials")
+        case "gcpOAuthClientId": String(localized: "Your organisation's OAuth client")
+        case "gcpGoogleSignIn": String(localized: "Sign in with Google")
         default: fields.map(fieldLabel).joined(separator: ", ")
         }
     }

@@ -7,11 +7,11 @@
     <meta
       name="description"
       data-i18n-attr="content"
-      content="Ichor is a free, open-source Talos Linux app for Android and iPhone: node health, logs, etcd, KubeSpan, live graphs, an inventory of the apps you run, Kubernetes workloads and pods, network tests between nodes, Longhorn and CloudNativePG health, configuration drift, an incident recorder and alerts when a node goes down. Built on the same Go client as talosctl. Try the offline demo, no cluster needed."
+      content="Ichor is a free, open-source Android and iPhone app for Talos Linux and any Kubernetes cluster: EKS, GKE, AKS, DigitalOcean, Rancher, Sidero Omni or an OIDC sign-in from a kubeconfig. Node health, logs, etcd, live graphs, workloads and pods, Argo CD and Flux, an audit log of what the phone changed, and alerts when a node goes down. Built on the same Go client as talosctl. Try the offline demo, no cluster needed."
     />
     <meta
       name="keywords"
-      content="Talos, Talos Linux, talosctl, Kubernetes, k8s, Sidero, etcd, KubeSpan, cluster monitoring, app inventory, rollout restart, pods, netperf, network test, Longhorn, CloudNativePG, cgroups, configuration drift, incident timeline, Wake-on-LAN, Android, iOS"
+      content="Talos, Talos Linux, talosctl, Kubernetes, k8s, EKS, GKE, AKS, Omni, kubeconfig, OIDC, Argo CD, Flux, Sidero, etcd, KubeSpan, cluster monitoring, app inventory, rollout restart, pods, netperf, network test, Longhorn, CloudNativePG, cgroups, configuration drift, incident timeline, Wake-on-LAN, Android, iOS"
     />
     <link rel="canonical" href="https://cyrinux.github.io/ichor/" />
     <link rel="alternate" hreflang="en" href="https://cyrinux.github.io/ichor/" />
@@ -34,7 +34,7 @@
     <meta
       property="og:description"
       data-i18n-attr="content"
-      content="Your Talos cluster, from your phone. Node health, logs, etcd, alerts, the apps you run, Kubernetes workloads and pods, and now network tests between nodes, storage and database health and node pressure, with the same client as talosctl."
+      content="Every cluster you run, from your phone. Built for Talos Linux, with the same client as talosctl; opens any kubeconfig too: EKS, GKE, AKS, DigitalOcean, Rancher, Omni, OIDC. Node health, logs, etcd, alerts, workloads, Argo CD and Flux, an audit log of what the phone changed."
     />
     <meta
       property="og:image"
@@ -47,9 +47,13 @@
         "@type": "SoftwareApplication",
         "name": "Ichor for Talos Linux",
         "alternateName": "Ichor",
-        "description": "Monitor and operate Talos Linux clusters from your phone: node health, logs, etcd, KubeSpan, live graphs, an inventory of the apps running in the cluster, Kubernetes workloads and pods, network tests between nodes, Longhorn, CloudNativePG, Garage and Dragonfly health, node pressure, configuration drift, incident recording, bottleneck metrics and alerts.",
+        "description": "Monitor and operate Talos Linux and any Kubernetes cluster (EKS, GKE, AKS, DigitalOcean, Rancher, Sidero Omni, OIDC) from your phone: node health, logs, etcd, KubeSpan, live graphs, an inventory of the apps running in the cluster, Kubernetes workloads and pods, network tests between nodes, Longhorn, CloudNativePG, Garage and Dragonfly health, node pressure, configuration drift, incident recording, bottleneck metrics and alerts.",
         "featureList": [
           "Cluster overview and background alerts",
+          "Any kubeconfig: EKS, GKE, AKS, DigitalOcean, Rancher, Sidero Omni, OIDC sign-in",
+          "Security key (FIDO2) app lock and sealed configs",
+          "Encrypted audit log of every change made from the app",
+          "Argo CD and Flux, with the diff a sync would apply",
           "Inventory of the apps running in the cluster, with their logos",
           "Kubernetes workloads with rollout restart, and pods with delete",
           "Network test between two nodes with netperf",
@@ -1182,6 +1186,349 @@
           display: none;
         }
       }
+      /* Mobile menu: the links the narrow header hides, behind one button. */
+      .menu {
+        position: relative;
+        display: none;
+      }
+      .menu summary {
+        list-style: none;
+        cursor: pointer;
+        width: 2.4rem;
+        height: 2.4rem;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--ink);
+      }
+      .menu summary::-webkit-details-marker {
+        display: none;
+      }
+      .menu summary span,
+      .menu summary span::before,
+      .menu summary span::after {
+        display: block;
+        width: 1.1rem;
+        height: 2px;
+        background: currentColor;
+        border-radius: 2px;
+        position: relative;
+        content: "";
+      }
+      .menu summary span::before {
+        position: absolute;
+        top: -6px;
+      }
+      .menu summary span::after {
+        position: absolute;
+        top: 6px;
+      }
+      .menu[open] summary {
+        background: var(--surface);
+      }
+      .menu summary:focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 3px;
+      }
+      .menu ul {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 0.5rem);
+        z-index: 10;
+        min-width: 11rem;
+        margin: 0;
+        padding: 0.35rem;
+        list-style: none;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 12px 30px -12px rgba(20, 36, 59, 0.35);
+      }
+      .top nav .menu a {
+        display: block;
+        padding: 0.5rem 0.7rem;
+        border-radius: 6px;
+        color: var(--ink);
+      }
+      .top nav .menu a:hover {
+        background: var(--bg);
+      }
+
+      /* The cluster switcher on the hero phone */
+      .screen {
+        padding-top: 2.4rem;
+      }
+      .screen .clock {
+        font-size: 3.2rem;
+      }
+      .screen .notification {
+        margin-top: 1.4rem;
+      }
+      .clusters {
+        margin-top: auto;
+        width: 100%;
+        background: var(--phone-card);
+        border-radius: 16px;
+        padding: 0.7rem 0.8rem 0.5rem;
+        font-size: 0.78rem;
+      }
+      .clusters .head {
+        color: var(--phone-ink-2);
+        font-size: 0.68rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 0.3rem;
+      }
+      .cluster {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.38rem 0;
+        border-top: 1px solid rgba(147, 163, 184, 0.16);
+      }
+      .cluster .swatch {
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 3px;
+      }
+      .cluster .name {
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .cluster .via {
+        font: 500 0.64rem/1 "IBM Plex Mono", ui-monospace, monospace;
+        color: var(--phone-ink-2);
+        border: 1px solid rgba(147, 163, 184, 0.3);
+        border-radius: 999px;
+        padding: 0.18rem 0.45rem;
+      }
+      .cluster .state {
+        font-size: 0.72rem;
+        min-width: 3.4rem;
+        text-align: right;
+      }
+      .cluster .state.ok {
+        color: #5bd18b;
+      }
+      .cluster .state.warn {
+        color: #f2c14e;
+      }
+      .cluster.current .name::after {
+        content: " ·";
+        color: #ff7a45;
+      }
+
+      /* Providers: the ways in, beside the add-cluster preview */
+      .providers {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        gap: 2.5rem;
+        align-items: start;
+        margin-top: 0.5rem;
+      }
+      .providers .intro {
+        margin-top: 0;
+      }
+      .ways {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 1.5rem 2rem;
+        margin: 1.5rem 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .ways li {
+        border-top: 2px solid var(--line);
+        padding-top: 0.8rem;
+      }
+      .ways li:first-child {
+        border-top-color: var(--accent);
+      }
+      .ways h3 {
+        margin: 0 0 0.3rem;
+        font-size: 1.02rem;
+        font-weight: 600;
+      }
+      .ways p {
+        margin: 0;
+        color: var(--ink-2);
+        font-size: 0.95rem;
+      }
+      .mock.tall .line {
+        grid-template-columns: 5rem minmax(0, 1fr) auto;
+      }
+      .mock .line span:nth-child(2) {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 2.5rem 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .chips li {
+        font: 500 0.85rem/1 "IBM Plex Mono", ui-monospace, monospace;
+        padding: 0.5rem 0.8rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--ink-2);
+      }
+      .chips li.talos {
+        color: var(--accent-ink);
+        border-color: var(--accent);
+      }
+
+      /* Security key and assistant mocks */
+      .mock .key {
+        text-align: center;
+      }
+      .mock .key .ring {
+        width: 3.6rem;
+        height: 3.6rem;
+        margin: 0.3rem auto 0.5rem;
+        border-radius: 50%;
+        border: 2px solid rgba(147, 163, 184, 0.3);
+        display: grid;
+        place-items: center;
+      }
+      .mock .key .ring span {
+        width: 1.6rem;
+        height: 1.6rem;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 0 6px rgba(255, 122, 69, 0.18);
+      }
+      .mock .key p {
+        margin: 0 0 0.5rem;
+        color: var(--phone-ink-2);
+      }
+      .mock .key .line {
+        text-align: left;
+      }
+      .mock .chat .you {
+        margin: 0 0 0.5rem;
+        padding: 0.35rem 0.6rem;
+        border-radius: 10px 10px 2px 10px;
+        background: rgba(232, 238, 245, 0.12);
+        font-family: "IBM Plex Sans", system-ui, sans-serif;
+        width: fit-content;
+        max-width: 100%;
+        margin-left: auto;
+      }
+      .mock .chat pre {
+        margin: 0 0 0.3rem;
+        padding: 0.4rem 0.5rem;
+        border: 1px solid rgba(147, 163, 184, 0.2);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--phone-ink);
+        font-size: 0.68rem;
+        line-height: 1.35;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .mock .tl .dot {
+        margin: 0;
+      }
+      .mock .tl span:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      /* Responsive: the header keeps a menu, the hero stacks, mocks keep their columns. */
+      @media (max-width: 860px) {
+        .menu {
+          display: block;
+        }
+        .top nav a.github {
+          display: none;
+        }
+        .providers {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 2rem;
+        }
+        .hero {
+          gap: 2rem;
+        }
+      }
+      @media (max-width: 640px) {
+        .ways {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 1.25rem;
+        }
+        .providers .insight {
+          max-width: 34rem;
+        }
+      }
+      @media (max-width: 520px) {
+        .hero {
+          padding-top: 1.25rem;
+          padding-bottom: 2.5rem;
+        }
+        .hero h1 {
+          font-size: clamp(2rem, 9.5vw, 2.4rem);
+        }
+        .lede {
+          font-size: 1.05rem;
+          margin-bottom: 1.5rem;
+        }
+        .actions .button {
+          padding: 0.7rem 1rem;
+        }
+        .phone {
+          width: min(270px, 100%);
+          aspect-ratio: 9 / 16;
+          border-radius: 36px;
+          padding: 10px;
+        }
+        .screen {
+          border-radius: 28px;
+          padding: 0.9rem 0.75rem 0.75rem;
+        }
+        .screen {
+          padding-top: 1.4rem;
+        }
+        .screen .clock {
+          font-size: 2.4rem;
+        }
+        .screen .notification {
+          margin-top: 0.9rem;
+        }
+        .mock.tall .line {
+          grid-template-columns: 4.2rem minmax(0, 1fr) auto;
+        }
+        .chips li {
+          font-size: 0.78rem;
+          padding: 0.4rem 0.65rem;
+        }
+        section {
+          padding: 3rem 0;
+        }
+      }
+      @media (max-width: 360px) {
+        .hero h1 {
+          font-size: 1.9rem;
+        }
+        .actions {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+        .actions .button {
+          justify-content: center;
+        }
+        .actions .button.primary {
+          grid-column: 1 / -1;
+        }
+      }
     </style>
     <meta
       name="google-site-verification"
@@ -1193,13 +1540,13 @@
       <header class="top">
         <a class="brand" href="./">
           <img src="brand/ichor.svg" width="32" height="32" alt="" />
-          <span data-i18n>Ichor <small>for Talos Linux</small></span>
+          <span data-i18n>Ichor <small>for Talos Linux and Kubernetes</small></span>
         </a>
         <nav aria-label="Primary">
           <a data-i18n class="optional" href="#new">What's new</a>
+          <a data-i18n class="optional" href="#providers">Clusters</a>
           <a data-i18n class="optional" href="#screens">Screens</a>
           <a data-i18n class="optional" href="#features">Features</a>
-          <a data-i18n class="optional" href="#access">Access</a>
           <a data-i18n class="optional" href="#faq">FAQ</a>
           <a data-i18n href="#install">Install</a>
           <a class="github" href="https://github.com/cyrinux/ichor">GitHub</a>
@@ -1214,6 +1561,18 @@
               <li><a href="./it/" hreflang="it" lang="it">Italiano</a></li>
             </ul>
           </details>
+          <details class="menu">
+            <summary aria-label="Menu"><span></span></summary>
+            <ul>
+              <li><a data-i18n href="#new">What's new</a></li>
+              <li><a data-i18n href="#providers">Clusters</a></li>
+              <li><a data-i18n href="#screens">Screens</a></li>
+              <li><a data-i18n href="#features">Features</a></li>
+              <li><a data-i18n href="#access">Access</a></li>
+              <li><a data-i18n href="#faq">FAQ</a></li>
+              <li translate="no"><a href="https://github.com/cyrinux/ichor">GitHub</a></li>
+            </ul>
+          </details>
         </nav>
       </header>
 
@@ -1221,14 +1580,14 @@
         <div class="hero">
           <div>
             <a class="newpill" href="#new" data-i18n
-              ><b>New</b> Network test, data services and node pressure →</a
+              ><b>1.21</b> Security keys, an audit log, Argo CD diffs and CAST AI →</a
             >
-            <h1>Your Talos cluster, from your phone.</h1>
+            <h1>Every cluster you run, from your phone.</h1>
             <p class="lede">
-              Node health, logs, etcd, KubeSpan and live graphs in your pocket,
-              and a notification the moment a node goes down. Ichor talks to the
-              Talos API with the same client as talosctl: nothing to install on
-              the cluster, nothing in between.
+              Ichor was built for Talos Linux and still speaks to it with the same
+              client as talosctl. Today it also opens any kubeconfig: EKS, GKE,
+              AKS, DigitalOcean, Rancher, Sidero Omni or an OIDC sign-in, with
+              nothing to install on the cluster and nothing in between.
             </p>
             <div class="actions">
               <a
@@ -1255,45 +1614,48 @@
           <div
             class="phone"
             role="img"
-            aria-label="A phone lock screen showing an Ichor alert: cp-2 is not ready, etcd not healthy. Below, a widget shows 7 of 8 nodes ready."
+            aria-label="A phone showing an Ichor alert, cp-2 is not ready, above the cluster switcher: lab on Talos 7 of 8 ready, prod-eu on EKS, staging on AKS with one warning, dev on GKE and edge through Omni."
           >
             <div class="screen" aria-hidden="true">
               <div class="clock">3:12</div>
               <div class="date" data-i18n>Thursday, 1 October</div>
               <div class="notification">
                 <header>
-                  <svg
-                    viewBox="0 0 512 512"
-                    fill="currentColor"
-                    stroke="currentColor"
-                  >
-                    <path
-                      fill="none"
-                      stroke-width="40"
-                      d="M300.1,72.6A212,212 0 0 1 463.4,235.9M467.9,272.6A212,212 0 0 1 355.5,467.2M211.9,72.6A212,212 0 0 0 48.6,235.9M44.1,272.6A212,212 0 0 0 156.5,467.2"
-                    />
-                    <path
-                      stroke="none"
-                      fill-rule="evenodd"
-                      d="M256,8L228,24L240,116L256,132L272,116L284,24ZM256,100C190,100 152,144 152,204L152,300L192,350L320,350L360,300L360,204C360,144 322,100 256,100ZM162,184L256,210L350,184L344,232L302,250L280,250L280,350L232,350L232,250L210,250L168,232ZM256,380C256,380 214,430 214,456A42,42 0 0 0 298,456C298,430 256,380 256,380Z"
-                    />
+                  <svg viewBox="0 0 512 512" fill="currentColor" stroke="currentColor">
+                    <path fill="none" stroke-width="40" d="M300.1,72.6A212,212 0 0 1 463.4,235.9M467.9,272.6A212,212 0 0 1 355.5,467.2M211.9,72.6A212,212 0 0 0 48.6,235.9M44.1,272.6A212,212 0 0 0 156.5,467.2" />
+                    <path stroke="none" fill-rule="evenodd" d="M256,8L228,24L240,116L256,132L272,116L284,24ZM256,100C190,100 152,144 152,204L152,300L192,350L320,350L360,300L360,204C360,144 322,100 256,100ZM162,184L256,210L350,184L344,232L302,250L280,250L280,350L232,350L232,250L210,250L168,232ZM256,380C256,380 214,430 214,456A42,42 0 0 0 298,456C298,430 256,380 256,380Z" />
                   </svg>
                   <span>Ichor</span><span data-i18n>now</span>
                 </header>
                 <strong data-i18n>cp-2 is not ready</strong>
-                <p>services: etcd not healthy</p>
+                <p>lab · services: etcd not healthy</p>
               </div>
-              <div class="glance">
-                <div>lab</div>
-                <div class="count" data-i18n>7/8 ready</div>
-                <div class="row">
-                  <span data-i18n
-                    ><i class="dot" style="background: #f2c14e"></i>1 not
-                    ready</span
-                  ><span data-i18n
-                    ><i class="dot" style="background: #5bd18b"></i>etcd: no
-                    alarms</span
-                  >
+              <div class="clusters">
+                <div class="head" data-i18n>Clusters</div>
+                <div class="cluster current">
+                  <i class="swatch" style="background: #ff7a45"></i>
+                  <span class="name">lab</span><span class="via">Talos</span>
+                  <span class="state warn" data-i18n>7/8 ready</span>
+                </div>
+                <div class="cluster">
+                  <i class="swatch" style="background: #7cb7ff"></i>
+                  <span class="name">prod-eu</span><span class="via">EKS</span>
+                  <span class="state ok">42/42</span>
+                </div>
+                <div class="cluster">
+                  <i class="swatch" style="background: #c58bff"></i>
+                  <span class="name">staging</span><span class="via">AKS</span>
+                  <span class="state warn" data-i18n>1 pending</span>
+                </div>
+                <div class="cluster">
+                  <i class="swatch" style="background: #5bd18b"></i>
+                  <span class="name">dev</span><span class="via">GKE</span>
+                  <span class="state ok">6/6</span>
+                </div>
+                <div class="cluster">
+                  <i class="swatch" style="background: #f2c14e"></i>
+                  <span class="name">edge</span><span class="via">Omni</span>
+                  <span class="state ok">3/3</span>
                 </div>
               </div>
             </div>
@@ -1309,37 +1671,398 @@
             </p>
           </li>
           <li>
-            <h3>Alerts without a server</h3>
+            <h3>Any kubeconfig, your identity</h3>
             <p>
-              The phone itself checks the cluster in the background and tells
-              you when a node or etcd is unhealthy. A home-screen widget shows
-              it at a glance.
+              A kubeconfig cluster signs in the way its users do: IAM, Entra ID,
+              a Google service account, OIDC in the browser. What you may do is
+              your RBAC, and the app says so before you tap.
             </p>
           </li>
           <li>
-            <h3>Least privilege</h3>
+            <h3>Alerts without a server</h3>
             <p>
-              Give it an <code>os:reader</code> certificate and it stays
-              read-only. Keys live in StrongBox or the Secure Enclave, behind an
-              optional biometric lock.
+              The phone itself checks every cluster in the background, Talos or
+              not, and tells you when a node, etcd or a backup is unhealthy.
             </p>
           </li>
           <li>
             <h3>Open source, no tracking</h3>
             <p>
-              Apache-2.0, no account, no ads, no analytics. Your talosconfig
-              only ever talks to your nodes.
+              Apache-2.0, no account, no ads, no analytics. Your configs are
+              sealed on the device and only ever talk to your clusters.
             </p>
           </li>
         </ul>
 
+        <section id="providers" aria-labelledby="providers-title">
+          <p class="eyebrow">Born on Talos · At home anywhere</p>
+          <h2 id="providers-title">
+            It started as a Talos app. Now it opens any kubeconfig.
+          </h2>
+          <div class="providers">
+            <div>
+              <p class="intro">
+                Drop a kubeconfig in, by file, paste, QR or the share sheet. The
+                preview lists every context with how it signs in and adds the
+                ones you pick. Each cluster gets a Kubernetes home, every
+                Kubernetes screen, background alerts and a colour of its own, so
+                a restart is never aimed at the wrong one.
+              </p>
+              <ul class="ways" aria-label="How a cluster gets in">
+                <li>
+                  <h3>Talos Linux</h3>
+                  <p>
+                    A talosconfig, with the roles baked into its certificate: node
+                    health, logs, etcd, KubeSpan, upgrades, the Talos API end to end.
+                  </p>
+                </li>
+                <li>
+                  <h3>Sidero Omni</h3>
+                  <p>
+                    Sign in to the instance as omnictl does, pick the clusters it
+                    lists. Omni's role for your identity is what the app may do.
+                  </p>
+                </li>
+                <li>
+                  <h3>Managed Kubernetes</h3>
+                  <p>
+                    EKS, GKE, AKS, DigitalOcean and Rancher: list the clusters of
+                    the account and add them, or import the kubeconfig the CLI
+                    wrote. Exec plugins are replaced by a sign-in on the phone.
+                  </p>
+                </li>
+                <li>
+                  <h3>Anything else</h3>
+                  <p>
+                    A client certificate, a ServiceAccount token, or OIDC with
+                    kubelogin, in the browser or with a device code. k3s, RKE2,
+                    kubeadm, OpenShift: if kubectl reaches it, so does Ichor.
+                  </p>
+                </li>
+              </ul>
+            </div>
+
+            <article class="insight">
+              <div
+                class="mock tall"
+                role="img"
+                aria-label="Add from a kubeconfig: six contexts found. prod-eu through aws eks get-token, IAM Identity Center; staging through kubelogin, Entra ID device code; dev through gke-gcloud-auth-plugin, service account key; blue through doctl, API token; rke-lab through rancher token, API key; home through oidc-login, browser sign-in."
+              >
+                <div class="title" data-i18n>Add from a kubeconfig · 6 contexts</div>
+                <div class="line" aria-hidden="true">
+                  <span>prod-eu</span><span>aws eks get-token</span>
+                  <span class="tag run">IAM Identity Center</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>staging</span><span>kubelogin · Entra ID</span>
+                  <span class="tag run" data-i18n>device code</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>dev</span><span>gke-gcloud-auth-plugin</span>
+                  <span class="tag run" data-i18n>service account</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>blue</span><span>doctl kubernetes</span>
+                  <span class="tag run">API token</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>rke-lab</span><span>rancher token</span>
+                  <span class="tag run">API key</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>home</span><span>oidc-login</span>
+                  <span class="tag run" data-i18n>browser</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>minikube</span><span>127.0.0.1:8443</span>
+                  <span class="tag off" data-i18n>unreachable</span>
+                </div>
+                <span class="runbtn" aria-hidden="true" data-i18n>Add 6 clusters</span>
+              </div>
+              <h3>Signed in like your laptop, sealed like a key</h3>
+              <p>
+                No <code>aws</code>, <code>gcloud</code> or <code>az</code>
+                binary runs on the phone: Ichor does what the exec plugin would,
+                with a sign-in that stays on the device and renews itself.
+                Tokens and keys are sealed in StrongBox or the Secure Enclave,
+                behind the app lock.
+              </p>
+              <p class="ask">"Which account is this cluster using?" → shown on its home.</p>
+            </article>
+          </div>
+
+          <ul class="chips" aria-label="Works with" translate="no">
+            <li class="talos">Talos Linux</li>
+            <li>Sidero Omni</li>
+            <li>Amazon EKS</li>
+            <li>Google GKE</li>
+            <li>Azure AKS</li>
+            <li>DigitalOcean</li>
+            <li>Rancher</li>
+            <li>OIDC · kubelogin</li>
+            <li>Client certificate</li>
+            <li>ServiceAccount token</li>
+            <li>Argo CD</li>
+            <li>Flux</li>
+            <li>Cilium · Calico</li>
+            <li>CAST AI</li>
+          </ul>
+
+          <p class="reassure">
+            On a cloud cluster the Kubernetes home also says where the cloud put
+            each node: its Karpenter pool, managed node group, compute class or
+            agent pool, the machine type, and whether it is spot or on-demand. A
+            Talos cluster can use one of these identities for its Kubernetes
+            screens too, instead of the admin kubeconfig.
+          </p>
+        </section>
+
         <section id="new" aria-labelledby="new-title">
-          <p class="eyebrow">New · Network, storage and pressure</p>
+          <p class="eyebrow">New in 1.18 to 1.21</p>
           <h2 id="new-title">
+            Every change on record, every action checked first.
+          </h2>
+          <p class="intro">
+            Four releases of operating, not only watching: a security key to
+            unlock the app, an encrypted log of what the app changed and who
+            tapped it, the diff Argo CD would apply, a PromQL assistant on the
+            metrics screen, CAST AI's savings on both platforms, and Kubernetes
+            actions that know in advance whether your account may run them.
+          </p>
+
+          <div class="spotlight">
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Activity: today at 14:02 a rollout restart of grafana succeeded; at 13:40 an Argo CD sync of cilium with prune; at 09:12 a reboot of w-2; yesterday a Helm rollback of loki to revision 7."
+              >
+                <div class="title" data-i18n>Activity · this device</div>
+                <div class="tl" aria-hidden="true">
+                  <time>14:02</time><i class="dot" style="background: #5bd18b"></i>
+                  <span data-i18n>rollout restart · grafana</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time>13:40</time><i class="dot" style="background: #5bd18b"></i>
+                  <span>argocd sync · cilium · prune</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time>09:12</time><i class="dot" style="background: #f2c14e"></i>
+                  <span data-i18n>reboot · w-2</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time data-i18n>yesterday</time><i class="dot" style="background: #ff6b6b"></i>
+                  <span data-i18n>helm rollback · loki · failed</span>
+                </div>
+              </div>
+              <h3>An audit log of what the phone did</h3>
+              <p>
+                Every cluster change made from the app, reboot, restart, sync,
+                rollback, delete, is recorded with its outcome, even when a
+                background run crashes, in a log encrypted on the device. The
+                Activity screen reads it on Android and iOS.
+              </p>
+              <p class="ask">"Who restarted grafana at 2 pm?" → this phone, from this screen.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Argo CD diff for cilium before sync: the cilium-config ConfigMap changes two keys, the cilium DaemonSet image goes from 1.17.4 to 1.18.0, a new CiliumNetworkPolicy is added, and the revision links to its commit."
+              >
+                <div class="title" data-i18n>cilium · what sync would change</div>
+                <div class="line" aria-hidden="true">
+                  <span>ConfigMap</span><span>cilium-config</span>
+                  <span class="tag diff" data-i18n>~ 2 keys</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>DaemonSet</span><span>image 1.17.4 → 1.18.0</span>
+                  <span class="tag diff">~</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>CNP</span><span>allow-dns</span>
+                  <span class="tag same" data-i18n>+ new</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>revision</span><span>a1b2c3d · bump cilium</span>
+                  <span class="tag run" data-i18n>GitHub ↗</span>
+                </div>
+              </div>
+              <h3>Argo CD: see the diff, then sync</h3>
+              <p>
+                Show diff renders what a sync would change, object by object,
+                from the comparison the controller already made, Secret values
+                hidden. The revision, each history entry and a running sync link
+                to their commit on GitHub, GitLab, Gitea, Forgejo, Codeberg or
+                Bitbucket. Rolling back now asks you to type the app's name.
+              </p>
+              <p class="ask">"What does this sync touch?" → the three objects, before you tap.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Unlock Ichor: hold your security key to the phone. A YubiKey over NFC is accepted and the sealed configs open."
+              >
+                <div class="title" data-i18n>Unlock · security key</div>
+                <div class="key" aria-hidden="true">
+                  <div class="ring"><span></span></div>
+                  <p>Hold your key to the back of the phone</p>
+                  <div class="line">
+                    <span>YubiKey 5</span><span>NFC</span>
+                    <span class="tag same" data-i18n>accepted</span>
+                  </div>
+                </div>
+              </div>
+              <h3>Unlock with a security key</h3>
+              <p>
+                A YubiKey or any FIDO2 key, over NFC or USB, can replace the PIN
+                and biometrics for the app lock, and seal the stored configs so
+                that nothing reads them without the key, not even a copy of the
+                phone's storage.
+              </p>
+              <p class="ask">"Phone lost?" → the configs are sealed to a key that is not in it.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Panel assistant on the metrics screen: asked for the p99 latency of the ingress by host, it writes a PromQL histogram_quantile query, checks it against the server and reports 3 series."
+              >
+                <div class="title" data-i18n>Metrics · panel assistant</div>
+                <div class="chat" aria-hidden="true">
+                  <p class="you">p99 latency of the ingress, by host</p>
+                  <pre>histogram_quantile(0.99,
+  sum by (host, le) (
+    rate(nginx_ingress_controller_request_duration_seconds_bucket[5m])))</pre>
+                  <div class="line">
+                    <span data-i18n>checked</span><span>3 series · 1.2 s</span>
+                    <span class="tag same" data-i18n>add panel</span>
+                  </div>
+                </div>
+              </div>
+              <h3>A PromQL assistant on the Metrics screen</h3>
+              <p>
+                Say what you want to see; the assistant writes the query, runs it
+                against your Prometheus to check it returns something, and adds
+                the panel. Optional, off by default, with your own Claude or
+                OpenAI key, on Android and iOS.
+              </p>
+              <p class="ask">"Memory of every pod on w-2, stacked" → a panel, checked.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="CAST AI: api-gateway requests 2 CPU and uses 0.4, a 68 dollar per month saving; a consolidation plan would drain three nodes into two; one failed plan left 14 dollars of missed savings."
+              >
+                <div class="title" data-i18n>CAST AI · prod-eu</div>
+                <div class="line" aria-hidden="true">
+                  <span>api-gateway</span><span>cpu 2000m → 650m</span>
+                  <span class="tag same">−$68/mo</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>worker</span><span>mem 4 Gi → 1.5 Gi</span>
+                  <span class="tag same">−$23/mo</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>consolidate</span><span>3 nodes → 2</span>
+                  <span class="tag run" data-i18n>plan</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>missed</span><span data-i18n>plan failed, 1 node left</span>
+                  <span class="tag diff">$14/mo</span>
+                </div>
+              </div>
+              <h3>CAST AI on both platforms</h3>
+              <p>
+                Workload recommendations with the money they save, node
+                consolidation plans and what a failed plan left behind as missed
+                savings, in a redesigned workloads view, now on iOS as well as
+                Android.
+              </p>
+              <p class="ask">"What is over-provisioned?" → ranked, with the saving.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Object summary of the loki StatefulSet: conditions Available true and Progressing false, owned by the Argo CD application loki, three events in the last hour, the last one a FailedScheduling warning."
+              >
+                <div class="title" data-i18n>StatefulSet · loki · summary</div>
+                <div class="line" aria-hidden="true">
+                  <span>Available</span><span data-i18n>2 of 3 ready</span>
+                  <span class="tag diff">False</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>owner</span><span>Application loki</span>
+                  <span class="tag run">Argo CD</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>event</span><span>FailedScheduling · loki-2</span>
+                  <span class="tag bad">2 min</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>action</span><span data-i18n>rollout restart</span>
+                  <span class="tag off" data-i18n>no RBAC</span>
+                </div>
+              </div>
+              <h3>Any object, summarised, with what you may do</h3>
+              <p>
+                Every object now has a summary tab, like the top of
+                <code>kubectl describe</code>: conditions, owners, the events of
+                the last hour. Its actions are one tap away, and the ones your
+                account may not run are disabled with the reason, asked from the
+                API server before you try.
+              </p>
+              <p class="ask">"Can I restart this from here?" → yes, or why not.</p>
+            </article>
+          </div>
+
+          <ul class="alsonew" aria-label="Also new">
+            <li>
+              <h3>Alerts on every cluster</h3>
+              <p>
+                Background alerts, data services and the arrangeable home now
+                work on clusters added from a kubeconfig, not only Talos ones.
+              </p>
+            </li>
+            <li>
+              <h3>Alerts that open the right screen</h3>
+              <p>
+                Tap a notification and land on the node, pod or backup it is
+                about, with one Android channel per kind to mute what you want.
+              </p>
+            </li>
+            <li>
+              <h3>Typed confirmations</h3>
+              <p>
+                Deleting every cluster or rolling back an Argo CD app asks you to
+                type its name. One-tap actions sit where their object is.
+              </p>
+            </li>
+            <li>
+              <h3>Same settings, both platforms</h3>
+              <p>
+                Android and iOS share one settings layout, say where updates come
+                from, and pass an accessibility check with readable dense text.
+              </p>
+            </li>
+          </ul>
+        </section>
+
+        <section id="measure" aria-labelledby="measure-title">
+          <p class="eyebrow">Network, storage and pressure</p>
+          <h2 id="measure-title">
             Is it the network, the storage or the node? Measure it.
           </h2>
           <p class="intro">
-            Something is slow and every node says Ready. Ichor now measures the
+            Something is slow and every node says Ready. Ichor measures the
             link between two nodes, checks the storage and databases your apps
             sit on, and shows which workload a node is starving, straight from
             the phone.
@@ -2520,6 +3243,18 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
               </p>
             </details>
             <details>
+              <summary>Does it work without Talos, on EKS, GKE or AKS?</summary>
+              <p>
+                Yes. Add a cluster from a kubeconfig, or list the clusters of an
+                AWS, Google Cloud, Azure, DigitalOcean or Rancher account and add
+                the ones you pick. The sign-in the kubeconfig's exec plugin would
+                run happens on the phone instead: IAM Identity Center, Entra ID,
+                a service account key, or OIDC in the browser. The Talos screens
+                are hidden; every Kubernetes screen, background alerts and data
+                services are there, and what you may do is your RBAC.
+              </p>
+            </details>
+            <details>
               <summary>Is Ichor an official Sidero Labs app?</summary>
               <p>
                 No. Ichor is an independent, community-built client for Talos
@@ -2729,10 +3464,11 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
       })();
 
       document.addEventListener("click", function (event) {
-        var open = document.querySelector(".lang[open]");
-        if (open && !open.contains(event.target)) {
-          open.removeAttribute("open");
-        }
+        document.querySelectorAll(".lang[open], .menu[open]").forEach(function (open) {
+          if (!open.contains(event.target)) {
+            open.removeAttribute("open");
+          }
+        });
       });
 
       document.querySelectorAll("[data-copy]").forEach(function (button) {

@@ -15,9 +15,13 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.TalosJson
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.monitor.AlertActionRequest
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.shareText
 import name.levis.ichorgo.Ichorgo
+
+/** A share link to open ([url], not yet checked), and the action an alert's button asks to confirm there. */
+data class OpenLink(val url: String, val action: AlertActionRequest? = null)
 
 /** The link to [target] on the cluster on screen; null when there is none to name. */
 fun TalosApp.shareLinkOf(target: ShareTarget): String? =

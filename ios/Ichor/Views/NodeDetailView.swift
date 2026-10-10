@@ -45,8 +45,12 @@ struct NodeDetailView: View {
     @State private var showingKubePods = false
     /// The cordon / uncordon choice is shown (the node's current state is not known here).
     @State private var showingCordon = false
+    @State private var showingReset = false
     /// Service start/stop/restart waiting for confirmation.
     @State private var serviceRequest: ServiceRequest?
+    /// The cluster's history over `period` (uptime strip, memory line); nil without one.
+    @State private var history: HistoryQueryResult?
+    @State private var period = HistoryPeriod.week
 
     enum Tab: String, CaseIterable {
         case services = "Services", resources = "Resources", live = "Live", processes = "Processes", pods = "Pods", cgroups = "Cgroups"
@@ -72,6 +76,12 @@ struct NodeDetailView: View {
             .pickerStyle(.segmented)
             .padding()
 
+            if let history, let uptime = history.node(ref.address), uptime.uptimePercent != nil || !uptime.intervals.isEmpty {
+                NodeUptimeStrip(uptime: uptime, from: history.from, to: history.to, period: $period)
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+            }
+
             // A role change (another config) can leave the hidden Cgroups tab selected.
             switch (tab == .cgroups && !model.allows(.cgroups)) ? Tab.services : tab {
             case .services:
@@ -83,7 +93,8 @@ struct NodeDetailView: View {
                 .task { if case .loading = services { await loadServices() } }
             case .resources:
                 LoadStateView(state: resources, retry: loadResources) {
-                    ResourcesList(resources: $0, clock: clock, pressure: model.allows(.cgroups) ? pressure : nil) { tab = .cgroups }
+                    ResourcesList(resources: $0, clock: clock, pressure: model.allows(.cgroups) ? pressure : nil,
+                                  memory: history?.memory(of: ref.address) ?? [], window: historyWindow) { tab = .cgroups }
                 }
                     .refreshable { await loadResources() }
                     .task { if case .loading = resources { await loadResources() } }
@@ -105,6 +116,10 @@ struct NodeDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         // What this node's Talos version can do: gates the menu and the tabs once known.
         .task { await model.loadFeatures(node: ref.address) }
+        // Masked like the screen in screenshot mode: reloaded when it changes.
+        .task(id: "\(period.rawValue)#\(model.dataGeneration)") {
+            history = await HistoryStore.query(cluster: model.activeSummary.map(monitorClusterKey) ?? "", period: period)
+        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 if running {
@@ -166,6 +181,12 @@ struct NodeDetailView: View {
         } message: {
             Text("A cordoned node gets no new pods; the pods it runs stay. Uncordon it to schedule pods on it again.")
         }
+        .sheet(isPresented: $showingReset) {
+            NodeResetSheet(node: ref.address, hostname: ref.hostname) { request in
+                showingReset = false
+                Task { await performReset(request) }
+            }
+        }
         .sheet(item: $powerAction) { action in
             PowerSheet(action: action, hostname: ref.hostname, role: ref.role) { request in
                 powerAction = nil
@@ -215,6 +236,26 @@ struct NodeDetailView: View {
     }
 
     /// With the app lock on, destructive actions need a fresh Face ID / passcode check.
+    /// `talosctl reset`, after the app lock when it is on; the screen closes once requested.
+    private func performReset(_ request: NodeResetSheet.Request) async {
+        guard let client = model.client else { return }
+        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Reset \(ref.hostname)")) {
+            succeeded = false
+            resultMessage = failure
+            return
+        }
+        running = true
+        defer { running = false }
+        do {
+            try await client.reset(node: ref.address, wipe: request.wipe, graceful: request.graceful, reboot: request.reboot)
+            succeeded = true
+            resultMessage = String(localized: "\(ref.hostname): reset requested")
+        } catch {
+            succeeded = false
+            resultMessage = error.localizedDescription
+        }
+    }
+
     private func perform(_ request: PowerRequest) async {
         guard let client = model.client else { return }
         if model.lock.enabled, let failure = await Authenticator.authenticate(reason: "\(request.localizedTitle) \(ref.hostname)") {
@@ -236,6 +277,12 @@ struct NodeDetailView: View {
 }
 
 extension NodeDetailView {
+    /// The history's window (epoch ms), for the memory line.
+    private var historyWindow: ClosedRange<Int64> {
+        guard let history, history.to > history.from else { return 0...1 }
+        return history.from...history.to
+    }
+
     private func support(_ feature: NodeFeature) -> FeatureSupport {
         model.support(feature, node: ref.address)
     }
@@ -295,7 +342,7 @@ extension NodeDetailView {
                 }
             }
         }
-        if model.allows(.machineConfig) || model.allows(.upgrade) || model.allows(.workloads) {
+        if model.allows(.machineConfig) || model.allows(.upgrade) || model.allows(.workloads) || model.allows(.reset) {
             Section("Operate") {
                 if model.allows(.machineConfig) {
                     FeatureButton(title: String(localized: "Machine config"), systemImage: "doc.text", support: support(.machineConfig)) {
@@ -306,6 +353,12 @@ extension NodeDetailView {
                     FeatureButton(title: String(localized: "Upgrade Talos…"), systemImage: "arrow.up.circle", support: support(.upgrade)) {
                         showingUpgrade = true
                     }
+                }
+                if model.allows(.reset) {
+                    FeatureButton(title: String(localized: "Reset…"), systemImage: "arrow.counterclockwise.circle", support: support(.reset)) {
+                        showingReset = true
+                    }
+                    .disabled(maintenanceRunning)
                 }
                 // Cordon and drain go through the Kubernetes API (os:admin, like the workloads).
                 if model.allows(.workloads) {
@@ -477,6 +530,9 @@ private struct ResourcesList: View {
     let clock: NodeTimeInfo?
     /// nil when the role cannot read cgroups: no pressure section then.
     let pressure: LoadState<CgroupReport>?
+    /// Memory used (%) over the history's window; a line under two points is left out.
+    let memory: [HistoryPoint]
+    let window: ClosedRange<Int64>
     let onPressureDetails: () -> Void
 
     var body: some View {
@@ -492,6 +548,10 @@ private struct ResourcesList: View {
                 let used = resources.memTotal - min(resources.memAvailable, resources.memTotal)
                 LabeledContent("Used", value: "\(formatBytes(used)) / \(formatBytes(resources.memTotal))")
                 UsageBar(fraction: usedFraction(total: resources.memTotal, available: resources.memAvailable))
+                if memory.count >= 2 {
+                    HistorySparkline(points: memory, from: window.lowerBound, to: window.upperBound,
+                                     label: Text("Memory used over the period"))
+                }
             }
             // Right after memory: pressure says whether CPU, memory or disk actually hold tasks back.
             if let pressure { PressureSection(state: pressure, onDetails: onPressureDetails) }

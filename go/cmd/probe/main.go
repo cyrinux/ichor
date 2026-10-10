@@ -84,10 +84,17 @@ func main() {
 	maskWords := flag.String("mask-words", "", "with -mask: comma-separated extra words to hide")
 	ageRecipient := flag.String("age-recipient", "", "snapshot-probe: encrypt for this age or SSH public key")
 	omniBrowser := flag.Bool("omni-browser", false, "an Omni account context: confirm a new key in the browser first (a service account reads OMNI_SERVICE_ACCOUNT_KEY)")
+	dataDir := flag.String("data-dir", "", "keep what the app keeps across launches (audit log, scan reports) in this directory")
 	flag.Parse()
 
 	if flag.NArg() == 0 {
 		fail(errors.New(usage()))
+	}
+
+	if *dataDir != "" {
+		if err := setDataDir(*dataDir); err != nil {
+			fail(fmt.Errorf("data dir: %w", err))
+		}
 	}
 
 	raw, err := os.ReadFile(*configPath)

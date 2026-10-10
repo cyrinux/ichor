@@ -12,6 +12,7 @@ import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.NetworkCheck
+import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.SdStorage
 import androidx.compose.material.icons.outlined.SystemUpdateAlt
 import androidx.compose.material.icons.outlined.Terminal
@@ -49,6 +50,8 @@ enum class NodeMenuEntry(val group: NodeMenuGroup, @StringRes val label: Int, va
     CAPTURES(NodeMenuGroup.TROUBLESHOOT, R.string.node_menu_captures, null, Feature.PACKET_CAPTURE),
     MACHINE_CONFIG(NodeMenuGroup.OPERATE, R.string.node_menu_machine_config, TalosFeature.MACHINE_CONFIG, Feature.MACHINE_CONFIG),
     UPGRADE(NodeMenuGroup.OPERATE, R.string.node_menu_upgrade, TalosFeature.UPGRADE, Feature.UPGRADE),
+    // Handled on the node screen: a plan and a confirmation, no screen of its own.
+    RESET(NodeMenuGroup.OPERATE, R.string.node_menu_reset, TalosFeature.RESET, Feature.RESET),
     // Kubernetes calls with the admin kubeconfig (the reboot step needs less): os:admin.
     MAINTENANCE(NodeMenuGroup.OPERATE, R.string.node_menu_maintenance, null, Feature.WORKLOADS),
     // The maintenance screen in drain-only mode: no reboot or shutdown.
@@ -70,6 +73,7 @@ internal val NodeMenuEntry.icon: ImageVector
         NodeMenuEntry.CAPTURES -> Icons.Outlined.FolderOpen
         NodeMenuEntry.MACHINE_CONFIG -> Icons.Outlined.Description
         NodeMenuEntry.UPGRADE -> Icons.Outlined.SystemUpdateAlt
+        NodeMenuEntry.RESET -> Icons.Outlined.RestartAlt
         NodeMenuEntry.MAINTENANCE -> Icons.Outlined.Build
         NodeMenuEntry.DRAIN -> Icons.AutoMirrored.Outlined.Logout
         NodeMenuEntry.CORDON -> Icons.Outlined.Block

@@ -56,6 +56,7 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.argocd.ArgoViewModel
+import name.levis.ichor.ui.history.SinceLastLookedCard
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
@@ -64,6 +65,7 @@ import name.levis.ichor.ui.components.rememberClusterLabels
 import name.levis.ichor.ui.dataservices.DataServicesViewModel
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.flux.FluxViewModel
+import name.levis.ichor.ui.kubeauth.GoogleSilentRenewal
 import name.levis.ichor.ui.kubeauth.SignInBanner
 import name.levis.ichor.ui.kubeauth.SignInSheet
 import name.levis.ichor.model.KubeSignInInfo
@@ -104,6 +106,8 @@ class KubeHomeNavigation(
     val onServices: () -> Unit,
     /** The Jobs, failures first. */
     val onJobs: () -> Unit,
+    /** The cluster's events, live. */
+    val onEvents: () -> Unit,
     /** The drain of a node, by its Kubernetes name. */
     val onDrain: (node: String) -> Unit,
     /** A root shell on a node through a privileged pod, by its Kubernetes name. */
@@ -233,10 +237,11 @@ fun KubeHomeScreen(
             dataVm.refresh()
             alertsVm.refresh()
         }
-        if (signingIn) {
-            config?.activeContext?.let { name ->
-                SignInSheet(context = name, onDismiss = { signingIn = false }, onSignedIn = { signingIn = false })
-            }
+        val banner = kubeSignInBanner(signIn, (state as? UiState.Failed)?.message ?: (state as? UiState.Loaded)?.error)
+        config?.activeContext?.let { name ->
+            if (signingIn) SignInSheet(context = name, onDismiss = { signingIn = false }, onSignedIn = { signingIn = false })
+            // An expired "Sign in with Google" token renews by itself; the banner is the fallback.
+            GoogleSilentRenewal(name, banner?.needed, onRenewed = refresh)
         }
         if (customizing) HomeEditor(
             layout = layout,
@@ -260,7 +265,7 @@ fun KubeHomeScreen(
                     name = config?.activeSummary?.let(clusterLabels::of),
                     nodes = (s as? UiState.Loaded)?.data,
                     failure = (s as? UiState.Failed)?.message,
-                    signIn = kubeSignInBanner(signIn, (s as? UiState.Failed)?.message ?: (s as? UiState.Loaded)?.error),
+                    signIn = banner,
                     onSignIn = { signingIn = true },
                     onRetry = vm::refresh,
                     argo = argoShown,
@@ -314,6 +319,7 @@ private fun KubeHomeList(
         signIn?.let { item(key = "sign-in") { SignInBanner(it.method, it.needed, onSignIn) } }
         // The banner says it all when the call failed for want of a sign-in.
         failure?.takeIf { signIn?.needed == null }?.let { item(key = "failure") { KubeUnreachableCard(it, onRetry) } }
+        cluster?.fingerprint?.takeIf { it.isNotBlank() }?.let { item(key = "since") { SinceLastLookedCard(it) } }
         // The cards, as arranged; a long press on one opens the arrangement.
         layout.visible.forEach { card ->
             when (card) {

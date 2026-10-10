@@ -26,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -38,6 +39,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.FluxApp
+import name.levis.ichor.model.FluxAction
 import name.levis.ichor.model.FluxResource
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.NodeOverview
@@ -58,7 +60,8 @@ import name.levis.ichor.ui.components.pageContent
  * One Kustomization or HelmRelease: the hero, its actions (each confirmed), its conditions, the
  * pods that are not ready (opening their node's pods through [onNode], with the tab), a
  * Kustomization's inventory by kind (rollout restarts) and a release's history. Polls while
- * something reconciles. [onDiff] opens a Kustomization's diff.
+ * something reconciles. [onDiff] opens a Kustomization's diff. [initialReconcile]: its reconcile
+ * confirmation opens once the object is read (an alert's Reconcile button).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,6 +72,7 @@ fun FluxAppScreen(
     onBack: () -> Unit,
     onNode: ((NodeOverview, Int) -> Unit)? = null,
     onDiff: (() -> Unit)? = null,
+    initialReconcile: Boolean = false,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
     val vm: FluxViewModel = viewModel(factory = factory { FluxViewModel(talos.gitOpsRepository, talos.kubeRepository) })
@@ -104,15 +108,29 @@ fun FluxAppScreen(
                 EmptyText(stringResource(R.string.flux_app_gone, name))
             } else {
                 val overview = remember(data) { talos.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value }
-                AppDetail(app, app.key in busy, vm, overview, onNode, onDiff)
+                AppDetail(app, app.key in busy, vm, overview, onNode, onDiff, initialReconcile)
             }
         }
     }
 }
 
 @Composable
-private fun AppDetail(app: FluxApp, busy: Boolean, vm: FluxViewModel, overview: ClusterOverview?, onNode: ((NodeOverview, Int) -> Unit)?, onDiff: (() -> Unit)?) {
+private fun AppDetail(
+    app: FluxApp,
+    busy: Boolean,
+    vm: FluxViewModel,
+    overview: ClusterOverview?,
+    onNode: ((NodeOverview, Int) -> Unit)?,
+    onDiff: (() -> Unit)?,
+    initialReconcile: Boolean,
+) {
     var confirm by remember { mutableStateOf<FluxConfirm?>(null) }
+    // Asked from an alert: the confirmation once (not again on rotation).
+    var initialReconcileShown by rememberSaveable { mutableStateOf(false) }
+    if (!initialReconcileShown && initialReconcile) {
+        initialReconcileShown = true
+        confirm = FluxConfirm(FluxAction.RECONCILE, app.kind, app.namespace, app.name, owner = app.ownerKey)
+    }
     var restart by remember { mutableStateOf<KubeWorkload?>(null) }
     val downNodes = remember(overview) { overview?.downHostnames().orEmpty() }
     val nodesByName = remember(overview) { overview?.nodes.orEmpty().associateBy { it.hostname } }
@@ -133,7 +151,7 @@ private fun AppDetail(app: FluxApp, busy: Boolean, vm: FluxViewModel, overview: 
         item(key = "hero") { FluxAppHero(app) }
         item(key = "actions") {
             FluxActionButtons(app, busy, onDiff) { action ->
-                confirm = FluxConfirm(action, app.kind, app.namespace, app.name, owner = app.owner?.let { "${it.namespace}/${it.name}" }.orEmpty())
+                confirm = FluxConfirm(action, app.kind, app.namespace, app.name, owner = app.ownerKey)
             }
         }
         if (app.conditions.isNotEmpty()) {
@@ -154,6 +172,9 @@ private fun AppDetail(app: FluxApp, busy: Boolean, vm: FluxViewModel, overview: 
         history(app)
     }
 }
+
+/** The Kustomization that applies [this] from Git, "namespace/name"; empty for none. */
+private val FluxApp.ownerKey: String get() = owner?.let { "${it.namespace}/${it.name}" }.orEmpty()
 
 /** The node screen's Pods tab. */
 private const val PODS_TAB = 4

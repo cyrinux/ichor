@@ -34,6 +34,9 @@ import name.levis.ichor.model.KubeWorkloadPage
 import name.levis.ichor.model.PodPhaseFilter
 import name.levis.ichor.model.PodSelection
 import name.levis.ichor.model.PromDiscovery
+import name.levis.ichor.model.PromOperatorStatus
+import name.levis.ichor.model.PromRules
+import name.levis.ichor.model.PromTargets
 import name.levis.ichor.model.PromPanel
 import name.levis.ichor.model.PromResult
 import name.levis.ichor.model.PromSource
@@ -134,6 +137,16 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
     fun changeWatch(namespace: String?, kinds: List<String>): Flow<StreamItem<KubeChange>> =
         kubeLiveFlow(go::kubeTarget, KubeChange.serializer()) { cfg, ctx, server, listener ->
             Ichorgo.startKubeChangeWatch(cfg, ctx, server, namespace.orEmpty(), kinds.joinToString(","), listener)
+        }
+
+    /**
+     * The events of [namespace] (null: every namespace) kept live, coalesced by object, reason
+     * and type (os:admin): the newest rows first, then each change, until the collector
+     * cancels or the stream ends. [warningsOnly]: Warning events only.
+     */
+    fun eventsStream(namespace: String?, warningsOnly: Boolean): Flow<KubeEventsItem> =
+        kubeEventsFlow(go::kubeTarget) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeEvents(cfg, ctx, server, namespace.orEmpty(), warningsOnly, listener)
         }
 
     /**
@@ -302,6 +315,21 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
     suspend fun promRange(source: PromSource, query: String, start: Long, end: Long): PromResult = go.kube { cfg, ctx, server ->
         val json = Ichorgo.promQueryRange(cfg, ctx, server, source.toGoJson(), query, start, end, 0)
         TalosJson.decodeFromString(PromResult.serializer(), json)
+    }
+
+    /** The rule groups [source] evaluates, those in trouble first, each naming its PrometheusRule. */
+    suspend fun promRules(source: PromSource): PromRules = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(PromRules.serializer(), Ichorgo.promRules(cfg, ctx, server, source.toGoJson()))
+    }
+
+    /** The scrape pools of [source] with their down targets. */
+    suspend fun promTargets(source: PromSource): PromTargets = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(PromTargets.serializer(), Ichorgo.promTargets(cfg, ctx, server, source.toGoJson()))
+    }
+
+    /** The Prometheus Operator's Prometheus and Alertmanager objects and its monitor counts. */
+    suspend fun promOperatorStatus(): PromOperatorStatus = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(PromOperatorStatus.serializer(), Ichorgo.promOperatorStatus(cfg, ctx, server))
     }
 
     /** The built-in panels. */

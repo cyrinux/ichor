@@ -68,6 +68,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import name.levis.ichor.TalosApp
 import name.levis.ichor.ui.live.LiveStatsTab
+import name.levis.ichor.ui.history.NodeMemoryHistory
+import name.levis.ichor.ui.history.NodeUptime
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ContainerInfo
 import name.levis.ichor.model.Feature
@@ -80,6 +82,7 @@ import name.levis.ichor.ui.components.FeatureGate
 import name.levis.ichor.ui.components.rememberNodeFeatures
 import name.levis.ichor.model.allows
 import name.levis.ichor.security.AuthResult
+import name.levis.ichor.model.ResetRequest
 import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
 import kotlinx.coroutines.launch
@@ -150,6 +153,9 @@ fun NodeDetailScreen(
     val maintenanceRunning = maintenance?.running == true
     val cordoned by app.maintenanceManager.cordoned.collectAsStateWithLifecycle()
     var confirmingCordon by remember { mutableStateOf(false) }
+    var confirmingReset by remember { mutableStateOf(false) }
+    val reset: ResetViewModel = viewModel(key = "reset-$node", factory = factory { ResetViewModel(app.talosRepository, node) })
+    val resetState by reset.state.collectAsStateWithLifecycle()
     var cordonBusy by remember { mutableStateOf(false) }
     val serviceControl: ServiceControlViewModel = viewModel(
         key = "service-control-$node",
@@ -222,6 +228,37 @@ fun NodeDetailScreen(
         }
     }
 
+    LaunchedEffect(resetState) {
+        when (val s = resetState) {
+            ResetState.Done -> {
+                snackbar.showSnackbar(context.getString(R.string.reset_requested, hostname))
+                reset.dismiss()
+                onBack()
+            }
+            is ResetState.Failed -> {
+                snackbar.showSnackbar(s.message.resolve(context), withDismissAction = true, duration = SnackbarDuration.Long)
+                reset.dismiss()
+            }
+            else -> Unit
+        }
+    }
+
+    // Like power actions: with the app lock on, a fresh fingerprint/PIN first.
+    fun resetConfirmed(request: ResetRequest) {
+        confirmingReset = false
+        val activity = context.findFragmentActivity()
+        if (!appLock.enabled.value || activity == null) {
+            reset.run(request)
+            return
+        }
+        scope.launch {
+            when (val auth = authenticate(activity, context.getString(R.string.reset_auth_title, hostname))) {
+                AuthResult.Success -> reset.run(request)
+                is AuthResult.Failure -> snackbar.showSnackbar(auth.message, withDismissAction = true, duration = SnackbarDuration.Long)
+            }
+        }
+    }
+
     // With the app lock on, destructive actions need a fresh fingerprint/PIN.
     fun confirmed(request: PowerRequest) {
         confirming = null
@@ -265,7 +302,9 @@ fun NodeDetailScreen(
                     BackButton(onBack)
                 },
                 actions = {
-                    if (powerState is PowerState.Running || controlState is ServiceControlState.Running || cordonBusy) {
+                    val busy = powerState is PowerState.Running || controlState is ServiceControlState.Running ||
+                        cordonBusy || resetState is ResetState.Running
+                    if (busy) {
                         CircularProgressIndicator(Modifier.size(20.dp).padding(end = 4.dp), strokeWidth = 2.dp)
                     }
                     TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { menuOpen = true })
@@ -282,6 +321,7 @@ fun NodeDetailScreen(
                                     add(NodeMenuEntry.DRAIN)
                                 }
                                 if (cordonBusy || (maintenanceRunning && maintenance?.node == node)) add(NodeMenuEntry.CORDON)
+                                if (resetState is ResetState.Running || upgrading?.running == true || maintenanceRunning) add(NodeMenuEntry.RESET)
                             },
                             cordoned = cordoned[node],
                             shareTarget = ShareTarget.node(node, hostname, tab),
@@ -290,7 +330,11 @@ fun NodeDetailScreen(
                             powerEnabled = powerState !is PowerState.Running,
                             onPick = { entry ->
                                 menuOpen = false
-                                if (entry == NodeMenuEntry.CORDON) confirmingCordon = true else onMenu(entry)
+                                when (entry) {
+                                    NodeMenuEntry.CORDON -> confirmingCordon = true
+                                    NodeMenuEntry.RESET -> confirmingReset = true
+                                    else -> onMenu(entry)
+                                }
                             },
                             onPower = { action ->
                                 menuOpen = false
@@ -307,6 +351,7 @@ fun NodeDetailScreen(
             // Cgroups (admin configs) and Kubernetes pods (with an API server) may be hidden.
             val tabs = nodeTabs(canCgroups, canKubePods)
             val shownTab = shownNodeTab(tab, tabs)
+            NodeUptime(node, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             PrimaryScrollableTabRow(selectedTabIndex = tabs.indexOf(shownTab), edgePadding = 0.dp) {
                 AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.node_tab_services)) })
                 AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.node_tab_resources)) })
@@ -367,6 +412,10 @@ fun NodeDetailScreen(
         CordonDialog(hostname, cordoned[node], onConfirm = ::cordon, onDismiss = { confirmingCordon = false })
     }
 
+    if (confirmingReset) {
+        ResetConfirmDialog(vm = reset, hostname = hostname, onConfirm = ::resetConfirmed, onDismiss = { confirmingReset = false })
+    }
+
     confirming?.let { action ->
         PowerConfirmDialog(
             action = action,
@@ -414,7 +463,7 @@ private fun ResourcesTab(
                 },
                 modifier = Modifier.weight(1f),
             ) {
-                ResourcesContent(s.data, clockState, pressure = onPressureDetails?.let { pressureState to it })
+                ResourcesContent(node, s.data, clockState, pressure = onPressureDetails?.let { pressureState to it })
             }
             DataFreshness(s, edgeToEdge = false)
         }
@@ -422,7 +471,7 @@ private fun ResourcesTab(
 }
 
 @Composable
-private fun ResourcesContent(r: NodeResources, clock: UiState<NodeTime>, pressure: Pair<UiState<CgroupReport>, () -> Unit>?) {
+private fun ResourcesContent(node: String, r: NodeResources, clock: UiState<NodeTime>, pressure: Pair<UiState<CgroupReport>, () -> Unit>?) {
     val uptime = if (r.bootTime > 0) localizedDuration(System.currentTimeMillis() / 1000 - r.bootTime) else "—"
     val cpu = if (r.cpuModel.isBlank()) {
         pluralStringResource(R.plurals.node_cpu_threads, r.cpuCount, r.cpuCount)
@@ -449,6 +498,7 @@ private fun ResourcesContent(r: NodeResources, clock: UiState<NodeTime>, pressur
                     val used = r.memTotal - r.memAvailable
                     InfoRow(stringResource(R.string.node_memory_used), "${formatBytes(used)} / ${formatBytes(r.memTotal)}")
                     UsageBar(usedFraction(r.memTotal, r.memAvailable), Modifier.padding(top = 4.dp))
+                    NodeMemoryHistory(node, Modifier.padding(top = 8.dp))
                 }
             }
         }

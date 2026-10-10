@@ -74,6 +74,7 @@ type kubeTableRow struct {
 type kubeRowMeta struct {
 	Name              string            `json:"name"`
 	Namespace         string            `json:"namespace"`
+	UID               string            `json:"uid"`
 	ResourceVersion   string            `json:"resourceVersion"`
 	Labels            map[string]string `json:"labels"`
 	CreationTimestamp time.Time         `json:"creationTimestamp"`

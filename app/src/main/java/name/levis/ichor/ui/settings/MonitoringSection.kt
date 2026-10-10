@@ -18,6 +18,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,16 +29,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.TalosApp
 import name.levis.ichor.monitor.CERT_WARN_DAYS
 import name.levis.ichor.monitor.MonitorStore
+import name.levis.ichor.monitor.STORAGE_WARN_RANGE
+import name.levis.ichor.monitor.TREND_OPEN_DAYS
+import name.levis.ichor.monitor.storageCriticalRange
+import name.levis.ichor.monitor.UNREACHABLE_RUNS
 import name.levis.ichor.monitor.canPostNotifications
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +57,10 @@ fun MonitoringSection(app: TalosApp) {
     val gitopsWatched by store.gitopsWatched.collectAsStateWithLifecycle()
     val checkupWatched by store.checkupWatched.collectAsStateWithLifecycle()
     val alertmanagerWatched by store.alertmanagerWatched.collectAsStateWithLifecycle()
+    val storageWatched by store.storageWatched.collectAsStateWithLifecycle()
+    val storageTrend by store.storageTrendAlerts.collectAsStateWithLifecycle()
+    val unreachable by store.unreachableAlerts.collectAsStateWithLifecycle()
+    val unreachableRuns by store.unreachableRuns.collectAsStateWithLifecycle()
     val interval by store.intervalMinutes.collectAsStateWithLifecycle()
     val securityKeys by app.appLock.securityKeys.collectAsStateWithLifecycle()
     var error by remember { mutableStateOf<String?>(null) }
@@ -139,6 +151,58 @@ fun MonitoringSection(app: TalosApp) {
                     modifier = Modifier.padding(start = 12.dp),
                 )
             }
+            // And for node storage: every node's volumes and disks are read at every check.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_storage), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_storage_desc))
+                }
+                Switch(
+                    checked = storageWatched,
+                    onCheckedChange = { store.setStorageWatched(it) },
+                    enabled = enabled,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            if (storageWatched) StorageThresholds(store, enabled)
+            // On top of it: the volumes' fill trend from the history, read after each check.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_storage_trend), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_storage_trend_desc, TREND_OPEN_DAYS.toInt()))
+                }
+                Switch(
+                    checked = storageTrend,
+                    onCheckedChange = { store.setStorageTrendAlerts(it) },
+                    enabled = enabled && storageWatched,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            // And for a cluster that stops answering: once, after that many checks in a row.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_unreachable), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_unreachable_desc))
+                }
+                Switch(
+                    checked = unreachable,
+                    onCheckedChange = { store.setUnreachableAlerts(it) },
+                    enabled = enabled,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            if (unreachable) {
+                val runsLabel = stringResource(R.string.monitor_unreachable_runs, unreachableRuns.toString())
+                Text(runsLabel, style = MaterialTheme.typography.bodyMedium)
+                Slider(
+                    value = unreachableRuns.toFloat(),
+                    onValueChange = { store.setUnreachableRuns(it.roundToInt()) },
+                    valueRange = UNREACHABLE_RUNS.first.toFloat()..UNREACHABLE_RUNS.last.toFloat(),
+                    steps = UNREACHABLE_RUNS.last - UNREACHABLE_RUNS.first - 1,
+                    enabled = enabled,
+                    modifier = Modifier.semantics { contentDescription = runsLabel },
+                )
+            }
             Text(stringResource(R.string.monitor_check_every), style = MaterialTheme.typography.labelLarge)
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 MonitorStore.INTERVALS.forEachIndexed { index, minutes ->
@@ -160,6 +224,30 @@ fun MonitoringSection(app: TalosApp) {
         }
     }
     OfflineCacheSetting(app)
+}
+
+/** The warning and critical fill thresholds of the storage alerts; critical stays above warning. */
+@Composable
+private fun StorageThresholds(store: MonitorStore, enabled: Boolean) {
+    val warn by store.storageWarnPercent.collectAsStateWithLifecycle()
+    val critical by store.storageCriticalPercent.collectAsStateWithLifecycle()
+    PercentSlider(stringResource(R.string.monitor_storage_warn, warn), warn, STORAGE_WARN_RANGE, enabled, store::setStorageWarnPercent)
+    PercentSlider(stringResource(R.string.monitor_storage_critical, critical), critical, storageCriticalRange(warn), enabled, store::setStorageCriticalPercent)
+}
+
+@Composable
+private fun PercentSlider(label: String, value: Int, range: IntRange, enabled: Boolean, onChange: (Int) -> Unit) {
+    Text(label, style = MaterialTheme.typography.bodyMedium)
+    // Warning at 98 % leaves critical a single value: nothing to slide.
+    if (range.first >= range.last) return
+    Slider(
+        value = value.toFloat(),
+        onValueChange = { onChange(it.roundToInt()) },
+        valueRange = range.first.toFloat()..range.last.toFloat(),
+        steps = (range.last - range.first - 1).coerceAtLeast(0),
+        enabled = enabled,
+        modifier = Modifier.semantics { contentDescription = label },
+    )
 }
 
 /** Opt-in: the last data of each cluster is kept on the phone, encrypted, to show it offline. */

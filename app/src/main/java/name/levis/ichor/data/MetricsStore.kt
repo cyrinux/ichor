@@ -9,7 +9,7 @@ import java.io.File
  * One Keystore-encrypted file per cluster, by context fingerprint, in the directory [name]: a
  * source kept there may hold a token or password. Only on this device (not in backups).
  */
-class ClusterSecureFiles(context: Context, private val name: String) {
+class ClusterSecureFiles(context: Context, private val name: String) : ClusterFiles {
     private val directory = File(context.noBackupFilesDir, name).apply { mkdirs() }
 
     private fun store(fingerprint: String): SecureStore {
@@ -17,12 +17,16 @@ class ClusterSecureFiles(context: Context, private val name: String) {
         return SecureStore(File(directory, "$fingerprint.enc"), "ichor-$name-$fingerprint")
     }
 
-    fun read(fingerprint: String): String? = store(fingerprint).read()?.toString(Charsets.UTF_8)
+    fun read(fingerprint: String): String? = readBytes(fingerprint)?.toString(Charsets.UTF_8)
 
-    fun write(fingerprint: String, text: String) = store(fingerprint).write(text.toByteArray())
+    fun write(fingerprint: String, text: String) = writeBytes(fingerprint, text.toByteArray())
+
+    override fun readBytes(fingerprint: String): ByteArray? = store(fingerprint).read()
+
+    override fun writeBytes(fingerprint: String, bytes: ByteArray) = store(fingerprint).write(bytes)
 
     /** Forgets the files of the clusters not in [fingerprints]. */
-    fun sync(fingerprints: Collection<String>) {
+    override fun sync(fingerprints: Collection<String>) {
         directory.listFiles()?.forEach { file ->
             val fingerprint = file.name.removeSuffix(".enc")
             if (file.name.endsWith(".enc") && fingerprint !in fingerprints && FINGERPRINT.matches(fingerprint)) store(fingerprint).clear()

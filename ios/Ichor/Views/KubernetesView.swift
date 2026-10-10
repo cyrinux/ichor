@@ -23,6 +23,8 @@ struct KubernetesView: View {
         /// Every kind the API server serves (the resource browser).
         case resources
         case helm
+        /// The cluster's events kept live.
+        case events
     }
 
     @Environment(AppModel.self) private var model
@@ -122,6 +124,7 @@ struct KubernetesView: View {
         case .flows: netScreen = .flows(HubbleFilter())
         case .resources: netScreen = .resources
         case .helm: netScreen = .helm
+        case .events: netScreen = .events
         case .apiAddress:
             serverInput = model.client?.kubeServer ?? ""
             editingServer = true
@@ -182,6 +185,7 @@ struct KubernetesView: View {
             case .flows(let filter): LiveFlowsView(cilium: cilium ?? CiliumStatus(), filter: filter)
             case .resources: KubeBrowserView()
             case .helm: HelmReleasesView()
+            case .events: KubeLiveEventsView()
             }
         }
         .task(id: model.client?.kubeServer) {
@@ -460,6 +464,7 @@ extension KubernetesAction: BarActionLook {
         case .flows: "point.3.filled.connected.trianglepath.dotted"
         case .resources: "square.grid.3x3"
         case .helm: "shippingbox"
+        case .events: "list.bullet.rectangle"
         case .apiAddress: "server.rack"
         }
     }
@@ -473,6 +478,7 @@ extension KubernetesAction: BarActionLook {
         case .flows: Text("Live flows")
         case .resources: Text("Resources")
         case .helm: Text("Helm releases")
+        case .events: Text("Kubernetes events")
         case .apiAddress: Text("Kubernetes API address")
         }
     }

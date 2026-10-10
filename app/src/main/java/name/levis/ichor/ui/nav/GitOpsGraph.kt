@@ -32,6 +32,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
         arguments = listOf(
             navArgument("ns") { type = NavType.StringType; defaultValue = "" },
             navArgument("name") { type = NavType.StringType; defaultValue = "" },
+            navArgument("sync") { type = NavType.BoolType; defaultValue = false },
         ),
     ) { entry ->
         val ns = entry.arguments?.getString("ns").orEmpty()
@@ -39,6 +40,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
         ArgoAppScreen(
             namespace = ns,
             name = name,
+            initialSync = entry.arguments?.getBoolean("sync") == true,
             onBack = { nav.popBackStack() },
             onNode = { n, tab -> nav.navigate(Routes.node(n.node, n.hostname, n.role, tab)) },
             onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
@@ -69,6 +71,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             navArgument("kind") { type = NavType.StringType; defaultValue = "" },
             navArgument("ns") { type = NavType.StringType; defaultValue = "" },
             navArgument("name") { type = NavType.StringType; defaultValue = "" },
+            navArgument("reconcile") { type = NavType.BoolType; defaultValue = false },
         ),
     ) { entry ->
         val kind = entry.arguments?.getString("kind").orEmpty()
@@ -78,6 +81,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             kind = kind,
             namespace = ns,
             name = name,
+            initialReconcile = entry.arguments?.getBoolean("reconcile") == true,
             onBack = { nav.popBackStack() },
             onNode = { n, tab -> nav.navigate(Routes.node(n.node, n.hostname, n.role, tab)) },
             onDiff = { nav.navigate(Routes.fluxDiff(kind, ns, name)) },

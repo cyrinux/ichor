@@ -20,11 +20,14 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.Feature
+import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.contextFor
 import name.levis.ichor.model.kubeFocus
 import name.levis.ichor.model.nodeTab
+import name.levis.ichor.monitor.AlertAction
+import name.levis.ichor.monitor.AlertActionRequest
 import name.levis.ichor.ui.backup.IncomingBackup
 import name.levis.ichor.ui.changelog.WhatsNewHost
 import name.levis.ichor.ui.debug.LiveShell
@@ -32,6 +35,7 @@ import name.levis.ichor.ui.importconfig.ImportScreen
 import name.levis.ichor.ui.kubebrowser.KubeBrowserRoutes
 import name.levis.ichor.ui.kubebrowser.KubeLinks
 import name.levis.ichor.ui.overview.OverviewScreen
+import name.levis.ichor.ui.share.OpenLink
 import name.levis.ichor.ui.share.parseShareLink
 import name.levis.ichor.ui.nav.Routes
 import name.levis.ichor.ui.nav.appGraph
@@ -50,7 +54,8 @@ enum class DeepLink { ISSUE_CONFIG, DEMO, DEMO_KUBE, ARGO_WINDOWS, ARGO_CD, FLUX
  * [openCluster]: the fingerprint of a cluster to show (a launcher shortcut), cleared by [onClusterOpened].
  * [incomingBackup]: a backup file opened from another app, to restore; cleared by [onIncomingBackupRead].
  * [openShell]: a debug shell to go back to (its notification), cleared by [onShellOpened].
- * [openLink]: a share link, to open on the cluster it names once unlocked; cleared by [onLinkOpened].
+ * [openLink]: a share link, to open on the cluster it names once unlocked, with the confirmation
+ * of the action an alert's button asked for there, if any; cleared by [onLinkOpened].
  */
 @Composable
 fun Navigation(
@@ -64,7 +69,7 @@ fun Navigation(
     onIncomingBackupRead: () -> Unit = {},
     openShell: LiveShell? = null,
     onShellOpened: () -> Unit = {},
-    openLink: String? = null,
+    openLink: OpenLink? = null,
     onLinkOpened: () -> Unit = {},
 ) {
     val nav = rememberNavController()
@@ -77,10 +82,11 @@ fun Navigation(
     // Like a launcher shortcut, on the overview of the cluster the link names (the context on
     // screen when it is one of that cluster), then the screen it names over it. Read once
     // unlocked, with the config loaded: screenshot mode then masks its names like the screens'.
+    // An alert's button only opens the screen's own confirmation: nothing is sent before it.
     LaunchedEffect(openLink, linkLocked) {
         val link = openLink ?: return@LaunchedEffect
         if (linkLocked) return@LaunchedEffect
-        val target = parseShareLink(link)
+        val target = parseShareLink(link.url)
         val stored = app.configRepository.config.value
         val cluster = target?.let { stored?.summary?.contextFor(it.cluster, stored.activeContext) }
         when {
@@ -89,7 +95,7 @@ fun Navigation(
             else -> {
                 app.selectCluster(cluster.name)
                 nav.resetTo(Routes.OVERVIEW)
-                target.route(app)?.let { nav.navigate(it) }
+                target.route(app, link.action?.takeIf { it.matches(target) })?.let { nav.navigate(it) }
             }
         }
         // Last: clearing the link restarts this effect, which would cancel a node lookup.
@@ -220,8 +226,8 @@ fun Navigation(
                 onEtcd = { nav.navigate(Routes.ETCD) },
                 onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
                 onWorkloads = { nav.navigate(Routes.workloads()) },
-                onMetrics = { nav.navigate(Routes.METRICS) },
-                onAlerts = { nav.navigate(Routes.ALERTS) },
+                onMetrics = { nav.navigate(Routes.metrics()) },
+                onAlerts = { nav.navigate(Routes.alerts()) },
                 onDataServices = { nav.navigate(Routes.dataServices(it)) },
                 onArgoCD = { nav.navigate(Routes.ARGO_CD) },
                 onFlux = { nav.navigate(Routes.FLUX) },
@@ -247,6 +253,7 @@ fun Navigation(
                 onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
                 onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
                 onJobs = { nav.navigate(KubeBrowserRoutes.JOBS) },
+                onKubeEvents = { nav.navigate(Routes.KUBE_EVENTS) },
                 onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
                 onNodeDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
                 onActivity = { nav.navigate(Routes.activity(it)) },
@@ -282,20 +289,26 @@ fun Navigation(
  * The route a share link opens over the overview; null for the overview itself. A node only
  * when it is one of the cluster's (with its role, for the control-plane warnings): a link
  * cannot point the app's Talos calls at another address. A Talos screen on a cluster added
- * from a kubeconfig (another phone's context of the same name) stays on its home.
+ * from a kubeconfig (another phone's context of the same name) stays on its home. [action]: the
+ * confirmation to open there (a reboot, a sync, a reconcile, a 1 h silence), checked to match.
  */
-private suspend fun ShareTarget.route(app: TalosApp): String? = when (target) {
+private suspend fun ShareTarget.route(app: TalosApp, action: AlertActionRequest? = null): String? = when (target) {
     ShareTarget.ETCD -> Routes.ETCD.takeUnless { app.configRepository.config.value?.activeIsKube == true }
     ShareTarget.HEALTH -> Routes.HEALTH.takeUnless { app.configRepository.config.value?.activeIsKube == true }
     ShareTarget.ARGO_CD -> Routes.ARGO_CD
     ShareTarget.FLUX -> Routes.FLUX
-    ShareTarget.NODE -> runCatching { app.talosRepository.overview() }.getOrNull()?.nodes
-        ?.firstOrNull { n -> addr.isNotEmpty() && n.node == addr || host.isNotEmpty() && n.hostname == host }
-        ?.let { n -> Routes.node(n.node, n.hostname, n.role, nodeTab) }
-    ShareTarget.ARGO_APP -> Routes.argoApp(namespace, name)
-    ShareTarget.FLUX_APP -> Routes.fluxApp(kind, namespace, name)
+    ShareTarget.NODE -> clusterNode(app)
+        ?.let { n -> Routes.node(n.node, n.hostname, n.role, nodeTab, action = if (action?.action == AlertAction.REBOOT) "reboot" else "") }
+    ShareTarget.STORAGE -> clusterNode(app)?.let { n -> Routes.storage(n.node, n.hostname) }
+    ShareTarget.ARGO_APP -> Routes.argoApp(namespace, name, sync = action?.action == AlertAction.SYNC)
+    ShareTarget.FLUX_APP -> Routes.fluxApp(kind, namespace, name, reconcile = action?.action == AlertAction.RECONCILE)
     ShareTarget.DATA -> Routes.dataServices(DataServiceKind.entries.firstOrNull { it.catalogId == kind })
     ShareTarget.CHECKUP -> Routes.CHECKUP
-    ShareTarget.ALERTS -> Routes.ALERTS
+    ShareTarget.ALERTS -> Routes.alerts(silence = action?.takeIf { it.action == AlertAction.SILENCE }?.target.orEmpty())
     else -> kubeFocus?.let { Routes.workloads(it) }
 }
+
+/** The cluster's node the link names, by address or hostname; null when it is none of its. */
+private suspend fun ShareTarget.clusterNode(app: TalosApp): NodeOverview? =
+    runCatching { app.talosRepository.overview() }.getOrNull()?.nodes
+        ?.firstOrNull { n -> addr.isNotEmpty() && n.node == addr || host.isNotEmpty() && n.hostname == host }

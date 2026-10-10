@@ -20,6 +20,7 @@ object KubeBrowserRoutes {
     private const val LIST = "kube-browser-list?g={g}&v={v}&r={r}&k={k}&namespaced={namespaced}&edit={edit}"
     private const val OBJECT = "kube-object?g={g}&v={v}&r={r}&k={k}&ns={ns}&name={name}&edit={edit}"
     const val HELM = "kube-helm"
+    const val APPLY = "kube-apply"
     const val STORAGE = "kube-storage"
     const val SERVICES = "kube-services"
     const val JOBS = "kube-jobs"
@@ -50,8 +51,9 @@ object KubeBrowserRoutes {
     /** The browser's screens, opened from the Kubernetes screen, the Kubernetes home and the pod log sheet ([links]). */
     fun NavGraphBuilder.kubeBrowserScreens(nav: NavHostController, links: KubeLinks) {
         composable(KINDS) {
-            ResourceKindsScreen(onBack = { nav.popBackStack() }, onKind = { nav.navigate(list(it)) })
+            ResourceKindsScreen(onBack = { nav.popBackStack() }, onKind = { nav.navigate(list(it)) }, onApply = { nav.navigate(APPLY) })
         }
+        composable(APPLY) { KubeApplyScreen(onBack = { nav.popBackStack() }) }
         composable(LIST, arguments = strings("g", "v", "r", "k") + flags("namespaced", "edit", "scale")) { entry ->
             val a = entry.arguments
             val deleted by entry.savedStateHandle.getStateFlow(DELETED, 0L).collectAsStateWithLifecycle()

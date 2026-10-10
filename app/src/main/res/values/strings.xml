@@ -457,7 +457,7 @@
     <string name="monitor_channel_nodes">Node alerts</string>
     <string name="monitor_channel_nodes_desc">A node goes down, stops answering or is ready again</string>
     <string name="monitor_channel_cluster">Cluster alerts</string>
-    <string name="monitor_channel_cluster_desc">etcd alarms, cluster checkup findings and Alertmanager alerts</string>
+    <string name="monitor_channel_cluster_desc">etcd alarms, cluster checkup findings, Alertmanager alerts and unreachable clusters</string>
     <string name="monitor_channel_data">Data service alerts</string>
     <string name="monitor_channel_data_desc">Longhorn, databases, object storage and backups that need attention</string>
     <string name="monitor_channel_gitops">GitOps alerts</string>
@@ -1090,6 +1090,25 @@
     <string name="node_menu_capture">Capture packets</string>
     <string name="node_menu_captures">Saved captures</string>
     <string name="node_menu_upgrade">Upgrade Talos…</string>
+    <string name="common_feature_reset">Node reset</string>
+    <string name="node_menu_reset">Reset…</string>
+    <string name="reset_confirm_title">Reset %1$s?</string>
+    <string name="reset_confirm">Reset</string>
+    <string name="reset_plan_loading">Checking what the reset would leave…</string>
+    <string name="reset_role_controlplane">Control plane</string>
+    <string name="reset_role_worker">Worker</string>
+    <string name="reset_etcd_member">etcd member %1$s</string>
+    <string name="reset_wipe_label">Wipe (talosctl reset --wipe-mode)</string>
+    <string name="reset_wipe_all">Everything: the system disk and the user disks</string>
+    <string name="reset_wipe_system">System disk only: the node starts over as a new machine</string>
+    <string name="reset_wipe_user">User disks only</string>
+    <string name="reset_graceful">Leave etcd first (--graceful)</string>
+    <string name="reset_graceful_desc">Cordon and drain the node and leave etcd cleanly before wiping.</string>
+    <string name="reset_dead_member">Its etcd member stays behind: remove it afterwards from the etcd screen (Remove member).</string>
+    <string name="reset_reboot">Reboot after (--reboot)</string>
+    <string name="reset_reboot_desc">The node restarts once the reset is done.</string>
+    <string name="reset_requested">%1$s: reset requested</string>
+    <string name="reset_auth_title">Reset %1$s</string>
     <string name="capture_title">Packet capture</string>
     <string name="capture_interface">Interface</string>
     <string name="capture_loading_interfaces">Loading interfaces…</string>
@@ -2435,6 +2454,33 @@
     <string name="metrics_reachable">The query API answers.</string>
     <string name="metrics_refused">The metrics source refused the query (HTTP 401 or 403): check the tenant (X-Scope-OrgID) and the credentials.</string>
     <string name="metrics_change_credentials">Change tenant or credentials</string>
+    <!-- Metrics: Monitoring tab (prometheus-operator) -->
+    <string name="monitoring_tab_panels">Panels</string>
+    <string name="monitoring_tab">Monitoring</string>
+    <string name="monitoring_targets">Scrape targets</string>
+    <string name="monitoring_targets_down">%1$s of %2$s targets down</string>
+    <string name="monitoring_targets_all_up">All %1$s targets up</string>
+    <string name="monitoring_targets_truncated">More down targets are left out.</string>
+    <string name="monitoring_pool_counts">%1$s down, %2$s up</string>
+    <string name="monitoring_config_job">Job from the Prometheus configuration</string>
+    <string name="monitoring_last_scrape">Last scrape %1$s ago</string>
+    <string name="monitoring_never_scraped">Not scraped yet</string>
+    <string name="monitoring_rules">Rules</string>
+    <string name="monitoring_rule_counts">%1$s groups, %2$s rules: %3$s firing, %4$s pending, %5$s failing</string>
+    <string name="monitoring_rules_truncated">Only the first rules are listed; the counts cover them all.</string>
+    <string name="monitoring_rule_failing">%1$s failing</string>
+    <string name="monitoring_rule_firing">%1$s firing</string>
+    <string name="monitoring_rule_pending">%1$s pending</string>
+    <string name="monitoring_rule_total">%1$s rules</string>
+    <string name="monitoring_rule_alerts">%1$s active alerts</string>
+    <string name="monitoring_last_evaluation">Evaluated %1$s ago</string>
+    <string name="monitoring_rule_from">PrometheusRule %1$s</string>
+    <string name="monitoring_operator">Prometheus Operator</string>
+    <string name="monitoring_operator_counts">%1$s ServiceMonitors, %2$s PodMonitors, %3$s PrometheusRules, %4$s Probes</string>
+    <string name="monitoring_prometheus">Prometheus</string>
+    <string name="monitoring_alertmanager">Alertmanager</string>
+    <string name="monitoring_available">%1$s of %2$s available</string>
+    <string name="monitoring_paused">Paused</string>
     <string name="metrics_ai_title">Panel assistant</string>
     <string name="metrics_ai_open">Ask AI for a panel</string>
     <string name="metrics_ai_ask">Ask AI</string>
@@ -3046,6 +3092,15 @@
     <string name="checkup_secretStoreNotReady_fix">Every ExternalSecret using it stops syncing. Check its credentials, its address and the provider’s status.</string>
     <string name="checkup_helmFailed_fix">Run helm history to see why, then helm rollback or a new upgrade.</string>
     <string name="checkup_helmPending_fix">A Helm operation was interrupted and left its lock: helm rollback to the last deployed revision releases it.</string>
+    <string name="checkup_section_monitoring">Monitoring</string>
+    <string name="checkup_section_monitoring_hint">Scrape targets down and rules that fail to evaluate</string>
+    <string name="checkup_scrapeTargetsDown">%1$s of %2$s scrape targets down (%3$s), most in %4$s</string>
+    <string name="checkup_scrapeTargetsDown_plain">%1$s of %2$s scrape targets down (%3$s)</string>
+    <string name="checkup_ruleErrors">%1$s rules fail to evaluate, first %2$s</string>
+    <string name="checkup_scrapeTargetsDown_fix">Prometheus no longer sees what these targets report, and the alerts about them stay silent. Open Monitoring for each target’s error: a pod down, a wrong port or path in its monitor, or a NetworkPolicy blocking Prometheus.</string>
+    <string name="checkup_prometheusRuleErrors_fix">Its alerts and recorded series stop updating. Fix the PromQL in the PrometheusRule: many-to-many matching and renamed labels are the usual causes.</string>
+    <string name="checkup_ruleGroupErrors_fix">This group comes from the Prometheus configuration, not from a PrometheusRule: fix the expression in its rule file.</string>
+    <string name="checkup_open_monitoring">Open Monitoring</string>
     <string name="kube_events_title">Events</string>
     <string name="kube_events_empty">No event. Kubernetes keeps them for one hour.</string>
     <string name="kube_events_ago">%1$s ago</string>
@@ -3132,6 +3187,25 @@
     <string name="kube_field_aws_role_name">Role name</string>
     <string name="kube_field_aws_region">AWS region</string>
     <string name="kube_field_gcp_service_account">Service account key (JSON)</string>
+    <string name="kube_field_gcp_user_credentials">gcloud user credentials (application_default_credentials.json)</string>
+    <string name="kube_field_gcp_projects">Project IDs</string>
+    <string name="kube_field_gcp_oauth_client_id">OAuth client ID</string>
+    <string name="kube_field_gcp_oauth_client_secret">OAuth client secret</string>
+    <string name="kube_signin_option_gcp_oauth">Your organisation\'s OAuth client</string>
+    <string name="kube_signin_gcp_oauth_hint">Ask your Google Cloud admin for a Desktop app OAuth client (APIs &amp; Services → Credentials) with an Internal consent screen. Sign in then opens your Google account in the browser.</string>
+    <string name="kube_signin_option_google">Sign in with Google</string>
+    <string name="kube_signin_google_hint">Your Google account, through Google\'s own sign-in. Needs Google Play services.</string>
+    <string name="kube_signin_google_unavailable">Google sign-in is not available on this device.</string>
+    <string name="kube_field_gcp_oauth_redirect">Redirect URL</string>
+    <string name="kube_signin_gcp_oauth_web_hint">With a Web application client instead, enter https://cyrinux.github.io/ichor/auth/google/ (or your organisation\'s own page) as redirect URL and add it to the client\'s authorised redirect URIs. Leave it empty for a Desktop app client.</string>
+    <string name="kube_signin_paste_code_hint">Browser did not come back to Ichor? Paste the sign-in code the page shows.</string>
+    <string name="kube_signin_paste_code_label">Sign-in code</string>
+    <string name="kube_signin_paste_code_action">Continue</string>
+    <string name="kube_discover_gcp_projects_hint">Leave empty to search every project your account can see; list project IDs to go faster in a large organisation.</string>
+    <string name="kube_signin_option_gcp_service_account">Service account key</string>
+    <string name="kube_signin_option_gcp_user">gcloud user credentials</string>
+    <string name="kube_signin_gcp_user_hint">Bring your gcloud session: on your computer run gcloud auth application-default login, then import ~/.config/gcloud/application_default_credentials.json. When Google ends the session, run it again and import the new file.</string>
+    <string name="kube_signin_gcp_workforce_hint">A workforce identity session (gcloud auth application-default login --login-config=…) is imported the same way.</string>
     <string name="kube_field_azure_tenant">Tenant ID</string>
     <string name="kube_field_azure_subscription">Subscription ID</string>
     <string name="kube_field_azure_client_id">Application (client) ID</string>
@@ -3186,6 +3260,23 @@
     <!-- kube browser -->
     <string name="kb_title">All resources</string>
     <string name="kb_search_kinds">Search kinds (pod, deploy, group…)</string>
+    <string name="kb_apply_title">Apply YAML</string>
+    <string name="kb_apply_hint">Paste one or more Kubernetes objects (YAML, separated by ---). Preview shows what each would become in the cluster before anything is applied.</string>
+    <string name="kb_apply_manifests">Manifests</string>
+    <string name="kb_apply_paste">Paste</string>
+    <string name="kb_apply_namespace">Namespace if none</string>
+    <string name="kb_apply_preview">Preview</string>
+    <string name="kb_apply_apply">Apply</string>
+    <string name="kb_apply_in_sync">Nothing would change: the cluster already matches.</string>
+    <string name="kb_apply_footnote">Server-side apply as “ichor”, like kubectl apply --server-side. A field another manager owns (a GitOps controller, an autoscaler) is refused with its name, never taken over.</string>
+    <plurals name="kb_apply_done">
+        <item quantity="one">%1$d object applied</item>
+        <item quantity="other">%1$d objects applied</item>
+    </plurals>
+    <plurals name="kb_apply_refused">
+        <item quantity="one">%1$d object refused</item>
+        <item quantity="other">%1$d objects refused</item>
+    </plurals>
     <string name="kb_failed_groups">Some API groups could not be read: %1$s</string>
     <string name="kb_no_kinds">No resource types.</string>
     <string name="kb_no_kind_match">No type matches “%1$s”.</string>
@@ -3478,6 +3569,41 @@
     <string name="monitor_alertmanager_desc">Also notifies the cluster\'s Alertmanager alerts that are neither silenced nor inhibited: critical ones at once, others once seen on two checks in a row, info ones never. Each check reads them through the Kubernetes API (os:admin) or at the URL set on the Alerts screen.</string>
     <string name="monitor_am_firing">Firing: %1$s</string>
     <string name="monitor_am_resolved">Resolved: %1$s</string>
+    <string name="monitor_cluster_unreachable">Cluster unreachable</string>
+    <string name="monitor_cluster_unreachable_text">No answer for %1$s checks in a row</string>
+    <string name="monitor_cluster_reachable">Cluster reachable again</string>
+    <string name="monitor_cluster_reachable_text">It answers the background checks again</string>
+    <string name="monitor_unreachable">Unreachable clusters</string>
+    <string name="monitor_unreachable_desc">Notifies once when a cluster has not answered for several checks in a row (no node, no API, or too slow), and once when it answers again. Node alerts stay silent meanwhile.</string>
+    <string name="monitor_unreachable_runs">After %1$s checks in a row</string>
+    <string name="monitor_storage">Node storage</string>
+    <string name="monitor_storage_desc">Notifies when a node\'s volume fills up (warnings once seen on two checks in a row) or a disk fails SMART (at once), and once it is fine again. Each check reads every node\'s volumes and disks through the Talos API (Talos clusters only).</string>
+    <string name="monitor_storage_warn">Warning from %1$d %% used</string>
+    <string name="monitor_storage_critical">Critical from %1$d %% used</string>
+    <string name="monitor_storage_fill">%1$s on %2$s at %3$d %%</string>
+    <string name="monitor_storage_fill_critical">%1$s on %2$s at %3$d %%, almost full</string>
+    <string name="monitor_storage_fill_text">%1$s free of %2$s</string>
+    <string name="monitor_storage_smart">SMART failing on %1$s (%2$s)</string>
+    <string name="monitor_storage_fill_ok">%1$s on %2$s back under %3$d %%</string>
+    <string name="monitor_storage_smart_ok">%1$s on %2$s passes SMART again</string>
+    <string name="monitor_storage_trend">Warn before a volume fills up</string>
+    <string name="monitor_storage_trend_desc">Notifies when a volume\'s growth over the last week would make it critical within %1$d days, and once it no longer does. Uses the history of the checks; needs node storage on.</string>
+    <plurals name="monitor_storage_trend_full">
+        <item quantity="one">%1$s on %2$s full in ~%3$d day</item>
+        <item quantity="other">%1$s on %2$s full in ~%3$d days</item>
+    </plurals>
+    <plurals name="monitor_storage_trend_critical">
+        <item quantity="one">%1$s on %2$s critical in ~%3$d day</item>
+        <item quantity="other">%1$s on %2$s critical in ~%3$d days</item>
+    </plurals>
+    <string name="monitor_storage_trend_full_soon">%1$s on %2$s full in &lt; 1 day</string>
+    <string name="monitor_storage_trend_critical_soon">%1$s on %2$s critical in &lt; 1 day</string>
+    <string name="monitor_storage_trend_text">growing ~%1$s %% a day, now at %2$d %%</string>
+    <string name="monitor_storage_trend_ok">%1$s on %2$s no longer filling up fast</string>
+    <string name="clusters_watch">Watch in the background</string>
+    <string name="widget_config_title">Cluster shown on the widget</string>
+    <string name="widget_config_active">Cluster on screen</string>
+    <string name="widget_config_active_desc">Follows the cluster open in the app</string>
     <plurals name="alerts_suppressed">
         <item quantity="one">%1$d alert silenced or inhibited</item>
         <item quantity="other">%1$d alerts silenced or inhibited</item>
@@ -3547,4 +3673,69 @@
     <string name="imagescan_system_hint">Checks the images Talos runs on this node (kubelet, etcd, the control plane), by digest, for known vulnerabilities with Trivy. It runs as a Job in the %1$s namespace, which deletes itself afterwards.</string>
     <string name="imagescan_system_scan">Scan system images</string>
     <string name="images_kubernetes_title">Kubernetes images</string>
+    <string name="alert_action_wake">Wake</string>
+    <string name="alert_action_silence_hour">Silence 1 h</string>
+    <string name="alert_action_snooze">Snooze 8 h</string>
+    <string name="alert_action_silence_comment">Silenced from a notification</string>
+    <string name="history_uptime_title">Uptime</string>
+    <plurals name="history_uptime_description">
+        <item quantity="one">Node uptime over the last %1$d day: %2$s</item>
+        <item quantity="other">Node uptime over the last %1$d days: %2$s</item>
+    </plurals>
+    <plurals name="history_days_short">
+        <item quantity="one">%1$d d</item>
+        <item quantity="other">%1$d d</item>
+    </plurals>
+    <plurals name="history_memory_description">
+        <item quantity="one">Memory use over the last %1$d day</item>
+        <item quantity="other">Memory use over the last %1$d days</item>
+    </plurals>
+    <plurals name="history_volumes_title">
+        <item quantity="one">Volume fill, last %1$d day</item>
+        <item quantity="other">Volume fill, last %1$d days</item>
+    </plurals>
+    <string name="history_volume_description">%1$s fill over time</string>
+    <plurals name="history_forecast_full">
+        <item quantity="one">full in ~%1$d day</item>
+        <item quantity="other">full in ~%1$d days</item>
+    </plurals>
+    <plurals name="history_forecast_critical">
+        <item quantity="one">critical in ~%1$d day</item>
+        <item quantity="other">critical in ~%1$d days</item>
+    </plurals>
+    <string name="history_forecast_full_soon">full in &lt; 1 day</string>
+    <string name="history_forecast_critical_soon">critical in &lt; 1 day</string>
+    <string name="history_forecast_growing">growing ~%1$s %% a day</string>
+    <string name="history_since_title">Since you last looked</string>
+    <string name="history_since_more">+%1$d more</string>
+    <string name="history_since_dismiss">Got it</string>
+    <string name="history_since_down">%1$s is still down (%2$s)</string>
+    <string name="history_since_alert_open">New alert, still open: %1$s</string>
+    <string name="history_since_recovered">%1$s was down (%2$s) for %3$s, back now</string>
+    <string name="history_since_alert_resolved">Resolved: %1$s</string>
+    <string name="history_since_upgrade">%1$s upgraded from %2$s to %3$s</string>
+    <plurals name="history_since_still_open">
+        <item quantity="one">%1$d older alert still open</item>
+        <item quantity="other">%1$d older alerts still open</item>
+    </plurals>
+    <string name="history_alert_cert">Certificate expiring</string>
+    <string name="kube_events_stream_title">Kubernetes events</string>
+    <string name="kube_events_warnings_only">Warnings only</string>
+    <string name="kube_events_pause">Pause</string>
+    <string name="kube_events_resume">Resume</string>
+    <string name="kube_events_paused">Paused</string>
+    <string name="kube_events_search">Search reasons, objects or messages</string>
+    <string name="kube_events_stream_empty">No event yet: new ones show up here as they happen.</string>
+    <string name="kube_events_no_match">No event matches.</string>
+    <string name="kube_events_share">Share events</string>
+    <string name="kube_events_open_object">Open object</string>
+    <string name="kube_events_connecting">Connecting…</string>
+    <string name="kube_events_reconnecting">Reconnecting…</string>
+    <string name="kube_events_reconnecting_reason">Reconnecting: %1$s</string>
+    <string name="kube_events_relisting">Reading the events again…</string>
+    <string name="kube_events_polling">Polling every 5 s: these credentials may list events but not watch them</string>
+    <plurals name="kube_events_pending">
+        <item quantity="one">Paused: %1$d new or changed event</item>
+        <item quantity="other">Paused: %1$d new or changed events</item>
+    </plurals>
 </resources>

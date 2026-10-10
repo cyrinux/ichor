@@ -25,6 +25,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -34,8 +35,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,9 +55,11 @@ import kotlinx.coroutines.delay
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.PromLink
 import name.levis.ichor.model.PromPanel
 import name.levis.ichor.model.isPromRefused
 import name.levis.ichor.model.legend
+import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
@@ -62,6 +67,10 @@ import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.factory
 
 private const val AUTO_REFRESH_MS = 60_000L
+
+/** The Metrics screen's tabs. */
+const val METRICS_TAB_PANELS = 0
+const val METRICS_TAB_MONITORING = 1
 
 /**
  * PromQL panels of the cluster on screen, from its Prometheus, Mimir, Thanos or
@@ -72,7 +81,13 @@ private data class ChatContext(val current: PromPanel?)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MetricsScreen(onBack: () -> Unit, onSettings: () -> Unit) {
+fun MetricsScreen(
+    onBack: () -> Unit,
+    onSettings: () -> Unit,
+    onLink: (PromLink) -> Unit,
+    /** [METRICS_TAB_MONITORING] to open on Monitoring (from the checkup). */
+    initialTab: Int = METRICS_TAB_PANELS,
+) {
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
@@ -82,6 +97,9 @@ fun MetricsScreen(onBack: () -> Unit, onSettings: () -> Unit) {
     val noSource = stringResource(R.string.metrics_none_found)
     val vm: MetricsViewModel = viewModel(key = key, factory = factory { MetricsViewModel(app.kubeRepository, app.metricsStore, fingerprint, noSource) })
     val state by vm.state.collectAsStateWithLifecycle()
+    val monitoringVm: MonitoringViewModel = viewModel(key = "monitoring-$key", factory = factory { MonitoringViewModel(app.kubeRepository) })
+    val monitoring by monitoringVm.state.collectAsStateWithLifecycle()
+    var tab by rememberSaveable { mutableIntStateOf(initialTab) }
     /** The editor's draft while it is open. */
     var editing by remember { mutableStateOf<PromPanel?>(null) }
     var chat by remember { mutableStateOf<ChatContext?>(null) }
@@ -89,6 +107,11 @@ fun MetricsScreen(onBack: () -> Unit, onSettings: () -> Unit) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 
     LaunchedEffect(key) { vm.load() }
+    // Read when the tab first shows, and again for another source.
+    val currentSource = state.config.source
+    LaunchedEffect(tab, currentSource) {
+        if (tab == METRICS_TAB_MONITORING && currentSource != null && monitoring.source != currentSource) monitoringVm.load(currentSource)
+    }
     // Quiet refresh while on screen.
     LaunchedEffect(vm, lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -108,13 +131,15 @@ fun MetricsScreen(onBack: () -> Unit, onSettings: () -> Unit) {
                     if (aiSettings.enabled && state.config.source != null) {
                         TooltipIconButton(Icons.Outlined.AutoAwesome, stringResource(R.string.metrics_ai_open), onClick = { chat = ChatContext(null) })
                     }
-                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
+                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = {
+                        if (tab == METRICS_TAB_MONITORING) state.config.source?.let(monitoringVm::load) else vm.refresh()
+                    })
                     TooltipIconButton(Icons.Outlined.Tune, stringResource(R.string.metrics_source), onClick = { sourceOpen = true })
                 },
             )
         },
         floatingActionButton = {
-            if (state.config.source != null) {
+            if (state.config.source != null && tab == METRICS_TAB_PANELS) {
                 ExtendedFloatingActionButton(
                     onClick = { editing = PromPanel(id = "", title = "", query = "") },
                     icon = { Icon(Icons.Outlined.Add, null) },
@@ -126,27 +151,15 @@ fun MetricsScreen(onBack: () -> Unit, onSettings: () -> Unit) {
         when {
             !state.loaded -> LoadingBox(Modifier.padding(padding).fillMaxSize())
             state.config.source == null -> NoSource(state, Modifier.padding(padding), onSetUp = { sourceOpen = true }, onSearch = { vm.discover(autoSelect = true) })
-            else -> LazyColumn(
-                Modifier.padding(padding),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                item { MutedText(stringResource(R.string.metrics_source_line, state.config.source!!.label)) }
-                item { RangeRow(state.range, vm::setRange) }
-                state.error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
-                if (state.results.values.any { isPromRefused(it.error) }) item { RefusedCard(onEdit = { sourceOpen = true }) }
-                if (state.config.panels.isEmpty()) item { MutedText(stringResource(R.string.metrics_no_panels)) }
-                val panels = state.config.panels
-                items(panels, key = { it.id }) { panel ->
-                    PanelCard(
-                        panel = panel,
-                        result = state.results[panel.id] ?: PanelResult(loading = true),
-                        first = panel == panels.first(),
-                        last = panel == panels.last(),
-                        onEdit = { editing = panel },
-                        onMove = { vm.movePanel(panel.id, it) },
-                        onDelete = { vm.deletePanel(panel.id) },
-                    )
+            else -> Column(Modifier.padding(padding)) {
+                PrimaryTabRow(selectedTabIndex = tab) {
+                    AppTab(selected = tab == METRICS_TAB_PANELS, onClick = { tab = METRICS_TAB_PANELS }, text = { Text(stringResource(R.string.monitoring_tab_panels)) })
+                    AppTab(selected = tab == METRICS_TAB_MONITORING, onClick = { tab = METRICS_TAB_MONITORING }, text = { Text(stringResource(R.string.monitoring_tab)) })
+                }
+                if (tab == METRICS_TAB_MONITORING) {
+                    MonitoringTab(monitoring, state.config.source!!, onLink)
+                } else {
+                    PanelList(state, vm, onEdit = { editing = it }, onSource = { sourceOpen = true })
                 }
             }
         }
@@ -188,6 +201,33 @@ fun MetricsScreen(onBack: () -> Unit, onSettings: () -> Unit) {
             onSave = vm::setSource,
             onDismiss = { sourceOpen = false },
         )
+    }
+}
+
+/** The panels of the source, over the chosen range. */
+@Composable
+private fun PanelList(state: MetricsState, vm: MetricsViewModel, onEdit: (PromPanel) -> Unit, onSource: () -> Unit) {
+    LazyColumn(
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item { MutedText(stringResource(R.string.metrics_source_line, state.config.source!!.label)) }
+        item { RangeRow(state.range, vm::setRange) }
+        state.error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
+        if (state.results.values.any { isPromRefused(it.error) }) item { RefusedCard(onEdit = onSource) }
+        if (state.config.panels.isEmpty()) item { MutedText(stringResource(R.string.metrics_no_panels)) }
+        val panels = state.config.panels
+        items(panels, key = { it.id }) { panel ->
+            PanelCard(
+                panel = panel,
+                result = state.results[panel.id] ?: PanelResult(loading = true),
+                first = panel == panels.first(),
+                last = panel == panels.last(),
+                onEdit = { onEdit(panel) },
+                onMove = { vm.movePanel(panel.id, it) },
+                onDelete = { vm.deletePanel(panel.id) },
+            )
+        }
     }
 }
 

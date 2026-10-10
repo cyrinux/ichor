@@ -166,9 +166,11 @@ dependencies {
     implementation(libs.yubikit.android)
     implementation(libs.yubikit.fido)
     implementation(libs.slf4j.nop)
-    // Feature funding and in-app updates, Play build only (see sourceSets above).
+    // Feature funding, in-app updates and Sign in with Google for GKE, Play build only (see
+    // sourceSets above).
     "playImplementation"(libs.billing)
     "playImplementation"(libs.play.app.update)
+    "playImplementation"(libs.play.services.auth)
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)

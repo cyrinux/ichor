@@ -64,6 +64,21 @@ extension TalosClient {
         }
     }
 
+    /// What applying `manifests` (multi-document YAML) would do, from server-side apply dry runs;
+    /// `namespace` is used for a namespaced object that names none.
+    func applyPreview(namespace: String, manifests: String) async throws -> KubeApplyResult {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeApplyPreview(config, context, kubeServer, namespace, manifests, $0)
+        }
+    }
+
+    /// Applies `manifests` with server-side apply (os:admin), each object on its own.
+    func apply(namespace: String, manifests: String) async throws -> KubeApplyResult {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeApply(config, context, kubeServer, namespace, manifests, $0)
+        }
+    }
+
     /// Saves `edited` as the object, refused when it changed since it was read.
     func updateObject(_ resource: KubeAPIResource, namespace: String, name: String, edited: String) async throws {
         try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in

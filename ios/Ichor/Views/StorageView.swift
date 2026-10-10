@@ -23,6 +23,10 @@ struct StorageView: View {
     @State private var usagePath: String?
     @State private var usage: LoadState<DiskUsage> = .loading
     @State private var showAllMounts = false
+    /// The last 7 days of the cluster's history: each volume's fill line (storage watch on).
+    @State private var history: HistoryQueryResult?
+    /// Each volume's fill projected from that week, to the user's critical threshold (CYR-128).
+    @State private var forecast: HistoryForecast?
 
     var body: some View {
         List {
@@ -49,7 +53,12 @@ struct StorageView: View {
                         } else if loaded.volumes.isEmpty {
                             Text("No volumes").font(.footnote).foregroundStyle(.secondary)
                         }
-                        ForEach(loaded.volumes) { VolumeRow(volume: $0) }
+                        let fills = history?.volumes(of: node) ?? [:]
+                        ForEach(loaded.volumes) { volume in
+                            VolumeRow(volume: volume, fill: volumeFill(volume, in: fills),
+                                      from: history?.from ?? 0, to: history?.to ?? 0,
+                                      trend: forecast?.volume(node: node, name: volume.id).flatMap { VolumeForecastLine($0) })
+                        }
                     }
                 }
             }
@@ -79,6 +88,17 @@ struct StorageView: View {
         .task { await loadVolumes() }
         .task { await loadHealth() }
         .task(id: usagePath) { await loadUsage() }
+        .task(id: model.dataGeneration) {
+            let cluster = model.activeSummary.map(monitorClusterKey) ?? ""
+            history = await HistoryStore.query(cluster: cluster, period: .week)
+            forecast = await HistoryStore.forecast(cluster: cluster)
+        }
+    }
+
+    /// The fill line of `volume`: the history names a Talos volume by its id, a user volume
+    /// without its "u-" prefix.
+    private func volumeFill(_ volume: VolumeInfo, in fills: [String: [HistoryPoint]]) -> [HistoryPoint] {
+        fills[volume.id] ?? (volume.id.hasPrefix("u-") ? fills[String(volume.id.dropFirst(2))] : nil) ?? []
     }
 
     private func volumesNotice(_ volumes: NodeVolumes) -> String {
@@ -168,6 +188,12 @@ private struct MountRow: View {
 
 private struct VolumeRow: View {
     let volume: VolumeInfo
+    /// Its fill (% used) over the history's window [from, to]; no line under two points.
+    let fill: [HistoryPoint]
+    let from: Int64
+    let to: Int64
+    /// When it fills up at its pace of the last week, or only that pace when too uncertain.
+    let trend: VolumeForecastLine?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -189,6 +215,12 @@ private struct VolumeRow: View {
             if !volume.mountedOn.isEmpty {
                 LabeledContent("Mounted on") { Text(verbatim: volume.mountedOn).font(.caption.monospaced()) }.font(.caption)
             }
+            if fill.count >= 2 {
+                HistorySparkline(points: fill, from: from, to: to, label: Text("Fill over the last 7 days"))
+            }
+            if let trend {
+                trendText(trend)
+            }
             if !volume.error.isEmpty {
                 Text(verbatim: volume.error).font(.caption).foregroundStyle(.statusBad)
             }
@@ -202,5 +234,16 @@ private struct VolumeRow: View {
                 .foregroundStyle(.secondary)
             }
         }
+    }
+
+    /// A projection within a week stands out, a pace alone stays muted.
+    private func trendText(_ trend: VolumeForecastLine) -> some View {
+        Label {
+            Text(verbatim: trend.localized)
+        } icon: {
+            Image(systemName: "chart.line.uptrend.xyaxis")
+        }
+        .font(.caption)
+        .foregroundStyle(trend.isWithinAWeek ? Color.orange : Color.secondary)
     }
 }

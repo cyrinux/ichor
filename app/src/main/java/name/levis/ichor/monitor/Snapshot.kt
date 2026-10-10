@@ -65,6 +65,22 @@ data class ClusterSnapshot(
     val amIssues: Map<String, String> = emptyMap(),
     /** Alertmanager warnings seen once and not notified yet. */
     val amPending: List<String> = emptyList(),
+    /** Watching node storage (volume fill, SMART) was on for this check (opt-in, Talos clusters only). */
+    val storageWatched: Boolean = false,
+    /** Its health could be read this time. */
+    val storageChecked: Boolean = false,
+    /**
+     * Volumes filling up and disks failing SMART ("node|volume" or "node|smart|device" → see
+     * [StorageDetail]), kept like [dataIssues].
+     */
+    val storageIssues: Map<String, String> = emptyMap(),
+    /** Storage warnings seen once and not notified yet. */
+    val storagePending: List<String> = emptyList(),
+    /**
+     * Volumes whose fill trend alert is open ("node|volume" → [TrendDetail], see
+     * [storageTrendStep]), set after the run's history record (see [withStorageTrends]).
+     */
+    val storageTrends: Map<String, String> = emptyMap(),
     /**
      * The cluster was added from a kubeconfig: its nodes come from the Kubernetes API (ready or
      * not, never unreachable), there is no etcd, and [certNotAfter] is the kubeconfig's credentials.
@@ -104,7 +120,13 @@ fun snapshotOf(
     /** The Alertmanager watched ([amIssues] null when watched but unreadable or not found). */
     amWatched: Boolean = false,
     amIssues: Map<String, String>? = null,
+    /** Node storage watched ([storageIssues] null when watched but unreadable, see [storageIssuesOf]). */
+    storageWatched: Boolean = false,
+    storageIssues: Map<String, String>? = null,
 ): ClusterSnapshot = ClusterSnapshot(
+    storageWatched = storageWatched,
+    storageChecked = storageWatched && storageIssues != null,
+    storageIssues = storageIssues?.takeIf { storageWatched }.orEmpty(),
     amWatched = amWatched,
     amChecked = amWatched && amIssues != null,
     amIssues = amIssues?.takeIf { amWatched }.orEmpty(),

@@ -119,6 +119,7 @@ private struct KubeSignInProgress: View {
     let target: KubeSignInTarget
 
     @Environment(\.openURL) private var openURL
+    @State private var pastedCode = ""
 
     var body: some View {
         switch flow.phase {
@@ -133,6 +134,18 @@ private struct KubeSignInProgress: View {
                     Text("Waiting for the sign-in in the browser…")
                 }
                 Button("Cancel", role: .cancel) { flow.cancel() }
+            }
+            if flow.acceptsPastedCode {
+                Section {
+                    TextField("Sign-in code", text: $pastedCode)
+                        .font(.body.monospaced())
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Button("Continue") { flow.complete(code: pastedCode) }
+                        .disabled(pastedCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                } footer: {
+                    Text("Browser did not come back to Ichor? Paste the sign-in code the page shows.")
+                }
             }
         case .device(let prompt):
             deviceSection(prompt)
@@ -214,14 +227,33 @@ struct KubeCredentialsForm: View {
                 .pickerStyle(.segmented)
             }
         }
-        KubeFieldsSection(fields: fields, values: $values)
-        Section {
-            Button("Save and sign in") { onSubmit(kubeSecretsJSON(fields: fields, values: values)) }
-                .disabled(busy || !kubeFieldsComplete(fields, values: values))
-        } footer: {
-            if fields.contains(where: { kubeFieldInput($0) == .secret || kubeFieldInput($0) == .json }) {
-                Text("Stored sealed on this device, and in your encrypted backups. Prefer a dedicated identity with read-only access.")
+        if fields == [kubeGoogleSignInField] {
+            // Sign in with Google: Google's page in the browser sheet, nothing to type.
+            Section {
+                Button("Sign in with Google") { onSubmit(kubeGoogleSignInSecretsJSON()) }
+                    .disabled(busy)
+            } footer: {
+                Text("Your Google account, through Google's sign-in page.")
             }
+        } else {
+            KubeFieldsSection(fields: fields, values: $values)
+            if let hint = fields.lazy.compactMap(KubeAuthWording.fieldHint).first {
+                Section {
+                    Text(hint).font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+            Section {
+                Button("Save and sign in") { onSubmit(kubeSecretsJSON(fields: fields, values: values)) }
+                    .disabled(busy || !kubeFieldsComplete(fields, values: values))
+            } footer: {
+                credentialsFooter
+            }
+        }
+    }
+
+    @ViewBuilder private var credentialsFooter: some View {
+        if fields.contains(where: { kubeFieldInput($0) == .secret || kubeFieldInput($0) == .json }) {
+            Text("Stored sealed on this device, and in your encrypted backups. Prefer a dedicated identity with read-only access.")
         }
     }
 }

@@ -238,6 +238,7 @@ internal fun KubeToolsCard(nav: KubeHomeNavigation) {
                 OutlinedButton(onClick = nav.onStorage) { Text(stringResource(R.string.storage_title)) }
                 OutlinedButton(onClick = nav.onServices) { Text(stringResource(R.string.kube_services_title)) }
                 OutlinedButton(onClick = nav.onJobs) { Text(stringResource(R.string.kube_jobs_title)) }
+                OutlinedButton(onClick = nav.onEvents) { Text(stringResource(R.string.kube_events_stream_title)) }
                 OutlinedButton(onClick = nav.onMetrics) { Text(stringResource(R.string.metrics_title)) }
                 OutlinedButton(onClick = { nav.onDataServices(null) }) { Text(stringResource(R.string.data_services_title)) }
                 OutlinedButton(onClick = nav.onCheckup) { Text(stringResource(R.string.checkup_title)) }

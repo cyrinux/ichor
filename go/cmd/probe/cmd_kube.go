@@ -186,6 +186,17 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "scan-history", args: "[CLUSTER]", run: func(e env) (out string, err error) {
+		// scan-history [CLUSTER]: the kept scan reports (needs -data-dir), every cluster when omitted.
+		out, err = ichorgo.ImageScanHistory(flag.Arg(1))
+
+		return out, err
+	}},
+	{name: "scan-saved", args: "ID", run: func(e env) (out string, err error) {
+		out, err = ichorgo.ImageScanSaved(flag.Arg(1))
+
+		return out, err
+	}},
 	{name: "netperf-cleanup", args: "NAMESPACE", run: func(e env) (out string, err error) {
 		// netperf-cleanup NAMESPACE: deletes an ichor-netperf-* namespace a test left behind.
 		if err = ichorgo.NetPerfDeleteNamespace(e.cfg, e.context, e.kubeServer, flag.Arg(1)); err == nil {
@@ -289,6 +300,12 @@ var kubeCommands = []command{
 	{name: "upgrade-plan", args: "NODE", run: func(e env) (out string, err error) {
 		// Read-only: never calls the upgrade itself.
 		out, err = ichorgo.UpgradePlan(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+
+		return out, err
+	}},
+	{name: "reset-plan", args: "NODE", run: func(e env) (out string, err error) {
+		// Read-only: never calls the reset itself.
+		out, err = ichorgo.NodeResetPlan(e.cfg, e.context, e.kubeServer, flag.Arg(1))
 
 		return out, err
 	}},

@@ -46,6 +46,36 @@ final class KubeAuthTests: XCTestCase {
 
         let single = KubeSignInInfo(method: "gke", kind: "credentials", fields: ["gcpServiceAccountJson"])
         XCTAssertEqual(single.fieldSets, [["gcpServiceAccountJson"]])
+        XCTAssertEqual(kubeFieldInput("gcpUserCredentialsJson"), .json)
+        XCTAssertEqual(kubeFieldInput("gcpOAuthClientSecret"), .secret)
+        XCTAssertEqual(kubeFieldInput("gcpOAuthClientId"), .plain)
+
+        // The OAuth client of the last sign-in reopens its option, filled.
+        let gke = try XCTUnwrap(try KubeSignInInfo.decode(#"""
+            {"method":"gke","kind":"credentials","options":[["gcpServiceAccountJson"],["gcpUserCredentialsJson"],["gcpOAuthClientId","gcpOAuthClientSecret"]],"values":{"gcpOAuthClientId":"123-abc.apps.googleusercontent.com","gcpOAuthClientSecret":"s"},"signedIn":false}
+            """#))
+        XCTAssertEqual(gke.rememberedOption, 2)
+        XCTAssertTrue(kubeFieldsComplete(gke.fieldSets[2], values: gke.values))
+
+        // "Sign in with Google" (a build with a Google client) is a marker the app does not
+        // render yet: it decodes, and its option is never complete from typed values.
+        let native = try XCTUnwrap(try KubeSignInInfo.decode(#"""
+            {"method":"gke","kind":"credentials","options":[["gcpServiceAccountJson"],["gcpGoogleSignIn"]],"signedIn":false}
+            """#))
+        XCTAssertEqual(native.fieldSets[1], ["gcpGoogleSignIn"])
+        XCTAssertFalse(kubeFieldsComplete(native.fieldSets[1], values: [:]))
+        XCTAssertTrue(kubeFieldsComplete(native.fieldSets[1], values: [kubeGoogleSignInField: "ios"]))
+        XCTAssertEqual(kubeGoogleSignInSecretsJSON(), #"{"gcpGoogleSignIn":"ios"}"#)
+    }
+
+    func testCallbackSchemeOfTheRedirect() {
+        // Google's iOS client comes back to its reversed client ID; the session closes on it.
+        XCTAssertEqual(kubeCallbackScheme(of: "com.googleusercontent.apps.123-abc:/oauth2redirect"), "com.googleusercontent.apps.123-abc")
+        XCTAssertEqual(kubeCallbackScheme(of: "http://127.0.0.1:4242"), "ichor")
+        XCTAssertEqual(kubeCallbackScheme(of: "https://cyrinux.github.io/ichor/auth/google/"), "ichor")
+        XCTAssertEqual(kubeCallbackScheme(of: nil), "ichor")
+        XCTAssertEqual(kubeCallbackScheme(of: "no scheme here"), "ichor")
+        XCTAssertEqual(kubeCallbackScheme(of: "1bad:/x"), "ichor")
 
         XCTAssertNil(try KubeSignInInfo.decode(""))
     }
@@ -97,6 +127,15 @@ final class KubeAuthTests: XCTestCase {
         let fields = try decodeKubeDiscoverFields(#"{"eks":["awsRegion","awsAccessKeyId"],"gke":["gcpServiceAccountJson"]}"#)
         XCTAssertEqual(fields["eks"], ["awsRegion", "awsAccessKeyId"])
         XCTAssertEqual(kubeDiscoverProviders, ["eks", "gke", "aks", "digitalocean", "rancher"])
+
+        // GKE takes a service account key or gcloud user credentials; the others their one set.
+        let options = try decodeKubeDiscoverOptions(#"{"gke":[["gcpServiceAccountJson"],["gcpUserCredentialsJson","gcpProjects"]]}"#)
+        XCTAssertEqual(kubeDiscoverOptionSets(provider: "gke", fields: fields, options: options),
+                       [["gcpServiceAccountJson"], ["gcpUserCredentialsJson", "gcpProjects"]])
+        XCTAssertEqual(kubeDiscoverOptionSets(provider: "eks", fields: fields, options: options), [["awsRegion", "awsAccessKeyId"]])
+        XCTAssertEqual(kubeDiscoverOptionSets(provider: "aks", fields: fields, options: options), [])
+        // The project IDs are optional: the credential alone is enough to search.
+        XCTAssertTrue(kubeFieldsComplete(["gcpUserCredentialsJson", "gcpProjects"], values: ["gcpUserCredentialsJson": "{}"]))
     }
 
     func testImportedSignInContexts() {
