@@ -3489,6 +3489,16 @@
     <string name="monitor_unreachable">Unreachable clusters</string>
     <string name="monitor_unreachable_desc">Notifies once when a cluster has not answered for several checks in a row (no node, no API, or too slow), and once when it answers again. Node alerts stay silent meanwhile.</string>
     <string name="monitor_unreachable_runs">After %1$s checks in a row</string>
+    <string name="monitor_storage">Node storage</string>
+    <string name="monitor_storage_desc">Notifies when a node\'s volume fills up (warnings once seen on two checks in a row) or a disk fails SMART (at once), and once it is fine again. Each check reads every node\'s volumes and disks through the Talos API (Talos clusters only).</string>
+    <string name="monitor_storage_warn">Warning from %1$d %% used</string>
+    <string name="monitor_storage_critical">Critical from %1$d %% used</string>
+    <string name="monitor_storage_fill">%1$s on %2$s at %3$d %%</string>
+    <string name="monitor_storage_fill_critical">%1$s on %2$s at %3$d %%, almost full</string>
+    <string name="monitor_storage_fill_text">%1$s free of %2$s</string>
+    <string name="monitor_storage_smart">SMART failing on %1$s (%2$s)</string>
+    <string name="monitor_storage_fill_ok">%1$s on %2$s back under %3$d %%</string>
+    <string name="monitor_storage_smart_ok">%1$s on %2$s passes SMART again</string>
     <string name="clusters_watch">Watch in the background</string>
     <string name="widget_config_title">Cluster shown on the widget</string>
     <string name="widget_config_active">Cluster on screen</string>

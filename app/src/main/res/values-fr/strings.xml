@@ -3489,6 +3489,16 @@
     <string name="monitor_unreachable">Clusters injoignables</string>
     <string name="monitor_unreachable_desc">Prévient une fois quand un cluster n\'a pas répondu à plusieurs vérifications de suite (aucun nœud, aucune API, ou trop lent), et une fois quand il répond de nouveau. Les alertes de nœuds restent muettes entre-temps.</string>
     <string name="monitor_unreachable_runs">Après %1$s vérifications de suite</string>
+    <string name="monitor_storage">Stockage des nœuds</string>
+    <string name="monitor_storage_desc">Notifie quand un volume d\'un nœud se remplit (les avertissements une fois vus sur deux vérifications de suite) ou qu\'un disque échoue au test SMART (aussitôt), puis une fois que tout va bien. Chaque vérification lit les volumes et disques de chaque nœud via l\'API Talos (clusters Talos uniquement).</string>
+    <string name="monitor_storage_warn">Avertissement dès %1$d&#160;%% utilisés</string>
+    <string name="monitor_storage_critical">Critique dès %1$d&#160;%% utilisés</string>
+    <string name="monitor_storage_fill">%1$s sur %2$s à %3$d&#160;%%</string>
+    <string name="monitor_storage_fill_critical">%1$s sur %2$s à %3$d&#160;%%, presque plein</string>
+    <string name="monitor_storage_fill_text">%1$s libres sur %2$s</string>
+    <string name="monitor_storage_smart">SMART en échec sur %1$s (%2$s)</string>
+    <string name="monitor_storage_fill_ok">%1$s sur %2$s repassé sous %3$d&#160;%%</string>
+    <string name="monitor_storage_smart_ok">%1$s sur %2$s passe de nouveau SMART</string>
     <string name="clusters_watch">Surveiller en arrière-plan</string>
     <string name="widget_config_title">Cluster affiché par le widget</string>
     <string name="widget_config_active">Cluster à l\'écran</string>

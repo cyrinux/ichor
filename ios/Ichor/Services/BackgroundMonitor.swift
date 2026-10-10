@@ -127,6 +127,28 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: alertmanagerKey) }
     }
 
+    static let storageKey = "monitor.storage"
+    /// Opt-in: also read every node's volume fill and disks' SMART verdict (Talos clusters only).
+    static var storageWatched: Bool {
+        get { UserDefaults.standard.bool(forKey: storageKey) }
+        set { UserDefaults.standard.set(newValue, forKey: storageKey) }
+    }
+
+    static let storageWarnKey = "monitor.storageWarn"
+    static let storageCritKey = "monitor.storageCrit"
+    /// The fill (% used) a volume alerts from: a warning, then critical (StorageThresholds clamps them).
+    static var storageThresholds: StorageThresholds {
+        get {
+            let stored = UserDefaults.standard
+            return StorageThresholds(warn: stored.object(forKey: storageWarnKey) as? Int ?? storageWarnDefault,
+                                     crit: stored.object(forKey: storageCritKey) as? Int ?? storageCritDefault)
+        }
+        set {
+            UserDefaults.standard.set(newValue.warn, forKey: storageWarnKey)
+            UserDefaults.standard.set(newValue.crit, forKey: storageCritKey)
+        }
+    }
+
     /// Call once, before the app finishes launching.
     static func register() {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: taskID, using: nil) { task in
@@ -314,6 +336,10 @@ enum BackgroundMonitor {
         // And for the Alertmanager, reached like the metrics through the service proxy or a URL.
         let watchAlertmanager = alertmanagerWatched && job.kubeAllowed
         let knownAlertmanager = knownAlertmanagerIssues(previous, context: context.name)
+        // And node storage, through the Talos API only (any role may read it): none on a kubeconfig cluster.
+        let watchStorage = storageWatched && !context.isKube
+        let knownStorage = knownStorageIssues(previous, context: context.name)
+        let thresholds = storageThresholds
         let fingerprint = context.fingerprint
         async let dataRead = ifWatched(watchData, within: left) { try? await client.dataServices(hints: "") }
         async let gitopsRead = ifWatched(watchGitOps, within: left) { await readGitOps(client, known: known) }
@@ -321,10 +347,14 @@ enum BackgroundMonitor {
         async let alertmanagerRead = ifWatched(watchAlertmanager, within: left) {
             await readAlertmanager(client, fingerprint: fingerprint, known: knownAlertmanager)
         }
+        async let storageRead = ifWatched(watchStorage, within: left) {
+            await readStorage(client, thresholds: thresholds, known: knownStorage)
+        }
         let dataServices = await dataRead
         let gitopsIssues = await gitopsRead
         let checkupIssues = await checkupRead
         let alertmanagerIssues = await alertmanagerRead
+        let storageIssues = await storageRead
         let now = Date()
         if let kubeNodes {
             return .read(kubeSnapshotOf(kubeNodes, context: context.name, certNotAfter: context.certNotAfter, takenAt: now,
@@ -338,7 +368,8 @@ enum BackgroundMonitor {
                                 dataWatched: watchData, dataServices: dataServices,
                                 gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
                                 checkupWatched: watchCheckup, checkupIssues: checkupIssues,
-                                alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues))
+                                alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
+                                storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn))
     }
 
     /// `work` within `seconds` when `on`; nil when off, failed or too slow.
@@ -413,6 +444,14 @@ enum BackgroundMonitor {
         return alertmanagerIssuesWithGaps(alerts, known: known)
     }
 
+    /// Volumes over `thresholds` and disks failing SMART; nil when it could not be read. A node
+    /// that did not answer keeps what the last snapshot knew of it.
+    private static func readStorage(_ client: TalosClient, thresholds: StorageThresholds,
+                                    known: [String: String]) async -> [String: String]? {
+        guard let health = try? await client.clusterStorageHealth() else { return nil }
+        return storageIssuesOf(health, thresholds: thresholds, known: known)
+    }
+
     /// IchorCore builds English alerts; this rebuilds their text in the user's
     /// language from the alert key and the snapshot (same wording, keys in Localizable.xcstrings).
     /// `previous`: the snapshot before the check, which still names an Alertmanager alert that resolved.
@@ -471,6 +510,10 @@ enum BackgroundMonitor {
             let section = CheckupSectionID(rawValue: finding.section)?.title ?? finding.section
             let severity = snapshot.checkupIssues[subject] == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
             return ("\(section): \(finding.subject)", "\(CheckupText.checkupTitle) · \(severity)")
+        case "storage":
+            // "<node>|…": named from the issue kept, the current one or, once resolved, the last.
+            guard let value = snapshot.storageIssues[subject] ?? previous?.storageIssues[subject] else { return (alert.title, alert.text) }
+            return localizedStorage(alert, issue: StorageIssue(value: value), warn: snapshot.storageWarn)
         case "unreachable":
             // The cluster is named in the subtitle.
             guard alert.problem else {
@@ -506,6 +549,28 @@ enum BackgroundMonitor {
         return (title, "\(subject.label) · \(severity)")
     }
 
+    /// A volume's fill, or a disk failing SMART, on a node named by its hostname.
+    private static func localizedStorage(_ alert: Alert, issue: StorageIssue, warn: Int) -> (title: String, text: String) {
+        let name = issue.name
+        let host = issue.hostname
+        if issue.isSmart {
+            guard alert.problem else { return (String(localized: "\(name) on \(host) passes SMART again"), "") }
+            return (String(localized: "SMART failing on \(name) (\(host))"), issue.detail)
+        }
+        // The "%" goes with the number, so no key carries a literal one.
+        guard alert.problem else {
+            let threshold = "\(warn) %"
+            return (String(localized: "\(name) on \(host) back under \(threshold)"), "")
+        }
+        let fill = "\(issue.percent) %"
+        let title = issue.severity == dataCritical
+            ? String(localized: "\(name) on \(host) at \(fill), almost full")
+            : String(localized: "\(name) on \(host) at \(fill)")
+        let free = formatBytes(issue.freeBytes)
+        let size = formatBytes(issue.sizeBytes)
+        return (title, String(localized: "\(free) free of \(size)"))
+    }
+
     static func requestPermission() async -> Bool {
         (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])) ?? false
     }
@@ -520,7 +585,7 @@ enum BackgroundMonitor {
 
     /// The alert kinds, one notification category each ("alert.node"…), so iOS can group and
     /// summarize them per kind.
-    static let alertKinds = ["node", "etcd", "cert", "data", "gitops", "checkup", "alertmanager", "cluster"]
+    static let alertKinds = ["node", "etcd", "cert", "data", "gitops", "checkup", "alertmanager", "storage", "cluster"]
 
     /// The category of an alert: its kind's with its `actions` (see alertCategory), "….private"
     /// with details hidden; "private" for a kind this version does not know. Alertmanager alerts

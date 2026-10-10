@@ -8,6 +8,8 @@ struct MonitoringSection: View {
     @State private var gitopsWatched = BackgroundMonitor.gitopsWatched
     @State private var checkupWatched = BackgroundMonitor.checkupWatched
     @State private var alertmanagerWatched = BackgroundMonitor.alertmanagerWatched
+    @State private var storageWatched = BackgroundMonitor.storageWatched
+    @State private var storageThresholds = BackgroundMonitor.storageThresholds
     @State private var unreachableWatched = BackgroundMonitor.unreachableWatched
     @State private var unreachableRuns = BackgroundMonitor.unreachableRuns
     @State private var message: String?
@@ -67,6 +69,22 @@ struct MonitoringSection: View {
                 }
             }
             .disabled(!enabled)
+            // Opt-in too: one Talos call per check reads every node's volumes and disks.
+            Toggle(isOn: Binding(get: { storageWatched }, set: { on in
+                BackgroundMonitor.storageWatched = on
+                storageWatched = on
+            })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Watch node storage")
+                    Text("Volumes such as EPHEMERAL filling up past the thresholds below, and disks failing SMART, on Talos clusters. Each check reads every node's volumes and disks through the Talos API.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
+            if storageWatched {
+                storageSteppers.disabled(!enabled)
+            }
             // Opt-in too: no extra call, only the runs a cluster did not answer in a row.
             Toggle(isOn: Binding(get: { unreachableWatched }, set: { on in
                 BackgroundMonitor.unreachableWatched = on
@@ -117,6 +135,27 @@ struct MonitoringSection: View {
                 if !Distribution.appStore { Text("The widget reads the last check through an App Group, which a free Apple ID may not allow when sideloading. In that case the widget stays empty.") }
             }
         }
+    }
+
+    /// The warning and critical fill thresholds; critical stays above warning.
+    @ViewBuilder private var storageSteppers: some View {
+        let warnLabel = "\(storageThresholds.warn) %"
+        let critLabel = "\(storageThresholds.crit) %"
+        Stepper(value: Binding(get: { storageThresholds.warn }, set: { warn in
+            setStorage(StorageThresholds(warn: warn, crit: max(storageThresholds.crit, warn + 1)))
+        }), in: storageWarnRange) {
+            Text("Warning from \(warnLabel) used")
+        }
+        Stepper(value: Binding(get: { storageThresholds.crit }, set: { crit in
+            setStorage(StorageThresholds(warn: storageThresholds.warn, crit: crit))
+        }), in: storageCritRange(warn: storageThresholds.warn)) {
+            Text("Critical from \(critLabel) used")
+        }
+    }
+
+    private func setStorage(_ thresholds: StorageThresholds) {
+        BackgroundMonitor.storageThresholds = thresholds
+        storageThresholds = thresholds
     }
 
     private func set(_ on: Bool) {

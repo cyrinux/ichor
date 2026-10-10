@@ -3489,6 +3489,16 @@
     <string name="monitor_unreachable">Clústeres inaccesibles</string>
     <string name="monitor_unreachable_desc">Avisa una vez cuando un clúster no ha respondido en varias comprobaciones seguidas (ningún nodo, ninguna API o demasiado lento), y una vez cuando vuelve a responder. Mientras tanto, las alertas de nodos callan.</string>
     <string name="monitor_unreachable_runs">Tras %1$s comprobaciones seguidas</string>
+    <string name="monitor_storage">Almacenamiento de los nodos</string>
+    <string name="monitor_storage_desc">Notifica cuando un volumen de un nodo se llena (las advertencias una vez vistas en dos comprobaciones seguidas) o un disco falla SMART (en el acto), y una vez cuando vuelve a estar bien. Cada comprobación lee los volúmenes y discos de cada nodo a través de la API de Talos (solo clústeres Talos).</string>
+    <string name="monitor_storage_warn">Advertencia desde %1$d %% usado</string>
+    <string name="monitor_storage_critical">Crítico desde %1$d %% usado</string>
+    <string name="monitor_storage_fill">%1$s en %2$s al %3$d %%</string>
+    <string name="monitor_storage_fill_critical">%1$s en %2$s al %3$d %%, casi lleno</string>
+    <string name="monitor_storage_fill_text">%1$s libres de %2$s</string>
+    <string name="monitor_storage_smart">SMART falla en %1$s (%2$s)</string>
+    <string name="monitor_storage_fill_ok">%1$s en %2$s de nuevo por debajo del %3$d %%</string>
+    <string name="monitor_storage_smart_ok">%1$s en %2$s vuelve a pasar SMART</string>
     <string name="clusters_watch">Vigilar en segundo plano</string>
     <string name="widget_config_title">Clúster que muestra el widget</string>
     <string name="widget_config_active">Clúster en pantalla</string>

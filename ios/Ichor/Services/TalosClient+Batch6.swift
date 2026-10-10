@@ -52,6 +52,12 @@ extension TalosClient {
         try await Self.json { [config, context] in IchorgoNodeDiskHealth(config, context, node, $0) }
     }
 
+    /// Every node's volume fill and disks' SMART verdict, nodes read in parallel (os:reader): what
+    /// the background monitor alerts on. Talos clusters only: a kubeconfig one has no Talos API.
+    func clusterStorageHealth() async throws -> ClusterStorageHealth {
+        try await Self.json { [config, context] in IchorgoClusterStorageHealth(config, context, $0) }
+    }
+
     /// `talosctl -n NODE etcd forfeit-leadership` (os:admin); node must be the leader.
     func etcdForfeitLeadership(node: String) async throws -> EtcdForfeitResult {
         try await Self.json { [config, context] in IchorgoEtcdForfeitLeadership(config, context, node, $0) }
