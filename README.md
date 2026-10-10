@@ -602,6 +602,9 @@ a fresh install. Backups move between Android and iOS.
     | Apply and reboot now | Applied, then the node reboots; you type its hostname first. |
 
   - **Changes that need a reboot:** they offer only the last two modes.
+  - **A try keeps running in the background:** leave the screen and the countdown goes on in a notification, with **Keep** and **Revert now**.
+    - **App lock:** with it on, Keep opens the app first.
+    - **On iOS:** the background time is short. Once iOS suspends Ichor, the node reverts by itself at the deadline, and the notification says so.
   - **The same change on several nodes ("Also apply to other nodes…"):**
     - **Preview:** the field edits are replayed on each picked node's own config, and you see each node's diff first. A node the edits do not fit is skipped.
     - **Run:** one confirmation for all, typed with the cluster's name. Nodes are applied one after the other, workers first and control planes last, and the first failure stops the rest.
