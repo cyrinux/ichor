@@ -140,6 +140,16 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
         }
 
     /**
+     * The events of [namespace] (null: every namespace) kept live, coalesced by object, reason
+     * and type (os:admin): the newest rows first, then each change, until the collector
+     * cancels or the stream ends. [warningsOnly]: Warning events only.
+     */
+    fun eventsStream(namespace: String?, warningsOnly: Boolean): Flow<KubeEventsItem> =
+        kubeEventsFlow(go::kubeTarget) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeEvents(cfg, ctx, server, namespace.orEmpty(), warningsOnly, listener)
+        }
+
+    /**
      * `kubectl scale KIND/NAME --replicas=N -n NAMESPACE` (os:admin): a warning ("" when none)
      * when a HorizontalPodAutoscaler manages the replicas and will change them again.
      */

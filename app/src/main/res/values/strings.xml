@@ -3655,4 +3655,23 @@
         <item quantity="other">%1$d older alerts still open</item>
     </plurals>
     <string name="history_alert_cert">Certificate expiring</string>
+    <string name="kube_events_stream_title">Kubernetes events</string>
+    <string name="kube_events_warnings_only">Warnings only</string>
+    <string name="kube_events_pause">Pause</string>
+    <string name="kube_events_resume">Resume</string>
+    <string name="kube_events_paused">Paused</string>
+    <string name="kube_events_search">Search reasons, objects or messages</string>
+    <string name="kube_events_stream_empty">No event yet: new ones show up here as they happen.</string>
+    <string name="kube_events_no_match">No event matches.</string>
+    <string name="kube_events_share">Share events</string>
+    <string name="kube_events_open_object">Open object</string>
+    <string name="kube_events_connecting">Connecting…</string>
+    <string name="kube_events_reconnecting">Reconnecting…</string>
+    <string name="kube_events_reconnecting_reason">Reconnecting: %1$s</string>
+    <string name="kube_events_relisting">Reading the events again…</string>
+    <string name="kube_events_polling">Polling every 5 s: these credentials may list events but not watch them</string>
+    <plurals name="kube_events_pending">
+        <item quantity="one">Paused: %1$d new or changed event</item>
+        <item quantity="other">Paused: %1$d new or changed events</item>
+    </plurals>
 </resources>

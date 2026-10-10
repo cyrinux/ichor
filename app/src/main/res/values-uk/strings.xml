@@ -3875,4 +3875,25 @@
         <item quantity="other">%1$d старішого сповіщення досі відкриті</item>
     </plurals>
     <string name="history_alert_cert">Сертифікат скоро спливає</string>
+    <string name="kube_events_stream_title">Події Kubernetes</string>
+    <string name="kube_events_warnings_only">Лише попередження</string>
+    <string name="kube_events_pause">Пауза</string>
+    <string name="kube_events_resume">Відновити</string>
+    <string name="kube_events_paused">Призупинено</string>
+    <string name="kube_events_search">Пошук причин, об’єктів або повідомлень</string>
+    <string name="kube_events_stream_empty">Подій ще немає: нові з’являться тут, щойно стануться.</string>
+    <string name="kube_events_no_match">Жодна подія не відповідає.</string>
+    <string name="kube_events_share">Поділитися подіями</string>
+    <string name="kube_events_open_object">Відкрити об’єкт</string>
+    <string name="kube_events_connecting">Підключення…</string>
+    <string name="kube_events_reconnecting">Перепідключення…</string>
+    <string name="kube_events_reconnecting_reason">Перепідключення: %1$s</string>
+    <string name="kube_events_relisting">Повторне читання подій…</string>
+    <string name="kube_events_polling">Опитування кожні 5 с: ці облікові дані можуть перелічувати події, але не стежити за ними</string>
+    <plurals name="kube_events_pending">
+        <item quantity="one">Призупинено: %1$d нова чи змінена подія</item>
+        <item quantity="few">Призупинено: %1$d нові чи змінені події</item>
+        <item quantity="many">Призупинено: %1$d нових чи змінених подій</item>
+        <item quantity="other">Призупинено: %1$d нової чи зміненої події</item>
+    </plurals>
 </resources>

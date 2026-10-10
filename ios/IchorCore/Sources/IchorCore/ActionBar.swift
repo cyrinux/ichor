@@ -38,6 +38,8 @@ public enum KubernetesAction: String, BarAction {
     case flows = "FLOWS"
     case resources = "RESOURCES"
     case helm = "HELM"
+    /// The cluster's events kept live.
+    case events = "EVENTS"
     case apiAddress = "API_ADDRESS"
 
     public var id: String { rawValue }

@@ -72,6 +72,9 @@ internal object Routes {
     fun workloads(focus: KubeFocus? = null) = if (focus == null) "workloads" else
         "workloads?tab=${focus.tab}&key=${Uri.encode(focus.key)}&ns=${Uri.encode(focus.namespace)}&name=${Uri.encode(focus.name)}"
     const val NETWORK_POLICIES = "netpol"
+
+    /** The cluster's Kubernetes events, live. */
+    const val KUBE_EVENTS = "kube-events"
     const val API_HEALTH = "apihealth"
     const val CHECKUP = "checkup"
     const val AUDIT = "audit"

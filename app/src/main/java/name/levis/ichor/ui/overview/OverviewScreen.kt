@@ -165,6 +165,8 @@ fun OverviewScreen(
     onStorage: () -> Unit,
     onServices: () -> Unit,
     onJobs: () -> Unit,
+    /** The cluster's Kubernetes events, live (from the Kubernetes home). */
+    onKubeEvents: () -> Unit,
     onDrain: (node: String) -> Unit,
     onNodeDebug: (node: String) -> Unit,
     /** The action audit log of a cluster, by its context name. */
@@ -204,6 +206,7 @@ fun OverviewScreen(
                 onStorage = onStorage,
                 onServices = onServices,
                 onJobs = onJobs,
+                onEvents = onKubeEvents,
                 onDrain = onDrain,
                 onNodeDebug = onNodeDebug,
                 onAllNodes = onKubeNodes,

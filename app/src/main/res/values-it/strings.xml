@@ -3655,4 +3655,23 @@
         <item quantity="other">%1$d avvisi precedenti ancora aperti</item>
     </plurals>
     <string name="history_alert_cert">Certificato in scadenza</string>
+    <string name="kube_events_stream_title">Eventi Kubernetes</string>
+    <string name="kube_events_warnings_only">Solo avvisi</string>
+    <string name="kube_events_pause">Pausa</string>
+    <string name="kube_events_resume">Riprendi</string>
+    <string name="kube_events_paused">In pausa</string>
+    <string name="kube_events_search">Cerca motivi, oggetti o messaggi</string>
+    <string name="kube_events_stream_empty">Ancora nessun evento: i nuovi compaiono qui appena accadono.</string>
+    <string name="kube_events_no_match">Nessun evento corrisponde.</string>
+    <string name="kube_events_share">Condividi eventi</string>
+    <string name="kube_events_open_object">Apri oggetto</string>
+    <string name="kube_events_connecting">Connessione…</string>
+    <string name="kube_events_reconnecting">Riconnessione…</string>
+    <string name="kube_events_reconnecting_reason">Riconnessione: %1$s</string>
+    <string name="kube_events_relisting">Rilettura degli eventi…</string>
+    <string name="kube_events_polling">Interrogazione ogni 5 s: queste credenziali possono elencare gli eventi ma non osservarli</string>
+    <plurals name="kube_events_pending">
+        <item quantity="one">In pausa: %1$d evento nuovo o modificato</item>
+        <item quantity="other">In pausa: %1$d eventi nuovi o modificati</item>
+    </plurals>
 </resources>
