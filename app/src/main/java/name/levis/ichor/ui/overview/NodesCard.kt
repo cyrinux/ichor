@@ -62,6 +62,7 @@ import name.levis.ichor.ui.components.NodeHealthPill
 import name.levis.ichor.ui.components.agoLabel
 import name.levis.ichor.ui.components.expandable
 import name.levis.ichor.ui.kubespan.siteTitle
+import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
@@ -200,6 +201,9 @@ private fun NodeChip(node: NodeOverview, onClick: () -> Unit, onLongClick: () ->
             Box(Modifier.size(8.dp).background(color, CircleShape))
             Spacer(Modifier.width(6.dp))
             Text(node.hostname, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (node.cordoned) {
+                Text(" · " + stringResource(R.string.kube_node_cordoned), style = MaterialTheme.typography.labelLarge, maxLines = 1)
+            }
         }
     }
 }
@@ -230,6 +234,9 @@ private fun NodeRow(
         Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(node.hostname, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                if (node.cordoned) {
+                    StatusPill(stringResource(R.string.kube_node_cordoned), LocalStatusColors.current.warn, Modifier.padding(end = 6.dp))
+                }
                 NodeHealthPill(node.health)
             }
             // Below the pill rather than beside it: the full width keeps an IPv6 on one line.
