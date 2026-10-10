@@ -303,6 +303,12 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "reset-plan", args: "NODE", run: func(e env) (out string, err error) {
+		// Read-only: never calls the reset itself.
+		out, err = ichorgo.NodeResetPlan(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+
+		return out, err
+	}},
 	{name: "diagnose-report", args: "", run: func(e env) (out string, err error) {
 		// What the AI diagnosis would send, anonymized; nothing is sent.
 		var d *ichorgo.Diagnosis

@@ -53,6 +53,8 @@ import name.levis.ichor.model.NodeDiscovery
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.EndpointProbe
 import name.levis.ichor.model.NodeFeatures
+import name.levis.ichor.model.NodeResetPlan
+import name.levis.ichor.model.ResetRequest
 import name.levis.ichor.model.ResourceDetail
 import name.levis.ichor.model.ResourceList
 import name.levis.ichor.model.ResourceType
@@ -381,6 +383,16 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
 
     /** `talosctl reboot -m [mode]` (default, powercycle, force); needs os:operator or higher. */
     suspend fun reboot(node: String, mode: String) = call { cfg, ctx -> Ichorgo.reboot(cfg, ctx, node, mode) }
+
+    /** What resetting [node] would wipe and leave, and what forbids it. Read-only. */
+    suspend fun resetPlan(node: String): NodeResetPlan = talosKubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(NodeResetPlan.serializer(), Ichorgo.nodeResetPlan(cfg, ctx, server, node))
+    }
+
+    /** `talosctl reset --wipe-mode --graceful --reboot` on [node] (os:admin); refused on a plan blocker. */
+    suspend fun reset(node: String, request: ResetRequest) = call { cfg, ctx ->
+        Ichorgo.nodeReset(cfg, ctx, node, request.wipe.wire, request.graceful, request.reboot)
+    }
 
     /** `talosctl rollback`: [node] reboots into the Talos it ran before its last upgrade (os:admin). */
     suspend fun rollback(node: String) = call { cfg, ctx -> Ichorgo.rollback(cfg, ctx, node) }

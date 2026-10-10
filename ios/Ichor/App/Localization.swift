@@ -24,6 +24,7 @@ extension Feature {
         case .supportBundle: String(localized: "Support bundle")
         case .workloads: String(localized: "Kubernetes workloads")
         case .cgroups: String(localized: "Cgroups and pressure")
+        case .reset: String(localized: "Node reset")
         }
     }
 }

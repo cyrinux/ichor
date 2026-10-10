@@ -45,6 +45,7 @@ type fakeTalos struct {
 	health           func(node string, stream grpc.ServerStreamingServer[clusterapi.HealthCheckProgress]) error
 	snapshot         func(stream grpc.ServerStreamingServer[common.Data]) error
 	rebootErr        error
+	resets           []*machineapi.ResetRequest // the Reset requests received, in order
 	disarmErr        error
 	failLogs         string // the service whose logs cannot be read
 	// mounts are a node's mounted filesystems (none: /dev/sda6 on /var, 40 % used).
@@ -225,6 +226,18 @@ func (m fakeTalosMachine) Reboot(ctx context.Context, _ *machineapi.RebootReques
 	}
 
 	return &machineapi.RebootResponse{Messages: []*machineapi.Reboot{{}}}, nil
+}
+
+func (m fakeTalosMachine) Reset(ctx context.Context, req *machineapi.ResetRequest) (*machineapi.ResetResponse, error) {
+	if _, err := m.f.enter(ctx, "Reset"); err != nil {
+		return nil, err
+	}
+
+	m.f.mu.Lock()
+	m.f.resets = append(m.f.resets, req)
+	m.f.mu.Unlock()
+
+	return &machineapi.ResetResponse{Messages: []*machineapi.Reset{{ActorId: "reset-1"}}}, nil
 }
 
 func (m fakeTalosMachine) EtcdSnapshot(_ *machineapi.EtcdSnapshotRequest, stream grpc.ServerStreamingServer[common.Data]) error {

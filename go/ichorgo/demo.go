@@ -145,9 +145,15 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 		return toJSON(services)
 	case "NodeResources":
 		return toJSON(nodeResources{MemTotal: sample.MemTotal, MemAvailable: sample.MemAvailable, Load1: 0.8, Load5: 0.7, Load15: 0.6, BootTime: uint64(demoBoot.Unix()), CPUCount: n.CPUCount, CPUModel: "Intel Xeon (demo)", Mounts: []mountUsage{{Filesystem: "/dev/nvme0n1p6", MountedOn: "/var", Size: 100 << 30, Available: 72 << 30}}})
+	case "NodeResetPlan":
+		plan := resetPlan{Node: n.Node, Hostname: n.Hostname, Role: n.Role, Blockers: []string{}, Warnings: []string{}, UserDisks: []string{}}
+		if index := slices.IndexFunc(nodes[:3], func(cp nodeOverview) bool { return cp.Node == n.Node }); index >= 0 {
+			plan.EtcdMember = &resetMember{ID: fmt.Sprintf("a%d", index+1), Healthy: true}
+		}
+		return toJSON(plan)
 	case "NodeFeatures":
 		features := computeFeatures(n.Version)
-		for _, id := range []string{"packetCapture", "upgrade", "etcdSnapshot", "etcdMemberActions", "supportBundle", "issueConfig", "debugShell", "serviceControl"} {
+		for _, id := range []string{"packetCapture", "upgrade", "etcdSnapshot", "etcdMemberActions", "supportBundle", "issueConfig", "debugShell", "serviceControl", "reset"} {
 			features.Features[id] = featureState{Reason: errDemoUnavailable.Error()}
 		}
 		return toJSON(features)

@@ -176,6 +176,7 @@ reads those roles and explains up front when a feature needs more.
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
 | **Cluster checkup, events of a pod or workload** | `Kubeconfig`, then the Kubernetes API (pods, nodes, events, claims, webhooks, quotas, services, CSRs, secrets metadata…) and each kubelet's `stats/summary` through the API server proxy | **`os:admin`** |
 | **Talos rollback (`talosctl rollback`)** | `Rollback` | **`os:admin`** |
+| **Node reset (`talosctl reset`)** | `Reset` | **`os:admin`** |
 
 Notes:
 
@@ -546,6 +547,18 @@ a fresh install. Backups move between Android and iOS.
   1. You type the node's hostname to confirm.
   2. Control-plane nodes get an etcd-quorum warning.
   3. With the app lock on, you also authenticate with fingerprint or PIN, or a security key.
+- **Reset (node menu → Reset…):** `talosctl reset` with a plan first. The last control plane,
+  or one whose departure would cost etcd its quorum, cannot be reset: the app and the Go core
+  both refuse it. The options, then the same typed hostname and app lock as a reboot:
+
+  | Option | What happens |
+  |---|---|
+  | Wipe everything | The system disk and the node's other disks, listed in the sheet. |
+  | Wipe the system disk | The system disk only: the node starts over as a new machine. |
+  | Wipe the user disks | The node's other disks only. |
+  | Leave etcd first (`--graceful`, on by default) | Cordon, drain and leave etcd cleanly first. Off on a control plane, its etcd member stays behind: remove it from the etcd screen. |
+  | Reboot after (`--reboot`, on by default) | Off, the node stays powered off once wiped. |
+
 - **App lock (Settings → Security):**
   - **Methods:** fingerprint, with the device PIN, pattern or password as fallback; or a
     **security key** (below).

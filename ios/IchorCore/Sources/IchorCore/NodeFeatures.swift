@@ -6,7 +6,7 @@ public enum NodeFeature: String, CaseIterable, Sendable {
     case events, containers, processes, logFollow, serviceControl, packetCapture, upgrade, volumes
     case diskUsage, mounts, kubespan, etcd, etcdSnapshot, etcdMemberActions, resourceBrowser
     case supportBundle, diskHealth, issueConfig, network, connections, time, hardware, images
-    case machineConfig, debugShell
+    case machineConfig, debugShell, reset
 }
 
 public struct FeatureSupport: Decodable, Equatable, Sendable {
