@@ -668,6 +668,16 @@ talosctl -n <control-plane-ip> bootstrap --recover-from=./etcd.snapshot
 
 Post-quantum `age1pq1…` / `age1tagpq1…` keys need age 1.3 or later to decrypt.
 
+Or from the phone, when no etcd member answers any more: **etcd → Recover from snapshot…**
+(os:admin) picks the file, asks for its passphrase or age secret key (`AGE-SECRET-KEY-1…`, never
+stored), the control plane to recover on, the typed cluster name and an acknowledgement, then
+uploads it and bootstraps etcd there with one member. The file is decrypted while it uploads: the
+clear database never touches the phone's storage. A snapshot encrypted for a YubiKey or an SSH key
+cannot be opened on the phone: decrypt it on a laptop first. The action is refused while any
+member still answers (a recovery would split a live cluster). Afterwards, reset the other control
+planes so they join the new one, as in the
+[Talos disaster recovery guide](https://www.talos.dev/latest/advanced/disaster-recovery/).
+
 ### NOSPACE fix
 
 When etcd raises its `NOSPACE` alarm, the cluster accepts no more writes. **etcd → Alarms → Fix

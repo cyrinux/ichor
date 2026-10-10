@@ -58,6 +58,7 @@ import name.levis.ichor.model.DiskUsage
 import name.levis.ichor.model.EtcdForfeitResult
 import name.levis.ichor.model.EtcdMemberPlan
 import name.levis.ichor.model.SnapshotEncryption
+import name.levis.ichor.model.SnapshotInfo
 import name.levis.ichor.model.SnapshotRecipient
 import name.levis.ichor.model.MountList
 import name.levis.ichor.model.NodeDiscovery
@@ -335,6 +336,15 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** The one-tap NOSPACE fix (see [TalosStreams.etcdNospaceFix]); needs os:admin. */
     fun etcdNospaceFix(snapshotNode: String, destPath: String, encryption: SnapshotEncryption): Flow<EtcdFixEvent> =
         streams.etcdNospaceFix(snapshotNode, destPath, encryption)
+
+    /** What the snapshot file at [path] needs before a recovery (encrypted, with what). */
+    suspend fun snapshotInspect(path: String): SnapshotInfo = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(SnapshotInfo.serializer(), Ichorgo.snapshotInspect(path))
+    }
+
+    /** Recovers etcd on [node] from a snapshot (see [TalosStreams.etcdRecover]); needs os:admin. */
+    fun etcdRecover(node: String, path: String, identity: String, passphrase: String, skipHashCheck: Boolean): Flow<EtcdRecoverEvent> =
+        streams.etcdRecover(node, path, identity, passphrase, skipHashCheck)
 
     /** Pulls an image on several nodes (see [TalosStreams.imagePull]); needs os:admin. */
     fun imagePull(nodes: List<String>, image: String, namespace: ImagePullNamespace): Flow<ImagePullEvent> =

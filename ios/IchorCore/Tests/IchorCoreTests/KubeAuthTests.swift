@@ -138,6 +138,17 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertTrue(kubeFieldsComplete(["gcpUserCredentialsJson", "gcpProjects"], values: ["gcpUserCredentialsJson": "{}"]))
     }
 
+    func testDiscoveryProgress() {
+        let listing = DiscoveryProgress.decode(#"{"running":true,"projects":0,"scanned":0,"clusters":0}"#)
+        XCTAssertEqual(listing, DiscoveryProgress(running: true))
+        XCTAssertNil(listing?.fraction)
+
+        let reading = DiscoveryProgress.decode(#"{"running":true,"projects":200,"scanned":50,"clusters":3}"#)
+        XCTAssertEqual(reading?.fraction, 0.25)
+        XCTAssertEqual(reading?.clusters, 3)
+        XCTAssertNil(DiscoveryProgress.decode("not json"))
+    }
+
     func testImportedSignInContexts() {
         let summary = ConfigSummary(current: "a", contexts: [
             ContextSummary(name: "eks-a", kind: ContextKind.kube, signIn: "eks"),
