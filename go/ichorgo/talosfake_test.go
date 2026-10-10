@@ -38,6 +38,8 @@ type fakeTalos struct {
 	// members are the etcd members (node -> member id); nil: each node is its own only member.
 	members map[string]uint64
 	leader  uint64
+	// etcdErrors are the errors a node's etcd status reports (an unhealthy member).
+	etcdErrors map[string][]string
 
 	// Scripts (nil: the default answer).
 	upgrade          func(node string, req *machineapi.UpgradeRequest) error
@@ -325,7 +327,7 @@ func (m fakeTalosMachine) EtcdStatus(ctx context.Context, _ *emptypb.Empty) (*ma
 	}
 
 	return &machineapi.EtcdStatusResponse{Messages: []*machineapi.EtcdStatus{{
-		MemberStatus: &machineapi.EtcdMemberStatus{MemberId: id, Leader: leader, DbSize: 4 << 20},
+		MemberStatus: &machineapi.EtcdMemberStatus{MemberId: id, Leader: leader, DbSize: 4 << 20, Errors: m.f.etcdErrors[node]},
 	}}}, nil
 }
 
