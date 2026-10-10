@@ -3816,4 +3816,27 @@
         <item quantity="one">En pausa: %1$d evento nuevo o cambiado</item>
         <item quantity="other">En pausa: %1$d eventos nuevos o cambiados</item>
     </plurals>
+    <string name="image_pull_channel_name">Descargas de imágenes</string>
+    <string name="image_pull_channel_desc">Progreso de la descarga de una imagen en tus nodos</string>
+    <string name="image_pull_notification_public">Descargando una imagen</string>
+    <string name="image_pull_notification_result_public">Descarga de la imagen terminada</string>
+    <string name="image_pull_notification_title">Descargando una imagen en los nodos</string>
+    <string name="image_pull_progress">%1$d de %2$d nodos listos</string>
+    <string name="image_pull_notification_done">Imagen descargada</string>
+    <string name="image_pull_notification_failed">Error al descargar la imagen</string>
+    <string name="image_pull_stopped">Descarga de la imagen detenida</string>
+    <string name="image_pull_title">Descargar una imagen</string>
+    <string name="image_pull_state_pending">En espera</string>
+    <string name="image_pull_state_pulling">Descargando</string>
+    <string name="image_pull_state_done">Descargada</string>
+    <string name="image_pull_state_failed">Error</string>
+    <string name="image_pull_stop">Detener</string>
+    <string name="image_pull_menu">Descargar una imagen en cada nodo…</string>
+    <string name="image_pull_image_label">Imagen</string>
+    <string name="image_pull_namespace_system">Imagen del sistema Talos</string>
+    <string name="image_pull_namespace_cri">Imagen de Kubernetes</string>
+    <string name="image_pull_namespace_hint">Un instalador de Talos va en las imágenes del sistema; una imagen de carga de trabajo, en las imágenes de Kubernetes.</string>
+    <string name="image_pull_start">Descargar</string>
+    <string name="upgrade_prepull">Descargar antes la imagen en todos los nodos</string>
+    <string name="upgrade_prepull_desc">Descárgala ahora en cada nodo para que cada reinicio sea corto.</string>
 </resources>

@@ -28,6 +28,7 @@ import name.levis.ichor.data.OfflineCache
 import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.TalosUpdateChecker
 import name.levis.ichor.data.UpgradeManager
+import name.levis.ichor.data.ImagePullManager
 import name.levis.ichor.data.MaintenanceManager
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.DataServicesRepository
@@ -60,6 +61,7 @@ import name.levis.ichor.update.UpdateManager
 import name.levis.ichor.update.createStoreUpdater
 import name.levis.ichor.ui.debug.DebugShells
 import name.levis.ichor.ui.upgrade.UpgradeService
+import name.levis.ichor.ui.images.ImagePullService
 import name.levis.ichor.ui.maintenance.MaintenanceService
 import name.levis.ichor.data.ClusterNames
 import name.levis.ichor.data.WakeOnLanStore
@@ -170,6 +172,8 @@ class TalosApp : Application() {
     }
     /** The followed node maintenance; MaintenanceService keeps the app alive while it runs. */
     val maintenanceManager by lazy { MaintenanceManager(talosRepository, onStarted = { MaintenanceService.start(this) }) }
+    /** The followed image pull; ImagePullService keeps the app alive while it runs. */
+    val imagePullManager by lazy { ImagePullManager(talosRepository, onStarted = { ImagePullService.start(this) }) }
     val talosUpdateChecker by lazy { TalosUpdateChecker() }
     /** The Talos release each cluster's update card was skipped for. */
     val skippedTalosUpdates by lazy { SkippedTalosUpdates(getSharedPreferences(SkippedTalosUpdates.FILE, Context.MODE_PRIVATE)) }

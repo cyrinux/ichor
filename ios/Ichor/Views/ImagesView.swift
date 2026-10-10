@@ -18,6 +18,12 @@ struct ImagesView: View {
     @State private var state: LoadState<[ContainerImage]> = .loading
     @State private var sort = ImageSort.name
     @State private var query = ""
+    @State private var pullSheet: PullSheet?
+
+    private enum PullSheet: Identifiable {
+        case request, progress
+        var id: Self { self }
+    }
 
     var body: some View {
         LoadStateView(state: state, retry: load) { images in
@@ -48,6 +54,30 @@ struct ImagesView: View {
         .navigationTitle(String(localized: "Images · \(hostname)"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button { pullSheet = .request } label: {
+                        Label("Pull an image on every node…", systemImage: "square.and.arrow.down.on.square")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
+                }
+            }
+        }
+        .sheet(item: $pullSheet) { sheet in
+            switch sheet {
+            case .request:
+                ImagePullRequestSheet { image, namespace in
+                    if let client = model.client {
+                        ImagePullJob.shared.start(client: client, image: image, namespace: namespace)
+                    }
+                    pullSheet = .progress // the followed pull: this one, or one started before
+                }
+            case .progress:
+                ImagePullSheet()
+            }
+        }
     }
 
     private func load() async {

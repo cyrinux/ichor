@@ -3816,4 +3816,27 @@
         <item quantity="one">Paused: %1$d new or changed event</item>
         <item quantity="other">Paused: %1$d new or changed events</item>
     </plurals>
+    <string name="image_pull_channel_name">Image pulls</string>
+    <string name="image_pull_channel_desc">Progress of an image pull on your nodes</string>
+    <string name="image_pull_notification_public">Pulling an image</string>
+    <string name="image_pull_notification_result_public">Image pull finished</string>
+    <string name="image_pull_notification_title">Pulling an image on the nodes</string>
+    <string name="image_pull_progress">%1$d of %2$d nodes done</string>
+    <string name="image_pull_notification_done">Image pulled</string>
+    <string name="image_pull_notification_failed">Image pull failed</string>
+    <string name="image_pull_stopped">Image pull stopped</string>
+    <string name="image_pull_title">Pull an image</string>
+    <string name="image_pull_state_pending">Waiting</string>
+    <string name="image_pull_state_pulling">Pulling</string>
+    <string name="image_pull_state_done">Pulled</string>
+    <string name="image_pull_state_failed">Failed</string>
+    <string name="image_pull_stop">Stop</string>
+    <string name="image_pull_menu">Pull an image on every node…</string>
+    <string name="image_pull_image_label">Image</string>
+    <string name="image_pull_namespace_system">Talos system image</string>
+    <string name="image_pull_namespace_cri">Kubernetes image</string>
+    <string name="image_pull_namespace_hint">A Talos installer goes into the system images; a workload image into the Kubernetes images.</string>
+    <string name="image_pull_start">Pull</string>
+    <string name="upgrade_prepull">Pre-pull the image on all nodes</string>
+    <string name="upgrade_prepull_desc">Download it on every node now, so each node\'s reboot is short.</string>
 </resources>
