@@ -8,8 +8,8 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         case cluster, etcd, health, argoCD = "argocd", flux, node, workloads
         case argoApp = "argo-app", fluxApp = "flux-app", workload, pod, cronJob = "cronjob"
         /// The data services screen, on the tab `kind` names (a catalog id); the cluster checkup;
-        /// the Alertmanager alerts.
-        case data, checkup, alerts
+        /// the Alertmanager alerts; a node's Storage screen (`addr`, `host`).
+        case data, checkup, alerts, storage
     }
 
     public var cluster: String
@@ -68,6 +68,11 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         ShareTarget(target: .node, host: hostname, addr: address, tab: nodeTabs.contains(tab) ? tab : "")
     }
 
+    /// The Storage screen of the node at `address`.
+    public static func storage(address: String, hostname: String) -> ShareTarget {
+        ShareTarget(target: .storage, host: hostname, addr: address)
+    }
+
     public static func kubernetes(tab: KubeFocus.Tab) -> ShareTarget {
         ShareTarget(target: .workloads, tab: tab.rawValue)
     }
@@ -123,6 +128,12 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
             }
         case "checkup": return .screen(.checkup)
         case "am": return .screen(.alerts)
+        case "storage":
+            // "<node>|…": the node's hostname from the issue kept, else from its state.
+            let address = storageIssueNode(subject)
+            guard !address.isEmpty else { return nil }
+            let kept = snapshot.storageIssues[subject].map { StorageIssue(value: $0).hostname } ?? ""
+            return .storage(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept)
         case "unreachable": return .screen(.cluster)
         default: return nil
         }

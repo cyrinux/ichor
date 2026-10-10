@@ -20,6 +20,7 @@ import name.levis.ichor.model.title
 import name.levis.ichor.ui.DeepLink
 import name.levis.ichor.ui.checkup.sectionLook
 import name.levis.ichor.ui.share.shareLinkFor
+import name.levis.ichor.util.formatBytes
 
 /** The single channel every alert used before [AlertChannel]: its settings carry over once. */
 private const val LEGACY_CHANNEL_ID = "cluster-alerts"
@@ -154,6 +155,33 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.AM_RESOLVED -> context.getString(R.string.monitor_am_resolved, alert.subject)
     AlertKind.CLUSTER_UNREACHABLE -> context.getString(R.string.monitor_cluster_unreachable)
     AlertKind.CLUSTER_REACHABLE -> context.getString(R.string.monitor_cluster_reachable)
+    AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertTitle(context, alert)
+}
+
+/**
+ * "EPHEMERAL on worker-1 at 91 %" (", almost full" when critical), "SMART failing on sda
+ * (worker-2)", or the cleared forms, from a storage alert's [StorageDetail].
+ */
+private fun storageAlertTitle(context: Context, alert: Alert): String {
+    val d = StorageDetail.parse(alert.detail)
+    return when {
+        d.smart && alert.problem -> context.getString(R.string.monitor_storage_smart, d.name, d.hostname)
+        d.smart -> context.getString(R.string.monitor_storage_smart_ok, d.name, d.hostname)
+        !alert.problem -> context.getString(R.string.monitor_storage_fill_ok, d.name, d.hostname, d.warn)
+        d.severity == DATA_CRITICAL -> context.getString(R.string.monitor_storage_fill_critical, d.name, d.hostname, d.percent)
+        else -> context.getString(R.string.monitor_storage_fill, d.name, d.hostname, d.percent)
+    }
+}
+
+/** "9.0 GiB free of 100.0 GiB", the SMART reason (or the disk's model); "Node storage" once cleared. */
+private fun storageAlertText(context: Context, alert: Alert): String {
+    val d = StorageDetail.parse(alert.detail)
+    val fallback = context.getString(R.string.monitor_storage)
+    return when {
+        !alert.problem -> fallback
+        d.smart -> d.reason.ifBlank { fallback }
+        else -> context.getString(R.string.monitor_storage_fill_text, formatBytes(d.freeBytes), formatBytes(d.sizeBytes))
+    }
 }
 
 /** "demo/worker-6f4b8 · critical": what the alert is about, and how bad while it fires. */
@@ -245,4 +273,5 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.AM_FIRING, AlertKind.AM_RESOLVED -> amAlertText(context, alert)
     AlertKind.CLUSTER_UNREACHABLE -> context.getString(R.string.monitor_cluster_unreachable_text, alert.detail)
     AlertKind.CLUSTER_REACHABLE -> context.getString(R.string.monitor_cluster_reachable_text)
+    AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertText(context, alert)
 }

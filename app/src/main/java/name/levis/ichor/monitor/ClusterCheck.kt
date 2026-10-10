@@ -107,6 +107,22 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
         null
     }
 
+    // And for node storage: one Talos call reads every node's volumes and SMART (none for a
+    // cluster added from a kubeconfig). A node that does not answer keeps its known issues.
+    val watchStorage = store.storageWatched.value && !kube
+    val storageIssues = if (watchStorage) {
+        runCatching { reads.talos.storageHealth() }.getOrNull()?.let {
+            storageIssuesOf(
+                it,
+                warn = store.storageWarnPercent.value,
+                critical = store.storageCriticalPercent.value,
+                known = knownStorageIssues(prev, name),
+            )
+        }
+    } else {
+        null
+    }
+
     return if (kubeNodes != null) {
         kubeSnapshotOf(
             kubeNodes, name, context.certNotAfter, now, fingerprint, watchData, dataServices,
@@ -126,6 +142,8 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
             checkupIssues = checkupIssues,
             amWatched = watchAm,
             amIssues = amIssues,
+            storageWatched = watchStorage,
+            storageIssues = storageIssues,
         )
     }
 }

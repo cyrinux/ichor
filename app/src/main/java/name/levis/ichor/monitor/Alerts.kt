@@ -11,6 +11,8 @@ enum class AlertKind {
     DATA_PROBLEM, DATA_OK, GITOPS_PROBLEM, GITOPS_OK, CHECKUP_PROBLEM, CHECKUP_OK,
     /** An Alertmanager alert firing, or no longer (resolved, silenced or inhibited since). */
     AM_FIRING, AM_RESOLVED,
+    /** A node's volume filling up or a disk failing SMART ([Alert.detail]: a [StorageDetail]), or no longer. */
+    STORAGE_PROBLEM, STORAGE_OK,
     /** The cluster could not be read for several checks in a row ([Alert.detail]: how many), or answers again. */
     CLUSTER_UNREACHABLE, CLUSTER_REACHABLE,
 }
@@ -21,7 +23,8 @@ enum class AlertKind {
  * "namespace/name" (Argo CD) / "Kind namespace/name" (Flux), or what a checkup finding is about,
  * or the alertname (Alertmanager); [detail]: node address/reason, etcd member, "system|severity"
  * (data services) or "tool|severity|reason" (GitOps apps), "section|kind|severity" (checkup),
- * "severity|alertname|where" (Alertmanager);
+ * "severity|alertname|where" (Alertmanager), a [StorageDetail] (node storage, whose subject is the
+ * node's hostname);
  * [days]: days until (or since) the certificate expiry.
  */
 data class Alert(
@@ -88,6 +91,7 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
     val gitops = if (blind) prev.gitopsTrack else evaluateTrack(prev?.gitopsTrack, cur.gitopsTrack, comparable, ::gitopsSeverity, ::gitopsAlert, alerts)
     val checkup = if (blind) prev.checkupTrack else evaluateTrack(prev?.checkupTrack, cur.checkupTrack, comparable, { it }, ::checkupAlert, alerts)
     val am = if (blind) prev.amTrack else evaluateTrack(prev?.amTrack, cur.amTrack, comparable, ::amSeverity, ::amAlert, alerts)
+    val storage = if (blind) prev.storageTrack else evaluateTrack(prev?.storageTrack, cur.storageTrack, comparable, ::storageSeverity, ::storageAlert, alerts)
 
     val next = if (blind) prev.copy(certNotAfter = cur.certNotAfter) else cur
     return Evaluation(
@@ -110,17 +114,22 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             amChecked = am.checked,
             amIssues = am.issues,
             amPending = am.pending,
+            storageWatched = storage.watched,
+            storageChecked = storage.checked,
+            storageIssues = storage.issues,
+            storagePending = storage.pending,
         ),
     )
 }
 
-/** One opt-in track of issues (data services, GitOps apps, checkup, Alertmanager), as a snapshot keeps it. */
+/** One opt-in track of issues (data services, GitOps apps, checkup, Alertmanager, storage), as a snapshot keeps it. */
 private data class Track(val watched: Boolean, val checked: Boolean, val issues: Map<String, String>, val pending: List<String>)
 
 private val ClusterSnapshot.dataTrack: Track get() = Track(dataWatched, dataChecked, dataIssues, dataPending)
 private val ClusterSnapshot.gitopsTrack: Track get() = Track(gitopsWatched, gitopsChecked, gitopsIssues, gitopsPending)
 private val ClusterSnapshot.checkupTrack: Track get() = Track(checkupWatched, checkupChecked, checkupIssues, checkupPending)
 private val ClusterSnapshot.amTrack: Track get() = Track(amWatched, amChecked, amIssues, amPending)
+private val ClusterSnapshot.storageTrack: Track get() = Track(storageWatched, storageChecked, storageIssues, storagePending)
 
 /**
  * Issues of one track (key → value, [severityOf] reading [DATA_CRITICAL] or [DATA_WARNING] from the
@@ -193,6 +202,15 @@ private fun amAlert(key: String, value: String, problem: Boolean): Alert = Alert
     kind = if (problem) AlertKind.AM_FIRING else AlertKind.AM_RESOLVED,
     problem = problem,
     subject = AmDetail.parse(value).alertname,
+    detail = value,
+)
+
+/** [key] "node|volume" or "node|smart|device", [value] a [StorageDetail]: the node's hostname is the subject. */
+private fun storageAlert(key: String, value: String, problem: Boolean): Alert = Alert(
+    key = "storage:$key",
+    kind = if (problem) AlertKind.STORAGE_PROBLEM else AlertKind.STORAGE_OK,
+    problem = problem,
+    subject = StorageDetail.parse(value).hostname,
     detail = value,
 )
 

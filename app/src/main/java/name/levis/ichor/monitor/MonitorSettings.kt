@@ -63,6 +63,43 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         _alertmanagerWatched.value = watched
     }
 
+    private val _storageWatched = MutableStateFlow(prefs.getBoolean(KEY_STORAGE, false))
+
+    /** Opt-in: also read every node's volume fill and disk SMART through the Talos API. */
+    val storageWatched: StateFlow<Boolean> = _storageWatched.asStateFlow()
+
+    fun setStorageWatched(watched: Boolean) {
+        prefs.edit().putBoolean(KEY_STORAGE, watched).apply()
+        _storageWatched.value = watched
+    }
+
+    private val _storageWarnPercent = MutableStateFlow(prefs.getInt(KEY_STORAGE_WARN, STORAGE_WARN_DEFAULT).coerceIn(STORAGE_WARN_RANGE))
+
+    /** A volume used at this % or more is a warning. */
+    val storageWarnPercent: StateFlow<Int> = _storageWarnPercent.asStateFlow()
+
+    private val _storageCriticalPercent = MutableStateFlow(
+        prefs.getInt(KEY_STORAGE_CRITICAL, STORAGE_CRITICAL_DEFAULT).coerceIn(storageCriticalRange(_storageWarnPercent.value)),
+    )
+
+    /** A volume used at this % or more is critical; always above [storageWarnPercent]. */
+    val storageCriticalPercent: StateFlow<Int> = _storageCriticalPercent.asStateFlow()
+
+    /** Moves the critical threshold up with it when it would no longer be above. */
+    fun setStorageWarnPercent(percent: Int) {
+        val warn = percent.coerceIn(STORAGE_WARN_RANGE)
+        val critical = _storageCriticalPercent.value.coerceIn(storageCriticalRange(warn))
+        prefs.edit().putInt(KEY_STORAGE_WARN, warn).putInt(KEY_STORAGE_CRITICAL, critical).apply()
+        _storageWarnPercent.value = warn
+        _storageCriticalPercent.value = critical
+    }
+
+    fun setStorageCriticalPercent(percent: Int) {
+        val critical = percent.coerceIn(storageCriticalRange(_storageWarnPercent.value))
+        prefs.edit().putInt(KEY_STORAGE_CRITICAL, critical).apply()
+        _storageCriticalPercent.value = critical
+    }
+
     fun setAlertsEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_ENABLED, enabled).apply()
         _alertsEnabled.value = enabled
@@ -133,6 +170,9 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_CHECKUP = "checkup_watched"
         private const val KEY_ALERTMANAGER = "alertmanager_watched"
         private const val KEY_UNREACHABLE = "unreachable_alerts"
+        private const val KEY_STORAGE = "storage_watched"
+        private const val KEY_STORAGE_WARN = "storage_warn_percent"
+        private const val KEY_STORAGE_CRITICAL = "storage_critical_percent"
         private const val KEY_UNREACHABLE_RUNS = "unreachable_runs"
     }
 }

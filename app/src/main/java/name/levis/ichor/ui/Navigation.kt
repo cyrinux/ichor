@@ -20,6 +20,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.Feature
+import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.contextFor
@@ -295,9 +296,9 @@ private suspend fun ShareTarget.route(app: TalosApp, action: AlertActionRequest?
     ShareTarget.HEALTH -> Routes.HEALTH.takeUnless { app.configRepository.config.value?.activeIsKube == true }
     ShareTarget.ARGO_CD -> Routes.ARGO_CD
     ShareTarget.FLUX -> Routes.FLUX
-    ShareTarget.NODE -> runCatching { app.talosRepository.overview() }.getOrNull()?.nodes
-        ?.firstOrNull { n -> addr.isNotEmpty() && n.node == addr || host.isNotEmpty() && n.hostname == host }
+    ShareTarget.NODE -> clusterNode(app)
         ?.let { n -> Routes.node(n.node, n.hostname, n.role, nodeTab, action = if (action?.action == AlertAction.REBOOT) "reboot" else "") }
+    ShareTarget.STORAGE -> clusterNode(app)?.let { n -> Routes.storage(n.node, n.hostname) }
     ShareTarget.ARGO_APP -> Routes.argoApp(namespace, name, sync = action?.action == AlertAction.SYNC)
     ShareTarget.FLUX_APP -> Routes.fluxApp(kind, namespace, name, reconcile = action?.action == AlertAction.RECONCILE)
     ShareTarget.DATA -> Routes.dataServices(DataServiceKind.entries.firstOrNull { it.catalogId == kind })
@@ -305,3 +306,8 @@ private suspend fun ShareTarget.route(app: TalosApp, action: AlertActionRequest?
     ShareTarget.ALERTS -> Routes.alerts(silence = action?.takeIf { it.action == AlertAction.SILENCE }?.target.orEmpty())
     else -> kubeFocus?.let { Routes.workloads(it) }
 }
+
+/** The cluster's node the link names, by address or hostname; null when it is none of its. */
+private suspend fun ShareTarget.clusterNode(app: TalosApp): NodeOverview? =
+    runCatching { app.talosRepository.overview() }.getOrNull()?.nodes
+        ?.firstOrNull { n -> addr.isNotEmpty() && n.node == addr || host.isNotEmpty() && n.hostname == host }
