@@ -321,6 +321,11 @@ where a failed upgrade can be rolled back.
   upgrade screen, on by default. The upgrade then runs as a node maintenance: cordon, drain
   (PodDisruptionBudgets honoured), upgrade, wait until the node is back and Ready, uncordon. A
   drain that cannot finish stops before the upgrade is requested and leaves the node cordoned.
+- **Pre-pull the image first:** the upgrade screen's "Pre-pull the image on all nodes" downloads
+  the installer on every node ahead of the maintenance window (`talosctl image pull`, os:admin),
+  three nodes at a time, so each reboot does not wait for the download. A node's Images screen
+  can pull any image on every node the same way, into the Kubernetes or the system images. A
+  node that cannot pull shows its error; the others go on.
 
 ### Argo CD app icons
 

@@ -44,6 +44,7 @@ import name.levis.ichor.model.TalosEvent
 import name.levis.ichor.model.ClusterTime
 import name.levis.ichor.model.ConnectionInfo
 import name.levis.ichor.model.ImageInfo
+import name.levis.ichor.model.ImagePullNamespace
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.NodeHardware
 import name.levis.ichor.model.NodeNetwork
@@ -294,6 +295,10 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** The one-tap NOSPACE fix (see [TalosStreams.etcdNospaceFix]); needs os:admin. */
     fun etcdNospaceFix(snapshotNode: String, destPath: String, encryption: SnapshotEncryption): Flow<EtcdFixEvent> =
         streams.etcdNospaceFix(snapshotNode, destPath, encryption)
+
+    /** Pulls an image on several nodes (see [TalosStreams.imagePull]); needs os:admin. */
+    fun imagePull(nodes: List<String>, image: String, namespace: ImagePullNamespace): Flow<ImagePullEvent> =
+        streams.imagePull(nodes, image, namespace)
 
     /**
      * The cluster's nodes. Those that no longer answer keep what the last overview knew of

@@ -23,6 +23,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -53,6 +54,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.ImagePullNamespace
 import name.levis.ichor.model.TalosRelease
 import name.levis.ichor.model.UpgradePlan
 import name.levis.ichor.model.etcdBlocked
@@ -77,6 +79,7 @@ import name.levis.ichor.model.MaintenanceAction
 import name.levis.ichor.model.MaintenanceUpgrade
 import name.levis.ichor.ui.components.ToggleRow
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.images.ImagePullSheet
 import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
@@ -121,6 +124,7 @@ fun UpgradeScreen(
     var forceWarning by remember { mutableStateOf(false) }
     var confirming by remember { mutableStateOf<UpgradeChoice?>(null) }
     var rollingBack by remember { mutableStateOf(false) }
+    var prePullShown by remember { mutableStateOf(false) }
     val following = current?.takeIf { it.node == node }
     LaunchedEffect(Unit) { if (plan == UiState.Loading) planVm.refresh() }
 
@@ -268,6 +272,10 @@ fun UpgradeScreen(
                             force = force && showForce,
                             otherRunning = current?.takeIf { it.running }?.hostname,
                             onStart = ::requestStart,
+                            onPrePull = { image ->
+                                app.imagePullManager.start(image, ImagePullNamespace.SYSTEM)
+                                prePullShown = true
+                            },
                         )
                     }
                 }
@@ -275,6 +283,7 @@ fun UpgradeScreen(
         }
     }
 
+    if (prePullShown) ImagePullSheet(app.imagePullManager, onDismiss = { prePullShown = false })
     if (forceWarning) {
         ConfirmDialog(
             title = stringResource(R.string.upgrade_force_title),
@@ -330,6 +339,7 @@ private fun UpgradeSetup(
     force: Boolean,
     otherRunning: String?,
     onStart: (UpgradeChoice) -> Unit,
+    onPrePull: (String) -> Unit,
 ) {
     val colors = LocalStatusColors.current
     val releases by targetVm.releases.collectAsStateWithLifecycle()
@@ -376,6 +386,9 @@ private fun UpgradeSetup(
         if (image.isNotEmpty()) {
             Text(stringResource(R.string.upgrade_image), style = MaterialTheme.typography.labelMedium)
             SelectionContainer { Text(image, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace) }
+            // Pulling the installer on every node first keeps each node's reboot short.
+            OutlinedButton(onClick = { onPrePull(image) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.upgrade_prepull)) }
+            MutedText(stringResource(R.string.upgrade_prepull_desc))
         }
         if (version.trim().isNotEmpty() && version.trim() == plan.currentVersion) {
             Text(stringResource(R.string.upgrade_same_version, plan.currentVersion), color = colors.warn, style = MaterialTheme.typography.bodySmall)
