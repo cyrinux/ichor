@@ -478,6 +478,16 @@ when no such label is set, as on bare metal.
 | `doctl … exec-credential` | A DigitalOcean API token (short-lived cluster credentials from it) |
 | `rancher token` | A Rancher API key |
 
+**GKE credentials by QR:** scan a gcloud ADC file from the import screen or tap
+**Scan credentials QR code** in GKE discovery. It opens discovery with the credential
+filled in; choose projects if needed, then tap **Find clusters**. Google user,
+workforce identity session and service account files are supported. Keep the QR
+private: it contains a refresh token or private key.
+
+```sh
+qrencode -t ansiutf8 < ~/.config/gcloud/application_default_credentials.json
+```
+
 **GKE with your organisation's OAuth client**: in the Google Cloud console (APIs & Services),
 1. set the OAuth consent screen to **Internal** (no Google verification needed),
 2. create an OAuth client ID of type **Desktop app**,
