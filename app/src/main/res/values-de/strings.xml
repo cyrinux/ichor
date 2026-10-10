@@ -3831,6 +3831,8 @@
     <string name="image_pull_start">Laden</string>
     <string name="upgrade_prepull">Image vorab auf alle Nodes laden</string>
     <string name="upgrade_prepull_desc">Lade es jetzt auf jeden Node, damit jeder Neustart kurz ist.</string>
+    <string name="kube_discover_progress_looking">Cluster werden gesucht…</string>
+    <string name="kube_discover_progress_projects">%1$s von %2$s Projekten durchsucht · %3$s Cluster gefunden</string>
     <string name="etcd_recover_button">Aus Snapshot wiederherstellen…</string>
     <string name="etcd_recover_lost">Kein etcd-Mitglied antwortet. Wenn jede Control Plane etcd verloren hat, starte es aus einem Snapshot neu.</string>
     <string name="etcd_recover_title">etcd aus einem Snapshot wiederherstellen</string>

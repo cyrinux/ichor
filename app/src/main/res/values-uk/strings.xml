@@ -4073,6 +4073,8 @@
     <string name="image_pull_start">Завантажити</string>
     <string name="upgrade_prepull">Попередньо завантажити образ на всі вузли</string>
     <string name="upgrade_prepull_desc">Завантажте його зараз на кожен вузол, щоб кожне перезавантаження було коротким.</string>
+    <string name="kube_discover_progress_looking">Пошук кластерів…</string>
+    <string name="kube_discover_progress_projects">Переглянуто %1$s з %2$s проєктів · знайдено кластерів: %3$s</string>
     <string name="etcd_recover_button">Відновити зі знімка…</string>
     <string name="etcd_recover_lost">Жоден учасник etcd не відповідає. Якщо всі control plane втратили etcd, запустіть його знову зі знімка.</string>
     <string name="etcd_recover_title">Відновлення etcd зі знімка</string>

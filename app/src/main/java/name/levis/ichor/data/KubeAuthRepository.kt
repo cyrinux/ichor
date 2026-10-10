@@ -8,6 +8,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import name.levis.ichor.model.DiscoveryProgress
 import name.levis.ichor.model.KubeSignInInfo
 import name.levis.ichor.model.isKube
 import name.levis.ichor.model.SignInPrompt
@@ -142,6 +143,9 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
     suspend fun discover(provider: String, secrets: Map<String, String>): String = withContext(Dispatchers.IO) {
         Ichorgo.discoverClusters(provider, encodeSecrets(secrets))
     }
+
+    /** How far the running [discover] got. */
+    fun discoverProgress(): DiscoveryProgress = TalosJson.decodeFromString(DiscoveryProgress.serializer(), Ichorgo.discoverProgress())
 
     /**
      * Signs the contexts [names] in with the [secrets] that found them (discovery), when they

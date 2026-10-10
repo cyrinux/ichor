@@ -3839,6 +3839,8 @@
     <string name="image_pull_start">Descargar</string>
     <string name="upgrade_prepull">Descargar antes la imagen en todos los nodos</string>
     <string name="upgrade_prepull_desc">Descárgala ahora en cada nodo para que cada reinicio sea corto.</string>
+    <string name="kube_discover_progress_looking">Buscando clústeres…</string>
+    <string name="kube_discover_progress_projects">%1$s de %2$s proyectos revisados · %3$s clústeres encontrados</string>
     <string name="etcd_recover_button">Recuperar desde una instantánea…</string>
     <string name="etcd_recover_lost">Ningún miembro de etcd responde. Si todos los control planes perdieron etcd, vuelve a iniciarlo desde una instantánea.</string>
     <string name="etcd_recover_title">Recuperar etcd desde una instantánea</string>
