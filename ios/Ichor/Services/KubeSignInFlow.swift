@@ -22,6 +22,9 @@ final class KubeSignInFlow {
     }
 
     private(set) var phase = Phase.idle
+    /// The browser comes back through a web redirect page (a Web OAuth client), which shows a
+    /// sign-in code to paste when it cannot bring the app back by itself.
+    private(set) var acceptsPastedCode = false
     @ObservationIgnored private var cancelRun: (@Sendable () -> Void)?
     @ObservationIgnored private var completeRun: (@Sendable (String) -> Void)?
     @ObservationIgnored private var web: WebSignInSession?
@@ -77,6 +80,14 @@ final class KubeSignInFlow {
         }
     }
 
+    /// Hands the sign-in code the redirect page showed (the browser did not come back) to the
+    /// sign-in in progress, which checks it against its own state.
+    func complete(code: String) {
+        let code = code.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !code.isEmpty else { return }
+        completeRun?(code)
+    }
+
     /// Stops waiting for the user; nothing is stored.
     func cancel() {
         cancelled = true
@@ -105,6 +116,7 @@ final class KubeSignInFlow {
             return
         }
         phase = .browser
+        acceptsPastedCode = prompt.redirectPrefix?.hasPrefix("https://") == true
         let session = WebSignInSession()
         web = session
         let id = runID

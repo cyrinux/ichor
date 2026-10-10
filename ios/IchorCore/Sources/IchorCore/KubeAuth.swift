@@ -152,7 +152,7 @@ public func kubeFieldInput(_ field: String) -> KubeFieldInput {
 
 /// Fields that may be left empty.
 public func kubeFieldOptional(_ field: String) -> Bool {
-    field == "awsSessionToken" || field == "gcpProjects"
+    field == "awsSessionToken" || field == "gcpProjects" || field == "gcpOAuthRedirectUrl"
 }
 
 /// The JSON object of `values` for `fields` (trimmed, empty ones left out), as KubeSetCredentials

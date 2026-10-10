@@ -13,6 +13,8 @@ import name.levis.ichor.model.isKube
 import name.levis.ichor.model.SignInPrompt
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.SignInListener
+import name.levis.ichorgo.SignInRun
+import java.util.concurrent.atomic.AtomicReference
 import name.levis.ichor.ui.goErrorText
 
 /** What an interactive sign-in reports: a prompt to show, then its end ([error] null on success or cancel). */
@@ -49,6 +51,20 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
         }
     }
 
+    /** The browser sign-in in progress, to hand it what the browser came back with. */
+    private val activeSignIn = AtomicReference<SignInRun?>(null)
+
+    /**
+     * Hands [callback] to the browser sign-in in progress: the URL the browser came back to
+     * the app with, or the sign-in code the redirect page shows, pasted. The sign-in checks
+     * it against its own state. False when none is in progress.
+     */
+    fun completeSignIn(callback: String): Boolean {
+        val run = activeSignIn.get() ?: return false
+        run.complete(callback)
+        return true
+    }
+
     /** Signs [context] in in the browser or with a device code; cancelling the collector stops it. */
     fun signIn(context: String): Flow<SignInEvent> = callbackFlow {
         val listener = object : SignInListener {
@@ -67,7 +83,11 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
         } else {
             Ichorgo.startKubeSignIn(kubeYaml(), context, listener)
         }
-        awaitClose { run.cancel() }
+        activeSignIn.set(run)
+        awaitClose {
+            activeSignIn.compareAndSet(run, null)
+            run.cancel()
+        }
     }
 
     /** Forgets [context]'s sign-in (its tokens and the secrets entered). */

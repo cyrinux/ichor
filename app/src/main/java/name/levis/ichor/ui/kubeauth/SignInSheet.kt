@@ -20,7 +20,9 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -30,6 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -99,7 +102,7 @@ fun SignInSheet(context: String, onDismiss: () -> Unit, onSignedIn: () -> Unit) 
                 }
                 is SignInUi.Waiting -> {
                     SignInTitle(s.info)
-                    Waiting(s.prompt, onCancel = vm::cancel)
+                    Waiting(s.prompt, onCancel = vm::cancel, onCode = vm::completeWithCode)
                 }
             }
         }
@@ -133,7 +136,10 @@ private fun CredentialsForm(info: KubeSignInInfo, checking: Boolean, onSubmit: (
         MutedText(stringResource(R.string.kube_signin_gcp_user_hint))
         MutedText(stringResource(R.string.kube_signin_gcp_workforce_hint))
     }
-    if (GCP_OAUTH_CLIENT_ID in fields) MutedText(stringResource(R.string.kube_signin_gcp_oauth_hint))
+    if (GCP_OAUTH_CLIENT_ID in fields) {
+        MutedText(stringResource(R.string.kube_signin_gcp_oauth_hint))
+        MutedText(stringResource(R.string.kube_signin_gcp_oauth_web_hint))
+    }
     Button(
         onClick = { onSubmit(fields, values.toMap()) },
         enabled = !checking && credentialsComplete(fields, values),
@@ -152,7 +158,7 @@ private fun CredentialsForm(info: KubeSignInInfo, checking: Boolean, onSubmit: (
  * code is shown big, to copy, with a button opening the page to enter it.
  */
 @Composable
-private fun Waiting(prompt: SignInPrompt?, onCancel: () -> Unit) {
+private fun Waiting(prompt: SignInPrompt?, onCancel: () -> Unit, onCode: (String) -> Unit) {
     val context = LocalContext.current
     val noBrowser = stringResource(R.string.kube_signin_no_browser)
     val open = { url: String -> if (!openInBrowser(context, url)) Toast.makeText(context, noBrowser, Toast.LENGTH_LONG).show() }
@@ -172,9 +178,28 @@ private fun Waiting(prompt: SignInPrompt?, onCancel: () -> Unit) {
                 Text(stringResource(R.string.kube_signin_waiting_browser))
             }
             OutlinedButton(onClick = { open(prompt.url) }) { Text(stringResource(R.string.kube_signin_open_again)) }
+            // A web redirect page (not Go's loopback address): it shows a code when the
+            // browser cannot bring the app back by itself.
+            if (prompt.redirectPrefix.startsWith("https://")) PasteSignInCode(onCode)
         }
     }
     TextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
+}
+
+/** The sign-in code a web redirect page shows, pasted when the browser did not come back. */
+@Composable
+private fun PasteSignInCode(onCode: (String) -> Unit) {
+    var code by remember { mutableStateOf("") }
+    MutedText(stringResource(R.string.kube_signin_paste_code_hint))
+    OutlinedTextField(
+        value = code,
+        onValueChange = { code = it },
+        label = { Text(stringResource(R.string.kube_signin_paste_code_label)) },
+        singleLine = true,
+        textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Button(onClick = { onCode(code) }, enabled = code.isNotBlank()) { Text(stringResource(R.string.kube_signin_paste_code_action)) }
 }
 
 @Composable

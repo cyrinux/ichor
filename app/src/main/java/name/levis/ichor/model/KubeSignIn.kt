@@ -111,6 +111,7 @@ private val FIELDS = listOf(
     CredentialField(GCP_PROJECTS, R.string.kube_field_gcp_projects, FieldKind.TEXT, optional = true),
     CredentialField(GCP_OAUTH_CLIENT_ID, R.string.kube_field_gcp_oauth_client_id, FieldKind.TEXT),
     CredentialField("gcpOAuthClientSecret", R.string.kube_field_gcp_oauth_client_secret, FieldKind.SECRET),
+    CredentialField("gcpOAuthRedirectUrl", R.string.kube_field_gcp_oauth_redirect, FieldKind.TEXT, optional = true),
     CredentialField("azureTenantId", R.string.kube_field_azure_tenant, FieldKind.TEXT),
     CredentialField("azureSubscriptionId", R.string.kube_field_azure_subscription, FieldKind.TEXT),
     CredentialField("azureClientId", R.string.kube_field_azure_client_id, FieldKind.TEXT),

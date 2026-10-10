@@ -96,7 +96,7 @@ type gkeMethod struct{}
 func (gkeMethod) name() string { return authGKE }
 
 func (gkeMethod) fieldSets() [][]string {
-	sets := [][]string{{gcpFieldServiceAccount}, {gcpFieldUserCredentials}, {gcpFieldOAuthClientID, gcpFieldOAuthClientSecret}}
+	sets := [][]string{{gcpFieldServiceAccount}, {gcpFieldUserCredentials}, {gcpFieldOAuthClientID, gcpFieldOAuthClientSecret, gcpFieldOAuthRedirectURL}}
 
 	// "Sign in with Google", only when the build carries a Google client.
 	if platform, _ := registeredGoogleSignIn(); platform != "" {

@@ -3174,6 +3174,11 @@
     <string name="kube_field_gcp_oauth_client_secret">Secret client OAuth</string>
     <string name="kube_signin_option_gcp_oauth">Le client OAuth de votre organisation</string>
     <string name="kube_signin_gcp_oauth_hint">Demandez à l\'administrateur Google Cloud un client OAuth de type Application de bureau (API et services → Identifiants) avec un écran de consentement Interne. Se connecter ouvre ensuite votre compte Google dans le navigateur.</string>
+    <string name="kube_field_gcp_oauth_redirect">URL de redirection</string>
+    <string name="kube_signin_gcp_oauth_web_hint">Avec un client de type Application Web, saisissez https://cyrinux.github.io/ichor/auth/google/ (ou la page de votre organisation) comme URL de redirection et ajoutez-la aux URI de redirection autorisés du client. Laissez-la vide pour un client Application de bureau.</string>
+    <string name="kube_signin_paste_code_hint">Le navigateur n\'est pas revenu dans Ichor ? Collez le code de connexion affiché par la page.</string>
+    <string name="kube_signin_paste_code_label">Code de connexion</string>
+    <string name="kube_signin_paste_code_action">Continuer</string>
     <string name="kube_discover_gcp_projects_hint">Laissez vide pour chercher dans tous les projets visibles par votre compte ; indiquez des ID de projet pour aller plus vite dans une grande organisation.</string>
     <string name="kube_signin_option_gcp_service_account">Clé de compte de service</string>
     <string name="kube_signin_option_gcp_user">Identifiants utilisateur gcloud</string>
