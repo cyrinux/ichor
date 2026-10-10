@@ -63,6 +63,8 @@ import name.levis.ichor.ui.debug.DebugShells
 import name.levis.ichor.ui.upgrade.UpgradeService
 import name.levis.ichor.ui.images.ImagePullService
 import name.levis.ichor.ui.maintenance.MaintenanceService
+import name.levis.ichor.ui.machineconfig.ConfigTryService
+import name.levis.ichor.data.ConfigTryManager
 import name.levis.ichor.ui.machineconfig.ConfigMultiService
 import name.levis.ichor.data.ConfigMultiManager
 import name.levis.ichor.data.ClusterNames
@@ -174,6 +176,8 @@ class TalosApp : Application() {
     }
     /** The followed node maintenance; MaintenanceService keeps the app alive while it runs. */
     val maintenanceManager by lazy { MaintenanceManager(talosRepository, onStarted = { MaintenanceService.start(this) }) }
+    /** The followed machine config try; ConfigTryService keeps its countdown going off screen. */
+    val configTryManager by lazy { ConfigTryManager(talosRepository::tryMachineConfig, onStarted = { ConfigTryService.start(this) }) }
     /** The followed multi-node config apply; ConfigMultiService keeps the app alive while it runs. */
     val configMultiManager by lazy {
         ConfigMultiManager(talosRepository::applyMachineConfigMulti, onStarted = { ConfigMultiService.start(this) })

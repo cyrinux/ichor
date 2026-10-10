@@ -47,7 +47,7 @@ import name.levis.ichor.ui.nav.talosGraph
 
 
 /** Screens a notification can open directly (see MainActivity.EXTRA_OPEN). */
-enum class DeepLink { ISSUE_CONFIG, DEMO, DEMO_KUBE, ARGO_WINDOWS, ARGO_CD, FLUX, CHECKUP }
+enum class DeepLink { ISSUE_CONFIG, DEMO, DEMO_KUBE, ARGO_WINDOWS, ARGO_CD, FLUX, CHECKUP, CONFIG_TRY }
 
 /**
  * [deepLink]: a screen to open once over the overview; [onDeepLinkHandled] then clears it.
@@ -146,6 +146,10 @@ fun Navigation(
         if (deepLink == null) return@LaunchedEffect
         when (deepLink) {
             DeepLink.DEMO -> nav.navigate(Routes.DEMO) { launchSingleTop = true }
+            // The try's notification: back on its node's machine config, where the countdown runs.
+            DeepLink.CONFIG_TRY -> app.configTryManager.current.value?.takeIf { !startWithImport }?.let {
+                nav.navigate(Routes.machineConfig(it.node, it.hostname)) { launchSingleTop = true }
+            }
             DeepLink.DEMO_KUBE -> nav.navigate(Routes.DEMO_KUBE) { launchSingleTop = true }
             // The certificate alert of a Talos cluster: the one on screen may be a kubeconfig one since.
             DeepLink.ISSUE_CONFIG -> if (!startWithImport && app.configRepository.config.value?.activeSummary?.allows(Feature.ISSUE_CONFIG) == true) {

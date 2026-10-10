@@ -1,24 +1,35 @@
 import SwiftUI
 import IchorCore
 
-/// A machine config tried on a node: the countdown until the node reverts by itself, Keep
-/// or Revert now, then how it ended. Leaving stops following, and the node reverts.
-struct ConfigTryView: View {
-    let node: String
-    let hostname: String
+/// What a try screen starts: the draft and how long the node waits before reverting.
+struct ConfigTryRequest {
     let base: String
     let draft: String
     let timeoutSeconds: Int
+}
+
+/// A machine config tried on a node: the countdown until the node reverts by itself, Keep
+/// or Revert now, then how it ended. The try is ConfigTryJob's: leaving the screen keeps it
+/// going (a notification takes over), and the node reverts by itself at the deadline.
+struct ConfigTryView: View {
+    let node: String
+    let hostname: String
+    /// nil: only follows the try already running on the node.
+    let request: ConfigTryRequest?
     /// How the try ended, told once, before the screen is closed.
     let onOutcome: (ConfigTryOutcome) -> Void
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    @State private var handle: ConfigTryHandle?
-    @State private var progress: ConfigTryProgress?
-    @State private var outcome: ConfigTryOutcome?
-    /// Keep or Revert now was tapped: no second tap until the node answers.
-    @State private var requested = false
+    @State private var started = false
+    @State private var refused: String?
+
+    private var job: ConfigTryJob { ConfigTryJob.shared }
+    /// The job's try, when it is this node's.
+    private var mine: Bool { job.target?.node == node }
+    private var progress: ConfigTryProgress? { mine ? job.progress : nil }
+    private var outcome: ConfigTryOutcome? { refused.map { .failed($0) } ?? (mine ? job.outcome : nil) }
+    private var requested: Bool { mine && !job.waiting }
 
     var body: some View {
         NavigationStack {
@@ -33,7 +44,7 @@ struct ConfigTryView: View {
                 }
                 Spacer()
                 if outcome == nil {
-                    Text("If you leave or lose the connection, the node reverts by itself.")
+                    Text("You can leave this screen: a notification offers Keep for a while. If Ichor is suspended or the connection is lost, the node reverts by itself.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -44,8 +55,17 @@ struct ConfigTryView: View {
             .themedBackground()
             .navigationTitle(String(localized: "Try · \(hostname)"))
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                // The try goes on: the machine config screen shows it again, and so does the notification.
+                if outcome == nil {
+                    ToolbarItem(placement: .cancellationAction) { Button("Hide") { dismiss() } }
+                }
+            }
         }
-        .task { await run() }
+        .task { start() }
+        .onChange(of: job.outcome) { _, new in
+            if mine, let new { onOutcome(new) }
+        }
         .onDisappear(perform: leave)
     }
 
@@ -84,8 +104,7 @@ struct ConfigTryView: View {
         }
         warning
         Button {
-            requested = true
-            handle?.keep()
+            job.keep()
         } label: {
             Text("Keep").fontWeight(.semibold).frame(maxWidth: .infinity)
         }
@@ -93,8 +112,7 @@ struct ConfigTryView: View {
         .controlSize(.large)
         .disabled(requested)
         Button("Revert now", role: .destructive) {
-            requested = true
-            handle?.revert()
+            job.revert()
         }
         .disabled(requested)
     }
@@ -112,7 +130,10 @@ struct ConfigTryView: View {
             Text(verbatim: message.isEmpty ? String(localized: "The config could not be applied.") : message)
                 .multilineTextAlignment(.center).textSelection(.enabled)
         }
-        Button { dismiss() } label: {
+        Button {
+            if mine { job.clear() }
+            dismiss()
+        } label: {
             Text("Done").frame(maxWidth: .infinity)
         }
         .buttonStyle(.borderedProminent)
@@ -124,45 +145,33 @@ struct ConfigTryView: View {
         "\(seconds / 60):" + String(format: "%02d", seconds % 60)
     }
 
-    private func run() async {
-        guard handle == nil else { return }
-        guard let client = model.client else {
-            finish(.failed(String(localized: "The config could not be applied.")))
+    /// Starts the requested try, unless one runs already (one at a time, across nodes).
+    private func start() {
+        guard !started else { return }
+        started = true
+        // The screen stays on while it is shown: the countdown is the point of it.
+        UIApplication.shared.isIdleTimerDisabled = true
+        guard let request else { return }
+        if job.isActive {
+            if !mine {
+                let other = job.target?.hostname ?? ""
+                refused = String(localized: "A config try is already running on \(other): keep or revert it first.")
+                onOutcome(.failed(refused ?? ""))
+            }
             return
         }
-        let run = client.tryMachineConfig(node: node, base: base, draft: draft, timeoutSeconds: timeoutSeconds)
-        handle = run
-        // The screen stays on: a paused app loses the connection, and the node reverts.
-        UIApplication.shared.isIdleTimerDisabled = true
-        for await event in run.events {
-            switch event {
-            case .progress(let update):
-                progress = update
-                requested = false
-            case .done(let result):
-                finish(result)
-                announce(resultAnnouncement(result))
-            }
+        guard let client = model.client else {
+            refused = String(localized: "The config could not be applied.")
+            onOutcome(.failed(refused ?? ""))
+            return
         }
-        restoreIdleTimer()
+        if !mine { job.clear() }
+        job.start(client: client, node: node, hostname: hostname, base: request.base, draft: request.draft,
+                  timeoutSeconds: request.timeoutSeconds)
     }
 
-    private func finish(_ result: ConfigTryOutcome) {
-        outcome = result
-        onOutcome(result)
-    }
-
-    private func resultAnnouncement(_ outcome: ConfigTryOutcome) -> String {
-        switch outcome {
-        case .kept: String(localized: "The change is now permanent.")
-        case .reverted: String(localized: "The node is back on its previous config.")
-        case .failed(let message): message
-        }
-    }
-
-    /// Leaving while the try runs stops following it; the node reverts at the end of its timeout.
+    /// Leaving keeps the try going in ConfigTryJob; only the screen's idle timer goes back.
     private func leave() {
-        if outcome == nil { handle?.cancel() }
         restoreIdleTimer()
     }
 

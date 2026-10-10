@@ -71,6 +71,584 @@
         }
       }
     },
+    "The node reverts by itself unless you keep the change." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nœud revient en arrière tout seul si vous ne conservez pas la modification."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nodo se revierte solo si no conservas el cambio."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Node setzt sich selbst zurück, wenn du die Änderung nicht behältst."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il nodo torna indietro da solo se non mantieni la modifica."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вузол сам повернеться, якщо ви не залишите зміну."
+          }
+        }
+      }
+    },
+    "Ichor was suspended: open it to keep the change. Otherwise the node reverts by itself at %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor a été suspendu : ouvrez-le pour conserver la modification. Sinon le nœud revient en arrière tout seul à %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor se suspendió: ábrelo para conservar el cambio. Si no, el nodo se revierte solo a las %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor wurde angehalten: Öffne es, um die Änderung zu behalten. Sonst setzt sich der Node um %@ selbst zurück."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor è stato sospeso: aprilo per mantenere la modifica. Altrimenti il nodo torna indietro da solo alle %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor призупинено: відкрийте його, щоб залишити зміну. Інакше вузол сам повернеться о %@."
+          }
+        }
+      }
+    },
+    "You can leave this screen: a notification offers Keep for a while. If Ichor is suspended or the connection is lost, the node reverts by itself." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous pouvez quitter cet écran : une notification propose Conserver pendant un moment. Si Ichor est suspendu ou la connexion perdue, le nœud revient en arrière tout seul."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puedes salir de esta pantalla: una notificación ofrece Conservar durante un rato. Si Ichor se suspende o se pierde la conexión, el nodo se revierte solo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du kannst diesen Bildschirm verlassen: Eine Benachrichtigung bietet eine Weile Behalten an. Wird Ichor angehalten oder bricht die Verbindung ab, setzt der Node selbst zurück."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puoi lasciare questa schermata: una notifica offre Mantieni per un po'. Se Ichor viene sospeso o la connessione si perde, il nodo torna indietro da solo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Можна вийти з цього екрана: сповіщення якийсь час пропонує «Залишити». Якщо Ichor призупинено або зв'язок втрачено, вузол сам повернеться."
+          }
+        }
+      }
+    },
+    "A config change is being tried: show the countdown" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une modification de config est en test : afficher le compte à rebours"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se está probando un cambio de configuración: mostrar la cuenta atrás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Konfigurationsänderung wird getestet: Countdown anzeigen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "È in prova una modifica di configurazione: mostra il conto alla rovescia"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тестується зміна конфігурації: показати відлік"
+          }
+        }
+      }
+    },
+    "Show how the try ended" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voir comment le test s'est terminé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar cómo terminó la prueba"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigen, wie der Test ausging"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra com'è finita la prova"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати, чим завершився тест"
+          }
+        }
+      }
+    },
+    "A config change is being tried" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une modification de config est en test"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se está probando un cambio de configuración"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Konfigurationsänderung wird getestet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "È in prova una modifica di configurazione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тестується зміна конфігурації"
+          }
+        }
+      }
+    },
+    "The config try ended" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le test de config est terminé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La prueba de configuración terminó"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Konfigurationstest ist beendet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La prova di configurazione è terminata"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тест конфігурації завершено"
+          }
+        }
+      }
+    },
+    "Trying a config change on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test d'une modification de config sur %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probando un cambio de configuración en %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurationsänderung wird auf %@ getestet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prova di una modifica di configurazione su %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тестування зміни конфігурації на %@"
+          }
+        }
+      }
+    },
+    "Reverts by itself at %@ unless you keep it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revient en arrière tout seul à %@ si vous ne la conservez pas."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se revierte sola a las %@ si no la conservas."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setzt sich um %@ selbst zurück, wenn du sie nicht behältst."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torna indietro da sola alle %@ se non la mantieni."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сама повернеться о %@, якщо ви її не залишите."
+          }
+        }
+      }
+    },
+    "Config change kept on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modification de config conservée sur %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambio de configuración conservado en %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurationsänderung auf %@ behalten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifica di configurazione mantenuta su %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зміну конфігурації залишено на %@"
+          }
+        }
+      }
+    },
+    "Config change reverted on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modification de config annulée sur %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambio de configuración revertido en %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurationsänderung auf %@ zurückgesetzt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifica di configurazione annullata su %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зміну конфігурації скасовано на %@"
+          }
+        }
+      }
+    },
+    "The config try on %@ failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le test de config sur %@ a échoué"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La prueba de configuración en %@ falló"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Konfigurationstest auf %@ ist fehlgeschlagen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La prova di configurazione su %@ non è riuscita"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тест конфігурації на %@ не вдався"
+          }
+        }
+      }
+    },
+    "A config try is already running on %@: keep or revert it first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un test de config est déjà en cours sur %@ : conservez-le ou annulez-le d'abord."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya hay una prueba de configuración en curso en %@: consérvala o reviértela primero."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf %@ läuft schon ein Konfigurationstest: Behalte ihn oder setze ihn zuerst zurück."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "È già in corso una prova di configurazione su %@: mantienila o annullala prima."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На %@ уже триває тест конфігурації: спершу залиште або скасуйте його."
+          }
+        }
+      }
+    },
+    "Scan credentials QR code" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan credentials QR code"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scanner le code QR des identifiants"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escanear el código QR de credenciales"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сканувати QR-код облікових даних"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-Code der Anmeldedaten scannen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scansiona il codice QR delle credenziali"
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "Scan a gcloud user credentials file or a service account key." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan a gcloud user credentials file or a service account key."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scannez un fichier d’identifiants utilisateur gcloud ou une clé de compte de service."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escanea un archivo de credenciales de usuario de gcloud o una clave de cuenta de servicio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скануйте файл облікових даних користувача gcloud або ключ сервісного облікового запису."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scanne eine gcloud-Datei mit Nutzeranmeldedaten oder einen Dienstkontoschlüssel."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scansiona un file di credenziali utente gcloud o una chiave di account di servizio."
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
+    "This file contains a refresh token or private key. Keep it private; anyone with it can access your Google account or service account." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This file contains a refresh token or private key. Keep it private; anyone with it can access your Google account or service account."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce fichier contient un jeton de renouvellement ou une clé privée. Gardez-le confidentiel : quiconque le possède peut accéder à votre compte Google ou compte de service."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este archivo contiene un token de actualización o una clave privada. Mantenlo en privado; quien lo tenga puede acceder a tu cuenta de Google o de servicio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей файл містить токен оновлення або приватний ключ. Зберігайте його в таємниці: кожен, хто його має, може отримати доступ до вашого облікового запису Google або сервісного облікового запису."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Datei enthält ein Aktualisierungstoken oder einen privaten Schlüssel. Halte sie geheim; wer sie besitzt, kann auf dein Google-Konto oder Dienstkonto zugreifen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo file contiene un token di aggiornamento o una chiave privata. Tienilo riservato: chiunque lo possieda può accedere al tuo account Google o di servizio."
+          }
+        }
+      },
+      "extractionState" : "manual"
+    },
     "Replace this control plane…" : {
       "extractionState" : "manual",
       "localizations" : {

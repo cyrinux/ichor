@@ -182,6 +182,18 @@
                 android:value="Follows a node maintenance the user started on one of their Talos nodes (cordon, drain its pods, reboot, wait for the node to come back) while they switch apps, so it is not cut off midway; it stops when the maintenance ends." />
         </service>
 
+        <!-- A machine config tried on a node reverts by itself after 1 to 10 minutes unless the
+             user keeps it: following the try keeps its countdown and the Keep button alive while
+             they switch apps, and it runs only until the try is kept or reverted. -->
+        <service
+            android:name=".ui.machineconfig.ConfigTryService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Follows a machine configuration change the user is trying on one of their Talos nodes, which the node reverts by itself after 1 to 10 minutes unless kept, so the user can keep it from the notification after switching apps; it stops when the try is kept or reverted." />
+        </service>
+
         <!-- Applying a machine config change to several nodes one after the other waits for each
              node to reboot in reboot mode, minutes per node; same reasons as the maintenance
              service, and it runs only while the rollout does. -->
@@ -213,6 +225,11 @@
         <!-- "+1 h" on the reminder before an Argo CD freeze ends. -->
         <receiver
             android:name=".monitor.FreezeExtendReceiver"
+            android:exported="false" />
+
+        <!-- Keep and Revert now on a machine config try's notification. -->
+        <receiver
+            android:name=".ui.machineconfig.ConfigTryActionReceiver"
             android:exported="false" />
 
         <!-- Snooze and Wake on an alert's notification. -->
