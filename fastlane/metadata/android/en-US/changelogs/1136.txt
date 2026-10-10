@@ -1,0 +1,2 @@
+• Restart one container on a node without rebooting
+• Sign release builds again by passing the keystore secrets to android.yml

@@ -210,7 +210,7 @@ func diagnoseNode(ctx context.Context, c *client.Client, o nodeOverview) nodeDia
 	wg.Go(func() {
 		list, err := c.Containers(nodeCtx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI)
 		if err == nil {
-			n.Running, n.IdlePods = summarizePods(mergeContainers(first(list.GetMessages()).GetContainers(), nil))
+			n.Running, n.IdlePods = summarizePods(mergeContainers(containerNSK8s, first(list.GetMessages()).GetContainers(), nil))
 		}
 	})
 

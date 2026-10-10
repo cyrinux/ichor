@@ -1,5 +1,6 @@
 package name.levis.ichor.model
 
+import name.levis.ichor.data.TalosJson
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -65,6 +66,30 @@ class ContainersTest {
         assertEquals(listOf("1"), rows.podGroups("KUBE-sys", ContainerSort.CPU).flatMap { it.containers }.map { it.info.id })
         assertEquals(listOf("2"), rows.podGroups(" nginx:1.27 ", ContainerSort.CPU).flatMap { it.containers }.map { it.info.id })
         assertTrue(rows.podGroups("nothing", ContainerSort.CPU).isEmpty())
+    }
+
+    @Test
+    fun systemContainersFormOneGroupListedFirst() {
+        val rows = listOf(
+            ContainerRow(c("web", 0, pod = "web", memory = 500), 50.0),
+            ContainerRow(c("apid", 0, pod = "", ns = "").copy(namespace = SYSTEM_CONTAINERS, status = "RUNNING"), 1.0),
+            ContainerRow(c("trustd", 0, pod = "", ns = "").copy(namespace = SYSTEM_CONTAINERS, status = "RUNNING"), 2.0),
+        )
+        val groups = rows.podGroups("", ContainerSort.CPU)
+        assertEquals(listOf(true, false), groups.map { it.system })
+        assertEquals(listOf("trustd", "apid"), groups[0].containers.map { it.info.id })
+        assertTrue(groups[0].containers.all { it.info.system && it.info.running })
+        assertFalse(groups[1].containers.single().info.system)
+    }
+
+    @Test
+    fun decodesNamespaceWithKubernetesDefault() {
+        val sample = TalosJson.decodeFromString(
+            ContainerSample.serializer(),
+            """{"at":1,"containers":[{"id":"apid","namespace":"system","name":"apid"},{"id":"c1","pod":"web"}]}""",
+        )
+        assertEquals(listOf(SYSTEM_CONTAINERS, K8S_CONTAINERS), sample.containers.map { it.namespace })
+        assertEquals(listOf(true, false), sample.containers.map { it.system })
     }
 
     @Test

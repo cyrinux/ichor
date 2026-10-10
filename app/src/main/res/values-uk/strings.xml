@@ -1162,6 +1162,17 @@
     <string name="service_done_stop">Зупинку %1$s на %2$s запитано.</string>
     <string name="service_done_start">Запуск %1$s на %2$s запитано.</string>
     <string name="service_action_failed">Не вдалося виконати «%1$s» для %2$s: %3$s</string>
+    <string name="common_feature_container_restart">Перезапуск контейнерів</string>
+    <string name="container_actions">Дії з контейнером</string>
+    <string name="container_open_log">Відкрити журнал</string>
+    <string name="container_restart">Перезапустити контейнер…</string>
+    <string name="container_restart_confirm">Перезапустити контейнер %1$s на %2$s?</string>
+    <string name="container_restart_kubernetes_note">Kubelet знову запустить контейнер; под продовжить працювати.</string>
+    <string name="container_restart_system_note">Це системний контейнер Talos: те, що він надає, зупиниться, доки він не повернеться.</string>
+    <string name="container_restart_done">Перезапуск контейнера %1$s на %2$s запитано.</string>
+    <string name="container_restart_failed">Не вдалося перезапустити контейнер %1$s: %2$s</string>
+    <string name="node_pods_system">Система</string>
+    <string name="node_pods_system_detail">Контейнери Talos</string>
     <string name="common_feature_issue_config">Видача talosconfig</string>
     <string name="node_menu_network">Мережа</string>
     <string name="node_menu_hardware">Про цей вузол</string>

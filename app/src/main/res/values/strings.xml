@@ -1002,6 +1002,7 @@
     <string name="common_stream_failed">Stopped: %1$s</string>
     <string name="common_stream_stopped">Stopped</string>
     <string name="common_feature_service_control">Service control</string>
+    <string name="common_feature_container_restart">Container restart</string>
     <string name="overview_action_events">Events</string>
     <string name="node_menu_events">Events</string>
     <string name="node_tab_pods">Pods</string>
@@ -1083,6 +1084,16 @@
     <string name="service_done_stop">Stop of %1$s requested on %2$s.</string>
     <string name="service_done_start">Start of %1$s requested on %2$s.</string>
     <string name="service_action_failed">%1$s %2$s failed: %3$s</string>
+    <string name="container_actions">Container actions</string>
+    <string name="container_open_log">Open log</string>
+    <string name="container_restart">Restart container…</string>
+    <string name="container_restart_confirm">Restart container %1$s on %2$s?</string>
+    <string name="container_restart_kubernetes_note">The kubelet starts the container again; the pod keeps running.</string>
+    <string name="container_restart_system_note">This is a Talos system container: what it serves stops until it is back.</string>
+    <string name="container_restart_done">Restart of container %1$s requested on %2$s.</string>
+    <string name="container_restart_failed">Restarting container %1$s failed: %2$s</string>
+    <string name="node_pods_system">System</string>
+    <string name="node_pods_system_detail">Talos containers</string>
     <string name="common_feature_issue_config">Issue talosconfig</string>
     <string name="node_menu_network">Network</string>
     <string name="node_menu_hardware">About this node</string>

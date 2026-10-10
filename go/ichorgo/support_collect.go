@@ -168,7 +168,7 @@ func collectContainerLogs(ctx context.Context, s *session, node string) ([]bundl
 		return nil, s.friendlyErr(node, err)
 	}
 
-	containers := mergeContainers(first(resp.GetMessages()).GetContainers(), nil)
+	containers := mergeContainers(containerNSK8s, first(resp.GetMessages()).GetContainers(), nil)
 
 	var table bytes.Buffer
 

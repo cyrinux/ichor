@@ -27,6 +27,7 @@ data class NodeFeatures(
 enum class TalosFeature(val key: String) {
     EVENTS("events"),
     CONTAINERS("containers"),
+    CONTAINER_RESTART("containerRestart"),
     PROCESSES("processes"),
     LOG_FOLLOW("logFollow"),
     SERVICE_CONTROL("serviceControl"),

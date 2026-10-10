@@ -1,6 +1,8 @@
 package name.levis.ichor.ui.node
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,10 +12,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Article
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -25,6 +33,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -40,11 +49,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
-import androidx.compose.foundation.clickable
 import name.levis.ichor.model.ContainerInfo
 import name.levis.ichor.model.ContainerRow
 import name.levis.ichor.model.ContainerSample
 import name.levis.ichor.model.ContainerSort
+import name.levis.ichor.model.FeatureSupport
 import name.levis.ichor.model.PodGroup
 import name.levis.ichor.model.containerRows
 import name.levis.ichor.model.podGroups
@@ -53,6 +62,7 @@ import name.levis.ichor.model.statusLabel
 import name.levis.ichor.ui.PollWhileStarted
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.EmptyText
+import name.levis.ichor.ui.components.FeatureMenuItem
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SearchField
@@ -81,10 +91,17 @@ class PodsViewModel(private val talos: TalosRepository, private val node: String
     }
 }
 
+/**
+ * The node's containers grouped by pod, Talos' own first. A tap opens the container's log;
+ * [onRestart] (null: the role cannot restart) adds "Restart container…" to the row's menu.
+ */
 @Composable
 fun PodsTab(
     node: String,
     onContainer: (ContainerInfo) -> Unit,
+    onRestart: ((ContainerInfo) -> Unit)? = null,
+    restartSupport: FeatureSupport = FeatureSupport.UNKNOWN,
+    restartBusy: Boolean = false,
     vm: PodsViewModel = viewModel(key = "pods-$node", factory = factory { PodsViewModel(app.talosRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -126,9 +143,15 @@ fun PodsTab(
         }
         LazyColumn(Modifier.fillMaxSize()) {
             groups.forEach { group ->
-                item(key = "pod|${group.namespace}|${group.pod}") { PodHeader(group) }
-                items(group.containers, key = { "c|${it.info.id}" }) { row ->
-                    ContainerItem(row, onClick = { onContainer(row.info) })
+                item(key = "pod|${group.system}|${group.namespace}|${group.pod}") { PodHeader(group) }
+                items(group.containers, key = { "c|${it.info.namespace}|${it.info.id}" }) { row ->
+                    ContainerItem(
+                        row,
+                        onClick = { onContainer(row.info) },
+                        onRestart = onRestart?.let { restart -> { restart(row.info) } },
+                        restartSupport = restartSupport,
+                        restartEnabled = !restartBusy,
+                    )
                     HorizontalDivider()
                 }
             }
@@ -149,13 +172,14 @@ private fun PodHeader(group: PodGroup) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    group.pod.ifEmpty { "—" },
+                    if (group.system) stringResource(R.string.node_pods_system) else group.pod.ifEmpty { "—" },
                     style = MaterialTheme.typography.titleSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (group.namespace.isNotEmpty()) {
-                    Text(group.namespace, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val detail = if (group.system) stringResource(R.string.node_pods_system_detail) else group.namespace
+                if (detail.isNotEmpty()) {
+                    Text(detail, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Text(cpu(group.cpuPercent), style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
@@ -170,15 +194,68 @@ private fun PodHeader(group: PodGroup) {
 }
 
 @Composable
-private fun ContainerItem(row: ContainerRow, onClick: () -> Unit) {
+private fun ContainerItem(
+    row: ContainerRow,
+    onClick: () -> Unit,
+    onRestart: (() -> Unit)?,
+    restartSupport: FeatureSupport,
+    restartEnabled: Boolean,
+) {
     val c = row.info
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val warn = LocalStatusColors.current.warn
-    // Tapping a container opens its log.
-    Column(Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = stringResource(R.string.common_open), onClick = onClick).padding(start = 28.dp, end = 16.dp, top = 6.dp, bottom = 6.dp)) {
+    var menuOpen by remember { mutableStateOf(false) }
+    // Tapping a container opens its log; a long press (or ⋮) its actions.
+    Row(
+        Modifier.fillMaxWidth()
+            .combinedClickable(
+                role = Role.Button,
+                onClickLabel = stringResource(R.string.common_open),
+                onClick = onClick,
+                onLongClick = onRestart?.let { { menuOpen = true } },
+                onLongClickLabel = stringResource(R.string.container_actions),
+            )
+            .padding(start = 28.dp, end = if (onRestart == null) 16.dp else 0.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ContainerDetails(row, Modifier.weight(1f), muted, warn)
+        if (onRestart != null) {
+            Box {
+                IconButton(onClick = { menuOpen = true }) {
+                    Icon(Icons.Outlined.MoreVert, stringResource(R.string.container_actions))
+                }
+                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.container_open_log)) },
+                        leadingIcon = { Icon(Icons.AutoMirrored.Outlined.Article, contentDescription = null) },
+                        onClick = {
+                            menuOpen = false
+                            onClick()
+                        },
+                    )
+                    FeatureMenuItem(
+                        label = stringResource(R.string.container_restart),
+                        icon = Icons.Outlined.RestartAlt,
+                        support = restartSupport,
+                        enabled = restartEnabled,
+                        onClick = {
+                            menuOpen = false
+                            onRestart()
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ContainerDetails(row: ContainerRow, modifier: Modifier, muted: Color, warn: Color) {
+    val c = row.info
+    Column(modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                c.name.ifEmpty { c.id.take(12) },
+                c.displayName,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,

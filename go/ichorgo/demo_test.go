@@ -120,6 +120,9 @@ func TestDemoPublicReadsAndActions(t *testing.T) {
 		if err := ServiceAction(yaml, "", n.Node, "kubelet", "restart"); !errors.Is(err, errDemoUnavailable) {
 			t.Fatalf("service control must be blocked locally: %v", err)
 		}
+		if err := ContainerRestart(yaml, "", n.Node, "system", "apid"); !errors.Is(err, errDemoUnavailable) {
+			t.Fatalf("container restart must be blocked locally: %v", err)
+		}
 	}
 	for _, read := range []func(string, string) (string, error){ClusterStats, ClusterTime, EtcdStatus, KubeSpanStatus, ClusterTopology} {
 		out, err := read(yaml, "")
