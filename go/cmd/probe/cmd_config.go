@@ -105,6 +105,29 @@ var configCommands = []command{
 
 		return "done: " + <-m.done, nil
 	}},
+	{name: "config-multi-preview", args: "NODES EDITSFILE", run: func(e env) (string, error) {
+		// EDITSFILE is a JSON array of config-edit edits, replayed on each node (a,b,c). Only
+		// dry runs reach the nodes.
+		edits, err := os.ReadFile(flag.Arg(2))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.MachineConfigMultiPreview(e.cfg, e.context, flag.Arg(1), string(edits))
+	}},
+	{name: "config-multi-apply", args: "NODES EDITSFILE MODE", run: func(e env) (string, error) {
+		// Applies the edits to each node for good, one after the other (MODE: auto, staged or
+		// reboot): it changes the nodes for real, and "reboot" reboots them.
+		edits, err := os.ReadFile(flag.Arg(2))
+		if err != nil {
+			return "", err
+		}
+
+		m := maintenanceProbe{done: make(chan string, 1)}
+		ichorgo.StartConfigApplyMulti(e.cfg, e.context, flag.Arg(1), string(edits), flag.Arg(3), m)
+
+		return "done: " + <-m.done, nil
+	}},
 }
 
 // configDraft reads the node's redacted config and the edited copy of it in FILE.

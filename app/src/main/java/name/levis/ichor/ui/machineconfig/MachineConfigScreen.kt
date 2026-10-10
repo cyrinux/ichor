@@ -107,6 +107,7 @@ fun MachineConfigScreen(
     var expanded by rememberSaveable(stateSaver = listSaver(save = { it.toList() }, restore = { it.toSet() })) { mutableStateOf(emptySet<String>()) }
     var confirmingTry by rememberSaveable { mutableStateOf<Int?>(null) }
     var confirmingApply by rememberSaveable { mutableStateOf<ConfigApplyMode?>(null) }
+    var confirmingMulti by rememberSaveable { mutableStateOf<ConfigApplyMode?>(null) }
 
     SecureWhile(revealed)
 
@@ -138,8 +139,13 @@ fun MachineConfigScreen(
     val review = editor.review
     val applying = editor.apply
 
+    val multi = editor.multi
+
     fun back() {
         when {
+            multi?.run?.finished == false -> Unit // a multi-node run too
+            multi?.run != null -> vm.finishMulti()
+            multi != null -> vm.closeMulti()
             run is ConfigTryState.Running -> Unit // the try is followed to its end
             run != null -> vm.finishTry()
             applying is ConfigApplyState.Running -> Unit // so is an apply
@@ -154,7 +160,7 @@ fun MachineConfigScreen(
 
     val loaded = (state as? UiState.Loaded)?.data
     val shown = remember(loaded, query) { loaded?.let { matchingLines(it, query) } }
-    val browsing = run == null && applying == null && review == null
+    val browsing = run == null && applying == null && review == null && multi == null
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -165,6 +171,8 @@ fun MachineConfigScreen(
                         Text(
                             stringResource(
                                 when {
+                                    multi?.run != null -> multi.run.mode.label
+                                    multi?.preview != null -> R.string.machine_config_multi_title
                                     run != null -> R.string.machine_config_try_title
                                     applying != null -> applying.mode.label
                                     review != null -> R.string.machine_config_review
@@ -175,7 +183,10 @@ fun MachineConfigScreen(
                         Text(hostname, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
                     }
                 },
-                navigationIcon = { if (run !is ConfigTryState.Running && applying !is ConfigApplyState.Running) BackButton(::back) },
+                navigationIcon = {
+                    val running = run is ConfigTryState.Running || applying is ConfigApplyState.Running || multi?.run?.finished == false
+                    if (!running) BackButton(::back)
+                },
                 actions = {
                     if (browsing && !editor.editing) {
                         TooltipIconButton(
@@ -210,6 +221,13 @@ fun MachineConfigScreen(
     ) { padding ->
         val body = Modifier.padding(padding).fillMaxSize()
         when {
+            multi?.run != null -> MultiApplyContent(multi.run, onDone = vm::finishMulti, modifier = body)
+            multi?.preview != null -> MultiNodeReviewContent(
+                multi.preview,
+                onRetry = vm::previewMulti,
+                onApply = { confirmingMulti = it },
+                modifier = body,
+            )
             run != null -> ConfigTryContent(run, onKeep = vm::keep, onRevert = vm::revertNow, onDone = vm::finishTry, modifier = body)
             applying != null -> ConfigApplyContent(applying, onDone = vm::finishApply, modifier = body)
             review != null -> ConfigReviewContent(
@@ -218,6 +236,7 @@ fun MachineConfigScreen(
                 onTry = { confirmingTry = it },
                 onApply = { confirmingApply = it },
                 modifier = body,
+                onAlsoApply = vm::startMulti.takeIf { editor.canReplay },
             )
             else -> Column(body) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -319,6 +338,47 @@ fun MachineConfigScreen(
                 onDismiss = { confirmingApply = null },
                 confirmColor = LocalStatusColors.current.warn,
             )
+        }
+    }
+
+    if (multi != null && multi.picking) {
+        MultiNodePickerDialog(
+            candidates = multi.candidates,
+            selected = multi.selected,
+            onToggle = vm::toggleMultiNode,
+            onRetry = vm::startMulti,
+            onPreview = vm::previewMulti,
+            onDismiss = vm::closeMulti,
+        )
+    }
+
+    confirmingMulti?.let { mode ->
+        val preview = (multi?.preview as? UiState.Loaded)?.data
+        val names = preview?.changing.orEmpty().map { it.name }
+        // One node: its hostname is typed; several: the cluster's name, once for them all.
+        val typed = names.singleOrNull() ?: multi?.cluster?.ifEmpty { null } ?: hostname
+        HostnameConfirmDialog(
+            title = stringResource(R.string.machine_config_multi_confirm_title),
+            hostname = typed,
+            confirmLabel = stringResource(mode.label),
+            onConfirm = {
+                confirmingMulti = null
+                authenticated(R.string.machine_config_apply_auth) { vm.startMultiApply(mode) }
+            },
+            onDismiss = { confirmingMulti = null },
+            emphasized = mode == ConfigApplyMode.REBOOT,
+        ) {
+            Text(
+                stringResource(
+                    when (mode) {
+                        ConfigApplyMode.REBOOT -> R.string.machine_config_multi_confirm_reboot
+                        ConfigApplyMode.STAGED -> R.string.machine_config_apply_confirm_staged
+                        ConfigApplyMode.AUTO -> R.string.machine_config_apply_confirm_auto
+                    },
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Text(names.joinToString(", "), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
         }
     }
 
