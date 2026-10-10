@@ -17,25 +17,48 @@ import (
 // `gcloud auth application-default login` writes (type authorized_user) carries gcloud's
 // OAuth client and the user's refresh token; a refresh token grant gives the cloud-platform
 // access token gke-gcloud-auth-plugin would. It is the user's gcloud session brought to the
-// phone, not a sign-in of Ichor's own.
+// phone, not a sign-in of Ichor's own. With `--login-config` (Workforce Identity Federation)
+// the file is an external_account_authorized_user: the same refresh, at Google STS
+// (token_url) with the client in a Basic header.
 
 const (
 	gcpTokenURL = "https://oauth2.googleapis.com/token"
 	// gcpRenewHint is how to get a working credential again once Google refuses it.
 	gcpRenewHint = "run `gcloud auth application-default login` again and import the new credentials file"
+	// gcpWorkforceRenewHint is the same for a workforce identity session.
+	gcpWorkforceRenewHint = "run `gcloud auth application-default login --login-config=<your login config>` again and import the new credentials file"
+
+	gcpTypeAuthorizedUser = "authorized_user"
+	gcpTypeWorkforceUser  = "external_account_authorized_user"
 )
 
 // gcpUserInfoTarget is where the account's email is read when the token answer carries no
 // ID token (overridden in tests).
 var gcpUserInfoTarget = func() string { return "https://openidconnect.googleapis.com/v1/userinfo" }
 
-// gcpUserCredentials is application_default_credentials.json for a Google account.
+// gcpUserCredentials is application_default_credentials.json for a Google account, or for a
+// workforce identity session (Audience, TokenURL, TokenInfoURL).
 type gcpUserCredentials struct {
 	Type           string `json:"type"`
 	ClientID       string `json:"client_id"`
 	ClientSecret   string `json:"client_secret"`
 	RefreshToken   string `json:"refresh_token"`
 	QuotaProjectID string `json:"quota_project_id,omitempty"`
+	Audience       string `json:"audience,omitempty"`
+	TokenURL       string `json:"token_url,omitempty"`
+	TokenInfoURL   string `json:"token_info_url,omitempty"`
+}
+
+// workforce tells a workforce identity session from a Google account's credentials.
+func (c gcpUserCredentials) workforce() bool { return c.Type == gcpTypeWorkforceUser }
+
+// renewHint is how to get working credentials again once Google refuses these.
+func (c gcpUserCredentials) renewHint() string {
+	if c.workforce() {
+		return gcpWorkforceRenewHint
+	}
+
+	return gcpRenewHint
 }
 
 func parseUserCredentials(raw string) (gcpUserCredentials, error) {
@@ -44,16 +67,39 @@ func parseUserCredentials(raw string) (gcpUserCredentials, error) {
 		return c, errors.New("the gcloud credentials file is not JSON")
 	}
 
-	switch {
-	case c.Type == "external_account":
-		return c, errors.New("a workforce identity login config is not supported yet (see Workforce Identity Federation)")
-	case c.Type == "service_account":
+	complete := c.ClientID != "" && c.ClientSecret != "" && c.RefreshToken != ""
+
+	switch c.Type {
+	case "external_account":
+		return c, errors.New("a workforce identity login config or external account file cannot sign in by itself: " +
+			"run `gcloud auth application-default login --login-config=<file>` and import the credentials it writes")
+	case "service_account":
 		return c, errors.New("this is a service account key: choose Service account key")
-	case c.Type != "authorized_user" || c.ClientID == "" || c.ClientSecret == "" || c.RefreshToken == "":
+	case gcpTypeWorkforceUser:
+		if !complete || c.TokenURL == "" {
+			return c, errors.New("not a workforce identity session (external_account_authorized_user with a refresh token and token_url)")
+		}
+
+		if u, err := url.Parse(c.TokenURL); err != nil || u.Scheme != "https" || u.Host == "" {
+			return c, errors.New("the workforce identity session's token_url is not https")
+		}
+	case gcpTypeAuthorizedUser:
+		if !complete {
+			return c, errors.New("not a gcloud user credential (type authorized_user with a refresh token)")
+		}
+	default:
 		return c, errors.New("not a gcloud user credential (type authorized_user with a refresh token)")
 	}
 
 	return c, nil
+}
+
+// isGCPUserCredentials tells the credentials files gcloud writes for a user (a Google account
+// or a workforce identity session) by their raw JSON.
+func isGCPUserCredentials(raw string) bool {
+	t := gcpCredentialType(raw)
+
+	return t == gcpTypeAuthorizedUser || t == gcpTypeWorkforceUser
 }
 
 // gcpCredentialType is the "type" of a Google credentials JSON, "" when it has none.
@@ -104,7 +150,7 @@ func mintForGoogleUser(ctx context.Context, state kubeAuthState) (string, time.T
 	t, err := refreshGoogleToken(ctx, creds)
 	if err != nil {
 		if oauthInvalidGrant(err) || unauthorized(err) {
-			return "", time.Time{}, state, signInRequired(authGKE, gcpRenewHint)
+			return "", time.Time{}, state, signInRequired(authGKE, creds.renewHint())
 		}
 
 		return "", time.Time{}, state, fmt.Errorf("get a Google token: %w", err)
@@ -119,26 +165,40 @@ func mintForGoogleUser(ctx context.Context, state kubeAuthState) (string, time.T
 		}
 	}
 
-	state.User = googleAccount(ctx, t, state.User)
+	if creds.workforce() {
+		state.User = workforceLabel(creds.Audience)
+	} else {
+		state.User = googleAccount(ctx, t, state.User)
+	}
 
 	return t.AccessToken, expiry, state, nil
 }
 
-// refreshGoogleToken is the refresh token grant of creds.
+// refreshGoogleToken is the refresh token grant of creds: at Google's token endpoint with the
+// client in the form, or at STS (the session's token_url) with the client in a Basic header.
 func refreshGoogleToken(ctx context.Context, creds gcpUserCredentials) (oidcTokens, error) {
-	form := url.Values{
-		"grant_type": {"refresh_token"}, "refresh_token": {creds.RefreshToken},
-		"client_id": {creds.ClientID}, "client_secret": {creds.ClientSecret},
+	form := url.Values{"grant_type": {"refresh_token"}, "refresh_token": {creds.RefreshToken}}
+	target := gcpTokenURL
+
+	if creds.workforce() {
+		target = creds.TokenURL
+	} else {
+		form.Set("client_id", creds.ClientID)
+		form.Set("client_secret", creds.ClientSecret)
 	}
 
 	var t oidcTokens
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, gcpTokenTarget(gcpTokenURL), strings.NewReader(form.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, gcpTokenTarget(target), strings.NewReader(form.Encode()))
 	if err != nil {
 		return t, err
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	if creds.workforce() {
+		req.SetBasicAuth(creds.ClientID, creds.ClientSecret)
+	}
 
 	if err := cloudJSON(req, &t); err != nil {
 		return t, err
@@ -187,4 +247,16 @@ func googleAccount(ctx context.Context, t oidcTokens, known string) string {
 	}
 
 	return cmpOr(known, "Google account")
+}
+
+// workforceLabel names a workforce identity session by its pool, from the audience
+// (//iam.googleapis.com/locations/global/workforcePools/<pool>/providers/<provider>).
+func workforceLabel(audience string) string {
+	if _, rest, ok := strings.Cut(audience, "/workforcePools/"); ok {
+		if pool, _, _ := strings.Cut(rest, "/"); pool != "" {
+			return pool + " (workforce identity)"
+		}
+	}
+
+	return "Workforce identity"
 }

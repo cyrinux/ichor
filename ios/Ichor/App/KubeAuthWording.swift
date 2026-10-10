@@ -50,6 +50,8 @@ enum KubeAuthWording {
         switch field {
         case "gcpUserCredentialsJson":
             String(localized: "Bring your gcloud session: on your computer run gcloud auth application-default login, then import ~/.config/gcloud/application_default_credentials.json. When Google ends the session, run it again and import the new file.")
+                + "\n\n"
+                + String(localized: "A workforce identity session (gcloud auth application-default login --login-config=…) is imported the same way.")
         case "gcpProjects":
             String(localized: "Leave empty to search every project your account can see; list project IDs to go faster in a large organisation.")
         case "gcpOAuthClientId":

@@ -1198,6 +1198,41 @@
         }
       }
     },
+    "A workforce identity session (gcloud auth application-default login --login-config=…) is imported the same way." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une session d'identité de personnel (gcloud auth application-default login --login-config=…) s'importe de la même façon."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una sesión de identidad de personal (gcloud auth application-default login --login-config=…) se importa del mismo modo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Workforce-Identity-Sitzung (gcloud auth application-default login --login-config=…) wird genauso importiert."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una sessione di identità della forza lavoro (gcloud auth application-default login --login-config=…) si importa allo stesso modo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сесію ідентифікації персоналу (gcloud auth application-default login --login-config=…) імпортують так само."
+          }
+        }
+      }
+    },
     "Since you last looked" : {
       "extractionState" : "manual",
       "localizations" : {
