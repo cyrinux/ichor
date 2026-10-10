@@ -25,6 +25,7 @@ extension Feature {
         case .workloads: String(localized: "Kubernetes workloads")
         case .cgroups: String(localized: "Cgroups and pressure")
         case .reset: String(localized: "Node reset")
+        case .containerRestart: String(localized: "Container restart")
         }
     }
 }

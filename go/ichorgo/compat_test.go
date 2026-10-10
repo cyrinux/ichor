@@ -79,7 +79,7 @@ func TestNotAvailableNamesTheVersion(t *testing.T) {
 
 // requiredFeatures are the names the apps rely on.
 var requiredFeatures = []string{
-	"events", "containers", "processes", "logFollow", "serviceControl", "packetCapture", "upgrade", "volumes",
+	"events", "containers", "containerRestart", "processes", "logFollow", "serviceControl", "packetCapture", "upgrade", "volumes",
 	"diskUsage", "mounts", "kubespan", "etcd", "etcdSnapshot", "etcdMemberActions", "resourceBrowser",
 	"supportBundle", "diskHealth", "issueConfig", "network", "connections", "time", "hardware", "images",
 	"imagePull", "machineConfig", "debugShell", "reset", "sensors",

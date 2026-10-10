@@ -397,6 +397,13 @@ struct TalosClient: Sendable {
         try await Self.json { [config, context] in IchorgoNodeContainers(config, context, node, $0) }
     }
 
+    /// `talosctl restart [-k] ID` (os:admin); namespace is `system` or `k8s.io`.
+    func containerRestart(node: String, namespace: String, id: String) async throws {
+        try await Self.run { [config, context] error -> Void in
+            _ = IchorgoContainerRestart(config, context, node, namespace, id, error)
+        }
+    }
+
     /// `talosctl service SERVICE start|stop|restart` (os:operator or os:admin).
     func serviceAction(_ action: ServiceAction, service: String, node: String) async throws {
         try await Self.run { [config, context] error -> Void in

@@ -10,6 +10,8 @@ data class ContainerSample(val at: Long, val containers: List<ContainerInfo> = e
 @Serializable
 data class ContainerInfo(
     val id: String,
+    /** Containerd namespace: [SYSTEM_CONTAINERS] (Talos' own) or [K8S_CONTAINERS]. */
+    val namespace: String = K8S_CONTAINERS,
     val podNamespace: String = "",
     val pod: String = "",
     val name: String = "",
@@ -22,6 +24,12 @@ data class ContainerInfo(
     val cpuNanos: Long = 0,
 )
 
+const val SYSTEM_CONTAINERS = "system"
+const val K8S_CONTAINERS = "k8s.io"
+
+/** A Talos container (apid, trustd, an extension service), not a Kubernetes one. */
+val ContainerInfo.system: Boolean get() = namespace == SYSTEM_CONTAINERS
+
 val ContainerInfo.running: Boolean get() = status.equals("CONTAINER_RUNNING", ignoreCase = true) || status.equals("running", ignoreCase = true)
 
 /** "CONTAINER_EXITED" → "exited". */
@@ -29,8 +37,8 @@ val ContainerInfo.statusLabel: String get() = status.removePrefix("CONTAINER_").
 
 data class ContainerRow(val info: ContainerInfo, val cpuPercent: Double)
 
-/** Containers of one pod, with totals for its header. */
-data class PodGroup(val namespace: String, val pod: String, val containers: List<ContainerRow>) {
+/** Containers of one pod, or Talos' own containers when [system], with totals for its header. */
+data class PodGroup(val namespace: String, val pod: String, val containers: List<ContainerRow>, val system: Boolean = false) {
     val memory: Long get() = containers.sumOf { it.info.memory }
     val cpuPercent: Double get() = containers.sumOf { it.cpuPercent }
 }
@@ -65,7 +73,8 @@ private fun ContainerRow.matches(query: String) = listOf(info.podNamespace, info
 
 /**
  * Containers matching [filter] (namespace, pod, container name or image; case-insensitive),
- * grouped by pod. Pods and the containers inside them are sorted by [sort], heaviest first.
+ * grouped by pod; Talos' system containers form one group, listed first. Pods and the
+ * containers inside them are sorted by [sort], heaviest first.
  */
 fun List<ContainerRow>.podGroups(filter: String, sort: ContainerSort): List<PodGroup> {
     val query = filter.trim()
@@ -74,11 +83,13 @@ fun List<ContainerRow>.podGroups(filter: String, sort: ContainerSort): List<PodG
         ContainerSort.CPU -> compareByDescending<ContainerRow> { it.cpuPercent }.thenByDescending { it.info.memory }
         ContainerSort.MEMORY -> compareByDescending<ContainerRow> { it.info.memory }.thenByDescending { it.cpuPercent }
     }.thenBy { it.info.name }
-    val podOrder = when (sort) {
-        ContainerSort.CPU -> compareByDescending<PodGroup> { it.cpuPercent }.thenByDescending { it.memory }
-        ContainerSort.MEMORY -> compareByDescending<PodGroup> { it.memory }.thenByDescending { it.cpuPercent }
-    }.thenBy { it.namespace }.thenBy { it.pod }
-    return matching.groupBy { it.info.podNamespace to it.info.pod }
-        .map { (key, rows) -> PodGroup(key.first, key.second, rows.sortedWith(containerOrder)) }
+    val podOrder = compareByDescending<PodGroup> { it.system }.then(
+        when (sort) {
+            ContainerSort.CPU -> compareByDescending<PodGroup> { it.cpuPercent }.thenByDescending { it.memory }
+            ContainerSort.MEMORY -> compareByDescending<PodGroup> { it.memory }.thenByDescending { it.cpuPercent }
+        },
+    ).thenBy { it.namespace }.thenBy { it.pod }
+    return matching.groupBy { Triple(it.info.system, it.info.podNamespace, it.info.pod) }
+        .map { (key, rows) -> PodGroup(key.second, key.third, rows.sortedWith(containerOrder), system = key.first) }
         .sortedWith(podOrder)
 }

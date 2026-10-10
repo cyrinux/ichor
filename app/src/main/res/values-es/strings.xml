@@ -1085,6 +1085,17 @@
     <string name="service_done_stop">Detención de %1$s solicitada en %2$s.</string>
     <string name="service_done_start">Inicio de %1$s solicitado en %2$s.</string>
     <string name="service_action_failed">Error al ejecutar «%1$s» en %2$s: %3$s</string>
+    <string name="common_feature_container_restart">Reinicio de contenedores</string>
+    <string name="container_actions">Acciones del contenedor</string>
+    <string name="container_open_log">Abrir el registro</string>
+    <string name="container_restart">Reiniciar el contenedor…</string>
+    <string name="container_restart_confirm">¿Reiniciar el contenedor %1$s en %2$s?</string>
+    <string name="container_restart_kubernetes_note">El kubelet vuelve a iniciar el contenedor; el pod sigue en marcha.</string>
+    <string name="container_restart_system_note">Es un contenedor del sistema de Talos: lo que ofrece se detiene hasta que vuelva.</string>
+    <string name="container_restart_done">Reinicio del contenedor %1$s solicitado en %2$s.</string>
+    <string name="container_restart_failed">Error al reiniciar el contenedor %1$s: %2$s</string>
+    <string name="node_pods_system">Sistema</string>
+    <string name="node_pods_system_detail">Contenedores de Talos</string>
     <string name="common_feature_issue_config">Emisión de talosconfig</string>
     <string name="node_menu_network">Red</string>
     <string name="node_menu_hardware">Acerca de este nodo</string>

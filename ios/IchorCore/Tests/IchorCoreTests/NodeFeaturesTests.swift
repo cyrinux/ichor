@@ -21,7 +21,7 @@ final class NodeFeaturesTests: XCTestCase {
     }
 
     func testEveryNameIsAGoName() {
-        XCTAssertEqual(NodeFeature.allCases.count, 27)
+        XCTAssertEqual(NodeFeature.allCases.count, 28)
         XCTAssertEqual(NodeFeature.logFollow.rawValue, "logFollow")
         XCTAssertEqual(NodeFeature.etcdMemberActions.rawValue, "etcdMemberActions")
     }

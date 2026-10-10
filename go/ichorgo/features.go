@@ -37,6 +37,8 @@ var featureRules = []featureRule{
 	{name: "events"},
 	// rpc Containers, rpc Stats (machine.proto): v1.0.0.
 	{name: "containers"},
+	// rpc Restart (machine.proto): v1.0.0.
+	{name: "containerRestart"},
 	// rpc Processes (machine.proto): v1.0.0.
 	{name: "processes"},
 	// rpc Logs, rpc Dmesg with follow (machine.proto): v1.0.0.

@@ -108,7 +108,7 @@ struct NodeDetailView: View {
                 }
             case .pods:
                 FeatureGated(support: support(.containers)) {
-                    PodsView(node: ref.address, hostname: ref.hostname, monitor: pods)
+                    PodsView(node: ref.address, hostname: ref.hostname, monitor: pods, restartSupport: support(.containerRestart))
                 }
             case .cgroups:
                 CgroupsView(node: ref.address, monitor: cgroups)

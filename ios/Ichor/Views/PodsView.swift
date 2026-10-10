@@ -26,16 +26,26 @@ final class PodMonitor {
     }
 }
 
-/// Pods running on the node, grouped from CRI containers: CPU% from CPU time deltas between
-/// two polls, memory as reported by the runtime.
+/// Pods running on the node, grouped from CRI containers, with Talos' own containers first: CPU%
+/// from CPU time deltas between two polls, memory as reported by the runtime. A long press on a
+/// container restarts it (os:admin): typed hostname for a system container, a plain confirm for
+/// a Kubernetes one (the kubelet starts it again).
 struct PodsView: View {
     let node: String
     let hostname: String
     let monitor: PodMonitor
+    /// What the node's Talos version says about restarting a container.
+    var restartSupport = FeatureSupport(supported: true)
 
     @Environment(AppModel.self) private var model
     @State private var query = ""
     @State private var sort = ProcessSort.cpu
+    /// A system container waiting for the typed hostname.
+    @State private var systemRestart: NodeContainer?
+    /// A Kubernetes container waiting for a plain confirm.
+    @State private var kubeRestart: NodeContainer?
+    @State private var restarting = false
+    @State private var resultMessage: String?
 
     var body: some View {
         let shown = sortPods(filterPods(monitor.pods, query: query), by: sort)
@@ -43,7 +53,7 @@ struct PodsView: View {
             Section {
                 if let error = monitor.error { ErrorOrNoticeText(message: error) }
                 if let sample = monitor.sample {
-                    LabeledContent("Pods", value: "\(monitor.pods.count)")
+                    LabeledContent("Pods", value: "\(monitor.pods.filter { !$0.isSystem }.count)")
                     LabeledContent("Containers", value: "\(sample.containers.count)")
                     LabeledContent("Memory", value: formatBytes(monitor.pods.reduce(UInt64(0)) { $0 &+ $1.memory }))
                 } else if monitor.error == nil {
@@ -67,6 +77,14 @@ struct PodsView: View {
                         NavigationLink(value: Route.containerLogs(node: node, hostname: hostname, container: logContainer(row.container))) {
                             ContainerRowView(row: row)
                         }
+                        .contextMenu {
+                            if model.allows(.containerRestart) && !restarting {
+                                FeatureButton(title: String(localized: "Restart container…"), systemImage: "arrow.clockwise",
+                                              support: restartSupport, role: .destructive) {
+                                    if row.container.isSystem { systemRestart = row.container } else { kubeRestart = row.container }
+                                }
+                            }
+                        }
                     }
                 } header: {
                     PodHeader(pod: pod)
@@ -84,12 +102,58 @@ struct PodsView: View {
             }
         }
         .searchable(text: $query, prompt: Text("Namespace, pod, container or image"))
+        .sheet(item: $systemRestart) { container in
+            HostnameConfirmationSheet(
+                title: confirmationTitle(container),
+                message: String(localized: "This is a Talos system container: what it serves stops until it is back."),
+                hostname: hostname,
+                actionTitle: String(localized: "Restart")
+            ) {
+                systemRestart = nil
+                Task { await restart(container) }
+            }
+        }
+        .confirmationDialog(kubeRestart.map(confirmationTitle) ?? "", isPresented: $kubeRestart.isPresent(),
+                            titleVisibility: .visible, presenting: kubeRestart) { container in
+            Button("Restart", role: .destructive) { Task { await restart(container) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text("The kubelet starts the container again; the pod keeps running.")
+        }
+        .alert(resultMessage ?? "", isPresented: $resultMessage.isPresent()) {
+            Button("OK") {}
+        }
         .themedBackground()
         // Polls only while visible: the task is cancelled when the tab or screen goes away.
         .task {
             guard let client = model.client else { return }
             await monitor.poll(client, node: node)
         }
+    }
+}
+
+extension PodsView {
+    private func confirmationTitle(_ container: NodeContainer) -> String {
+        String(localized: "Restart container \(container.displayName) on \(hostname)?")
+    }
+
+    /// Asks for Face ID / passcode when the app lock is on, then restarts the container; the
+    /// next poll shows it back (with a new id for a Kubernetes container).
+    private func restart(_ container: NodeContainer) async {
+        kubeRestart = nil
+        guard let client = model.client else { return }
+        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: confirmationTitle(container)) {
+            resultMessage = failure
+            return
+        }
+        restarting = true
+        do {
+            try await client.containerRestart(node: node, namespace: container.namespace, id: container.id)
+            resultMessage = String(localized: "Restart of container \(container.displayName) requested on \(hostname).")
+        } catch {
+            resultMessage = String(localized: "Restarting container \(container.displayName) failed: \(error.localizedDescription)")
+        }
+        restarting = false
     }
 }
 
@@ -105,12 +169,16 @@ private struct PodHeader: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 1) {
-                Text(verbatim: pod.pod)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(pod.allRunning ? Color.primary : Color.orange)
-                    .textCase(nil)
-                    .lineLimit(1)
-                if !pod.namespace.isEmpty {
+                Group {
+                    if pod.isSystem { Text("System") } else { Text(verbatim: pod.pod) }
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(pod.allRunning ? Color.primary : Color.orange)
+                .textCase(nil)
+                .lineLimit(1)
+                if pod.isSystem {
+                    Text("Talos containers").font(.caption2).textCase(nil)
+                } else if !pod.namespace.isEmpty {
                     Text(verbatim: pod.namespace).font(.caption2).textCase(nil)
                 }
             }
@@ -130,7 +198,7 @@ private struct ContainerRowView: View {
         let container = row.container
         VStack(alignment: .leading, spacing: 3) {
             HStack(alignment: .firstTextBaseline) {
-                Text(verbatim: container.name.isEmpty ? container.id : container.name)
+                Text(verbatim: container.displayName)
                     .font(.body)
                     .lineLimit(1)
                 Spacer()

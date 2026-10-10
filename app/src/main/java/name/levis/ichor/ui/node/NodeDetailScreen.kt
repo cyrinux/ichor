@@ -142,6 +142,7 @@ fun NodeDetailScreen(
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val canPower = config?.activeSummary?.allows(Feature.POWER) ?: false
     val canControlServices = config?.activeSummary?.allows(Feature.SERVICE_CONTROL) ?: false
+    val canRestartContainers = config?.activeSummary?.allows(Feature.CONTAINER_RESTART) ?: false
     // Pressure and cgroups come from a copy of /sys/fs/cgroup: os:admin only, hidden otherwise.
     val canCgroups = config?.activeSummary?.allows(Feature.CGROUPS) ?: false
     // The node's pods as Kubernetes sees them: through the Kubernetes API, os:admin only.
@@ -171,6 +172,47 @@ fun NodeDetailScreen(
     val services: ServicesViewModel = viewModel(key = "services-$node", factory = factory { ServicesViewModel(app.talosRepository, node) })
     val controlState by serviceControl.state.collectAsStateWithLifecycle()
     var confirmingService by remember { mutableStateOf<ServiceRequest?>(null) }
+    val containerRestart: ContainerRestartViewModel = viewModel(
+        key = "container-restart-$node",
+        factory = factory { ContainerRestartViewModel(app.talosRepository, node) },
+    )
+    val restartState by containerRestart.state.collectAsStateWithLifecycle()
+    var confirmingContainer by remember { mutableStateOf<ContainerInfo?>(null) }
+
+    // The Pods tab polls every few seconds: the restarted container shows up there by itself.
+    LaunchedEffect(restartState) {
+        when (val s = restartState) {
+            is ContainerRestartState.Done -> {
+                snackbar.showSnackbar(context.getString(R.string.container_restart_done, s.container.displayName, hostname))
+                containerRestart.dismiss()
+            }
+            is ContainerRestartState.Failed -> {
+                snackbar.showSnackbar(
+                    context.getString(R.string.container_restart_failed, s.container.displayName, s.message.resolve(context)),
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Long,
+                )
+                containerRestart.dismiss()
+            }
+            else -> Unit
+        }
+    }
+
+    // Like service control: with the app lock on, a fresh fingerprint/PIN first.
+    fun containerRestartConfirmed(container: ContainerInfo) {
+        confirmingContainer = null
+        val activity = context.findFragmentActivity()
+        if (!appLock.enabled.value || activity == null) {
+            containerRestart.run(container)
+            return
+        }
+        scope.launch {
+            when (val auth = authenticate(activity, context.getString(R.string.container_restart), "${container.displayName} · $hostname")) {
+                AuthResult.Success -> containerRestart.run(container)
+                is AuthResult.Failure -> snackbar.showSnackbar(auth.message, withDismissAction = true, duration = SnackbarDuration.Long)
+            }
+        }
+    }
 
     // dismiss() comes last: it changes the effect's key, which cancels whatever still runs here.
     LaunchedEffect(controlState) {
@@ -400,7 +442,15 @@ fun NodeDetailScreen(
                     3 -> FeatureGate(features.support(TalosFeature.PROCESSES)) { ProcessesTab(node) }
                     CGROUPS_TAB -> CgroupsTab(node)
                     KUBE_PODS_TAB -> SelectedPodsList(PodSelection.OnNode(node))
-                    else -> FeatureGate(features.support(TalosFeature.CONTAINERS)) { PodsTab(node, onContainer = onContainerLogs) }
+                    else -> FeatureGate(features.support(TalosFeature.CONTAINERS)) {
+                        PodsTab(
+                            node,
+                            onContainer = onContainerLogs,
+                            onRestart = if (canRestartContainers) ({ confirmingContainer = it }) else null,
+                            restartSupport = features.support(TalosFeature.CONTAINER_RESTART),
+                            restartBusy = restartState is ContainerRestartState.Running,
+                        )
+                    }
                 }
             }
         }
@@ -412,6 +462,15 @@ fun NodeDetailScreen(
             hostname = hostname,
             onConfirm = { serviceConfirmed(request) },
             onDismiss = { confirmingService = null },
+        )
+    }
+
+    confirmingContainer?.let { container ->
+        ContainerRestartDialog(
+            container = container,
+            hostname = hostname,
+            onConfirm = { containerRestartConfirmed(container) },
+            onDismiss = { confirmingContainer = null },
         )
     }
 

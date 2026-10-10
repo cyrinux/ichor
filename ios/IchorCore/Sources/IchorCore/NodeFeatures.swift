@@ -3,7 +3,7 @@ import Foundation
 /// What a node's Talos version can do, by name (Go NodeFeatures). Not the same thing as
 /// `Feature`, which is what the talosconfig's role may do.
 public enum NodeFeature: String, CaseIterable, Sendable {
-    case events, containers, processes, logFollow, serviceControl, packetCapture, upgrade, volumes
+    case events, containers, containerRestart, processes, logFollow, serviceControl, packetCapture, upgrade, volumes
     case diskUsage, mounts, kubespan, etcd, etcdSnapshot, etcdMemberActions, resourceBrowser
     case supportBundle, diskHealth, issueConfig, network, connections, time, hardware, images
     case imagePull, machineConfig, debugShell, reset

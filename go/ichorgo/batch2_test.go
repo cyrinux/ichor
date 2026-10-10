@@ -57,7 +57,7 @@ func TestDescribeEvent(t *testing.T) {
 }
 
 func TestMergeContainersDropsPauseAndJoinsStats(t *testing.T) {
-	got := mergeContainers(
+	got := mergeContainers(containerNSK8s,
 		[]*machineapi.ContainerInfo{
 			{Id: "kube-system/coredns-1", PodId: "kube-system/coredns-1", Image: "registry.k8s.io/pause:3.10"},
 			{Id: "kube-system/coredns-1:coredns:abc", PodId: "kube-system/coredns-1", Name: "coredns", Image: "coredns:1.12", Status: "CONTAINER_RUNNING", Pid: 42},
