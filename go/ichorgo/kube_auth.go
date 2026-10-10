@@ -452,6 +452,11 @@ func KubeSetCredentials(storedYAML, contextName, secretsJSON string) (err error)
 		return err
 	}
 
+	// A cluster discovery found signs in with the session that discovery's sign-in got.
+	if _, ok := cm.(gkeMethod); ok {
+		state = withDiscoverySession(state)
+	}
+
 	state.Method = cm.name()
 
 	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)

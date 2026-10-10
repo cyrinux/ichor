@@ -134,6 +134,11 @@ final class KubeAuthTests: XCTestCase {
                        [["gcpServiceAccountJson"], ["gcpUserCredentialsJson", "gcpProjects"]])
         XCTAssertEqual(kubeDiscoverOptionSets(provider: "eks", fields: fields, options: options), [["awsRegion", "awsAccessKeyId"]])
         XCTAssertEqual(kubeDiscoverOptionSets(provider: "aks", fields: fields, options: options), [])
+        // The sets that sign in in the browser first are not offered (the sheet cannot run that sign-in yet).
+        let withBrowser = try decodeKubeDiscoverOptions(#"{"gke":[["gcpServiceAccountJson"],["gcpUserCredentialsJson","gcpProjects"],"#
+            + #"["gcpOAuthClientId","gcpOAuthClientSecret","gcpOAuthRedirectUrl","gcpProjects"],["gcpGoogleSignIn","gcpProjects"]]}"#)
+        XCTAssertEqual(kubeDiscoverOptionSets(provider: "gke", fields: fields, options: withBrowser),
+                       [["gcpServiceAccountJson"], ["gcpUserCredentialsJson", "gcpProjects"]])
         // The project IDs are optional: the credential alone is enough to search.
         XCTAssertTrue(kubeFieldsComplete(["gcpUserCredentialsJson", "gcpProjects"], values: ["gcpUserCredentialsJson": "{}"]))
     }

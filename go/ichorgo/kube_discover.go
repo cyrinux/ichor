@@ -3,7 +3,6 @@ package ichorgo
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -62,15 +61,26 @@ func KubeDiscoverFields() (out string, err error) {
 }
 
 // KubeDiscoverOptions lists, as JSON, the providers whose discovery takes one of several
-// credentials, each a set of fields: GKE takes a service account key, or gcloud user
-// credentials with optional project IDs. A provider absent from it has the one set
-// KubeDiscoverFields lists.
+// credentials, each a set of fields. GKE, in this order: a service account key; gcloud user
+// credentials; the organisation's OAuth client (ID, secret, redirect URL); "Sign in with
+// Google" (gcpGoogleSignIn, a marker the apps draw as a button, never a text field; only when
+// the build registered a Google client). Every set but the key's ends with the optional
+// project IDs. The OAuth client and Google sign-in on iOS sign in with StartDiscoverSignIn
+// first. A provider absent from it has the one set KubeDiscoverFields lists.
 func KubeDiscoverOptions() (out string, err error) {
 	defer maskResult(&out, &err)
 
-	return toJSON(map[string][][]string{
-		discoverGKE: {{gcpFieldServiceAccount}, {gcpFieldUserCredentials, gcpFieldProjects}},
-	})
+	var gke [][]string
+
+	for _, set := range (gkeMethod{}).fieldSets() {
+		if !slices.Contains(set, gcpFieldServiceAccount) {
+			set = append(slices.Clone(set), gcpFieldProjects)
+		}
+
+		gke = append(gke, set)
+	}
+
+	return toJSON(map[string][][]string{discoverGKE: gke})
 }
 
 // DiscoverClusters lists the clusters of a cloud account (provider: eks, gke, aks,
@@ -81,13 +91,9 @@ func DiscoverClusters(provider, secretsJSON string) (out string, err error) {
 	// is masked.
 	defer maskErr(&err)
 
-	var secrets map[string]string
-	if err := json.Unmarshal([]byte(secretsJSON), &secrets); err != nil {
-		return "", fmt.Errorf("credentials: %w", err)
-	}
-
-	for k, v := range secrets {
-		secrets[k] = strings.TrimSpace(v)
+	secrets, err := discoverySecrets(secretsJSON)
+	if err != nil {
+		return "", err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*callTimeout)

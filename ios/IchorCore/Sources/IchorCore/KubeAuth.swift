@@ -231,9 +231,15 @@ public struct DiscoveryProgress: Decodable, Equatable {
     }
 }
 
+/// A credential set that signs in in the browser before discovery (the OAuth client, Sign in
+/// with Google): the discovery sheet does not run that sign-in yet, so it is not offered.
+func kubeDiscoverNeedsSignIn(_ set: [String]) -> Bool {
+    set.contains("gcpOAuthClientId") || set.contains(kubeGoogleSignInField)
+}
+
 /// The credentials `provider` takes, as field sets: its options, else its one set of fields.
 public func kubeDiscoverOptionSets(provider: String, fields: [String: [String]], options: [String: [[String]]]) -> [[String]] {
-    let sets = (options[provider] ?? []).filter { !$0.isEmpty }
+    let sets = (options[provider] ?? []).filter { !$0.isEmpty && !kubeDiscoverNeedsSignIn($0) }
     if !sets.isEmpty { return sets }
     return fields[provider].map { [$0] } ?? []
 }

@@ -24,6 +24,8 @@ type fakeGoogleCloud struct {
 	refused  map[string]bool
 	// clusterName names a project's cluster; nil is "<project>-gke".
 	clusterName func(project string) string
+	// bearer is the access token the APIs take; "" is the user credentials' one.
+	bearer string
 
 	mu       sync.Mutex
 	crmCalls int
@@ -42,7 +44,7 @@ func (f *fakeGoogleCloud) handle(w http.ResponseWriter, r *http.Request) {
 
 	f.headers = append(f.headers, r.Header.Get("X-Goog-User-Project"))
 
-	if r.Header.Get("Authorization") != "Bearer ya29.user" {
+	if r.Header.Get("Authorization") != "Bearer "+cmpOr(f.bearer, "ya29.user") {
 		w.WriteHeader(http.StatusUnauthorized)
 
 		return
@@ -259,9 +261,29 @@ func TestKubeDiscoverOptions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gke := options[discoverGKE]
-	if len(gke) != 2 || gke[0][0] != gcpFieldServiceAccount || strings.Join(gke[1], ",") != gcpFieldUserCredentials+","+gcpFieldProjects {
-		t.Errorf("options %v", options)
+	want := strings.Join([]string{
+		gcpFieldServiceAccount,
+		gcpFieldUserCredentials + "," + gcpFieldProjects,
+		gcpFieldOAuthClientID + "," + gcpFieldOAuthClientSecret + "," + gcpFieldOAuthRedirectURL + "," + gcpFieldProjects,
+	}, " | ")
+	if got := optionSets(options[discoverGKE]); got != want {
+		t.Errorf("without a Google client: %s", got)
+	}
+
+	// The build's Google client adds Sign in with Google, a marker the apps draw as a button.
+	withGoogleSignInClient(t, googleSignInAndroid, "")
+
+	raw, err = KubeDiscoverOptions()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := json.Unmarshal([]byte(raw), &options); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := optionSets(options[discoverGKE]); got != want+" | "+gcpFieldGoogleSignIn+","+gcpFieldProjects {
+		t.Errorf("with a Google client: %s", got)
 	}
 }
 
@@ -369,4 +391,14 @@ func TestDiscoverProgress(t *testing.T) {
 	if p.Running || p.Projects != 3 || p.Scanned != 3 || p.Clusters != 2 {
 		t.Errorf("progress %+v", p)
 	}
+}
+
+// optionSets is option sets as "a,b | c" for comparison.
+func optionSets(sets [][]string) string {
+	parts := make([]string, 0, len(sets))
+	for _, set := range sets {
+		parts = append(parts, strings.Join(set, ","))
+	}
+
+	return strings.Join(parts, " | ")
 }
