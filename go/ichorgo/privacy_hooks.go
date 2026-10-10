@@ -321,6 +321,17 @@ func (l maskedEtcdFixListener) OnDone(errMessage string) {
 	l.EtcdFixListener.OnDone(privacy.maskPlain(errMessage))
 }
 
+// maskedEtcdRecoverListener masks an etcd recovery's progress and error.
+type maskedEtcdRecoverListener struct{ EtcdRecoverListener }
+
+func (l maskedEtcdRecoverListener) OnProgress(json string) {
+	l.EtcdRecoverListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedEtcdRecoverListener) OnDone(errMessage string) {
+	l.EtcdRecoverListener.OnDone(privacy.maskPlain(errMessage))
+}
+
 // maskedConfigApplyListener masks a config apply's progress and error.
 type maskedConfigApplyListener struct{ ConfigApplyListener }
 
