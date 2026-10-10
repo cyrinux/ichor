@@ -12,6 +12,10 @@ import (
 
 // Talos nodes and the cluster.
 var nodeCommands = []command{
+	{name: "upgrade-ext", args: "NODE IMAGE", run: func(e env) (out string, err error) {
+		// Read-only: the node's extensions against the Image Factory's list for IMAGE's version.
+		return ichorgo.UpgradeExtensionCheck(e.cfg, e.context, flag.Arg(1), flag.Arg(2))
+	}},
 	{name: "kubespan-diag", args: "[NODE]", run: func(e env) (out string, err error) {
 		// Read-only: one node's peers and their verdicts, or every node compared.
 		if flag.Arg(1) == "" {

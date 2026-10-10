@@ -1,6 +1,117 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "These extensions have no build for %@: %@. The node would come back without them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These extensions have no build for %1$@: %2$@. The node would come back without them."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ces extensions n'ont pas de build pour %1$@ : %2$@. Le nœud reviendrait sans elles."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estas extensiones no tienen compilación para %1$@: %2$@. El nodo volvería sin ellas."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Erweiterungen haben keinen Build für %1$@: %2$@. Der Node käme ohne sie zurück."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queste estensioni non hanno una build per %1$@: %2$@. Il nodo tornerebbe senza di esse."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ці розширення не мають збірки для %1$@: %2$@. Вузол повернеться без них."
+          }
+        }
+      }
+    },
+    "Extensions not checked: the image is not from the Image Factory." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions non vérifiées : l'image ne vient pas de l'Image Factory."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensiones no comprobadas: la imagen no viene de Image Factory."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterungen nicht geprüft: das Image stammt nicht aus der Image Factory."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estensioni non verificate: l'immagine non proviene dall'Image Factory."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розширення не перевірено: образ не з Image Factory."
+          }
+        }
+      }
+    },
+    "Every extension has a build for %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque extension a un build pour %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas las extensiones tienen compilación para %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jede Erweiterung hat einen Build für %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni estensione ha una build per %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кожне розширення має збірку для %@."
+          }
+        }
+      }
+    },
     "Reading why the link is up or down…" : {
       "extractionState" : "manual",
       "localizations" : {

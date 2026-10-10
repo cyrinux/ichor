@@ -114,3 +114,19 @@ fun upgradeTimeline(events: List<UpgradeProgress>, finished: Boolean, failed: Bo
         TimelineStep(phase, status, own.firstOrNull()?.at ?: 0, own.lastOrNull()?.message.orEmpty())
     }
 }
+
+/** A node's system extensions against the Image Factory's list for the target (UpgradeExtensionCheck). */
+@Serializable
+data class UpgradeExtensionCheck(
+    val schematic: String = "",
+    val targetVersion: String = "",
+    val installed: List<InstalledExtension> = emptyList(),
+    /** Installed extensions the target version has no official build of. */
+    val missing: List<String> = emptyList(),
+    /** The image is not from the public Image Factory, or it could not be read ([error]). */
+    val unknown: Boolean = false,
+    val error: String = "",
+)
+
+@Serializable
+data class InstalledExtension(val name: String = "", val version: String = "")
