@@ -226,7 +226,7 @@ fun Navigation(
                 onEtcd = { nav.navigate(Routes.ETCD) },
                 onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
                 onWorkloads = { nav.navigate(Routes.workloads()) },
-                onMetrics = { nav.navigate(Routes.METRICS) },
+                onMetrics = { nav.navigate(Routes.metrics()) },
                 onAlerts = { nav.navigate(Routes.alerts()) },
                 onDataServices = { nav.navigate(Routes.dataServices(it)) },
                 onArgoCD = { nav.navigate(Routes.ARGO_CD) },

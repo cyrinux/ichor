@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -107,6 +108,7 @@ class CheckupViewModel(private val kube: KubeRepository) : LoadingViewModel<Chec
 fun CheckupScreen(
     onBack: () -> Unit,
     onOpenRelease: (namespace: String, name: String) -> Unit,
+    onOpenMonitoring: () -> Unit,
     vm: CheckupViewModel = viewModel(factory = factory { CheckupViewModel(app.kubeRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -145,15 +147,21 @@ fun CheckupScreen(
         },
     ) { padding ->
         Loaded(state, vm::refresh, Modifier.pageContent(padding)) { report ->
-            CheckupList(report, onOpenRelease, onDeleteLeftover = { confirmDelete = it })
+            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring), onDeleteLeftover = { confirmDelete = it })
         }
     }
 }
 
+/** Where the checkup leads: a Helm release, the Monitoring tab of the Metrics screen. */
+private class CheckupLinks(
+    val onOpenRelease: (namespace: String, name: String) -> Unit,
+    val onOpenMonitoring: () -> Unit,
+)
+
 @Composable
 private fun CheckupList(
     report: CheckupReport,
-    onOpenRelease: (namespace: String, name: String) -> Unit,
+    links: CheckupLinks,
     onDeleteLeftover: (namespace: String) -> Unit,
 ) {
     // Fixed while the report is on screen: the ages must not drift between recompositions.
@@ -173,7 +181,7 @@ private fun CheckupList(
         items(sections, key = { it.id }) { section ->
             val expanded = section.id in open
             SectionCard(section, expanded, onToggle = { open = if (expanded) open - section.id else open + section.id }) {
-                SectionBody(section, report, now, onOpenRelease, onDeleteLeftover)
+                SectionBody(section, report, now, links, onDeleteLeftover)
             }
         }
     }
@@ -274,7 +282,7 @@ private fun SectionBody(
     section: CheckupSection,
     report: CheckupReport,
     now: Long,
-    onOpenRelease: (namespace: String, name: String) -> Unit,
+    links: CheckupLinks,
     onDeleteLeftover: (namespace: String) -> Unit,
 ) {
     if (section.error.isNotEmpty()) InlineError(stringResource(R.string.checkup_section_error, section.error))
@@ -289,6 +297,9 @@ private fun SectionBody(
         CheckupSectionId.CAPACITY -> NodeRequests(report.nodes)
         CheckupSectionId.NODES -> NodeTaints(report.nodes)
         CheckupSectionId.STORAGE -> VolumeLevels(report.volumes)
-        CheckupSectionId.HELM -> HelmReleases(report.releases, now, onOpenRelease)
+        CheckupSectionId.HELM -> HelmReleases(report.releases, now, links.onOpenRelease)
+        CheckupSectionId.MONITORING -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
+            TextButton(onClick = links.onOpenMonitoring) { Text(stringResource(R.string.checkup_open_monitoring)) }
+        }
     }
 }

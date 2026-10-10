@@ -21,6 +21,29 @@ extension TalosClient {
         }
     }
 
+    /// The rule groups of `source`, troubled first, each naming its PrometheusRule when known.
+    func promRules(_ source: PromSource) async throws -> PromRules {
+        let sourceJSON = try Self.encode(source)
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoPromRules(config, context, kubeServer, sourceJSON, $0)
+        }
+    }
+
+    /// The active scrape pools of `source` with their down targets, most down first.
+    func promTargets(_ source: PromSource) async throws -> PromTargets {
+        let sourceJSON = try Self.encode(source)
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoPromTargets(config, context, kubeServer, sourceJSON, $0)
+        }
+    }
+
+    /// The prometheus-operator's Prometheus and Alertmanager objects and monitor counts.
+    func promOperatorStatus() async throws -> PromOperatorStatus {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoPromOperatorStatus(config, context, kubeServer, $0)
+        }
+    }
+
     /// The built-in panels.
     static func promPresets() async throws -> [PromPanel] {
         try await json { IchorgoPromPresets($0) }

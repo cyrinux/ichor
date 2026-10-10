@@ -110,6 +110,10 @@ struct MetricsView: View {
         List {
             Section {
                 Text("Source: \(source.label)").font(.footnote).foregroundStyle(.secondary)
+                // The source's own health: down targets, rule groups, the prometheus-operator.
+                NavigationLink { PromMonitoringView(source: source) } label: {
+                    Label(PromMonitoringText.entry, systemImage: "waveform.path.ecg")
+                }
                 Picker("Range", selection: $range) {
                     ForEach(MetricsRange.allCases, id: \.self) { Text($0.label).tag($0) }
                 }
