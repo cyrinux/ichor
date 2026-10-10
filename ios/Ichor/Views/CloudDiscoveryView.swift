@@ -15,10 +15,16 @@ struct CloudDiscoveryView: View {
     let onFound: (DiscoveredClusters) -> Void
 
     /// Opens on `provider`, one of kubeDiscoverProviders.
-    init(provider: String = kubeDiscoverProviders[0], onFound: @escaping (DiscoveredClusters) -> Void) {
+    init(provider: String = kubeDiscoverProviders[0], initialValues: [String: String] = [:], onFound: @escaping (DiscoveredClusters) -> Void) {
         self.onFound = onFound
         _provider = State(initialValue: provider)
+        _values = State(initialValue: initialValues)
+        initialField = initialValues.keys.first
     }
+
+    private let initialField: String?
+    @State private var scanning = false
+    @State private var didLoad = false
 
     @Environment(\.dismiss) private var dismiss
     @State private var provider: String
@@ -62,6 +68,13 @@ struct CloudDiscoveryView: View {
                 if !fields.isEmpty {
                     KubeFieldsSection(fields: fields, values: $values)
                 }
+                if provider == "gke" {
+                    Section {
+                        Button("Scan credentials QR code") { scanning = true }.disabled(busy)
+                    } footer: {
+                        Text("This file contains a refresh token or private key. Keep it private; anyone with it can access your Google account or service account.")
+                    }
+                }
                 let hints = fields.compactMap(KubeAuthWording.fieldHint)
                 if !hints.isEmpty {
                     Section {
@@ -92,18 +105,44 @@ struct CloudDiscoveryView: View {
         }
         .interactiveDismissDisabled(busy)
         .task { await loadFields() }
+        .sheet(isPresented: $scanning) {
+            NavigationStack {
+                QRScannerView { text in
+                    scanning = false
+                    Task { await useScannedCredentials(text) }
+                }
+                .navigationTitle("Scan credentials QR code")
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { scanning = false } } }
+            }
+        }
         // Another provider: its own fields, nothing typed for the previous one carried over.
         .onChange(of: provider) { option = 0; values = [:]; error = nil }
-        .onChange(of: option) { values = [:]; error = nil }
+        .onChange(of: option) { if didLoad { values = values.filter { fields.contains($0.key) }; error = nil } }
     }
 
     private func loadFields() async {
         do {
             fieldsByProvider = try await TalosClient.discoverFields()
             optionsByProvider = try await TalosClient.discoverOptions()
+            if !didLoad, let initialField { option = sets.firstIndex { $0.contains(initialField) } ?? 0 }
+            didLoad = true
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    private func useScannedCredentials(_ text: String) async {
+        do {
+            let decoded = try await TalosClient.decodeImportText(text)
+            let route = try await TalosClient.classifyImportText(decoded)
+            guard route.isGkeCredential else {
+                error = String(localized: "Scan a gcloud user credentials file or a service account key.")
+                return
+            }
+            option = sets.firstIndex { $0.contains(route.field) } ?? 0
+            values = [route.field: decoded]
+            error = nil
+        } catch { self.error = error.localizedDescription }
     }
 
     private func discover() async {

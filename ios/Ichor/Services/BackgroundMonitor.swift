@@ -739,7 +739,8 @@ enum BackgroundMonitor {
                 }
             }
         }
-        let categories = Set(alerts + [make("private", actions: [], hidden: true), FreezeReminders.notificationCategory])
+        let categories = Set(alerts + [make("private", actions: [], hidden: true), FreezeReminders.notificationCategory,
+                                       ConfigTryJob.notificationCategory])
         UNUserNotificationCenter.current().setNotificationCategories(categories)
     }
 }

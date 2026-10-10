@@ -69,6 +69,15 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         let content = response.notification.request.content
+        // A config try's Keep (the app opened, unlocked first) and Revert now.
+        if content.categoryIdentifier == ConfigTryJob.category {
+            let action = response.actionIdentifier
+            await MainActor.run {
+                if action == ConfigTryJob.keepAction { ConfigTryJob.shared.keep() }
+                if action == ConfigTryJob.revertAction { ConfigTryJob.shared.revert() }
+            }
+            return
+        }
         if content.categoryIdentifier == FreezeReminders.category {
             let extend = response.actionIdentifier == FreezeReminders.extendAction ? FreezeExtendRequest(userInfo: content.userInfo) : nil
             await MainActor.run {

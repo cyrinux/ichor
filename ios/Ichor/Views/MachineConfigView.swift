@@ -28,6 +28,8 @@ struct MachineConfigView: View {
     @State private var describing: Task<Void, Never>?
     @State private var confirmingDiscard = false
     @State private var reviewing = false
+    /// The try running on this node, shown again (the screen was left meanwhile).
+    @State private var followingTry = false
     /// The field edits made to the draft, in order: what other nodes can be given.
     @State private var edits: [ConfigEdit] = []
     /// False once the YAML was typed into: that change is text, it cannot be replayed elsewhere.
@@ -55,6 +57,9 @@ struct MachineConfigView: View {
                 }
             }
         }
+        .fullScreenCover(isPresented: $followingTry, onDismiss: { Task { await finishTry() } }) {
+            ConfigTryView(node: node, hostname: hostname, request: nil) { _ in }
+        }
         .task { await load() }
     }
 
@@ -79,6 +84,16 @@ struct MachineConfigView: View {
                         .font(.footnote)
                         .foregroundStyle(.statusWarn)
                 }
+            }
+            if ConfigTryJob.shared.target?.node == node, ConfigTryJob.shared.isActive || ConfigTryJob.shared.outcome != nil {
+                Button { followingTry = true } label: {
+                    if ConfigTryJob.shared.isActive {
+                        Label("A config change is being tried: show the countdown", systemImage: "timer")
+                    } else {
+                        Label("Show how the try ended", systemImage: "timer")
+                    }
+                }
+                .font(.footnote)
             }
             if let message {
                 Text(message).font(.footnote).foregroundStyle(.secondary)

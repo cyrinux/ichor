@@ -861,7 +861,15 @@
     <string name="machine_config_try_reverting">Ripristino…</string>
     <string name="machine_config_keep">Mantieni la modifica</string>
     <string name="machine_config_revert_now">Ripristina ora</string>
-    <string name="machine_config_try_leave_note">Se lasci questa schermata o perdi la connessione, il nodo si ripristina da solo.</string>
+    <string name="machine_config_try_leave_note">Puoi lasciare questa schermata: il conto alla rovescia continua in una notifica, con Mantieni. Se la connessione si perde, il nodo torna indietro da solo alla fine.</string>
+    <string name="config_try_notification_public">È in prova una modifica di configurazione</string>
+    <string name="config_try_notification_result_public">La prova di configurazione è terminata</string>
+    <string name="config_try_notification_title">Prova di una modifica di configurazione su %1$s</string>
+    <string name="config_try_notification_reverts_at">Torna indietro da sola alle %1$s se non la mantieni.</string>
+    <string name="config_try_notification_kept">Modifica di configurazione mantenuta su %1$s</string>
+    <string name="config_try_notification_reverted">Modifica di configurazione annullata su %1$s</string>
+    <string name="config_try_notification_failed">La prova di configurazione su %1$s non è riuscita</string>
+    <string name="config_try_already_running">È già in corso una prova di configurazione su %1$s: mantienila o annullala prima.</string>
     <string name="machine_config_kept">La modifica è ora permanente.</string>
     <string name="machine_config_reverted">Il nodo è tornato alla configurazione precedente.</string>
     <string name="machine_config_remove_value_text">Viene rimosso dalla bozza.</string>
@@ -3913,4 +3921,7 @@
     <string name="kube_discover_signin_find">Accedi e trova i cluster</string>
     <string name="kube_discover_google_body">Google elenca i progetti che il tuo account può vedere; Ichor ne legge i cluster.</string>
     <string name="kube_discover_signin_first">Accedi prima, poi cerca i cluster.</string>
+    <string name="kube_discover_scan">Scansiona il codice QR delle credenziali</string>
+    <string name="kube_discover_scan_invalid">Scansiona un file di credenziali utente gcloud o una chiave di account di servizio.</string>
+    <string name="kube_discover_credentials_warning">Questo file contiene un token di aggiornamento o una chiave privata. Tienilo riservato: chiunque lo possieda può accedere al tuo account Google o di servizio.</string>
 </resources>

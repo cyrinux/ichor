@@ -338,3 +338,22 @@ public extension ContextSummary {
         return allows(feature)
     }
 }
+
+/// Routing metadata from Go ClassifyImportText, without any imported secrets.
+public struct ImportTextRoute: Decodable, Sendable {
+    public let kind: String
+    public let provider: String?
+    public let field: String
+    public var isGkeCredential: Bool {
+        kind == "credentials" && provider == "gke" &&
+            ["gcpUserCredentialsJson", "gcpServiceAccountJson"].contains(field)
+    }
+
+    private enum CodingKeys: String, CodingKey { case kind, provider, field }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try c.decode(String.self, forKey: .kind)
+        provider = try c.decodeIfPresent(String.self, forKey: .provider)
+        field = try c.decodeIfPresent(String.self, forKey: .field) ?? ""
+    }
+}

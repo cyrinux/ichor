@@ -21,6 +21,11 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.LaunchedEffect
+import name.levis.ichor.data.TalosJson
+import name.levis.ichor.model.ImportTextRoute
+import name.levis.ichorgo.Ichorgo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -74,10 +79,35 @@ internal fun DiscoverCard(
     val providers = state.options.keys.toList()
     var provider by remember { mutableStateOf(state.initial?.takeIf { it in providers } ?: providers.firstOrNull()) }
     // Not saveable: secrets never go into saved instance state.
-    val values = remember { mutableStateMapOf<String, String>() }
+    val values = remember { mutableStateMapOf<String, String>().apply { putAll(state.initialValues) } }
+    var scanning by remember { mutableStateOf(false) }
+    var scanned by remember { mutableStateOf<String?>(null) }
+    var scanError by remember { mutableStateOf(false) }
     val sets = provider?.let { state.options[it] }.orEmpty()
-    var option by remember(provider) { mutableIntStateOf(0) }
+    var option by remember(provider) { mutableIntStateOf(sets.indexOfFirst { set -> set.any { it in state.initialValues } }.coerceAtLeast(0)) }
     val fields = sets.getOrElse(option) { sets.firstOrNull().orEmpty() }
+    LaunchedEffect(scanned) {
+        val text = scanned ?: return@LaunchedEffect
+        try {
+            val decoded = Ichorgo.decodeImportText(text)
+            val route = TalosJson.decodeFromString(ImportTextRoute.serializer(), Ichorgo.classifyImportText(decoded))
+            if (route.isGkeCredential) {
+                option = sets.indexOfFirst { route.field in it }.coerceAtLeast(0)
+                values.clear()
+                values[route.field] = decoded
+                scanError = false
+            } else scanError = true
+        } catch (_: Exception) { scanError = true }
+        finally { scanned = null }
+    }
+    if (scanning) {
+        AlertDialog(
+            onDismissRequest = { scanning = false },
+            confirmButton = {},
+            dismissButton = { OutlinedButton(onClick = { scanning = false }) { Text(stringResource(R.string.common_cancel)) } },
+            text = { QrScanner(onScanned = { scanned = it; scanning = false }, modifier = Modifier.height(360.dp)) },
+        )
+    }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -88,7 +118,7 @@ internal fun DiscoverCard(
             providers.forEach { p ->
                 FilterChip(
                     selected = provider == p,
-                    onClick = { provider = p },
+                    onClick = { provider = p; values.clear(); scanError = false },
                     label = { Text(stringResource(p.label)) },
                     enabled = !state.running,
                 )
@@ -112,6 +142,11 @@ internal fun DiscoverCard(
         // Google's own sign-in: nothing to type but the optional projects.
         val typed = fields.filter { it != GCP_GOOGLE_SIGN_IN }
         CredentialFields(typed, values, onValue = { name, value -> values[name] = value }, enabled = !state.running)
+        if (provider == DiscoveryProvider.GKE) {
+            OutlinedButton(onClick = { scanning = true }, enabled = !state.running) { Text(stringResource(R.string.kube_discover_scan)) }
+            if (scanError) Text(stringResource(R.string.kube_discover_scan_invalid), color = LocalStatusColors.current.bad)
+            MutedText(stringResource(R.string.kube_discover_credentials_warning))
+        }
         DiscoverHints(fields)
         if (state.running && !state.signingIn) DiscoverProgressRow(state.progress)
         if (state.needsSignIn) Text(stringResource(R.string.kube_discover_signin_first), style = MaterialTheme.typography.bodyMedium)
