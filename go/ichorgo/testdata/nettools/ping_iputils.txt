@@ -1,0 +1,7 @@
+PING 203.0.113.5 (203.0.113.5) 56(84) bytes of data.
+64 bytes from 203.0.113.5: icmp_seq=1 ttl=63 time=0.412 ms
+64 bytes from 203.0.113.5: icmp_seq=2 ttl=63 time=0.611 ms
+
+--- 203.0.113.5 ping statistics ---
+3 packets transmitted, 2 received, 33.3333% packet loss, time 2003ms
+rtt min/avg/max/mdev = 0.412/0.501/0.611/0.081 ms

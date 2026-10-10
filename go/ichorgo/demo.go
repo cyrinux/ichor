@@ -159,6 +159,8 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			features.Features[id] = featureState{Reason: errDemoUnavailable.Error()}
 		}
 		return toJSON(features)
+	case "NodeNetTool":
+		return toJSON(demoNetTool(n, args))
 	case "NodeTime":
 		return toJSON(nodeTime{Node: n.Node, Server: "time.demo.invalid", LocalTime: now, RemoteTime: now + 2, OffsetMs: 2})
 	case "ClusterTime":

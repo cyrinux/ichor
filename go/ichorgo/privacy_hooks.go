@@ -342,3 +342,14 @@ func (l maskedClusterUpgradeListener) OnProgress(json string) {
 func (l maskedClusterUpgradeListener) OnDone(errMessage string) {
 	l.ClusterUpgradeListener.OnDone(privacy.maskPlain(errMessage))
 }
+
+// maskedNetToolListener masks a network tool's output lines, result and error.
+type maskedNetToolListener struct{ NetToolListener }
+
+func (l maskedNetToolListener) OnOutput(line string) {
+	l.NetToolListener.OnOutput(privacy.maskPlain(line))
+}
+
+func (l maskedNetToolListener) OnDone(resultJSON string, errMessage string) {
+	l.NetToolListener.OnDone(privacy.mask(resultJSON), privacy.maskPlain(errMessage))
+}
