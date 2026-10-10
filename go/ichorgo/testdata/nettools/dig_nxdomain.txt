@@ -1,0 +1,5 @@
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 4243
+
+;; Query time: 3 msec
+;; SERVER: 10.96.0.10#53(10.96.0.10) (UDP)

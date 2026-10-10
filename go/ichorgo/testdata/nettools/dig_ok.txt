@@ -1,0 +1,9 @@
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 4242
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+kubernetes.default.svc.cluster.local. 30 IN A 10.96.0.1
+;; Query time: 1 msec
+;; SERVER: 10.96.0.10#53(10.96.0.10) (UDP)
+;; WHEN: Sat Oct 10 11:00:00 UTC 2026
+;; MSG SIZE  rcvd: 117

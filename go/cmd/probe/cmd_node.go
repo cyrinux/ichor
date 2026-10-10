@@ -24,6 +24,10 @@ var nodeCommands = []command{
 
 		return ichorgo.KubeSpanDiagnostics(e.cfg, e.context, flag.Arg(1))
 	}},
+	{name: "nettool", args: "NODE dns|ping|port|trace|http TARGET [OPTIONS-JSON]", run: func(e env) (out string, err error) {
+		// Read-only, but runs a privileged netshoot container on NODE (os:admin).
+		return netToolRun(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4)), nil
+	}},
 	{name: "cluster-upgrade-plan", args: "VERSION", run: func(e env) (out string, err error) {
 		// Read-only: the order, each node's checks.
 		return ichorgo.ClusterUpgradePlan(e.cfg, e.context, e.kubeServer, flag.Arg(1))
