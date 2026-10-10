@@ -89,6 +89,8 @@ enum class Feature(@StringRes val label: Int, val roles: Set<String>) {
     PACKET_CAPTURE(R.string.common_feature_packet_capture, setOf("os:admin", "os:operator")),
     // MachineService/Upgrade (and LifecycleService/Upgrade) are admin-only in Talos.
     UPGRADE(R.string.common_feature_upgrade, setOf("os:admin")),
+    // MachineService/Reset is admin-only in Talos.
+    RESET(R.string.common_feature_reset, setOf("os:admin")),
     // MachineService/EtcdForfeitLeadership and EtcdRemoveMemberByID are admin-only in Talos.
     ETCD_MEMBER_ACTIONS(R.string.common_feature_etcd_member_actions, setOf("os:admin")),
     // The cgroup tree is read with MachineService/Copy of /sys/fs/cgroup, admin-only in Talos.

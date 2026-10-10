@@ -45,6 +45,7 @@ struct NodeDetailView: View {
     @State private var showingKubePods = false
     /// The cordon / uncordon choice is shown (the node's current state is not known here).
     @State private var showingCordon = false
+    @State private var showingReset = false
     /// Service start/stop/restart waiting for confirmation.
     @State private var serviceRequest: ServiceRequest?
     /// The cluster's history over `period` (uptime strip, memory line); nil without one.
@@ -180,6 +181,12 @@ struct NodeDetailView: View {
         } message: {
             Text("A cordoned node gets no new pods; the pods it runs stay. Uncordon it to schedule pods on it again.")
         }
+        .sheet(isPresented: $showingReset) {
+            NodeResetSheet(node: ref.address, hostname: ref.hostname) { request in
+                showingReset = false
+                Task { await performReset(request) }
+            }
+        }
         .sheet(item: $powerAction) { action in
             PowerSheet(action: action, hostname: ref.hostname, role: ref.role) { request in
                 powerAction = nil
@@ -229,6 +236,26 @@ struct NodeDetailView: View {
     }
 
     /// With the app lock on, destructive actions need a fresh Face ID / passcode check.
+    /// `talosctl reset`, after the app lock when it is on; the screen closes once requested.
+    private func performReset(_ request: NodeResetSheet.Request) async {
+        guard let client = model.client else { return }
+        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Reset \(ref.hostname)")) {
+            succeeded = false
+            resultMessage = failure
+            return
+        }
+        running = true
+        defer { running = false }
+        do {
+            try await client.reset(node: ref.address, wipe: request.wipe, graceful: request.graceful, reboot: request.reboot)
+            succeeded = true
+            resultMessage = String(localized: "\(ref.hostname): reset requested")
+        } catch {
+            succeeded = false
+            resultMessage = error.localizedDescription
+        }
+    }
+
     private func perform(_ request: PowerRequest) async {
         guard let client = model.client else { return }
         if model.lock.enabled, let failure = await Authenticator.authenticate(reason: "\(request.localizedTitle) \(ref.hostname)") {
@@ -315,7 +342,7 @@ extension NodeDetailView {
                 }
             }
         }
-        if model.allows(.machineConfig) || model.allows(.upgrade) || model.allows(.workloads) {
+        if model.allows(.machineConfig) || model.allows(.upgrade) || model.allows(.workloads) || model.allows(.reset) {
             Section("Operate") {
                 if model.allows(.machineConfig) {
                     FeatureButton(title: String(localized: "Machine config"), systemImage: "doc.text", support: support(.machineConfig)) {
@@ -326,6 +353,12 @@ extension NodeDetailView {
                     FeatureButton(title: String(localized: "Upgrade Talos…"), systemImage: "arrow.up.circle", support: support(.upgrade)) {
                         showingUpgrade = true
                     }
+                }
+                if model.allows(.reset) {
+                    FeatureButton(title: String(localized: "Reset…"), systemImage: "arrow.counterclockwise.circle", support: support(.reset)) {
+                        showingReset = true
+                    }
+                    .disabled(maintenanceRunning)
                 }
                 // Cordon and drain go through the Kubernetes API (os:admin, like the workloads).
                 if model.allows(.workloads) {

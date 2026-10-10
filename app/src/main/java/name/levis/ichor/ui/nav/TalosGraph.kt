@@ -104,7 +104,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
                         NodeMenuEntry.MAINTENANCE -> Routes.maintenance(addr, host)
                         NodeMenuEntry.DRAIN -> Routes.maintenance(addr, host, drain = true)
                         // Handled on the node screen (a confirmation, no screen of its own).
-                        NodeMenuEntry.CORDON -> null
+                        NodeMenuEntry.CORDON, NodeMenuEntry.RESET -> null
                     }?.let { nav.navigate(it) }
                 },
             )
