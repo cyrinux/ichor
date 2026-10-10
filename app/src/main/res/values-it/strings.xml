@@ -1433,7 +1433,10 @@
     <string name="ai_stop">Interrompi</string>
     <string name="ai_copy">Copia</string>
     <string name="ai_disclaimer">Le risposte dell’IA possono essere sbagliate. Controlla un comando prima di eseguirlo, soprattutto se reimposta un nodo o modifica etcd.</string>
-    <string name="ai_health_diagnose">Diagnostica con l’IA</string>
+    <string name="ai_health_explain_title">Cosa non va</string>
+    <string name="ai_health_explain_hint">Invia i controlli falliti, lo stato dei nodi e gli eventi recenti a %1$s.</string>
+    <string name="ai_health_explain">Spiega con l’IA</string>
+    <string name="ai_health_continue">Continua nella diagnosi</string>
     <string name="demo_try">Prova la demo</string>
     <string name="demo_talos">Cluster Talos</string>
     <string name="demo_kube">Cluster Kubernetes (EKS)</string>

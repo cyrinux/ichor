@@ -10,6 +10,7 @@ struct HealthView: View {
     @State private var finished = false
     @State private var error: String?
     @State private var runID = 0
+    @State private var explanation = HealthExplanation()
 
     var body: some View {
         List {
@@ -34,11 +35,11 @@ struct HealthView: View {
                     }
                     if let error {
                         Text(error).foregroundStyle(.statusBad)
-                        // Only with the optional AI diagnosis turned on in the settings.
-                        if finished, ai.enabled {
-                            NavigationLink("Diagnose with AI", value: Route.diagnosis(note: healthFailureNote(error)))
-                        }
                     }
+                }
+                // Only with the optional AI diagnosis turned on in the settings.
+                if finished, ai.enabled, let error {
+                    HealthExplainSection(explanation: explanation, lines: lines, failure: error)
                 }
                 Section {
                     ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
@@ -52,6 +53,8 @@ struct HealthView: View {
         .navigationTitle("Cluster health")
         .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.health)) } }
         .task(id: runID) { await run() }
+        .task(id: ai.enabled) { if ai.enabled { await ai.loadProviders() } }
+        .onDisappear { explanation.stop() }
     }
 
     private func lineColor(_ status: HealthLineStatus) -> Color {
@@ -66,6 +69,7 @@ struct HealthView: View {
 
     private func run() async {
         guard model.allows(.health), let client = model.client else { return }
+        explanation.reset()
         lines = []
         error = nil
         finished = false

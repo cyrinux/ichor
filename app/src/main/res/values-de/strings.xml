@@ -1426,7 +1426,10 @@
     <string name="ai_stop">Stoppen</string>
     <string name="ai_copy">Kopieren</string>
     <string name="ai_disclaimer">KI-Antworten können falsch sein. Prüfen Sie einen Befehl, bevor Sie ihn ausführen, besonders wenn er einen Knoten zurücksetzt oder etcd verändert.</string>
-    <string name="ai_health_diagnose">Mit KI diagnostizieren</string>
+    <string name="ai_health_explain_title">Was schiefgelaufen ist</string>
+    <string name="ai_health_explain_hint">Sendet die fehlgeschlagenen Prüfungen, die Bereitschaft der Nodes und die letzten Ereignisse an %1$s.</string>
+    <string name="ai_health_explain">Mit KI erklären</string>
+    <string name="ai_health_continue">In der Diagnose fortfahren</string>
     <string name="demo_try">Demo ausprobieren</string>
     <string name="demo_talos">Talos-Cluster</string>
     <string name="demo_kube">Kubernetes-Cluster (EKS)</string>

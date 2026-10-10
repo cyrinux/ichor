@@ -69,6 +69,17 @@ extension TalosClient {
         guard let report else { throw TalosError(message: "CollectDiagnosis returned no report") }
         return report
     }
+
+    /// Builds the short report the health check helper sends: the check's lines as shown, its
+    /// failure, node readiness and recent warning/error events. Nothing leaves the phone here.
+    func collectHealthExplanation(lines: [String], failure: String, anonymize: Bool) async throws -> DiagnosisReport {
+        let linesJSON = try TalosJSON.encode(lines)
+        let report: DiagnosisReport? = try await Self.run { [config, context, kubeServer] error in
+            IchorgoCollectHealthExplanation(config, context, kubeServer, linesJSON, failure, anonymize, error).map(DiagnosisReport.init)
+        }
+        guard let report else { throw TalosError(message: "CollectHealthExplanation returned no report") }
+        return report
+    }
 }
 
 private final class DiagnosisBridge: NSObject, IchorgoDiagnosisListenerProtocol, @unchecked Sendable {

@@ -1432,7 +1432,10 @@
     <string name="ai_stop">Stop</string>
     <string name="ai_copy">Copy</string>
     <string name="ai_disclaimer">AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd.</string>
-    <string name="ai_health_diagnose">Diagnose with AI</string>
+    <string name="ai_health_explain_title">What went wrong</string>
+    <string name="ai_health_explain_hint">Sends the failed checks, node readiness and recent events to %1$s.</string>
+    <string name="ai_health_explain">Explain with AI</string>
+    <string name="ai_health_continue">Continue in Diagnosis</string>
     <string name="demo_try">Try demo</string>
     <string name="demo_talos">Talos cluster</string>
     <string name="demo_kube">Kubernetes cluster (EKS)</string>
