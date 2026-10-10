@@ -63,19 +63,20 @@ class ReplaceControlPlaneViewModel(
             val next = uiStateOf { talos.controlPlaneReplacePlan(memberId, node) }
             (next as? UiState.Loaded)?.data?.let { p ->
                 if (p.member.node.isNotBlank()) node = p.member.node
-                if (membersBefore == null) membersBefore = p.membersBeforeJoin
+                // A plan read while etcd did not answer counts no member: not a baseline.
+                if (membersBefore == null && p.quorum.members > 0) membersBefore = p.membersBeforeJoin
             }
             _plan.value = next
         }
     }
 
-    /** Removes the member through [via], a healthy member (the plan's template). */
-    fun removeMember(via: String) {
+    /** Removes the member; Go checks the fresh plan first and sends it through a healthy member. */
+    fun removeMember() {
         if (_remove.value == CpRemoveState.Running) return
         _remove.value = CpRemoveState.Running
         viewModelScope.launch {
             _remove.value = try {
-                talos.etcdRemoveMember(via, memberId)
+                talos.controlPlaneReplaceRemove(memberId)
                 CpRemoveState.Idle
             } catch (e: CancellationException) {
                 throw e

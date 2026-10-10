@@ -187,7 +187,53 @@ func TestControlPlaneReplaceDemo(t *testing.T) {
 		t.Errorf("demo wait = %v", err)
 	}
 
+	if err := ControlPlaneReplaceRemove(yaml, "", "a3"); !errors.Is(err, errDemoUnavailable) {
+		t.Errorf("demo replace removal = %v", err)
+	}
+
 	if err := EtcdRemoveMember(yaml, "", "192.0.2.10", "a3"); err == nil {
 		t.Error("demo removal went through")
+	}
+}
+
+func TestControlPlaneReplaceRemove(t *testing.T) {
+	withDataDir(t)
+
+	f, cfg := threeControlPlanes(t, true)
+
+	// a2 is healthy: refused, nothing sent.
+	if err := ControlPlaneReplaceRemove(cfg, "fake", "a2"); err == nil || !strings.Contains(err.Error(), "healthy") {
+		t.Fatalf("healthy member = %v", err)
+	}
+
+	// a3 failed since the screen loaded: removed through the template (the leader).
+	f.etcdErrors = map[string][]string{"192.0.2.53": {"etcdserver: no leader"}}
+	if err := ControlPlaneReplaceRemove(cfg, "fake", "a3"); err != nil {
+		t.Fatal(err)
+	}
+
+	removals := slices.DeleteFunc(slices.Clone(f.calls), func(c string) bool { return !strings.HasPrefix(c, "EtcdRemoveMemberByID") })
+	if !slices.Equal(removals, []string{"EtcdRemoveMemberByID a3 192.0.2.51"}) {
+		t.Fatalf("removals = %v", removals)
+	}
+
+	entries := readAudit(t, "fake", "etcd-remove-member")
+	if len(entries) != 2 || entries[0].Params != "member=a3,replace=true" || entries[0].Outcome != auditOK {
+		t.Errorf("audit = %+v", entries)
+	}
+}
+
+func TestControlPlaneReplaceNeverResetsAReusedAddress(t *testing.T) {
+	f, cfg := threeControlPlanes(t, true)
+	// The old a3 is gone; the new member a4 took its address.
+	f.members = map[string]uint64{"192.0.2.51": 0xa1, "192.0.2.52": 0xa2, "192.0.2.53": 0xa4}
+
+	out, err := ControlPlaneReplacePlan(cfg, "fake", "a3", "192.0.2.53")
+	plan := decodeJSON[cpReplacePlan](t, out, err)
+
+	wantSteps(t, plan, out, stepDone, stepDone, stepSkipped, stepReady, stepReady)
+
+	if !strings.Contains(plan.Steps[2].Detail, "now belongs to etcd member a4") {
+		t.Errorf("detail = %q", plan.Steps[2].Detail)
 	}
 }

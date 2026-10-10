@@ -149,7 +149,8 @@ struct ReplaceControlPlaneView: View {
         if let client = model.client, case .loaded(let plan, _, _) = state {
             EtcdRemoveMemberSheet(member: EtcdMember(id: plan.member.id, hostname: plan.member.hostname),
                                   throughNode: plan.template.node.isEmpty ? nil : plan.template.node,
-                                  client: client, lockEnabled: model.lock.enabled) { name in
+                                  client: client, lockEnabled: model.lock.enabled,
+                                  remove: { try await client.controlPlaneReplaceRemove(memberID: $0) }) { name in
                 removing = false
                 message = String(localized: "\(name) was removed from etcd")
                 Task { await load() }
@@ -174,7 +175,8 @@ struct ReplaceControlPlaneView: View {
         let next = await LoadState.from { try await client.controlPlaneReplacePlan(memberID: memberId, node: node) }
         if case .loaded(let plan, _, _) = next {
             if !plan.member.node.isEmpty { node = plan.member.node }
-            if membersBefore == nil { membersBefore = plan.membersBeforeJoin }
+            // A plan read while etcd did not answer counts no member: not a baseline.
+            if membersBefore == nil && plan.quorum.members > 0 { membersBefore = plan.membersBeforeJoin }
         }
         state = state.refreshed(with: next)
     }
@@ -202,19 +204,22 @@ struct ReplaceControlPlaneView: View {
         guard let client = model.client, let before = membersBefore, waitTask == nil else { return }
         join = .waiting("")
         waitTask = Task {
-            defer { waitTask = nil }
             while !Task.isCancelled {
                 do {
                     let result = try await client.controlPlaneReplaceWait(membersBefore: before, timeout: 30)
                     if Task.isCancelled { return }
                     if result.joined {
                         join = .joined
+                        waitTask = nil
                         await load()
                         return
                     }
                     join = .waiting(result.detail)
                 } catch {
-                    if !Task.isCancelled { join = .failed(error.localizedDescription) }
+                    if !Task.isCancelled {
+                        join = .failed(error.localizedDescription)
+                        waitTask = nil
+                    }
                     return
                 }
             }

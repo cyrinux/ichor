@@ -589,6 +589,12 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         TalosJson.decodeFromString(CpReplacePlan.serializer(), Ichorgo.controlPlaneReplacePlan(cfg, ctx, memberId, node))
     }
 
+    /**
+     * Removes the failed member [memberId] as the replacement's step 2 (os:admin): Go reads the
+     * plan again and refuses a member that recovered or a removal that loses quorum.
+     */
+    suspend fun controlPlaneReplaceRemove(memberId: String) = call { cfg, ctx -> Ichorgo.controlPlaneReplaceRemove(cfg, ctx, memberId) }
+
     /** Polls etcd up to [timeoutSec] until it has more healthy voting members than [membersBefore]. Read-only. */
     suspend fun controlPlaneReplaceWait(membersBefore: Int, timeoutSec: Int): CpReplaceWait = call { cfg, ctx ->
         TalosJson.decodeFromString(CpReplaceWait.serializer(), Ichorgo.controlPlaneReplaceWait(cfg, ctx, membersBefore.toLong(), timeoutSec.toLong()))

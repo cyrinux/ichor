@@ -171,7 +171,7 @@ fun ReplaceControlPlaneScreen(
             onConfirm = {
                 confirmRemove = false
                 authenticated(context.getString(R.string.etcd_auth_remove, member.confirmToken), { vm.failRemoval(UiText.Raw(it)) }) {
-                    vm.removeMember(plan.template.node)
+                    vm.removeMember()
                 }
             },
             onDismiss = { confirmRemove = false },

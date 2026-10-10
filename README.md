@@ -595,10 +595,12 @@ a fresh install. Backups move between Android and iOS.
   so that leaving and coming back resumes:
   1. **Check etcd quorum:** the removal must leave enough healthy members. A healthy member is
      never offered, and a removal that would lose quorum is blocked with the reason.
-  2. **Remove the etcd member:** the usual removal plan and typed hostname, sent through a
+  2. **Remove the etcd member:** the usual removal plan and typed hostname. The Go core reads
+     the plan again first, refuses a member that recovered, and sends the removal through a
      healthy control plane.
   3. **Reset the old node:** the reset sheet, without `--graceful` (the member already left).
-     A node that no longer answers is skipped: power it off yourself.
+     A node that no longer answers is skipped: power it off yourself. So is an address that a
+     current member now uses (a replacement that took the old IP).
   4. **Boot the new node:** by hand for now. Boot it from a Talos image, open the machine config
      of a healthy control plane (secrets revealed only after the app lock), save it as
      `controlplane.yaml`, then run `talosctl apply-config --insecure -n <new-node-ip> -f controlplane.yaml`

@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -151,10 +152,26 @@ func computeCPReplacePlan(in cpReplaceInput) cpReplacePlan {
 	case removal.Found:
 		plan.Steps = stepsBeforeRemoval(plan, removal)
 	default:
-		plan.Steps = stepsAfterRemoval(plan)
+		plan.Steps = stepsAfterRemoval(plan, addressOwner(in))
 	}
 
 	return plan
+}
+
+// addressOwner is the current member whose address is the old node's: a replacement that
+// reused the old IP. Its node must not be reset as if it were the old one.
+func addressOwner(in cpReplaceInput) *memberState {
+	if in.node == "" {
+		return nil
+	}
+
+	for i, m := range in.etcd.members {
+		if m.address == in.node && hexID(m.id) != in.etcd.memberID {
+			return &in.etcd.members[i]
+		}
+	}
+
+	return nil
 }
 
 // replacementTemplate is the control plane whose machine config the new node copies: the
@@ -218,8 +235,13 @@ func stepsBeforeRemoval(plan cpReplacePlan, removal etcdMemberPlan) []cpReplaceS
 	}
 }
 
-func stepsAfterRemoval(plan cpReplacePlan) []cpReplaceStep {
+func stepsAfterRemoval(plan cpReplacePlan, owner *memberState) []cpReplaceStep {
 	reset := resetStep(plan, stepReady)
+	if owner != nil {
+		reset = cpReplaceStep{ID: stepResetOrPowerOff, State: stepSkipped, Detail: fmt.Sprintf(
+			"%s now belongs to etcd member %s (%s): never reset it from here", plan.Member.Node, hexID(owner.id), owner.hostname)}
+	}
+
 	next := stepReady
 
 	if reset.State == stepReady {
@@ -247,10 +269,73 @@ func resetStep(plan cpReplacePlan, whenReachable string) cpReplaceStep {
 	case plan.Member.Node == "":
 		return cpReplaceStep{ID: stepResetOrPowerOff, State: stepSkipped, Detail: "the old node's address is unknown: power it off yourself"}
 	case !plan.Member.Reachable:
-		return cpReplaceStep{ID: stepResetOrPowerOff, State: stepSkipped, Detail: plan.Member.Node + " does not answer: power it off yourself if it still runs"}
+		return cpReplaceStep{ID: stepResetOrPowerOff, State: stepSkipped, Detail: plan.Member.Node + " does not answer (powered off, or reset into maintenance mode): power it off yourself if it still runs"}
 	default:
 		return cpReplaceStep{ID: stepResetOrPowerOff, State: whenReachable, Detail: plan.Member.Node + " still answers: reset it so it cannot rejoin with stale etcd data"}
 	}
+}
+
+// ControlPlaneReplaceRemove removes the failed etcd member memberID as step 2 of the
+// replacement (os:admin): it reads the plan again and refuses unless the step is ready (the
+// member is still failed and its removal keeps quorum), then sends the removal through the
+// plan's template, a healthy control plane. Audited like EtcdRemoveMember.
+func ControlPlaneReplaceRemove(configYAML, contextName, memberID string) (err error) {
+	defer maskErr(&err)
+
+	contextName = unmaskContext(configYAML, contextName)
+
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: "etcd-remove-member", Params: "member=" + memberID + ",replace=true"})
+
+	if isDemoContext(configYAML, contextName) {
+		return errDemoUnavailable
+	}
+
+	_, err = withSession(configYAML, contextName, planTimeout, func(ctx context.Context, s *session) (struct{}, error) {
+		cps, err := s.controlPlanes(ctx)
+		if err != nil {
+			return struct{}{}, err
+		}
+
+		plan := computeCPReplacePlan(cpReplaceInput{etcd: gatherMemberPlan(ctx, s.client, cps, memberID)})
+		if err := replaceRemovalAllowed(plan); err != nil {
+			return struct{}{}, err
+		}
+
+		if err := removeEtcdMember(ctx, s.client, plan.Template.Node, memberID); err != nil {
+			return struct{}{}, s.friendlyErr(plan.Template.Node, err)
+		}
+
+		return struct{}{}, nil
+	})
+
+	return err
+}
+
+// replaceRemovalAllowed refuses a removal the fresh plan does not mark ready: a member that
+// recovered, a quorum loss, no healthy member to send it through.
+func replaceRemovalAllowed(plan cpReplacePlan) error {
+	for _, st := range plan.Steps {
+		if st.ID != stepRemoveMember {
+			continue
+		}
+
+		if st.State == stepReady && plan.Template.Node != "" {
+			return nil
+		}
+
+		reason := st.Detail
+		if blocked := plan.Steps[0]; blocked.State == stepBlocked {
+			reason = blocked.Detail
+		}
+
+		if reason == "" {
+			reason = "the step is " + st.State
+		}
+
+		return errors.New("removal refused: " + reason)
+	}
+
+	return errors.New("removal refused: no removal step")
 }
 
 // cpReplaceWait is what ControlPlaneReplaceWait returns.
