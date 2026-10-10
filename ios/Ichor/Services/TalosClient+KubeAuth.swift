@@ -87,6 +87,14 @@ extension TalosClient {
         signInRun { bridge in talos ? IchorgoStartTalosSignIn(kube, context, bridge) : IchorgoStartKubeSignIn(kube, context, bridge) }
     }
 
+    /// Signs in to a cloud account before any of its clusters has been imported.
+    static func startDiscoverSignIn(provider: String, secrets: String) -> SignInRun {
+        signInRun { IchorgoStartDiscoverSignIn(provider, secrets, $0) }
+    }
+
+    /// Drops the discovery session after cancellation or after imported clusters have it.
+    static func forgetDiscoverSignIn() { IchorgoForgetDiscoverSignIn() }
+
     /// Signs the account `email` in to the Omni instance at `endpoint` in the browser.
     static func startOmniSignIn(endpoint: String, email: String) -> SignInRun {
         signInRun { bridge in IchorgoStartOmniAccountSignIn(endpoint, email, bridge) }

@@ -2,6 +2,29 @@ import XCTest
 @testable import IchorCore
 
 final class KubeAuthTests: XCTestCase {
+    func testDiscoverNeedsSignIn() {
+        XCTAssertTrue(kubeDiscoverNeedsSignIn(["gcpOAuthClientId", "gcpOAuthClientSecret", "gcpOAuthRedirectUrl", "gcpProjects"]))
+        XCTAssertTrue(kubeDiscoverNeedsSignIn([kubeGoogleSignInField, "gcpProjects"]))
+        XCTAssertFalse(kubeDiscoverNeedsSignIn(["gcpServiceAccountJson"]))
+        XCTAssertFalse(kubeDiscoverNeedsSignIn(["gcpUserCredentialsJson", "gcpProjects"]))
+        XCTAssertFalse(kubeDiscoverNeedsSignIn(["awsRegion", "awsAccessKeyId", "awsSecretAccessKey"]))
+        XCTAssertFalse(kubeDiscoverNeedsSignIn([]))
+    }
+
+    func testGoogleDiscoverySecrets() throws {
+        let empty = try TalosJSON.decode([String: String].self, from: kubeGoogleSignInSecretsJSON())
+        XCTAssertEqual(empty, [kubeGoogleSignInField: "ios"])
+        let projects = try TalosJSON.decode([String: String].self,
+                                           from: kubeGoogleSignInSecretsJSON(projects: "  sample-proj-a, sample-proj-b  "))
+        XCTAssertEqual(projects, [kubeGoogleSignInField: "ios", "gcpProjects": "sample-proj-a, sample-proj-b"])
+        XCTAssertEqual(try TalosJSON.decode([String: String].self,
+                                           from: kubeGoogleSignInSecretsJSON(projects: "  ")), empty)
+        // The Google marker is submitted by the app, never a required text field.
+        let visible = [kubeGoogleSignInField, "gcpProjects"].filter { $0 != kubeGoogleSignInField }
+        XCTAssertTrue(kubeFieldsComplete(visible, values: [:]))
+        XCTAssertTrue(kubeFieldsComplete(visible, values: ["gcpProjects": "sample-proj-a"]))
+    }
+
     func testSignInRequiredReason() {
         let message = "kube-sign-in-required: sign in to this cluster (eks): the session expired"
         XCTAssertEqual(kubeSignInRequiredReason(message), "sign in to this cluster (eks): the session expired")
@@ -134,13 +157,19 @@ final class KubeAuthTests: XCTestCase {
                        [["gcpServiceAccountJson"], ["gcpUserCredentialsJson", "gcpProjects"]])
         XCTAssertEqual(kubeDiscoverOptionSets(provider: "eks", fields: fields, options: options), [["awsRegion", "awsAccessKeyId"]])
         XCTAssertEqual(kubeDiscoverOptionSets(provider: "aks", fields: fields, options: options), [])
-        // The sets that sign in in the browser first are not offered (the sheet cannot run that sign-in yet).
+        // Every option supplied by Go is offered, including both browser sign-ins.
         let withBrowser = try decodeKubeDiscoverOptions(#"{"gke":[["gcpServiceAccountJson"],["gcpUserCredentialsJson","gcpProjects"],"#
             + #"["gcpOAuthClientId","gcpOAuthClientSecret","gcpOAuthRedirectUrl","gcpProjects"],["gcpGoogleSignIn","gcpProjects"]]}"#)
         XCTAssertEqual(kubeDiscoverOptionSets(provider: "gke", fields: fields, options: withBrowser),
-                       [["gcpServiceAccountJson"], ["gcpUserCredentialsJson", "gcpProjects"]])
-        // The project IDs are optional: the credential alone is enough to search.
+                       [["gcpServiceAccountJson"], ["gcpUserCredentialsJson", "gcpProjects"],
+                        ["gcpOAuthClientId", "gcpOAuthClientSecret", "gcpOAuthRedirectUrl", "gcpProjects"],
+                        [kubeGoogleSignInField, "gcpProjects"]])
+        // With no registered Google client, Go omits the marker; the app offers only
+        // the sets supplied and never invents a Google sign-in option.
+        XCTAssertFalse(kubeDiscoverOptionSets(provider: "gke", fields: fields, options: options)
+            .contains { $0.contains(kubeGoogleSignInField) })
         XCTAssertTrue(kubeFieldsComplete(["gcpUserCredentialsJson", "gcpProjects"], values: ["gcpUserCredentialsJson": "{}"]))
+
     }
 
     func testDiscoveryProgress() {

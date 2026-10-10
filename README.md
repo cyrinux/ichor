@@ -493,9 +493,11 @@ shows a sign-in code to paste. The code is useless without the key only the app 
 
 **Add from a cloud account** (on the add screen) lists the clusters of an AWS, Google Cloud,
 Azure, DigitalOcean or Rancher account and adds the ones you pick, signed in with the same
-credentials. For Google Cloud that is a service account key, or the gcloud user credentials of
-your own account: the app then looks through every project you can see (or the project IDs you
-enter). A Talos cluster can also use one of these kubeconfig clusters for its Kubernetes
+credentials. For Google Cloud that is a service account key or the gcloud user credentials of
+your own account. On iOS, you can also use **Sign in with Google** (when the build carries
+Ichor's Google client) or **Your organisation's OAuth client**: sign in once in the browser,
+then the clusters you add reuse that session. For a Google user account, the app looks
+through every project you can see (or the project IDs you enter). A Talos cluster can also use one of these kubeconfig clusters for its Kubernetes
 screens (cluster menu → **Kubernetes access**): your own identity and RBAC instead of the
 admin kubeconfig, which also works with an `os:reader` talosconfig.
 
