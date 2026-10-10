@@ -3837,4 +3837,27 @@
         <item quantity="one">In pausa: %1$d evento nuovo o modificato</item>
         <item quantity="other">In pausa: %1$d eventi nuovi o modificati</item>
     </plurals>
+    <string name="image_pull_channel_name">Download di immagini</string>
+    <string name="image_pull_channel_desc">Avanzamento del download di un\'immagine sui tuoi nodi</string>
+    <string name="image_pull_notification_public">Download di un\'immagine</string>
+    <string name="image_pull_notification_result_public">Download dell\'immagine terminato</string>
+    <string name="image_pull_notification_title">Download di un\'immagine sui nodi</string>
+    <string name="image_pull_progress">%1$d nodi su %2$d completati</string>
+    <string name="image_pull_notification_done">Immagine scaricata</string>
+    <string name="image_pull_notification_failed">Download dell\'immagine non riuscito</string>
+    <string name="image_pull_stopped">Download dell\'immagine interrotto</string>
+    <string name="image_pull_title">Scarica un\'immagine</string>
+    <string name="image_pull_state_pending">In attesa</string>
+    <string name="image_pull_state_pulling">Download in corso</string>
+    <string name="image_pull_state_done">Scaricata</string>
+    <string name="image_pull_state_failed">Non riuscito</string>
+    <string name="image_pull_stop">Interrompi</string>
+    <string name="image_pull_menu">Scarica un\'immagine su ogni nodo…</string>
+    <string name="image_pull_image_label">Immagine</string>
+    <string name="image_pull_namespace_system">Immagine di sistema Talos</string>
+    <string name="image_pull_namespace_cri">Immagine Kubernetes</string>
+    <string name="image_pull_namespace_hint">Un installer Talos va nelle immagini di sistema; un\'immagine di workload nelle immagini Kubernetes.</string>
+    <string name="image_pull_start">Scarica</string>
+    <string name="upgrade_prepull">Pre-scarica l\'immagine su tutti i nodi</string>
+    <string name="upgrade_prepull_desc">Scaricala ora su ogni nodo, così ogni riavvio è breve.</string>
 </resources>

@@ -343,6 +343,28 @@ func (l maskedClusterUpgradeListener) OnDone(errMessage string) {
 	l.ClusterUpgradeListener.OnDone(privacy.maskPlain(errMessage))
 }
 
+// maskedImagePullListener masks an image pull's progress and error.
+type maskedImagePullListener struct{ ImagePullListener }
+
+func (l maskedImagePullListener) OnProgress(json string) {
+	l.ImagePullListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedImagePullListener) OnDone(errMessage string) {
+	l.ImagePullListener.OnDone(privacy.maskPlain(errMessage))
+}
+
+// maskedK8sUpgradeListener masks a Kubernetes upgrade's progress and error.
+type maskedK8sUpgradeListener struct{ K8sUpgradeListener }
+
+func (l maskedK8sUpgradeListener) OnProgress(json string) {
+	l.K8sUpgradeListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedK8sUpgradeListener) OnDone(errMessage string) {
+	l.K8sUpgradeListener.OnDone(privacy.maskPlain(errMessage))
+}
+
 // maskedNetToolListener masks a network tool's output lines, result and error.
 type maskedNetToolListener struct{ NetToolListener }
 

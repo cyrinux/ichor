@@ -4071,4 +4071,27 @@
         <item quantity="many">Призупинено: %1$d нових чи змінених подій</item>
         <item quantity="other">Призупинено: %1$d нової чи зміненої події</item>
     </plurals>
+    <string name="image_pull_channel_name">Завантаження образів</string>
+    <string name="image_pull_channel_desc">Хід завантаження образу на ваші вузли</string>
+    <string name="image_pull_notification_public">Завантаження образу</string>
+    <string name="image_pull_notification_result_public">Завантаження образу завершено</string>
+    <string name="image_pull_notification_title">Завантаження образу на вузли</string>
+    <string name="image_pull_progress">Готово %1$d з %2$d вузлів</string>
+    <string name="image_pull_notification_done">Образ завантажено</string>
+    <string name="image_pull_notification_failed">Не вдалося завантажити образ</string>
+    <string name="image_pull_stopped">Завантаження образу зупинено</string>
+    <string name="image_pull_title">Завантажити образ</string>
+    <string name="image_pull_state_pending">Очікування</string>
+    <string name="image_pull_state_pulling">Завантаження</string>
+    <string name="image_pull_state_done">Завантажено</string>
+    <string name="image_pull_state_failed">Помилка</string>
+    <string name="image_pull_stop">Зупинити</string>
+    <string name="image_pull_menu">Завантажити образ на кожен вузол…</string>
+    <string name="image_pull_image_label">Образ</string>
+    <string name="image_pull_namespace_system">Системний образ Talos</string>
+    <string name="image_pull_namespace_cri">Образ Kubernetes</string>
+    <string name="image_pull_namespace_hint">Інсталятор Talos — у системні образи; образ навантаження — в образи Kubernetes.</string>
+    <string name="image_pull_start">Завантажити</string>
+    <string name="upgrade_prepull">Попередньо завантажити образ на всі вузли</string>
+    <string name="upgrade_prepull_desc">Завантажте його зараз на кожен вузол, щоб кожне перезавантаження було коротким.</string>
 </resources>

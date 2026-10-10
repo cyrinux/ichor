@@ -182,6 +182,18 @@
                 android:value="Follows a node maintenance the user started on one of their Talos nodes (cordon, drain its pods, reboot, wait for the node to come back) while they switch apps, so it is not cut off midway; it stops when the maintenance ends." />
         </service>
 
+        <!-- Pulling an image on every node before an upgrade keeps the app talking to the nodes
+             for minutes on a slow link; same reasons as the maintenance service, and it runs
+             only while the pull does. -->
+        <service
+            android:name=".ui.images.ImagePullService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Follows a container image pull the user started on their Talos nodes (ahead of an upgrade) while they switch apps, so the download is not cut off midway; it stops when the pull ends." />
+        </service>
+
         <receiver
             android:name=".update.InstallResultReceiver"
             android:exported="false" />

@@ -48,6 +48,7 @@ enum class TalosFeature(val key: String) {
     TIME("time"),
     HARDWARE("hardware"),
     IMAGES("images"),
+    IMAGE_PULL("imagePull"),
     MACHINE_CONFIG("machineConfig"),
     DEBUG_SHELL("debugShell"),
     RESET("reset"),
