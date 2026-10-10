@@ -86,6 +86,10 @@ var featureRules = []featureRule{
 	// v1.8.0 (before: the Disks API). All read through the COSI API; a section missing on a
 	// version is reported in NodeHardware's "errors", not as a failure.
 	{name: "hardware", min: oldestCOSI},
+	// rpc CPUFreqStats (machine.proto): first in v1.5.0; rpc Read and List (hwmon, thermal
+	// zones, throttle counters): v1.0.0; PCIDevices.hardware.talos.dev is listed through the
+	// COSI API. NodeSensors reports a missing part in its "errors".
+	{name: "sensors", min: "v1.5"},
 	// rpc ImageList (machine.proto): first in v1.5.0; service ImageService (v1.13.0) is the
 	// fallback once ImageList is gone.
 	{name: "images", min: "v1.5"},

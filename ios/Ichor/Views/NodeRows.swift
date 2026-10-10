@@ -14,7 +14,8 @@ struct NodeListRow: View {
 
     var body: some View {
         let ref = node.ref
-        let row = NodeOverviewRow(node: node, publicIPs: node.shownPublicIPs(probed: model.activePublicIPs), sharedVersion: sharedVersion)
+        let row = NodeOverviewRow(node: node, publicIPs: node.shownPublicIPs(probed: model.activePublicIPs), sharedVersion: sharedVersion,
+                                  throttled: node.reachable && model.throttledNodes.contains(node.node))
         Group {
             if node.reachable {
                 NavigationLink(value: Route.node(ref)) { row }
@@ -119,12 +120,15 @@ struct NodeOverviewRow: View {
     var publicIPs: [String] = []
     /// The version every node runs, which the summary shows: left out of the row.
     var sharedVersion: String?
+    /// Its sensors said so when its Hardware screen last read them.
+    var throttled = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(node.hostname).font(.headline)
                 Spacer()
+                if throttled { StatusPill(label: String(localized: "Throttled"), color: .statusBad) }
                 if node.cordoned {
                     StatusPill(label: String(localized: "Cordoned"), color: .orange)
                 }

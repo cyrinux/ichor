@@ -47,6 +47,7 @@ import name.levis.ichor.model.ImageInfo
 import name.levis.ichor.model.ImagePullNamespace
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.NodeHardware
+import name.levis.ichor.model.NodeSensors
 import name.levis.ichor.model.NodeNetwork
 import name.levis.ichor.model.NodeTime
 import name.levis.ichor.model.DiskHealthReport
@@ -483,6 +484,11 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
 
     suspend fun hardware(node: String): NodeHardware = remember(hardwareKey(node)) {
         call { cfg, ctx -> TalosJson.decodeFromString(NodeHardware.serializer(), Ichorgo.nodeHardware(cfg, ctx, node)) }
+    }
+
+    /** Temperatures, fans, CPU frequencies and PCI devices; read on the Hardware screen only. */
+    suspend fun sensors(node: String): NodeSensors = remember(sensorsKey(node)) {
+        call { cfg, ctx -> TalosJson.decodeFromString(NodeSensors.serializer(), Ichorgo.nodeSensors(cfg, ctx, node)) }
     }
 
     suspend fun images(node: String): List<ImageInfo> = remember(imagesKey(node)) {

@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"context"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 	"sync"
@@ -58,6 +59,11 @@ type fakeTalos struct {
 	// imagePull answers MachineService.ImagePull (nil: Unimplemented, like Talos without the
 	// deprecated API, so ImageService.Pull serves the pull).
 	imagePull func(node string, req *machineapi.ImagePullRequest) error
+	// files are a node's file tree (absolute path -> content), served by List and Read; a
+	// node without one lists a fixed directory.
+	files map[string]map[string]string
+	// cpuFreq is a node's CPUFreqStats answer (a node without an entry: Unimplemented).
+	cpuFreq map[string][]*machineapi.CPUFreqStats
 }
 
 func newFakeTalos() *fakeTalos {
@@ -468,11 +474,92 @@ func (m fakeTalosMachine) DiskUsage(req *machineapi.DiskUsageRequest, stream grp
 }
 
 func (m fakeTalosMachine) List(req *machineapi.ListRequest, stream grpc.ServerStreamingServer[machineapi.FileInfo]) error {
-	if _, err := m.f.enter(stream.Context(), "List"); err != nil {
+	node, err := m.f.enter(stream.Context(), "List")
+	if err != nil {
 		return err
 	}
 
-	return stream.Send(&machineapi.FileInfo{Name: req.GetRoot() + "/logs", IsDir: true})
+	m.f.mu.Lock()
+	tree, scripted := m.f.files[node]
+	m.f.mu.Unlock()
+
+	if !scripted {
+		return stream.Send(&machineapi.FileInfo{Name: req.GetRoot() + "/logs", IsDir: true})
+	}
+
+	children := fakeChildren(tree, req.GetRoot())
+	if children == nil {
+		return status.Errorf(codes.Unknown, "lstat %s: no such file or directory", req.GetRoot())
+	}
+
+	// Like Talos, the root comes first as ".", then its direct children (no recursion).
+	if err := stream.Send(&machineapi.FileInfo{Name: req.GetRoot(), RelativeName: ".", IsDir: true}); err != nil {
+		return err
+	}
+
+	for _, name := range slices.Sorted(maps.Keys(children)) {
+		if err := stream.Send(&machineapi.FileInfo{Name: req.GetRoot() + "/" + name, RelativeName: name, IsDir: children[name]}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// fakeChildren are the entries directly below dir in tree (name -> is a directory), nil
+// when dir does not exist.
+func fakeChildren(tree map[string]string, dir string) map[string]bool {
+	var out map[string]bool
+
+	for p := range tree {
+		rest, ok := strings.CutPrefix(p, dir+"/")
+		if !ok {
+			continue
+		}
+
+		if out == nil {
+			out = map[string]bool{}
+		}
+
+		name, _, isDir := strings.Cut(rest, "/")
+		out[name] = out[name] || isDir
+	}
+
+	return out
+}
+
+func (m fakeTalosMachine) Read(req *machineapi.ReadRequest, stream grpc.ServerStreamingServer[common.Data]) error {
+	node, err := m.f.enter(stream.Context(), "Read")
+	if err != nil {
+		return err
+	}
+
+	m.f.mu.Lock()
+	content, ok := m.f.files[node][req.GetPath()]
+	m.f.mu.Unlock()
+
+	if !ok {
+		return status.Errorf(codes.Unknown, "open %s: no such file or directory", req.GetPath())
+	}
+
+	return stream.Send(&common.Data{Bytes: []byte(content)})
+}
+
+func (m fakeTalosMachine) CPUFreqStats(ctx context.Context, _ *emptypb.Empty) (*machineapi.CPUFreqStatsResponse, error) {
+	node, err := m.f.enter(ctx, "CPUFreqStats")
+	if err != nil {
+		return nil, err
+	}
+
+	m.f.mu.Lock()
+	stats, ok := m.f.cpuFreq[node]
+	m.f.mu.Unlock()
+
+	if !ok {
+		return nil, status.Error(codes.Unimplemented, "unknown method CPUFreqStats for service machine.MachineService")
+	}
+
+	return &machineapi.CPUFreqStatsResponse{Messages: []*machineapi.CPUsFreqStats{{CpuFreqStats: stats}}}, nil
 }
 
 type fakeTalosImage struct {

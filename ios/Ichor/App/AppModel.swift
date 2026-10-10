@@ -119,6 +119,10 @@ final class AppModel {
     /// per node and Talos version, see loadFeatures.
     private(set) var nodeFeatures: [String: NodeFeatures] = [:]
 
+    /// The nodes found throttled when their Hardware screen last read their sensors (by
+    /// address): the overview never reads sensors itself, so a row says nothing until then.
+    private(set) var throttledNodes: Set<String> = []
+
     /// Public IPs Talos does not know, found by a curl pod per node (PublicIPStore), by cluster
     /// fingerprint, and the clusters being probed: here, not in a view, since a probe takes
     /// minutes and outlives the screen that started it.
@@ -322,6 +326,11 @@ final class AppModel {
         nodeFeatures[node] = loaded
     }
 
+    /// Records what node's sensors said, for its row in the node lists.
+    func setThrottled(node: String, _ throttled: Bool) {
+        if throttled { throttledNodes.insert(node) } else { throttledNodes.remove(node) }
+    }
+
     /// Drops node's cached features and asks again: its Talos version just changed (upgrade).
     func reloadFeatures(node: String) async {
         nodeFeatures[node] = nil
@@ -343,6 +352,7 @@ final class AppModel {
     private func forgetFeatures() {
         featuresGeneration += 1
         nodeFeatures = [:]
+        throttledNodes = []
     }
 
     /// Loads the stored configs (Keychain); nothing is read before the first unlock.

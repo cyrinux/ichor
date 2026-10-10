@@ -133,6 +133,11 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "sensors", args: "NODE", run: func(e env) (out string, err error) {
+		out, err = ichorgo.NodeSensors(e.cfg, e.context, flag.Arg(1))
+
+		return out, err
+	}},
 	{name: "images", args: "NODE", run: func(e env) (out string, err error) {
 		out, err = ichorgo.NodeImages(e.cfg, e.context, flag.Arg(1))
 

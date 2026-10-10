@@ -47,6 +47,7 @@ fun resourcesKey(node: String) = "resources|$node"
 const val CLUSTER_TIME = "clustertime"
 fun networkKey(node: String) = "network|$node"
 fun hardwareKey(node: String) = "hardware|$node"
+fun sensorsKey(node: String) = "sensors|$node"
 fun imagesKey(node: String) = "images|$node"
 
 /**
