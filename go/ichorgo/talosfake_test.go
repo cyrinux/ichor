@@ -55,6 +55,9 @@ type fakeTalos struct {
 	mounts map[string][]*machineapi.MountStat
 	// systemImages are the images of the system containerd namespace (the CRI one has pause).
 	systemImages []*machineapi.ImageServiceListResponse
+	// imagePull answers MachineService.ImagePull (nil: Unimplemented, like Talos without the
+	// deprecated API, so ImageService.Pull serves the pull).
+	imagePull func(node string, req *machineapi.ImagePullRequest) error
 }
 
 func newFakeTalos() *fakeTalos {
@@ -229,6 +232,23 @@ func (m fakeTalosMachine) Reboot(ctx context.Context, _ *machineapi.RebootReques
 	}
 
 	return &machineapi.RebootResponse{Messages: []*machineapi.Reboot{{}}}, nil
+}
+
+func (m fakeTalosMachine) ImagePull(ctx context.Context, req *machineapi.ImagePullRequest) (*machineapi.ImagePullResponse, error) {
+	if m.f.imagePull == nil {
+		return nil, status.Error(codes.Unimplemented, "unknown method ImagePull")
+	}
+
+	node, err := m.f.enter(ctx, "ImagePull")
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.f.imagePull(node, req); err != nil {
+		return nil, err
+	}
+
+	return &machineapi.ImagePullResponse{Messages: []*machineapi.ImagePull{{}}}, nil
 }
 
 func (m fakeTalosMachine) Reset(ctx context.Context, req *machineapi.ResetRequest) (*machineapi.ResetResponse, error) {

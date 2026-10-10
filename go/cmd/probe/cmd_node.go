@@ -134,6 +134,20 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "image-pull", args: "IMAGE [NODES] [system|cri]", run: func(e env) (out string, err error) {
+		// Pulls IMAGE for real on NODES (comma-separated; empty: every node), into the system
+		// namespace unless told otherwise.
+		ns := flag.Arg(3)
+		if ns == "" {
+			ns = "system"
+		}
+
+		m := maintenanceProbe{done: make(chan string, 1)}
+		ichorgo.StartImagePull(e.cfg, e.context, flag.Arg(2), flag.Arg(1), ns, m)
+		out = "done: " + <-m.done
+
+		return out, err
+	}},
 	{name: "system-images", args: "NODE", run: func(e env) (out string, err error) {
 		out, err = ichorgo.TalosSystemImages(e.cfg, e.context, flag.Arg(1))
 

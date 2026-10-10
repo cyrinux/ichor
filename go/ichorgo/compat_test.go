@@ -82,7 +82,7 @@ var requiredFeatures = []string{
 	"events", "containers", "processes", "logFollow", "serviceControl", "packetCapture", "upgrade", "volumes",
 	"diskUsage", "mounts", "kubespan", "etcd", "etcdSnapshot", "etcdMemberActions", "resourceBrowser",
 	"supportBundle", "diskHealth", "issueConfig", "network", "connections", "time", "hardware", "images",
-	"machineConfig", "debugShell", "reset",
+	"imagePull", "machineConfig", "debugShell", "reset",
 }
 
 func TestFeatureTable(t *testing.T) {
