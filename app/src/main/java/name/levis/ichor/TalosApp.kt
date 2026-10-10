@@ -63,6 +63,8 @@ import name.levis.ichor.ui.debug.DebugShells
 import name.levis.ichor.ui.upgrade.UpgradeService
 import name.levis.ichor.ui.images.ImagePullService
 import name.levis.ichor.ui.maintenance.MaintenanceService
+import name.levis.ichor.ui.upgrade.K8sUpgradeService
+import name.levis.ichor.data.K8sUpgradeManager
 import name.levis.ichor.data.NetToolTargets
 import name.levis.ichor.ui.upgrade.ClusterUpgradeService
 import name.levis.ichor.data.ClusterUpgradeManager
@@ -188,6 +190,10 @@ class TalosApp : Application() {
     /** The followed rolling cluster upgrade; ClusterUpgradeService keeps the app alive while it runs. */
     val clusterUpgradeManager by lazy {
         ClusterUpgradeManager(talosRepository::startClusterUpgrade, onStarted = { ClusterUpgradeService.start(this) })
+    }
+    /** The followed Kubernetes upgrade; K8sUpgradeService keeps the app alive while it runs. */
+    val k8sUpgradeManager by lazy {
+        K8sUpgradeManager(talosRepository::startK8sUpgrade, onStarted = { K8sUpgradeService.start(this) })
     }
     /** The followed image pull; ImagePullService keeps the app alive while it runs. */
     val imagePullManager by lazy { ImagePullManager(talosRepository, onStarted = { ImagePullService.start(this) }) }

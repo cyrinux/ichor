@@ -36,6 +36,7 @@ import name.levis.ichor.ui.logs.LogsScreen
 import name.levis.ichor.ui.machineconfig.MachineConfigScreen
 import name.levis.ichor.ui.nettools.NetToolsScreen
 import name.levis.ichor.ui.upgrade.ClusterUpgradeScreen
+import name.levis.ichor.ui.upgrade.K8sUpgradeScreen
 import name.levis.ichor.ui.maintenance.MaintenanceScreen
 import name.levis.ichor.ui.network.NetworkScreen
 import name.levis.ichor.ui.node.NodeDetailScreen
@@ -191,6 +192,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
         val addr = entry.arguments?.getString("addr").orEmpty()
         NetToolsScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
     }
+    composable(Routes.K8S_UPGRADE) { K8sUpgradeScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.ISSUE_CONFIG) { IssueConfigScreen(onBack = { nav.popBackStack() }) }
     composable(
         Routes.LOGS,

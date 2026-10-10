@@ -46,6 +46,7 @@ struct IchorApp: App {
                     if phase == .background { UpgradeJob.shared.didEnterBackground() }
                     if phase == .background { MaintenanceJob.shared.didEnterBackground() }
                     if phase == .background { ClusterUpgradeJob.shared.didEnterBackground() }
+                    if phase == .background { K8sUpgradeJob.shared.didEnterBackground() }
                     if phase == .background { ConfigTryJob.shared.didEnterBackground() }
                     if phase == .active { ConfigTryJob.shared.willEnterForeground() }
                     if phase == .background { ConfigMultiJob.shared.didEnterBackground() }
@@ -134,6 +135,8 @@ enum Route: Hashable {
     case nodePower(NodeRef, PowerAction)
     /// Every node to a Talos version, one after the other ("": the newest stable release).
     case clusterUpgrade(version: String)
+    /// The Kubernetes upgrade (talosctl upgrade-k8s).
+    case k8sUpgrade
     /// Node screen opened on its cordon / uncordon confirmation (from a row's menu).
     case nodeCordon(NodeRef)
     /// Node screen opened on a tab (a share link).
@@ -246,6 +249,7 @@ struct MainNavigation: View {
                     case .nodeLive(let ref): NodeDetailView(ref: ref, initialTab: .live)
                     case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
                     case .clusterUpgrade(let version): ClusterUpgradePlanView(initialVersion: version)
+                    case .k8sUpgrade: K8sUpgradePlanView()
                     case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
                     case .nodeTab(let ref, let tab): NodeDetailView(ref: ref, initialTab: tab)
                     case .nodes(let filter, let nodes): NodesView(nodes: nodes, filter: filter, path: $path)

@@ -152,6 +152,7 @@ fun OverviewScreen(
     onUpgrade: (NodeOverview, String) -> Unit,
     /** Every node to the version given ("": the newest stable release). */
     onUpgradeCluster: (String) -> Unit,
+    onUpgradeKubernetes: () -> Unit,
     onDiagnose: () -> Unit,
     onAddCluster: () -> Unit,
     onClustersCleared: () -> Unit,
@@ -390,6 +391,7 @@ fun OverviewScreen(
                                 onManage = { showClusters = true },
                                 onDismiss = { clusterMenu = false },
                                 onUpgradeCluster = { onUpgradeCluster("") }.takeIf { config?.activeSummary?.allows(Feature.UPGRADE) == true },
+                                onUpgradeKubernetes = onUpgradeKubernetes.takeIf { config?.activeSummary?.allows(Feature.UPGRADE) == true },
                             )
                         }
                     }
