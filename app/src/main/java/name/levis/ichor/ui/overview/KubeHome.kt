@@ -65,6 +65,7 @@ import name.levis.ichor.ui.components.rememberClusterLabels
 import name.levis.ichor.ui.dataservices.DataServicesViewModel
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.flux.FluxViewModel
+import name.levis.ichor.ui.kubeauth.GoogleSilentRenewal
 import name.levis.ichor.ui.kubeauth.SignInBanner
 import name.levis.ichor.ui.kubeauth.SignInSheet
 import name.levis.ichor.model.KubeSignInInfo
@@ -236,10 +237,11 @@ fun KubeHomeScreen(
             dataVm.refresh()
             alertsVm.refresh()
         }
-        if (signingIn) {
-            config?.activeContext?.let { name ->
-                SignInSheet(context = name, onDismiss = { signingIn = false }, onSignedIn = { signingIn = false })
-            }
+        val banner = kubeSignInBanner(signIn, (state as? UiState.Failed)?.message ?: (state as? UiState.Loaded)?.error)
+        config?.activeContext?.let { name ->
+            if (signingIn) SignInSheet(context = name, onDismiss = { signingIn = false }, onSignedIn = { signingIn = false })
+            // An expired "Sign in with Google" token renews by itself; the banner is the fallback.
+            GoogleSilentRenewal(name, banner?.needed, onRenewed = refresh)
         }
         if (customizing) HomeEditor(
             layout = layout,
@@ -263,7 +265,7 @@ fun KubeHomeScreen(
                     name = config?.activeSummary?.let(clusterLabels::of),
                     nodes = (s as? UiState.Loaded)?.data,
                     failure = (s as? UiState.Failed)?.message,
-                    signIn = kubeSignInBanner(signIn, (s as? UiState.Failed)?.message ?: (s as? UiState.Loaded)?.error),
+                    signIn = banner,
                     onSignIn = { signingIn = true },
                     onRetry = vm::refresh,
                     argo = argoShown,

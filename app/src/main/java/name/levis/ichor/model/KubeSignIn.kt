@@ -141,6 +141,9 @@ const val GCP_USER_CREDENTIALS = "gcpUserCredentialsJson"
 /** GKE discovery's optional project IDs, for a Google account in a large organisation. */
 const val GCP_PROJECTS = "gcpProjects"
 
+/** GKE's "Sign in with Google" option (Play build): a marker, never a text field. */
+const val GCP_GOOGLE_SIGN_IN = "gcpGoogleSignIn"
+
 /** GKE's field for the client ID of the organisation's own OAuth client (browser sign-in). */
 const val GCP_OAUTH_CLIENT_ID = "gcpOAuthClientId"
 
@@ -155,6 +158,7 @@ fun fieldSetLabel(fields: List<String>): Int = when {
     "gcpServiceAccountJson" in fields -> R.string.kube_signin_option_gcp_service_account
     GCP_USER_CREDENTIALS in fields -> R.string.kube_signin_option_gcp_user
     GCP_OAUTH_CLIENT_ID in fields -> R.string.kube_signin_option_gcp_oauth
+    GCP_GOOGLE_SIGN_IN in fields -> R.string.kube_signin_option_google
     else -> R.string.kube_signin_option_other
 }
 
