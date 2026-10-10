@@ -34,6 +34,8 @@ data class ShareTarget(
         const val CRONJOB = "cronjob"
         const val DATA = "data"
         const val CHECKUP = "checkup"
+        const val ALERTS = "alerts"
+        const val STORAGE = "storage"
 
         /** The node screen's tabs, by their index there. */
         val NODE_TABS = listOf("services", "resources", "live", "processes", "pods", "cgroups", "kube-pods")
@@ -45,6 +47,9 @@ data class ShareTarget(
 
         fun node(addr: String, host: String, tab: Int) =
             ShareTarget(target = NODE, addr = addr, host = host, tab = NODE_TABS.getOrNull(tab).orEmpty())
+
+        /** A node's Storage screen (its volumes, mounts and disks). */
+        fun storage(addr: String, host: String) = ShareTarget(target = STORAGE, addr = addr, host = host)
 
         fun kubernetes(tab: Int) = ShareTarget(target = WORKLOADS, tab = KUBE_TABS.getOrNull(tab).orEmpty())
 

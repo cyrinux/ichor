@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.overview
 
 import name.levis.ichor.BuildConfig
+import name.levis.ichor.ui.history.SinceLastLookedCard
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.VersionFooter
 import name.levis.ichor.ui.components.rememberClusterLabels
@@ -137,6 +138,7 @@ fun OverviewScreen(
     onKubeSpan: () -> Unit,
     onWorkloads: () -> Unit,
     onMetrics: () -> Unit,
+    onAlerts: () -> Unit,
     onDataServices: (DataServiceKind?) -> Unit,
     onArgoCD: () -> Unit,
     onFlux: () -> Unit,
@@ -163,6 +165,8 @@ fun OverviewScreen(
     onStorage: () -> Unit,
     onServices: () -> Unit,
     onJobs: () -> Unit,
+    /** The cluster's Kubernetes events, live (from the Kubernetes home). */
+    onKubeEvents: () -> Unit,
     onDrain: (node: String) -> Unit,
     onNodeDebug: (node: String) -> Unit,
     /** The action audit log of a cluster, by its context name. */
@@ -175,6 +179,7 @@ fun OverviewScreen(
     dataVm: DataServicesViewModel = viewModel(key = "overview-data-services", factory = factory { DataServicesViewModel(app.dataServicesRepository) }),
     argoVm: ArgoViewModel = viewModel(key = "overview-argocd", factory = factory { ArgoViewModel(app.gitOpsRepository, app.kubeRepository, freezeReminderHook(app)) }),
     fluxVm: FluxViewModel = viewModel(key = "overview-flux", factory = factory { FluxViewModel(app.gitOpsRepository, app.kubeRepository) }),
+    alertsVm: AlertsCardViewModel = viewModel(key = "overview-alerts", factory = factory { alertsCardViewModel(app) }),
 ) {
     // A cluster added from a kubeconfig has no Talos overview: its Kubernetes home instead,
     // before any of the Talos loads below start.
@@ -184,6 +189,7 @@ fun OverviewScreen(
             KubeHomeNavigation(
                 onWorkloads = onWorkloads,
                 onMetrics = onMetrics,
+                onAlerts = onAlerts,
                 onCheckup = onCheckup,
                 onApiHealth = onApiHealth,
                 onNetworkPolicies = onNetworkPolicies,
@@ -200,6 +206,7 @@ fun OverviewScreen(
                 onStorage = onStorage,
                 onServices = onServices,
                 onJobs = onJobs,
+                onEvents = onKubeEvents,
                 onDrain = onDrain,
                 onNodeDebug = onNodeDebug,
                 onAllNodes = onKubeNodes,
@@ -260,11 +267,19 @@ fun OverviewScreen(
         if (fluxHinted) fluxVm.load(listOf(config?.activeContext, generation, invalidations)) else fluxVm.forget()
     }
     val flux by fluxVm.state.collectAsStateWithLifecycle()
+    // The Alertmanager: no inventory hint, it is looked for among the Services (a quick list).
+    val alertsAllowed = config?.activeSummary?.allows(Feature.WORKLOADS) == true
+    LaunchedEffect(config?.activeContext, generation, invalidations, alertsAllowed) {
+        if (alertsAllowed) alertsVm.load(listOf(config?.activeContext, generation, invalidations)) else alertsVm.forget()
+    }
+    val alerts by alertsVm.state.collectAsStateWithLifecycle()
+    val alertsShown = alerts.takeIf { alertsAllowed && it.alertmanagerFound }
     // Cards the cluster has nothing for, left out of the editor too; all offered until the inventory is known.
     val absentCards = if (apps is UiState.Loaded) setOfNotNull(
         OverviewCard.DATA_SERVICES.takeIf { dataHints.isEmpty() },
         OverviewCard.ARGO_CD.takeIf { !argoHinted },
         OverviewCard.FLUX.takeIf { !fluxHinted },
+        OverviewCard.ALERTS.takeIf { alertsShown == null && (!alertsAllowed || alerts !is UiState.Loading) },
     ) else emptySet()
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -385,6 +400,7 @@ fun OverviewScreen(
                             onWorkloads = onWorkloads,
                             onGitOps = if (argoHinted) onArgoCD else onFlux,
                             onMetrics = onMetrics,
+                            onAlerts = onAlerts,
                             onKubeSpan = onKubeSpan,
                             onEtcd = onEtcd,
                             onSettings = onSettings,
@@ -470,6 +486,7 @@ fun OverviewScreen(
                     timeVm.refresh()
                     appsVm.refresh()
                     if (dataHints.isNotEmpty()) dataVm.refresh()
+                    if (alertsAllowed) alertsVm.refresh()
                     scope.launch { discoveryVm.discover() }
                 },
                 modifier = Modifier.pageContent(padding).fillMaxSize(),
@@ -505,6 +522,8 @@ fun OverviewScreen(
                     onArgoCD = onArgoCD,
                     flux = flux.takeIf { fluxHinted },
                     onFlux = onFlux,
+                    alerts = alertsShown,
+                    onAlerts = onAlerts,
                     onNode = onNode,
                     onSettings = onSettings,
                     onFunding = onFunding,
@@ -553,6 +572,8 @@ private fun NodeList(
     onArgoCD: () -> Unit,
     flux: UiState<FluxStatus>?,
     onFlux: () -> Unit,
+    alerts: UiState<AlertsOverview?>?,
+    onAlerts: () -> Unit,
     onNode: (NodeOverview) -> Unit,
     onSettings: () -> Unit,
     onFunding: () -> Unit,
@@ -618,6 +639,7 @@ private fun NodeList(
         if (BuildConfig.DONATIONS || BuildConfig.FEATURE_FUNDING) item { SupportCard(onFunding) }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
         if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
+        fingerprint?.takeIf { it.isNotBlank() }?.let { item(key = "since") { SinceLastLookedCard(it) } }
         // The cards, as arranged; a long press on one opens the arrangement.
         layout.visible.forEach { card ->
             when (card) {
@@ -675,6 +697,9 @@ private fun NodeList(
                         // Only on the title: a long press on a node row opens its actions.
                         titleModifier = Modifier.longPressToCustomize(onCustomize),
                     )
+                }
+                OverviewCard.ALERTS -> if (alerts != null) item(key = card.name) {
+                    Box(Modifier.longPressToCustomize(onCustomize)) { AlertsCard(alerts, onAlerts) }
                 }
                 OverviewCard.TIME_DRIFT -> item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) {

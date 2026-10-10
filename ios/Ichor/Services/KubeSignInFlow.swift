@@ -22,6 +22,9 @@ final class KubeSignInFlow {
     }
 
     private(set) var phase = Phase.idle
+    /// The browser comes back through a web redirect page (a Web OAuth client), which shows a
+    /// sign-in code to paste when it cannot bring the app back by itself.
+    private(set) var acceptsPastedCode = false
     @ObservationIgnored private var cancelRun: (@Sendable () -> Void)?
     @ObservationIgnored private var completeRun: (@Sendable (String) -> Void)?
     @ObservationIgnored private var web: WebSignInSession?
@@ -77,6 +80,14 @@ final class KubeSignInFlow {
         }
     }
 
+    /// Hands the sign-in code the redirect page showed (the browser did not come back) to the
+    /// sign-in in progress, which checks it against its own state.
+    func complete(code: String) {
+        let code = code.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !code.isEmpty else { return }
+        completeRun?(code)
+    }
+
     /// Stops waiting for the user; nothing is stored.
     func cancel() {
         cancelled = true
@@ -105,10 +116,11 @@ final class KubeSignInFlow {
             return
         }
         phase = .browser
+        acceptsPastedCode = prompt.redirectPrefix?.hasPrefix("https://") == true
         let session = WebSignInSession()
         web = session
         let id = runID
-        let started = session.start(url: url) { [weak self] callback in
+        let started = session.start(url: url, callbackScheme: kubeCallbackScheme(of: prompt.redirectPrefix)) { [weak self] callback in
             guard let self, id == self.runID else { return }
             if let callback {
                 // The provider came back to the app rather than to Go's loopback address.
@@ -145,14 +157,12 @@ final class KubeSignInFlow {
 final class WebSignInSession: NSObject, ASWebAuthenticationPresentationContextProviding {
     private var session: ASWebAuthenticationSession?
 
-    /// The app's own scheme: what a provider set up for the app would come back to.
-    private static let callbackScheme = "ichor"
-
-    /// Opens `url`; `ended` gets the URL the browser came back with, or nil when it was closed.
-    /// False when the sheet could not be shown.
+    /// Opens `url`; `ended` gets the URL the browser came back with on `callbackScheme` (the
+    /// app's "ichor", or Google's reversed client ID; see kubeCallbackScheme), or nil when it was
+    /// closed. False when the sheet could not be shown.
     @MainActor
-    func start(url: URL, ended: @escaping @MainActor (URL?) -> Void) -> Bool {
-        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: Self.callbackScheme) { callback, _ in
+    func start(url: URL, callbackScheme: String, ended: @escaping @MainActor (URL?) -> Void) -> Bool {
+        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: callbackScheme) { callback, _ in
             Task { @MainActor in ended(callback) }
         }
         session.presentationContextProvider = self

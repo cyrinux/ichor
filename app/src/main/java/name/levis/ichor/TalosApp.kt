@@ -39,13 +39,18 @@ import name.levis.ichor.data.SupportPrompt
 import name.levis.ichor.data.FundingHistory
 import name.levis.ichor.data.RoadmapRepository
 import name.levis.ichor.data.createFeatureStore
+import name.levis.ichor.data.createGoogleNativeSignIn
 import name.levis.ichor.data.PrivacyMask
 import name.levis.ichor.data.UiPreferences
 import androidx.glance.appwidget.updateAll
 import name.levis.ichor.widget.ClusterWidget
+import name.levis.ichor.widget.WidgetClusters
 import name.levis.ichor.ui.apps.AppIconLoader
 import name.levis.ichor.i18n.AppLocale
+import name.levis.ichor.monitor.AlertActionToken
+import name.levis.ichor.monitor.AlertSnoozes
 import name.levis.ichor.monitor.MonitorStore
+import name.levis.ichor.monitor.clusterFingerprints
 import name.levis.ichor.monitor.canPostNotifications
 import name.levis.ichor.monitor.syncMonitoring
 import name.levis.ichor.security.AppLock
@@ -60,6 +65,7 @@ import name.levis.ichor.data.ClusterNames
 import name.levis.ichor.data.WakeOnLanStore
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.VpnMonitor
+import name.levis.ichor.data.UnwatchedClusters
 import name.levis.ichor.data.VpnOnlyClusters
 import name.levis.ichor.data.KubeScopes
 import name.levis.ichor.data.KubeServers
@@ -71,9 +77,16 @@ import name.levis.ichor.data.hasStrongBox
 import name.levis.ichor.data.SkippedTalosUpdates
 import name.levis.ichor.data.SnapshotKeys
 import name.levis.ichor.data.MetricsStore
+import name.levis.ichor.data.AlertmanagerStore
+import name.levis.ichor.data.ClusterSecureFiles
+import name.levis.ichor.data.HistoryRepository
+import name.levis.ichor.data.HistoryStore
+import name.levis.ichor.data.LastLooked
+import name.levis.ichor.data.AlertmanagerRepository
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.data.VpnRequiredException
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.heldBackForVpn
 import name.levis.ichor.model.signInKeys
@@ -118,6 +131,7 @@ class TalosApp : Application() {
     val kubeRepository by lazy { KubeRepository(goCall) }
     val gitOpsRepository by lazy { GitOpsRepository(goCall) }
     val dataServicesRepository by lazy { DataServicesRepository(goCall) }
+    val alertmanagerRepository by lazy { AlertmanagerRepository(goCall) }
 
     /** Last known cluster data on disk, only while "Keep last known state" is on (Settings → Privacy). */
     private val offlineCache by lazy {
@@ -147,7 +161,9 @@ class TalosApp : Application() {
             masked = { uiPreferences.privacyMask.value.enabled },
         )
     }
-    val supportBundleRepository by lazy { SupportBundleRepository(configRepository, kubeServers, filesDir) }
+    val supportBundleRepository by lazy {
+        SupportBundleRepository(configRepository, kubeServers, filesDir) { configRepository.config.value?.activeSummary?.fingerprint?.let { historyRepository.export(it) } }
+    }
     /** The followed upgrade; UpgradeService keeps the app alive while it runs. */
     val upgradeManager by lazy {
         UpgradeManager(configRepository, kubeServers, onStarted = { UpgradeService.start(this) }, onFinished = talosRepository::forgetFeatures)
@@ -170,6 +186,10 @@ class TalosApp : Application() {
         WakeOnLanStore(sealed)
     }
     val vpnOnly by lazy { VpnOnlyClusters(getSharedPreferences(VpnOnlyClusters.FILE, Context.MODE_PRIVATE)) }
+    /** The clusters the background monitor leaves out (all are watched by default). */
+    val unwatchedClusters by lazy { UnwatchedClusters(getSharedPreferences(UnwatchedClusters.FILE, Context.MODE_PRIVATE)) }
+    /** The cluster each home-screen widget shows. */
+    val widgetClusters by lazy { WidgetClusters(getSharedPreferences(WidgetClusters.FILE, Context.MODE_PRIVATE)) }
     val kubeServers by lazy { KubeServers(getSharedPreferences(KubeServers.FILE, Context.MODE_PRIVATE)) }
     /** The kubeconfig cluster each Talos cluster's Kubernetes calls go through, when not the Talos admin kubeconfig. */
     val kubeAccess by lazy { KubeAccess(getSharedPreferences(KubeAccess.FILE, Context.MODE_PRIVATE)) }
@@ -179,6 +199,14 @@ class TalosApp : Application() {
     val snapshotKeys by lazy { SnapshotKeys(getSharedPreferences(SnapshotKeys.FILE, Context.MODE_PRIVATE)) }
     /** Each cluster's Prometheus/Mimir source and saved PromQL panels (Metrics screen). */
     val metricsStore by lazy { MetricsStore(this) }
+    val alertmanagerStore by lazy { AlertmanagerStore(this) }
+    /** Each cluster's 30-day history ring, one record per monitor run, sealed per cluster. */
+    val historyStore by lazy {
+        HistoryStore(ClusterSecureFiles(this, "history")) { ring, record, now -> Ichorgo.historyAppend(ring, record, now) }
+    }
+    val historyRepository by lazy { HistoryRepository(historyStore) }
+    /** When the user last looked at each cluster's home ("since you last looked"). */
+    val lastLooked by lazy { LastLooked(getSharedPreferences(LastLooked.FILE, Context.MODE_PRIVATE)) }
     val vpn by lazy { VpnMonitor(this) }
     val appLock by lazy {
         AppLock(
@@ -190,6 +218,7 @@ class TalosApp : Application() {
     val supportPrompt by lazy { SupportPrompt(getSharedPreferences("ichor-support", Context.MODE_PRIVATE)) }
     val fundingHistory by lazy { FundingHistory(getSharedPreferences(FundingHistory.FILE, Context.MODE_PRIVATE)) }
     val featureStore by lazy { createFeatureStore(this, fundingHistory) }
+    val googleNativeSignIn by lazy { createGoogleNativeSignIn() }
     val roadmapRepository by lazy { RoadmapRepository(getSharedPreferences(RoadmapRepository.FILE, Context.MODE_PRIVATE)) }
     val changelogRepository by lazy { ChangelogRepository(this, getSharedPreferences(ChangelogRepository.PREFS, Context.MODE_PRIVATE)) }
     val updateManager by lazy {
@@ -205,6 +234,12 @@ class TalosApp : Application() {
             KeystoreValue(java.io.File(noBackupFilesDir, "monitor-snapshot.enc"), "ichor-monitor-snapshot"),
         )
     }
+
+    /** The alerts snoozed from their notification. */
+    val alertSnoozes by lazy { AlertSnoozes(getSharedPreferences(AlertSnoozes.FILE, Context.MODE_PRIVATE)) }
+
+    /** The secret an alert's in-app button carries, so no other app can ask for its confirmation. */
+    val alertActionToken by lazy { AlertActionToken(getSharedPreferences(AlertSnoozes.FILE, Context.MODE_PRIVATE)) }
 
     /** The optional AI diagnosis: off until enabled in Settings. API keys get their own Keystore keys. */
     val diagnosisRepository by lazy { DiagnosisRepository(configRepository, kubeServers) }
@@ -257,6 +292,16 @@ class TalosApp : Application() {
     fun setVpnOnly(fingerprint: String, vpnOnly: Boolean) {
         this.vpnOnly.set(fingerprint, vpnOnly)
         if (fingerprint == configRepository.config.value?.activeSummary?.fingerprint) talosRepository.invalidate()
+    }
+
+    /**
+     * Sets whether the background monitor checks the cluster of [context] (all its contexts):
+     * a cluster left out drops its snapshot and alerts at the next check.
+     */
+    fun setWatched(context: ContextSummary, watched: Boolean) {
+        val summary = configRepository.config.value?.summary ?: return
+        clusterFingerprints(summary, context).forEach { unwatchedClusters.set(it, !watched) }
+        launchSync(runNow = true)
     }
 
     /**
@@ -356,12 +401,10 @@ class TalosApp : Application() {
     }
 
     /**
-     * Another cluster is on screen: the widget drops the previous one's nodes right away
-     * (the next check may not reach the new cluster, and would then keep them) and a check
-     * of the new one runs.
+     * Another cluster is on screen: the widgets that follow it show its own snapshot (each
+     * cluster keeps one), and a check runs.
      */
     private fun forgetShownCluster() {
-        monitorStore.clearSnapshot()
         ProcessLifecycleOwner.get().lifecycleScope.launch {
             ClusterWidget().updateAll(this@TalosApp)
             syncMonitoring(this@TalosApp, runNow = true)
@@ -378,7 +421,7 @@ class TalosApp : Application() {
         uiPreferences.setPrivacyMask(mask)
         applyPrivacyMask(mask)
         // Keys differ masked vs unmasked: diffing across the switch would alert on every node.
-        monitorStore.clearSnapshot()
+        monitorStore.clearSnapshots()
         ProcessLifecycleOwner.get().lifecycleScope.launch {
             // The config summary (context names, endpoints) is masked too, and the Go side
             // forgets its previous mapping: re-read it, then reload with the new names.
@@ -453,6 +496,9 @@ class TalosApp : Application() {
         Ichorgo.setAuditEvents(uiPreferences.auditEvents.value)
         // Where Go remembers node names, so a node that is down still shows its hostname.
         Ichorgo.setDataDir(noBackupFilesDir.path, coreDataKey() ?: ByteArray(0))
+        // GKE's "Sign in with Google" (Play build with Play services): Google's SDK holds the
+        // client, so no client ID here.
+        if (googleNativeSignIn.available(this)) Ichorgo.setGoogleSignInClient("android", "")
         launchSync()
         // Every cluster of the stored config gets a color of its own, as soon as it shows up.
         ProcessLifecycleOwner.get().lifecycleScope.launch {
@@ -464,6 +510,10 @@ class TalosApp : Application() {
                     // Rewrites a sealed file (a Keystore call): off the main thread, its store is locked.
                     launch(Dispatchers.IO) { publicIps.sync(it.summary) }
                     vpnOnly.sync(it.summary)
+                    unwatchedClusters.sync(it.summary)
+                    widgetClusters.sync(it.summary)
+                    // A removed cluster's snoozes go with it (its snapshot at the next check).
+                    alertSnoozes.retain(it.summary.contexts.map { c -> c.fingerprint })
                     kubeServers.sync(it.summary)
                     kubeAccess.sync(it.summary)
                     // Omni sign-ins are kept under their own key, not a fingerprint.
@@ -473,10 +523,15 @@ class TalosApp : Application() {
                     skippedTalosUpdates.sync(it.summary)
                     val fingerprints = it.summary.contexts.map { c -> c.fingerprint }
                     launch(Dispatchers.IO) { metricsStore.sync(fingerprints) }
+                    launch(Dispatchers.IO) { alertmanagerStore.sync(fingerprints) }
+                    launch(Dispatchers.IO) { historyStore.sync(fingerprints) }
+                    lastLooked.sync(it.summary)
                 }
-                // The deleted config takes the metrics setups (and their credentials) with it, and the sign-ins.
+                // The deleted config takes the metrics and Alertmanager setups (and their credentials) with it, and the sign-ins.
                 if (stored == null && configRepository.generation.value > 0) {
                     launch(Dispatchers.IO) { metricsStore.sync(emptyList()) }
+                    launch(Dispatchers.IO) { alertmanagerStore.sync(emptyList()) }
+                    launch(Dispatchers.IO) { historyStore.sync(emptyList()) }
                     launch(Dispatchers.IO) {
                         kubeAuthStore.clear()
                         // Drops the tokens the core keeps in memory.

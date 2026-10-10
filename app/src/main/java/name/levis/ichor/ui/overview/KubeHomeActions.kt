@@ -5,6 +5,7 @@ import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.MonitorHeart
+import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Settings
@@ -25,6 +26,7 @@ private fun kubeHomeActionIcon(action: KubeHomeAction): ImageVector = when (acti
     KubeHomeAction.RESOURCES -> Icons.Outlined.Category
     KubeHomeAction.GITOPS -> Icons.Outlined.Sync
     KubeHomeAction.METRICS -> Icons.Outlined.QueryStats
+    KubeHomeAction.ALERTS -> Icons.Outlined.NotificationsActive
     KubeHomeAction.HELM -> Icons.Outlined.Inventory2
     KubeHomeAction.DATA_SERVICES -> Icons.Outlined.Storage
     KubeHomeAction.CHECKUP -> Icons.Outlined.HealthAndSafety
@@ -39,6 +41,7 @@ fun kubeHomeActionLabel(action: KubeHomeAction): String = when (action) {
     KubeHomeAction.RESOURCES -> stringResource(R.string.kb_title)
     KubeHomeAction.GITOPS -> "GitOps"
     KubeHomeAction.METRICS -> stringResource(R.string.metrics_title)
+    KubeHomeAction.ALERTS -> stringResource(R.string.alerts_title)
     KubeHomeAction.HELM -> stringResource(R.string.kb_helm_title)
     KubeHomeAction.DATA_SERVICES -> stringResource(R.string.data_services_title)
     KubeHomeAction.CHECKUP -> stringResource(R.string.checkup_title)
@@ -56,6 +59,7 @@ fun KubeHomeNavigation.open(action: KubeHomeAction, flux: Boolean = false): () -
     KubeHomeAction.RESOURCES -> onResources
     KubeHomeAction.GITOPS -> if (flux) onFlux else onArgoCD
     KubeHomeAction.METRICS -> onMetrics
+    KubeHomeAction.ALERTS -> onAlerts
     KubeHomeAction.HELM -> onHelm
     KubeHomeAction.DATA_SERVICES -> { { onDataServices(null) } }
     KubeHomeAction.CHECKUP -> onCheckup

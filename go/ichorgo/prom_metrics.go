@@ -64,26 +64,13 @@ func promMetricNames(target kubeTarget, sourceJSON string) ([]string, error) {
 // parsePromMetricNames reads a label values answer, keeping the well-formed names, sorted
 // and without duplicates (a federated source may list one twice), up to the caps.
 func parsePromMetricNames(status int, body []byte) ([]string, error) {
-	var env promEnvelope
-	if err := json.Unmarshal(body, &env); err != nil || env.Status == "" {
-		return nil, promHTTPError(status, body)
-	}
-
-	if env.Status != "success" {
-		msg := strings.TrimSpace(env.Error)
-		if msg == "" {
-			msg = http.StatusText(status)
-		}
-
-		if env.ErrorType != "" {
-			msg = env.ErrorType + ": " + msg
-		}
-
-		return nil, errors.New(clipUTF8(msg, 500))
+	data, err := promEnvelopeData(status, body)
+	if err != nil {
+		return nil, err
 	}
 
 	var raw []string
-	if err := json.Unmarshal(env.Data, &raw); err != nil {
+	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, errors.New("the metric names answer has no data")
 	}
 
@@ -108,4 +95,28 @@ func parsePromMetricNames(status int, body []byte) ([]string, error) {
 	}
 
 	return names, nil
+}
+
+// promEnvelopeData is the data of a successful API answer of any HTTP status (other than
+// the query one); the reason Prometheus gives for a failed one.
+func promEnvelopeData(status int, body []byte) (json.RawMessage, error) {
+	var env promEnvelope
+	if err := json.Unmarshal(body, &env); err != nil || env.Status == "" {
+		return nil, promHTTPError(status, body)
+	}
+
+	if env.Status != "success" {
+		msg := strings.TrimSpace(env.Error)
+		if msg == "" {
+			msg = http.StatusText(status)
+		}
+
+		if env.ErrorType != "" {
+			msg = env.ErrorType + ": " + msg
+		}
+
+		return nil, errors.New(clipUTF8(msg, 500))
+	}
+
+	return env.Data, nil
 }

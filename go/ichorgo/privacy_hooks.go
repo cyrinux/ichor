@@ -91,6 +91,18 @@ func (l maskedKubeLiveListener) OnDone(errMessage string) {
 	l.KubeLiveListener.OnDone(privacy.maskPlain(errMessage))
 }
 
+type maskedKubeEventsListener struct{ KubeEventsListener }
+
+func (l maskedKubeEventsListener) OnEvents(batchJSON string) {
+	l.KubeEventsListener.OnEvents(privacy.mask(batchJSON))
+}
+func (l maskedKubeEventsListener) OnStatus(stateJSON string) {
+	l.KubeEventsListener.OnStatus(privacy.mask(stateJSON))
+}
+func (l maskedKubeEventsListener) OnDone(errMessage string) {
+	l.KubeEventsListener.OnDone(privacy.maskPlain(errMessage))
+}
+
 type maskedEventListener struct{ EventListener }
 
 func (l maskedEventListener) OnEvent(json string) { l.EventListener.OnEvent(privacy.mask(json)) }

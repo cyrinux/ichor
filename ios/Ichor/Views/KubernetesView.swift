@@ -23,6 +23,8 @@ struct KubernetesView: View {
         /// Every kind the API server serves (the resource browser).
         case resources
         case helm
+        /// The cluster's events kept live.
+        case events
     }
 
     @Environment(AppModel.self) private var model
@@ -122,6 +124,7 @@ struct KubernetesView: View {
         case .flows: netScreen = .flows(HubbleFilter())
         case .resources: netScreen = .resources
         case .helm: netScreen = .helm
+        case .events: netScreen = .events
         case .apiAddress:
             serverInput = model.client?.kubeServer ?? ""
             editingServer = true
@@ -182,6 +185,7 @@ struct KubernetesView: View {
             case .flows(let filter): LiveFlowsView(cilium: cilium ?? CiliumStatus(), filter: filter)
             case .resources: KubeBrowserView()
             case .helm: HelmReleasesView()
+            case .events: KubeLiveEventsView()
             }
         }
         .task(id: model.client?.kubeServer) {
@@ -289,6 +293,7 @@ private struct WorkloadsList: View {
     @Binding var focus: String?
 
     @Environment(AppModel.self) private var model
+    @Environment(\.scenePhase) private var scenePhase
     @State private var confirm: KubeWorkload?
     @State private var restarting: Set<String> = []
     @State private var resultMessage: String?
@@ -326,7 +331,32 @@ private struct WorkloadsList: View {
             actions = workload
             self.focus = nil
         }
+        .task(id: ChangeTrigger(settles: list.settles, active: scenePhase == .active, namespace: control.scope.namespace)) {
+            await followChanges()
+        }
         .messageAlert($resultMessage)
+    }
+
+    private struct ChangeTrigger: Hashable {
+        let settles: Int
+        let active: Bool
+        let namespace: String?
+    }
+
+    /// Reads the list again each time a workload of the scope changes, while on screen and the
+    /// app active: the Go core signals at most every 2 s, never for the lists it reads at the
+    /// start. Restarted after each load (the refresh it causes too); a watch that ends is
+    /// followed again after a while. Pull-to-refresh stays.
+    private func followChanges() async {
+        guard scenePhase == .active, list.settles > 0 else { return }
+        let namespace = control.scope.namespace
+        while !Task.isCancelled {
+            guard let client = model.client else { return }
+            for await event in client.changeWatch(namespace: namespace, kinds: KubeChange.workloadKinds) {
+                if case .update = event { await list.refresh(model: model) }
+            }
+            try? await Task.sleep(for: .seconds(kubeWatchRetrySeconds))
+        }
     }
 
     private func load() async {
@@ -434,6 +464,7 @@ extension KubernetesAction: BarActionLook {
         case .flows: "point.3.filled.connected.trianglepath.dotted"
         case .resources: "square.grid.3x3"
         case .helm: "shippingbox"
+        case .events: "list.bullet.rectangle"
         case .apiAddress: "server.rack"
         }
     }
@@ -447,6 +478,7 @@ extension KubernetesAction: BarActionLook {
         case .flows: Text("Live flows")
         case .resources: Text("Resources")
         case .helm: Text("Helm releases")
+        case .events: Text("Kubernetes events")
         case .apiAddress: Text("Kubernetes API address")
         }
     }

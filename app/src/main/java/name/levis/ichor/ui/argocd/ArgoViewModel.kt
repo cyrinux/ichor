@@ -27,6 +27,10 @@ import name.levis.ichor.ui.PolledStatusViewModel
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.workloads.WorkloadRestarts
+import name.levis.ichor.data.KUBE_WATCH_RETRY_MILLIS
+import name.levis.ichor.data.StreamItem
+import name.levis.ichor.data.watchForever
+import name.levis.ichor.model.ARGO_WATCH_KINDS
 
 /** How an action on [count] apps ended: [failed] of them with [error] (the first one's), [app] when only one. */
 data class ArgoActionResult(val action: ArgoAction, val count: Int, val app: String?, val failed: Int, val error: UiText?)
@@ -64,6 +68,18 @@ class ArgoViewModel(
 
     // Another cluster, or a new configuration.
     override fun onNewSource() = cleared.clear()
+
+    /**
+     * Reads the status again while called (the screen is visible) each time an Application
+     * changes, instead of waiting for the next poll: the Go core signals at most every 2 s,
+     * never for the list it reads at the start; skipped while a read runs. A watch that ends
+     * (no Argo CD, a refusal) is followed again after [KUBE_WATCH_RETRY_MILLIS].
+     */
+    suspend fun follow() {
+        watchForever(start = { kube.changeWatch(null, ARGO_WATCH_KINDS) }) { item ->
+            if (item is StreamItem.Item) poll()
+        }
+    }
 
     override fun fetcher(): suspend () -> ArgoStatus {
         val onStatus = onLoad()

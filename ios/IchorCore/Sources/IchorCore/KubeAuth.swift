@@ -143,15 +143,36 @@ public enum KubeFieldInput: Equatable, Sendable {
 
 public func kubeFieldInput(_ field: String) -> KubeFieldInput {
     switch field {
-    case "gcpServiceAccountJson": .json
-    case "awsSecretAccessKey", "awsSessionToken", "azureClientSecret", "doApiToken", "rancherApiKey", "serviceAccountKey": .secret
+    case "gcpServiceAccountJson", "gcpUserCredentialsJson": .json
+    case "awsSecretAccessKey", "awsSessionToken", "azureClientSecret", "doApiToken", "rancherApiKey", "serviceAccountKey",
+         "gcpOAuthClientSecret": .secret
     default: .plain
     }
 }
 
+/// GKE's "Sign in with Google" option (a build with Ichor's iOS client): a marker, never a
+/// text field; its value tells the Go core which platform's sign-in runs.
+public let kubeGoogleSignInField = "gcpGoogleSignIn"
+
+/// What the GKE "Sign in with Google" option submits to the Go core (KubeSetCredentials):
+/// the browser sign-in then starts.
+public func kubeGoogleSignInSecretsJSON() -> String {
+    kubeSecretsJSON(fields: [kubeGoogleSignInField], values: [kubeGoogleSignInField: "ios"])
+}
+
+/// The URL scheme the in-app web session closes on for a sign-in coming back to
+/// `redirectPrefix`: its own custom scheme (Google's reversed client ID), else the app's
+/// "ichor" (a loopback address is answered to Go itself, the session never sees it).
+public func kubeCallbackScheme(of redirectPrefix: String?) -> String {
+    guard let prefix = redirectPrefix, let colon = prefix.firstIndex(of: ":") else { return "ichor" }
+    let scheme = prefix[..<colon].lowercased()
+    let valid = scheme.first?.isLetter == true && scheme.allSatisfy { $0.isLetter || $0.isNumber || "+-.".contains($0) }
+    return !valid || scheme == "http" || scheme == "https" ? "ichor" : scheme
+}
+
 /// Fields that may be left empty.
 public func kubeFieldOptional(_ field: String) -> Bool {
-    field == "awsSessionToken"
+    field == "awsSessionToken" || field == "gcpProjects" || field == "gcpOAuthRedirectUrl"
 }
 
 /// The JSON object of `values` for `fields` (trimmed, empty ones left out), as KubeSetCredentials
@@ -177,6 +198,19 @@ public let kubeDiscoverProviders = ["eks", "gke", "aks", "digitalocean", "ranche
 /// KubeDiscoverFields' answer: the fields per provider.
 public func decodeKubeDiscoverFields(_ json: String) throws -> [String: [String]] {
     try TalosJSON.decode([String: [String]].self, from: json)
+}
+
+/// KubeDiscoverOptions' answer: the field sets of the providers that take one of several
+/// credentials (GKE: a service account key, or gcloud user credentials).
+public func decodeKubeDiscoverOptions(_ json: String) throws -> [String: [[String]]] {
+    try TalosJSON.decode([String: [[String]]].self, from: json)
+}
+
+/// The credentials `provider` takes, as field sets: its options, else its one set of fields.
+public func kubeDiscoverOptionSets(provider: String, fields: [String: [String]], options: [String: [[String]]]) -> [[String]] {
+    let sets = (options[provider] ?? []).filter { !$0.isEmpty }
+    if !sets.isEmpty { return sets }
+    return fields[provider].map { [$0] } ?? []
 }
 
 /// The stored names of the contexts an import added that sign in through a method (`signIn`):

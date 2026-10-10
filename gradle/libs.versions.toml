@@ -20,6 +20,7 @@ termlib = "0.3.11"
 aboutLibraries = "15.2.0"
 billing = "9.1.0"
 appUpdate = "2.1.0"
+playServicesAuth = "21.3.0"
 yubikit = "3.2.1"
 slf4j = "2.0.17"
 
@@ -53,6 +54,7 @@ androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", 
 aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
 billing = { module = "com.android.billingclient:billing", version.ref = "billing" }
 play-app-update = { module = "com.google.android.play:app-update", version.ref = "appUpdate" }
+play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 yubikit-android = { module = "com.yubico.yubikit:android", version.ref = "yubikit" }
 yubikit-fido = { module = "com.yubico.yubikit:fido", version.ref = "yubikit" }
 slf4j-nop = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }

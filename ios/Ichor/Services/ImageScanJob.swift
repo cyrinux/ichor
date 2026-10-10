@@ -26,13 +26,14 @@ final class ImageScanJob {
         return state.context != context || state.appID != appID
     }
 
-    /// Scans `pods`' images, replacing the last scan. Ignored while one runs.
-    func start(client: TalosClient, context: String, appID: String, pods: [RoutePod]) {
+    /// Scans `pods`' images and the `images` refs (a node's system images), replacing the last
+    /// scan. Ignored while one runs.
+    func start(client: TalosClient, context: String, appID: String, pods: [RoutePod], images: [String] = []) {
         guard !isRunning else { return }
         var started = ImageScanState(context: context, appID: appID)
         let scan: (events: AsyncStream<ImageScanEvent>, stop: @Sendable () -> Void)
         do {
-            scan = try client.imageScan(pods: pods)
+            scan = try client.imageScan(pods: pods, images: images)
         } catch {
             started.finish(report: nil, json: "", error: error.localizedDescription)
             state = started

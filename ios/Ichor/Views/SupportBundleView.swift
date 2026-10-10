@@ -189,7 +189,8 @@ struct SupportBundleView: View {
             message = failure
             return
         }
-        job.start(client: client, context: model.activeContext, nodes: supportSelection(all))
+        job.start(client: client, context: model.activeContext, cluster: model.activeSummary.map(monitorClusterKey) ?? "",
+                  nodes: supportSelection(all))
     }
 }
 

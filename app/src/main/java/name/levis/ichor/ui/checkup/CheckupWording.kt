@@ -7,6 +7,7 @@ import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.Lan
+import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.NotificationImportant
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Storage
@@ -42,6 +43,7 @@ fun sectionLook(id: String): SectionLook? = when (id) {
     CheckupSectionId.CERTIFICATES -> SectionLook(Icons.Outlined.VerifiedUser, R.string.checkup_section_certificates, R.string.checkup_section_certificates_hint)
     CheckupSectionId.SECRETS -> SectionLook(Icons.Outlined.Key, R.string.checkup_section_secrets, R.string.checkup_section_secrets_hint)
     CheckupSectionId.HELM -> SectionLook(Icons.Outlined.Anchor, R.string.checkup_section_helm, R.string.checkup_section_helm_hint)
+    CheckupSectionId.MONITORING -> SectionLook(Icons.Outlined.MonitorHeart, R.string.checkup_section_monitoring, R.string.checkup_section_monitoring_hint)
     else -> null
 }
 
@@ -100,6 +102,13 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
         CheckupKind.SECRET_STORE_NOT_READY -> stringResource(R.string.checkup_secretStoreNotReady, f.extra)
         CheckupKind.HELM_FAILED -> stringResource(R.string.checkup_helmFailed, f.count.toString())
         CheckupKind.HELM_PENDING -> stringResource(R.string.checkup_helmPending, f.reason, age)
+        CheckupKind.SCRAPE_TARGETS_DOWN ->
+            if (f.extra.isEmpty()) {
+                stringResource(R.string.checkup_scrapeTargetsDown_plain, f.count.toString(), f.limit.roundToInt().toString(), percent(f.value))
+            } else {
+                stringResource(R.string.checkup_scrapeTargetsDown, f.count.toString(), f.limit.roundToInt().toString(), percent(f.value), f.extra)
+            }
+        CheckupKind.PROMETHEUS_RULE_ERRORS, CheckupKind.RULE_GROUP_ERRORS -> stringResource(R.string.checkup_ruleErrors, f.count.toString(), f.reason)
         else -> f.kind
     }
 }
@@ -145,6 +154,9 @@ fun checkupFix(kind: String): Int = when (kind) {
     CheckupKind.SECRET_STORE_NOT_READY -> R.string.checkup_secretStoreNotReady_fix
     CheckupKind.HELM_FAILED -> R.string.checkup_helmFailed_fix
     CheckupKind.HELM_PENDING -> R.string.checkup_helmPending_fix
+    CheckupKind.SCRAPE_TARGETS_DOWN -> R.string.checkup_scrapeTargetsDown_fix
+    CheckupKind.PROMETHEUS_RULE_ERRORS -> R.string.checkup_prometheusRuleErrors_fix
+    CheckupKind.RULE_GROUP_ERRORS -> R.string.checkup_ruleGroupErrors_fix
     else -> 0
 }
 

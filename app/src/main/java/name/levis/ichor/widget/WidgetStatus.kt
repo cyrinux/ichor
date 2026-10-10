@@ -1,6 +1,10 @@
 package name.levis.ichor.widget
 
+import name.levis.ichor.model.ConfigSummary
 import name.levis.ichor.monitor.ClusterSnapshot
+import name.levis.ichor.monitor.MonitorState
+import name.levis.ichor.monitor.clusterFingerprints
+import name.levis.ichor.monitor.monitorKeyOf
 
 /** A snapshot older than this is shown dimmed, with its time instead of the status row. */
 const val WIDGET_STALE_AFTER_MS = 60 * 60 * 1000L
@@ -32,3 +36,24 @@ fun statusItems(s: ClusterSnapshot, max: Int = 2): List<StatusItem> {
     val etcd = if (s.etcdChecked) listOf(StatusItem.Etcd(s.etcdAlarms.size)) else emptyList()
     return (health + etcd).take(max)
 }
+
+/**
+ * Where a widget's snapshot is kept, likeliest first: its [choice] (a context fingerprint), else
+ * the cluster on screen ([activeContext] of [summary], or [lastActive] while the config is not
+ * loaded); then the other contexts of that cluster, which the monitor may have checked instead.
+ */
+fun widgetKeys(choice: String?, summary: ConfigSummary?, activeContext: String?, lastActive: String): List<String> {
+    val wanted = choice ?: summary?.contexts?.firstOrNull { it.name == activeContext }?.let(::monitorKeyOf) ?: lastActive
+    val context = summary?.contexts?.firstOrNull { monitorKeyOf(it) == wanted } ?: return listOf(wanted)
+    return listOf(wanted) + (clusterFingerprints(summary, context) - wanted)
+}
+
+/**
+ * The cluster id a tap on a widget opens (its share link of the cluster screen): that of its
+ * [choice]; null for a widget on the cluster on screen, or one not found in [summary] (the app opens as is).
+ */
+fun widgetClusterId(choice: String?, summary: ConfigSummary?): String? =
+    choice?.let { fingerprint -> summary?.contexts?.firstOrNull { monitorKeyOf(it) == fingerprint } }?.clusterId?.takeIf { it.isNotBlank() }
+
+/** The snapshot of the first of [keys] the monitor has one for. */
+fun widgetSnapshot(state: MonitorState, keys: List<String>): ClusterSnapshot? = keys.firstNotNullOfOrNull { state.clusters[it] }

@@ -29,7 +29,14 @@ internal object Routes {
     const val FUNDING = "funding"
     const val INSIGHTS = "insights"
     const val APPS = "apps?attention={attention}"
-    const val METRICS = "metrics"
+    const val METRICS = "metrics?tab={tab}"
+
+    /** The Metrics screen on its panels, or on [tab] (ui.metrics.METRICS_TAB_MONITORING). */
+    fun metrics(tab: Int = 0) = "metrics?tab=$tab"
+    const val ALERTS = "alerts?silence={silence}"
+
+    /** [silence]: the fingerprint of an alert whose silence form opens (1 h, from its notification). */
+    fun alerts(silence: String = "") = "alerts?silence=${Uri.encode(silence)}"
 
     /** [attention]: open on the "needs attention" chip. */
     fun apps(attention: Boolean = false) = "apps?attention=$attention"
@@ -65,6 +72,9 @@ internal object Routes {
     fun workloads(focus: KubeFocus? = null) = if (focus == null) "workloads" else
         "workloads?tab=${focus.tab}&key=${Uri.encode(focus.key)}&ns=${Uri.encode(focus.namespace)}&name=${Uri.encode(focus.name)}"
     const val NETWORK_POLICIES = "netpol"
+
+    /** The cluster's Kubernetes events, live. */
+    const val KUBE_EVENTS = "kube-events"
     const val API_HEALTH = "apihealth"
     const val CHECKUP = "checkup"
     const val AUDIT = "audit"
@@ -77,17 +87,20 @@ internal object Routes {
     /** [kind] opens on that system's tab; null on the first. */
     fun dataServices(kind: DataServiceKind? = null) = "data-services?kind=${kind?.name.orEmpty()}"
     const val ARGO_CD = "argocd"
-    const val ARGO_APP = "argocd-app?ns={ns}&name={name}"
+    const val ARGO_APP = "argocd-app?ns={ns}&name={name}&sync={sync}"
     const val ARGO_WINDOWS = "argocd-windows"
 
-    fun argoApp(namespace: String, name: String) = "argocd-app?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
+    /** [sync]: open its sync sheet (from an alert's button). */
+    fun argoApp(namespace: String, name: String, sync: Boolean = false) =
+        "argocd-app?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&sync=$sync"
     const val ARGO_DIFF = "argocd-diff?ns={ns}&name={name}"
     fun argoDiff(namespace: String, name: String) = "argocd-diff?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
     const val FLUX = "flux"
-    const val FLUX_APP = "flux-app?kind={kind}&ns={ns}&name={name}"
+    const val FLUX_APP = "flux-app?kind={kind}&ns={ns}&name={name}&reconcile={reconcile}"
 
-    fun fluxApp(kind: String, namespace: String, name: String) =
-        "flux-app?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
+    /** [reconcile]: open its reconcile confirmation (from an alert's button). */
+    fun fluxApp(kind: String, namespace: String, name: String, reconcile: Boolean = false) =
+        "flux-app?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&reconcile=$reconcile"
     const val FLUX_DIFF = "flux-diff?kind={kind}&ns={ns}&name={name}"
     fun fluxDiff(kind: String, namespace: String, name: String) =
         "flux-diff?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"

@@ -7,6 +7,12 @@ struct MonitoringSection: View {
     @State private var dataWatched = BackgroundMonitor.dataServicesWatched
     @State private var gitopsWatched = BackgroundMonitor.gitopsWatched
     @State private var checkupWatched = BackgroundMonitor.checkupWatched
+    @State private var alertmanagerWatched = BackgroundMonitor.alertmanagerWatched
+    @State private var storageWatched = BackgroundMonitor.storageWatched
+    @State private var storageThresholds = BackgroundMonitor.storageThresholds
+    @State private var storageTrendWatched = BackgroundMonitor.storageTrendWatched
+    @State private var unreachableWatched = BackgroundMonitor.unreachableWatched
+    @State private var unreachableRuns = BackgroundMonitor.unreachableRuns
     @State private var message: String?
 
     var body: some View {
@@ -51,6 +57,70 @@ struct MonitoringSection: View {
                 }
             }
             .disabled(!enabled)
+            // Opt-in too: asks the cluster's Alertmanager for its alerts at every check.
+            Toggle(isOn: Binding(get: { alertmanagerWatched }, set: { on in
+                BackgroundMonitor.alertmanagerWatched = on
+                alertmanagerWatched = on
+            })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Watch Alertmanager alerts")
+                    Text("Critical alerts at once, warnings seen on two checks in a row, and when they resolve; silenced, inhibited and info alerts never notify. Each check asks the cluster's Alertmanager through the Kubernetes API or its URL.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
+            // Opt-in too: one Talos call per check reads every node's volumes and disks.
+            Toggle(isOn: Binding(get: { storageWatched }, set: { on in
+                BackgroundMonitor.storageWatched = on
+                storageWatched = on
+            })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Watch node storage")
+                    Text("Volumes such as EPHEMERAL filling up past the thresholds below, and disks failing SMART, on Talos clusters. Each check reads every node's volumes and disks through the Talos API.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
+            if storageWatched {
+                storageSteppers.disabled(!enabled)
+                // Opt-in: no extra call, a line through each volume's fill in the history kept on this phone.
+                Toggle(isOn: Binding(get: { storageTrendWatched }, set: { on in
+                    BackgroundMonitor.storageTrendWatched = on
+                    storageTrendWatched = on
+                })) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Warn before a volume fills up")
+                        Text("When a volume's growth over the last week would make it critical within 3 days, before it crosses the thresholds above.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .disabled(!enabled)
+            }
+            // Opt-in too: no extra call, only the runs a cluster did not answer in a row.
+            Toggle(isOn: Binding(get: { unreachableWatched }, set: { on in
+                BackgroundMonitor.unreachableWatched = on
+                unreachableWatched = on
+            })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Alert when a cluster is unreachable")
+                    Text("When a cluster does not answer several checks in a row (off its network, its API down), and once it answers again. Its node alerts stay silent meanwhile.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
+            if unreachableWatched {
+                Stepper(value: Binding(get: { unreachableRuns }, set: { runs in
+                    BackgroundMonitor.unreachableRuns = runs
+                    unreachableRuns = runs
+                }), in: unreachableRunsRange) {
+                    Text("After \(unreachableRuns) checks in a row")
+                }
+                .disabled(!enabled)
+            }
             Button("Check now") {
                 Task {
                     await BackgroundMonitor.check()
@@ -72,12 +142,34 @@ struct MonitoringSection: View {
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within \(certWarnDays) days. iOS schedules background checks itself, so there is no check interval to choose as on Android, and alerts can be delayed. The home-screen widget shows the last check.")
+                Text("Each check covers every cluster. To leave one out, turn off Watch in the background in its menu under Clusters.")
                 // The sealed configs cannot be read in the background after iOS closed the app.
                 if model.requiresKey { Text("A security key is required: alerts and the widget pause when iOS has closed Ichor, until you unlock it again.") }
                 // README "Widget": the App Group a sideloaded build may lack with a free Apple ID.
                 if !Distribution.appStore { Text("The widget reads the last check through an App Group, which a free Apple ID may not allow when sideloading. In that case the widget stays empty.") }
             }
         }
+    }
+
+    /// The warning and critical fill thresholds; critical stays above warning.
+    @ViewBuilder private var storageSteppers: some View {
+        let warnLabel = "\(storageThresholds.warn) %"
+        let critLabel = "\(storageThresholds.crit) %"
+        Stepper(value: Binding(get: { storageThresholds.warn }, set: { warn in
+            setStorage(StorageThresholds(warn: warn, crit: max(storageThresholds.crit, warn + 1)))
+        }), in: storageWarnRange) {
+            Text("Warning from \(warnLabel) used")
+        }
+        Stepper(value: Binding(get: { storageThresholds.crit }, set: { crit in
+            setStorage(StorageThresholds(warn: storageThresholds.warn, crit: crit))
+        }), in: storageCritRange(warn: storageThresholds.warn)) {
+            Text("Critical from \(critLabel) used")
+        }
+    }
+
+    private func setStorage(_ thresholds: StorageThresholds) {
+        BackgroundMonitor.storageThresholds = thresholds
+        storageThresholds = thresholds
     }
 
     private func set(_ on: Bool) {

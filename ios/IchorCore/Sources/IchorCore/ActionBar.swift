@@ -19,6 +19,7 @@ public enum OverviewAction: String, BarAction {
     case etcd = "ETCD"
     case events = "EVENTS"
     case metrics = "METRICS"
+    case alerts = "ALERTS"
     case kubespan = "KUBESPAN"
     case settings = "SETTINGS"
 
@@ -37,6 +38,8 @@ public enum KubernetesAction: String, BarAction {
     case flows = "FLOWS"
     case resources = "RESOURCES"
     case helm = "HELM"
+    /// The cluster's events kept live.
+    case events = "EVENTS"
     case apiAddress = "API_ADDRESS"
 
     public var id: String { rawValue }
@@ -52,6 +55,7 @@ public enum KubeHomeAction: String, BarAction {
     case resources = "RESOURCES"
     case gitOps = "GITOPS"
     case metrics = "METRICS"
+    case alerts = "ALERTS"
     case helm = "HELM"
     case dataServices = "DATA_SERVICES"
     case checkup = "CHECKUP"

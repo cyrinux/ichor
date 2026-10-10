@@ -200,6 +200,11 @@ private struct CheckupSectionBody: View {
                     CheckupReleaseRow(release: release, now: now)
                 }
             }
+        case .monitoring:
+            // Each down target and failing rule, from the Metrics screen's source (or the first found).
+            NavigationLink { PromMonitoringView(source: nil) } label: {
+                Label(PromMonitoringText.openFromCheckup, systemImage: "waveform.path.ecg").font(.callout)
+            }
         default:
             EmptyView()
         }

@@ -47,6 +47,11 @@ targets:
       - framework: Frameworks/Ichorgo.xcframework
         embed: false
       - target: TalosWidget
+    # GOOGLE_IOS_CLIENT_ID and GOOGLE_IOS_REVERSED_CLIENT_ID (GKE's Sign in with Google): empty
+    # unless a git-ignored Config/GoogleSignIn.local.xcconfig sets them.
+    configFiles:
+      Debug: Config/GoogleSignIn.xcconfig
+      Release: Config/GoogleSignIn.xcconfig
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: name.levis.ichor
@@ -75,6 +80,12 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: name.levis.ichor
             CFBundleURLSchemes: [ichor]
+          # GKE's Sign in with Google: Google's iOS client redirects to its reversed client ID
+          # (Config/GoogleSignIn.xcconfig); empty, and unused, in a build without a client.
+          - CFBundleURLName: name.levis.ichor.google
+            CFBundleURLSchemes: [$(GOOGLE_IOS_REVERSED_CLIENT_ID)]
+        # The client ID the app hands the Go core at start ("" when the build has none).
+        GoogleSignInClientID: $(GOOGLE_IOS_CLIENT_ID)
         # One scene; its delegate (QuickActions.swift) receives the Home Screen quick actions.
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false

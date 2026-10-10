@@ -31,6 +31,24 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     /// Checkup findings ("section|kind|subject" → severity, see CheckupReport.alertIssues), kept like dataIssues.
     public var checkupIssues: [String: String]
     public var checkupPending: [String]
+    /// Watching the Alertmanager's alerts was on for this check (opt-in), and they could be read.
+    public var amWatched: Bool
+    public var amChecked: Bool
+    /// Alerts not suppressed (fingerprint → AMIssue value, see alertmanagerIssuesOf), kept like dataIssues.
+    public var amIssues: [String: String]
+    public var amPending: [String]
+    /// Watching node storage was on for this check (opt-in, Talos clusters only), and it could be read.
+    public var storageWatched: Bool
+    public var storageChecked: Bool
+    /// Volumes over a threshold and disks failing SMART ("<node>|…" → StorageIssue value, see
+    /// storageIssuesOf), kept like dataIssues.
+    public var storageIssues: [String: String]
+    public var storagePending: [String]
+    /// The warning threshold (% used) of this check, which a "back under" alert names.
+    public var storageWarn: Int
+    /// Open storage trend alerts (volume key → StorageTrendIssue value, see evaluateStorageTrends):
+    /// set after the history ring is written, carried over by evaluate.
+    public var storageTrends: [String: String]
     /// The cluster was added from a kubeconfig: its nodes come from the Kubernetes API (ready or
     /// not, never unreachable), there is no etcd, and `certNotAfter` is the kubeconfig's credentials.
     public var kube: Bool
@@ -41,7 +59,11 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
                 gitopsWatched: Bool = false, gitopsChecked: Bool = false, gitopsIssues: [String: String] = [:],
                 gitopsPending: [String] = [],
                 checkupWatched: Bool = false, checkupChecked: Bool = false, checkupIssues: [String: String] = [:],
-                checkupPending: [String] = [], kube: Bool = false) {
+                checkupPending: [String] = [],
+                amWatched: Bool = false, amChecked: Bool = false, amIssues: [String: String] = [:], amPending: [String] = [],
+                storageWatched: Bool = false, storageChecked: Bool = false, storageIssues: [String: String] = [:],
+                storagePending: [String] = [], storageWarn: Int = storageWarnDefault,
+                storageTrends: [String: String] = [:], kube: Bool = false) {
         self.context = context
         self.takenAt = takenAt
         self.nodes = nodes
@@ -61,10 +83,20 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.checkupChecked = checkupChecked
         self.checkupIssues = checkupIssues
         self.checkupPending = checkupPending
+        self.amWatched = amWatched
+        self.amChecked = amChecked
+        self.amIssues = amIssues
+        self.amPending = amPending
+        self.storageWatched = storageWatched
+        self.storageChecked = storageChecked
+        self.storageIssues = storageIssues
+        self.storagePending = storagePending
+        self.storageWarn = storageWarn
+        self.storageTrends = storageTrends
         self.kube = kube
     }
 
-    /// Snapshots saved by older versions lack the data-service, GitOps, checkup and kube fields.
+    /// Snapshots saved by older versions lack the data-service, GitOps, checkup, Alertmanager, storage and kube fields.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         context = try c.decode(String.self, forKey: .context)
@@ -86,6 +118,16 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         checkupChecked = try c.field(.checkupChecked, false)
         checkupIssues = try c.field(.checkupIssues, [:])
         checkupPending = try c.field(.checkupPending, [])
+        amWatched = try c.field(.amWatched, false)
+        amChecked = try c.field(.amChecked, false)
+        amIssues = try c.field(.amIssues, [:])
+        amPending = try c.field(.amPending, [])
+        storageWatched = try c.field(.storageWatched, false)
+        storageChecked = try c.field(.storageChecked, false)
+        storageIssues = try c.field(.storageIssues, [:])
+        storagePending = try c.field(.storagePending, [])
+        storageWarn = try c.field(.storageWarn, storageWarnDefault)
+        storageTrends = try c.field(.storageTrends, [:])
         kube = try c.field(.kube, false)
     }
 
@@ -102,6 +144,18 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     var checkupTrack: IssueTrack {
         get { IssueTrack(watched: checkupWatched, checked: checkupChecked, issues: checkupIssues, pending: checkupPending) }
         set { (checkupWatched, checkupChecked, checkupIssues, checkupPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
+    }
+
+    var amTrack: IssueTrack {
+        get { IssueTrack(watched: amWatched, checked: amChecked, issues: amIssues, pending: amPending) }
+        set { (amWatched, amChecked, amIssues, amPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
+    }
+
+    var storageTrack: IssueTrack {
+        get { IssueTrack(watched: storageWatched, checked: storageChecked, issues: storageIssues, pending: storagePending) }
+        set {
+            (storageWatched, storageChecked, storageIssues, storagePending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending)
+        }
     }
 
     public var readyCount: Int { nodes.values.filter { $0.health == .ready }.count }
@@ -129,10 +183,16 @@ public struct NodeState: Codable, Equatable, Sendable {
 /// dataWatched: watching data services was on; dataServices: nil when watched but unreadable.
 /// gitopsWatched: watching GitOps apps was on; gitopsIssues (see gitopsIssuesOf): nil when unreadable.
 /// checkupWatched: watching the checkup was on; checkupIssues: nil when unreadable.
+/// alertmanagerWatched: watching the Alertmanager was on; alertmanagerIssues (see alertmanagerIssuesOf): nil when unreadable.
+/// storageWatched: watching node storage was on; storageIssues (see storageIssuesOf): nil when unreadable;
+/// storageWarn: the warning threshold they were read with.
 public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNotAfter: Int64, takenAt: Date,
                        dataWatched: Bool = false, dataServices: DataServices? = nil,
                        gitopsWatched: Bool = false, gitopsIssues: [String: String]? = nil,
-                       checkupWatched: Bool = false, checkupIssues: [String: String]? = nil) -> ClusterSnapshot {
+                       checkupWatched: Bool = false, checkupIssues: [String: String]? = nil,
+                       alertmanagerWatched: Bool = false, alertmanagerIssues: [String: String]? = nil,
+                       storageWatched: Bool = false, storageIssues: [String: String]? = nil,
+                       storageWarn: Int = storageWarnDefault) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
     for n in overview.nodes {
         let reason = n.error ?? n.unmetConditions.map { "\($0.name): \($0.reason)" }.joined(separator: "; ")
@@ -154,7 +214,14 @@ public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNot
         gitopsIssues: gitopsWatched ? gitopsIssues ?? [:] : [:],
         checkupWatched: checkupWatched,
         checkupChecked: checkupWatched && checkupIssues != nil,
-        checkupIssues: checkupWatched ? checkupIssues ?? [:] : [:]
+        checkupIssues: checkupWatched ? checkupIssues ?? [:] : [:],
+        amWatched: alertmanagerWatched,
+        amChecked: alertmanagerWatched && alertmanagerIssues != nil,
+        amIssues: alertmanagerWatched ? alertmanagerIssues ?? [:] : [:],
+        storageWatched: storageWatched,
+        storageChecked: storageWatched && storageIssues != nil,
+        storageIssues: storageWatched ? storageIssues ?? [:] : [:],
+        storageWarn: storageWarn
     )
 }
 
@@ -165,7 +232,8 @@ public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNot
 public func kubeSnapshotOf(_ overview: KubeNodesOverview, context: String, certNotAfter: Int64, takenAt: Date,
                            dataWatched: Bool = false, dataServices: DataServices? = nil,
                            gitopsWatched: Bool = false, gitopsIssues: [String: String]? = nil,
-                           checkupWatched: Bool = false, checkupIssues: [String: String]? = nil) -> ClusterSnapshot {
+                           checkupWatched: Bool = false, checkupIssues: [String: String]? = nil,
+                           alertmanagerWatched: Bool = false, alertmanagerIssues: [String: String]? = nil) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
     for n in overview.nodes {
         nodes[n.name] = NodeState(hostname: n.name, health: n.ready ? .ready : .notReady, reason: n.pressure.joined(separator: "; "))
@@ -184,6 +252,9 @@ public func kubeSnapshotOf(_ overview: KubeNodesOverview, context: String, certN
         checkupWatched: checkupWatched,
         checkupChecked: checkupWatched && checkupIssues != nil,
         checkupIssues: checkupWatched ? checkupIssues ?? [:] : [:],
+        amWatched: alertmanagerWatched,
+        amChecked: alertmanagerWatched && alertmanagerIssues != nil,
+        amIssues: alertmanagerWatched ? alertmanagerIssues ?? [:] : [:],
         kube: true
     )
 }
@@ -305,7 +376,7 @@ public func dataSystemTitle(_ key: String) -> String {
     }
 }
 
-/// One opt-in track of issues as a snapshot carries it (data services, GitOps apps).
+/// One opt-in track of issues as a snapshot carries it (data services, GitOps apps, the checkup, Alertmanager).
 struct IssueTrack: Equatable {
     var watched: Bool
     var checked: Bool
@@ -391,6 +462,10 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
         next.dataTrack = evaluateData(previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.gitopsTrack = evaluateGitOps(previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.checkupTrack = evaluateCheckup(previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.amTrack = evaluateAlertmanager(previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.storageTrack = evaluateStorage(previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        // The trend alerts are evaluated once the history ring has this check (evaluateStorageTrends).
+        next.storageTrends = comparable && current.storageWatched ? previous?.storageTrends ?? [:] : [:]
     }
     if let previous, comparable, !current.unreachableAsAWhole {
         for addr in current.nodes.keys.sorted() {

@@ -82,6 +82,7 @@ func demoCheckup(now time.Time) checkupReport {
 			{Kind: findExternalSecretFailed, Severity: sevWarning, Namespace: "demo", Name: "database-credentials", Extra: "vault", Reason: "SecretSyncedError", Message: "could not get secret data from provider: permission denied"},
 		}),
 		newSection(checkHelm, len(releases), helmFindings(releases, now)),
+		demoCheckupMonitoring(now),
 	}
 
 	return checkupReport{Status: checkupVerdict(sections), KubeVersion: "v1.34.1", Sections: sections, Nodes: nodes, Volumes: volumes, Releases: releases}

@@ -18,7 +18,7 @@ public enum CheckupSeverity: String, Sendable, WireEnum {
 
 /// The sections of a checkup, as Go names them.
 public enum CheckupSectionID: String, Sendable {
-    case workloads, events, storage, upgrade, webhooks, capacity, nodes, loadbalancers, terminating, certificates, secrets, helm
+    case workloads, events, storage, upgrade, webhooks, capacity, nodes, loadbalancers, terminating, certificates, secrets, helm, monitoring
 }
 
 /// What a finding is about, as Go names it.
@@ -36,6 +36,7 @@ public enum CheckupKind: String, Sendable {
     case csrPending, csrDenied
     case externalSecretFailed, secretStoreNotReady
     case helmFailed, helmPending
+    case scrapeTargetsDown, prometheusRuleErrors, ruleGroupErrors
 }
 
 /// What the cluster hides behind green nodes: one section per kind of trouble.
@@ -151,7 +152,7 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
     /// more than the title does, then the message.
     public var detail: String {
         let reasonKinds: Set<CheckupKind> = [.podCrashLoop, .podOOMKilled, .podStuckStarting, .jobFailed, .nodeNotReady, .nodePressure,
-                                             .externalSecretFailed, .secretStoreNotReady]
+                                             .externalSecretFailed, .secretStoreNotReady, .prometheusRuleErrors, .ruleGroupErrors]
         let shownReason = kind.map(reasonKinds.contains) == true ? reason : ""
         return [shownReason, message].filter { !$0.isEmpty }.joined(separator: ": ")
     }

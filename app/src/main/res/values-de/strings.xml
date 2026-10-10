@@ -455,7 +455,7 @@
     <string name="monitor_channel_nodes">Knoten-Warnungen</string>
     <string name="monitor_channel_nodes_desc">Ein Knoten fällt aus, antwortet nicht mehr oder ist wieder bereit</string>
     <string name="monitor_channel_cluster">Cluster-Warnungen</string>
-    <string name="monitor_channel_cluster_desc">etcd-Alarme und Befunde des Cluster-Checks</string>
+    <string name="monitor_channel_cluster_desc">etcd-Alarme, Befunde des Cluster-Checks, Alarme von Alertmanager und nicht erreichbare Cluster</string>
     <string name="monitor_channel_data">Warnungen zu Datendiensten</string>
     <string name="monitor_channel_data_desc">Longhorn, Datenbanken, Objektspeicher und Backups, die Aufmerksamkeit brauchen</string>
     <string name="monitor_channel_gitops">GitOps-Warnungen</string>
@@ -2429,6 +2429,33 @@
     <string name="metrics_reachable">Die Abfrage-API antwortet.</string>
     <string name="metrics_refused">Die Metrikquelle hat die Abfrage abgelehnt (HTTP 401 oder 403): Mandant (X-Scope-OrgID) und Zugangsdaten prüfen.</string>
     <string name="metrics_change_credentials">Mandant oder Zugangsdaten ändern</string>
+    <!-- Metrics: Monitoring tab (prometheus-operator) -->
+    <string name="monitoring_tab_panels">Panels</string>
+    <string name="monitoring_tab">Monitoring</string>
+    <string name="monitoring_targets">Scrape-Ziele</string>
+    <string name="monitoring_targets_down">%1$s von %2$s Zielen ausgefallen</string>
+    <string name="monitoring_targets_all_up">Alle %1$s Ziele erreichbar</string>
+    <string name="monitoring_targets_truncated">Weitere ausgefallene Ziele sind ausgelassen.</string>
+    <string name="monitoring_pool_counts">%1$s ausgefallen, %2$s erreichbar</string>
+    <string name="monitoring_config_job">Job aus der Prometheus-Konfiguration</string>
+    <string name="monitoring_last_scrape">Letzter Scrape vor %1$s</string>
+    <string name="monitoring_never_scraped">Noch nicht gescrapt</string>
+    <string name="monitoring_rules">Regeln</string>
+    <string name="monitoring_rule_counts">%1$s Gruppen, %2$s Regeln: %3$s feuernd, %4$s ausstehend, %5$s fehlerhaft</string>
+    <string name="monitoring_rules_truncated">Nur die ersten Regeln sind aufgeführt; die Summen zählen alle.</string>
+    <string name="monitoring_rule_failing">%1$s fehlerhaft</string>
+    <string name="monitoring_rule_firing">%1$s feuernd</string>
+    <string name="monitoring_rule_pending">%1$s ausstehend</string>
+    <string name="monitoring_rule_total">%1$s Regeln</string>
+    <string name="monitoring_rule_alerts">%1$s aktive Alerts</string>
+    <string name="monitoring_last_evaluation">Ausgewertet vor %1$s</string>
+    <string name="monitoring_rule_from">PrometheusRule %1$s</string>
+    <string name="monitoring_operator">Prometheus Operator</string>
+    <string name="monitoring_operator_counts">%1$s ServiceMonitors, %2$s PodMonitors, %3$s PrometheusRules, %4$s Probes</string>
+    <string name="monitoring_prometheus">Prometheus</string>
+    <string name="monitoring_alertmanager">Alertmanager</string>
+    <string name="monitoring_available">%1$s von %2$s verfügbar</string>
+    <string name="monitoring_paused">Pausiert</string>
     <string name="metrics_ai_title">Panel-Assistent</string>
     <string name="metrics_ai_open">KI um ein Panel bitten</string>
     <string name="metrics_ai_ask">KI fragen</string>
@@ -3038,6 +3065,15 @@
     <string name="checkup_secretStoreNotReady_fix">Jedes ExternalSecret, das ihn nutzt, wird nicht mehr synchronisiert. Prüfen Sie seine Zugangsdaten, seine Adresse und den Status des Anbieters.</string>
     <string name="checkup_helmFailed_fix">Führen Sie helm history aus, um den Grund zu sehen, dann helm rollback oder ein neues Upgrade.</string>
     <string name="checkup_helmPending_fix">Eine Helm-Operation wurde unterbrochen und hat ihre Sperre hinterlassen: helm rollback auf die letzte ausgerollte Revision gibt sie frei.</string>
+    <string name="checkup_section_monitoring">Monitoring</string>
+    <string name="checkup_section_monitoring_hint">Ausgefallene Scrape-Ziele und Regeln, deren Auswertung fehlschlägt</string>
+    <string name="checkup_scrapeTargetsDown">%1$s von %2$s Scrape-Zielen ausgefallen (%3$s), die meisten in %4$s</string>
+    <string name="checkup_scrapeTargetsDown_plain">%1$s von %2$s Scrape-Zielen ausgefallen (%3$s)</string>
+    <string name="checkup_ruleErrors">Auswertung von %1$s Regeln schlägt fehl, zuerst %2$s</string>
+    <string name="checkup_scrapeTargetsDown_fix">Prometheus sieht nicht mehr, was diese Ziele liefern, und Alerts zu ihnen bleiben stumm. Öffne Monitoring für den Fehler jedes Ziels: ein ausgefallener Pod, ein falscher Port oder Pfad im Monitor oder eine NetworkPolicy, die Prometheus blockiert.</string>
+    <string name="checkup_prometheusRuleErrors_fix">Ihre Alerts und aufgezeichneten Reihen werden nicht mehr aktualisiert. Korrigiere das PromQL in der PrometheusRule: Many-to-many-Matching und umbenannte Labels sind die üblichen Ursachen.</string>
+    <string name="checkup_ruleGroupErrors_fix">Diese Gruppe stammt aus der Prometheus-Konfiguration, nicht aus einer PrometheusRule: Korrigiere den Ausdruck in ihrer Regeldatei.</string>
+    <string name="checkup_open_monitoring">Monitoring öffnen</string>
     <string name="kube_events_title">Ereignisse</string>
     <string name="kube_events_empty">Kein Ereignis. Kubernetes bewahrt sie eine Stunde auf.</string>
     <string name="kube_events_ago">vor %1$s</string>
@@ -3124,6 +3160,25 @@
     <string name="kube_field_aws_role_name">Rollenname</string>
     <string name="kube_field_aws_region">AWS-Region</string>
     <string name="kube_field_gcp_service_account">Dienstkontoschlüssel (JSON)</string>
+    <string name="kube_field_gcp_user_credentials">gcloud-Benutzeranmeldedaten (application_default_credentials.json)</string>
+    <string name="kube_field_gcp_projects">Projekt-IDs</string>
+    <string name="kube_field_gcp_oauth_client_id">OAuth-Client-ID</string>
+    <string name="kube_field_gcp_oauth_client_secret">OAuth-Client-Secret</string>
+    <string name="kube_signin_option_gcp_oauth">OAuth-Client deiner Organisation</string>
+    <string name="kube_signin_gcp_oauth_hint">Bitte deine Google-Cloud-Administration um einen OAuth-Client vom Typ Desktop-App (APIs &amp; Dienste → Anmeldedaten) mit internem Zustimmungsbildschirm. Anmelden öffnet dann dein Google-Konto im Browser.</string>
+    <string name="kube_signin_option_google">Über Google anmelden</string>
+    <string name="kube_signin_google_hint">Dein Google-Konto über Googles eigene Anmeldung. Benötigt die Google Play-Dienste.</string>
+    <string name="kube_signin_google_unavailable">Die Google-Anmeldung ist auf diesem Gerät nicht verfügbar.</string>
+    <string name="kube_field_gcp_oauth_redirect">Weiterleitungs-URL</string>
+    <string name="kube_signin_gcp_oauth_web_hint">Bei einem Client vom Typ Webanwendung gib https://cyrinux.github.io/ichor/auth/google/ (oder die Seite deiner Organisation) als Weiterleitungs-URL ein und füge sie den autorisierten Weiterleitungs-URIs des Clients hinzu. Lass sie für einen Desktop-App-Client leer.</string>
+    <string name="kube_signin_paste_code_hint">Der Browser ist nicht zu Ichor zurückgekehrt? Füge den Anmeldecode ein, den die Seite anzeigt.</string>
+    <string name="kube_signin_paste_code_label">Anmeldecode</string>
+    <string name="kube_signin_paste_code_action">Weiter</string>
+    <string name="kube_discover_gcp_projects_hint">Leer lassen, um alle Projekte zu durchsuchen, die dein Konto sieht; gib Projekt-IDs an, um in einer großen Organisation schneller zu sein.</string>
+    <string name="kube_signin_option_gcp_service_account">Dienstkontoschlüssel</string>
+    <string name="kube_signin_option_gcp_user">gcloud-Benutzeranmeldedaten</string>
+    <string name="kube_signin_gcp_user_hint">Nutze deine gcloud-Sitzung: Führe auf deinem Computer gcloud auth application-default login aus und importiere dann ~/.config/gcloud/application_default_credentials.json. Wenn Google die Sitzung beendet, führe den Befehl erneut aus und importiere die neue Datei.</string>
+    <string name="kube_signin_gcp_workforce_hint">Eine Workforce-Identity-Sitzung (gcloud auth application-default login --login-config=…) wird genauso importiert.</string>
     <string name="kube_field_azure_tenant">Mandanten-ID</string>
     <string name="kube_field_azure_subscription">Abonnement-ID</string>
     <string name="kube_field_azure_client_id">Anwendungs-ID (Client)</string>
@@ -3175,7 +3230,6 @@
     <string name="kube_discover_find">Cluster suchen</string>
     <string name="kube_signin_required_error">Melde dich bei diesem Cluster an, um fortzufahren (%1$s).</string>
     <string name="kube_signin_required_error_plain">Melde dich bei diesem Cluster an, um fortzufahren.</string>
-||||||| a1506f3c
     <!-- kube browser -->
     <string name="kb_title">Alle Ressourcen</string>
     <string name="kb_search_kinds">Typen suchen (pod, deploy, Gruppe…)</string>
@@ -3391,7 +3445,6 @@
     <string name="activity_settings_desc">Jede Änderung, die Ichor an Ihren Clustern vorgenommen hat (Neustarts, Skalierungen, Syncs, Rollbacks…), 90 Tage auf diesem Gerät gespeichert.</string>
     <string name="activity_open">Aktivitätsprotokoll</string>
     <string name="clusters_menu_activity">Aktivität</string>
-||||||| b9b4f161
     <string name="kb_tab_summary">Übersicht</string>
     <string name="kb_summary_conditions">Bedingungen</string>
     <string name="kb_summary_no_conditions">Diese Art meldet keine Bedingungen.</string>
@@ -3421,6 +3474,129 @@
     <string name="kube_whoami_user">Kubernetes-Benutzer</string>
     <string name="mono_text_larger">Größerer Text</string>
     <string name="mono_text_smaller">Kleinerer Text</string>
+    <!-- Alertmanager -->
+    <string name="alerts_title">Alarme</string>
+    <string name="alerts_unreadable">Alarme nicht lesbar: %1$s</string>
+    <string name="alerts_loading">Alarme werden gelesen…</string>
+    <string name="alerts_none_firing">Kein Alarm aktiv.</string>
+    <string name="alerts_severity_critical">Kritisch</string>
+    <string name="alerts_severity_warning">Warnung</string>
+    <string name="alerts_severity_info">Info</string>
+    <string name="alerts_severity_other">Sonstige</string>
+    <string name="alerts_state_firing">Aktiv</string>
+    <string name="alerts_state_silenced">Stummgeschaltet</string>
+    <string name="alerts_state_inhibited">Unterdrückt</string>
+    <string name="alerts_state_silenced_inhibited">Stummgeschaltet, unterdrückt</string>
+    <string name="alerts_silence_active">Aktiv</string>
+    <string name="alerts_silence_pending">Ausstehend</string>
+    <string name="alerts_silence_expired">Abgelaufen</string>
+    <string name="alerts_started">Beginn</string>
+    <string name="alerts_receivers">Empfänger</string>
+    <string name="alerts_runbook">Runbook</string>
+    <string name="alerts_generator">Graph der Regel</string>
+    <string name="alerts_open_pod">Pod</string>
+    <string name="alerts_open_namespace">Namespace %1$s</string>
+    <string name="alerts_open_node">Node %1$s</string>
+    <string name="alerts_silence">Stummschalten</string>
+    <string name="alerts_labels">Labels</string>
+    <string name="alerts_annotations">Annotationen</string>
+    <string name="alerts_silence_title">%1$s stummschalten</string>
+    <string name="alerts_silence_matchers">Treffer</string>
+    <string name="alerts_silence_remove_matcher">%1$s entfernen</string>
+    <string name="alerts_silence_no_matchers">Kein Kriterium mehr: Eine Stummschaltung braucht mindestens eines.</string>
+    <string name="alerts_silence_matchers_hint">Schaltet genau diesen Alarm stumm. Entferne ein Kriterium, um mehr Alarme dieser Art stummzuschalten.</string>
+    <string name="alerts_silence_for">Für</string>
+    <string name="alerts_silence_custom">Andere Dauer</string>
+    <string name="alerts_silence_hours">Stunden</string>
+    <string name="alerts_silence_hours_hint">1 bis 720 Stunden (30 Tage)</string>
+    <string name="alerts_silence_comment">Kommentar</string>
+    <string name="alerts_silence_comment_hint">Pflicht: Sag, warum, für alle, die die Stummschaltung sehen.</string>
+    <string name="alerts_expire_title">Diese Stummschaltung beenden?</string>
+    <string name="alerts_expire_text">Die Alarme, die sie stummschaltet, melden sich wieder: %1$s</string>
+    <string name="alerts_expire">Beenden</string>
+    <string name="alerts_silences_show_expired">Abgelaufene Stummschaltungen zeigen</string>
+    <string name="alerts_silences_none">Keine Stummschaltung.</string>
+    <string name="alerts_silence_by">Von %1$s</string>
+    <string name="alerts_silence_starts">Beginnt %1$s (%2$s)</string>
+    <string name="alerts_silence_ends">Endet %1$s (%2$s)</string>
+    <string name="alerts_silence_ended">Beendet %1$s (%2$s)</string>
+    <string name="alerts_search">Alarme und Labels durchsuchen</string>
+    <string name="alerts_truncated">Die ersten 1000 von %1$d Alarmen werden gezeigt.</string>
+    <string name="alerts_none">Alertmanager hat keinen Alarm.</string>
+    <string name="alerts_none_match">Kein Alarm passt zu den Filtern.</string>
+    <string name="alerts_source">Alertmanager</string>
+    <string name="alerts_source_line">Von %1$s</string>
+    <string name="alerts_tab_alerts">Alarme</string>
+    <string name="alerts_tab_silences">Stummschaltungen</string>
+    <string name="alerts_tab_silences_count">Stummschaltungen (%1$d)</string>
+    <string name="alerts_none_found">Kein Alertmanager im Cluster gefunden</string>
+    <string name="alerts_none_found_hint">Wähle einen Service von Hand oder gib die URL eines Alertmanagers an, den das Telefon erreicht.</string>
+    <string name="alerts_searching">Suche nach Alertmanager im Cluster…</string>
+    <string name="alerts_reachable">Alertmanager antwortet.</string>
+    <string name="alerts_expire_failed">Stummschaltung konnte nicht beendet werden: %1$s</string>
+    <string name="alerts_silence_failed">Stummschalten fehlgeschlagen: %1$s</string>
+    <string name="alerts_expired">Stummschaltung beendet</string>
+    <string name="alerts_silenced">Stummschaltung erstellt</string>
+    <string name="overview_card_desc_alerts">Aktive Alarme von Alertmanager nach Schweregrad, und die stummgeschalteten</string>
+    <string name="monitor_alertmanager">Alarme von Alertmanager</string>
+    <string name="monitor_alertmanager_desc">Meldet auch die Alarme des Alertmanagers im Cluster, die weder stummgeschaltet noch unterdrückt sind: kritische sofort, andere erst nach zwei Prüfungen in Folge, Info-Alarme nie. Jede Prüfung liest sie über die Kubernetes-API (os:admin) oder unter der URL, die du im Alarme-Bildschirm gewählt hast.</string>
+    <string name="monitor_am_firing">Aktiv: %1$s</string>
+    <string name="monitor_am_resolved">Behoben: %1$s</string>
+    <string name="monitor_cluster_unreachable">Cluster nicht erreichbar</string>
+    <string name="monitor_cluster_unreachable_text">Seit %1$s Prüfungen in Folge keine Antwort</string>
+    <string name="monitor_cluster_reachable">Cluster wieder erreichbar</string>
+    <string name="monitor_cluster_reachable_text">Er antwortet wieder auf die Prüfungen im Hintergrund</string>
+    <string name="monitor_unreachable">Nicht erreichbare Cluster</string>
+    <string name="monitor_unreachable_desc">Benachrichtigt dich einmal, wenn ein Cluster mehrere Prüfungen in Folge nicht geantwortet hat (kein Node, keine API oder zu langsam), und einmal, wenn er wieder antwortet. Node-Warnungen bleiben so lange stumm.</string>
+    <string name="monitor_unreachable_runs">Nach %1$s Prüfungen in Folge</string>
+    <string name="monitor_storage">Speicher der Knoten</string>
+    <string name="monitor_storage_desc">Benachrichtigt, wenn sich ein Volume eines Knotens füllt (Warnungen erst nach zwei Prüfungen in Folge) oder eine Festplatte SMART nicht besteht (sofort), und einmal, wenn alles wieder in Ordnung ist. Jede Prüfung liest die Volumes und Datenträger jedes Knotens über die Talos-API (nur Talos-Cluster).</string>
+    <string name="monitor_storage_warn">Warnung ab %1$d %% belegt</string>
+    <string name="monitor_storage_critical">Kritisch ab %1$d %% belegt</string>
+    <string name="monitor_storage_fill">%1$s auf %2$s bei %3$d %%</string>
+    <string name="monitor_storage_fill_critical">%1$s auf %2$s bei %3$d %%, fast voll</string>
+    <string name="monitor_storage_fill_text">%1$s frei von %2$s</string>
+    <string name="monitor_storage_smart">SMART-Fehler auf %1$s (%2$s)</string>
+    <string name="monitor_storage_fill_ok">%1$s auf %2$s wieder unter %3$d %%</string>
+    <string name="monitor_storage_smart_ok">%1$s auf %2$s besteht SMART wieder</string>
+    <string name="monitor_storage_trend">Warnen, bevor ein Volume voll wird</string>
+    <string name="monitor_storage_trend_desc">Benachrichtigt, wenn ein Volume bei seinem Wachstum der letzten Woche innerhalb von %1$d Tagen kritisch würde, und einmal, wenn das nicht mehr so ist. Nutzt den Verlauf der Prüfungen; braucht den Speicher der Knoten.</string>
+    <plurals name="monitor_storage_trend_full">
+        <item quantity="one">%1$s auf %2$s in ~%3$d Tag voll</item>
+        <item quantity="other">%1$s auf %2$s in ~%3$d Tagen voll</item>
+    </plurals>
+    <plurals name="monitor_storage_trend_critical">
+        <item quantity="one">%1$s auf %2$s in ~%3$d Tag kritisch</item>
+        <item quantity="other">%1$s auf %2$s in ~%3$d Tagen kritisch</item>
+    </plurals>
+    <string name="monitor_storage_trend_full_soon">%1$s auf %2$s in weniger als einem Tag voll</string>
+    <string name="monitor_storage_trend_critical_soon">%1$s auf %2$s in weniger als einem Tag kritisch</string>
+    <string name="monitor_storage_trend_text">wächst um ~%1$s %% pro Tag, jetzt bei %2$d %%</string>
+    <string name="monitor_storage_trend_ok">%1$s auf %2$s füllt sich nicht mehr so schnell</string>
+    <string name="clusters_watch">Im Hintergrund überwachen</string>
+    <string name="widget_config_title">Vom Widget gezeigter Cluster</string>
+    <string name="widget_config_active">Cluster auf dem Bildschirm</string>
+    <string name="widget_config_active_desc">Folgt dem in der App geöffneten Cluster</string>
+    <plurals name="alerts_suppressed">
+        <item quantity="one">%1$d Alarm stummgeschaltet oder unterdrückt</item>
+        <item quantity="other">%1$d Alarme stummgeschaltet oder unterdrückt</item>
+    </plurals>
+    <plurals name="alerts_hours">
+        <item quantity="one">%1$d Stunde</item>
+        <item quantity="other">%1$d Stunden</item>
+    </plurals>
+    <plurals name="alerts_days">
+        <item quantity="one">%1$d Tag</item>
+        <item quantity="other">%1$d Tage</item>
+    </plurals>
+    <plurals name="alerts_weeks">
+        <item quantity="one">%1$d Woche</item>
+        <item quantity="other">%1$d Wochen</item>
+    </plurals>
+    <plurals name="alerts_group_count">
+        <item quantity="one">%1$d von %2$d aktiv</item>
+        <item quantity="other">%1$d von %2$d aktiv</item>
+    </plurals>
     <string name="kb_tab_data">Daten</string>
     <string name="kb_data_type">Typ: %1$s</string>
     <string name="kb_data_keys">Schlüssel</string>
@@ -3438,7 +3614,6 @@
     <string name="kb_data_used_by_unknown">Die Pods dieses Namespace konnten nicht aufgelistet werden.</string>
     <string name="kb_data_used_by_none">Kein Pod dieses Namespace verwendet es.</string>
     <string name="kb_data_reveal_auth">%1$s von %2$s anzeigen</string>
-||||||| 62d80f4f
     <string name="pod_debug_toggle">Debug-Container</string>
     <string name="pod_debug_note">Für Images ohne Shell (distroless): fügt einen temporären Container hinzu, der die Prozesse dieses Pods sieht. Kubernetes behält ihn im Pod, bis der Pod gelöscht wird.</string>
     <string name="storage_kube_search">PVCs, Klassen oder Pods suchen</string>
@@ -3465,4 +3640,75 @@
     <string name="kube_jobs_no_match">Kein Job passt.</string>
     <string name="kube_jobs_completions">Abschlüsse: %1$s</string>
     <string name="kube_jobs_owner">CronJob %1$s</string>
+    <string name="imagescan_system_title">System-Images</string>
+    <string name="imagescan_system_loading">System-Images des Knotens werden gelesen…</string>
+    <string name="imagescan_system_unavailable">System-Images erfordern die Rolle os:admin: %1$s</string>
+    <string name="imagescan_system_hint">Prüft die Images, die Talos auf diesem Knoten ausführt (kubelet, etcd, die Control Plane), per Digest mit Trivy auf bekannte Schwachstellen. Läuft als Job im Namespace %1$s, der sich danach selbst löscht.</string>
+    <string name="imagescan_system_scan">System-Images prüfen</string>
+    <string name="images_kubernetes_title">Kubernetes-Images</string>
+    <string name="alert_action_wake">Wecken</string>
+    <string name="alert_action_silence_hour">1 Std. stummschalten</string>
+    <string name="alert_action_snooze">8 Std. pausieren</string>
+    <string name="alert_action_silence_comment">Aus einer Benachrichtigung stummgeschaltet</string>
+    <string name="history_uptime_title">Verfügbarkeit</string>
+    <plurals name="history_uptime_description">
+        <item quantity="one">Verfügbarkeit des Nodes am letzten %1$d Tag: %2$s</item>
+        <item quantity="other">Verfügbarkeit des Nodes in den letzten %1$d Tagen: %2$s</item>
+    </plurals>
+    <plurals name="history_days_short">
+        <item quantity="one">%1$d T</item>
+        <item quantity="other">%1$d T</item>
+    </plurals>
+    <plurals name="history_memory_description">
+        <item quantity="one">Speichernutzung am letzten %1$d Tag</item>
+        <item quantity="other">Speichernutzung in den letzten %1$d Tagen</item>
+    </plurals>
+    <plurals name="history_volumes_title">
+        <item quantity="one">Füllstand der Volumes, letzter %1$d Tag</item>
+        <item quantity="other">Füllstand der Volumes, letzte %1$d Tage</item>
+    </plurals>
+    <string name="history_volume_description">Füllstand von %1$s im Verlauf</string>
+    <plurals name="history_forecast_full">
+        <item quantity="one">voll in ~%1$d Tag</item>
+        <item quantity="other">voll in ~%1$d Tagen</item>
+    </plurals>
+    <plurals name="history_forecast_critical">
+        <item quantity="one">kritisch in ~%1$d Tag</item>
+        <item quantity="other">kritisch in ~%1$d Tagen</item>
+    </plurals>
+    <string name="history_forecast_full_soon">voll in weniger als einem Tag</string>
+    <string name="history_forecast_critical_soon">kritisch in weniger als einem Tag</string>
+    <string name="history_forecast_growing">wächst um ~%1$s %% pro Tag</string>
+    <string name="history_since_title">Seit du zuletzt geschaut hast</string>
+    <string name="history_since_more">+%1$d weitere</string>
+    <string name="history_since_dismiss">Verstanden</string>
+    <string name="history_since_down">%1$s ist noch ausgefallen (%2$s)</string>
+    <string name="history_since_alert_open">Neuer Alarm, noch offen: %1$s</string>
+    <string name="history_since_recovered">%1$s war %3$s lang ausgefallen (%2$s), jetzt wieder da</string>
+    <string name="history_since_alert_resolved">Behoben: %1$s</string>
+    <string name="history_since_upgrade">%1$s aktualisiert von %2$s auf %3$s</string>
+    <plurals name="history_since_still_open">
+        <item quantity="one">%1$d älterer Alarm noch offen</item>
+        <item quantity="other">%1$d ältere Alarme noch offen</item>
+    </plurals>
+    <string name="history_alert_cert">Zertifikat läuft bald ab</string>
+    <string name="kube_events_stream_title">Kubernetes-Ereignisse</string>
+    <string name="kube_events_warnings_only">Nur Warnungen</string>
+    <string name="kube_events_pause">Pausieren</string>
+    <string name="kube_events_resume">Fortsetzen</string>
+    <string name="kube_events_paused">Pausiert</string>
+    <string name="kube_events_search">Grund, Objekt oder Meldung suchen</string>
+    <string name="kube_events_stream_empty">Noch kein Ereignis: Neue erscheinen hier, sobald sie eintreten.</string>
+    <string name="kube_events_no_match">Kein Ereignis passt.</string>
+    <string name="kube_events_share">Ereignisse teilen</string>
+    <string name="kube_events_open_object">Objekt öffnen</string>
+    <string name="kube_events_connecting">Verbinde…</string>
+    <string name="kube_events_reconnecting">Verbinde erneut…</string>
+    <string name="kube_events_reconnecting_reason">Verbinde erneut: %1$s</string>
+    <string name="kube_events_relisting">Ereignisse werden neu gelesen…</string>
+    <string name="kube_events_polling">Abfrage alle 5 s: Diese Zugangsdaten dürfen Ereignisse auflisten, aber nicht beobachten</string>
+    <plurals name="kube_events_pending">
+        <item quantity="one">Pausiert: %1$d neues oder geändertes Ereignis</item>
+        <item quantity="other">Pausiert: %1$d neue oder geänderte Ereignisse</item>
+    </plurals>
 </resources>

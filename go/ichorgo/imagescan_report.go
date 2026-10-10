@@ -25,15 +25,19 @@ type imageScanReport struct {
 }
 
 type scannedImage struct {
-	Image           string      `json:"image"`            // as the pods name it (tag)
-	Ref             string      `json:"ref"`              // what was scanned: repo@digest when known
-	Digest          string      `json:"digest,omitempty"` // sha256:…
-	OS              string      `json:"os,omitempty"`     // "debian 12.5"
-	Pods            []string    `json:"pods"`             // namespace/pod running it
-	ScannedAt       int64       `json:"scannedAt,omitempty"`
-	Error           string      `json:"error,omitempty"`
-	Summary         vulnSummary `json:"summary"`
-	Vulnerabilities []imageVuln `json:"vulnerabilities"`
+	Image     string      `json:"image"`            // as the pods name it (tag)
+	Ref       string      `json:"ref"`              // what was scanned: repo@digest when known
+	Digest    string      `json:"digest,omitempty"` // sha256:…
+	OS        string      `json:"os,omitempty"`     // "debian 12.5"
+	Pods      []string    `json:"pods"`             // namespace/pod running it
+	ScannedAt int64       `json:"scannedAt,omitempty"`
+	Error     string      `json:"error,omitempty"`
+	Summary   vulnSummary `json:"summary"`
+	// NewSummary counts the findings not in the last kept scan of the same digest, scanned at
+	// PreviousScannedAt (0 when there is none: nothing is new then).
+	NewSummary        vulnSummary `json:"new"`
+	PreviousScannedAt int64       `json:"previousScannedAt,omitempty"`
+	Vulnerabilities   []imageVuln `json:"vulnerabilities"`
 }
 
 type vulnSummary struct {
@@ -62,6 +66,7 @@ type imageVuln struct {
 	Class       string  `json:"class,omitempty"`  // os-pkgs, lang-pkgs
 	Type        string  `json:"type,omitempty"`   // debian, gobinary, jar…
 	Published   string  `json:"published,omitempty"`
+	New         bool    `json:"new,omitempty"` // not in the last kept scan of the same digest
 }
 
 func newImageScanReport(source, scanner string) imageScanReport {

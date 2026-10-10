@@ -45,6 +45,11 @@ type oidcMethod struct {
 	// seedRefresh is an auth-provider's refresh token, used until the app has its own.
 	seedRefresh string
 	tls         *tls.Config
+	// google marks Google's sign-in whatever the issuer (a test's fake one).
+	google bool
+	// redirectURI, when set, is a custom-scheme redirect the app receives and hands over
+	// (SignInRun.Complete): no loopback server then.
+	redirectURI string
 }
 
 func (m *oidcMethod) name() string { return m.method }
@@ -138,7 +143,7 @@ func (m *oidcMethod) httpClient() *http.Client {
 
 // isGoogle: Google refuses offline_access and wants access_type=offline instead.
 func (m *oidcMethod) isGoogle() bool {
-	return strings.Contains(m.issuer, "accounts.google.com")
+	return m.google || strings.Contains(m.issuer, "accounts.google.com")
 }
 
 func (m *oidcMethod) scope() string {
@@ -381,14 +386,20 @@ func (m *oidcMethod) browserSignIn(ctx context.Context, state kubeAuthState, d o
 		return state, errors.New("the identity provider has no authorization endpoint")
 	}
 
-	ln, err := listenFirst(ctx, m.listen)
-	if err != nil {
-		return state, err
-	}
-	defer ln.Close() //nolint:errcheck
+	// The answer comes to the loopback server, or (a custom-scheme redirect the app receives)
+	// only through callbacks.
+	codes := make(chan url.Values, 1)
+	redirect := m.redirectURI
 
-	_, port, _ := net.SplitHostPort(ln.Addr().String())
-	redirect := "http://" + net.JoinHostPort(m.redirectHost, port)
+	if redirect == "" {
+		loopback, stop, err := m.serveLoopback(ctx, codes)
+		if err != nil {
+			return state, err
+		}
+		defer stop()
+
+		redirect = loopback
+	}
 
 	verifier, oauthState, nonce := randomToken(), randomToken(), randomToken()
 	challenge := sha256.Sum256([]byte(verifier))
@@ -414,26 +425,6 @@ func (m *oidcMethod) browserSignIn(ctx context.Context, state kubeAuthState, d o
 		sep = "&"
 	}
 
-	codes := make(chan url.Values, 1)
-	srv := &http.Server{ReadHeaderTimeout: 10 * time.Second, Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Query().Get("state") == "" {
-			http.NotFound(w, r)
-
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_, _ = io.WriteString(w, signInDonePage)
-
-		select {
-		case codes <- r.URL.Query():
-		default:
-		}
-	})}
-
-	go func() { _ = srv.Serve(ln) }() //nolint:errcheck
-	defer srv.Close()                 //nolint:errcheck
-
 	prompt(signInPrompt{Kind: "browser", URL: d.AuthorizationEndpoint + sep + q.Encode(), RedirectPrefix: redirect})
 
 	var answer url.Values
@@ -443,12 +434,10 @@ func (m *oidcMethod) browserSignIn(ctx context.Context, state kubeAuthState, d o
 		return state, ctx.Err()
 	case answer = <-codes:
 	case cb := <-callbacks:
-		u, err := url.Parse(cb)
-		if err != nil {
-			return state, fmt.Errorf("sign-in callback: %w", err)
+		var err error
+		if answer, err = callbackAnswer(cb); err != nil {
+			return state, err
 		}
-
-		answer = u.Query()
 	}
 
 	if e := answer.Get("error"); e != "" {
@@ -467,6 +456,67 @@ func (m *oidcMethod) browserSignIn(ctx context.Context, state kubeAuthState, d o
 	}
 
 	return m.finish(state, t, nonce)
+}
+
+// signInCodeSeparator joins state and code in a sign-in code a redirect page shows to paste
+// back ("<state>~<code>"): "~" is in neither (state is base64url, Google's codes are not).
+const signInCodeSeparator = "~"
+
+// callbackAnswer is the query of the URL the app handed over, or a sign-in code the user
+// pasted from the redirect page (state~code).
+func callbackAnswer(cb string) (url.Values, error) {
+	cb = strings.TrimSpace(cb)
+
+	if oauthState, code, ok := strings.Cut(cb, signInCodeSeparator); ok && !strings.Contains(cb, "://") && !strings.Contains(cb, ":/") {
+		if oauthState == "" || code == "" {
+			return nil, errors.New("the sign-in code is incomplete: copy it again from the page")
+		}
+
+		return url.Values{"state": {oauthState}, "code": {code}}, nil
+	}
+
+	u, err := url.Parse(cb)
+	if err != nil {
+		return nil, fmt.Errorf("sign-in callback: %w", err)
+	}
+
+	return u.Query(), nil
+}
+
+// serveLoopback listens on the first free m.listen address and hands each answer with a
+// state to codes; it returns the redirect URI and how to stop.
+func (m *oidcMethod) serveLoopback(ctx context.Context, codes chan<- url.Values) (string, func(), error) {
+	ln, err := listenFirst(ctx, m.listen)
+	if err != nil {
+		return "", nil, err
+	}
+
+	_, port, _ := net.SplitHostPort(ln.Addr().String())
+
+	srv := &http.Server{ReadHeaderTimeout: 10 * time.Second, Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("state") == "" {
+			http.NotFound(w, r)
+
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = io.WriteString(w, signInDonePage)
+
+		select {
+		case codes <- r.URL.Query():
+		default:
+		}
+	})}
+
+	go func() { _ = srv.Serve(ln) }() //nolint:errcheck
+
+	stop := func() {
+		_ = srv.Close() //nolint:errcheck
+		_ = ln.Close()  //nolint:errcheck
+	}
+
+	return "http://" + net.JoinHostPort(m.redirectHost, port), stop, nil
 }
 
 func (m *oidcMethod) finish(state kubeAuthState, t oidcTokens, nonce string) (kubeAuthState, error) {

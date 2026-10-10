@@ -18,6 +18,7 @@ object CheckupSectionId {
     const val CERTIFICATES = "certificates"
     const val SECRETS = "secrets"
     const val HELM = "helm"
+    const val MONITORING = "monitoring"
 }
 
 /** What a finding is about ([CheckupFinding.kind]); CheckupWording words each one. */
@@ -62,6 +63,10 @@ object CheckupKind {
     const val SECRET_STORE_NOT_READY = "secretStoreNotReady"
     const val HELM_FAILED = "helmFailed"
     const val HELM_PENDING = "helmPending"
+    const val SCRAPE_TARGETS_DOWN = "scrapeTargetsDown"
+    const val PROMETHEUS_RULE_ERRORS = "prometheusRuleErrors"
+    /** Failing rules of a group no PrometheusRule writes (the Prometheus configuration's). */
+    const val RULE_GROUP_ERRORS = "ruleGroupErrors"
 }
 
 /** A section's or the whole checkup's state, worst first. */

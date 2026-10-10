@@ -235,9 +235,6 @@ func integrationGroupsText(groups []integrationGroup) string {
 func demoIntegrations() integrationReport {
 	return integrationReport{
 		Families: []integrationFamily{
-			{ID: "coreos.com", Groups: []integrationGroup{
-				{Name: "monitoring.coreos.com", Version: "v1", Kinds: []string{"Alertmanager", "PodMonitor", "Prometheus", "PrometheusRule", "ServiceMonitor"}},
-			}},
 			{ID: "kyverno.io", Groups: []integrationGroup{
 				{Name: "kyverno.io", Version: "v1", Kinds: []string{"ClusterPolicy", "Policy"}},
 				{Name: "reports.kyverno.io", Version: "v1", Kinds: []string{"ClusterEphemeralReport", "EphemeralReport"}},
@@ -249,6 +246,6 @@ func demoIntegrations() integrationReport {
 				{Name: "traefik.io", Version: "v1alpha1", Kinds: []string{"IngressRoute", "Middleware", "TLSOption"}},
 			}},
 		},
-		Supported: []string{groupArgo, groupCertManager, groupLonghorn, groupCNPG},
+		Supported: []string{groupArgo, groupCertManager, groupLonghorn, groupMonitoring, groupCNPG},
 	}
 }

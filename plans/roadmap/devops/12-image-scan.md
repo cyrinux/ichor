@@ -55,6 +55,16 @@ Dojo, Dependency-Track or a colleague.
   other images. `StartImageScan` takes them as `options.images` (refs with no pod, validated
   against a strict ref pattern, pulled without credentials) with `pods=[]`. Probe:
   `system-images NODE`, `image-scan REF...`.
+- Kept reports (`imagescan_store.go`): every completed scan with at least one image scanned
+  is kept in the data directory (`SetDataDir`; nothing is kept without one), sealed like the
+  audit log: an index `image-scans.json` and one `scans/<id>.json` per report, 90 days, at
+  most 30 reports. Each image scanned without error is compared with the newest kept scan of
+  the same digest: findings not in it (by id, package, installed version, target) get
+  `new: true` and count in the image's `new` summary (`previousScannedAt` says when); a first
+  scan has nothing new. The operator's reports are compared too, not kept.
+  `ImageScanHistory(cluster)`, `ImageScanSaved(id)` (the report as OnDone gave it),
+  `ImageScanForget(id)`, `ImageScanClear(cluster)`; `options.app` names what a report is of.
+  Probe: `-data-dir DIR`, `scan-history [CLUSTER]`, `scan-saved ID`.
 
 ## Android (done)
 
@@ -68,6 +78,10 @@ Dojo, Dependency-Track or a colleague.
   place (description, CVSS, advisory link).
 - Export menu: HTML, SARIF, CycloneDX, CSV, JSON, written by the core and shared as a file
   (`cache/scans`, one at a time, removed when the report closes).
+- Node → Images → "System images" (`SystemImagesSection`): the node's Talos system images with
+  their digests (os:admin; a one-line hint otherwise), and for a role that reaches the
+  Kubernetes API "Scan system images": the same scan session (id `talos:<node>`), progress
+  lines, report sheet and exports as an app's.
 
 ## iOS (done)
 
@@ -75,9 +89,9 @@ Same as Android: `AppScanSection` in the app sheet, the scan kept app-wide by
 `ImageScanJob.shared`, `ImageScanReportView` pushed from the sheet with its filters and
 expandable findings, and an Export menu (core-written file in `tmp/scans`, kept an hour,
 shown in the system share sheet). Models and their logic in `IchorCore/ImageScan.swift`.
+The node's system images: `SystemImagesSection` at the top of `ImagesView`, as on Android.
 
 ## Later
 
-- Talos system images in the apps (Node → Images: "Scan system images"); the Go core is done.
-- Cache reports per digest on the phone; "new since last scan".
+- Kept reports in the apps: a saved reports list and "N new since last scan"; the Go core is done.
 - Grype as a second opinion (same pod pattern, `grype -o json`).

@@ -1,7 +1,8 @@
 import SwiftUI
 import IchorCore
 
-/// Container images of a node's Kubernetes (CRI) namespace, like `talosctl image list`
+/// The Talos system images of a node (SystemImagesSection), then the container images of its
+/// Kubernetes (CRI) namespace, like `talosctl image list`
 /// (os:reader): searchable, sortable by name, size or age.
 struct ImagesView: View {
     let node: String
@@ -22,6 +23,7 @@ struct ImagesView: View {
         LoadStateView(state: state, retry: load) { images in
             let shown = sortImages(filterImages(images, query: query), by: sort)
             List {
+                SystemImagesSection(node: node, hostname: hostname)
                 Section {
                     LabeledContent("Images", value: query.isEmpty ? "\(images.count)" : "\(shown.count) / \(images.count)")
                     LabeledContent("Total size", value: ByteCountFormatter.string(fromByteCount: totalImageSize(shown), countStyle: .file))
@@ -29,6 +31,8 @@ struct ImagesView: View {
                         ForEach(ImageSort.allCases, id: \.self) { Text($0.localizedLabel).tag($0) }
                     }
                     .pickerStyle(.segmented)
+                } header: {
+                    Text("Kubernetes images")
                 } footer: {
                     Text("Images share layers, so the total can exceed the disk space they use.")
                 }

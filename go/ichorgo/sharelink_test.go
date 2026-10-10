@@ -71,6 +71,8 @@ func TestShareLinkRoundTrip(t *testing.T) {
 		{Cluster: c, Target: "data", Kind: "cloudnative-pg"},
 		{Cluster: c, Target: "data"},
 		{Cluster: c, Target: "checkup"},
+		{Cluster: c, Target: "alerts"},
+		{Cluster: c, Target: "storage", Host: "worker-1", Addr: "10.0.0.5"},
 	}
 
 	for _, want := range targets {

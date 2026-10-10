@@ -57,10 +57,15 @@ type promCandidate struct {
 }
 
 func promCandidates(services []promService) []promSource {
+	return rankSources(services, promMatch)
+}
+
+// rankSources keeps the Services match recognises, the best score first.
+func rankSources(services []promService, match func(promService) (promCandidate, bool)) []promSource {
 	var found []promCandidate
 
 	for _, s := range services {
-		if c, ok := promMatch(s); ok {
+		if c, ok := match(s); ok {
 			found = append(found, c)
 		}
 	}

@@ -435,6 +435,12 @@ struct TalosClient: Sendable {
         try await Self.json { [config, context] in IchorgoNodeImages(config, context, node, $0) }
     }
 
+    /// The images Talos runs on node outside of any app, with their digests (os:admin: the
+    /// machine config).
+    func systemImages(node: String) async throws -> [SystemImage] {
+        try await Self.json { [config, context] in IchorgoTalosSystemImages(config, context, node, $0) }
+    }
+
     /// The apps running in the cluster, from every node's containers (os:reader). One container
     /// listing per node: called when a screen opens or refreshes, not on a poll.
     func inventory() async throws -> ClusterInventory {

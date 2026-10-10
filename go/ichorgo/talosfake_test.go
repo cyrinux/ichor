@@ -47,6 +47,8 @@ type fakeTalos struct {
 	rebootErr        error
 	disarmErr        error
 	failLogs         string // the service whose logs cannot be read
+	// mounts are a node's mounted filesystems (none: /dev/sda6 on /var, 40 % used).
+	mounts map[string][]*machineapi.MountStat
 	// systemImages are the images of the system containerd namespace (the CRI one has pause).
 	systemImages []*machineapi.ImageServiceListResponse
 }
@@ -359,8 +361,17 @@ func (m fakeTalosMachine) Containers(ctx context.Context, _ *machineapi.Containe
 }
 
 func (m fakeTalosMachine) Mounts(ctx context.Context, _ *emptypb.Empty) (*machineapi.MountsResponse, error) {
-	if _, err := m.f.enter(ctx, "Mounts"); err != nil {
+	node, err := m.f.enter(ctx, "Mounts")
+	if err != nil {
 		return nil, err
+	}
+
+	m.f.mu.Lock()
+	stats, scripted := m.f.mounts[node]
+	m.f.mu.Unlock()
+
+	if scripted {
+		return &machineapi.MountsResponse{Messages: []*machineapi.Mounts{{Stats: stats}}}, nil
 	}
 
 	return &machineapi.MountsResponse{Messages: []*machineapi.Mounts{{Stats: []*machineapi.MountStat{

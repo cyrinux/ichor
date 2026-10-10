@@ -56,6 +56,7 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.argocd.ArgoViewModel
+import name.levis.ichor.ui.history.SinceLastLookedCard
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
@@ -64,6 +65,7 @@ import name.levis.ichor.ui.components.rememberClusterLabels
 import name.levis.ichor.ui.dataservices.DataServicesViewModel
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.flux.FluxViewModel
+import name.levis.ichor.ui.kubeauth.GoogleSilentRenewal
 import name.levis.ichor.ui.kubeauth.SignInBanner
 import name.levis.ichor.ui.kubeauth.SignInSheet
 import name.levis.ichor.model.KubeSignInInfo
@@ -83,6 +85,7 @@ class KubeHomeViewModel(val kube: KubeRepository) : LoadingViewModel<KubeNodesOv
 class KubeHomeNavigation(
     val onWorkloads: () -> Unit,
     val onMetrics: () -> Unit,
+    val onAlerts: () -> Unit,
     val onCheckup: () -> Unit,
     val onApiHealth: () -> Unit,
     val onNetworkPolicies: () -> Unit,
@@ -103,6 +106,8 @@ class KubeHomeNavigation(
     val onServices: () -> Unit,
     /** The Jobs, failures first. */
     val onJobs: () -> Unit,
+    /** The cluster's events, live. */
+    val onEvents: () -> Unit,
     /** The drain of a node, by its Kubernetes name. */
     val onDrain: (node: String) -> Unit,
     /** A root shell on a node through a privileged pod, by its Kubernetes name. */
@@ -129,6 +134,7 @@ fun KubeHomeScreen(
     argoVm: ArgoViewModel = viewModel(key = "overview-argocd", factory = factory { ArgoViewModel(app.gitOpsRepository, app.kubeRepository, freezeReminderHook(app)) }),
     fluxVm: FluxViewModel = viewModel(key = "overview-flux", factory = factory { FluxViewModel(app.gitOpsRepository, app.kubeRepository) }),
     dataVm: DataServicesViewModel = viewModel(key = "overview-data-services", factory = factory { DataServicesViewModel(app.dataServicesRepository) }),
+    alertsVm: AlertsCardViewModel = viewModel(key = "overview-alerts", factory = factory { alertsCardViewModel(app) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
@@ -156,7 +162,7 @@ fun KubeHomeScreen(
     }
 
     LaunchedEffect(config?.activeContext, invalidations) { vm.refresh(reset = true) }
-    // No Talos inventory hints at Argo CD, Flux or the data services here: all are asked, and
+    // No Talos inventory hints at Argo CD, Flux, the data services or Alertmanager here: all are asked, and
     // answer "not installed" quickly when absent (the operators from the API groups; Garage,
     // which has none, from a listing of the pods).
     val gitopsKey = listOf(config?.activeContext, generation, invalidations)
@@ -164,18 +170,22 @@ fun KubeHomeScreen(
         argoVm.load(gitopsKey)
         fluxVm.load(gitopsKey)
         dataVm.load(gitopsKey, hints = "")
+        alertsVm.load(gitopsKey)
     }
     val argo by argoVm.state.collectAsStateWithLifecycle()
     val flux by fluxVm.state.collectAsStateWithLifecycle()
     val dataServices by dataVm.state.collectAsStateWithLifecycle()
+    val alerts by alertsVm.state.collectAsStateWithLifecycle()
     val argoShown = argo.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val fluxShown = flux.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val dataShown = dataServices.takeIf { (it as? UiState.Loaded)?.data?.detected?.isNotEmpty() == true }
+    val alertsShown = alerts.takeIf { it.alertmanagerFound }
     // Cards the cluster has nothing for, left out of the editor too; each offered until its answer came.
     val absentCards = setOfNotNull(
         KubeHomeCard.ARGO_CD.takeIf { argo is UiState.Loaded && argoShown == null },
         KubeHomeCard.FLUX.takeIf { flux is UiState.Loaded && fluxShown == null },
         KubeHomeCard.DATA_SERVICES.takeIf { dataServices is UiState.Loaded && dataShown == null },
+        KubeHomeCard.ALERTS.takeIf { alerts is UiState.Loaded && alertsShown == null },
     )
 
     Scaffold(
@@ -225,11 +235,13 @@ fun KubeHomeScreen(
             argoVm.refresh()
             fluxVm.refresh()
             dataVm.refresh()
+            alertsVm.refresh()
         }
-        if (signingIn) {
-            config?.activeContext?.let { name ->
-                SignInSheet(context = name, onDismiss = { signingIn = false }, onSignedIn = { signingIn = false })
-            }
+        val banner = kubeSignInBanner(signIn, (state as? UiState.Failed)?.message ?: (state as? UiState.Loaded)?.error)
+        config?.activeContext?.let { name ->
+            if (signingIn) SignInSheet(context = name, onDismiss = { signingIn = false }, onSignedIn = { signingIn = false })
+            // An expired "Sign in with Google" token renews by itself; the banner is the fallback.
+            GoogleSilentRenewal(name, banner?.needed, onRenewed = refresh)
         }
         if (customizing) HomeEditor(
             layout = layout,
@@ -253,12 +265,13 @@ fun KubeHomeScreen(
                     name = config?.activeSummary?.let(clusterLabels::of),
                     nodes = (s as? UiState.Loaded)?.data,
                     failure = (s as? UiState.Failed)?.message,
-                    signIn = kubeSignInBanner(signIn, (s as? UiState.Failed)?.message ?: (s as? UiState.Loaded)?.error),
+                    signIn = banner,
                     onSignIn = { signingIn = true },
                     onRetry = vm::refresh,
                     argo = argoShown,
                     flux = fluxShown,
                     dataServices = dataShown,
+                    alerts = alertsShown,
                     onNode = { nodeMenu = it },
                     nav = nav,
                     layout = layout,
@@ -282,6 +295,7 @@ private fun KubeHomeList(
     argo: UiState<ArgoStatus>?,
     flux: UiState<FluxStatus>?,
     dataServices: UiState<DataServices>?,
+    alerts: UiState<AlertsOverview?>?,
     onNode: (KubeNodeInfo) -> Unit,
     nav: KubeHomeNavigation,
     layout: KubeHomeLayout,
@@ -305,6 +319,7 @@ private fun KubeHomeList(
         signIn?.let { item(key = "sign-in") { SignInBanner(it.method, it.needed, onSignIn) } }
         // The banner says it all when the call failed for want of a sign-in.
         failure?.takeIf { signIn?.needed == null }?.let { item(key = "failure") { KubeUnreachableCard(it, onRetry) } }
+        cluster?.fingerprint?.takeIf { it.isNotBlank() }?.let { item(key = "since") { SinceLastLookedCard(it) } }
         // The cards, as arranged; a long press on one opens the arrangement.
         layout.visible.forEach { card ->
             when (card) {
@@ -327,6 +342,9 @@ private fun KubeHomeList(
                 }
                 KubeHomeCard.FLUX -> if (flux != null) item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) { FluxCard(flux, fluxTile = null, onOpen = nav.onFlux) }
+                }
+                KubeHomeCard.ALERTS -> if (alerts != null) item(key = card.name) {
+                    Box(Modifier.longPressToCustomize(onCustomize)) { AlertsCard(alerts, onOpen = nav.onAlerts) }
                 }
             }
         }

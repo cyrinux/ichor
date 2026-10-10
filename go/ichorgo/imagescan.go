@@ -80,6 +80,8 @@ type imageScanOptions struct {
 	// Images are image refs scanned with no pod behind them (Talos system images), by tag or
 	// repo@sha256:digest, pulled without credentials.
 	Images []string `json:"images,omitempty"`
+	// App names what is scanned in the kept report (an inventory app id, "talos:<node>").
+	App string `json:"app,omitempty"`
 }
 
 // imageRefRe is what an Images entry may be: a repository (a registry host with an optional
@@ -129,11 +131,14 @@ func decodeImageScanOptions(s string) (imageScanOptions, error) {
 
 // StartImageScan scans the images of the given pods for known vulnerabilities with Trivy
 // (os:admin): pods [{namespace,pod}] as KubeAppWorkloads ([] when options has images),
-// options {"dbRepository","javaDBRepository","images"} or "", images being refs scanned with no
-// pod behind them (TalosSystemImages' refs). It reads the pods' images by digest and their pull secrets,
+// options {"dbRepository","javaDBRepository","images","app"} or "", images being refs scanned
+// with no pod behind them (TalosSystemImages' refs), app what the kept report is of (see
+// ImageScanHistory). It reads the pods' images by digest and their pull secrets,
 // creates a namespace, runs one Trivy pod there that downloads the database then scans each
 // image in turn, and deletes the namespace at the end, also on failure or Cancel. The pull
-// secrets are copied into that namespace for the run. kubeServer: see KubePods.
+// secrets are copied into that namespace for the run. A completed report is kept on the
+// phone, its findings not in the last scan of the same image marked new. kubeServer: see
+// KubePods.
 func StartImageScan(configYAML, contextName, kubeServer, pods, options string, listener ImageScanListener) *ImageScanRun {
 	contextName = unmaskContext(configYAML, contextName)
 
@@ -171,10 +176,17 @@ func startImageScan(ctx context.Context, target kubeTarget, pods, options string
 	}
 
 	if isDemoContext(target.config, target.context) {
-		return runDemoImageScan(ctx, emit)
+		report, err = runDemoImageScan(ctx, emit)
+	} else {
+		report, err = runImageScanWith(ctx, target, refs, opts, emit)
 	}
 
-	return runImageScanWith(ctx, target, refs, opts, emit)
+	// A completed scan is kept, its findings marked against the last scan of each image.
+	if err == nil {
+		report = keepScan(target.context, opts.App, report)
+	}
+
+	return report, err
 }
 
 // runImageScanWith runs a scan with target's client. A refusal is returned as is, outside
@@ -249,7 +261,10 @@ func ImageScanOperatorReports(configYAML, contextName, kubeServer, pods string) 
 
 	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demoOperatorReports,
 		func(ctx context.Context, k *kubeClient) (operatorReports, error) {
-			return readOperatorReports(ctx, k, refs)
+			reports, err := readOperatorReports(ctx, k, refs)
+			reports.Report = markedWithHistory(reports.Report)
+
+			return reports, err
 		})
 }
 

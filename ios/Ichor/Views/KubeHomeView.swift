@@ -8,6 +8,7 @@ extension KubeHomeAction: BarActionLook {
         case .resources: "square.grid.3x3"
         case .gitOps: "arrow.triangle.2.circlepath"
         case .metrics: "chart.xyaxis.line"
+        case .alerts: "bell.badge"
         case .helm: "shippingbox"
         case .dataServices: "externaldrive.connected.to.line.below"
         case .checkup: "stethoscope"
@@ -23,6 +24,7 @@ extension KubeHomeAction: BarActionLook {
         case .resources: Text("Resources")
         case .gitOps: Text(verbatim: "GitOps")
         case .metrics: Text("Metrics")
+        case .alerts: Text("Alerts")
         case .helm: Text("Helm releases")
         case .dataServices: Text("Data services")
         case .checkup: Text(CheckupText.checkupTitle)
@@ -42,6 +44,7 @@ extension KubeHomeCard: CardLook {
         case .dataServices: Text("Data services")
         case .argoCD: Text(verbatim: "Argo CD")
         case .flux: Text(verbatim: "Flux")
+        case .alerts: Text("Alerts")
         }
     }
 
@@ -54,6 +57,7 @@ extension KubeHomeCard: CardLook {
         case .dataServices: Text("Health of Longhorn, Garage and CloudNativePG")
         case .argoCD: Text("Sync and health of the Argo CD apps, syncs in progress")
         case .flux: Text("Ready, reconciling and failing Kustomizations and HelmReleases")
+        case .alerts: Text("Alertmanager alerts firing by severity, and those silenced")
         }
     }
 }
@@ -87,6 +91,8 @@ struct KubeHomeView: View {
     @State private var argo: LoadState<ArgoStatus>?
     @State private var flux: LoadState<FluxStatus>?
     @State private var dataServices: LoadState<DataServices>?
+    /// The Alertmanager's alerts: nil until one is found (none hides the section).
+    @State private var alerts: LoadState<AMAlerts>?
     /// Who the API server takes the credentials for; nil until known (or when it cannot say).
     @State private var whoAmI: KubeWhoAmI?
     /// Node usage from metrics-server, by node name; empty without it (no bars then).
@@ -96,6 +102,8 @@ struct KubeHomeView: View {
     @AppStorage(KubeHomeLayout.storageKey) private var layoutText = ""
     @AppStorage(KubeHomeBar.storageKey) private var barText = ""
     @State private var customizing = false
+    /// "Since you last looked" (the history ring).
+    @State private var look = HistoryLook()
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -106,6 +114,7 @@ struct KubeHomeView: View {
                             .font(.callout).foregroundStyle(.secondary)
                     }
                 }
+                HistorySinceSection(look: look)
                 if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
                     Section { KubeExpiryBanner(notAfter: ctx.certNotAfter) }
                 }
@@ -196,12 +205,14 @@ struct KubeHomeView: View {
         }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
+        .watchesHistory(look, cluster: model.activeSummary.map(monitorClusterKey) ?? "", id: loadID)
         // Another cluster: never its name over the previous one's nodes.
         .onChange(of: loadID) {
             state = .loading
             argo = nil
             flux = nil
             dataServices = nil
+            alerts = nil
             whoAmI = nil
         }
         // A new network (VPN connected, back on Wi-Fi) is the likely fix: try again at once.
@@ -235,6 +246,8 @@ struct KubeHomeView: View {
             if let flux {
                 FluxSection(state: flux, app: nil, downNodes: notReadyNodes(overview))
             }
+        case .alerts:
+            if let alerts { AlertsSection(state: alerts) }
         }
     }
 
@@ -323,11 +336,17 @@ struct KubeHomeView: View {
             NavigationLink { KubeJobsView() } label: {
                 Label("Jobs", systemImage: "checklist")
             }
+            NavigationLink { KubeLiveEventsView() } label: {
+                Label("Kubernetes events", systemImage: "list.bullet.rectangle")
+            }
             NavigationLink(value: Route.metrics) {
                 Label("Metrics", systemImage: "chart.xyaxis.line")
             }
             NavigationLink(value: Route.dataServices(hints: "", downNodes: loadedNotReadyNodes)) {
                 Label("Data services", systemImage: "externaldrive.connected.to.line.below")
+            }
+            NavigationLink(value: Route.alerts) {
+                Label("Alerts", systemImage: "bell.badge")
             }
         } header: {
             Text("Kubernetes")
@@ -340,6 +359,7 @@ struct KubeHomeView: View {
         case .resources: screen = .resources
         case .gitOps: if let route = gitOpsRoute { path.append(route) }
         case .metrics: path.append(.metrics)
+        case .alerts: path.append(.alerts)
         case .helm: screen = .helm
         case .dataServices: path.append(.dataServices(hints: "", downNodes: loadedNotReadyNodes))
         case .checkup: screen = .checkup
@@ -380,6 +400,7 @@ struct KubeHomeView: View {
         if case .loaded(let status, _, _)? = argo, !status.installed { absent.insert(.argoCD) }
         if case .loaded(let status, _, _)? = flux, !status.installed { absent.insert(.flux) }
         if case .loaded(let services, _, _)? = dataServices, services.detected.isEmpty { absent.insert(.dataServices) }
+        if AlertsStore.shared.absent(for: model.alertsKey) { absent.insert(.alerts) }
         return absent
     }
 
@@ -412,6 +433,22 @@ struct KubeHomeView: View {
         let dataNext = await loadDataServices(with: client)
         guard id == loadID else { return }
         dataServices = dataNext.map { (dataServices ?? .loading).refreshed(with: $0) }
+        let alertsNext = await loadAlerts(with: client)
+        guard id == loadID else { return }
+        alerts = alertsNext.map { (alerts ?? .loading).refreshed(with: $0) }
+    }
+
+    /// The Alertmanager's alerts, nil when the cluster has none (searched once per cluster, see
+    /// AlertsStore). A failure shows on the card only once one was found.
+    private func loadAlerts(with client: TalosClient) async -> LoadState<AMAlerts>? {
+        let key = model.alertsKey
+        let fingerprint = model.activeSummary?.fingerprint ?? ""
+        do {
+            guard let read = try await AlertsStore.shared.load(with: client, key: key, fingerprint: fingerprint) else { return nil }
+            return .loaded(read, at: Date())
+        } catch {
+            return alerts == nil ? nil : .failed(error.localizedDescription)
+        }
     }
 
     /// The Argo CD status, nil when Argo CD is not installed.

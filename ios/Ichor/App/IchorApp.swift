@@ -1,4 +1,5 @@
 import SwiftUI
+import Ichorgo
 import IchorCore
 import UserNotifications
 
@@ -17,6 +18,11 @@ struct IchorApp: App {
         TalosClient.setDataDirectory()
         // Where Go keeps the sign-ins of kubeconfig clusters, before any Kubernetes call.
         KubeAuthStore.register()
+        // GKE's Sign in with Google, when the build carries Ichor's iOS client
+        // (Config/GoogleSignIn.xcconfig): the option appears on the GKE sign-in sheet.
+        if let clientID = Bundle.main.object(forInfoDictionaryKey: "GoogleSignInClientID") as? String, !clientID.isEmpty {
+            IchorgoSetGoogleSignInClient("ios", clientID)
+        }
         SupportBundleStore.removeStaleParts()
         BackgroundMonitor.register()
         BackgroundMonitor.registerCategories()
@@ -165,12 +171,16 @@ enum Route: Hashable {
     case flux(downNodes: Set<String>)
     /// The cluster checkup (a share link; the Kubernetes screens push their own).
     case checkup
+    /// The Alertmanager's alerts and silences (os:admin).
+    case alerts
     case health
     case settings
     case importConfig
     /// The imported clusters: switch, color, remove, add.
     case clusters
     case debugShell(node: String, hostname: String)
+    /// A node's Storage screen: volumes, mounts and disks' health (a share link, a storage alert).
+    case storage(node: String, hostname: String)
     /// The drain of a node (the maintenance screen, drain only); on a cluster without Talos,
     /// node and hostname are its Kubernetes name.
     case drain(node: String, hostname: String)
@@ -250,12 +260,14 @@ struct MainNavigation: View {
                     case .fluxApp(let kind, let namespace, let name): FluxAppView(kind: kind, namespace: namespace, name: name, downNodes: [])
                     case .flux(let downNodes): FluxView(downNodes: downNodes)
                     case .checkup: CheckupView()
+                    case .alerts: AlertsView(path: $path)
                     case .health: HealthView()
                     case .settings: SettingsView()
                     case .diagnosis(let note): DiagnosisView(initialNote: note)
                     case .importConfig: ImportView { path.removeAll() }
                     case .clusters: ClustersView()
                     case .debugShell(let node, let hostname): DebugShellView(node: node, hostname: hostname)
+                    case .storage(let node, let hostname): StorageView(node: node, hostname: hostname)
                     case .drain(let node, let hostname): MaintenanceView(node: node, hostname: hostname, drainOnly: true)
                     case .kubeNodeDebug(let node): KubeNodeDebugView(node: node)
                     case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
@@ -346,6 +358,10 @@ struct MainNavigation: View {
     private func openShareLink() {
         guard !model.lock.locked, let url = NotificationRouter.shared.pendingShareLink else { return }
         NotificationRouter.shared.pendingShareLink = nil
+        // An alert's Reboot, Sync…: its screen asks for it (none for a plain tap or link).
+        let action = NotificationRouter.shared.pendingAlertAction
+        NotificationRouter.shared.pendingAlertAction = nil
+        NotificationRouter.shared.alertActionRequest = nil
         Task {
             guard let target = try? await TalosClient.parseShareLink(url) else {
                 linkMessage = String(localized: "Not a valid Ichor link")
@@ -357,8 +373,17 @@ struct MainNavigation: View {
                 return
             }
             path = []
-            if let route = await target.route(client: model.client, kube: model.activeIsKube) { path = [route] }
+            guard let route = await target.route(client: model.client, kube: model.activeIsKube) else { return }
+            path = [actionRoute(route, for: action)]
+            if action?.action != .reboot { NotificationRouter.shared.alertActionRequest = action }
         }
+    }
+
+    /// The node screen with its reboot confirmation for an alert's Reboot (when this config may
+    /// power nodes); `route` otherwise.
+    private func actionRoute(_ route: Route, for action: AlertActionRequest?) -> Route {
+        guard let action, case .nodeTab(let ref, _) = route, action.isReboot(node: ref.address), model.allows(.power) else { return route }
+        return .nodePower(ref, .reboot)
     }
 
     /// From a config file opened with Ichor: the import screen, which previews it (and takes

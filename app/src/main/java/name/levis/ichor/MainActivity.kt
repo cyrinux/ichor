@@ -37,11 +37,14 @@ import name.levis.ichor.data.ConfigUnreadableException
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.seedOf
+import name.levis.ichor.monitor.AlertActionRequest
+import name.levis.ichor.monitor.AlertActionToken
 import name.levis.ichor.ui.DeepLink
 import name.levis.ichor.ui.Navigation
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.debug.DebugShellService
 import name.levis.ichor.ui.importconfig.ConfigUnreadableScreen
+import name.levis.ichor.ui.share.OpenLink
 import name.levis.ichor.ui.debug.LiveShell
 import name.levis.ichor.ui.debug.shellKey
 import name.levis.ichor.ui.theme.TalosTheme
@@ -64,7 +67,7 @@ class MainActivity : FragmentActivity() {
     private val openShell = MutableStateFlow<LiveShell?>(null)
 
     /** A share link (its URL, checked by Navigation once the config is loaded), consumed once. */
-    private val openTarget = MutableStateFlow<String?>(null)
+    private val openTarget = MutableStateFlow<OpenLink?>(null)
 
     // Below API 33, the in-app language is applied here (API 33+ uses LocaleManager).
     override fun attachBaseContext(newBase: Context) {
@@ -104,7 +107,7 @@ class MainActivity : FragmentActivity() {
             openCluster.value = intent.clusterFingerprint()
             backupFile.value = intent.backupFile()
             openShell.value = intent.debugShell()
-            openTarget.value = intent.shareLink()
+            openTarget.value = intent.shareLink(app.alertActionToken)
         }
         if (BuildConfig.SELF_UPDATE) app.updateManager.maybeAutoCheck(lifecycleScope)
         else app.storeUpdater.attach(this)
@@ -145,11 +148,18 @@ class MainActivity : FragmentActivity() {
         intent.clusterFingerprint()?.let { openCluster.value = it }
         intent.backupFile()?.let { backupFile.value = it }
         intent.debugShell()?.let { openShell.value = it }
-        intent.shareLink()?.let { openTarget.value = it }
+        intent.shareLink((application as TalosApp).alertActionToken)?.let { openTarget.value = it }
     }
 
     companion object {
         const val EXTRA_OPEN = "name.levis.ichor.OPEN"
+
+        /** With a share link from an alert's button: what to confirm on its screen (see [name.levis.ichor.monitor.AlertActionRequest]). */
+        const val EXTRA_ALERT_ACTION = "name.levis.ichor.ALERT_ACTION"
+        const val EXTRA_ALERT_TARGET = "name.levis.ichor.ALERT_TARGET"
+
+        /** The install's [name.levis.ichor.monitor.AlertActionToken]: without it, the action is dropped. */
+        const val EXTRA_ALERT_TOKEN = "name.levis.ichor.ALERT_TOKEN"
 
         /** The fingerprint of the cluster a launcher shortcut opens. */
         const val EXTRA_CLUSTER = "name.levis.ichor.CLUSTER"
@@ -171,7 +181,7 @@ private class LaunchTargets(
     val cluster: MutableStateFlow<String?>,
     val backupFile: MutableStateFlow<Uri?>,
     val shell: MutableStateFlow<LiveShell?>,
-    val shareLink: MutableStateFlow<String?>,
+    val shareLink: MutableStateFlow<OpenLink?>,
 )
 
 private fun Intent.debugShell(): LiveShell? {
@@ -180,12 +190,19 @@ private fun Intent.debugShell(): LiveShell? {
     return LiveShell(key, getStringExtra(MainActivity.EXTRA_SHELL_HOST)?.takeIf { it.isNotBlank() } ?: key.node.ifEmpty { key.pod })
 }
 
-/** The URL of a share link (ichor://open, or the website page forwarding to it), not yet checked. */
-private fun Intent.shareLink(): String? {
+/**
+ * The URL of a share link (ichor://open, or the website page forwarding to it), not yet checked,
+ * with the action an alert's button asks to confirm there, if any: only with this install's
+ * [token] (the activity is exported), else the link opens its screen only.
+ */
+private fun Intent.shareLink(token: AlertActionToken): OpenLink? {
     val uri = data ?: return null
     val ours = uri.scheme == "ichor" && uri.host == "open" ||
         uri.scheme == "https" && uri.host == "cyrinux.github.io" && uri.path.orEmpty().startsWith("/ichor/open")
-    return uri.toString().takeIf { action == Intent.ACTION_VIEW && ours }
+    if (action != Intent.ACTION_VIEW || !ours) return null
+    val request = AlertActionRequest.parse(getStringExtra(MainActivity.EXTRA_ALERT_ACTION), getStringExtra(MainActivity.EXTRA_ALERT_TARGET))
+        ?.takeIf { token.accepts(getStringExtra(MainActivity.EXTRA_ALERT_TOKEN)) }
+    return OpenLink(uri.toString(), request)
 }
 
 private fun Intent.clusterFingerprint(): String? = getStringExtra(MainActivity.EXTRA_CLUSTER)?.takeIf { it.isNotBlank() }

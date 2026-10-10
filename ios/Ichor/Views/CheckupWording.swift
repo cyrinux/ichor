@@ -32,6 +32,7 @@ extension CheckupSectionID {
         case .certificates: CheckupText.checkupSectionCertificates
         case .secrets: CheckupText.checkupSectionSecrets
         case .helm: CheckupText.checkupSectionHelm
+        case .monitoring: String(localized: "Monitoring")
         }
     }
 
@@ -50,6 +51,7 @@ extension CheckupSectionID {
         case .certificates: CheckupText.checkupSectionCertificatesHint
         case .secrets: CheckupText.checkupSectionSecretsHint
         case .helm: CheckupText.checkupSectionHelmHint
+        case .monitoring: PromMonitoringText.checkupSectionMonitoringHint
         }
     }
 
@@ -67,6 +69,7 @@ extension CheckupSectionID {
         case .certificates: "checkmark.seal"
         case .secrets: "key"
         case .helm: "shippingbox"
+        case .monitoring: "waveform.path.ecg"
         }
     }
 }
@@ -146,6 +149,9 @@ extension CheckupFinding {
         case .secretStoreNotReady: return CheckupText.checkupSecretStoreNotReady(f.extra)
         case .helmFailed: return CheckupText.checkupHelmFailed("\(f.count)")
         case .helmPending: return CheckupText.checkupHelmPending(f.reason, age)
+        case .scrapeTargetsDown: return PromMonitoringText.checkupScrapeTargetsDown("\(f.count)", limit)
+        case .prometheusRuleErrors: return PromMonitoringText.checkupRuleErrors("\(f.count)")
+        case .ruleGroupErrors: return PromMonitoringText.checkupGroupErrors("\(f.count)", f.extra)
         }
     }
 
@@ -192,6 +198,9 @@ extension CheckupFinding {
         case .secretStoreNotReady: return CheckupText.checkupSecretStoreNotReadyFix
         case .helmFailed: return CheckupText.checkupHelmFailedFix
         case .helmPending: return CheckupText.checkupHelmPendingFix
+        case .scrapeTargetsDown: return PromMonitoringText.checkupScrapeTargetsDownFix
+        case .prometheusRuleErrors: return PromMonitoringText.checkupRuleErrorsFix
+        case .ruleGroupErrors: return PromMonitoringText.checkupGroupErrorsFix
         }
     }
 }

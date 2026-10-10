@@ -441,14 +441,29 @@ when no such label is set, as on bare metal.
 | Client certificate, token (ServiceAccount) | Uses it as is |
 | `kubectl oidc-login` / kubelogin, `auth-provider: oidc` | Signs in in the browser (kubelogin's own `localhost` redirect, so nothing changes on the identity provider) or with a device code; renews the token with the refresh token |
 | `aws eks get-token`, aws-iam-authenticator | IAM Identity Center (device code, like `aws sso login`) or access keys; `--role-arn` through AssumeRole |
-| `gke-gcloud-auth-plugin` | A service account key |
+| `gke-gcloud-auth-plugin` | A service account key, Sign in with Google (Play build and iOS), the user credentials `gcloud auth application-default login` writes (`application_default_credentials.json`, also with `--login-config` for workforce identity), or your organisation's own OAuth client (Desktop app type: sign-in in the browser, no key) |
 | Azure `kubelogin` (AKS with Entra ID) | Device code or browser, or a service principal |
 | `doctl … exec-credential` | A DigitalOcean API token (short-lived cluster credentials from it) |
 | `rancher token` | A Rancher API key |
 
+**GKE with your organisation's OAuth client**: in the Google Cloud console (APIs & Services),
+1. set the OAuth consent screen to **Internal** (no Google verification needed),
+2. create an OAuth client ID of type **Desktop app**,
+3. in Ichor, pick "Your organisation's OAuth client" on the GKE sign-in sheet and paste its ID
+   and secret. Sign in then opens your Google account in the browser (company SSO included);
+   the app keeps a refresh token and asks again only when Google ends the session.
+
+A **Web application** client works too (the kind kubenav uses): add
+`https://cyrinux.github.io/ichor/auth/google/` (or a page of your own doing the same) to its
+authorised redirect URIs and enter it as the redirect URL. Google sends the browser to that
+page, which hands the sign-in back to the app; if the browser cannot open the app, the page
+shows a sign-in code to paste. The code is useless without the key only the app holds (PKCE).
+
 **Add from a cloud account** (on the add screen) lists the clusters of an AWS, Google Cloud,
 Azure, DigitalOcean or Rancher account and adds the ones you pick, signed in with the same
-credentials. A Talos cluster can also use one of these kubeconfig clusters for its Kubernetes
+credentials. For Google Cloud that is a service account key, or the gcloud user credentials of
+your own account: the app then looks through every project you can see (or the project IDs you
+enter). A Talos cluster can also use one of these kubeconfig clusters for its Kubernetes
 screens (cluster menu → **Kubernetes access**): your own identity and RBAC instead of the
 admin kubeconfig, which also works with an `os:reader` talosconfig.
 

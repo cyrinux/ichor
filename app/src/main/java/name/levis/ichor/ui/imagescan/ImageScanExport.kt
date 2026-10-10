@@ -41,10 +41,16 @@ fun writeReport(context: Context, appName: String, format: ImageScanFormat, cont
 
 /**
  * [report] over the app's sheet, exported on request: [json] (the core's own report, or "")
- * written in the chosen format, then shared as a file named after [appName].
+ * written in the chosen format by [export], then shared as a file named after [appName].
  */
 @Composable
-fun ImageScanReportOpen(report: ImageScanReport, json: String, appName: String, vm: ImageScanViewModel, onDismiss: () -> Unit) {
+fun ImageScanReportOpen(
+    report: ImageScanReport,
+    json: String,
+    appName: String,
+    export: suspend (ImageScanReport, String, ImageScanFormat) -> String,
+    onDismiss: () -> Unit,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     ImageScanReportSheet(
@@ -52,7 +58,7 @@ fun ImageScanReportOpen(report: ImageScanReport, json: String, appName: String, 
         onExport = { format ->
             scope.launch {
                 runCatching {
-                    val content = vm.export(report, json, format)
+                    val content = export(report, json, format)
                     withContext(Dispatchers.IO) { writeReport(context, appName, format, content) }
                 }.onSuccess { file ->
                     shareFile(context, file, format.mime, R.string.imagescan_share_chooser)

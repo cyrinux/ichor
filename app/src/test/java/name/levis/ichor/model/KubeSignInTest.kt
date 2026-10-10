@@ -41,6 +41,33 @@ class KubeSignInTest {
         assertEquals(R.string.kube_signin_option_aws_sso, fieldSetLabel(info.fieldSets[0]))
         assertEquals(R.string.kube_signin_option_aws_keys, fieldSetLabel(info.fieldSets[1]))
 
+        val gke = TalosJson.decodeFromString(
+            KubeSignInInfo.serializer(),
+            """{"method":"gke","kind":"credentials","fields":["gcpServiceAccountJson"],"options":[["gcpServiceAccountJson"],["gcpUserCredentialsJson"],["gcpOAuthClientId","gcpOAuthClientSecret"]],"values":{"gcpOAuthClientId":"123-abc.apps.googleusercontent.com","gcpOAuthClientSecret":"s"},"signedIn":false}""",
+        )
+        assertEquals(R.string.kube_signin_option_gcp_service_account, fieldSetLabel(gke.fieldSets[0]))
+        assertEquals(R.string.kube_signin_option_gcp_user, fieldSetLabel(gke.fieldSets[1]))
+        assertEquals(R.string.kube_signin_option_gcp_oauth, fieldSetLabel(gke.fieldSets[2]))
+        // The OAuth client of the last sign-in reopens its option, filled: one tap to sign in again.
+        assertEquals(2, gke.rememberedOption)
+        assertTrue(credentialsComplete(gke.fieldSets[2], gke.values))
+        assertEquals(FieldKind.SECRET, credentialField("gcpOAuthClientSecret")?.kind)
+        // The redirect URL is for a Web client only: a Desktop client signs in without it.
+        val oauth = listOf("gcpOAuthClientId", "gcpOAuthClientSecret", "gcpOAuthRedirectUrl")
+        assertEquals(true, credentialField("gcpOAuthRedirectUrl")?.optional)
+        assertTrue(credentialsComplete(oauth, mapOf("gcpOAuthClientId" to "123-abc.apps.googleusercontent.com", "gcpOAuthClientSecret" to "s")))
+
+        // "Sign in with Google" (a build with a Google client) is a marker the app does not
+        // render yet: it decodes, and its option is never complete from typed values.
+        val native = TalosJson.decodeFromString(
+            KubeSignInInfo.serializer(),
+            """{"method":"gke","kind":"credentials","options":[["gcpServiceAccountJson"],["gcpGoogleSignIn"]],"signedIn":false}""",
+        )
+        assertEquals(listOf("gcpGoogleSignIn"), native.fieldSets[1])
+        assertNull(credentialField("gcpGoogleSignIn"))
+        assertFalse(credentialsComplete(native.fieldSets[1], emptyMap()))
+        assertEquals(R.string.kube_signin_option_google, fieldSetLabel(native.fieldSets[1]))
+
         val oidc = TalosJson.decodeFromString(KubeSignInInfo.serializer(), """{"method":"oidc","kind":"browser","signedIn":true,"user":"me@example.com","sessionExpires":1700000000}""")
         assertEquals(listOf(emptyList<String>()), oidc.fieldSets)
         assertTrue(oidc.signedIn)
@@ -82,6 +109,7 @@ class KubeSignInTest {
     @Test
     fun fieldsHaveKinds() {
         assertEquals(FieldKind.JSON, credentialField("gcpServiceAccountJson")?.kind)
+        assertEquals(FieldKind.JSON, credentialField("gcpUserCredentialsJson")?.kind)
         assertEquals(FieldKind.SECRET, credentialField("doApiToken")?.kind)
         assertEquals(FieldKind.TEXT, credentialField("awsRegion")?.kind)
         assertEquals(FieldKind.SECRET, credentialField("serviceAccountKey")?.kind)
@@ -100,6 +128,15 @@ class KubeSignInTest {
         )
         assertEquals(listOf(DiscoveryProvider.EKS, DiscoveryProvider.GKE), fields.keys.toList())
         assertEquals(listOf("awsRegion", "awsAccessKeyId"), fields[DiscoveryProvider.EKS])
+
+        // GKE takes a service account key or gcloud user credentials; the others their one set.
+        val gke = listOf(listOf("gcpServiceAccountJson"), listOf("gcpUserCredentialsJson", "gcpProjects"))
+        val options = discoveryOptions(mapOf("gke" to gke, "unknown" to listOf(listOf("x"))), fields)
+        assertEquals(gke, options[DiscoveryProvider.GKE])
+        assertEquals(listOf(listOf("awsRegion", "awsAccessKeyId")), options[DiscoveryProvider.EKS])
+        assertEquals(fields.keys, options.keys)
+        // The project IDs are optional: the credential alone is enough to search.
+        assertTrue(credentialsComplete(gke[1], mapOf("gcpUserCredentialsJson" to "{}")))
     }
 
     @Test
