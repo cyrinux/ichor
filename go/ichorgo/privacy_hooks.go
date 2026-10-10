@@ -331,3 +331,14 @@ func (l maskedConfigApplyListener) OnProgress(json string) {
 func (l maskedConfigApplyListener) OnDone(errMessage string) {
 	l.ConfigApplyListener.OnDone(privacy.maskPlain(errMessage))
 }
+
+// maskedClusterUpgradeListener masks a cluster upgrade's progress and error.
+type maskedClusterUpgradeListener struct{ ClusterUpgradeListener }
+
+func (l maskedClusterUpgradeListener) OnProgress(json string) {
+	l.ClusterUpgradeListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedClusterUpgradeListener) OnDone(errMessage string) {
+	l.ClusterUpgradeListener.OnDone(privacy.maskPlain(errMessage))
+}

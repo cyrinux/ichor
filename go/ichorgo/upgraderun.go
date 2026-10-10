@@ -168,6 +168,15 @@ func runUpgrade(ctx context.Context, kube kubeTarget, node string, o upgradeOpti
 		}
 	}()
 
+	return requestAndFollow(ctx, s, node, plan, o, emit)
+}
+
+// requestAndFollow asks node to upgrade to o.image and follows it until it runs the new
+// version; the checks and the lock are the caller's.
+func requestAndFollow(ctx context.Context, s *session, node string, plan upgradePlan, o upgradeOptions, emit func(phase, msg string)) (string, error) {
+	image := o.image
+	_, tag := splitImageRef(image)
+
 	emit(phaseRequested, "requesting the upgrade to "+image+"; the node pulls and checks the installer image first")
 
 	// The request is not tied to Cancel: once sent, it completes.

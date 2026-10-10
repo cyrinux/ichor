@@ -165,6 +165,20 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			result.Nodes = append(result.Nodes, nodeTime{Node: n.Node, Server: "time.demo.invalid", LocalTime: now, RemoteTime: now + 2, OffsetMs: 2})
 		}
 		return toJSON(result)
+	case "ClusterUpgradePlan":
+		asked := strings.Join(args, "")
+		version, ok := normalizeTalosVersion(asked)
+		if !ok {
+			return "", fmt.Errorf("%q is not a Talos version (vX.Y.Z)", asked)
+		}
+		plan := clusterUpgradePlan{Version: version, Nodes: []clusterPlanNode{}, Blockers: []string{}, Warnings: []string{}}
+		for i, n := range nodes {
+			up := upgradePlan{Hostname: n.Hostname, ControlPlane: n.Role == "controlplane", CurrentVersion: n.Version}
+			plan.Nodes = append(plan.Nodes, clusterNodeOf(n.Node, up, version, i == 0)) // a1, demo-cp-1, leads etcd
+		}
+		plan.Nodes = orderClusterNodes(plan.Nodes)
+		summarizeClusterPlan(&plan)
+		return toJSON(plan)
 	case "EtcdStatus":
 		result := etcdOverview{LeaderID: "a1", Members: []etcdMember{}, Statuses: []etcdNodeStatus{}, Alarms: []etcdAlarm{}}
 		for i, n := range nodes[:3] {
