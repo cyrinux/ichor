@@ -3578,4 +3578,35 @@
     <string name="alert_action_silence_hour">Silenciar 1 h</string>
     <string name="alert_action_snooze">Posponer 8 h</string>
     <string name="alert_action_silence_comment">Silenciada desde una notificación</string>
+    <string name="history_uptime_title">Disponibilidad</string>
+    <plurals name="history_uptime_description">
+        <item quantity="one">Disponibilidad del nodo en el último %1$d día: %2$s</item>
+        <item quantity="other">Disponibilidad del nodo en los últimos %1$d días: %2$s</item>
+    </plurals>
+    <plurals name="history_days_short">
+        <item quantity="one">%1$d d</item>
+        <item quantity="other">%1$d d</item>
+    </plurals>
+    <plurals name="history_memory_description">
+        <item quantity="one">Uso de memoria en el último %1$d día</item>
+        <item quantity="other">Uso de memoria en los últimos %1$d días</item>
+    </plurals>
+    <plurals name="history_volumes_title">
+        <item quantity="one">Llenado de volúmenes, último %1$d día</item>
+        <item quantity="other">Llenado de volúmenes, últimos %1$d días</item>
+    </plurals>
+    <string name="history_volume_description">Llenado de %1$s en el tiempo</string>
+    <string name="history_since_title">Desde tu última visita</string>
+    <string name="history_since_more">+%1$d más</string>
+    <string name="history_since_dismiss">Entendido</string>
+    <string name="history_since_down">%1$s sigue caído (%2$s)</string>
+    <string name="history_since_alert_open">Nueva alerta, aún abierta: %1$s</string>
+    <string name="history_since_recovered">%1$s estuvo caído (%2$s) durante %3$s, ya volvió</string>
+    <string name="history_since_alert_resolved">Resuelta: %1$s</string>
+    <string name="history_since_upgrade">%1$s actualizado de %2$s a %3$s</string>
+    <plurals name="history_since_still_open">
+        <item quantity="one">%1$d alerta anterior aún abierta</item>
+        <item quantity="other">%1$d alertas anteriores aún abiertas</item>
+    </plurals>
+    <string name="history_alert_cert">Certificado a punto de caducar</string>
 </resources>

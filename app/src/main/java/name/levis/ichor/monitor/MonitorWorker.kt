@@ -7,8 +7,12 @@ import androidx.work.WorkerParameters
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.StoredConfig
+import name.levis.ichor.data.TalosJson
+import name.levis.ichor.model.HistoryRecord
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.ContextSummary
@@ -43,15 +47,24 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
 
         val now = System.currentTimeMillis()
         val before = store.state.value
+        // Screenshot mode fakes every name the checks read: no history from those.
+        val maskedBefore = app.uiPreferences.privacyMask.value.enabled
+        val reads = readAll(app, stored, before, now)
         val run = monitorRun(
             before,
-            readAll(app, stored, before, now),
+            reads,
             now,
             unreachableAlerts = store.unreachableAlerts.value,
             unreachableRuns = store.unreachableRuns.value,
             active = stored.activeSummary?.let(::monitorKeyOf).orEmpty(),
         )
         store.saveState(run.state)
+        val masked = maskedBefore || app.uiPreferences.privacyMask.value.enabled
+        withContext(Dispatchers.IO) {
+            historyRecords(before, reads, run.state, now, masked).forEach { (fingerprint, record) ->
+                app.historyStore.append(fingerprint, TalosJson.encodeToString(HistoryRecord.serializer(), record), now)
+            }
+        }
         scheduleWidgetStaleRefresh(applicationContext, run.state.clusters.values, now)
 
         if (store.alertsEnabled.value) {
@@ -77,7 +90,8 @@ private suspend fun readAll(app: TalosApp, stored: StoredConfig, before: Monitor
                 if (heldBackForVpn(app.vpnOnly.fingerprints.value, context.fingerprint, vpnUp)) {
                     ClusterRead(context, snapshot = null, skipped = true)
                 } else {
-                    ClusterRead(context, readWithin { readCluster(app, context, before.clusters[monitorKeyOf(context)], now) })
+                    val reading = readWithin { readCluster(app, context, before.clusters[monitorKeyOf(context)], now) }
+                    ClusterRead(context, reading?.snapshot, detail = reading?.detail)
                 }
             }
         }
@@ -105,8 +119,16 @@ private fun post(app: TalosApp, cluster: ClusterAlerts, now: Long) {
     }
 }
 
-/** What one run read of a cluster: [snapshot] null when it could not be read; [skipped] when it was not tried. */
-data class ClusterRead(val context: ContextSummary, val snapshot: ClusterSnapshot?, val skipped: Boolean = false)
+/**
+ * What one run read of a cluster: [snapshot] null when it could not be read; [skipped] when it was
+ * not tried; [detail] what only its history record keeps.
+ */
+data class ClusterRead(
+    val context: ContextSummary,
+    val snapshot: ClusterSnapshot?,
+    val skipped: Boolean = false,
+    val detail: HistoryDetail? = null,
+)
 
 /** The alerts of one cluster in a run. */
 data class ClusterAlerts(val context: ContextSummary, val alerts: List<Alert>)

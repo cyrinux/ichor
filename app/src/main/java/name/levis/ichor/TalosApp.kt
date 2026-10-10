@@ -77,6 +77,10 @@ import name.levis.ichor.data.SkippedTalosUpdates
 import name.levis.ichor.data.SnapshotKeys
 import name.levis.ichor.data.MetricsStore
 import name.levis.ichor.data.AlertmanagerStore
+import name.levis.ichor.data.ClusterSecureFiles
+import name.levis.ichor.data.HistoryRepository
+import name.levis.ichor.data.HistoryStore
+import name.levis.ichor.data.LastLooked
 import name.levis.ichor.data.AlertmanagerRepository
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.data.VpnRequiredException
@@ -156,7 +160,9 @@ class TalosApp : Application() {
             masked = { uiPreferences.privacyMask.value.enabled },
         )
     }
-    val supportBundleRepository by lazy { SupportBundleRepository(configRepository, kubeServers, filesDir) }
+    val supportBundleRepository by lazy {
+        SupportBundleRepository(configRepository, kubeServers, filesDir) { configRepository.config.value?.activeSummary?.fingerprint?.let { historyRepository.export(it) } }
+    }
     /** The followed upgrade; UpgradeService keeps the app alive while it runs. */
     val upgradeManager by lazy {
         UpgradeManager(configRepository, kubeServers, onStarted = { UpgradeService.start(this) }, onFinished = talosRepository::forgetFeatures)
@@ -193,6 +199,13 @@ class TalosApp : Application() {
     /** Each cluster's Prometheus/Mimir source and saved PromQL panels (Metrics screen). */
     val metricsStore by lazy { MetricsStore(this) }
     val alertmanagerStore by lazy { AlertmanagerStore(this) }
+    /** Each cluster's 30-day history ring, one record per monitor run, sealed per cluster. */
+    val historyStore by lazy {
+        HistoryStore(ClusterSecureFiles(this, "history")) { ring, record, now -> Ichorgo.historyAppend(ring, record, now) }
+    }
+    val historyRepository by lazy { HistoryRepository(historyStore) }
+    /** When the user last looked at each cluster's home ("since you last looked"). */
+    val lastLooked by lazy { LastLooked(getSharedPreferences(LastLooked.FILE, Context.MODE_PRIVATE)) }
     val vpn by lazy { VpnMonitor(this) }
     val appLock by lazy {
         AppLock(
@@ -506,11 +519,14 @@ class TalosApp : Application() {
                     val fingerprints = it.summary.contexts.map { c -> c.fingerprint }
                     launch(Dispatchers.IO) { metricsStore.sync(fingerprints) }
                     launch(Dispatchers.IO) { alertmanagerStore.sync(fingerprints) }
+                    launch(Dispatchers.IO) { historyStore.sync(fingerprints) }
+                    lastLooked.sync(it.summary)
                 }
                 // The deleted config takes the metrics and Alertmanager setups (and their credentials) with it, and the sign-ins.
                 if (stored == null && configRepository.generation.value > 0) {
                     launch(Dispatchers.IO) { metricsStore.sync(emptyList()) }
                     launch(Dispatchers.IO) { alertmanagerStore.sync(emptyList()) }
+                    launch(Dispatchers.IO) { historyStore.sync(emptyList()) }
                     launch(Dispatchers.IO) {
                         kubeAuthStore.clear()
                         // Drops the tokens the core keeps in memory.
