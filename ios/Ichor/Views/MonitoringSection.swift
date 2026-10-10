@@ -10,6 +10,7 @@ struct MonitoringSection: View {
     @State private var alertmanagerWatched = BackgroundMonitor.alertmanagerWatched
     @State private var storageWatched = BackgroundMonitor.storageWatched
     @State private var storageThresholds = BackgroundMonitor.storageThresholds
+    @State private var storageTrendWatched = BackgroundMonitor.storageTrendWatched
     @State private var unreachableWatched = BackgroundMonitor.unreachableWatched
     @State private var unreachableRuns = BackgroundMonitor.unreachableRuns
     @State private var message: String?
@@ -84,6 +85,19 @@ struct MonitoringSection: View {
             .disabled(!enabled)
             if storageWatched {
                 storageSteppers.disabled(!enabled)
+                // Opt-in: no extra call, a line through each volume's fill in the history kept on this phone.
+                Toggle(isOn: Binding(get: { storageTrendWatched }, set: { on in
+                    BackgroundMonitor.storageTrendWatched = on
+                    storageTrendWatched = on
+                })) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Warn before a volume fills up")
+                        Text("When a volume's growth over the last week would make it critical within 3 days, before it crosses the thresholds above.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .disabled(!enabled)
             }
             // Opt-in too: no extra call, only the runs a cluster did not answer in a row.
             Toggle(isOn: Binding(get: { unreachableWatched }, set: { on in

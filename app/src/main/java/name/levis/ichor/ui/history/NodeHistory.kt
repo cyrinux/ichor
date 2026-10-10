@@ -19,8 +19,13 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.VolumeOutlook
+import name.levis.ichor.model.formatSlope
+import name.levis.ichor.model.outlook
+import name.levis.ichor.monitor.TREND_CLOSE_DAYS
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.theme.LocalStatusColors
 import java.util.Locale
 
 /**
@@ -56,6 +61,7 @@ fun VolumeFillHistory(node: String) {
     val history = rememberClusterHistory(HISTORY_SHORT_DAYS) ?: return
     val volumes = history.volumes.filter { it.node == node && it.series.size >= 2 }
     if (volumes.isEmpty()) return
+    val forecasts = rememberVolumeForecast()?.volumes.orEmpty().associateBy { it.key }
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SectionTitle(pluralStringResource(R.plurals.history_volumes_title, HISTORY_SHORT_DAYS, HISTORY_SHORT_DAYS))
@@ -73,7 +79,30 @@ fun VolumeFillHistory(node: String) {
                     )
                     Text(last?.let { String.format(Locale.ROOT, "%.0f %%", it) } ?: "—", style = MaterialTheme.typography.bodySmall)
                 }
+                forecasts[volume.key]?.outlook()?.let { VolumeOutlookText(it) }
             }
         }
     }
+}
+
+/**
+ * "critical in ~2 days · full in ~4 days" (in the warning colour within a week), or a muted
+ * "growing ~0.4 % a day" without a projection.
+ */
+@Composable
+private fun VolumeOutlookText(outlook: VolumeOutlook) {
+    val growing = outlook.growingPerDay
+    if (growing != null) {
+        MutedText(stringResource(R.string.history_forecast_growing, formatSlope(growing)))
+        return
+    }
+    val critical = outlook.critical?.let { days ->
+        if (days < 1) stringResource(R.string.history_forecast_critical_soon) else pluralStringResource(R.plurals.history_forecast_critical, days, days)
+    }
+    val full = outlook.full?.let { days ->
+        if (days < 1) stringResource(R.string.history_forecast_full_soon) else pluralStringResource(R.plurals.history_forecast_full, days, days)
+    }
+    val soonest = listOfNotNull(outlook.critical, outlook.full).minOrNull() ?: return
+    val color = if (soonest <= TREND_CLOSE_DAYS) LocalStatusColors.current.warn else MaterialTheme.colorScheme.onSurfaceVariant
+    Text(listOfNotNull(critical, full).joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = color)
 }

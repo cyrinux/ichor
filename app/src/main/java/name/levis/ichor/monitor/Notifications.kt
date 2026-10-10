@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import name.levis.ichor.MainActivity
 import name.levis.ichor.R
 import name.levis.ichor.model.dataServiceKindOf
+import name.levis.ichor.model.formatSlope
 import name.levis.ichor.model.title
 import name.levis.ichor.ui.DeepLink
 import name.levis.ichor.ui.checkup.sectionLook
@@ -156,6 +157,29 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.CLUSTER_UNREACHABLE -> context.getString(R.string.monitor_cluster_unreachable)
     AlertKind.CLUSTER_REACHABLE -> context.getString(R.string.monitor_cluster_reachable)
     AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertTitle(context, alert)
+    AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertTitle(context, alert)
+}
+
+/**
+ * "EPHEMERAL on worker-1 full in ~3 days" ("critical in" when that comes first, "in < 1 day"
+ * below a day), or the cleared form, from a trend alert's [TrendDetail].
+ */
+private fun trendAlertTitle(context: Context, alert: Alert): String {
+    val d = TrendDetail.parse(alert.detail)
+    return when {
+        !alert.problem -> context.getString(R.string.monitor_storage_trend_ok, d.name, d.hostname)
+        d.days < 1 && d.critical -> context.getString(R.string.monitor_storage_trend_critical_soon, d.name, d.hostname)
+        d.days < 1 -> context.getString(R.string.monitor_storage_trend_full_soon, d.name, d.hostname)
+        d.critical -> context.resources.getQuantityString(R.plurals.monitor_storage_trend_critical, d.days, d.name, d.hostname, d.days)
+        else -> context.resources.getQuantityString(R.plurals.monitor_storage_trend_full, d.days, d.name, d.hostname, d.days)
+    }
+}
+
+/** "growing ~2.4 % a day, now at 81 %"; "Node storage" once cleared. */
+private fun trendAlertText(context: Context, alert: Alert): String {
+    if (!alert.problem) return context.getString(R.string.monitor_storage)
+    val d = TrendDetail.parse(alert.detail)
+    return context.getString(R.string.monitor_storage_trend_text, formatSlope(d.slopePerDay), d.percent)
 }
 
 /**
@@ -274,4 +298,5 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.CLUSTER_UNREACHABLE -> context.getString(R.string.monitor_cluster_unreachable_text, alert.detail)
     AlertKind.CLUSTER_REACHABLE -> context.getString(R.string.monitor_cluster_reachable_text)
     AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertText(context, alert)
+    AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertText(context, alert)
 }

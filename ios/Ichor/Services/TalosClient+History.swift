@@ -25,6 +25,12 @@ extension TalosClient {
         try await json { IchorgoHistorySince(ring, lastLooked, $0) }
     }
 
+    /// Each volume's fill projected from its last week (CYR-128) at `now` (epoch ms); `critical`
+    /// is the critical threshold (% used) its "days to critical" counts to.
+    static func historyForecast(ring: Data?, now: Int64, critical: Int) async throws -> HistoryForecast {
+        try await json { IchorgoHistoryVolumeForecast(ring, now, Double(critical), $0) }
+    }
+
     /// The ring as anonymised JSON (nodes, volumes and alerts renamed), for the support bundle.
     static func historyExport(ring: Data?) async throws -> String {
         try await run { IchorgoHistoryExport(ring, $0) }
