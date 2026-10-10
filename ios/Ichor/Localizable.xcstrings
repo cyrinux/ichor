@@ -11470,6 +11470,41 @@
         }
       }
     },
+    "%lld objects refused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld objets refusés"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld objetos rechazados"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відхилено об’єктів: %lld"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Objekte abgelehnt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld oggetti rifiutati"
+          }
+        }
+      }
+    },
     "%lld of %lld nodes" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -25193,6 +25228,41 @@
         }
       }
     },
+    "Namespace if none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespace par défaut"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespace si falta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespace, якщо не вказано"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespace, falls keiner"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespace se manca"
+          }
+        }
+      }
+    },
     "Namespace, pod, container or image" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -36069,6 +36139,76 @@
         }
       }
     },
+    "Preview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aperçu"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista previa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перегляд"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorschau"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anteprima"
+          }
+        }
+      }
+    },
+    "Preview failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aperçu impossible"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La vista previa falló"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перегляд не вдався"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorschau fehlgeschlagen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anteprima non riuscita"
+          }
+        }
+      }
+    },
     "Previous page" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -39854,6 +39994,41 @@
         }
       }
     },
+    "Paste one or more Kubernetes objects (YAML, separated by ---). Preview shows what each would become in the cluster before anything is applied." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collez un ou plusieurs objets Kubernetes (YAML, séparés par ---). L’aperçu montre ce que chacun deviendrait dans le cluster avant toute application."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pega uno o varios objetos de Kubernetes (YAML, separados por ---). La vista previa muestra en qué se convertiría cada uno en el clúster antes de aplicar nada."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставте один або кілька об’єктів Kubernetes (YAML, розділені ---). Перегляд показує, яким стане кожен у кластері, перш ніж щось застосовувати."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füge ein oder mehrere Kubernetes-Objekte ein (YAML, durch --- getrennt). Die Vorschau zeigt, was jedes im Cluster werden würde, bevor etwas angewendet wird."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incolla uno o più oggetti Kubernetes (YAML, separati da ---). L’anteprima mostra cosa diventerebbe ciascuno nel cluster prima di applicare qualcosa."
+          }
+        }
+      }
+    },
     "Path" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -40410,6 +40585,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Створити пакет підтримки"
+          }
+        }
+      }
+    },
+    "Not applied" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non appliqué"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No aplicado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не застосовано"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht angewendet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non applicato"
           }
         }
       }
@@ -53086,6 +53296,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ApplicationSet e progetti"
+          }
+        }
+      }
+    },
+    "Apply YAML" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appliquer du YAML"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplicar YAML"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застосувати YAML"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YAML anwenden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Applica YAML"
           }
         }
       }
@@ -68079,6 +68324,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показано серій: %lld з %lld"
+          }
+        }
+      }
+    },
+    "Server-side apply as “ichor”, like kubectl apply --server-side. A field another manager owns (a GitOps controller, an autoscaler) is refused with its name, never taken over." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server-side apply en tant que « ichor », comme kubectl apply --server-side. Un champ détenu par un autre gestionnaire (un contrôleur GitOps, un autoscaler) est refusé avec son nom, jamais repris."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server-side apply como «ichor», igual que kubectl apply --server-side. Un campo que posee otro gestor (un controlador GitOps, un autoscaler) se rechaza con su nombre, nunca se toma."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server-side apply від імені «ichor», як kubectl apply --server-side. Поле, яким володіє інший менеджер (контролер GitOps, автоскейлер), відхиляється з його назвою і ніколи не перехоплюється."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server-Side-Apply als „ichor“, wie kubectl apply --server-side. Ein Feld, das ein anderer Manager besitzt (ein GitOps-Controller, ein Autoscaler), wird mit dessen Namen abgelehnt, nie übernommen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server-side apply come “ichor”, come kubectl apply --server-side. Un campo posseduto da un altro gestore (un controller GitOps, un autoscaler) viene rifiutato con il suo nome, mai preso in carico."
           }
         }
       }
@@ -84533,6 +84813,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ultimo applicato"
+          }
+        }
+      }
+    },
+    "Nothing would change: the cluster already matches." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien ne changerait : le cluster correspond déjà."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada cambiaría: el clúster ya coincide."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нічого не зміниться: кластер уже відповідає."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts würde sich ändern: Der Cluster stimmt bereits überein."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nulla cambierebbe: il cluster corrisponde già."
           }
         }
       }

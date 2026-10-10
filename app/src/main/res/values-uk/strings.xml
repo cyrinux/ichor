@@ -3441,6 +3441,27 @@
     <!-- kube browser -->
     <string name="kb_title">Усі ресурси</string>
     <string name="kb_search_kinds">Пошук типів (pod, deploy, група…)</string>
+    <string name="kb_apply_title">Застосувати YAML</string>
+    <string name="kb_apply_hint">Вставте один або кілька об’єктів Kubernetes (YAML, розділені ---). Перегляд показує, яким стане кожен у кластері, перш ніж щось застосовувати.</string>
+    <string name="kb_apply_manifests">Маніфести</string>
+    <string name="kb_apply_paste">Вставити</string>
+    <string name="kb_apply_namespace">Namespace, якщо не вказано</string>
+    <string name="kb_apply_preview">Перегляд</string>
+    <string name="kb_apply_apply">Застосувати</string>
+    <string name="kb_apply_in_sync">Нічого не зміниться: кластер уже відповідає.</string>
+    <string name="kb_apply_footnote">Server-side apply від імені «ichor», як kubectl apply --server-side. Поле, яким володіє інший менеджер (контролер GitOps, автоскейлер), відхиляється з його назвою і ніколи не перехоплюється.</string>
+    <plurals name="kb_apply_done">
+        <item quantity="one">Застосовано %1$d об’єкт</item>
+        <item quantity="few">Застосовано %1$d об’єкти</item>
+        <item quantity="many">Застосовано %1$d об’єктів</item>
+        <item quantity="other">Застосовано %1$d об’єкта</item>
+    </plurals>
+    <plurals name="kb_apply_refused">
+        <item quantity="one">Відхилено %1$d об’єкт</item>
+        <item quantity="few">Відхилено %1$d об’єкти</item>
+        <item quantity="many">Відхилено %1$d об’єктів</item>
+        <item quantity="other">Відхилено %1$d об’єкта</item>
+    </plurals>
     <string name="kb_failed_groups">Не вдалося прочитати деякі групи API: %1$s</string>
     <string name="kb_no_kinds">Немає типів ресурсів.</string>
     <string name="kb_no_kind_match">Жоден тип не відповідає «%1$s».</string>

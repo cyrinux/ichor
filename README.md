@@ -37,7 +37,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   open an app in the browser from its sheet, at the hosts of the Ingresses and Gateway API
   HTTPRoutes whose Services select its pods; browse any resource, CRDs included, with the
   columns `kubectl get` prints, read and edit its YAML (a dry-run diff first; a change made
-  meanwhile is never overwritten), list Helm releases and roll one back to an earlier revision
+  meanwhile is never overwritten), apply pasted manifests like `kubectl apply --server-side`
+  (each object previewed as a diff first; a field another manager owns is refused, never taken
+  over), list Helm releases and roll one back to an earlier revision
   (a dry-run plan first; a release Flux manages is suspended first), follow a pod's log and
   port-forward to it on the phone (127.0.0.1 only); or export a kubeconfig.
 - **Argo CD:** when the cluster runs it, list its Applications with their health and sync state,

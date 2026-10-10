@@ -3241,6 +3241,23 @@
     <!-- kube browser -->
     <string name="kb_title">Todos los recursos</string>
     <string name="kb_search_kinds">Buscar tipos (pod, deploy, grupo…)</string>
+    <string name="kb_apply_title">Aplicar YAML</string>
+    <string name="kb_apply_hint">Pega uno o varios objetos de Kubernetes (YAML, separados por ---). La vista previa muestra en qué se convertiría cada uno en el clúster antes de aplicar nada.</string>
+    <string name="kb_apply_manifests">Manifiestos</string>
+    <string name="kb_apply_paste">Pegar</string>
+    <string name="kb_apply_namespace">Namespace si falta</string>
+    <string name="kb_apply_preview">Vista previa</string>
+    <string name="kb_apply_apply">Aplicar</string>
+    <string name="kb_apply_in_sync">Nada cambiaría: el clúster ya coincide.</string>
+    <string name="kb_apply_footnote">Server-side apply como «ichor», igual que kubectl apply --server-side. Un campo que posee otro gestor (un controlador GitOps, un autoscaler) se rechaza con su nombre, nunca se toma.</string>
+    <plurals name="kb_apply_done">
+        <item quantity="one">%1$d objeto aplicado</item>
+        <item quantity="other">%1$d objetos aplicados</item>
+    </plurals>
+    <plurals name="kb_apply_refused">
+        <item quantity="one">%1$d objeto rechazado</item>
+        <item quantity="other">%1$d objetos rechazados</item>
+    </plurals>
     <string name="kb_failed_groups">No se pudieron leer algunos grupos de API: %1$s</string>
     <string name="kb_no_kinds">No hay tipos de recursos.</string>
     <string name="kb_no_kind_match">Ningún tipo coincide con «%1$s».</string>

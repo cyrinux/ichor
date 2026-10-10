@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -69,6 +70,7 @@ class ResourceKindsViewModel(private val browser: KubeBrowserRepository) : Loadi
 fun ResourceKindsScreen(
     onBack: () -> Unit,
     onKind: (ApiResource) -> Unit,
+    onApply: (() -> Unit)? = null,
     vm: ResourceKindsViewModel = viewModel(factory = factory { ResourceKindsViewModel(app.kubeBrowser) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -80,7 +82,10 @@ fun ResourceKindsScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.kb_title)) },
                 navigationIcon = { BackButton(onBack) },
-                actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = vm::refresh) },
+                actions = {
+                    if (onApply != null) TooltipIconButton(Icons.Outlined.ContentPaste, stringResource(R.string.kb_apply_title), onClick = onApply)
+                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = vm::refresh)
+                },
             )
         },
     ) { padding ->
