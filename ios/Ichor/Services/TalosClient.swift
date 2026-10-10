@@ -435,6 +435,12 @@ struct TalosClient: Sendable {
         try await Self.json { [config, context] in IchorgoNodeHardware(config, context, node, $0) }
     }
 
+    /// Temperatures, fans, voltages, CPU frequencies, throttle counters and PCI devices of node
+    /// (os:reader); read on the Hardware screen only.
+    func sensors(node: String) async throws -> NodeSensors {
+        try await Self.json { [config, context] in IchorgoNodeSensors(config, context, node, $0) }
+    }
+
     /// Container images in node's CRI namespace (os:reader).
     func images(node: String) async throws -> [ContainerImage] {
         try await Self.json { [config, context] in IchorgoNodeImages(config, context, node, $0) }

@@ -30,11 +30,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.hardwareKey
+import name.levis.ichor.data.sensorsKey
 import name.levis.ichor.model.DiskInfo
 import name.levis.ichor.model.ExtensionInfo
 import name.levis.ichor.model.HardwareSection
 import name.levis.ichor.model.MemoryModule
 import name.levis.ichor.model.NodeHardware
+import name.levis.ichor.model.NodeSensors
 import name.levis.ichor.model.ProcessorInfo
 import name.levis.ichor.model.SecurityInfo
 import name.levis.ichor.model.SystemInfo
@@ -43,6 +45,7 @@ import name.levis.ichor.model.totalMemoryBytes
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.InfoRow
@@ -62,6 +65,14 @@ class HardwareViewModel(private val talos: TalosRepository, private val node: St
     override suspend fun fetch() = talos.hardware(node)
 }
 
+/** The node's sensors, loaded beside the hardware: a failure leaves the other sections alone. */
+class SensorsViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<NodeSensors>() {
+    override val keepsDataOnFailure = true
+    override fun cached(): TalosRepository.Timed<NodeSensors>? = talos.cached(sensorsKey(node))
+    override val restores get() = talos.restores
+    override suspend fun fetch() = talos.sensors(node)
+}
+
 /** "About this node": SMBIOS system, CPUs, memory, disks, extensions and security state. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,9 +81,14 @@ fun HardwareScreen(
     hostname: String,
     onBack: () -> Unit,
     vm: HardwareViewModel = viewModel(key = "hardware-$node", factory = factory { HardwareViewModel(app.talosRepository, node) }),
+    sensorsVm: SensorsViewModel = viewModel(key = "sensors-$node", factory = factory { SensorsViewModel(app.talosRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
+    val sensorsState by sensorsVm.state.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) {
+        if (state == UiState.Loading) vm.refresh()
+        if (sensorsState == UiState.Loading) sensorsVm.refresh()
+    }
 
     Scaffold(
         bottomBar = { DataFreshness(state) },
@@ -88,16 +104,21 @@ fun HardwareScreen(
             )
         },
     ) { padding ->
-        Loaded(state, vm::refresh, Modifier.pageContent(padding)) { data ->
-            HardwareContent(data)
-            
+        Loaded(state, { vm.refresh(); sensorsVm.refresh() }, Modifier.pageContent(padding)) { data ->
+            HardwareContent(data, sensorsState)
         }
     }
 }
 
 @Composable
-private fun HardwareContent(hw: NodeHardware) {
+private fun HardwareContent(hw: NodeHardware, sensorsState: UiState<NodeSensors>) {
+    val sensors = (sensorsState as? UiState.Loaded)?.data
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
+        // Sensors first: a hot or throttled node is why one opens this screen. Hidden on a VM.
+        if (sensors != null && sensors.showsSensorsCard()) item { SensorsCard(sensors) }
+        if (sensorsState is UiState.Failed) item {
+            Section(stringResource(R.string.hardware_sensors), sensorsState.message.asString(), empty = false) {}
+        }
         item {
             Section(stringResource(R.string.hardware_system), hw.errors[HardwareSection.SYSTEM], hw.system == null) {
                 hw.system?.let { SystemRows(it) }
@@ -135,6 +156,7 @@ private fun HardwareContent(hw: NodeHardware) {
                 hw.security?.let { SecurityRows(it) }
             }
         }
+        if (sensors != null && sensors.showsPciCard()) item { PciCard(sensors) }
     }
 }
 

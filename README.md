@@ -313,6 +313,12 @@ where a failed upgrade can be rolled back.
 - **Alerts:** Settings → Alerts → Cluster checkup runs it at every background check (it lists every
   pod and asks each kubelet). A critical finding notifies at once, a warning when seen on two
   checks in a row, a cleared one once; a section that could not be read keeps what it knew.
+- **Hardware sensors:** a node's *About this node* screen shows its temperatures (with each
+  sensor's max and critical limits), fans, per-core CPU frequency with the governor, the CPU's
+  thermal throttle counters and its PCI devices, read with `os:reader` from `/sys/class/hwmon`,
+  the thermal zones and `CPUFreqStats` (Talos 1.5+). Cores held below 70 % of their top speed
+  under the `performance` governor, or a sensor above its max, mark the node *Throttled* there
+  and, once that screen was opened, on its row in the node lists. A VM has no Sensors card.
 - **Rollback:** on a node's upgrade screen, the menu offers `talosctl rollback` (os:admin): the node
   reboots at once into the Talos it ran before its last upgrade, for an upgrade that boots but
   misbehaves. Talos rolls back by itself one that does not boot.

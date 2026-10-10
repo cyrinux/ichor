@@ -59,10 +59,11 @@ import name.levis.ichor.model.status
 import name.levis.ichor.model.shownPublicIps
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.NodeHealthPill
+import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.hardware.cachedThrottled
 import name.levis.ichor.ui.components.agoLabel
 import name.levis.ichor.ui.components.expandable
 import name.levis.ichor.ui.kubespan.siteTitle
-import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
@@ -234,6 +235,9 @@ private fun NodeRow(
         Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(node.hostname, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                if (node.reachable && cachedThrottled(node.node)) {
+                    StatusPill(stringResource(R.string.hardware_throttled), LocalStatusColors.current.bad, Modifier.padding(end = 6.dp))
+                }
                 if (node.cordoned) {
                     StatusPill(stringResource(R.string.kube_node_cordoned), LocalStatusColors.current.warn, Modifier.padding(end = 6.dp))
                 }

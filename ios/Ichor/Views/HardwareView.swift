@@ -15,16 +15,30 @@ struct HardwareView: View {
 
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<NodeHardware> = .loading
+    /// Loaded beside the hardware: a failure only shows in its own section.
+    @State private var sensors: LoadState<NodeSensors> = .loading
 
     var body: some View {
         LoadStateView(state: state, retry: load) { hw in
             List {
+                // Sensors first: a hot or throttled node is why one opens this screen. Hidden on a VM.
+                switch sensors {
+                case .loaded(let s, _, _) where !s.sensorsEmpty || s.sensorsError != nil:
+                    SensorsSection(sensors: s)
+                case .failed(let message):
+                    Section("Sensors") { SectionError(message: message) }
+                default:
+                    EmptyView()
+                }
                 systemSection(hw)
                 processorsSection(hw)
                 memorySection(hw)
                 disksSection(hw)
                 extensionsSection(hw)
                 securitySection(hw)
+                if case .loaded(let s, _, _) = sensors, !s.pci.isEmpty || s.errors["pci"] != nil {
+                    PCISection(sensors: s)
+                }
             }
             .refreshable { await load() }
             .themedBackground()
@@ -37,7 +51,10 @@ struct HardwareView: View {
     private func load() async {
         guard let client = model.client else { return }
         state = model.seeded(state, from: .hardware(node: node))
+        async let loadedSensors = LoadState<NodeSensors>.from { try await client.sensors(node: node) }
         state = state.refreshed(with: await .from { try await model.fetch(.hardware(node: node), with: client) })
+        sensors = sensors.refreshed(with: await loadedSensors)
+        if case .loaded(let s, _, nil) = sensors { model.setThrottled(node: node, s.throttled) }
     }
 
     private func systemSection(_ hw: NodeHardware) -> some View {
