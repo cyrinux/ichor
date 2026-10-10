@@ -52,6 +52,10 @@ class KubeSignInTest {
         assertEquals(2, gke.rememberedOption)
         assertTrue(credentialsComplete(gke.fieldSets[2], gke.values))
         assertEquals(FieldKind.SECRET, credentialField("gcpOAuthClientSecret")?.kind)
+        // The redirect URL is for a Web client only: a Desktop client signs in without it.
+        val oauth = listOf("gcpOAuthClientId", "gcpOAuthClientSecret", "gcpOAuthRedirectUrl")
+        assertEquals(true, credentialField("gcpOAuthRedirectUrl")?.optional)
+        assertTrue(credentialsComplete(oauth, mapOf("gcpOAuthClientId" to "123-abc.apps.googleusercontent.com", "gcpOAuthClientSecret" to "s")))
 
         // "Sign in with Google" (a build with a Google client) is a marker the app does not
         // render yet: it decodes, and its option is never complete from typed values.

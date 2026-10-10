@@ -434,12 +434,10 @@ func (m *oidcMethod) browserSignIn(ctx context.Context, state kubeAuthState, d o
 		return state, ctx.Err()
 	case answer = <-codes:
 	case cb := <-callbacks:
-		u, err := url.Parse(cb)
-		if err != nil {
-			return state, fmt.Errorf("sign-in callback: %w", err)
+		var err error
+		if answer, err = callbackAnswer(cb); err != nil {
+			return state, err
 		}
-
-		answer = u.Query()
 	}
 
 	if e := answer.Get("error"); e != "" {
@@ -458,6 +456,31 @@ func (m *oidcMethod) browserSignIn(ctx context.Context, state kubeAuthState, d o
 	}
 
 	return m.finish(state, t, nonce)
+}
+
+// signInCodeSeparator joins state and code in a sign-in code a redirect page shows to paste
+// back ("<state>~<code>"): "~" is in neither (state is base64url, Google's codes are not).
+const signInCodeSeparator = "~"
+
+// callbackAnswer is the query of the URL the app handed over, or a sign-in code the user
+// pasted from the redirect page (state~code).
+func callbackAnswer(cb string) (url.Values, error) {
+	cb = strings.TrimSpace(cb)
+
+	if oauthState, code, ok := strings.Cut(cb, signInCodeSeparator); ok && !strings.Contains(cb, "://") && !strings.Contains(cb, ":/") {
+		if oauthState == "" || code == "" {
+			return nil, errors.New("the sign-in code is incomplete: copy it again from the page")
+		}
+
+		return url.Values{"state": {oauthState}, "code": {code}}, nil
+	}
+
+	u, err := url.Parse(cb)
+	if err != nil {
+		return nil, fmt.Errorf("sign-in callback: %w", err)
+	}
+
+	return u.Query(), nil
 }
 
 // serveLoopback listens on the first free m.listen address and hands each answer with a

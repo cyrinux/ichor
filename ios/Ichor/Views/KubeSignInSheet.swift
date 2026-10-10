@@ -119,6 +119,7 @@ private struct KubeSignInProgress: View {
     let target: KubeSignInTarget
 
     @Environment(\.openURL) private var openURL
+    @State private var pastedCode = ""
 
     var body: some View {
         switch flow.phase {
@@ -133,6 +134,18 @@ private struct KubeSignInProgress: View {
                     Text("Waiting for the sign-in in the browser…")
                 }
                 Button("Cancel", role: .cancel) { flow.cancel() }
+            }
+            if flow.acceptsPastedCode {
+                Section {
+                    TextField("Sign-in code", text: $pastedCode)
+                        .font(.body.monospaced())
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Button("Continue") { flow.complete(code: pastedCode) }
+                        .disabled(pastedCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                } footer: {
+                    Text("Browser did not come back to Ichor? Paste the sign-in code the page shows.")
+                }
             }
         case .device(let prompt):
             deviceSection(prompt)

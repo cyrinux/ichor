@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Back to Ichor</title>
+<!-- The redirect page of a GKE sign-in with an organisation's Web OAuth client:
+     https://cyrinux.github.io/ichor/auth/google/?code=…&state=…
+     It hands code and state to the app as ichor://signin?…, and shows them as a sign-in code
+     to paste in the app when the browser cannot open it. The code is useless without the
+     PKCE verifier that only the app holds. No third-party request, no tracking. -->
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="../../brand/ichor.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #E9EEF2;
+    --surface: #F6F8FA;
+    --ink: #14243B;
+    --ink-2: #51627A;
+    --line: #C9D3DD;
+    --accent: #FF7A45;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101823;
+      --surface: #16212F;
+      --ink: #E4EAF1;
+      --ink-2: #9AABC0;
+      --line: #2A3A4E;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 1.0625rem/1.6 system-ui, sans-serif;
+  }
+  main {
+    max-width: 30rem;
+    margin: 1.5rem;
+    padding: 2rem 1.75rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    text-align: center;
+  }
+  img { width: 56px; height: 56px; }
+  h1 { font-size: 1.5rem; font-weight: 600; margin: .75rem 0 .25rem; }
+  p { color: var(--ink-2); margin: .5rem 0; }
+  a, button { color: inherit; font: inherit; }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+  .open {
+    display: inline-block;
+    margin: 1.25rem 0 .75rem;
+    padding: .7rem 1.4rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #14243B;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  code {
+    display: block;
+    margin: .5rem 0;
+    padding: .6rem .75rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font: 500 .9rem/1.4 ui-monospace, monospace;
+    word-break: break-all;
+    user-select: all;
+  }
+  .copy {
+    padding: .45rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+  }
+  [hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <img src="../../brand/ichor.svg" alt="">
+  <h1>Back to Ichor</h1>
+  <div id="signed">
+    <p>Google signed you in. Ichor finishes the sign-in of your GKE cluster.</p>
+    <a class="open" id="open" href="../../">Return to Ichor</a>
+    <p>If the app did not open, copy this sign-in code and paste it in Ichor:</p>
+    <code id="code"></code>
+    <button class="copy" id="copy" type="button">Copy the sign-in code</button>
+  </div>
+  <p id="refused" hidden></p>
+  <p id="invalid" hidden>This page is the end of a sign-in started in Ichor; it has nothing to do on its own.</p>
+</main>
+<script>
+  // The app checks everything again (state against its own sign-in); this only refuses what
+  // cannot be a Google answer.
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var code = q.get("code") || "", state = q.get("state") || "", error = q.get("error") || "";
+    // The code stays out of the history and any later page.
+    history.replaceState(null, "", location.pathname);
+    var token = /^[A-Za-z0-9._\/-]{1,2048}$/, word = /^[A-Za-z0-9._ ,:()'\/-]{0,512}$/;
+    if (error && word.test(error) && word.test(q.get("error_description") || "")) {
+      document.getElementById("signed").hidden = true;
+      var refused = document.getElementById("refused");
+      refused.textContent = "Google did not sign you in: " + (q.get("error_description") || error) + ". Go back to Ichor and try again.";
+      refused.hidden = false;
+      return;
+    }
+    if (!token.test(code) || !/^[A-Za-z0-9_-]{8,256}$/.test(state)) {
+      document.getElementById("signed").hidden = true;
+      document.getElementById("invalid").hidden = false;
+      return;
+    }
+    // The format Ichor reads back from a paste (state~code).
+    var pasted = state + "~" + code;
+    document.getElementById("code").textContent = pasted;
+    document.getElementById("copy").addEventListener("click", function () {
+      if (navigator.clipboard) navigator.clipboard.writeText(pasted);
+    });
+    var app = "ichor://signin?" + new URLSearchParams({ code: code, state: state }).toString();
+    document.getElementById("open").href = app;
+    location.replace(app);
+  })();
+</script>
+</body>
+</html>

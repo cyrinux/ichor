@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"net/url"
 	"strings"
 )
 
@@ -11,11 +12,20 @@ import (
 // Internal, so no Google verification) whose ID and secret the user enters once; the sign-in
 // then runs in the browser (PKCE, loopback redirect, as kubelogin does) and the app keeps the
 // refresh token. The client fields are Secrets (backed up), the tokens the Session.
+//
+// A Web application client cannot redirect to a loopback address but may to any https page:
+// with a redirect URL entered (Ichor's https://cyrinux.github.io/ichor/auth/google/, or the
+// organisation's own), Google sends the browser there, the page forwards code and state to
+// ichor://signin, and the app hands that over (SignInRun.Complete); the page also shows a
+// sign-in code (state~code) to paste back when the app did not come back by itself.
 
 const (
 	gcpFieldOAuthClientID     = "gcpOAuthClientId"
 	gcpFieldOAuthClientSecret = "gcpOAuthClientSecret"
-	gcpClientIDSuffix         = ".apps.googleusercontent.com"
+	// gcpFieldOAuthRedirectURL is a Web client's authorised redirect URI; "" for a Desktop
+	// client (loopback).
+	gcpFieldOAuthRedirectURL = "gcpOAuthRedirectUrl"
+	gcpClientIDSuffix        = ".apps.googleusercontent.com"
 )
 
 var (
@@ -32,6 +42,7 @@ func googleOAuthMethod(state kubeAuthState) *oidcMethod {
 		clientID: state.secret(gcpFieldOAuthClientID), clientSecret: state.secret(gcpFieldOAuthClientSecret),
 		scopes: []string{"email", gcpScope}, useAccessToken: true,
 		listen: []string{"127.0.0.1:0"}, redirectHost: "127.0.0.1", tls: gcpOAuthTLS(), google: true,
+		redirectURI: state.secret(gcpFieldOAuthRedirectURL),
 	}
 }
 
@@ -47,13 +58,19 @@ func oauthClientState(s map[string]string) (kubeAuthState, error) {
 		return kubeAuthState{}, errors.New("enter the OAuth client secret")
 	}
 
-	return kubeAuthState{Secrets: pick(s, gcpFieldOAuthClientID, gcpFieldOAuthClientSecret)}, nil
+	if redirect := s[gcpFieldOAuthRedirectURL]; redirect != "" {
+		if u, err := url.Parse(redirect); err != nil || u.Scheme != "https" || u.Host == "" || u.RawQuery != "" || u.Fragment != "" {
+			return kubeAuthState{}, errors.New("the redirect URL must be an https page without query (leave it empty for a Desktop app client)")
+		}
+	}
+
+	return kubeAuthState{Secrets: pick(s, gcpFieldOAuthClientID, gcpFieldOAuthClientSecret, gcpFieldOAuthRedirectURL)}, nil
 }
 
 // rememberedFields: the OAuth client is shown again when the session has to be renewed (a
 // Desktop client's secret is not confidential, Google says), so signing in again is one tap.
 func (gkeMethod) rememberedFields() []string {
-	return []string{gcpFieldOAuthClientID, gcpFieldOAuthClientSecret}
+	return []string{gcpFieldOAuthClientID, gcpFieldOAuthClientSecret, gcpFieldOAuthRedirectURL}
 }
 
 // signIn runs the browser sign-in of the OAuth client entered, or of the build's own Google

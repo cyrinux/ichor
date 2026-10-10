@@ -451,6 +451,12 @@ when no such label is set, as on bare metal.
    and secret. Sign in then opens your Google account in the browser (company SSO included);
    the app keeps a refresh token and asks again only when Google ends the session.
 
+A **Web application** client works too (the kind kubenav uses): add
+`https://cyrinux.github.io/ichor/auth/google/` (or a page of your own doing the same) to its
+authorised redirect URIs and enter it as the redirect URL. Google sends the browser to that
+page, which hands the sign-in back to the app; if the browser cannot open the app, the page
+shows a sign-in code to paste. The code is useless without the key only the app holds (PKCE).
+
 **Add from a cloud account** (on the add screen) lists the clusters of an AWS, Google Cloud,
 Azure, DigitalOcean or Rancher account and adds the ones you pick, signed in with the same
 credentials. For Google Cloud that is a service account key, or the gcloud user credentials of

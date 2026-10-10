@@ -32,6 +32,22 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Ichor">
 
+        <!-- A browser sign-in coming back (ichor://signin, from a Web OAuth client's redirect
+             page): handed to the sign-in in progress, which checks its state. -->
+        <activity
+            android:name=".SignInCallbackActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ichor" android:host="signin" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
