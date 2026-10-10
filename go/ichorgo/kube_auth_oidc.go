@@ -45,6 +45,8 @@ type oidcMethod struct {
 	// seedRefresh is an auth-provider's refresh token, used until the app has its own.
 	seedRefresh string
 	tls         *tls.Config
+	// google marks Google's sign-in whatever the issuer (a test's fake one).
+	google bool
 }
 
 func (m *oidcMethod) name() string { return m.method }
@@ -138,7 +140,7 @@ func (m *oidcMethod) httpClient() *http.Client {
 
 // isGoogle: Google refuses offline_access and wants access_type=offline instead.
 func (m *oidcMethod) isGoogle() bool {
-	return strings.Contains(m.issuer, "accounts.google.com")
+	return m.google || strings.Contains(m.issuer, "accounts.google.com")
 }
 
 func (m *oidcMethod) scope() string {

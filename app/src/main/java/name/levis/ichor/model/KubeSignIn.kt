@@ -109,6 +109,8 @@ private val FIELDS = listOf(
     CredentialField("gcpServiceAccountJson", R.string.kube_field_gcp_service_account, FieldKind.JSON),
     CredentialField(GCP_USER_CREDENTIALS, R.string.kube_field_gcp_user_credentials, FieldKind.JSON),
     CredentialField(GCP_PROJECTS, R.string.kube_field_gcp_projects, FieldKind.TEXT, optional = true),
+    CredentialField(GCP_OAUTH_CLIENT_ID, R.string.kube_field_gcp_oauth_client_id, FieldKind.TEXT),
+    CredentialField("gcpOAuthClientSecret", R.string.kube_field_gcp_oauth_client_secret, FieldKind.SECRET),
     CredentialField("azureTenantId", R.string.kube_field_azure_tenant, FieldKind.TEXT),
     CredentialField("azureSubscriptionId", R.string.kube_field_azure_subscription, FieldKind.TEXT),
     CredentialField("azureClientId", R.string.kube_field_azure_client_id, FieldKind.TEXT),
@@ -138,6 +140,9 @@ const val GCP_USER_CREDENTIALS = "gcpUserCredentialsJson"
 /** GKE discovery's optional project IDs, for a Google account in a large organisation. */
 const val GCP_PROJECTS = "gcpProjects"
 
+/** GKE's field for the client ID of the organisation's own OAuth client (browser sign-in). */
+const val GCP_OAUTH_CLIENT_ID = "gcpOAuthClientId"
+
 /**
  * The label of an alternative field set: EKS asks for IAM Identity Center or access keys, GKE
  * for a service account key or gcloud user credentials.
@@ -148,6 +153,7 @@ fun fieldSetLabel(fields: List<String>): Int = when {
     "awsAccessKeyId" in fields -> R.string.kube_signin_option_aws_keys
     "gcpServiceAccountJson" in fields -> R.string.kube_signin_option_gcp_service_account
     GCP_USER_CREDENTIALS in fields -> R.string.kube_signin_option_gcp_user
+    GCP_OAUTH_CLIENT_ID in fields -> R.string.kube_signin_option_gcp_oauth
     else -> R.string.kube_signin_option_other
 }
 

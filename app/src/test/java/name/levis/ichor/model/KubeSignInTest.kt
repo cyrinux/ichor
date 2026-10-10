@@ -43,10 +43,15 @@ class KubeSignInTest {
 
         val gke = TalosJson.decodeFromString(
             KubeSignInInfo.serializer(),
-            """{"method":"gke","kind":"credentials","fields":["gcpServiceAccountJson"],"options":[["gcpServiceAccountJson"],["gcpUserCredentialsJson"]],"signedIn":false}""",
+            """{"method":"gke","kind":"credentials","fields":["gcpServiceAccountJson"],"options":[["gcpServiceAccountJson"],["gcpUserCredentialsJson"],["gcpOAuthClientId","gcpOAuthClientSecret"]],"values":{"gcpOAuthClientId":"123-abc.apps.googleusercontent.com","gcpOAuthClientSecret":"s"},"signedIn":false}""",
         )
         assertEquals(R.string.kube_signin_option_gcp_service_account, fieldSetLabel(gke.fieldSets[0]))
         assertEquals(R.string.kube_signin_option_gcp_user, fieldSetLabel(gke.fieldSets[1]))
+        assertEquals(R.string.kube_signin_option_gcp_oauth, fieldSetLabel(gke.fieldSets[2]))
+        // The OAuth client of the last sign-in reopens its option, filled: one tap to sign in again.
+        assertEquals(2, gke.rememberedOption)
+        assertTrue(credentialsComplete(gke.fieldSets[2], gke.values))
+        assertEquals(FieldKind.SECRET, credentialField("gcpOAuthClientSecret")?.kind)
 
         val oidc = TalosJson.decodeFromString(KubeSignInInfo.serializer(), """{"method":"oidc","kind":"browser","signedIn":true,"user":"me@example.com","sessionExpires":1700000000}""")
         assertEquals(listOf(emptyList<String>()), oidc.fieldSets)

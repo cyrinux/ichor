@@ -44,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.GCP_OAUTH_CLIENT_ID
 import name.levis.ichor.model.GCP_USER_CREDENTIALS
 import name.levis.ichor.model.KubeSignInInfo
 import name.levis.ichor.model.SignInPrompt
@@ -129,6 +130,7 @@ private fun CredentialsForm(info: KubeSignInInfo, checking: Boolean, onSubmit: (
     MutedText(stringResource(R.string.kube_signin_credentials_hint))
     CredentialFields(fields, values, onValue = { name, value -> values[name] = value }, enabled = !checking)
     if (GCP_USER_CREDENTIALS in fields) MutedText(stringResource(R.string.kube_signin_gcp_user_hint))
+    if (GCP_OAUTH_CLIENT_ID in fields) MutedText(stringResource(R.string.kube_signin_gcp_oauth_hint))
     Button(
         onClick = { onSubmit(fields, values.toMap()) },
         enabled = !checking && credentialsComplete(fields, values),

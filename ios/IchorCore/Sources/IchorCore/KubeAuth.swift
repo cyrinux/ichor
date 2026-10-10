@@ -144,7 +144,8 @@ public enum KubeFieldInput: Equatable, Sendable {
 public func kubeFieldInput(_ field: String) -> KubeFieldInput {
     switch field {
     case "gcpServiceAccountJson", "gcpUserCredentialsJson": .json
-    case "awsSecretAccessKey", "awsSessionToken", "azureClientSecret", "doApiToken", "rancherApiKey", "serviceAccountKey": .secret
+    case "awsSecretAccessKey", "awsSessionToken", "azureClientSecret", "doApiToken", "rancherApiKey", "serviceAccountKey",
+         "gcpOAuthClientSecret": .secret
     default: .plain
     }
 }
