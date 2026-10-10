@@ -61,6 +61,7 @@ import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.EndpointProbe
 import name.levis.ichor.model.KubeSpanDiagAll
 import name.levis.ichor.model.NodeFeatures
+import name.levis.ichor.model.UpgradeExtensionCheck
 import name.levis.ichor.model.NodeResetPlan
 import name.levis.ichor.model.ResetRequest
 import name.levis.ichor.model.ResourceDetail
@@ -436,6 +437,11 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     }
 
     /** `talosctl reboot -m [mode]` (default, powercycle, force); needs os:operator or higher. */
+    /** [node]'s extensions against the Image Factory's official list for [image]'s version. Read-only. */
+    suspend fun upgradeExtensionCheck(node: String, image: String): UpgradeExtensionCheck = call { cfg, ctx ->
+        TalosJson.decodeFromString(UpgradeExtensionCheck.serializer(), Ichorgo.upgradeExtensionCheck(cfg, ctx, node, image))
+    }
+
     suspend fun reboot(node: String, mode: String) = call { cfg, ctx -> Ichorgo.reboot(cfg, ctx, node, mode) }
 
     /** What resetting [node] would wipe and leave, and what forbids it. Read-only. */

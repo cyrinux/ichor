@@ -34,6 +34,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -56,6 +57,7 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ImagePullNamespace
 import name.levis.ichor.model.TalosRelease
+import name.levis.ichor.model.UpgradeExtensionCheck
 import name.levis.ichor.model.UpgradePlan
 import name.levis.ichor.model.etcdBlocked
 import name.levis.ichor.model.releaseSuggestions
@@ -386,6 +388,7 @@ private fun UpgradeSetup(
         if (image.isNotEmpty()) {
             Text(stringResource(R.string.upgrade_image), style = MaterialTheme.typography.labelMedium)
             SelectionContainer { Text(image, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace) }
+            ExtensionCheckRow(plan.node, image)
             // Pulling the installer on every node first keeps each node's reboot short.
             OutlinedButton(onClick = { onPrePull(image) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.upgrade_prepull)) }
             MutedText(stringResource(R.string.upgrade_prepull_desc))
@@ -486,5 +489,30 @@ private fun RiskAcknowledgment(risks: List<String>, understood: Boolean, onChang
     ) {
         Checkbox(checked = understood, onCheckedChange = null, modifier = Modifier.padding(end = 12.dp, top = 8.dp, bottom = 8.dp))
         Text(stringResource(R.string.upgrade_acknowledge_check), style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+/** The node's extensions against the Image Factory's list for [image]'s version; nothing while it is read or when there are none. */
+@Composable
+private fun ExtensionCheckRow(node: String, image: String) {
+    val app = LocalContext.current.applicationContext as TalosApp
+    val colors = LocalStatusColors.current
+    val check by produceState<UpgradeExtensionCheck?>(null, node, image) {
+        value = runCatching { app.talosRepository.upgradeExtensionCheck(node, image) }.getOrNull()
+    }
+    val c = check ?: return
+    when {
+        c.missing.isNotEmpty() -> Text(
+            stringResource(R.string.upgrade_ext_missing, c.targetVersion, c.missing.joinToString(", ")),
+            color = colors.warn,
+            style = MaterialTheme.typography.bodySmall,
+        )
+        c.error.isNotEmpty() -> MutedText(c.error)
+        c.unknown && c.installed.isNotEmpty() -> MutedText(stringResource(R.string.upgrade_ext_not_factory))
+        c.installed.isNotEmpty() -> Text(
+            stringResource(R.string.upgrade_ext_ok, c.targetVersion),
+            color = colors.ok,
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
 }

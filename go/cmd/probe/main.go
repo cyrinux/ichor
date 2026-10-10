@@ -9,6 +9,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -173,6 +174,48 @@ func diagnose(cfg, contextName, provider, model string) error {
 
 	if msg := <-p.done; msg != "" {
 		return fmt.Errorf("diagnosis failed: %s", msg)
+	}
+
+	return nil
+}
+
+// healthLines collects a health check's lines, as the apps show them.
+type healthLines struct {
+	lines []string
+	done  chan string
+}
+
+func (h *healthLines) OnProgress(_, message string) { h.lines = append(h.lines, message) }
+func (h *healthLines) OnDone(errMessage string)     { h.done <- errMessage }
+
+// collectHealthExplanation runs the cluster health check, then builds the report the
+// health check helper sends about it (whether the check passed or not).
+func collectHealthExplanation(e env, anonymize bool) (*ichorgo.Diagnosis, error) {
+	h := &healthLines{done: make(chan string, 1)}
+	ichorgo.StartClusterHealth(e.cfg, e.context, h)
+	failure := <-h.done
+
+	lines, err := json.Marshal(h.lines)
+	if err != nil {
+		return nil, err
+	}
+
+	return ichorgo.CollectHealthExplanation(e.cfg, e.context, e.kubeServer, string(lines), failure, anonymize)
+}
+
+// healthExplain asks the health check helper about a fresh health check run and prints the
+// answer. Like diagnose, it sends cluster data (real names) to the provider.
+func healthExplain(e env, provider, model string) error {
+	d, err := collectHealthExplanation(e, false)
+	if err != nil {
+		return err
+	}
+
+	p := &answerPrinter{done: make(chan string, 1)}
+	d.Ask(provider, aiKey(provider), model, os.Getenv("ICHOR_AI_BASE_URL"), "en", "", p)
+
+	if msg := <-p.done; msg != "" {
+		return fmt.Errorf("health explanation failed: %s", msg)
 	}
 
 	return nil

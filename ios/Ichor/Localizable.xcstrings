@@ -532,6 +532,187 @@
         }
       }
     },
+    "Cordon…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isoler…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acordonar…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Absperren…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isola…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ізолювати…"
+          }
+        }
+      }
+    },
+    "Uncordon…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lever l'isolement…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitar acordonamiento…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Absperrung aufheben…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovi isolamento…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зняти ізоляцію…"
+          }
+        }
+      }
+    },
+    "These extensions have no build for %@: %@. The node would come back without them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These extensions have no build for %1$@: %2$@. The node would come back without them."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ces extensions n'ont pas de build pour %1$@ : %2$@. Le nœud reviendrait sans elles."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estas extensiones no tienen compilación para %1$@: %2$@. El nodo volvería sin ellas."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Erweiterungen haben keinen Build für %1$@: %2$@. Der Node käme ohne sie zurück."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queste estensioni non hanno una build per %1$@: %2$@. Il nodo tornerebbe senza di esse."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ці розширення не мають збірки для %1$@: %2$@. Вузол повернеться без них."
+          }
+        }
+      }
+    },
+    "Extensions not checked: the image is not from the Image Factory." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensions non vérifiées : l'image ne vient pas de l'Image Factory."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensiones no comprobadas: la imagen no viene de Image Factory."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterungen nicht geprüft: das Image stammt nicht aus der Image Factory."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estensioni non verificate: l'immagine non proviene dall'Image Factory."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розширення не перевірено: образ не з Image Factory."
+          }
+        }
+      }
+    },
+    "Every extension has a build for %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque extension a un build pour %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas las extensiones tienen compilación para %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jede Erweiterung hat einen Build für %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni estensione ha una build per %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кожне розширення має збірку для %@."
+          }
+        }
+      }
+    },
     "Reading why the link is up or down…" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -45202,41 +45383,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Відповіді ШІ можуть бути хибними. Перевіряйте команду перед виконанням, особливо якщо вона скидає вузол або змінює etcd."
-          }
-        }
-      }
-    },
-    "Diagnose with AI" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mit KI diagnostizieren"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diagnosticar con IA"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diagnostiquer avec l’IA"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diagnostica con l’IA"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Діагностувати за допомогою ШІ"
           }
         }
       }
@@ -110799,6 +110945,152 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Un pod privilegiato gira su %1$@ nel namespace %2$@, nei namespace del nodo stesso, e nsenter apre una shell root sul nodo. Il pod viene eliminato quando la shell termina. Il namespace deve ammettere pod privilegiati."
+          }
+        }
+      }
+    },
+    "What went wrong" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was schiefgelaufen ist"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qué ha fallado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce qui ne va pas"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cosa non va"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Що пішло не так"
+          }
+        }
+      }
+    },
+    "Explain with AI" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit KI erklären"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explicar con IA"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expliquer avec l’IA"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spiega con l’IA"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пояснити за допомогою ШІ"
+          }
+        }
+      }
+    },
+    "Continue in Diagnosis" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In der Diagnose fortfahren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar en el diagnóstico"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuer dans le diagnostic"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continua nella diagnosi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Продовжити в діагностиці"
+          }
+        }
+      }
+    },
+    "Sends the failed checks, node readiness and recent events to %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sends the failed checks, node readiness and recent events to %1$@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoie les vérifications en échec, l’état des nœuds et les événements récents à %1$@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envía las comprobaciones fallidas, el estado de los nodos y los eventos recientes a %1$@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надсилає невдалі перевірки, готовність вузлів і нещодавні події до %1$@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sendet die fehlgeschlagenen Prüfungen, die Bereitschaft der Nodes und die letzten Ereignisse an %1$@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia i controlli falliti, lo stato dei nodi e gli eventi recenti a %1$@."
           }
         }
       }

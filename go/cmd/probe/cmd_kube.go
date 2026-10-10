@@ -323,6 +323,20 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "health-explain-report", args: "", run: func(e env) (out string, err error) {
+		// What the health check helper would send, anonymized; nothing is sent.
+		var d *ichorgo.Diagnosis
+		if d, err = collectHealthExplanation(e, true); err == nil {
+			out = d.Report()
+		}
+
+		return out, err
+	}},
+	{name: "health-explain", args: "anthropic|openai [MODEL]", run: func(e env) (out string, err error) {
+		err = healthExplain(e, flag.Arg(1), flag.Arg(2))
+
+		return noOutput, err
+	}},
 	{name: "prom-metrics", args: "SOURCE_JSON", run: func(e env) (out string, err error) {
 		// The metric names the panel assistant would be given; nothing is sent.
 		out, err = ichorgo.PromMetricNames(e.cfg, e.context, e.kubeServer, flag.Arg(1))

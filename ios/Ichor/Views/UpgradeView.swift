@@ -25,6 +25,8 @@ struct UpgradeView: View {
     /// UpgradeVersionCheck for the target: nil while it is computed.
     @State private var versionRisk: String?
     @State private var stage = false
+    /// The node's extensions against the target image's version; nil while it is read.
+    @State private var extensions: UpgradeExtensionCheck?
     /// Cordon and drain first (a maintenance run), when the plan says the upgrade does not.
     @State private var drain = true
     @State private var force = false
@@ -58,6 +60,7 @@ struct UpgradeView: View {
             }
         }
         .task(id: [version, loadedPlan?.currentImage ?? ""]) { await computeImage() }
+        .task(id: image) { await checkExtensions() }
     }
 
     /// Pulls the installer on every node (another pull already running is shown instead).
@@ -207,6 +210,7 @@ struct UpgradeView: View {
                     Text("New image").font(.caption).foregroundStyle(.secondary)
                     Text(verbatim: image).font(.caption.monospaced()).textSelection(.enabled)
                 }
+                extensionRow
                 // Pulling the installer on every node first keeps each node's reboot short.
                 Button("Pre-pull the image on all nodes") { prePull() }
                 Text("Download it on every node now, so each node's reboot is short.")
@@ -317,6 +321,27 @@ struct UpgradeView: View {
         guard !Task.isCancelled else { return }
         versionRisk = risk
         image = await TalosClient.upgradeImage(currentImage: plan.currentImage, version: target)
+    }
+
+    @ViewBuilder private var extensionRow: some View {
+        if let check = extensions {
+            if !check.missing.isEmpty {
+                Text("These extensions have no build for \(check.targetVersion): \(check.missing.joined(separator: ", ")). The node would come back without them.")
+                    .font(.footnote).foregroundStyle(.statusWarn)
+            } else if !check.error.isEmpty {
+                Text(verbatim: check.error).font(.footnote).foregroundStyle(.secondary)
+            } else if check.unknown && !check.installed.isEmpty {
+                Text("Extensions not checked: the image is not from the Image Factory.").font(.footnote).foregroundStyle(.secondary)
+            } else if !check.installed.isEmpty {
+                Text("Every extension has a build for \(check.targetVersion).").font(.footnote).foregroundStyle(.statusOK)
+            }
+        }
+    }
+
+    private func checkExtensions() async {
+        extensions = nil
+        guard !image.isEmpty, let client = model.client else { return }
+        extensions = try? await client.upgradeExtensionCheck(node: node, image: image)
     }
 
     /// App lock first (like reboot), then the typed hostname.

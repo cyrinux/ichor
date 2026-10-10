@@ -1220,6 +1220,9 @@
     <string name="upgrade_same_version">%1$s ist bereits installiert.</string>
     <string name="upgrade_stage">Beim nächsten Neustart anwenden</string>
     <string name="upgrade_stage_desc">Bereitet das Upgrade vor und installiert es beim Start des Knotens (Talos startet ihn neu). Nützlich, wenn verwendete Dateien das Upgrade blockieren.</string>
+    <string name="upgrade_ext_missing">Diese Erweiterungen haben keinen Build für %1$s: %2$s. Der Node käme ohne sie zurück.</string>
+    <string name="upgrade_ext_not_factory">Erweiterungen nicht geprüft: das Image stammt nicht aus der Image Factory.</string>
+    <string name="upgrade_ext_ok">Jede Erweiterung hat einen Build für %1$s.</string>
     <string name="upgrade_drain_first">Node zuerst leeren</string>
     <string name="upgrade_drain_first_desc">Absperren und leeren, aktualisieren, warten, bis er wieder bereit ist, dann die Absperrung aufheben. Ohne diese Option stoppt diese Talos-Version die Pods des Nodes beim Neustart.</string>
     <string name="maintenance_action_upgrade_desc">Talos aktualisieren, warten, bis der Node die neue Version ausführt und bereit ist, dann die Absperrung aufheben.</string>
@@ -1439,7 +1442,10 @@
     <string name="ai_stop">Stoppen</string>
     <string name="ai_copy">Kopieren</string>
     <string name="ai_disclaimer">KI-Antworten können falsch sein. Prüfen Sie einen Befehl, bevor Sie ihn ausführen, besonders wenn er einen Knoten zurücksetzt oder etcd verändert.</string>
-    <string name="ai_health_diagnose">Mit KI diagnostizieren</string>
+    <string name="ai_health_explain_title">Was schiefgelaufen ist</string>
+    <string name="ai_health_explain_hint">Sendet die fehlgeschlagenen Prüfungen, die Bereitschaft der Nodes und die letzten Ereignisse an %1$s.</string>
+    <string name="ai_health_explain">Mit KI erklären</string>
+    <string name="ai_health_continue">In der Diagnose fortfahren</string>
     <string name="demo_try">Demo ausprobieren</string>
     <string name="demo_talos">Talos-Cluster</string>
     <string name="demo_kube">Kubernetes-Cluster (EKS)</string>

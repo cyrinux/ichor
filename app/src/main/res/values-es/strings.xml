@@ -1227,6 +1227,9 @@
     <string name="upgrade_same_version">%1$s ya está instalada.</string>
     <string name="upgrade_stage">Aplicar en el próximo reinicio</string>
     <string name="upgrade_stage_desc">Prepara la actualización y la instala al arrancar el nodo (Talos lo reinicia). Útil cuando archivos en uso bloquean la actualización.</string>
+    <string name="upgrade_ext_missing">Estas extensiones no tienen compilación para %1$s: %2$s. El nodo volvería sin ellas.</string>
+    <string name="upgrade_ext_not_factory">Extensiones no comprobadas: la imagen no viene de Image Factory.</string>
+    <string name="upgrade_ext_ok">Todas las extensiones tienen compilación para %1$s.</string>
     <string name="upgrade_drain_first">Vaciar primero el nodo</string>
     <string name="upgrade_drain_first_desc">Acordonarlo y vaciarlo, actualizar, esperar a que vuelva y esté listo, y quitar el acordonamiento. Sin esto, esta versión de Talos detiene los pods del nodo al reiniciar.</string>
     <string name="maintenance_action_upgrade_desc">Actualizar Talos, esperar a que el nodo ejecute la nueva versión y esté listo, y luego quitar el acordonamiento.</string>
@@ -1446,7 +1449,10 @@
     <string name="ai_stop">Detener</string>
     <string name="ai_copy">Copiar</string>
     <string name="ai_disclaimer">Las respuestas de la IA pueden ser erróneas. Comprueba un comando antes de ejecutarlo, sobre todo si restablece un nodo o modifica etcd.</string>
-    <string name="ai_health_diagnose">Diagnosticar con IA</string>
+    <string name="ai_health_explain_title">Qué ha fallado</string>
+    <string name="ai_health_explain_hint">Envía las comprobaciones fallidas, el estado de los nodos y los eventos recientes a %1$s.</string>
+    <string name="ai_health_explain">Explicar con IA</string>
+    <string name="ai_health_continue">Continuar en el diagnóstico</string>
     <string name="demo_try">Probar demo</string>
     <string name="demo_talos">Clúster Talos</string>
     <string name="demo_kube">Clúster Kubernetes (EKS)</string>

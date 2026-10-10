@@ -316,6 +316,11 @@ where a failed upgrade can be rolled back.
 - **Rollback:** on a node's upgrade screen, the menu offers `talosctl rollback` (os:admin): the node
   reboots at once into the Talos it ran before its last upgrade, for an upgrade that boots but
   misbehaves. Talos rolls back by itself one that does not boot.
+- **Extensions before an upgrade:** once the target version is chosen, the upgrade screen
+  checks the node's system extensions against the Image Factory's official list for that
+  version. Any extension with no build is named, since the node would come back without it.
+  An image from another registry, or a factory that cannot be reached, is said to be
+  unchecked.
 - **Drain before an upgrade:** a Talos version that upgrades without draining the node first
   (1.18 and later, through the LifecycleService) gets a "Drain the node first" switch on the
   upgrade screen, on by default. The upgrade then runs as a node maintenance: cordon, drain
@@ -695,6 +700,11 @@ and never contacts a model provider.
   the Claude, ChatGPT or Gemini app (or any app taking text) through the system share sheet.
 - **Check the answer:** a model can be wrong. Read a command before running it, especially one
   that resets a node or changes etcd membership.
+- **Health check helper:** when the cluster health check fails, the health page shows *Explain
+  with AI*: one tap sends the check's lines and failure, node readiness and recent warning and
+  error events (no logs, no etcd), anonymized like the report, and the answer names the likely
+  cause and the next two or three screens to check. *Continue in Diagnosis* opens the full
+  report with the failure as the note.
 - **Panel assistant:** on the Metrics screen, the sparkle button (or *Ask AI* in the panel
   editor) opens a chat with the same model to write a PromQL panel from a description, or to
   change the one being edited. The model gets the metric names your source knows and the
@@ -711,6 +721,10 @@ go run ./cmd/probe diagnose-report        # the anonymized report; nothing is se
 # These two send the report with the real names (not anonymized) and print the answer:
 ANTHROPIC_API_KEY=... go run ./cmd/probe diagnose anthropic
 OPENAI_API_KEY=... go run ./cmd/probe diagnose openai gpt-6-astra
+# The health check helper: runs the health check, then prints what would be sent (anonymized,
+# nothing is sent), or sends it with the real names and prints the answer
+go run ./cmd/probe health-explain-report
+ANTHROPIC_API_KEY=... go run ./cmd/probe health-explain anthropic
 # The panel assistant: the metric names (nothing is sent), then one question with its checked panel
 SRC='{"mode":"proxy","namespace":"monitoring","service":"prometheus-operated","port":9090}'
 go run ./cmd/probe prom-metrics "$SRC"

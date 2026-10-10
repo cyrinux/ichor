@@ -117,7 +117,17 @@ func gatherClusterPlan(ctx context.Context, s *session, kube kubeTarget, version
 
 	for _, node := range targetNodes(s.context) {
 		up := gatherPlan(ctx, s, node, kubeTarget{})
-		plan.Nodes = append(plan.Nodes, clusterNodeOf(node, up, v, node == leader))
+		n := clusterNodeOf(node, up, v, node == leader)
+
+		// A pending node whose extensions the version has no build of (an unreadable list
+		// only says it could not be checked).
+		if n.State == clusterNodePending {
+			if installed, err := nodeExtensions(ctx, s, node); err == nil {
+				n.Warnings = append(n.Warnings, extensionWarnings(checkExtensions(installed, n.Image, officialExtensions))...)
+			}
+		}
+
+		plan.Nodes = append(plan.Nodes, n)
 	}
 
 	plan.Nodes = orderClusterNodes(plan.Nodes)

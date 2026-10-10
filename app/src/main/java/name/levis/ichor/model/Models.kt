@@ -169,6 +169,10 @@ data class NodeOverview(
     val memAvailable: Long = 0,
     /** Internet-facing addresses, IPv4 first; empty when none (or from an older core). */
     val publicIPs: List<String> = emptyList(),
+    /** The Kubernetes node is unschedulable, as the node itself says; see [cordonKnown]. */
+    val cordoned: Boolean = false,
+    /** False when the node did not say (older Talos, not a Kubernetes member yet). */
+    val cordonKnown: Boolean = false,
     /**
      * Set by the app, never by the core: when an unreachable node last answered (epoch millis);
      * its hostname, role, version and capacity are then the ones it had (see [withLastKnown]).
@@ -270,7 +274,7 @@ val NodeOverview.health: NodeHealth
 
 /** Worth a full row even in the collapsed nodes card: down, not ready, or reporting a problem. */
 val NodeOverview.needsAttention: Boolean
-    get() = health != NodeHealth.READY || unmetConditions.isNotEmpty() || !error.isNullOrBlank()
+    get() = health != NodeHealth.READY || unmetConditions.isNotEmpty() || !error.isNullOrBlank() || cordoned
 
 /**
  * The Talos version every answering node runs, which the cluster summary already shows, so the

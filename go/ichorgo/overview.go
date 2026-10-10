@@ -39,6 +39,11 @@ type nodeOverview struct {
 	MemAvailable uint64 `json:"memAvailable"` // bytes
 	// Internet-facing addresses, IPv4 first; empty when the node has none or did not say.
 	PublicIPs []string `json:"publicIPs,omitempty"`
+	// Cordoned: the Kubernetes node is unschedulable, as the node's own k8s.NodeStatus says
+	// (no Kubernetes API needed). CordonKnown is false when that status is not there (an older
+	// Talos, a node not yet a Kubernetes member): never read it as schedulable then.
+	Cordoned    bool `json:"cordoned"`
+	CordonKnown bool `json:"cordonKnown"`
 }
 
 type unmetCondition struct {
@@ -62,6 +67,8 @@ type nodeProbe struct {
 	publicIPs   []string
 	// KubeSpan peers that are up, by label: the addresses this node reaches them at.
 	peerEndpoints map[string][]netip.Addr
+	// kube is the node's Kubernetes node as Talos sees it, nil when unknown.
+	kube *kubeNodeState
 }
 
 // ClusterOverview queries every node of the context in parallel and returns a JSON clusterOverview.
@@ -150,6 +157,7 @@ func probeNode(ctx context.Context, c *client.Client, node string) nodeProbe {
 
 	p.publicIPs = probePublicIPs(nodeCtx, c)
 	p.peerEndpoints = probePeerEndpoints(nodeCtx, c)
+	p.kube = fetchKubeNodeState(nodeCtx, c)
 
 	return p
 }
@@ -188,6 +196,10 @@ func buildNodeOverview(node string, p nodeProbe) nodeOverview {
 	out.MemTotal = p.memory.GetMeminfo().GetMemtotal() * kib
 	out.MemAvailable = p.memory.GetMeminfo().GetMemavailable() * kib
 	out.PublicIPs = p.publicIPs
+
+	if p.kube != nil {
+		out.Cordoned, out.CordonKnown = p.kube.Unschedulable, true
+	}
 
 	var errs []string
 

@@ -1225,6 +1225,9 @@
     <string name="upgrade_same_version">%1$s is already installed.</string>
     <string name="upgrade_stage">Apply at next reboot</string>
     <string name="upgrade_stage_desc">Stage the upgrade and install it while the node boots (Talos reboots it). Use it when files in use block the upgrade.</string>
+    <string name="upgrade_ext_missing">These extensions have no build for %1$s: %2$s. The node would come back without them.</string>
+    <string name="upgrade_ext_not_factory">Extensions not checked: the image is not from the Image Factory.</string>
+    <string name="upgrade_ext_ok">Every extension has a build for %1$s.</string>
     <string name="upgrade_drain_first">Drain the node first</string>
     <string name="upgrade_drain_first_desc">Cordon and drain it, upgrade, wait until it is back and Ready, then uncordon it. Without it, this Talos version stops the node\'s pods when it reboots.</string>
     <string name="maintenance_action_upgrade_desc">Upgrade Talos, wait until the node runs the new version and is Ready, then uncordon it.</string>
@@ -1445,7 +1448,10 @@
     <string name="ai_stop">Stop</string>
     <string name="ai_copy">Copy</string>
     <string name="ai_disclaimer">AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd.</string>
-    <string name="ai_health_diagnose">Diagnose with AI</string>
+    <string name="ai_health_explain_title">What went wrong</string>
+    <string name="ai_health_explain_hint">Sends the failed checks, node readiness and recent events to %1$s.</string>
+    <string name="ai_health_explain">Explain with AI</string>
+    <string name="ai_health_continue">Continue in Diagnosis</string>
     <string name="demo_try">Try demo</string>
     <string name="demo_talos">Talos cluster</string>
     <string name="demo_kube">Kubernetes cluster (EKS)</string>

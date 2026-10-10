@@ -84,6 +84,8 @@ func demoNodes() []nodeOverview {
 		if i >= 3 { // the workers sit behind a NAT the discovery service sees
 			nodes[i].PublicIPs = []string{fmt.Sprintf("203.0.113.%d", 40+i)}
 		}
+		// The second worker was left cordoned by a maintenance.
+		nodes[i].Cordoned, nodes[i].CordonKnown = i == 4, true
 	}
 	return nodes
 }
@@ -250,6 +252,13 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			{ID: "EPHEMERAL", Phase: "ready", Type: "partition", Location: "/dev/nvme0n1p6", Size: 100 << 30, Filesystem: "xfs", MountedOn: "/var"},
 			{ID: "STATE", Phase: "ready", Type: "partition", Location: "/dev/nvme0n1p5", Size: 100 << 20, Filesystem: "xfs", MountedOn: "/system/state"},
 		}})
+	case "UpgradeExtensionCheck":
+		// Whatever the image: a node with two extensions, one without a build for the version.
+		image := strings.Join(args, "")
+		installed := []extensionInfo{{Name: "iscsi-tools", Version: "v0.2.0"}, {Name: "util-linux-tools", Version: "2.41.1"}}
+		return toJSON(checkExtensions(installed, factoryHost+"/installer/demo:"+demoTag(image), func(string) ([]string, error) {
+			return []string{"siderolabs/util-linux-tools"}, nil
+		}))
 	case "NodeHardware":
 		return toJSON(nodeHardware{
 			System:     &systemInfo{Manufacturer: "Ichor", Product: "Demo server", Serial: "DEMO-001"},
