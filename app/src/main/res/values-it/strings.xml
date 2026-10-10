@@ -841,6 +841,12 @@
     <string name="machine_config_multi_state_failed">Non riuscito</string>
     <string name="machine_config_multi_confirm_title">Applicare la modifica a questi nodi?</string>
     <string name="machine_config_multi_confirm_reboot">Ogni nodo applica la modifica e si riavvia, uno dopo l\'altro: il successivo inizia quando il precedente è tornato.</string>
+    <string name="config_multi_notification_public">Una modifica di configurazione viene applicata a più nodi</string>
+    <string name="config_multi_notification_result_public">Il rilascio della configurazione è terminato</string>
+    <string name="config_multi_notification_title">Applicazione di una modifica di configurazione su %1$s</string>
+    <string name="config_multi_notification_done">Modifica di configurazione applicata su %1$s</string>
+    <string name="config_multi_notification_failed">Il rilascio della configurazione su %1$s si è interrotto</string>
+    <string name="config_multi_already_running">Una modifica di configurazione è già in corso su %1$s: attendi che finisca.</string>
     <string name="machine_config_apply_applying">Applicazione della modifica…</string>
     <string name="machine_config_apply_rebooting">Il nodo si sta riavviando…</string>
     <string name="machine_config_apply_waiting">In attesa che il nodo torni…</string>

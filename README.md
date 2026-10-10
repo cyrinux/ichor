@@ -624,6 +624,7 @@ a fresh install. Backups move between Android and iOS.
     - **Run:** one confirmation for all, typed with the cluster's name. Nodes are applied one after the other, workers first and control planes last, and the first failure stops the rest.
     - **Reboot mode:** each node is back before the next starts, and etcd must be healthy before a control plane reboots.
     - **Try mode:** for one node only.
+    - **In the background:** on Android the rollout goes on in a notification, node by node, after you leave the app. On iOS it runs while iOS allows, and a notification asks you to come back.
 - **App lock (Settings → Security):**
   - **Methods:** fingerprint, with the device PIN, pattern or password as fallback; or a
     **security key** (below).

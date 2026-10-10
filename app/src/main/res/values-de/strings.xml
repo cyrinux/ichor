@@ -834,6 +834,12 @@
     <string name="machine_config_multi_state_failed">Fehlgeschlagen</string>
     <string name="machine_config_multi_confirm_title">Die Änderung auf diese Nodes anwenden?</string>
     <string name="machine_config_multi_confirm_reboot">Jeder Node wendet die Änderung an und startet neu, einer nach dem anderen: Der nächste beginnt, sobald der vorige zurück ist.</string>
+    <string name="config_multi_notification_public">Eine Konfigurationsänderung wird auf mehrere Nodes angewendet</string>
+    <string name="config_multi_notification_result_public">Das Ausrollen der Konfiguration ist beendet</string>
+    <string name="config_multi_notification_title">Konfigurationsänderung wird auf %1$s angewendet</string>
+    <string name="config_multi_notification_done">Konfigurationsänderung auf %1$s angewendet</string>
+    <string name="config_multi_notification_failed">Das Ausrollen der Konfiguration auf %1$s wurde angehalten</string>
+    <string name="config_multi_already_running">Auf %1$s wird schon eine Konfigurationsänderung angewendet: Warte, bis sie fertig ist.</string>
     <string name="machine_config_apply_applying">Änderung wird angewendet…</string>
     <string name="machine_config_apply_rebooting">Der Node startet neu…</string>
     <string name="machine_config_apply_waiting">Warten, bis der Node zurück ist…</string>

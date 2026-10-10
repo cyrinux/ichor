@@ -841,6 +841,12 @@
     <string name="machine_config_multi_state_failed">Échec</string>
     <string name="machine_config_multi_confirm_title">Appliquer la modification à ces nœuds ?</string>
     <string name="machine_config_multi_confirm_reboot">Chaque nœud applique la modification et redémarre, l\'un après l\'autre : le suivant commence quand le précédent est revenu.</string>
+    <string name="config_multi_notification_public">Une modification de config est appliquée à plusieurs nœuds</string>
+    <string name="config_multi_notification_result_public">Le déploiement de la config est terminé</string>
+    <string name="config_multi_notification_title">Application d\'une modification de config sur %1$s</string>
+    <string name="config_multi_notification_done">Modification de config appliquée sur %1$s</string>
+    <string name="config_multi_notification_failed">Le déploiement de la config sur %1$s s\'est arrêté</string>
+    <string name="config_multi_already_running">Une modification de config est déjà en cours sur %1$s : attendez qu\'elle se termine.</string>
     <string name="machine_config_apply_applying">Application de la modification…</string>
     <string name="machine_config_apply_rebooting">Le nœud redémarre…</string>
     <string name="machine_config_apply_waiting">En attente du retour du nœud…</string>

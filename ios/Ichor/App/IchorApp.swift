@@ -45,6 +45,7 @@ struct IchorApp: App {
                     if phase == .background, BackgroundMonitor.alertsEnabled { BackgroundMonitor.schedule() }
                     if phase == .background { UpgradeJob.shared.didEnterBackground() }
                     if phase == .background { MaintenanceJob.shared.didEnterBackground() }
+                    if phase == .background { ConfigMultiJob.shared.didEnterBackground() }
                 }
                 .preferredColorScheme(model.theme.colorScheme)
                 // The accent color follows the cluster on screen.
