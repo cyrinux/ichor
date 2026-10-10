@@ -32,12 +32,13 @@ import name.levis.ichor.ui.flows.FlowsScreen
 import name.levis.ichor.ui.kubebrowser.KubeBrowserRoutes
 import name.levis.ichor.ui.kubebrowser.KubeLinks
 import name.levis.ichor.ui.kubebrowser.LocalKubeLinks
+import name.levis.ichor.ui.kubeevents.KubeEventsScreen
 import name.levis.ichor.ui.kubenodes.KubeNodesScreen
 import name.levis.ichor.ui.metrics.METRICS_TAB_MONITORING
 import name.levis.ichor.ui.netpol.NetworkPoliciesScreen
 import name.levis.ichor.ui.overview.KubeHomeViewModel
 
-/** The Kubernetes screens: nodes, workloads, apps, metrics, the checkup, flows, data services, pod shells. */
+/** The Kubernetes screens: nodes, workloads, events, apps, metrics, the checkup, flows, data services, pod shells. */
 internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks) {
     with(KubeBrowserRoutes) { kubeBrowserScreens(nav, kubeLinks) }
     composable(Routes.METRICS, arguments = listOf(navArgument("tab") { type = NavType.IntType; defaultValue = 0 })) { entry ->
@@ -137,9 +138,11 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
                 onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
                 onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
                 onJobs = { nav.navigate(KubeBrowserRoutes.JOBS) },
+                onEvents = { nav.navigate(Routes.KUBE_EVENTS) },
             )
         }
     }
+    composable(Routes.KUBE_EVENTS) { KubeEventsScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
     composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = { nav.navigate(Routes.AUDIT) }) }
     composable(Routes.AUDIT) { AuditScreen(onBack = { nav.popBackStack() }) }

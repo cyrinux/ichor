@@ -3642,4 +3642,23 @@
         <item quantity="other">%1$d ältere Alarme noch offen</item>
     </plurals>
     <string name="history_alert_cert">Zertifikat läuft bald ab</string>
+    <string name="kube_events_stream_title">Kubernetes-Ereignisse</string>
+    <string name="kube_events_warnings_only">Nur Warnungen</string>
+    <string name="kube_events_pause">Pausieren</string>
+    <string name="kube_events_resume">Fortsetzen</string>
+    <string name="kube_events_paused">Pausiert</string>
+    <string name="kube_events_search">Grund, Objekt oder Meldung suchen</string>
+    <string name="kube_events_stream_empty">Noch kein Ereignis: Neue erscheinen hier, sobald sie eintreten.</string>
+    <string name="kube_events_no_match">Kein Ereignis passt.</string>
+    <string name="kube_events_share">Ereignisse teilen</string>
+    <string name="kube_events_open_object">Objekt öffnen</string>
+    <string name="kube_events_connecting">Verbinde…</string>
+    <string name="kube_events_reconnecting">Verbinde erneut…</string>
+    <string name="kube_events_reconnecting_reason">Verbinde erneut: %1$s</string>
+    <string name="kube_events_relisting">Ereignisse werden neu gelesen…</string>
+    <string name="kube_events_polling">Abfrage alle 5 s: Diese Zugangsdaten dürfen Ereignisse auflisten, aber nicht beobachten</string>
+    <plurals name="kube_events_pending">
+        <item quantity="one">Pausiert: %1$d neues oder geändertes Ereignis</item>
+        <item quantity="other">Pausiert: %1$d neue oder geänderte Ereignisse</item>
+    </plurals>
 </resources>

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Stream
+import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -29,6 +30,7 @@ private fun kubernetesActionIcon(action: KubernetesAction): ImageVector = when (
     KubernetesAction.STORAGE -> Icons.Outlined.Storage
     KubernetesAction.SERVICES -> Icons.Outlined.Lan
     KubernetesAction.JOBS -> Icons.Outlined.TaskAlt
+    KubernetesAction.EVENTS -> Icons.Outlined.Timeline
     KubernetesAction.API_ADDRESS -> Icons.Outlined.Dns
 }
 
@@ -46,6 +48,7 @@ val kubernetesActionLook = ActionLook<KubernetesAction>(::kubernetesActionIcon) 
             KubernetesAction.STORAGE -> R.string.storage_title
             KubernetesAction.SERVICES -> R.string.kube_services_title
             KubernetesAction.JOBS -> R.string.kube_jobs_title
+            KubernetesAction.EVENTS -> R.string.kube_events_stream_title
             KubernetesAction.API_ADDRESS -> R.string.kube_server_title
         },
     )
