@@ -46,6 +46,8 @@ struct OverviewView: View {
     @State private var customizing = false
     @Environment(\.scenePhase) private var scenePhase
     @State private var visible = false
+    /// "Since you last looked" (the history ring).
+    @State private var look = HistoryLook()
 
     var body: some View {
         Group {
@@ -75,6 +77,7 @@ struct OverviewView: View {
                                         .font(.callout).foregroundStyle(.secondary)
                                 }
                             }
+                            HistorySinceSection(look: look)
                             if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
                                 Section { CertExpiryBanner(notAfter: ctx.certNotAfter) }
                             }
@@ -176,6 +179,7 @@ struct OverviewView: View {
         .sheet(isPresented: $customizing) { OverviewEditorSheet(OverviewCard.self, OverviewAction.self, title: "Customize overview", absent: absentCards) }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
+        .watchesHistory(look, cluster: model.activeSummary.map(monitorClusterKey) ?? "", id: loadID)
         // Live CPU and memory while the overview is on screen, the app active, the setting on
         // and a node answers; fewer samples on a large cluster (each one asks every node).
         .task(id: liveID) {
