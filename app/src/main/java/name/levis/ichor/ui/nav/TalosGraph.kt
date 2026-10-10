@@ -157,6 +157,10 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             hostname = entry.arguments?.getString("host") ?: addr,
             initialVersion = entry.arguments?.getString("version").orEmpty(),
             onBack = { nav.popBackStack() },
+            onMaintenance = {
+                nav.popBackStack()
+                nav.navigate(Routes.maintenance(addr, entry.arguments?.getString("host") ?: addr))
+            },
         )
     }
     composable(

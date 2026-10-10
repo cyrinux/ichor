@@ -33,6 +33,15 @@ extension TalosClient {
         }
     }
 
+    /// Cordons, drains, upgrades Talos to `image`, waits until the node is back and Ready, then
+    /// uncordons it (StartNodeMaintenanceUpgrade). `force` skips the etcd checks as for an upgrade.
+    func startMaintenanceUpgrade(node: String, image: String, includeBare: Bool, acknowledged: Bool,
+                                 force: Bool) -> (events: AsyncStream<MaintenanceEvent>, stop: @Sendable () -> Void) {
+        Self.followMaintenance { [config, context, kubeServer] bridge in
+            IchorgoStartNodeMaintenanceUpgrade(config, context, kubeServer, node, image, includeBare, acknowledged, force, bridge)
+        }
+    }
+
     /// A cluster without Talos (kubeconfig): the drain plan of the Kubernetes node `kubeNode`,
     /// without the reboot checks.
     func kubeDrainPlan(kubeNode: String) async throws -> MaintenancePlan {

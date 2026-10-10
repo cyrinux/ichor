@@ -104,7 +104,7 @@ struct MaintenanceView: View {
     private var actionSection: some View {
         Section("After the drain") {
             Picker("Action", selection: $action) {
-                ForEach(MaintenanceAction.allCases) { action in
+                ForEach(MaintenanceAction.planned) { action in
                     VStack(alignment: .leading) {
                         Text(action.localizedLabel)
                         Text(action.localizedDetails).font(.caption).foregroundStyle(.secondary)
@@ -169,7 +169,7 @@ struct MaintenanceView: View {
 
     private var startTitle: String {
         switch action {
-        case .reboot: String(localized: "Drain and reboot")
+        case .reboot, .upgrade: String(localized: "Drain and reboot")
         case .shutdown: String(localized: "Drain and shut down")
         case .none: String(localized: "Drain")
         }
@@ -177,7 +177,7 @@ struct MaintenanceView: View {
 
     private func confirmationMessage(_ plan: MaintenancePlan) -> String {
         var text = switch action {
-        case .reboot: String(localized: "\(hostname) is cordoned, its pods are evicted, then it reboots and is uncordoned once Ready again.")
+        case .reboot, .upgrade: String(localized: "\(hostname) is cordoned, its pods are evicted, then it reboots and is uncordoned once Ready again.")
         case .shutdown: String(localized: "\(hostname) is cordoned, its pods are evicted, then it shuts down. It stays cordoned and off until someone powers it on.")
         case .none: String(localized: "\(hostname) is cordoned and its pods are evicted. It stays cordoned: uncordon it from its menu when ready.")
         }
@@ -263,6 +263,7 @@ extension MaintenanceAction {
         case .reboot: String(localized: "Reboot")
         case .shutdown: String(localized: "Shut down")
         case .none: String(localized: "Drain only")
+        case .upgrade: String(localized: "Upgrade")
         }
     }
 
@@ -271,6 +272,7 @@ extension MaintenanceAction {
         case .reboot: String(localized: "Reboots, waits until the node is Ready again, then uncordons it.")
         case .shutdown: String(localized: "Powers the node off; it stays cordoned.")
         case .none: String(localized: "Stops after the drain; the node stays cordoned.")
+        case .upgrade: String(localized: "Upgrade Talos, wait until the node runs the new version and is Ready, then uncordon it.")
         }
     }
 }

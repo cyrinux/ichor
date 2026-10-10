@@ -180,7 +180,7 @@ func runUpgrade(ctx context.Context, kube kubeTarget, node string, o upgradeOpti
 		s.definitions.Delete(node)
 	}()
 
-	if err := requestUpgrade(client.WithNode(reqCtx, node), talosUpgrader{s.client}, image, o.stage, o.force, func() error { return upgradeRefusal(plan, false) }, emit); err != nil {
+	if err := requestUpgrade(client.WithNode(reqCtx, node), talosUpgrader{s.client}, image, o.stage, o.force, false, func() error { return upgradeRefusal(plan, false) }, emit); err != nil {
 		if isUnavailableAPI(err) {
 			return "", errors.New("upgrade: " + s.friendly(node, err))
 		}

@@ -35,6 +35,7 @@ const drainPDBsJSON = `{"items":[
 type drainAPI struct {
 	mu        sync.Mutex
 	blockFor  int
+	forbid    bool // every eviction is refused (403)
 	evicted   map[string]bool
 	evictions []string
 	patches   []string
@@ -72,6 +73,13 @@ func (d *drainAPI) handler(w http.ResponseWriter, r *http.Request) {
 	case r.Method == http.MethodPost && strings.HasSuffix(r.URL.Path, "/eviction"):
 		pod := strings.TrimSuffix(r.URL.Path, "/eviction")
 		d.evictions = append(d.evictions, pod)
+
+		if d.forbid {
+			w.WriteHeader(http.StatusForbidden)
+			_, _ = io.WriteString(w, `{"kind":"Status","reason":"Forbidden","message":"evictions are forbidden"}`)
+
+			return
+		}
 
 		if strings.HasSuffix(pod, "/pg-1") && d.blockFor > 0 {
 			d.blockFor--

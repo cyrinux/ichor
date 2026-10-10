@@ -113,5 +113,33 @@ class MaintenanceTest {
         assertEquals(true, cordonedAfter(MaintenanceAction.REBOOT, MaintenancePhase.WAITING, running = false, failed = true, wasCordoned = false))
         assertEquals(true, cordonedAfter(MaintenanceAction.SHUTDOWN, MaintenancePhase.SHUTDOWN, running = false, failed = false, wasCordoned = false))
         assertEquals(true, cordonedAfter(MaintenanceAction.NONE, MaintenancePhase.DRAIN, running = false, failed = false, wasCordoned = false))
+        // An upgrade ends like a reboot; a failed one leaves the node cordoned.
+        assertEquals(false, cordonedAfter(MaintenanceAction.UPGRADE, MaintenancePhase.UNCORDON, running = false, failed = false, wasCordoned = false))
+        assertEquals(true, cordonedAfter(MaintenanceAction.UPGRADE, MaintenancePhase.UPGRADE, running = false, failed = true, wasCordoned = false))
+    }
+
+    @Test
+    fun upgradeRunsAfterTheDrain() {
+        assertEquals(
+            listOf(MaintenancePhase.CORDON, MaintenancePhase.DRAIN, MaintenancePhase.UPGRADE, MaintenancePhase.WAITING, MaintenancePhase.UNCORDON),
+            maintenancePhases(MaintenanceAction.UPGRADE),
+        )
+        val timeline = maintenanceTimeline(
+            MaintenanceAction.UPGRADE,
+            listOf(MaintenanceProgress("cordon"), MaintenanceProgress("drain"), MaintenanceProgress("upgrade", "installing: installing")),
+            finished = false,
+            failed = false,
+        )
+        assertEquals(StepStatus.CURRENT, timeline[2].status)
+        assertEquals("installing: installing", timeline[2].message)
+        // Started from the upgrade screen only.
+        assertFalse(MaintenanceAction.UPGRADE in MaintenanceAction.planned)
+    }
+
+    @Test
+    fun decodesUpgradeDrainable() {
+        assertTrue(TalosJson.decodeFromString(MaintenancePlan.serializer(), """{"node":"n","upgradeDrainable":true}""").upgradeDrainable)
+        assertTrue(TalosJson.decodeFromString(UpgradePlan.serializer(), """{"node":"n","drainable":true}""").drainable)
+        assertFalse(TalosJson.decodeFromString(UpgradePlan.serializer(), """{"node":"n"}""").drainable)
     }
 }

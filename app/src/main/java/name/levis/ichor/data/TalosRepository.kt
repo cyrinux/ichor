@@ -20,6 +20,7 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.ClusterStorageHealth
 import name.levis.ichor.model.MaintenanceAction
 import name.levis.ichor.model.MaintenancePlan
+import name.levis.ichor.model.MaintenanceUpgrade
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
@@ -362,7 +363,8 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /**
      * Starts the maintenance of [node] (cordon, drain, then [action]); returns at once, the
      * run reports to [listener]. The core refuses blockers, and acknowledgments unless [acknowledged].
-     * A kubeconfig cluster only drains ([node]: the Kubernetes node name).
+     * A kubeconfig cluster only drains ([node]: the Kubernetes node name). [upgrade]: what
+     * [MaintenanceAction.UPGRADE] installs, required for it.
      */
     fun startMaintenance(
         node: String,
@@ -370,6 +372,7 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         includeBare: Boolean,
         acknowledged: Boolean,
         listener: MaintenanceListener,
+        upgrade: MaintenanceUpgrade? = null,
     ): MaintenanceRun {
         val stored = configs.forCall()
         if (stored.activeIsKube) {
@@ -378,6 +381,12 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
             return Ichorgo.startKubeDrain(target.yaml, target.context, target.server, node, includeBare, listener)
         }
         val server = kubeServers.serverFor(stored)
+        if (action == MaintenanceAction.UPGRADE) {
+            val up = requireNotNull(upgrade) { "an upgrade maintenance needs its installer image" }
+            return Ichorgo.startNodeMaintenanceUpgrade(
+                stored.yaml, stored.activeContext, server, node, up.image, includeBare, acknowledged, up.force, listener,
+            )
+        }
         return Ichorgo.startNodeMaintenance(stored.yaml, stored.activeContext, server, node, action.wire, includeBare, acknowledged, listener)
     }
 

@@ -306,6 +306,11 @@ where a failed upgrade can be rolled back.
 - **Rollback:** on a node's upgrade screen, the menu offers `talosctl rollback` (os:admin): the node
   reboots at once into the Talos it ran before its last upgrade, for an upgrade that boots but
   misbehaves. Talos rolls back by itself one that does not boot.
+- **Drain before an upgrade:** a Talos version that upgrades without draining the node first
+  (1.18 and later, through the LifecycleService) gets a "Drain the node first" switch on the
+  upgrade screen, on by default. The upgrade then runs as a node maintenance: cordon, drain
+  (PodDisruptionBudgets honoured), upgrade, wait until the node is back and Ready, uncordon. A
+  drain that cannot finish stops before the upgrade is requested and leaves the node cordoned.
 
 ### Argo CD app icons
 

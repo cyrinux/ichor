@@ -1,6 +1,181 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Drain the node first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vider le nœud d'abord"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaciar primero el nodo"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Node zuerst leeren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svuota prima il nodo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спершу звільнити вузол"
+          }
+        }
+      }
+    },
+    "Cordon and drain it, upgrade, wait until it is back and Ready, then uncordon it. Without it, this Talos version stops the node's pods when it reboots." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'isoler et le vider, mettre à jour, attendre qu'il revienne prêt, puis lever l'isolement. Sans cela, cette version de Talos arrête les pods du nœud au redémarrage."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acordonarlo y vaciarlo, actualizar, esperar a que vuelva y esté listo, y quitar el acordonamiento. Sin esto, esta versión de Talos detiene los pods del nodo al reiniciar."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Absperren und leeren, aktualisieren, warten, bis er wieder bereit ist, dann die Absperrung aufheben. Ohne diese Option stoppt diese Talos-Version die Pods des Nodes beim Neustart."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isolarlo e svuotarlo, aggiornare, attendere che torni pronto, poi rimuovere l'isolamento. Senza, questa versione di Talos ferma i pod del nodo al riavvio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ізолювати й звільнити його, оновити, дочекатися готовності, потім зняти ізоляцію. Без цього ця версія Talos зупиняє поди вузла під час перезавантаження."
+          }
+        }
+      }
+    },
+    "Upgrade Talos, wait until the node runs the new version and is Ready, then uncordon it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour Talos, attendre que le nœud tourne sur la nouvelle version et soit prêt, puis lever l'isolement."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar Talos, esperar a que el nodo ejecute la nueva versión y esté listo, y luego quitar el acordonamiento."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos aktualisieren, warten, bis der Node die neue Version ausführt und bereit ist, dann die Absperrung aufheben."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna Talos, attendi che il nodo esegua la nuova versione e sia pronto, poi rimuovi l'isolamento."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити Talos, дочекатися, поки вузол працюватиме на новій версії й буде готовий, потім зняти ізоляцію."
+          }
+        }
+      }
+    },
+    "Upgrade" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualización"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualisierung"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення"
+          }
+        }
+      }
+    },
+    "Another maintenance is running. The app runs one at a time." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une autre maintenance est en cours. L'app n'en exécute qu'une à la fois."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hay otro mantenimiento en curso. La app ejecuta uno a la vez."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine andere Wartung läuft. Die App führt jeweils nur eine aus."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "È in corso un'altra manutenzione. L'app ne esegue una alla volta."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Триває інше обслуговування. Застосунок виконує лише одне за раз."
+          }
+        }
+      }
+    },
     "Node reset" : {
       "extractionState" : "manual",
       "localizations" : {

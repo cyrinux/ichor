@@ -20,6 +20,8 @@ data class UpgradePlan(
     val acknowledge: List<String> = emptyList(),
     /** Every blocker is an etcd check, which "force" skips like `talosctl upgrade --force`. */
     val forceable: Boolean = false,
+    /** This upgrade does not drain the node: offer to drain it first (a maintenance run). */
+    val drainable: Boolean = false,
 )
 
 @Serializable

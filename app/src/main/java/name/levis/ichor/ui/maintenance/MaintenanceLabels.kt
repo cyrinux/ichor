@@ -13,6 +13,7 @@ val MaintenanceAction.label: Int
         MaintenanceAction.REBOOT -> R.string.power_reboot
         MaintenanceAction.SHUTDOWN -> R.string.power_shut_down
         MaintenanceAction.NONE -> R.string.maintenance_action_none
+        MaintenanceAction.UPGRADE -> R.string.common_feature_upgrade
     }
 
 @get:StringRes
@@ -21,13 +22,14 @@ val MaintenanceAction.description: Int
         MaintenanceAction.REBOOT -> R.string.maintenance_action_reboot_desc
         MaintenanceAction.SHUTDOWN -> R.string.maintenance_action_shutdown_desc
         MaintenanceAction.NONE -> R.string.maintenance_action_none_desc
+        MaintenanceAction.UPGRADE -> R.string.maintenance_action_upgrade_desc
     }
 
 /** The result of a successful run, with the hostname. */
 @get:StringRes
 val MaintenanceRunState.doneText: Int
     get() = when (action) {
-        MaintenanceAction.REBOOT -> if (wasCordoned) R.string.maintenance_done_reboot_cordoned else R.string.maintenance_done_reboot
+        MaintenanceAction.REBOOT, MaintenanceAction.UPGRADE -> if (wasCordoned) R.string.maintenance_done_reboot_cordoned else R.string.maintenance_done_reboot
         MaintenanceAction.SHUTDOWN -> R.string.maintenance_done_shutdown
         MaintenanceAction.NONE -> R.string.maintenance_done_none
     }
@@ -40,6 +42,7 @@ val MaintenancePhase.label: Int
         MaintenancePhase.DRAIN -> R.string.maintenance_phase_drain
         MaintenancePhase.REBOOT -> R.string.maintenance_phase_reboot
         MaintenancePhase.SHUTDOWN -> R.string.maintenance_phase_shutdown
+        MaintenancePhase.UPGRADE -> R.string.maintenance_phase_upgrade
         MaintenancePhase.WAITING -> R.string.maintenance_phase_waiting
         MaintenancePhase.UNCORDON -> R.string.maintenance_phase_uncordon
     }

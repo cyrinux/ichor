@@ -85,9 +85,9 @@ struct MaintenanceRunView: View {
 
     private var successMessage: String {
         switch job.target?.action ?? .reboot {
-        case .reboot where job.target?.wasCordoned == true:
+        case .reboot where job.target?.wasCordoned == true, .upgrade where job.target?.wasCordoned == true:
             String(localized: "\(hostname) is back and stays cordoned, as it was before the maintenance")
-        case .reboot: String(localized: "\(hostname) is back and uncordoned")
+        case .reboot, .upgrade: String(localized: "\(hostname) is back and uncordoned")
         case .shutdown: String(localized: "\(hostname) is shutting down and stays cordoned")
         case .none: String(localized: "\(hostname) is drained and stays cordoned")
         }
@@ -101,6 +101,7 @@ extension MaintenancePhase {
         case .drain: String(localized: "Drain")
         case .reboot: String(localized: "Reboot")
         case .shutdown: String(localized: "Shut down")
+        case .upgrade: String(localized: "Upgrade")
         case .waiting: String(localized: "Waiting for node")
         case .uncordon: String(localized: "Uncordon")
         }

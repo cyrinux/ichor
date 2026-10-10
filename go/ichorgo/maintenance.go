@@ -31,6 +31,8 @@ const (
 	maintenanceReboot   = "reboot"
 	maintenanceShutdown = "shutdown"
 	maintenanceNone     = "none"
+	// maintenanceUpgrade upgrades Talos after the drain: see StartNodeMaintenanceUpgrade.
+	maintenanceUpgrade = "upgrade"
 )
 
 // Maintenance phases reported through MaintenanceListener.OnProgress.
@@ -39,6 +41,8 @@ const (
 	phaseDrain    = "drain"
 	phaseReboot   = "reboot"
 	phaseShutdown = "shutdown"
+	// phaseUpgrade carries the upgrade's own phases: "<upgrade phase>: <message>".
+	phaseUpgrade  = "upgrade"
 	phaseBack     = "waiting"
 	phaseUncordon = "uncordon"
 )
@@ -80,6 +84,12 @@ type maintenancePlan struct {
 	Blockers    []string `json:"blockers"`
 	Warnings    []string `json:"warnings"`
 	Acknowledge []string `json:"acknowledge"`
+	// UpgradeDrainable: the node's upgrade does not drain it (the LifecycleService path), so
+	// StartNodeMaintenanceUpgrade is worth offering; the legacy upgrade drains by itself.
+	UpgradeDrainable bool `json:"upgradeDrainable"`
+
+	// upgrade is the upgrade plan the reboot checks come from.
+	upgrade upgradePlan
 }
 
 // NodeMaintenancePlan reports what a maintenance of node would do, before running it: the
@@ -116,12 +126,14 @@ func gatherMaintenancePlan(ctx context.Context, s *session, kube kubeTarget, nod
 	reboot := gatherPlan(ctx, s, node, kube)
 
 	plan := maintenancePlan{
-		Node:         node,
-		Hostname:     reboot.Hostname,
-		ControlPlane: reboot.ControlPlane,
-		Blockers:     reboot.Blockers,
-		Warnings:     rebootWarnings(reboot),
-		Acknowledge:  reboot.Acknowledge,
+		Node:             node,
+		Hostname:         reboot.Hostname,
+		ControlPlane:     reboot.ControlPlane,
+		Blockers:         reboot.Blockers,
+		Warnings:         rebootWarnings(reboot),
+		Acknowledge:      reboot.Acknowledge,
+		UpgradeDrainable: reboot.Drainable,
+		upgrade:          reboot,
 	}
 
 	state := fetchKubeNodeState(client.WithNode(ctx, node), s.client)
@@ -204,28 +216,32 @@ func StartNodeMaintenance(configYAML, contextName, kubeServer, node, action stri
 
 	listener = maskedMaintenanceListener{listener}
 
+	m := maintenance{
+		kube:         kubeTarget{configYAML, contextName, kubeServer},
+		node:         node,
+		action:       strings.ToLower(strings.TrimSpace(action)),
+		includeBare:  includeBare,
+		acknowledged: acknowledged,
+		listener:     listener,
+	}
+
+	return runMaintenance(listener, func(ctx context.Context) error {
+		return recordedRun(configYAML, contextName, func() auditAction {
+			return auditAction{Action: "maintenance-" + m.action, Node: node, Params: fmt.Sprintf("include-bare=%t", includeBare)}
+		}, func() error { return m.run(ctx) })
+	})
+}
+
+// runMaintenance runs work in the background, bounded by maintenanceTimeout, and reports
+// its end to listener.
+func runMaintenance(listener MaintenanceListener, work func(ctx context.Context) error) *MaintenanceRun {
 	ctx, cancel := context.WithTimeout(context.Background(), maintenanceTimeout)
 
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
 
-		m := maintenance{
-			kube:         kubeTarget{configYAML, contextName, kubeServer},
-			node:         node,
-			action:       strings.ToLower(strings.TrimSpace(action)),
-			includeBare:  includeBare,
-			acknowledged: acknowledged,
-			listener:     listener,
-		}
-
-		err := recordedRun(configYAML, contextName, func() auditAction {
-			return auditAction{Action: "maintenance-" + m.action, Node: node, Params: fmt.Sprintf("include-bare=%t", includeBare)}
-		}, func() error { return m.run(ctx) })
-
-		errMessage := errText(err)
-
-		listener.OnDone(errMessage)
+		listener.OnDone(errText(work(ctx)))
 	}()
 
 	return &MaintenanceRun{cancel: cancel}
@@ -237,6 +253,9 @@ type maintenance struct {
 	action                    string
 	includeBare, acknowledged bool
 	listener                  MaintenanceListener
+	// image and force: action upgrade only (see StartNodeMaintenanceUpgrade).
+	image string
+	force bool
 }
 
 func (m maintenance) emit(phase, message string, pods []drainPod) {
@@ -249,8 +268,8 @@ func stoppedCordoned(kubeNode string, why error) error {
 }
 
 func (m maintenance) run(ctx context.Context) error {
-	if !slices.Contains([]string{maintenanceReboot, maintenanceShutdown, maintenanceNone}, m.action) {
-		return fmt.Errorf("unknown maintenance action %q (reboot, shutdown, none)", m.action)
+	if !slices.Contains([]string{maintenanceReboot, maintenanceShutdown, maintenanceNone, maintenanceUpgrade}, m.action) {
+		return fmt.Errorf("unknown maintenance action %q (reboot, shutdown, none, upgrade)", m.action)
 	}
 
 	if isDemoContext(m.kube.config, m.kube.context) {
@@ -277,11 +296,9 @@ func (m maintenance) run(ctx context.Context) error {
 		return err
 	}
 
-	lock, err := takeUpgradeLock(ctx, m.kube,
-		upgradeLockRequest{holder: newLockHolder(), node: m.node, hostname: plan.Hostname, to: maintenanceLockTo},
-		// Never take over a lock someone else holds: it frees itself when that run ends or expires.
-		func(*upgradeLockInfo) bool { return false },
-		func(msg string) { m.emit(phaseCordon, msg, nil) })
+	request, settled := m.lockRequest(plan)
+
+	lock, err := takeUpgradeLock(ctx, m.kube, request, settled, func(msg string) { m.emit(phaseCordon, msg, nil) })
 	if err != nil {
 		return err
 	}
@@ -296,8 +313,11 @@ func (m maintenance) run(ctx context.Context) error {
 // refusal applies the plan: no blockers, and acknowledgments confirmed, for a reboot or
 // shutdown (a drain alone is always allowed).
 func (m maintenance) refusal(plan maintenancePlan) error {
-	if m.action == maintenanceNone {
+	switch m.action {
+	case maintenanceNone:
 		return nil
+	case maintenanceUpgrade:
+		return m.upgradeChecks(plan)
 	}
 
 	return plan.checks().refusal("maintenance", m.acknowledged)
@@ -331,6 +351,10 @@ func (m maintenance) recheck(ctx context.Context, s *session, k *kubeClient, loc
 }
 
 func (m maintenance) steps(ctx context.Context, s *session, k *kubeClient, lock *upgradeLock, plan maintenancePlan) error {
+	if m.action == maintenanceUpgrade {
+		return m.drainThenUpgrade(ctx, k, plan, m.talosUpgradeSteps(s, k, lock, plan))
+	}
+
 	pods, err := cordonAndDrain(ctx, k, plan.KubeNode, m.includeBare, m.emit)
 	if err != nil {
 		return err
@@ -374,13 +398,18 @@ func (m maintenance) steps(ctx context.Context, s *session, k *kubeClient, lock 
 	backCancel()
 
 	if err != nil {
-		if ctx.Err() == nil && backCtx.Err() != nil {
+		if ctx.Err() == nil && errors.Is(backCtx.Err(), context.DeadlineExceeded) {
 			err = fmt.Errorf("the node is not back and Ready within %s", backTimeout)
 		}
 
 		return stoppedCordoned(plan.KubeNode, err)
 	}
 
+	return m.uncordon(ctx, k, plan)
+}
+
+// uncordon ends a run whose node is back: uncordoned, unless it was cordoned before the run.
+func (m maintenance) uncordon(ctx context.Context, k *kubeClient, plan maintenancePlan) error {
 	// A node someone cordoned before the run (a bad disk, a pending decommission) stays so.
 	if plan.Cordoned {
 		m.emit(phaseUncordon, plan.KubeNode+" was cordoned before the maintenance: it stays cordoned", nil)
@@ -422,7 +451,8 @@ func cordonAndDrain(ctx context.Context, k *kubeClient, kubeNode string, include
 	drainCancel()
 
 	if err != nil {
-		if ctx.Err() == nil && drainCtx.Err() != nil {
+		// drainCancel ran: only a deadline means the drain ran out of time.
+		if ctx.Err() == nil && errors.Is(drainCtx.Err(), context.DeadlineExceeded) {
 			err = fmt.Errorf("the drain did not finish within %s (%s)", drainTimeout, drainMessage(pods))
 		}
 
