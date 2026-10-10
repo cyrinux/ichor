@@ -206,6 +206,31 @@ public func decodeKubeDiscoverOptions(_ json: String) throws -> [String: [[Strin
     try TalosJSON.decode([String: [[String]]].self, from: json)
 }
 
+/// How far a running cloud discovery got (Go DiscoverProgress): GKE with a Google account reads
+/// many projects. `projects` is 0 while they are still being listed.
+public struct DiscoveryProgress: Decodable, Equatable {
+    public var running = false
+    public var projects = 0
+    public var scanned = 0
+    public var clusters = 0
+
+    public init(running: Bool = false, projects: Int = 0, scanned: Int = 0, clusters: Int = 0) {
+        self.running = running
+        self.projects = projects
+        self.scanned = scanned
+        self.clusters = clusters
+    }
+
+    /// The share of the projects read, nil while they are listed (or none are read).
+    public var fraction: Double? {
+        projects > 0 ? Double(min(scanned, projects)) / Double(projects) : nil
+    }
+
+    public static func decode(_ json: String) -> DiscoveryProgress? {
+        try? TalosJSON.decode(DiscoveryProgress.self, from: json)
+    }
+}
+
 /// The credentials `provider` takes, as field sets: its options, else its one set of fields.
 public func kubeDiscoverOptionSets(provider: String, fields: [String: [String]], options: [String: [[String]]]) -> [[String]] {
     let sets = (options[provider] ?? []).filter { !$0.isEmpty }

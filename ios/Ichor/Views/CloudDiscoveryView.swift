@@ -27,6 +27,7 @@ struct CloudDiscoveryView: View {
     @State private var option = 0
     @State private var values: [String: String] = [:]
     @State private var busy = false
+    @State private var progress: DiscoveryProgress?
     @State private var error: String?
 
     /// The credentials the provider takes (GKE: a service account key or gcloud user credentials).
@@ -68,6 +69,7 @@ struct CloudDiscoveryView: View {
                     }
                 }
                 Section {
+                    if busy { DiscoverProgressRow(progress: progress) }
                     if let error { Text(error).font(.footnote).foregroundStyle(.statusBad) }
                     Button {
                         Task { await discover() }
@@ -106,7 +108,12 @@ struct CloudDiscoveryView: View {
 
     private func discover() async {
         busy = true
-        defer { busy = false }
+        progress = nil
+        let poll = Task { await pollProgress() }
+        defer {
+            poll.cancel()
+            busy = false
+        }
         let secrets = kubeSecretsJSON(fields: fields, values: values)
         do {
             let kubeconfig = try await TalosClient.discoverClusters(provider: provider, secrets: secrets)
@@ -115,5 +122,34 @@ struct CloudDiscoveryView: View {
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    /// Shows how far the running discovery got until cancelled.
+    private func pollProgress() async {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .milliseconds(250))
+            if let read = TalosClient.discoverProgress(), read.running, busy { progress = read }
+        }
+    }
+}
+
+/// How far the running discovery got: a bar that fills as a Google account's projects are read
+/// (indeterminate while they are listed, and for the other clouds), and the counts.
+private struct DiscoverProgressRow: View {
+    let progress: DiscoveryProgress?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let progress, let fraction = progress.fraction {
+                ProgressView(value: fraction)
+                Text("Scanned \(String(progress.scanned)) of \(String(progress.projects)) projects · \(String(progress.clusters)) clusters found")
+                    .font(.footnote).foregroundStyle(.secondary)
+                    .monospacedDigit()
+            } else {
+                ProgressView().frame(maxWidth: .infinity, alignment: .leading)
+                Text("Looking for clusters…").font(.footnote).foregroundStyle(.secondary)
+            }
+        }
+        .animation(.default, value: progress)
     }
 }
