@@ -108,6 +108,12 @@ private struct TalosRolloutView: View {
                         Label("Upgrade next: \(next.node.hostname)", systemImage: "arrow.up.circle.fill").fontWeight(.semibold)
                     }
                     .disabled(!plan.canOpen(next))
+                    // Every node in one roll, the app driving it.
+                    NavigationLink {
+                        ClusterUpgradePlanView(initialVersion: latest)
+                    } label: {
+                        Label("Upgrade all", systemImage: "square.stack.3d.up.fill")
+                    }
                 }
             }
             section(plan.controlPlane, in: plan, later: false) {

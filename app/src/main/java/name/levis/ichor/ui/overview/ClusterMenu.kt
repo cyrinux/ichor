@@ -7,6 +7,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.SystemUpdateAlt
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -42,6 +43,8 @@ fun ClusterMenu(
     onSelect: (String) -> Unit,
     onManage: () -> Unit,
     onDismiss: () -> Unit,
+    /** "Upgrade cluster…": null when the role cannot upgrade (or the cluster has no Talos). */
+    onUpgradeCluster: (() -> Unit)? = null,
 ) {
     var switching by remember(expanded) { mutableStateOf(false) }
     val contexts = config.summary.contexts
@@ -86,6 +89,16 @@ fun ClusterMenu(
                     onManage()
                 },
             )
+            onUpgradeCluster?.let { upgrade ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.cluster_upgrade_menu)) },
+                    leadingIcon = { Icon(Icons.Outlined.SystemUpdateAlt, contentDescription = null) },
+                    onClick = {
+                        onDismiss()
+                        upgrade()
+                    },
+                )
+            }
             ShareLinkMenuItem(ShareTarget.screen(ShareTarget.CLUSTER), onClick = onDismiss)
         }
     }

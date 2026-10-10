@@ -150,6 +150,8 @@ fun OverviewScreen(
     onFunding: () -> Unit,
     onIssueConfig: () -> Unit,
     onUpgrade: (NodeOverview, String) -> Unit,
+    /** Every node to the version given ("": the newest stable release). */
+    onUpgradeCluster: (String) -> Unit,
     onDiagnose: () -> Unit,
     onAddCluster: () -> Unit,
     onClustersCleared: () -> Unit,
@@ -387,6 +389,7 @@ fun OverviewScreen(
                                 onSelect = app::selectCluster,
                                 onManage = { showClusters = true },
                                 onDismiss = { clusterMenu = false },
+                                onUpgradeCluster = { onUpgradeCluster("") }.takeIf { config?.activeSummary?.allows(Feature.UPGRADE) == true },
                             )
                         }
                     }
@@ -533,6 +536,7 @@ fun OverviewScreen(
                     canDrain = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
                     canUpgrade = config?.activeSummary?.allows(Feature.UPGRADE) == true,
                     onUpgrade = onUpgrade,
+                    onUpgradeCluster = onUpgradeCluster,
                     skippedTalosUpdate = config?.activeSummary?.fingerprint?.let(skippedTalosUpdates::get),
                     onSkipTalosUpdate = skipTalosUpdate,
                     live = liveState.takeIf { liveEnabled },
@@ -583,6 +587,7 @@ private fun NodeList(
     canDrain: Boolean,
     canUpgrade: Boolean,
     onUpgrade: (NodeOverview, String) -> Unit,
+    onUpgradeCluster: (String) -> Unit,
     skippedTalosUpdate: String?,
     onSkipTalosUpdate: (String) -> Unit,
     live: ClusterLiveState?,
@@ -622,7 +627,16 @@ private fun NodeList(
     // gone (no reachable node is outdated any more).
     var rollingOut by rememberSaveable { mutableStateOf(false) }
     if (rollingOut && canUpgrade && talosCheck != null) {
-        TalosRolloutDialog(overview.nodes, talosCheck.latest, onUpgrade = { onUpgrade(it, talosCheck.latest) }, onDismiss = { rollingOut = false })
+        TalosRolloutDialog(
+            overview.nodes,
+            talosCheck.latest,
+            onUpgrade = { onUpgrade(it, talosCheck.latest) },
+            onDismiss = { rollingOut = false },
+            onUpgradeAll = {
+                rollingOut = false
+                onUpgradeCluster(talosCheck.latest)
+            },
+        )
     }
     LazyColumn(
         contentPadding = PaddingValues(16.dp),

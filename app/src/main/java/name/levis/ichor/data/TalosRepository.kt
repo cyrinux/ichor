@@ -4,6 +4,7 @@ import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.goErrorText
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.R
+import name.levis.ichorgo.ClusterUpgradeListener
 import name.levis.ichorgo.ConfigApplyListener
 import name.levis.ichorgo.ConfigTryListener
 import name.levis.ichorgo.MaintenanceListener
@@ -27,6 +28,8 @@ import name.levis.ichor.model.MultiConfigProgress
 import name.levis.ichor.model.AuditReport
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.ClusterUpgradeCommand
+import name.levis.ichor.model.ClusterUpgradePlan
 import name.levis.ichor.model.ClusterStorageHealth
 import name.levis.ichor.model.MaintenanceAction
 import name.levis.ichor.model.MaintenancePlan
@@ -485,6 +488,46 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
             )
         }
         return Ichorgo.startNodeMaintenance(stored.yaml, stored.activeContext, server, node, action.wire, includeBare, acknowledged, listener)
+    }
+
+    /**
+     * Every node of the context to [version], in the order the roll follows, with each node's
+     * checks (ClusterUpgradePlan). Nodes already on [version] are "done": a rerun continues.
+     */
+    suspend fun clusterUpgradePlan(version: String): ClusterUpgradePlan = talosKubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(ClusterUpgradePlan.serializer(), Ichorgo.clusterUpgradePlan(cfg, ctx, server, version))
+    }
+
+    /** StartClusterUpgrade: returns at once, the roll reports to [onProgress] and [onDone] (once). */
+    fun startClusterUpgrade(
+        version: String,
+        drain: Boolean,
+        acknowledged: Boolean,
+        onProgress: (String) -> Unit,
+        onDone: (String) -> Unit,
+    ): ClusterUpgradeHandle {
+        val stored = configs.forCall()
+        val run = Ichorgo.startClusterUpgrade(
+            stored.yaml,
+            stored.activeContext,
+            kubeServers.serverFor(stored),
+            version,
+            drain,
+            acknowledged,
+            object : ClusterUpgradeListener {
+                override fun onProgress(json: String) = onProgress(json)
+                override fun onDone(errMessage: String) = onDone(errMessage)
+            },
+        )
+        return object : ClusterUpgradeHandle {
+            override fun send(command: ClusterUpgradeCommand) = when (command) {
+                ClusterUpgradeCommand.PAUSE -> run.pause()
+                ClusterUpgradeCommand.RESUME -> run.resume()
+                ClusterUpgradeCommand.ABORT -> run.abort()
+            }
+
+            override fun cancel() = run.cancel()
+        }
     }
 
     /** `talosctl reboot -m [mode]` (default, powercycle, force); needs os:operator or higher. */

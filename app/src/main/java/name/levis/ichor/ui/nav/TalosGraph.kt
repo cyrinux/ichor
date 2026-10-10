@@ -34,6 +34,7 @@ import name.levis.ichor.ui.kubebrowser.LocalKubeLinks
 import name.levis.ichor.ui.kubespan.KubeSpanScreen
 import name.levis.ichor.ui.logs.LogsScreen
 import name.levis.ichor.ui.machineconfig.MachineConfigScreen
+import name.levis.ichor.ui.upgrade.ClusterUpgradeScreen
 import name.levis.ichor.ui.maintenance.MaintenanceScreen
 import name.levis.ichor.ui.network.NetworkScreen
 import name.levis.ichor.ui.node.NodeDetailScreen
@@ -177,6 +178,12 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             drainOnly = entry.arguments?.getBoolean("drain") ?: false,
             onBack = { nav.popBackStack() },
         )
+    }
+    composable(
+        Routes.CLUSTER_UPGRADE,
+        arguments = listOf(navArgument("version") { type = NavType.StringType; defaultValue = "" }),
+    ) { entry ->
+        ClusterUpgradeScreen(initialVersion = entry.arguments?.getString("version").orEmpty(), onBack = { nav.popBackStack() })
     }
     composable(Routes.ISSUE_CONFIG) { IssueConfigScreen(onBack = { nav.popBackStack() }) }
     composable(

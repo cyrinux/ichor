@@ -63,6 +63,8 @@ import name.levis.ichor.ui.debug.DebugShells
 import name.levis.ichor.ui.upgrade.UpgradeService
 import name.levis.ichor.ui.images.ImagePullService
 import name.levis.ichor.ui.maintenance.MaintenanceService
+import name.levis.ichor.ui.upgrade.ClusterUpgradeService
+import name.levis.ichor.data.ClusterUpgradeManager
 import name.levis.ichor.ui.machineconfig.ConfigTryService
 import name.levis.ichor.data.ConfigTryManager
 import name.levis.ichor.ui.machineconfig.ConfigMultiService
@@ -181,6 +183,10 @@ class TalosApp : Application() {
     /** The followed multi-node config apply; ConfigMultiService keeps the app alive while it runs. */
     val configMultiManager by lazy {
         ConfigMultiManager(talosRepository::applyMachineConfigMulti, onStarted = { ConfigMultiService.start(this) })
+    }
+    /** The followed rolling cluster upgrade; ClusterUpgradeService keeps the app alive while it runs. */
+    val clusterUpgradeManager by lazy {
+        ClusterUpgradeManager(talosRepository::startClusterUpgrade, onStarted = { ClusterUpgradeService.start(this) })
     }
     /** The followed image pull; ImagePullService keeps the app alive while it runs. */
     val imagePullManager by lazy { ImagePullManager(talosRepository, onStarted = { ImagePullService.start(this) }) }

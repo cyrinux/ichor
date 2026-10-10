@@ -122,6 +122,7 @@ internal object Routes {
     const val CAPTURES = "captures"
     const val CAPTURE_FILE = "capturefile?name={name}"
     const val UPGRADE = "upgrade?addr={addr}&host={host}&version={version}"
+    const val CLUSTER_UPGRADE = "clusterupgrade?version={version}"
     const val MAINTENANCE = "maintenance?addr={addr}&host={host}&drain={drain}"
 
     /** [drain]: a drain only, without the reboot or shutdown that a maintenance can add. */
@@ -133,6 +134,9 @@ internal object Routes {
     fun captureFile(name: String) = "capturefile?name=${Uri.encode(name)}"
 
     /** [version]: target version to preselect (empty: none). */
+    /** Every node to [version] ("": the newest stable release), one after the other. */
+    fun clusterUpgrade(version: String = "") = "clusterupgrade?version=${Uri.encode(version)}"
+
     fun upgrade(addr: String, host: String, version: String = "") =
         "upgrade?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&version=${Uri.encode(version)}"
 

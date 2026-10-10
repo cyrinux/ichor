@@ -243,6 +243,7 @@ fun Navigation(
                 onFunding = { nav.navigate(Routes.FUNDING) },
                 onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
                 onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
+                onUpgradeCluster = { version -> nav.navigate(Routes.clusterUpgrade(version)) },
                 onDiagnose = { nav.navigate(Routes.diagnosis()) },
                 onAddCluster = { nav.navigate(Routes.IMPORT) },
                 onClustersCleared = { nav.resetTo(Routes.IMPORT) },
