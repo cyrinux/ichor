@@ -98,6 +98,15 @@ final class KubeAuthTests: XCTestCase {
         let fields = try decodeKubeDiscoverFields(#"{"eks":["awsRegion","awsAccessKeyId"],"gke":["gcpServiceAccountJson"]}"#)
         XCTAssertEqual(fields["eks"], ["awsRegion", "awsAccessKeyId"])
         XCTAssertEqual(kubeDiscoverProviders, ["eks", "gke", "aks", "digitalocean", "rancher"])
+
+        // GKE takes a service account key or gcloud user credentials; the others their one set.
+        let options = try decodeKubeDiscoverOptions(#"{"gke":[["gcpServiceAccountJson"],["gcpUserCredentialsJson","gcpProjects"]]}"#)
+        XCTAssertEqual(kubeDiscoverOptionSets(provider: "gke", fields: fields, options: options),
+                       [["gcpServiceAccountJson"], ["gcpUserCredentialsJson", "gcpProjects"]])
+        XCTAssertEqual(kubeDiscoverOptionSets(provider: "eks", fields: fields, options: options), [["awsRegion", "awsAccessKeyId"]])
+        XCTAssertEqual(kubeDiscoverOptionSets(provider: "aks", fields: fields, options: options), [])
+        // The project IDs are optional: the credential alone is enough to search.
+        XCTAssertTrue(kubeFieldsComplete(["gcpUserCredentialsJson", "gcpProjects"], values: ["gcpUserCredentialsJson": "{}"]))
     }
 
     func testImportedSignInContexts() {

@@ -23,11 +23,18 @@ struct CloudDiscoveryView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var provider: String
     @State private var fieldsByProvider: [String: [String]] = [:]
+    @State private var optionsByProvider: [String: [[String]]] = [:]
+    @State private var option = 0
     @State private var values: [String: String] = [:]
     @State private var busy = false
     @State private var error: String?
 
-    private var fields: [String] { fieldsByProvider[provider] ?? [] }
+    /// The credentials the provider takes (GKE: a service account key or gcloud user credentials).
+    private var sets: [[String]] {
+        kubeDiscoverOptionSets(provider: provider, fields: fieldsByProvider, options: optionsByProvider)
+    }
+
+    private var fields: [String] { sets.indices.contains(option) ? sets[option] : sets.first ?? [] }
 
     var body: some View {
         NavigationStack {
@@ -41,8 +48,24 @@ struct CloudDiscoveryView: View {
                 } footer: {
                     Text("Ichor lists the account's clusters with these credentials, then signs the clusters you add in with them. They stay on this device, sealed, and in your encrypted backups. Prefer a dedicated identity with read-only access.")
                 }
+                if sets.count > 1 {
+                    Section {
+                        Picker("Sign in with", selection: $option) {
+                            ForEach(sets.indices, id: \.self) { index in
+                                Text(KubeAuthWording.optionLabel(sets[index])).tag(index)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+                }
                 if !fields.isEmpty {
                     KubeFieldsSection(fields: fields, values: $values)
+                }
+                let hints = fields.compactMap(KubeAuthWording.fieldHint)
+                if !hints.isEmpty {
+                    Section {
+                        ForEach(hints, id: \.self) { Text($0).font(.footnote).foregroundStyle(.secondary) }
+                    }
                 }
                 Section {
                     if let error { Text(error).font(.footnote).foregroundStyle(.statusBad) }
@@ -68,12 +91,14 @@ struct CloudDiscoveryView: View {
         .interactiveDismissDisabled(busy)
         .task { await loadFields() }
         // Another provider: its own fields, nothing typed for the previous one carried over.
-        .onChange(of: provider) { values = [:]; error = nil }
+        .onChange(of: provider) { option = 0; values = [:]; error = nil }
+        .onChange(of: option) { values = [:]; error = nil }
     }
 
     private func loadFields() async {
         do {
             fieldsByProvider = try await TalosClient.discoverFields()
+            optionsByProvider = try await TalosClient.discoverOptions()
         } catch {
             self.error = error.localizedDescription
         }

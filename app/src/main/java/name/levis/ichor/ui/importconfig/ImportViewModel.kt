@@ -9,6 +9,7 @@ import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.TalosForm
 import name.levis.ichor.model.DiscoveryProvider
 import name.levis.ichor.model.discoveryFields
+import name.levis.ichor.model.discoveryOptions
 import name.levis.ichor.model.importedContextNames
 import name.levis.ichor.model.isKube
 import name.levis.ichor.model.ConfigSummary
@@ -74,12 +75,13 @@ sealed interface ImportState {
     }
 
     /**
-     * Adding clusters from a cloud account (K7): the fields each provider asks for, starting
-     * on the [initial] provider; [running] while the account's clusters are listed, [error]
-     * when that failed.
+     * Adding clusters from a cloud account (K7): the credentials each provider takes, as
+     * field sets (GKE: a service account key or gcloud user credentials), starting on the
+     * [initial] provider; [running] while the account's clusters are listed, [error] when
+     * that failed.
      */
     data class Discover(
-        val fields: Map<DiscoveryProvider, List<String>>,
+        val options: Map<DiscoveryProvider, List<List<String>>>,
         val initial: DiscoveryProvider? = null,
         val running: Boolean = false,
         val error: String? = null,
@@ -170,7 +172,9 @@ class ImportViewModel(
         }
         _state.value = ImportState.Validating
         viewModelScope.launch {
-            _state.value = runCatching { ImportState.Discover(discoveryFields(auth.discoveryFields()), initial = provider) }
+            _state.value = runCatching {
+                ImportState.Discover(discoveryOptions(auth.discoveryOptions(), discoveryFields(auth.discoveryFields())), initial = provider)
+            }
                 .getOrElse { ImportState.Invalid(it.userMessage()) }
         }
     }
