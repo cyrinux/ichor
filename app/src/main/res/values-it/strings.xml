@@ -3495,6 +3495,16 @@
     <string name="monitor_unreachable">Cluster non raggiungibili</string>
     <string name="monitor_unreachable_desc">Avvisa una volta quando un cluster non ha risposto a diversi controlli di fila (nessun nodo, nessuna API o troppo lento), e una volta quando risponde di nuovo. Nel frattempo gli avvisi sui nodi tacciono.</string>
     <string name="monitor_unreachable_runs">Dopo %1$s controlli di fila</string>
+    <string name="monitor_storage">Archiviazione dei nodi</string>
+    <string name="monitor_storage_desc">Notifica quando un volume di un nodo si riempie (gli avvisi dopo due controlli di fila) o un disco non supera SMART (subito), e una volta quando torna a posto. Ogni controllo legge i volumi e i dischi di ogni nodo tramite l\'API di Talos (solo cluster Talos).</string>
+    <string name="monitor_storage_warn">Avviso dal %1$d %% usato</string>
+    <string name="monitor_storage_critical">Critico dal %1$d %% usato</string>
+    <string name="monitor_storage_fill">%1$s su %2$s al %3$d %%</string>
+    <string name="monitor_storage_fill_critical">%1$s su %2$s al %3$d %%, quasi pieno</string>
+    <string name="monitor_storage_fill_text">%1$s liberi su %2$s</string>
+    <string name="monitor_storage_smart">SMART non superato su %1$s (%2$s)</string>
+    <string name="monitor_storage_fill_ok">%1$s su %2$s di nuovo sotto il %3$d %%</string>
+    <string name="monitor_storage_smart_ok">%1$s su %2$s supera di nuovo SMART</string>
     <string name="clusters_watch">Controlla in background</string>
     <string name="widget_config_title">Cluster mostrato dal widget</string>
     <string name="widget_config_active">Cluster sullo schermo</string>

@@ -36,6 +36,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.TalosApp
 import name.levis.ichor.monitor.CERT_WARN_DAYS
 import name.levis.ichor.monitor.MonitorStore
+import name.levis.ichor.monitor.STORAGE_WARN_RANGE
+import name.levis.ichor.monitor.storageCriticalRange
 import name.levis.ichor.monitor.UNREACHABLE_RUNS
 import name.levis.ichor.monitor.canPostNotifications
 import name.levis.ichor.ui.components.InfoNotice
@@ -54,6 +56,7 @@ fun MonitoringSection(app: TalosApp) {
     val gitopsWatched by store.gitopsWatched.collectAsStateWithLifecycle()
     val checkupWatched by store.checkupWatched.collectAsStateWithLifecycle()
     val alertmanagerWatched by store.alertmanagerWatched.collectAsStateWithLifecycle()
+    val storageWatched by store.storageWatched.collectAsStateWithLifecycle()
     val unreachable by store.unreachableAlerts.collectAsStateWithLifecycle()
     val unreachableRuns by store.unreachableRuns.collectAsStateWithLifecycle()
     val interval by store.intervalMinutes.collectAsStateWithLifecycle()
@@ -146,6 +149,20 @@ fun MonitoringSection(app: TalosApp) {
                     modifier = Modifier.padding(start = 12.dp),
                 )
             }
+            // And for node storage: every node's volumes and disks are read at every check.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_storage), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_storage_desc))
+                }
+                Switch(
+                    checked = storageWatched,
+                    onCheckedChange = { store.setStorageWatched(it) },
+                    enabled = enabled,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            if (storageWatched) StorageThresholds(store, enabled)
             // And for a cluster that stops answering: once, after that many checks in a row.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -192,6 +209,30 @@ fun MonitoringSection(app: TalosApp) {
         }
     }
     OfflineCacheSetting(app)
+}
+
+/** The warning and critical fill thresholds of the storage alerts; critical stays above warning. */
+@Composable
+private fun StorageThresholds(store: MonitorStore, enabled: Boolean) {
+    val warn by store.storageWarnPercent.collectAsStateWithLifecycle()
+    val critical by store.storageCriticalPercent.collectAsStateWithLifecycle()
+    PercentSlider(stringResource(R.string.monitor_storage_warn, warn), warn, STORAGE_WARN_RANGE, enabled, store::setStorageWarnPercent)
+    PercentSlider(stringResource(R.string.monitor_storage_critical, critical), critical, storageCriticalRange(warn), enabled, store::setStorageCriticalPercent)
+}
+
+@Composable
+private fun PercentSlider(label: String, value: Int, range: IntRange, enabled: Boolean, onChange: (Int) -> Unit) {
+    Text(label, style = MaterialTheme.typography.bodyMedium)
+    // Warning at 98 % leaves critical a single value: nothing to slide.
+    if (range.first >= range.last) return
+    Slider(
+        value = value.toFloat(),
+        onValueChange = { onChange(it.roundToInt()) },
+        valueRange = range.first.toFloat()..range.last.toFloat(),
+        steps = (range.last - range.first - 1).coerceAtLeast(0),
+        enabled = enabled,
+        modifier = Modifier.semantics { contentDescription = label },
+    )
 }
 
 /** Opt-in: the last data of each cluster is kept on the phone, encrypted, to show it offline. */

@@ -3487,6 +3487,16 @@
     <string name="monitor_unreachable">Nicht erreichbare Cluster</string>
     <string name="monitor_unreachable_desc">Benachrichtigt dich einmal, wenn ein Cluster mehrere Prüfungen in Folge nicht geantwortet hat (kein Node, keine API oder zu langsam), und einmal, wenn er wieder antwortet. Node-Warnungen bleiben so lange stumm.</string>
     <string name="monitor_unreachable_runs">Nach %1$s Prüfungen in Folge</string>
+    <string name="monitor_storage">Speicher der Knoten</string>
+    <string name="monitor_storage_desc">Benachrichtigt, wenn sich ein Volume eines Knotens füllt (Warnungen erst nach zwei Prüfungen in Folge) oder eine Festplatte SMART nicht besteht (sofort), und einmal, wenn alles wieder in Ordnung ist. Jede Prüfung liest die Volumes und Datenträger jedes Knotens über die Talos-API (nur Talos-Cluster).</string>
+    <string name="monitor_storage_warn">Warnung ab %1$d %% belegt</string>
+    <string name="monitor_storage_critical">Kritisch ab %1$d %% belegt</string>
+    <string name="monitor_storage_fill">%1$s auf %2$s bei %3$d %%</string>
+    <string name="monitor_storage_fill_critical">%1$s auf %2$s bei %3$d %%, fast voll</string>
+    <string name="monitor_storage_fill_text">%1$s frei von %2$s</string>
+    <string name="monitor_storage_smart">SMART-Fehler auf %1$s (%2$s)</string>
+    <string name="monitor_storage_fill_ok">%1$s auf %2$s wieder unter %3$d %%</string>
+    <string name="monitor_storage_smart_ok">%1$s auf %2$s besteht SMART wieder</string>
     <string name="clusters_watch">Im Hintergrund überwachen</string>
     <string name="widget_config_title">Vom Widget gezeigter Cluster</string>
     <string name="widget_config_active">Cluster auf dem Bildschirm</string>

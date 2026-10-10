@@ -30,7 +30,7 @@ public func alertActions(key: String, problem: Bool, canWake: Bool) -> [AlertAct
         default: return [.snooze]
         }
     case "am": return [.silence, .snooze]
-    case "etcd", "data", "checkup", "cert", "unreachable": return [.snooze]
+    case "etcd", "data", "checkup", "storage", "cert", "unreachable": return [.snooze]
     default: return []
     }
 }

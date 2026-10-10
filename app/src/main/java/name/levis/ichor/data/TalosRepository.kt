@@ -17,6 +17,7 @@ import name.levis.ichor.model.ConfigTryProgress
 import name.levis.ichor.model.AuditReport
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.ClusterStorageHealth
 import name.levis.ichor.model.MaintenanceAction
 import name.levis.ichor.model.MaintenancePlan
 import name.levis.ichor.model.EtcdOverview
@@ -264,6 +265,11 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
 
     private suspend fun overviewUncached(): ClusterOverview = call { cfg, ctx ->
         TalosJson.decodeFromString(ClusterOverview.serializer(), Ichorgo.clusterOverview(cfg, ctx))
+    }
+
+    /** Every node's volume fill and disk SMART verdict (the monitor's storage track; never cached). */
+    suspend fun storageHealth(): ClusterStorageHealth = call { cfg, ctx ->
+        TalosJson.decodeFromString(ClusterStorageHealth.serializer(), Ichorgo.clusterStorageHealth(cfg, ctx))
     }
 
     suspend fun services(node: String): List<ServiceInfo> = remember(servicesKey(node)) { servicesUncached(node) }

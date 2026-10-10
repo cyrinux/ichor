@@ -3695,6 +3695,16 @@
     <string name="monitor_unreachable">Недоступні кластери</string>
     <string name="monitor_unreachable_desc">Сповіщає один раз, коли кластер не відповів на кілька перевірок поспіль (жоден вузол, жоден API або надто повільно), і один раз, коли він знову відповідає. Тим часом сповіщення про вузли мовчать.</string>
     <string name="monitor_unreachable_runs">Після %1$s перевірок поспіль</string>
+    <string name="monitor_storage">Сховище вузлів</string>
+    <string name="monitor_storage_desc">Сповіщає, коли том вузла заповнюється (попередження — після двох перевірок поспіль) або диск не проходить SMART (одразу), і один раз, коли все знову гаразд. Кожна перевірка читає томи й диски кожного вузла через Talos API (лише кластери Talos).</string>
+    <string name="monitor_storage_warn">Попередження від %1$d %% зайнято</string>
+    <string name="monitor_storage_critical">Критично від %1$d %% зайнято</string>
+    <string name="monitor_storage_fill">%1$s на %2$s заповнено на %3$d %%</string>
+    <string name="monitor_storage_fill_critical">%1$s на %2$s заповнено на %3$d %%, майже повний</string>
+    <string name="monitor_storage_fill_text">%1$s вільно з %2$s</string>
+    <string name="monitor_storage_smart">SMART не пройдено на %1$s (%2$s)</string>
+    <string name="monitor_storage_fill_ok">%1$s на %2$s знову нижче %3$d %%</string>
+    <string name="monitor_storage_smart_ok">%1$s на %2$s знову проходить SMART</string>
     <string name="clusters_watch">Стежити у фоні</string>
     <string name="widget_config_title">Кластер, який показує віджет</string>
     <string name="widget_config_active">Кластер на екрані</string>
