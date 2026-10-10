@@ -265,6 +265,8 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			Disks:      []diskInfo{{Name: "nvme0n1", DevPath: "/dev/nvme0n1", Model: "Demo NVMe", Size: 120 << 30, Type: "nvme", SystemDisk: true}},
 			Extensions: []extensionInfo{}, Security: &securityInfo{SecureBoot: true, BootedWithUKI: true}, Errors: map[string]string{},
 		})
+	case "NodeSensors":
+		return toJSON(demoSensors(n))
 	case "NodeDiskHealth":
 		return `{"supported":false,"reason":"Disk health data is unavailable in the demo cluster","disks":[]}`, nil
 	case "KubeSpanStatus":
