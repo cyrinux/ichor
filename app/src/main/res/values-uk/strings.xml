@@ -4158,6 +4158,9 @@
     <string name="etcd_recover_uploaded">Вивантажено %1$s з %2$s</string>
     <string name="etcd_recover_done">etcd знову працює з одним учасником. Скиньте інші control plane, щоб вони приєдналися.</string>
     <string name="etcd_recover_stopped">Відновлення зупинено</string>
+    <string name="kube_discover_signin_find">Увійти й знайти кластери</string>
+    <string name="kube_discover_google_body">Google показує проєкти, які бачить ваш обліковий запис; Ichor читає їхні кластери.</string>
+    <string name="kube_discover_signin_first">Спершу увійдіть, потім шукайте кластери.</string>
     <string name="kube_discover_scan">Сканувати QR-код облікових даних</string>
     <string name="kube_discover_scan_invalid">Скануйте файл облікових даних користувача gcloud або ключ сервісного облікового запису.</string>
     <string name="kube_discover_credentials_warning">Цей файл містить токен оновлення або приватний ключ. Зберігайте його в таємниці: кожен, хто його має, може отримати доступ до вашого облікового запису Google або сервісного облікового запису.</string>
