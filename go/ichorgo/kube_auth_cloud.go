@@ -96,7 +96,14 @@ type gkeMethod struct{}
 func (gkeMethod) name() string { return authGKE }
 
 func (gkeMethod) fieldSets() [][]string {
-	return [][]string{{gcpFieldServiceAccount}, {gcpFieldUserCredentials}, {gcpFieldOAuthClientID, gcpFieldOAuthClientSecret}}
+	sets := [][]string{{gcpFieldServiceAccount}, {gcpFieldUserCredentials}, {gcpFieldOAuthClientID, gcpFieldOAuthClientSecret}}
+
+	// "Sign in with Google", only when the build carries a Google client.
+	if platform, _ := registeredGoogleSignIn(); platform != "" {
+		sets = append(sets, []string{gcpFieldGoogleSignIn})
+	}
+
+	return sets
 }
 
 type gcpServiceAccount struct {
@@ -140,6 +147,10 @@ func parseServiceAccount(raw string) (gcpServiceAccount, *rsa.PrivateKey, error)
 }
 
 func (gkeMethod) fromSecrets(s map[string]string) (kubeAuthState, error) {
+	if s[gcpFieldGoogleSignIn] != "" {
+		return nativeSignInState(s)
+	}
+
 	if s[gcpFieldOAuthClientID] != "" {
 		return oauthClientState(s)
 	}
@@ -161,6 +172,10 @@ func (gkeMethod) fromSecrets(s map[string]string) (kubeAuthState, error) {
 }
 
 func (gkeMethod) mint(ctx context.Context, state kubeAuthState) (string, time.Time, kubeAuthState, error) {
+	if state.secret(gcpFieldGoogleSignIn) != "" {
+		return mintNative(ctx, state)
+	}
+
 	if state.secret(gcpFieldOAuthClientID) != "" {
 		return googleOAuthMethod(state).mint(ctx, state)
 	}
