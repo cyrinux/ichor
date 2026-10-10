@@ -16,6 +16,40 @@ enum SupportBundleStore {
         try LocalFileStore.delete(url)
     }
 
+    /// Where the history export goes in a bundle (as on Android).
+    static let historyEntry = "cluster/history.json"
+
+    /// Adds `cluster`'s history (anonymised by Go) to the finished bundle `url`, on a copy that
+    /// then takes its place, so a failure leaves the bundle as it was. Its new size, nil when
+    /// nothing was added (no history, or a bundle that is not a plain zip).
+    static func addHistory(cluster: String, to url: URL) async -> Int64? {
+        guard let ring = HistoryStore.bytes(cluster: cluster),
+              let export = try? await TalosClient.historyExport(ring: ring) else { return nil }
+        let part = url.appendingPathExtension("add")
+        do {
+            guard let plan = try historyPlan(export, for: url) else { return nil }
+            try? FileManager.default.removeItem(at: part)
+            try FileManager.default.copyItem(at: url, to: part)
+            let handle = try FileHandle(forWritingTo: part)
+            try handle.truncate(atOffset: UInt64(plan.truncateAt))
+            try handle.seekToEnd()
+            try handle.write(contentsOf: plan.tail)
+            try handle.close()
+            _ = try FileManager.default.replaceItemAt(url, withItemAt: part)
+            let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize
+            return size.map(Int64.init)
+        } catch {
+            try? FileManager.default.removeItem(at: part)
+            return nil
+        }
+    }
+
+    /// The bytes to add for `export`, read from the bundle mapped (released before it is replaced).
+    private static func historyPlan(_ export: String, for url: URL) throws -> ZipAppendPlan? {
+        let zip = try Data(contentsOf: url, options: .alwaysMapped)
+        return zipAppendPlan(zip, name: historyEntry, content: Data(export.utf8), date: Date())
+    }
+
     /// Removes what a collection killed with the app left behind (Go writes NAME.part, then
     /// renames); called at launch, when no collection can be running.
     static func removeStaleParts() {
@@ -47,7 +81,8 @@ final class SupportBundleJob {
 
     var isRunning: Bool { state == .running }
 
-    func start(client: TalosClient, context: String, nodes selected: [String]) {
+    /// `cluster`: its monitor key, whose history (anonymised) the bundle gets too.
+    func start(client: TalosClient, context: String, cluster: String, nodes selected: [String]) {
         guard !isRunning, !selected.isEmpty else { return }
         let url: URL
         do {
@@ -73,6 +108,11 @@ final class SupportBundleJob {
                         outcome = .finished(file: path.isEmpty ? url : URL(fileURLWithPath: path), size: size)
                     }
                 }
+            }
+            // Best effort: without a history (or when it cannot be added) the bundle stays as Go wrote it.
+            if case .finished(let file, _)? = outcome, !Task.isCancelled,
+               let size = await SupportBundleStore.addHistory(cluster: cluster, to: file) {
+                outcome = .finished(file: file, size: size)
             }
             finish(Task.isCancelled ? nil : outcome, partial: url)
         }

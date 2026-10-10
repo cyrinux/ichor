@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.overview
 
 import name.levis.ichor.BuildConfig
+import name.levis.ichor.ui.history.SinceLastLookedCard
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.VersionFooter
 import name.levis.ichor.ui.components.rememberClusterLabels
@@ -635,6 +636,7 @@ private fun NodeList(
         if (BuildConfig.DONATIONS || BuildConfig.FEATURE_FUNDING) item { SupportCard(onFunding) }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
         if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
+        fingerprint?.takeIf { it.isNotBlank() }?.let { item(key = "since") { SinceLastLookedCard(it) } }
         // The cards, as arranged; a long press on one opens the arrangement.
         layout.visible.forEach { card ->
             when (card) {

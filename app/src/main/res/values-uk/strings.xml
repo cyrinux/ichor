@@ -3793,4 +3793,45 @@
     <string name="alert_action_silence_hour">Заглушити на 1 год</string>
     <string name="alert_action_snooze">Відкласти на 8 год</string>
     <string name="alert_action_silence_comment">Заглушено зі сповіщення</string>
+    <string name="history_uptime_title">Доступність</string>
+    <plurals name="history_uptime_description">
+        <item quantity="one">Доступність вузла за останній %1$d день: %2$s</item>
+        <item quantity="few">Доступність вузла за останні %1$d дні: %2$s</item>
+        <item quantity="many">Доступність вузла за останні %1$d днів: %2$s</item>
+        <item quantity="other">Доступність вузла за останні %1$d дня: %2$s</item>
+    </plurals>
+    <plurals name="history_days_short">
+        <item quantity="one">%1$d д</item>
+        <item quantity="few">%1$d д</item>
+        <item quantity="many">%1$d д</item>
+        <item quantity="other">%1$d д</item>
+    </plurals>
+    <plurals name="history_memory_description">
+        <item quantity="one">Використання пам’яті за останній %1$d день</item>
+        <item quantity="few">Використання пам’яті за останні %1$d дні</item>
+        <item quantity="many">Використання пам’яті за останні %1$d днів</item>
+        <item quantity="other">Використання пам’яті за останні %1$d дня</item>
+    </plurals>
+    <plurals name="history_volumes_title">
+        <item quantity="one">Заповнення томів, останній %1$d день</item>
+        <item quantity="few">Заповнення томів, останні %1$d дні</item>
+        <item quantity="many">Заповнення томів, останні %1$d днів</item>
+        <item quantity="other">Заповнення томів, останні %1$d дня</item>
+    </plurals>
+    <string name="history_volume_description">Заповнення %1$s з часом</string>
+    <string name="history_since_title">Відтоді, як ви востаннє дивилися</string>
+    <string name="history_since_more">+%1$d ще</string>
+    <string name="history_since_dismiss">Зрозуміло</string>
+    <string name="history_since_down">%1$s досі не працює (%2$s)</string>
+    <string name="history_since_alert_open">Нове сповіщення, досі відкрите: %1$s</string>
+    <string name="history_since_recovered">%1$s не працював (%2$s) протягом %3$s, тепер знову працює</string>
+    <string name="history_since_alert_resolved">Вирішено: %1$s</string>
+    <string name="history_since_upgrade">%1$s оновлено з %2$s до %3$s</string>
+    <plurals name="history_since_still_open">
+        <item quantity="one">%1$d старіше сповіщення досі відкрите</item>
+        <item quantity="few">%1$d старіші сповіщення досі відкриті</item>
+        <item quantity="many">%1$d старіших сповіщень досі відкриті</item>
+        <item quantity="other">%1$d старішого сповіщення досі відкриті</item>
+    </plurals>
+    <string name="history_alert_cert">Сертифікат скоро спливає</string>
 </resources>

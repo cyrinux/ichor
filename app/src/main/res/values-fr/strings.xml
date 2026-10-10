@@ -3583,4 +3583,35 @@
     <string name="alert_action_silence_hour">Silence 1 h</string>
     <string name="alert_action_snooze">Reporter 8 h</string>
     <string name="alert_action_silence_comment">Mis en silence depuis une notification</string>
+    <string name="history_uptime_title">Disponibilité</string>
+    <plurals name="history_uptime_description">
+        <item quantity="one">Disponibilité du nœud sur le dernier %1$d jour : %2$s</item>
+        <item quantity="other">Disponibilité du nœud sur les %1$d derniers jours : %2$s</item>
+    </plurals>
+    <plurals name="history_days_short">
+        <item quantity="one">%1$d j</item>
+        <item quantity="other">%1$d j</item>
+    </plurals>
+    <plurals name="history_memory_description">
+        <item quantity="one">Mémoire utilisée sur le dernier %1$d jour</item>
+        <item quantity="other">Mémoire utilisée sur les %1$d derniers jours</item>
+    </plurals>
+    <plurals name="history_volumes_title">
+        <item quantity="one">Remplissage des volumes, dernier %1$d jour</item>
+        <item quantity="other">Remplissage des volumes, %1$d derniers jours</item>
+    </plurals>
+    <string name="history_volume_description">Remplissage de %1$s dans le temps</string>
+    <string name="history_since_title">Depuis votre dernière visite</string>
+    <string name="history_since_more">+%1$d de plus</string>
+    <string name="history_since_dismiss">Compris</string>
+    <string name="history_since_down">%1$s est toujours hors service (%2$s)</string>
+    <string name="history_since_alert_open">Nouvelle alerte, toujours ouverte : %1$s</string>
+    <string name="history_since_recovered">%1$s a été hors service (%2$s) pendant %3$s, revenu depuis</string>
+    <string name="history_since_alert_resolved">Résolue : %1$s</string>
+    <string name="history_since_upgrade">%1$s mis à jour de %2$s vers %3$s</string>
+    <plurals name="history_since_still_open">
+        <item quantity="one">%1$d alerte plus ancienne toujours ouverte</item>
+        <item quantity="other">%1$d alertes plus anciennes toujours ouvertes</item>
+    </plurals>
+    <string name="history_alert_cert">Certificat bientôt expiré</string>
 </resources>

@@ -645,6 +645,7 @@ final class AppModel {
         storeKubeAccess([:])
         publicIPReports = [:]
         SharedStore.clear() // the widget stops showing the old clusters
+        HistoryStore.wipe()
         forgetFeatures()
         yaml = nil
         kubeYAML = nil
@@ -759,6 +760,7 @@ final class AppModel {
         // A removed cluster's background state goes too: its snapshot, unreachable count and snoozes.
         storeMonitorUnwatched(keepVpnOnly(saved: monitorUnwatched, fingerprints: newSummary.contexts.map(\.fingerprint)))
         SharedStore.keep(clusters: newSummary.contexts.map(monitorClusterKey))
+        HistoryStore.keep(clusters: newSummary.contexts.map(monitorClusterKey))
         AlertSnoozeStore.keep(clusters: newSummary.contexts.map(\.fingerprint))
         let kept = publicIPReports.filter { report in newSummary.contexts.contains { $0.fingerprint == report.key } }
         if kept.count != publicIPReports.count {

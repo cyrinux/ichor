@@ -7,12 +7,16 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import name.levis.ichorgo.SupportListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.SupportProgress
 import name.levis.ichor.model.isSupportBundleName
 import java.io.File
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 
 /** Events of a support bundle being collected; [Done] or [Failed] ends it. */
 sealed interface SupportEvent {
@@ -29,9 +33,15 @@ data class SupportBundleFile(val file: File, val size: Long, val modified: Long)
 /**
  * Support bundles (`talosctl support`) written by the Go core into the app's private
  * `support/` directory. They hold logs and cluster details, unmasked, so they never leave
- * that directory unless the user saves or shares one.
+ * that directory unless the user saves or shares one. [history]: the cluster's history ring,
+ * anonymised (null without one), added to each bundle as [HISTORY_ENTRY].
  */
-class SupportBundleRepository(private val configs: ConfigRepository, private val kubeServers: KubeServers, filesDir: File) {
+class SupportBundleRepository(
+    private val configs: ConfigRepository,
+    private val kubeServers: KubeServers,
+    filesDir: File,
+    private val history: suspend () -> String? = { null },
+) {
     val dir = File(filesDir, SUPPORT_DIR)
 
     /** Collects a bundle of [nodes] into [dest]. Cancelling the collector cancels it. */
@@ -51,8 +61,18 @@ class SupportBundleRepository(private val configs: ConfigRepository, private val
                 }
 
                 override fun onDone(path: String, size: Long, errMessage: String) {
-                    trySend(if (errMessage.isEmpty()) SupportEvent.Done(path, size) else SupportEvent.Failed(goErrorText(errMessage)))
-                    close()
+                    if (errMessage.isNotEmpty()) {
+                        trySend(SupportEvent.Failed(goErrorText(errMessage)))
+                        close()
+                        return
+                    }
+                    launch(Dispatchers.IO) {
+                        // Best effort: a bundle without its history is still worth sending.
+                        val export = runCatching { history() }.getOrNull()
+                        val added = export != null && runCatching { addZipEntry(File(path), HISTORY_ENTRY, export.toByteArray()) }.isSuccess
+                        trySend(SupportEvent.Done(path, if (added) File(path).length() else size))
+                        close()
+                    }
                 }
             },
         )
@@ -83,6 +103,32 @@ class SupportBundleRepository(private val configs: ConfigRepository, private val
 
     companion object {
         const val SUPPORT_DIR = "support"
+        const val HISTORY_ENTRY = "cluster/history.json"
         private const val STALE_PART_MILLIS = 60 * 60 * 1000L
+    }
+}
+
+/**
+ * Adds (or replaces) the entry [name] of the zip [zip]: the entries are copied to a new file,
+ * which then takes its place, so a failure leaves the zip as it was.
+ */
+internal fun addZipEntry(zip: File, name: String, bytes: ByteArray) {
+    val part = File(zip.path + ".add")
+    try {
+        ZipFile(zip).use { source ->
+            ZipOutputStream(part.outputStream().buffered()).use { out ->
+                source.entries().asSequence().filter { it.name != name }.forEach { entry ->
+                    out.putNextEntry(ZipEntry(entry.name).apply { time = entry.time })
+                    source.getInputStream(entry).use { it.copyTo(out) }
+                    out.closeEntry()
+                }
+                out.putNextEntry(ZipEntry(name))
+                out.write(bytes)
+                out.closeEntry()
+            }
+        }
+        check(part.renameTo(zip)) { "Could not replace the support bundle" }
+    } finally {
+        part.delete()
     }
 }

@@ -3583,4 +3583,35 @@
     <string name="alert_action_silence_hour">Silenzia 1 h</string>
     <string name="alert_action_snooze">Posticipa 8 h</string>
     <string name="alert_action_silence_comment">Silenziato da una notifica</string>
+    <string name="history_uptime_title">Disponibilità</string>
+    <plurals name="history_uptime_description">
+        <item quantity="one">Disponibilità del nodo nell\'ultimo %1$d giorno: %2$s</item>
+        <item quantity="other">Disponibilità del nodo negli ultimi %1$d giorni: %2$s</item>
+    </plurals>
+    <plurals name="history_days_short">
+        <item quantity="one">%1$d g</item>
+        <item quantity="other">%1$d g</item>
+    </plurals>
+    <plurals name="history_memory_description">
+        <item quantity="one">Uso della memoria nell\'ultimo %1$d giorno</item>
+        <item quantity="other">Uso della memoria negli ultimi %1$d giorni</item>
+    </plurals>
+    <plurals name="history_volumes_title">
+        <item quantity="one">Riempimento dei volumi, ultimo %1$d giorno</item>
+        <item quantity="other">Riempimento dei volumi, ultimi %1$d giorni</item>
+    </plurals>
+    <string name="history_volume_description">Riempimento di %1$s nel tempo</string>
+    <string name="history_since_title">Dall\'ultima volta che hai guardato</string>
+    <string name="history_since_more">+%1$d altri</string>
+    <string name="history_since_dismiss">Ho capito</string>
+    <string name="history_since_down">%1$s è ancora giù (%2$s)</string>
+    <string name="history_since_alert_open">Nuovo avviso, ancora aperto: %1$s</string>
+    <string name="history_since_recovered">%1$s è stato giù (%2$s) per %3$s, ora è tornato</string>
+    <string name="history_since_alert_resolved">Risolto: %1$s</string>
+    <string name="history_since_upgrade">%1$s aggiornato da %2$s a %3$s</string>
+    <plurals name="history_since_still_open">
+        <item quantity="one">%1$d avviso precedente ancora aperto</item>
+        <item quantity="other">%1$d avvisi precedenti ancora aperti</item>
+    </plurals>
+    <string name="history_alert_cert">Certificato in scadenza</string>
 </resources>
