@@ -134,6 +134,14 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: storageKey) }
     }
 
+    static let storageTrendKey = "monitor.storageTrend"
+    /// Opt-in, under the storage watch: an early alert when a volume's growth over the last week
+    /// (the history ring) makes it critical within days (CYR-128).
+    static var storageTrendWatched: Bool {
+        get { UserDefaults.standard.bool(forKey: storageTrendKey) }
+        set { UserDefaults.standard.set(newValue, forKey: storageTrendKey) }
+    }
+
     static let storageWarnKey = "monitor.storageWarn"
     static let storageCritKey = "monitor.storageCrit"
     /// The fill (% used) a volume alerts from: a warning, then critical (StorageThresholds clamps them).
@@ -272,12 +280,14 @@ enum BackgroundMonitor {
             let snapshot = latest ?? ClusterSnapshot(context: job.context.name, takenAt: now, nodes: [:], kube: job.context.isKube)
             outcomes.append(ClusterAlerts(job: job, alerts: alerts, snapshot: snapshot, previous: job.previous))
         }
-        SharedStore.save(snapshots)
         saveReachability(reach)
         // Real names only: under the screenshot mode the run read masked ones.
         if historyRecordingAllowed(privacyMasked: UserDefaults.standard.bool(forKey: PrivacyKeys.enabled)) {
             await recordHistory(history, at: now)
+            // The storage trends come from the ring with this run's record in it.
+            outcomes += await evaluateTrends(history, jobs: jobs, snapshots: &snapshots, now: now)
         }
+        SharedStore.save(snapshots)
         guard alertsEnabled else { return }
         await post(outcomes, now: now)
     }
@@ -295,6 +305,35 @@ enum BackgroundMonitor {
                                        previousAlerts: previous, now: now)
             HistoryStore.append(record, cluster: input.key, stored: stored)
         }
+    }
+
+    /// The storage trend alerts (CYR-128) of each cluster whose storage was read this run, from
+    /// its ring as just written: the ones open go in its snapshot. A cluster not read, or whose
+    /// ring cannot be read, keeps its open ones; with the warning off they are forgotten.
+    private static func evaluateTrends(_ inputs: [HistoryInput], jobs: [ClusterJob], snapshots: inout [String: ClusterSnapshot],
+                                       now: Date) async -> [ClusterAlerts] {
+        let watched = storageTrendWatched
+        var out: [ClusterAlerts] = []
+        for input in inputs {
+            guard let current = input.current, var snapshot = snapshots[input.key], snapshot.storageWatched else { continue }
+            guard watched else {
+                snapshot.storageTrends = [:]
+                snapshots[input.key] = snapshot
+                continue
+            }
+            guard current.storageChecked, let job = jobs.first(where: { $0.key == input.key }),
+                  let forecast = await HistoryStore.forecast(cluster: input.key, now: now) else { continue }
+            // At or above the warning threshold, read now or still notified: the fill alert speaks for it.
+            let fill = current.storageIssues.merging(snapshot.storageIssues) { fresh, _ in fresh }
+            let outcome = evaluateStorageTrends(forecast, open: snapshot.storageTrends, fillIssues: fill,
+                                                hostnames: snapshot.nodes.mapValues(\.hostname))
+            snapshot.storageTrends = outcome.open
+            snapshots[input.key] = snapshot
+            if !outcome.alerts.isEmpty {
+                out.append(ClusterAlerts(job: job, alerts: outcome.alerts, snapshot: snapshot, previous: job.previous))
+            }
+        }
+        return out
     }
 
     /// The clusters of `contexts` to check now: a VPN-only one waits for its VPN (without it the
@@ -556,6 +595,11 @@ enum BackgroundMonitor {
             let severity = snapshot.checkupIssues[subject] == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
             return ("\(section): \(finding.subject)", "\(CheckupText.checkupTitle) · \(severity)")
         case "storage":
+            // "<node>|<volume>:trend": named from the trend kept, the current one or, once resolved, the last.
+            if let volume = storageTrendVolumeKey(subject: subject) {
+                guard let value = snapshot.storageTrends[volume] ?? previous?.storageTrends[volume] else { return (alert.title, alert.text) }
+                return localizedStorageTrend(alert, issue: StorageTrendIssue(value: value))
+            }
             // "<node>|…": named from the issue kept, the current one or, once resolved, the last.
             guard let value = snapshot.storageIssues[subject] ?? previous?.storageIssues[subject] else { return (alert.title, alert.text) }
             return localizedStorage(alert, issue: StorageIssue(value: value), warn: snapshot.storageWarn)
@@ -614,6 +658,21 @@ enum BackgroundMonitor {
         let free = formatBytes(issue.freeBytes)
         let size = formatBytes(issue.sizeBytes)
         return (title, String(localized: "\(free) free of \(size)"))
+    }
+
+    /// A volume about to be critical or full, by its growth over the last week.
+    private static func localizedStorageTrend(_ alert: Alert, issue: StorageTrendIssue) -> (title: String, text: String) {
+        let name = issue.name
+        let host = issue.hostname
+        guard alert.problem else { return (String(localized: "\(name) on \(host) no longer filling up fast"), "") }
+        let when = issue.when.localized
+        let title = issue.critical
+            ? String(localized: "\(name) on \(host) critical \(when)")
+            : String(localized: "\(name) on \(host) full \(when)")
+        // The "%" goes with the number, so no key carries a literal one.
+        let growth = "\(storagePercentText(issue.slopePerDay)) %"
+        let fill = "\(storagePercentText(issue.usedPercent)) %"
+        return (title, String(localized: "growing ~\(growth) a day, now at \(fill)"))
     }
 
     static func requestPermission() async -> Bool {

@@ -3539,6 +3539,20 @@
     <string name="monitor_storage_smart">SMART-Fehler auf %1$s (%2$s)</string>
     <string name="monitor_storage_fill_ok">%1$s auf %2$s wieder unter %3$d %%</string>
     <string name="monitor_storage_smart_ok">%1$s auf %2$s besteht SMART wieder</string>
+    <string name="monitor_storage_trend">Warnen, bevor ein Volume voll wird</string>
+    <string name="monitor_storage_trend_desc">Benachrichtigt, wenn ein Volume bei seinem Wachstum der letzten Woche innerhalb von %1$d Tagen kritisch würde, und einmal, wenn das nicht mehr so ist. Nutzt den Verlauf der Prüfungen; braucht den Speicher der Knoten.</string>
+    <plurals name="monitor_storage_trend_full">
+        <item quantity="one">%1$s auf %2$s in ~%3$d Tag voll</item>
+        <item quantity="other">%1$s auf %2$s in ~%3$d Tagen voll</item>
+    </plurals>
+    <plurals name="monitor_storage_trend_critical">
+        <item quantity="one">%1$s auf %2$s in ~%3$d Tag kritisch</item>
+        <item quantity="other">%1$s auf %2$s in ~%3$d Tagen kritisch</item>
+    </plurals>
+    <string name="monitor_storage_trend_full_soon">%1$s auf %2$s in weniger als einem Tag voll</string>
+    <string name="monitor_storage_trend_critical_soon">%1$s auf %2$s in weniger als einem Tag kritisch</string>
+    <string name="monitor_storage_trend_text">wächst um ~%1$s %% pro Tag, jetzt bei %2$d %%</string>
+    <string name="monitor_storage_trend_ok">%1$s auf %2$s füllt sich nicht mehr so schnell</string>
     <string name="clusters_watch">Im Hintergrund überwachen</string>
     <string name="widget_config_title">Vom Widget gezeigter Cluster</string>
     <string name="widget_config_active">Cluster auf dem Bildschirm</string>
@@ -3634,6 +3648,17 @@
         <item quantity="other">Füllstand der Volumes, letzte %1$d Tage</item>
     </plurals>
     <string name="history_volume_description">Füllstand von %1$s im Verlauf</string>
+    <plurals name="history_forecast_full">
+        <item quantity="one">voll in ~%1$d Tag</item>
+        <item quantity="other">voll in ~%1$d Tagen</item>
+    </plurals>
+    <plurals name="history_forecast_critical">
+        <item quantity="one">kritisch in ~%1$d Tag</item>
+        <item quantity="other">kritisch in ~%1$d Tagen</item>
+    </plurals>
+    <string name="history_forecast_full_soon">voll in weniger als einem Tag</string>
+    <string name="history_forecast_critical_soon">kritisch in weniger als einem Tag</string>
+    <string name="history_forecast_growing">wächst um ~%1$s %% pro Tag</string>
     <string name="history_since_title">Seit du zuletzt geschaut hast</string>
     <string name="history_since_more">+%1$d weitere</string>
     <string name="history_since_dismiss">Verstanden</string>

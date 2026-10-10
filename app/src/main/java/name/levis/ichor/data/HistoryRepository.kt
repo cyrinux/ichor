@@ -2,6 +2,7 @@ package name.levis.ichor.data
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import name.levis.ichor.model.HistoryForecast
 import name.levis.ichor.model.HistoryQuery
 import name.levis.ichor.model.HistorySince
 import name.levis.ichorgo.Ichorgo
@@ -20,6 +21,14 @@ class HistoryRepository(private val store: HistoryStore) {
     /** What happened in the cluster [fingerprint] after [lastLookedMillis]. */
     suspend fun since(fingerprint: String, lastLookedMillis: Long): HistorySince? = read(fingerprint) { ring ->
         TalosJson.decodeFromString(HistorySince.serializer(), Ichorgo.historySince(ring, lastLookedMillis))
+    }
+
+    /**
+     * Each volume's fill trend over the 7 days before [nowMillis], projected to [criticalPercent]
+     * (the user's storage critical threshold) and to full.
+     */
+    suspend fun forecast(fingerprint: String, nowMillis: Long, criticalPercent: Int): HistoryForecast? = read(fingerprint) { ring ->
+        TalosJson.decodeFromString(HistoryForecast.serializer(), Ichorgo.historyVolumeForecast(ring, nowMillis, criticalPercent.toDouble()))
     }
 
     /** The cluster [fingerprint]'s whole ring as anonymised JSON, for a support bundle. */

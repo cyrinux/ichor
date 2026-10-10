@@ -46,6 +46,9 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     public var storagePending: [String]
     /// The warning threshold (% used) of this check, which a "back under" alert names.
     public var storageWarn: Int
+    /// Open storage trend alerts (volume key → StorageTrendIssue value, see evaluateStorageTrends):
+    /// set after the history ring is written, carried over by evaluate.
+    public var storageTrends: [String: String]
     /// The cluster was added from a kubeconfig: its nodes come from the Kubernetes API (ready or
     /// not, never unreachable), there is no etcd, and `certNotAfter` is the kubeconfig's credentials.
     public var kube: Bool
@@ -60,7 +63,7 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
                 amWatched: Bool = false, amChecked: Bool = false, amIssues: [String: String] = [:], amPending: [String] = [],
                 storageWatched: Bool = false, storageChecked: Bool = false, storageIssues: [String: String] = [:],
                 storagePending: [String] = [], storageWarn: Int = storageWarnDefault,
-                kube: Bool = false) {
+                storageTrends: [String: String] = [:], kube: Bool = false) {
         self.context = context
         self.takenAt = takenAt
         self.nodes = nodes
@@ -89,6 +92,7 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.storageIssues = storageIssues
         self.storagePending = storagePending
         self.storageWarn = storageWarn
+        self.storageTrends = storageTrends
         self.kube = kube
     }
 
@@ -123,6 +127,7 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         storageIssues = try c.field(.storageIssues, [:])
         storagePending = try c.field(.storagePending, [])
         storageWarn = try c.field(.storageWarn, storageWarnDefault)
+        storageTrends = try c.field(.storageTrends, [:])
         kube = try c.field(.kube, false)
     }
 
@@ -459,6 +464,8 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
         next.checkupTrack = evaluateCheckup(previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.amTrack = evaluateAlertmanager(previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.storageTrack = evaluateStorage(previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        // The trend alerts are evaluated once the history ring has this check (evaluateStorageTrends).
+        next.storageTrends = comparable && current.storageWatched ? previous?.storageTrends ?? [:] : [:]
     }
     if let previous, comparable, !current.unreachableAsAWhole {
         for addr in current.nodes.keys.sorted() {

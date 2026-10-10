@@ -3547,6 +3547,20 @@
     <string name="monitor_storage_smart">SMART en échec sur %1$s (%2$s)</string>
     <string name="monitor_storage_fill_ok">%1$s sur %2$s repassé sous %3$d&#160;%%</string>
     <string name="monitor_storage_smart_ok">%1$s sur %2$s passe de nouveau SMART</string>
+    <string name="monitor_storage_trend">Prévenir avant qu\'un volume se remplisse</string>
+    <string name="monitor_storage_trend_desc">Notifie quand la croissance d\'un volume sur la dernière semaine le rendrait critique d\'ici %1$d jours, puis une fois que ce n\'est plus le cas. Utilise l\'historique des vérifications ; nécessite le stockage des nœuds.</string>
+    <plurals name="monitor_storage_trend_full">
+        <item quantity="one">%1$s sur %2$s plein dans ~%3$d jour</item>
+        <item quantity="other">%1$s sur %2$s plein dans ~%3$d jours</item>
+    </plurals>
+    <plurals name="monitor_storage_trend_critical">
+        <item quantity="one">%1$s sur %2$s critique dans ~%3$d jour</item>
+        <item quantity="other">%1$s sur %2$s critique dans ~%3$d jours</item>
+    </plurals>
+    <string name="monitor_storage_trend_full_soon">%1$s sur %2$s plein en moins d\'un jour</string>
+    <string name="monitor_storage_trend_critical_soon">%1$s sur %2$s critique en moins d\'un jour</string>
+    <string name="monitor_storage_trend_text">croissance ~%1$s&#160;%% par jour, actuellement à %2$d&#160;%%</string>
+    <string name="monitor_storage_trend_ok">%1$s sur %2$s ne se remplit plus aussi vite</string>
     <string name="clusters_watch">Surveiller en arrière-plan</string>
     <string name="widget_config_title">Cluster affiché par le widget</string>
     <string name="widget_config_active">Cluster à l\'écran</string>
@@ -3642,6 +3656,17 @@
         <item quantity="other">Remplissage des volumes, %1$d derniers jours</item>
     </plurals>
     <string name="history_volume_description">Remplissage de %1$s dans le temps</string>
+    <plurals name="history_forecast_full">
+        <item quantity="one">plein dans ~%1$d jour</item>
+        <item quantity="other">plein dans ~%1$d jours</item>
+    </plurals>
+    <plurals name="history_forecast_critical">
+        <item quantity="one">critique dans ~%1$d jour</item>
+        <item quantity="other">critique dans ~%1$d jours</item>
+    </plurals>
+    <string name="history_forecast_full_soon">plein en moins d\'un jour</string>
+    <string name="history_forecast_critical_soon">critique en moins d\'un jour</string>
+    <string name="history_forecast_growing">croissance ~%1$s&#160;%% par jour</string>
     <string name="history_since_title">Depuis votre dernière visite</string>
     <string name="history_since_more">+%1$d de plus</string>
     <string name="history_since_dismiss">Compris</string>
