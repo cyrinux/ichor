@@ -1,0 +1,5 @@
+ICHOR-HTTP 200||0|0.084213
+subject=CN = www.example.test
+issuer=C = XX, O = Example CA, CN = Example Issuing CA
+notBefore=Sep  1 00:00:00 2026 GMT
+notAfter=Nov 30 23:59:59 2026 GMT

@@ -1,0 +1,4 @@
+PING 203.0.113.6 (203.0.113.6): 56 data bytes
+
+--- 203.0.113.6 ping statistics ---
+3 packets transmitted, 0 packets received, 100% packet loss

@@ -56,6 +56,8 @@ type fakeTalos struct {
 	mounts map[string][]*machineapi.MountStat
 	// systemImages are the images of the system containerd namespace (the CRI one has pause).
 	systemImages []*machineapi.ImageServiceListResponse
+	// debugRun answers a debug container run of spec on node (nil: Unimplemented).
+	debugRun func(node string, spec *machineapi.DebugContainerRunRequestSpec) (output string, exitCode int32)
 	// files are a node's file tree (absolute path -> content), served by List and Read; a
 	// node without one lists a fixed directory.
 	files map[string]map[string]string
@@ -173,6 +175,7 @@ func (f *fakeTalos) start(t *testing.T, nodes ...string) string {
 		machineapi.RegisterMachineServiceServer(s, fakeTalosMachine{f: f})
 		machineapi.RegisterImageServiceServer(s, fakeTalosImage{f: f})
 		machineapi.RegisterLifecycleServiceServer(s, fakeTalosLifecycle{f: f})
+		machineapi.RegisterDebugServiceServer(s, fakeTalosDebug{f: f})
 		clusterapi.RegisterClusterServiceServer(s, fakeTalosCluster{f: f})
 		cosiv1alpha1.RegisterStateServer(s, fakeTalosState{f: f})
 	})
@@ -484,6 +487,41 @@ func (m fakeTalosMachine) List(req *machineapi.ListRequest, stream grpc.ServerSt
 	}
 
 	return nil
+}
+
+type fakeTalosDebug struct {
+	machineapi.UnimplementedDebugServiceServer
+
+	f *fakeTalos
+}
+
+// ContainerRun reads the spec, then sends debugRun's output in two pieces and its exit code.
+func (d fakeTalosDebug) ContainerRun(stream grpc.BidiStreamingServer[machineapi.DebugContainerRunRequest, machineapi.DebugContainerRunResponse]) error {
+	node, err := d.f.enter(stream.Context(), "ContainerRun")
+	if err != nil {
+		return err
+	}
+
+	if d.f.debugRun == nil {
+		return status.Error(codes.Unimplemented, "no debug containers")
+	}
+
+	req, err := stream.Recv()
+	if err != nil {
+		return err
+	}
+
+	output, code := d.f.debugRun(node, req.GetSpec())
+	half := len(output) / 2
+
+	for _, part := range []string{output[:half], output[half:]} {
+		resp := &machineapi.DebugContainerRunResponse{Resp: &machineapi.DebugContainerRunResponse_StdoutData{StdoutData: []byte(part)}}
+		if err := stream.Send(resp); err != nil {
+			return err
+		}
+	}
+
+	return stream.Send(&machineapi.DebugContainerRunResponse{Resp: &machineapi.DebugContainerRunResponse_ExitCode{ExitCode: code}})
 }
 
 // fakeChildren are the entries directly below dir in tree (name -> is a directory), nil
