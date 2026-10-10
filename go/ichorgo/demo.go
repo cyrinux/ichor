@@ -183,6 +183,8 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 		plan.Nodes = orderClusterNodes(plan.Nodes)
 		summarizeClusterPlan(&plan)
 		return toJSON(plan)
+	case "K8sUpgradePlan":
+		return demoK8sPlan(nodes, strings.Join(args, ""))
 	case "EtcdStatus":
 		result := etcdOverview{LeaderID: "a1", Members: []etcdMember{}, Statuses: []etcdNodeStatus{}, Alarms: []etcdAlarm{}}
 		for i, n := range nodes[:3] {
