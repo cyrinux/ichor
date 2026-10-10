@@ -66,6 +66,16 @@ type fakeTalos struct {
 	files map[string]map[string]string
 	// cpuFreq is a node's CPUFreqStats answer (a node without an entry: Unimplemented).
 	cpuFreq map[string][]*machineapi.CPUFreqStats
+	// applies are the ApplyConfiguration requests received, in order; a real (not dry run)
+	// one replaces the node's machine config, then onApply runs.
+	applies []fakeConfigApply
+	onApply func(node string)
+}
+
+type fakeConfigApply struct {
+	node   string
+	dryRun bool
+	mode   machineapi.ApplyConfigurationRequest_Mode
 }
 
 func newFakeTalos() *fakeTalos {
@@ -581,6 +591,33 @@ func (m fakeTalosMachine) Read(req *machineapi.ReadRequest, stream grpc.ServerSt
 	}
 
 	return stream.Send(&common.Data{Bytes: []byte(content)})
+}
+
+func (m fakeTalosMachine) ApplyConfiguration(ctx context.Context, req *machineapi.ApplyConfigurationRequest) (*machineapi.ApplyConfigurationResponse, error) {
+	node, err := m.f.enter(ctx, "ApplyConfiguration")
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := configloader.NewFromBytes(req.GetData())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid config: %v", err)
+	}
+
+	m.f.mu.Lock()
+	m.f.applies = append(m.f.applies, fakeConfigApply{node: node, dryRun: req.GetDryRun(), mode: req.GetMode()})
+	onApply := m.f.onApply
+	m.f.mu.Unlock()
+
+	if !req.GetDryRun() {
+		m.f.put(node, config.NewMachineConfigWithID(provider, config.ActiveID))
+
+		if onApply != nil {
+			onApply(node)
+		}
+	}
+
+	return &machineapi.ApplyConfigurationResponse{Messages: []*machineapi.ApplyConfiguration{{Mode: machineapi.ApplyConfigurationRequest_NO_REBOOT}}}, nil
 }
 
 func (m fakeTalosMachine) CPUFreqStats(ctx context.Context, _ *emptypb.Empty) (*machineapi.CPUFreqStatsResponse, error) {

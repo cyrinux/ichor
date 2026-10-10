@@ -551,7 +551,11 @@ type talosClusterSteps struct {
 	drain, acknowledged bool
 }
 
-func (t *talosClusterSteps) keepLock(ctx context.Context) {
+func (t *talosClusterSteps) keepLock(ctx context.Context) { keepLockRenewed(ctx, t.lock) }
+
+// keepLockRenewed renews lock every clusterLockRenew until ctx ends: a run holding a short
+// lock (clusterLockDuration) keeps it while it lives and frees it within minutes if it dies.
+func keepLockRenewed(ctx context.Context, lock *upgradeLock) {
 	ticker := time.NewTicker(clusterLockRenew)
 	defer ticker.Stop()
 
@@ -561,7 +565,7 @@ func (t *talosClusterSteps) keepLock(ctx context.Context) {
 			return
 		case <-ticker.C:
 			renewCtx, cancel := context.WithTimeout(ctx, callTimeout)
-			_ = t.lock.renew(renewCtx, nil) //nolint:errcheck // stillHeld refuses the next step when it is lost
+			_ = lock.renew(renewCtx, nil) //nolint:errcheck // stillHeld refuses the next step when it is lost
 			cancel()
 		}
 	}

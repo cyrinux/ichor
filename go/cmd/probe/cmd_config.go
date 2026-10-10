@@ -81,6 +81,17 @@ var configCommands = []command{
 
 		return "done: " + <-c.done, nil
 	}},
+	{name: "k8s-upgrade-plan", args: "VERSION", run: func(e env) (string, error) {
+		// Read-only: the images per node, the support range, deprecated APIs, blockers.
+		return ichorgo.K8sUpgradePlan(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+	}},
+	{name: "k8s-upgrade", args: "VERSION [--dry-run]", run: func(e env) (string, error) {
+		// Without --dry-run it upgrades Kubernetes for real: use a disposable cluster.
+		m := maintenanceProbe{done: make(chan string, 1)}
+		ichorgo.StartK8sUpgrade(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2) == "--dry-run", m)
+
+		return "done: " + <-m.done, nil
+	}},
 	{name: "config-apply", args: "NODE FILE MODE", run: func(e env) (string, error) {
 		// Applies FILE for good (MODE: auto, staged or reboot): it changes the node for real,
 		// and "reboot" reboots it.
