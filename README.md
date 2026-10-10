@@ -194,6 +194,25 @@ Notes:
   (port 6443): when the kubeconfig's address (often a VIP or an internal name) does not answer,
   the app tries the Talos endpoints on the same port.
 
+### Network tools
+
+**Node menu → Network tools** runs one check from that node and shows the result as fields,
+not as terminal output. It uses the same privileged `nicolaka/netshoot` container as the debug
+shell, so it needs os:admin; the first run pulls the image.
+
+| Tool | What it shows |
+|---|---|
+| DNS | The records (A, AAAA, CNAME, MX, NS, PTR, SRV, TXT) with their TTL, the answer's status, the resolver that answered and the query time. Leave the resolver empty for the node's own, or give one such as the cluster DNS. |
+| Ping | Packets sent and received, loss, and min / avg / max round trip. |
+| Port | Whether a TCP `host:port` is open, closed or filtered. |
+| Trace | The path, hop by hop, with loss and average latency (`mtr`, else `tracepath`). |
+| HTTP/TLS | The status after redirects and the total time. For https, whether the certificate verifies, its subject, issuer and days left. |
+
+- **Targets:** checked before anything runs: no spaces, no shell characters, no leading dash.
+  The last ten are offered again per cluster, on that phone only.
+- **More:** a run can be cancelled. The raw output sits under each result, and **Share** sends
+  the result as text.
+
 ### Network test
 
 **Kubernetes → Network** (also under **Cluster insights → Network**) measures the network from a

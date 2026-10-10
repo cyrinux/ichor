@@ -7,6 +7,7 @@ import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Layers
@@ -45,6 +46,8 @@ enum class NodeMenuEntry(val group: NodeMenuGroup, @StringRes val label: Int, va
     STORAGE(NodeMenuGroup.INSPECT, R.string.node_menu_storage, TalosFeature.MOUNTS, null),
     RESOURCES(NodeMenuGroup.INSPECT, R.string.node_menu_resources, TalosFeature.RESOURCE_BROWSER, Feature.RESOURCE_BROWSER),
     DEBUG_SHELL(NodeMenuGroup.TROUBLESHOOT, R.string.node_menu_debug_shell, TalosFeature.DEBUG_SHELL, Feature.DEBUG_SHELL),
+    // The same privileged netshoot container as the debug shell, one check at a time.
+    NET_TOOLS(NodeMenuGroup.TROUBLESHOOT, R.string.node_menu_net_tools, TalosFeature.DEBUG_SHELL, Feature.DEBUG_SHELL),
     CAPTURE(NodeMenuGroup.TROUBLESHOOT, R.string.node_menu_capture, TalosFeature.PACKET_CAPTURE, Feature.PACKET_CAPTURE),
     // Saved captures are local files: no Talos version involved.
     CAPTURES(NodeMenuGroup.TROUBLESHOOT, R.string.node_menu_captures, null, Feature.PACKET_CAPTURE),
@@ -70,6 +73,7 @@ internal val NodeMenuEntry.icon: ImageVector
         NodeMenuEntry.STORAGE -> Icons.Outlined.SdStorage
         NodeMenuEntry.RESOURCES -> Icons.Outlined.AccountTree
         NodeMenuEntry.CAPTURE -> Icons.Outlined.NetworkCheck
+        NodeMenuEntry.NET_TOOLS -> Icons.Outlined.Dns
         NodeMenuEntry.CAPTURES -> Icons.Outlined.FolderOpen
         NodeMenuEntry.MACHINE_CONFIG -> Icons.Outlined.Description
         NodeMenuEntry.UPGRADE -> Icons.Outlined.SystemUpdateAlt

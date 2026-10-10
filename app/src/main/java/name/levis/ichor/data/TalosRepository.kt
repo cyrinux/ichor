@@ -28,6 +28,9 @@ import name.levis.ichor.model.MultiConfigProgress
 import name.levis.ichor.model.AuditReport
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.NetTool
+import name.levis.ichor.model.NetToolEvent
+import name.levis.ichor.model.NetToolOptions
 import name.levis.ichor.model.ClusterUpgradeCommand
 import name.levis.ichor.model.ClusterUpgradePlan
 import name.levis.ichor.model.ClusterStorageHealth
@@ -350,6 +353,10 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** Recovers etcd on [node] from a snapshot (see [TalosStreams.etcdRecover]); needs os:admin. */
     fun etcdRecover(node: String, path: String, identity: String, passphrase: String, skipHashCheck: Boolean): Flow<EtcdRecoverEvent> =
         streams.etcdRecover(node, path, identity, passphrase, skipHashCheck)
+
+    /** A network check from [node] (see [TalosStreams.netTool]); needs os:admin. */
+    fun netTool(node: String, tool: NetTool, target: String, options: NetToolOptions): Flow<NetToolEvent> =
+        streams.netTool(node, tool, target, options)
 
     /** Pulls an image on several nodes (see [TalosStreams.imagePull]); needs os:admin. */
     fun imagePull(nodes: List<String>, image: String, namespace: ImagePullNamespace): Flow<ImagePullEvent> =

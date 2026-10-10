@@ -7,6 +7,7 @@ import name.levis.ichorgo.EventListener
 import name.levis.ichorgo.HealthListener
 import name.levis.ichorgo.ImagePullListener
 import name.levis.ichorgo.LogListener
+import name.levis.ichorgo.NetToolListener
 import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.TalosEvent
@@ -15,6 +16,10 @@ import name.levis.ichor.model.EtcdRecoverProgress
 import name.levis.ichor.model.ImagePullNamespace
 import name.levis.ichor.model.ImagePullProgress
 import name.levis.ichor.model.SnapshotEncryption
+import name.levis.ichor.model.NetTool
+import name.levis.ichor.model.NetToolEvent
+import name.levis.ichor.model.NetToolOptions
+import name.levis.ichor.model.NetToolResult
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -125,6 +130,40 @@ internal class TalosStreams(private val configs: ConfigRepository) {
                     close()
                 }
             },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED)
+
+    /**
+     * StartNodeNetTool: [tool] against [target] from [node], in a privileged netshoot container
+     * (os:admin). Output lines as they come, then the parsed result. Closing the flow cancels it.
+     */
+    fun netTool(node: String, tool: NetTool, target: String, options: NetToolOptions): Flow<NetToolEvent> = callbackFlow {
+        val stored = configs.forCall()
+        val listener = object : NetToolListener {
+            override fun onOutput(line: String) {
+                trySend(NetToolEvent.Line(line))
+            }
+
+            override fun onDone(resultJSON: String, errMessage: String) {
+                val event = if (errMessage.isNotEmpty()) {
+                    NetToolEvent.Failed(goErrorText(errMessage))
+                } else {
+                    runCatching { TalosJson.decodeFromString(NetToolResult.serializer(), resultJSON) }
+                        .fold({ NetToolEvent.Done(it) }, { NetToolEvent.Failed(it.message.orEmpty()) })
+                }
+                trySend(event)
+                close()
+            }
+        }
+        val run = Ichorgo.startNodeNetTool(
+            stored.yaml,
+            stored.activeContext,
+            node,
+            tool.wire,
+            target.trim(),
+            TalosJson.encodeToString(NetToolOptions.serializer(), options),
+            listener,
         )
         awaitClose { run.cancel() }
     }.buffer(Channel.UNLIMITED)
