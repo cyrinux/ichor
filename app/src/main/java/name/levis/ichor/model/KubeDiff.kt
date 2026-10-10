@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo/kube_diff.go and kube_flux_diff.go: what a GitOps tool would change in
-// the cluster, object by object (plans/roadmap/devops/06-flux.md, phase 5).
+// the cluster, object by object.
 
 /** What reconciling a Flux object now would change. */
 @Serializable

@@ -3,7 +3,7 @@ package name.levis.ichor.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-// Mirrors go/ichorgo (see DataServices.kt); the wire format is documented in plans/data-services/README.md.
+// Mirrors go/ichorgo (see DataServices.kt).
 
 @Serializable
 data class CnpgStatus(

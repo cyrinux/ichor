@@ -1,8 +1,7 @@
 import Foundation
 
-// Mirrors go/ichorgo/kube_argocd.go, kube_argocd_actions.go and kube_argocd_syncwindows.go (the
-// wire format and the UX are described in plans/argocd/README.md and
-// plans/roadmap/devops/09-argocd-freeze.md). The logic on top lives in ArgoCDLogic.swift.
+// Mirrors go/ichorgo/kube_argocd.go, kube_argocd_actions.go and kube_argocd_syncwindows.go. The
+// logic on top lives in ArgoCDLogic.swift.
 
 /// The catalog id of Argo CD in the inventory: only clusters running it are asked (KubeArgoCD).
 public let argoCDCatalogID = "argo-cd"

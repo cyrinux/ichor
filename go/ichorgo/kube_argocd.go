@@ -11,7 +11,7 @@ import (
 
 // Argo CD is read and driven through its custom resources (argoproj.io Applications), with
 // the admin kubeconfig Talos issues, the way `argocd --core` works: no Argo CD token and no
-// access to argocd-server needed. See plans/argocd/README.md.
+// access to argocd-server needed.
 
 const (
 	groupArgo = "argoproj.io"

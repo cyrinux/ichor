@@ -1,7 +1,6 @@
 import Foundation
 
-// Mirrors go/ichorgo/kube_castai_plans.go (and the Android model/DataServicesCastAIPlans.kt); the
-// wire format is documented in plans/data-services/README.md.
+// Mirrors go/ichorgo/kube_castai_plans.go (and the Android model/DataServicesCastAIPlans.kt).
 
 /// One node consolidation CAST AI ran (a RebalancePlan): the nodes it removes and adds, and what it costs.
 public struct CastAIPlan: Decodable, Equatable, Identifiable, Sendable {

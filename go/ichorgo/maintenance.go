@@ -12,7 +12,7 @@ import (
 )
 
 // Node maintenance: cordon → drain → reboot (or shut down, or nothing) → wait until the node
-// is back and Ready → uncordon, as one followed run. See plans/roadmap/devops/01-node-maintenance.md.
+// is back and Ready → uncordon, as one followed run.
 
 const (
 	// maintenanceTimeout is the cluster upgrade lock's lifetime: the lock is not renewed.

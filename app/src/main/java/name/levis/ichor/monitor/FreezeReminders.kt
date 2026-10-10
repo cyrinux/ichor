@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit
 
 // A notification 5 minutes before an Ichor freeze ends, with "+1 h". Scheduled from the freezes
 // the app last read (WorkManager, no polling): Argo CD ends the freeze on its own, the reminder
-// only says so. See plans/roadmap/devops/09-argocd-freeze.md.
+// only says so.
 
 private const val TAG_PREFIX = "argo-freeze-reminder|"
 private const val LEAD_MILLIS = 5 * 60_000L

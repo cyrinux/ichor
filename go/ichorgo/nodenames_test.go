@@ -54,6 +54,22 @@ func TestNodeNamesFileIsEncrypted(t *testing.T) {
 	}
 }
 
+type oversizedOverheadAEAD struct{}
+
+func (oversizedOverheadAEAD) NonceSize() int                { return 12 }
+func (oversizedOverheadAEAD) Overhead() int                 { return int(^uint(0) >> 1) }
+func (oversizedOverheadAEAD) Seal(_, _, _, _ []byte) []byte { panic("Seal must not be called") }
+func (oversizedOverheadAEAD) Open(_, _, _, _ []byte) ([]byte, error) {
+	panic("Open must not be called")
+}
+func (oversizedOverheadAEAD) BlockSize() int { return 16 }
+
+func TestSealRejectsCapacityOverflow(t *testing.T) {
+	if _, err := seal(oversizedOverheadAEAD{}, nil); err == nil {
+		t.Fatal("seal succeeded with an overflowing output capacity")
+	}
+}
+
 func TestPlaintextNodeNamesFileIsReadThenEncrypted(t *testing.T) {
 	dir := withDataDir(t)
 	path := filepath.Join(dir, nodeNamesFile)

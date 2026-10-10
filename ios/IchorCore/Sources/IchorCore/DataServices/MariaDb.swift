@@ -1,6 +1,6 @@
 import Foundation
 
-// Mirrors go/ichorgo/kube_mariadb.go (the wire format is documented in plans/data-services/README.md).
+// Mirrors go/ichorgo/kube_mariadb.go.
 
 public struct MariaDbStatus: Decodable, Equatable, Sendable {
     public let version: String

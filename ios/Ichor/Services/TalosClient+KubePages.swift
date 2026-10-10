@@ -2,9 +2,9 @@ import Foundation
 import Ichorgo
 import IchorCore
 
-/// Kubernetes lists page by page, namespace first (plans/roadmap/large-clusters.md; os:admin,
-/// see TalosClient for the conventions). `namespace` nil is every namespace; `token` is the
-/// previous page's continue token, "" for the first page.
+/// Kubernetes lists page by page, namespace first (os:admin, see TalosClient for the
+/// conventions). `namespace` nil is every namespace; `token` is the previous page's continue
+/// token, "" for the first page.
 extension TalosClient {
     /// The cluster's namespaces, to pick the scope of the lists. Forbidden is an answer, not an error.
     func namespaces() async throws -> KubeNamespaces {
