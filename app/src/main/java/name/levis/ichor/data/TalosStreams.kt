@@ -2,6 +2,7 @@ package name.levis.ichor.data
 
 import name.levis.ichor.ui.goErrorText
 import name.levis.ichorgo.EtcdFixListener
+import name.levis.ichorgo.EtcdRecoverListener
 import name.levis.ichorgo.EventListener
 import name.levis.ichorgo.HealthListener
 import name.levis.ichorgo.ImagePullListener
@@ -10,6 +11,7 @@ import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.TalosEvent
 import name.levis.ichor.model.EtcdFixProgress
+import name.levis.ichor.model.EtcdRecoverProgress
 import name.levis.ichor.model.ImagePullNamespace
 import name.levis.ichor.model.ImagePullProgress
 import name.levis.ichor.model.SnapshotEncryption
@@ -33,6 +35,12 @@ sealed interface SnapshotEvent {
 }
 
 /** The NOSPACE fix's progress, then its end: [Done.error] null when it succeeded. */
+/** A recovery's progress, then its end: [Done.error] null when etcd runs again. */
+sealed interface EtcdRecoverEvent {
+    data class Progress(val progress: EtcdRecoverProgress) : EtcdRecoverEvent
+    data class Done(val error: String?) : EtcdRecoverEvent
+}
+
 sealed interface EtcdFixEvent {
     data class Progress(val progress: EtcdFixProgress) : EtcdFixEvent
     data class Done(val error: String?) : EtcdFixEvent
@@ -188,6 +196,28 @@ internal class TalosStreams(private val configs: ConfigRepository) {
         val run = Ichorgo.startImagePull(stored.yaml, stored.activeContext, nodes.joinToString(","), image, namespace.wire, listener)
         awaitClose { run.cancel() }
     }.buffer(Channel.CONFLATED) // each event carries every node's state: the latest is enough
+
+    /**
+     * StartEtcdRecover: upload the snapshot at [path] to [node] and bootstrap etcd from it,
+     * decrypting with [identity] or [passphrase] on the fly. Closing the flow cancels it
+     * (once the bootstrap is requested it cannot be undone).
+     */
+    fun etcdRecover(node: String, path: String, identity: String, passphrase: String, skipHashCheck: Boolean): Flow<EtcdRecoverEvent> = callbackFlow {
+        val stored = configs.forCall()
+        val listener = object : EtcdRecoverListener {
+            override fun onProgress(json: String) {
+                runCatching { TalosJson.decodeFromString(EtcdRecoverProgress.serializer(), json) }.getOrNull()
+                    ?.let { trySend(EtcdRecoverEvent.Progress(it)) }
+            }
+
+            override fun onDone(errMessage: String) {
+                trySend(EtcdRecoverEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+                close()
+            }
+        }
+        val run = Ichorgo.startEtcdRecover(stored.yaml, stored.activeContext, node, path, identity, passphrase, skipHashCheck, listener)
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED) // every step is kept: the timeline needs them
 
     fun health(): Flow<HealthEvent> = callbackFlow {
         val stored = configs.forCall()

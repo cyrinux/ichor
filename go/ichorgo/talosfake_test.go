@@ -2,7 +2,9 @@ package ichorgo
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"maps"
 	"slices"
 	"strings"
@@ -70,6 +72,12 @@ type fakeTalos struct {
 	// one replaces the node's machine config, then onApply runs.
 	applies []fakeConfigApply
 	onApply func(node string)
+	// etcdDown are the nodes whose etcd does not answer (EtcdStatus: Unavailable) until a
+	// recovery bootstraps it.
+	etcdDown map[string]bool
+	// recovered is what EtcdRecover received, per node; bootstraps the Bootstrap requests.
+	recovered  map[string][]byte
+	bootstraps []*machineapi.BootstrapRequest
 }
 
 type fakeConfigApply struct {
@@ -339,6 +347,10 @@ func (m fakeTalosMachine) EtcdStatus(ctx context.Context, _ *emptypb.Empty) (*ma
 	m.f.mu.Lock()
 	defer m.f.mu.Unlock()
 
+	if m.f.etcdDown[node] {
+		return nil, status.Errorf(codes.Unavailable, "etcd is not running on %s", node)
+	}
+
 	id, leader := uint64(1), uint64(1)
 	if m.f.members != nil {
 		id, leader = m.f.members[node], m.f.leader
@@ -347,6 +359,55 @@ func (m fakeTalosMachine) EtcdStatus(ctx context.Context, _ *emptypb.Empty) (*ma
 	return &machineapi.EtcdStatusResponse{Messages: []*machineapi.EtcdStatus{{
 		MemberStatus: &machineapi.EtcdMemberStatus{MemberId: id, Leader: leader, DbSize: 4 << 20},
 	}}}, nil
+}
+
+// EtcdRecover keeps the uploaded database of the node.
+func (m fakeTalosMachine) EtcdRecover(stream grpc.ClientStreamingServer[common.Data, machineapi.EtcdRecoverResponse]) error {
+	node, err := m.f.enter(stream.Context(), "EtcdRecover")
+	if err != nil {
+		return err
+	}
+
+	var data []byte
+
+	for {
+		msg, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+
+		if err != nil {
+			return err
+		}
+
+		data = append(data, msg.GetBytes()...)
+	}
+
+	m.f.mu.Lock()
+	if m.f.recovered == nil {
+		m.f.recovered = map[string][]byte{}
+	}
+
+	m.f.recovered[node] = data
+	m.f.mu.Unlock()
+
+	return stream.SendAndClose(&machineapi.EtcdRecoverResponse{Messages: []*machineapi.EtcdRecover{{}}})
+}
+
+// Bootstrap starts etcd on the node again.
+func (m fakeTalosMachine) Bootstrap(ctx context.Context, req *machineapi.BootstrapRequest) (*machineapi.BootstrapResponse, error) {
+	node, err := m.f.enter(ctx, "Bootstrap")
+	if err != nil {
+		return nil, err
+	}
+
+	m.f.mu.Lock()
+	defer m.f.mu.Unlock()
+
+	m.f.bootstraps = append(m.f.bootstraps, req)
+	delete(m.f.etcdDown, node)
+
+	return &machineapi.BootstrapResponse{Messages: []*machineapi.Bootstrap{{}}}, nil
 }
 
 func (m fakeTalosMachine) EtcdMemberList(ctx context.Context, _ *machineapi.EtcdMemberListRequest) (*machineapi.EtcdMemberListResponse, error) {
