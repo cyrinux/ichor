@@ -57,6 +57,14 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertEqual(gke.rememberedOption, 2)
         XCTAssertTrue(kubeFieldsComplete(gke.fieldSets[2], values: gke.values))
 
+        // "Sign in with Google" (a build with a Google client) is a marker the app does not
+        // render yet: it decodes, and its option is never complete from typed values.
+        let native = try XCTUnwrap(try KubeSignInInfo.decode(#"""
+            {"method":"gke","kind":"credentials","options":[["gcpServiceAccountJson"],["gcpGoogleSignIn"]],"signedIn":false}
+            """#))
+        XCTAssertEqual(native.fieldSets[1], ["gcpGoogleSignIn"])
+        XCTAssertFalse(kubeFieldsComplete(native.fieldSets[1], values: [:]))
+
         XCTAssertNil(try KubeSignInInfo.decode(""))
     }
 

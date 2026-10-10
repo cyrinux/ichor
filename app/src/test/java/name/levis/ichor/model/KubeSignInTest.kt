@@ -53,6 +53,16 @@ class KubeSignInTest {
         assertTrue(credentialsComplete(gke.fieldSets[2], gke.values))
         assertEquals(FieldKind.SECRET, credentialField("gcpOAuthClientSecret")?.kind)
 
+        // "Sign in with Google" (a build with a Google client) is a marker the app does not
+        // render yet: it decodes, and its option is never complete from typed values.
+        val native = TalosJson.decodeFromString(
+            KubeSignInInfo.serializer(),
+            """{"method":"gke","kind":"credentials","options":[["gcpServiceAccountJson"],["gcpGoogleSignIn"]],"signedIn":false}""",
+        )
+        assertEquals(listOf("gcpGoogleSignIn"), native.fieldSets[1])
+        assertNull(credentialField("gcpGoogleSignIn"))
+        assertFalse(credentialsComplete(native.fieldSets[1], emptyMap()))
+
         val oidc = TalosJson.decodeFromString(KubeSignInInfo.serializer(), """{"method":"oidc","kind":"browser","signedIn":true,"user":"me@example.com","sessionExpires":1700000000}""")
         assertEquals(listOf(emptyList<String>()), oidc.fieldSets)
         assertTrue(oidc.signedIn)
