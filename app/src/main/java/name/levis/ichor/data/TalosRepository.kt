@@ -58,6 +58,7 @@ import name.levis.ichor.model.MountList
 import name.levis.ichor.model.NodeDiscovery
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.EndpointProbe
+import name.levis.ichor.model.KubeSpanDiagAll
 import name.levis.ichor.model.NodeFeatures
 import name.levis.ichor.model.NodeResetPlan
 import name.levis.ichor.model.ResetRequest
@@ -109,6 +110,11 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         persistable: (T) -> Boolean = { true },
         block: suspend (last: () -> Timed<T>?) -> T,
     ): T = go.remember(key, persistable, block)
+
+    /** Why each node's KubeSpan peers are up or down, every node compared. Read-only, not cached. */
+    suspend fun kubespanDiagnostics(): KubeSpanDiagAll = call { cfg, ctx ->
+        TalosJson.decodeFromString(KubeSpanDiagAll.serializer(), Ichorgo.kubeSpanDiagnosticsAll(cfg, ctx))
+    }
 
     suspend fun kubespan(): KubeSpanOverview = remember(KUBESPAN) {
         call { cfg, ctx -> TalosJson.decodeFromString(KubeSpanOverview.serializer(), Ichorgo.kubeSpanStatus(cfg, ctx)) }

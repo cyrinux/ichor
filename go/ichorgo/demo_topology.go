@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/resources/kubespan"
+	"github.com/siderolabs/talos/pkg/machinery/resources/siderolink"
 )
 
 // demoSite places each demo node (by index into demoNodes) in a zone with the public address
@@ -75,4 +76,32 @@ func demoTopology() clusterTopology {
 	}
 
 	return buildTopology(members, observations)
+}
+
+// demoKubeSpanDiag is what demo node i would show in the peer diagnosis: the Falkenstein
+// worker's tunnel to Amsterdam is down, stale, and Amsterdam advertised no endpoint to it;
+// the Amsterdam control plane is the one Omni manages (a SideroLink row).
+func demoKubeSpanDiag(i int) kubespanDiagInput {
+	nodes := demoNodes()
+	in := kubespanDiagInput{
+		node: nodes[i].Node, hostname: nodes[i].Hostname, linkMTU: 1420, errors: map[string]string{}, now: time.Now(),
+		config:   &kubespan.ConfigSpec{Enabled: true, AdvertiseKubernetesNetworks: true, HarvestExtraEndpoints: true},
+		statuses: demoPeers(i),
+	}
+
+	for _, peer := range in.statuses {
+		spec := kubespan.PeerSpecSpec{Label: peer.spec.Label, Endpoints: []netip.AddrPort{peer.spec.Endpoint}}
+		if i == 4 && peer.spec.Label == nodes[2].Hostname {
+			spec.Endpoints = nil
+		}
+
+		in.specs = append(in.specs, kubespanSpecInput{id: peer.id, spec: spec})
+	}
+
+	if i == 2 {
+		in.sidero = &siderolink.StatusSpec{Host: "omni.demo.invalid:8090", Connected: true, LinkName: "siderolink"}
+		in.tunnel = &siderolink.TunnelSpec{LinkName: "siderolink", MTU: 1280}
+	}
+
+	return in
 }

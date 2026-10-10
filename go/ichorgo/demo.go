@@ -262,6 +262,15 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 		return `{"supported":false,"reason":"Disk health data is unavailable in the demo cluster","disks":[]}`, nil
 	case "KubeSpanStatus":
 		return toJSON(demoKubeSpan())
+	case "KubeSpanDiagnostics":
+		index := slices.IndexFunc(nodes, func(m nodeOverview) bool { return m.Node == n.Node })
+		return toJSON(buildKubeSpanDiag(demoKubeSpanDiag(index)))
+	case "KubeSpanDiagnosticsAll":
+		inputs := make([]kubespanDiagInput, len(nodes))
+		for i := range nodes {
+			inputs[i] = demoKubeSpanDiag(i)
+		}
+		return toJSON(buildKubeSpanDiagAll(inputs))
 	case "ClusterTopology":
 		if privacy.isEnabled() {
 			return toJSON(hideLocations(demoTopology()))

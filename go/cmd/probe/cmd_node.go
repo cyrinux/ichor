@@ -12,6 +12,14 @@ import (
 
 // Talos nodes and the cluster.
 var nodeCommands = []command{
+	{name: "kubespan-diag", args: "[NODE]", run: func(e env) (out string, err error) {
+		// Read-only: one node's peers and their verdicts, or every node compared.
+		if flag.Arg(1) == "" {
+			return ichorgo.KubeSpanDiagnosticsAll(e.cfg, e.context)
+		}
+
+		return ichorgo.KubeSpanDiagnostics(e.cfg, e.context, flag.Arg(1))
+	}},
 	{name: "cluster-upgrade-plan", args: "VERSION", run: func(e env) (out string, err error) {
 		// Read-only: the order, each node's checks.
 		return ichorgo.ClusterUpgradePlan(e.cfg, e.context, e.kubeServer, flag.Arg(1))
