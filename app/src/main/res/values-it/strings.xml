@@ -3174,6 +3174,9 @@
     <string name="kube_field_gcp_oauth_client_secret">Segreto client OAuth</string>
     <string name="kube_signin_option_gcp_oauth">Il client OAuth della tua organizzazione</string>
     <string name="kube_signin_gcp_oauth_hint">Chiedi all\'amministratore Google Cloud un client OAuth di tipo App desktop (API e servizi → Credenziali) con una schermata di consenso Interna. Accedi apre poi il tuo account Google nel browser.</string>
+    <string name="kube_signin_option_google">Accedi con Google</string>
+    <string name="kube_signin_google_hint">Il tuo account Google, con l\'accesso di Google. Richiede i servizi Google Play.</string>
+    <string name="kube_signin_google_unavailable">L\'accesso con Google non è disponibile su questo dispositivo.</string>
     <string name="kube_field_gcp_oauth_redirect">URL di reindirizzamento</string>
     <string name="kube_signin_gcp_oauth_web_hint">Con un client di tipo Applicazione web, inserisci https://cyrinux.github.io/ichor/auth/google/ (o la pagina della tua organizzazione) come URL di reindirizzamento e aggiungilo agli URI di reindirizzamento autorizzati del client. Lascialo vuoto per un client App desktop.</string>
     <string name="kube_signin_paste_code_hint">Il browser non è tornato a Ichor? Incolla il codice di accesso mostrato dalla pagina.</string>

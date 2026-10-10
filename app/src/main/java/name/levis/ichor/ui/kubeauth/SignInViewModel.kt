@@ -8,8 +8,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import name.levis.ichor.data.GoogleAuthorization
 import name.levis.ichor.data.KubeAuthRepository
 import name.levis.ichor.data.SignInEvent
+import name.levis.ichor.data.googleSignInSecrets
 import name.levis.ichor.model.KubeSignInInfo
 import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.credentialsFor
@@ -114,6 +116,31 @@ class SignInViewModel(
         run?.cancel()
         run = null
         _state.value = SignInUi.Loading
+    }
+
+    /**
+     * What Google's sign-in gave (Play build): a token signs the cluster in through the Go core;
+     * a failure shows Google's message, or [failedText] when it gave none.
+     */
+    fun googleAnswer(answer: GoogleAuthorization, failedText: String) {
+        val ready = _state.value as? SignInUi.Ready ?: return
+        when (answer) {
+            is GoogleAuthorization.NeedsUser -> Unit
+            is GoogleAuthorization.Failed -> _state.value = ready.copy(checking = false, error = answer.message.ifBlank { failedText })
+            is GoogleAuthorization.Token -> {
+                _state.value = ready.copy(checking = true, error = null)
+                viewModelScope.launch {
+                    _state.value = try {
+                        repo.setCredentials(context, googleSignInSecrets(answer))
+                        SignInUi.Done
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        ready.copy(checking = false, error = e.userMessage())
+                    }
+                }
+            }
+        }
     }
 
     /** Hands the sign-in code the redirect page showed (the browser did not come back) to the sign-in in progress. */

@@ -39,6 +39,7 @@ import name.levis.ichor.data.SupportPrompt
 import name.levis.ichor.data.FundingHistory
 import name.levis.ichor.data.RoadmapRepository
 import name.levis.ichor.data.createFeatureStore
+import name.levis.ichor.data.createGoogleNativeSignIn
 import name.levis.ichor.data.PrivacyMask
 import name.levis.ichor.data.UiPreferences
 import androidx.glance.appwidget.updateAll
@@ -217,6 +218,7 @@ class TalosApp : Application() {
     val supportPrompt by lazy { SupportPrompt(getSharedPreferences("ichor-support", Context.MODE_PRIVATE)) }
     val fundingHistory by lazy { FundingHistory(getSharedPreferences(FundingHistory.FILE, Context.MODE_PRIVATE)) }
     val featureStore by lazy { createFeatureStore(this, fundingHistory) }
+    val googleNativeSignIn by lazy { createGoogleNativeSignIn() }
     val roadmapRepository by lazy { RoadmapRepository(getSharedPreferences(RoadmapRepository.FILE, Context.MODE_PRIVATE)) }
     val changelogRepository by lazy { ChangelogRepository(this, getSharedPreferences(ChangelogRepository.PREFS, Context.MODE_PRIVATE)) }
     val updateManager by lazy {
@@ -494,6 +496,9 @@ class TalosApp : Application() {
         Ichorgo.setAuditEvents(uiPreferences.auditEvents.value)
         // Where Go remembers node names, so a node that is down still shows its hostname.
         Ichorgo.setDataDir(noBackupFilesDir.path, coreDataKey() ?: ByteArray(0))
+        // GKE's "Sign in with Google" (Play build with Play services): Google's SDK holds the
+        // client, so no client ID here.
+        if (googleNativeSignIn.available(this)) Ichorgo.setGoogleSignInClient("android", "")
         launchSync()
         // Every cluster of the stored config gets a color of its own, as soon as it shows up.
         ProcessLifecycleOwner.get().lifecycleScope.launch {

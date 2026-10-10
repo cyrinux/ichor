@@ -3166,6 +3166,9 @@
     <string name="kube_field_gcp_oauth_client_secret">OAuth-Client-Secret</string>
     <string name="kube_signin_option_gcp_oauth">OAuth-Client deiner Organisation</string>
     <string name="kube_signin_gcp_oauth_hint">Bitte deine Google-Cloud-Administration um einen OAuth-Client vom Typ Desktop-App (APIs &amp; Dienste → Anmeldedaten) mit internem Zustimmungsbildschirm. Anmelden öffnet dann dein Google-Konto im Browser.</string>
+    <string name="kube_signin_option_google">Über Google anmelden</string>
+    <string name="kube_signin_google_hint">Dein Google-Konto über Googles eigene Anmeldung. Benötigt die Google Play-Dienste.</string>
+    <string name="kube_signin_google_unavailable">Die Google-Anmeldung ist auf diesem Gerät nicht verfügbar.</string>
     <string name="kube_field_gcp_oauth_redirect">Weiterleitungs-URL</string>
     <string name="kube_signin_gcp_oauth_web_hint">Bei einem Client vom Typ Webanwendung gib https://cyrinux.github.io/ichor/auth/google/ (oder die Seite deiner Organisation) als Weiterleitungs-URL ein und füge sie den autorisierten Weiterleitungs-URIs des Clients hinzu. Lass sie für einen Desktop-App-Client leer.</string>
     <string name="kube_signin_paste_code_hint">Der Browser ist nicht zu Ichor zurückgekehrt? Füge den Anmeldecode ein, den die Seite anzeigt.</string>

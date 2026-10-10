@@ -66,6 +66,7 @@ class KubeSignInTest {
         assertEquals(listOf("gcpGoogleSignIn"), native.fieldSets[1])
         assertNull(credentialField("gcpGoogleSignIn"))
         assertFalse(credentialsComplete(native.fieldSets[1], emptyMap()))
+        assertEquals(R.string.kube_signin_option_google, fieldSetLabel(native.fieldSets[1]))
 
         val oidc = TalosJson.decodeFromString(KubeSignInInfo.serializer(), """{"method":"oidc","kind":"browser","signedIn":true,"user":"me@example.com","sessionExpires":1700000000}""")
         assertEquals(listOf(emptyList<String>()), oidc.fieldSets)
