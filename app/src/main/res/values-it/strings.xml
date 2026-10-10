@@ -3142,6 +3142,7 @@
     <string name="kube_signin_option_gcp_service_account">Chiave dell\'account di servizio</string>
     <string name="kube_signin_option_gcp_user">Credenziali utente gcloud</string>
     <string name="kube_signin_gcp_user_hint">Usa la tua sessione gcloud: sul computer esegui gcloud auth application-default login, poi importa ~/.config/gcloud/application_default_credentials.json. Quando Google chiude la sessione, eseguilo di nuovo e importa il nuovo file.</string>
+    <string name="kube_signin_gcp_workforce_hint">Una sessione di identità della forza lavoro (gcloud auth application-default login --login-config=…) si importa allo stesso modo.</string>
     <string name="kube_field_azure_tenant">ID tenant</string>
     <string name="kube_field_azure_subscription">ID sottoscrizione</string>
     <string name="kube_field_azure_client_id">ID applicazione (client)</string>

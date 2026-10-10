@@ -148,7 +148,7 @@ func (gkeMethod) fromSecrets(s map[string]string) (kubeAuthState, error) {
 		return userCredentialsState(s)
 	}
 
-	if gcpCredentialType(s[gcpFieldServiceAccount]) == "authorized_user" {
+	if isGCPUserCredentials(s[gcpFieldServiceAccount]) {
 		return kubeAuthState{}, errors.New("this is a gcloud user credential: choose gcloud user credentials")
 	}
 
