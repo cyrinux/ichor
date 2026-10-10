@@ -3,8 +3,13 @@ import Foundation
 /// What a node maintenance does after the drain (StartNodeMaintenance's action).
 public enum MaintenanceAction: String, CaseIterable, Identifiable, Sendable {
     case reboot, shutdown, none
+    /// Upgrade Talos (StartNodeMaintenanceUpgrade): started from the upgrade screen only.
+    case upgrade
 
     public var id: String { rawValue }
+
+    /// The actions the maintenance screen offers.
+    public static let planned: [MaintenanceAction] = [.reboot, .shutdown, .none]
 
     /// The plan's blockers and acknowledgments concern the node going down: a drain alone
     /// ignores them.
@@ -111,11 +116,14 @@ public struct MaintenancePlan: Decodable, Equatable, Sendable {
     public let warnings: [String]
     /// Confirmed one by one before a reboot or shutdown.
     public let acknowledge: [String]
+    /// The node's upgrade does not drain it: the upgrade action is worth offering.
+    public let upgradeDrainable: Bool
 
     public var podGroups: MaintenancePodGroups { MaintenancePodGroups(pods) }
 
     public init(node: String, hostname: String = "", kubeNode: String = "", controlPlane: Bool = false, cordoned: Bool = false,
-                pods: [DrainPod] = [], blockers: [String] = [], warnings: [String] = [], acknowledge: [String] = []) {
+                pods: [DrainPod] = [], blockers: [String] = [], warnings: [String] = [], acknowledge: [String] = [],
+                upgradeDrainable: Bool = false) {
         self.node = node
         self.hostname = hostname
         self.kubeNode = kubeNode
@@ -125,9 +133,12 @@ public struct MaintenancePlan: Decodable, Equatable, Sendable {
         self.blockers = blockers
         self.warnings = warnings
         self.acknowledge = acknowledge
+        self.upgradeDrainable = upgradeDrainable
     }
 
-    private enum CodingKeys: String, CodingKey { case node, hostname, kubeNode, controlPlane, cordoned, pods, blockers, warnings, acknowledge }
+    private enum CodingKeys: String, CodingKey {
+        case node, hostname, kubeNode, controlPlane, cordoned, pods, blockers, warnings, acknowledge, upgradeDrainable
+    }
 
     // Go encodes empty slices as null.
     public init(from decoder: Decoder) throws {
@@ -141,6 +152,7 @@ public struct MaintenancePlan: Decodable, Equatable, Sendable {
         blockers = try c.field(.blockers, [])
         warnings = try c.field(.warnings, [])
         acknowledge = try c.field(.acknowledge, [])
+        upgradeDrainable = try c.field(.upgradeDrainable, false)
     }
 
     /// The acknowledgments the user must tick for `action` (none for a drain alone).
@@ -158,7 +170,8 @@ public struct MaintenancePlan: Decodable, Equatable, Sendable {
 
 /// Phases of a maintenance run, in order.
 public enum MaintenancePhase: String, CaseIterable, Comparable, Sendable {
-    case cordon, drain, reboot, shutdown, waiting, uncordon
+    /// upgrade: the upgrade's own phases, as "<upgrade phase>: <message>".
+    case cordon, drain, reboot, shutdown, upgrade, waiting, uncordon
 
     /// The phases a run of `action` goes through.
     public static func steps(for action: MaintenanceAction) -> [MaintenancePhase] {
@@ -166,6 +179,7 @@ public enum MaintenancePhase: String, CaseIterable, Comparable, Sendable {
         case .reboot: [.cordon, .drain, .reboot, .waiting, .uncordon]
         case .shutdown: [.cordon, .drain, .shutdown]
         case .none: [.cordon, .drain]
+        case .upgrade: [.cordon, .drain, .upgrade, .waiting, .uncordon]
         }
     }
 

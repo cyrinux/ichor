@@ -35,8 +35,11 @@ type upgradePlan struct {
 	Warnings       []string  `json:"warnings"`
 	// Acknowledge are risks the user must confirm to start: StartUpgrade refuses them
 	// unless acknowledged (force does not skip them).
-	Acknowledge  []string `json:"acknowledge"`
-	Forceable    bool     `json:"forceable"` // every blocker is an etcd check that force skips
+	Acknowledge []string `json:"acknowledge"`
+	Forceable   bool     `json:"forceable"` // every blocker is an etcd check that force skips
+	// Drainable: this upgrade does not drain the node (the LifecycleService path), so
+	// StartNodeMaintenanceUpgrade, which drains it first, is worth offering.
+	Drainable    bool     `json:"drainable"`
 	etcdBlockers []string // the blockers force bypasses
 	upgradeOnly  []string // the warnings about upgrading itself, which a reboot plan drops
 	target       planPeer
@@ -338,7 +341,9 @@ func computePlan(in planInput) upgradePlan {
 	plan.Forceable = len(plan.Blockers) > 0 && len(plan.etcdBlockers) == len(plan.Blockers)
 
 	// Without the legacy upgrade API the node neither drains nor checks etcd: see requestUpgrade.
-	if t.version != "" && compareMinor(t.version, legacyUpgradeRemoved) >= 0 {
+	plan.Drainable = upgradeSkipsDrain(t.version)
+
+	if plan.Drainable {
 		plan.Warnings = append(plan.Warnings, noDrainWarning+": its pods stop when it reboots")
 		plan.Forceable = false
 	}

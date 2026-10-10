@@ -1268,6 +1268,10 @@
     <string name="upgrade_same_version">%1$s уже встановлено.</string>
     <string name="upgrade_stage">Застосувати під час наступного перезавантаження</string>
     <string name="upgrade_stage_desc">Підготувати оновлення й установити його під час завантаження вузла (Talos перезавантажує його). Корисно, коли файли, що використовуються, блокують оновлення.</string>
+    <string name="upgrade_drain_first">Спершу звільнити вузол</string>
+    <string name="upgrade_drain_first_desc">Ізолювати й звільнити його, оновити, дочекатися готовності, потім зняти ізоляцію. Без цього ця версія Talos зупиняє поди вузла під час перезавантаження.</string>
+    <string name="maintenance_action_upgrade_desc">Оновити Talos, дочекатися, поки вузол працюватиме на новій версії й буде готовий, потім зняти ізоляцію.</string>
+    <string name="maintenance_phase_upgrade">Оновлення</string>
     <string name="upgrade_checks">Попередні перевірки</string>
     <string name="upgrade_etcd_members">etcd: %1$d з %2$d учасників справні</string>
     <string name="upgrade_etcd_quorum_ok">etcd зберігає кворум, поки цей вузол недоступний.</string>

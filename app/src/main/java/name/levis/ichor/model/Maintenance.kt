@@ -17,6 +17,8 @@ data class MaintenancePlan(
     val warnings: List<String> = emptyList(),
     /** To confirm before a reboot or shutdown: the core refuses unless acknowledged. */
     val acknowledge: List<String> = emptyList(),
+    /** The node's upgrade does not drain it: [MaintenanceAction.UPGRADE] is worth offering. */
+    val upgradeDrainable: Boolean = false,
 )
 
 @Serializable
@@ -64,7 +66,18 @@ enum class MaintenanceAction(val wire: String) {
     REBOOT("reboot"),
     SHUTDOWN("shutdown"),
     NONE("none"),
+    /** Upgrade Talos (see [MaintenanceUpgrade]): started from the upgrade screen, not the maintenance one. */
+    UPGRADE("upgrade"),
+    ;
+
+    companion object {
+        /** The actions the maintenance screen offers. */
+        val planned: List<MaintenanceAction> = listOf(REBOOT, SHUTDOWN, NONE)
+    }
 }
+
+/** What an [MaintenanceAction.UPGRADE] installs: the installer [image], [force] as for an upgrade. */
+data class MaintenanceUpgrade(val image: String, val force: Boolean = false)
 
 /** Run phases, in the order they happen. */
 enum class MaintenancePhase(val wire: String) {
@@ -72,6 +85,8 @@ enum class MaintenancePhase(val wire: String) {
     DRAIN("drain"),
     REBOOT("reboot"),
     SHUTDOWN("shutdown"),
+    /** The upgrade's own phases, as "<upgrade phase>: <message>". */
+    UPGRADE("upgrade"),
     WAITING("waiting"),
     UNCORDON("uncordon"),
     ;
@@ -88,6 +103,9 @@ fun maintenancePhases(action: MaintenanceAction): List<MaintenancePhase> = when 
     )
     MaintenanceAction.SHUTDOWN -> listOf(MaintenancePhase.CORDON, MaintenancePhase.DRAIN, MaintenancePhase.SHUTDOWN)
     MaintenanceAction.NONE -> listOf(MaintenancePhase.CORDON, MaintenancePhase.DRAIN)
+    MaintenanceAction.UPGRADE -> listOf(
+        MaintenancePhase.CORDON, MaintenancePhase.DRAIN, MaintenancePhase.UPGRADE, MaintenancePhase.WAITING, MaintenancePhase.UNCORDON,
+    )
 }
 
 /** The plan's pods by what the drain does with them. */
@@ -144,10 +162,10 @@ fun maintenanceTimeline(action: MaintenanceAction, events: List<MaintenanceProgr
 /**
  * Whether the node is cordoned after a run of [action] that reached [phase] (null: not even
  * cordoned) and ended (not [running]) with or without [failed]; null when unknown. Only a
- * successful reboot uncordons it, and not a node [wasCordoned] before the run.
+ * successful reboot or upgrade uncordons it, and not a node [wasCordoned] before the run.
  */
 fun cordonedAfter(action: MaintenanceAction, phase: MaintenancePhase?, running: Boolean, failed: Boolean, wasCordoned: Boolean): Boolean? = when {
     phase == null || phase == MaintenancePhase.CORDON -> null // the cordon itself may not have happened
-    !running && !failed && action == MaintenanceAction.REBOOT -> wasCordoned
+    !running && !failed && (action == MaintenanceAction.REBOOT || action == MaintenanceAction.UPGRADE) -> wasCordoned
     else -> true
 }

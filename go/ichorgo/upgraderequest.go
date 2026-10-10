@@ -41,7 +41,10 @@ type upgrader interface {
 //     the Kubernetes API, which this app does not speak. The reboot stops the pods like any
 //     Talos reboot and Kubernetes reschedules them once the node is NotReady;
 //   - there is no staged upgrade: stage is refused instead of silently ignored.
-func requestUpgrade(ctx context.Context, u upgrader, image string, stage, force bool, unforced func() error, emit func(phase, msg string)) error {
+//
+// drained tells the node was cordoned and drained before (a maintenance run): the messages
+// then do not warn about pods stopped by the reboot.
+func requestUpgrade(ctx context.Context, u upgrader, image string, stage, force, drained bool, unforced func() error, emit func(phase, msg string)) error {
 	err := u.legacyUpgrade(ctx, image, stage, force)
 	if err == nil {
 		emit(phaseInstall, "upgrade accepted: draining and installing")
@@ -61,7 +64,11 @@ func requestUpgrade(ctx context.Context, u upgrader, image string, stage, force 
 		return fmt.Errorf("%w (this Talos version does not check etcd itself, so force cannot skip it)", err)
 	}
 
-	emit(phaseRequested, noDrainWarning+": pulling "+image)
+	if drained {
+		emit(phaseRequested, "pulling "+image)
+	} else {
+		emit(phaseRequested, noDrainWarning+": pulling "+image)
+	}
 
 	if err := u.pullImage(ctx, image); err != nil {
 		if isUnavailableAPI(err) {
@@ -71,7 +78,11 @@ func requestUpgrade(ctx context.Context, u upgrader, image string, stage, force 
 		return errors.New("pulling the installer image failed: " + friendlyError(err))
 	}
 
-	emit(phaseInstall, "installing (the node is not drained: its pods stop when it reboots)")
+	if drained {
+		emit(phaseInstall, "installing")
+	} else {
+		emit(phaseInstall, "installing (the node is not drained: its pods stop when it reboots)")
+	}
 
 	var last string
 
@@ -121,6 +132,12 @@ const noDrainWarning = "this Talos version upgrades without draining the node fi
 // legacyUpgradeRemoved is the Talos version expected to drop MachineService.Upgrade
 // (remove_deprecated_method = "v1.18" in api/machine/machine.proto).
 const legacyUpgradeRemoved = "v1.18"
+
+// upgradeSkipsDrain tells a node on version upgrades through the LifecycleService, which
+// does not drain it ("" is unknown: no).
+func upgradeSkipsDrain(version string) bool {
+	return version != "" && compareMinor(version, legacyUpgradeRemoved) >= 0
+}
 
 // talosUpgrader is upgrader on a Talos client.
 type talosUpgrader struct{ c *client.Client }

@@ -1175,6 +1175,10 @@
     <string name="upgrade_same_version">%1$s est déjà installée.</string>
     <string name="upgrade_stage">Appliquer au prochain redémarrage</string>
     <string name="upgrade_stage_desc">Prépare la mise à jour et l\'installe au démarrage du nœud (Talos le redémarre). Utile quand des fichiers en cours d\'utilisation bloquent la mise à jour.</string>
+    <string name="upgrade_drain_first">Vider le nœud d\'abord</string>
+    <string name="upgrade_drain_first_desc">L\'isoler et le vider, mettre à jour, attendre qu\'il revienne prêt, puis lever l\'isolement. Sans cela, cette version de Talos arrête les pods du nœud au redémarrage.</string>
+    <string name="maintenance_action_upgrade_desc">Mettre à jour Talos, attendre que le nœud tourne sur la nouvelle version et soit prêt, puis lever l\'isolement.</string>
+    <string name="maintenance_phase_upgrade">Mise à jour</string>
     <string name="upgrade_checks">Vérifications préalables</string>
     <string name="upgrade_etcd_members">etcd&#160;: %1$d membres sains sur %2$d</string>
     <string name="upgrade_etcd_quorum_ok">etcd garde le quorum pendant l\'arrêt de ce nœud.</string>

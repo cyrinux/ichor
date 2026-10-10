@@ -12,6 +12,7 @@ import name.levis.ichor.model.MaintenanceAction
 import name.levis.ichor.model.MaintenancePhase
 import name.levis.ichor.model.MaintenancePlan
 import name.levis.ichor.model.MaintenanceProgress
+import name.levis.ichor.model.MaintenanceUpgrade
 import name.levis.ichor.model.cordonedAfter
 import name.levis.ichor.ui.FollowedRun
 
@@ -57,13 +58,24 @@ class MaintenanceManager(
         remember(node, on)
     }
 
-    /** Starts the maintenance unless one is already followed; returns false then. [wasCordoned]: from the plan. */
+    /**
+     * Starts the maintenance unless one is already followed; returns false then. [wasCordoned]:
+     * from the plan. [upgrade]: what [MaintenanceAction.UPGRADE] installs.
+     */
     @Synchronized
-    fun start(node: String, hostname: String, action: MaintenanceAction, includeBare: Boolean, acknowledged: Boolean, wasCordoned: Boolean): Boolean {
+    fun start(
+        node: String,
+        hostname: String,
+        action: MaintenanceAction,
+        includeBare: Boolean,
+        acknowledged: Boolean,
+        wasCordoned: Boolean,
+        upgrade: MaintenanceUpgrade? = null,
+    ): Boolean {
         if (_current.value?.running == true) return false
         _current.value = MaintenanceRunState(node, hostname, action, wasCordoned)
         run = try {
-            talos.startMaintenance(node, action, includeBare, acknowledged, listener(node))
+            talos.startMaintenance(node, action, includeBare, acknowledged, listener(node), upgrade)
         } catch (e: Exception) {
             _current.value = null
             throw e

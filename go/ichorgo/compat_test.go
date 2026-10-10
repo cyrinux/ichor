@@ -243,7 +243,7 @@ func TestRequestUpgrade(t *testing.T) {
 	run := func(f *fakeUpgrader, stage, force bool) ([]string, error) {
 		var phases []string
 
-		err := requestUpgrade(context.Background(), f, image, stage, force, func() error { return nil },
+		err := requestUpgrade(context.Background(), f, image, stage, force, false, func() error { return nil },
 			func(phase, _ string) { phases = append(phases, phase) })
 
 		return phases, err
@@ -299,7 +299,7 @@ func TestRequestUpgrade(t *testing.T) {
 			etcd:   &etcdHealth{members: 3, healthy: 2, thisMember: true, thisHealthy: true},
 		})
 
-		if plan.Forceable || !containsText(plan.Warnings, noDrainWarning) {
+		if plan.Forceable || !plan.Drainable || !containsText(plan.Warnings, noDrainWarning) {
 			t.Fatalf("plan = %+v", plan)
 		}
 
@@ -311,7 +311,7 @@ func TestRequestUpgrade(t *testing.T) {
 		var messages []string
 
 		f := &fakeUpgrader{legacyErr: unimplemented}
-		err := requestUpgrade(context.Background(), f, image, false, true, func() error { return upgradeRefusal(plan, false) },
+		err := requestUpgrade(context.Background(), f, image, false, true, false, func() error { return upgradeRefusal(plan, false) },
 			func(_, msg string) { messages = append(messages, msg) })
 
 		if err == nil || !strings.Contains(err.Error(), "upgrade refused") || !strings.Contains(err.Error(), "force cannot skip") {
@@ -324,14 +324,14 @@ func TestRequestUpgrade(t *testing.T) {
 
 		// The legacy API (the node checks etcd itself) still honours force.
 		f = &fakeUpgrader{}
-		if err := requestUpgrade(context.Background(), f, image, false, true, func() error { return upgradeRefusal(plan, false) },
+		if err := requestUpgrade(context.Background(), f, image, false, true, false, func() error { return upgradeRefusal(plan, false) },
 			func(string, string) {}); err != nil {
 			t.Errorf("legacy forced: %v", err)
 		}
 
 		// The warning reaches the progress when the fallback runs, and older versions have neither.
 		f = &fakeUpgrader{legacyErr: unimplemented}
-		_ = requestUpgrade(context.Background(), f, image, false, false, func() error { return nil }, //nolint:errcheck
+		_ = requestUpgrade(context.Background(), f, image, false, false, false, func() error { return nil }, //nolint:errcheck
 			func(_, msg string) { messages = append(messages, msg) })
 
 		if !containsText(messages, noDrainWarning) {
@@ -342,7 +342,7 @@ func TestRequestUpgrade(t *testing.T) {
 			target: running("10.0.0.2", "v1.17.3", true),
 			etcd:   &etcdHealth{members: 3, healthy: 2, thisMember: true, thisHealthy: true},
 		})
-		if !old.Forceable || containsText(old.Warnings, noDrainWarning) {
+		if !old.Forceable || old.Drainable || containsText(old.Warnings, noDrainWarning) {
 			t.Errorf("1.17 plan = %+v", old)
 		}
 	})

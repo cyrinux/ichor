@@ -1168,6 +1168,10 @@
     <string name="upgrade_same_version">%1$s ist bereits installiert.</string>
     <string name="upgrade_stage">Beim nächsten Neustart anwenden</string>
     <string name="upgrade_stage_desc">Bereitet das Upgrade vor und installiert es beim Start des Knotens (Talos startet ihn neu). Nützlich, wenn verwendete Dateien das Upgrade blockieren.</string>
+    <string name="upgrade_drain_first">Node zuerst leeren</string>
+    <string name="upgrade_drain_first_desc">Absperren und leeren, aktualisieren, warten, bis er wieder bereit ist, dann die Absperrung aufheben. Ohne diese Option stoppt diese Talos-Version die Pods des Nodes beim Neustart.</string>
+    <string name="maintenance_action_upgrade_desc">Talos aktualisieren, warten, bis der Node die neue Version ausführt und bereit ist, dann die Absperrung aufheben.</string>
+    <string name="maintenance_phase_upgrade">Aktualisierung</string>
     <string name="upgrade_checks">Vorabprüfungen</string>
     <string name="upgrade_etcd_members">etcd: %1$d von %2$d Mitgliedern gesund</string>
     <string name="upgrade_etcd_quorum_ok">etcd behält das Quorum, während dieser Knoten ausfällt.</string>

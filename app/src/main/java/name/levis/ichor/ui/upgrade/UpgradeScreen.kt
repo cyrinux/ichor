@@ -73,6 +73,8 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.model.MaintenanceAction
+import name.levis.ichor.model.MaintenanceUpgrade
 import name.levis.ichor.ui.components.ToggleRow
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.node.HostnameConfirmDialog
@@ -91,6 +93,8 @@ private data class UpgradeChoice(
     val stage: Boolean,
     val force: Boolean,
     val risks: List<String> = emptyList(),
+    /** Cordon and drain first, through a maintenance run (only when the plan is drainable). */
+    val drain: Boolean = false,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,6 +104,8 @@ fun UpgradeScreen(
     hostname: String,
     onBack: () -> Unit,
     initialVersion: String = "",
+    /** Opens the node's maintenance screen, which follows an upgrade started with a drain. */
+    onMaintenance: () -> Unit = {},
     planVm: UpgradePlanViewModel = viewModel(key = "upgrade-plan-$node", factory = factory { UpgradePlanViewModel(app.upgradeManager, node) }),
     targetVm: UpgradeTargetViewModel = viewModel(key = "upgrade-target-$node", factory = factory { UpgradeTargetViewModel(app.upgradeManager) }),
 ) {
@@ -156,8 +162,32 @@ fun UpgradeScreen(
         }
     }
 
+    // Drained first: a maintenance run (cordon, drain, upgrade, uncordon), followed on its screen.
+    fun startDrained(choice: UpgradeChoice, acknowledged: Boolean) {
+        val maintenances = app.maintenanceManager
+        scope.launch {
+            val wasCordoned = maintenances.cordoned.value[node] ?: false
+            val upgrade = MaintenanceUpgrade(choice.image, choice.force)
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    maintenances.start(node, hostname, MaintenanceAction.UPGRADE, false, acknowledged, wasCordoned, upgrade)
+                }
+            }
+            result.exceptionOrNull()?.let { snackbar.showSnackbar(it.uiText().resolve(context)) }
+            when (result.getOrNull()) {
+                true -> onMaintenance()
+                false -> snackbar.showSnackbar(context.getString(R.string.maintenance_other_running, maintenances.current.value?.hostname.orEmpty()))
+                null -> Unit
+            }
+        }
+    }
+
     fun start(choice: UpgradeChoice, fromVersion: String, acknowledged: Boolean) {
         confirming = null
+        if (choice.drain) {
+            startDrained(choice, acknowledged)
+            return
+        }
         scope.launch {
             val result = runCatching {
                 withContext(Dispatchers.IO) {
@@ -306,6 +336,7 @@ private fun UpgradeSetup(
     val target by targetVm.target.collectAsStateWithLifecycle()
     var version by rememberSaveable { mutableStateOf(initialVersion) }
     var stage by rememberSaveable { mutableStateOf(false) }
+    var drain by rememberSaveable { mutableStateOf(true) }
     LaunchedEffect(plan.currentImage, plan.currentVersion, version) { targetVm.setVersion(plan.currentImage, plan.currentVersion, version) }
     val image = if (target.version == version.trim() && !target.pending) target.image else ""
     val versionRisk = if (image.isNotEmpty()) target.risk else ""
@@ -350,12 +381,22 @@ private fun UpgradeSetup(
             Text(stringResource(R.string.upgrade_same_version, plan.currentVersion), color = colors.warn, style = MaterialTheme.typography.bodySmall)
         }
 
-        ToggleRow(
-            title = stringResource(R.string.upgrade_stage),
-            description = stringResource(R.string.upgrade_stage_desc),
-            checked = stage,
-            onChange = { stage = it },
-        )
+        // The upgrade path that does not drain the node has no staged upgrade either.
+        if (plan.drainable) {
+            ToggleRow(
+                title = stringResource(R.string.upgrade_drain_first),
+                description = stringResource(R.string.upgrade_drain_first_desc),
+                checked = drain,
+                onChange = { drain = it },
+            )
+        } else {
+            ToggleRow(
+                title = stringResource(R.string.upgrade_stage),
+                description = stringResource(R.string.upgrade_stage_desc),
+                checked = stage,
+                onChange = { stage = it },
+            )
+        }
 
         PlanChecks(plan, versionRisk)
         if (force) Text(stringResource(R.string.upgrade_force_on), color = colors.bad, style = MaterialTheme.typography.bodyMedium)
@@ -363,7 +404,10 @@ private fun UpgradeSetup(
             Text(stringResource(R.string.upgrade_other_running, otherRunning), color = colors.warn, style = MaterialTheme.typography.bodySmall)
         }
         Button(
-            onClick = { onStart(UpgradeChoice(version.trim(), image, stage, force, upgradeRisks(plan, versionRisk))) },
+            onClick = {
+                val drained = plan.drainable && drain
+                onStart(UpgradeChoice(version.trim(), image, stage && !plan.drainable, force, upgradeRisks(plan, versionRisk), drained))
+            },
             enabled = gate.canStart,
             modifier = Modifier.fillMaxWidth(),
         ) { Text(stringResource(R.string.upgrade_start)) }

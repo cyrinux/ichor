@@ -44,10 +44,13 @@ public struct UpgradePlan: Decodable, Equatable, Sendable {
     /// Every blocker is an etcd check that force skips (nil from an older core: guessed
     /// from the blocker texts).
     public let forceable: Bool?
+    /// This upgrade does not drain the node: offer to drain it first (a maintenance run).
+    public let drainable: Bool
 
     public init(node: String, hostname: String = "", controlPlane: Bool = false, currentVersion: String = "",
                 currentImage: String = "", schematic: String = "", etcd: Etcd? = nil,
-                blockers: [String] = [], warnings: [String] = [], acknowledge: [String] = [], forceable: Bool? = nil) {
+                blockers: [String] = [], warnings: [String] = [], acknowledge: [String] = [], forceable: Bool? = nil,
+                drainable: Bool = false) {
         self.node = node
         self.hostname = hostname
         self.controlPlane = controlPlane
@@ -59,10 +62,12 @@ public struct UpgradePlan: Decodable, Equatable, Sendable {
         self.warnings = warnings
         self.acknowledge = acknowledge
         self.forceable = forceable
+        self.drainable = drainable
     }
 
     private enum CodingKeys: String, CodingKey {
         case node, hostname, controlPlane, currentVersion, currentImage, schematic, etcd, blockers, warnings, acknowledge, forceable
+        case drainable
     }
 
     // Go encodes empty slices as null and may omit empty strings.
@@ -79,6 +84,7 @@ public struct UpgradePlan: Decodable, Equatable, Sendable {
         warnings = try c.field(.warnings, [])
         acknowledge = try c.field(.acknowledge, [])
         forceable = try c.decodeIfPresent(Bool.self, forKey: .forceable)
+        drainable = try c.field(.drainable, false)
     }
 }
 

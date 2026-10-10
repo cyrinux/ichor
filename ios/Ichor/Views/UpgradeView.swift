@@ -25,6 +25,8 @@ struct UpgradeView: View {
     /// UpgradeVersionCheck for the target: nil while it is computed.
     @State private var versionRisk: String?
     @State private var stage = false
+    /// Cordon and drain first (a maintenance run), when the plan says the upgrade does not.
+    @State private var drain = true
     @State private var force = false
     @State private var confirmForce = false
     @State private var confirming = false
@@ -37,6 +39,8 @@ struct UpgradeView: View {
         Group {
             if let target = job.target, target.node == node {
                 UpgradeProgressView(job: job, hostname: hostname) { Task { await loadPlan() } }
+            } else if let run = MaintenanceJob.shared.target, run.node == node, run.action == .upgrade {
+                MaintenanceRunView(job: .shared, hostname: hostname) { Task { await loadPlan() } }
             } else {
                 LoadStateView(state: plan, retry: loadPlan) { plan in form(plan) }
             }
@@ -194,11 +198,22 @@ struct UpgradeView: View {
                     Text(verbatim: image).font(.caption.monospaced()).textSelection(.enabled)
                 }
             }
-            Toggle(isOn: $stage) {
-                VStack(alignment: .leading) {
-                    Text("Stage (--stage)")
-                    Text("Installs during the reboot instead of before it, for nodes whose files in use block the upgrade.")
-                        .font(.caption).foregroundStyle(.secondary)
+            // The upgrade path that does not drain the node has no staged upgrade either.
+            if plan.drainable {
+                Toggle(isOn: $drain) {
+                    VStack(alignment: .leading) {
+                        Text("Drain the node first")
+                        Text("Cordon and drain it, upgrade, wait until it is back and Ready, then uncordon it. Without it, this Talos version stops the node's pods when it reboots.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            } else {
+                Toggle(isOn: $stage) {
+                    VStack(alignment: .leading) {
+                        Text("Stage (--stage)")
+                        Text("Installs during the reboot instead of before it, for nodes whose files in use block the upgrade.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                 }
             }
         } header: {
@@ -327,6 +342,17 @@ struct UpgradeView: View {
         let gate = makeGate(plan, acknowledged: true)
         guard let client = model.client, let target = normalizedTalosVersion(version), gate.canStart, !image.isEmpty,
               versionRisk != nil else { return }
+        if plan.drainable && drain {
+            guard !MaintenanceJob.shared.isActive else {
+                message = String(localized: "Another maintenance is running. The app runs one at a time.")
+                return
+            }
+            MaintenanceJob.shared.start(client: client,
+                                        target: MaintenanceJob.Target(node: node, hostname: hostname, action: .upgrade, wasCordoned: false,
+                                                                      image: image, force: force && gate.forceAvailable),
+                                        includeBare: false, acknowledged: !gate.acknowledgments.isEmpty)
+            return
+        }
         job.start(client: client, target: UpgradeJob.Target(node: node, hostname: hostname, fromVersion: plan.currentVersion,
                                                            toVersion: target, image: image, stage: stage),
                   force: force && gate.forceAvailable, acknowledged: !gate.acknowledgments.isEmpty)

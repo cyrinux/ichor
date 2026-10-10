@@ -95,4 +95,23 @@ final class MaintenanceTests: XCTestCase {
         XCTAssertEqual(latestDrainPods(events).map(\.podState), [.gone])
         XCTAssertEqual(latestDrainPods([]), [])
     }
+
+    func testUpgradeAction() throws {
+        XCTAssertEqual(MaintenancePhase.steps(for: .upgrade), [.cordon, .drain, .upgrade, .waiting, .uncordon])
+        XCTAssertFalse(MaintenanceAction.planned.contains(.upgrade))
+        XCTAssertTrue(MaintenanceAction.upgrade.takesNodeDown)
+        XCTAssertLessThan(MaintenancePhase.upgrade, MaintenancePhase.waiting)
+
+        let events = [MaintenanceProgress(phase: "cordon"), MaintenanceProgress(phase: "drain"),
+                      MaintenanceProgress(phase: "upgrade", message: "installing: installing")]
+        let timeline = maintenanceTimeline(events, action: .upgrade)
+        XCTAssertEqual(timeline.map(\.state), [.done, .done, .current, .pending, .pending])
+        XCTAssertEqual(timeline[2].message, "installing: installing")
+
+        let plan = try TalosJSON.decode(MaintenancePlan.self, from: #"{"node":"n","upgradeDrainable":true}"#)
+        XCTAssertTrue(plan.upgradeDrainable)
+        XCTAssertFalse(try TalosJSON.decode(MaintenancePlan.self, from: planJSON).upgradeDrainable)
+        XCTAssertTrue(try TalosJSON.decode(UpgradePlan.self, from: #"{"node":"n","drainable":true}"#).drainable)
+        XCTAssertFalse(try TalosJSON.decode(UpgradePlan.self, from: #"{"node":"n"}"#).drainable)
+    }
 }

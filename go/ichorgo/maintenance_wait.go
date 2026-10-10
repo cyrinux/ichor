@@ -62,7 +62,13 @@ func kubeNodeReadySince(ctx context.Context, k *kubeClient, kubeNode string, sin
 // waitBack polls until the node went down and came back running with its Kubernetes node
 // Ready. Stopping pods and services takes longer than a poll, so the reboot is seen.
 func waitBack(ctx context.Context, observe func(context.Context) backObservation, emit func(string), interval time.Duration) error {
-	sawDown, last := false, ""
+	return waitBackFrom(ctx, false, observe, emit, interval)
+}
+
+// waitBackFrom is waitBack for a reboot already seen (sawDown): after an upgrade the node was
+// followed through it, only its Kubernetes node remains to be Ready.
+func waitBackFrom(ctx context.Context, sawDown bool, observe func(context.Context) backObservation, emit func(string), interval time.Duration) error {
+	last := ""
 
 	for {
 		select {
