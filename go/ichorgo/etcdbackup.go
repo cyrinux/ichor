@@ -51,8 +51,7 @@ func StartEtcdSnapshot(configYAML, contextName, node, destPath string, listener 
 // (https://age-encryption.org), for the public keys in recipients (age or SSH, one per
 // line) or, when recipients is empty, for passphrase. The snapshot is encrypted while it
 // streams: the clear database never reaches the phone's storage. size and sha256 in OnDone
-// are the clear snapshot's, to check it after `age -d` on any Unix machine
-// (see plans/etcd-encrypted-snapshot/README.md).
+// are the clear snapshot's, to check it after `age -d` on any Unix machine.
 func StartEtcdSnapshotEncrypted(configYAML, contextName, node, destPath, recipients, passphrase string, listener SnapshotListener) *SnapshotRun {
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 

@@ -72,7 +72,7 @@ import java.text.DateFormat
 import java.time.ZoneId
 
 // The freeze sheet, the banner of a frozen app and the dialogs ending a freeze or removing a
-// window. See plans/roadmap/devops/09-argocd-freeze.md.
+// window.
 
 /** The hour "until …" freezes to: the start of a working day. */
 private const val MORNING_HOUR = 9

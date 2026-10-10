@@ -207,7 +207,16 @@ func writeKnownNodes(path string, known knownNodes, aead cipher.AEAD) error {
 
 // seal is a fresh random nonce followed by data encrypted and authenticated with aead.
 func seal(aead cipher.AEAD, data []byte) ([]byte, error) {
-	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(data)+aead.Overhead())
+	nonceSize, overhead := aead.NonceSize(), aead.Overhead()
+	maxInt := int(^uint(0) >> 1)
+	if nonceSize < 0 || overhead < 0 {
+		return nil, errors.New("invalid AEAD size")
+	}
+	if nonceSize > maxInt-overhead || len(data) > maxInt-nonceSize-overhead {
+		return nil, errors.New("sealed data too large")
+	}
+
+	nonce := make([]byte, nonceSize, nonceSize+len(data)+overhead)
 	if _, err := rand.Read(nonce); err != nil {
 		return nil, err
 	}

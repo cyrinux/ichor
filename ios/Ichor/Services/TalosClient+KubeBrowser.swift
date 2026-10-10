@@ -12,10 +12,9 @@ enum PortForwardEvent: Sendable {
     case done(error: String?)
 }
 
-/// The resource browser, YAML edit, Helm releases, pod log follow and port-forward
-/// (plans/roadmap/kubeconfig-only.md §7), through the Kubernetes API of the cluster: the
-/// kubeconfig's for a kubeconfig cluster, the one Talos issues otherwise, with the API address
-/// the user set (see TalosClient for the conventions).
+/// The resource browser, YAML edit, Helm releases, pod log follow and port-forward, through the
+/// Kubernetes API of the cluster: the kubeconfig's for a kubeconfig cluster, the one Talos issues
+/// otherwise, with the API address the user set (see TalosClient for the conventions).
 extension TalosClient {
     /// The listable resources of the cluster, CRDs included, at their preferred version.
     func apiResources() async throws -> KubeAPIResourceList {

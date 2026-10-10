@@ -28,7 +28,7 @@ fun snapshotFileName(
     return "etcd-${safe(context)}-${safe(hostname)}-$stamp.snapshot" + if (encrypted) ".age" else ""
 }
 
-/** How a snapshot is protected (plans/etcd-encrypted-snapshot): age public keys, an age passphrase, or nothing. */
+/** How a snapshot is protected: age public keys, an age passphrase, or nothing. */
 sealed interface SnapshotEncryption {
     val mode: SnapshotMode
 

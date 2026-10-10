@@ -45,7 +45,7 @@ sealed interface ForwardEvent {
 }
 
 /**
- * The generic Kubernetes browser (plans/roadmap/kubeconfig-only.md §7): any kind through
+ * The generic Kubernetes browser: any kind through
  * discovery and the server's Table, one object as YAML and its edit, Helm releases, a
  * followed pod log and a port-forward. Every call goes through the Kubernetes API of the
  * active cluster, Talos (its admin kubeconfig) or kubeconfig alike, with the API address the

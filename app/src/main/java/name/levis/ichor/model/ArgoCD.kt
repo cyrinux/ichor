@@ -3,7 +3,7 @@ package name.levis.ichor.model
 import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo/kube_argocd.go, kube_argocd_actions.go and kube_argocd_syncwindows.go
-// (the design is in plans/argocd/README.md and plans/roadmap/devops/09-argocd-freeze.md). Argo CD terms (Synced, OutOfSync, Healthy...) are its own names.
+// Argo CD terms (Synced, OutOfSync, Healthy...) are its own names.
 
 /** The Argo CD Applications of every namespace, with their ApplicationSets and projects. */
 @Serializable

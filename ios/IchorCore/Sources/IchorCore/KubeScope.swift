@@ -1,7 +1,7 @@
 import Foundation
 
-// The namespace the Kubernetes lists are loaded for (plans/roadmap/large-clusters.md, L5, L6).
-// Mirrors go/ichorgo/kube_namespaces.go; same rules as Android's model/KubeScope.kt.
+// The namespace the Kubernetes lists are loaded for. Mirrors go/ichorgo/kube_namespaces.go;
+// same rules as Android's model/KubeScope.kt.
 
 /// The cluster's namespace names (KubeNamespaces).
 public struct KubeNamespaces: Decodable, Equatable, Sendable {
