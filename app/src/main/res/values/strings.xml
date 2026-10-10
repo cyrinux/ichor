@@ -3966,6 +3966,9 @@
     <string name="etcd_recover_uploaded">%1$s of %2$s uploaded</string>
     <string name="etcd_recover_done">etcd runs again with one member. Reset the other control planes so they join it.</string>
     <string name="etcd_recover_stopped">Recovery stopped</string>
+    <string name="kube_discover_signin_find">Sign in and find clusters</string>
+    <string name="kube_discover_google_body">Google lists the projects your account can see; Ichor reads their clusters.</string>
+    <string name="kube_discover_signin_first">Sign in first, then find clusters.</string>
     <string name="kube_discover_scan">Scan credentials QR code</string>
     <string name="kube_discover_scan_invalid">Scan a gcloud user credentials file or a service account key.</string>
     <string name="kube_discover_credentials_warning">This file contains a refresh token or private key. Keep it private; anyone with it can access your Google account or service account.</string>

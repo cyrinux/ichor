@@ -3966,6 +3966,9 @@
     <string name="etcd_recover_uploaded">%1$s de %2$s subidos</string>
     <string name="etcd_recover_done">etcd vuelve a funcionar con un miembro. Restablece los demás control planes para que se unan.</string>
     <string name="etcd_recover_stopped">Recuperación detenida</string>
+    <string name="kube_discover_signin_find">Iniciar sesión y buscar clústeres</string>
+    <string name="kube_discover_google_body">Google enumera los proyectos que tu cuenta puede ver; Ichor lee sus clústeres.</string>
+    <string name="kube_discover_signin_first">Inicia sesión primero y luego busca los clústeres.</string>
     <string name="kube_discover_scan">Escanear el código QR de credenciales</string>
     <string name="kube_discover_scan_invalid">Escanea un archivo de credenciales de usuario de gcloud o una clave de cuenta de servicio.</string>
     <string name="kube_discover_credentials_warning">Este archivo contiene un token de actualización o una clave privada. Mantenlo en privado; quien lo tenga puede acceder a tu cuenta de Google o de servicio.</string>
