@@ -64,6 +64,18 @@ final class KubeAuthTests: XCTestCase {
             """#))
         XCTAssertEqual(native.fieldSets[1], ["gcpGoogleSignIn"])
         XCTAssertFalse(kubeFieldsComplete(native.fieldSets[1], values: [:]))
+        XCTAssertTrue(kubeFieldsComplete(native.fieldSets[1], values: [kubeGoogleSignInField: "ios"]))
+        XCTAssertEqual(kubeGoogleSignInSecretsJSON(), #"{"gcpGoogleSignIn":"ios"}"#)
+    }
+
+    func testCallbackSchemeOfTheRedirect() {
+        // Google's iOS client comes back to its reversed client ID; the session closes on it.
+        XCTAssertEqual(kubeCallbackScheme(of: "com.googleusercontent.apps.123-abc:/oauth2redirect"), "com.googleusercontent.apps.123-abc")
+        XCTAssertEqual(kubeCallbackScheme(of: "http://127.0.0.1:4242"), "ichor")
+        XCTAssertEqual(kubeCallbackScheme(of: "https://cyrinux.github.io/ichor/auth/google/"), "ichor")
+        XCTAssertEqual(kubeCallbackScheme(of: nil), "ichor")
+        XCTAssertEqual(kubeCallbackScheme(of: "no scheme here"), "ichor")
+        XCTAssertEqual(kubeCallbackScheme(of: "1bad:/x"), "ichor")
 
         XCTAssertNil(try KubeSignInInfo.decode(""))
     }

@@ -1,0 +1,9 @@
+// GKE's "Sign in with Google" (Ichor's own iOS OAuth client, see the GKE tracking issue's
+// manual steps). Empty here: the option does not exist in a build without a client (CI, forks).
+// To build with one, put the two values in GoogleSignIn.local.xcconfig next to this file
+// (git-ignored), e.g.:
+//   GOOGLE_IOS_CLIENT_ID = 123-abc.apps.googleusercontent.com
+//   GOOGLE_IOS_REVERSED_CLIENT_ID = com.googleusercontent.apps.123-abc
+GOOGLE_IOS_CLIENT_ID =
+GOOGLE_IOS_REVERSED_CLIENT_ID =
+#include? "GoogleSignIn.local.xcconfig"
