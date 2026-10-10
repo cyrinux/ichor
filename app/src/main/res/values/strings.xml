@@ -838,6 +838,12 @@
     <string name="machine_config_multi_state_failed">Failed</string>
     <string name="machine_config_multi_confirm_title">Apply the change to these nodes?</string>
     <string name="machine_config_multi_confirm_reboot">Each node applies the change and reboots, one after the other: the next one starts once the previous one is back.</string>
+    <string name="config_multi_notification_public">A config change is being applied to several nodes</string>
+    <string name="config_multi_notification_result_public">The config rollout ended</string>
+    <string name="config_multi_notification_title">Applying a config change on %1$s</string>
+    <string name="config_multi_notification_done">Config change applied on %1$s</string>
+    <string name="config_multi_notification_failed">The config rollout on %1$s stopped</string>
+    <string name="config_multi_already_running">A config change is already being applied on %1$s: wait for it to end.</string>
     <string name="machine_config_apply_applying">Applying the change…</string>
     <string name="machine_config_apply_rebooting">The node is rebooting…</string>
     <string name="machine_config_apply_waiting">Waiting for the node to come back…</string>

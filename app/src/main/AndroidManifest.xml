@@ -194,6 +194,18 @@
                 android:value="Follows a machine configuration change the user is trying on one of their Talos nodes, which the node reverts by itself after 1 to 10 minutes unless kept, so the user can keep it from the notification after switching apps; it stops when the try is kept or reverted." />
         </service>
 
+        <!-- Applying a machine config change to several nodes one after the other waits for each
+             node to reboot in reboot mode, minutes per node; same reasons as the maintenance
+             service, and it runs only while the rollout does. -->
+        <service
+            android:name=".ui.machineconfig.ConfigMultiService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Follows a machine configuration change the user is applying to several of their Talos nodes one after the other (each may reboot and is waited for) while they switch apps, so the rollout is not cut off halfway; it stops when the rollout ends." />
+        </service>
+
         <!-- Pulling an image on every node before an upgrade keeps the app talking to the nodes
              for minutes on a slow link; same reasons as the maintenance service, and it runs
              only while the pull does. -->

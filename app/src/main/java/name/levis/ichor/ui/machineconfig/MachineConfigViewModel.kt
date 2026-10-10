@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.ConfigTryManager
+import name.levis.ichor.data.ConfigMultiManager
 import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ClusterOverview
@@ -97,6 +98,8 @@ class MachineConfigViewModel(
     private val hostname: String,
     /** Runs the try app-wide: its countdown and Keep outlive this screen. */
     private val tries: ConfigTryManager,
+    /** Runs a multi-node apply app-wide: it outlives this screen. */
+    private val multiRuns: ConfigMultiManager,
 ) : LoadingViewModel<String>() {
     private val _revealed = MutableStateFlow(false)
     val revealed: StateFlow<Boolean> = _revealed.asStateFlow()
@@ -123,6 +126,14 @@ class MachineConfigViewModel(
         viewModelScope.launch {
             tries.current.collect { run ->
                 if (run?.node == node) _editor.update { it.copy(run = run.state) }
+            }
+        }
+        // A multi-node run started from this node's screen shows from the app-wide run, also when
+        // the screen is reopened while it goes on.
+        viewModelScope.launch {
+            multiRuns.current.collect { state ->
+                if (state?.origin != node) return@collect
+                _editor.update { it.copy(multi = (it.multi ?: MultiConfigState(picking = false, cluster = state.hostname)).copy(run = state.run)) }
             }
         }
         // The schema is downloaded once per Talos version; the tree shows without it meanwhile.
@@ -318,22 +329,16 @@ class MachineConfigViewModel(
     /** Applies the edits to the nodes the preview would change, one after the other. */
     fun startMultiApply(mode: ConfigApplyMode) {
         val editor = _editor.value
-        val preview = (editor.multi?.preview as? UiState.Loaded)?.data ?: return
+        val multi = editor.multi ?: return
+        val preview = (multi.preview as? UiState.Loaded)?.data ?: return
         val nodes = preview.changing.map { it.node }
-        if (nodes.isEmpty() || trying?.isActive == true) return
-        updateMulti { it.copy(run = MultiApplyRun(mode)) }
-        trying = viewModelScope.launch {
-            try {
-                talos.applyMachineConfigMulti(nodes, editor.edits, mode).collect { event ->
-                    updateMulti { m -> m.copy(run = m.run?.after(event)) }
-                }
-                updateMulti { m -> m.run?.takeIf { !it.finished }?.let { m.copy(run = it.copy(finished = true, error = "")) } ?: m }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                updateMulti { m -> m.copy(run = m.run?.copy(finished = true, error = e.userMessage())) }
-            }
+        if (nodes.isEmpty()) return
+        multiRuns.current.value?.takeIf { it.running }?.let { other ->
+            _messages.tryEmit(UiText.Res(R.string.config_multi_already_running, other.hostname))
+            return
         }
+        multiRuns.dismiss() // a finished run started elsewhere is not shown any more
+        multiRuns.start(node, multi.cluster.ifEmpty { node }, nodes, editor.edits, mode)
     }
 
     /** Back from picking or from the per-node review: to this node's review. */
@@ -350,6 +355,7 @@ class MachineConfigViewModel(
     fun finishMulti() {
         val run = _editor.value.multi?.run ?: return
         if (!run.finished) return
+        multiRuns.dismiss()
         if (run.error == null) {
             _editor.update { ConfigEditorState(tree = it.tree, treeStale = true) }
             refresh(reset = true)

@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "The config rollout stops while Ichor is in the background. Open it until every node is done." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le déploiement de la config s'arrête tant qu'Ichor est en arrière-plan. Ouvrez-le jusqu'à ce que tous les nœuds soient faits."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El despliegue de la configuración se detiene mientras Ichor está en segundo plano. Ábrelo hasta que todos los nodos terminen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Ausrollen der Konfiguration hält an, solange Ichor im Hintergrund ist. Öffne es, bis alle Nodes fertig sind."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il rilascio della configurazione si ferma mentre Ichor è in background. Aprilo finché tutti i nodi non sono completati."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розгортання конфігурації зупиняється, поки Ichor у фоні. Відкрийте його, доки всі вузли не будуть готові."
+          }
+        }
+      }
+    },
+    "A config change is already being applied on several nodes: wait for it to end." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une modification de config est déjà appliquée sur plusieurs nœuds : attendez qu'elle se termine."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya se está aplicando un cambio de configuración en varios nodos: espera a que termine."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf mehreren Nodes wird schon eine Konfigurationsänderung angewendet: Warte, bis sie fertig ist."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una modifica di configurazione è già in corso su più nodi: attendi che finisca."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зміна конфігурації вже застосовується до кількох вузлів: дочекайтеся завершення."
+          }
+        }
+      }
+    },
     "The node reverts by itself unless you keep the change." : {
       "extractionState" : "manual",
       "localizations" : {

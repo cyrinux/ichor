@@ -906,6 +906,12 @@
     <string name="machine_config_multi_state_failed">Помилка</string>
     <string name="machine_config_multi_confirm_title">Застосувати зміну до цих вузлів?</string>
     <string name="machine_config_multi_confirm_reboot">Кожен вузол застосовує зміну й перезавантажується по черзі: наступний починає, щойно попередній повернувся.</string>
+    <string name="config_multi_notification_public">Зміна конфігурації застосовується до кількох вузлів</string>
+    <string name="config_multi_notification_result_public">Розгортання конфігурації завершено</string>
+    <string name="config_multi_notification_title">Застосування зміни конфігурації на %1$s</string>
+    <string name="config_multi_notification_done">Зміну конфігурації застосовано на %1$s</string>
+    <string name="config_multi_notification_failed">Розгортання конфігурації на %1$s зупинено</string>
+    <string name="config_multi_already_running">На %1$s уже застосовується зміна конфігурації: дочекайтеся завершення.</string>
     <string name="machine_config_apply_applying">Застосування зміни…</string>
     <string name="machine_config_apply_rebooting">Вузол перезавантажується…</string>
     <string name="machine_config_apply_waiting">Очікування повернення вузла…</string>

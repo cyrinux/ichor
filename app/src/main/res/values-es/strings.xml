@@ -841,6 +841,12 @@
     <string name="machine_config_multi_state_failed">Falló</string>
     <string name="machine_config_multi_confirm_title">¿Aplicar el cambio a estos nodos?</string>
     <string name="machine_config_multi_confirm_reboot">Cada nodo aplica el cambio y se reinicia, uno tras otro: el siguiente empieza cuando el anterior ha vuelto.</string>
+    <string name="config_multi_notification_public">Se está aplicando un cambio de configuración a varios nodos</string>
+    <string name="config_multi_notification_result_public">El despliegue de la configuración terminó</string>
+    <string name="config_multi_notification_title">Aplicando un cambio de configuración en %1$s</string>
+    <string name="config_multi_notification_done">Cambio de configuración aplicado en %1$s</string>
+    <string name="config_multi_notification_failed">El despliegue de la configuración en %1$s se detuvo</string>
+    <string name="config_multi_already_running">Ya se está aplicando un cambio de configuración en %1$s: espera a que termine.</string>
     <string name="machine_config_apply_applying">Aplicando el cambio…</string>
     <string name="machine_config_apply_rebooting">El nodo se está reiniciando…</string>
     <string name="machine_config_apply_waiting">Esperando a que el nodo vuelva…</string>
