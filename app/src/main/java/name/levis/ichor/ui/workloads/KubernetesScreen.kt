@@ -60,7 +60,8 @@ private val KUBE_TABS = listOf(0, 1, 2, 3)
  * dialog would show the real address). It also opens the API server health, the network
  * policies and, with Cilium or Calico,
  * the live flows ([onFlows] with the namespace and pod to narrow them to, or nulls), and from
- * its menu the browser of every kind ([onResources]) and the Helm releases ([onHelm]).
+ * its menu the browser of every kind ([onResources]), the Helm releases ([onHelm]) and the
+ * live cluster events ([onEvents]).
  * [focus] (a share link) opens a tab, scoped to and searched for one item, whose sheet opens
  * once its row loads.
  */
@@ -78,6 +79,7 @@ fun KubernetesScreen(
     onStorage: () -> Unit,
     onServices: () -> Unit,
     onJobs: () -> Unit,
+    onEvents: () -> Unit,
     focus: KubeFocus = KubeFocus(0),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(focus.tab) }
@@ -152,6 +154,7 @@ fun KubernetesScreen(
                                 KubernetesAction.STORAGE -> onStorage()
                                 KubernetesAction.SERVICES -> onServices()
                                 KubernetesAction.JOBS -> onJobs()
+                                KubernetesAction.EVENTS -> onEvents()
                                 KubernetesAction.API_ADDRESS -> editing = true
                             }
                         },
