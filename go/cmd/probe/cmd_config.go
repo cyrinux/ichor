@@ -81,6 +81,19 @@ var configCommands = []command{
 
 		return "done: " + <-c.done, nil
 	}},
+	{name: "config-apply", args: "NODE FILE MODE", run: func(e env) (string, error) {
+		// Applies FILE for good (MODE: auto, staged or reboot): it changes the node for real,
+		// and "reboot" reboots it.
+		base, draft, err := configDraft(e)
+		if err != nil {
+			return "", err
+		}
+
+		m := maintenanceProbe{done: make(chan string, 1)}
+		ichorgo.StartConfigApply(e.cfg, e.context, flag.Arg(1), base, draft, flag.Arg(3), m)
+
+		return "done: " + <-m.done, nil
+	}},
 }
 
 // configDraft reads the node's redacted config and the edited copy of it in FILE.

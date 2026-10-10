@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.model.ConfigApplyMode
+import name.levis.ichor.model.ConfigApplyState
 import name.levis.ichor.model.ConfigEdit
 import name.levis.ichor.model.ConfigPreview
 import name.levis.ichor.model.ConfigSyntaxError
@@ -46,6 +48,8 @@ data class ConfigEditorState(
     val review: UiState<ConfigPreview>? = null,
     /** Non-null once the change was sent to the node. */
     val run: ConfigTryState? = null,
+    /** A change applied for good (not tried): its progress, then how it ended. */
+    val apply: ConfigApplyState? = null,
 ) {
     val editing: Boolean get() = draft != null
     val dirty: Boolean get() = draft != null && draft != base
@@ -201,6 +205,42 @@ class MachineConfigViewModel(private val talos: TalosRepository, private val nod
                 throw e
             } catch (e: Throwable) {
                 _editor.update { it.copy(run = ConfigTryState.Failed(e.userMessage())) }
+            }
+        }
+    }
+
+    /** Applies the draft for good in [mode] (StartConfigApply). */
+    fun startApply(mode: ConfigApplyMode) {
+        val editor = _editor.value
+        val draft = editor.draft ?: return
+        if (trying?.isActive == true || editor.review !is UiState.Loaded) return
+        _editor.update { it.copy(apply = ConfigApplyState.Running(mode)) }
+        trying = viewModelScope.launch {
+            try {
+                talos.applyMachineConfig(node, editor.base, draft, mode).collect { event ->
+                    _editor.update { state -> state.copy(apply = state.apply?.after(event)) }
+                }
+                // The run always ends with how it ended; without it, nothing can be said.
+                _editor.update { if (it.apply is ConfigApplyState.Running) it.copy(apply = ConfigApplyState.Failed(mode, "")) else it }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                _editor.update { it.copy(apply = ConfigApplyState.Failed(mode, e.userMessage())) }
+            }
+        }
+    }
+
+    /**
+     * Leaves a finished apply. Done: back to the node's config, read again. Failed: back to the
+     * draft, still there to fix or apply again.
+     */
+    fun finishApply() {
+        when (_editor.value.apply) {
+            null, is ConfigApplyState.Running -> return
+            is ConfigApplyState.Failed -> _editor.update { it.copy(apply = null, review = null) }
+            is ConfigApplyState.Done -> {
+                _editor.update { ConfigEditorState(tree = it.tree, treeStale = true) }
+                refresh(reset = true)
             }
         }
     }

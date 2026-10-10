@@ -564,6 +564,18 @@ a fresh install. Backups move between Android and iOS.
   | Leave etcd first (`--graceful`, on by default) | Cordon, drain and leave etcd cleanly first. Off on a control plane, its etcd member stays behind: remove it from the etcd screen. |
   | Reboot after (`--reboot`, on by default) | Off, the node stays powered off once wiped. |
 
+- **Machine config changes (node menu → Machine config → Edit):**
+  - **Review first:** the node checks every change with a dry run before anything is applied.
+  - **Ways to apply it:**
+
+    | Mode | What happens |
+    |---|---|
+    | Try for 1, 5 or 10 min | Applied without a reboot; the node goes back to its previous config by itself unless you keep it. |
+    | Apply now | Applied for good, without a reboot. Refused when the change needs one. |
+    | Apply at the next reboot | Saved on the node (`--mode staged`), applied when it next reboots. |
+    | Apply and reboot now | Applied, then the node reboots; you type its hostname first. |
+
+  - **Changes that need a reboot:** they offer only the last two modes.
 - **App lock (Settings → Security):**
   - **Methods:** fingerprint, with the device PIN, pattern or password as fallback; or a
     **security key** (below).
