@@ -47,7 +47,10 @@ type fakeTalos struct {
 	rebootErr        error
 	resets           []*machineapi.ResetRequest // the Reset requests received, in order
 	disarmErr        error
-	failLogs         string // the service whose logs cannot be read
+	// alarms are the active etcd alarms; a disarm clears them.
+	alarms    []*machineapi.EtcdMemberAlarm
+	defragErr map[string]error // node -> its defragmentation's error
+	failLogs  string           // the service whose logs cannot be read
 	// mounts are a node's mounted filesystems (none: /dev/sda6 on /var, 40 % used).
 	mounts map[string][]*machineapi.MountStat
 	// systemImages are the images of the system containerd namespace (the CRI one has pause).
@@ -257,6 +260,10 @@ func (m fakeTalosMachine) EtcdAlarmDisarm(ctx context.Context, _ *emptypb.Empty)
 		return nil, m.f.disarmErr
 	}
 
+	m.f.mu.Lock()
+	m.f.alarms = nil
+	m.f.mu.Unlock()
+
 	return &machineapi.EtcdAlarmDisarmResponse{Messages: []*machineapi.EtcdAlarmDisarm{{}}}, nil
 }
 
@@ -265,7 +272,23 @@ func (m fakeTalosMachine) EtcdAlarmList(ctx context.Context, _ *emptypb.Empty) (
 		return nil, err
 	}
 
-	return &machineapi.EtcdAlarmListResponse{Messages: []*machineapi.EtcdAlarm{{}}}, nil
+	m.f.mu.Lock()
+	defer m.f.mu.Unlock()
+
+	return &machineapi.EtcdAlarmListResponse{Messages: []*machineapi.EtcdAlarm{{MemberAlarms: m.f.alarms}}}, nil
+}
+
+func (m fakeTalosMachine) EtcdDefragment(ctx context.Context, _ *emptypb.Empty) (*machineapi.EtcdDefragmentResponse, error) {
+	node, err := m.f.enter(ctx, "EtcdDefragment")
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.f.defragErr[node]; err != nil {
+		return nil, err
+	}
+
+	return &machineapi.EtcdDefragmentResponse{Messages: []*machineapi.EtcdDefragment{{}}}, nil
 }
 
 func (m fakeTalosMachine) EtcdStatus(ctx context.Context, _ *emptypb.Empty) (*machineapi.EtcdStatusResponse, error) {

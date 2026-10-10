@@ -8,6 +8,8 @@ struct EtcdView: View {
     @State private var progress: String?
     @State private var result: String?
     @State private var snapshot = EtcdSnapshotJob()
+    @State private var fix = EtcdFixJob()
+    @State private var confirmFix: EtcdOverview?
     @State private var confirmDisarm = false
     @State private var disarming = false
     @State private var alarmMessage: String?
@@ -42,11 +44,18 @@ struct EtcdView: View {
                 if model.allows(.etcdSnapshot) {
                     EtcdSnapshotSection(etcd: etcd, hostnames: hostnames, job: snapshot)
                 }
+                if !fix.idle {
+                    EtcdFixSection(job: fix)
+                }
                 if !etcd.alarms.isEmpty || alarmMessage != nil || etcd.alarmsError != nil {
                     Section("Alarms") {
                         if let alarmsError = etcd.alarmsError { Text("Could not check alarms: \(alarmsError)").foregroundStyle(.statusBad) }
                         ForEach(etcd.alarms, id: \.self) { Text(verbatim: "\(hostnames[$0.memberId] ?? $0.memberId): \($0.alarm)").foregroundStyle(.statusBad) }
                         if let alarmMessage { Text(alarmMessage).font(.footnote).foregroundStyle(.secondary) }
+                        // Defragmentation and disarm, like the separate buttons.
+                        if model.allows(.etcdDefrag) && etcd.hasNospace && fix.idle {
+                            Button("Fix NOSPACE…") { confirmFix = etcd }
+                        }
                         if model.allows(.etcdDefrag) && !etcd.alarms.isEmpty {
                             if disarming {
                                 HStack { ProgressView(); Text("Disarming…") }
@@ -112,7 +121,25 @@ struct EtcdView: View {
         }
         .fileMover(isPresented: Binding(get: { snapshot.moving }, set: { snapshot.moving = $0 }), file: snapshot.file,
                    onCompletion: { snapshot.moved($0) }, onCancellation: { snapshot.moveCancelled() })
-        .onDisappear { snapshot.leave() }
+        .onDisappear {
+            snapshot.leave()
+            fix.leave()
+        }
+        .fileMover(isPresented: Binding(get: { fix.moving }, set: { fix.moving = $0 }), file: fix.file,
+                   onCompletion: { fix.moved($0) }, onCancellation: { fix.moveCancelled() })
+        // The fix changed etcd (or stopped half-way): show what is true now.
+        .onChange(of: fix.finished) { _, finished in
+            if finished { Task { await load() } }
+        }
+        .sheet(item: Binding(get: { confirmFix.map(FixRequest.init) }, set: { confirmFix = $0?.etcd })) { request in
+            let hostnames = Dictionary(request.etcd.members.map { ($0.id, $0.hostname) }, uniquingKeysWith: { first, _ in first })
+            EtcdFixConfirmSheet(etcd: request.etcd, hostnames: hostnames, savedKeys: model.activeSnapshotKeys) { pick in
+                confirmFix = nil
+                if case .keys(let keys)? = pick?.encryption { model.setSnapshotKeys(keys) }
+                guard let client = model.client else { return }
+                fix.start(client: client, context: model.activeContext, snapshot: pick, lockEnabled: model.lock.enabled)
+            }
+        }
         .confirmationDialog(
             confirm.count == 1 ? Text("Defragment this member?") : Text("Defragment \(confirm.count) members?"),
             isPresented: Binding(get: { !confirm.isEmpty }, set: { if !$0 { confirm = [] } }),
@@ -280,4 +307,10 @@ private struct MemberStatusRow: View {
             StatusPill(label: String(localized: "Follower"), color: .gray)
         }
     }
+}
+
+/// The overview the fix confirmation is shown for, as a sheet item.
+private struct FixRequest: Identifiable {
+    let etcd: EtcdOverview
+    var id: String { "nospace-fix" }
 }

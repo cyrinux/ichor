@@ -309,3 +309,14 @@ func (l maskedImageScanListener) OnProgress(json string) {
 func (l maskedImageScanListener) OnDone(reportJSON string, errMessage string) {
 	l.ImageScanListener.OnDone(privacy.mask(reportJSON), privacy.maskPlain(errMessage))
 }
+
+// maskedEtcdFixListener masks the NOSPACE fix's progress and error.
+type maskedEtcdFixListener struct{ EtcdFixListener }
+
+func (l maskedEtcdFixListener) OnProgress(json string) {
+	l.EtcdFixListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedEtcdFixListener) OnDone(errMessage string) {
+	l.EtcdFixListener.OnDone(privacy.maskPlain(errMessage))
+}
