@@ -116,6 +116,11 @@ class SignInViewModel(
         _state.value = SignInUi.Loading
     }
 
+    /** Hands the sign-in code the redirect page showed (the browser did not come back) to the sign-in in progress. */
+    fun completeWithCode(code: String) {
+        if (code.isNotBlank()) repo.completeSignIn(code.trim())
+    }
+
     /** Stops waiting for the browser or the device code; the method shows again. */
     fun cancel() {
         run?.cancel()

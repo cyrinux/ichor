@@ -19,6 +19,7 @@ enum KubeAuthWording {
         case "gcpProjects": String(localized: "Project IDs (optional)")
         case "gcpOAuthClientId": String(localized: "OAuth client ID")
         case "gcpOAuthClientSecret": String(localized: "OAuth client secret")
+        case "gcpOAuthRedirectUrl": String(localized: "Redirect URL (optional)")
         case "azureClientId": String(localized: "Client ID")
         case "azureClientSecret": String(localized: "Client secret")
         case "azureTenantId": String(localized: "Tenant ID")
@@ -41,6 +42,7 @@ enum KubeAuthWording {
         case "rancherServer": "https://rancher.example.com"
         case "gcpProjects": "sample-proj-1, sample-proj-2"
         case "gcpOAuthClientId": "123-abc.apps.googleusercontent.com"
+        case "gcpOAuthRedirectUrl": "https://cyrinux.github.io/ichor/auth/google/"
         default: nil
         }
     }
@@ -56,6 +58,8 @@ enum KubeAuthWording {
             String(localized: "Leave empty to search every project your account can see; list project IDs to go faster in a large organisation.")
         case "gcpOAuthClientId":
             String(localized: "Ask your Google Cloud admin for a Desktop app OAuth client (APIs & Services → Credentials) with an Internal consent screen. Sign in then opens your Google account in the browser.")
+                + "\n\n"
+                + String(localized: "With a Web application client instead, enter https://cyrinux.github.io/ichor/auth/google/ (or your organisation's own page) as redirect URL and add it to the client's authorised redirect URIs. Leave it empty for a Desktop app client.")
         default: nil
         }
     }

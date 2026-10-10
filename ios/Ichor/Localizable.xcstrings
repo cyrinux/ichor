@@ -1,6 +1,146 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Redirect URL (optional)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL de redirection (facultatif)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL de redirección (opcional)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weiterleitungs-URL (optional)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL di reindirizzamento (facoltativo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL переспрямування (необовʼязково)"
+          }
+        }
+      }
+    },
+    "With a Web application client instead, enter https://cyrinux.github.io/ichor/auth/google/ (or your organisation's own page) as redirect URL and add it to the client's authorised redirect URIs. Leave it empty for a Desktop app client." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avec un client de type Application Web, saisissez https://cyrinux.github.io/ichor/auth/google/ (ou la page de votre organisation) comme URL de redirection et ajoutez-la aux URI de redirection autorisés du client. Laissez-la vide pour un client Application de bureau."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con un cliente de tipo Aplicación web, introduce https://cyrinux.github.io/ichor/auth/google/ (o la página de tu organización) como URL de redirección y añádela a los URI de redirección autorizados del cliente. Déjala vacía para un cliente de Aplicación de escritorio."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei einem Client vom Typ Webanwendung gib https://cyrinux.github.io/ichor/auth/google/ (oder die Seite deiner Organisation) als Weiterleitungs-URL ein und füge sie den autorisierten Weiterleitungs-URIs des Clients hinzu. Lass sie für einen Desktop-App-Client leer."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con un client di tipo Applicazione web, inserisci https://cyrinux.github.io/ichor/auth/google/ (o la pagina della tua organizzazione) come URL di reindirizzamento e aggiungilo agli URI di reindirizzamento autorizzati del client. Lascialo vuoto per un client App desktop."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для клієнта типу «Вебзастосунок» введіть https://cyrinux.github.io/ichor/auth/google/ (або сторінку вашої організації) як URL переспрямування й додайте його до дозволених URI переспрямування клієнта. Залиште порожнім для клієнта «Програма для комп’ютера»."
+          }
+        }
+      }
+    },
+    "Browser did not come back to Ichor? Paste the sign-in code the page shows." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le navigateur n'est pas revenu dans Ichor ? Collez le code de connexion affiché par la page."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿El navegador no volvió a Ichor? Pega el código de inicio de sesión que muestra la página."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Browser ist nicht zu Ichor zurückgekehrt? Füge den Anmeldecode ein, den die Seite anzeigt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il browser non è tornato a Ichor? Incolla il codice di accesso mostrato dalla pagina."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Браузер не повернувся до Ichor? Вставте код входу, який показує сторінка."
+          }
+        }
+      }
+    },
+    "Sign-in code" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code de connexion"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código de inicio de sesión"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldecode"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codice di accesso"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Код входу"
+          }
+        }
+      }
+    },
     "Targets, rules and operator" : {
       "extractionState" : "manual",
       "localizations" : {

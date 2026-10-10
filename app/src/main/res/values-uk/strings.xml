@@ -3374,6 +3374,11 @@
     <string name="kube_field_gcp_oauth_client_secret">Секрет клієнта OAuth</string>
     <string name="kube_signin_option_gcp_oauth">OAuth-клієнт вашої організації</string>
     <string name="kube_signin_gcp_oauth_hint">Попросіть адміністратора Google Cloud створити OAuth-клієнт типу «Програма для комп’ютера» (API та сервіси → Облікові дані) з внутрішнім екраном згоди. Вхід відкриє ваш обліковий запис Google у браузері.</string>
+    <string name="kube_field_gcp_oauth_redirect">URL переспрямування</string>
+    <string name="kube_signin_gcp_oauth_web_hint">Для клієнта типу «Вебзастосунок» введіть https://cyrinux.github.io/ichor/auth/google/ (або сторінку вашої організації) як URL переспрямування й додайте його до дозволених URI переспрямування клієнта. Залиште порожнім для клієнта «Програма для комп’ютера».</string>
+    <string name="kube_signin_paste_code_hint">Браузер не повернувся до Ichor? Вставте код входу, який показує сторінка.</string>
+    <string name="kube_signin_paste_code_label">Код входу</string>
+    <string name="kube_signin_paste_code_action">Продовжити</string>
     <string name="kube_discover_gcp_projects_hint">Залиште порожнім, щоб шукати в усіх проєктах, які бачить ваш обліковий запис; укажіть ID проєктів, щоб швидше працювати у великій організації.</string>
     <string name="kube_signin_option_gcp_service_account">Ключ сервісного облікового запису</string>
     <string name="kube_signin_option_gcp_user">Облікові дані користувача gcloud</string>
