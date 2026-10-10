@@ -31,6 +31,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.HISTORY_NOT_READY
 import name.levis.ichor.model.HISTORY_READY
+import name.levis.ichor.model.HistoryForecast
 import name.levis.ichor.model.HistoryNodeSpan
 import name.levis.ichor.model.HistoryQuery
 import name.levis.ichor.model.uptimeSegments
@@ -56,6 +57,22 @@ fun rememberClusterHistory(days: Int): HistoryQuery? {
         value = fingerprint?.let { app.historyRepository.query(it, now - days * DAY_MILLIS, now) }
     }
     return history
+}
+
+/**
+ * The shown cluster's volume fill trends, projected to the user's storage critical threshold;
+ * read once per cluster and threshold, null while it loads or without history.
+ */
+@Composable
+fun rememberVolumeForecast(): HistoryForecast? {
+    val app = LocalContext.current.applicationContext as TalosApp
+    val config by app.configRepository.config.collectAsStateWithLifecycle()
+    val critical by app.monitorStore.storageCriticalPercent.collectAsStateWithLifecycle()
+    val fingerprint = config?.activeSummary?.fingerprint
+    val forecast by produceState<HistoryForecast?>(null, fingerprint, critical) {
+        value = fingerprint?.let { app.historyRepository.forecast(it, System.currentTimeMillis(), critical) }
+    }
+    return forecast
 }
 
 /**

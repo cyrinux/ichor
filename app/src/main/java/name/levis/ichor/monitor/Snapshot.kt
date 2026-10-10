@@ -77,6 +77,11 @@ data class ClusterSnapshot(
     /** Storage warnings seen once and not notified yet. */
     val storagePending: List<String> = emptyList(),
     /**
+     * Volumes whose fill trend alert is open ("node|volume" → [TrendDetail], see
+     * [storageTrendStep]), set after the run's history record (see [withStorageTrends]).
+     */
+    val storageTrends: Map<String, String> = emptyMap(),
+    /**
      * The cluster was added from a kubeconfig: its nodes come from the Kubernetes API (ready or
      * not, never unreachable), there is no etcd, and [certNotAfter] is the kubeconfig's credentials.
      */

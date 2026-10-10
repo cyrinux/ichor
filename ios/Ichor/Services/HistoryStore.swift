@@ -65,6 +65,14 @@ enum HistoryStore {
         return try? await TalosClient.historyQuery(ring: data, since: period.since(now: millis), now: millis)
     }
 
+    /// Each volume's fill projection on `cluster` now, to the user's critical threshold; nil
+    /// without a ring (or when it cannot be read).
+    static func forecast(cluster: String, now: Date = Date()) async -> HistoryForecast? {
+        guard let data = bytes(cluster: cluster) else { return nil }
+        let millis = Int64(now.timeIntervalSince1970 * 1000)
+        return try? await TalosClient.historyForecast(ring: data, now: millis, critical: BackgroundMonitor.storageThresholds.crit)
+    }
+
     /// What happened on `cluster` after `lastLooked`; nil without a ring.
     static func since(cluster: String, lastLooked: Int64) async -> HistorySinceSummary? {
         guard let data = bytes(cluster: cluster) else { return nil }

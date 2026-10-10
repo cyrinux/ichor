@@ -37,6 +37,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.monitor.CERT_WARN_DAYS
 import name.levis.ichor.monitor.MonitorStore
 import name.levis.ichor.monitor.STORAGE_WARN_RANGE
+import name.levis.ichor.monitor.TREND_OPEN_DAYS
 import name.levis.ichor.monitor.storageCriticalRange
 import name.levis.ichor.monitor.UNREACHABLE_RUNS
 import name.levis.ichor.monitor.canPostNotifications
@@ -57,6 +58,7 @@ fun MonitoringSection(app: TalosApp) {
     val checkupWatched by store.checkupWatched.collectAsStateWithLifecycle()
     val alertmanagerWatched by store.alertmanagerWatched.collectAsStateWithLifecycle()
     val storageWatched by store.storageWatched.collectAsStateWithLifecycle()
+    val storageTrend by store.storageTrendAlerts.collectAsStateWithLifecycle()
     val unreachable by store.unreachableAlerts.collectAsStateWithLifecycle()
     val unreachableRuns by store.unreachableRuns.collectAsStateWithLifecycle()
     val interval by store.intervalMinutes.collectAsStateWithLifecycle()
@@ -163,6 +165,19 @@ fun MonitoringSection(app: TalosApp) {
                 )
             }
             if (storageWatched) StorageThresholds(store, enabled)
+            // On top of it: the volumes' fill trend from the history, read after each check.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_storage_trend), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_storage_trend_desc, TREND_OPEN_DAYS.toInt()))
+                }
+                Switch(
+                    checked = storageTrend,
+                    onCheckedChange = { store.setStorageTrendAlerts(it) },
+                    enabled = enabled && storageWatched,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
             // And for a cluster that stops answering: once, after that many checks in a row.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {

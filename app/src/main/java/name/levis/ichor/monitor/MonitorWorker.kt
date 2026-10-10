@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.TalosJson
+import name.levis.ichor.model.HistoryForecast
 import name.levis.ichor.model.HistoryRecord
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ClusterLabels
@@ -50,7 +51,7 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         // Screenshot mode fakes every name the checks read: no history from those.
         val maskedBefore = app.uiPreferences.privacyMask.value.enabled
         val reads = readAll(app, stored, before, now)
-        val run = monitorRun(
+        val evaluated = monitorRun(
             before,
             reads,
             now,
@@ -58,13 +59,20 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             unreachableRuns = store.unreachableRuns.value,
             active = stored.activeSummary?.let(::monitorKeyOf).orEmpty(),
         )
-        store.saveState(run.state)
+        val firstPass = evaluated.state
+        store.saveState(firstPass)
         val masked = maskedBefore || app.uiPreferences.privacyMask.value.enabled
         withContext(Dispatchers.IO) {
-            historyRecords(before, reads, run.state, now, masked).forEach { (fingerprint, record) ->
+            historyRecords(before, reads, firstPass, now, masked).forEach { (fingerprint, record) ->
                 app.historyStore.append(fingerprint, TalosJson.encodeToString(HistoryRecord.serializer(), record), now)
             }
         }
+        // The volume trends read the ring with this run's record in it; none from faked names
+        // (screenshot mode), so the open ones are kept as they are.
+        val trendsOn = store.storageTrendAlerts.value
+        val forecasts = if (trendsOn && !masked) storageForecasts(app, reads, now) else emptyMap()
+        val run = withStorageTrends(evaluated, before, reads, forecasts, enabled = trendsOn)
+        if (run.state != firstPass) store.saveState(run.state)
         scheduleWidgetStaleRefresh(applicationContext, run.state.clusters.values, now)
 
         if (store.alertsEnabled.value) {
@@ -96,6 +104,14 @@ private suspend fun readAll(app: TalosApp, stored: StoredConfig, before: Monitor
             }
         }
         .awaitAll()
+}
+
+/** The volume forecast of each cluster whose storage this run read, by monitor key (see [wantsStorageForecast]). */
+private suspend fun storageForecasts(app: TalosApp, reads: List<ClusterRead>, now: Long): Map<String, HistoryForecast> {
+    val critical = app.monitorStore.storageCriticalPercent.value
+    return reads.filter(::wantsStorageForecast).mapNotNull { read ->
+        app.historyRepository.forecast(read.context.fingerprint, now, critical)?.let { monitorKeyOf(read.context) to it }
+    }.toMap()
 }
 
 /** Posts the alerts of one cluster that are not snoozed, named after it as the app shows it. */

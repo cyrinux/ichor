@@ -3742,6 +3742,24 @@
     <string name="monitor_storage_smart">SMART не пройдено на %1$s (%2$s)</string>
     <string name="monitor_storage_fill_ok">%1$s на %2$s знову нижче %3$d %%</string>
     <string name="monitor_storage_smart_ok">%1$s на %2$s знову проходить SMART</string>
+    <string name="monitor_storage_trend">Попереджати, перш ніж том заповниться</string>
+    <string name="monitor_storage_trend_desc">Сповіщає, коли зростання тому за останній тиждень зробить його критичним протягом %1$d днів, і один раз, коли це вже не так. Використовує історію перевірок; потребує сховища вузлів.</string>
+    <plurals name="monitor_storage_trend_full">
+        <item quantity="one">%1$s на %2$s заповниться за ~%3$d день</item>
+        <item quantity="few">%1$s на %2$s заповниться за ~%3$d дні</item>
+        <item quantity="many">%1$s на %2$s заповниться за ~%3$d днів</item>
+        <item quantity="other">%1$s на %2$s заповниться за ~%3$d дня</item>
+    </plurals>
+    <plurals name="monitor_storage_trend_critical">
+        <item quantity="one">%1$s на %2$s стане критичним за ~%3$d день</item>
+        <item quantity="few">%1$s на %2$s стане критичним за ~%3$d дні</item>
+        <item quantity="many">%1$s на %2$s стане критичним за ~%3$d днів</item>
+        <item quantity="other">%1$s на %2$s стане критичним за ~%3$d дня</item>
+    </plurals>
+    <string name="monitor_storage_trend_full_soon">%1$s на %2$s заповниться менш ніж за день</string>
+    <string name="monitor_storage_trend_critical_soon">%1$s на %2$s стане критичним менш ніж за день</string>
+    <string name="monitor_storage_trend_text">зростає на ~%1$s %% на день, зараз %2$d %%</string>
+    <string name="monitor_storage_trend_ok">%1$s на %2$s більше не заповнюється так швидко</string>
     <string name="clusters_watch">Стежити у фоні</string>
     <string name="widget_config_title">Кластер, який показує віджет</string>
     <string name="widget_config_active">Кластер на екрані</string>
@@ -3855,6 +3873,21 @@
         <item quantity="other">Заповнення томів, останні %1$d дня</item>
     </plurals>
     <string name="history_volume_description">Заповнення %1$s з часом</string>
+    <plurals name="history_forecast_full">
+        <item quantity="one">заповниться за ~%1$d день</item>
+        <item quantity="few">заповниться за ~%1$d дні</item>
+        <item quantity="many">заповниться за ~%1$d днів</item>
+        <item quantity="other">заповниться за ~%1$d дня</item>
+    </plurals>
+    <plurals name="history_forecast_critical">
+        <item quantity="one">стане критичним за ~%1$d день</item>
+        <item quantity="few">стане критичним за ~%1$d дні</item>
+        <item quantity="many">стане критичним за ~%1$d днів</item>
+        <item quantity="other">стане критичним за ~%1$d дня</item>
+    </plurals>
+    <string name="history_forecast_full_soon">заповниться менш ніж за день</string>
+    <string name="history_forecast_critical_soon">стане критичним менш ніж за день</string>
+    <string name="history_forecast_growing">зростає на ~%1$s %% на день</string>
     <string name="history_since_title">Відтоді, як ви востаннє дивилися</string>
     <string name="history_since_more">+%1$d ще</string>
     <string name="history_since_dismiss">Зрозуміло</string>

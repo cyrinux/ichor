@@ -13,6 +13,8 @@ enum class AlertKind {
     AM_FIRING, AM_RESOLVED,
     /** A node's volume filling up or a disk failing SMART ([Alert.detail]: a [StorageDetail]), or no longer. */
     STORAGE_PROBLEM, STORAGE_OK,
+    /** A volume projected critical (or full) within days ([Alert.detail]: a [TrendDetail]), or no longer. */
+    STORAGE_TREND, STORAGE_TREND_OK,
     /** The cluster could not be read for several checks in a row ([Alert.detail]: how many), or answers again. */
     CLUSTER_UNREACHABLE, CLUSTER_REACHABLE,
 }
@@ -118,6 +120,8 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             storageChecked = storage.checked,
             storageIssues = storage.issues,
             storagePending = storage.pending,
+            // Stepped after the run's history record (see [withStorageTrends]); kept until then.
+            storageTrends = prev?.takeIf { comparable && storage.watched }?.storageTrends.orEmpty(),
         ),
     )
 }
