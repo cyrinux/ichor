@@ -94,6 +94,7 @@ import name.levis.ichor.model.confirmToken
 import name.levis.ichor.model.notice
 import name.levis.ichor.model.nodeHostnames
 import name.levis.ichor.model.removalNode
+import name.levis.ichor.model.replaceCandidates
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.components.FeatureGate
 import name.levis.ichor.ui.components.InfoNotice
@@ -176,6 +177,7 @@ sealed interface DisarmState {
 @Composable
 fun EtcdScreen(
     onBack: () -> Unit,
+    onReplace: (EtcdMember) -> Unit = {},
     vm: EtcdViewModel = viewModel(factory = factory { EtcdViewModel(app.talosRepository) }),
     snapshotVm: EtcdSnapshotViewModel = viewModel(factory = factory { EtcdSnapshotViewModel(app.talosRepository, app) }),
     memberVm: EtcdMemberActionsViewModel = viewModel(factory = factory { EtcdMemberActionsViewModel(app.talosRepository) }),
@@ -300,6 +302,7 @@ fun EtcdScreen(
                             allowed = canMemberActions,
                             onForfeit = { confirmForfeit = it },
                             onRemove = memberVm::plan,
+                            onReplace = onReplace,
                             onDismiss = memberVm::dismiss,
                         ),
                         snapshot = if (canSnapshot || snapshot != SnapshotState.Idle) {
@@ -383,16 +386,21 @@ private data class MemberActionsHost(
     val allowed: Boolean,
     val onForfeit: (EtcdNodeStatus) -> Unit,
     val onRemove: (EtcdMemberRef) -> Unit,
+    val onReplace: (EtcdMember) -> Unit,
     val onDismiss: () -> Unit,
 ) {
-    /** What the card of the member [id] ([hostname]) offers; [leader] set for the leader's status. */
-    fun actionsFor(id: String, hostname: String, leader: EtcdNodeStatus?): MemberActions? {
+    /**
+     * What the card of the member [id] ([hostname]) offers; [leader] set for the leader's status,
+     * [failed] for a member the guided replacement is offered for.
+     */
+    fun actionsFor(id: String, hostname: String, leader: EtcdNodeStatus?, failed: EtcdMember? = null): MemberActions? {
         if (!allowed || id.isEmpty()) return null
         return MemberActions(
             support = support,
             enabled = !state.busy,
             onForfeit = leader?.let { { onForfeit(it) } },
             onRemove = { onRemove(EtcdMemberRef(id, hostname)) },
+            onReplace = failed?.let { { onReplace(it) } },
         )
     }
 }
@@ -427,6 +435,7 @@ private fun EtcdContent(
     // Nodes are addresses; a node that did not answer has no member id to name it by.
     val nodeNames = remember(etcd, knownHostnames) { etcd.nodeHostnames(knownHostnames) }
     val running = defrag is DefragState.Running
+    val failed = remember(etcd) { etcd.replaceCandidates().associateBy { it.id } }
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         etcd.error?.let { item { Text(it, color = colors.bad) } }
@@ -506,7 +515,7 @@ private fun EtcdContent(
                 status = status,
                 hostname = hostname,
                 lag = etcdLag(status, etcd.statuses),
-                actions = members.actionsFor(status.memberId, hostname, status.takeIf { it.isLeader && it.error == null }),
+                actions = members.actionsFor(status.memberId, hostname, status.takeIf { it.isLeader && it.error == null }, failed[status.memberId]),
                 onDefrag = if (canDefrag && !running && status.error == null) {
                     { onDefrag(DefragRequest(listOf(status), nodeNames)) }
                 } else {
@@ -517,7 +526,7 @@ private fun EtcdContent(
         val unprobed = etcd.members.filter { m -> etcd.statuses.none { it.memberId == m.id } }
         if (unprobed.isNotEmpty()) {
             item { SectionTitle(stringResource(R.string.etcd_section_unprobed)) }
-            items(unprobed, key = { it.id }) { MemberCard(it, members.actionsFor(it.id, it.hostname, leader = null)) }
+            items(unprobed, key = { it.id }) { MemberCard(it, members.actionsFor(it.id, it.hostname, leader = null, failed = failed[it.id])) }
         }
     }
 }

@@ -3845,6 +3845,27 @@
         <item quantity="one">In pausa: %1$d evento nuovo o modificato</item>
         <item quantity="other">In pausa: %1$d eventi nuovi o modificati</item>
     </plurals>
+    <string name="cp_replace_entry">Sostituisci questo control plane…</string>
+    <string name="cp_replace_title">Sostituisci un control plane</string>
+    <string name="cp_replace_intro">Ogni passaggio chiede la propria conferma. I passaggi sono letti dal cluster: puoi uscire e tornare in qualsiasi momento.</string>
+    <string name="cp_replace_step_quorum">Verifica il quorum di etcd</string>
+    <string name="cp_replace_step_remove">Rimuovi il membro etcd</string>
+    <string name="cp_replace_step_reset">Reimposta il vecchio nodo</string>
+    <string name="cp_replace_step_boot">Avvia il nuovo nodo</string>
+    <string name="cp_replace_step_wait">Attendi il nuovo membro</string>
+    <string name="cp_replace_state_pending">In attesa</string>
+    <string name="cp_replace_state_ready">Da fare</string>
+    <string name="cp_replace_state_done">Fatto</string>
+    <string name="cp_replace_state_skipped">Saltato</string>
+    <string name="cp_replace_state_blocked">Bloccato</string>
+    <string name="cp_replace_power_off">Il vecchio nodo non risponde, quindi non può essere reimpostato da qui: spegnilo tu se è ancora acceso.</string>
+    <string name="cp_replace_boot_body">Avvia la nuova macchina da un\'immagine Talos (modalità manutenzione), poi applicale la configurazione macchina di %1$s da un portatile. L\'aggiunta di un nodo dal telefono arriverà più avanti.</string>
+    <string name="cp_replace_open_template">Apri la configurazione modello</string>
+    <string name="cp_replace_copy_command">Copia il comando</string>
+    <string name="cp_replace_wait_start">Inizia ad attendere</string>
+    <string name="cp_replace_waiting">In attesa di un nuovo membro etcd sano…</string>
+    <string name="cp_replace_joined">Il nuovo membro si è unito: etcd è sano.</string>
+    <string name="cp_replace_wait_stop">Smetti di attendere</string>
     <string name="image_pull_channel_name">Download di immagini</string>
     <string name="image_pull_channel_desc">Avanzamento del download di un\'immagine sui tuoi nodi</string>
     <string name="image_pull_notification_public">Download di un\'immagine</string>

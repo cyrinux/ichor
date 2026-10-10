@@ -137,6 +137,12 @@ class KubeSignInTest {
         assertEquals(fields.keys, options.keys)
         // The project IDs are optional: the credential alone is enough to search.
         assertTrue(credentialsComplete(gke[1], mapOf("gcpUserCredentialsJson" to "{}")))
+        // The sets that sign in in the browser first are not offered (the card cannot run that sign-in yet).
+        val withBrowser = gke + listOf(
+            listOf("gcpOAuthClientId", "gcpOAuthClientSecret", "gcpOAuthRedirectUrl", "gcpProjects"),
+            listOf("gcpGoogleSignIn", "gcpProjects"),
+        )
+        assertEquals(gke, discoveryOptions(mapOf("gke" to withBrowser), fields)[DiscoveryProvider.GKE])
     }
 
     @Test

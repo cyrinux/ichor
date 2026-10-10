@@ -57,6 +57,12 @@ internal object Routes {
         "logs?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&container=${Uri.encode(container)}" +
             "&title=${Uri.encode(title)}&subtitle=${Uri.encode(subtitle)}"
     const val ETCD = "etcd"
+
+    /** The guided replacement of the failed etcd member [member] whose node is [addr] ([host]). */
+    const val REPLACE_CONTROL_PLANE = "replacecp?member={member}&addr={addr}&host={host}"
+
+    fun replaceControlPlane(member: String, addr: String, host: String) =
+        "replacecp?member=${Uri.encode(member)}&addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
     const val KUBESPAN = "kubespan"
     const val NODES = "nodes?filter={filter}"
 

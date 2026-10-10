@@ -91,6 +91,7 @@ private val ResetWipe.label: Int
 /**
  * The plan (role, etcd member, blockers, warnings), what to wipe, `--graceful` and `--reboot`,
  * then the typed-hostname confirmation: one dialog, its button disabled while a blocker stands.
+ * [initial]: the options preselected (a control plane already out of etcd resets without `--graceful`).
  */
 @Composable
 fun ResetConfirmDialog(
@@ -98,11 +99,12 @@ fun ResetConfirmDialog(
     hostname: String,
     onConfirm: (ResetRequest) -> Unit,
     onDismiss: () -> Unit,
+    initial: ResetRequest = ResetRequest(),
 ) {
     LaunchedEffect(Unit) { vm.loadPlan() }
     val planState by vm.plan.collectAsStateWithLifecycle()
     val plan = (planState as? UiState.Loaded)?.data
-    var chosen by remember { mutableStateOf(ResetRequest()) }
+    var chosen by remember { mutableStateOf(initial) }
     // A mode the plan does not offer (no user disk) falls back to the system disk.
     val request = plan?.let { p -> chosen.copy(wipe = chosen.wipe.takeIf { it in p.wipeModes } ?: ResetWipe.SYSTEM) } ?: chosen
 

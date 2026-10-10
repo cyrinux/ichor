@@ -38,6 +38,18 @@ struct EtcdMemberActionsSection: View {
                     Text("Remove member…").foregroundStyle(removable.isEmpty || !support.supported ? Color.secondary : Color.red)
                 }
                 .disabled(removable.isEmpty || !support.supported)
+                // The guided replacement, for a failed member only.
+                ForEach(replaceCandidates(etcd)) { member in
+                    NavigationLink(value: Route.replaceControlPlane(memberId: member.id, node: etcdMemberAddress(member),
+                                                                    hostname: member.hostname)) {
+                        VStack(alignment: .leading) {
+                            Text("Replace this control plane…")
+                            Text(verbatim: member.hostname.isEmpty ? member.id : member.hostname)
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .disabled(!support.supported)
+                }
             }
             if let notice = support.localizedNotice { VersionNoticeRow(text: notice) }
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
@@ -59,6 +71,8 @@ struct EtcdRemoveMemberSheet: View {
     let lockEnabled: Bool
     /// Called after a successful removal with the name of the removed member.
     let onRemoved: (String) -> Void
+    /// Replaces the plain removal (the control-plane replacement re-checks its own plan).
+    let remove: ((String) async throws -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @State private var plan: LoadState<EtcdMemberPlan> = .loading
@@ -67,11 +81,13 @@ struct EtcdRemoveMemberSheet: View {
     @State private var message: String?
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(member: EtcdMember, throughNode: String?, client: TalosClient, lockEnabled: Bool, onRemoved: @escaping (String) -> Void) {
+    init(member: EtcdMember, throughNode: String?, client: TalosClient, lockEnabled: Bool,
+         remove: ((String) async throws -> Void)? = nil, onRemoved: @escaping (String) -> Void) {
         self.member = member
         self.throughNode = throughNode
         self.client = client
         self.lockEnabled = lockEnabled
+        self.remove = remove
         self.onRemoved = onRemoved
     }
 
@@ -163,7 +179,11 @@ struct EtcdRemoveMemberSheet: View {
         removing = true
         defer { removing = false }
         do {
-            try await client.etcdRemoveMember(node: throughNode, memberID: plan.member.id)
+            if let remove {
+                try await remove(plan.member.id)
+            } else {
+                try await client.etcdRemoveMember(node: throughNode, memberID: plan.member.id)
+            }
             onRemoved(gate.confirmationName)
         } catch {
             message = error.localizedDescription

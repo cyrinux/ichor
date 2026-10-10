@@ -59,18 +59,21 @@ func (a gkeAccount) get(ctx context.Context, u string, out any) error {
 }
 
 func discoverGKEClusters(ctx context.Context, s map[string]string) ([]discoveredCluster, error) {
-	if s[gcpFieldUserCredentials] == "" {
+	state, err := gkeMethod{}.fromSecrets(s)
+	if err != nil {
+		return nil, err
+	}
+
+	if raw := state.secret(gcpFieldServiceAccount); raw != "" {
 		var sa struct {
 			ProjectID string `json:"project_id"`
 		}
 
-		if !isGCPUserCredentials(s[gcpFieldServiceAccount]) {
-			if err := json.Unmarshal([]byte(s[gcpFieldServiceAccount]), &sa); err != nil || sa.ProjectID == "" {
-				return nil, errors.New("the service account key names no project")
-			}
+		if err := json.Unmarshal([]byte(raw), &sa); err != nil || sa.ProjectID == "" {
+			return nil, errors.New("the service account key names no project")
 		}
 
-		account, err := gkeSignIn(ctx, s)
+		account, err := gkeSignIn(ctx, state)
 		if err != nil {
 			return nil, err
 		}
@@ -78,17 +81,20 @@ func discoverGKEClusters(ctx context.Context, s map[string]string) ([]discovered
 		return listGKEClusters(ctx, account, sa.ProjectID)
 	}
 
-	creds, err := parseUserCredentials(s[gcpFieldUserCredentials])
+	// A Google account: gcloud user credentials, the OAuth client or Sign in with Google.
+	account, err := gkeSignIn(ctx, state)
 	if err != nil {
 		return nil, err
 	}
 
-	account, err := gkeSignIn(ctx, s)
-	if err != nil {
-		return nil, err
-	}
+	if raw := state.secret(gcpFieldUserCredentials); raw != "" {
+		creds, err := parseUserCredentials(raw)
+		if err != nil {
+			return nil, err
+		}
 
-	account.quotaProject = creds.QuotaProjectID
+		account.quotaProject = creds.QuotaProjectID
+	}
 
 	projects, err := gcpProjectsFilter(s[gcpFieldProjects])
 	if err != nil {
@@ -111,14 +117,16 @@ func discoverGKEClusters(ctx context.Context, s map[string]string) ([]discovered
 	return clusters, err
 }
 
-// gkeSignIn mints a token from the GKE credentials s holds (either kind).
-func gkeSignIn(ctx context.Context, s map[string]string) (gkeAccount, error) {
-	state, err := gkeMethod{}.fromSecrets(s)
-	if err != nil {
-		return gkeAccount{}, err
+// gkeSignIn mints a token from GKE credentials (any kind), with the session of the
+// discovery's browser sign-in when there was one.
+func gkeSignIn(ctx context.Context, state kubeAuthState) (gkeAccount, error) {
+	token, _, _, err := gkeMethod{}.mint(ctx, withDiscoverySession(state))
+
+	var needSignIn *errSignInRequired
+	if errors.As(err, &needSignIn) && gkeNeedsBrowser(state.Secrets) {
+		return gkeAccount{}, signInRequired(authGKE, "sign in with Google before finding clusters")
 	}
 
-	token, _, _, err := gkeMethod{}.mint(ctx, state)
 	if err != nil {
 		return gkeAccount{}, err
 	}
