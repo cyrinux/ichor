@@ -102,6 +102,8 @@ struct KubeHomeView: View {
     @AppStorage(KubeHomeLayout.storageKey) private var layoutText = ""
     @AppStorage(KubeHomeBar.storageKey) private var barText = ""
     @State private var customizing = false
+    /// "Since you last looked" (the history ring).
+    @State private var look = HistoryLook()
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -112,6 +114,7 @@ struct KubeHomeView: View {
                             .font(.callout).foregroundStyle(.secondary)
                     }
                 }
+                HistorySinceSection(look: look)
                 if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
                     Section { KubeExpiryBanner(notAfter: ctx.certNotAfter) }
                 }
@@ -202,6 +205,7 @@ struct KubeHomeView: View {
         }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
+        .watchesHistory(look, cluster: model.activeSummary.map(monitorClusterKey) ?? "", id: loadID)
         // Another cluster: never its name over the previous one's nodes.
         .onChange(of: loadID) {
             state = .loading

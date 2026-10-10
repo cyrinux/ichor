@@ -3582,4 +3582,35 @@
     <string name="alert_action_silence_hour">Silence 1 h</string>
     <string name="alert_action_snooze">Snooze 8 h</string>
     <string name="alert_action_silence_comment">Silenced from a notification</string>
+    <string name="history_uptime_title">Uptime</string>
+    <plurals name="history_uptime_description">
+        <item quantity="one">Node uptime over the last %1$d day: %2$s</item>
+        <item quantity="other">Node uptime over the last %1$d days: %2$s</item>
+    </plurals>
+    <plurals name="history_days_short">
+        <item quantity="one">%1$d d</item>
+        <item quantity="other">%1$d d</item>
+    </plurals>
+    <plurals name="history_memory_description">
+        <item quantity="one">Memory use over the last %1$d day</item>
+        <item quantity="other">Memory use over the last %1$d days</item>
+    </plurals>
+    <plurals name="history_volumes_title">
+        <item quantity="one">Volume fill, last %1$d day</item>
+        <item quantity="other">Volume fill, last %1$d days</item>
+    </plurals>
+    <string name="history_volume_description">%1$s fill over time</string>
+    <string name="history_since_title">Since you last looked</string>
+    <string name="history_since_more">+%1$d more</string>
+    <string name="history_since_dismiss">Got it</string>
+    <string name="history_since_down">%1$s is still down (%2$s)</string>
+    <string name="history_since_alert_open">New alert, still open: %1$s</string>
+    <string name="history_since_recovered">%1$s was down (%2$s) for %3$s, back now</string>
+    <string name="history_since_alert_resolved">Resolved: %1$s</string>
+    <string name="history_since_upgrade">%1$s upgraded from %2$s to %3$s</string>
+    <plurals name="history_since_still_open">
+        <item quantity="one">%1$d older alert still open</item>
+        <item quantity="other">%1$d older alerts still open</item>
+    </plurals>
+    <string name="history_alert_cert">Certificate expiring</string>
 </resources>

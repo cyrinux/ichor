@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.ui.history.VolumeFillHistory
 import name.levis.ichor.model.DiskHealthReport
 import name.levis.ichor.model.DiskUsage
 import name.levis.ichor.model.FeatureSupport
@@ -171,6 +172,7 @@ fun StorageScreen(
                         SectionBody(state.volumes) { VolumesContent(it) }
                     }
                 }
+                item(key = "fill-history") { VolumeFillHistory(node) }
                 item(key = "health") {
                     SectionCard(stringResource(R.string.storage_section_health), features.support(TalosFeature.DISK_HEALTH)) {
                         SectionBody(state.health) { DiskHealthContent(it) }

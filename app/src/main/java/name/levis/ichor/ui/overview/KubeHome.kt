@@ -56,6 +56,7 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.argocd.ArgoViewModel
+import name.levis.ichor.ui.history.SinceLastLookedCard
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
@@ -314,6 +315,7 @@ private fun KubeHomeList(
         signIn?.let { item(key = "sign-in") { SignInBanner(it.method, it.needed, onSignIn) } }
         // The banner says it all when the call failed for want of a sign-in.
         failure?.takeIf { signIn?.needed == null }?.let { item(key = "failure") { KubeUnreachableCard(it, onRetry) } }
+        cluster?.fingerprint?.takeIf { it.isNotBlank() }?.let { item(key = "since") { SinceLastLookedCard(it) } }
         // The cards, as arranged; a long press on one opens the arrangement.
         layout.visible.forEach { card ->
             when (card) {

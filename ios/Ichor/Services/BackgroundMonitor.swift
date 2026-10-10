@@ -181,12 +181,29 @@ enum BackgroundMonitor {
 
     /// What a run learnt of one cluster.
     private enum ClusterRead: Sendable {
-        /// Read: its fresh snapshot (where no node may have answered: unreachable then too).
-        case read(ClusterSnapshot)
+        /// Read: its fresh snapshot (where no node may have answered: unreachable then too), with
+        /// what the history ring keeps beyond it (versions, memory, volumes).
+        case read(ClusterSnapshot, HistoryExtras)
         /// No answer, or none in time.
         case unreachable
         /// Not tried to the end (iOS ended the run): nothing changes for it.
         case skipped
+    }
+
+    /// What one cluster's history record is built from (see recordHistory).
+    private struct HistoryInput {
+        let key: String
+        /// The fresh snapshot, nil when the cluster did not answer.
+        let current: ClusterSnapshot?
+        /// After evaluate: the issues notified (or kept from the last run for a track not read).
+        let evaluated: ClusterSnapshot?
+        let extras: HistoryExtras
+    }
+
+    /// Node storage as a run read it: the issues worth an alert, and every volume's fill.
+    private struct StorageRead: Sendable {
+        let issues: [String: String]
+        let volumes: [HistoryVolumeRecord]
     }
 
     /// The alerts of one cluster, with the snapshots they are worded from.
@@ -211,6 +228,7 @@ enum BackgroundMonitor {
         // A cluster removed since drops its snapshot, unreachable count and snoozes (the app does too).
         let clusterKeys = summary.contexts.map(monitorClusterKey)
         AlertSnoozeStore.keep(clusters: summary.contexts.map(\.fingerprint))
+        HistoryStore.keep(clusters: clusterKeys)
         var snapshots = keepingClusters(SharedStore.snapshots(activeCluster: summary.context(named: activeName).map(monitorClusterKey)),
                                         clusters: clusterKeys)
         let unwatched = Set(UserDefaults.standard.stringArray(forKey: unwatchedKey) ?? [])
@@ -225,6 +243,7 @@ enum BackgroundMonitor {
         var reach = keepingClusters(reachability(), clusters: clusterKeys)
         let runs = unreachableRuns
         var outcomes: [ClusterAlerts] = []
+        var history: [HistoryInput] = []
         for job in jobs {
             guard let result = reads[job.key] else { continue }
             var alerts: [Alert] = []
@@ -235,12 +254,14 @@ enum BackgroundMonitor {
                 continue
             case .unreachable:
                 reachable = false
-            case .read(let current):
+                history.append(HistoryInput(key: job.key, current: nil, evaluated: nil, extras: HistoryExtras()))
+            case .read(let current, let extras):
                 let evaluated = evaluate(previous: job.previous, current: current, now: now)
                 snapshots[job.key] = evaluated.next
                 latest = evaluated.next
                 alerts = evaluated.alerts
                 reachable = !current.unreachableAsAWhole
+                history.append(HistoryInput(key: job.key, current: current, evaluated: evaluated.next, extras: extras))
             }
             // Counted even with the alert off, so turning it on knows the runs already missed.
             let counted = evaluateReachability(previous: reach[job.key], reachable: reachable, runs: runs,
@@ -253,8 +274,27 @@ enum BackgroundMonitor {
         }
         SharedStore.save(snapshots)
         saveReachability(reach)
+        // Real names only: under the screenshot mode the run read masked ones.
+        if historyRecordingAllowed(privacyMasked: UserDefaults.standard.bool(forKey: PrivacyKeys.enabled)) {
+            await recordHistory(history, at: now)
+        }
         guard alertsEnabled else { return }
         await post(outcomes, now: now)
+    }
+
+    /// One record per cluster read (or not answering) in each one's sealed ring. A track not read
+    /// this run resends the alerts the ring has open for it; a ring that cannot be read now (the
+    /// device locked) or that a newer version wrote is left as it is.
+    private static func recordHistory(_ inputs: [HistoryInput], at now: Date) async {
+        let millis = Int64(now.timeIntervalSince1970 * 1000)
+        for input in inputs {
+            let stored = HistoryStore.ring(cluster: input.key)
+            if stored == .unreadable { continue }
+            let previous = await HistoryStore.openAlerts(in: stored, now: millis)
+            let record = historyRecord(at: now, current: input.current, evaluated: input.evaluated, extras: input.extras,
+                                       previousAlerts: previous, now: now)
+            HistoryStore.append(record, cluster: input.key, stored: stored)
+        }
     }
 
     /// The clusters of `contexts` to check now: a VPN-only one waits for its VPN (without it the
@@ -354,22 +394,27 @@ enum BackgroundMonitor {
         let gitopsIssues = await gitopsRead
         let checkupIssues = await checkupRead
         let alertmanagerIssues = await alertmanagerRead
-        let storageIssues = await storageRead
+        let storage = await storageRead
+        let storageIssues = storage?.issues
         let now = Date()
         if let kubeNodes {
             return .read(kubeSnapshotOf(kubeNodes, context: context.name, certNotAfter: context.certNotAfter, takenAt: now,
                                         dataWatched: watchData, dataServices: dataServices,
                                         gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
                                         checkupWatched: watchCheckup, checkupIssues: checkupIssues,
-                                        alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues))
+                                        alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues),
+                         historyExtras(kubeNodes))
         }
         guard let overview else { return .unreachable }
+        var extras = historyExtras(overview)
+        extras.volumes = storage?.volumes ?? []
         return .read(snapshotOf(overview, etcd: etcd, certNotAfter: context.certNotAfter, takenAt: now,
                                 dataWatched: watchData, dataServices: dataServices,
                                 gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
                                 checkupWatched: watchCheckup, checkupIssues: checkupIssues,
                                 alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
-                                storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn))
+                                storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn),
+                     extras)
     }
 
     /// `work` within `seconds` when `on`; nil when off, failed or too slow.
@@ -444,12 +489,12 @@ enum BackgroundMonitor {
         return alertmanagerIssuesWithGaps(alerts, known: known)
     }
 
-    /// Volumes over `thresholds` and disks failing SMART; nil when it could not be read. A node
-    /// that did not answer keeps what the last snapshot knew of it.
+    /// Volumes over `thresholds` and disks failing SMART, with every volume's fill (the history);
+    /// nil when it could not be read. A node that did not answer keeps what the last snapshot knew of it.
     private static func readStorage(_ client: TalosClient, thresholds: StorageThresholds,
-                                    known: [String: String]) async -> [String: String]? {
+                                    known: [String: String]) async -> StorageRead? {
         guard let health = try? await client.clusterStorageHealth() else { return nil }
-        return storageIssuesOf(health, thresholds: thresholds, known: known)
+        return StorageRead(issues: storageIssuesOf(health, thresholds: thresholds, known: known), volumes: historyVolumes(health))
     }
 
     /// IchorCore builds English alerts; this rebuilds their text in the user's

@@ -3574,4 +3574,35 @@
     <string name="alert_action_silence_hour">1 Std. stummschalten</string>
     <string name="alert_action_snooze">8 Std. pausieren</string>
     <string name="alert_action_silence_comment">Aus einer Benachrichtigung stummgeschaltet</string>
+    <string name="history_uptime_title">Verfügbarkeit</string>
+    <plurals name="history_uptime_description">
+        <item quantity="one">Verfügbarkeit des Nodes am letzten %1$d Tag: %2$s</item>
+        <item quantity="other">Verfügbarkeit des Nodes in den letzten %1$d Tagen: %2$s</item>
+    </plurals>
+    <plurals name="history_days_short">
+        <item quantity="one">%1$d T</item>
+        <item quantity="other">%1$d T</item>
+    </plurals>
+    <plurals name="history_memory_description">
+        <item quantity="one">Speichernutzung am letzten %1$d Tag</item>
+        <item quantity="other">Speichernutzung in den letzten %1$d Tagen</item>
+    </plurals>
+    <plurals name="history_volumes_title">
+        <item quantity="one">Füllstand der Volumes, letzter %1$d Tag</item>
+        <item quantity="other">Füllstand der Volumes, letzte %1$d Tage</item>
+    </plurals>
+    <string name="history_volume_description">Füllstand von %1$s im Verlauf</string>
+    <string name="history_since_title">Seit du zuletzt geschaut hast</string>
+    <string name="history_since_more">+%1$d weitere</string>
+    <string name="history_since_dismiss">Verstanden</string>
+    <string name="history_since_down">%1$s ist noch ausgefallen (%2$s)</string>
+    <string name="history_since_alert_open">Neuer Alarm, noch offen: %1$s</string>
+    <string name="history_since_recovered">%1$s war %3$s lang ausgefallen (%2$s), jetzt wieder da</string>
+    <string name="history_since_alert_resolved">Behoben: %1$s</string>
+    <string name="history_since_upgrade">%1$s aktualisiert von %2$s auf %3$s</string>
+    <plurals name="history_since_still_open">
+        <item quantity="one">%1$d älterer Alarm noch offen</item>
+        <item quantity="other">%1$d ältere Alarme noch offen</item>
+    </plurals>
+    <string name="history_alert_cert">Zertifikat läuft bald ab</string>
 </resources>

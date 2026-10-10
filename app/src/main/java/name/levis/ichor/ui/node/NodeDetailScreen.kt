@@ -68,6 +68,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import name.levis.ichor.TalosApp
 import name.levis.ichor.ui.live.LiveStatsTab
+import name.levis.ichor.ui.history.NodeMemoryHistory
+import name.levis.ichor.ui.history.NodeUptime
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ContainerInfo
 import name.levis.ichor.model.Feature
@@ -307,6 +309,7 @@ fun NodeDetailScreen(
             // Cgroups (admin configs) and Kubernetes pods (with an API server) may be hidden.
             val tabs = nodeTabs(canCgroups, canKubePods)
             val shownTab = shownNodeTab(tab, tabs)
+            NodeUptime(node, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             PrimaryScrollableTabRow(selectedTabIndex = tabs.indexOf(shownTab), edgePadding = 0.dp) {
                 AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.node_tab_services)) })
                 AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.node_tab_resources)) })
@@ -414,7 +417,7 @@ private fun ResourcesTab(
                 },
                 modifier = Modifier.weight(1f),
             ) {
-                ResourcesContent(s.data, clockState, pressure = onPressureDetails?.let { pressureState to it })
+                ResourcesContent(node, s.data, clockState, pressure = onPressureDetails?.let { pressureState to it })
             }
             DataFreshness(s, edgeToEdge = false)
         }
@@ -422,7 +425,7 @@ private fun ResourcesTab(
 }
 
 @Composable
-private fun ResourcesContent(r: NodeResources, clock: UiState<NodeTime>, pressure: Pair<UiState<CgroupReport>, () -> Unit>?) {
+private fun ResourcesContent(node: String, r: NodeResources, clock: UiState<NodeTime>, pressure: Pair<UiState<CgroupReport>, () -> Unit>?) {
     val uptime = if (r.bootTime > 0) localizedDuration(System.currentTimeMillis() / 1000 - r.bootTime) else "—"
     val cpu = if (r.cpuModel.isBlank()) {
         pluralStringResource(R.plurals.node_cpu_threads, r.cpuCount, r.cpuCount)
@@ -449,6 +452,7 @@ private fun ResourcesContent(r: NodeResources, clock: UiState<NodeTime>, pressur
                     val used = r.memTotal - r.memAvailable
                     InfoRow(stringResource(R.string.node_memory_used), "${formatBytes(used)} / ${formatBytes(r.memTotal)}")
                     UsageBar(usedFraction(r.memTotal, r.memAvailable), Modifier.padding(top = 4.dp))
+                    NodeMemoryHistory(node, Modifier.padding(top = 8.dp))
                 }
             }
         }
