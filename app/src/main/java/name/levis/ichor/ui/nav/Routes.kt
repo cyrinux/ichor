@@ -29,7 +29,10 @@ internal object Routes {
     const val FUNDING = "funding"
     const val INSIGHTS = "insights"
     const val APPS = "apps?attention={attention}"
-    const val METRICS = "metrics"
+    const val METRICS = "metrics?tab={tab}"
+
+    /** The Metrics screen on its panels, or on [tab] (ui.metrics.METRICS_TAB_MONITORING). */
+    fun metrics(tab: Int = 0) = "metrics?tab=$tab"
     const val ALERTS = "alerts?silence={silence}"
 
     /** [silence]: the fingerprint of an alert whose silence form opens (1 h, from its notification). */

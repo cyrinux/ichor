@@ -16,6 +16,7 @@ import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.PromLink
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.kubeFocus
 import name.levis.ichor.ui.alerts.AlertObjectLinks
@@ -32,14 +33,25 @@ import name.levis.ichor.ui.kubebrowser.KubeBrowserRoutes
 import name.levis.ichor.ui.kubebrowser.KubeLinks
 import name.levis.ichor.ui.kubebrowser.LocalKubeLinks
 import name.levis.ichor.ui.kubenodes.KubeNodesScreen
+import name.levis.ichor.ui.metrics.METRICS_TAB_MONITORING
 import name.levis.ichor.ui.netpol.NetworkPoliciesScreen
 import name.levis.ichor.ui.overview.KubeHomeViewModel
 
 /** The Kubernetes screens: nodes, workloads, apps, metrics, the checkup, flows, data services, pod shells. */
 internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks) {
     with(KubeBrowserRoutes) { kubeBrowserScreens(nav, kubeLinks) }
-    composable(Routes.METRICS) {
-        name.levis.ichor.ui.metrics.MetricsScreen(onBack = { nav.popBackStack() }, onSettings = { nav.navigate(Routes.SETTINGS) })
+    composable(Routes.METRICS, arguments = listOf(navArgument("tab") { type = NavType.IntType; defaultValue = 0 })) { entry ->
+        name.levis.ichor.ui.metrics.MetricsScreen(
+            onBack = { nav.popBackStack() },
+            onSettings = { nav.navigate(Routes.SETTINGS) },
+            onLink = { link ->
+                when (link) {
+                    is PromLink.Focus -> nav.navigate(Routes.workloads(link.focus))
+                    is PromLink.Object -> kubeLinks.onObject(link.ref)
+                }
+            },
+            initialTab = entry.arguments?.getInt("tab") ?: 0,
+        )
     }
     composable(Routes.ALERTS, arguments = listOf(navArgument("silence") { type = NavType.StringType; defaultValue = "" })) { entry ->
         AlertsScreen(
@@ -131,7 +143,13 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
     composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = { nav.navigate(Routes.AUDIT) }) }
     composable(Routes.AUDIT) { AuditScreen(onBack = { nav.popBackStack() }) }
-    composable(Routes.CHECKUP) { CheckupScreen(onBack = { nav.popBackStack() }, onOpenRelease = { ns, name -> nav.navigate(KubeBrowserRoutes.helmRelease(ns, name)) }) }
+    composable(Routes.CHECKUP) {
+        CheckupScreen(
+            onBack = { nav.popBackStack() },
+            onOpenRelease = { ns, name -> nav.navigate(KubeBrowserRoutes.helmRelease(ns, name)) },
+            onOpenMonitoring = { nav.navigate(Routes.metrics(METRICS_TAB_MONITORING)) },
+        )
+    }
     composable(
         Routes.FLOWS,
         arguments = listOf(
