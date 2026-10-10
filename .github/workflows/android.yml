@@ -8,6 +8,13 @@ on:
   # Artifacts are only uploaded then (github.ref is the caller's tag); pushes and PRs
   # just build.
   workflow_call:
+    secrets:
+      ICHOR_KEYSTORE_BASE64:
+        required: false
+      ICHOR_KEYSTORE_PASSWORD:
+        required: false
+      ICHOR_KEY_ALIAS:
+        required: false
 
 permissions:
   contents: read

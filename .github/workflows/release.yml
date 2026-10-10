@@ -11,9 +11,14 @@ permissions:
 
 jobs:
   android:
-    # No secrets passed: the signing key is in the `release` environment, which android.yml's
-    # job enters on tags, like ios.yml.
+    # The signing key is in the `release` environment, but a called workflow only sees the
+    # secrets its caller passes: without these, android.yml's job gets them empty even in
+    # that environment, and the APKs and App Bundle come out unsigned.
     uses: ./.github/workflows/android.yml
+    secrets:
+      ICHOR_KEYSTORE_BASE64: ${{ secrets.ICHOR_KEYSTORE_BASE64 }}
+      ICHOR_KEYSTORE_PASSWORD: ${{ secrets.ICHOR_KEYSTORE_PASSWORD }}
+      ICHOR_KEY_ALIAS: ${{ secrets.ICHOR_KEY_ALIAS }}
 
   ios:
     uses: ./.github/workflows/ios.yml
