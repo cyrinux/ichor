@@ -192,8 +192,8 @@ struct MultiNodeReviewSheet: View {
     }
 }
 
-/// A multi-node apply: every node's state as it goes, then how it ended. Leaving stops
-/// following; the nodes done keep the change.
+/// A multi-node apply: every node's state as it goes, then how it ended. The rollout is
+/// ConfigMultiJob's: it borrows background time, and a notification asks to come back.
 struct MultiApplyView: View {
     let nodes: [String]
     let edits: [ConfigEdit]
@@ -202,10 +202,13 @@ struct MultiApplyView: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    @State private var progress: MultiConfigProgress?
-    /// nil while running; then nil inside on success.
-    @State private var outcome: String??
-    @State private var task: Task<Void, Never>?
+    @State private var started = false
+    /// Refused before starting (another rollout runs, or no client).
+    @State private var refused: String?
+
+    private var job: ConfigMultiJob { ConfigMultiJob.shared }
+    private var progress: MultiConfigProgress? { job.progress }
+    private var outcome: String?? { refused.map { .some($0) } ?? job.outcome }
 
     var body: some View {
         NavigationStack {
@@ -227,7 +230,10 @@ struct MultiApplyView: View {
                             Image(systemName: outcome == nil ? "checkmark.seal.fill" : "xmark.octagon.fill")
                                 .foregroundStyle(outcome == nil ? Color.statusOK : Color.statusBad)
                         }
-                        Button("Done") { dismiss() }
+                        Button("Done") {
+                            job.clear()
+                            dismiss()
+                        }
                     }
                 }
             }
@@ -236,8 +242,10 @@ struct MultiApplyView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .interactiveDismissDisabled(outcome == nil)
-        .task { await run() }
-        .onDisappear { if outcome == nil { task?.cancel() } }
+        .task { start() }
+        .onChange(of: job.isActive) { _, active in
+            if !active, case .some(let error) = job.outcome { onOutcome(error != nil) }
+        }
     }
 
     private func row(_ n: MultiConfigNodeState) -> some View {
@@ -288,31 +296,22 @@ struct MultiApplyView: View {
         }
     }
 
-    private func run() async {
-        guard task == nil else { return }
-        guard let client = model.client else {
-            finish(String(localized: "The config could not be applied."))
+    /// Starts the rollout in ConfigMultiJob, unless one runs already.
+    private func start() {
+        guard !started else { return }
+        started = true
+        guard !job.isActive else {
+            refused = String(localized: "A config change is already being applied on several nodes: wait for it to end.")
+            onOutcome(true)
             return
         }
-        UIApplication.shared.isIdleTimerDisabled = true
-        let events = client.applyMachineConfigMulti(nodes: nodes, edits: edits, mode: mode)
-        let running = Task {
-            for await event in events {
-                switch event {
-                case .progress(let update): progress = update
-                case .done(let error): finish(error)
-                }
-            }
+        guard let client = model.client else {
+            refused = String(localized: "The config could not be applied.")
+            onOutcome(true)
+            return
         }
-        task = running
-        await running.value
-        UIApplication.shared.isIdleTimerDisabled = UpgradeJob.shared.isActive || MaintenanceJob.shared.isActive
-    }
-
-    private func finish(_ error: String?) {
-        outcome = .some(error)
-        onOutcome(error != nil)
-        announce(error ?? String(localized: "Every node has the change."))
+        job.clear()
+        job.start(client: client, nodes: nodes, edits: edits, mode: mode)
     }
 }
 

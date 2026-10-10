@@ -838,6 +838,12 @@
     <string name="machine_config_multi_state_failed">Failed</string>
     <string name="machine_config_multi_confirm_title">Apply the change to these nodes?</string>
     <string name="machine_config_multi_confirm_reboot">Each node applies the change and reboots, one after the other: the next one starts once the previous one is back.</string>
+    <string name="config_multi_notification_public">A config change is being applied to several nodes</string>
+    <string name="config_multi_notification_result_public">The config rollout ended</string>
+    <string name="config_multi_notification_title">Applying a config change on %1$s</string>
+    <string name="config_multi_notification_done">Config change applied on %1$s</string>
+    <string name="config_multi_notification_failed">The config rollout on %1$s stopped</string>
+    <string name="config_multi_already_running">A config change is already being applied on %1$s: wait for it to end.</string>
     <string name="machine_config_apply_applying">Applying the change…</string>
     <string name="machine_config_apply_rebooting">The node is rebooting…</string>
     <string name="machine_config_apply_waiting">Waiting for the node to come back…</string>
@@ -858,7 +864,15 @@
     <string name="machine_config_try_reverting">Reverting…</string>
     <string name="machine_config_keep">Keep the change</string>
     <string name="machine_config_revert_now">Revert now</string>
-    <string name="machine_config_try_leave_note">If you leave this screen or lose the connection, the node reverts by itself.</string>
+    <string name="machine_config_try_leave_note">You can leave this screen: the countdown goes on in a notification, with Keep. If the connection is lost, the node reverts by itself at the end.</string>
+    <string name="config_try_notification_public">A config change is being tried</string>
+    <string name="config_try_notification_result_public">The config try ended</string>
+    <string name="config_try_notification_title">Trying a config change on %1$s</string>
+    <string name="config_try_notification_reverts_at">Reverts by itself at %1$s unless you keep it.</string>
+    <string name="config_try_notification_kept">Config change kept on %1$s</string>
+    <string name="config_try_notification_reverted">Config change reverted on %1$s</string>
+    <string name="config_try_notification_failed">The config try on %1$s failed</string>
+    <string name="config_try_already_running">A config try is already running on %1$s: keep or revert it first.</string>
     <string name="machine_config_kept">The change is now permanent.</string>
     <string name="machine_config_reverted">The node is back on its previous config.</string>
     <string name="machine_config_remove_value_text">It is removed from the draft.</string>
@@ -3910,4 +3924,10 @@
     <string name="etcd_recover_uploaded">%1$s of %2$s uploaded</string>
     <string name="etcd_recover_done">etcd runs again with one member. Reset the other control planes so they join it.</string>
     <string name="etcd_recover_stopped">Recovery stopped</string>
+    <string name="kube_discover_signin_find">Sign in and find clusters</string>
+    <string name="kube_discover_google_body">Google lists the projects your account can see; Ichor reads their clusters.</string>
+    <string name="kube_discover_signin_first">Sign in first, then find clusters.</string>
+    <string name="kube_discover_scan">Scan credentials QR code</string>
+    <string name="kube_discover_scan_invalid">Scan a gcloud user credentials file or a service account key.</string>
+    <string name="kube_discover_credentials_warning">This file contains a refresh token or private key. Keep it private; anyone with it can access your Google account or service account.</string>
 </resources>

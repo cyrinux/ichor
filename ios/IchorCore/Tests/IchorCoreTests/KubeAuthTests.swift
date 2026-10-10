@@ -25,6 +25,17 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertTrue(kubeFieldsComplete(visible, values: ["gcpProjects": "sample-proj-a"]))
     }
 
+    func testCredentialImportRouting() throws {
+        for field in ["gcpUserCredentialsJson", "gcpServiceAccountJson"] {
+            let json = "{\"kind\":\"credentials\",\"provider\":\"gke\",\"field\":\"\(field)\"}"
+            XCTAssertTrue(try TalosJSON.decode(ImportTextRoute.self, from: json).isGkeCredential)
+        }
+        for json in ["{\"kind\":\"kubeconfig\"}", "{\"kind\":\"talosconfig\"}", "{\"kind\":\"unknown\"}",
+                     "{\"kind\":\"credentials\",\"provider\":\"gke\",\"field\":\"unknown\"}"] {
+            XCTAssertFalse(try TalosJSON.decode(ImportTextRoute.self, from: json).isGkeCredential)
+        }
+    }
+
     func testSignInRequiredReason() {
         let message = "kube-sign-in-required: sign in to this cluster (eks): the session expired"
         XCTAssertEqual(kubeSignInRequiredReason(message), "sign in to this cluster (eks): the session expired")

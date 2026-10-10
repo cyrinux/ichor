@@ -89,7 +89,10 @@ fun MachineConfigScreen(
     node: String,
     hostname: String,
     onBack: () -> Unit,
-    vm: MachineConfigViewModel = viewModel(key = "machineconfig-$node", factory = factory { MachineConfigViewModel(app.talosRepository, node) }),
+    vm: MachineConfigViewModel = viewModel(
+        key = "machineconfig-$node",
+        factory = factory { MachineConfigViewModel(app.talosRepository, node, hostname, app.configTryManager, app.configMultiManager) },
+    ),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val revealed by vm.revealed.collectAsStateWithLifecycle()
@@ -143,10 +146,10 @@ fun MachineConfigScreen(
 
     fun back() {
         when {
-            multi?.run?.finished == false -> Unit // a multi-node run too
+            multi?.run?.finished == false -> onBack() // a multi-node run goes on in its notification
             multi?.run != null -> vm.finishMulti()
             multi != null -> vm.closeMulti()
-            run is ConfigTryState.Running -> Unit // the try is followed to its end
+            run is ConfigTryState.Running -> onBack() // the try goes on in its notification
             run != null -> vm.finishTry()
             applying is ConfigApplyState.Running -> Unit // so is an apply
             applying != null -> vm.finishApply()
@@ -184,7 +187,7 @@ fun MachineConfigScreen(
                     }
                 },
                 navigationIcon = {
-                    val running = run is ConfigTryState.Running || applying is ConfigApplyState.Running || multi?.run?.finished == false
+                    val running = applying is ConfigApplyState.Running
                     if (!running) BackButton(::back)
                 },
                 actions = {

@@ -841,6 +841,12 @@
     <string name="machine_config_multi_state_failed">Échec</string>
     <string name="machine_config_multi_confirm_title">Appliquer la modification à ces nœuds ?</string>
     <string name="machine_config_multi_confirm_reboot">Chaque nœud applique la modification et redémarre, l\'un après l\'autre : le suivant commence quand le précédent est revenu.</string>
+    <string name="config_multi_notification_public">Une modification de config est appliquée à plusieurs nœuds</string>
+    <string name="config_multi_notification_result_public">Le déploiement de la config est terminé</string>
+    <string name="config_multi_notification_title">Application d\'une modification de config sur %1$s</string>
+    <string name="config_multi_notification_done">Modification de config appliquée sur %1$s</string>
+    <string name="config_multi_notification_failed">Le déploiement de la config sur %1$s s\'est arrêté</string>
+    <string name="config_multi_already_running">Une modification de config est déjà en cours sur %1$s : attendez qu\'elle se termine.</string>
     <string name="machine_config_apply_applying">Application de la modification…</string>
     <string name="machine_config_apply_rebooting">Le nœud redémarre…</string>
     <string name="machine_config_apply_waiting">En attente du retour du nœud…</string>
@@ -861,7 +867,15 @@
     <string name="machine_config_try_reverting">Retour à la configuration précédente…</string>
     <string name="machine_config_keep">Conserver la modification</string>
     <string name="machine_config_revert_now">Annuler maintenant</string>
-    <string name="machine_config_try_leave_note">Si vous quittez cet écran ou perdez la connexion, le nœud revient de lui-même en arrière.</string>
+    <string name="machine_config_try_leave_note">Vous pouvez quitter cet écran : le compte à rebours continue dans une notification, avec Conserver. Si la connexion est perdue, le nœud revient en arrière tout seul à la fin.</string>
+    <string name="config_try_notification_public">Une modification de config est en test</string>
+    <string name="config_try_notification_result_public">Le test de config est terminé</string>
+    <string name="config_try_notification_title">Test d\'une modification de config sur %1$s</string>
+    <string name="config_try_notification_reverts_at">Revient en arrière tout seul à %1$s si vous ne la conservez pas.</string>
+    <string name="config_try_notification_kept">Modification de config conservée sur %1$s</string>
+    <string name="config_try_notification_reverted">Modification de config annulée sur %1$s</string>
+    <string name="config_try_notification_failed">Le test de config sur %1$s a échoué</string>
+    <string name="config_try_already_running">Un test de config est déjà en cours sur %1$s : conservez-le ou annulez-le d\'abord.</string>
     <string name="machine_config_kept">La modification est maintenant permanente.</string>
     <string name="machine_config_reverted">Le nœud est revenu à sa configuration précédente.</string>
     <string name="machine_config_remove_value_text">Il est supprimé du brouillon.</string>
@@ -3910,4 +3924,10 @@
     <string name="etcd_recover_uploaded">%1$s sur %2$s envoyés</string>
     <string name="etcd_recover_done">etcd tourne de nouveau avec un membre. Réinitialisez les autres control planes pour qu\'ils le rejoignent.</string>
     <string name="etcd_recover_stopped">Restauration arrêtée</string>
+    <string name="kube_discover_signin_find">Se connecter et trouver les clusters</string>
+    <string name="kube_discover_google_body">Google liste les projets que votre compte peut voir ; Ichor lit leurs clusters.</string>
+    <string name="kube_discover_signin_first">Connectez-vous d’abord, puis cherchez les clusters.</string>
+    <string name="kube_discover_scan">Scanner le code QR des identifiants</string>
+    <string name="kube_discover_scan_invalid">Scannez un fichier d’identifiants utilisateur gcloud ou une clé de compte de service.</string>
+    <string name="kube_discover_credentials_warning">Ce fichier contient un jeton de renouvellement ou une clé privée. Gardez-le confidentiel : quiconque le possède peut accéder à votre compte Google ou compte de service.</string>
 </resources>

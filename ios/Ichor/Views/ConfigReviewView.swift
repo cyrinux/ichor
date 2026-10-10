@@ -80,7 +80,8 @@ struct ConfigReviewView: View {
             }
         }
         .fullScreenCover(isPresented: $trying, onDismiss: tryClosed) {
-            ConfigTryView(node: node, hostname: hostname, base: base, draft: draft, timeoutSeconds: timeout) { outcome in
+            ConfigTryView(node: node, hostname: hostname,
+                          request: ConfigTryRequest(base: base, draft: draft, timeoutSeconds: timeout)) { outcome in
                 if case .failed = outcome { failed = true }
             }
         }

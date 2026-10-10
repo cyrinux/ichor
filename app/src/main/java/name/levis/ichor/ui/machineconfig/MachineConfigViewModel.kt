@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import name.levis.ichor.R
+import name.levis.ichor.data.ConfigTryManager
+import name.levis.ichor.data.ConfigMultiManager
 import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ClusterOverview
@@ -24,7 +27,6 @@ import name.levis.ichor.model.ConfigEdit
 import name.levis.ichor.model.ConfigPreview
 import name.levis.ichor.model.ConfigSyntaxError
 import name.levis.ichor.model.ConfigTree
-import name.levis.ichor.model.ConfigTryCommand
 import name.levis.ichor.model.ConfigTryState
 import name.levis.ichor.model.after
 import name.levis.ichor.ui.LoadingViewModel
@@ -90,7 +92,15 @@ private const val DESCRIBE_DEBOUNCE_MS = 400L
  * The node's machine config (os:admin): redacted unless the user asked to reveal secrets,
  * and editable as a draft that is tried on the node with an automatic revert.
  */
-class MachineConfigViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<String>() {
+class MachineConfigViewModel(
+    private val talos: TalosRepository,
+    private val node: String,
+    private val hostname: String,
+    /** Runs the try app-wide: its countdown and Keep outlive this screen. */
+    private val tries: ConfigTryManager,
+    /** Runs a multi-node apply app-wide: it outlives this screen. */
+    private val multiRuns: ConfigMultiManager,
+) : LoadingViewModel<String>() {
     private val _revealed = MutableStateFlow(false)
     val revealed: StateFlow<Boolean> = _revealed.asStateFlow()
 
@@ -102,9 +112,6 @@ class MachineConfigViewModel(private val talos: TalosRepository, private val nod
     /** Refused edits, to show once. */
     val messages: SharedFlow<UiText> = _messages.asSharedFlow()
 
-    // Keep and Revert are only offered once the node holds the change, when the run listens.
-    private val commands = MutableSharedFlow<ConfigTryCommand>(extraBufferCapacity = 1)
-
     /** The Talos version whose schema describes the tree; empty until known (or when it cannot be). */
     private var schemaVersion = ""
     private var editWhenLoaded = false
@@ -115,6 +122,20 @@ class MachineConfigViewModel(private val talos: TalosRepository, private val nod
     private var multiJob: Job? = null
 
     init {
+        // A try of this node is shown from the app-wide run, also when the screen is reopened.
+        viewModelScope.launch {
+            tries.current.collect { run ->
+                if (run?.node == node) _editor.update { it.copy(run = run.state) }
+            }
+        }
+        // A multi-node run started from this node's screen shows from the app-wide run, also when
+        // the screen is reopened while it goes on.
+        viewModelScope.launch {
+            multiRuns.current.collect { state ->
+                if (state?.origin != node) return@collect
+                _editor.update { it.copy(multi = (it.multi ?: MultiConfigState(picking = false, cluster = state.hostname)).copy(run = state.run)) }
+            }
+        }
         // The schema is downloaded once per Talos version; the tree shows without it meanwhile.
         viewModelScope.launch {
             val status = runCatching { talos.machineConfigSchema(node) }.getOrNull() ?: return@launch
@@ -216,25 +237,20 @@ class MachineConfigViewModel(private val talos: TalosRepository, private val nod
         _editor.update { it.copy(review = null) }
     }
 
-    /** Applies the draft in try mode: the node reverts after [timeoutSeconds] unless [keep] is called. */
+    /**
+     * Applies the draft in try mode: the node reverts after [timeoutSeconds] unless [keep] is
+     * called. Refused while another try runs (one at a time, across nodes).
+     */
     fun startTry(timeoutSeconds: Int) {
         val editor = _editor.value
         val draft = editor.draft ?: return
         if (trying?.isActive == true || editor.review !is UiState.Loaded) return
-        _editor.update { it.copy(run = ConfigTryState.Running(ConfigTryState.APPLYING)) }
-        trying = viewModelScope.launch {
-            try {
-                talos.tryMachineConfig(node, editor.base, draft, timeoutSeconds, commands).collect { event ->
-                    _editor.update { it.copy(run = it.run.after(event)) }
-                }
-                // The run always ends with how it ended; without it, nothing can be said.
-                _editor.update { if (it.run is ConfigTryState.Running) it.copy(run = ConfigTryState.Failed("")) else it }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                _editor.update { it.copy(run = ConfigTryState.Failed(e.userMessage())) }
-            }
+        tries.current.value?.takeIf { it.running }?.let { other ->
+            _messages.tryEmit(UiText.Res(R.string.config_try_already_running, other.hostname))
+            return
         }
+        tries.dismiss() // a finished try of another node is not shown any more
+        tries.start(node, hostname, editor.base, draft, timeoutSeconds)
     }
 
     /** Applies the draft for good in [mode] (StartConfigApply). */
@@ -313,22 +329,16 @@ class MachineConfigViewModel(private val talos: TalosRepository, private val nod
     /** Applies the edits to the nodes the preview would change, one after the other. */
     fun startMultiApply(mode: ConfigApplyMode) {
         val editor = _editor.value
-        val preview = (editor.multi?.preview as? UiState.Loaded)?.data ?: return
+        val multi = editor.multi ?: return
+        val preview = (multi.preview as? UiState.Loaded)?.data ?: return
         val nodes = preview.changing.map { it.node }
-        if (nodes.isEmpty() || trying?.isActive == true) return
-        updateMulti { it.copy(run = MultiApplyRun(mode)) }
-        trying = viewModelScope.launch {
-            try {
-                talos.applyMachineConfigMulti(nodes, editor.edits, mode).collect { event ->
-                    updateMulti { m -> m.copy(run = m.run?.after(event)) }
-                }
-                updateMulti { m -> m.run?.takeIf { !it.finished }?.let { m.copy(run = it.copy(finished = true, error = "")) } ?: m }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                updateMulti { m -> m.copy(run = m.run?.copy(finished = true, error = e.userMessage())) }
-            }
+        if (nodes.isEmpty()) return
+        multiRuns.current.value?.takeIf { it.running }?.let { other ->
+            _messages.tryEmit(UiText.Res(R.string.config_multi_already_running, other.hostname))
+            return
         }
+        multiRuns.dismiss() // a finished run started elsewhere is not shown any more
+        multiRuns.start(node, multi.cluster.ifEmpty { node }, nodes, editor.edits, mode)
     }
 
     /** Back from picking or from the per-node review: to this node's review. */
@@ -345,6 +355,7 @@ class MachineConfigViewModel(private val talos: TalosRepository, private val nod
     fun finishMulti() {
         val run = _editor.value.multi?.run ?: return
         if (!run.finished) return
+        multiRuns.dismiss()
         if (run.error == null) {
             _editor.update { ConfigEditorState(tree = it.tree, treeStale = true) }
             refresh(reset = true)
@@ -357,25 +368,20 @@ class MachineConfigViewModel(private val talos: TalosRepository, private val nod
         _editor.update { state -> state.multi?.let { state.copy(multi = change(it)) } ?: state }
     }
 
-    fun keep() = command(ConfigTryCommand.KEEP, ConfigTryState.KEEPING)
+    fun keep() = tries.keep()
 
-    fun revertNow() = command(ConfigTryCommand.REVERT, ConfigTryState.REVERTING)
-
-    /** Sends [command] once: the screen shows [phase] at once, so a second tap cannot follow. */
-    private fun command(command: ConfigTryCommand, phase: String) {
-        val run = _editor.value.run as? ConfigTryState.Running ?: return
-        if (!run.trying) return
-        _editor.update { it.copy(run = run.copy(phase = phase, message = "")) }
-        commands.tryEmit(command)
-    }
+    fun revertNow() = tries.revert()
 
     /**
      * Leaves a finished try. Kept or reverted: back to the node's config, read again. Failed:
      * back to the draft, which is still there to fix or try again.
      */
     fun finishTry() {
-        when (_editor.value.run) {
-            null, is ConfigTryState.Running -> return
+        val run = _editor.value.run
+        if (run == null || run is ConfigTryState.Running) return
+        tries.dismiss()
+        when (run) {
+            is ConfigTryState.Running -> Unit
             is ConfigTryState.Failed -> _editor.update { it.copy(run = null, review = null) }
             ConfigTryState.Kept, ConfigTryState.Reverted -> {
                 _editor.update { ConfigEditorState(tree = it.tree, treeStale = true) }

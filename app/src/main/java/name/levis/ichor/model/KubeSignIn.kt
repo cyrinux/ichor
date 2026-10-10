@@ -189,15 +189,13 @@ fun discoveryFields(byProvider: Map<String, List<String>>): Map<DiscoveryProvide
  * lists ([byProvider]; GKE: a service account key or gcloud user credentials), else its one set.
  */
 fun discoveryOptions(byProvider: Map<String, List<List<String>>>, fields: Map<DiscoveryProvider, List<String>>): Map<DiscoveryProvider, List<List<String>>> =
-    fields.mapValues { (p, set) ->
-        byProvider[p.id]?.filter { it.isNotEmpty() && !needsDiscoverySignIn(it) }?.takeIf { it.isNotEmpty() } ?: listOf(set)
-    }
+    fields.mapValues { (p, set) -> byProvider[p.id]?.filter { it.isNotEmpty() }?.takeIf { it.isNotEmpty() } ?: listOf(set) }
 
-/**
- * A credential set that signs in in the browser before discovery (the OAuth client, Sign in
- * with Google): the discovery card does not run that sign-in yet, so it is not offered.
- */
-private fun needsDiscoverySignIn(set: List<String>): Boolean = GCP_OAUTH_CLIENT_ID in set || GCP_GOOGLE_SIGN_IN in set
+/** A discovery credential set that signs in in the browser first (the organisation's OAuth client). */
+fun discoveryNeedsSignIn(fields: List<String>): Boolean = GCP_OAUTH_CLIENT_ID in fields
+
+/** A discovery credential set that is Google's own sign-in (Play build): a button, nothing to type but the projects. */
+fun discoveryUsesGoogle(fields: List<String>): Boolean = GCP_GOOGLE_SIGN_IN in fields
 
 /**
  * The stored names of the contexts an import added: names that were not stored [before] and

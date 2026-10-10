@@ -478,6 +478,16 @@ when no such label is set, as on bare metal.
 | `doctl … exec-credential` | A DigitalOcean API token (short-lived cluster credentials from it) |
 | `rancher token` | A Rancher API key |
 
+**GKE credentials by QR:** scan a gcloud ADC file from the import screen or tap
+**Scan credentials QR code** in GKE discovery. It opens discovery with the credential
+filled in; choose projects if needed, then tap **Find clusters**. Google user,
+workforce identity session and service account files are supported. Keep the QR
+private: it contains a refresh token or private key.
+
+```sh
+qrencode -t ansiutf8 < ~/.config/gcloud/application_default_credentials.json
+```
+
 **GKE with your organisation's OAuth client**: in the Google Cloud console (APIs & Services),
 1. set the OAuth consent screen to **Internal** (no Google verification needed),
 2. create an OAuth client ID of type **Desktop app**,
@@ -493,11 +503,12 @@ shows a sign-in code to paste. The code is useless without the key only the app 
 
 **Add from a cloud account** (on the add screen) lists the clusters of an AWS, Google Cloud,
 Azure, DigitalOcean or Rancher account and adds the ones you pick, signed in with the same
-credentials. For Google Cloud that is a service account key or the gcloud user credentials of
-your own account. On iOS, you can also use **Sign in with Google** (when the build carries
-Ichor's Google client) or **Your organisation's OAuth client**: sign in once in the browser,
-then the clusters you add reuse that session. For a Google user account, the app looks
-through every project you can see (or the project IDs you enter). A Talos cluster can also use one of these kubeconfig clusters for its Kubernetes
+credentials. For Google Cloud that is a service account key, the gcloud user credentials of
+your own account, **Sign in with Google** (Play build, and iOS builds that carry Ichor's Google
+client), or your organisation's OAuth client in the browser, with no file to paste: the app then
+looks through every project you can see (or the project IDs you enter), and the clusters you add
+reuse that sign-in without a second prompt.
+A Talos cluster can also use one of these kubeconfig clusters for its Kubernetes
 screens (cluster menu → **Kubernetes access**): your own identity and RBAC instead of the
 admin kubeconfig, which also works with an `os:reader` talosconfig.
 
@@ -621,11 +632,15 @@ a fresh install. Backups move between Android and iOS.
     | Apply and reboot now | Applied, then the node reboots; you type its hostname first. |
 
   - **Changes that need a reboot:** they offer only the last two modes.
+  - **A try keeps running in the background:** leave the screen and the countdown goes on in a notification, with **Keep** and **Revert now**.
+    - **App lock:** with it on, Keep opens the app first.
+    - **On iOS:** the background time is short. Once iOS suspends Ichor, the node reverts by itself at the deadline, and the notification says so.
   - **The same change on several nodes ("Also apply to other nodes…"):**
     - **Preview:** the field edits are replayed on each picked node's own config, and you see each node's diff first. A node the edits do not fit is skipped.
     - **Run:** one confirmation for all, typed with the cluster's name. Nodes are applied one after the other, workers first and control planes last, and the first failure stops the rest.
     - **Reboot mode:** each node is back before the next starts, and etcd must be healthy before a control plane reboots.
     - **Try mode:** for one node only.
+    - **In the background:** on Android the rollout goes on in a notification, node by node, after you leave the app. On iOS it runs while iOS allows, and a notification asks you to come back.
 - **App lock (Settings → Security):**
   - **Methods:** fingerprint, with the device PIN, pattern or password as fallback; or a
     **security key** (below).

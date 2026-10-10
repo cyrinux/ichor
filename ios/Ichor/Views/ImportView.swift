@@ -15,6 +15,8 @@ struct ImportView: View {
     @Environment(AppModel.self) private var model
     /// The paste or QR sheet, when open.
     @State private var source: Source?
+    @State private var sourceDismissing = false
+    @State private var pendingDiscovery: DiscoveryStart?
     @State private var pasted = ""
     @State private var showingImporter = false
     @State private var preview: Preview?
@@ -52,6 +54,7 @@ struct ImportView: View {
 
     struct DiscoveryStart: Identifiable {
         let provider: String
+        var initialValues: [String: String] = [:]
         var id: String { provider }
     }
 
@@ -83,9 +86,15 @@ struct ImportView: View {
             OmniDiscoveryView { talosconfig in validate(talosconfig) }
         }
         .sheet(item: $discovery) { start in
-            CloudDiscoveryView(provider: start.provider) { found in validate(found.kubeconfig, discovered: found) }
+            CloudDiscoveryView(provider: start.provider, initialValues: start.initialValues) { found in validate(found.kubeconfig, discovered: found) }
         }
-        .sheet(item: $source) { source in
+        .sheet(item: $source, onDismiss: {
+            sourceDismissing = false
+            if let start = pendingDiscovery {
+                pendingDiscovery = nil
+                discovery = start
+            }
+        }) { source in
             if source == .form {
                 // A talosconfig built from what is typed, previewed like an imported one.
                 TalosFormView { yaml in validate(yaml) }
@@ -203,6 +212,7 @@ struct ImportView: View {
                             .textInputAutocapitalization(.never)
                             .border(.quaternary)
                         Button("Validate") {
+                            sourceDismissing = true
                             self.source = nil
                             validate(pasted)
                         }
@@ -212,6 +222,7 @@ struct ImportView: View {
                     .padding()
                 case .qr:
                     QRScannerView { text in
+                        sourceDismissing = true
                         self.source = nil
                         validate(text)
                     }
@@ -253,6 +264,13 @@ struct ImportView: View {
             defer { busy = false }
             do {
                 let yaml = try await TalosClient.decodeImportText(text)
+                let route = try await TalosClient.classifyImportText(yaml)
+                if route.isGkeCredential {
+                    let start = DiscoveryStart(provider: "gke", initialValues: [route.field: yaml])
+                    if sourceDismissing { pendingDiscovery = start } else { discovery = start }
+                    error = nil
+                    return
+                }
                 if await TalosClient.isKubeconfig(yaml) {
                     let summary = try await TalosClient.parseKubeconfig(yaml)
                     let conflicts = try await TalosClient.kubeImportConflicts(

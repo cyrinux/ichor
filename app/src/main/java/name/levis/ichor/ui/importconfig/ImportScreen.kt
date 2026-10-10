@@ -137,7 +137,15 @@ fun ImportScreen(
                     onConfirm = vm::confirm,
                     onCancel = vm::reset,
                 )
-                is ImportState.Discover -> DiscoverCard(s, onDiscover = vm::discover, onCancel = vm::reset)
+                is ImportState.Discover -> DiscoverCard(
+                    s,
+                    onDiscover = vm::discover,
+                    onDiscoverWithSignIn = vm::discoverWithSignIn,
+                    onCancelSignIn = vm::cancelDiscoverSignIn,
+                    onSignInCode = vm::completeSignInWithCode,
+                    onFailed = vm::discoverFailed,
+                    onCancel = vm::reset,
+                )
                 is ImportState.Omni -> OmniCard(s, onAccount = vm::omniAccount, onServiceAccount = vm::omniServiceAccount, onCancel = vm::reset)
                 ImportState.Validating, ImportState.Saved -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                     CircularProgressIndicator()

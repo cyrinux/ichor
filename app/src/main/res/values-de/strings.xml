@@ -834,6 +834,12 @@
     <string name="machine_config_multi_state_failed">Fehlgeschlagen</string>
     <string name="machine_config_multi_confirm_title">Die Änderung auf diese Nodes anwenden?</string>
     <string name="machine_config_multi_confirm_reboot">Jeder Node wendet die Änderung an und startet neu, einer nach dem anderen: Der nächste beginnt, sobald der vorige zurück ist.</string>
+    <string name="config_multi_notification_public">Eine Konfigurationsänderung wird auf mehrere Nodes angewendet</string>
+    <string name="config_multi_notification_result_public">Das Ausrollen der Konfiguration ist beendet</string>
+    <string name="config_multi_notification_title">Konfigurationsänderung wird auf %1$s angewendet</string>
+    <string name="config_multi_notification_done">Konfigurationsänderung auf %1$s angewendet</string>
+    <string name="config_multi_notification_failed">Das Ausrollen der Konfiguration auf %1$s wurde angehalten</string>
+    <string name="config_multi_already_running">Auf %1$s wird schon eine Konfigurationsänderung angewendet: Warte, bis sie fertig ist.</string>
     <string name="machine_config_apply_applying">Änderung wird angewendet…</string>
     <string name="machine_config_apply_rebooting">Der Node startet neu…</string>
     <string name="machine_config_apply_waiting">Warten, bis der Node zurück ist…</string>
@@ -854,7 +860,15 @@
     <string name="machine_config_try_reverting">Wird zurückgesetzt…</string>
     <string name="machine_config_keep">Änderung behalten</string>
     <string name="machine_config_revert_now">Jetzt zurücksetzen</string>
-    <string name="machine_config_try_leave_note">Wenn du diesen Bildschirm verlässt oder die Verbindung verlierst, setzt sich der Node selbst zurück.</string>
+    <string name="machine_config_try_leave_note">Du kannst diesen Bildschirm verlassen: Der Countdown läuft in einer Benachrichtigung weiter, mit Behalten. Bricht die Verbindung ab, setzt der Node am Ende selbst zurück.</string>
+    <string name="config_try_notification_public">Eine Konfigurationsänderung wird getestet</string>
+    <string name="config_try_notification_result_public">Der Konfigurationstest ist beendet</string>
+    <string name="config_try_notification_title">Konfigurationsänderung wird auf %1$s getestet</string>
+    <string name="config_try_notification_reverts_at">Setzt sich um %1$s selbst zurück, wenn du sie nicht behältst.</string>
+    <string name="config_try_notification_kept">Konfigurationsänderung auf %1$s behalten</string>
+    <string name="config_try_notification_reverted">Konfigurationsänderung auf %1$s zurückgesetzt</string>
+    <string name="config_try_notification_failed">Der Konfigurationstest auf %1$s ist fehlgeschlagen</string>
+    <string name="config_try_already_running">Auf %1$s läuft schon ein Konfigurationstest: Behalte ihn oder setze ihn zuerst zurück.</string>
     <string name="machine_config_kept">Die Änderung ist jetzt dauerhaft.</string>
     <string name="machine_config_reverted">Der Node nutzt wieder seine vorherige Konfiguration.</string>
     <string name="machine_config_remove_value_text">Es wird aus dem Entwurf entfernt.</string>
@@ -3902,4 +3916,10 @@
     <string name="etcd_recover_uploaded">%1$s von %2$s hochgeladen</string>
     <string name="etcd_recover_done">etcd läuft wieder mit einem Mitglied. Setze die anderen Control Planes zurück, damit sie beitreten.</string>
     <string name="etcd_recover_stopped">Wiederherstellung gestoppt</string>
+    <string name="kube_discover_signin_find">Anmelden und Cluster suchen</string>
+    <string name="kube_discover_google_body">Google listet die Projekte auf, die Ihr Konto sehen kann; Ichor liest deren Cluster.</string>
+    <string name="kube_discover_signin_first">Melden Sie sich zuerst an und suchen Sie dann die Cluster.</string>
+    <string name="kube_discover_scan">QR-Code der Anmeldedaten scannen</string>
+    <string name="kube_discover_scan_invalid">Scanne eine gcloud-Datei mit Nutzeranmeldedaten oder einen Dienstkontoschlüssel.</string>
+    <string name="kube_discover_credentials_warning">Diese Datei enthält ein Aktualisierungstoken oder einen privaten Schlüssel. Halte sie geheim; wer sie besitzt, kann auf dein Google-Konto oder Dienstkonto zugreifen.</string>
 </resources>

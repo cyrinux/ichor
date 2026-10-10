@@ -906,6 +906,12 @@
     <string name="machine_config_multi_state_failed">Помилка</string>
     <string name="machine_config_multi_confirm_title">Застосувати зміну до цих вузлів?</string>
     <string name="machine_config_multi_confirm_reboot">Кожен вузол застосовує зміну й перезавантажується по черзі: наступний починає, щойно попередній повернувся.</string>
+    <string name="config_multi_notification_public">Зміна конфігурації застосовується до кількох вузлів</string>
+    <string name="config_multi_notification_result_public">Розгортання конфігурації завершено</string>
+    <string name="config_multi_notification_title">Застосування зміни конфігурації на %1$s</string>
+    <string name="config_multi_notification_done">Зміну конфігурації застосовано на %1$s</string>
+    <string name="config_multi_notification_failed">Розгортання конфігурації на %1$s зупинено</string>
+    <string name="config_multi_already_running">На %1$s уже застосовується зміна конфігурації: дочекайтеся завершення.</string>
     <string name="machine_config_apply_applying">Застосування зміни…</string>
     <string name="machine_config_apply_rebooting">Вузол перезавантажується…</string>
     <string name="machine_config_apply_waiting">Очікування повернення вузла…</string>
@@ -926,7 +932,15 @@
     <string name="machine_config_try_reverting">Повернення…</string>
     <string name="machine_config_keep">Зберегти зміну</string>
     <string name="machine_config_revert_now">Повернути зараз</string>
-    <string name="machine_config_try_leave_note">Якщо ви залишите цей екран або втратите з\'єднання, вузол сам поверне попередню конфігурацію.</string>
+    <string name="machine_config_try_leave_note">Можна вийти з цього екрана: відлік триває в сповіщенні, з кнопкою «Залишити». Якщо з\'єднання зникне, вузол сам повернеться наприкінці.</string>
+    <string name="config_try_notification_public">Тестується зміна конфігурації</string>
+    <string name="config_try_notification_result_public">Тест конфігурації завершено</string>
+    <string name="config_try_notification_title">Тестування зміни конфігурації на %1$s</string>
+    <string name="config_try_notification_reverts_at">Сама повернеться о %1$s, якщо ви її не залишите.</string>
+    <string name="config_try_notification_kept">Зміну конфігурації залишено на %1$s</string>
+    <string name="config_try_notification_reverted">Зміну конфігурації скасовано на %1$s</string>
+    <string name="config_try_notification_failed">Тест конфігурації на %1$s не вдався</string>
+    <string name="config_try_already_running">На %1$s уже триває тест конфігурації: спершу залиште або скасуйте його.</string>
     <string name="machine_config_kept">Зміна тепер постійна.</string>
     <string name="machine_config_reverted">Вузол повернувся до попередньої конфігурації.</string>
     <string name="machine_config_remove_value_text">Його буде вилучено з чернетки.</string>
@@ -4144,4 +4158,10 @@
     <string name="etcd_recover_uploaded">Вивантажено %1$s з %2$s</string>
     <string name="etcd_recover_done">etcd знову працює з одним учасником. Скиньте інші control plane, щоб вони приєдналися.</string>
     <string name="etcd_recover_stopped">Відновлення зупинено</string>
+    <string name="kube_discover_signin_find">Увійти й знайти кластери</string>
+    <string name="kube_discover_google_body">Google показує проєкти, які бачить ваш обліковий запис; Ichor читає їхні кластери.</string>
+    <string name="kube_discover_signin_first">Спершу увійдіть, потім шукайте кластери.</string>
+    <string name="kube_discover_scan">Сканувати QR-код облікових даних</string>
+    <string name="kube_discover_scan_invalid">Скануйте файл облікових даних користувача gcloud або ключ сервісного облікового запису.</string>
+    <string name="kube_discover_credentials_warning">Цей файл містить токен оновлення або приватний ключ. Зберігайте його в таємниці: кожен, хто його має, може отримати доступ до вашого облікового запису Google або сервісного облікового запису.</string>
 </resources>
