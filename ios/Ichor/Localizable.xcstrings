@@ -1,6 +1,146 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "OAuth client ID" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID client OAuth"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID de cliente OAuth"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth-Client-ID"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID client OAuth"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID клієнта OAuth"
+          }
+        }
+      }
+    },
+    "OAuth client secret" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret client OAuth"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secreto de cliente OAuth"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth-Client-Secret"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segreto client OAuth"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Секрет клієнта OAuth"
+          }
+        }
+      }
+    },
+    "Your organisation's OAuth client" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le client OAuth de votre organisation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El cliente OAuth de tu organización"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth-Client deiner Organisation"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il client OAuth della tua organizzazione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth-клієнт вашої організації"
+          }
+        }
+      }
+    },
+    "Ask your Google Cloud admin for a Desktop app OAuth client (APIs & Services → Credentials) with an Internal consent screen. Sign in then opens your Google account in the browser." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demandez à l'administrateur Google Cloud un client OAuth de type Application de bureau (API et services → Identifiants) avec un écran de consentement Interne. Se connecter ouvre ensuite votre compte Google dans le navigateur."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pide al administrador de Google Cloud un cliente OAuth de tipo Aplicación de escritorio (APIs y servicios → Credenciales) con una pantalla de consentimiento Interna. Iniciar sesión abre después tu cuenta de Google en el navegador."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte deine Google-Cloud-Administration um einen OAuth-Client vom Typ Desktop-App (APIs & Dienste → Anmeldedaten) mit internem Zustimmungsbildschirm. Anmelden öffnet dann dein Google-Konto im Browser."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiedi all'amministratore Google Cloud un client OAuth di tipo App desktop (API e servizi → Credenziali) con una schermata di consenso Interna. Accedi apre poi il tuo account Google nel browser."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попросіть адміністратора Google Cloud створити OAuth-клієнт типу «Програма для комп’ютера» (API та сервіси → Облікові дані) з внутрішнім екраном згоди. Вхід відкриє ваш обліковий запис Google у браузері."
+          }
+        }
+      }
+    },
     "Watch node storage" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -3334,6 +3334,10 @@
     <string name="kube_field_gcp_service_account">Ключ сервісного облікового запису (JSON)</string>
     <string name="kube_field_gcp_user_credentials">Облікові дані користувача gcloud (application_default_credentials.json)</string>
     <string name="kube_field_gcp_projects">ID проєктів</string>
+    <string name="kube_field_gcp_oauth_client_id">ID клієнта OAuth</string>
+    <string name="kube_field_gcp_oauth_client_secret">Секрет клієнта OAuth</string>
+    <string name="kube_signin_option_gcp_oauth">OAuth-клієнт вашої організації</string>
+    <string name="kube_signin_gcp_oauth_hint">Попросіть адміністратора Google Cloud створити OAuth-клієнт типу «Програма для комп’ютера» (API та сервіси → Облікові дані) з внутрішнім екраном згоди. Вхід відкриє ваш обліковий запис Google у браузері.</string>
     <string name="kube_discover_gcp_projects_hint">Залиште порожнім, щоб шукати в усіх проєктах, які бачить ваш обліковий запис; укажіть ID проєктів, щоб швидше працювати у великій організації.</string>
     <string name="kube_signin_option_gcp_service_account">Ключ сервісного облікового запису</string>
     <string name="kube_signin_option_gcp_user">Облікові дані користувача gcloud</string>
