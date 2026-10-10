@@ -90,7 +90,10 @@ internal fun DiscoverCard(
             }
         }
         CredentialFields(fields, values, onValue = { name, value -> values[name] = value }, enabled = !state.running)
-        if (GCP_USER_CREDENTIALS in fields) MutedText(stringResource(R.string.kube_signin_gcp_user_hint))
+        if (GCP_USER_CREDENTIALS in fields) {
+            MutedText(stringResource(R.string.kube_signin_gcp_user_hint))
+            MutedText(stringResource(R.string.kube_signin_gcp_workforce_hint))
+        }
         if (GCP_PROJECTS in fields) MutedText(stringResource(R.string.kube_discover_gcp_projects_hint))
         MutedText(stringResource(R.string.kube_discover_least_privilege))
         state.error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
