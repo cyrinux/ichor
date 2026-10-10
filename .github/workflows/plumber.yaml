@@ -1,0 +1,17 @@
+name: Plumber
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  plumber:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: getplumber/plumber@a7fa2feca21bd02c21c2e45d87e352b5ff7e7f28 # v0.3.43
