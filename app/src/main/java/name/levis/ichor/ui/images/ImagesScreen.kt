@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.images
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,6 +9,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -57,6 +62,7 @@ import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SearchField
+import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.util.formatBytes
@@ -92,6 +98,21 @@ fun ImagesScreen(
     reportOpen?.let { (report, json) ->
         ImageScanReportOpen(report, json, "$hostname-system", systemVm::export, onDismiss = { reportOpen = null })
     }
+    var menuOpen by remember { mutableStateOf(false) }
+    var pullAsked by remember { mutableStateOf(false) }
+    var pullShown by remember { mutableStateOf(false) }
+    val pulls = (LocalContext.current.applicationContext as TalosApp).imagePullManager
+    if (pullAsked) {
+        ImagePullDialog(
+            onPull = { image, namespace ->
+                pullAsked = false
+                pulls.start(image, namespace)
+                pullShown = true // shows the followed pull: this one, or one started before
+            },
+            onDismiss = { pullAsked = false },
+        )
+    }
+    if (pullShown) ImagePullSheet(pulls, onDismiss = { pullShown = false })
 
     Scaffold(
         bottomBar = { DataFreshness(state) },
@@ -104,6 +125,20 @@ fun ImagesScreen(
                     }
                 },
                 navigationIcon = { BackButton(onBack) },
+                actions = {
+                    Box {
+                        TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { menuOpen = true })
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.image_pull_menu)) },
+                                onClick = {
+                                    menuOpen = false
+                                    pullAsked = true
+                                },
+                            )
+                        }
+                    }
+                },
             )
         },
     ) { padding ->

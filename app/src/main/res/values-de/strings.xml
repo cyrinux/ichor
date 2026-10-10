@@ -3829,4 +3829,27 @@
     <string name="cp_replace_waiting">Warte auf ein neues gesundes etcd-Mitglied…</string>
     <string name="cp_replace_joined">Das neue Mitglied ist beigetreten: etcd ist gesund.</string>
     <string name="cp_replace_wait_stop">Warten beenden</string>
+    <string name="image_pull_channel_name">Image-Downloads</string>
+    <string name="image_pull_channel_desc">Fortschritt eines Image-Downloads auf deinen Nodes</string>
+    <string name="image_pull_notification_public">Image wird geladen</string>
+    <string name="image_pull_notification_result_public">Image-Download beendet</string>
+    <string name="image_pull_notification_title">Image wird auf die Nodes geladen</string>
+    <string name="image_pull_progress">%1$d von %2$d Nodes fertig</string>
+    <string name="image_pull_notification_done">Image geladen</string>
+    <string name="image_pull_notification_failed">Image-Download fehlgeschlagen</string>
+    <string name="image_pull_stopped">Image-Download gestoppt</string>
+    <string name="image_pull_title">Image laden</string>
+    <string name="image_pull_state_pending">Wartet</string>
+    <string name="image_pull_state_pulling">Wird geladen</string>
+    <string name="image_pull_state_done">Geladen</string>
+    <string name="image_pull_state_failed">Fehlgeschlagen</string>
+    <string name="image_pull_stop">Stoppen</string>
+    <string name="image_pull_menu">Image auf jeden Node laden…</string>
+    <string name="image_pull_image_label">Image</string>
+    <string name="image_pull_namespace_system">Talos-System-Image</string>
+    <string name="image_pull_namespace_cri">Kubernetes-Image</string>
+    <string name="image_pull_namespace_hint">Ein Talos-Installer gehört zu den System-Images, ein Workload-Image zu den Kubernetes-Images.</string>
+    <string name="image_pull_start">Laden</string>
+    <string name="upgrade_prepull">Image vorab auf alle Nodes laden</string>
+    <string name="upgrade_prepull_desc">Lade es jetzt auf jeden Node, damit jeder Neustart kurz ist.</string>
 </resources>

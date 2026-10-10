@@ -3837,4 +3837,27 @@
     <string name="cp_replace_waiting">En attente d\'un nouveau membre etcd sain…</string>
     <string name="cp_replace_joined">Le nouveau membre a rejoint le cluster : etcd est sain.</string>
     <string name="cp_replace_wait_stop">Arrêter l\'attente</string>
+    <string name="image_pull_channel_name">Téléchargements d\'images</string>
+    <string name="image_pull_channel_desc">Progression du téléchargement d\'une image sur vos nœuds</string>
+    <string name="image_pull_notification_public">Téléchargement d\'une image</string>
+    <string name="image_pull_notification_result_public">Téléchargement de l\'image terminé</string>
+    <string name="image_pull_notification_title">Téléchargement d\'une image sur les nœuds</string>
+    <string name="image_pull_progress">%1$d nœuds sur %2$d terminés</string>
+    <string name="image_pull_notification_done">Image téléchargée</string>
+    <string name="image_pull_notification_failed">Échec du téléchargement de l\'image</string>
+    <string name="image_pull_stopped">Téléchargement de l\'image arrêté</string>
+    <string name="image_pull_title">Télécharger une image</string>
+    <string name="image_pull_state_pending">En attente</string>
+    <string name="image_pull_state_pulling">Téléchargement</string>
+    <string name="image_pull_state_done">Téléchargée</string>
+    <string name="image_pull_state_failed">Échec</string>
+    <string name="image_pull_stop">Arrêter</string>
+    <string name="image_pull_menu">Télécharger une image sur chaque nœud…</string>
+    <string name="image_pull_image_label">Image</string>
+    <string name="image_pull_namespace_system">Image système Talos</string>
+    <string name="image_pull_namespace_cri">Image Kubernetes</string>
+    <string name="image_pull_namespace_hint">Un installeur Talos va dans les images système ; une image d\'application dans les images Kubernetes.</string>
+    <string name="image_pull_start">Télécharger</string>
+    <string name="upgrade_prepull">Pré-télécharger l\'image sur tous les nœuds</string>
+    <string name="upgrade_prepull_desc">Téléchargez-la maintenant sur chaque nœud, pour que chaque redémarrage soit court.</string>
 </resources>

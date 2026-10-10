@@ -4,11 +4,14 @@ import name.levis.ichor.ui.goErrorText
 import name.levis.ichorgo.EtcdFixListener
 import name.levis.ichorgo.EventListener
 import name.levis.ichorgo.HealthListener
+import name.levis.ichorgo.ImagePullListener
 import name.levis.ichorgo.LogListener
 import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.TalosEvent
 import name.levis.ichor.model.EtcdFixProgress
+import name.levis.ichor.model.ImagePullNamespace
+import name.levis.ichor.model.ImagePullProgress
 import name.levis.ichor.model.SnapshotEncryption
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -33,6 +36,12 @@ sealed interface SnapshotEvent {
 sealed interface EtcdFixEvent {
     data class Progress(val progress: EtcdFixProgress) : EtcdFixEvent
     data class Done(val error: String?) : EtcdFixEvent
+}
+
+/** An image pull's per-node progress, then its end: [Done.error] null when every node pulled it. */
+sealed interface ImagePullEvent {
+    data class Progress(val progress: ImagePullProgress) : ImagePullEvent
+    data class Done(val error: String?) : ImagePullEvent
 }
 
 /** Items of a live stream (events, followed log). [Done] ends it; [error] null when cancelled. */
@@ -158,6 +167,27 @@ internal class TalosStreams(private val configs: ConfigRepository) {
         val run = Ichorgo.startEtcdNospaceFix(stored.yaml, stored.activeContext, snapshotNode, destPath, recipients, passphrase, listener)
         awaitClose { run.cancel() }
     }.buffer(Channel.UNLIMITED) // every step is kept: the timeline needs them
+
+    /**
+     * StartImagePull: pull [image] into [namespace] on [nodes] (every node when empty), three
+     * at a time. Closing the flow cancels the pulls in flight.
+     */
+    fun imagePull(nodes: List<String>, image: String, namespace: ImagePullNamespace): Flow<ImagePullEvent> = callbackFlow {
+        val stored = configs.forCall()
+        val listener = object : ImagePullListener {
+            override fun onProgress(json: String) {
+                runCatching { TalosJson.decodeFromString(ImagePullProgress.serializer(), json) }.getOrNull()
+                    ?.let { trySend(ImagePullEvent.Progress(it)) }
+            }
+
+            override fun onDone(errMessage: String) {
+                trySend(ImagePullEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+                close()
+            }
+        }
+        val run = Ichorgo.startImagePull(stored.yaml, stored.activeContext, nodes.joinToString(","), image, namespace.wire, listener)
+        awaitClose { run.cancel() }
+    }.buffer(Channel.CONFLATED) // each event carries every node's state: the latest is enough
 
     fun health(): Flow<HealthEvent> = callbackFlow {
         val stored = configs.forCall()

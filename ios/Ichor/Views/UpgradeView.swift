@@ -34,6 +34,7 @@ struct UpgradeView: View {
     @State private var confirming = false
     @State private var confirmingRollback = false
     @State private var message: String?
+    @State private var showingPull = false
 
     private var job: UpgradeJob { .shared }
 
@@ -51,6 +52,7 @@ struct UpgradeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadPlan() }
         .task { await loadReleases() }
+        .sheet(isPresented: $showingPull) { ImagePullSheet() }
         // The node runs another Talos version now: what it can do is asked again.
         .onChange(of: job.outcome) { _, outcome in
             if case .succeeded? = outcome, let target = job.target {
@@ -59,6 +61,14 @@ struct UpgradeView: View {
         }
         .task(id: [version, loadedPlan?.currentImage ?? ""]) { await computeImage() }
         .task(id: image) { await checkExtensions() }
+    }
+
+    /// Pulls the installer on every node (another pull already running is shown instead).
+    private func prePull() {
+        if let client = model.client {
+            ImagePullJob.shared.start(client: client, image: image, namespace: .system)
+        }
+        showingPull = true
     }
 
     private var loadedPlan: UpgradePlan? {
@@ -201,6 +211,10 @@ struct UpgradeView: View {
                     Text(verbatim: image).font(.caption.monospaced()).textSelection(.enabled)
                 }
                 extensionRow
+                // Pulling the installer on every node first keeps each node's reboot short.
+                Button("Pre-pull the image on all nodes") { prePull() }
+                Text("Download it on every node now, so each node's reboot is short.")
+                    .font(.footnote).foregroundStyle(.secondary)
             }
             // The upgrade path that does not drain the node has no staged upgrade either.
             if plan.drainable {

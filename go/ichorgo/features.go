@@ -93,6 +93,9 @@ var featureRules = []featureRule{
 	// rpc ImageList (machine.proto): first in v1.5.0; service ImageService (v1.13.0) is the
 	// fallback once ImageList is gone.
 	{name: "images", min: "v1.5"},
+	// rpc ImagePull (machine.proto): first in v1.1.0; ImageService.Pull (v1.13.0) is the
+	// fallback once ImagePull is gone.
+	{name: "imagePull", min: "v1.1"},
 	// MachineConfigs.config.talos.dev: v1.0.0, read through the COSI API.
 	{name: "machineConfig", min: oldestCOSI},
 	// service DebugService (api/machine/debug.proto) and ImageService.Pull: first in v1.13.0.
