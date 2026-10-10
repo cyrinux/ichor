@@ -97,8 +97,12 @@ struct ClusterUpgradePlanView: View {
             Text("Nodes, in upgrade order (\(p.done) of \(p.nodes.count) done)")
         }
         Section("Checks") {
-            ForEach(p.allBlockers, id: \.self) { Label { Text(verbatim: $0) } icon: { Image(systemName: "xmark.octagon.fill") }.foregroundStyle(.statusBad) }
-            ForEach(p.allWarnings, id: \.self) { Label { Text(verbatim: $0) } icon: { Image(systemName: "exclamationmark.triangle.fill") }.foregroundStyle(.statusWarn) }
+            ForEach(p.allBlockers, id: \.self) { blocker in
+                Label { Text(verbatim: blocker) } icon: { Image(systemName: "xmark.octagon.fill") }.foregroundStyle(.statusBad)
+            }
+            ForEach(p.allWarnings, id: \.self) { warning in
+                Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }.foregroundStyle(.statusWarn)
+            }
             if p.allBlockers.isEmpty && p.allWarnings.isEmpty { Text("No issues found").foregroundStyle(.statusOK) }
         }
         Section {
