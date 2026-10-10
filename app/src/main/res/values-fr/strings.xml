@@ -1449,7 +1449,10 @@
     <string name="ai_stop">Arrêter</string>
     <string name="ai_copy">Copier</string>
     <string name="ai_disclaimer">Les réponses de l’IA peuvent être fausses. Vérifiez une commande avant de l’exécuter, surtout si elle réinitialise un nœud ou modifie etcd.</string>
-    <string name="ai_health_diagnose">Diagnostiquer avec l’IA</string>
+    <string name="ai_health_explain_title">Ce qui ne va pas</string>
+    <string name="ai_health_explain_hint">Envoie les vérifications en échec, l’état des nœuds et les événements récents à %1$s.</string>
+    <string name="ai_health_explain">Expliquer avec l’IA</string>
+    <string name="ai_health_continue">Continuer dans le diagnostic</string>
     <string name="demo_try">Essayer la démo</string>
     <string name="demo_talos">Cluster Talos</string>
     <string name="demo_kube">Cluster Kubernetes (EKS)</string>

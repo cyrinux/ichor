@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import name.levis.ichorgo.Diagnosis
 import name.levis.ichorgo.DiagnosisListener
 import name.levis.ichorgo.Ichorgo
@@ -45,6 +46,19 @@ class DiagnosisRepository(private val configs: ConfigRepository, private val kub
         val stored = configs.forCall()
         val server = kubeServers.serverFor(stored)
         return withContext(Dispatchers.IO) { Ichorgo.collectDiagnosis(stored.yaml, stored.activeContext, server, anonymize) }
+    }
+
+    /**
+     * Builds the short report the health check helper sends: the check's [lines] as shown,
+     * its [failure], node readiness and recent warning/error events. Nothing leaves the phone here.
+     */
+    suspend fun collectHealth(lines: List<String>, failure: String, anonymize: Boolean): Diagnosis {
+        val stored = configs.forCall()
+        val server = kubeServers.serverFor(stored)
+        val linesJson = TalosJson.encodeToString(ListSerializer(String.serializer()), lines)
+        return withContext(Dispatchers.IO) {
+            Ichorgo.collectHealthExplanation(stored.yaml, stored.activeContext, server, linesJson, failure, anonymize)
+        }
     }
 
     /**

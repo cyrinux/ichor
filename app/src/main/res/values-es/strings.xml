@@ -1449,7 +1449,10 @@
     <string name="ai_stop">Detener</string>
     <string name="ai_copy">Copiar</string>
     <string name="ai_disclaimer">Las respuestas de la IA pueden ser erróneas. Comprueba un comando antes de ejecutarlo, sobre todo si restablece un nodo o modifica etcd.</string>
-    <string name="ai_health_diagnose">Diagnosticar con IA</string>
+    <string name="ai_health_explain_title">Qué ha fallado</string>
+    <string name="ai_health_explain_hint">Envía las comprobaciones fallidas, el estado de los nodos y los eventos recientes a %1$s.</string>
+    <string name="ai_health_explain">Explicar con IA</string>
+    <string name="ai_health_continue">Continuar en el diagnóstico</string>
     <string name="demo_try">Probar demo</string>
     <string name="demo_talos">Clúster Talos</string>
     <string name="demo_kube">Clúster Kubernetes (EKS)</string>

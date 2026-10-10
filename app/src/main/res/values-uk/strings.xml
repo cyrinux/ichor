@@ -1550,7 +1550,10 @@
     <string name="ai_stop">Зупинити</string>
     <string name="ai_copy">Копіювати</string>
     <string name="ai_disclaimer">Відповіді ШІ можуть бути хибними. Перевіряйте команду перед виконанням, особливо якщо вона скидає вузол або змінює etcd.</string>
-    <string name="ai_health_diagnose">Діагностувати за допомогою ШІ</string>
+    <string name="ai_health_explain_title">Що пішло не так</string>
+    <string name="ai_health_explain_hint">Надсилає невдалі перевірки, готовність вузлів і нещодавні події до %1$s.</string>
+    <string name="ai_health_explain">Пояснити за допомогою ШІ</string>
+    <string name="ai_health_continue">Продовжити в діагностиці</string>
     <string name="demo_try">Спробувати демо</string>
     <string name="demo_talos">Кластер Talos</string>
     <string name="demo_kube">Кластер Kubernetes (EKS)</string>
