@@ -15,6 +15,8 @@ struct ImportView: View {
     @Environment(AppModel.self) private var model
     /// The paste or QR sheet, when open.
     @State private var source: Source?
+    @State private var sourceDismissing = false
+    @State private var pendingDiscovery: DiscoveryStart?
     @State private var pasted = ""
     @State private var showingImporter = false
     @State private var preview: Preview?
@@ -52,6 +54,7 @@ struct ImportView: View {
 
     struct DiscoveryStart: Identifiable {
         let provider: String
+        var initialValues: [String: String] = [:]
         var id: String { provider }
     }
 
@@ -59,11 +62,11 @@ struct ImportView: View {
         Group {
             switch preview {
             case .talos(let yaml, let summary)?:
-                PreviewList(summary: summary, adding: model.hasConfig, busy: busy, onCancel: { self.preview = nil }) {
+                PreviewList(summary: summary, adding: model.hasConfig, busy: busy, onCancel: cancelPreview) {
                     Task { await save(yaml) }
                 }
             case .kube(let yaml, let summary, let conflicts)?:
-                KubePreviewList(summary: summary, conflicts: conflicts, busy: busy, onCancel: { self.preview = nil }) { choices in
+                KubePreviewList(summary: summary, conflicts: conflicts, busy: busy, onCancel: cancelPreview) { choices in
                     Task { await saveKube(yaml, summary: summary, conflicts: conflicts, choices: choices) }
                 }
             case nil:
@@ -77,14 +80,21 @@ struct ImportView: View {
                     .accessibilityLabel("How to create a talosconfig")
             }
         }
+        .onDisappear { TalosClient.forgetDiscoverSignIn() }
         .sheet(isPresented: $showingHelp) { HelpSheet() }
         .sheet(isPresented: $addingFromOmni) {
             OmniDiscoveryView { talosconfig in validate(talosconfig) }
         }
         .sheet(item: $discovery) { start in
-            CloudDiscoveryView(provider: start.provider) { found in validate(found.kubeconfig, discovered: found) }
+            CloudDiscoveryView(provider: start.provider, initialValues: start.initialValues) { found in validate(found.kubeconfig, discovered: found) }
         }
-        .sheet(item: $source) { source in
+        .sheet(item: $source, onDismiss: {
+            sourceDismissing = false
+            if let start = pendingDiscovery {
+                pendingDiscovery = nil
+                discovery = start
+            }
+        }) { source in
             if source == .form {
                 // A talosconfig built from what is typed, previewed like an imported one.
                 TalosFormView { yaml in validate(yaml) }
@@ -202,6 +212,7 @@ struct ImportView: View {
                             .textInputAutocapitalization(.never)
                             .border(.quaternary)
                         Button("Validate") {
+                            sourceDismissing = true
                             self.source = nil
                             validate(pasted)
                         }
@@ -211,6 +222,7 @@ struct ImportView: View {
                     .padding()
                 case .qr:
                     QRScannerView { text in
+                        sourceDismissing = true
                         self.source = nil
                         validate(text)
                     }
@@ -252,6 +264,13 @@ struct ImportView: View {
             defer { busy = false }
             do {
                 let yaml = try await TalosClient.decodeImportText(text)
+                let route = try await TalosClient.classifyImportText(yaml)
+                if route.isGkeCredential {
+                    let start = DiscoveryStart(provider: "gke", initialValues: [route.field: yaml])
+                    if sourceDismissing { pendingDiscovery = start } else { discovery = start }
+                    error = nil
+                    return
+                }
                 if await TalosClient.isKubeconfig(yaml) {
                     let summary = try await TalosClient.parseKubeconfig(yaml)
                     let conflicts = try await TalosClient.kubeImportConflicts(
@@ -298,6 +317,12 @@ struct ImportView: View {
         }
     }
 
+    private func cancelPreview() {
+        preview = nil
+        discovered = nil
+        TalosClient.forgetDiscoverSignIn()
+    }
+
     private func saveKube(_ yaml: String, summary: ConfigSummary, conflicts: [KubeImportConflict],
                           choices: [KubeImportChoice]) async {
         busy = true
@@ -315,6 +340,7 @@ struct ImportView: View {
         }
         discovered = nil
         let failures = await signInDiscovered(summary: summary, conflicts: conflicts, choices: choices, secrets: found.secrets)
+        TalosClient.forgetDiscoverSignIn()
         if failures.isEmpty {
             onImported()
         } else {

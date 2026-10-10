@@ -45,6 +45,9 @@ struct IchorApp: App {
                     if phase == .background, BackgroundMonitor.alertsEnabled { BackgroundMonitor.schedule() }
                     if phase == .background { UpgradeJob.shared.didEnterBackground() }
                     if phase == .background { MaintenanceJob.shared.didEnterBackground() }
+                    if phase == .background { ConfigTryJob.shared.didEnterBackground() }
+                    if phase == .active { ConfigTryJob.shared.willEnterForeground() }
+                    if phase == .background { ConfigMultiJob.shared.didEnterBackground() }
                 }
                 .preferredColorScheme(model.theme.colorScheme)
                 // The accent color follows the cluster on screen.
@@ -152,6 +155,8 @@ enum Route: Hashable {
     /// The projects the app integrates with, and which ones the cluster runs.
     case supportedIntegrations
     case etcd
+    /// The guided replacement of a failed etcd member; node: its address as last seen.
+    case replaceControlPlane(memberId: String, node: String, hostname: String)
     case kubespan
     /// Kubernetes Deployments, StatefulSets and DaemonSets (os:admin).
     case workloads
@@ -253,6 +258,8 @@ struct MainNavigation: View {
                     case .licenses: LicensesView()
                     case .supportedIntegrations: SupportedIntegrationsView()
                     case .etcd: EtcdView()
+                    case .replaceControlPlane(let memberId, let node, let hostname):
+                        ReplaceControlPlaneView(memberId: memberId, node: node, hostname: hostname)
                     case .kubespan: KubeSpanView()
                     case .workloads: KubernetesView()
                     case .kubernetes(let focus): KubernetesView(focus: focus)

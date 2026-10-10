@@ -10,6 +10,8 @@ import name.levis.ichorgo.MaintenanceListener
 import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ConfigApplyEvent
+import name.levis.ichor.model.CpReplacePlan
+import name.levis.ichor.model.CpReplaceWait
 import name.levis.ichor.model.ConfigApplyMode
 import name.levis.ichor.model.ConfigApplyProgress
 import name.levis.ichor.model.ConfigEdit
@@ -19,6 +21,9 @@ import name.levis.ichor.model.ConfigTree
 import name.levis.ichor.model.ConfigTryCommand
 import name.levis.ichor.model.ConfigTryEvent
 import name.levis.ichor.model.ConfigTryProgress
+import name.levis.ichor.model.MultiConfigEvent
+import name.levis.ichor.model.MultiConfigPreview
+import name.levis.ichor.model.MultiConfigProgress
 import name.levis.ichor.model.AuditReport
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
@@ -44,6 +49,7 @@ import name.levis.ichor.model.TalosEvent
 import name.levis.ichor.model.ClusterTime
 import name.levis.ichor.model.ConnectionInfo
 import name.levis.ichor.model.ImageInfo
+import name.levis.ichor.model.ImagePullNamespace
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.NodeHardware
 import name.levis.ichor.model.NodeSensors
@@ -54,6 +60,7 @@ import name.levis.ichor.model.DiskUsage
 import name.levis.ichor.model.EtcdForfeitResult
 import name.levis.ichor.model.EtcdMemberPlan
 import name.levis.ichor.model.SnapshotEncryption
+import name.levis.ichor.model.SnapshotInfo
 import name.levis.ichor.model.SnapshotRecipient
 import name.levis.ichor.model.MountList
 import name.levis.ichor.model.NodeDiscovery
@@ -246,6 +253,41 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         awaitClose { run.cancel() }
     }.buffer(Channel.UNLIMITED)
 
+    /**
+     * MachineConfigMultiPreview: [edits] replayed on each of [nodes]' own config, previewed per
+     * node with a dry run (os:admin). A node the edits do not fit carries its error.
+     */
+    suspend fun machineConfigMultiPreview(nodes: List<String>, edits: List<ConfigEdit>): MultiConfigPreview = call { cfg, ctx ->
+        TalosJson.decodeFromString(
+            MultiConfigPreview.serializer(),
+            Ichorgo.machineConfigMultiPreview(cfg, ctx, nodes.joinToString(","), TalosJson.encodeToString(ListSerializer(ConfigEdit.serializer()), edits)),
+        )
+    }
+
+    /** StartConfigApplyMulti: [edits] applied to [nodes] one after the other in [mode]; closing the flow stops following. */
+    fun applyMachineConfigMulti(nodes: List<String>, edits: List<ConfigEdit>, mode: ConfigApplyMode): Flow<MultiConfigEvent> = callbackFlow {
+        val stored = configs.forCall()
+        val run = Ichorgo.startConfigApplyMulti(
+            stored.yaml,
+            stored.activeContext,
+            nodes.joinToString(","),
+            TalosJson.encodeToString(ListSerializer(ConfigEdit.serializer()), edits),
+            mode.wire,
+            object : ConfigApplyListener {
+                override fun onProgress(json: String) {
+                    runCatching { TalosJson.decodeFromString(MultiConfigProgress.serializer(), json) }
+                        .onSuccess { trySend(MultiConfigEvent.Progress(it)) }
+                }
+
+                override fun onDone(errMessage: String) {
+                    trySend(MultiConfigEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED)
+
     fun tryMachineConfig(node: String, base: String, draft: String, timeoutSeconds: Int, commands: Flow<ConfigTryCommand>): Flow<ConfigTryEvent> = callbackFlow {
         val stored = configs.forCall()
         val run = Ichorgo.startConfigTry(
@@ -296,6 +338,19 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** The one-tap NOSPACE fix (see [TalosStreams.etcdNospaceFix]); needs os:admin. */
     fun etcdNospaceFix(snapshotNode: String, destPath: String, encryption: SnapshotEncryption): Flow<EtcdFixEvent> =
         streams.etcdNospaceFix(snapshotNode, destPath, encryption)
+
+    /** What the snapshot file at [path] needs before a recovery (encrypted, with what). */
+    suspend fun snapshotInspect(path: String): SnapshotInfo = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(SnapshotInfo.serializer(), Ichorgo.snapshotInspect(path))
+    }
+
+    /** Recovers etcd on [node] from a snapshot (see [TalosStreams.etcdRecover]); needs os:admin. */
+    fun etcdRecover(node: String, path: String, identity: String, passphrase: String, skipHashCheck: Boolean): Flow<EtcdRecoverEvent> =
+        streams.etcdRecover(node, path, identity, passphrase, skipHashCheck)
+
+    /** Pulls an image on several nodes (see [TalosStreams.imagePull]); needs os:admin. */
+    fun imagePull(nodes: List<String>, image: String, namespace: ImagePullNamespace): Flow<ImagePullEvent> =
+        streams.imagePull(nodes, image, namespace)
 
     /**
      * The cluster's nodes. Those that no longer answer keep what the last overview knew of
@@ -572,6 +627,25 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** What removing [memberId] would leave (members, quorum) and what forbids it. Read-only. */
     suspend fun etcdMemberPlan(memberId: String): EtcdMemberPlan = call { cfg, ctx ->
         TalosJson.decodeFromString(EtcdMemberPlan.serializer(), Ichorgo.etcdMemberPlan(cfg, ctx, memberId))
+    }
+
+    /**
+     * Where replacing the failed etcd member [memberId] stands (steps from live state). [node]:
+     * the member's address as last seen, which names the old node once the member is removed. Read-only.
+     */
+    suspend fun controlPlaneReplacePlan(memberId: String, node: String): CpReplacePlan = call { cfg, ctx ->
+        TalosJson.decodeFromString(CpReplacePlan.serializer(), Ichorgo.controlPlaneReplacePlan(cfg, ctx, memberId, node))
+    }
+
+    /**
+     * Removes the failed member [memberId] as the replacement's step 2 (os:admin): Go reads the
+     * plan again and refuses a member that recovered or a removal that loses quorum.
+     */
+    suspend fun controlPlaneReplaceRemove(memberId: String) = call { cfg, ctx -> Ichorgo.controlPlaneReplaceRemove(cfg, ctx, memberId) }
+
+    /** Polls etcd up to [timeoutSec] until it has more healthy voting members than [membersBefore]. Read-only. */
+    suspend fun controlPlaneReplaceWait(membersBefore: Int, timeoutSec: Int): CpReplaceWait = call { cfg, ctx ->
+        TalosJson.decodeFromString(CpReplaceWait.serializer(), Ichorgo.controlPlaneReplaceWait(cfg, ctx, membersBefore.toLong(), timeoutSec.toLong()))
     }
 
     /** Resource types the node knows (`talosctl get rd`). */

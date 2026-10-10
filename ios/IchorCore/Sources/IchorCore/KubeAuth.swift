@@ -156,8 +156,14 @@ public let kubeGoogleSignInField = "gcpGoogleSignIn"
 
 /// What the GKE "Sign in with Google" option submits to the Go core (KubeSetCredentials):
 /// the browser sign-in then starts.
-public func kubeGoogleSignInSecretsJSON() -> String {
-    kubeSecretsJSON(fields: [kubeGoogleSignInField], values: [kubeGoogleSignInField: "ios"])
+public func kubeGoogleSignInSecretsJSON(projects: String = "") -> String {
+    kubeSecretsJSON(fields: [kubeGoogleSignInField, "gcpProjects"],
+                    values: [kubeGoogleSignInField: "ios", "gcpProjects": projects])
+}
+
+/// Discovery's OAuth and native iOS Google options need a browser round first.
+public func kubeDiscoverNeedsSignIn(_ fields: [String]) -> Bool {
+    fields.contains(kubeGoogleSignInField) || fields.contains("gcpOAuthClientId")
 }
 
 /// The URL scheme the in-app web session closes on for a sign-in coming back to
@@ -204,6 +210,31 @@ public func decodeKubeDiscoverFields(_ json: String) throws -> [String: [String]
 /// credentials (GKE: a service account key, or gcloud user credentials).
 public func decodeKubeDiscoverOptions(_ json: String) throws -> [String: [[String]]] {
     try TalosJSON.decode([String: [[String]]].self, from: json)
+}
+
+/// How far a running cloud discovery got (Go DiscoverProgress): GKE with a Google account reads
+/// many projects. `projects` is 0 while they are still being listed.
+public struct DiscoveryProgress: Decodable, Equatable {
+    public var running = false
+    public var projects = 0
+    public var scanned = 0
+    public var clusters = 0
+
+    public init(running: Bool = false, projects: Int = 0, scanned: Int = 0, clusters: Int = 0) {
+        self.running = running
+        self.projects = projects
+        self.scanned = scanned
+        self.clusters = clusters
+    }
+
+    /// The share of the projects read, nil while they are listed (or none are read).
+    public var fraction: Double? {
+        projects > 0 ? Double(min(scanned, projects)) / Double(projects) : nil
+    }
+
+    public static func decode(_ json: String) -> DiscoveryProgress? {
+        try? TalosJSON.decode(DiscoveryProgress.self, from: json)
+    }
 }
 
 /// The credentials `provider` takes, as field sets: its options, else its one set of fields.
@@ -305,5 +336,24 @@ public extension ContextSummary {
     func allows(_ feature: Feature, kubeLinked: Bool) -> Bool {
         if kubeLinked && !isKube && feature == .workloads { return true }
         return allows(feature)
+    }
+}
+
+/// Routing metadata from Go ClassifyImportText, without any imported secrets.
+public struct ImportTextRoute: Decodable, Sendable {
+    public let kind: String
+    public let provider: String?
+    public let field: String
+    public var isGkeCredential: Bool {
+        kind == "credentials" && provider == "gke" &&
+            ["gcpUserCredentialsJson", "gcpServiceAccountJson"].contains(field)
+    }
+
+    private enum CodingKeys: String, CodingKey { case kind, provider, field }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try c.decode(String.self, forKey: .kind)
+        provider = try c.decodeIfPresent(String.self, forKey: .provider)
+        field = try c.decodeIfPresent(String.self, forKey: .field) ?? ""
     }
 }

@@ -2,7 +2,9 @@ package ichorgo
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"maps"
 	"slices"
 	"strings"
@@ -38,6 +40,8 @@ type fakeTalos struct {
 	// members are the etcd members (node -> member id); nil: each node is its own only member.
 	members map[string]uint64
 	leader  uint64
+	// etcdErrors are the errors a node's etcd status reports (an unhealthy member).
+	etcdErrors map[string][]string
 
 	// Scripts (nil: the default answer).
 	upgrade          func(node string, req *machineapi.UpgradeRequest) error
@@ -56,6 +60,9 @@ type fakeTalos struct {
 	mounts map[string][]*machineapi.MountStat
 	// systemImages are the images of the system containerd namespace (the CRI one has pause).
 	systemImages []*machineapi.ImageServiceListResponse
+	// imagePull answers MachineService.ImagePull (nil: Unimplemented, like Talos without the
+	// deprecated API, so ImageService.Pull serves the pull).
+	imagePull func(node string, req *machineapi.ImagePullRequest) error
 	// debugRun answers a debug container run of spec on node (nil: Unimplemented).
 	debugRun func(node string, spec *machineapi.DebugContainerRunRequestSpec) (output string, exitCode int32)
 	// files are a node's file tree (absolute path -> content), served by List and Read; a
@@ -63,6 +70,22 @@ type fakeTalos struct {
 	files map[string]map[string]string
 	// cpuFreq is a node's CPUFreqStats answer (a node without an entry: Unimplemented).
 	cpuFreq map[string][]*machineapi.CPUFreqStats
+	// applies are the ApplyConfiguration requests received, in order; a real (not dry run)
+	// one replaces the node's machine config, then onApply runs.
+	applies []fakeConfigApply
+	onApply func(node string)
+	// etcdDown are the nodes whose etcd does not answer (EtcdStatus: Unavailable) until a
+	// recovery bootstraps it.
+	etcdDown map[string]bool
+	// recovered is what EtcdRecover received, per node; bootstraps the Bootstrap requests.
+	recovered  map[string][]byte
+	bootstraps []*machineapi.BootstrapRequest
+}
+
+type fakeConfigApply struct {
+	node   string
+	dryRun bool
+	mode   machineapi.ApplyConfigurationRequest_Mode
 }
 
 func newFakeTalos() *fakeTalos {
@@ -240,6 +263,23 @@ func (m fakeTalosMachine) Reboot(ctx context.Context, _ *machineapi.RebootReques
 	return &machineapi.RebootResponse{Messages: []*machineapi.Reboot{{}}}, nil
 }
 
+func (m fakeTalosMachine) ImagePull(ctx context.Context, req *machineapi.ImagePullRequest) (*machineapi.ImagePullResponse, error) {
+	if m.f.imagePull == nil {
+		return nil, status.Error(codes.Unimplemented, "unknown method ImagePull")
+	}
+
+	node, err := m.f.enter(ctx, "ImagePull")
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.f.imagePull(node, req); err != nil {
+		return nil, err
+	}
+
+	return &machineapi.ImagePullResponse{Messages: []*machineapi.ImagePull{{}}}, nil
+}
+
 func (m fakeTalosMachine) Reset(ctx context.Context, req *machineapi.ResetRequest) (*machineapi.ResetResponse, error) {
 	if _, err := m.f.enter(ctx, "Reset"); err != nil {
 		return nil, err
@@ -309,14 +349,67 @@ func (m fakeTalosMachine) EtcdStatus(ctx context.Context, _ *emptypb.Empty) (*ma
 	m.f.mu.Lock()
 	defer m.f.mu.Unlock()
 
+	if m.f.etcdDown[node] {
+		return nil, status.Errorf(codes.Unavailable, "etcd is not running on %s", node)
+	}
+
 	id, leader := uint64(1), uint64(1)
 	if m.f.members != nil {
 		id, leader = m.f.members[node], m.f.leader
 	}
 
 	return &machineapi.EtcdStatusResponse{Messages: []*machineapi.EtcdStatus{{
-		MemberStatus: &machineapi.EtcdMemberStatus{MemberId: id, Leader: leader, DbSize: 4 << 20},
+		MemberStatus: &machineapi.EtcdMemberStatus{MemberId: id, Leader: leader, DbSize: 4 << 20, Errors: m.f.etcdErrors[node]},
 	}}}, nil
+}
+
+// EtcdRecover keeps the uploaded database of the node.
+func (m fakeTalosMachine) EtcdRecover(stream grpc.ClientStreamingServer[common.Data, machineapi.EtcdRecoverResponse]) error {
+	node, err := m.f.enter(stream.Context(), "EtcdRecover")
+	if err != nil {
+		return err
+	}
+
+	var data []byte
+
+	for {
+		msg, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+
+		if err != nil {
+			return err
+		}
+
+		data = append(data, msg.GetBytes()...)
+	}
+
+	m.f.mu.Lock()
+	if m.f.recovered == nil {
+		m.f.recovered = map[string][]byte{}
+	}
+
+	m.f.recovered[node] = data
+	m.f.mu.Unlock()
+
+	return stream.SendAndClose(&machineapi.EtcdRecoverResponse{Messages: []*machineapi.EtcdRecover{{}}})
+}
+
+// Bootstrap starts etcd on the node again.
+func (m fakeTalosMachine) Bootstrap(ctx context.Context, req *machineapi.BootstrapRequest) (*machineapi.BootstrapResponse, error) {
+	node, err := m.f.enter(ctx, "Bootstrap")
+	if err != nil {
+		return nil, err
+	}
+
+	m.f.mu.Lock()
+	defer m.f.mu.Unlock()
+
+	m.f.bootstraps = append(m.f.bootstraps, req)
+	delete(m.f.etcdDown, node)
+
+	return &machineapi.BootstrapResponse{Messages: []*machineapi.Bootstrap{{}}}, nil
 }
 
 func (m fakeTalosMachine) EtcdMemberList(ctx context.Context, _ *machineapi.EtcdMemberListRequest) (*machineapi.EtcdMemberListResponse, error) {
@@ -561,6 +654,33 @@ func (m fakeTalosMachine) Read(req *machineapi.ReadRequest, stream grpc.ServerSt
 	}
 
 	return stream.Send(&common.Data{Bytes: []byte(content)})
+}
+
+func (m fakeTalosMachine) ApplyConfiguration(ctx context.Context, req *machineapi.ApplyConfigurationRequest) (*machineapi.ApplyConfigurationResponse, error) {
+	node, err := m.f.enter(ctx, "ApplyConfiguration")
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := configloader.NewFromBytes(req.GetData())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid config: %v", err)
+	}
+
+	m.f.mu.Lock()
+	m.f.applies = append(m.f.applies, fakeConfigApply{node: node, dryRun: req.GetDryRun(), mode: req.GetMode()})
+	onApply := m.f.onApply
+	m.f.mu.Unlock()
+
+	if !req.GetDryRun() {
+		m.f.put(node, config.NewMachineConfigWithID(provider, config.ActiveID))
+
+		if onApply != nil {
+			onApply(node)
+		}
+	}
+
+	return &machineapi.ApplyConfigurationResponse{Messages: []*machineapi.ApplyConfiguration{{Mode: machineapi.ApplyConfigurationRequest_NO_REBOOT}}}, nil
 }
 
 func (m fakeTalosMachine) CPUFreqStats(ctx context.Context, _ *emptypb.Empty) (*machineapi.CPUFreqStatsResponse, error) {

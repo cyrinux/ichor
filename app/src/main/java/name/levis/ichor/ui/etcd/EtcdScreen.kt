@@ -74,6 +74,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.defragOrder
+import name.levis.ichor.model.etcdLost
 import name.levis.ichor.model.hasNospace
 import name.levis.ichor.model.EtcdLag
 import name.levis.ichor.model.ETCD_LAG_ENTRIES
@@ -93,6 +94,7 @@ import name.levis.ichor.model.confirmToken
 import name.levis.ichor.model.notice
 import name.levis.ichor.model.nodeHostnames
 import name.levis.ichor.model.removalNode
+import name.levis.ichor.model.replaceCandidates
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.components.FeatureGate
 import name.levis.ichor.ui.components.InfoNotice
@@ -175,19 +177,23 @@ sealed interface DisarmState {
 @Composable
 fun EtcdScreen(
     onBack: () -> Unit,
+    onReplace: (EtcdMember) -> Unit = {},
     vm: EtcdViewModel = viewModel(factory = factory { EtcdViewModel(app.talosRepository) }),
     snapshotVm: EtcdSnapshotViewModel = viewModel(factory = factory { EtcdSnapshotViewModel(app.talosRepository, app) }),
     memberVm: EtcdMemberActionsViewModel = viewModel(factory = factory { EtcdMemberActionsViewModel(app.talosRepository) }),
     fixVm: EtcdFixViewModel = viewModel(factory = factory { EtcdFixViewModel(app.talosRepository, app) }),
+    recoverVm: EtcdRecoverViewModel = viewModel(factory = factory { EtcdRecoverViewModel(app.talosRepository, app) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val defrag by vm.defrag.collectAsStateWithLifecycle()
     val disarm by vm.disarm.collectAsStateWithLifecycle()
     val snapshot by snapshotVm.state.collectAsStateWithLifecycle()
     val fix by fixVm.state.collectAsStateWithLifecycle()
+    val recover by recoverVm.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     // The fix changed etcd (or stopped half-way): show what is true now.
     LaunchedEffect(fix.finished) { if (fix.finished) vm.refresh() }
+    LaunchedEffect(recover.finished) { if (recover.finished) vm.refresh() }
 
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
@@ -208,6 +214,9 @@ fun EtcdScreen(
     var confirmDisarm by remember { mutableStateOf<String?>(null) }
     val startSnapshot = rememberSnapshotFlow(snapshotVm, config?.activeSummary?.name.orEmpty(), config?.activeSummary?.fingerprint.orEmpty())
     val startFix = rememberEtcdFixFlow(fixVm, config?.activeSummary?.name.orEmpty(), config?.activeSummary?.fingerprint.orEmpty())
+    val startRecover = rememberEtcdRecoverFlow(recoverVm, config?.activeSummary?.name.orEmpty())
+    // EtcdRecover and Bootstrap are admin-only in Talos, like the member actions.
+    val canRecover = config?.activeSummary?.allows(Feature.ETCD_MEMBER_ACTIONS) ?: false
 
     // With the app lock on, defragmentation needs a fresh fingerprint/PIN, like reboot.
     fun confirmed(request: DefragRequest) {
@@ -280,12 +289,20 @@ fun EtcdScreen(
                             onCancel = fixVm::cancel,
                             onDismiss = fixVm::dismiss,
                         ),
+                        recover = RecoverActions(
+                            state = recover,
+                            // Only for a cluster that lost etcd: Go refuses it otherwise.
+                            onRecover = if (canRecover && s.data.etcdLost) ({ startRecover(s.data) }) else null,
+                            onCancel = recoverVm::cancel,
+                            onDismiss = recoverVm::dismiss,
+                        ),
                         members = MemberActionsHost(
                             state = memberAction,
                             support = memberSupport,
                             allowed = canMemberActions,
                             onForfeit = { confirmForfeit = it },
                             onRemove = memberVm::plan,
+                            onReplace = onReplace,
                             onDismiss = memberVm::dismiss,
                         ),
                         snapshot = if (canSnapshot || snapshot != SnapshotState.Idle) {
@@ -359,6 +376,9 @@ private data class AlarmActions(val state: DisarmState, val onDisarm: (() -> Uni
 /** The NOSPACE fix; [onFix] is null without the alarm or the role. */
 private data class FixActions(val state: EtcdFixState, val onFix: (() -> Unit)?, val onCancel: () -> Unit, val onDismiss: () -> Unit)
 
+/** The recovery from a snapshot file; [onRecover] null when etcd still answers or the role cannot. */
+private data class RecoverActions(val state: EtcdRecoverState, val onRecover: (() -> Unit)?, val onCancel: () -> Unit, val onDismiss: () -> Unit)
+
 /** Member actions of the screen; not [allowed] by the role: nothing is offered. */
 private data class MemberActionsHost(
     val state: MemberActionState,
@@ -366,16 +386,21 @@ private data class MemberActionsHost(
     val allowed: Boolean,
     val onForfeit: (EtcdNodeStatus) -> Unit,
     val onRemove: (EtcdMemberRef) -> Unit,
+    val onReplace: (EtcdMember) -> Unit,
     val onDismiss: () -> Unit,
 ) {
-    /** What the card of the member [id] ([hostname]) offers; [leader] set for the leader's status. */
-    fun actionsFor(id: String, hostname: String, leader: EtcdNodeStatus?): MemberActions? {
+    /**
+     * What the card of the member [id] ([hostname]) offers; [leader] set for the leader's status,
+     * [failed] for a member the guided replacement is offered for.
+     */
+    fun actionsFor(id: String, hostname: String, leader: EtcdNodeStatus?, failed: EtcdMember? = null): MemberActions? {
         if (!allowed || id.isEmpty()) return null
         return MemberActions(
             support = support,
             enabled = !state.busy,
             onForfeit = leader?.let { { onForfeit(it) } },
             onRemove = { onRemove(EtcdMemberRef(id, hostname)) },
+            onReplace = failed?.let { { onReplace(it) } },
         )
     }
 }
@@ -401,6 +426,7 @@ private fun EtcdContent(
     onDismissDefrag: () -> Unit,
     alarms: AlarmActions,
     fix: FixActions,
+    recover: RecoverActions,
     members: MemberActionsHost,
     snapshot: SnapshotActions?,
 ) {
@@ -409,6 +435,7 @@ private fun EtcdContent(
     // Nodes are addresses; a node that did not answer has no member id to name it by.
     val nodeNames = remember(etcd, knownHostnames) { etcd.nodeHostnames(knownHostnames) }
     val running = defrag is DefragState.Running
+    val failed = remember(etcd) { etcd.replaceCandidates().associateBy { it.id } }
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         etcd.error?.let { item { Text(it, color = colors.bad) } }
@@ -432,6 +459,17 @@ private fun EtcdContent(
         }
         if (!fix.state.idle) {
             item { EtcdFixPanel(fix.state, fix.onCancel, fix.onDismiss) }
+        }
+        if (!recover.state.idle) {
+            item { EtcdRecoverPanel(recover.state, recover.onCancel, recover.onDismiss) }
+        }
+        recover.onRecover?.takeIf { recover.state.idle }?.let { onRecover ->
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.etcd_recover_lost), color = colors.bad, style = MaterialTheme.typography.bodyMedium)
+                    OutlinedButton(onClick = onRecover, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_recover_button)) }
+                }
+            }
         }
         etcd.alarmsError?.let { error ->
             item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
@@ -477,7 +515,7 @@ private fun EtcdContent(
                 status = status,
                 hostname = hostname,
                 lag = etcdLag(status, etcd.statuses),
-                actions = members.actionsFor(status.memberId, hostname, status.takeIf { it.isLeader && it.error == null }),
+                actions = members.actionsFor(status.memberId, hostname, status.takeIf { it.isLeader && it.error == null }, failed[status.memberId]),
                 onDefrag = if (canDefrag && !running && status.error == null) {
                     { onDefrag(DefragRequest(listOf(status), nodeNames)) }
                 } else {
@@ -488,7 +526,7 @@ private fun EtcdContent(
         val unprobed = etcd.members.filter { m -> etcd.statuses.none { it.memberId == m.id } }
         if (unprobed.isNotEmpty()) {
             item { SectionTitle(stringResource(R.string.etcd_section_unprobed)) }
-            items(unprobed, key = { it.id }) { MemberCard(it, members.actionsFor(it.id, it.hostname, leader = null)) }
+            items(unprobed, key = { it.id }) { MemberCard(it, members.actionsFor(it.id, it.hostname, leader = null, failed = failed[it.id])) }
         }
     }
 }

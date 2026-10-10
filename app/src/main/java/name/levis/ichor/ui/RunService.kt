@@ -66,6 +66,9 @@ abstract class RunService<T : FollowedRun> : Service() {
     /** The title once the run failed; [FollowedRun.error] is the detail. */
     protected abstract fun failedTitle(res: Context, run: T): String
 
+    /** More on the progress notification (a countdown, action buttons); nothing by default. */
+    protected open fun decorateProgress(res: Context, builder: NotificationCompat.Builder, run: T) {}
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -117,15 +120,14 @@ abstract class RunService<T : FollowedRun> : Service() {
     private fun progressNotification(run: T): Notification {
         val res = AppLocale.wrap(this)
         val (title, step) = progressText(res, run)
-        return lockScreenSafe(
-            baseNotification(title)
-                .setContentText(step)
-                .setOngoing(true)
-                .setSilent(true)
-                .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-                .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE),
-            res.getString(publicTitle),
-        )
+        val builder = baseNotification(title)
+            .setContentText(step)
+            .setOngoing(true)
+            .setSilent(true)
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+        decorateProgress(res, builder, run)
+        return lockScreenSafe(builder, res.getString(publicTitle))
     }
 
     private fun resultNotification(run: T): Notification {

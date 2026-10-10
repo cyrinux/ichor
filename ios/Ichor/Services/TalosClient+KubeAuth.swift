@@ -71,6 +71,13 @@ extension TalosClient {
         try await run { IchorgoDiscoverClusters(provider, secrets, $0) }
     }
 
+    /// How far the running discoverClusters got.
+    static func discoverProgress() -> DiscoveryProgress? {
+        var error: NSError?
+        let json = IchorgoDiscoverProgress(&error)
+        return error == nil ? DiscoveryProgress.decode(json) : nil
+    }
+
     /// A running interactive sign-in: its events (finished after `done`), `complete` hands
     /// over a callback URL the app received, `cancel` stops waiting.
     typealias SignInRun = (events: AsyncStream<KubeSignInEvent>, complete: @Sendable (String) -> Void, cancel: @Sendable () -> Void)
@@ -79,6 +86,14 @@ extension TalosClient {
     static func startSignIn(kube: String, context: String, talos: Bool = false) -> SignInRun {
         signInRun { bridge in talos ? IchorgoStartTalosSignIn(kube, context, bridge) : IchorgoStartKubeSignIn(kube, context, bridge) }
     }
+
+    /// Signs in to a cloud account before any of its clusters has been imported.
+    static func startDiscoverSignIn(provider: String, secrets: String) -> SignInRun {
+        signInRun { IchorgoStartDiscoverSignIn(provider, secrets, $0) }
+    }
+
+    /// Drops the discovery session after cancellation or after imported clusters have it.
+    static func forgetDiscoverSignIn() { IchorgoForgetDiscoverSignIn() }
 
     /// Signs the account `email` in to the Omni instance at `endpoint` in the browser.
     static func startOmniSignIn(endpoint: String, email: String) -> SignInRun {

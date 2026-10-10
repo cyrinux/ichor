@@ -137,6 +137,26 @@ class KubeSignInTest {
         assertEquals(fields.keys, options.keys)
         // The project IDs are optional: the credential alone is enough to search.
         assertTrue(credentialsComplete(gke[1], mapOf("gcpUserCredentialsJson" to "{}")))
+        // The organisation's OAuth client and Sign in with Google (Play build) are offered too.
+        val oauth = listOf("gcpOAuthClientId", "gcpOAuthClientSecret", "gcpOAuthRedirectUrl", "gcpProjects")
+        val google = listOf("gcpGoogleSignIn", "gcpProjects")
+        val all = gke + listOf(oauth, google)
+        assertEquals(all, discoveryOptions(mapOf("gke" to all), fields)[DiscoveryProvider.GKE])
+        assertEquals(R.string.kube_signin_option_gcp_oauth, fieldSetLabel(oauth))
+        assertEquals(R.string.kube_signin_option_google, fieldSetLabel(google))
+    }
+
+    @Test
+    fun discoverySetsThatSignInFirst() {
+        val oauth = listOf("gcpOAuthClientId", "gcpOAuthClientSecret", "gcpOAuthRedirectUrl", "gcpProjects")
+        val google = listOf("gcpGoogleSignIn", "gcpProjects")
+        // The OAuth client signs in in the browser before the discovery; Google's own sign-in is a button.
+        assertTrue(discoveryNeedsSignIn(oauth))
+        assertFalse(discoveryNeedsSignIn(google))
+        assertFalse(discoveryNeedsSignIn(listOf("gcpUserCredentialsJson", "gcpProjects")))
+        assertTrue(discoveryUsesGoogle(google))
+        assertFalse(discoveryUsesGoogle(oauth))
+        assertFalse(discoveryUsesGoogle(listOf("gcpServiceAccountJson")))
     }
 
     @Test

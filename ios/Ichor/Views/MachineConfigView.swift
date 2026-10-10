@@ -28,6 +28,12 @@ struct MachineConfigView: View {
     @State private var describing: Task<Void, Never>?
     @State private var confirmingDiscard = false
     @State private var reviewing = false
+    /// The try running on this node, shown again (the screen was left meanwhile).
+    @State private var followingTry = false
+    /// The field edits made to the draft, in order: what other nodes can be given.
+    @State private var edits: [ConfigEdit] = []
+    /// False once the YAML was typed into: that change is text, it cannot be replayed elsewhere.
+    @State private var replayable = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -46,10 +52,13 @@ struct MachineConfigView: View {
         }
         .sheet(isPresented: $reviewing) {
             if let base = loadedYAML, let draft {
-                ConfigReviewView(node: node, hostname: hostname, base: base, draft: draft) {
+                ConfigReviewView(node: node, hostname: hostname, base: base, draft: draft, edits: replayable ? edits : []) {
                     Task { await finishTry() }
                 }
             }
+        }
+        .fullScreenCover(isPresented: $followingTry, onDismiss: { Task { await finishTry() } }) {
+            ConfigTryView(node: node, hostname: hostname, request: nil) { _ in }
         }
         .task { await load() }
     }
@@ -75,6 +84,16 @@ struct MachineConfigView: View {
                         .font(.footnote)
                         .foregroundStyle(.statusWarn)
                 }
+            }
+            if ConfigTryJob.shared.target?.node == node, ConfigTryJob.shared.isActive || ConfigTryJob.shared.outcome != nil {
+                Button { followingTry = true } label: {
+                    if ConfigTryJob.shared.isActive {
+                        Label("A config change is being tried: show the countdown", systemImage: "timer")
+                    } else {
+                        Label("Show how the try ended", systemImage: "timer")
+                    }
+                }
+                .font(.footnote)
             }
             if let message {
                 Text(message).font(.footnote).foregroundStyle(.secondary)
@@ -155,6 +174,7 @@ struct MachineConfigView: View {
         Binding(get: { draft ?? "" }, set: { new in
             guard draft != nil, new != draft else { return }
             draft = new
+            replayable = false
             describing?.cancel()
             describing = Task {
                 try? await Task.sleep(for: .milliseconds(400))
@@ -217,6 +237,7 @@ struct MachineConfigView: View {
             guard draft == current else { return nil }
             describing?.cancel()
             draft = edited
+            edits.append(edit)
             await describe()
             return nil
         } catch {
@@ -230,6 +251,8 @@ struct MachineConfigView: View {
         guard !reveal, let yaml = loadedYAML else { return }
         message = nil
         draft = yaml
+        edits = []
+        replayable = true
     }
 
     private func requestDiscard() {

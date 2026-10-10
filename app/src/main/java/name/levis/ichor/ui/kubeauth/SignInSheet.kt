@@ -1,9 +1,6 @@
 package name.levis.ichor.ui.kubeauth
 
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,7 +36,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,12 +47,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.GCP_GOOGLE_SIGN_IN
-import name.levis.ichor.data.GoogleAuthorization
-import name.levis.ichor.data.GoogleNativeSignIn
 import name.levis.ichor.model.GCP_OAUTH_CLIENT_ID
 import name.levis.ichor.model.GCP_USER_CREDENTIALS
 import name.levis.ichor.model.KubeSignInInfo
@@ -115,28 +108,6 @@ fun SignInSheet(context: String, onDismiss: () -> Unit, onSignedIn: () -> Unit) 
                     SignInTitle(s.info)
                     Waiting(s.prompt, onCancel = vm::cancel, onCode = vm::completeWithCode)
                 }
-            }
-        }
-    }
-}
-
-/**
- * Starts Google's sign-in (Play build): a token at once when the user already allowed the
- * app, else Google's account picker and consent, whose answer [onAnswer] gets too.
- */
-@Composable
-private fun rememberGoogleSignIn(google: GoogleNativeSignIn, onAnswer: (GoogleAuthorization, String) -> Unit): () -> Unit {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val failedText = stringResource(R.string.kube_signin_google_unavailable)
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-        onAnswer(google.fromResolution(context, result.data), failedText)
-    }
-    return {
-        scope.launch {
-            when (val answer = google.authorize(context, silent = false)) {
-                is GoogleAuthorization.NeedsUser -> picker.launch(IntentSenderRequest.Builder(answer.intentSender).build())
-                else -> onAnswer(answer, failedText)
             }
         }
     }
@@ -204,7 +175,7 @@ private fun CredentialsForm(info: KubeSignInInfo, checking: Boolean, onSubmit: (
  * code is shown big, to copy, with a button opening the page to enter it.
  */
 @Composable
-private fun Waiting(prompt: SignInPrompt?, onCancel: () -> Unit, onCode: (String) -> Unit) {
+internal fun Waiting(prompt: SignInPrompt?, onCancel: () -> Unit, onCode: (String) -> Unit) {
     val context = LocalContext.current
     val noBrowser = stringResource(R.string.kube_signin_no_browser)
     val open = { url: String -> if (!openInBrowser(context, url)) Toast.makeText(context, noBrowser, Toast.LENGTH_LONG).show() }

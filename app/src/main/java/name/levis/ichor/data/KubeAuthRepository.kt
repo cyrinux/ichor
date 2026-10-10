@@ -1,6 +1,7 @@
 package name.levis.ichor.data
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -8,6 +9,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import name.levis.ichor.model.DiscoveryProgress
 import name.levis.ichor.model.KubeSignInInfo
 import name.levis.ichor.model.isKube
 import name.levis.ichor.model.SignInPrompt
@@ -67,17 +69,7 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
 
     /** Signs [context] in in the browser or with a device code; cancelling the collector stops it. */
     fun signIn(context: String): Flow<SignInEvent> = callbackFlow {
-        val listener = object : SignInListener {
-            override fun onPrompt(json: String) {
-                runCatching { TalosJson.decodeFromString(SignInPrompt.serializer(), json) }
-                    .onSuccess { trySend(SignInEvent.Prompt(it)) }
-            }
-
-            override fun onDone(errMessage: String) {
-                trySend(SignInEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
-                close()
-            }
-        }
+        val listener = signInListener()
         val run = if (isTalos(context)) {
             Ichorgo.startTalosSignIn(talosYaml(), context, listener)
         } else {
@@ -97,22 +89,38 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
 
     /** Signs the account [email] in to the Omni instance at [endpoint] in the browser; cancelling stops it. */
     fun omniSignIn(endpoint: String, email: String): Flow<SignInEvent> = callbackFlow {
-        val run = Ichorgo.startOmniAccountSignIn(
-            endpoint,
-            email,
-            object : SignInListener {
-                override fun onPrompt(json: String) {
-                    runCatching { TalosJson.decodeFromString(SignInPrompt.serializer(), json) }
-                        .onSuccess { trySend(SignInEvent.Prompt(it)) }
-                }
-
-                override fun onDone(errMessage: String) {
-                    trySend(SignInEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
-                    close()
-                }
-            },
-        )
+        val run = Ichorgo.startOmniAccountSignIn(endpoint, email, signInListener())
         awaitClose { run.cancel() }
+    }
+
+    /**
+     * Runs the browser sign-in the [provider] discovery credentials [secrets] need (GKE with
+     * the organisation's OAuth client) before [discover]; ends at once for credentials that
+     * need none. The browser's way back reaches it through [completeSignIn]; cancelling stops it.
+     */
+    fun discoverSignIn(provider: String, secrets: Map<String, String>): Flow<SignInEvent> = callbackFlow {
+        val run = Ichorgo.startDiscoverSignIn(provider, encodeSecrets(secrets), signInListener())
+        activeSignIn.set(run)
+        awaitClose {
+            activeSignIn.compareAndSet(run, null)
+            run.cancel()
+        }
+    }
+
+    /** Drops the session a discovery's sign-in got (the import screen closed). */
+    fun forgetDiscoverSignIn() = Ichorgo.forgetDiscoverSignIn()
+
+    /** A Go sign-in listener that sends its prompts and its end to this flow. */
+    private fun ProducerScope<SignInEvent>.signInListener() = object : SignInListener {
+        override fun onPrompt(json: String) {
+            runCatching { TalosJson.decodeFromString(SignInPrompt.serializer(), json) }
+                .onSuccess { trySend(SignInEvent.Prompt(it)) }
+        }
+
+        override fun onDone(errMessage: String) {
+            trySend(SignInEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+            close()
+        }
     }
 
     /** Checks and stores an Omni service account [key]; returns the identity it signs as. */
@@ -142,6 +150,9 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
     suspend fun discover(provider: String, secrets: Map<String, String>): String = withContext(Dispatchers.IO) {
         Ichorgo.discoverClusters(provider, encodeSecrets(secrets))
     }
+
+    /** How far the running [discover] got. */
+    fun discoverProgress(): DiscoveryProgress = TalosJson.decodeFromString(DiscoveryProgress.serializer(), Ichorgo.discoverProgress())
 
     /**
      * Signs the contexts [names] in with the [secrets] that found them (discovery), when they

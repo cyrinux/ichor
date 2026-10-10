@@ -332,6 +332,11 @@ where a failed upgrade can be rolled back.
   upgrade screen, on by default. The upgrade then runs as a node maintenance: cordon, drain
   (PodDisruptionBudgets honoured), upgrade, wait until the node is back and Ready, uncordon. A
   drain that cannot finish stops before the upgrade is requested and leaves the node cordoned.
+- **Pre-pull the image first:** the upgrade screen's "Pre-pull the image on all nodes" downloads
+  the installer on every node ahead of the maintenance window (`talosctl image pull`, os:admin),
+  three nodes at a time, so each reboot does not wait for the download. A node's Images screen
+  can pull any image on every node the same way, into the Kubernetes or the system images. A
+  node that cannot pull shows its error; the others go on.
 
 ### Argo CD app icons
 
@@ -473,6 +478,16 @@ when no such label is set, as on bare metal.
 | `doctl … exec-credential` | A DigitalOcean API token (short-lived cluster credentials from it) |
 | `rancher token` | A Rancher API key |
 
+**GKE credentials by QR:** scan a gcloud ADC file from the import screen or tap
+**Scan credentials QR code** in GKE discovery. It opens discovery with the credential
+filled in; choose projects if needed, then tap **Find clusters**. Google user,
+workforce identity session and service account files are supported. Keep the QR
+private: it contains a refresh token or private key.
+
+```sh
+qrencode -t ansiutf8 < ~/.config/gcloud/application_default_credentials.json
+```
+
 **GKE with your organisation's OAuth client**: in the Google Cloud console (APIs & Services),
 1. set the OAuth consent screen to **Internal** (no Google verification needed),
 2. create an OAuth client ID of type **Desktop app**,
@@ -488,9 +503,12 @@ shows a sign-in code to paste. The code is useless without the key only the app 
 
 **Add from a cloud account** (on the add screen) lists the clusters of an AWS, Google Cloud,
 Azure, DigitalOcean or Rancher account and adds the ones you pick, signed in with the same
-credentials. For Google Cloud that is a service account key, or the gcloud user credentials of
-your own account: the app then looks through every project you can see (or the project IDs you
-enter). A Talos cluster can also use one of these kubeconfig clusters for its Kubernetes
+credentials. For Google Cloud that is a service account key, the gcloud user credentials of
+your own account, **Sign in with Google** (Play build, and iOS builds that carry Ichor's Google
+client), or your organisation's OAuth client in the browser, with no file to paste: the app then
+looks through every project you can see (or the project IDs you enter), and the clusters you add
+reuse that sign-in without a second prompt.
+A Talos cluster can also use one of these kubeconfig clusters for its Kubernetes
 screens (cluster menu → **Kubernetes access**): your own identity and RBAC instead of the
 admin kubeconfig, which also works with an `os:reader` talosconfig.
 
@@ -585,6 +603,23 @@ a fresh install. Backups move between Android and iOS.
   | Leave etcd first (`--graceful`, on by default) | Cordon, drain and leave etcd cleanly first. Off on a control plane, its etcd member stays behind: remove it from the etcd screen. |
   | Reboot after (`--reboot`, on by default) | Off, the node stays powered off once wiped. |
 
+- **Replacing a control plane (etcd → a failed member's menu → Replace this control plane…,
+  `os:admin`):** one screen walks through the replacement, step by step, read from the cluster
+  so that leaving and coming back resumes:
+  1. **Check etcd quorum:** the removal must leave enough healthy members. A healthy member is
+     never offered, and a removal that would lose quorum is blocked with the reason.
+  2. **Remove the etcd member:** the usual removal plan and typed hostname. The Go core reads
+     the plan again first, refuses a member that recovered, and sends the removal through a
+     healthy control plane.
+  3. **Reset the old node:** the reset sheet, without `--graceful` (the member already left).
+     A node that no longer answers is skipped: power it off yourself. So is an address that a
+     current member now uses (a replacement that took the old IP).
+  4. **Boot the new node:** by hand for now. Boot it from a Talos image, open the machine config
+     of a healthy control plane (secrets revealed only after the app lock), save it as
+     `controlplane.yaml`, then run `talosctl apply-config --insecure -n <new-node-ip> -f controlplane.yaml`
+     from a laptop.
+  5. **Wait for the new member:** the screen polls etcd until a new healthy voting member joins.
+
 - **Machine config changes (node menu → Machine config → Edit):**
   - **Review first:** the node checks every change with a dry run before anything is applied.
   - **Ways to apply it:**
@@ -597,6 +632,15 @@ a fresh install. Backups move between Android and iOS.
     | Apply and reboot now | Applied, then the node reboots; you type its hostname first. |
 
   - **Changes that need a reboot:** they offer only the last two modes.
+  - **A try keeps running in the background:** leave the screen and the countdown goes on in a notification, with **Keep** and **Revert now**.
+    - **App lock:** with it on, Keep opens the app first.
+    - **On iOS:** the background time is short. Once iOS suspends Ichor, the node reverts by itself at the deadline, and the notification says so.
+  - **The same change on several nodes ("Also apply to other nodes…"):**
+    - **Preview:** the field edits are replayed on each picked node's own config, and you see each node's diff first. A node the edits do not fit is skipped.
+    - **Run:** one confirmation for all, typed with the cluster's name. Nodes are applied one after the other, workers first and control planes last, and the first failure stops the rest.
+    - **Reboot mode:** each node is back before the next starts, and etcd must be healthy before a control plane reboots.
+    - **Try mode:** for one node only.
+    - **In the background:** on Android the rollout goes on in a notification, node by node, after you leave the app. On iOS it runs while iOS allows, and a notification asks you to come back.
 - **App lock (Settings → Security):**
   - **Methods:** fingerprint, with the device PIN, pattern or password as fallback; or a
     **security key** (below).
@@ -657,6 +701,16 @@ talosctl -n <control-plane-ip> bootstrap --recover-from=./etcd.snapshot
 ```
 
 Post-quantum `age1pq1…` / `age1tagpq1…` keys need age 1.3 or later to decrypt.
+
+Or from the phone, when no etcd member answers any more: **etcd → Recover from snapshot…**
+(os:admin) picks the file, asks for its passphrase or age secret key (`AGE-SECRET-KEY-1…`, never
+stored), the control plane to recover on, the typed cluster name and an acknowledgement, then
+uploads it and bootstraps etcd there with one member. The file is decrypted while it uploads: the
+clear database never touches the phone's storage. A snapshot encrypted for a YubiKey or an SSH key
+cannot be opened on the phone: decrypt it on a laptop first. The action is refused while any
+member still answers (a recovery would split a live cluster). Afterwards, reset the other control
+planes so they join the new one, as in the
+[Talos disaster recovery guide](https://www.talos.dev/latest/advanced/disaster-recovery/).
 
 ### NOSPACE fix
 

@@ -173,6 +173,13 @@ enum class DiscoveryProvider(val id: String, @StringRes val label: Int) {
     OMNI("omni", R.string.kube_signin_method_omni),
 }
 
+/**
+ * How far a running cloud discovery got (DiscoverProgress): GKE with a Google account reads
+ * many projects. [projects] is 0 while they are still being listed.
+ */
+@Serializable
+data class DiscoveryProgress(val running: Boolean = false, val projects: Int = 0, val scanned: Int = 0, val clusters: Int = 0)
+
 /** The fields each provider asks for (KubeDiscoverFields), only for the providers the app shows. */
 fun discoveryFields(byProvider: Map<String, List<String>>): Map<DiscoveryProvider, List<String>> =
     DiscoveryProvider.entries.mapNotNull { p -> byProvider[p.id]?.takeIf { it.isNotEmpty() }?.let { p to it } }.toMap()
@@ -183,6 +190,12 @@ fun discoveryFields(byProvider: Map<String, List<String>>): Map<DiscoveryProvide
  */
 fun discoveryOptions(byProvider: Map<String, List<List<String>>>, fields: Map<DiscoveryProvider, List<String>>): Map<DiscoveryProvider, List<List<String>>> =
     fields.mapValues { (p, set) -> byProvider[p.id]?.filter { it.isNotEmpty() }?.takeIf { it.isNotEmpty() } ?: listOf(set) }
+
+/** A discovery credential set that signs in in the browser first (the organisation's OAuth client). */
+fun discoveryNeedsSignIn(fields: List<String>): Boolean = GCP_OAUTH_CLIENT_ID in fields
+
+/** A discovery credential set that is Google's own sign-in (Play build): a button, nothing to type but the projects. */
+fun discoveryUsesGoogle(fields: List<String>): Boolean = GCP_GOOGLE_SIGN_IN in fields
 
 /**
  * The stored names of the contexts an import added: names that were not stored [before] and

@@ -36,6 +36,8 @@ const (
 	annotationRun = "ichor.levis.name/run"
 
 	lockRunCluster = "cluster"
+	// lockRunKubernetes is a Kubernetes upgrade (StartK8sUpgrade).
+	lockRunKubernetes = "kubernetes"
 )
 
 var leasesPath = "/apis/coordination.k8s.io/v1/namespaces/" + upgradeLockNamespace + "/leases"
@@ -88,9 +90,9 @@ type upgradeLockInfo struct {
 }
 
 func (i upgradeLockInfo) describe() string {
-	if i.run == lockRunCluster {
-		return fmt.Sprintf("another Ichor cluster upgrade (to %s, started %s) holds the cluster upgrade lock until %s",
-			i.to, i.since.Local().Format("15:04"), i.expires.Local().Format("15:04"))
+	if name, whole := map[string]string{lockRunCluster: "cluster", lockRunKubernetes: "Kubernetes"}[i.run]; whole {
+		return fmt.Sprintf("another Ichor %s upgrade (to %s, started %s) holds the cluster upgrade lock until %s",
+			name, i.to, i.since.Local().Format("15:04"), i.expires.Local().Format("15:04"))
 	}
 
 	who := i.hostname

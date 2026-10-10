@@ -12,8 +12,21 @@ const explainIndexBody = `{"paths":{
 	"api/v1":{"serverRelativeURL":"/openapi/v3/api/v1?hash=AAA111"},
 	"apis/apps/v1":{"serverRelativeURL":"/openapi/v3/apis/apps/v1?hash=BBB222"}}}`
 
+// freshExplainCache gives the test an empty document cache: it is keyed by the kubeconfig,
+// whose server is a test server's loopback port, which a later test may get again.
+func freshExplainCache(t *testing.T) {
+	t.Helper()
+
+	saved := explainDocs
+	explainDocs = newExplainCache()
+
+	t.Cleanup(func() { explainDocs = saved })
+}
+
 func explainFake(t *testing.T) (*fakeKubeAPI, string) {
 	t.Helper()
+
+	freshExplainCache(t)
 
 	f := newFakeKubeAPI(t, map[string]string{
 		"GET /openapi/v3":              explainIndexBody,
@@ -145,6 +158,8 @@ func TestKubeExplainErrors(t *testing.T) {
 }
 
 func TestKubeExplainWithoutOpenAPIV3(t *testing.T) {
+	freshExplainCache(t)
+
 	f := newFakeKubeAPI(t, map[string]string{})
 
 	_, err := KubeExplain(kubeStoreFor(t, f), "admin@test", "", "apps", "v1", "Deployment", "spec")

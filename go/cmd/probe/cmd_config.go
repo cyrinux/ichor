@@ -81,6 +81,17 @@ var configCommands = []command{
 
 		return "done: " + <-c.done, nil
 	}},
+	{name: "k8s-upgrade-plan", args: "VERSION", run: func(e env) (string, error) {
+		// Read-only: the images per node, the support range, deprecated APIs, blockers.
+		return ichorgo.K8sUpgradePlan(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+	}},
+	{name: "k8s-upgrade", args: "VERSION [--dry-run]", run: func(e env) (string, error) {
+		// Without --dry-run it upgrades Kubernetes for real: use a disposable cluster.
+		m := maintenanceProbe{done: make(chan string, 1)}
+		ichorgo.StartK8sUpgrade(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2) == "--dry-run", m)
+
+		return "done: " + <-m.done, nil
+	}},
 	{name: "config-apply", args: "NODE FILE MODE", run: func(e env) (string, error) {
 		// Applies FILE for good (MODE: auto, staged or reboot): it changes the node for real,
 		// and "reboot" reboots it.
@@ -91,6 +102,29 @@ var configCommands = []command{
 
 		m := maintenanceProbe{done: make(chan string, 1)}
 		ichorgo.StartConfigApply(e.cfg, e.context, flag.Arg(1), base, draft, flag.Arg(3), m)
+
+		return "done: " + <-m.done, nil
+	}},
+	{name: "config-multi-preview", args: "NODES EDITSFILE", run: func(e env) (string, error) {
+		// EDITSFILE is a JSON array of config-edit edits, replayed on each node (a,b,c). Only
+		// dry runs reach the nodes.
+		edits, err := os.ReadFile(flag.Arg(2))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.MachineConfigMultiPreview(e.cfg, e.context, flag.Arg(1), string(edits))
+	}},
+	{name: "config-multi-apply", args: "NODES EDITSFILE MODE", run: func(e env) (string, error) {
+		// Applies the edits to each node for good, one after the other (MODE: auto, staged or
+		// reboot): it changes the nodes for real, and "reboot" reboots them.
+		edits, err := os.ReadFile(flag.Arg(2))
+		if err != nil {
+			return "", err
+		}
+
+		m := maintenanceProbe{done: make(chan string, 1)}
+		ichorgo.StartConfigApplyMulti(e.cfg, e.context, flag.Arg(1), string(edits), flag.Arg(3), m)
 
 		return "done: " + <-m.done, nil
 	}},
