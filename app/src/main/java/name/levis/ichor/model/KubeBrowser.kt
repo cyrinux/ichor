@@ -2,6 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import name.levis.ichor.model.KubeDiffResource
 
 // Mirrors go/ichorgo/kube_browser.go and kube_edit.go: any kind the API server serves, listed
 // with the columns of its server-side Table, and one object as YAML (plans/roadmap/kubeconfig-only.md §7).
@@ -174,6 +175,26 @@ fun cellTone(column: String, value: String): CellTone {
         v in WARN_VALUES || v.startsWith("init:") -> CellTone.WARN
         else -> CellTone.NONE
     }
+}
+
+/**
+ * What applying pasted manifests did, or would do (KubeApplyPreview, KubeApply): one row per
+ * object, sorted by the Go core (what needs a look first); [applied] and [failed] count after
+ * a real apply ([failed] counts refused dry runs too).
+ */
+@Serializable
+data class KubeApplyResult(
+    val resources: List<KubeDiffResource> = emptyList(),
+    val warnings: List<String> = emptyList(),
+    val applied: Int = 0,
+    val failed: Int = 0,
+) {
+    /** Counts by change, in [DiffChange] order, the empty ones left out. */
+    val counts: List<Pair<DiffChange, Int>>
+        get() = resources.groupingBy { it.change }.eachCount().toSortedMap().map { it.key to it.value }
+
+    /** At least one object would be created or changed. */
+    val hasChanges: Boolean get() = resources.any { it.change.isChange }
 }
 
 /** What saving the edited YAML would change (KubeObjectUpdatePreview). */

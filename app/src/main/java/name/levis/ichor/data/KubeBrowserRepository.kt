@@ -16,6 +16,7 @@ import name.levis.ichor.model.HelmReleaseList
 import name.levis.ichor.model.HelmRollbackPlan
 import name.levis.ichor.model.DeletePropagation
 import name.levis.ichor.model.KUBE_PAGE_SIZE
+import name.levis.ichor.model.KubeApplyResult
 import name.levis.ichor.model.KubeConfigData
 import name.levis.ichor.model.KubeDeletePreview
 import name.levis.ichor.model.configDataKind
@@ -112,6 +113,24 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     suspend fun updatePreview(ref: KubeObjectRef, edited: String): KubeEditPreview = kubeCall { cfg, ctx, server ->
         val json = Ichorgo.kubeObjectUpdatePreview(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, edited)
         TalosJson.decodeFromString(KubeEditPreview.serializer(), json)
+    }
+
+    /**
+     * What applying [manifests] (multi-document YAML) would do, from server-side apply dry runs:
+     * per object created, changed (with a diff), unchanged or refused. [namespace] is used for a
+     * namespaced object that names none. Never cached.
+     */
+    suspend fun applyPreview(namespace: String, manifests: String): KubeApplyResult = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeApplyResult.serializer(), Ichorgo.kubeApplyPreview(cfg, ctx, server, namespace, manifests))
+    }
+
+    /**
+     * Applies [manifests] with server-side apply (os:admin), each object on its own: a refused
+     * one does not stop the others. Throws when some were refused, with the result's detail lost:
+     * callers preview first.
+     */
+    suspend fun apply(namespace: String, manifests: String): KubeApplyResult = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeApplyResult.serializer(), Ichorgo.kubeApply(cfg, ctx, server, namespace, manifests))
     }
 
     /** Saves [edited] as [ref]; refused when the object changed since it was read. */
