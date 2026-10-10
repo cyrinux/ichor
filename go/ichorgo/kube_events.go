@@ -45,12 +45,16 @@ type kubeEventList struct {
 
 type eventObject struct {
 	Metadata struct {
+		UID               string    `json:"uid"`
+		Namespace         string    `json:"namespace"`
+		Name              string    `json:"name"`
 		CreationTimestamp time.Time `json:"creationTimestamp"`
 	} `json:"metadata"`
 	InvolvedObject struct {
-		Kind      string `json:"kind"`
-		Namespace string `json:"namespace"`
-		Name      string `json:"name"`
+		Kind       string `json:"kind"`
+		APIVersion string `json:"apiVersion"`
+		Namespace  string `json:"namespace"`
+		Name       string `json:"name"`
 	} `json:"involvedObject"`
 	Type           string     `json:"type"`
 	Reason         string     `json:"reason"`
