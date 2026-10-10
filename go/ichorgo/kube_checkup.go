@@ -21,6 +21,7 @@ const (
 	checkCertificates  = "certificates"
 	checkSecrets       = "secrets"
 	checkHelm          = "helm"
+	checkMonitoring    = "monitoring"
 )
 
 // A section's status beyond the health values: the cluster does not run what it checks, or
@@ -86,7 +87,8 @@ type checkupFinding struct {
 // (os:admin): failing pods and Jobs, Warning events, volumes filling up, deprecated APIs
 // still in use, admission webhooks without a backend, nodes out of room, load balancers
 // without an address, objects stuck in Terminating, pending certificate requests, external
-// secrets that do not sync and Helm releases that failed, as JSON (see checkupReport).
+// secrets that do not sync, Helm releases that failed, and the scrape targets down and rules
+// failing in the first Prometheus discovered, as JSON (see checkupReport).
 // It only reads. kubeServer: see KubePods.
 func KubeCheckup(configYAML, contextName, kubeServer string) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -144,7 +146,7 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 	wg.Wait()
 
 	report := checkupReport{KubeVersion: version}
-	sections := make([]checkupSection, 12)
+	sections := make([]checkupSection, 13)
 
 	wg.Go(func() { sections[0] = checkupWorkloads(ctx, k, in) })
 	wg.Go(func() { sections[1] = checkupEvents(ctx, k, in) })
@@ -157,6 +159,7 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 	wg.Go(func() { sections[9] = checkupCSRs(ctx, k, in) })
 	wg.Go(func() { sections[10] = checkupExternalSecrets(ctx, k, in) })
 	wg.Go(func() { sections[11], report.Releases = checkupHelm(ctx, k, in) })
+	wg.Go(func() { sections[12] = checkupMonitoring(ctx, k, in) })
 	wg.Wait()
 
 	report.Sections = sections

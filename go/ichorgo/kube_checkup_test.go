@@ -157,6 +157,7 @@ func TestReadCheckup(t *testing.T) {
 		checkCertificates:  {"csrPending:warning:system:node:n1"},
 		checkSecrets:       {"secretStoreNotReady:critical:vault", "externalSecretFailed:warning:db"},
 		checkHelm:          {"helmFailed:warning:shop", "helmPending:warning:mon"},
+		checkMonitoring:    {},
 	}
 
 	if len(r.Sections) != len(want) {
@@ -232,7 +233,7 @@ func TestReadCheckupEmptyCluster(t *testing.T) {
 
 	for _, s := range r.Sections {
 		want := healthOK
-		if s.ID == checkLoadBalancers || s.ID == checkSecrets || s.ID == checkHelm {
+		if s.ID == checkLoadBalancers || s.ID == checkSecrets || s.ID == checkHelm || s.ID == checkMonitoring {
 			want = checkAbsent
 		}
 
@@ -410,7 +411,7 @@ func TestKubeCheckupDemo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if r.Status != healthCritical || len(r.Sections) != 12 || len(r.Nodes) != 5 || len(r.Volumes) == 0 || len(r.Releases) == 0 {
+	if r.Status != healthCritical || len(r.Sections) != 13 || len(r.Nodes) != 5 || len(r.Volumes) == 0 || len(r.Releases) == 0 {
 		t.Fatalf("%+v", r)
 	}
 

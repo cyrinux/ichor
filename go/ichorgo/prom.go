@@ -161,18 +161,57 @@ var errPromNoAnswer = errors.New("no answer")
 // body is sent as JSON, nil for none. An answer from the API server itself (no pod behind
 // the Service) is an error here; a request left without an answer is errPromNoAnswer.
 func promSend(target kubeTarget, src promSource, method, pathQuery string, body []byte) (int, []byte, error) {
+	if src.Mode == promModeURL {
+		ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
+		defer cancel()
+
+		return promHTTPDo(ctx, src, method, src.URL+pathQuery, promHeader(src), body)
+	}
+
+	a, err := withKube(target, func(ctx context.Context, k *kubeClient) (promProxyAnswer, error) {
+		return promProxyCall(ctx, k, src, method, pathQuery, body)
+	})
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return a.result(src)
+}
+
+// promSendWith is promSend through a client already open (the checkup's), for a source in
+// proxy mode.
+func promSendWith(ctx context.Context, k *kubeClient, src promSource, method, pathQuery string) (int, []byte, error) {
+	ctx, cancel := context.WithTimeout(ctx, callTimeout)
+	defer cancel()
+
+	a, err := promProxyCall(ctx, k, src, method, pathQuery, nil)
+	if err != nil {
+		return 0, nil, kubeError(err)
+	}
+
+	return a.result(src)
+}
+
+// promHeader is the headers every request to the source carries.
+func promHeader(src promSource) map[string]string {
 	header := map[string]string{}
 	if src.Tenant != "" {
 		header["X-Scope-OrgID"] = src.Tenant
 	}
 
-	if src.Mode == promModeURL {
-		ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
-		defer cancel()
+	return header
+}
 
-		return promHTTPDo(ctx, src, method, src.URL+pathQuery, header, body)
-	}
+// promProxyAnswer is a service proxy answer, before result reads it.
+type promProxyAnswer struct {
+	status  int
+	body    []byte
+	kube    bool // the API server's own Status
+	timeout bool
+}
 
+// promProxyCall makes one request to the source through the API server's service proxy.
+func promProxyCall(ctx context.Context, k *kubeClient, src promSource, method, pathQuery string, body []byte) (promProxyAnswer, error) {
 	path := serviceProxyPath(src.Namespace, fmt.Sprintf("%s:%d", url.PathEscape(src.Service), src.Port), src.PathPrefix+pathQuery)
 
 	contentType := ""
@@ -180,35 +219,27 @@ func promSend(target kubeTarget, src promSource, method, pathQuery string, body 
 		contentType = "application/json"
 	}
 
-	type answer struct {
-		status  int
-		body    []byte
-		kube    bool // the API server's own Status
-		timeout bool
-	}
-
-	a, err := withKube(target, func(ctx context.Context, k *kubeClient) (answer, error) {
-		resp, data, err := k.send(ctx, method, path, "application/json", contentType, body, header)
-
-		switch {
-		case errors.Is(err, context.DeadlineExceeded):
-			// A slow backend, not a dead client: keep it cached.
-			return answer{timeout: true}, nil
-		case err != nil:
-			return answer{}, err
-		case resp.StatusCode/100 == 2 || !isKubeStatus(data):
-			return answer{status: resp.StatusCode, body: data}, nil
-		case resp.StatusCode == http.StatusUnauthorized:
-			// Expired credentials: the client is dropped as for any other call.
-			return answer{}, kubeStatusError(resp.StatusCode, data)
-		default:
-			return answer{status: resp.StatusCode, body: data, kube: true}, nil
-		}
-	})
+	resp, data, err := k.send(ctx, method, path, "application/json", contentType, body, promHeader(src))
 
 	switch {
+	case errors.Is(err, context.DeadlineExceeded):
+		// A slow backend, not a dead client: keep it cached.
+		return promProxyAnswer{timeout: true}, nil
 	case err != nil:
-		return 0, nil, err
+		return promProxyAnswer{}, err
+	case resp.StatusCode/100 == 2 || !isKubeStatus(data):
+		return promProxyAnswer{status: resp.StatusCode, body: data}, nil
+	case resp.StatusCode == http.StatusUnauthorized:
+		// Expired credentials: the client is dropped as for any other call.
+		return promProxyAnswer{}, kubeStatusError(resp.StatusCode, data)
+	default:
+		return promProxyAnswer{status: resp.StatusCode, body: data, kube: true}, nil
+	}
+}
+
+// result is the answer as promSend returns it: the API server's own an error.
+func (a promProxyAnswer) result(src promSource) (int, []byte, error) {
+	switch {
 	case a.timeout:
 		return 0, nil, errPromNoAnswer
 	case a.kube:
