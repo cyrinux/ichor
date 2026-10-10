@@ -62,11 +62,11 @@ struct ImportView: View {
         Group {
             switch preview {
             case .talos(let yaml, let summary)?:
-                PreviewList(summary: summary, adding: model.hasConfig, busy: busy, onCancel: { self.preview = nil }) {
+                PreviewList(summary: summary, adding: model.hasConfig, busy: busy, onCancel: cancelPreview) {
                     Task { await save(yaml) }
                 }
             case .kube(let yaml, let summary, let conflicts)?:
-                KubePreviewList(summary: summary, conflicts: conflicts, busy: busy, onCancel: { self.preview = nil }) { choices in
+                KubePreviewList(summary: summary, conflicts: conflicts, busy: busy, onCancel: cancelPreview) { choices in
                     Task { await saveKube(yaml, summary: summary, conflicts: conflicts, choices: choices) }
                 }
             case nil:
@@ -80,6 +80,7 @@ struct ImportView: View {
                     .accessibilityLabel("How to create a talosconfig")
             }
         }
+        .onDisappear { TalosClient.forgetDiscoverSignIn() }
         .sheet(isPresented: $showingHelp) { HelpSheet() }
         .sheet(isPresented: $addingFromOmni) {
             OmniDiscoveryView { talosconfig in validate(talosconfig) }
@@ -316,6 +317,12 @@ struct ImportView: View {
         }
     }
 
+    private func cancelPreview() {
+        preview = nil
+        discovered = nil
+        TalosClient.forgetDiscoverSignIn()
+    }
+
     private func saveKube(_ yaml: String, summary: ConfigSummary, conflicts: [KubeImportConflict],
                           choices: [KubeImportChoice]) async {
         busy = true
@@ -333,6 +340,7 @@ struct ImportView: View {
         }
         discovered = nil
         let failures = await signInDiscovered(summary: summary, conflicts: conflicts, choices: choices, secrets: found.secrets)
+        TalosClient.forgetDiscoverSignIn()
         if failures.isEmpty {
             onImported()
         } else {

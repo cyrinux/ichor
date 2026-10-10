@@ -520,9 +520,10 @@ shows a sign-in code to paste. The code is useless without the key only the app 
 **Add from a cloud account** (on the add screen) lists the clusters of an AWS, Google Cloud,
 Azure, DigitalOcean or Rancher account and adds the ones you pick, signed in with the same
 credentials. For Google Cloud that is a service account key, the gcloud user credentials of
-your own account, **Sign in with Google** (Play build and iOS), or your organisation's OAuth
-client in the browser, with no file to paste: the app then looks through every project you can
-see (or the project IDs you enter), and the clusters you add stay signed in with that sign-in.
+your own account, **Sign in with Google** (Play build, and iOS builds that carry Ichor's Google
+client), or your organisation's OAuth client in the browser, with no file to paste: the app then
+looks through every project you can see (or the project IDs you enter), and the clusters you add
+reuse that sign-in without a second prompt.
 A Talos cluster can also use one of these kubeconfig clusters for its Kubernetes
 screens (cluster menu → **Kubernetes access**): your own identity and RBAC instead of the
 admin kubeconfig, which also works with an `os:reader` talosconfig.
