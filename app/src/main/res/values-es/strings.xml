@@ -3134,6 +3134,10 @@
     <string name="kube_field_gcp_service_account">Clave de cuenta de servicio (JSON)</string>
     <string name="kube_field_gcp_user_credentials">Credenciales de usuario de gcloud (application_default_credentials.json)</string>
     <string name="kube_field_gcp_projects">ID de proyecto</string>
+    <string name="kube_field_gcp_oauth_client_id">ID de cliente OAuth</string>
+    <string name="kube_field_gcp_oauth_client_secret">Secreto de cliente OAuth</string>
+    <string name="kube_signin_option_gcp_oauth">El cliente OAuth de tu organización</string>
+    <string name="kube_signin_gcp_oauth_hint">Pide al administrador de Google Cloud un cliente OAuth de tipo Aplicación de escritorio (APIs y servicios → Credenciales) con una pantalla de consentimiento Interna. Iniciar sesión abre después tu cuenta de Google en el navegador.</string>
     <string name="kube_discover_gcp_projects_hint">Déjalo vacío para buscar en todos los proyectos que ve tu cuenta; indica ID de proyecto para ir más rápido en una organización grande.</string>
     <string name="kube_signin_option_gcp_service_account">Clave de cuenta de servicio</string>
     <string name="kube_signin_option_gcp_user">Credenciales de usuario de gcloud</string>

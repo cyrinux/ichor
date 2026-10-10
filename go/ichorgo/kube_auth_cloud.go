@@ -89,13 +89,14 @@ func unauthorized(err error) bool {
 
 // gkeMethod signs in like gke-gcloud-auth-plugin, with a service account key (a signed JWT
 // exchanged for an access token, the OAuth 2.0 JWT bearer grant) or with the user credentials
-// `gcloud auth application-default login` writes (kube_auth_gke_user.go).
+// `gcloud auth application-default login` writes (kube_auth_gke_user.go), or in the browser
+// with the organisation's own OAuth client (kube_auth_gke_oauth.go).
 type gkeMethod struct{}
 
 func (gkeMethod) name() string { return authGKE }
 
 func (gkeMethod) fieldSets() [][]string {
-	return [][]string{{gcpFieldServiceAccount}, {gcpFieldUserCredentials}}
+	return [][]string{{gcpFieldServiceAccount}, {gcpFieldUserCredentials}, {gcpFieldOAuthClientID, gcpFieldOAuthClientSecret}}
 }
 
 type gcpServiceAccount struct {
@@ -139,6 +140,10 @@ func parseServiceAccount(raw string) (gcpServiceAccount, *rsa.PrivateKey, error)
 }
 
 func (gkeMethod) fromSecrets(s map[string]string) (kubeAuthState, error) {
+	if s[gcpFieldOAuthClientID] != "" {
+		return oauthClientState(s)
+	}
+
 	if s[gcpFieldUserCredentials] != "" {
 		return userCredentialsState(s)
 	}
@@ -156,6 +161,10 @@ func (gkeMethod) fromSecrets(s map[string]string) (kubeAuthState, error) {
 }
 
 func (gkeMethod) mint(ctx context.Context, state kubeAuthState) (string, time.Time, kubeAuthState, error) {
+	if state.secret(gcpFieldOAuthClientID) != "" {
+		return googleOAuthMethod(state).mint(ctx, state)
+	}
+
 	if state.secret(gcpFieldUserCredentials) != "" {
 		return mintForGoogleUser(ctx, state)
 	}

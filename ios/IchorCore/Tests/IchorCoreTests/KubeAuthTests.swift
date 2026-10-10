@@ -47,6 +47,15 @@ final class KubeAuthTests: XCTestCase {
         let single = KubeSignInInfo(method: "gke", kind: "credentials", fields: ["gcpServiceAccountJson"])
         XCTAssertEqual(single.fieldSets, [["gcpServiceAccountJson"]])
         XCTAssertEqual(kubeFieldInput("gcpUserCredentialsJson"), .json)
+        XCTAssertEqual(kubeFieldInput("gcpOAuthClientSecret"), .secret)
+        XCTAssertEqual(kubeFieldInput("gcpOAuthClientId"), .plain)
+
+        // The OAuth client of the last sign-in reopens its option, filled.
+        let gke = try XCTUnwrap(try KubeSignInInfo.decode(#"""
+            {"method":"gke","kind":"credentials","options":[["gcpServiceAccountJson"],["gcpUserCredentialsJson"],["gcpOAuthClientId","gcpOAuthClientSecret"]],"values":{"gcpOAuthClientId":"123-abc.apps.googleusercontent.com","gcpOAuthClientSecret":"s"},"signedIn":false}
+            """#))
+        XCTAssertEqual(gke.rememberedOption, 2)
+        XCTAssertTrue(kubeFieldsComplete(gke.fieldSets[2], values: gke.values))
 
         XCTAssertNil(try KubeSignInInfo.decode(""))
     }

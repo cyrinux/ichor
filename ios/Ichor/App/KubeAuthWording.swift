@@ -17,6 +17,8 @@ enum KubeAuthWording {
         case "gcpServiceAccountJson": String(localized: "Service account key (JSON)")
         case "gcpUserCredentialsJson": String(localized: "gcloud user credentials (application_default_credentials.json)")
         case "gcpProjects": String(localized: "Project IDs (optional)")
+        case "gcpOAuthClientId": String(localized: "OAuth client ID")
+        case "gcpOAuthClientSecret": String(localized: "OAuth client secret")
         case "azureClientId": String(localized: "Client ID")
         case "azureClientSecret": String(localized: "Client secret")
         case "azureTenantId": String(localized: "Tenant ID")
@@ -38,6 +40,7 @@ enum KubeAuthWording {
         case "rancherApiKey": "token-xxxxx:secret"
         case "rancherServer": "https://rancher.example.com"
         case "gcpProjects": "sample-proj-1, sample-proj-2"
+        case "gcpOAuthClientId": "123-abc.apps.googleusercontent.com"
         default: nil
         }
     }
@@ -49,6 +52,8 @@ enum KubeAuthWording {
             String(localized: "Bring your gcloud session: on your computer run gcloud auth application-default login, then import ~/.config/gcloud/application_default_credentials.json. When Google ends the session, run it again and import the new file.")
         case "gcpProjects":
             String(localized: "Leave empty to search every project your account can see; list project IDs to go faster in a large organisation.")
+        case "gcpOAuthClientId":
+            String(localized: "Ask your Google Cloud admin for a Desktop app OAuth client (APIs & Services → Credentials) with an Internal consent screen. Sign in then opens your Google account in the browser.")
         default: nil
         }
     }
@@ -61,6 +66,7 @@ enum KubeAuthWording {
         case "awsAccessKeyId": String(localized: "Access keys")
         case "gcpServiceAccountJson": String(localized: "Service account key")
         case "gcpUserCredentialsJson": String(localized: "gcloud user credentials")
+        case "gcpOAuthClientId": String(localized: "Your organisation's OAuth client")
         default: fields.map(fieldLabel).joined(separator: ", ")
         }
     }
