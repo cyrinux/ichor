@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.automirrored.outlined.Logout
@@ -41,6 +42,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import name.levis.ichor.TalosApp
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.WolTarget
@@ -52,7 +54,7 @@ import name.levis.ichor.ui.components.text
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /** What a node row can lead to; destructive ones only ever open their confirmation. */
-enum class NodeAction { LIVE, SERVICES, KERNEL_LOG, REBOOT, SHUTDOWN, SHELL, DRAIN }
+enum class NodeAction { LIVE, SERVICES, KERNEL_LOG, REBOOT, SHUTDOWN, SHELL, DRAIN, CORDON }
 
 /**
  * Swipe right: the node's live graphs. Swipe left (or long-press the card): the action sheet.
@@ -147,6 +149,14 @@ fun NodeActionsSheet(
                 }
                 if (canDrain) {
                     Item(Icons.AutoMirrored.Outlined.Logout, stringResource(R.string.node_menu_drain)) { pick(NodeAction.DRAIN) }
+                    // Only when the node said whether it is cordoned: the entry names what it does.
+                    if (node.cordonKnown) {
+                        Item(Icons.Outlined.Block, stringResource(if (node.cordoned) R.string.node_menu_uncordon else R.string.node_menu_cordon)) {
+                            // The node screen's confirmation then names the right action.
+                            (context.applicationContext as TalosApp).maintenanceManager.learn(node.node, node.cordoned)
+                            pick(NodeAction.CORDON)
+                        }
+                    }
                 }
                 if (canPower) {
                     Item(Icons.Outlined.PowerSettingsNew, stringResource(R.string.overview_action_reboot), danger = true) { pick(NodeAction.REBOOT) }

@@ -170,7 +170,7 @@ internal object Routes {
     fun logs(addr: String, host: String, service: String?) =
         "logs?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&service=${Uri.encode(service.orEmpty())}"
 
-    /** [tab]: 0 services, 1 resources, 2 live, 3 processes, 4 pods; [action]: "reboot"/"shutdown" opens its confirmation. */
+    /** [tab]: 0 services, 1 resources, 2 live, 3 processes, 4 pods; [action]: "reboot"/"shutdown"/"cordon" opens its confirmation. */
     fun node(addr: String, host: String, role: String, tab: Int = 0, action: String = "") =
         "node?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&role=${Uri.encode(role)}&tab=$tab&action=$action"
 }
@@ -185,6 +185,8 @@ internal fun NavHostController.openNodeAction(n: NodeOverview, action: NodeActio
         NodeAction.DRAIN -> navigate(Routes.maintenance(n.node, n.hostname, drain = true))
         NodeAction.REBOOT -> navigate(Routes.node(n.node, n.hostname, n.role, action = "reboot"))
         NodeAction.SHUTDOWN -> navigate(Routes.node(n.node, n.hostname, n.role, action = "shutdown"))
+        // The node screen holds the cordon confirmation and the running-maintenance guard.
+        NodeAction.CORDON -> navigate(Routes.node(n.node, n.hostname, n.role, action = "cordon"))
     }
 }
 

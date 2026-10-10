@@ -82,6 +82,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
                     "shutdown" -> PowerAction.SHUTDOWN
                     else -> null
                 },
+                initialCordon = entry.arguments?.getString("action") == "cordon",
                 onBack = { nav.popBackStack() },
                 onLogs = { service -> nav.navigate(Routes.logs(addr, host, service)) },
                 onContainerLogs = { c ->
@@ -157,6 +158,10 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             hostname = entry.arguments?.getString("host") ?: addr,
             initialVersion = entry.arguments?.getString("version").orEmpty(),
             onBack = { nav.popBackStack() },
+            onMaintenance = {
+                nav.popBackStack()
+                nav.navigate(Routes.maintenance(addr, entry.arguments?.getString("host") ?: addr))
+            },
         )
     }
     composable(

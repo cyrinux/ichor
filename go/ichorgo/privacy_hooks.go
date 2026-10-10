@@ -309,3 +309,47 @@ func (l maskedImageScanListener) OnProgress(json string) {
 func (l maskedImageScanListener) OnDone(reportJSON string, errMessage string) {
 	l.ImageScanListener.OnDone(privacy.mask(reportJSON), privacy.maskPlain(errMessage))
 }
+
+// maskedEtcdFixListener masks the NOSPACE fix's progress and error.
+type maskedEtcdFixListener struct{ EtcdFixListener }
+
+func (l maskedEtcdFixListener) OnProgress(json string) {
+	l.EtcdFixListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedEtcdFixListener) OnDone(errMessage string) {
+	l.EtcdFixListener.OnDone(privacy.maskPlain(errMessage))
+}
+
+// maskedConfigApplyListener masks a config apply's progress and error.
+type maskedConfigApplyListener struct{ ConfigApplyListener }
+
+func (l maskedConfigApplyListener) OnProgress(json string) {
+	l.ConfigApplyListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedConfigApplyListener) OnDone(errMessage string) {
+	l.ConfigApplyListener.OnDone(privacy.maskPlain(errMessage))
+}
+
+// maskedClusterUpgradeListener masks a cluster upgrade's progress and error.
+type maskedClusterUpgradeListener struct{ ClusterUpgradeListener }
+
+func (l maskedClusterUpgradeListener) OnProgress(json string) {
+	l.ClusterUpgradeListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedClusterUpgradeListener) OnDone(errMessage string) {
+	l.ClusterUpgradeListener.OnDone(privacy.maskPlain(errMessage))
+}
+
+// maskedNetToolListener masks a network tool's output lines, result and error.
+type maskedNetToolListener struct{ NetToolListener }
+
+func (l maskedNetToolListener) OnOutput(line string) {
+	l.NetToolListener.OnOutput(privacy.maskPlain(line))
+}
+
+func (l maskedNetToolListener) OnDone(resultJSON string, errMessage string) {
+	l.NetToolListener.OnDone(privacy.mask(resultJSON), privacy.maskPlain(errMessage))
+}

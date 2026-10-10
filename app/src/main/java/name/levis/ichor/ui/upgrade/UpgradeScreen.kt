@@ -33,6 +33,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -54,6 +55,7 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.TalosRelease
+import name.levis.ichor.model.UpgradeExtensionCheck
 import name.levis.ichor.model.UpgradePlan
 import name.levis.ichor.model.etcdBlocked
 import name.levis.ichor.model.releaseSuggestions
@@ -73,6 +75,8 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.model.MaintenanceAction
+import name.levis.ichor.model.MaintenanceUpgrade
 import name.levis.ichor.ui.components.ToggleRow
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.node.HostnameConfirmDialog
@@ -91,6 +95,8 @@ private data class UpgradeChoice(
     val stage: Boolean,
     val force: Boolean,
     val risks: List<String> = emptyList(),
+    /** Cordon and drain first, through a maintenance run (only when the plan is drainable). */
+    val drain: Boolean = false,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,6 +106,8 @@ fun UpgradeScreen(
     hostname: String,
     onBack: () -> Unit,
     initialVersion: String = "",
+    /** Opens the node's maintenance screen, which follows an upgrade started with a drain. */
+    onMaintenance: () -> Unit = {},
     planVm: UpgradePlanViewModel = viewModel(key = "upgrade-plan-$node", factory = factory { UpgradePlanViewModel(app.upgradeManager, node) }),
     targetVm: UpgradeTargetViewModel = viewModel(key = "upgrade-target-$node", factory = factory { UpgradeTargetViewModel(app.upgradeManager) }),
 ) {
@@ -156,8 +164,32 @@ fun UpgradeScreen(
         }
     }
 
+    // Drained first: a maintenance run (cordon, drain, upgrade, uncordon), followed on its screen.
+    fun startDrained(choice: UpgradeChoice, acknowledged: Boolean) {
+        val maintenances = app.maintenanceManager
+        scope.launch {
+            val wasCordoned = maintenances.cordoned.value[node] ?: false
+            val upgrade = MaintenanceUpgrade(choice.image, choice.force)
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    maintenances.start(node, hostname, MaintenanceAction.UPGRADE, false, acknowledged, wasCordoned, upgrade)
+                }
+            }
+            result.exceptionOrNull()?.let { snackbar.showSnackbar(it.uiText().resolve(context)) }
+            when (result.getOrNull()) {
+                true -> onMaintenance()
+                false -> snackbar.showSnackbar(context.getString(R.string.maintenance_other_running, maintenances.current.value?.hostname.orEmpty()))
+                null -> Unit
+            }
+        }
+    }
+
     fun start(choice: UpgradeChoice, fromVersion: String, acknowledged: Boolean) {
         confirming = null
+        if (choice.drain) {
+            startDrained(choice, acknowledged)
+            return
+        }
         scope.launch {
             val result = runCatching {
                 withContext(Dispatchers.IO) {
@@ -306,6 +338,7 @@ private fun UpgradeSetup(
     val target by targetVm.target.collectAsStateWithLifecycle()
     var version by rememberSaveable { mutableStateOf(initialVersion) }
     var stage by rememberSaveable { mutableStateOf(false) }
+    var drain by rememberSaveable { mutableStateOf(true) }
     LaunchedEffect(plan.currentImage, plan.currentVersion, version) { targetVm.setVersion(plan.currentImage, plan.currentVersion, version) }
     val image = if (target.version == version.trim() && !target.pending) target.image else ""
     val versionRisk = if (image.isNotEmpty()) target.risk else ""
@@ -345,17 +378,28 @@ private fun UpgradeSetup(
         if (image.isNotEmpty()) {
             Text(stringResource(R.string.upgrade_image), style = MaterialTheme.typography.labelMedium)
             SelectionContainer { Text(image, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace) }
+            ExtensionCheckRow(plan.node, image)
         }
         if (version.trim().isNotEmpty() && version.trim() == plan.currentVersion) {
             Text(stringResource(R.string.upgrade_same_version, plan.currentVersion), color = colors.warn, style = MaterialTheme.typography.bodySmall)
         }
 
-        ToggleRow(
-            title = stringResource(R.string.upgrade_stage),
-            description = stringResource(R.string.upgrade_stage_desc),
-            checked = stage,
-            onChange = { stage = it },
-        )
+        // The upgrade path that does not drain the node has no staged upgrade either.
+        if (plan.drainable) {
+            ToggleRow(
+                title = stringResource(R.string.upgrade_drain_first),
+                description = stringResource(R.string.upgrade_drain_first_desc),
+                checked = drain,
+                onChange = { drain = it },
+            )
+        } else {
+            ToggleRow(
+                title = stringResource(R.string.upgrade_stage),
+                description = stringResource(R.string.upgrade_stage_desc),
+                checked = stage,
+                onChange = { stage = it },
+            )
+        }
 
         PlanChecks(plan, versionRisk)
         if (force) Text(stringResource(R.string.upgrade_force_on), color = colors.bad, style = MaterialTheme.typography.bodyMedium)
@@ -363,7 +407,10 @@ private fun UpgradeSetup(
             Text(stringResource(R.string.upgrade_other_running, otherRunning), color = colors.warn, style = MaterialTheme.typography.bodySmall)
         }
         Button(
-            onClick = { onStart(UpgradeChoice(version.trim(), image, stage, force, upgradeRisks(plan, versionRisk))) },
+            onClick = {
+                val drained = plan.drainable && drain
+                onStart(UpgradeChoice(version.trim(), image, stage && !plan.drainable, force, upgradeRisks(plan, versionRisk), drained))
+            },
             enabled = gate.canStart,
             modifier = Modifier.fillMaxWidth(),
         ) { Text(stringResource(R.string.upgrade_start)) }
@@ -429,5 +476,30 @@ private fun RiskAcknowledgment(risks: List<String>, understood: Boolean, onChang
     ) {
         Checkbox(checked = understood, onCheckedChange = null, modifier = Modifier.padding(end = 12.dp, top = 8.dp, bottom = 8.dp))
         Text(stringResource(R.string.upgrade_acknowledge_check), style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+/** The node's extensions against the Image Factory's list for [image]'s version; nothing while it is read or when there are none. */
+@Composable
+private fun ExtensionCheckRow(node: String, image: String) {
+    val app = LocalContext.current.applicationContext as TalosApp
+    val colors = LocalStatusColors.current
+    val check by produceState<UpgradeExtensionCheck?>(null, node, image) {
+        value = runCatching { app.talosRepository.upgradeExtensionCheck(node, image) }.getOrNull()
+    }
+    val c = check ?: return
+    when {
+        c.missing.isNotEmpty() -> Text(
+            stringResource(R.string.upgrade_ext_missing, c.targetVersion, c.missing.joinToString(", ")),
+            color = colors.warn,
+            style = MaterialTheme.typography.bodySmall,
+        )
+        c.error.isNotEmpty() -> MutedText(c.error)
+        c.unknown && c.installed.isNotEmpty() -> MutedText(stringResource(R.string.upgrade_ext_not_factory))
+        c.installed.isNotEmpty() -> Text(
+            stringResource(R.string.upgrade_ext_ok, c.targetVersion),
+            color = colors.ok,
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
 }

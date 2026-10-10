@@ -117,6 +117,8 @@ fun NodeDetailScreen(
     onBack: () -> Unit,
     initialTab: Int = 0,
     initialAction: PowerAction? = null,
+    /** Opens the cordon / uncordon confirmation once, as [initialAction] does for power. */
+    initialCordon: Boolean = false,
     onLogs: (service: String?) -> Unit,
     onContainerLogs: (ContainerInfo) -> Unit,
     onMenu: (NodeMenuEntry) -> Unit,
@@ -153,6 +155,11 @@ fun NodeDetailScreen(
     val maintenanceRunning = maintenance?.running == true
     val cordoned by app.maintenanceManager.cordoned.collectAsStateWithLifecycle()
     var confirmingCordon by remember { mutableStateOf(false) }
+    var initialCordonShown by rememberSaveable { mutableStateOf(false) }
+    if (!initialCordonShown && initialCordon) {
+        initialCordonShown = true
+        confirmingCordon = true
+    }
     var confirmingReset by remember { mutableStateOf(false) }
     val reset: ResetViewModel = viewModel(key = "reset-$node", factory = factory { ResetViewModel(app.talosRepository, node) })
     val resetState by reset.state.collectAsStateWithLifecycle()

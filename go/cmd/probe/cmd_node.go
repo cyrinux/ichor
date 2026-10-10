@@ -12,6 +12,34 @@ import (
 
 // Talos nodes and the cluster.
 var nodeCommands = []command{
+	{name: "upgrade-ext", args: "NODE IMAGE", run: func(e env) (out string, err error) {
+		// Read-only: the node's extensions against the Image Factory's list for IMAGE's version.
+		return ichorgo.UpgradeExtensionCheck(e.cfg, e.context, flag.Arg(1), flag.Arg(2))
+	}},
+	{name: "kubespan-diag", args: "[NODE]", run: func(e env) (out string, err error) {
+		// Read-only: one node's peers and their verdicts, or every node compared.
+		if flag.Arg(1) == "" {
+			return ichorgo.KubeSpanDiagnosticsAll(e.cfg, e.context)
+		}
+
+		return ichorgo.KubeSpanDiagnostics(e.cfg, e.context, flag.Arg(1))
+	}},
+	{name: "nettool", args: "NODE dns|ping|port|trace|http TARGET [OPTIONS-JSON]", run: func(e env) (out string, err error) {
+		// Read-only, but runs a privileged netshoot container on NODE (os:admin).
+		return netToolRun(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4)), nil
+	}},
+	{name: "cluster-upgrade-plan", args: "VERSION", run: func(e env) (out string, err error) {
+		// Read-only: the order, each node's checks.
+		return ichorgo.ClusterUpgradePlan(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+	}},
+	{name: "cluster-upgrade", args: "VERSION [drain]", run: func(e env) (out string, err error) {
+		// Upgrades every node for real, one at a time; a rerun resumes. Acknowledges the risks.
+		m := maintenanceProbe{done: make(chan string, 1)}
+		ichorgo.StartClusterUpgrade(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2) == "drain", true, m)
+		out = "done: " + <-m.done
+
+		return out, err
+	}},
 	{name: "parse", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.ParseConfig(e.cfg)
 
@@ -106,6 +134,11 @@ var nodeCommands = []command{
 	}},
 	{name: "hardware", args: "NODE", run: func(e env) (out string, err error) {
 		out, err = ichorgo.NodeHardware(e.cfg, e.context, flag.Arg(1))
+
+		return out, err
+	}},
+	{name: "sensors", args: "NODE", run: func(e env) (out string, err error) {
+		out, err = ichorgo.NodeSensors(e.cfg, e.context, flag.Arg(1))
 
 		return out, err
 	}},

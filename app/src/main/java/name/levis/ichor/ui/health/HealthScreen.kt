@@ -35,7 +35,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.platform.LocalContext
 import name.levis.ichor.TalosApp
-import androidx.compose.material3.OutlinedButton
+import name.levis.ichor.data.AiPreferences
+import name.levis.ichor.data.AnswerEvent
+import name.levis.ichor.data.DiagnosisRepository
 import name.levis.ichor.data.HealthEvent
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.healthCheckNote
@@ -59,6 +61,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.ui.components.pageContent
@@ -70,13 +74,36 @@ data class HealthState(
     val error: String? = null,
 )
 
-class HealthViewModel(private val talos: TalosRepository) : ViewModel() {
+/** The health check helper's answer about a failed run. */
+data class ExplainState(
+    /** Reading node readiness and events into the report. */
+    val collecting: Boolean = false,
+    val asking: Boolean = false,
+    val text: String = "",
+    /** Why it stopped early; [text] may still hold the part received. */
+    val error: String? = null,
+) {
+    val running: Boolean get() = collecting || asking
+}
+
+class HealthViewModel(
+    private val talos: TalosRepository,
+    private val diagnosis: DiagnosisRepository,
+    private val preferences: AiPreferences,
+) : ViewModel() {
     private val _state = MutableStateFlow(HealthState())
     val state: StateFlow<HealthState> = _state.asStateFlow()
     private var job: Job? = null
 
+    private val _explain = MutableStateFlow(ExplainState())
+    val explain: StateFlow<ExplainState> = _explain.asStateFlow()
+    private var explainJob: Job? = null
+
     fun start() {
         job?.cancel()
+        // The previous answer was about the previous run.
+        explainJob?.cancel()
+        _explain.value = ExplainState()
         _state.value = HealthState(running = true)
         job = viewModelScope.launch {
             talos.health()
@@ -91,6 +118,37 @@ class HealthViewModel(private val talos: TalosRepository) : ViewModel() {
                 }
         }
     }
+
+    /** Sends the failed run's lines, node readiness and recent events to the configured model. */
+    fun explain(language: String) {
+        val run = _state.value
+        val failure = run.error?.takeIf { run.finished } ?: return
+        val settings = preferences.settings.value
+        explainJob?.cancel()
+        _explain.value = ExplainState(collecting = true)
+        explainJob = viewModelScope.launch {
+            flow {
+                val report = diagnosis.collectHealth(run.lines, failure, settings.anonymize)
+                _explain.update { it.copy(collecting = false, asking = true) }
+                emitAll(diagnosis.ask(report, settings, preferences.apiKey(settings.provider), language, healthCheckNote(failure)))
+            }
+                .catch { e -> _explain.update { it.copy(collecting = false, asking = false, error = e.userMessage()) } }
+                .collect { event ->
+                    _explain.update { s ->
+                        when (event) {
+                            is AnswerEvent.Text -> s.copy(text = event.text)
+                            is AnswerEvent.Done -> s.copy(asking = false, error = event.error)
+                        }
+                    }
+                }
+        }
+    }
+
+    /** Stops collecting or waiting for the answer, keeping what was received. */
+    fun stopExplaining() {
+        explainJob?.cancel()
+        _explain.update { it.copy(collecting = false, asking = false) }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,9 +156,10 @@ class HealthViewModel(private val talos: TalosRepository) : ViewModel() {
 fun HealthScreen(
     onBack: () -> Unit,
     onDiagnose: (note: String) -> Unit,
-    vm: HealthViewModel = viewModel(factory = factory { HealthViewModel(app.talosRepository) }),
+    vm: HealthViewModel = viewModel(factory = factory { HealthViewModel(app.talosRepository, app.diagnosisRepository, app.aiPreferences) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val explain by vm.explain.collectAsStateWithLifecycle()
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val ai by app.aiPreferences.settings.collectAsStateWithLifecycle()
@@ -125,10 +184,13 @@ fun HealthScreen(
             }
             HealthHeader(state, onRerun = vm::start)
             // Only when the optional AI diagnosis is on, and there is a failure to explain.
-            state.error?.takeIf { ai.enabled }?.let { error ->
-                OutlinedButton(onClick = { onDiagnose(healthCheckNote(error)) }, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.ai_health_diagnose))
-                }
+            state.error?.takeIf { ai.enabled && state.finished }?.let { error ->
+                HealthExplainCard(
+                    explain = explain,
+                    onExplain = vm::explain,
+                    onStop = vm::stopExplaining,
+                    onContinue = { onDiagnose(healthCheckNote(error)) },
+                )
             }
             Card(Modifier.fillMaxWidth().weight(1f)) {
                 LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

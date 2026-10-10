@@ -41,6 +41,11 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeSpanNode
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubeSpanPeer
+import name.levis.ichor.model.SiderolinkDiag
+import name.levis.ichor.model.node
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
@@ -73,6 +78,7 @@ fun KubeSpanScreen(
     onNode: (TopologyNode) -> Unit,
     vm: KubeSpanViewModel = viewModel(factory = factory { KubeSpanViewModel(app.talosRepository) }),
     mapVm: TopologyViewModel = viewModel(factory = factory { TopologyViewModel(app.talosRepository) }),
+    diagVm: KubeSpanDiagViewModel = viewModel(factory = factory { KubeSpanDiagViewModel(app.talosRepository) }),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     val state by vm.state.collectAsStateWithLifecycle()
@@ -80,7 +86,11 @@ fun KubeSpanScreen(
     LaunchedEffect(tab) {
         if (tab == MAP_TAB && mapState == UiState.Loading) mapVm.refresh()
         if (tab == PEERS_TAB && state == UiState.Loading) vm.refresh()
+        if (tab == PEERS_TAB) diagVm.load()
     }
+    val diag by diagVm.state.collectAsStateWithLifecycle()
+    // The peer whose sheet is open: node address and public key.
+    var opened by remember { mutableStateOf<Pair<KubeSpanNode, KubeSpanPeer>?>(null) }
 
     Scaffold(
         bottomBar = { DataFreshness(if (tab == MAP_TAB) mapState else state) },
@@ -104,16 +114,34 @@ fun KubeSpanScreen(
                         val hostnames = vm.hostnames()
                         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             item { Summary(data.nodes) }
-                            items(data.nodes, key = { it.node }) { NodeCard(it, hostnames[it.node] ?: it.node) }
+                            items(data.nodes, key = { it.node }) { node ->
+                                NodeCard(
+                                    node,
+                                    hostnames[node.node] ?: node.node,
+                                    siderolink = (diag as? UiState.Loaded)?.data?.node(node.node)?.siderolink,
+                                    onPeer = { opened = node to it },
+                                )
+                            }
                         }
                     }
                 }
             }
         }
     }
+    opened?.let { (node, peer) ->
+        PeerSheet(
+            nodeName = vm.hostnames()[node.node] ?: node.node,
+            peerName = peer.label.ifBlank { peer.publicKey.take(12) },
+            diag = diag,
+            node = node.node,
+            publicKey = peer.publicKey,
+            onDismiss = { opened = null },
+        )
+    }
 }
 
 private const val MAP_TAB = 0
+
 private const val PEERS_TAB = 1
 
 @Composable
@@ -133,7 +161,7 @@ private fun Summary(nodes: List<KubeSpanNode>) {
 }
 
 @Composable
-private fun NodeCard(node: KubeSpanNode, hostname: String) {
+private fun NodeCard(node: KubeSpanNode, hostname: String, siderolink: SiderolinkDiag?, onPeer: (KubeSpanPeer) -> Unit) {
     val colors = LocalStatusColors.current
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -150,19 +178,20 @@ private fun NodeCard(node: KubeSpanNode, hostname: String) {
                 }
             }
             node.error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = colors.bad) }
+            siderolink?.let { SiderolinkRow(it) }
             node.peers.forEachIndexed { i, peer ->
                 if (i > 0) HorizontalDivider()
-                PeerRow(peer)
+                PeerRow(peer, onClick = { onPeer(peer) })
             }
         }
     }
 }
 
 @Composable
-private fun PeerRow(peer: KubeSpanPeer) {
+private fun PeerRow(peer: KubeSpanPeer, onClick: () -> Unit) {
     val colors = LocalStatusColors.current
     val now = System.currentTimeMillis() / 1000
-    Column(Modifier.padding(vertical = 4.dp)) {
+    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(peer.label.ifBlank { peer.publicKey.take(12) }, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
             when (peer.state) {

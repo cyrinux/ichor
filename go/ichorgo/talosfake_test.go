@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"context"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 	"sync"
@@ -47,11 +48,21 @@ type fakeTalos struct {
 	rebootErr        error
 	resets           []*machineapi.ResetRequest // the Reset requests received, in order
 	disarmErr        error
-	failLogs         string // the service whose logs cannot be read
+	// alarms are the active etcd alarms; a disarm clears them.
+	alarms    []*machineapi.EtcdMemberAlarm
+	defragErr map[string]error // node -> its defragmentation's error
+	failLogs  string           // the service whose logs cannot be read
 	// mounts are a node's mounted filesystems (none: /dev/sda6 on /var, 40 % used).
 	mounts map[string][]*machineapi.MountStat
 	// systemImages are the images of the system containerd namespace (the CRI one has pause).
 	systemImages []*machineapi.ImageServiceListResponse
+	// debugRun answers a debug container run of spec on node (nil: Unimplemented).
+	debugRun func(node string, spec *machineapi.DebugContainerRunRequestSpec) (output string, exitCode int32)
+	// files are a node's file tree (absolute path -> content), served by List and Read; a
+	// node without one lists a fixed directory.
+	files map[string]map[string]string
+	// cpuFreq is a node's CPUFreqStats answer (a node without an entry: Unimplemented).
+	cpuFreq map[string][]*machineapi.CPUFreqStats
 }
 
 func newFakeTalos() *fakeTalos {
@@ -164,6 +175,7 @@ func (f *fakeTalos) start(t *testing.T, nodes ...string) string {
 		machineapi.RegisterMachineServiceServer(s, fakeTalosMachine{f: f})
 		machineapi.RegisterImageServiceServer(s, fakeTalosImage{f: f})
 		machineapi.RegisterLifecycleServiceServer(s, fakeTalosLifecycle{f: f})
+		machineapi.RegisterDebugServiceServer(s, fakeTalosDebug{f: f})
 		clusterapi.RegisterClusterServiceServer(s, fakeTalosCluster{f: f})
 		cosiv1alpha1.RegisterStateServer(s, fakeTalosState{f: f})
 	})
@@ -257,6 +269,10 @@ func (m fakeTalosMachine) EtcdAlarmDisarm(ctx context.Context, _ *emptypb.Empty)
 		return nil, m.f.disarmErr
 	}
 
+	m.f.mu.Lock()
+	m.f.alarms = nil
+	m.f.mu.Unlock()
+
 	return &machineapi.EtcdAlarmDisarmResponse{Messages: []*machineapi.EtcdAlarmDisarm{{}}}, nil
 }
 
@@ -265,7 +281,23 @@ func (m fakeTalosMachine) EtcdAlarmList(ctx context.Context, _ *emptypb.Empty) (
 		return nil, err
 	}
 
-	return &machineapi.EtcdAlarmListResponse{Messages: []*machineapi.EtcdAlarm{{}}}, nil
+	m.f.mu.Lock()
+	defer m.f.mu.Unlock()
+
+	return &machineapi.EtcdAlarmListResponse{Messages: []*machineapi.EtcdAlarm{{MemberAlarms: m.f.alarms}}}, nil
+}
+
+func (m fakeTalosMachine) EtcdDefragment(ctx context.Context, _ *emptypb.Empty) (*machineapi.EtcdDefragmentResponse, error) {
+	node, err := m.f.enter(ctx, "EtcdDefragment")
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.f.defragErr[node]; err != nil {
+		return nil, err
+	}
+
+	return &machineapi.EtcdDefragmentResponse{Messages: []*machineapi.EtcdDefragment{{}}}, nil
 }
 
 func (m fakeTalosMachine) EtcdStatus(ctx context.Context, _ *emptypb.Empty) (*machineapi.EtcdStatusResponse, error) {
@@ -425,11 +457,127 @@ func (m fakeTalosMachine) DiskUsage(req *machineapi.DiskUsageRequest, stream grp
 }
 
 func (m fakeTalosMachine) List(req *machineapi.ListRequest, stream grpc.ServerStreamingServer[machineapi.FileInfo]) error {
-	if _, err := m.f.enter(stream.Context(), "List"); err != nil {
+	node, err := m.f.enter(stream.Context(), "List")
+	if err != nil {
 		return err
 	}
 
-	return stream.Send(&machineapi.FileInfo{Name: req.GetRoot() + "/logs", IsDir: true})
+	m.f.mu.Lock()
+	tree, scripted := m.f.files[node]
+	m.f.mu.Unlock()
+
+	if !scripted {
+		return stream.Send(&machineapi.FileInfo{Name: req.GetRoot() + "/logs", IsDir: true})
+	}
+
+	children := fakeChildren(tree, req.GetRoot())
+	if children == nil {
+		return status.Errorf(codes.Unknown, "lstat %s: no such file or directory", req.GetRoot())
+	}
+
+	// Like Talos, the root comes first as ".", then its direct children (no recursion).
+	if err := stream.Send(&machineapi.FileInfo{Name: req.GetRoot(), RelativeName: ".", IsDir: true}); err != nil {
+		return err
+	}
+
+	for _, name := range slices.Sorted(maps.Keys(children)) {
+		if err := stream.Send(&machineapi.FileInfo{Name: req.GetRoot() + "/" + name, RelativeName: name, IsDir: children[name]}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type fakeTalosDebug struct {
+	machineapi.UnimplementedDebugServiceServer
+
+	f *fakeTalos
+}
+
+// ContainerRun reads the spec, then sends debugRun's output in two pieces and its exit code.
+func (d fakeTalosDebug) ContainerRun(stream grpc.BidiStreamingServer[machineapi.DebugContainerRunRequest, machineapi.DebugContainerRunResponse]) error {
+	node, err := d.f.enter(stream.Context(), "ContainerRun")
+	if err != nil {
+		return err
+	}
+
+	if d.f.debugRun == nil {
+		return status.Error(codes.Unimplemented, "no debug containers")
+	}
+
+	req, err := stream.Recv()
+	if err != nil {
+		return err
+	}
+
+	output, code := d.f.debugRun(node, req.GetSpec())
+	half := len(output) / 2
+
+	for _, part := range []string{output[:half], output[half:]} {
+		resp := &machineapi.DebugContainerRunResponse{Resp: &machineapi.DebugContainerRunResponse_StdoutData{StdoutData: []byte(part)}}
+		if err := stream.Send(resp); err != nil {
+			return err
+		}
+	}
+
+	return stream.Send(&machineapi.DebugContainerRunResponse{Resp: &machineapi.DebugContainerRunResponse_ExitCode{ExitCode: code}})
+}
+
+// fakeChildren are the entries directly below dir in tree (name -> is a directory), nil
+// when dir does not exist.
+func fakeChildren(tree map[string]string, dir string) map[string]bool {
+	var out map[string]bool
+
+	for p := range tree {
+		rest, ok := strings.CutPrefix(p, dir+"/")
+		if !ok {
+			continue
+		}
+
+		if out == nil {
+			out = map[string]bool{}
+		}
+
+		name, _, isDir := strings.Cut(rest, "/")
+		out[name] = out[name] || isDir
+	}
+
+	return out
+}
+
+func (m fakeTalosMachine) Read(req *machineapi.ReadRequest, stream grpc.ServerStreamingServer[common.Data]) error {
+	node, err := m.f.enter(stream.Context(), "Read")
+	if err != nil {
+		return err
+	}
+
+	m.f.mu.Lock()
+	content, ok := m.f.files[node][req.GetPath()]
+	m.f.mu.Unlock()
+
+	if !ok {
+		return status.Errorf(codes.Unknown, "open %s: no such file or directory", req.GetPath())
+	}
+
+	return stream.Send(&common.Data{Bytes: []byte(content)})
+}
+
+func (m fakeTalosMachine) CPUFreqStats(ctx context.Context, _ *emptypb.Empty) (*machineapi.CPUFreqStatsResponse, error) {
+	node, err := m.f.enter(ctx, "CPUFreqStats")
+	if err != nil {
+		return nil, err
+	}
+
+	m.f.mu.Lock()
+	stats, ok := m.f.cpuFreq[node]
+	m.f.mu.Unlock()
+
+	if !ok {
+		return nil, status.Error(codes.Unimplemented, "unknown method CPUFreqStats for service machine.MachineService")
+	}
+
+	return &machineapi.CPUFreqStatsResponse{Messages: []*machineapi.CPUsFreqStats{{CpuFreqStats: stats}}}, nil
 }
 
 type fakeTalosImage struct {

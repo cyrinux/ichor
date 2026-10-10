@@ -84,6 +84,8 @@ func demoNodes() []nodeOverview {
 		if i >= 3 { // the workers sit behind a NAT the discovery service sees
 			nodes[i].PublicIPs = []string{fmt.Sprintf("203.0.113.%d", 40+i)}
 		}
+		// The second worker was left cordoned by a maintenance.
+		nodes[i].Cordoned, nodes[i].CordonKnown = i == 4, true
 	}
 	return nodes
 }
@@ -157,6 +159,8 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			features.Features[id] = featureState{Reason: errDemoUnavailable.Error()}
 		}
 		return toJSON(features)
+	case "NodeNetTool":
+		return toJSON(demoNetTool(n, args))
 	case "NodeTime":
 		return toJSON(nodeTime{Node: n.Node, Server: "time.demo.invalid", LocalTime: now, RemoteTime: now + 2, OffsetMs: 2})
 	case "ClusterTime":
@@ -165,6 +169,20 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			result.Nodes = append(result.Nodes, nodeTime{Node: n.Node, Server: "time.demo.invalid", LocalTime: now, RemoteTime: now + 2, OffsetMs: 2})
 		}
 		return toJSON(result)
+	case "ClusterUpgradePlan":
+		asked := strings.Join(args, "")
+		version, ok := normalizeTalosVersion(asked)
+		if !ok {
+			return "", fmt.Errorf("%q is not a Talos version (vX.Y.Z)", asked)
+		}
+		plan := clusterUpgradePlan{Version: version, Nodes: []clusterPlanNode{}, Blockers: []string{}, Warnings: []string{}}
+		for i, n := range nodes {
+			up := upgradePlan{Hostname: n.Hostname, ControlPlane: n.Role == "controlplane", CurrentVersion: n.Version}
+			plan.Nodes = append(plan.Nodes, clusterNodeOf(n.Node, up, version, i == 0)) // a1, demo-cp-1, leads etcd
+		}
+		plan.Nodes = orderClusterNodes(plan.Nodes)
+		summarizeClusterPlan(&plan)
+		return toJSON(plan)
 	case "EtcdStatus":
 		result := etcdOverview{LeaderID: "a1", Members: []etcdMember{}, Statuses: []etcdNodeStatus{}, Alarms: []etcdAlarm{}}
 		for i, n := range nodes[:3] {
@@ -236,6 +254,13 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			{ID: "EPHEMERAL", Phase: "ready", Type: "partition", Location: "/dev/nvme0n1p6", Size: 100 << 30, Filesystem: "xfs", MountedOn: "/var"},
 			{ID: "STATE", Phase: "ready", Type: "partition", Location: "/dev/nvme0n1p5", Size: 100 << 20, Filesystem: "xfs", MountedOn: "/system/state"},
 		}})
+	case "UpgradeExtensionCheck":
+		// Whatever the image: a node with two extensions, one without a build for the version.
+		image := strings.Join(args, "")
+		installed := []extensionInfo{{Name: "iscsi-tools", Version: "v0.2.0"}, {Name: "util-linux-tools", Version: "2.41.1"}}
+		return toJSON(checkExtensions(installed, factoryHost+"/installer/demo:"+demoTag(image), func(string) ([]string, error) {
+			return []string{"siderolabs/util-linux-tools"}, nil
+		}))
 	case "NodeHardware":
 		return toJSON(nodeHardware{
 			System:     &systemInfo{Manufacturer: "Ichor", Product: "Demo server", Serial: "DEMO-001"},
@@ -244,10 +269,21 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			Disks:      []diskInfo{{Name: "nvme0n1", DevPath: "/dev/nvme0n1", Model: "Demo NVMe", Size: 120 << 30, Type: "nvme", SystemDisk: true}},
 			Extensions: []extensionInfo{}, Security: &securityInfo{SecureBoot: true, BootedWithUKI: true}, Errors: map[string]string{},
 		})
+	case "NodeSensors":
+		return toJSON(demoSensors(n))
 	case "NodeDiskHealth":
 		return `{"supported":false,"reason":"Disk health data is unavailable in the demo cluster","disks":[]}`, nil
 	case "KubeSpanStatus":
 		return toJSON(demoKubeSpan())
+	case "KubeSpanDiagnostics":
+		index := slices.IndexFunc(nodes, func(m nodeOverview) bool { return m.Node == n.Node })
+		return toJSON(buildKubeSpanDiag(demoKubeSpanDiag(index)))
+	case "KubeSpanDiagnosticsAll":
+		inputs := make([]kubespanDiagInput, len(nodes))
+		for i := range nodes {
+			inputs[i] = demoKubeSpanDiag(i)
+		}
+		return toJSON(buildKubeSpanDiagAll(inputs))
 	case "ClusterTopology":
 		if privacy.isEnabled() {
 			return toJSON(hideLocations(demoTopology()))

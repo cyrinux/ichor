@@ -223,6 +223,16 @@ and, optionally, host to host.
   latency result also draws where the round trips fell, from the fastest to the slowest, with
   p50 to p99 as a bar. The KubeSpan map shows the last pod-to-pod throughput measured
   between two nodes on their link, and the link's sheet the rest of that test.
+- **Why a KubeSpan peer is down:** on the KubeSpan *Peers* tab, tap a peer to see why in plain
+  words. The reasons cover:
+  - no endpoint to try;
+  - a handshake that went stale, with the endpoints tried;
+  - an endpoint that keeps changing;
+  - a different KubeSpan MTU on the other node;
+  - endpoint filters that may exclude every address.
+
+  The raw fields are under *Details*. A node Omni manages shows its SideroLink connection.
+  Nothing secret is read: neither the WireGuard key nor the KubeSpan shared secret.
 
 ### CronJobs
 
@@ -303,9 +313,25 @@ where a failed upgrade can be rolled back.
 - **Alerts:** Settings → Alerts → Cluster checkup runs it at every background check (it lists every
   pod and asks each kubelet). A critical finding notifies at once, a warning when seen on two
   checks in a row, a cleared one once; a section that could not be read keeps what it knew.
+- **Hardware sensors:** a node's *About this node* screen shows its temperatures (with each
+  sensor's max and critical limits), fans, per-core CPU frequency with the governor, the CPU's
+  thermal throttle counters and its PCI devices, read with `os:reader` from `/sys/class/hwmon`,
+  the thermal zones and `CPUFreqStats` (Talos 1.5+). Cores held below 70 % of their top speed
+  under the `performance` governor, or a sensor above its max, mark the node *Throttled* there
+  and, once that screen was opened, on its row in the node lists. A VM has no Sensors card.
 - **Rollback:** on a node's upgrade screen, the menu offers `talosctl rollback` (os:admin): the node
   reboots at once into the Talos it ran before its last upgrade, for an upgrade that boots but
   misbehaves. Talos rolls back by itself one that does not boot.
+- **Extensions before an upgrade:** once the target version is chosen, the upgrade screen
+  checks the node's system extensions against the Image Factory's official list for that
+  version. Any extension with no build is named, since the node would come back without it.
+  An image from another registry, or a factory that cannot be reached, is said to be
+  unchecked.
+- **Drain before an upgrade:** a Talos version that upgrades without draining the node first
+  (1.18 and later, through the LifecycleService) gets a "Drain the node first" switch on the
+  upgrade screen, on by default. The upgrade then runs as a node maintenance: cordon, drain
+  (PodDisruptionBudgets honoured), upgrade, wait until the node is back and Ready, uncordon. A
+  drain that cannot finish stops before the upgrade is requested and leaves the node cordoned.
 
 ### Argo CD app icons
 
@@ -559,6 +585,18 @@ a fresh install. Backups move between Android and iOS.
   | Leave etcd first (`--graceful`, on by default) | Cordon, drain and leave etcd cleanly first. Off on a control plane, its etcd member stays behind: remove it from the etcd screen. |
   | Reboot after (`--reboot`, on by default) | Off, the node stays powered off once wiped. |
 
+- **Machine config changes (node menu → Machine config → Edit):**
+  - **Review first:** the node checks every change with a dry run before anything is applied.
+  - **Ways to apply it:**
+
+    | Mode | What happens |
+    |---|---|
+    | Try for 1, 5 or 10 min | Applied without a reboot; the node goes back to its previous config by itself unless you keep it. |
+    | Apply now | Applied for good, without a reboot. Refused when the change needs one. |
+    | Apply at the next reboot | Saved on the node (`--mode staged`), applied when it next reboots. |
+    | Apply and reboot now | Applied, then the node reboots; you type its hostname first. |
+
+  - **Changes that need a reboot:** they offer only the last two modes.
 - **App lock (Settings → Security):**
   - **Methods:** fingerprint, with the device PIN, pattern or password as fallback; or a
     **security key** (below).
@@ -620,6 +658,20 @@ talosctl -n <control-plane-ip> bootstrap --recover-from=./etcd.snapshot
 
 Post-quantum `age1pq1…` / `age1tagpq1…` keys need age 1.3 or later to decrypt.
 
+### NOSPACE fix
+
+When etcd raises its `NOSPACE` alarm, the cluster accepts no more writes. **etcd → Alarms → Fix
+NOSPACE…** (os:admin) runs the usual sequence as one followed run:
+
+1. A snapshot, as above, unless you switch it off.
+2. A defragmentation of every member, one at a time: followers first, the leader last.
+3. The alarm disarmed.
+4. etcd read again.
+
+The run stops at the first failure and says which member failed. When the alarm comes back at
+once, the database is still over its quota: raise `quota-backend-bytes` in the machine config,
+or delete data.
+
 ## AI diagnosis (optional)
 
 Off by default. Turn it on in Settings → AI diagnosis; until then the app shows no trace of it
@@ -649,6 +701,11 @@ and never contacts a model provider.
   the Claude, ChatGPT or Gemini app (or any app taking text) through the system share sheet.
 - **Check the answer:** a model can be wrong. Read a command before running it, especially one
   that resets a node or changes etcd membership.
+- **Health check helper:** when the cluster health check fails, the health page shows *Explain
+  with AI*: one tap sends the check's lines and failure, node readiness and recent warning and
+  error events (no logs, no etcd), anonymized like the report, and the answer names the likely
+  cause and the next two or three screens to check. *Continue in Diagnosis* opens the full
+  report with the failure as the note.
 - **Panel assistant:** on the Metrics screen, the sparkle button (or *Ask AI* in the panel
   editor) opens a chat with the same model to write a PromQL panel from a description, or to
   change the one being edited. The model gets the metric names your source knows and the
@@ -665,6 +722,10 @@ go run ./cmd/probe diagnose-report        # the anonymized report; nothing is se
 # These two send the report with the real names (not anonymized) and print the answer:
 ANTHROPIC_API_KEY=... go run ./cmd/probe diagnose anthropic
 OPENAI_API_KEY=... go run ./cmd/probe diagnose openai gpt-6-astra
+# The health check helper: runs the health check, then prints what would be sent (anonymized,
+# nothing is sent), or sends it with the real names and prints the answer
+go run ./cmd/probe health-explain-report
+ANTHROPIC_API_KEY=... go run ./cmd/probe health-explain anthropic
 # The panel assistant: the metric names (nothing is sent), then one question with its checked panel
 SRC='{"mode":"proxy","namespace":"monitoring","service":"prometheus-operated","port":9090}'
 go run ./cmd/probe prom-metrics "$SRC"

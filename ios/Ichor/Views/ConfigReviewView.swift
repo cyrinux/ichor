@@ -19,6 +19,9 @@ struct ConfigReviewView: View {
     @State private var trying = false
     @State private var failed = false
     @State private var message: String?
+    /// A mode picked, waiting for its confirmation (typed hostname for a reboot).
+    @State private var confirmingApply: ConfigApplyMode?
+    @State private var applying: ConfigApplyMode?
 
     var body: some View {
         NavigationStack {
@@ -35,6 +38,36 @@ struct ConfigReviewView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("The node applies it now and reverts by itself after \(timeout / 60) min unless you keep it.")
+        }
+        .confirmationDialog(Text("Apply the change to \(hostname)?"),
+                            isPresented: Binding(get: { confirmingApply != nil && confirmingApply != .reboot },
+                                                 set: { if !$0 { confirmingApply = nil } }),
+                            titleVisibility: .visible, presenting: confirmingApply) { mode in
+            Button(modeTitle(mode)) { Task { await startApply(mode) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { mode in
+            if mode == .staged {
+                Text("The change is saved on the node and takes effect at its next reboot.")
+            } else {
+                Text("The change is applied now and stays: nothing reverts it.")
+            }
+        }
+        // Never a surprise reboot: the hostname is typed, as for a reboot.
+        .sheet(isPresented: Binding(get: { confirmingApply == .reboot }, set: { if !$0 { confirmingApply = nil } })) {
+            HostnameConfirmationSheet(
+                title: String(localized: "Apply and reboot \(hostname)?"),
+                message: String(localized: "The node applies the change and reboots now. Its pods stop while it reboots."),
+                hostname: hostname,
+                actionTitle: modeTitle(.reboot)
+            ) {
+                confirmingApply = nil
+                Task { await startApply(.reboot) }
+            }
+        }
+        .fullScreenCover(item: $applying, onDismiss: tryClosed) { mode in
+            ConfigApplyView(node: node, hostname: hostname, base: base, draft: draft, mode: mode) { didFail in
+                if didFail { failed = true }
+            }
         }
         .fullScreenCover(isPresented: $trying, onDismiss: tryClosed) {
             ConfigTryView(node: node, hostname: hostname, base: base, draft: draft, timeoutSeconds: timeout) { outcome in
@@ -59,6 +92,7 @@ struct ConfigReviewView: View {
                 } else {
                     trySection
                 }
+                applySection(preview)
             } else {
                 Section { Text("No changes").note() }
             }
@@ -83,6 +117,38 @@ struct ConfigReviewView: View {
         } footer: {
             Text("The node applies the change without a reboot and goes back to its previous config by itself unless you keep it.")
         }
+    }
+
+    private func applySection(_ preview: ConfigPreview) -> some View {
+        Section {
+            ForEach(preview.applyModes) { mode in
+                VStack(alignment: .leading, spacing: 4) {
+                    Button(modeTitle(mode)) { confirmingApply = mode }
+                    Text(modeDetails(mode)).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        } header: {
+            Text("Or apply it for good:")
+        }
+    }
+
+    private func modeDetails(_ mode: ConfigApplyMode) -> String {
+        switch mode {
+        case .auto: String(localized: "No reboot, and nothing reverts it.")
+        case .staged: String(localized: "Saved on the node; it takes effect when the node next reboots.")
+        case .reboot: String(localized: "The node reboots into the new config right away.")
+        }
+    }
+
+    /// Like a try: a fresh Face ID / passcode first when the app lock is on.
+    private func startApply(_ mode: ConfigApplyMode) async {
+        message = nil
+        if model.lock.enabled,
+           let failure = await Authenticator.authenticate(reason: String(localized: "Apply the machine config of \(hostname)")) {
+            message = failure
+            return
+        }
+        applying = mode
     }
 
     private func load() async {

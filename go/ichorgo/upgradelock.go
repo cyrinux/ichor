@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/resources/runtime"
@@ -31,6 +32,10 @@ const (
 	annotationHostname = "ichor.levis.name/hostname"
 	annotationFrom     = "ichor.levis.name/from-version"
 	annotationTo       = "ichor.levis.name/to-version"
+	// annotationRun names the kind of run holding the lock: "cluster" for a cluster upgrade.
+	annotationRun = "ichor.levis.name/run"
+
+	lockRunCluster = "cluster"
 )
 
 var leasesPath = "/apis/coordination.k8s.io/v1/namespaces/" + upgradeLockNamespace + "/leases"
@@ -77,11 +82,17 @@ type upgradeLockInfo struct {
 	node     string
 	hostname string
 	from, to string
+	run      string
 	since    time.Time
 	expires  time.Time
 }
 
 func (i upgradeLockInfo) describe() string {
+	if i.run == lockRunCluster {
+		return fmt.Sprintf("another Ichor cluster upgrade (to %s, started %s) holds the cluster upgrade lock until %s",
+			i.to, i.since.Local().Format("15:04"), i.expires.Local().Format("15:04"))
+	}
+
 	who := i.hostname
 	if who == "" {
 		who = i.node
@@ -129,7 +140,7 @@ func heldLock(l *kubeLease, now time.Time) *upgradeLockInfo {
 
 	return &upgradeLockInfo{
 		holder: l.Spec.HolderIdentity, node: a[annotationNode], hostname: a[annotationHostname],
-		from: a[annotationFrom], to: a[annotationTo], since: since, expires: expires,
+		from: a[annotationFrom], to: a[annotationTo], run: a[annotationRun], since: since, expires: expires,
 	}
 }
 
@@ -155,6 +166,10 @@ type upgradeLockRequest struct {
 	holder         string
 	node, hostname string
 	from, to       string
+	// run is the annotationRun value ("" for a node upgrade or maintenance).
+	run string
+	// duration replaces upgradeLockDuration: a run that renews its lock holds it shorter.
+	duration time.Duration
 }
 
 func newLockHolder() string {
@@ -174,11 +189,19 @@ func (r upgradeLockRequest) lease(now time.Time, base *kubeLease) kubeLease {
 	l.Metadata.Annotations = map[string]string{
 		annotationNode: r.node, annotationHostname: r.hostname, annotationFrom: r.from, annotationTo: r.to,
 	}
+	if r.run != "" {
+		l.Metadata.Annotations[annotationRun] = r.run
+	}
+
+	duration := r.duration
+	if duration == 0 {
+		duration = upgradeLockDuration
+	}
 
 	stamp := now.UTC().Format(leaseTimeFormat)
 	l.Spec = leaseSpec{
 		HolderIdentity:       r.holder,
-		LeaseDurationSeconds: int(upgradeLockDuration / time.Second),
+		LeaseDurationSeconds: int(duration / time.Second),
 		AcquireTime:          stamp,
 		RenewTime:            stamp,
 	}
@@ -328,8 +351,70 @@ func readUpgradeLock(ctx context.Context, kube kubeTarget, now time.Time) *lockS
 
 // upgradeLock is the lock a run holds; release frees it (a no-op when none was taken).
 type upgradeLock struct {
-	kube  kubeTarget
+	kube kubeTarget
+	// mu guards lease, which renew replaces while the run goes on.
+	mu    sync.Mutex
 	lease *kubeLease
+}
+
+// renewLease extends l and sets annotations on it, if it is still the one l took.
+func renewLease(ctx context.Context, s leaseStore, l *kubeLease, annotations map[string]string, now time.Time) (*kubeLease, error) {
+	next := *l
+	next.Metadata.Annotations = map[string]string{}
+
+	for k, v := range l.Metadata.Annotations {
+		next.Metadata.Annotations[k] = v
+	}
+
+	for k, v := range annotations {
+		next.Metadata.Annotations[k] = v
+	}
+
+	next.Spec.RenewTime = now.UTC().Format(leaseTimeFormat)
+
+	return s.replace(ctx, next)
+}
+
+// renew extends the lock and records annotations on it (a no-op when none was taken). A
+// lock taken over meanwhile is not renewed: stillHeld then refuses the next step.
+func (l *upgradeLock) renew(ctx context.Context, annotations map[string]string) error {
+	if l == nil {
+		return nil
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if l.lease == nil {
+		return nil
+	}
+
+	renewed, err := withKubeContext(ctx, l.kube, func(ctx context.Context, k *kubeClient) (*kubeLease, error) {
+		return renewLease(ctx, kubeLeaseStore{k}, l.lease, annotations, time.Now())
+	})
+	if err != nil {
+		return err
+	}
+
+	l.lease = renewed
+
+	return nil
+}
+
+// holder is who l holds the lock as, "" when no lock was taken.
+func (l *upgradeLock) holder() string {
+	if l == nil {
+		return ""
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if l.lease == nil {
+		return ""
+	}
+
+	return l.lease.Spec.HolderIdentity
 }
 
 // takeUpgradeLock acquires the lock for r. It refuses with an error when another run holds
@@ -364,7 +449,8 @@ func takeUpgradeLock(ctx context.Context, kube kubeTarget, r upgradeLockRequest,
 // and not expired (the lease is not renewed, and a phone that slept may wake up after it
 // expired and another run took it). No lock taken (the API was unusable) passes.
 func (l *upgradeLock) stillHeld(ctx context.Context, k *kubeClient) error {
-	if l == nil || l.lease == nil {
+	holder := l.holder()
+	if holder == "" {
 		return nil
 	}
 
@@ -374,7 +460,7 @@ func (l *upgradeLock) stillHeld(ctx context.Context, k *kubeClient) error {
 	}
 
 	info := heldLock(current, time.Now())
-	if info == nil || info.holder != l.lease.Spec.HolderIdentity {
+	if info == nil || info.holder != holder {
 		return errors.New("the cluster upgrade lock expired or was taken by another run")
 	}
 
@@ -382,7 +468,14 @@ func (l *upgradeLock) stillHeld(ctx context.Context, k *kubeClient) error {
 }
 
 func (l *upgradeLock) release() {
-	if l == nil || l.lease == nil {
+	if l == nil {
+		return
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if l.lease == nil {
 		return
 	}
 

@@ -1,0 +1,7 @@
+• Fix etcd's NOSPACE alarm in one tap: snapshot, defragment, disarm, check
+• Drain a node before its Talos upgrade when the upgrade would not
+• Reset or wipe a node from the phone, refused when it would break etcd
+• GKE clusters can sign in with Google on iOS when the build carries Ichor's client
+• GKE clusters can sign in with your Google account on the Play build
+• Storage forecast on Android and iOS: full in ~N days, and an early warning
+• Volume fill forecast from the history ring

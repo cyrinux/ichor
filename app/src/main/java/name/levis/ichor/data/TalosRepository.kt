@@ -1,12 +1,17 @@
 package name.levis.ichor.data
 
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.goErrorText
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.R
+import name.levis.ichorgo.ConfigApplyListener
 import name.levis.ichorgo.ConfigTryListener
 import name.levis.ichorgo.MaintenanceListener
 import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.Ichorgo
+import name.levis.ichor.model.ConfigApplyEvent
+import name.levis.ichor.model.ConfigApplyMode
+import name.levis.ichor.model.ConfigApplyProgress
 import name.levis.ichor.model.ConfigEdit
 import name.levis.ichor.model.ConfigPreview
 import name.levis.ichor.model.ConfigSchemaStatus
@@ -20,6 +25,7 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.ClusterStorageHealth
 import name.levis.ichor.model.MaintenanceAction
 import name.levis.ichor.model.MaintenancePlan
+import name.levis.ichor.model.MaintenanceUpgrade
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
@@ -40,6 +46,7 @@ import name.levis.ichor.model.ConnectionInfo
 import name.levis.ichor.model.ImageInfo
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.NodeHardware
+import name.levis.ichor.model.NodeSensors
 import name.levis.ichor.model.NodeNetwork
 import name.levis.ichor.model.NodeTime
 import name.levis.ichor.model.DiskHealthReport
@@ -52,7 +59,9 @@ import name.levis.ichor.model.MountList
 import name.levis.ichor.model.NodeDiscovery
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.EndpointProbe
+import name.levis.ichor.model.KubeSpanDiagAll
 import name.levis.ichor.model.NodeFeatures
+import name.levis.ichor.model.UpgradeExtensionCheck
 import name.levis.ichor.model.NodeResetPlan
 import name.levis.ichor.model.ResetRequest
 import name.levis.ichor.model.ResourceDetail
@@ -103,6 +112,11 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         persistable: (T) -> Boolean = { true },
         block: suspend (last: () -> Timed<T>?) -> T,
     ): T = go.remember(key, persistable, block)
+
+    /** Why each node's KubeSpan peers are up or down, every node compared. Read-only, not cached. */
+    suspend fun kubespanDiagnostics(): KubeSpanDiagAll = call { cfg, ctx ->
+        TalosJson.decodeFromString(KubeSpanDiagAll.serializer(), Ichorgo.kubeSpanDiagnosticsAll(cfg, ctx))
+    }
 
     suspend fun kubespan(): KubeSpanOverview = remember(KUBESPAN) {
         call { cfg, ctx -> TalosJson.decodeFromString(KubeSpanOverview.serializer(), Ichorgo.kubeSpanStatus(cfg, ctx)) }
@@ -207,6 +221,31 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
      * node reverts by itself unless [ConfigTryCommand.KEEP] comes through [commands] first.
      * Cancelling the collection only stops following; the node still reverts.
      */
+    /** StartConfigApply: [draft] applied for good in [mode]; closing the flow stops following it. */
+    fun applyMachineConfig(node: String, base: String, draft: String, mode: ConfigApplyMode): Flow<ConfigApplyEvent> = callbackFlow {
+        val stored = configs.forCall()
+        val run = Ichorgo.startConfigApply(
+            stored.yaml,
+            stored.activeContext,
+            node,
+            base,
+            draft,
+            mode.wire,
+            object : ConfigApplyListener {
+                override fun onProgress(json: String) {
+                    runCatching { TalosJson.decodeFromString(ConfigApplyProgress.serializer(), json) }
+                        .onSuccess { trySend(ConfigApplyEvent.Progress(it)) }
+                }
+
+                override fun onDone(errMessage: String) {
+                    trySend(ConfigApplyEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED)
+
     fun tryMachineConfig(node: String, base: String, draft: String, timeoutSeconds: Int, commands: Flow<ConfigTryCommand>): Flow<ConfigTryEvent> = callbackFlow {
         val stored = configs.forCall()
         val run = Ichorgo.startConfigTry(
@@ -253,6 +292,10 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
      * Cancelling the collector cancels the download.
      */
     fun etcdSnapshot(node: String, destPath: String, encryption: SnapshotEncryption): Flow<SnapshotEvent> = streams.etcdSnapshot(node, destPath, encryption)
+
+    /** The one-tap NOSPACE fix (see [TalosStreams.etcdNospaceFix]); needs os:admin. */
+    fun etcdNospaceFix(snapshotNode: String, destPath: String, encryption: SnapshotEncryption): Flow<EtcdFixEvent> =
+        streams.etcdNospaceFix(snapshotNode, destPath, encryption)
 
     /**
      * The cluster's nodes. Those that no longer answer keep what the last overview knew of
@@ -362,7 +405,8 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /**
      * Starts the maintenance of [node] (cordon, drain, then [action]); returns at once, the
      * run reports to [listener]. The core refuses blockers, and acknowledgments unless [acknowledged].
-     * A kubeconfig cluster only drains ([node]: the Kubernetes node name).
+     * A kubeconfig cluster only drains ([node]: the Kubernetes node name). [upgrade]: what
+     * [MaintenanceAction.UPGRADE] installs, required for it.
      */
     fun startMaintenance(
         node: String,
@@ -370,6 +414,7 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         includeBare: Boolean,
         acknowledged: Boolean,
         listener: MaintenanceListener,
+        upgrade: MaintenanceUpgrade? = null,
     ): MaintenanceRun {
         val stored = configs.forCall()
         if (stored.activeIsKube) {
@@ -378,10 +423,21 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
             return Ichorgo.startKubeDrain(target.yaml, target.context, target.server, node, includeBare, listener)
         }
         val server = kubeServers.serverFor(stored)
+        if (action == MaintenanceAction.UPGRADE) {
+            val up = requireNotNull(upgrade) { "an upgrade maintenance needs its installer image" }
+            return Ichorgo.startNodeMaintenanceUpgrade(
+                stored.yaml, stored.activeContext, server, node, up.image, includeBare, acknowledged, up.force, listener,
+            )
+        }
         return Ichorgo.startNodeMaintenance(stored.yaml, stored.activeContext, server, node, action.wire, includeBare, acknowledged, listener)
     }
 
     /** `talosctl reboot -m [mode]` (default, powercycle, force); needs os:operator or higher. */
+    /** [node]'s extensions against the Image Factory's official list for [image]'s version. Read-only. */
+    suspend fun upgradeExtensionCheck(node: String, image: String): UpgradeExtensionCheck = call { cfg, ctx ->
+        TalosJson.decodeFromString(UpgradeExtensionCheck.serializer(), Ichorgo.upgradeExtensionCheck(cfg, ctx, node, image))
+    }
+
     suspend fun reboot(node: String, mode: String) = call { cfg, ctx -> Ichorgo.reboot(cfg, ctx, node, mode) }
 
     /** What resetting [node] would wipe and leave, and what forbids it. Read-only. */
@@ -423,6 +479,11 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
 
     suspend fun hardware(node: String): NodeHardware = remember(hardwareKey(node)) {
         call { cfg, ctx -> TalosJson.decodeFromString(NodeHardware.serializer(), Ichorgo.nodeHardware(cfg, ctx, node)) }
+    }
+
+    /** Temperatures, fans, CPU frequencies and PCI devices; read on the Hardware screen only. */
+    suspend fun sensors(node: String): NodeSensors = remember(sensorsKey(node)) {
+        call { cfg, ctx -> TalosJson.decodeFromString(NodeSensors.serializer(), Ichorgo.nodeSensors(cfg, ctx, node)) }
     }
 
     suspend fun images(node: String): List<ImageInfo> = remember(imagesKey(node)) {

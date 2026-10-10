@@ -48,6 +48,9 @@ import kotlinx.coroutines.delay
 import name.levis.ichor.R
 import name.levis.ichor.model.CONFIG_TRY_DEFAULT_TIMEOUT
 import name.levis.ichor.model.CONFIG_TRY_TIMEOUTS
+import name.levis.ichor.model.ConfigApplyMode
+import name.levis.ichor.model.ConfigApplyState
+import name.levis.ichor.model.applyModes
 import name.levis.ichor.model.ConfigDiffLine
 import name.levis.ichor.model.ConfigPreview
 import name.levis.ichor.model.ConfigTryState
@@ -59,9 +62,18 @@ import name.levis.ichor.ui.components.InfoBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.theme.LocalStatusColors
 
-/** What the draft would change on the node, and the choice to try it. [onTry] gets the timeout in seconds. */
+/**
+ * What the draft would change on the node, and the choice to try it ([onTry] gets the timeout
+ * in seconds) or to apply it for good ([onApply]).
+ */
 @Composable
-fun ConfigReviewContent(review: UiState<ConfigPreview>, onRetry: () -> Unit, onTry: (Int) -> Unit, modifier: Modifier = Modifier) {
+fun ConfigReviewContent(
+    review: UiState<ConfigPreview>,
+    onRetry: () -> Unit,
+    onTry: (Int) -> Unit,
+    onApply: (ConfigApplyMode) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     when (review) {
         UiState.Loading -> Waiting(stringResource(R.string.machine_config_review_loading), modifier)
         is UiState.Failed -> ErrorBox(review.message, onRetry, modifier)
@@ -73,12 +85,16 @@ fun ConfigReviewContent(review: UiState<ConfigPreview>, onRetry: () -> Unit, onT
             }
             Column(modifier.fillMaxSize()) {
                 DiffView(preview.lines, Modifier.weight(1f))
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                     if (preview.needsReboot) {
                         Notice(stringResource(R.string.machine_config_needs_reboot), LocalStatusColors.current.warn)
                     } else {
                         TryChoice(onTry)
                     }
+                    ApplyChoice(preview.applyModes, onApply)
                 }
             }
         }
@@ -101,6 +117,71 @@ private fun TryChoice(onTry: (Int) -> Unit) {
         }
     }
     Button(onClick = { onTry(timeout) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.machine_config_try)) }
+}
+
+/** The ways to apply the change for good, each with what it does. */
+@Composable
+private fun ApplyChoice(modes: List<ConfigApplyMode>, onApply: (ConfigApplyMode) -> Unit) {
+    Text(stringResource(R.string.machine_config_apply_other), style = MaterialTheme.typography.labelLarge)
+    modes.forEach { mode ->
+        OutlinedButton(onClick = { onApply(mode) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(mode.label)) }
+        MutedText(stringResource(mode.description))
+    }
+}
+
+@get:StringRes
+val ConfigApplyMode.label: Int
+    get() = when (this) {
+        ConfigApplyMode.AUTO -> R.string.machine_config_apply_auto
+        ConfigApplyMode.STAGED -> R.string.machine_config_apply_staged
+        ConfigApplyMode.REBOOT -> R.string.machine_config_apply_reboot
+    }
+
+@get:StringRes
+private val ConfigApplyMode.description: Int
+    get() = when (this) {
+        ConfigApplyMode.AUTO -> R.string.machine_config_apply_auto_desc
+        ConfigApplyMode.STAGED -> R.string.machine_config_apply_staged_desc
+        ConfigApplyMode.REBOOT -> R.string.machine_config_apply_reboot_desc
+    }
+
+/** A change being applied for good: its phase, then how it ended. */
+@Composable
+fun ConfigApplyContent(run: ConfigApplyState, onDone: () -> Unit, modifier: Modifier = Modifier) {
+    val status = LocalStatusColors.current
+    when (run) {
+        is ConfigApplyState.Running -> Waiting(
+            stringResource(
+                when (run.phase) {
+                    ConfigApplyState.REBOOTING -> R.string.machine_config_apply_rebooting
+                    ConfigApplyState.WAITING -> R.string.machine_config_apply_waiting
+                    else -> R.string.machine_config_apply_applying
+                },
+            ) + run.message.takeIf { it.isNotEmpty() }?.let { "\n$it" }.orEmpty(),
+            modifier,
+        )
+        is ConfigApplyState.Done -> Ended(
+            Icons.Outlined.CheckCircle,
+            status.ok,
+            stringResource(
+                when (run.mode) {
+                    ConfigApplyMode.AUTO -> R.string.machine_config_applied
+                    ConfigApplyMode.STAGED -> R.string.machine_config_staged
+                    ConfigApplyMode.REBOOT -> R.string.machine_config_rebooted
+                },
+            ),
+            onDone,
+            modifier,
+        )
+        is ConfigApplyState.Failed -> Ended(
+            Icons.Outlined.ErrorOutline,
+            status.bad,
+            run.message.ifEmpty { stringResource(R.string.machine_config_try_no_answer) },
+            onDone,
+            modifier,
+            done = R.string.machine_config_back_to_draft,
+        )
+    }
 }
 
 @Composable

@@ -121,7 +121,7 @@ fun MaintenancePlanView(
 @Composable
 private fun ActionPicker(selected: MaintenanceAction, onSelect: (MaintenanceAction) -> Unit) {
     Column(Modifier.selectableGroup()) {
-        MaintenanceAction.entries.forEach { action ->
+        MaintenanceAction.planned.forEach { action ->
             Row(
                 Modifier.fillMaxWidth()
                     .selectable(selected = action == selected, role = Role.RadioButton, onClick = { onSelect(action) })

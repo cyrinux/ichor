@@ -284,10 +284,15 @@ var kubeCommands = []command{
 	}},
 	{name: "cordon", args: "NODE", run: runCordon},
 	{name: "uncordon", args: "NODE", run: runCordon},
-	{name: "maintenance", args: "NODE ACTION", run: func(e env) (out string, err error) {
-		// maintenance NODE reboot|shutdown|none: cordons and drains the node for real.
+	{name: "maintenance", args: "NODE ACTION [IMAGE]", run: func(e env) (out string, err error) {
+		// maintenance NODE reboot|shutdown|none, or NODE upgrade IMAGE: cordons and drains the
+		// node for real (then upgrades it to IMAGE).
 		m := maintenanceProbe{done: make(chan string, 1)}
-		ichorgo.StartNodeMaintenance(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), false, true, m)
+		if flag.Arg(2) == "upgrade" {
+			ichorgo.StartNodeMaintenanceUpgrade(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(3), false, true, false, m)
+		} else {
+			ichorgo.StartNodeMaintenance(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), false, true, m)
+		}
 		out = "done: " + <-m.done
 
 		return out, err
@@ -317,6 +322,20 @@ var kubeCommands = []command{
 		}
 
 		return out, err
+	}},
+	{name: "health-explain-report", args: "", run: func(e env) (out string, err error) {
+		// What the health check helper would send, anonymized; nothing is sent.
+		var d *ichorgo.Diagnosis
+		if d, err = collectHealthExplanation(e, true); err == nil {
+			out = d.Report()
+		}
+
+		return out, err
+	}},
+	{name: "health-explain", args: "anthropic|openai [MODEL]", run: func(e env) (out string, err error) {
+		err = healthExplain(e, flag.Arg(1), flag.Arg(2))
+
+		return noOutput, err
 	}},
 	{name: "prom-metrics", args: "SOURCE_JSON", run: func(e env) (out string, err error) {
 		// The metric names the panel assistant would be given; nothing is sent.

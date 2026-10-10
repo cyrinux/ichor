@@ -64,6 +64,12 @@ extension TalosClient {
 
     /// Current version, installer image and what blocks an upgrade of node (os:admin), with
     /// the risks to acknowledge; also reads the cluster upgrade lock (Kubernetes API).
+    /// The node's system extensions against the Image Factory's official list for `image`'s
+    /// version (os:reader; the factory is asked without credentials).
+    func upgradeExtensionCheck(node: String, image: String) async throws -> UpgradeExtensionCheck {
+        try await Self.json { [config, context] in IchorgoUpgradeExtensionCheck(config, context, node, image, $0) }
+    }
+
     func upgradePlan(node: String) async throws -> UpgradePlan {
         try await Self.json { [config, context, kubeServer] in IchorgoUpgradePlan(config, context, kubeServer, node, $0) }
     }

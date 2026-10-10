@@ -45,7 +45,17 @@ type Diagnosis struct {
 	// wrong names (real ones in screenshot mode, or fakes nobody can map back).
 	screenshotMode   bool
 	screenshotResets int
+	// kind picks the instructions sent with the report; the zero value is the full diagnosis.
+	kind diagnosisKind
 }
+
+// diagnosisKind tells which question a report answers.
+type diagnosisKind int
+
+const (
+	diagnosisFull   diagnosisKind = iota // the full cluster report (CollectDiagnosis)
+	diagnosisHealth                      // a failed health check (CollectHealthExplanation)
+)
 
 // CollectDiagnosis reads the state of the cluster (os:reader calls only) into a report.
 // Nothing leaves the phone here. With anonymize, the nodes' names, addresses and domain
@@ -70,7 +80,14 @@ func CollectDiagnosis(configYAML, contextName, kubeServer string, anonymize bool
 	}
 
 	d.report = renderDiagnosis(data)
+	d.applyMask(configYAML, anonymize, data)
 
+	return d, nil
+}
+
+// applyMask hides the cluster's names and addresses in d.report: with screenshot mode's
+// mask when it is on, else with a mask of its own when anonymize is set.
+func (d *Diagnosis) applyMask(configYAML string, anonymize bool, data diagnosisData) {
 	switch {
 	case d.screenshotMode:
 		d.mask = privacy
@@ -87,8 +104,15 @@ func CollectDiagnosis(configYAML, contextName, kubeServer string, anonymize bool
 		learnDiagnosisHosts(d.mask, data)
 		d.report = d.mask.maskPlain(d.report)
 	}
+}
 
-	return d, nil
+// systemPrompt is the instructions for this kind of report.
+func (d *Diagnosis) systemPrompt(language string) string {
+	if d.kind == diagnosisHealth {
+		return healthExplainSystemPrompt(language, d.mask != nil)
+	}
+
+	return diagnosisSystemPrompt(language, d.mask != nil)
 }
 
 // Report is the text that would be sent, to show to the user first.
@@ -105,7 +129,7 @@ func (d *Diagnosis) Prompt(language, note string) string {
 		return ""
 	}
 
-	return diagnosisSystemPrompt(language, d.mask != nil) + "\n\n" + diagnosisUserMessage(d.report, d.maskNote(note))
+	return d.systemPrompt(language) + "\n\n" + diagnosisUserMessage(d.report, d.maskNote(note))
 }
 
 // Ask sends the report and the user's optional note to the model and streams its answer
@@ -136,7 +160,7 @@ func (d *Diagnosis) ask(ctx context.Context, provider, apiKey, model, baseURL, l
 		return err.Error()
 	}
 
-	req.system = diagnosisSystemPrompt(language, d.mask != nil)
+	req.system = d.systemPrompt(language)
 	req.user = diagnosisUserMessage(d.report, d.maskNote(note))
 
 	ctx, stop := context.WithCancel(ctx)

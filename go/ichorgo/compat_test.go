@@ -82,7 +82,7 @@ var requiredFeatures = []string{
 	"events", "containers", "processes", "logFollow", "serviceControl", "packetCapture", "upgrade", "volumes",
 	"diskUsage", "mounts", "kubespan", "etcd", "etcdSnapshot", "etcdMemberActions", "resourceBrowser",
 	"supportBundle", "diskHealth", "issueConfig", "network", "connections", "time", "hardware", "images",
-	"machineConfig", "debugShell", "reset",
+	"machineConfig", "debugShell", "reset", "sensors",
 }
 
 func TestFeatureTable(t *testing.T) {
@@ -151,15 +151,15 @@ func TestComputeFeatures(t *testing.T) {
 		{"v1.8.0", []string{"debugShell", "diskHealth"}},
 		{"v1.7.6", []string{"debugShell", "diskHealth", "volumes"}},
 		{"v1.5.0", []string{"debugShell", "diskHealth", "volumes"}},
-		{"v1.4.8", []string{"debugShell", "diskHealth", "images", "volumes"}},
-		{"v1.3.7", []string{"connections", "debugShell", "diskHealth", "etcd", "images", "reset", "volumes"}},
+		{"v1.4.8", []string{"debugShell", "diskHealth", "images", "sensors", "volumes"}},
+		{"v1.3.7", []string{"connections", "debugShell", "diskHealth", "etcd", "images", "reset", "sensors", "volumes"}},
 		{"v1.2.0", []string{
 			"connections", "debugShell", "diskHealth", "etcd", "etcdMemberActions", "hardware", "images", "kubespan",
-			"machineConfig", "network", "reset", "resourceBrowser", "volumes",
+			"machineConfig", "network", "reset", "resourceBrowser", "sensors", "volumes",
 		}},
 		{"v1.1.3", []string{
 			"connections", "debugShell", "diskHealth", "etcd", "etcdMemberActions", "hardware", "images", "kubespan",
-			"machineConfig", "network", "packetCapture", "reset", "resourceBrowser", "volumes",
+			"machineConfig", "network", "packetCapture", "reset", "resourceBrowser", "sensors", "volumes",
 		}},
 		{"v1.10.3", []string{"debugShell", "diskHealth"}}, // 1.10 > 1.8: compared as numbers
 	}
@@ -243,7 +243,7 @@ func TestRequestUpgrade(t *testing.T) {
 	run := func(f *fakeUpgrader, stage, force bool) ([]string, error) {
 		var phases []string
 
-		err := requestUpgrade(context.Background(), f, image, stage, force, func() error { return nil },
+		err := requestUpgrade(context.Background(), f, image, stage, force, false, func() error { return nil },
 			func(phase, _ string) { phases = append(phases, phase) })
 
 		return phases, err
@@ -299,7 +299,7 @@ func TestRequestUpgrade(t *testing.T) {
 			etcd:   &etcdHealth{members: 3, healthy: 2, thisMember: true, thisHealthy: true},
 		})
 
-		if plan.Forceable || !containsText(plan.Warnings, noDrainWarning) {
+		if plan.Forceable || !plan.Drainable || !containsText(plan.Warnings, noDrainWarning) {
 			t.Fatalf("plan = %+v", plan)
 		}
 
@@ -311,7 +311,7 @@ func TestRequestUpgrade(t *testing.T) {
 		var messages []string
 
 		f := &fakeUpgrader{legacyErr: unimplemented}
-		err := requestUpgrade(context.Background(), f, image, false, true, func() error { return upgradeRefusal(plan, false) },
+		err := requestUpgrade(context.Background(), f, image, false, true, false, func() error { return upgradeRefusal(plan, false) },
 			func(_, msg string) { messages = append(messages, msg) })
 
 		if err == nil || !strings.Contains(err.Error(), "upgrade refused") || !strings.Contains(err.Error(), "force cannot skip") {
@@ -324,14 +324,14 @@ func TestRequestUpgrade(t *testing.T) {
 
 		// The legacy API (the node checks etcd itself) still honours force.
 		f = &fakeUpgrader{}
-		if err := requestUpgrade(context.Background(), f, image, false, true, func() error { return upgradeRefusal(plan, false) },
+		if err := requestUpgrade(context.Background(), f, image, false, true, false, func() error { return upgradeRefusal(plan, false) },
 			func(string, string) {}); err != nil {
 			t.Errorf("legacy forced: %v", err)
 		}
 
 		// The warning reaches the progress when the fallback runs, and older versions have neither.
 		f = &fakeUpgrader{legacyErr: unimplemented}
-		_ = requestUpgrade(context.Background(), f, image, false, false, func() error { return nil }, //nolint:errcheck
+		_ = requestUpgrade(context.Background(), f, image, false, false, false, func() error { return nil }, //nolint:errcheck
 			func(_, msg string) { messages = append(messages, msg) })
 
 		if !containsText(messages, noDrainWarning) {
@@ -342,7 +342,7 @@ func TestRequestUpgrade(t *testing.T) {
 			target: running("10.0.0.2", "v1.17.3", true),
 			etcd:   &etcdHealth{members: 3, healthy: 2, thisMember: true, thisHealthy: true},
 		})
-		if !old.Forceable || containsText(old.Warnings, noDrainWarning) {
+		if !old.Forceable || old.Drainable || containsText(old.Warnings, noDrainWarning) {
 			t.Errorf("1.17 plan = %+v", old)
 		}
 	})

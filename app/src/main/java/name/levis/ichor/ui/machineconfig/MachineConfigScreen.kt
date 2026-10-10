@@ -55,6 +55,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.ConfigApplyMode
+import name.levis.ichor.model.ConfigApplyState
 import name.levis.ichor.model.ConfigTryState
 import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.SecureWhile
@@ -64,6 +66,7 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.LoadingBox
@@ -103,6 +106,7 @@ fun MachineConfigScreen(
     // Kept here so the tree stays as it was opened across the review, the YAML view and a rotation.
     var expanded by rememberSaveable(stateSaver = listSaver(save = { it.toList() }, restore = { it.toSet() })) { mutableStateOf(emptySet<String>()) }
     var confirmingTry by rememberSaveable { mutableStateOf<Int?>(null) }
+    var confirmingApply by rememberSaveable { mutableStateOf<ConfigApplyMode?>(null) }
 
     SecureWhile(revealed)
 
@@ -132,11 +136,14 @@ fun MachineConfigScreen(
 
     val run = editor.run
     val review = editor.review
+    val applying = editor.apply
 
     fun back() {
         when {
             run is ConfigTryState.Running -> Unit // the try is followed to its end
             run != null -> vm.finishTry()
+            applying is ConfigApplyState.Running -> Unit // so is an apply
+            applying != null -> vm.finishApply()
             review != null -> vm.closeReview()
             editor.dirty -> confirmingDiscard = true
             editor.editing -> vm.discard()
@@ -147,7 +154,7 @@ fun MachineConfigScreen(
 
     val loaded = (state as? UiState.Loaded)?.data
     val shown = remember(loaded, query) { loaded?.let { matchingLines(it, query) } }
-    val browsing = run == null && review == null
+    val browsing = run == null && applying == null && review == null
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -159,6 +166,7 @@ fun MachineConfigScreen(
                             stringResource(
                                 when {
                                     run != null -> R.string.machine_config_try_title
+                                    applying != null -> applying.mode.label
                                     review != null -> R.string.machine_config_review
                                     else -> R.string.machine_config_title
                                 },
@@ -167,7 +175,7 @@ fun MachineConfigScreen(
                         Text(hostname, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
                     }
                 },
-                navigationIcon = { if (run !is ConfigTryState.Running) BackButton(::back) },
+                navigationIcon = { if (run !is ConfigTryState.Running && applying !is ConfigApplyState.Running) BackButton(::back) },
                 actions = {
                     if (browsing && !editor.editing) {
                         TooltipIconButton(
@@ -203,7 +211,14 @@ fun MachineConfigScreen(
         val body = Modifier.padding(padding).fillMaxSize()
         when {
             run != null -> ConfigTryContent(run, onKeep = vm::keep, onRevert = vm::revertNow, onDone = vm::finishTry, modifier = body)
-            review != null -> ConfigReviewContent(review, onRetry = vm::review, onTry = { confirmingTry = it }, modifier = body)
+            applying != null -> ConfigApplyContent(applying, onDone = vm::finishApply, modifier = body)
+            review != null -> ConfigReviewContent(
+                review,
+                onRetry = vm::review,
+                onTry = { confirmingTry = it },
+                onApply = { confirmingApply = it },
+                modifier = body,
+            )
             else -> Column(body) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (editor.editing) {
@@ -274,6 +289,37 @@ fun MachineConfigScreen(
             onDismiss = { confirmingDiscard = false },
             destructive = true,
         )
+    }
+
+    confirmingApply?.let { mode ->
+        val start = {
+            confirmingApply = null
+            authenticated(R.string.machine_config_apply_auth) { vm.startApply(mode) }
+        }
+        if (mode == ConfigApplyMode.REBOOT) {
+            // Never a surprise reboot: the hostname is typed, as for a reboot.
+            HostnameConfirmDialog(
+                title = stringResource(R.string.machine_config_apply_reboot_title, hostname),
+                hostname = hostname,
+                confirmLabel = stringResource(R.string.machine_config_apply_reboot),
+                onConfirm = start,
+                onDismiss = { confirmingApply = null },
+                emphasized = true,
+            ) {
+                Text(stringResource(R.string.machine_config_apply_reboot_text), style = MaterialTheme.typography.bodyMedium)
+            }
+        } else {
+            ConfirmDialog(
+                title = stringResource(R.string.machine_config_apply_confirm_title, hostname),
+                text = stringResource(
+                    if (mode == ConfigApplyMode.STAGED) R.string.machine_config_apply_confirm_staged else R.string.machine_config_apply_confirm_auto,
+                ),
+                confirm = stringResource(mode.label),
+                onConfirm = start,
+                onDismiss = { confirmingApply = null },
+                confirmColor = LocalStatusColors.current.warn,
+            )
+        }
     }
 
     confirmingTry?.let { timeout ->

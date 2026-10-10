@@ -56,6 +56,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
@@ -73,6 +74,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.defragOrder
+import name.levis.ichor.model.hasNospace
 import name.levis.ichor.model.EtcdLag
 import name.levis.ichor.model.ETCD_LAG_ENTRIES
 import name.levis.ichor.model.etcdLag
@@ -176,12 +178,16 @@ fun EtcdScreen(
     vm: EtcdViewModel = viewModel(factory = factory { EtcdViewModel(app.talosRepository) }),
     snapshotVm: EtcdSnapshotViewModel = viewModel(factory = factory { EtcdSnapshotViewModel(app.talosRepository, app) }),
     memberVm: EtcdMemberActionsViewModel = viewModel(factory = factory { EtcdMemberActionsViewModel(app.talosRepository) }),
+    fixVm: EtcdFixViewModel = viewModel(factory = factory { EtcdFixViewModel(app.talosRepository, app) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val defrag by vm.defrag.collectAsStateWithLifecycle()
     val disarm by vm.disarm.collectAsStateWithLifecycle()
     val snapshot by snapshotVm.state.collectAsStateWithLifecycle()
+    val fix by fixVm.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
+    // The fix changed etcd (or stopped half-way): show what is true now.
+    LaunchedEffect(fix.finished) { if (fix.finished) vm.refresh() }
 
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
@@ -201,6 +207,7 @@ fun EtcdScreen(
     var confirm by remember { mutableStateOf<DefragRequest?>(null) }
     var confirmDisarm by remember { mutableStateOf<String?>(null) }
     val startSnapshot = rememberSnapshotFlow(snapshotVm, config?.activeSummary?.name.orEmpty(), config?.activeSummary?.fingerprint.orEmpty())
+    val startFix = rememberEtcdFixFlow(fixVm, config?.activeSummary?.name.orEmpty(), config?.activeSummary?.fingerprint.orEmpty())
 
     // With the app lock on, defragmentation needs a fresh fingerprint/PIN, like reboot.
     fun confirmed(request: DefragRequest) {
@@ -265,6 +272,13 @@ fun EtcdScreen(
                                 ?.takeIf { canDefrag }
                                 ?.let { node -> { confirmDisarm = node } },
                             onDismiss = vm::dismissDisarm,
+                        ),
+                        fix = FixActions(
+                            state = fix,
+                            // Defragmentation and disarm, like the separate buttons.
+                            onFix = if (canDefrag && s.data.hasNospace) ({ startFix(s.data) }) else null,
+                            onCancel = fixVm::cancel,
+                            onDismiss = fixVm::dismiss,
                         ),
                         members = MemberActionsHost(
                             state = memberAction,
@@ -342,6 +356,9 @@ fun EtcdScreen(
 /** The alarms section's disarm action; [onDisarm] is null when not allowed. */
 private data class AlarmActions(val state: DisarmState, val onDisarm: (() -> Unit)?, val onDismiss: () -> Unit)
 
+/** The NOSPACE fix; [onFix] is null without the alarm or the role. */
+private data class FixActions(val state: EtcdFixState, val onFix: (() -> Unit)?, val onCancel: () -> Unit, val onDismiss: () -> Unit)
+
 /** Member actions of the screen; not [allowed] by the role: nothing is offered. */
 private data class MemberActionsHost(
     val state: MemberActionState,
@@ -383,6 +400,7 @@ private fun EtcdContent(
     onDefrag: (DefragRequest) -> Unit,
     onDismissDefrag: () -> Unit,
     alarms: AlarmActions,
+    fix: FixActions,
     members: MemberActionsHost,
     snapshot: SnapshotActions?,
 ) {
@@ -412,6 +430,9 @@ private fun EtcdContent(
         snapshot?.let { snap ->
             item { SnapshotPanel(snap.state, snap.onSave, snap.onCancel, snap.onDismiss, snap.notice) }
         }
+        if (!fix.state.idle) {
+            item { EtcdFixPanel(fix.state, fix.onCancel, fix.onDismiss) }
+        }
         etcd.alarmsError?.let { error ->
             item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
             item { Text(stringResource(R.string.etcd_alarms_check_failed, error), color = colors.bad) }
@@ -420,6 +441,11 @@ private fun EtcdContent(
             item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
             items(etcd.alarms) { alarm ->
                 Text("${hostnames[alarm.memberId] ?: alarm.memberId}: ${alarm.alarm}", color = colors.bad)
+            }
+            fix.onFix?.takeIf { fix.state.idle }?.let { onFix ->
+                item {
+                    Button(onClick = onFix, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_fix_button)) }
+                }
             }
             alarms.onDisarm?.let { onDisarm ->
                 item {

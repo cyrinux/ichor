@@ -211,6 +211,11 @@ struct TalosClient: Sendable {
         try await Self.json { [config, context] in IchorgoKubeSpanStatus(config, context, $0) }
     }
 
+    /// Why each node's KubeSpan peers are up or down, every node compared (os:reader).
+    func kubespanDiagnostics() async throws -> KubeSpanDiagAll {
+        try await Self.json { [config, context] in IchorgoKubeSpanDiagnosticsAll(config, context, $0) }
+    }
+
     /// Admin kubeconfig (os:admin). A credential: only write it where the user chose.
     func kubeconfig() async throws -> String {
         try await Self.run { [config, context, kubeServer] in IchorgoKubeconfig(config, context, kubeServer, $0) }
@@ -428,6 +433,12 @@ struct TalosClient: Sendable {
     /// System, CPUs, memory, disks, extensions and security state of node (os:reader).
     func hardware(node: String) async throws -> NodeHardware {
         try await Self.json { [config, context] in IchorgoNodeHardware(config, context, node, $0) }
+    }
+
+    /// Temperatures, fans, voltages, CPU frequencies, throttle counters and PCI devices of node
+    /// (os:reader); read on the Hardware screen only.
+    func sensors(node: String) async throws -> NodeSensors {
+        try await Self.json { [config, context] in IchorgoNodeSensors(config, context, node, $0) }
     }
 
     /// Container images in node's CRI namespace (os:reader).

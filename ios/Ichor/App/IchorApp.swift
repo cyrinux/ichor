@@ -128,6 +128,8 @@ enum Route: Hashable {
     /// Node screen opened on a tab, or with a reboot/shutdown confirmation (from row swipes).
     case nodeLive(NodeRef)
     case nodePower(NodeRef, PowerAction)
+    /// Node screen opened on its cordon / uncordon confirmation (from a row's menu).
+    case nodeCordon(NodeRef)
     /// Node screen opened on a tab (a share link).
     case nodeTab(NodeRef, tab: NodeDetailView.Tab)
     /// Every node of a large cluster (see isDenseCluster), as the overview loaded them; filter preselects one.
@@ -235,6 +237,7 @@ struct MainNavigation: View {
                     case .node(let ref): NodeDetailView(ref: ref)
                     case .nodeLive(let ref): NodeDetailView(ref: ref, initialTab: .live)
                     case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
+                    case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
                     case .nodeTab(let ref, let tab): NodeDetailView(ref: ref, initialTab: tab)
                     case .nodes(let filter, let nodes): NodesView(nodes: nodes, filter: filter, path: $path)
                     case .kubeNodes(let filter, let nodes): KubeNodesView(nodes: nodes, filter: filter, path: $path)

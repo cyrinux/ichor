@@ -37,4 +37,13 @@ var etcdCommands = []command{
 
 		return out, err
 	}},
+	{name: "etcd-nospace-fix", args: "NODE [DEST]", run: func(e env) (out string, err error) {
+		// Defragments every member and disarms the alarm for real; refused without NOSPACE.
+		// DEST: an absolute path for a clear snapshot first; none skips it.
+		m := maintenanceProbe{done: make(chan string, 1)}
+		ichorgo.StartEtcdNospaceFix(e.cfg, e.context, flag.Arg(1), flag.Arg(2), "", "", m)
+		out = "done: " + <-m.done
+
+		return out, err
+	}},
 }
