@@ -26,9 +26,9 @@ final class ConfigTryJob {
     private var task: Task<Void, Never>?
     private var backgroundTask = UIBackgroundTaskIdentifier.invalid
 
-    static let category = "config-try"
-    static let keepAction = "config-try.keep"
-    static let revertAction = "config-try.revert"
+    nonisolated static let category = "config-try"
+    nonisolated static let keepAction = "config-try.keep"
+    nonisolated static let revertAction = "config-try.revert"
     private static let notification = "config-try"
 
     var isActive: Bool { task != nil }
@@ -38,7 +38,7 @@ final class ConfigTryJob {
 
     /// Keep opens the app first (unlocked, with the app lock); Revert now runs from the
     /// notification, as it only puts the previous config back.
-    static var notificationCategory: UNNotificationCategory {
+    nonisolated static var notificationCategory: UNNotificationCategory {
         UNNotificationCategory(
             identifier: category,
             actions: [
