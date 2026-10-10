@@ -26,6 +26,7 @@ struct NodeDetailView: View {
 
     @State private var live = LiveStats()
     @State private var showingDebugShell = false
+    @State private var showingNetTools = false
     @State private var showingMachineConfig = false
     @State private var processes = ProcessMonitor()
     @State private var pods = PodMonitor()
@@ -146,6 +147,9 @@ struct NodeDetailView: View {
         }
         .navigationDestination(isPresented: $showingHardware) {
             HardwareView(node: ref.address, hostname: ref.hostname)
+        }
+        .navigationDestination(isPresented: $showingNetTools) {
+            NetToolsView(node: ref.address, hostname: ref.hostname)
         }
         .navigationDestination(isPresented: $showingDebugShell) {
             DebugShellView(node: ref.address, hostname: ref.hostname)
@@ -333,6 +337,10 @@ extension NodeDetailView {
                 if model.allows(.debugShell) {
                     FeatureButton(title: String(localized: "Debug shell"), systemImage: "apple.terminal", support: support(.debugShell)) {
                         showingDebugShell = true
+                    }
+                    // The same privileged netshoot container, one check at a time.
+                    FeatureButton(title: String(localized: "Network tools"), systemImage: "network", support: support(.debugShell)) {
+                        showingNetTools = true
                     }
                 }
                 if model.allows(.packetCapture) {

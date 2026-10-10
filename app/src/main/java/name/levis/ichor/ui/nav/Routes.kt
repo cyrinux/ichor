@@ -119,6 +119,7 @@ internal object Routes {
     const val IMAGES = "images?addr={addr}&host={host}"
     const val ISSUE_CONFIG = "issueconfig"
     const val CAPTURE = "capture?addr={addr}&host={host}"
+    const val NET_TOOLS = "nettools?addr={addr}&host={host}"
     const val CAPTURES = "captures"
     const val CAPTURE_FILE = "capturefile?name={name}"
     const val UPGRADE = "upgrade?addr={addr}&host={host}&version={version}"
@@ -130,6 +131,7 @@ internal object Routes {
         "maintenance?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&drain=$drain"
 
     fun capture(addr: String, host: String) = "capture?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
+    fun netTools(addr: String, host: String) = "nettools?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
     fun captureFile(name: String) = "capturefile?name=${Uri.encode(name)}"
 

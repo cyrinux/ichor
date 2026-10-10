@@ -63,6 +63,7 @@ import name.levis.ichor.ui.debug.DebugShells
 import name.levis.ichor.ui.upgrade.UpgradeService
 import name.levis.ichor.ui.images.ImagePullService
 import name.levis.ichor.ui.maintenance.MaintenanceService
+import name.levis.ichor.data.NetToolTargets
 import name.levis.ichor.ui.upgrade.ClusterUpgradeService
 import name.levis.ichor.data.ClusterUpgradeManager
 import name.levis.ichor.ui.machineconfig.ConfigTryService
@@ -193,6 +194,8 @@ class TalosApp : Application() {
     val talosUpdateChecker by lazy { TalosUpdateChecker() }
     /** The Talos release each cluster's update card was skipped for. */
     val skippedTalosUpdates by lazy { SkippedTalosUpdates(getSharedPreferences(SkippedTalosUpdates.FILE, Context.MODE_PRIVATE)) }
+    /** The network tools' recent targets, per cluster. */
+    val netToolTargets by lazy { NetToolTargets(getSharedPreferences(NetToolTargets.FILE, Context.MODE_PRIVATE)) }
     val uiPreferences by lazy { UiPreferences(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
     val clusterColors by lazy { ClusterColors(getSharedPreferences(ClusterColors.FILE, Context.MODE_PRIVATE)) }
     val clusterNames by lazy { ClusterNames(getSharedPreferences(ClusterNames.FILE, Context.MODE_PRIVATE)) }
@@ -541,6 +544,7 @@ class TalosApp : Application() {
                     kubeScopes.sync(it.summary)
                     snapshotKeys.sync(it.summary)
                     skippedTalosUpdates.sync(it.summary)
+                    netToolTargets.sync(it.summary)
                     val fingerprints = it.summary.contexts.map { c -> c.fingerprint }
                     launch(Dispatchers.IO) { metricsStore.sync(fingerprints) }
                     launch(Dispatchers.IO) { alertmanagerStore.sync(fingerprints) }

@@ -34,6 +34,7 @@ import name.levis.ichor.ui.kubebrowser.LocalKubeLinks
 import name.levis.ichor.ui.kubespan.KubeSpanScreen
 import name.levis.ichor.ui.logs.LogsScreen
 import name.levis.ichor.ui.machineconfig.MachineConfigScreen
+import name.levis.ichor.ui.nettools.NetToolsScreen
 import name.levis.ichor.ui.upgrade.ClusterUpgradeScreen
 import name.levis.ichor.ui.maintenance.MaintenanceScreen
 import name.levis.ichor.ui.network.NetworkScreen
@@ -102,6 +103,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
                         NodeMenuEntry.RESOURCES -> Routes.resources(addr, host)
                         NodeMenuEntry.DEBUG_SHELL -> Routes.debug(addr, host)
                         NodeMenuEntry.CAPTURE -> Routes.capture(addr, host)
+                        NodeMenuEntry.NET_TOOLS -> Routes.netTools(addr, host)
                         NodeMenuEntry.CAPTURES -> Routes.CAPTURES
                         NodeMenuEntry.MACHINE_CONFIG -> Routes.machineConfig(addr, host)
                         NodeMenuEntry.UPGRADE -> Routes.upgrade(addr, host)
@@ -184,6 +186,10 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
         arguments = listOf(navArgument("version") { type = NavType.StringType; defaultValue = "" }),
     ) { entry ->
         ClusterUpgradeScreen(initialVersion = entry.arguments?.getString("version").orEmpty(), onBack = { nav.popBackStack() })
+    }
+    composable(Routes.NET_TOOLS, arguments = nodeArguments()) { entry ->
+        val addr = entry.arguments?.getString("addr").orEmpty()
+        NetToolsScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
     }
     composable(Routes.ISSUE_CONFIG) { IssueConfigScreen(onBack = { nav.popBackStack() }) }
     composable(
