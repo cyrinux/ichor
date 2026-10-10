@@ -56,9 +56,13 @@ func (gkeMethod) rememberedFields() []string {
 	return []string{gcpFieldOAuthClientID, gcpFieldOAuthClientSecret}
 }
 
-// signIn runs the browser sign-in of the OAuth client entered; the other GKE credentials
-// need none.
+// signIn runs the browser sign-in of the OAuth client entered, or of the build's own Google
+// client (kube_auth_gke_native.go); the other GKE credentials need none.
 func (gkeMethod) signIn(ctx context.Context, state kubeAuthState, prompt func(signInPrompt), callbacks <-chan string) (kubeAuthState, error) {
+	if state.secret(gcpFieldGoogleSignIn) != "" {
+		return signInNative(ctx, state, prompt, callbacks)
+	}
+
 	if state.secret(gcpFieldOAuthClientID) == "" {
 		return state, errors.New("enter the OAuth client ID and secret first")
 	}
