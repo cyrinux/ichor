@@ -12,6 +12,18 @@ import (
 
 // Talos nodes and the cluster.
 var nodeCommands = []command{
+	{name: "cluster-upgrade-plan", args: "VERSION", run: func(e env) (out string, err error) {
+		// Read-only: the order, each node's checks.
+		return ichorgo.ClusterUpgradePlan(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+	}},
+	{name: "cluster-upgrade", args: "VERSION [drain]", run: func(e env) (out string, err error) {
+		// Upgrades every node for real, one at a time; a rerun resumes. Acknowledges the risks.
+		m := maintenanceProbe{done: make(chan string, 1)}
+		ichorgo.StartClusterUpgrade(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2) == "drain", true, m)
+		out = "done: " + <-m.done
+
+		return out, err
+	}},
 	{name: "parse", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.ParseConfig(e.cfg)
 

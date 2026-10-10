@@ -22,7 +22,7 @@ var auditedEntryPoints = []string{
 	"KubeDeletePod", "KubeFluxAction", "KubeGarageRepairBlocks", "KubeGarageSetTranquility",
 	"KubeHelmRollback", "KubeLonghornAction", "KubeNodeCordon", "KubeObjectUpdate",
 	"KubeRollbackDeployment", "KubeRolloutRestart", "KubeScale", "KubeSuspendCronJob",
-	"KubeTriggerCronJob", "NetPerfDeleteNamespace", "Reboot", "Rollback", "ServiceAction", "Shutdown", "StartConfigApply", "StartConfigTry",
+	"KubeTriggerCronJob", "NetPerfDeleteNamespace", "Reboot", "Rollback", "ServiceAction", "Shutdown", "StartClusterUpgrade", "StartConfigApply", "StartConfigTry",
 	"StartEtcdNospaceFix", "StartKubeDrain", "StartNodeDebug", "StartNodeMaintenance", "StartNodeMaintenanceUpgrade", "StartPodDebug", "StartUpgrade",
 }
 
