@@ -1,4 +1,5 @@
 import SwiftUI
+import Ichorgo
 import IchorCore
 import UserNotifications
 
@@ -17,6 +18,11 @@ struct IchorApp: App {
         TalosClient.setDataDirectory()
         // Where Go keeps the sign-ins of kubeconfig clusters, before any Kubernetes call.
         KubeAuthStore.register()
+        // GKE's Sign in with Google, when the build carries Ichor's iOS client
+        // (Config/GoogleSignIn.xcconfig): the option appears on the GKE sign-in sheet.
+        if let clientID = Bundle.main.object(forInfoDictionaryKey: "GoogleSignInClientID") as? String, !clientID.isEmpty {
+            IchorgoSetGoogleSignInClient("ios", clientID)
+        }
         SupportBundleStore.removeStaleParts()
         BackgroundMonitor.register()
         BackgroundMonitor.registerCategories()

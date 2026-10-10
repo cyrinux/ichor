@@ -150,6 +150,26 @@ public func kubeFieldInput(_ field: String) -> KubeFieldInput {
     }
 }
 
+/// GKE's "Sign in with Google" option (a build with Ichor's iOS client): a marker, never a
+/// text field; its value tells the Go core which platform's sign-in runs.
+public let kubeGoogleSignInField = "gcpGoogleSignIn"
+
+/// What the GKE "Sign in with Google" option submits to the Go core (KubeSetCredentials):
+/// the browser sign-in then starts.
+public func kubeGoogleSignInSecretsJSON() -> String {
+    kubeSecretsJSON(fields: [kubeGoogleSignInField], values: [kubeGoogleSignInField: "ios"])
+}
+
+/// The URL scheme the in-app web session closes on for a sign-in coming back to
+/// `redirectPrefix`: its own custom scheme (Google's reversed client ID), else the app's
+/// "ichor" (a loopback address is answered to Go itself, the session never sees it).
+public func kubeCallbackScheme(of redirectPrefix: String?) -> String {
+    guard let prefix = redirectPrefix, let colon = prefix.firstIndex(of: ":") else { return "ichor" }
+    let scheme = prefix[..<colon].lowercased()
+    let valid = scheme.first?.isLetter == true && scheme.allSatisfy { $0.isLetter || $0.isNumber || "+-.".contains($0) }
+    return !valid || scheme == "http" || scheme == "https" ? "ichor" : scheme
+}
+
 /// Fields that may be left empty.
 public func kubeFieldOptional(_ field: String) -> Bool {
     field == "awsSessionToken" || field == "gcpProjects" || field == "gcpOAuthRedirectUrl"

@@ -227,19 +227,33 @@ struct KubeCredentialsForm: View {
                 .pickerStyle(.segmented)
             }
         }
-        KubeFieldsSection(fields: fields, values: $values)
-        if let hint = fields.lazy.compactMap(KubeAuthWording.fieldHint).first {
+        if fields == [kubeGoogleSignInField] {
+            // Sign in with Google: Google's page in the browser sheet, nothing to type.
             Section {
-                Text(hint).font(.footnote).foregroundStyle(.secondary)
+                Button("Sign in with Google") { onSubmit(kubeGoogleSignInSecretsJSON()) }
+                    .disabled(busy)
+            } footer: {
+                Text("Your Google account, through Google's sign-in page.")
+            }
+        } else {
+            KubeFieldsSection(fields: fields, values: $values)
+            if let hint = fields.lazy.compactMap(KubeAuthWording.fieldHint).first {
+                Section {
+                    Text(hint).font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+            Section {
+                Button("Save and sign in") { onSubmit(kubeSecretsJSON(fields: fields, values: values)) }
+                    .disabled(busy || !kubeFieldsComplete(fields, values: values))
+            } footer: {
+                credentialsFooter
             }
         }
-        Section {
-            Button("Save and sign in") { onSubmit(kubeSecretsJSON(fields: fields, values: values)) }
-                .disabled(busy || !kubeFieldsComplete(fields, values: values))
-        } footer: {
-            if fields.contains(where: { kubeFieldInput($0) == .secret || kubeFieldInput($0) == .json }) {
-                Text("Stored sealed on this device, and in your encrypted backups. Prefer a dedicated identity with read-only access.")
-            }
+    }
+
+    @ViewBuilder private var credentialsFooter: some View {
+        if fields.contains(where: { kubeFieldInput($0) == .secret || kubeFieldInput($0) == .json }) {
+            Text("Stored sealed on this device, and in your encrypted backups. Prefer a dedicated identity with read-only access.")
         }
     }
 }

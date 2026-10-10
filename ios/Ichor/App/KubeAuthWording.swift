@@ -73,6 +73,7 @@ enum KubeAuthWording {
         case "gcpServiceAccountJson": String(localized: "Service account key")
         case "gcpUserCredentialsJson": String(localized: "gcloud user credentials")
         case "gcpOAuthClientId": String(localized: "Your organisation's OAuth client")
+        case "gcpGoogleSignIn": String(localized: "Sign in with Google")
         default: fields.map(fieldLabel).joined(separator: ", ")
         }
     }
