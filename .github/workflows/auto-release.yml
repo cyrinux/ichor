@@ -50,11 +50,14 @@ jobs:
         if: env.DEPLOY_KEY == ''
         run: echo "::notice::RELEASE_DEPLOY_KEY is not set (just auto-release-setup); only a dry run is possible."
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
           fetch-depth: 0 # tags and history to bump from
           ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }} # empty: HTTPS with GITHUB_TOKEN, read only
+          # Neither the key nor the token stays in .git/config; the push step below sets the
+          # key up for itself.
+          persist-credentials: false
 
       - name: Next version
         id: next
@@ -89,8 +92,10 @@ jobs:
           fi
           echo "ok=$ok" >>"$GITHUB_OUTPUT"
 
-      - uses: extractions/setup-just@v4
+      # From the Ubuntu archive rather than a third-party action, as this job holds the key.
+      - name: Install just
         if: steps.ci.outputs.ok == 'true' && !inputs.dry_run && env.DEPLOY_KEY != ''
+        run: sudo apt-get update -q && sudo apt-get install -y -q just
 
       # --yes commits the drafted Play notes ("docs: Google Play release notes for vX.Y.Z")
       # and the tag goes on that commit, as `just release-tag X --yes` does by hand. The checks
@@ -102,6 +107,13 @@ jobs:
           VERSION: ${{ steps.next.outputs.version }}
           ICHOR_RELEASE_SKIP_GATE: "1"
         run: |
+          # The deploy key for `git fetch` in release-tag and the push, and GitHub's host
+          # keys from its API (over TLS) rather than trusting whatever answers on port 22.
+          key="$RUNNER_TEMP/deploy_key"
+          install -m 600 /dev/null "$key"
+          printf '%s\n' "$DEPLOY_KEY" >"$key"
+          gh api meta --jq '.ssh_keys[] | "github.com " + .' >"$RUNNER_TEMP/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$RUNNER_TEMP/known_hosts -o StrictHostKeyChecking=yes"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           just release-tag "$VERSION" --yes --unsigned
