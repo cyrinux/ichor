@@ -206,6 +206,10 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
     /// An unreachable node shown with what it said last: when that was (epoch ms). Never
     /// from Go, set by mergeLastKnown.
     public let lastSeen: Int64?
+    /// The Kubernetes node is unschedulable, as the node itself says; see `cordonKnown`.
+    public let cordoned: Bool
+    /// False when the node did not say (older Talos, not a Kubernetes member yet).
+    public let cordonKnown: Bool
 
     public var id: String { node }
 
@@ -216,14 +220,15 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
 
     /// Worth a full row even in the collapsed nodes section: down, not ready, or reporting a problem.
     public var needsAttention: Bool {
-        health != .ready || !unmetConditions.isEmpty || !(error ?? "").trimmingCharacters(in: .whitespaces).isEmpty
+        health != .ready || !unmetConditions.isEmpty || !(error ?? "").trimmingCharacters(in: .whitespaces).isEmpty || cordoned
     }
 
     public init(
         node: String, hostname: String, reachable: Bool, error: String? = nil, errorKind: String? = nil,
         version: String = "", arch: String = "", platform: String = "", role: String = "", stage: String = "",
         ready: Bool = false, unmetConditions: [UnmetCondition] = [], cpuCount: Int = 0, memTotal: UInt64 = 0,
-        memAvailable: UInt64 = 0, publicIPs: [String] = [], lastSeen: Int64? = nil
+        memAvailable: UInt64 = 0, publicIPs: [String] = [], lastSeen: Int64? = nil, cordoned: Bool = false,
+        cordonKnown: Bool = false
     ) {
         self.node = node
         self.hostname = hostname
@@ -242,11 +247,13 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
         self.memAvailable = memAvailable
         self.publicIPs = publicIPs
         self.lastSeen = lastSeen
+        self.cordoned = cordoned
+        self.cordonKnown = cordonKnown
     }
 
     private enum CodingKeys: String, CodingKey {
         case node, hostname, reachable, error, errorKind, version, arch, platform, role, stage, ready
-        case unmetConditions, cpuCount, memTotal, memAvailable, publicIPs, lastSeen
+        case unmetConditions, cpuCount, memTotal, memAvailable, publicIPs, lastSeen, cordoned, cordonKnown
     }
 
     // Older cores send no capacity; Go encodes an empty (nil) slice as null.
@@ -269,6 +276,8 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
         memAvailable = try c.field(.memAvailable, 0)
         publicIPs = try c.field(.publicIPs, [])
         lastSeen = try c.decodeIfPresent(Int64.self, forKey: .lastSeen)
+        cordoned = try c.field(.cordoned, false)
+        cordonKnown = try c.field(.cordonKnown, false)
     }
 }
 

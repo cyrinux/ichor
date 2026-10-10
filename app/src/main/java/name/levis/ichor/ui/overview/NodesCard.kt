@@ -202,6 +202,9 @@ private fun NodeChip(node: NodeOverview, onClick: () -> Unit, onLongClick: () ->
             Box(Modifier.size(8.dp).background(color, CircleShape))
             Spacer(Modifier.width(6.dp))
             Text(node.hostname, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (node.cordoned) {
+                Text(" · " + stringResource(R.string.kube_node_cordoned), style = MaterialTheme.typography.labelLarge, maxLines = 1)
+            }
         }
     }
 }
@@ -234,6 +237,9 @@ private fun NodeRow(
                 Text(node.hostname, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 if (node.reachable && cachedThrottled(node.node)) {
                     StatusPill(stringResource(R.string.hardware_throttled), LocalStatusColors.current.bad, Modifier.padding(end = 6.dp))
+                }
+                if (node.cordoned) {
+                    StatusPill(stringResource(R.string.kube_node_cordoned), LocalStatusColors.current.warn, Modifier.padding(end = 6.dp))
                 }
                 NodeHealthPill(node.health)
             }

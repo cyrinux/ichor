@@ -17,10 +17,11 @@ struct NodeDetailView: View {
     @State private var succeeded = false
     @State private var showingKernelLog = false
 
-    init(ref: NodeRef, initialTab: Tab = .services, initialAction: PowerAction? = nil) {
+    init(ref: NodeRef, initialTab: Tab = .services, initialAction: PowerAction? = nil, initialCordon: Bool = false) {
         self.ref = ref
         _tab = State(initialValue: initialTab)
         _powerAction = State(initialValue: initialAction)
+        _showingCordon = State(initialValue: initialCordon)
     }
 
     @State private var live = LiveStats()

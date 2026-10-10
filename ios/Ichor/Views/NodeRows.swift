@@ -90,6 +90,12 @@ struct NodeMenu: View {
                 Button { path.append(.drain(node: node.node, hostname: node.hostname)) } label: {
                     Label("Drain…", systemImage: "rectangle.portrait.and.arrow.right")
                 }
+                // Only when the node said whether it is cordoned: the entry names what it does.
+                if node.cordonKnown {
+                    Button { path.append(.nodeCordon(ref)) } label: {
+                        Label(node.cordoned ? String(localized: "Uncordon…") : String(localized: "Cordon…"), systemImage: "nosign")
+                    }
+                }
             }
             if model.allows(.power) {
                 Button(role: .destructive) { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot…", systemImage: "power") }
@@ -123,6 +129,9 @@ struct NodeOverviewRow: View {
                 Text(node.hostname).font(.headline)
                 Spacer()
                 if throttled { StatusPill(label: String(localized: "Throttled"), color: .statusBad) }
+                if node.cordoned {
+                    StatusPill(label: String(localized: "Cordoned"), color: .orange)
+                }
                 StatusPill(label: node.health.label, color: node.health.color)
             }
             // Below the pill rather than beside it: the full width keeps an IPv6 on one line.

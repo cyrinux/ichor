@@ -84,6 +84,8 @@ func demoNodes() []nodeOverview {
 		if i >= 3 { // the workers sit behind a NAT the discovery service sees
 			nodes[i].PublicIPs = []string{fmt.Sprintf("203.0.113.%d", 40+i)}
 		}
+		// The second worker was left cordoned by a maintenance.
+		nodes[i].Cordoned, nodes[i].CordonKnown = i == 4, true
 	}
 	return nodes
 }

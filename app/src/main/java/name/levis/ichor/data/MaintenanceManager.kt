@@ -119,6 +119,9 @@ class MaintenanceManager(
         }
     }
 
+    /** What another screen learnt of [node]'s cordon (the overview reads it from the node). */
+    fun learn(node: String, cordoned: Boolean) = remember(node, cordoned)
+
     private fun remember(node: String, cordoned: Boolean) {
         _cordoned.update { it + (node to cordoned) }
     }
