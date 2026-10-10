@@ -74,6 +74,42 @@ extension TalosClient {
     }
 }
 
+enum ConfigApplyEvent: Sendable {
+    case progress(ConfigApplyProgress)
+    /// nil on success.
+    case done(error: String?)
+}
+
+extension TalosClient {
+    /// Applies `draft` for good in `mode` (os:admin): now, at the next reboot, or now with a
+    /// reboot. Ending the stream stops following the run; what was sent stays.
+    func applyMachineConfig(node: String, base: String, draft: String, mode: ConfigApplyMode) -> AsyncStream<ConfigApplyEvent> {
+        Self.bridged { [config, context] continuation in
+            let bridge = ConfigApplyBridge(
+                progress: { continuation.yield(.progress($0)) },
+                done: {
+                    continuation.yield(.done(error: $0))
+                    continuation.finish()
+                }
+            )
+            let run = IchorgoStartConfigApply(config, context, node, base, draft, mode.rawValue, bridge)
+            return BridgedRun(bridge) { run?.cancel() }
+        }
+    }
+}
+
+private final class ConfigApplyBridge: NSObject, IchorgoConfigApplyListenerProtocol, @unchecked Sendable {
+    private let sink: JSONSink<ConfigApplyProgress>
+
+    init(progress: @escaping @Sendable (ConfigApplyProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {
+        sink = JSONSink(item: progress, done: done)
+    }
+
+    func onProgress(_ json: String?) { sink.emit(json) }
+
+    func onDone(_ errMessage: String?) { sink.finish(errMessage) }
+}
+
 private final class ConfigTryBridge: NSObject, IchorgoConfigTryListenerProtocol, @unchecked Sendable {
     private let progress: @Sendable (ConfigTryProgress) -> Void
     private let done: @Sendable (ConfigTryOutcome) -> Void

@@ -1,12 +1,17 @@
 package name.levis.ichor.data
 
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.goErrorText
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.R
+import name.levis.ichorgo.ConfigApplyListener
 import name.levis.ichorgo.ConfigTryListener
 import name.levis.ichorgo.MaintenanceListener
 import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.Ichorgo
+import name.levis.ichor.model.ConfigApplyEvent
+import name.levis.ichor.model.ConfigApplyMode
+import name.levis.ichor.model.ConfigApplyProgress
 import name.levis.ichor.model.ConfigEdit
 import name.levis.ichor.model.ConfigPreview
 import name.levis.ichor.model.ConfigSchemaStatus
@@ -208,6 +213,31 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
      * node reverts by itself unless [ConfigTryCommand.KEEP] comes through [commands] first.
      * Cancelling the collection only stops following; the node still reverts.
      */
+    /** StartConfigApply: [draft] applied for good in [mode]; closing the flow stops following it. */
+    fun applyMachineConfig(node: String, base: String, draft: String, mode: ConfigApplyMode): Flow<ConfigApplyEvent> = callbackFlow {
+        val stored = configs.forCall()
+        val run = Ichorgo.startConfigApply(
+            stored.yaml,
+            stored.activeContext,
+            node,
+            base,
+            draft,
+            mode.wire,
+            object : ConfigApplyListener {
+                override fun onProgress(json: String) {
+                    runCatching { TalosJson.decodeFromString(ConfigApplyProgress.serializer(), json) }
+                        .onSuccess { trySend(ConfigApplyEvent.Progress(it)) }
+                }
+
+                override fun onDone(errMessage: String) {
+                    trySend(ConfigApplyEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED)
+
     fun tryMachineConfig(node: String, base: String, draft: String, timeoutSeconds: Int, commands: Flow<ConfigTryCommand>): Flow<ConfigTryEvent> = callbackFlow {
         val stored = configs.forCall()
         val run = Ichorgo.startConfigTry(

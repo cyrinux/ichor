@@ -49,6 +49,8 @@ type fakeConfigNode struct {
 	// same (an answer lost on the way back).
 	tryErr     error
 	tryApplies bool
+	// lostAnswer: a failed real apply was applied all the same (the answer was lost).
+	lostAnswer bool
 }
 
 func newFakeConfigNode(t *testing.T) *fakeConfigNode {
@@ -94,6 +96,10 @@ func (n *fakeConfigNode) apply(_ context.Context, data []byte, mode machineapi.A
 		if len(n.failures) > 0 {
 			err := n.failures[0]
 			n.failures = n.failures[1:]
+
+			if n.lostAnswer {
+				n.previous, n.active = nil, data
+			}
 
 			return configApplyResult{}, err
 		}

@@ -320,3 +320,14 @@ func (l maskedEtcdFixListener) OnProgress(json string) {
 func (l maskedEtcdFixListener) OnDone(errMessage string) {
 	l.EtcdFixListener.OnDone(privacy.maskPlain(errMessage))
 }
+
+// maskedConfigApplyListener masks a config apply's progress and error.
+type maskedConfigApplyListener struct{ ConfigApplyListener }
+
+func (l maskedConfigApplyListener) OnProgress(json string) {
+	l.ConfigApplyListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedConfigApplyListener) OnDone(errMessage string) {
+	l.ConfigApplyListener.OnDone(privacy.maskPlain(errMessage))
+}
