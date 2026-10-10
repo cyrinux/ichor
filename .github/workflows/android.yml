@@ -8,13 +8,6 @@ on:
   # Artifacts are only uploaded then (github.ref is the caller's tag); pushes and PRs
   # just build.
   workflow_call:
-    secrets:
-      ICHOR_KEYSTORE_BASE64:
-        required: false
-      ICHOR_KEYSTORE_PASSWORD:
-        required: false
-      ICHOR_KEY_ALIAS:
-        required: false
 
 permissions:
   contents: read
@@ -26,11 +19,12 @@ jobs:
     # pull request and main builds get no secrets and come out unsigned.
     environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || '' }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # scripts/version.sh derives the version from tags and history
+          persist-credentials: false
 
-      - uses: cachix/install-nix-action@v31
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
 
       - name: Check (gofmt, vet, staticcheck, Go and Kotlin unit tests)
         run: ./build.sh check
@@ -83,7 +77,7 @@ jobs:
           scripts/changelog.py --limit 30 -o dist/changelog.json
           ls -l dist
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           name: android-release
@@ -92,13 +86,13 @@ jobs:
             dist/changelog.json
 
       # R8 mapping, to decode obfuscated stack traces from release builds.
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           name: android-mapping
           path: app/build/outputs/mapping/release/mapping.txt
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           name: android-play
@@ -106,7 +100,7 @@ jobs:
             app/build/outputs/bundle/play/*.aab
             app/build/outputs/mapping/play/mapping.txt
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           name: android-debug
