@@ -337,6 +337,22 @@ where a failed upgrade can be rolled back.
   three nodes at a time, so each reboot does not wait for the download. A node's Images screen
   can pull any image on every node the same way, into the Kubernetes or the system images. A
   node that cannot pull shows its error; the others go on.
+- **Cluster upgrade (cluster menu → Upgrade cluster…, or "Upgrade all" in the rollout):** every
+  node to one Talos version, one after the other (os:admin).
+  - **Order:** control planes first, the etcd leader last of them (it hands its leadership over
+    first), then the workers. Each node keeps its own installer registry and schematic.
+  - **Gates:** between nodes, the node must run the new version and be Ready, and etcd must be
+    healthy without alarms. Then the cluster settles for a minute. A failed gate pauses the roll
+    with its reason, and Resume checks again.
+  - **Drain:** "Drain each node first" (on by default) cordons and drains each node before its
+    upgrade, for Talos versions whose upgrade does not drain by itself.
+  - **Pause and Abort:** both take effect before the next node; a node being upgraded is never
+    interrupted. After an abort, the nodes upgraded stay upgraded.
+  - **Continue:** a lock on the cluster (a Lease in `kube-system`, renewed while the roll runs)
+    keeps two phones from rolling at once. If the app stops mid-roll, the lock expires within
+    minutes, and the plan screen offers **Continue**, starting with the nodes left.
+  - **In the background:** Android keeps the roll going in a notification ("Upgrading 3/7:
+    worker-2, Rebooting"). iOS stops it once suspended, so keep Ichor open until the end.
 
 ### Argo CD app icons
 

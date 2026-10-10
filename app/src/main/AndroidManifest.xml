@@ -206,6 +206,18 @@
                 android:value="Follows a machine configuration change the user is applying to several of their Talos nodes one after the other (each may reboot and is waited for) while they switch apps, so the rollout is not cut off halfway; it stops when the rollout ends." />
         </service>
 
+        <!-- A rolling upgrade of every node takes many minutes per node (drain, install, reboot,
+             health gate); same reasons as the upgrade service, and it runs only while the roll
+             does. -->
+        <service
+            android:name=".ui.upgrade.ClusterUpgradeService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Follows a Talos OS upgrade the user started on every node of their cluster, one node after the other (drain, install, reboot, health checks), while they switch apps, so the roll is not cut off halfway; it stops when the roll ends." />
+        </service>
+
         <!-- Pulling an image on every node before an upgrade keeps the app talking to the nodes
              for minutes on a slow link; same reasons as the maintenance service, and it runs
              only while the pull does. -->

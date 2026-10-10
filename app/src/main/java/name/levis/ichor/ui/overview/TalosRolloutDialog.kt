@@ -61,7 +61,14 @@ import name.levis.ichor.ui.theme.LocalStatusColors
  * node. The rows are the expert path; a worker ahead of the control plane asks first.
  */
 @Composable
-fun TalosRolloutDialog(nodes: List<NodeOverview>, latest: String, onUpgrade: (NodeOverview) -> Unit, onDismiss: () -> Unit) {
+fun TalosRolloutDialog(
+    nodes: List<NodeOverview>,
+    latest: String,
+    onUpgrade: (NodeOverview) -> Unit,
+    onDismiss: () -> Unit,
+    /** Every node in one roll, the app driving it (the cluster upgrade); null: not offered. */
+    onUpgradeAll: (() -> Unit)? = null,
+) {
     val app = LocalContext.current.applicationContext as TalosApp
     val run by app.upgradeManager.current.collectAsStateWithLifecycle()
     // Read again when a node's health or version changes. Unknown when it cannot be read: the
@@ -129,7 +136,12 @@ fun TalosRolloutDialog(nodes: List<NodeOverview>, latest: String, onUpgrade: (No
                 }
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) } },
+        dismissButton = {
+            Row {
+                onUpgradeAll?.let { TextButton(onClick = it) { Text(stringResource(R.string.cluster_upgrade_all)) } }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
+            }
+        },
     )
 
     anyway?.let { row ->

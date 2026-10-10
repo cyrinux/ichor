@@ -1,6 +1,1109 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "No issues found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun problème trouvé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontraron problemas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Probleme gefunden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun problema trovato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проблем не знайдено"
+          }
+        }
+      }
+    },
+    "Upgrade cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour le cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar el clúster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster aktualisieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna il cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити кластер"
+          }
+        }
+      }
+    },
+    "Upgrade cluster…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour le cluster…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar el clúster…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster aktualisieren…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna il cluster…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити кластер…"
+          }
+        }
+      }
+    },
+    "Upgrade all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout mettre à jour"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar todos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle aktualisieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna tutti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити всі"
+          }
+        }
+      }
+    },
+    "Every node is upgraded one after the other: control planes first, the etcd leader last of them, then the workers. Between nodes, the app checks the cluster is healthy again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque nœud est mis à jour l'un après l'autre : les plans de contrôle d'abord, le leader etcd en dernier parmi eux, puis les workers. Entre deux nœuds, l'app vérifie que le cluster est de nouveau en bonne santé."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada nodo se actualiza uno tras otro: primero los planos de control, el líder de etcd el último de ellos, luego los workers. Entre nodos, la app comprueba que el clúster vuelve a estar sano."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeder Node wird nacheinander aktualisiert: zuerst die Control Planes, der etcd-Leader als letzter davon, dann die Worker. Zwischen den Nodes prüft die App, dass der Cluster wieder gesund ist."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni nodo viene aggiornato uno dopo l'altro: prima i control plane, il leader etcd per ultimo tra questi, poi i worker. Tra un nodo e l'altro, l'app verifica che il cluster sia di nuovo sano."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кожен вузол оновлюється по черзі: спершу площини керування, лідер etcd останнім серед них, потім робочі вузли. Між вузлами застосунок перевіряє, що кластер знову справний."
+          }
+        }
+      }
+    },
+    "Drain each node first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vider chaque nœud d'abord"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaciar cada nodo primero"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeden Node zuerst leeren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svuota prima ogni nodo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спершу звільняти кожен вузол"
+          }
+        }
+      }
+    },
+    "Cordon the node and evict its pods before its upgrade, so they move before it reboots." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isoler le nœud et évincer ses pods avant sa mise à jour, pour qu'ils partent avant le redémarrage."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acordonar el nodo y desalojar sus pods antes de su actualización, para que se muevan antes del reinicio."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den Node absperren und seine Pods vor dem Update verdrängen, damit sie vor dem Neustart umziehen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isola il nodo e sfratta i suoi pod prima dell'aggiornamento, così si spostano prima del riavvio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ізолювати вузол і виселити його поди перед оновленням, щоб вони переїхали до перезавантаження."
+          }
+        }
+      }
+    },
+    "Nodes, in upgrade order (%lld of %lld done)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nodes, in upgrade order (%1$lld of %2$lld done)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nœuds, dans l'ordre de mise à jour (%1$lld sur %2$lld faits)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nodos, en orden de actualización (%1$lld de %2$lld hechos)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nodes in Update-Reihenfolge (%1$lld von %2$lld fertig)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nodi, in ordine di aggiornamento (%1$lld di %2$lld fatti)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вузли в порядку оновлення (готово %1$lld з %2$lld)"
+          }
+        }
+      }
+    },
+    "On the version" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur la version"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En la versión"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf der Version"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alla versione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На версії"
+          }
+        }
+      }
+    },
+    "etcd leader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "leader etcd"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "líder de etcd"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd-Leader"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "leader etcd"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "лідер etcd"
+          }
+        }
+      }
+    },
+    "Every node already runs %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les nœuds tournent déjà en %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los nodos ya ejecutan %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Nodes laufen schon mit %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutti i nodi eseguono già %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі вузли вже працюють на %@."
+          }
+        }
+      }
+    },
+    "Keep Ichor open until the end: if the app stops, start again and it continues with the nodes left." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gardez Ichor ouvert jusqu'au bout : si l'app s'arrête, relancez et elle reprend avec les nœuds restants."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén Ichor abierto hasta el final: si la app se detiene, vuelve a empezar y continúa con los nodos restantes."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lass Ichor bis zum Ende offen: Stoppt die App, starte erneut, und es geht mit den restlichen Nodes weiter."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tieni Ichor aperto fino alla fine: se l'app si ferma, ricomincia e continua con i nodi rimasti."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тримайте Ichor відкритим до кінця: якщо застосунок зупиниться, почніть знову, і він продовжить із рештою вузлів."
+          }
+        }
+      }
+    },
+    "Upgrade every node" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour tous les nœuds"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar todos los nodos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Nodes aktualisieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna tutti i nodi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити всі вузли"
+          }
+        }
+      }
+    },
+    "Continue the upgrade" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre la mise à jour"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar la actualización"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update fortsetzen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continua l'aggiornamento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Продовжити оновлення"
+          }
+        }
+      }
+    },
+    "Demo cluster: the plan is a sample, and the upgrade is refused." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster de démo : le plan est un exemple, et la mise à jour est refusée."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clúster de demostración: el plan es un ejemplo y la actualización se rechaza."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demo-Cluster: Der Plan ist ein Beispiel, das Update wird abgelehnt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster demo: il piano è un esempio e l'aggiornamento viene rifiutato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Демо-кластер: план є прикладом, а оновлення відхиляється."
+          }
+        }
+      }
+    },
+    "Upgrade %@ to %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgrade %1$@ to %2$@?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour %1$@ en %2$@ ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Actualizar %1$@ a %2$@?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ auf %2$@ aktualisieren?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornare %1$@ a %2$@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити %1$@ до %2$@?"
+          }
+        }
+      }
+    },
+    "Every node reboots in turn. Pods move between nodes as they drain; a single-replica workload stops while its node reboots." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque nœud redémarre à son tour. Les pods passent d'un nœud à l'autre en se vidant ; une charge à une seule réplique s'arrête pendant le redémarrage de son nœud."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada nodo se reinicia por turnos. Los pods se mueven entre nodos al vaciarse; una carga con una sola réplica se detiene mientras su nodo se reinicia."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeder Node startet der Reihe nach neu. Pods ziehen beim Leeren zwischen den Nodes um; ein Workload mit einer Replik stoppt, solange sein Node neu startet."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni nodo si riavvia a turno. I pod si spostano tra i nodi mentre si svuotano; un carico con una sola replica si ferma mentre il suo nodo si riavvia."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кожен вузол перезавантажується по черзі. Поди переїжджають між вузлами під час звільнення; навантаження з однією реплікою зупиняється, поки його вузол перезавантажується."
+          }
+        }
+      }
+    },
+    "Upgrade the cluster %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour le cluster %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar el clúster %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den Cluster %@ aktualisieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna il cluster %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити кластер %@"
+          }
+        }
+      }
+    },
+    "Upgrading the cluster to %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour du cluster en %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizando el clúster a %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster wird auf %@ aktualisiert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamento del cluster a %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення кластера до %@"
+          }
+        }
+      }
+    },
+    "Upgrading %lld/%lld: %@, %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgrading %1$lld/%2$lld: %3$@, %4$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour %1$lld/%2$lld : %3$@, %4$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizando %1$lld/%2$lld: %3$@, %4$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update %1$lld/%2$lld: %3$@, %4$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamento %1$lld/%2$lld: %3$@, %4$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення %1$lld/%2$lld: %3$@, %4$@"
+          }
+        }
+      }
+    },
+    "checking the cluster's health" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vérification de la santé du cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "comprobando la salud del clúster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zustand des Clusters wird geprüft"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "verifica dello stato del cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "перевірка стану кластера"
+          }
+        }
+      }
+    },
+    "Every node runs %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les nœuds tournent en %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los nodos ejecutan %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Nodes laufen mit %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutti i nodi eseguono %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі вузли працюють на %@."
+          }
+        }
+      }
+    },
+    "The upgrade ended without an answer: open the plan again to see where each node stands." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mise à jour s'est terminée sans réponse : rouvrez le plan pour voir où en est chaque nœud."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La actualización terminó sin respuesta: abre el plan de nuevo para ver dónde está cada nodo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Update endete ohne Antwort: Öffne den Plan erneut, um zu sehen, wo jeder Node steht."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'aggiornamento è terminato senza risposta: riapri il piano per vedere a che punto è ogni nodo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення завершилося без відповіді: відкрийте план знову, щоб побачити стан кожного вузла."
+          }
+        }
+      }
+    },
+    "Abort" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abandonner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abortar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abbrechen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interrompi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перервати"
+          }
+        }
+      }
+    },
+    "Stopping before the next node…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêt avant le nœud suivant…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deteniendo antes del siguiente nodo…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird vor dem nächsten Node angehalten…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arresto prima del nodo successivo…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинка перед наступним вузлом…"
+          }
+        }
+      }
+    },
+    "Abort the cluster upgrade?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abandonner la mise à jour du cluster ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Abortar la actualización del clúster?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster-Update abbrechen?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interrompere l'aggiornamento del cluster?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перервати оновлення кластера?"
+          }
+        }
+      }
+    },
+    "It stops before the next node: a node being upgraded finishes first. The nodes upgraded stay upgraded; start again later to continue with the others." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle s'arrête avant le nœud suivant : un nœud en cours de mise à jour termine d'abord. Les nœuds mis à jour le restent ; relancez plus tard pour continuer avec les autres."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se detiene antes del siguiente nodo: un nodo en actualización termina primero. Los nodos actualizados siguen así; vuelve a empezar más tarde para continuar con los demás."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es hält vor dem nächsten Node an: Ein Node im Update wird zuerst fertig. Aktualisierte Nodes bleiben aktualisiert; starte später erneut, um mit den anderen weiterzumachen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si ferma prima del nodo successivo: un nodo in aggiornamento termina prima. I nodi aggiornati restano tali; ricomincia più tardi per continuare con gli altri."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупиняється перед наступним вузлом: вузол, що оновлюється, спершу завершить. Оновлені вузли такими й залишаться; почніть знову пізніше, щоб продовжити з іншими."
+          }
+        }
+      }
+    },
+    "Another upgrade is running: wait for it to end." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une autre mise à jour est en cours : attendez qu'elle se termine."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hay otra actualización en curso: espera a que termine."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein anderes Update läuft: Warte, bis es fertig ist."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "È in corso un altro aggiornamento: attendi che finisca."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Триває інше оновлення: дочекайтеся завершення."
+          }
+        }
+      }
+    },
+    "A node maintenance is running: wait for it to end." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une maintenance de nœud est en cours : attendez qu'elle se termine."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hay un mantenimiento de nodo en curso: espera a que termine."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Node-Wartung läuft: Warte, bis sie fertig ist."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "È in corso una manutenzione del nodo: attendi che finisca."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Триває обслуговування вузла: дочекайтеся завершення."
+          }
+        }
+      }
+    },
+    "The cluster upgrade could not start." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mise à jour du cluster n'a pas pu démarrer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La actualización del clúster no pudo empezar."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Cluster-Update konnte nicht starten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'aggiornamento del cluster non è potuto partire."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення кластера не вдалося запустити."
+          }
+        }
+      }
+    },
+    "The cluster upgrade stops while Ichor is in the background. Open it until every node is upgraded." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mise à jour du cluster s'arrête tant qu'Ichor est en arrière-plan. Ouvrez-le jusqu'à ce que tous les nœuds soient à jour."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La actualización del clúster se detiene mientras Ichor está en segundo plano. Ábrelo hasta que todos los nodos estén actualizados."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Cluster-Update hält an, solange Ichor im Hintergrund ist. Öffne es, bis alle Nodes aktualisiert sind."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'aggiornamento del cluster si ferma mentre Ichor è in background. Aprilo finché tutti i nodi non sono aggiornati."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення кластера зупиняється, поки Ichor у фоні. Відкрийте його, доки всі вузли не оновляться."
+          }
+        }
+      }
+    },
     "Sign in and find clusters" : {
       "extractionState" : "manual",
       "localizations" : {

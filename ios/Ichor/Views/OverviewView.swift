@@ -128,6 +128,11 @@ struct OverviewView: View {
                 }
             }
             Button { path.append(.clusters) } label: { Label("Manage clusters…", systemImage: "square.stack.3d.up") }
+            if model.allows(.upgrade) {
+                Button { path.append(.clusterUpgrade(version: "")) } label: {
+                    Label("Upgrade cluster…", systemImage: "arrow.up.circle")
+                }
+            }
             ShareLinkButton(target: .screen(.cluster))
         }
         .safeAreaInset(edge: .top, spacing: 0) {
