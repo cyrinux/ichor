@@ -1,5 +1,6 @@
 import SwiftUI
 import IchorCore
+import UniformTypeIdentifiers
 
 struct EtcdView: View {
     @Environment(AppModel.self) private var model
@@ -10,6 +11,11 @@ struct EtcdView: View {
     @State private var snapshot = EtcdSnapshotJob()
     @State private var fix = EtcdFixJob()
     @State private var confirmFix: EtcdOverview?
+    @State private var recover = EtcdRecoverJob()
+    /// The overview the recovery was started from (its control planes), while a file is picked.
+    @State private var recoverEtcd: EtcdOverview?
+    @State private var importingSnapshot = false
+    @State private var choosingRecovery = false
     @State private var confirmDisarm = false
     @State private var disarming = false
     @State private var alarmMessage: String?
@@ -46,6 +52,21 @@ struct EtcdView: View {
                 }
                 if !fix.idle {
                     EtcdFixSection(job: fix)
+                }
+                if recover.loading || recover.running || recover.finished {
+                    EtcdRecoverSection(job: recover)
+                }
+                // EtcdRecover and Bootstrap are admin-only in Talos, like the member actions; only
+                // for a cluster that lost etcd (Go refuses it otherwise).
+                if model.allows(.etcdMemberActions) && etcd.etcdLost && recover.idle {
+                    Section {
+                        Text("No etcd member answers. If every control plane lost etcd, start it again from a snapshot.")
+                            .foregroundStyle(.statusBad)
+                        Button("Recover from snapshot…", role: .destructive) {
+                            recoverEtcd = etcd
+                            importingSnapshot = true
+                        }
+                    }
                 }
                 if !etcd.alarms.isEmpty || alarmMessage != nil || etcd.alarmsError != nil {
                     Section("Alarms") {
@@ -124,6 +145,30 @@ struct EtcdView: View {
         .onDisappear {
             snapshot.leave()
             fix.leave()
+            recover.leave()
+        }
+        .fileImporter(isPresented: $importingSnapshot, allowedContentTypes: [.data]) { result in
+            Task { choosingRecovery = await recover.pick(result) }
+        }
+        .sheet(isPresented: $choosingRecovery, onDismiss: {
+            // Dismissed without starting: forget the copied file.
+            if !recover.running && !recover.finished { recover.dismiss() }
+            recoverEtcd = nil
+        }) {
+            if let picked = recover.picked, let etcd = recoverEtcd {
+                EtcdRecoverSheet(picked: picked, nodes: etcd.recoverCandidates, hostnames: [:], clusterName: model.activeContext,
+                                 onStart: { node, identity, passphrase, skipHashCheck in
+                                     choosingRecovery = false
+                                     guard let client = model.client else { return }
+                                     recover.start(client: client, node: node, identity: identity, passphrase: passphrase,
+                                                   skipHashCheck: skipHashCheck, lockEnabled: model.lock.enabled)
+                                 },
+                                 onCancel: { choosingRecovery = false })
+            }
+        }
+        // The recovery changed etcd (or stopped half-way): show what is true now.
+        .onChange(of: recover.finished) { _, finished in
+            if finished { Task { await load() } }
         }
         .fileMover(isPresented: Binding(get: { fix.moving }, set: { fix.moving = $0 }), file: fix.file,
                    onCompletion: { fix.moved($0) }, onCancellation: { fix.moveCancelled() })

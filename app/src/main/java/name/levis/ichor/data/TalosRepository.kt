@@ -21,6 +21,9 @@ import name.levis.ichor.model.ConfigTree
 import name.levis.ichor.model.ConfigTryCommand
 import name.levis.ichor.model.ConfigTryEvent
 import name.levis.ichor.model.ConfigTryProgress
+import name.levis.ichor.model.MultiConfigEvent
+import name.levis.ichor.model.MultiConfigPreview
+import name.levis.ichor.model.MultiConfigProgress
 import name.levis.ichor.model.AuditReport
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
@@ -57,6 +60,7 @@ import name.levis.ichor.model.DiskUsage
 import name.levis.ichor.model.EtcdForfeitResult
 import name.levis.ichor.model.EtcdMemberPlan
 import name.levis.ichor.model.SnapshotEncryption
+import name.levis.ichor.model.SnapshotInfo
 import name.levis.ichor.model.SnapshotRecipient
 import name.levis.ichor.model.MountList
 import name.levis.ichor.model.NodeDiscovery
@@ -249,6 +253,41 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         awaitClose { run.cancel() }
     }.buffer(Channel.UNLIMITED)
 
+    /**
+     * MachineConfigMultiPreview: [edits] replayed on each of [nodes]' own config, previewed per
+     * node with a dry run (os:admin). A node the edits do not fit carries its error.
+     */
+    suspend fun machineConfigMultiPreview(nodes: List<String>, edits: List<ConfigEdit>): MultiConfigPreview = call { cfg, ctx ->
+        TalosJson.decodeFromString(
+            MultiConfigPreview.serializer(),
+            Ichorgo.machineConfigMultiPreview(cfg, ctx, nodes.joinToString(","), TalosJson.encodeToString(ListSerializer(ConfigEdit.serializer()), edits)),
+        )
+    }
+
+    /** StartConfigApplyMulti: [edits] applied to [nodes] one after the other in [mode]; closing the flow stops following. */
+    fun applyMachineConfigMulti(nodes: List<String>, edits: List<ConfigEdit>, mode: ConfigApplyMode): Flow<MultiConfigEvent> = callbackFlow {
+        val stored = configs.forCall()
+        val run = Ichorgo.startConfigApplyMulti(
+            stored.yaml,
+            stored.activeContext,
+            nodes.joinToString(","),
+            TalosJson.encodeToString(ListSerializer(ConfigEdit.serializer()), edits),
+            mode.wire,
+            object : ConfigApplyListener {
+                override fun onProgress(json: String) {
+                    runCatching { TalosJson.decodeFromString(MultiConfigProgress.serializer(), json) }
+                        .onSuccess { trySend(MultiConfigEvent.Progress(it)) }
+                }
+
+                override fun onDone(errMessage: String) {
+                    trySend(MultiConfigEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED)
+
     fun tryMachineConfig(node: String, base: String, draft: String, timeoutSeconds: Int, commands: Flow<ConfigTryCommand>): Flow<ConfigTryEvent> = callbackFlow {
         val stored = configs.forCall()
         val run = Ichorgo.startConfigTry(
@@ -299,6 +338,15 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** The one-tap NOSPACE fix (see [TalosStreams.etcdNospaceFix]); needs os:admin. */
     fun etcdNospaceFix(snapshotNode: String, destPath: String, encryption: SnapshotEncryption): Flow<EtcdFixEvent> =
         streams.etcdNospaceFix(snapshotNode, destPath, encryption)
+
+    /** What the snapshot file at [path] needs before a recovery (encrypted, with what). */
+    suspend fun snapshotInspect(path: String): SnapshotInfo = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(SnapshotInfo.serializer(), Ichorgo.snapshotInspect(path))
+    }
+
+    /** Recovers etcd on [node] from a snapshot (see [TalosStreams.etcdRecover]); needs os:admin. */
+    fun etcdRecover(node: String, path: String, identity: String, passphrase: String, skipHashCheck: Boolean): Flow<EtcdRecoverEvent> =
+        streams.etcdRecover(node, path, identity, passphrase, skipHashCheck)
 
     /** Pulls an image on several nodes (see [TalosStreams.imagePull]); needs os:admin. */
     fun imagePull(nodes: List<String>, image: String, namespace: ImagePullNamespace): Flow<ImagePullEvent> =
