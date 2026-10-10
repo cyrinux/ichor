@@ -82,7 +82,7 @@ var requiredFeatures = []string{
 	"events", "containers", "processes", "logFollow", "serviceControl", "packetCapture", "upgrade", "volumes",
 	"diskUsage", "mounts", "kubespan", "etcd", "etcdSnapshot", "etcdMemberActions", "resourceBrowser",
 	"supportBundle", "diskHealth", "issueConfig", "network", "connections", "time", "hardware", "images",
-	"machineConfig", "debugShell", "reset",
+	"machineConfig", "debugShell", "reset", "sensors",
 }
 
 func TestFeatureTable(t *testing.T) {
@@ -151,15 +151,15 @@ func TestComputeFeatures(t *testing.T) {
 		{"v1.8.0", []string{"debugShell", "diskHealth"}},
 		{"v1.7.6", []string{"debugShell", "diskHealth", "volumes"}},
 		{"v1.5.0", []string{"debugShell", "diskHealth", "volumes"}},
-		{"v1.4.8", []string{"debugShell", "diskHealth", "images", "volumes"}},
-		{"v1.3.7", []string{"connections", "debugShell", "diskHealth", "etcd", "images", "reset", "volumes"}},
+		{"v1.4.8", []string{"debugShell", "diskHealth", "images", "sensors", "volumes"}},
+		{"v1.3.7", []string{"connections", "debugShell", "diskHealth", "etcd", "images", "reset", "sensors", "volumes"}},
 		{"v1.2.0", []string{
 			"connections", "debugShell", "diskHealth", "etcd", "etcdMemberActions", "hardware", "images", "kubespan",
-			"machineConfig", "network", "reset", "resourceBrowser", "volumes",
+			"machineConfig", "network", "reset", "resourceBrowser", "sensors", "volumes",
 		}},
 		{"v1.1.3", []string{
 			"connections", "debugShell", "diskHealth", "etcd", "etcdMemberActions", "hardware", "images", "kubespan",
-			"machineConfig", "network", "packetCapture", "reset", "resourceBrowser", "volumes",
+			"machineConfig", "network", "packetCapture", "reset", "resourceBrowser", "sensors", "volumes",
 		}},
 		{"v1.10.3", []string{"debugShell", "diskHealth"}}, // 1.10 > 1.8: compared as numbers
 	}
