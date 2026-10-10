@@ -8,6 +8,9 @@ struct ConfigReviewView: View {
     let hostname: String
     let base: String
     let draft: String
+    /// The field edits the draft is made of, which other nodes can be given too (empty when the
+    /// YAML was typed into).
+    var edits: [ConfigEdit] = []
     /// A try changed (or may have changed) the node and is over: its config is to be read again.
     let onFinished: () -> Void
 
@@ -22,6 +25,7 @@ struct ConfigReviewView: View {
     /// A mode picked, waiting for its confirmation (typed hostname for a reboot).
     @State private var confirmingApply: ConfigApplyMode?
     @State private var applying: ConfigApplyMode?
+    @State private var otherNodes = false
 
     var body: some View {
         NavigationStack {
@@ -69,6 +73,12 @@ struct ConfigReviewView: View {
                 if didFail { failed = true }
             }
         }
+        .sheet(isPresented: $otherNodes) {
+            MultiNodeReviewSheet(node: node, edits: edits) {
+                otherNodes = false
+                onFinished()
+            }
+        }
         .fullScreenCover(isPresented: $trying, onDismiss: tryClosed) {
             ConfigTryView(node: node, hostname: hostname, base: base, draft: draft, timeoutSeconds: timeout) { outcome in
                 if case .failed = outcome { failed = true }
@@ -93,6 +103,15 @@ struct ConfigReviewView: View {
                     trySection
                 }
                 applySection(preview)
+                if !edits.isEmpty {
+                    Section {
+                        Button("Also apply to other nodes…") { otherNodes = true }
+                    } header: {
+                        Text("Other nodes")
+                    } footer: {
+                        Text("The same edits are made to each node's own config: you see each node's diff before anything is applied.")
+                    }
+                }
             } else {
                 Section { Text("No changes").note() }
             }
@@ -180,7 +199,7 @@ struct ConfigReviewView: View {
 
 /// A unified diff: added lines on green, removed ones on red, each with its sign so the
 /// colour is not the only cue.
-private struct ConfigDiffView: View {
+struct ConfigDiffView: View {
     let lines: [ConfigDiffLine]
 
     @ScaledMetric(relativeTo: .caption) private var rowHeight: CGFloat = 18

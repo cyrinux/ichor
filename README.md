@@ -597,6 +597,11 @@ a fresh install. Backups move between Android and iOS.
     | Apply and reboot now | Applied, then the node reboots; you type its hostname first. |
 
   - **Changes that need a reboot:** they offer only the last two modes.
+  - **The same change on several nodes ("Also apply to other nodes…"):**
+    - **Preview:** the field edits are replayed on each picked node's own config, and you see each node's diff first. A node the edits do not fit is skipped.
+    - **Run:** one confirmation for all, typed with the cluster's name. Nodes are applied one after the other, workers first and control planes last, and the first failure stops the rest.
+    - **Reboot mode:** each node is back before the next starts, and etcd must be healthy before a control plane reboots.
+    - **Try mode:** for one node only.
 - **App lock (Settings → Security):**
   - **Methods:** fingerprint, with the device PIN, pattern or password as fallback; or a
     **security key** (below).

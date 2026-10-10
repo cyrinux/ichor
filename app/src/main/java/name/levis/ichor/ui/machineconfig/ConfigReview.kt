@@ -64,7 +64,8 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
  * What the draft would change on the node, and the choice to try it ([onTry] gets the timeout
- * in seconds) or to apply it for good ([onApply]).
+ * in seconds) or to apply it for good ([onApply]). [onAlsoApply], when the draft is only field
+ * edits, takes the same change to other nodes.
  */
 @Composable
 fun ConfigReviewContent(
@@ -73,6 +74,7 @@ fun ConfigReviewContent(
     onTry: (Int) -> Unit,
     onApply: (ConfigApplyMode) -> Unit,
     modifier: Modifier = Modifier,
+    onAlsoApply: (() -> Unit)? = null,
 ) {
     when (review) {
         UiState.Loading -> Waiting(stringResource(R.string.machine_config_review_loading), modifier)
@@ -95,6 +97,11 @@ fun ConfigReviewContent(
                         TryChoice(onTry)
                     }
                     ApplyChoice(preview.applyModes, onApply)
+                    onAlsoApply?.let {
+                        Text(stringResource(R.string.machine_config_multi_title), style = MaterialTheme.typography.labelLarge)
+                        OutlinedButton(onClick = it, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.machine_config_multi_also)) }
+                        MutedText(stringResource(R.string.machine_config_multi_also_desc))
+                    }
                 }
             }
         }
@@ -121,7 +128,7 @@ private fun TryChoice(onTry: (Int) -> Unit) {
 
 /** The ways to apply the change for good, each with what it does. */
 @Composable
-private fun ApplyChoice(modes: List<ConfigApplyMode>, onApply: (ConfigApplyMode) -> Unit) {
+internal fun ApplyChoice(modes: List<ConfigApplyMode>, onApply: (ConfigApplyMode) -> Unit) {
     Text(stringResource(R.string.machine_config_apply_other), style = MaterialTheme.typography.labelLarge)
     modes.forEach { mode ->
         OutlinedButton(onClick = { onApply(mode) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(mode.label)) }
@@ -188,7 +195,7 @@ fun ConfigApplyContent(run: ConfigApplyState, onDone: () -> Unit, modifier: Modi
 fun minutesText(seconds: Int): String = stringResource(R.string.machine_config_minutes, seconds / 60)
 
 @Composable
-private fun DiffView(lines: List<ConfigDiffLine>, modifier: Modifier = Modifier) {
+internal fun DiffView(lines: List<ConfigDiffLine>, modifier: Modifier = Modifier) {
     val status = LocalStatusColors.current
     SelectionContainer(modifier) {
         Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).horizontalScroll(rememberScrollState())) {
@@ -223,7 +230,7 @@ private fun Notice(text: String, color: Color) {
 }
 
 @Composable
-private fun Waiting(text: String, modifier: Modifier = Modifier) {
+internal fun Waiting(text: String, modifier: Modifier = Modifier) {
     Column(
         modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
