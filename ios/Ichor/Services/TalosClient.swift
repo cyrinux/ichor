@@ -211,6 +211,11 @@ struct TalosClient: Sendable {
         try await Self.json { [config, context] in IchorgoKubeSpanStatus(config, context, $0) }
     }
 
+    /// Why each node's KubeSpan peers are up or down, every node compared (os:reader).
+    func kubespanDiagnostics() async throws -> KubeSpanDiagAll {
+        try await Self.json { [config, context] in IchorgoKubeSpanDiagnosticsAll(config, context, $0) }
+    }
+
     /// Admin kubeconfig (os:admin). A credential: only write it where the user chose.
     func kubeconfig() async throws -> String {
         try await Self.run { [config, context, kubeServer] in IchorgoKubeconfig(config, context, kubeServer, $0) }

@@ -15,6 +15,8 @@ struct KubeSpanView: View {
     /// The network test started from the map: kept while a node screen is pushed on top.
     @State private var netPerf = NetPerfSession()
     @State private var openNode: NodeRef?
+    @State private var diag: KubeSpanDiagAll?
+    @State private var openedPeer: OpenedPeer?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,7 +35,9 @@ struct KubeSpanView: View {
                 .task { if case .loading = map { await loadMap() } }
             case .peers:
                 LoadStateView(state: peers, retry: loadPeers) { overview in
-                    KubeSpanPeersList(overview: overview, hostnames: hostnames)
+                    KubeSpanPeersList(overview: overview, hostnames: hostnames, diag: diag) { node, peer in
+                        openedPeer = OpenedPeer(node: node, peer: peer)
+                    }
                         .refreshable { await loadPeers() }
                         .themedBackground()
                 }
@@ -43,6 +47,11 @@ struct KubeSpanView: View {
         .navigationTitle(Text(verbatim: "KubeSpan"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(item: $openNode) { NodeDetailView(ref: $0) }
+        .sheet(item: $openedPeer) { opened in
+            PeerDiagnosisSheet(nodeName: hostnames[opened.node] ?? opened.node, peer: opened.peer,
+                               diagnosis: diag?.peer(node: opened.node, publicKey: opened.peer.publicKey),
+                               config: diag?.node(opened.node))
+        }
         .task {
             if let cluster = model.activeSummary?.fingerprint {
                 // The same saved tests as the network test screens: their speeds show on the links.
@@ -81,6 +90,8 @@ struct KubeSpanView: View {
         }
         peers = model.seeded(peers, from: .kubespan)
         peers = peers.refreshed(with: await .from { try await model.fetch(.kubespan, with: client) })
+        // The diagnosis is an extra: the peers show without it.
+        diag = try? await client.kubespanDiagnostics()
     }
 }
 
@@ -88,6 +99,8 @@ struct KubeSpanView: View {
 private struct KubeSpanPeersList: View {
     let overview: KubeSpanOverview
     let hostnames: [String: String]
+    let diag: KubeSpanDiagAll?
+    let onPeer: (_ node: String, _ peer: KubeSpanPeer) -> Void
 
     var body: some View {
         List {
@@ -99,7 +112,16 @@ private struct KubeSpanPeersList: View {
             ForEach(overview.nodes) { node in
                 Section {
                     if let error = node.error { Text(error).font(.caption).foregroundStyle(.statusBad) }
-                    ForEach(node.peers) { PeerRow(peer: $0) }
+                    if let link = diag?.node(node.node)?.siderolink {
+                        LabeledContent("SideroLink") {
+                            Text(link.connected ? String(localized: "connected") : String(localized: "not connected"))
+                                .foregroundStyle(link.connected ? Color.statusOK : Color.statusBad)
+                        }
+                    }
+                    ForEach(node.peers) { peer in
+                        Button { onPeer(node.node, peer) } label: { PeerRow(peer: peer) }
+                            .tint(.primary)
+                    }
                 } header: {
                     HStack {
                         Text(hostnames[node.node] ?? node.node)
@@ -161,6 +183,70 @@ struct LinkStatePill: View {
         case "up": StatusPill(label: String(localized: "Up"), color: .green)
         case "down": StatusPill(label: String(localized: "Down"), color: .red)
         default: StatusPill(label: String(localized: "Unknown"), color: .gray)
+        }
+    }
+}
+
+/// The peer whose diagnosis sheet is open, as a node sees it.
+private struct OpenedPeer: Identifiable {
+    let node: String
+    let peer: KubeSpanPeer
+    var id: String { node + "/" + peer.publicKey }
+}
+
+/// Why a peer link is up or down: the core's verdicts, the endpoints tried, the MTU, then the
+/// raw fields.
+private struct PeerDiagnosisSheet: View {
+    let nodeName: String
+    let peer: KubeSpanPeer
+    let diagnosis: KubeSpanDiagPeer?
+    let config: KubeSpanDiag?
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                if let diagnosis {
+                    Section {
+                        if diagnosis.verdicts.isEmpty {
+                            Text("No problem found on this link.").foregroundStyle(.statusOK)
+                        } else {
+                            ForEach(diagnosis.verdicts, id: \.self) { Text(verbatim: $0.message).foregroundStyle(.statusBad) }
+                        }
+                    }
+                    Section("Endpoints tried") {
+                        if diagnosis.endpointsTried.isEmpty {
+                            Text("none").foregroundStyle(.secondary)
+                        } else {
+                            ForEach(diagnosis.endpointsTried, id: \.self) { Text(verbatim: $0).font(.footnote.monospaced()) }
+                        }
+                        if !diagnosis.endpoint.isEmpty { Text("In use: \(diagnosis.endpoint)").font(.footnote) }
+                        if diagnosis.lastEndpointChange > 0 {
+                            let age = localizedDuration(Int64(Date().timeIntervalSince1970) - diagnosis.lastEndpointChange)
+                            Text("Endpoint changed \(age) ago").font(.footnote)
+                        }
+                        if let config = config?.config {
+                            let mtu = config.mtu > 0 ? String(config.mtu) : String(localized: "default")
+                            let link = (self.config?.linkMtu ?? 0) > 0 ? String(self.config?.linkMtu ?? 0) : "—"
+                            Text("KubeSpan MTU: \(mtu) (link \(link))").font(.footnote)
+                        }
+                    }
+                    Section("Details") {
+                        LabeledContent("publicKey") { Text(verbatim: diagnosis.publicKey).font(.caption.monospaced()) }
+                        if !diagnosis.address.isEmpty { LabeledContent("address") { Text(verbatim: diagnosis.address).font(.caption.monospaced()) } }
+                        LabeledContent("allowedIPs") { Text(verbatim: diagnosis.allowedIPs.joined(separator: ", ")).font(.caption.monospaced()) }
+                        LabeledContent("state") { Text(verbatim: diagnosis.state).font(.caption.monospaced()) }
+                    }
+                } else {
+                    Text("This node did not report this peer.").foregroundStyle(.secondary)
+                }
+            }
+            .navigationTitle(Text(verbatim: "\(nodeName) → \(peer.label.isEmpty ? String(peer.publicKey.prefix(12)) : peer.label)"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+            }
         }
     }
 }

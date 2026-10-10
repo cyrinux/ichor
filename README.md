@@ -223,6 +223,16 @@ and, optionally, host to host.
   latency result also draws where the round trips fell, from the fastest to the slowest, with
   p50 to p99 as a bar. The KubeSpan map shows the last pod-to-pod throughput measured
   between two nodes on their link, and the link's sheet the rest of that test.
+- **Why a KubeSpan peer is down:** on the KubeSpan *Peers* tab, tap a peer to see why in plain
+  words. The reasons cover:
+  - no endpoint to try;
+  - a handshake that went stale, with the endpoints tried;
+  - an endpoint that keeps changing;
+  - a different KubeSpan MTU on the other node;
+  - endpoint filters that may exclude every address.
+
+  The raw fields are under *Details*. A node Omni manages shows its SideroLink connection.
+  Nothing secret is read: neither the WireGuard key nor the KubeSpan shared secret.
 
 ### CronJobs
 
