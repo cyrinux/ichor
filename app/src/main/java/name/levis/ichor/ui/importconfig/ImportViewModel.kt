@@ -7,6 +7,7 @@ import name.levis.ichor.data.KubeAuthRepository
 import name.levis.ichor.data.SignInEvent
 import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.TalosForm
+import name.levis.ichor.model.DiscoveryProgress
 import name.levis.ichor.model.DiscoveryProvider
 import name.levis.ichor.model.discoveryFields
 import name.levis.ichor.model.discoveryOptions
@@ -22,11 +23,15 @@ import name.levis.ichorgo.Ichorgo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+/** How often a running cloud discovery's progress is read. */
+private const val DISCOVER_PROGRESS_POLL_MS = 250L
 
 sealed interface ImportState {
     data object Idle : ImportState
@@ -85,6 +90,8 @@ sealed interface ImportState {
         val initial: DiscoveryProvider? = null,
         val running: Boolean = false,
         val error: String? = null,
+        /** How far the running discovery got; null before the first reading. */
+        val progress: DiscoveryProgress? = null,
     ) : ImportState
 
     data class Invalid(val message: String) : ImportState
@@ -186,12 +193,25 @@ class ImportViewModel(
     fun discover(provider: DiscoveryProvider, secrets: Map<String, String>) {
         val discover = _state.value as? ImportState.Discover ?: return
         if (discover.running) return
-        _state.value = discover.copy(running = true, error = null)
+        _state.value = discover.copy(running = true, error = null, progress = null)
         viewModelScope.launch {
-            _state.value = runCatching {
+            val poll = launch { pollDiscoverProgress() }
+            val next = runCatching {
                 val yaml = auth.discover(provider.id, secrets)
                 ImportState.KubePreview(yaml, configs.validateKube(yaml), configs.kubeImportConflicts(yaml), discovery = secrets)
             }.getOrElse { discover.copy(running = false, error = it.userMessage()) }
+            poll.cancel()
+            _state.value = next
+        }
+    }
+
+    /** Shows how far the running discovery got until it is cancelled. */
+    private suspend fun pollDiscoverProgress() {
+        while (true) {
+            delay(DISCOVER_PROGRESS_POLL_MS)
+            val progress = runCatching { auth.discoverProgress() }.getOrNull() ?: continue
+            val current = _state.value as? ImportState.Discover ?: return
+            if (current.running && progress.running) _state.value = current.copy(progress = progress)
         }
     }
 

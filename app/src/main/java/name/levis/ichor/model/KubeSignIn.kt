@@ -173,6 +173,13 @@ enum class DiscoveryProvider(val id: String, @StringRes val label: Int) {
     OMNI("omni", R.string.kube_signin_method_omni),
 }
 
+/**
+ * How far a running cloud discovery got (DiscoverProgress): GKE with a Google account reads
+ * many projects. [projects] is 0 while they are still being listed.
+ */
+@Serializable
+data class DiscoveryProgress(val running: Boolean = false, val projects: Int = 0, val scanned: Int = 0, val clusters: Int = 0)
+
 /** The fields each provider asks for (KubeDiscoverFields), only for the providers the app shows. */
 fun discoveryFields(byProvider: Map<String, List<String>>): Map<DiscoveryProvider, List<String>> =
     DiscoveryProvider.entries.mapNotNull { p -> byProvider[p.id]?.takeIf { it.isNotEmpty() }?.let { p to it } }.toMap()

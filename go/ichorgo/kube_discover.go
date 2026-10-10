@@ -93,6 +93,8 @@ func DiscoverClusters(provider, secretsJSON string) (out string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*callTimeout)
 	defer cancel()
 
+	defer startDiscoveryProgress()()
+
 	var clusters []discoveredCluster
 
 	switch provider {
