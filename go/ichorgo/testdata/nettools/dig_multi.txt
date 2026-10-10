@@ -1,0 +1,8 @@
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 7
+
+example.test. 300 IN MX 10 mail.example.test.
+example.test. 300 IN TXT "v=spf1 -all"
+_https._tcp.example.test. 60 IN SRV 0 5 443 www.example.test.
+;; Query time: 12 msec
+;; SERVER: 203.0.113.53#53(203.0.113.53) (UDP)
