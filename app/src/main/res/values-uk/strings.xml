@@ -4305,4 +4305,17 @@
     <string name="kube_discover_scan">Сканувати QR-код облікових даних</string>
     <string name="kube_discover_scan_invalid">Скануйте файл облікових даних користувача gcloud або ключ сервісного облікового запису.</string>
     <string name="kube_discover_credentials_warning">Цей файл містить токен оновлення або приватний ключ. Зберігайте його в таємниці: кожен, хто його має, може отримати доступ до вашого облікового запису Google або сервісного облікового запису.</string>
+    <string name="join_node_menu">Додати вузол…</string>
+    <string name="join_node_title">Додати вузол</string>
+    <string name="join_node_step_inspect">1. Перевірити новий вузол</string>
+    <string name="join_node_intro">Завантажте нову машину з ISO Talos: вона чекає в режимі обслуговування, а її консоль показує її IP-адресу. Телефон має бути в тій самій мережі або у VPN, що до неї дістається.</string>
+    <string name="join_node_demo">У демо введіть demo, щоб побачити приклад вузла.</string>
+    <string name="join_node_address">Адреса вузла</string>
+    <string name="join_node_inspect">Перевірити</string>
+    <string name="join_node_maintenance">Режим обслуговування</string>
+    <string name="join_node_installed_pill">Уже встановлено</string>
+    <string name="join_node_installed">%1$s уже встановлено: він вимагає клієнтський сертифікат. Тут можна додати лише вузол, завантажений з ISO і ще не встановлений.</string>
+    <string name="join_node_step_config">2. Конфігурація машини з наявного вузла: роль, ім’я хоста та диск для встановлення</string>
+    <string name="join_node_step_apply">3. Застосувати її та стежити за вузлом, доки він не приєднається до кластера</string>
+    <string name="join_node_coming">З’явиться в наступній версії.</string>
 </resources>

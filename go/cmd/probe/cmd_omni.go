@@ -17,7 +17,7 @@ import (
 var omniCommands = []command{
 	// Everything an Omni account gets in the app, read only: sign in (confirm the key at the
 	// printed URL), list the clusters, then the first one's nodes and Kubernetes namespaces.
-	{"omni-account", "URL EMAIL", func(e env) (string, error) {
+	{name: "omni-account", args: "URL EMAIL", run: func(e env) (string, error) {
 		if flag.NArg() != 3 {
 			return "", errors.New("usage: omni-account URL EMAIL")
 		}
@@ -59,7 +59,7 @@ var omniCommands = []command{
 
 		return noOutput, nil
 	}},
-	{"omni-clusters", "", func(e env) (string, error) {
+	{name: "omni-clusters", args: "", run: func(e env) (string, error) {
 		endpoint, err := omniEndpoint(e.cfg, e.context)
 		if err != nil {
 			return "", err

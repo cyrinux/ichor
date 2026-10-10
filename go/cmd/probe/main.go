@@ -98,29 +98,18 @@ func main() {
 		}
 	}
 
-	raw, err := os.ReadFile(*configPath)
-	if err != nil {
-		fail(err)
-	}
-
-	cfg := string(raw)
-
-	// The omni-* commands sign in themselves, to Omni rather than to a cluster.
-	if !strings.HasPrefix(flag.Arg(0), "omni-") {
-		if err := omniSignIn(cfg, *contextName, *omniBrowser); err != nil {
-			fail(fmt.Errorf("omni sign-in: %w", err))
-		}
+	c, ok := lookup(flag.Arg(0))
+	if !ok {
+		fail(fmt.Errorf("unknown command %q", flag.Arg(0)))
 	}
 
 	if *mask {
 		ichorgo.SetPrivacyMask(true, *maskWords)
-		// Like the app, which shows the overview first: it teaches the mask the hostnames.
-		_, _ = ichorgo.ClusterOverview(cfg, *contextName) //nolint:errcheck
 	}
 
-	c, ok := lookup(flag.Arg(0))
-	if !ok {
-		fail(fmt.Errorf("unknown command %q", flag.Arg(0)))
+	cfg := ""
+	if !c.noConfig {
+		cfg = loadProbeConfig(*configPath, *contextName, *omniBrowser, *mask)
 	}
 
 	out, err := c.run(env{
@@ -134,6 +123,30 @@ func main() {
 	if out != noOutput {
 		fmt.Println(out)
 	}
+}
+
+// loadProbeConfig reads the talosconfig, signs in to Omni for an Omni context (the omni-*
+// commands sign in themselves, to Omni rather than to a cluster) and, with -mask, reads the
+// overview first like the app, which teaches the mask the hostnames.
+func loadProbeConfig(path, contextName string, omniBrowser, mask bool) string {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		fail(err)
+	}
+
+	cfg := string(raw)
+
+	if !strings.HasPrefix(flag.Arg(0), "omni-") {
+		if err := omniSignIn(cfg, contextName, omniBrowser); err != nil {
+			fail(fmt.Errorf("omni sign-in: %w", err))
+		}
+	}
+
+	if mask {
+		_, _ = ichorgo.ClusterOverview(cfg, contextName) //nolint:errcheck
+	}
+
+	return cfg
 }
 
 // answerPrinter prints the answer as it grows.

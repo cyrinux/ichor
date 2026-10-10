@@ -59,6 +59,7 @@ import name.levis.ichor.data.SPONSOR_URL
 import name.levis.ichor.ui.settings.openUrl
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.isDemo
+import name.levis.ichor.model.isKube
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.needsEndpoint
@@ -153,6 +154,8 @@ fun OverviewScreen(
     /** Every node to the version given ("": the newest stable release). */
     onUpgradeCluster: (String) -> Unit,
     onUpgradeKubernetes: () -> Unit,
+    /** "Add a node…": a machine in maintenance mode, booted from the Talos ISO. */
+    onAddNode: () -> Unit,
     onDiagnose: () -> Unit,
     onAddCluster: () -> Unit,
     onClustersCleared: () -> Unit,
@@ -392,6 +395,7 @@ fun OverviewScreen(
                                 onDismiss = { clusterMenu = false },
                                 onUpgradeCluster = { onUpgradeCluster("") }.takeIf { config?.activeSummary?.allows(Feature.UPGRADE) == true },
                                 onUpgradeKubernetes = onUpgradeKubernetes.takeIf { config?.activeSummary?.allows(Feature.UPGRADE) == true },
+                                onAddNode = onAddNode.takeIf { config?.activeSummary?.let { !it.isKube && !it.omni } == true },
                             )
                         }
                     }

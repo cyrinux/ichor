@@ -12,6 +12,7 @@ import name.levis.ichorgo.MaintenanceListener
 import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ConfigApplyEvent
+import name.levis.ichor.model.MaintenanceInspection
 import name.levis.ichor.model.CpReplacePlan
 import name.levis.ichor.model.CpReplaceWait
 import name.levis.ichor.model.ConfigApplyMode
@@ -770,6 +771,15 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         return withContext(Dispatchers.IO) {
             TalosJson.decodeFromString(EndpointProbe.serializer(), Ichorgo.probeEndpoint(stored.yamlFor(contextName), contextName, endpoint))
         }
+    }
+
+    /**
+     * A node in maintenance mode at [address] (IP or host name on the LAN or VPN): version, disks
+     * and links over the unauthenticated maintenance API. Not through [call]: the node belongs to
+     * no cluster yet, so no talosconfig is involved.
+     */
+    suspend fun maintenanceNodeInspect(address: String): MaintenanceInspection = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(MaintenanceInspection.serializer(), Ichorgo.maintenanceNodeInspect(address, 0L))
     }
 
     /** `talosctl get TYPE ID -o yaml` (never cached: may hold secrets). */

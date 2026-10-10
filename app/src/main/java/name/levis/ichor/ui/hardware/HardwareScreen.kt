@@ -202,7 +202,7 @@ private fun OptionalRow(label: String, value: String, mono: Boolean = false) {
 }
 
 @Composable
-private fun SystemRows(s: SystemInfo) {
+internal fun SystemRows(s: SystemInfo) {
     OptionalRow(stringResource(R.string.hardware_manufacturer), s.manufacturer)
     OptionalRow(stringResource(R.string.hardware_product), s.product)
     OptionalRow(stringResource(R.string.hardware_version), s.version)
@@ -244,7 +244,7 @@ private fun MemoryRow(m: MemoryModule) {
 }
 
 @Composable
-private fun DiskRow(d: DiskInfo) {
+internal fun DiskRow(d: DiskInfo) {
     val colors = LocalStatusColors.current
     Column(Modifier.padding(vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {

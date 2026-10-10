@@ -137,7 +137,7 @@ struct SectionError: View {
     }
 }
 
-private struct LinkRow: View {
+struct LinkRow: View {
     let link: NetLink
 
     var body: some View {

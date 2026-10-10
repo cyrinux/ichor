@@ -4071,4 +4071,17 @@
     <string name="kube_discover_scan">Scanner le code QR des identifiants</string>
     <string name="kube_discover_scan_invalid">Scannez un fichier d’identifiants utilisateur gcloud ou une clé de compte de service.</string>
     <string name="kube_discover_credentials_warning">Ce fichier contient un jeton de renouvellement ou une clé privée. Gardez-le confidentiel : quiconque le possède peut accéder à votre compte Google ou compte de service.</string>
+    <string name="join_node_menu">Ajouter un nœud…</string>
+    <string name="join_node_title">Ajouter un nœud</string>
+    <string name="join_node_step_inspect">1. Inspecter le nouveau nœud</string>
+    <string name="join_node_intro">Démarrez la nouvelle machine sur l\'ISO Talos : elle attend en mode maintenance et sa console affiche son adresse IP. Votre téléphone doit être sur le même réseau, ou sur un VPN qui l\'atteint.</string>
+    <string name="join_node_demo">Dans la démo, tapez demo pour voir un nœud d\'exemple.</string>
+    <string name="join_node_address">Adresse du nœud</string>
+    <string name="join_node_inspect">Inspecter</string>
+    <string name="join_node_maintenance">Mode maintenance</string>
+    <string name="join_node_installed_pill">Déjà installé</string>
+    <string name="join_node_installed">%1$s est déjà installé : il demande un certificat client. Seul un nœud démarré sur l\'ISO et pas encore installé peut être ajouté ici.</string>
+    <string name="join_node_step_config">2. Configuration machine à partir d\'un nœud existant : rôle, nom d\'hôte et disque d\'installation</string>
+    <string name="join_node_step_apply">3. L\'appliquer et suivre le nœud jusqu\'à ce qu\'il rejoigne le cluster</string>
+    <string name="join_node_coming">Dans une prochaine version.</string>
 </resources>

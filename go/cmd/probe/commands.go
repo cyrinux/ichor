@@ -20,6 +20,8 @@ type command struct {
 	name string
 	args string
 	run  func(e env) (string, error)
+	// noConfig: the command reads no talosconfig (a node outside any cluster).
+	noConfig bool
 }
 
 // commands is every subcommand, by area.

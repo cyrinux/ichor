@@ -319,6 +319,28 @@ func startFakeOmni(t *testing.T, srv machineapi.MachineServiceServer) (endpoint,
 func startTLSServer(t *testing.T, register func(*grpc.Server), opts ...grpc.ServerOption) (endpoint, caB64 string) {
 	t.Helper()
 
+	pair, certPEM := testServerCert(t)
+
+	lis, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	opts = append(opts, grpc.Creds(credentials.NewTLS(&tls.Config{Certificates: []tls.Certificate{pair}, MinVersion: tls.VersionTLS12})))
+	server := grpc.NewServer(opts...)
+	register(server)
+
+	go server.Serve(lis) //nolint:errcheck
+
+	t.Cleanup(server.Stop)
+
+	return lis.Addr().String(), base64.StdEncoding.EncodeToString(certPEM)
+}
+
+// testServerCert is a self-signed server certificate for 127.0.0.1, and its PEM.
+func testServerCert(t *testing.T) (tls.Certificate, []byte) {
+	t.Helper()
+
 	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		t.Fatal(err)
@@ -353,20 +375,7 @@ func startTLSServer(t *testing.T, register func(*grpc.Server), opts ...grpc.Serv
 		t.Fatal(err)
 	}
 
-	lis, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	opts = append(opts, grpc.Creds(credentials.NewTLS(&tls.Config{Certificates: []tls.Certificate{pair}, MinVersion: tls.VersionTLS12})))
-	server := grpc.NewServer(opts...)
-	register(server)
-
-	go server.Serve(lis) //nolint:errcheck
-
-	t.Cleanup(server.Stop)
-
-	return lis.Addr().String(), base64.StdEncoding.EncodeToString(certPEM)
+	return pair, certPEM
 }
 
 // A service account key Omni refuses is a refused key, not a sign-in request: the apps would

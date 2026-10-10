@@ -195,14 +195,7 @@ func (f *fakeTalos) called(prefix string) []string {
 func (f *fakeTalos) start(t *testing.T, nodes ...string) string {
 	t.Helper()
 
-	endpoint, caB64 := startTLSServer(t, func(s *grpc.Server) {
-		machineapi.RegisterMachineServiceServer(s, fakeTalosMachine{f: f})
-		machineapi.RegisterImageServiceServer(s, fakeTalosImage{f: f})
-		machineapi.RegisterLifecycleServiceServer(s, fakeTalosLifecycle{f: f})
-		machineapi.RegisterDebugServiceServer(s, fakeTalosDebug{f: f})
-		clusterapi.RegisterClusterServiceServer(s, fakeTalosCluster{f: f})
-		cosiv1alpha1.RegisterStateServer(s, fakeTalosState{f: f})
-	})
+	endpoint, caB64 := f.serve(t)
 
 	var list strings.Builder
 	for _, n := range nodes {
@@ -211,6 +204,21 @@ func (f *fakeTalos) start(t *testing.T, nodes ...string) string {
 
 	return fmt.Sprintf("context: fake\ncontexts:\n    fake:\n        endpoints:\n            - %s\n        ca: %s\n        nodes:\n%s",
 		endpoint, caB64, list.String())
+}
+
+// serve serves f over TLS on loopback, without client authentication (like a node in
+// maintenance mode), and returns its endpoint and CA.
+func (f *fakeTalos) serve(t *testing.T) (endpoint, caB64 string) {
+	t.Helper()
+
+	return startTLSServer(t, func(s *grpc.Server) {
+		machineapi.RegisterMachineServiceServer(s, fakeTalosMachine{f: f})
+		machineapi.RegisterImageServiceServer(s, fakeTalosImage{f: f})
+		machineapi.RegisterLifecycleServiceServer(s, fakeTalosLifecycle{f: f})
+		machineapi.RegisterDebugServiceServer(s, fakeTalosDebug{f: f})
+		clusterapi.RegisterClusterServiceServer(s, fakeTalosCluster{f: f})
+		cosiv1alpha1.RegisterStateServer(s, fakeTalosState{f: f})
+	})
 }
 
 type fakeTalosMachine struct {

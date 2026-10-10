@@ -136,6 +136,11 @@ struct OverviewView: View {
                     Label("Upgrade Kubernetes…", systemImage: "shippingbox")
                 }
             }
+            if let context = model.activeSummary, !context.isKube, !context.omni {
+                Button { path.append(.joinNode) } label: {
+                    Label("Add a node…", systemImage: "plus.circle")
+                }
+            }
             ShareLinkButton(target: .screen(.cluster))
         }
         .safeAreaInset(edge: .top, spacing: 0) {

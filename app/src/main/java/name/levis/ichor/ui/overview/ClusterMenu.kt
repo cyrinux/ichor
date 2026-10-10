@@ -5,6 +5,7 @@ import name.levis.ichor.ui.share.ShareLinkMenuItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.SystemUpdateAlt
@@ -48,6 +49,8 @@ fun ClusterMenu(
     onUpgradeCluster: (() -> Unit)? = null,
     /** "Upgrade Kubernetes…": null when the role cannot upgrade (or the cluster has no Talos). */
     onUpgradeKubernetes: (() -> Unit)? = null,
+    /** "Add a node…": null for a cluster without the Talos API (or one Omni manages). */
+    onAddNode: (() -> Unit)? = null,
 ) {
     var switching by remember(expanded) { mutableStateOf(false) }
     val contexts = config.summary.contexts
@@ -109,6 +112,16 @@ fun ClusterMenu(
                     onClick = {
                         onDismiss()
                         upgrade()
+                    },
+                )
+            }
+            onAddNode?.let { add ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.join_node_menu)) },
+                    leadingIcon = { Icon(Icons.Outlined.AddCircleOutline, contentDescription = null) },
+                    onClick = {
+                        onDismiss()
+                        add()
                     },
                 )
             }
