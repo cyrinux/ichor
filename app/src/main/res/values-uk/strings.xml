@@ -3333,6 +3333,8 @@
     <string name="kube_field_aws_region">Регіон AWS</string>
     <string name="kube_field_gcp_service_account">Ключ сервісного облікового запису (JSON)</string>
     <string name="kube_field_gcp_user_credentials">Облікові дані користувача gcloud (application_default_credentials.json)</string>
+    <string name="kube_field_gcp_projects">ID проєктів</string>
+    <string name="kube_discover_gcp_projects_hint">Залиште порожнім, щоб шукати в усіх проєктах, які бачить ваш обліковий запис; укажіть ID проєктів, щоб швидше працювати у великій організації.</string>
     <string name="kube_signin_option_gcp_service_account">Ключ сервісного облікового запису</string>
     <string name="kube_signin_option_gcp_user">Облікові дані користувача gcloud</string>
     <string name="kube_signin_gcp_user_hint">Використайте свою сесію gcloud: на компʼютері виконайте gcloud auth application-default login, потім імпортуйте ~/.config/gcloud/application_default_credentials.json. Коли Google завершить сесію, виконайте команду знову й імпортуйте новий файл.</string>

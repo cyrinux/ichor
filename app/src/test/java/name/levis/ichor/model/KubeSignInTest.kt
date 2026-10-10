@@ -108,6 +108,15 @@ class KubeSignInTest {
         )
         assertEquals(listOf(DiscoveryProvider.EKS, DiscoveryProvider.GKE), fields.keys.toList())
         assertEquals(listOf("awsRegion", "awsAccessKeyId"), fields[DiscoveryProvider.EKS])
+
+        // GKE takes a service account key or gcloud user credentials; the others their one set.
+        val gke = listOf(listOf("gcpServiceAccountJson"), listOf("gcpUserCredentialsJson", "gcpProjects"))
+        val options = discoveryOptions(mapOf("gke" to gke, "unknown" to listOf(listOf("x"))), fields)
+        assertEquals(gke, options[DiscoveryProvider.GKE])
+        assertEquals(listOf(listOf("awsRegion", "awsAccessKeyId")), options[DiscoveryProvider.EKS])
+        assertEquals(fields.keys, options.keys)
+        // The project IDs are optional: the credential alone is enough to search.
+        assertTrue(credentialsComplete(gke[1], mapOf("gcpUserCredentialsJson" to "{}")))
     }
 
     @Test

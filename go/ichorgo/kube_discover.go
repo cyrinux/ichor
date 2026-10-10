@@ -61,6 +61,18 @@ func KubeDiscoverFields() (out string, err error) {
 	})
 }
 
+// KubeDiscoverOptions lists, as JSON, the providers whose discovery takes one of several
+// credentials, each a set of fields: GKE takes a service account key, or gcloud user
+// credentials with optional project IDs. A provider absent from it has the one set
+// KubeDiscoverFields lists.
+func KubeDiscoverOptions() (out string, err error) {
+	defer maskResult(&out, &err)
+
+	return toJSON(map[string][][]string{
+		discoverGKE: {{gcpFieldServiceAccount}, {gcpFieldUserCredentials, gcpFieldProjects}},
+	})
+}
+
 // DiscoverClusters lists the clusters of a cloud account (provider: eks, gke, aks,
 // digitalocean, rancher; secretsJSON: the fields KubeDiscoverFields names) and returns a
 // kubeconfig of them, for the import preview. Context names say the cloud and the region.
@@ -203,55 +215,6 @@ func discoverEKSClusters(ctx context.Context, s map[string]string) ([]discovered
 		out = append(out, discoveredCluster{
 			name: name + "." + region + ".eks", server: d.Cluster.Endpoint, caData: d.Cluster.CertificateAuthority.Data,
 			user: execUser("aws", "--region", region, "eks", "get-token", "--cluster-name", name),
-		})
-	}
-
-	return out, nil
-}
-
-func discoverGKEClusters(ctx context.Context, s map[string]string) ([]discoveredCluster, error) {
-	var sa struct {
-		ProjectID string `json:"project_id"`
-	}
-
-	if gcpCredentialType(s[gcpFieldServiceAccount]) == "authorized_user" || s[gcpFieldUserCredentials] != "" {
-		return nil, errors.New("GKE discovery needs a service account key; cluster discovery with a Google account is coming")
-	}
-
-	if err := json.Unmarshal([]byte(s[gcpFieldServiceAccount]), &sa); err != nil || sa.ProjectID == "" {
-		return nil, errors.New("the service account key names no project")
-	}
-
-	state, err := gkeMethod{}.fromSecrets(s)
-	if err != nil {
-		return nil, err
-	}
-
-	token, _, _, err := gkeMethod{}.mint(ctx, state)
-	if err != nil {
-		return nil, err
-	}
-
-	var list struct {
-		Clusters []struct {
-			Name       string `json:"name"`
-			Location   string `json:"location"`
-			Endpoint   string `json:"endpoint"`
-			MasterAuth struct {
-				ClusterCACertificate string `json:"clusterCaCertificate"`
-			} `json:"masterAuth"`
-		} `json:"clusters"`
-	}
-
-	if err := cloudGet(ctx, gkeEndpoint+"/v1/projects/"+url.PathEscape(sa.ProjectID)+"/locations/-/clusters", token, &list); err != nil {
-		return nil, fmt.Errorf("GKE clusters: %w", err)
-	}
-
-	var out []discoveredCluster
-	for _, c := range list.Clusters {
-		out = append(out, discoveredCluster{
-			name: c.Name + "." + c.Location + ".gke", server: "https://" + c.Endpoint, caData: c.MasterAuth.ClusterCACertificate,
-			user: execUser("gke-gcloud-auth-plugin"),
 		})
 	}
 

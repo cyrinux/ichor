@@ -110,6 +110,14 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
         TalosJson.decodeFromString(MapSerializer(String.serializer(), ListSerializer(String.serializer())), Ichorgo.kubeDiscoverFields())
     }
 
+    /** The providers whose discovery takes one of several credentials, each a field set, by provider id. */
+    suspend fun discoveryOptions(): Map<String, List<List<String>>> = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(
+            MapSerializer(String.serializer(), ListSerializer(ListSerializer(String.serializer()))),
+            Ichorgo.kubeDiscoverOptions(),
+        )
+    }
+
     /** A kubeconfig of the clusters the [provider] account reaches with [secrets], for the import preview. */
     suspend fun discover(provider: String, secrets: Map<String, String>): String = withContext(Dispatchers.IO) {
         Ichorgo.discoverClusters(provider, encodeSecrets(secrets))
