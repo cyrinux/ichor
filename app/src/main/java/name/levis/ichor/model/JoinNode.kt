@@ -28,3 +28,35 @@ data class MaintenanceInspection(
 
 /** The address as typed, ready to send: no blanks; empty when there is nothing to inspect. */
 fun joinAddress(typed: String): String = typed.trim()
+
+// Mirrors go/ichorgo/join_config.go.
+
+/** Step 2: the new node's machine config, made from a member's, with its secrets hidden. */
+@Serializable
+data class JoinConfigPreview(
+    val redactedYaml: String = "",
+    val warnings: List<String> = emptyList(),
+    val needsBootstrap: Boolean = false,
+    /** Bytes of the full config the node will receive. */
+    val size: Int = 0,
+    val role: String = "",
+    val hostname: String = "",
+    val template: String = "",
+)
+
+/** What a member's role makes of the new node: "init" (an old bootstrap node) joins as a control plane. */
+fun joinRole(role: String): String = if (role == "init") "controlplane" else role
+
+/** The members a config can be taken from: those that answer and have a role, workers first. */
+fun joinTemplates(nodes: List<NodeOverview>): List<NodeOverview> = nodes
+    .filter { it.reachable && joinRole(it.role) in setOf("worker", "controlplane") }
+    .sortedWith(compareBy({ joinRole(it.role) != "worker" }, { it.hostname }))
+
+/** "<role>-<n>" with the lowest n that no member's host name takes yet, from 1. */
+fun suggestedHostname(role: String, hostnames: Collection<String>): String {
+    val taken = hostnames.toSet()
+    return generateSequence(1) { it + 1 }.map { "${joinRole(role)}-$it" }.first { it !in taken }
+}
+
+/** The disks a config can install to: writable ones, by their device path. */
+fun installDisks(disks: List<DiskInfo>): List<String> = disks.filter { !it.readonly && it.devPath.isNotBlank() }.map { it.devPath }

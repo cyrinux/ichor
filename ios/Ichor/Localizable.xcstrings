@@ -1,6 +1,397 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "The new node gets the config of a member of the same role, with its own host name, install disk and address. The member is only read." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nouveau nœud reçoit la configuration d'un membre du même rôle, avec son propre nom d'hôte, son disque d'installation et son adresse. Le membre est seulement lu."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nuevo nodo recibe la configuración de un miembro del mismo rol, con su propio nombre de host, disco de instalación y dirección. El miembro solo se lee."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der neue Node bekommt die Konfiguration eines Mitglieds mit derselben Rolle, mit eigenem Hostnamen, eigener Installationsfestplatte und Adresse. Das Mitglied wird nur gelesen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il nuovo nodo riceve la configurazione di un membro dello stesso ruolo, con il proprio nome host, disco di installazione e indirizzo. Il membro viene solo letto."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новий вузол отримує конфігурацію учасника з тією ж роллю, зі своїм іменем хоста, диском для встановлення та адресою. Учасника лише читають."
+          }
+        }
+      }
+    },
+    "No member answers: the new node's config is made from a member's." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun membre ne répond : la configuration du nouveau nœud est faite à partir de celle d'un membre."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún miembro responde: la configuración del nuevo nodo se crea a partir de la de un miembro."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Mitglied antwortet: Die Konfiguration des neuen Nodes wird aus der eines Mitglieds erstellt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun membro risponde: la configurazione del nuovo nodo si crea da quella di un membro."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жоден учасник не відповідає: конфігурацію нового вузла створюють з конфігурації учасника."
+          }
+        }
+      }
+    },
+    "Template" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modèle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plantilla"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlage"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modello"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаблон"
+          }
+        }
+      }
+    },
+    "Role: %@ (the template's)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rôle : %@ (celui du modèle)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rol: %@ (el de la plantilla)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rolle: %@ (die der Vorlage)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruolo: %@ (quello del modello)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Роль: %@ (як у шаблону)"
+          }
+        }
+      }
+    },
+    "Host name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom d'hôte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de host"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostname"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome host"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ім'я хоста"
+          }
+        }
+      }
+    },
+    "Install disk" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disque d'installation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disco de instalación"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installationsfestplatte"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disco di installazione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Диск для встановлення"
+          }
+        }
+      }
+    },
+    "Static address (optional)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresse statique (facultative)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dirección estática (opcional)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statische Adresse (optional)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indirizzo statico (facoltativo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Статична адреса (необов'язково)"
+          }
+        }
+      }
+    },
+    "With its prefix. Empty: the node takes its address from DHCP." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avec son préfixe. Vide : le nœud prend son adresse par DHCP."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con su prefijo. Vacía: el nodo toma su dirección por DHCP."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Präfix. Leer: Der Node bezieht seine Adresse per DHCP."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con il prefisso. Vuoto: il nodo prende l'indirizzo da DHCP."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З префіксом. Порожньо: вузол отримує адресу через DHCP."
+          }
+        }
+      }
+    },
+    "Preview the config" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prévisualiser la configuration"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver la configuración"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfiguration ansehen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anteprima della configurazione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переглянути конфігурацію"
+          }
+        }
+      }
+    },
+    "Valid config for %@ (%@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid config for %1$@ (%2$@)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration valide pour %1$@ (%2$@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuración válida para %1$@ (%2$@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gültige Konfiguration für %1$@ (%2$@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurazione valida per %1$@ (%2$@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дійсна конфігурація для %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "The secrets are hidden here. The full config, with the cluster's secrets, only goes to the new node, in step 3." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les secrets sont masqués ici. La configuration complète, avec les secrets du cluster, ne va qu'au nouveau nœud, à l'étape 3."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los secretos están ocultos aquí. La configuración completa, con los secretos del clúster, solo va al nuevo nodo, en el paso 3."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Geheimnisse sind hier verborgen. Die vollständige Konfiguration mit den Geheimnissen des Clusters geht nur an den neuen Node, in Schritt 3."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I segreti qui sono nascosti. La configurazione completa, con i segreti del cluster, va solo al nuovo nodo, al passo 3."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Секрети тут приховано. Повна конфігурація із секретами кластера йде лише на новий вузол, на кроці 3."
+          }
+        }
+      }
+    },
     "Add a node…" : {
       "extractionState" : "manual",
       "localizations" : {

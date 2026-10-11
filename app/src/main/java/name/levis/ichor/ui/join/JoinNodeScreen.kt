@@ -42,6 +42,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.MaintenanceInspection
+import name.levis.ichor.model.installDisks
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.joinAddress
 import name.levis.ichor.ui.UiState
@@ -83,14 +84,15 @@ class JoinNodeViewModel(private val talos: TalosRepository) : ViewModel() {
 
 /**
  * "Add a node…": a machine booted from the Talos ISO waits in maintenance mode; type the address
- * its console shows and see its version, disks and links. Generating its config and applying it
- * are the next steps (placeholders for now).
+ * its console shows and see its version, disks and links; then make its config from a member's.
+ * Applying it is the next step (a placeholder for now).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JoinNodeScreen(
     onBack: () -> Unit,
     vm: JoinNodeViewModel = viewModel(key = "join-node", factory = factory { JoinNodeViewModel(app.talosRepository) }),
+    configVm: JoinConfigViewModel = viewModel(key = "join-config", factory = factory { JoinConfigViewModel(app.talosRepository) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
@@ -123,6 +125,8 @@ fun JoinNodeScreen(
                 is UiState.Failed -> ErrorBox(state.message, vm::inspect)
                 is UiState.Loaded -> InspectionView(state.data)
             }
+            val disks = (inspection as? UiState.Loaded)?.data?.takeIf { it.maintenance }?.disks.orEmpty()
+            JoinConfigStep(configVm, installDisks(disks))
             NextSteps()
         }
     }
@@ -195,12 +199,11 @@ private fun Section(title: String, error: String?, empty: Boolean, content: @Com
     }
 }
 
-/** Steps 2 and 3, shipped by the next changes. */
+/** Step 3, shipped by the next change. */
 @Composable
 private fun NextSteps() {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(stringResource(R.string.join_node_step_config), style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.join_node_step_apply), style = MaterialTheme.typography.bodyMedium)
             MutedText(stringResource(R.string.join_node_coming))
         }

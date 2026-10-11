@@ -2,8 +2,8 @@ import SwiftUI
 import IchorCore
 
 /// "Add a node…": a machine booted from the Talos ISO waits in maintenance mode; type the address
-/// its console shows and see its version, disks and interfaces. Generating its config and
-/// applying it are the next steps (placeholders for now).
+/// its console shows and see its version, disks and interfaces; then make its config from a
+/// member's (JoinConfigSection). Applying it is the next step (a placeholder for now).
 struct JoinNodeView: View {
     @Environment(AppModel.self) private var model
     @State private var address = ""
@@ -44,14 +44,20 @@ struct JoinNodeView: View {
                     inspectionSections(node)
                 }
             }
+            JoinConfigSection(disks: newNodeDisks)
             Section {
-                Text("2. Machine config from an existing node: role, host name and install disk")
                 Text("3. Apply it and follow the node until it joins the cluster")
                 Text("Coming in a next version.").font(.footnote).foregroundStyle(.secondary)
             }
         }
         .navigationTitle("Add a node")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    /// The writable disks of the inspected node, for step 2.
+    private var newNodeDisks: [String] {
+        if case .loaded(let node, _, _) = inspection, node.maintenance { return installDisks(node.disks) }
+        return []
     }
 
     private var isLoading: Bool {

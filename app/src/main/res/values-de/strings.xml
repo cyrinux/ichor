@@ -4076,4 +4076,15 @@
     <string name="join_node_step_config">2. Maschinenkonfiguration aus einem bestehenden Node: Rolle, Hostname und Installationsdatenträger</string>
     <string name="join_node_step_apply">3. Anwenden und den Node verfolgen, bis er dem Cluster beitritt</string>
     <string name="join_node_coming">Kommt in einer nächsten Version.</string>
+    <string name="join_config_intro">Der neue Node bekommt die Konfiguration eines Mitglieds mit derselben Rolle, mit eigenem Hostnamen, eigener Installationsfestplatte und Adresse. Das Mitglied wird nur gelesen.</string>
+    <string name="join_config_no_template">Kein Mitglied antwortet: Die Konfiguration des neuen Nodes wird aus der eines Mitglieds erstellt.</string>
+    <string name="join_config_template">Vorlage</string>
+    <string name="join_config_role">Rolle: %1$s (die der Vorlage)</string>
+    <string name="join_config_hostname">Hostname</string>
+    <string name="join_config_disk">Installationsfestplatte</string>
+    <string name="join_config_address">Statische Adresse (optional)</string>
+    <string name="join_config_address_help">Mit Präfix. Leer: Der Node bezieht seine Adresse per DHCP.</string>
+    <string name="join_config_preview">Konfiguration ansehen</string>
+    <string name="join_config_valid">Gültige Konfiguration für %1$s (%2$s)</string>
+    <string name="join_config_secrets">Die Geheimnisse sind hier verborgen. Die vollständige Konfiguration mit den Geheimnissen des Clusters geht nur an den neuen Node, in Schritt 3.</string>
 </resources>
