@@ -112,6 +112,7 @@ private val FIELDS = listOf(
     CredentialField(GCP_OAUTH_CLIENT_ID, R.string.kube_field_gcp_oauth_client_id, FieldKind.TEXT),
     CredentialField("gcpOAuthClientSecret", R.string.kube_field_gcp_oauth_client_secret, FieldKind.SECRET),
     CredentialField("gcpOAuthRedirectUrl", R.string.kube_field_gcp_oauth_redirect, FieldKind.TEXT, optional = true),
+    CredentialField(GCP_LOGIN_CONFIG, R.string.kube_field_gcp_login_config, FieldKind.JSON),
     CredentialField("azureTenantId", R.string.kube_field_azure_tenant, FieldKind.TEXT),
     CredentialField("azureSubscriptionId", R.string.kube_field_azure_subscription, FieldKind.TEXT),
     CredentialField("azureClientId", R.string.kube_field_azure_client_id, FieldKind.TEXT),
@@ -152,6 +153,9 @@ const val GCP_GOOGLE_SIGN_IN = "gcpGoogleSignIn"
  */
 const val GCP_GCLOUD_SIGN_IN = "gcpGcloudSignIn"
 
+/** GKE's field for a workforce identity login config (browser sign-in at the organisation's identity provider). */
+const val GCP_LOGIN_CONFIG = "gcpLoginConfigJson"
+
 /** GKE's field for the client ID of the organisation's own OAuth client (browser sign-in). */
 const val GCP_OAUTH_CLIENT_ID = "gcpOAuthClientId"
 
@@ -167,6 +171,7 @@ fun fieldSetLabel(fields: List<String>): Int = when {
     GCP_USER_CREDENTIALS in fields -> R.string.kube_signin_option_gcp_user
     GCP_OAUTH_CLIENT_ID in fields -> R.string.kube_signin_option_gcp_oauth
     GCP_GCLOUD_SIGN_IN in fields -> R.string.kube_signin_option_gcp_gcloud
+    GCP_LOGIN_CONFIG in fields -> R.string.kube_signin_option_gcp_workforce
     GCP_GOOGLE_SIGN_IN in fields -> R.string.kube_signin_option_google
     else -> R.string.kube_signin_option_other
 }
@@ -200,8 +205,9 @@ fun discoveryFields(byProvider: Map<String, List<String>>): Map<DiscoveryProvide
 fun discoveryOptions(byProvider: Map<String, List<List<String>>>, fields: Map<DiscoveryProvider, List<String>>): Map<DiscoveryProvider, List<List<String>>> =
     fields.mapValues { (p, set) -> byProvider[p.id]?.filter { it.isNotEmpty() }?.takeIf { it.isNotEmpty() } ?: listOf(set) }
 
-/** A discovery credential set that signs in in the browser first (the organisation's OAuth client, or gcloud's). */
-fun discoveryNeedsSignIn(fields: List<String>): Boolean = GCP_OAUTH_CLIENT_ID in fields || GCP_GCLOUD_SIGN_IN in fields
+/** A discovery credential set that signs in in the browser first (the organisation's OAuth client, gcloud's, or a workforce login config). */
+fun discoveryNeedsSignIn(fields: List<String>): Boolean =
+    GCP_OAUTH_CLIENT_ID in fields || GCP_GCLOUD_SIGN_IN in fields || GCP_LOGIN_CONFIG in fields
 
 /** A discovery credential set that is Google's own sign-in (Play build): a button, nothing to type but the projects. */
 fun discoveryUsesGoogle(fields: List<String>): Boolean = GCP_GOOGLE_SIGN_IN in fields

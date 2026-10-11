@@ -3475,6 +3475,9 @@
     <string name="kube_signin_gcp_oauth_hint">Ask your Google Cloud admin for a Desktop app OAuth client (APIs &amp; Services → Credentials) with an Internal consent screen. Sign in then opens your Google account in the browser.</string>
     <string name="kube_signin_option_gcp_gcloud">Your Google account (like gcloud)</string>
     <string name="kube_signin_gcp_gcloud_hint">Opens Google\'s sign-in in the browser, as gcloud auth application-default login does on a computer. Works on every build; your organisation\'s SSO applies. The consent page names Google Cloud SDK.</string>
+    <string name="kube_field_gcp_login_config">Workforce login config (JSON)</string>
+    <string name="kube_signin_option_gcp_workforce">Workforce identity (login config)</string>
+    <string name="kube_signin_gcp_workforce_config_hint">Import the login config your administrator gave you; the sign-in opens your organisation\'s identity provider in the browser.</string>
     <string name="kube_signin_option_google">Sign in with Google</string>
     <string name="kube_signin_google_hint">Your Google account, through Google\'s own sign-in. Needs Google Play services.</string>
     <string name="kube_signin_google_unavailable">Google sign-in is not available on this device.</string>

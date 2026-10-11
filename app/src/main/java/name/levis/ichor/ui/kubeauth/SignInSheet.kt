@@ -51,6 +51,7 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.GCP_GCLOUD_SIGN_IN
 import name.levis.ichor.model.GCP_GOOGLE_SIGN_IN
+import name.levis.ichor.model.GCP_LOGIN_CONFIG
 import name.levis.ichor.model.GCP_OAUTH_CLIENT_ID
 import name.levis.ichor.model.GCP_USER_CREDENTIALS
 import name.levis.ichor.model.KubeSignInInfo
@@ -163,6 +164,9 @@ private fun CredentialsForm(info: KubeSignInInfo, checking: Boolean, onSubmit: (
     if (GCP_OAUTH_CLIENT_ID in fields) {
         MutedText(stringResource(R.string.kube_signin_gcp_oauth_hint))
         MutedText(stringResource(R.string.kube_signin_gcp_oauth_web_hint))
+    }
+    if (GCP_LOGIN_CONFIG in fields) {
+        MutedText(stringResource(R.string.kube_signin_gcp_workforce_config_hint))
     }
     SignInButton(checking, enabled = credentialsComplete(fields, values)) { onSubmit(fields, values.toMap()) }
 }

@@ -3467,6 +3467,9 @@
     <string name="kube_signin_gcp_oauth_hint">Bitte deine Google-Cloud-Administration um einen OAuth-Client vom Typ Desktop-App (APIs &amp; Dienste → Anmeldedaten) mit internem Zustimmungsbildschirm. Anmelden öffnet dann dein Google-Konto im Browser.</string>
     <string name="kube_signin_option_gcp_gcloud">Dein Google-Konto (wie gcloud)</string>
     <string name="kube_signin_gcp_gcloud_hint">Öffnet die Google-Anmeldung im Browser, wie gcloud auth application-default login auf einem Computer. Funktioniert in jedem Build; das SSO deiner Organisation gilt. Die Zustimmungsseite nennt Google Cloud SDK.</string>
+    <string name="kube_field_gcp_login_config">Workforce-Login-Konfiguration (JSON)</string>
+    <string name="kube_signin_option_gcp_workforce">Workforce Identity (Login-Konfiguration)</string>
+    <string name="kube_signin_gcp_workforce_config_hint">Importiere die Login-Konfiguration von deinem Administrator; die Anmeldung öffnet den Identitätsanbieter deiner Organisation im Browser.</string>
     <string name="kube_signin_option_google">Über Google anmelden</string>
     <string name="kube_signin_google_hint">Dein Google-Konto über Googles eigene Anmeldung. Benötigt die Google Play-Dienste.</string>
     <string name="kube_signin_google_unavailable">Die Google-Anmeldung ist auf diesem Gerät nicht verfügbar.</string>

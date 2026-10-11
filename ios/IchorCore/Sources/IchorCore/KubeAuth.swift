@@ -143,7 +143,7 @@ public enum KubeFieldInput: Equatable, Sendable {
 
 public func kubeFieldInput(_ field: String) -> KubeFieldInput {
     switch field {
-    case "gcpServiceAccountJson", "gcpUserCredentialsJson": .json
+    case "gcpServiceAccountJson", "gcpUserCredentialsJson", kubeLoginConfigField: .json
     case "awsSecretAccessKey", "awsSessionToken", "azureClientSecret", "doApiToken", "rancherApiKey", "serviceAccountKey",
          "gcpOAuthClientSecret": .secret
     default: .plain
@@ -166,9 +166,15 @@ public func kubeGoogleSignInSecretsJSON(projects: String = "") -> String {
 /// submitted as "1".
 public let kubeGcloudSignInField = "gcpGcloudSignIn"
 
-/// Discovery's OAuth, gcloud and native iOS Google options need a browser round first.
+/// GKE's workforce identity option: the login config the organisation's administrator hands
+/// out; the sign-in then opens the organisation's identity provider in the browser.
+public let kubeLoginConfigField = "gcpLoginConfigJson"
+
+/// Discovery's OAuth, gcloud, workforce login config and native iOS Google options need a
+/// browser round first.
 public func kubeDiscoverNeedsSignIn(_ fields: [String]) -> Bool {
     fields.contains(kubeGoogleSignInField) || fields.contains(kubeGcloudSignInField) || fields.contains("gcpOAuthClientId")
+        || fields.contains(kubeLoginConfigField)
 }
 
 /// The URL scheme the in-app web session closes on for a sign-in coming back to

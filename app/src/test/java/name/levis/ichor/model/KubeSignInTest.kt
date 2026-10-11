@@ -177,6 +177,22 @@ class KubeSignInTest {
     }
 
     @Test
+    fun workforceLoginConfigIsAJsonFieldThatSignsInInTheBrowser() {
+        val workforce = listOf(GCP_LOGIN_CONFIG)
+        assertEquals(R.string.kube_signin_option_gcp_workforce, fieldSetLabel(workforce))
+        assertEquals(FieldKind.JSON, credentialField(GCP_LOGIN_CONFIG)?.kind)
+        assertEquals(R.string.kube_field_gcp_login_config, credentialField(GCP_LOGIN_CONFIG)?.label)
+        assertFalse(credentialsComplete(workforce, emptyMap()))
+        assertTrue(credentialsComplete(workforce, mapOf(GCP_LOGIN_CONFIG to "{}")))
+        // Discovery signs in in the browser first.
+        assertTrue(discoveryNeedsSignIn(listOf(GCP_LOGIN_CONFIG, "gcpProjects")))
+        assertFalse(discoveryUsesGoogle(listOf(GCP_LOGIN_CONFIG, "gcpProjects")))
+        // The sheet reopens on it with the config prefilled (the core remembers it).
+        val info = KubeSignInInfo(method = "gke", options = listOf(listOf("gcpServiceAccountJson"), workforce), values = mapOf(GCP_LOGIN_CONFIG to "{}"))
+        assertEquals(1, info.rememberedOption)
+    }
+
+    @Test
     fun importedNamesAreNewAndReplacedContexts() {
         val conflicts = listOf(ImportConflict(0, "eks-1", sameAs = "eks"), ImportConflict(1, "gke-1"))
         val choices = listOf(ImportChoice(0, replace = true), ImportChoice(1), ImportChoice(2, skip = true))
