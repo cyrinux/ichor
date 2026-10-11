@@ -1,0 +1,7 @@
+• Startup timing trace on both apps and in the Go core
+• IOS Storage screen shows each disk's partitions, free space and encryption
+• Import or scan an omniconfig to prefill the Omni sign-in
+• Show what the cluster checkup is reading while it loads
+• Android Storage screen shows each disk's partitions, free space and encryption
+• Grype is the default image scanner
+• Search every cluster's nodes, pods, workloads and GitOps apps from the Android overview
