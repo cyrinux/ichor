@@ -10,14 +10,15 @@ import (
 	"time"
 )
 
-// imageScanMaxReport bounds one image's Trivy JSON (a few MB for hundreds of findings).
+// imageScanMaxReport bounds one image's report JSON (a few MB for hundreds of findings).
 const (
 	imageScanMaxReport = 24 << 20
 	imageScanMaxLine   = 1 << 20
 )
 
-// scanLogParser reads the Trivy pod's log (see imageScanScript) into report as it arrives.
+// scanLogParser reads the scanner pod's log (see imageScanScript) into report as it arrives.
 type scanLogParser struct {
+	scanner scannerSpec
 	marker  string // "@@<nonce> "
 	targets []scanTarget
 	report  *imageScanReport
@@ -30,8 +31,8 @@ type scanLogParser struct {
 	ended   int // images whose end marker was read
 }
 
-func newScanLogParser(nonce string, targets []scanTarget, report *imageScanReport, emit func(imageScanProgress)) *scanLogParser {
-	return &scanLogParser{marker: "@@" + nonce + " ", targets: targets, report: report, emit: emit}
+func newScanLogParser(scanner scannerSpec, nonce string, targets []scanTarget, report *imageScanReport, emit func(imageScanProgress)) *scanLogParser {
+	return &scanLogParser{scanner: scanner, marker: "@@" + nonce + " ", targets: targets, report: report, emit: emit}
 }
 
 // read consumes a log stream line by line. A line longer than imageScanMaxLine is cut
@@ -90,7 +91,7 @@ func (p *scanLogParser) line(line string) {
 		p.mode = word
 		p.buf.Reset()
 	case word == "end" && arg == "db":
-		p.dbError = trivyError(p.buf.String())
+		p.dbError = p.scanner.errorOf(p.buf.String())
 		p.mode = ""
 	case word == "scan" && valid:
 		p.emit(imageScanProgress{Phase: imageScanPhaseScanning, Step: i + 1, Steps: steps, Image: p.targets[i].image})
@@ -109,7 +110,7 @@ func (p *scanLogParser) finish(i int) {
 
 	switch p.mode {
 	case "result":
-		parsed, err := parseTrivyReport(p.buf.Bytes(), img)
+		parsed, err := p.scanner.parse(p.buf.Bytes(), img)
 		if err != nil {
 			img.Error = err.Error()
 		} else {
@@ -117,7 +118,7 @@ func (p *scanLogParser) finish(i int) {
 			img.Error = ""
 		}
 	case "fail":
-		img.Error = trivyError(p.buf.String())
+		img.Error = p.scanner.errorOf(p.buf.String())
 	}
 
 	p.report.Images[i] = img
@@ -126,11 +127,16 @@ func (p *scanLogParser) finish(i int) {
 	p.ended++
 }
 
-// outcome is the scan's result once the pod ended: the database could not be downloaded,
+// complete is whether the log said all there is: every image ended, or the database failed.
+func (p *scanLogParser) complete() bool {
+	return p.dbError != "" || p.ended == len(p.targets)
+}
+
+// outcome is the scan's result once the pod ended (or its log is complete): the database could not be downloaded,
 // the pod stopped before the last image (killed for memory, its deadline), or done.
 func (p *scanLogParser) outcome(pod netPerfPod) error {
 	if p.dbError != "" {
-		return netPerfRefused("Trivy could not download its vulnerability database (a mirror can be set in the scan options): %s", p.dbError)
+		return netPerfRefused("%s could not download its vulnerability database (a mirror can be set in the scan options): %s", p.scanner.name, p.dbError)
 	}
 
 	if p.ended == len(p.targets) {
@@ -144,5 +150,5 @@ func (p *scanLogParser) outcome(pod netPerfPod) error {
 		}
 	}
 
-	return netPerfRefused("the Trivy pod stopped after %d of %d images: %s", p.ended, len(p.targets), cmpOr(reason, pod.Status.Phase))
+	return netPerfRefused("the %s pod stopped after %d of %d images: %s", p.scanner.name, p.ended, len(p.targets), cmpOr(reason, pod.Status.Phase))
 }

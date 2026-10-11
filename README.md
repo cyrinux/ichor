@@ -272,6 +272,21 @@ and, optionally, host to host.
   The raw fields are under *Details*. A node Omni manages shows its SideroLink connection.
   Nothing secret is read: neither the WireGuard key nor the KubeSpan shared secret.
 
+### Image vulnerability scan
+
+**Scan images** on an app's sheet (and on a Talos node's Images screen) looks for known
+vulnerabilities in the images it runs, by digest, with Trivy or Grype (Settings → Kubernetes →
+*Vulnerability scanner*, Trivy by default) in a short-lived Job of the `ichor-imagescan`
+namespace: the cluster downloads the vulnerability database and the image layers, not the phone.
+
+- **Pinned scanners:** `aquasec/trivy` and `anchore/grype` (its `-debug` variant, which has a
+  shell) are pinned by digest; the pod runs restricted, without a service account token, and only
+  gets the pull credentials of the registries scanned.
+- **Same report either way:** findings, filters and the SARIF, CycloneDX, HTML, CSV and JSON
+  exports do not depend on the scanner. "New since the last scan" compares a scan with the last
+  one by the same scanner, since the two name their findings differently.
+- **Trivy Operator:** when it runs in the cluster, its reports are read instead, without a Job.
+
 ### CronJobs
 
 **Kubernetes → CronJobs** lists every CronJob on a card: its icon and name, schedule (and time

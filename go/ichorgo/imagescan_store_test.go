@@ -243,3 +243,27 @@ func TestImageScanStoreDemo(t *testing.T) {
 		t.Fatalf("%v %s", err, saved)
 	}
 }
+
+// A scan is compared with the last one by the same scanner: Trivy and Grype name targets and
+// advisories differently, so everything would read as new.
+func TestImageScanStoreSameScanner(t *testing.T) {
+	withScanStore(t, time.UnixMilli(1_000_000))
+
+	keepScan("prod", "web", keptScanReport(1_000_000, "sha256:a", testVuln("CVE-1", "HIGH")))
+
+	grype := keptScanReport(2_000_000, "sha256:a", testVuln("CVE-1", "HIGH"), testVuln("CVE-2", "HIGH"))
+	grype.Scanner = "Grype " + grypeVersion
+
+	if img := keepScan("prod", "web", grype).Images[0]; img.PreviousScannedAt != 0 || img.NewSummary != (vulnSummary{}) {
+		t.Fatalf("first Grype scan compared with Trivy's %+v", img)
+	}
+
+	trivy := keptScanReport(3_000_000, "sha256:a", testVuln("CVE-1", "HIGH"), testVuln("CVE-3", "LOW"))
+	if img := keepScan("prod", "web", trivy).Images[0]; img.PreviousScannedAt != 1_000_010 || img.NewSummary.Low != 1 || img.NewSummary.High != 0 {
+		t.Fatalf("Trivy scan not compared with the last Trivy one %+v", img)
+	}
+
+	if got := scannerFamily("Trivy Operator"); got != "Trivy" {
+		t.Fatalf("family %q", got)
+	}
+}

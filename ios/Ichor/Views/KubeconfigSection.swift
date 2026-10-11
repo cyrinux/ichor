@@ -11,6 +11,7 @@ struct KubeconfigSection: View {
     @State private var busy = false
     @State private var message: String?
     @AppStorage(NodeDebugKeys.enabled) private var nodeDebug = false
+    @AppStorage(ImageScannerKeys.selected) private var imageScanner = ImageScanner.trivy
 
     var body: some View {
         Section {
@@ -21,6 +22,17 @@ struct KubeconfigSection: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Vulnerability scanner")
+                Text("What “Scan images” runs in the cluster: Trivy, or Grype, run in the cluster the same way; Grype’s database is Anchore’s. The report and its exports are the same.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Picker("Vulnerability scanner", selection: $imageScanner) {
+                    ForEach(ImageScanner.allCases) { Text(verbatim: $0.label).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
             }
             Button(busy ? String(localized: "Exporting…") : String(localized: "Export kubeconfig…")) { Task { await export() } }
                 .disabled(busy)

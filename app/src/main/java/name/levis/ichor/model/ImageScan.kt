@@ -41,9 +41,20 @@ data class SystemImage(
 /** The scan id of [node]'s system images (an app's scan uses the app's id). */
 fun systemImagesScanId(node: String) = "talos:$node"
 
-/** The images options of a scan of refs with no pod ("" when none). */
+/** A scan's options: the refs scanned with no pod behind them, and the scanner. */
 @Serializable
-data class ImageScanOptions(val images: List<String> = emptyList())
+data class ImageScanOptions(val images: List<String> = emptyList(), val scanner: String = "")
+
+/** The scanners a scan may run in the cluster, by their core [id]; Trivy by default. */
+enum class ImageScanner(val id: String, val label: String) {
+    TRIVY("trivy", "Trivy"),
+    GRYPE("grype", "Grype"),
+    ;
+
+    companion object {
+        fun parse(id: String?): ImageScanner = entries.firstOrNull { it.id == id } ?: TRIVY
+    }
+}
 
 @Serializable
 data class ImageScanProgress(

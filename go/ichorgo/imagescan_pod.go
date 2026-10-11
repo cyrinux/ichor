@@ -17,11 +17,10 @@ const (
 	// were overwritten with a malicious build once (CVE-2026-33634).
 	trivyImage = "docker.io/aquasec/trivy:" + trivyVersion + "@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa"
 	// imageScanName labels the scan namespaces, and prefixes their names.
-	imageScanName      = "ichor-imagescan"
-	imageScanContainer = "trivy"
-	// imageScanStartTimeout bounds the start of the Trivy pod, its image pull included.
+	imageScanName = "ichor-imagescan"
+	// imageScanStartTimeout bounds the start of the scanner's pod, its image pull included.
 	imageScanStartTimeout = 5 * time.Minute
-	// imageScanPodDeadline bounds the Trivy pod itself.
+	// imageScanPodDeadline bounds the scanner's pod itself.
 	imageScanPodDeadline = 40 * time.Minute
 	// imageScanImageTimeout bounds one image's scan, imageScanDBTimeout the database
 	// download (Trivy's --timeout, 5m by default: short for ~80 MB on a slow uplink).
@@ -54,9 +53,11 @@ for img in "$@"; do
 done
 `
 
-// runImageScan scans targets' images with one Trivy Job (see imagescan_job.go).
+// runImageScan scans targets' images with one Job of the scanner opts chose (see
+// imagescan_job.go).
 func runImageScan(ctx context.Context, k *kubeClient, refs []routePod, opts imageScanOptions, emit func(imageScanProgress)) (imageScanReport, error) {
-	report := newImageScanReport(imageScanSourceScan, "Trivy "+trivyVersion)
+	scanner := scannerOf(opts)
+	report := newImageScanReport(imageScanSourceScan, scanner.label())
 
 	emit(imageScanProgress{Phase: imageScanPhasePreparing})
 
@@ -108,7 +109,7 @@ func runImageScan(ctx context.Context, k *kubeClient, refs []routePod, opts imag
 		}
 	}
 
-	err = followImageScan(ctx, k, job, nonce, targets, &report, emit)
+	err = followImageScan(ctx, k, scanner, job, nonce, targets, &report, emit)
 	report.Finished = time.Now().UnixMilli()
 
 	return report, err
@@ -149,34 +150,23 @@ func scanNonce() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-// imageScanPodSpec is the Trivy pod: restricted like the network test's, its database and
-// layers in a /work emptyDir, the pull credentials (the secret named, if any) at
-// /docker/config.json.
+// imageScanPodSpec is the scanner's pod (the scanner opts chose): restricted like the
+// network test's, its database and layers in a /work emptyDir, the pull credentials (the
+// secret named, if any) at /docker/config.json.
 func imageScanPodSpec(nonce string, targets []scanTarget, opts imageScanOptions, secret string) map[string]any {
+	scanner := scannerOf(opts)
 	img := runPodImage{
-		app: imageScanName, image: trivyImage, container: imageScanContainer,
-		env: []map[string]string{
+		app: imageScanName, image: scanner.image, container: scanner.id,
+		env: append([]map[string]string{
 			{"name": "HOME", "value": "/work"},
 			{"name": "TMPDIR", "value": "/work/tmp"},
-			{"name": "TRIVY_CACHE_DIR", "value": "/work/cache"},
-			{"name": "TRIVY_NO_PROGRESS", "value": "true"},
-			{"name": "TRIVY_DISABLE_TELEMETRY", "value": "true"},
-			{"name": "TRIVY_SKIP_VERSION_CHECK", "value": "true"},
-		},
+		}, scanner.env(opts)...),
 		mounts:  []map[string]any{{"name": "work", "mountPath": "/work"}},
 		volumes: []map[string]any{{"name": "work", "emptyDir": map[string]string{"sizeLimit": "8Gi"}}},
 		resources: map[string]any{
 			"requests": map[string]string{"cpu": "250m", "memory": "512Mi"},
 			"limits":   map[string]string{"memory": "4Gi"},
 		},
-	}
-
-	if opts.DBRepository != "" {
-		img.env = append(img.env, map[string]string{"name": "TRIVY_DB_REPOSITORY", "value": opts.DBRepository})
-	}
-
-	if opts.JavaDBRepository != "" {
-		img.env = append(img.env, map[string]string{"name": "TRIVY_JAVA_DB_REPOSITORY", "value": opts.JavaDBRepository})
 	}
 
 	if secret != "" {
@@ -187,7 +177,7 @@ func imageScanPodSpec(nonce string, targets []scanTarget, opts imageScanOptions,
 		}})
 	}
 
-	command := []string{"sh", "-c", imageScanScript, "sh", nonce}
+	command := []string{scanner.shell, "-c", scanner.script, "sh", nonce}
 	for _, t := range targets {
 		command = append(command, t.ref)
 	}
@@ -195,12 +185,12 @@ func imageScanPodSpec(nonce string, targets []scanTarget, opts imageScanOptions,
 	return runPodSpec(img, "", "", false, imageScanPodDeadline, command...)
 }
 
-// followImageScan waits for the Trivy pod to start, then follows its log until it ends,
+// followImageScan waits for the scanner's pod to start, then follows its log until it ends,
 // reading the progress and reports into report. A follow cut short (the API server
 // restarted, the phone's network changed) starts over from the top: the reports read again
 // replace the same images. Once the pod ended, a follow that did not read to the end is
 // replaced by one plain read of the whole log.
-func followImageScan(ctx context.Context, k *kubeClient, job, nonce string, targets []scanTarget, report *imageScanReport, emit func(imageScanProgress)) error {
+func followImageScan(ctx context.Context, k *kubeClient, scanner scannerSpec, job, nonce string, targets []scanTarget, report *imageScanReport, emit func(imageScanProgress)) error {
 	emit(imageScanProgress{Phase: imageScanPhaseStarting, Steps: len(targets)})
 
 	podName, err := findScanPod(ctx, k, job, imageScanStartTimeout)
@@ -212,7 +202,7 @@ func followImageScan(ctx context.Context, k *kubeClient, job, nonce string, targ
 		emit(imageScanProgress{Phase: imageScanPhaseStarting, Steps: len(targets), Message: reason})
 	}
 
-	_, err = waitRunPod(ctx, k, "Trivy", imageScanNamespace, podName, "its node", imageScanStartTimeout, onWait, func(pod netPerfPod) bool {
+	_, err = waitRunPod(ctx, k, scanner.name, imageScanNamespace, podName, "its node", imageScanStartTimeout, onWait, func(pod netPerfPod) bool {
 		return pod.Status.Phase != "Pending" && pod.Status.Phase != ""
 	})
 	if err != nil {
@@ -221,13 +211,13 @@ func followImageScan(ctx context.Context, k *kubeClient, job, nonce string, targ
 
 	podPath := netPerfNamespacePath(imageScanNamespace) + "/pods/" + url.PathEscape(podName)
 	logPath := func(follow bool) string {
-		return podPath + "/log?" + url.Values{"container": {imageScanContainer}, "follow": {strconv.FormatBool(follow)}}.Encode()
+		return podPath + "/log?" + url.Values{"container": {scanner.id}, "follow": {strconv.FormatBool(follow)}}.Encode()
 	}
 
 	var lastErr error
 
 	for range imageScanFollows {
-		parser := newScanLogParser(nonce, targets, report, emit)
+		parser := newScanLogParser(scanner, nonce, targets, report, emit)
 		streamErr := k.stream(ctx, logPath(true), "text/plain, */*", parser.read)
 
 		if ctx.Err() != nil {
@@ -242,15 +232,22 @@ func followImageScan(ctx context.Context, k *kubeClient, job, nonce string, targ
 		}
 
 		if pod.Status.Phase != "Succeeded" && pod.Status.Phase != "Failed" {
+			// The log was read to its end: the pod's phase only says so a moment later.
+			if streamErr == nil && parser.complete() {
+				return parser.outcome(pod)
+			}
+
 			lastErr = streamErr
+
+			sleepCtx(ctx, netPerfPoll)
 
 			continue
 		}
 
 		if streamErr != nil {
-			parser = newScanLogParser(nonce, targets, report, func(imageScanProgress) {})
+			parser = newScanLogParser(scanner, nonce, targets, report, func(imageScanProgress) {})
 			if err := k.stream(ctx, logPath(false), "text/plain, */*", parser.read); err != nil {
-				return fmt.Errorf("read the Trivy pod's log: %w", kubeError(err))
+				return fmt.Errorf("read the %s pod's log: %w", scanner.name, kubeError(err))
 			}
 		}
 
@@ -258,10 +255,10 @@ func followImageScan(ctx context.Context, k *kubeClient, job, nonce string, targ
 	}
 
 	if lastErr != nil {
-		return fmt.Errorf("follow the Trivy pod's log: %w", kubeError(lastErr))
+		return fmt.Errorf("follow the %s pod's log: %w", scanner.name, kubeError(lastErr))
 	}
 
-	return netPerfRefused("lost the Trivy pod's log")
+	return netPerfRefused("lost the %s pod's log", scanner.name)
 }
 
 func sleepCtx(ctx context.Context, d time.Duration) {
@@ -271,9 +268,13 @@ func sleepCtx(ctx context.Context, d time.Duration) {
 	}
 }
 
-// trivyError turns the end of Trivy's error output into a sentence: its last line without
-// the timestamp and level, after a plain-words reason for the common cases.
-func trivyError(text string) string {
+// trivyError turns the end of Trivy's error output into a sentence (see scannerError).
+func trivyError(text string) string { return scannerError("Trivy", text) }
+
+// scannerError turns the end of a scanner's error output into a sentence: its last line
+// without the timestamp and level (Trivy's tab-separated, Grype's "[0002] ERROR " prefix or
+// "  - " list item), after a plain-words reason for the common cases.
+func scannerError(name, text string) string {
 	last := ""
 
 	for line := range strings.SplitSeq(strings.TrimSpace(text), "\n") {
@@ -285,6 +286,8 @@ func trivyError(text string) string {
 	if fields := strings.Split(last, "\t"); len(fields) > 1 {
 		last = fields[len(fields)-1]
 	}
+
+	last = strings.TrimPrefix(grypeLogPrefix.ReplaceAllString(last, ""), "- ")
 
 	if len(last) > 400 {
 		last = last[:400] + "…"
@@ -309,7 +312,7 @@ func trivyError(text string) string {
 
 	switch {
 	case reason == "":
-		return cmpOr(last, "Trivy failed without a message")
+		return cmpOr(last, name+" failed without a message")
 	case last == "":
 		return reason
 	default:

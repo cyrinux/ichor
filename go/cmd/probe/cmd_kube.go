@@ -180,8 +180,9 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
-	{name: "image-scan", args: "REF...", run: func(e env) (out string, err error) {
-		// image-scan REF...: scans image refs with no pod behind them (Trivy in a Job).
+	{name: "image-scan", args: "REF... [-scanner trivy|grype]", run: func(e env) (out string, err error) {
+		// image-scan REF... [-scanner grype]: scans image refs with no pod behind them (Trivy,
+		// or Grype, in a Job; PROBE_SCANNER sets the scanner too).
 		out = imageScanRun(e.cfg, e.context, e.kubeServer, flag.Args()[1:])
 
 		return out, err

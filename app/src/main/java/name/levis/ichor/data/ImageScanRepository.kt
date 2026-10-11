@@ -11,6 +11,7 @@ import name.levis.ichor.model.ImageScanFormat
 import name.levis.ichor.model.ImageScanOptions
 import name.levis.ichor.model.ImageScanProgress
 import name.levis.ichor.model.ImageScanReport
+import name.levis.ichor.model.ImageScanner
 import name.levis.ichor.model.OperatorReports
 import name.levis.ichor.model.RoutePod
 import name.levis.ichor.ui.goErrorText
@@ -42,11 +43,15 @@ data class ImageScanSession(
 }
 
 /**
- * Vulnerability scans of an app's images, through the Kubernetes API (os:admin): a Trivy Job
- * in the cluster, or the Trivy Operator's reports. One scan at a time, kept app-wide so it
+ * Vulnerability scans of an app's images, through the Kubernetes API (os:admin): a Job of the
+ * [scanner] the user picked (Trivy or Grype) in the cluster, or the Trivy Operator's reports. One scan at a time, kept app-wide so it
  * goes on while the user leaves the Apps screen; the core calls back on its own threads.
  */
-class ImageScanRepository(private val configs: ConfigRepository, private val kubeServers: KubeServers) {
+class ImageScanRepository(
+    private val configs: ConfigRepository,
+    private val kubeServers: KubeServers,
+    private val scanner: () -> ImageScanner = { ImageScanner.TRIVY },
+) {
     private val _session = MutableStateFlow<ImageScanSession?>(null)
     val session: StateFlow<ImageScanSession?> = _session.asStateFlow()
 
@@ -115,7 +120,7 @@ class ImageScanRepository(private val configs: ConfigRepository, private val kub
     private fun podsJson(pods: List<RoutePod>) = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
 
     private fun optionsJson(images: List<String>) =
-        if (images.isEmpty()) "" else TalosJson.encodeToString(ImageScanOptions.serializer(), ImageScanOptions(images))
+        TalosJson.encodeToString(ImageScanOptions.serializer(), ImageScanOptions(images, scanner().id))
 
     /** The config to call with and the Kubernetes API address the user set ("" for the kubeconfig's). */
     private fun target(): Pair<StoredConfig, String> {
