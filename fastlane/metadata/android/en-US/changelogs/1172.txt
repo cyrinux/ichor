@@ -1,0 +1,3 @@
+• Add EKS clusters with IAM Identity Center: sign in, pick the account and role, the app finds the clusters across regions
+• Settings grouped into pages: Appearance, Security, Privacy, Alerts, AI, Kubernetes, Clusters & backup, Support, About
+• Grype as a second image scanner, picked in Settings
