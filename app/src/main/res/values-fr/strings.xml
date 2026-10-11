@@ -3540,6 +3540,8 @@
     <string name="kube_field_from_file">Importer depuis un fichier</string>
     <string name="kube_signin_option_aws_sso">IAM Identity Center</string>
     <string name="kube_signin_option_aws_keys">Clés d\'accès</string>
+    <string name="kube_signin_aws_sso_hint">Saisissez l\'URL de démarrage de votre portail d\'accès AWS et sa région ; le compte et le rôle se choisissent après la connexion. Laissez-les vides si vous ne les connaissez pas.</string>
+    <string name="kube_signin_aws_choose_role">Choisissez un compte et un rôle</string>
     <string name="kube_signin_option_other">Autre</string>
     <string name="kube_signin_show">Afficher</string>
     <string name="kube_signin_hide">Masquer</string>

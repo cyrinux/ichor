@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -22,6 +23,59 @@ type fakeAWS struct {
 	pending  int
 	refreshN int
 	grants   []string
+	// devices counts the device codes asked for; singleRole lists one account with one role.
+	devices    int
+	singleRole bool
+}
+
+// The accounts and roles the fake portal lists (invented), the first page ending with a
+// nextToken.
+var fakeSSOAccounts = []struct{ id, name string }{{"210987654321", "Staging"}, {"123456789012", "Production"}}
+
+var fakeSSORoles = map[string][]string{"123456789012": {"ReadOnly", "Admin"}, "210987654321": {"ReadOnly"}}
+
+// portal answers the account and role listings.
+func (a *fakeAWS) portal(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	if !strings.HasPrefix(r.Header.Get("X-Amz-Sso_bearer_token"), "sso-access-") || q.Get("max_result") == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = io.WriteString(w, `{"message":"Session token not found or invalid"}`)
+
+		return
+	}
+
+	accounts := fakeSSOAccounts
+	if a.singleRole {
+		accounts = accounts[1:]
+	}
+
+	if r.URL.Path == "/portal/assignment/accounts" {
+		page, next := accounts[:1], `"p2"`
+		if q.Get("next_token") == "p2" || len(accounts) == 1 {
+			page, next = accounts[len(accounts)-1:], "null"
+		}
+
+		list := make([]string, 0, len(page))
+		for _, acc := range page {
+			list = append(list, fmt.Sprintf(`{"accountId":%q,"accountName":%q,"emailAddress":"aws@example.com"}`, acc.id, acc.name))
+		}
+
+		fmt.Fprintf(w, `{"accountList":[%s],"nextToken":%s}`, strings.Join(list, ","), next)
+
+		return
+	}
+
+	roles := fakeSSORoles[q.Get("account_id")]
+	if a.singleRole {
+		roles = roles[:1]
+	}
+
+	list := make([]string, 0, len(roles))
+	for _, role := range roles {
+		list = append(list, fmt.Sprintf(`{"accountId":%q,"roleName":%q}`, q.Get("account_id"), role))
+	}
+
+	fmt.Fprintf(w, `{"roleList":[%s]}`, strings.Join(list, ","))
 }
 
 func newFakeAWS(t *testing.T) *fakeAWS {
@@ -46,6 +100,7 @@ func newFakeAWS(t *testing.T) *fakeAWS {
 		case r.URL.Path == "/oidc/client/register":
 			_, _ = io.WriteString(w, `{"clientId":"cid","clientSecret":"csecret"}`)
 		case r.URL.Path == "/oidc/device_authorization":
+			a.devices++
 			_, _ = io.WriteString(w, `{"deviceCode":"dc","userCode":"WXYZ-1234","verificationUri":"https://device.sso/","verificationUriComplete":"https://device.sso/?user_code=WXYZ-1234","expiresIn":60,"interval":0}`)
 		case r.URL.Path == "/oidc/token":
 			var req map[string]string
@@ -62,6 +117,8 @@ func newFakeAWS(t *testing.T) *fakeAWS {
 
 			a.refreshN++
 			fmt.Fprintf(w, `{"accessToken":"sso-access-%d","refreshToken":"sso-refresh-%d","expiresIn":28800}`, a.refreshN, a.refreshN)
+		case strings.HasPrefix(r.URL.Path, "/portal/assignment/"):
+			a.portal(w, r)
 		case r.URL.Path == "/portal/federation/credentials":
 			if !strings.HasPrefix(r.Header.Get("X-Amz-Sso_bearer_token"), "sso-access-") || r.URL.Query().Get("account_id") != "123456789012" {
 				w.WriteHeader(http.StatusUnauthorized)
@@ -232,5 +289,169 @@ func TestEKSWithIdentityCenter(t *testing.T) {
 
 	if backup, _ := KubeAuthForBackup(store.Load(key)); !strings.Contains(backup, "acme.awsapps.com") || strings.Contains(backup, "sso-refresh") {
 		t.Errorf("backup %s", backup)
+	}
+}
+
+// signInEKS runs the device sign-in of the context and waits for it.
+func signInEKS(t *testing.T, stored string) {
+	t.Helper()
+
+	old := deviceMinInterval
+	deviceMinInterval = 10 * time.Millisecond
+
+	t.Cleanup(func() { deviceMinInterval = old })
+
+	rec := recSignIn{prompts: make(chan signInPrompt, 1), done: make(chan string, 1)}
+	StartKubeSignIn(stored, "admin@test", rec)
+
+	if p := <-rec.prompts; p.Kind != "device" {
+		t.Fatalf("prompt %+v", p)
+	}
+
+	if msg := <-rec.done; msg != "" {
+		t.Fatalf("sign-in: %s", msg)
+	}
+}
+
+func TestEKSIdentityCenterPicksTheRoleAfterSignIn(t *testing.T) {
+	store := withAuthStore(t)
+	aws := newFakeAWS(t)
+
+	api := newFakeKubeAPI(t, map[string]string{"GET /api/v1/nodes": `{"items":[]}`})
+
+	stored, err := MergeKubeconfig("", "", eksKubeconfig(api), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	start := `"awsSsoStartUrl":"https://example.awsapps.com/start","awsSsoRegion":"eu-west-1"`
+
+	if err := KubeSetCredentials(stored, "admin@test", "{"+start+"}"); err == nil || !strings.HasPrefix(err.Error(), KubeSignInRequired) {
+		t.Fatalf("set credentials: %v", err)
+	}
+
+	signInEKS(t, stored)
+
+	var info kubeSignInKind
+
+	raw, _ := KubeSignInInfo(stored, "admin@test")
+	if err := json.Unmarshal([]byte(raw), &info); err != nil {
+		t.Fatal(err)
+	}
+
+	want := []awsSSORole{
+		{AccountID: "123456789012", AccountName: "Production", RoleName: "Admin"},
+		{AccountID: "123456789012", AccountName: "Production", RoleName: "ReadOnly"},
+		{AccountID: "210987654321", AccountName: "Staging", RoleName: "ReadOnly"},
+	}
+	if !info.SignedIn || info.User != "" || fmt.Sprint(info.Choices) != fmt.Sprint(want) {
+		t.Fatalf("info %s", raw)
+	}
+
+	// Without a role the cluster asks for the sheet again, not for the browser.
+	if _, err := KubeNodes(stored, "admin@test", ""); err == nil || !strings.Contains(err.Error(), "choose an account and role") {
+		t.Fatalf("nodes before the choice: %v", err)
+	}
+
+	if err := KubeSetCredentials(stored, "admin@test", "{"+start+`,"awsAccountId":"123456789012","awsRoleName":"ReadOnly"}`); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := KubeNodes(stored, "admin@test", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	aws.mu.Lock()
+	devices := aws.devices
+	aws.mu.Unlock()
+
+	if devices != 1 {
+		t.Errorf("device codes asked: %d", devices)
+	}
+
+	info = kubeSignInKind{}
+
+	raw, _ = KubeSignInInfo(stored, "admin@test")
+	if err := json.Unmarshal([]byte(raw), &info); err != nil {
+		t.Fatal(err)
+	}
+
+	if info.User != "ReadOnly @ Production (123456789012)" || len(info.Choices) != 0 {
+		t.Fatalf("info after the choice %s", raw)
+	}
+
+	if backup, _ := KubeAuthForBackup(store.Load(stateKeyOf(t, stored, "admin@test"))); strings.Contains(backup, "Staging") {
+		t.Errorf("backup keeps the role list: %s", backup)
+	}
+}
+
+func TestEKSIdentityCenterSingleRolePicksItself(t *testing.T) {
+	withAuthStore(t)
+	aws := newFakeAWS(t)
+	aws.singleRole = true
+
+	api := newFakeKubeAPI(t, map[string]string{"GET /api/v1/nodes": `{"items":[]}`})
+
+	stored, err := MergeKubeconfig("", "", eksKubeconfig(api), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_ = KubeSetCredentials(stored, "admin@test", `{"awsSsoStartUrl":"https://example.awsapps.com/start","awsSsoRegion":"eu-west-1"}`)
+	signInEKS(t, stored)
+
+	raw, _ := KubeSignInInfo(stored, "admin@test")
+	if !strings.Contains(raw, `"user":"ReadOnly @ Production (123456789012)"`) || strings.Contains(raw, `"choices"`) ||
+		!strings.Contains(raw, `"awsAccountId":"123456789012"`) {
+		t.Fatalf("info %s", raw)
+	}
+
+	if _, err := KubeNodes(stored, "admin@test", ""); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestEKSIdentityCenterNeedsStartURLAndRegion(t *testing.T) {
+	m := &eksMethod{}
+
+	tests := []struct {
+		name    string
+		secrets map[string]string
+		wantErr string
+	}{
+		{"start URL and region", map[string]string{awsFieldSSOStartURL: "https://example.awsapps.com/start", awsFieldSSORegion: "eu-west-1"}, ""},
+		{"all four", map[string]string{awsFieldSSOStartURL: "https://example.awsapps.com/start", awsFieldSSORegion: "eu-west-1", awsFieldAccountID: "123456789012", awsFieldRoleName: "ReadOnly"}, ""},
+		{"no region", map[string]string{awsFieldSSOStartURL: "https://example.awsapps.com/start"}, "awsSsoRegion"},
+		{"http", map[string]string{awsFieldSSOStartURL: "http://example.awsapps.com/start", awsFieldSSORegion: "eu-west-1"}, "https"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			state, err := m.fromSecrets(tt.secrets)
+			if tt.wantErr == "" {
+				if err != nil || len(state.Secrets) != len(tt.secrets) {
+					t.Fatalf("state %+v, err %v", state, err)
+				}
+
+				return
+			}
+
+			if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+				t.Fatalf("err %v, want %q", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestEKSSSORolesExpiredToken(t *testing.T) {
+	newFakeAWS(t)
+
+	m := &eksMethod{http: awsHTTPClient()}
+
+	_, err := m.ssoRoles(t.Context(), "expired", "eu-west-1")
+
+	var need *errSignInRequired
+	if !errors.As(err, &need) {
+		t.Fatalf("err %v", err)
 	}
 }

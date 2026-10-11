@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -25,6 +27,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -41,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.AWS_SSO_START_URL
 import name.levis.ichor.model.GCP_GCLOUD_SIGN_IN
 import name.levis.ichor.model.GCP_GOOGLE_SIGN_IN
 import name.levis.ichor.model.GCP_LOGIN_CONFIG
@@ -56,6 +61,7 @@ import name.levis.ichor.model.GCP_OAUTH_CLIENT_ID
 import name.levis.ichor.model.GCP_USER_CREDENTIALS
 import name.levis.ichor.model.KubeSignInInfo
 import name.levis.ichor.model.SignInPrompt
+import name.levis.ichor.model.SsoRoleChoice
 import name.levis.ichor.model.credentialsComplete
 import name.levis.ichor.model.fieldSetLabel
 import name.levis.ichor.ui.components.MutedText
@@ -155,8 +161,14 @@ private fun CredentialsForm(info: KubeSignInInfo, checking: Boolean, onSubmit: (
         SignInButton(checking) { onSubmit(fields, values.toMap()) }
         return
     }
+    // Signed in to IAM Identity Center with several accounts and roles: one tap picks one.
+    if (AWS_SSO_START_URL in fields && info.choices.isNotEmpty()) {
+        RoleChoices(info, checking, onSubmit)
+        return
+    }
     MutedText(stringResource(R.string.kube_signin_credentials_hint))
     CredentialFields(fields, values, onValue = { name, value -> values[name] = value }, enabled = !checking)
+    if (AWS_SSO_START_URL in fields) MutedText(stringResource(R.string.kube_signin_aws_sso_hint))
     if (GCP_USER_CREDENTIALS in fields) {
         MutedText(stringResource(R.string.kube_signin_gcp_user_hint))
         MutedText(stringResource(R.string.kube_signin_gcp_workforce_hint))
@@ -169,6 +181,36 @@ private fun CredentialsForm(info: KubeSignInInfo, checking: Boolean, onSubmit: (
         MutedText(stringResource(R.string.kube_signin_gcp_workforce_config_hint))
     }
     SignInButton(checking, enabled = credentialsComplete(fields, values)) { onSubmit(fields, values.toMap()) }
+}
+
+/** The accounts and roles IAM Identity Center offers, as a radio list; Sign in sends the one picked. */
+@Composable
+private fun RoleChoices(info: KubeSignInInfo, checking: Boolean, onSubmit: (List<String>, Map<String, String>) -> Unit) {
+    var picked by remember(info.choices) { mutableStateOf<SsoRoleChoice?>(null) }
+    Text(stringResource(R.string.kube_signin_aws_choose_role), style = MaterialTheme.typography.titleSmall)
+    Column(Modifier.selectableGroup()) {
+        info.choices.forEach { choice ->
+            Row(
+                Modifier.fillMaxWidth()
+                    .selectable(selected = picked == choice, enabled = !checking, role = Role.RadioButton, onClick = { picked = choice })
+                    .padding(vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                RadioButton(selected = picked == choice, onClick = null, enabled = !checking)
+                Column {
+                    Text(choice.label, style = MaterialTheme.typography.bodyLarge)
+                    MutedText(choice.accountId)
+                }
+            }
+        }
+    }
+    SignInButton(checking, enabled = picked != null) {
+        picked?.let { choice ->
+            val credentials = choice.credentials(info.values)
+            onSubmit(credentials.keys.toList(), credentials)
+        }
+    }
 }
 
 /** The sheet's Sign in button, a spinner while [checking]. */

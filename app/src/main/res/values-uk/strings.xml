@@ -3740,6 +3740,8 @@
     <string name="kube_field_from_file">Імпортувати з файлу</string>
     <string name="kube_signin_option_aws_sso">IAM Identity Center</string>
     <string name="kube_signin_option_aws_keys">Ключі доступу</string>
+    <string name="kube_signin_aws_sso_hint">Введіть початкову URL-адресу вашого порталу доступу AWS і її регіон; обліковий запис і роль вибираються після входу. Залиште їх порожніми, якщо не знаєте їх.</string>
+    <string name="kube_signin_aws_choose_role">Виберіть обліковий запис і роль</string>
     <string name="kube_signin_option_other">Інше</string>
     <string name="kube_signin_show">Показати</string>
     <string name="kube_signin_hide">Приховати</string>

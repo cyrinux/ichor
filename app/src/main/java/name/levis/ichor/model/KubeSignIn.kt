@@ -23,6 +23,8 @@ data class KubeSignInInfo(
     val user: String = "",
     /** When a new sign-in will be needed, unix seconds; 0 when unknown. */
     val sessionExpires: Long = 0,
+    /** The accounts and roles an IAM Identity Center sign-in may assume, when several: the user picks one. */
+    val choices: List<SsoRoleChoice> = emptyList(),
 ) {
     /** The field sets to choose from: [options], else [fields] alone. */
     val fieldSets: List<List<String>> get() = options.ifEmpty { listOf(fields) }
@@ -35,6 +37,23 @@ data class KubeSignInInfo(
         const val KIND_CREDENTIALS = "credentials"
     }
 }
+
+/** An AWS account and a role IAM Identity Center lets the signed-in user assume. */
+@Serializable
+data class SsoRoleChoice(val accountId: String = "", val accountName: String = "", val roleName: String = "") {
+    /** "<account name> · <role>", the account ID when the account has no name. */
+    val label: String get() = "${accountName.ifBlank { accountId }} · $roleName"
+
+    /** The fields that sign in with this role: the start URL and region of [values], this account and role. */
+    fun credentials(values: Map<String, String>): Map<String, String> =
+        values.filterKeys { it == AWS_SSO_START_URL || it == AWS_SSO_REGION } + mapOf(AWS_ACCOUNT_ID to accountId, AWS_ROLE_NAME to roleName)
+}
+
+/** EKS's IAM Identity Center fields (go/ichorgo/kube_auth_eks.go). */
+const val AWS_SSO_START_URL = "awsSsoStartUrl"
+const val AWS_SSO_REGION = "awsSsoRegion"
+const val AWS_ACCOUNT_ID = "awsAccountId"
+const val AWS_ROLE_NAME = "awsRoleName"
 
 /** What an interactive sign-in asks the user to do: open a page, or enter a code on one. */
 @Serializable
@@ -101,10 +120,11 @@ private val FIELDS = listOf(
     CredentialField("awsAccessKeyId", R.string.kube_field_aws_access_key, FieldKind.TEXT),
     CredentialField("awsSecretAccessKey", R.string.kube_field_aws_secret_key, FieldKind.SECRET),
     CredentialField("awsSessionToken", R.string.kube_field_aws_session_token, FieldKind.SECRET, optional = true),
-    CredentialField("awsSsoStartUrl", R.string.kube_field_aws_sso_start_url, FieldKind.TEXT),
-    CredentialField("awsSsoRegion", R.string.kube_field_aws_sso_region, FieldKind.TEXT),
-    CredentialField("awsAccountId", R.string.kube_field_aws_account_id, FieldKind.TEXT),
-    CredentialField("awsRoleName", R.string.kube_field_aws_role_name, FieldKind.TEXT),
+    CredentialField(AWS_SSO_START_URL, R.string.kube_field_aws_sso_start_url, FieldKind.TEXT),
+    CredentialField(AWS_SSO_REGION, R.string.kube_field_aws_sso_region, FieldKind.TEXT),
+    // Picked from a list after the IAM Identity Center sign-in, unless typed.
+    CredentialField(AWS_ACCOUNT_ID, R.string.kube_field_aws_account_id, FieldKind.TEXT, optional = true),
+    CredentialField(AWS_ROLE_NAME, R.string.kube_field_aws_role_name, FieldKind.TEXT, optional = true),
     CredentialField("awsRegion", R.string.kube_field_aws_region, FieldKind.TEXT),
     CredentialField("gcpServiceAccountJson", R.string.kube_field_gcp_service_account, FieldKind.JSON),
     CredentialField(GCP_USER_CREDENTIALS, R.string.kube_field_gcp_user_credentials, FieldKind.JSON),
@@ -165,7 +185,7 @@ const val GCP_OAUTH_CLIENT_ID = "gcpOAuthClientId"
  */
 @StringRes
 fun fieldSetLabel(fields: List<String>): Int = when {
-    "awsSsoStartUrl" in fields -> R.string.kube_signin_option_aws_sso
+    AWS_SSO_START_URL in fields -> R.string.kube_signin_option_aws_sso
     "awsAccessKeyId" in fields -> R.string.kube_signin_option_aws_keys
     "gcpServiceAccountJson" in fields -> R.string.kube_signin_option_gcp_service_account
     GCP_USER_CREDENTIALS in fields -> R.string.kube_signin_option_gcp_user

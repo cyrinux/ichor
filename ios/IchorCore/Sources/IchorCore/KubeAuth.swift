@@ -20,6 +20,46 @@ public func isKubeSignInRequired(_ message: String) -> Bool {
     kubeSignInRequiredReason(message) != nil
 }
 
+/// EKS's IAM Identity Center fields (Go kube_auth_eks.go).
+public let kubeAWSStartURLField = "awsSsoStartUrl"
+public let kubeAWSRegionField = "awsSsoRegion"
+public let kubeAWSAccountField = "awsAccountId"
+public let kubeAWSRoleField = "awsRoleName"
+
+/// An AWS account and a role IAM Identity Center lets the signed-in user assume.
+public struct KubeSsoRoleChoice: Codable, Equatable, Hashable, Sendable {
+    public let accountId: String
+    public let accountName: String
+    public let roleName: String
+
+    public init(accountId: String, accountName: String = "", roleName: String) {
+        self.accountId = accountId
+        self.accountName = accountName
+        self.roleName = roleName
+    }
+
+    private enum CodingKeys: String, CodingKey { case accountId, accountName, roleName }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        accountId = try c.field(.accountId, "")
+        accountName = try c.field(.accountName, "")
+        roleName = try c.field(.roleName, "")
+    }
+
+    /// "<account name> · <role>", the account ID when the account has no name.
+    public var label: String { "\(accountName.isEmpty ? accountId : accountName) · \(roleName)" }
+
+    /// The KubeSetCredentials JSON that signs in with this role: the start URL and region of
+    /// `values`, this account and role.
+    public func secretsJSON(values: [String: String]) -> String {
+        var picked = values.filter { $0.key == kubeAWSStartURLField || $0.key == kubeAWSRegionField }
+        picked[kubeAWSAccountField] = accountId
+        picked[kubeAWSRoleField] = roleName
+        return kubeSecretsJSON(fields: [kubeAWSStartURLField, kubeAWSRegionField, kubeAWSAccountField, kubeAWSRoleField], values: picked)
+    }
+}
+
 /// How a stored kubeconfig context signs in (Go KubeSignInInfo; nil for static credentials).
 public struct KubeSignInInfo: Decodable, Equatable, Sendable {
     /// oidc, eks, gke, azure, digitalocean, rancher.
@@ -36,9 +76,13 @@ public struct KubeSignInInfo: Decodable, Equatable, Sendable {
     public let user: String?
     /// When a new sign-in will be needed, Unix seconds (0: unknown).
     public let sessionExpires: Int64
+    /// The accounts and roles an IAM Identity Center sign-in may assume, when several: the user
+    /// picks one.
+    public let choices: [KubeSsoRoleChoice]
 
     public init(method: String, kind: String, fields: [String] = [], options: [[String]] = [],
-                values: [String: String] = [:], signedIn: Bool = false, user: String? = nil, sessionExpires: Int64 = 0) {
+                values: [String: String] = [:], signedIn: Bool = false, user: String? = nil, sessionExpires: Int64 = 0,
+                choices: [KubeSsoRoleChoice] = []) {
         self.method = method
         self.kind = kind
         self.fields = fields
@@ -47,9 +91,10 @@ public struct KubeSignInInfo: Decodable, Equatable, Sendable {
         self.signedIn = signedIn
         self.user = user
         self.sessionExpires = sessionExpires
+        self.choices = choices
     }
 
-    private enum CodingKeys: String, CodingKey { case method, kind, fields, options, values, signedIn, user, sessionExpires }
+    private enum CodingKeys: String, CodingKey { case method, kind, fields, options, values, signedIn, user, sessionExpires, choices }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -61,6 +106,7 @@ public struct KubeSignInInfo: Decodable, Equatable, Sendable {
         signedIn = try c.field(.signedIn, false)
         user = try c.decodeIfPresent(String.self, forKey: .user).flatMap { $0.isEmpty ? nil : $0 }
         sessionExpires = try c.field(.sessionExpires, 0)
+        choices = try c.field(.choices, [])
     }
 
     public var isCredentials: Bool { kind == "credentials" }
@@ -189,7 +235,9 @@ public func kubeCallbackScheme(of redirectPrefix: String?) -> String {
 
 /// Fields that may be left empty.
 public func kubeFieldOptional(_ field: String) -> Bool {
-    field == "awsSessionToken" || field == "gcpProjects" || field == "gcpOAuthRedirectUrl"
+    // The account and role of IAM Identity Center are picked from a list after the sign-in.
+    field == "awsSessionToken" || field == "gcpProjects" || field == "gcpOAuthRedirectUrl" ||
+        field == kubeAWSAccountField || field == kubeAWSRoleField
 }
 
 /// The JSON object of `values` for `fields` (trimmed, empty ones left out), as KubeSetCredentials

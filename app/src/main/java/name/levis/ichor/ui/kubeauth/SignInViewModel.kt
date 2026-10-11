@@ -100,7 +100,7 @@ class SignInViewModel(
                 repo.signIn(context).collect { event ->
                     _state.value = when (event) {
                         is SignInEvent.Prompt -> SignInUi.Waiting(info, event.prompt)
-                        is SignInEvent.Done -> event.error?.let { SignInUi.Ready(info, error = it) } ?: SignInUi.Done.also { onBrowserDone() }
+                        is SignInEvent.Done -> event.error?.let { SignInUi.Ready(info, error = it) } ?: afterBrowser()
                     }
                 }
             } catch (e: CancellationException) {
@@ -109,6 +109,16 @@ class SignInViewModel(
                 _state.value = SignInUi.Ready(info, error = e.userMessage())
             }
         }
+    }
+
+    /**
+     * A browser or device-code sign-in worked: done, unless it left a choice to make (IAM
+     * Identity Center with several accounts and roles), shown in the form.
+     */
+    private suspend fun afterBrowser(): SignInUi {
+        onBrowserDone()
+        val info = repo.info(context)
+        return if (info != null && info.choices.isNotEmpty()) SignInUi.Ready(info) else SignInUi.Done
     }
 
     /** The sheet closed: stops a sign-in in progress and forgets how the last one ended. */
