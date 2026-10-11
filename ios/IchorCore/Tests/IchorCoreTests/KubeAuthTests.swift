@@ -46,7 +46,7 @@ final class KubeAuthTests: XCTestCase {
     }
 
     func testCredentialImportRouting() throws {
-        for field in ["gcpUserCredentialsJson", "gcpServiceAccountJson"] {
+        for field in ["gcpUserCredentialsJson", "gcpServiceAccountJson", kubeLoginConfigField] {
             let json = "{\"kind\":\"credentials\",\"provider\":\"gke\",\"field\":\"\(field)\"}"
             XCTAssertTrue(try TalosJSON.decode(ImportTextRoute.self, from: json).isGkeCredential)
         }

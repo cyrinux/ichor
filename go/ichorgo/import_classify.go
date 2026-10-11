@@ -16,6 +16,8 @@ func ClassifyImportText(text string) (out string, err error) {
 	switch gcpCredentialType(text) {
 	case gcpTypeAuthorizedUser, gcpTypeWorkforceUser:
 		route.Kind, route.Provider, route.Field = "credentials", discoverGKE, gcpFieldUserCredentials
+	case gcpTypeLoginConfig:
+		route.Kind, route.Provider, route.Field = "credentials", discoverGKE, gcpFieldLoginConfig
 	case "service_account":
 		route.Kind, route.Provider, route.Field = "credentials", discoverGKE, gcpFieldServiceAccount
 	default:

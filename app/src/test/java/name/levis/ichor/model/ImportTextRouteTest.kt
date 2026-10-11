@@ -7,7 +7,7 @@ import org.junit.Test
 
 class ImportTextRouteTest {
     @Test fun onlyKnownGkeCredentialFieldsOpenDiscovery() {
-        for (field in listOf("gcpUserCredentialsJson", "gcpServiceAccountJson")) {
+        for (field in listOf("gcpUserCredentialsJson", "gcpServiceAccountJson", "gcpLoginConfigJson")) {
             val route = TalosJson.decodeFromString(ImportTextRoute.serializer(), """{"kind":"credentials","provider":"gke","field":"$field"}""")
             assertTrue(route.isGkeCredential)
         }

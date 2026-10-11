@@ -360,7 +360,7 @@ public struct ImportTextRoute: Decodable, Sendable {
     public let field: String
     public var isGkeCredential: Bool {
         kind == "credentials" && provider == "gke" &&
-            ["gcpUserCredentialsJson", "gcpServiceAccountJson"].contains(field)
+            ["gcpUserCredentialsJson", "gcpServiceAccountJson", kubeLoginConfigField].contains(field)
     }
 
     private enum CodingKeys: String, CodingKey { case kind, provider, field }
