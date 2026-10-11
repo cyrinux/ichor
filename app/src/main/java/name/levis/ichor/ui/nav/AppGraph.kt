@@ -6,12 +6,14 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.activity.ActivityScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
 import name.levis.ichor.ui.diagnosis.DiagnosisScreen
 import name.levis.ichor.ui.funding.FundingScreen
 import name.levis.ichor.ui.integrations.IntegrationsScreen
 import name.levis.ichor.ui.kubebrowser.KubeLinks
+import name.levis.ichor.ui.search.SearchScreen
 import name.levis.ichor.ui.settings.LicensesScreen
 import name.levis.ichor.ui.settings.SettingsActions
 import name.levis.ichor.ui.settings.SettingsPage
@@ -21,8 +23,12 @@ import name.levis.ichor.ui.settings.SettingsStores
 import name.levis.ichor.ui.settings.SupportedIntegrationsScreen
 import name.levis.ichor.ui.support.SupportBundleScreen
 
-/** The app's own screens: settings, diagnosis, changelog, licenses, funding, support. */
-internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks) {
+/**
+ * The app's own screens: settings, diagnosis, changelog, licenses, funding, support, and the
+ * search across clusters, whose results [openTarget] opens like share links.
+ */
+internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks, openTarget: (ShareTarget) -> Unit) {
+    composable(Routes.SEARCH) { SearchScreen(onBack = { nav.popBackStack() }, onOpen = openTarget) }
     composable(Routes.INSIGHTS) {
         name.levis.ichor.ui.insights.InsightsScreen(
             onBack = { nav.popBackStack() },

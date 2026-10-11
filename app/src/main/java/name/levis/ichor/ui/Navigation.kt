@@ -1,11 +1,13 @@
 package name.levis.ichor.ui
 
+import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
@@ -44,6 +46,7 @@ import name.levis.ichor.ui.nav.kubeGraph
 import name.levis.ichor.ui.nav.openNodeAction
 import name.levis.ichor.ui.nav.resetTo
 import name.levis.ichor.ui.nav.talosGraph
+import kotlinx.coroutines.launch
 
 
 /** Screens a notification can open directly (see MainActivity.EXTRA_OPEN). */
@@ -87,20 +90,18 @@ fun Navigation(
         val link = openLink ?: return@LaunchedEffect
         if (linkLocked) return@LaunchedEffect
         val target = parseShareLink(link.url)
-        val stored = app.configRepository.config.value
-        val cluster = target?.let { stored?.summary?.contextFor(it.cluster, stored.activeContext) }
-        when {
-            target == null -> Toast.makeText(context, R.string.share_link_invalid, Toast.LENGTH_LONG).show()
-            cluster == null -> Toast.makeText(context, R.string.share_link_unknown_cluster, Toast.LENGTH_LONG).show()
-            else -> {
-                app.selectCluster(cluster.name)
-                nav.resetTo(Routes.OVERVIEW)
-                target.route(app, link.action?.takeIf { it.matches(target) })?.let { nav.navigate(it) }
-            }
+        if (target == null) {
+            Toast.makeText(context, R.string.share_link_invalid, Toast.LENGTH_LONG).show()
+        } else {
+            openShareTarget(app, nav, context, target, link.action?.takeIf { it.matches(target) })
         }
         // Last: clearing the link restarts this effect, which would cancel a node lookup.
         onLinkOpened()
     }
+
+    // A search result: opened the way its share link would be.
+    val scope = rememberCoroutineScope()
+    val openTarget: (ShareTarget) -> Unit = remember(nav) { { target -> scope.launch { openShareTarget(app, nav, context, target) } } }
 
     // Over whatever is on screen, unless it already is that shell.
     LaunchedEffect(openShell) {
@@ -189,7 +190,7 @@ fun Navigation(
         talosGraph(nav, app, kubeLinks)
         kubeGraph(nav, app, kubeLinks)
         gitOpsGraph(nav, app, kubeLinks)
-        appGraph(nav, app, kubeLinks)
+        appGraph(nav, app, kubeLinks, openTarget)
         composable(Routes.IMPORT) {
             ImportScreen(
                 incoming = incomingConfig,
@@ -264,6 +265,7 @@ fun Navigation(
                 onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
                 onNodeDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
                 onActivity = { nav.navigate(Routes.activity(it)) },
+                onSearch = { nav.navigate(Routes.SEARCH) { launchSingleTop = true } },
             )
             // After an update: what changed since the build that ran before.
             WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
@@ -291,6 +293,28 @@ fun Navigation(
 }
 
 
+
+/**
+ * Opens [target] as a share link does: the overview of its cluster (the context on screen when
+ * it is one of that cluster), then the screen it names over it, with [action]'s confirmation.
+ */
+private suspend fun openShareTarget(
+    app: TalosApp,
+    nav: NavHostController,
+    context: Context,
+    target: ShareTarget,
+    action: AlertActionRequest? = null,
+) {
+    val stored = app.configRepository.config.value
+    val cluster = stored?.summary?.contextFor(target.cluster, stored.activeContext)
+    if (cluster == null) {
+        Toast.makeText(context, R.string.share_link_unknown_cluster, Toast.LENGTH_LONG).show()
+        return
+    }
+    app.selectCluster(cluster.name)
+    nav.resetTo(Routes.OVERVIEW)
+    target.route(app, action)?.let { nav.navigate(it) }
+}
 
 /**
  * The route a share link opens over the overview; null for the overview itself. A node only

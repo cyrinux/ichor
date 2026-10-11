@@ -5,6 +5,7 @@ import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.QueryStats
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
@@ -34,6 +35,8 @@ class OverviewNavigation(
     val onKubeSpan: () -> Unit,
     val onEtcd: () -> Unit,
     val onSettings: () -> Unit,
+    /** The search across clusters. */
+    val onSearch: () -> Unit,
 ) {
     fun open(action: OverviewAction): () -> Unit = when (action) {
         OverviewAction.HEALTH -> onHealth
@@ -44,6 +47,7 @@ class OverviewNavigation(
         OverviewAction.ALERTS -> onAlerts
         OverviewAction.KUBESPAN -> onKubeSpan
         OverviewAction.ETCD -> onEtcd
+        OverviewAction.SEARCH -> onSearch
         OverviewAction.SETTINGS -> onSettings
     }
 }
@@ -57,6 +61,7 @@ fun overviewActionIcon(action: OverviewAction): ImageVector = when (action) {
     OverviewAction.ALERTS -> Icons.Outlined.NotificationsActive
     OverviewAction.KUBESPAN -> Icons.Outlined.Hub
     OverviewAction.ETCD -> Icons.Outlined.Storage
+    OverviewAction.SEARCH -> Icons.Outlined.Search
     OverviewAction.SETTINGS -> Icons.Outlined.Settings
 }
 
@@ -70,6 +75,7 @@ fun overviewActionLabel(action: OverviewAction): String = when (action) {
     OverviewAction.ALERTS -> stringResource(R.string.alerts_title)
     OverviewAction.KUBESPAN -> "KubeSpan"
     OverviewAction.ETCD -> "etcd"
+    OverviewAction.SEARCH -> stringResource(R.string.overview_action_search)
     OverviewAction.SETTINGS -> stringResource(R.string.overview_action_settings)
 }
 

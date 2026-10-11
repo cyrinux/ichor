@@ -8,6 +8,7 @@ import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.QueryStats
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
@@ -32,6 +33,7 @@ private fun kubeHomeActionIcon(action: KubeHomeAction): ImageVector = when (acti
     KubeHomeAction.CHECKUP -> Icons.Outlined.HealthAndSafety
     KubeHomeAction.API_HEALTH -> Icons.Outlined.MonitorHeart
     KubeHomeAction.NETWORK_POLICIES -> Icons.Outlined.Policy
+    KubeHomeAction.SEARCH -> Icons.Outlined.Search
     KubeHomeAction.SETTINGS -> Icons.Outlined.Settings
 }
 
@@ -47,6 +49,7 @@ fun kubeHomeActionLabel(action: KubeHomeAction): String = when (action) {
     KubeHomeAction.CHECKUP -> stringResource(R.string.checkup_title)
     KubeHomeAction.API_HEALTH -> stringResource(R.string.apihealth_title)
     KubeHomeAction.NETWORK_POLICIES -> stringResource(R.string.netpol_title)
+    KubeHomeAction.SEARCH -> stringResource(R.string.overview_action_search)
     KubeHomeAction.SETTINGS -> stringResource(R.string.overview_action_settings)
 }
 
@@ -65,6 +68,7 @@ fun KubeHomeNavigation.open(action: KubeHomeAction, flux: Boolean = false): () -
     KubeHomeAction.CHECKUP -> onCheckup
     KubeHomeAction.API_HEALTH -> onApiHealth
     KubeHomeAction.NETWORK_POLICIES -> onNetworkPolicies
+    KubeHomeAction.SEARCH -> onSearch
     KubeHomeAction.SETTINGS -> onSettings
 }
 

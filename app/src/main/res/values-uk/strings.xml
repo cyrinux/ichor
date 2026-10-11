@@ -4441,4 +4441,25 @@
     <string name="join_config_preview">Переглянути конфігурацію</string>
     <string name="join_config_valid">Дійсна конфігурація для %1$s (%2$s)</string>
     <string name="join_config_secrets">Секрети тут приховано. Повна конфігурація із секретами кластера йде лише на новий вузол, на кроці 3.</string>
+
+    <!-- Search across clusters -->
+    <string name="overview_action_search">Пошук</string>
+    <string name="search_title">Пошук у кластерах</string>
+    <string name="search_hint">Поди, робочі навантаження, вузли, застосунки…</string>
+    <string name="search_recent">Нещодавні пошуки</string>
+    <string name="search_recent_remove">Вилучити з нещодавніх пошуків</string>
+    <string name="search_empty">Немає результатів для «%1$s»</string>
+    <string name="search_nothing_known">Поки нічого не відомо: відкрийте кластер хоча б раз</string>
+    <string name="search_refresh_active">Оновити активний кластер</string>
+    <string name="search_refresh_failed">Не вдалося оновити активний кластер: показано останній відомий стан</string>
+    <string name="search_last_seen">Бачено %1$s</string>
+    <string name="search_offline_needed">Увімкніть «Зберігати останній відомий стан» у налаштуваннях, щоб шукати й в інших кластерах</string>
+    <string name="search_shown">Показано %1$d з %2$d результатів</string>
+    <string name="search_clear">Очистити</string>
+    <string name="search_kind_node">Вузол</string>
+    <string name="search_kind_pod">Под</string>
+    <string name="search_kind_workload">Робоче навантаження</string>
+    <string name="search_kind_cronjob">CronJob</string>
+    <string name="search_kind_argo_app">Застосунок Argo CD</string>
+    <string name="search_kind_flux_app">Застосунок Flux</string>
 </resources>

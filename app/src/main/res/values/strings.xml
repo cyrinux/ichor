@@ -4210,4 +4210,25 @@
     <string name="join_node_address_hint" translatable="false">192.168.1.42</string>
     <string name="join_config_disk_hint" translatable="false">/dev/sda</string>
     <string name="join_config_address_hint" translatable="false">192.168.1.50/24</string>
+
+    <!-- Search across clusters -->
+    <string name="overview_action_search">Search</string>
+    <string name="search_title">Search clusters</string>
+    <string name="search_hint">Pods, workloads, nodes, apps…</string>
+    <string name="search_recent">Recent searches</string>
+    <string name="search_recent_remove">Remove from recent searches</string>
+    <string name="search_empty">No results for “%1$s”</string>
+    <string name="search_nothing_known">Nothing known yet: open a cluster once</string>
+    <string name="search_refresh_active">Refresh active cluster</string>
+    <string name="search_refresh_failed">Could not refresh the active cluster: showing what it last showed</string>
+    <string name="search_last_seen">Last seen %1$s</string>
+    <string name="search_offline_needed">Turn on “Keep last known state” in Settings to search your other clusters too</string>
+    <string name="search_shown">%1$d of %2$d results shown</string>
+    <string name="search_clear">Clear</string>
+    <string name="search_kind_node">Node</string>
+    <string name="search_kind_pod">Pod</string>
+    <string name="search_kind_workload">Workload</string>
+    <string name="search_kind_cronjob">CronJob</string>
+    <string name="search_kind_argo_app">Argo CD app</string>
+    <string name="search_kind_flux_app">Flux app</string>
 </resources>

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.SystemUpdateAlt
 import androidx.compose.material.icons.outlined.Upgrade
 import androidx.compose.material.icons.outlined.SwapHoriz
@@ -45,6 +46,8 @@ fun ClusterMenu(
     onSelect: (String) -> Unit,
     onManage: () -> Unit,
     onDismiss: () -> Unit,
+    /** "Search clusters": every cluster's nodes, pods, workloads and apps. */
+    onSearch: () -> Unit,
     /** "Upgrade cluster…": null when the role cannot upgrade (or the cluster has no Talos). */
     onUpgradeCluster: (() -> Unit)? = null,
     /** "Upgrade Kubernetes…": null when the role cannot upgrade (or the cluster has no Talos). */
@@ -87,6 +90,14 @@ fun ClusterMenu(
                     onClick = { switching = true },
                 )
             }
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.search_title)) },
+                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                onClick = {
+                    onDismiss()
+                    onSearch()
+                },
+            )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.clusters_manage)) },
                 leadingIcon = { Icon(Icons.Outlined.Layers, contentDescription = null) },

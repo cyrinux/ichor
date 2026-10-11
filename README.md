@@ -542,6 +542,12 @@ dark and true black alike) is generated from the color of the cluster on screen,
 always clear which cluster a reboot is about to hit. Background alerts and the widget follow
 the cluster on screen.
 
+**Search every cluster's nodes, pods, workloads and GitOps apps from the overview** (Android:
+"Search clusters" in the title's menu, or the search action of the top bar). Results come from
+what each cluster last showed: other clusters than the one on screen need "Keep last known
+state" on. Typing never calls a cluster; a result opens its screen on its cluster, like a share
+link.
+
 ### Kubernetes clusters without Talos
 
 A cluster can also be added from a kubeconfig alone, the same ways as a talosconfig (file,

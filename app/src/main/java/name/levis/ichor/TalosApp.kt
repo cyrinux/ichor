@@ -25,6 +25,7 @@ import name.levis.ichor.data.SecureStore
 import name.levis.ichor.data.KeystoreSealer
 import name.levis.ichor.data.KeystoreValue
 import name.levis.ichor.data.OfflineCache
+import name.levis.ichor.data.SearchRepository
 import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.TalosUpdateChecker
 import name.levis.ichor.data.UpgradeManager
@@ -141,6 +142,17 @@ class TalosApp : Application() {
     val talosRepository by lazy { TalosRepository(goCall) }
     val kubeRepository by lazy { KubeRepository(goCall) }
     val gitOpsRepository by lazy { GitOpsRepository(goCall) }
+
+    /** Search across clusters: what every cluster last showed, never a cluster call. */
+    val searchRepository by lazy {
+        SearchRepository(
+            summary = { configRepository.config.value?.summary },
+            active = { configRepository.config.value?.activeContext },
+            offline = offlineCache,
+            offlineEnabled = { uiPreferences.offlineCache.value },
+            results = goCall.results,
+        )
+    }
     val dataServicesRepository by lazy { DataServicesRepository(goCall) }
     val alertmanagerRepository by lazy { AlertmanagerRepository(goCall) }
 
@@ -457,6 +469,7 @@ class TalosApp : Application() {
             runCatching { configRepository.reparse() }
             // Kept under the previous setting: masked and real names must never mix.
             offlineCache.clear()
+            uiPreferences.clearRecentSearches()
             talosRepository.invalidate()
             ClusterWidget().updateAll(this@TalosApp)
             syncMonitoring(this@TalosApp, runNow = true)
@@ -508,7 +521,10 @@ class TalosApp : Application() {
                             talosRepository.restoreOffline()
                         }
                         // Generation 0: not loaded yet (locked); later, every cluster was removed.
-                        generation > 0 -> offlineCache.clear()
+                        generation > 0 -> {
+                            offlineCache.clear()
+                            uiPreferences.clearRecentSearches()
+                        }
                     }
                 }
         }

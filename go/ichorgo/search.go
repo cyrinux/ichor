@@ -167,10 +167,22 @@ func searchItems(e searchEntry) []searchItem {
 	case "overview":
 		return searchParse(e.JSON, func(v clusterOverview) []searchItem { return searchNodes(v.Nodes) })
 	case "pods":
+		if searchIsList(e.JSON) {
+			return searchParse(e.JSON, searchPods)
+		}
+
 		return searchParse(e.JSON, func(v searchPodList) []searchItem { return searchPods(v.Pods) })
 	case "workloads":
+		if searchIsList(e.JSON) {
+			return searchParse(e.JSON, searchWorkloads)
+		}
+
 		return searchParse(e.JSON, func(v searchWorkloadList) []searchItem { return searchWorkloads(v.Workloads) })
 	case "cronjobs":
+		if searchIsList(e.JSON) {
+			return searchParse(e.JSON, searchCronJobs)
+		}
+
 		return searchParse(e.JSON, func(v searchCronJobList) []searchItem { return searchCronJobs(v.CronJobs) })
 	case "argocd":
 		return searchParse(e.JSON, func(v searchApps) []searchItem { return searchArgoApps(v.Apps) })
@@ -179,6 +191,11 @@ func searchItems(e searchEntry) []searchItem {
 	}
 
 	return nil
+}
+
+// searchIsList tells a bare JSON array (Android keeps its lists so) from the Go object.
+func searchIsList(blob string) bool {
+	return strings.HasPrefix(strings.TrimSpace(blob), "[")
 }
 
 func searchParse[T any](blob string, items func(T) []searchItem) []searchItem {

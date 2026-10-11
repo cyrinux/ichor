@@ -70,6 +70,12 @@ class OfflineCache(
         return loaded[fingerprint]?.get(key)?.takeUnless { expired(it.at) }
     }
 
+    /** Every stored result of the cluster [fingerprint] by key, once [load]ed; none expired. */
+    fun peekAll(fingerprint: String): Map<String, TalosRepository.Timed<String>> {
+        if (!enabled()) return emptyMap()
+        return loaded[fingerprint]?.filterValues { !expired(it.at) }.orEmpty()
+    }
+
     /**
      * Stores [json] as the result [key] of the cluster [fingerprint], fetched at [at]; dropped
      * when [clear] ran since [epoch] was read (before the fetch).

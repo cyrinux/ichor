@@ -4199,4 +4199,25 @@
     <string name="join_config_preview">Konfiguration ansehen</string>
     <string name="join_config_valid">Gültige Konfiguration für %1$s (%2$s)</string>
     <string name="join_config_secrets">Die Geheimnisse sind hier verborgen. Die vollständige Konfiguration mit den Geheimnissen des Clusters geht nur an den neuen Node, in Schritt 3.</string>
+
+    <!-- Search across clusters -->
+    <string name="overview_action_search">Suchen</string>
+    <string name="search_title">Cluster durchsuchen</string>
+    <string name="search_hint">Pods, Workloads, Nodes, Apps…</string>
+    <string name="search_recent">Letzte Suchen</string>
+    <string name="search_recent_remove">Aus den letzten Suchen entfernen</string>
+    <string name="search_empty">Keine Ergebnisse für „%1$s“</string>
+    <string name="search_nothing_known">Noch nichts bekannt: öffne einen Cluster einmal</string>
+    <string name="search_refresh_active">Aktiven Cluster aktualisieren</string>
+    <string name="search_refresh_failed">Aktiver Cluster konnte nicht aktualisiert werden: zuletzt Gezeigtes wird angezeigt</string>
+    <string name="search_last_seen">Zuletzt gesehen %1$s</string>
+    <string name="search_offline_needed">Aktiviere „Letzten bekannten Zustand behalten“ in den Einstellungen, um auch deine anderen Cluster zu durchsuchen</string>
+    <string name="search_shown">%1$d von %2$d Ergebnissen angezeigt</string>
+    <string name="search_clear">Löschen</string>
+    <string name="search_kind_node">Node</string>
+    <string name="search_kind_pod">Pod</string>
+    <string name="search_kind_workload">Workload</string>
+    <string name="search_kind_cronjob">CronJob</string>
+    <string name="search_kind_argo_app">Argo-CD-App</string>
+    <string name="search_kind_flux_app">Flux-App</string>
 </resources>

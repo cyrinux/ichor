@@ -30,6 +30,7 @@ internal object Routes {
     const val SUPPORTED_INTEGRATIONS = "supported-integrations"
     const val FUNDING = "funding"
     const val INSIGHTS = "insights"
+    const val SEARCH = "search"
     const val APPS = "apps?attention={attention}"
     const val METRICS = "metrics?tab={tab}"
 
