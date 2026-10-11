@@ -548,8 +548,19 @@
     <string name="settings_delete_body">Зашифровану конфігурацію всіх кластерів разом із їхніми клієнтськими ключами буде вилучено з цього пристрою.</string>
     <string name="settings_delete_backup_first">Спершу створити резервну копію</string>
 
+    <string name="settings_section_clusters">Кластери й резервні копії</string>
+    <string name="settings_page_appearance_summary">Тема, мова, використання наживо</string>
+    <string name="settings_page_security_summary">Блокування застосунку, ключі безпеки</string>
+    <string name="settings_page_privacy_summary">Режим знімків екрана, події кластера, значки застосунків</string>
+    <string name="settings_page_alerts_summary">Фонові перевірки, спостереження, пороги</string>
+    <string name="settings_page_ai_summary">Провайдер, ключ API, модель</string>
+    <string name="settings_page_kubernetes_summary">Налагоджувальна оболонка вузлів, експорт kubeconfig</string>
+    <string name="settings_page_clusters_summary">Додати, оновити, зберегти копію, видалити</string>
+    <string name="settings_page_support_summary">Пакет підтримки, журнал дій, повідомити про помилку</string>
+    <string name="settings_page_about_summary">Версія, що нового, ліцензії, оновлення</string>
+
     <!-- Monitoring and notifications -->
-    <string name="monitor_section">Моніторинг</string>
+    <string name="monitor_section">Сповіщення</string>
     <string name="monitor_notifications_blocked">Сповіщення для цього застосунку заблоковано; дозвольте їх у налаштуваннях Android.</string>
     <string name="monitor_background_alerts">Фонові сповіщення</string>
     <string name="monitor_background_alerts_desc">Сповіщає, коли вузол перестає працювати чи відновлюється, про нові тривоги etcd і щодня, коли до закінчення клієнтського сертифіката лишається менше %1$d днів. Мовчить, поки кластер недоступний (наприклад, без VPN).</string>

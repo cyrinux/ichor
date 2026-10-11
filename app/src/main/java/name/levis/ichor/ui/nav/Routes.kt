@@ -10,6 +10,7 @@ import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.sensitive
 import name.levis.ichor.ui.overview.NodeAction
 import name.levis.ichor.ui.resources.ResourceRef
+import name.levis.ichor.ui.settings.SettingsPage
 
 internal object Routes {
     const val IMPORT = "import"
@@ -177,6 +178,11 @@ internal object Routes {
         "pod-shell?ctx=${Uri.encode(context)}&ns=${Uri.encode(namespace)}&pod=${Uri.encode(pod)}&c=${Uri.encode(container)}"
     const val HEALTH = "health"
     const val SETTINGS = "settings"
+
+    /** One group of Settings on its own page ([SettingsPage.route]). */
+    const val SETTINGS_PAGE = "settings/{page}"
+
+    fun settingsPage(page: SettingsPage) = "settings/${page.route}"
 
     /** The action audit log; empty [cluster]: every cluster. */
     const val ACTIVITY = "activity?cluster={cluster}"

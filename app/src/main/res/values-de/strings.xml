@@ -494,8 +494,19 @@
     <string name="settings_delete_body">Die verschlüsselte Konfiguration aller Cluster wird samt ihren Client-Schlüsseln von diesem Gerät entfernt.</string>
     <string name="settings_delete_backup_first">Zuerst sichern</string>
 
+    <string name="settings_section_clusters">Cluster &amp; Sicherung</string>
+    <string name="settings_page_appearance_summary">Design, Sprache, Live-Auslastung</string>
+    <string name="settings_page_security_summary">App-Sperre, Sicherheitsschlüssel</string>
+    <string name="settings_page_privacy_summary">Screenshot-Modus, Cluster-Events, App-Symbole</string>
+    <string name="settings_page_alerts_summary">Hintergrundprüfungen, Überwachungen, Schwellenwerte</string>
+    <string name="settings_page_ai_summary">Anbieter, API-Schlüssel, Modell</string>
+    <string name="settings_page_kubernetes_summary">Debug-Shell für Nodes, kubeconfig-Export</string>
+    <string name="settings_page_clusters_summary">Hinzufügen, erneuern, sichern, löschen</string>
+    <string name="settings_page_support_summary">Support-Bundle, Aktivitätsprotokoll, Fehler melden</string>
+    <string name="settings_page_about_summary">Version, Neuigkeiten, Lizenzen, Updates</string>
+
     <!-- Monitoring and notifications -->
-    <string name="monitor_section">Überwachung</string>
+    <string name="monitor_section">Alerts</string>
     <string name="monitor_notifications_blocked">Benachrichtigungen sind für diese App blockiert. Erlaube sie in den Android-Einstellungen.</string>
     <string name="monitor_background_alerts">Hintergrundwarnungen</string>
     <string name="monitor_background_alerts_desc">Benachrichtigt, wenn ein Knoten ausfällt oder wieder bereit ist, bei neuen etcd-Alarmen und täglich, wenn das Client-Zertifikat innerhalb von %1$d Tagen abläuft. Stumm, solange der Cluster nicht erreichbar ist (z. B. ohne VPN).</string>

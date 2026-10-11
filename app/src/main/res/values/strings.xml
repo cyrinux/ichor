@@ -496,8 +496,19 @@
     <string name="settings_delete_body">The encrypted config of every cluster, with their client keys, will be removed from this device.</string>
     <string name="settings_delete_backup_first">Back up first</string>
 
+    <string name="settings_section_clusters">Clusters &amp; backup</string>
+    <string name="settings_page_appearance_summary">Theme, language, live usage</string>
+    <string name="settings_page_security_summary">App lock, security keys</string>
+    <string name="settings_page_privacy_summary">Screenshot mode, cluster events, app icons</string>
+    <string name="settings_page_alerts_summary">Background checks, watches, thresholds</string>
+    <string name="settings_page_ai_summary">Provider, API key, model</string>
+    <string name="settings_page_kubernetes_summary">Node debug shell, kubeconfig export</string>
+    <string name="settings_page_clusters_summary">Add, renew, back up, delete</string>
+    <string name="settings_page_support_summary">Support bundle, activity log, report a bug</string>
+    <string name="settings_page_about_summary">Version, what\'s new, licenses, updates</string>
+
     <!-- Monitoring and notifications -->
-    <string name="monitor_section">Monitoring</string>
+    <string name="monitor_section">Alerts</string>
     <string name="monitor_notifications_blocked">Notifications are blocked for this app; allow them in Android settings.</string>
     <string name="monitor_background_alerts">Background alerts</string>
     <string name="monitor_background_alerts_desc">Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within %1$d days. Silent while the cluster is unreachable (e.g. off VPN).</string>

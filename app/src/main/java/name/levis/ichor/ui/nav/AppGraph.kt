@@ -13,7 +13,11 @@ import name.levis.ichor.ui.funding.FundingScreen
 import name.levis.ichor.ui.integrations.IntegrationsScreen
 import name.levis.ichor.ui.kubebrowser.KubeLinks
 import name.levis.ichor.ui.settings.LicensesScreen
+import name.levis.ichor.ui.settings.SettingsActions
+import name.levis.ichor.ui.settings.SettingsPage
+import name.levis.ichor.ui.settings.SettingsPageScreen
 import name.levis.ichor.ui.settings.SettingsScreen
+import name.levis.ichor.ui.settings.SettingsStores
 import name.levis.ichor.ui.settings.SupportedIntegrationsScreen
 import name.levis.ichor.ui.support.SupportBundleScreen
 
@@ -49,23 +53,33 @@ internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kub
     composable(Routes.SETTINGS) {
         SettingsScreen(
             configs = app.configRepository,
-            uiPreferences = app.uiPreferences,
-            appLock = app.appLock,
-            talos = app.talosRepository,
             onBack = { nav.popBackStack() },
-            onReimport = { nav.navigate(Routes.IMPORT) },
-            onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
-            onSupportBundle = { nav.navigate(Routes.SUPPORT_BUNDLE) },
-            onActivity = { nav.navigate(Routes.activity()) },
-            onIntegrations = { nav.navigate(Routes.INTEGRATIONS) },
-            onChangelog = { nav.navigate(Routes.CHANGELOG) },
-            onLicenses = { nav.navigate(Routes.LICENSES) },
-            onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
-            onFunding = { nav.navigate(Routes.FUNDING) },
-            onCleared = {
-                app.launchSync(runNow = true)
-                nav.resetTo(Routes.IMPORT)
-            },
+            onOpen = { page -> nav.navigate(Routes.settingsPage(page)) },
+        )
+    }
+    composable(Routes.SETTINGS_PAGE, arguments = listOf(navArgument("page") { type = NavType.StringType })) { entry ->
+        val page = SettingsPage.fromRoute(entry.arguments?.getString("page")) ?: SettingsPage.APPEARANCE
+        SettingsPageScreen(
+            page = page,
+            stores = SettingsStores(app.configRepository, app.uiPreferences, app.appLock, app.talosRepository),
+            actions = settingsActions(nav, app),
+            onBack = { nav.popBackStack() },
         )
     }
 }
+
+private fun settingsActions(nav: NavHostController, app: TalosApp) = SettingsActions(
+    onReimport = { nav.navigate(Routes.IMPORT) },
+    onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
+    onSupportBundle = { nav.navigate(Routes.SUPPORT_BUNDLE) },
+    onActivity = { nav.navigate(Routes.activity()) },
+    onIntegrations = { nav.navigate(Routes.INTEGRATIONS) },
+    onChangelog = { nav.navigate(Routes.CHANGELOG) },
+    onLicenses = { nav.navigate(Routes.LICENSES) },
+    onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
+    onFunding = { nav.navigate(Routes.FUNDING) },
+    onCleared = {
+        app.launchSync(runNow = true)
+        nav.resetTo(Routes.IMPORT)
+    },
+)

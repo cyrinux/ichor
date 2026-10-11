@@ -501,8 +501,19 @@
     <string name="settings_delete_body">La configurazione crittografata di tutti i cluster, con le loro chiavi client, verrà rimossa da questo dispositivo.</string>
     <string name="settings_delete_backup_first">Prima fai il backup</string>
 
+    <string name="settings_section_clusters">Cluster e backup</string>
+    <string name="settings_page_appearance_summary">Tema, lingua, utilizzo in tempo reale</string>
+    <string name="settings_page_security_summary">Blocco dell’app, chiavi di sicurezza</string>
+    <string name="settings_page_privacy_summary">Modalità screenshot, eventi del cluster, icone delle app</string>
+    <string name="settings_page_alerts_summary">Controlli in background, monitoraggi, soglie</string>
+    <string name="settings_page_ai_summary">Provider, chiave API, modello</string>
+    <string name="settings_page_kubernetes_summary">Shell di debug dei nodi, esportazione kubeconfig</string>
+    <string name="settings_page_clusters_summary">Aggiungi, rinnova, backup, elimina</string>
+    <string name="settings_page_support_summary">Bundle di supporto, registro attività, segnala un bug</string>
+    <string name="settings_page_about_summary">Versione, novità, licenze, aggiornamenti</string>
+
     <!-- Monitoring and notifications -->
-    <string name="monitor_section">Monitoraggio</string>
+    <string name="monitor_section">Avvisi</string>
     <string name="monitor_notifications_blocked">Le notifiche sono bloccate per questa app; consentile nelle impostazioni di Android.</string>
     <string name="monitor_background_alerts">Avvisi in background</string>
     <string name="monitor_background_alerts_desc">Avvisa quando un nodo diventa inattivo o si ripristina, per nuovi allarmi etcd e ogni giorno quando il certificato client scade entro %1$d giorni. Nessun avviso mentre il cluster è irraggiungibile (ad es. fuori dalla VPN).</string>
