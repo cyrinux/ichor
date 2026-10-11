@@ -70,6 +70,11 @@ struct HelpSheet: View {
                     Text("Prefer a ServiceAccount with read-only rights over your admin credentials.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
+                Section("Sidero Omni: your omniconfig") {
+                    Text("Import or scan your omniconfig.yaml, or the talosconfig Omni gives for your whole account: the Omni sign-in opens with the address and account filled in, then adds every cluster. These files hold no secret.")
+                        .font(.footnote)
+                    CommandRow("qrencode -t ansiutf8 -r ~/.config/omni/config")
+                }
             }
             .navigationTitle("Create a talosconfig")
             .navigationBarTitleDisplayMode(.inline)

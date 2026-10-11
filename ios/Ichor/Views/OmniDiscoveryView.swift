@@ -3,8 +3,11 @@ import IchorCore
 
 /// "Add clusters from Sidero Omni": the instance's URL, then an account (it confirms a key in
 /// the browser) or a service account key. The account's clusters come back as a talosconfig
-/// for the import preview, already signed in (Go DiscoverOmniClusters).
+/// for the import preview, already signed in (Go DiscoverOmniClusters). A scanned omnictl
+/// config prefills the fields (`initialValues`: omniUrl, omniEmail).
 struct OmniDiscoveryView: View {
+    var initialValues: [String: String] = [:]
+    var initialServiceAccount = false
     let onFound: (String) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -35,7 +38,10 @@ struct OmniDiscoveryView: View {
                     }
                     .pickerStyle(.segmented)
                 } footer: {
-                    Text("Sign in to your Omni instance: its clusters show in the preview, already signed in, Kubernetes included.")
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Sign in to your Omni instance: its clusters show in the preview, already signed in, Kubernetes included.")
+                        if !initialValues.isEmpty { Text("Filled in from the imported file: sign in to list its clusters.") }
+                    }
                 }
                 .disabled(working)
                 Section {
@@ -87,6 +93,12 @@ struct OmniDiscoveryView: View {
             }
         }
         .interactiveDismissDisabled(working)
+        .onAppear {
+            guard url.isEmpty, email.isEmpty else { return }
+            serviceAccount = initialServiceAccount
+            url = initialValues["omniUrl"] ?? ""
+            email = initialValues["omniEmail"] ?? ""
+        }
         // Gone whichever way: no wait for the confirmation in Omni (up to 10 minutes) goes on.
         .onDisappear {
             flow.cancel()

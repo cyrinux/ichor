@@ -28,8 +28,9 @@ struct ImportView: View {
     /// The credentials cloud discovery found the previewed clusters with: the added ones that
     /// sign in with credentials are signed in with them.
     @State private var discovered: DiscoveredClusters?
-    /// The Sidero Omni sheet is up (its clusters come as a talosconfig).
-    @State private var addingFromOmni = false
+    /// The Sidero Omni sheet, while up (its clusters come as a talosconfig); prefilled from a
+    /// scanned omnictl config.
+    @State private var omniStart: DiscoveryStart?
 
     /// A validated config waiting for the user's go: a talosconfig, or a kubeconfig with the
     /// stored clusters its contexts are named like.
@@ -55,7 +56,14 @@ struct ImportView: View {
     struct DiscoveryStart: Identifiable {
         let provider: String
         var initialValues: [String: String] = [:]
+        /// Omni only: open on the service account key.
+        var serviceAccount = false
         var id: String { provider }
+    }
+
+    /// Opens Omni's own sheet, or cloud discovery for the other providers.
+    private func open(_ start: DiscoveryStart) {
+        if start.provider == "omni" { omniStart = start } else { discovery = start }
     }
 
     var body: some View {
@@ -82,8 +90,8 @@ struct ImportView: View {
         }
         .onDisappear { TalosClient.forgetDiscoverSignIn() }
         .sheet(isPresented: $showingHelp) { HelpSheet() }
-        .sheet(isPresented: $addingFromOmni) {
-            OmniDiscoveryView { talosconfig in validate(talosconfig) }
+        .sheet(item: $omniStart) { start in
+            OmniDiscoveryView(initialValues: start.initialValues, initialServiceAccount: start.serviceAccount) { talosconfig in validate(talosconfig) }
         }
         .sheet(item: $discovery) { start in
             CloudDiscoveryView(provider: start.provider, initialValues: start.initialValues) { found in validate(found.kubeconfig, discovered: found) }
@@ -92,7 +100,7 @@ struct ImportView: View {
             sourceDismissing = false
             if let start = pendingDiscovery {
                 pendingDiscovery = nil
-                discovery = start
+                open(start)
             }
         }) { source in
             if source == .form {
@@ -132,7 +140,7 @@ struct ImportView: View {
                             }
                             .buttonStyle(.bordered)
                         }
-                        Button { addingFromOmni = true } label: {
+                        Button { omniStart = DiscoveryStart(provider: "omni") } label: {
                             Label {
                                 Text(verbatim: KubeAuthWording.providerLabel("omni"))
                             } icon: {
@@ -265,10 +273,11 @@ struct ImportView: View {
             do {
                 let yaml = try await TalosClient.decodeImportText(text)
                 let route = try await TalosClient.classifyImportText(yaml)
-                if route.isGkeCredential || route.isEksIdentityCenter {
+                if route.isGkeCredential || route.isEksIdentityCenter || route.isOmni {
                     let start = route.isGkeCredential ? DiscoveryStart(provider: "gke", initialValues: [route.field: yaml]) :
-                        DiscoveryStart(provider: "eks", initialValues: route.values)
-                    if sourceDismissing { pendingDiscovery = start } else { discovery = start }
+                        DiscoveryStart(provider: route.isOmni ? "omni" : "eks", initialValues: route.values,
+                                       serviceAccount: route.isOmniServiceAccount)
+                    if sourceDismissing { pendingDiscovery = start } else { open(start) }
                     error = nil
                     return
                 }

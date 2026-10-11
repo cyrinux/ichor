@@ -8,6 +8,7 @@ import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.KubeAuthRepository
 import name.levis.ichor.data.SignInEvent
 import name.levis.ichor.model.ImportTextRoute
+import name.levis.ichor.model.OMNI_SERVICE_ACCOUNT_KEY
 import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.SsoRoleChoice
@@ -44,9 +45,17 @@ sealed interface ImportState {
 
     /**
      * Adding the clusters of a Sidero Omni account: [running] while signing in or listing,
-     * [prompt] the page to open while Omni waits for the user's confirmation.
+     * [prompt] the page to open while Omni waits for the user's confirmation. [initialValues]
+     * prefill the fields from a scanned omnictl config or account talosconfig, and
+     * [serviceAccount] opens on the service account key.
      */
-    data class Omni(val running: Boolean = false, val prompt: SignInPrompt? = null, val error: String? = null) : ImportState
+    data class Omni(
+        val running: Boolean = false,
+        val prompt: SignInPrompt? = null,
+        val error: String? = null,
+        val initialValues: Map<String, String> = emptyMap(),
+        val serviceAccount: Boolean = false,
+    ) : ImportState
     data object Validating : ImportState
 
     /**
@@ -169,6 +178,7 @@ class ImportViewModel(
                 initial = DiscoveryProvider.EKS, initialValues = route.values,
             )
         }
+        if (route.isOmni) return ImportState.Omni(initialValues = route.values, serviceAccount = route.field == OMNI_SERVICE_ACCOUNT_KEY)
         if (route.isAwsAccessKeys) return ImportState.Invalid("", R.string.kube_import_aws_keys_refused)
         return if (kube) {
             ImportState.KubePreview(yaml, configs.validateKube(yaml), configs.kubeImportConflicts(yaml))

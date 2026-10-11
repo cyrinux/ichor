@@ -3820,6 +3820,9 @@
     <string name="import_form_omni_identity_hint">Your Omni account email, or a service account\'s identity (name@serviceaccount.omni.sidero.dev)</string>
     <string name="omni_add_title">Add clusters from Sidero Omni</string>
     <string name="omni_add_body">Sign in to your Omni instance: its clusters show in the preview, already signed in, Kubernetes included.</string>
+    <string name="omni_prefilled">Filled in from the imported file: sign in to list its clusters.</string>
+    <string name="help_omni_title">Sidero Omni: your omniconfig</string>
+    <string name="help_omni_body">Import or scan your omniconfig.yaml, or the talosconfig Omni gives for your whole account: the Omni sign-in opens with the address and account filled in, then adds every cluster. These files hold no secret.</string>
     <string name="omni_field_url">Omni URL (https://…omni.siderolabs.io)</string>
     <string name="omni_field_email">Account email</string>
     <string name="omni_mode_account">Account</string>
