@@ -54,6 +54,8 @@ enum KubeAuthWording {
             String(localized: "Bring your gcloud session: on your computer run gcloud auth application-default login, then import ~/.config/gcloud/application_default_credentials.json. When Google ends the session, run it again and import the new file.")
                 + "\n\n"
                 + String(localized: "A workforce identity session (gcloud auth application-default login --login-config=…) is imported the same way.")
+        case "gcpGcloudSignIn":
+            String(localized: "Opens Google's sign-in in the browser, as gcloud auth application-default login does on a computer. Works on every build; your organisation's SSO applies. The consent page names Google Cloud SDK.")
         case "gcpGoogleSignIn":
             String(localized: "Google lists the projects your account can see; Ichor reads their clusters.")
         case "gcpProjects":
@@ -75,6 +77,7 @@ enum KubeAuthWording {
         case "gcpServiceAccountJson": String(localized: "Service account key")
         case "gcpUserCredentialsJson": String(localized: "gcloud user credentials")
         case "gcpOAuthClientId": String(localized: "Your organisation's OAuth client")
+        case "gcpGcloudSignIn": String(localized: "Your Google account (like gcloud)")
         case "gcpGoogleSignIn": String(localized: "Sign in with Google")
         default: fields.map(fieldLabel).joined(separator: ", ")
         }

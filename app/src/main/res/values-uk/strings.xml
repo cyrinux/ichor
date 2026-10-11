@@ -3647,6 +3647,8 @@
     <string name="kube_field_gcp_oauth_client_secret">Секрет клієнта OAuth</string>
     <string name="kube_signin_option_gcp_oauth">OAuth-клієнт вашої організації</string>
     <string name="kube_signin_gcp_oauth_hint">Попросіть адміністратора Google Cloud створити OAuth-клієнт типу «Програма для комп’ютера» (API та сервіси → Облікові дані) з внутрішнім екраном згоди. Вхід відкриє ваш обліковий запис Google у браузері.</string>
+    <string name="kube_signin_option_gcp_gcloud">Ваш обліковий запис Google (як gcloud)</string>
+    <string name="kube_signin_gcp_gcloud_hint">Відкриває вхід Google у браузері, як gcloud auth application-default login на комп\'ютері. Працює в кожній збірці; діє SSO вашої організації. Сторінка згоди називає Google Cloud SDK.</string>
     <string name="kube_signin_option_google">Увійти через Google</string>
     <string name="kube_signin_google_hint">Ваш обліковий запис Google через вхід Google. Потрібні сервіси Google Play.</string>
     <string name="kube_signin_google_unavailable">Вхід через Google недоступний на цьому пристрої.</string>

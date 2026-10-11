@@ -150,7 +150,12 @@ func mintForGoogleUser(ctx context.Context, state kubeAuthState) (string, time.T
 	t, err := refreshGoogleToken(ctx, creds)
 	if err != nil {
 		if oauthInvalidGrant(err) || unauthorized(err) {
-			return "", time.Time{}, state, signInRequired(authGKE, creds.renewHint())
+			hint := creds.renewHint()
+			if state.secret(gcpFieldGcloudSignIn) != "" {
+				hint = gcpGcloudRenewHint
+			}
+
+			return "", time.Time{}, state, signInRequired(authGKE, hint)
 		}
 
 		return "", time.Time{}, state, fmt.Errorf("get a Google token: %w", err)

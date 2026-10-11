@@ -11,6 +11,19 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertFalse(kubeDiscoverNeedsSignIn([]))
     }
 
+    func testGcloudSignInIsAMarker() throws {
+        // Nothing to type: complete as it is, submitted as its marker, browser first in discovery.
+        XCTAssertTrue(kubeFieldsComplete([kubeGcloudSignInField], values: [:]))
+        XCTAssertEqual(try TalosJSON.decode([String: String].self, from: kubeSecretsJSON(fields: [kubeGcloudSignInField], values: [:])),
+                       [kubeGcloudSignInField: "1"])
+        let discovery = [kubeGcloudSignInField, "gcpProjects"]
+        XCTAssertTrue(kubeDiscoverNeedsSignIn(discovery))
+        XCTAssertTrue(kubeFieldsComplete(discovery, values: [:]))
+        XCTAssertEqual(try TalosJSON.decode([String: String].self,
+                                           from: kubeSecretsJSON(fields: discovery, values: ["gcpProjects": " sample-proj "])),
+                       [kubeGcloudSignInField: "1", "gcpProjects": "sample-proj"])
+    }
+
     func testGoogleDiscoverySecrets() throws {
         let empty = try TalosJSON.decode([String: String].self, from: kubeGoogleSignInSecretsJSON())
         XCTAssertEqual(empty, [kubeGoogleSignInField: "ios"])

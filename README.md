@@ -522,7 +522,7 @@ when no such label is set, as on bare metal.
 | Client certificate, token (ServiceAccount) | Uses it as is |
 | `kubectl oidc-login` / kubelogin, `auth-provider: oidc` | Signs in in the browser (kubelogin's own `localhost` redirect, so nothing changes on the identity provider) or with a device code; renews the token with the refresh token |
 | `aws eks get-token`, aws-iam-authenticator | IAM Identity Center (device code, like `aws sso login`) or access keys; `--role-arn` through AssumeRole |
-| `gke-gcloud-auth-plugin` | A service account key, Sign in with Google (Play build and iOS), the user credentials `gcloud auth application-default login` writes (`application_default_credentials.json`, also with `--login-config` for workforce identity), or your organisation's own OAuth client (Desktop app type: sign-in in the browser, no key) |
+| `gke-gcloud-auth-plugin` | A service account key, your Google account in the browser like gcloud (every build), Sign in with Google (Play build and iOS), the user credentials `gcloud auth application-default login` writes (`application_default_credentials.json`, also with `--login-config` for workforce identity), or your organisation's own OAuth client (Desktop app type: sign-in in the browser, no key) |
 | Azure `kubelogin` (AKS with Entra ID) | Device code or browser, or a service principal |
 | `doctl … exec-credential` | A DigitalOcean API token (short-lived cluster credentials from it) |
 | `rancher token` | A Rancher API key |
@@ -536,6 +536,14 @@ private: it contains a refresh token or private key.
 ```sh
 qrencode -t ansiutf8 < ~/.config/gcloud/application_default_credentials.json
 ```
+
+**GKE with your Google account, no setup**: pick "Your Google account (like gcloud)" on the
+GKE sign-in sheet and tap **Sign in**. Google's sign-in opens in the browser (your
+organisation's SSO applies) and comes back by itself; the app then keeps the session as
+`gcloud auth application-default login` does, renewing it without the browser until Google ends
+it. It uses gcloud's own public OAuth client, so the consent page names Google Cloud SDK, and
+Workspace admins who allow gcloud allow it. The refresh token is stored like an imported
+`application_default_credentials.json`, so encrypted backups keep the session.
 
 **GKE with your organisation's OAuth client**: in the Google Cloud console (APIs & Services),
 1. set the OAuth consent screen to **Internal** (no Google verification needed),
@@ -553,7 +561,7 @@ shows a sign-in code to paste. The code is useless without the key only the app 
 **Add from a cloud account** (on the add screen) lists the clusters of an AWS, Google Cloud,
 Azure, DigitalOcean or Rancher account and adds the ones you pick, signed in with the same
 credentials. For Google Cloud that is a service account key, the gcloud user credentials of
-your own account, **Sign in with Google** (Play build, and iOS builds that carry Ichor's Google
+your own account, your Google account in the browser like gcloud (every build), **Sign in with Google** (Play build, and iOS builds that carry Ichor's Google
 client), or your organisation's OAuth client in the browser, with no file to paste: the app then
 looks through every project you can see (or the project IDs you enter), and the clusters you add
 reuse that sign-in without a second prompt.

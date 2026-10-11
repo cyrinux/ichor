@@ -96,10 +96,10 @@ func ForgetDiscoverSignIn() {
 	discoverySignIn.state = nil
 }
 
-// gkeNeedsBrowser tells GKE credentials that sign in in the browser: the OAuth client, or the
-// build's Google client on iOS.
+// gkeNeedsBrowser tells GKE credentials that sign in in the browser: the OAuth client,
+// gcloud's client, or the build's Google client on iOS.
 func gkeNeedsBrowser(s map[string]string) bool {
-	return s[gcpFieldOAuthClientID] != "" || s[gcpFieldGoogleSignIn] == googleSignInIOS
+	return s[gcpFieldOAuthClientID] != "" || s[gcpFieldGcloudSignIn] != "" || s[gcpFieldGoogleSignIn] == googleSignInIOS
 }
 
 // withDiscoverySession is state with the session of the discovery's sign-in when that sign-in
@@ -109,14 +109,31 @@ func withDiscoverySession(state kubeAuthState) kubeAuthState {
 	defer discoverySignIn.mu.Unlock()
 
 	signed := discoverySignIn.state
-	if signed == nil || !maps.Equal(signed.Secrets, state.Secrets) {
+	if signed == nil {
 		return state
 	}
 
 	out := state
+
+	switch {
+	case maps.Equal(signed.Secrets, state.Secrets):
+	case gcloudSignedFor(*signed, state):
+		// gcloud's sign-in stored its session as user credentials: the cluster takes them.
+		out.Secrets = maps.Clone(signed.Secrets)
+	default:
+		return state
+	}
+
 	out.Session, out.User, out.SessionExpires = maps.Clone(signed.Session), signed.User, signed.SessionExpires
 
 	return out
+}
+
+// gcloudSignedFor tells the gcloud sign-in signed, whose user credentials it added, from the
+// same option entered again (state: the marker only).
+func gcloudSignedFor(signed, state kubeAuthState) bool {
+	return state.secret(gcpFieldGcloudSignIn) != "" && state.secret(gcpFieldUserCredentials) == "" &&
+		signed.secret(gcpFieldGcloudSignIn) != "" && signed.secret(gcpFieldUserCredentials) != ""
 }
 
 // discoverySecrets is secretsJSON as DiscoverClusters reads it: values trimmed.

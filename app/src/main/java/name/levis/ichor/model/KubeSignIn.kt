@@ -127,13 +127,15 @@ private val FIELDS = listOf(
 /** The field [name], or null when the core asks for one the app does not know (shown by name, as a secret). */
 fun credentialField(name: String): CredentialField? = FIELDS[name]
 
-/** Whether every required field of [fields] has a value in [values]. */
+/** Whether every required field of [fields] has a value in [values]; a marker needs none. */
 fun credentialsComplete(fields: List<String>, values: Map<String, String>): Boolean =
-    fields.all { credentialField(it)?.optional == true || values[it].orEmpty().isNotBlank() }
+    fields.all { it == GCP_GCLOUD_SIGN_IN || credentialField(it)?.optional == true || values[it].orEmpty().isNotBlank() }
 
-/** The values of [fields] to send, trimmed, empty ones left out. */
+/** The values of [fields] to send, trimmed, empty ones left out; gcloud's sign-in sends its marker. */
 fun credentialsFor(fields: List<String>, values: Map<String, String>): Map<String, String> =
-    fields.mapNotNull { name -> values[name]?.trim()?.takeIf { it.isNotEmpty() }?.let { name to it } }.toMap()
+    fields.mapNotNull { name ->
+        if (name == GCP_GCLOUD_SIGN_IN) name to "1" else values[name]?.trim()?.takeIf { it.isNotEmpty() }?.let { name to it }
+    }.toMap()
 
 /** GKE's field for the application_default_credentials.json gcloud writes for a Google account. */
 const val GCP_USER_CREDENTIALS = "gcpUserCredentialsJson"
@@ -143,6 +145,12 @@ const val GCP_PROJECTS = "gcpProjects"
 
 /** GKE's "Sign in with Google" option (Play build): a marker, never a text field. */
 const val GCP_GOOGLE_SIGN_IN = "gcpGoogleSignIn"
+
+/**
+ * GKE's "Your Google account (like gcloud)" option: the browser sign-in with gcloud's own
+ * client, on every build. A marker drawn as a Sign in button, never a text field.
+ */
+const val GCP_GCLOUD_SIGN_IN = "gcpGcloudSignIn"
 
 /** GKE's field for the client ID of the organisation's own OAuth client (browser sign-in). */
 const val GCP_OAUTH_CLIENT_ID = "gcpOAuthClientId"
@@ -158,6 +166,7 @@ fun fieldSetLabel(fields: List<String>): Int = when {
     "gcpServiceAccountJson" in fields -> R.string.kube_signin_option_gcp_service_account
     GCP_USER_CREDENTIALS in fields -> R.string.kube_signin_option_gcp_user
     GCP_OAUTH_CLIENT_ID in fields -> R.string.kube_signin_option_gcp_oauth
+    GCP_GCLOUD_SIGN_IN in fields -> R.string.kube_signin_option_gcp_gcloud
     GCP_GOOGLE_SIGN_IN in fields -> R.string.kube_signin_option_google
     else -> R.string.kube_signin_option_other
 }
@@ -191,8 +200,8 @@ fun discoveryFields(byProvider: Map<String, List<String>>): Map<DiscoveryProvide
 fun discoveryOptions(byProvider: Map<String, List<List<String>>>, fields: Map<DiscoveryProvider, List<String>>): Map<DiscoveryProvider, List<List<String>>> =
     fields.mapValues { (p, set) -> byProvider[p.id]?.filter { it.isNotEmpty() }?.takeIf { it.isNotEmpty() } ?: listOf(set) }
 
-/** A discovery credential set that signs in in the browser first (the organisation's OAuth client). */
-fun discoveryNeedsSignIn(fields: List<String>): Boolean = GCP_OAUTH_CLIENT_ID in fields
+/** A discovery credential set that signs in in the browser first (the organisation's OAuth client, or gcloud's). */
+fun discoveryNeedsSignIn(fields: List<String>): Boolean = GCP_OAUTH_CLIENT_ID in fields || GCP_GCLOUD_SIGN_IN in fields
 
 /** A discovery credential set that is Google's own sign-in (Play build): a button, nothing to type but the projects. */
 fun discoveryUsesGoogle(fields: List<String>): Boolean = GCP_GOOGLE_SIGN_IN in fields
