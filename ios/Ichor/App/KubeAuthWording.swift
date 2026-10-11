@@ -20,6 +20,7 @@ enum KubeAuthWording {
         case "gcpOAuthClientId": String(localized: "OAuth client ID")
         case "gcpOAuthClientSecret": String(localized: "OAuth client secret")
         case "gcpOAuthRedirectUrl": String(localized: "Redirect URL (optional)")
+        case kubeLoginConfigField: String(localized: "Workforce login config (JSON)")
         case "azureClientId": String(localized: "Client ID")
         case "azureClientSecret": String(localized: "Client secret")
         case "azureTenantId": String(localized: "Tenant ID")
@@ -56,6 +57,8 @@ enum KubeAuthWording {
                 + String(localized: "A workforce identity session (gcloud auth application-default login --login-config=…) is imported the same way.")
         case "gcpGcloudSignIn":
             String(localized: "Opens Google's sign-in in the browser, as gcloud auth application-default login does on a computer. Works on every build; your organisation's SSO applies. The consent page names Google Cloud SDK.")
+        case kubeLoginConfigField:
+            String(localized: "Import the login config your administrator gave you; the sign-in opens your organisation's identity provider in the browser.")
         case "gcpGoogleSignIn":
             String(localized: "Google lists the projects your account can see; Ichor reads their clusters.")
         case "gcpProjects":
@@ -78,6 +81,7 @@ enum KubeAuthWording {
         case "gcpUserCredentialsJson": String(localized: "gcloud user credentials")
         case "gcpOAuthClientId": String(localized: "Your organisation's OAuth client")
         case "gcpGcloudSignIn": String(localized: "Your Google account (like gcloud)")
+        case kubeLoginConfigField: String(localized: "Workforce identity (login config)")
         case "gcpGoogleSignIn": String(localized: "Sign in with Google")
         default: fields.map(fieldLabel).joined(separator: ", ")
         }

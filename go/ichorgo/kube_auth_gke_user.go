@@ -68,6 +68,8 @@ func parseUserCredentials(raw string) (gcpUserCredentials, error) {
 	}
 
 	complete := c.ClientID != "" && c.ClientSecret != "" && c.RefreshToken != ""
+	// A workforce client may have no secret (Basic auth with an empty password).
+	workforceComplete := c.ClientID != "" && c.RefreshToken != ""
 
 	switch c.Type {
 	case "external_account":
@@ -75,8 +77,10 @@ func parseUserCredentials(raw string) (gcpUserCredentials, error) {
 			"run `gcloud auth application-default login --login-config=<file>` and import the credentials it writes")
 	case "service_account":
 		return c, errors.New("this is a service account key: choose Service account key")
+	case gcpTypeLoginConfig:
+		return c, errors.New("this is a workforce login config: choose Workforce identity (login config)")
 	case gcpTypeWorkforceUser:
-		if !complete || c.TokenURL == "" {
+		if !workforceComplete || c.TokenURL == "" {
 			return c, errors.New("not a workforce identity session (external_account_authorized_user with a refresh token and token_url)")
 		}
 
@@ -151,8 +155,11 @@ func mintForGoogleUser(ctx context.Context, state kubeAuthState) (string, time.T
 	if err != nil {
 		if oauthInvalidGrant(err) || unauthorized(err) {
 			hint := creds.renewHint()
-			if state.secret(gcpFieldGcloudSignIn) != "" {
+			switch {
+			case state.secret(gcpFieldGcloudSignIn) != "":
 				hint = gcpGcloudRenewHint
+			case state.secret(gcpFieldLoginConfig) != "":
+				hint = gcpWorkforceSignInHint
 			}
 
 			return "", time.Time{}, state, signInRequired(authGKE, hint)

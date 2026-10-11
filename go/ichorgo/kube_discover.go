@@ -63,10 +63,11 @@ func KubeDiscoverFields() (out string, err error) {
 // KubeDiscoverOptions lists, as JSON, the providers whose discovery takes one of several
 // credentials, each a set of fields. GKE, in this order: a service account key; gcloud user
 // credentials; the organisation's OAuth client (ID, secret, redirect URL); your Google
-// account with gcloud's client (gcpGcloudSignIn, a marker drawn as a button); "Sign in with
-// Google" (gcpGoogleSignIn, a marker the apps draw as a button, never a text field; only when
-// the build registered a Google client). Every set but the key's ends with the optional
-// project IDs. The OAuth client, gcloud's client and Google sign-in on iOS sign in with StartDiscoverSignIn
+// account with gcloud's client (gcpGcloudSignIn, a marker drawn as a button); a workforce
+// login config (gcpLoginConfigJson); "Sign in with Google" (gcpGoogleSignIn, a marker the
+// apps draw as a button, never a text field; only when the build registered a Google client).
+// Every set but the key's ends with the optional project IDs. The OAuth client, gcloud's
+// client, a login config and Google sign-in on iOS sign in with StartDiscoverSignIn
 // first. A provider absent from it has the one set KubeDiscoverFields lists.
 func KubeDiscoverOptions() (out string, err error) {
 	defer maskResult(&out, &err)

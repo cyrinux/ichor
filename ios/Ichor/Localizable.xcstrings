@@ -1658,6 +1658,111 @@
         }
       }
     },
+    "Workforce login config (JSON)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration de connexion Workforce (JSON)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuración de inicio de sesión de Workforce (JSON)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workforce-Login-Konfiguration (JSON)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurazione di accesso Workforce (JSON)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конфігурація входу Workforce (JSON)"
+          }
+        }
+      }
+    },
+    "Workforce identity (login config)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workforce Identity (configuration de connexion)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workforce Identity (configuración de inicio de sesión)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workforce Identity (Login-Konfiguration)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workforce Identity (configurazione di accesso)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workforce Identity (конфігурація входу)"
+          }
+        }
+      }
+    },
+    "Import the login config your administrator gave you; the sign-in opens your organisation's identity provider in the browser." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importez la configuration de connexion fournie par votre administrateur ; la connexion ouvre le fournisseur d'identité de votre organisation dans le navigateur."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importa la configuración de inicio de sesión que te dio tu administrador; el inicio de sesión abre el proveedor de identidad de tu organización en el navegador."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importiere die Login-Konfiguration von deinem Administrator; die Anmeldung öffnet den Identitätsanbieter deiner Organisation im Browser."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importa la configurazione di accesso fornita dal tuo amministratore; l'accesso apre il provider di identità della tua organizzazione nel browser."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імпортуйте конфігурацію входу від вашого адміністратора; вхід відкриває постачальника ідентичності вашої організації в браузері."
+          }
+        }
+      }
+    },
     "Opens Google's sign-in in the browser, as gcloud auth application-default login does on a computer. Works on every build; your organisation's SSO applies. The consent page names Google Cloud SDK." : {
       "extractionState" : "manual",
       "localizations" : {

@@ -49,13 +49,13 @@ func TestGKENativeOptionOnlyWithAClient(t *testing.T) {
 
 	stored, _ := gkeUserCluster(t)
 
-	if options := signInOptions(t, stored); len(options) != 4 || hasOption(options, gcpFieldGoogleSignIn) {
+	if options := signInOptions(t, stored); len(options) != 5 || hasOption(options, gcpFieldGoogleSignIn) {
 		t.Fatalf("without a client: %v", options)
 	}
 
 	withGoogleSignInClient(t, googleSignInAndroid, "")
 
-	if options := signInOptions(t, stored); len(options) != 5 || !hasOption(options, gcpFieldGoogleSignIn) {
+	if options := signInOptions(t, stored); len(options) != 6 || !hasOption(options, gcpFieldGoogleSignIn) {
 		t.Fatalf("with a client: %v", options)
 	}
 

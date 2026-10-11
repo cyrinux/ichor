@@ -24,6 +24,13 @@ final class KubeAuthTests: XCTestCase {
                        [kubeGcloudSignInField: "1", "gcpProjects": "sample-proj"])
     }
 
+    func testWorkforceLoginConfigIsJSONAndSignsInFirst() {
+        XCTAssertEqual(kubeFieldInput(kubeLoginConfigField), .json)
+        XCTAssertFalse(kubeFieldsComplete([kubeLoginConfigField], values: [:]))
+        XCTAssertTrue(kubeFieldsComplete([kubeLoginConfigField], values: [kubeLoginConfigField: "{}"]))
+        XCTAssertTrue(kubeDiscoverNeedsSignIn([kubeLoginConfigField, "gcpProjects"]))
+    }
+
     func testGoogleDiscoverySecrets() throws {
         let empty = try TalosJSON.decode([String: String].self, from: kubeGoogleSignInSecretsJSON())
         XCTAssertEqual(empty, [kubeGoogleSignInField: "ios"])
