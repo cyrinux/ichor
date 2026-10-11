@@ -239,6 +239,11 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "disks", args: "NODE", run: func(e env) (out string, err error) {
+		out, err = ichorgo.NodeDisks(e.cfg, e.context, flag.Arg(1))
+
+		return out, err
+	}},
 	{name: "usage", args: "NODE PATH DEPTH", run: func(e env) (out string, err error) {
 		depth, _ := strconv.Atoi(flag.Arg(3)) //nolint:errcheck
 		out, err = ichorgo.NodeDiskUsage(e.cfg, e.context, flag.Arg(1), flag.Arg(2), depth)

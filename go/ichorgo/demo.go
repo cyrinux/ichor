@@ -146,7 +146,7 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 		}
 		return toJSON(services)
 	case "NodeResources":
-		return toJSON(nodeResources{MemTotal: sample.MemTotal, MemAvailable: sample.MemAvailable, Load1: 0.8, Load5: 0.7, Load15: 0.6, BootTime: uint64(demoBoot.Unix()), CPUCount: n.CPUCount, CPUModel: "Intel Xeon (demo)", Mounts: []mountUsage{{Filesystem: "/dev/nvme0n1p6", MountedOn: "/var", Size: 100 << 30, Available: 72 << 30}}})
+		return toJSON(nodeResources{MemTotal: sample.MemTotal, MemAvailable: sample.MemAvailable, Load1: 0.8, Load5: 0.7, Load15: 0.6, BootTime: uint64(demoBoot.Unix()), CPUCount: n.CPUCount, CPUModel: "Intel Xeon (demo)", Mounts: []mountUsage{{Filesystem: "/dev/nvme0n1p4", MountedOn: "/var", Size: 100 << 30, Available: 72 << 30}}})
 	case "NodeResetPlan":
 		plan := resetPlan{Node: n.Node, Hostname: n.Hostname, Role: n.Role, Blockers: []string{}, Warnings: []string{}, UserDisks: []string{}}
 		if index := slices.IndexFunc(nodes[:3], func(cp nodeOverview) bool { return cp.Node == n.Node }); index >= 0 {
@@ -254,12 +254,14 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			{Name: "nginx:1.27", Digest: "sha256:def456demo", Size: 64 << 20, Created: demoBoot.UnixMilli()},
 		})
 	case "NodeMounts":
-		return toJSON(mountList{Mounts: []mountInfo{{Filesystem: "/dev/nvme0n1p6", MountedOn: "/var", Size: 100 << 30, Available: 72 << 30, Used: 28 << 30, UsedPercent: 28}}})
+		return toJSON(mountList{Mounts: []mountInfo{{Filesystem: "/dev/nvme0n1p4", MountedOn: "/var", Size: 100 << 30, Available: 72 << 30, Used: 28 << 30, UsedPercent: 28}}})
 	case "NodeVolumes":
 		return toJSON(volumeList{Supported: true, Volumes: []volumeInfo{
-			{ID: "EPHEMERAL", Phase: "ready", Type: "partition", Location: "/dev/nvme0n1p6", Size: 100 << 30, Filesystem: "xfs", MountedOn: "/var"},
-			{ID: "STATE", Phase: "ready", Type: "partition", Location: "/dev/nvme0n1p5", Size: 100 << 20, Filesystem: "xfs", MountedOn: "/system/state"},
+			{ID: "EPHEMERAL", Phase: "ready", Type: "partition", Location: "/dev/nvme0n1p4", Size: 100 << 30, Filesystem: "xfs", MountedOn: "/var"},
+			{ID: "STATE", Phase: "ready", Type: "partition", Location: "/dev/nvme0n1p3", Size: 100 << 20, Filesystem: "xfs", MountedOn: "/system/state"},
 		}})
+	case "NodeDisks":
+		return toJSON(demoDisks())
 	case "UpgradeExtensionCheck":
 		// Whatever the image: a node with two extensions, one without a build for the version.
 		image := strings.Join(args, "")

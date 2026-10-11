@@ -54,6 +54,9 @@ var featureRules = []featureRule{
 	// VolumeStatuses.block.talos.dev: first in v1.8.0 (MountStatuses.block.talos.dev only in
 	// v1.10.0: on 1.8 and 1.9 NodeVolumes has no mountedOn).
 	{name: "volumes", min: "v1.8"},
+	// DiscoveredVolumes.block.talos.dev and Disks.block.talos.dev: first in v1.8.0
+	// (NodeDisks reads SystemDisks and MountStatuses best effort).
+	{name: "disks", min: "v1.8"},
 	// rpc DiskUsage (machine.proto): v1.0.0.
 	{name: "diskUsage"},
 	// rpc Mounts (machine.proto): v1.0.0.

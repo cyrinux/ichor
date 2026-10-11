@@ -58,8 +58,9 @@ type diskInfo struct {
 	DevPath    string `json:"devPath"` // /dev/sda
 	Model      string `json:"model"`
 	Serial     string `json:"serial"`
-	Size       uint64 `json:"size"` // bytes
-	Type       string `json:"type"` // ssd | hdd | nvme | sd | unknown
+	Size       uint64 `json:"size"`      // bytes
+	Type       string `json:"type"`      // ssd | hdd | nvme | sd | unknown
+	Transport  string `json:"transport"` // nvme, sata, virtio, usb... ("" from the Disks API)
 	WWID       string `json:"wwid"`
 	BusPath    string `json:"busPath"`
 	SystemDisk bool   `json:"systemDisk"`
@@ -127,6 +128,10 @@ func NodeHardware(configYAML, contextName, node string) (out string, err error) 
 		} else if cosiDisks, cosiErr := safe.StateListAll[*block.Disk](ctx, st); cosiErr == nil {
 			// Newer Talos versions dropped the Disks API in favor of the block.Disk resource.
 			out.Disks = mapBlockDisks(safe.ToSlice(cosiDisks, identity))
+
+			if sd, err := safe.StateGetByID[*block.SystemDisk](ctx, st, block.SystemDiskID); err == nil {
+				out.Disks = markSystemDisk(out.Disks, sd.TypedSpec().DiskID)
+			}
 		} else {
 			out.Errors["disks"] = s.friendly(node, err)
 		}
@@ -267,19 +272,33 @@ func mapBlockDisks(in []*block.Disk) []diskInfo {
 		}
 
 		out = append(out, diskInfo{
-			Name:     name,
-			DevPath:  devPath,
-			Model:    spec.Model,
-			Serial:   spec.Serial,
-			Size:     spec.Size,
-			Type:     blockDiskType(spec),
-			WWID:     spec.WWID,
-			BusPath:  spec.BusPath,
-			Readonly: spec.Readonly,
+			Name:      name,
+			DevPath:   devPath,
+			Model:     spec.Model,
+			Serial:    spec.Serial,
+			Size:      spec.Size,
+			Type:      blockDiskType(spec),
+			Transport: spec.Transport,
+			WWID:      spec.WWID,
+			BusPath:   spec.BusPath,
+			Readonly:  spec.Readonly,
 		})
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+
+	return out
+}
+
+// markSystemDisk returns disks with the one named id (block.SystemDisk's DiskID) flagged as
+// the system disk: block.Disk itself does not say.
+func markSystemDisk(disks []diskInfo, id string) []diskInfo {
+	out := make([]diskInfo, len(disks))
+
+	for i, d := range disks {
+		d.SystemDisk = d.SystemDisk || (id != "" && d.Name == id)
+		out[i] = d
+	}
 
 	return out
 }
