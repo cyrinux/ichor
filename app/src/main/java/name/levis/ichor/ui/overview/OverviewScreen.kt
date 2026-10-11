@@ -41,6 +41,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.first
+import name.levis.ichor.util.StartupTrace
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -125,9 +129,21 @@ class OverviewViewModel(
     val configs: ConfigRepository,
 ) : LoadingViewModel<ClusterOverview>() {
     override val keepsDataOnFailure = true
-    override fun cached(): TalosRepository.Timed<ClusterOverview>? = talos.cached(OVERVIEW)
+    override fun cached(): TalosRepository.Timed<ClusterOverview>? =
+        talos.cached<ClusterOverview>(OVERVIEW).also { StartupTrace.markOnce(if (it == null) "overview cached miss" else "overview cached hit") }
     override val restores get() = talos.restores
-    override suspend fun fetch() = talos.overview()
+    override suspend fun fetch(): ClusterOverview {
+        StartupTrace.markOnce("overview fetch start")
+        return talos.overview()
+    }
+
+    init {
+        // The first data on the home, the last known one or the fresh one.
+        viewModelScope.launch {
+            val loaded = state.first { it is UiState.Loaded } as UiState.Loaded<*>
+            StartupTrace.markOnce("overview first Loaded", if (loaded.refreshing) "(last known)" else "(fresh)")
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -189,6 +205,7 @@ fun OverviewScreen(
     fluxVm: FluxViewModel = viewModel(key = "overview-flux", factory = factory { FluxViewModel(app.gitOpsRepository, app.kubeRepository) }),
     alertsVm: AlertsCardViewModel = viewModel(key = "overview-alerts", factory = factory { alertsCardViewModel(app) }),
 ) {
+    SideEffect { StartupTrace.markOnce("overviewScreen first composition") }
     // A cluster added from a kubeconfig has no Talos overview: its Kubernetes home instead,
     // before any of the Talos loads below start.
     val shown by vm.configs.config.collectAsStateWithLifecycle()

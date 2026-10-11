@@ -1,6 +1,7 @@
 package name.levis.ichor
 
 import name.levis.ichorgo.Ichorgo
+import name.levis.ichor.util.StartupTrace
 import android.app.Application
 import android.content.Context
 import android.os.SystemClock
@@ -492,6 +493,12 @@ class TalosApp : Application() {
         Ichorgo.setAuditEvents(enabled)
     }
 
+    /** Turns the startup timing in logcat on or off (always on in a debug build). */
+    fun setStartupTrace(enabled: Boolean) {
+        uiPreferences.setStartupTrace(enabled)
+        StartupTrace.setEnabled(BuildConfig.DEBUG || enabled)
+    }
+
     /**
      * The key the Go core encrypts what it remembers with, created once and kept encrypted by
      * a Keystore key ([SecureStore]). One that no longer decrypts is replaced: what was sealed
@@ -540,6 +547,9 @@ class TalosApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // First, so the trace sees the whole start (when on, this first Go call loads the core).
+        StartupTrace.setEnabled(BuildConfig.DEBUG || uiPreferences.startupTrace.value)
+        StartupTrace.markOnce("app.onCreate start")
         syncLanguage()
         // Errors turned into text away from a screen are localized with the app's language.
         name.levis.ichor.ui.AppTexts.context = this
@@ -549,6 +559,7 @@ class TalosApp : Application() {
         Ichorgo.setAuditEvents(uiPreferences.auditEvents.value)
         // Where Go remembers node names, so a node that is down still shows its hostname.
         Ichorgo.setDataDir(noBackupFilesDir.path, coreDataKey() ?: ByteArray(0))
+        StartupTrace.markOnce("app.goInit done")
         // GKE's "Sign in with Google" (Play build with Play services): Google's SDK holds the
         // client, so no client ID here.
         if (googleNativeSignIn.available(this)) Ichorgo.setGoogleSignInClient("android", "")
@@ -606,6 +617,7 @@ class TalosApp : Application() {
             override fun onStart(owner: LifecycleOwner) = appLock.onForeground()
             override fun onStop(owner: LifecycleOwner) = appLock.onBackground()
         })
+        StartupTrace.markOnce("app.onCreate end")
     }
 
     /**

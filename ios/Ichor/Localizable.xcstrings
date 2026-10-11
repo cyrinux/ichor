@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Startup timing in the log" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durées de démarrage dans le journal"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempos de arranque en el registro"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startzeiten im Protokoll"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tempi di avvio nel log"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Час запуску в журналі"
+          }
+        }
+      }
+    },
+    "Logs how long each step of a cold start takes (config, cluster connection, first node, home screen), for a bug report: Console, category startup. Durations and counts only, never a cluster name or an address. Stays on the device." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note la durée de chaque étape d’un démarrage à froid (configuration, connexion au cluster, premier nœud, écran d’accueil), pour un rapport de bug : Console, catégorie startup. Seulement des durées et des nombres, jamais un nom de cluster ni une adresse. Reste sur l’appareil."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registra cuánto tarda cada paso de un arranque en frío (configuración, conexión al clúster, primer nodo, pantalla de inicio), para un informe de error: Consola, categoría startup. Solo duraciones y recuentos, nunca un nombre de clúster ni una dirección. Se queda en el dispositivo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokolliert, wie lange jeder Schritt eines Kaltstarts dauert (Konfiguration, Clusterverbindung, erster Node, Startbildschirm), für einen Fehlerbericht: Konsole, Kategorie startup. Nur Dauern und Anzahlen, nie ein Clustername oder eine Adresse. Bleibt auf dem Gerät."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registra quanto dura ogni passo di un avvio a freddo (configurazione, connessione al cluster, primo nodo, schermata iniziale), per una segnalazione di bug: Console, categoria startup. Solo durate e conteggi, mai un nome di cluster o un indirizzo. Resta sul dispositivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записує, скільки триває кожен крок холодного запуску (конфігурація, підключення до кластера, перший вузол, головний екран), для звіту про помилку: Консоль, категорія startup. Лише тривалості й кількості, ніколи назва кластера чи адреса. Залишається на пристрої."
+          }
+        }
+      }
+    },
     "Reading the cluster" : {
       "extractionState" : "manual",
       "localizations" : {

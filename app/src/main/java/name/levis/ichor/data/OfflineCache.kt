@@ -54,14 +54,25 @@ class OfflineCache(
     /** Pass to [save]: what [clear] has to bump for a save to be dropped. */
     val epoch: Int get() = generation.get()
 
-    /** Reads the stored results of the cluster [fingerprint] once, so [peek] has them. Expired or unreadable files are deleted. */
-    suspend fun load(fingerprint: String) = locked {
-        if (!enabled() || fingerprint.isBlank() || !read.add(fingerprint)) return@locked
+    /**
+     * Reads the stored results of the cluster [fingerprint] once, so [peek] has them. Expired or
+     * unreadable files are deleted. Returns how many files were read (0 when already read).
+     */
+    suspend fun load(fingerprint: String): Int {
+        var files = 0
+        locked { files = loadLocked(fingerprint) }
+        return files
+    }
+
+    private fun loadLocked(fingerprint: String): Int {
+        if (!enabled() || fingerprint.isBlank() || !read.add(fingerprint)) return 0
         val entries = loaded.getOrPut(fingerprint) { ConcurrentHashMap() }
-        clusterDir(fingerprint).listFiles()?.forEach { file ->
+        val files = clusterDir(fingerprint).listFiles().orEmpty()
+        files.forEach { file ->
             val entry = runCatching { seal.read(file)?.let { TalosJson.decodeFromString(Entry.serializer(), it.decodeToString()) } }.getOrNull()
             if (entry == null || expired(entry.at)) file.delete() else entries.putIfAbsent(entry.key, TalosRepository.Timed(entry.json, entry.at))
         }
+        return files.size
     }
 
     /** The stored JSON of [key] for the cluster [fingerprint], once [load]ed; null if none or expired. */

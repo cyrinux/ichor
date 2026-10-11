@@ -475,8 +475,10 @@ struct OverviewView: View {
 
     private func load() async {
         guard let client = model.client else { return }
+        StartupTrace.markOnce("overview load start")
         // Nothing on screen: the last known overview (when kept) while this one loads.
         if case .loaded = state {} else { state = model.seeded(LoadState<ClusterOverview>.loading, from: .overview) }
+        if case .loaded = state { StartupTrace.markOnce("overview first Loaded", detail: "(last known)") }
         // The call is not cancelled with its task: a slow load of the previous context can
         // end after the new one's, and must not replace it.
         let id = loadID
@@ -485,6 +487,7 @@ struct OverviewView: View {
         guard id == loadID else { return }
         let loaded = merged(fetched, for: target)
         state = state.refreshed(with: loaded)
+        if case .loaded = state { StartupTrace.markOnce("overview first Loaded", detail: "(fresh)") }
         if case .loaded(let overview, _, _) = loaded {
             // Alongside the rest: listing every node's containers takes a while.
             Task { await loadInventory(with: client, id: id) }

@@ -5,6 +5,7 @@ import IchorCore
 /// bug reports.
 struct SupportSection: View {
     @Environment(AppModel.self) private var model
+    @AppStorage(StartupTrace.defaultsKey) private var startupTrace = false
 
     var body: some View {
         Section {
@@ -40,6 +41,15 @@ struct SupportSection: View {
                 }
             }
             Link(destination: IntegrationLinks.reportBug) { Label("Report a bug", systemImage: "ladybug") }
+            Toggle(isOn: $startupTrace) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Startup timing in the log")
+                    Text("Logs how long each step of a cold start takes (config, cluster connection, first node, home screen), for a bug report: Console, category startup. Durations and counts only, never a cluster name or an address. Stays on the device.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .onChange(of: startupTrace) { _, on in TalosClient.setStartupTrace(on) }
         } header: {
             Text("Support")
         }

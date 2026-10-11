@@ -11,6 +11,7 @@ import (
 	"path"
 	"slices"
 	"strings"
+	"time"
 )
 
 // kubeContextSummary is contextSummary for a kubeconfig context, plus what the import
@@ -60,6 +61,8 @@ const (
 func ParseKubeconfig(configYAML string) (out string, err error) {
 	defer maskResult(&out, &err)
 
+	start := time.Now()
+
 	privacy.learnConfig(configYAML)
 
 	doc, err := loadKubeconfigDoc(configYAML)
@@ -71,6 +74,8 @@ func ParseKubeconfig(configYAML string) (out string, err error) {
 	for _, name := range doc.sortedNames() {
 		summary.Contexts = append(summary.Contexts, summarizeKubeContext(doc, name))
 	}
+
+	traceCounts("kubeconfig.parse", start, len(summary.Contexts), 0)
 
 	return toJSON(summary)
 }

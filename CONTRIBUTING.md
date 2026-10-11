@@ -24,6 +24,27 @@ Do the same on Android and iOS:
   rollout restart.
 - When a safer way out exists (a backup before deleting), offer it in the dialog.
 
+## Measuring a cold start
+
+Turn on Settings → Support → "Startup timing" (always on in a debug build), close the app,
+then:
+
+- **Android:** `adb shell am force-stop name.levis.ichor.foss && adb logcat -c && adb logcat -s Ichor.Startup`,
+  then launch the app (or `adb shell am start -W -n name.levis.ichor.foss/name.levis.ichor.MainActivity`;
+  the Play build is `name.levis.ichor`). Each line
+  is `<step> +<ms since process start> (Δ<ms since the previous step>)`; the Go core's steps
+  start with `go:`.
+- **iOS:** `log stream --predicate 'subsystem == "name.levis.ichor" && category == "startup"'`
+  on a Mac with the device attached (or Console, filtered on category `startup`). Each Go call
+  is also a signpost interval for Instruments.
+- **Go core alone:** `just probe overview -timing -context <context>` prints the config parse,
+  the session (opened or reused), the first node answered, all nodes and the total on stderr;
+  `just probe parse -timing` the config parse and the context count.
+
+The trace carries step names, counts and durations only, but before posting numbers in an
+issue, check that nothing identifies your clusters: write "~23 contexts" and "cluster B", not
+a context name, a hostname or an address.
+
 ## Code ownership
 
 [@cyrinux](https://github.com/cyrinux) is the default owner for all repository files;

@@ -38,6 +38,8 @@ struct StoredConfigs: Sendable {
         var kubeSummary: ConfigSummary?
         if let talos { talosSummary = try? await TalosClient.parse(talos) }
         if let kube { kubeSummary = try? await TalosClient.parseKubeconfig(kube) }
+        let contexts = (talosSummary?.contexts.count ?? 0) + (kubeSummary?.contexts.count ?? 0)
+        StartupTrace.markOnce("config parsed", detail: "\(contexts) contexts")
         let unreadable = unreadableConfigs([
             .talosconfig: StoredConfigStatus(stored: talosStored, parsed: talosSummary != nil),
             .kubeconfig: StoredConfigStatus(stored: kubeStored, parsed: kubeSummary != nil),

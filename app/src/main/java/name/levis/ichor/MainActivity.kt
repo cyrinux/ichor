@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import name.levis.ichor.i18n.AppLocale
+import name.levis.ichor.util.StartupTrace
 import name.levis.ichor.security.LockOnboarding
 import name.levis.ichor.security.LockScreen
 import name.levis.ichor.security.SecurityKeyPromptHost
@@ -278,6 +279,7 @@ private fun Root(app: TalosApp, targets: LaunchTargets) {
     var attempt by remember { mutableIntStateOf(0) }
     LaunchedEffect(attempt) {
         load = ConfigLoad.Loading
+        StartupTrace.markOnce("lockGate load start")
         load = try {
             app.configRepository.load()
             ConfigLoad.Done

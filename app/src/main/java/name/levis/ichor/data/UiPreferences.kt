@@ -82,6 +82,10 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _auditEvents = MutableStateFlow(prefs.getBoolean(KEY_AUDIT_EVENTS, false))
     val auditEvents: StateFlow<Boolean> = _auditEvents.asStateFlow()
 
+    /** Logs where a cold start's time goes to logcat (tag Ichor.Startup). Off by default. */
+    private val _startupTrace = MutableStateFlow(prefs.getBoolean(KEY_STARTUP_TRACE, false))
+    val startupTrace: StateFlow<Boolean> = _startupTrace.asStateFlow()
+
     /**
      * Offers a root shell on the nodes of a cluster without Talos, through a privileged pod
      * (`kubectl debug node/`). Off by default: it is root on the node.
@@ -165,6 +169,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
     fun setAuditEvents(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_AUDIT_EVENTS, enabled).apply()
         _auditEvents.value = enabled
+    }
+
+    fun setStartupTrace(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_STARTUP_TRACE, enabled).apply()
+        _startupTrace.value = enabled
     }
 
     fun setNodeDebugShell(enabled: Boolean) {
@@ -257,6 +266,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_LIVE_CLUSTER_STATS = "live_cluster_stats"
         private const val KEY_REMOTE_APP_ICONS = "remote_app_icons"
         private const val KEY_AUDIT_EVENTS = "audit_events"
+        private const val KEY_STARTUP_TRACE = "startup_trace"
         private const val KEY_NODE_DEBUG_SHELL = "node_debug_shell"
         private const val KEY_IMAGE_SCANNER = "image_scanner"
         private const val KEY_OFFLINE_CACHE = "offline_cache"

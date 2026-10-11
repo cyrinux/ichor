@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -9,6 +10,37 @@ import (
 
 	"github.com/cyrinux/ichor/go/ichorgo"
 )
+
+// stderrTrace prints the startup trace (-timing) to stderr, one step per line, so the
+// command's JSON on stdout stays clean: `probe overview -timing`, `probe parse -timing`.
+type stderrTrace struct{}
+
+func (stderrTrace) OnTrace(raw string) { fmt.Fprintln(os.Stderr, formatTrace(raw)) }
+
+// formatTrace turns a trace step's JSON into "trace overview.all_nodes 1234 ms count=8 unreachable=1".
+func formatTrace(raw string) string {
+	var s struct {
+		Step        string `json:"step"`
+		Ms          int64  `json:"ms"`
+		Count       int    `json:"count"`
+		Unreachable int    `json:"unreachable"`
+	}
+
+	if err := json.Unmarshal([]byte(raw), &s); err != nil {
+		return "trace: " + raw
+	}
+
+	line := fmt.Sprintf("trace %s %d ms", s.Step, s.Ms)
+	if s.Count > 0 {
+		line += fmt.Sprintf(" count=%d", s.Count)
+	}
+
+	if s.Unreachable > 0 {
+		line += fmt.Sprintf(" unreachable=%d", s.Unreachable)
+	}
+
+	return line
+}
 
 // Talos nodes and the cluster.
 var nodeCommands = []command{
