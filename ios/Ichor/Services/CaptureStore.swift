@@ -38,6 +38,8 @@ final class CaptureSession {
     private(set) var bytes: Int64 = 0
     /// Each node's counters, in a capture of two nodes.
     private(set) var nodeStats: [PairNodeStats] = []
+    /// How far apart the two nodes' clocks are (ms), when known.
+    private(set) var clockGapMs: Int64?
     private(set) var startedAt: Date?
     private(set) var stoppedAt: Date?
     private var task: Task<Void, Never>?
@@ -61,6 +63,7 @@ final class CaptureSession {
         packetCount = 0
         bytes = 0
         nodeStats = []
+        clockGapMs = nil
         startedAt = Date()
         stoppedAt = nil
         state = .running
@@ -82,6 +85,7 @@ final class CaptureSession {
                     packetCount = stats.packets
                     bytes = stats.bytes
                     nodeStats = stats.nodes
+                    clockGapMs = stats.clockGapMs ?? clockGapMs
                 case .done(let path, let count, let size, let error):
                     packetCount = count
                     bytes = size

@@ -46,6 +46,8 @@ func pairCluster(t *testing.T, a, b []byte) (*fakeTalos, string) {
 
 	f := newFakeTalos()
 	f.pcaps, f.pcapHold = map[string][]byte{pairA: a, pairB: b}, map[string]bool{}
+	// Node A's clock is 5 ms behind its NTP server, node B's 7 ms ahead: 12 ms apart.
+	f.clockOffsets = map[string]int64{pairA: 5, pairB: -7}
 
 	for _, n := range []string{pairA, pairB} {
 		f.addNode(t, n, "v1.11.0", machine.TypeWorker)
@@ -145,6 +147,11 @@ func TestCapturePairMergesBothNodesInTimeOrder(t *testing.T) {
 		t.Errorf("summaries = %+v", ev.summaries)
 	}
 
+	// Both clocks were read: the gap is in the live counters and in the file.
+	if page.ClockGapMs == nil || *page.ClockGapMs != 12 || ev.stats[0].ClockGapMs == nil || *ev.stats[0].ClockGapMs != 12 {
+		t.Errorf("clock gap: file %v, stats %v", page.ClockGapMs, ev.stats[0].ClockGapMs)
+	}
+
 	last := ev.stats[len(ev.stats)-1]
 	if len(last.Nodes) != 2 || last.Packets != last.Nodes[0].Packets+last.Nodes[1].Packets {
 		t.Errorf("stats = %+v", last)
@@ -214,5 +221,31 @@ func TestCapturePairDemoIsRefused(t *testing.T) {
 
 	if ev.path != "" || ev.errText == "" {
 		t.Errorf("demo: path=%q err=%q", ev.path, ev.errText)
+	}
+}
+
+func TestCapturePairWithoutClocksRecordsNoGap(t *testing.T) {
+	pkt := udpPacket(t, 40000, 51820, []byte("wg"))
+	f, cfg := pairCluster(t, streamAt(t, []int{1}, pkt), streamAt(t, []int{2}, pkt))
+	delete(f.clockOffsets, pairB) // a node whose time cannot be read
+
+	dest := filepath.Join(t.TempDir(), "pair.pcapng")
+	ev := newPairEvents()
+
+	StartPacketCapturePair(cfg, "fake", pairA+","+pairB, "eth0", "", false, 0, 30, 0, dest, ev)
+	ev.wait(t)
+
+	out, err := ReadPcap(dest, 0, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var page pcapPage
+	if err := json.Unmarshal([]byte(out), &page); err != nil {
+		t.Fatal(err)
+	}
+
+	if page.ClockGapMs != nil || page.Total != 2 {
+		t.Errorf("page = %+v", page)
 	}
 }

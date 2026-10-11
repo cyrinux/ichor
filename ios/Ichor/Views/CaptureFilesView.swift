@@ -112,7 +112,10 @@ struct CaptureFileView: View {
                             .monoFont()
                     }
                 } header: {
-                    pager(total: page.total)
+                    VStack(alignment: .leading, spacing: 4) {
+                        pager(total: page.total)
+                        if let gap = page.clockGapMs { ClockGapNote(gapMs: gap).textCase(nil) }
+                    }
                 }
             }
             .listStyle(.plain)

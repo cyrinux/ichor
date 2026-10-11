@@ -322,6 +322,7 @@ private struct CaptureLiveView: View {
                 ForEach(session.nodeStats) { n in
                     Text("\(n.hostname): \(n.packets) packets").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                 }
+                if let gap = session.clockGapMs { ClockGapNote(gapMs: gap) }
             }
             Spacer()
             TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -353,6 +354,17 @@ private struct CaptureLiveView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(.bar)
+    }
+}
+
+/// "The two nodes' clocks are 12 ms apart": packets of the two are ordered no better than that.
+struct ClockGapNote: View {
+    let gapMs: Int64
+
+    var body: some View {
+        Text("The two nodes' clocks are \(gapMs) ms apart: packets of one node can be that much out of order against the other's.")
+            .font(.caption)
+            .foregroundStyle(gapMs >= clockGapWarnMs ? Color.statusWarn : .secondary)
     }
 }
 

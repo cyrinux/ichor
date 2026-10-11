@@ -23,7 +23,7 @@ import java.io.File
 sealed interface CaptureEvent {
     data class Packet(val summary: PacketSummary) : CaptureEvent
     /** [nodes]: each node's counters, in a capture of two nodes. */
-    data class Stats(val packets: Long, val bytes: Long, val nodes: List<PairNodeStats> = emptyList()) : CaptureEvent
+    data class Stats(val packets: Long, val bytes: Long, val nodes: List<PairNodeStats> = emptyList(), val clockGapMs: Long? = null) : CaptureEvent
     data class Done(val path: String, val packets: Long, val bytes: Long, val error: String?) : CaptureEvent
 }
 
@@ -113,7 +113,7 @@ class CaptureRepository(private val configs: ConfigRepository, filesDir: File) {
 
                 override fun onStats(statsJson: String) {
                     runCatching { TalosJson.decodeFromString(PairCaptureStats.serializer(), statsJson) }
-                        .onSuccess { events.trySend(CaptureEvent.Stats(it.packets, it.bytes, it.nodes)) }
+                        .onSuccess { events.trySend(CaptureEvent.Stats(it.packets, it.bytes, it.nodes, it.clockGapMs)) }
                 }
 
                 override fun onDone(path: String, packets: Long, bytes: Long, errMessage: String) {

@@ -1362,6 +1362,7 @@
     <string name="capture_second_iface">Interfaccia su %1$s</string>
     <string name="capture_second_iface_same">Vuoto: la stessa interfaccia.</string>
     <string name="capture_max_size_each">Dimensione massima, per nodo</string>
+    <string name="capture_clock_gap">Gli orologi dei due nodi distano %1$d ms: i pacchetti di un nodo possono essere fuori ordine di tanto rispetto a quelli dell\'altro.</string>
     <string name="topology_link_capture">Cattura entrambi i capi</string>
     <string name="capture_seconds">%1$d s</string>
     <string name="capture_minutes">%1$d min</string>

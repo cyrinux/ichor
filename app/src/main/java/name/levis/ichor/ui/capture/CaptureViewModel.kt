@@ -53,6 +53,8 @@ data class CaptureSession(
     val error: UiText? = null,
     /** Each node's counters, in a capture of two nodes. */
     val nodeStats: List<PairNodeStats> = emptyList(),
+    /** How far apart the two nodes' clocks are (ms), when known. */
+    val clockGapMs: Long? = null,
 ) {
     val running: Boolean get() = finishedAt == 0L
 
@@ -166,6 +168,7 @@ class CaptureViewModel(
                 packetCount = done?.packets ?: stats?.packets ?: (s.packetCount + packets.size),
                 bytes = done?.bytes ?: stats?.bytes ?: s.bytes,
                 nodeStats = stats?.nodes ?: s.nodeStats,
+                clockGapMs = stats?.clockGapMs ?: s.clockGapMs,
             )
         }
         // Stopping early is not a failure, whatever the core reports for it.

@@ -30,4 +30,10 @@ final class CapturePairTests: XCTestCase {
         XCTAssertEqual(summary.node, "worker-2")
         XCTAssertEqual(try TalosJSON.decode(PacketSummary.self, from: #"{"n":1}"#).node, "")
     }
+
+    func testTheClockGapDecodes() throws {
+        XCTAssertEqual(try TalosJSON.decode(PcapPage.self, from: #"{"packets":[],"total":0,"clockGapMs":12}"#).clockGapMs, 12)
+        XCTAssertNil(try TalosJSON.decode(PcapPage.self, from: #"{"packets":[],"total":0}"#).clockGapMs)
+        XCTAssertEqual(try TalosJSON.decode(PairCaptureStats.self, from: #"{"packets":1,"bytes":2,"nodes":[],"clockGapMs":3}"#).clockGapMs, 3)
+    }
 }

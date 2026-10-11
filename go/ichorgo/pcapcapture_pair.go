@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -27,8 +28,9 @@ type PairCaptureListener interface {
 	// OnPacket gets a packet summary JSON (see packetSummary) with "node": the hostname it was
 	// captured on; at most ~20 per second per node.
 	OnPacket(summaryJSON string)
-	// OnStats gets {"packets","bytes","nodes":[{"node","hostname","packets","bytes"}]}, the
-	// totals and each node's, about twice a second per node.
+	// OnStats gets {"packets","bytes","nodes":[{"node","hostname","packets","bytes"}],
+	// "clockGapMs"}, the totals and each node's, about twice a second per node; clockGapMs is
+	// how far apart the two nodes' clocks are (the merged order across nodes is no better).
 	OnStats(statsJSON string)
 	// OnDone is called exactly once, as CaptureListener's: path is the merged pcapng file.
 	OnDone(path string, packets int64, bytes int64, errMessage string)
@@ -45,6 +47,9 @@ type pairStats struct {
 	Packets int64           `json:"packets"`
 	Bytes   int64           `json:"bytes"`
 	Nodes   []pairNodeStats `json:"nodes"`
+	// ClockGapMs is how far apart the two nodes' clocks are (see pairClockGap); absent when
+	// either could not be read.
+	ClockGapMs *int64 `json:"clockGapMs,omitempty"`
 }
 
 // StartPacketCapturePair captures on two nodes at once (nodes: "nodeA,nodeB"), with the same
@@ -82,9 +87,11 @@ func StartPacketCapturePair(
 	return &CaptureRun{cancel: cancel}
 }
 
-// pairTarget is one end of a pair capture.
+// pairTarget is one end of a pair capture; offsetMs is its clock's offset to its NTP server
+// (nil when it could not be read).
 type pairTarget struct {
 	node, hostname, iface, part string
+	offsetMs                    *int64
 }
 
 func runCapturePair(
@@ -97,10 +104,12 @@ func runCapturePair(
 	}
 
 	for i := range targets {
-		targets[i].hostname = pairHostname(ctx, configYAML, contextName, targets[i].node)
+		targets[i].hostname, targets[i].offsetMs = pairNodeInfo(ctx, configYAML, contextName, targets[i].node)
 	}
 
+	gap := pairClockGap(targets)
 	stats := newPairStatsReporter(targets, listener)
+	stats.clockGapMs = gap
 
 	type outcome struct {
 		path string
@@ -165,7 +174,7 @@ func runCapturePair(
 		return captureResult{}, "", errors.Join(errs...)
 	}
 
-	res, err := mergeCaptureFiles(destPath, inputs)
+	res, err := mergeCaptureFiles(destPath, inputs, gap)
 	if err != nil {
 		return captureResult{}, "", err
 	}
@@ -210,30 +219,57 @@ func splitTrim(s string) []string {
 	return out
 }
 
-// pairHostname is node's hostname, its address when it cannot be read.
-func pairHostname(ctx context.Context, configYAML, contextName, node string) string {
+// pairNodeInfo is node's hostname (its address when it cannot be read) and its clock's offset
+// to its NTP server, like `talosctl time` (nil when it cannot be read).
+func pairNodeInfo(ctx context.Context, configYAML, contextName, node string) (string, *int64) {
 	s, release, err := acquireNode(configYAML, contextName, node)
 	if err != nil {
-		return node
+		return node, nil
 	}
 
 	defer release()
 
-	ctx, cancel := context.WithTimeout(client.WithNode(ctx, node), nodeTimeout)
+	hostname := node
+
+	nodeCtx, cancel := context.WithTimeout(client.WithNode(ctx, node), nodeTimeout)
 	defer cancel()
 
-	if hs, err := safe.StateGetByID[*network.HostnameStatus](ctx, s.client.COSI, network.HostnameID); err == nil && hs.TypedSpec().Hostname != "" {
-		return hs.TypedSpec().Hostname
+	if hs, err := safe.StateGetByID[*network.HostnameStatus](nodeCtx, s.client.COSI, network.HostnameID); err == nil && hs.TypedSpec().Hostname != "" {
+		hostname = hs.TypedSpec().Hostname
 	}
 
-	return node
+	t := probeTime(ctx, s.client, node)
+	if t.Error != "" {
+		return hostname, nil
+	}
+
+	return hostname, &t.OffsetMs
 }
+
+// pairClockGap is how far apart the two nodes' clocks are, each measured against its NTP
+// server: packets of the two nodes are ordered no better than that. Nil when either is unknown.
+func pairClockGap(targets []pairTarget) *int64 {
+	if len(targets) != 2 || targets[0].offsetMs == nil || targets[1].offsetMs == nil {
+		return nil
+	}
+
+	gap := *targets[0].offsetMs - *targets[1].offsetMs
+	if gap < 0 {
+		gap = -gap
+	}
+
+	return &gap
+}
+
+// clockGapPrefix starts the pcapng section comment that records the gap in a merged file.
+const clockGapPrefix = "ichor clock-gap-ms="
 
 // pairStatsReporter adds up both nodes' counters for the listener.
 type pairStatsReporter struct {
-	mu       sync.Mutex
-	nodes    []pairNodeStats
-	listener PairCaptureListener
+	mu         sync.Mutex
+	nodes      []pairNodeStats
+	listener   PairCaptureListener
+	clockGapMs *int64
 }
 
 func newPairStatsReporter(targets []pairTarget, l PairCaptureListener) *pairStatsReporter {
@@ -248,7 +284,7 @@ func newPairStatsReporter(targets []pairTarget, l PairCaptureListener) *pairStat
 func (r *pairStatsReporter) update(i int, packets, bytes int64) {
 	r.mu.Lock()
 	r.nodes[i].Packets, r.nodes[i].Bytes = packets, bytes
-	out := pairStats{Nodes: append([]pairNodeStats(nil), r.nodes...)}
+	out := pairStats{Nodes: append([]pairNodeStats(nil), r.nodes...), ClockGapMs: r.clockGapMs}
 	r.mu.Unlock()
 
 	for _, n := range out.Nodes {
@@ -289,8 +325,9 @@ type captureInput struct {
 }
 
 // mergeCaptureFiles writes inputs into one pcapng file at dest, packets in time order, each
-// on the interface of its input (named name). The file is written to dest.part, then renamed.
-func mergeCaptureFiles(dest string, inputs []captureInput) (captureResult, error) {
+// on the interface of its input (named name); clockGapMs, when known, is recorded in the
+// section comment (see captureClockGap). The file is written to dest.part, then renamed.
+func mergeCaptureFiles(dest string, inputs []captureInput, clockGapMs *int64) (captureResult, error) {
 	type source struct {
 		r     packetReader
 		data  []byte
@@ -320,7 +357,7 @@ func mergeCaptureFiles(dest string, inputs []captureInput) (captureResult, error
 
 	defer os.Remove(part) //nolint:errcheck // gone once renamed
 
-	w, err := newMergeWriter(f, inputs, sources[0].r)
+	w, err := newMergeWriter(f, inputs, sources[0].r, clockGapMs)
 	if err != nil {
 		_ = f.Close() //nolint:errcheck
 
@@ -392,8 +429,41 @@ func mergeCaptureFiles(dest string, inputs []captureInput) (captureResult, error
 	return res, os.Rename(part, dest)
 }
 
-func newMergeWriter(w io.Writer, inputs []captureInput, first packetReader) (*pcapgo.NgWriter, error) {
-	return pcapgo.NewNgWriterInterface(w, mergeInterface(inputs[0].name, first), pcapgo.DefaultNgWriterOptions)
+func newMergeWriter(w io.Writer, inputs []captureInput, first packetReader, clockGapMs *int64) (*pcapgo.NgWriter, error) {
+	options := pcapgo.NgWriterOptions{SectionInfo: pcapgo.NgSectionInfo{Application: "Ichor"}}
+	if clockGapMs != nil {
+		options.SectionInfo.Comment = fmt.Sprintf("%s%d", clockGapPrefix, *clockGapMs)
+	}
+
+	return pcapgo.NewNgWriterInterface(w, mergeInterface(inputs[0].name, first), options)
+}
+
+// captureClockGap reads the clock gap a merged capture recorded (mergeCaptureFiles); nil for
+// any other file.
+func captureClockGap(path string) *int64 {
+	r, closer, err := openPcap(path)
+	if err != nil {
+		return nil
+	}
+
+	defer closer.Close() //nolint:errcheck
+
+	ng, ok := r.(*pcapgo.NgReader)
+	if !ok {
+		return nil
+	}
+
+	value, found := strings.CutPrefix(ng.SectionInfo().Comment, clockGapPrefix)
+	if !found {
+		return nil
+	}
+
+	gap, err := strconv.ParseInt(strings.TrimSpace(value), 10, 64)
+	if err != nil {
+		return nil
+	}
+
+	return &gap
 }
 
 func mergeInterface(name string, r packetReader) pcapgo.NgInterface {

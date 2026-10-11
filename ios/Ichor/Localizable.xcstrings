@@ -1,6 +1,41 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "The two nodes' clocks are %lld ms apart: packets of one node can be that much out of order against the other's." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les horloges des deux nœuds ont %lld ms d'écart : les paquets d'un nœud peuvent être décalés d'autant par rapport à ceux de l'autre."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los relojes de los dos nodos difieren %lld ms: los paquetes de un nodo pueden estar desordenados respecto a los del otro en esa medida."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Uhren der beiden Nodes liegen %lld ms auseinander: Die Pakete eines Nodes können gegenüber denen des anderen um so viel verschoben sein."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli orologi dei due nodi distano %lld ms: i pacchetti di un nodo possono essere fuori ordine di tanto rispetto a quelli dell'altro."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Годинники двох вузлів розходяться на %lld мс: пакети одного вузла можуть бути зсунуті на стільки відносно пакетів іншого."
+          }
+        }
+      }
+    },
     "Second node" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -1455,6 +1455,7 @@
     <string name="capture_second_iface">Інтерфейс на %1$s</string>
     <string name="capture_second_iface_same">Порожньо: той самий інтерфейс.</string>
     <string name="capture_max_size_each">Максимальний розмір, на вузол</string>
+    <string name="capture_clock_gap">Годинники двох вузлів розходяться на %1$d мс: пакети одного вузла можуть бути зсунуті на стільки відносно пакетів іншого.</string>
     <string name="topology_link_capture">Захопити обидва кінці</string>
     <string name="capture_seconds">%1$d с</string>
     <string name="capture_minutes">%1$d хв</string>

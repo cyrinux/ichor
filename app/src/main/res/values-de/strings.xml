@@ -1355,6 +1355,7 @@
     <string name="capture_second_iface">Schnittstelle auf %1$s</string>
     <string name="capture_second_iface_same">Leer: dieselbe Schnittstelle.</string>
     <string name="capture_max_size_each">Maximale Größe, pro Node</string>
+    <string name="capture_clock_gap">Die Uhren der beiden Nodes liegen %1$d ms auseinander: Die Pakete eines Nodes können gegenüber denen des anderen um so viel verschoben sein.</string>
     <string name="topology_link_capture">Beide Enden mitschneiden</string>
     <string name="capture_seconds">%1$d s</string>
     <string name="capture_minutes">%1$d min</string>

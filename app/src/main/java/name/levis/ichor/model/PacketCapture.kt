@@ -32,6 +32,8 @@ data class PairCaptureStats(
     val packets: Long = 0,
     val bytes: Long = 0,
     val nodes: List<PairNodeStats> = emptyList(),
+    /** How far apart the two nodes' clocks are (ms); null when either could not be read. */
+    val clockGapMs: Long? = null,
 )
 
 @Serializable
@@ -39,7 +41,12 @@ data class PairNodeStats(val node: String = "", val hostname: String = "", val p
 
 /** A page of a pcap file read back ([total] packets in the whole file). */
 @Serializable
-data class PcapPage(val packets: List<PacketSummary> = emptyList(), val total: Long = 0)
+data class PcapPage(
+    val packets: List<PacketSummary> = emptyList(),
+    val total: Long = 0,
+    /** In a capture of two nodes, how far apart their clocks were (ms); null otherwise or unknown. */
+    val clockGapMs: Long? = null,
+)
 
 @Serializable
 data class PacketField(val k: String, val v: String = "")

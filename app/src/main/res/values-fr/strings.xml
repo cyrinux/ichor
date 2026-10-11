@@ -1362,6 +1362,7 @@
     <string name="capture_second_iface">Interface sur %1$s</string>
     <string name="capture_second_iface_same">Vide : la même interface.</string>
     <string name="capture_max_size_each">Taille maximale, par nœud</string>
+    <string name="capture_clock_gap">Les horloges des deux nœuds ont %1$d ms d\'écart : les paquets d\'un nœud peuvent être décalés d\'autant par rapport à ceux de l\'autre.</string>
     <string name="topology_link_capture">Capturer les deux bouts</string>
     <string name="capture_seconds">%1$d s</string>
     <string name="capture_minutes">%1$d min</string>

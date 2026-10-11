@@ -224,6 +224,7 @@ private fun CaptureBar(session: CaptureSession, onStop: () -> Unit) {
                         "${n.hostname}: ${pluralStringResource(R.plurals.capture_packets, c, c)}"
                     }
                     Text(perNode.joinToString("  ·  "), style = MaterialTheme.typography.labelMedium)
+                    session.clockGapMs?.let { ClockGapNote(it) }
                 }
                 val status = when {
                     session.running -> stringResource(R.string.capture_running, session.options.iface)

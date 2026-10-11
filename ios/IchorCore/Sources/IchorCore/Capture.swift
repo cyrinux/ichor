@@ -71,18 +71,22 @@ public enum ProtoKind: Equatable, Sendable {
 public struct PcapPage: Decodable, Equatable, Sendable {
     public let packets: [PacketSummary]
     public let total: Int
+    /// In a capture of two nodes, how far apart their clocks were (ms); nil otherwise or unknown.
+    public let clockGapMs: Int64?
 
-    public init(packets: [PacketSummary], total: Int) {
+    public init(packets: [PacketSummary], total: Int, clockGapMs: Int64? = nil) {
         self.packets = packets
         self.total = total
+        self.clockGapMs = clockGapMs
     }
 
-    private enum CodingKeys: String, CodingKey { case packets, total }
+    private enum CodingKeys: String, CodingKey { case packets, total, clockGapMs }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         packets = try c.field(.packets, [])
         total = try c.field(.total, packets.count)
+        clockGapMs = try c.decodeIfPresent(Int64.self, forKey: .clockGapMs)
     }
 }
 
@@ -287,16 +291,23 @@ public struct PairCaptureStats: Decodable, Equatable, Sendable {
     public let packets: Int64
     public let bytes: Int64
     public let nodes: [PairNodeStats]
+    /// How far apart the two nodes' clocks are (ms); nil when either could not be read.
+    public let clockGapMs: Int64?
 
-    private enum CodingKeys: String, CodingKey { case packets, bytes, nodes }
+    private enum CodingKeys: String, CodingKey { case packets, bytes, nodes, clockGapMs }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         packets = try c.field(.packets, 0)
         bytes = try c.field(.bytes, 0)
         nodes = try c.field(.nodes, [])
+        clockGapMs = try c.decodeIfPresent(Int64.self, forKey: .clockGapMs)
     }
 }
+
+/// From this clock gap between two captured nodes the note is a warning: a request and its
+/// answer can swap places.
+public let clockGapWarnMs: Int64 = 5
 
 public struct PairNodeStats: Decodable, Equatable, Sendable, Identifiable {
     public let node: String

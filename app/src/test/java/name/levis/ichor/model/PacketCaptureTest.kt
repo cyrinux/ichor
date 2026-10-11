@@ -140,5 +140,7 @@ class PacketCaptureTest {
         assertEquals(listOf("worker-1", "worker-2"), stats.nodes.map { it.hostname })
         val summary = TalosJson.decodeFromString(PacketSummary.serializer(), """{"n":0,"proto":"UDP","node":"worker-2"}""")
         assertEquals("worker-2", summary.node)
+        assertEquals(12L, TalosJson.decodeFromString(PcapPage.serializer(), """{"packets":[],"total":0,"clockGapMs":12}""").clockGapMs)
+        assertNull(TalosJson.decodeFromString(PcapPage.serializer(), """{"packets":[],"total":0}""").clockGapMs)
     }
 }

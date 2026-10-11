@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	cosiv1alpha1 "github.com/cosi-project/runtime/api/v1alpha1"
 	"github.com/cosi-project/runtime/pkg/resource"
@@ -17,6 +18,7 @@ import (
 	clusterapi "github.com/siderolabs/talos/pkg/machinery/api/cluster"
 	"github.com/siderolabs/talos/pkg/machinery/api/common"
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
+	timeapi "github.com/siderolabs/talos/pkg/machinery/api/time"
 	"github.com/siderolabs/talos/pkg/machinery/config/configloader"
 	"github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/siderolabs/talos/pkg/machinery/resources/config"
@@ -27,6 +29,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // fakeTalos is the Talos API of a few nodes behind one endpoint: like apid, it routes each
@@ -85,6 +88,9 @@ type fakeTalos struct {
 	// open after it (until the capture is stopped), like a live capture.
 	pcaps    map[string][]byte
 	pcapHold map[string]bool
+	// clockOffsets are a node's clock offsets to its NTP server, in ms, for TimeService.Time
+	// (a node without one: Unimplemented).
+	clockOffsets map[string]int64
 }
 
 type fakeConfigApply struct {
@@ -222,6 +228,7 @@ func (f *fakeTalos) serve(t *testing.T) (endpoint, caB64 string) {
 		machineapi.RegisterDebugServiceServer(s, fakeTalosDebug{f: f})
 		clusterapi.RegisterClusterServiceServer(s, fakeTalosCluster{f: f})
 		cosiv1alpha1.RegisterStateServer(s, fakeTalosState{f: f})
+		timeapi.RegisterTimeServiceServer(s, fakeTalosTime{f: f})
 	})
 }
 
@@ -347,6 +354,36 @@ func (m fakeTalosMachine) Reset(ctx context.Context, req *machineapi.ResetReques
 	m.f.mu.Unlock()
 
 	return &machineapi.ResetResponse{Messages: []*machineapi.Reset{{ActorId: "reset-1"}}}, nil
+}
+
+// fakeTalosTime answers `talosctl time` with the node's clockOffsets entry.
+type fakeTalosTime struct {
+	timeapi.UnimplementedTimeServiceServer
+
+	f *fakeTalos
+}
+
+func (t fakeTalosTime) Time(ctx context.Context, _ *emptypb.Empty) (*timeapi.TimeResponse, error) {
+	node, err := t.f.enter(ctx, "Time")
+	if err != nil {
+		return nil, err
+	}
+
+	t.f.mu.Lock()
+	offset, ok := t.f.clockOffsets[node]
+	t.f.mu.Unlock()
+
+	if !ok {
+		return nil, status.Error(codes.Unimplemented, "no time")
+	}
+
+	local := time.Unix(1700000000, 0)
+
+	return &timeapi.TimeResponse{Messages: []*timeapi.Time{{
+		Server:     "time.example.test",
+		Localtime:  timestamppb.New(local),
+		Remotetime: timestamppb.New(local.Add(time.Duration(offset) * time.Millisecond)),
+	}}}, nil
 }
 
 func (m fakeTalosMachine) PacketCapture(_ *machineapi.PacketCaptureRequest, stream grpc.ServerStreamingServer[common.Data]) error {

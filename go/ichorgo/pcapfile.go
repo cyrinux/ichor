@@ -29,6 +29,9 @@ const (
 type pcapPage struct {
 	Packets []packetSummary `json:"packets"`
 	Total   int             `json:"total"`
+	// ClockGapMs: in a capture of two nodes, how far apart their clocks were (packets of the
+	// two are ordered no better than that); absent otherwise or when it was not known.
+	ClockGapMs *int64 `json:"clockGapMs,omitempty"`
 }
 
 type packetDetail struct {
@@ -176,6 +179,8 @@ func ReadPcap(path string, offset, limit int) (out string, err error) {
 	if err != nil {
 		return "", err
 	}
+
+	page.ClockGapMs = captureClockGap(path)
 
 	return toJSON(page)
 }
