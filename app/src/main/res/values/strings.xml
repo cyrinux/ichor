@@ -501,7 +501,7 @@
     <string name="settings_section_clusters">Clusters &amp; backup</string>
     <string name="settings_page_appearance_summary">Theme, language, live usage</string>
     <string name="settings_page_security_summary">App lock, security keys</string>
-    <string name="settings_page_privacy_summary">Screenshot mode, cluster events, app icons</string>
+    <string name="settings_page_privacy_summary">Screenshot mode, cluster events, app icons, last known state</string>
     <string name="settings_page_alerts_summary">Background checks, watches, thresholds</string>
     <string name="settings_page_ai_summary">Provider, API key, model</string>
     <string name="settings_page_kubernetes_summary">Node debug shell, kubeconfig export</string>

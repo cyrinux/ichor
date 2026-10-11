@@ -241,7 +241,6 @@ fun MonitoringSection(app: TalosApp) {
             error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }
         }
     }
-    OfflineCacheSetting(app)
 }
 
 /** The warning and critical fill thresholds of the storage alerts; critical stays above warning. */
@@ -294,19 +293,4 @@ private fun PercentSlider(label: String, value: Int, range: IntRange, enabled: B
         enabled = enabled,
         modifier = Modifier.semantics { contentDescription = label },
     )
-}
-
-/** Opt-in: the last data of each cluster is kept on the phone, encrypted, to show it offline. */
-@Composable
-private fun OfflineCacheSetting(app: TalosApp) {
-    val enabled by app.uiPreferences.offlineCache.collectAsStateWithLifecycle()
-    Card(Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.settings_offline_cache), style = MaterialTheme.typography.titleMedium)
-                MutedText(stringResource(R.string.settings_offline_cache_desc))
-            }
-            Switch(checked = enabled, onCheckedChange = app::setOfflineCache, modifier = Modifier.padding(start = 12.dp))
-        }
-    }
 }

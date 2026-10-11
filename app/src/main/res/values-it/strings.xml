@@ -506,7 +506,7 @@
     <string name="settings_section_clusters">Cluster e backup</string>
     <string name="settings_page_appearance_summary">Tema, lingua, utilizzo in tempo reale</string>
     <string name="settings_page_security_summary">Blocco dell’app, chiavi di sicurezza</string>
-    <string name="settings_page_privacy_summary">Modalità screenshot, eventi del cluster, icone delle app</string>
+    <string name="settings_page_privacy_summary">Modalità screenshot, eventi del cluster, icone delle app, ultimo stato noto</string>
     <string name="settings_page_alerts_summary">Controlli in background, monitoraggi, soglie</string>
     <string name="settings_page_ai_summary">Provider, chiave API, modello</string>
     <string name="settings_page_kubernetes_summary">Shell di debug dei nodi, esportazione kubeconfig</string>

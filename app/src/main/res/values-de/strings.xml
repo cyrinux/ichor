@@ -499,7 +499,7 @@
     <string name="settings_section_clusters">Cluster &amp; Sicherung</string>
     <string name="settings_page_appearance_summary">Design, Sprache, Live-Auslastung</string>
     <string name="settings_page_security_summary">App-Sperre, Sicherheitsschlüssel</string>
-    <string name="settings_page_privacy_summary">Screenshot-Modus, Cluster-Events, App-Symbole</string>
+    <string name="settings_page_privacy_summary">Screenshot-Modus, Cluster-Events, App-Symbole, letzter bekannter Zustand</string>
     <string name="settings_page_alerts_summary">Hintergrundprüfungen, Überwachungen, Schwellenwerte</string>
     <string name="settings_page_ai_summary">Anbieter, API-Schlüssel, Modell</string>
     <string name="settings_page_kubernetes_summary">Debug-Shell für Nodes, kubeconfig-Export</string>

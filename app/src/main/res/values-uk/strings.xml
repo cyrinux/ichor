@@ -553,7 +553,7 @@
     <string name="settings_section_clusters">Кластери й резервні копії</string>
     <string name="settings_page_appearance_summary">Тема, мова, використання наживо</string>
     <string name="settings_page_security_summary">Блокування застосунку, ключі безпеки</string>
-    <string name="settings_page_privacy_summary">Режим знімків екрана, події кластера, значки застосунків</string>
+    <string name="settings_page_privacy_summary">Режим знімків екрана, події кластера, значки застосунків, останній відомий стан</string>
     <string name="settings_page_alerts_summary">Фонові перевірки, спостереження, пороги</string>
     <string name="settings_page_ai_summary">Провайдер, ключ API, модель</string>
     <string name="settings_page_kubernetes_summary">Налагоджувальна оболонка вузлів, експорт kubeconfig</string>
