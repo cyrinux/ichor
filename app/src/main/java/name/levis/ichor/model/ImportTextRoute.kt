@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ImportTextRoute(val kind: String = "unknown", val provider: String = "", val field: String = "") {
     val isGkeCredential: Boolean get() = kind == "credentials" && provider == "gke" &&
-        this.field in setOf(GCP_USER_CREDENTIALS, "gcpServiceAccountJson")
+        this.field in setOf(GCP_USER_CREDENTIALS, "gcpServiceAccountJson", GCP_LOGIN_CONFIG)
 }

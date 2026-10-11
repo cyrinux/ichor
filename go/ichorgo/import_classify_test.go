@@ -11,6 +11,7 @@ func TestClassifyImportText(t *testing.T) {
 		{`{"type":"authorized_user","refresh_token":"invented-secret"}`, "credentials", gcpFieldUserCredentials},
 		{`{"type":"external_account_authorized_user","refresh_token":"invented-secret"}`, "credentials", gcpFieldUserCredentials},
 		{`{"type":"service_account","private_key":"invented-secret"}`, "credentials", gcpFieldServiceAccount},
+		{`{"type":"external_account_authorized_user_login_config","audience":"//iam.googleapis.com/locations/global/workforcePools/sample-pool/providers/sample-provider","client_secret":"invented-secret"}`, "credentials", gcpFieldLoginConfig},
 		{"kind: Config\nclusters: []\ncontexts: []\n", "kubeconfig", ""},
 		{"context: cp\ncontexts:\n  cp:\n    endpoints: [127.0.0.1]\n", "talosconfig", ""},
 		{`{"type":"external_account"}`, "unknown", ""},
