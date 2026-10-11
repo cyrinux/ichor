@@ -97,9 +97,10 @@ func ForgetDiscoverSignIn() {
 }
 
 // gkeNeedsBrowser tells GKE credentials that sign in in the browser: the OAuth client,
-// gcloud's client, or the build's Google client on iOS.
+// gcloud's client, a workforce login config, or the build's Google client on iOS.
 func gkeNeedsBrowser(s map[string]string) bool {
-	return s[gcpFieldOAuthClientID] != "" || s[gcpFieldGcloudSignIn] != "" || s[gcpFieldGoogleSignIn] == googleSignInIOS
+	return s[gcpFieldOAuthClientID] != "" || s[gcpFieldGcloudSignIn] != "" || s[gcpFieldLoginConfig] != "" ||
+		s[gcpFieldGoogleSignIn] == googleSignInIOS
 }
 
 // withDiscoverySession is state with the session of the discovery's sign-in when that sign-in
@@ -118,7 +119,8 @@ func withDiscoverySession(state kubeAuthState) kubeAuthState {
 	switch {
 	case maps.Equal(signed.Secrets, state.Secrets):
 	case gcloudSignedFor(*signed, state):
-		// gcloud's sign-in stored its session as user credentials: the cluster takes them.
+		// gcloud's or a login config's sign-in stored its session as user credentials: the
+		// cluster takes them.
 		out.Secrets = maps.Clone(signed.Secrets)
 	default:
 		return state
@@ -129,11 +131,18 @@ func withDiscoverySession(state kubeAuthState) kubeAuthState {
 	return out
 }
 
-// gcloudSignedFor tells the gcloud sign-in signed, whose user credentials it added, from the
-// same option entered again (state: the marker only).
+// gcloudSignedFor tells the gcloud or login-config sign-in signed, whose user credentials it
+// added, from the same option entered again (state: the marker or the same config only).
 func gcloudSignedFor(signed, state kubeAuthState) bool {
-	return state.secret(gcpFieldGcloudSignIn) != "" && state.secret(gcpFieldUserCredentials) == "" &&
-		signed.secret(gcpFieldGcloudSignIn) != "" && signed.secret(gcpFieldUserCredentials) != ""
+	if state.secret(gcpFieldUserCredentials) != "" || signed.secret(gcpFieldUserCredentials) == "" {
+		return false
+	}
+
+	if state.secret(gcpFieldGcloudSignIn) != "" {
+		return signed.secret(gcpFieldGcloudSignIn) != ""
+	}
+
+	return state.secret(gcpFieldLoginConfig) != "" && signed.secret(gcpFieldLoginConfig) == state.secret(gcpFieldLoginConfig)
 }
 
 // discoverySecrets is secretsJSON as DiscoverClusters reads it: values trimmed.

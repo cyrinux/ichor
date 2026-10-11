@@ -70,11 +70,12 @@ func oauthClientState(s map[string]string) (kubeAuthState, error) {
 // rememberedFields: the OAuth client is shown again when the session has to be renewed (a
 // Desktop client's secret is not confidential, Google says), so signing in again is one tap.
 func (gkeMethod) rememberedFields() []string {
-	return []string{gcpFieldOAuthClientID, gcpFieldOAuthClientSecret, gcpFieldOAuthRedirectURL, gcpFieldGcloudSignIn}
+	return []string{gcpFieldOAuthClientID, gcpFieldOAuthClientSecret, gcpFieldOAuthRedirectURL, gcpFieldGcloudSignIn, gcpFieldLoginConfig}
 }
 
 // signIn runs the browser sign-in of the OAuth client entered, of gcloud's client
-// (kube_auth_gke_gcloud.go) or of the build's own Google client (kube_auth_gke_native.go); the other GKE credentials need none.
+// (kube_auth_gke_gcloud.go), of a workforce login config (kube_auth_gke_workforce.go) or of
+// the build's own Google client (kube_auth_gke_native.go); the other GKE credentials need none.
 func (gkeMethod) signIn(ctx context.Context, state kubeAuthState, prompt func(signInPrompt), callbacks <-chan string) (kubeAuthState, error) {
 	if state.secret(gcpFieldGoogleSignIn) != "" {
 		return signInNative(ctx, state, prompt, callbacks)
@@ -82,6 +83,10 @@ func (gkeMethod) signIn(ctx context.Context, state kubeAuthState, prompt func(si
 
 	if state.secret(gcpFieldGcloudSignIn) != "" {
 		return signInGcloud(ctx, state, prompt, callbacks)
+	}
+
+	if state.secret(gcpFieldLoginConfig) != "" {
+		return signInWorkforce(ctx, state, prompt, callbacks)
 	}
 
 	if state.secret(gcpFieldOAuthClientID) == "" {

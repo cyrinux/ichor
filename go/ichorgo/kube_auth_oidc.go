@@ -50,6 +50,15 @@ type oidcMethod struct {
 	// redirectURI, when set, is a custom-scheme redirect the app receives and hands over
 	// (SignInRun.Complete): no loopback server then.
 	redirectURI string
+	// endpoints, when set, are the authorization and token endpoints: no discovery (a
+	// workforce login config names them).
+	endpoints *oidcDiscovery
+	// basicClientAuth sends the client in a Basic header, never in the form (Google STS).
+	basicClientAuth bool
+	// scopesOnly asks for scopes alone: no openid (and so no nonce), no offline_access.
+	scopesOnly bool
+	// authQuery is added to the authorization request.
+	authQuery url.Values
 }
 
 func (m *oidcMethod) name() string { return m.method }
@@ -147,6 +156,10 @@ func (m *oidcMethod) isGoogle() bool {
 }
 
 func (m *oidcMethod) scope() string {
+	if m.scopesOnly {
+		return strings.Join(m.scopes, " ")
+	}
+
 	scopes := append([]string{"openid"}, m.scopes...)
 	if !m.isGoogle() && !slices.Contains(scopes, "offline_access") {
 		scopes = append(scopes, "offline_access")
@@ -162,6 +175,10 @@ type oidcDiscovery struct {
 }
 
 func (m *oidcMethod) discover(ctx context.Context) (oidcDiscovery, error) {
+	if m.endpoints != nil {
+		return *m.endpoints, nil
+	}
+
 	var d oidcDiscovery
 
 	err := m.getJSON(ctx, strings.TrimSuffix(m.issuer, "/")+"/.well-known/openid-configuration", &d)
@@ -212,15 +229,21 @@ type oidcTokens struct {
 }
 
 func (m *oidcMethod) postForm(ctx context.Context, endpoint string, form url.Values, out any) (int, error) {
-	if m.clientSecret != "" {
-		form.Set("client_secret", m.clientSecret)
-	}
+	if !m.basicClientAuth {
+		if m.clientSecret != "" {
+			form.Set("client_secret", m.clientSecret)
+		}
 
-	form.Set("client_id", m.clientID)
+		form.Set("client_id", m.clientID)
+	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(form.Encode()))
 	if err != nil {
 		return 0, err
+	}
+
+	if m.basicClientAuth {
+		req.SetBasicAuth(m.clientID, m.clientSecret)
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -410,14 +433,24 @@ func (m *oidcMethod) browserSignIn(ctx context.Context, state kubeAuthState, d o
 		"redirect_uri":          {redirect},
 		"scope":                 {m.scope()},
 		"state":                 {oauthState},
-		"nonce":                 {nonce},
 		"code_challenge":        {base64.RawURLEncoding.EncodeToString(challenge[:])},
 		"code_challenge_method": {"S256"},
+	}
+
+	// No openid, no ID token: a nonce has nothing to be checked against.
+	if m.scopesOnly {
+		nonce = ""
+	} else {
+		q.Set("nonce", nonce)
 	}
 
 	if m.isGoogle() {
 		q.Set("access_type", "offline")
 		q.Set("prompt", "consent")
+	}
+
+	for k, v := range m.authQuery {
+		q[k] = slices.Clone(v)
 	}
 
 	sep := "?"

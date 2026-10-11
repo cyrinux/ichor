@@ -90,8 +90,8 @@ func unauthorized(err error) bool {
 // gkeMethod signs in like gke-gcloud-auth-plugin, with a service account key (a signed JWT
 // exchanged for an access token, the OAuth 2.0 JWT bearer grant) or with the user credentials
 // `gcloud auth application-default login` writes (kube_auth_gke_user.go), or in the browser
-// with the organisation's own OAuth client (kube_auth_gke_oauth.go) or gcloud's
-// (kube_auth_gke_gcloud.go).
+// with the organisation's own OAuth client (kube_auth_gke_oauth.go), gcloud's
+// (kube_auth_gke_gcloud.go) or a workforce login config (kube_auth_gke_workforce.go).
 type gkeMethod struct{}
 
 func (gkeMethod) name() string { return authGKE }
@@ -101,6 +101,8 @@ func (gkeMethod) fieldSets() [][]string {
 		{gcpFieldServiceAccount}, {gcpFieldUserCredentials}, {gcpFieldOAuthClientID, gcpFieldOAuthClientSecret, gcpFieldOAuthRedirectURL},
 		// Your Google account in the browser with gcloud's client, on every build.
 		{gcpFieldGcloudSignIn},
+		// Workforce identity: the login config, then the browser.
+		{gcpFieldLoginConfig},
 	}
 
 	// "Sign in with Google", only when the build carries a Google client.
@@ -160,6 +162,10 @@ func (gkeMethod) fromSecrets(s map[string]string) (kubeAuthState, error) {
 		return gcloudSignInState(s), nil
 	}
 
+	if s[gcpFieldLoginConfig] != "" {
+		return loginConfigState(s)
+	}
+
 	if s[gcpFieldOAuthClientID] != "" {
 		return oauthClientState(s)
 	}
@@ -187,6 +193,10 @@ func (gkeMethod) mint(ctx context.Context, state kubeAuthState) (string, time.Ti
 
 	if state.secret(gcpFieldGcloudSignIn) != "" && state.secret(gcpFieldUserCredentials) == "" {
 		return "", time.Time{}, state, errGcloudSignIn
+	}
+
+	if state.secret(gcpFieldLoginConfig) != "" && state.secret(gcpFieldUserCredentials) == "" {
+		return "", time.Time{}, state, errWorkforceSignIn
 	}
 
 	if state.secret(gcpFieldOAuthClientID) != "" {
