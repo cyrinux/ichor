@@ -29,6 +29,9 @@ func ClassifyImportText(text string) (out string, err error) {
 			route.Kind, route.Provider, route.Field = "refused", discoverEKS, awsFieldAccessKey
 		} else if IsKubeconfig(text) {
 			route.Kind = "kubeconfig"
+		} else if field, values, ok := omniSignInFile(text); ok {
+			// An omnictl config or a whole account's talosconfig: Omni lists its clusters.
+			route.Kind, route.Provider, route.Field, route.Values = "credentials", discoverOmni, field, values
 		} else {
 			var shape struct {
 				Contexts yaml.Node `yaml:"contexts"`

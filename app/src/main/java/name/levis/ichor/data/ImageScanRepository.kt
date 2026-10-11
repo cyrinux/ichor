@@ -14,6 +14,7 @@ import name.levis.ichor.model.ImageScanReport
 import name.levis.ichor.model.ImageScanner
 import name.levis.ichor.model.OperatorReports
 import name.levis.ichor.model.RoutePod
+import name.levis.ichor.ui.FollowedRun
 import name.levis.ichor.ui.goErrorText
 import name.levis.ichorgo.ImageScanListener
 import name.levis.ichorgo.ImageScanRun
@@ -27,16 +28,23 @@ data class ImageScanSession(
     /** The cluster context and app it scans. */
     val context: String,
     val appId: String,
+    /** What it scans, for the notification: the app's name or the node. */
+    val name: String = appId,
+    /** The scanner it runs, the one picked in Settings when it started. */
+    val scanner: ImageScanner = ImageScanner.DEFAULT,
     val progress: ImageScanProgress? = null,
     val report: ImageScanReport? = null,
     val reportJson: String = "",
-    val running: Boolean = true,
+    override val running: Boolean = true,
     /** Stop was asked: the core is deleting the scan Job. */
     val stopping: Boolean = false,
     /** Ended by Stop: its report holds only what was scanned before. */
     val stopped: Boolean = false,
-    val error: String? = null,
-) {
+    override val error: String? = null,
+) : FollowedRun {
+    override val hostname: String get() = name
+    override val finished: Boolean get() = !running
+
     /** The finished scan's report, when it scanned at least one image (not stopped or failed early). */
     val usableReport: ImageScanReport?
         get() = report?.takeIf { !running && !stopped && error == null && it.images.any { image -> image.error.isEmpty() } }
@@ -45,12 +53,14 @@ data class ImageScanSession(
 /**
  * Vulnerability scans of an app's images, through the Kubernetes API (os:admin): a Job of the
  * [scanner] the user picked (Trivy or Grype) in the cluster, or the Trivy Operator's reports. One scan at a time, kept app-wide so it
- * goes on while the user leaves the Apps screen; the core calls back on its own threads.
+ * goes on while the user leaves the Apps screen; the core calls back on its own threads. [onStarted] runs once a scan
+ * started (to keep the app alive meanwhile, also with the screen locked).
  */
 class ImageScanRepository(
     private val configs: ConfigRepository,
     private val kubeServers: KubeServers,
-    private val scanner: () -> ImageScanner = { ImageScanner.TRIVY },
+    private val scanner: () -> ImageScanner = { ImageScanner.DEFAULT },
+    private val onStarted: () -> Unit = {},
 ) {
     private val _session = MutableStateFlow<ImageScanSession?>(null)
     val session: StateFlow<ImageScanSession?> = _session.asStateFlow()
@@ -66,19 +76,21 @@ class ImageScanRepository(
 
     /**
      * Scans [pods]' images and the [images] refs (no pod behind them: a node's system images),
-     * replacing the last scan. Ignored while one runs. It returns at once: the core runs the
-     * scan in the background and [session] follows it.
+     * replacing the last scan; [name] is what the notification calls it. Ignored while one runs.
+     * It returns at once: the core runs the scan in the background and [session] follows it.
      */
-    fun start(appId: String, pods: List<RoutePod>, images: List<String> = emptyList()) {
+    fun start(appId: String, name: String, pods: List<RoutePod>, images: List<String> = emptyList()) {
         if (_session.value?.running == true) return
         val (stored, server) = try {
             target()
         } catch (e: Exception) {
-            _session.value = ImageScanSession(configs.config.value?.activeContext.orEmpty(), appId, running = false, error = e.message)
+            _session.value = ImageScanSession(configs.config.value?.activeContext.orEmpty(), appId, name, running = false, error = e.message)
             return
         }
-        _session.value = ImageScanSession(stored.activeContext, appId)
-        run = Ichorgo.startImageScan(stored.yaml, stored.activeContext, server, podsJson(pods), optionsJson(images), listener())
+        val picked = scanner()
+        _session.value = ImageScanSession(stored.activeContext, appId, name, picked)
+        run = Ichorgo.startImageScan(stored.yaml, stored.activeContext, server, podsJson(pods), optionsJson(images, picked), listener())
+        onStarted()
     }
 
     /** Stops the running scan; the session ends once the core deleted its Job. */
@@ -119,8 +131,8 @@ class ImageScanRepository(
 
     private fun podsJson(pods: List<RoutePod>) = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
 
-    private fun optionsJson(images: List<String>) =
-        TalosJson.encodeToString(ImageScanOptions.serializer(), ImageScanOptions(images, scanner().id))
+    private fun optionsJson(images: List<String>, scanner: ImageScanner) =
+        TalosJson.encodeToString(ImageScanOptions.serializer(), ImageScanOptions(images, scanner.id))
 
     /** The config to call with and the Kubernetes API address the user set ("" for the kubeconfig's). */
     private fun target(): Pair<StoredConfig, String> {

@@ -30,20 +30,23 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.OMNI_EMAIL
+import name.levis.ichor.model.OMNI_SERVICE_ACCOUNT_KEY
+import name.levis.ichor.model.OMNI_URL
 import name.levis.ichor.model.credentialsComplete
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.kubeauth.CredentialFields
 import name.levis.ichor.ui.kubeauth.openInBrowser
 import name.levis.ichor.ui.theme.LocalStatusColors
 
-private const val FIELD_URL = "omniUrl"
-private const val FIELD_EMAIL = "omniEmail"
-private const val FIELD_KEY = "serviceAccountKey"
+private const val FIELD_URL = OMNI_URL
+private const val FIELD_EMAIL = OMNI_EMAIL
+private const val FIELD_KEY = OMNI_SERVICE_ACCOUNT_KEY
 
 /**
  * Adding the clusters of a Sidero Omni account: the instance's URL, then an account (it
  * confirms a key in the browser) or a service account key. Its clusters show in the
- * talosconfig preview, already signed in.
+ * talosconfig preview, already signed in. A scanned omnictl config prefills the fields.
  */
 @Composable
 internal fun OmniCard(
@@ -53,9 +56,11 @@ internal fun OmniCard(
     onCancel: () -> Unit,
 ) {
     val context = LocalContext.current
-    var serviceAccount by remember { mutableStateOf(false) }
+    var serviceAccount by remember { mutableStateOf(state.serviceAccount) }
     // Not saveable: a service account key never goes into saved instance state.
-    val values = remember { mutableStateMapOf<String, String>() }
+    val values = remember { mutableStateMapOf<String, String>().apply { putAll(state.initialValues) } }
+    // Kept past a failed try: the state that comes back carries no initial values.
+    val prefilled = remember { state.initialValues.isNotEmpty() }
     val fields = listOf(FIELD_URL, if (serviceAccount) FIELD_KEY else FIELD_EMAIL)
     val noBrowser = stringResource(R.string.kube_signin_no_browser)
     // Once per page: the prompt comes again only for a new one.
@@ -70,6 +75,7 @@ internal fun OmniCard(
     ) {
         Text(stringResource(R.string.omni_add_title), style = MaterialTheme.typography.titleLarge)
         MutedText(stringResource(R.string.omni_add_body))
+        if (prefilled) MutedText(stringResource(R.string.omni_prefilled))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = !serviceAccount,

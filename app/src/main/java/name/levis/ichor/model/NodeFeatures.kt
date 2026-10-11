@@ -34,6 +34,7 @@ enum class TalosFeature(val key: String) {
     PACKET_CAPTURE("packetCapture"),
     UPGRADE("upgrade"),
     VOLUMES("volumes"),
+    DISKS("disks"),
     DISK_USAGE("diskUsage"),
     MOUNTS("mounts"),
     KUBESPAN("kubespan"),

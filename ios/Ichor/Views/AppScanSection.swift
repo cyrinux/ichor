@@ -2,13 +2,14 @@ import SwiftUI
 import IchorCore
 
 /// An app's vulnerabilities (os:admin): the Trivy Operator's report, read when the sheet opens
-/// (nothing runs in the cluster for it), or a scan started from here with a Trivy Job, which
-/// goes on when the sheet closes (ImageScanJob).
+/// (nothing runs in the cluster for it), or a scan started from here with a Job of the scanner
+/// picked in Settings, which goes on when the sheet closes (ImageScanJob).
 struct AppScanSection: View {
     let app: InventoryApp
 
     @Environment(AppModel.self) private var model
     @State private var operatorState: LoadState<OperatorReports> = .loading
+    @AppStorage(ImageScannerKeys.selected) private var scanner = ImageScanner.defaultScanner
 
     private var job: ImageScanJob { ImageScanJob.shared }
     private var scan: ImageScanState? { job.scan(context: model.activeContext, appID: app.id) }
@@ -44,7 +45,7 @@ struct AppScanSection: View {
                         Label("Open report", systemImage: "doc.text.magnifyingglass")
                     }
                 } else {
-                    Text("Checks the images these pods run, by digest, for known vulnerabilities with Trivy. It runs as a Job in the \(imageScanNamespace) namespace, which deletes itself afterwards.").note()
+                    Text("Checks the images these pods run, by digest, for known vulnerabilities with \(scanner.label). It runs as a Job in the \(imageScanNamespace) namespace, which deletes itself afterwards.").note()
                 }
                 if busyElsewhere {
                     Text("Another app's scan is running: one at a time.").note()
@@ -79,7 +80,7 @@ struct ScanProgressLines: View {
 
     var body: some View {
         let progress = scan.progress
-        Text(verbatim: scan.stopping ? String(localized: "Stopping…") : phaseText(progress))
+        Text(verbatim: scan.stopping ? String(localized: "Stopping…") : phaseText(progress, scanner: scan.scanner.label))
         if let progress, progress.phase == ImageScanPhase.scanning, progress.steps > 0 {
             ProgressView(value: Double(max(progress.step - 1, 0)), total: Double(progress.steps))
         } else {
@@ -90,11 +91,11 @@ struct ScanProgressLines: View {
         }
     }
 
-    private func phaseText(_ p: ImageScanProgress?) -> String {
+    private func phaseText(_ p: ImageScanProgress?, scanner: String) -> String {
         switch p?.phase {
         case ImageScanPhase.starting:
-            guard let p, !p.message.isEmpty else { return String(localized: "Starting Trivy…") }
-            return String(localized: "Starting Trivy (\(p.message))…")
+            guard let p, !p.message.isEmpty else { return String(localized: "Starting \(scanner)…") }
+            return String(localized: "Starting \(scanner) (\(p.message))…")
         case ImageScanPhase.database:
             return String(localized: "Downloading the vulnerability database…")
         case ImageScanPhase.scanning:

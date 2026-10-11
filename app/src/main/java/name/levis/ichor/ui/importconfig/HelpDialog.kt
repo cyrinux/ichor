@@ -100,6 +100,7 @@ fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
                 Command(COMPRESSED_QR_COMMAND)
                 MutedText(stringResource(R.string.help_cleanup))
                 KubeconfigHelp()
+                OmniHelp()
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.help_got_it)) } },
@@ -122,6 +123,14 @@ private fun KubeconfigHelp() {
     Step(stringResource(R.string.help_kube_flatten))
     Command("kubectl config view --flatten --minify > kubeconfig-phone")
     MutedText(stringResource(R.string.help_kube_later))
+}
+
+/** Sidero Omni: an omniconfig (or an account talosconfig) prefills the Omni sign-in. */
+@Composable
+private fun OmniHelp() {
+    Text(stringResource(R.string.help_omni_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
+    Text(stringResource(R.string.help_omni_body), style = MaterialTheme.typography.bodyMedium)
+    Command("qrencode -t ansiutf8 -r ~/.config/omni/config")
 }
 
 @Composable

@@ -85,6 +85,20 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertTrue(keys.values.isEmpty)
     }
 
+    func testOmniConfigRouteOpensOmniSignIn() throws {
+        let account = try TalosJSON.decode(ImportTextRoute.self, from: """
+        {"kind":"credentials","provider":"omni","field":"omniEmail","values":{"omniUrl":"https://acme.omni.siderolabs.io","omniEmail":"ops@example.com"}}
+        """)
+        XCTAssertTrue(account.isOmni)
+        XCTAssertFalse(account.isOmniServiceAccount)
+        XCTAssertFalse(account.isEksIdentityCenter)
+        let sa = try TalosJSON.decode(ImportTextRoute.self, from: """
+        {"kind":"credentials","provider":"omni","field":"serviceAccountKey","values":{"omniUrl":"https://acme.omni.siderolabs.io"}}
+        """)
+        XCTAssertTrue(sa.isOmniServiceAccount)
+        XCTAssertFalse(try TalosJSON.decode(ImportTextRoute.self, from: "{\"kind\":\"talosconfig\"}").isOmni)
+    }
+
     func testSignInRequiredReason() {
         let message = "kube-sign-in-required: sign in to this cluster (eks): the session expired"
         XCTAssertEqual(kubeSignInRequiredReason(message), "sign in to this cluster (eks): the session expired")

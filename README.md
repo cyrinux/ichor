@@ -276,7 +276,7 @@ and, optionally, host to host.
 
 **Scan images** on an app's sheet (and on a Talos node's Images screen) looks for known
 vulnerabilities in the images it runs, by digest, with Trivy or Grype (Settings → Kubernetes →
-*Vulnerability scanner*, Trivy by default) in a short-lived Job of the `ichor-imagescan`
+*Vulnerability scanner*, Grype by default) in a short-lived Job of the `ichor-imagescan`
 namespace: the cluster downloads the vulnerability database and the image layers, not the phone.
 
 - **Pinned scanners:** `aquasec/trivy` and `anchore/grype` (its `-debug` variant, which has a
@@ -384,6 +384,10 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     limit does not flap.
   - **Throttled:** notifies when seen on two checks in a row.
   - **Tapping it:** opens the node's Hardware screen.
+- **Disk partitions:** a node's *Storage* screen opens on its disks: per disk a bar of its
+  partitions (EFI, META, STATE, EPHEMERAL, user volumes) and the unallocated space, then one row
+  per partition with its filesystem, whether it is encrypted, its UUID and size, read with
+  `os:reader` from the `block.talos.dev` resources (Talos 1.8+).
 - **Rollback:** on a node's upgrade screen, the menu offers `talosctl rollback` (os:admin): the node
   reboots at once into the Talos it ran before its last upgrade, for an upgrade that boots but
   misbehaves. Talos rolls back by itself one that does not boot.

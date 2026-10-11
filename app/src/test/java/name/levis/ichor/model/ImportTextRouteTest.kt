@@ -31,6 +31,18 @@ class ImportTextRouteTest {
         assertFalse(ImportTextRoute(kind = "credentials", provider = "eks").isEksIdentityCenter)
     }
 
+    @Test fun omniConfigOpensOmniSignInWithItsValues() {
+        val route = TalosJson.decodeFromString(
+            ImportTextRoute.serializer(),
+            """{"kind":"credentials","provider":"omni","field":"omniEmail","values":{"omniUrl":"https://acme.omni.siderolabs.io","omniEmail":"ops@example.com"}}""",
+        )
+        assertTrue(route.isOmni)
+        assertFalse(route.isEksIdentityCenter)
+        assertEquals("ops@example.com", route.values[OMNI_EMAIL])
+        assertFalse(ImportTextRoute(kind = "credentials", provider = "omni").isOmni)
+        assertFalse(ImportTextRoute(kind = "talosconfig").isOmni)
+    }
+
     @Test fun awsAccessKeysAreRefused() {
         val route = TalosJson.decodeFromString(ImportTextRoute.serializer(), """{"kind":"refused","provider":"eks","field":"awsAccessKeyId"}""")
         assertTrue(route.isAwsAccessKeys)

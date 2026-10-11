@@ -25,9 +25,9 @@ extension TalosClient {
     /// Starts a scan of the pods' images and of `images`, refs with no pod behind them (a node's
     /// system images). The stream finishes after `done`; `stop` ends it early, and `done` follows
     /// once Go deleted the scan Job.
-    func imageScan(pods: [RoutePod], images: [String] = []) throws -> (events: AsyncStream<ImageScanEvent>, stop: @Sendable () -> Void) {
+    func imageScan(pods: [RoutePod], images: [String] = [], scanner: ImageScanner) throws -> (events: AsyncStream<ImageScanEvent>, stop: @Sendable () -> Void) {
         let encoded = try TalosJSON.encode(pods)
-        let options = try imageScanOptions(images: images, scanner: ImageScanner.stored())
+        let options = try imageScanOptions(images: images, scanner: scanner)
         let (stream, continuation) = AsyncStream.makeStream(of: ImageScanEvent.self)
         let bridge = ImageScanBridge(
             progress: { continuation.yield(.progress($0)) },

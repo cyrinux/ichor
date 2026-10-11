@@ -81,4 +81,12 @@ class ImageScanTest {
         val nothing = report.copy(images = report.images.map { it.copy(error = IMAGESCAN_NOT_SCANNED) })
         assertNull(done.copy(report = nothing).usableReport)
     }
+
+    @Test
+    fun scannerIsGrypeUnlessTrivyWasPicked() {
+        assertEquals(ImageScanner.GRYPE, ImageScanner.parse(null))
+        assertEquals(ImageScanner.GRYPE, ImageScanner.parse("other"))
+        assertEquals(ImageScanner.TRIVY, ImageScanner.parse("trivy"))
+        assertEquals(ImageScanner.GRYPE, ImageScanSession("ctx", "nginx").scanner)
+    }
 }

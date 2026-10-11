@@ -139,6 +139,7 @@ fun AppsScreen(
     // Vulnerability scans: through the Kubernetes API too.
     val operatorReports by scanVm.state.collectAsStateWithLifecycle()
     val scanSession by scanVm.session.collectAsStateWithLifecycle()
+    val scanner by application.uiPreferences.imageScanner.collectAsStateWithLifecycle()
     // The report open over the app's sheet, with the core's JSON to export it from.
     var reportOpen by remember { mutableStateOf<Pair<ImageScanReport, String>?>(null) }
 
@@ -205,6 +206,7 @@ fun AppsScreen(
                             operator = operatorReports,
                             session = scanSession?.takeIf { it.appId == detail.id && it.context == config?.activeContext },
                             busyElsewhere = scanSession?.let { it.running && (it.appId != detail.id || it.context != config?.activeContext) } == true,
+                            scanner = scanner,
                             onScan = { scanVm.scan(detail) },
                             onStop = scanVm::stop,
                             onOpen = { report, json -> reportOpen = report to json },

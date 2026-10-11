@@ -2,7 +2,7 @@ import SwiftUI
 import IchorCore
 
 /// The images Talos runs on a node outside of any app (kubelet, etcd, the control plane…), read
-/// with os:admin (the machine config), and their vulnerability scan: the same Trivy Job as an
+/// with os:admin (the machine config), and their vulnerability scan: the same scanner Job as an
 /// app's, kept by ImageScanJob, offered to a role that reaches the Kubernetes API.
 struct SystemImagesSection: View {
     let node: String
@@ -10,6 +10,7 @@ struct SystemImagesSection: View {
 
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<[SystemImage]> = .loading
+    @AppStorage(ImageScannerKeys.selected) private var scanner = ImageScanner.defaultScanner
 
     private var job: ImageScanJob { ImageScanJob.shared }
     private var scanID: String { systemImagesScanID(node: node) }
@@ -53,7 +54,7 @@ struct SystemImagesSection: View {
                     Label("Open report", systemImage: "doc.text.magnifyingglass")
                 }
             } else {
-                Text("Checks the images Talos runs on this node (kubelet, etcd, the control plane), by digest, for known vulnerabilities with Trivy. It runs as a Job in the \(imageScanNamespace) namespace, which deletes itself afterwards.").note()
+                Text("Checks the images Talos runs on this node (kubelet, etcd, the control plane), by digest, for known vulnerabilities with \(scanner.label). It runs as a Job in the \(imageScanNamespace) namespace, which deletes itself afterwards.").note()
             }
             if busyElsewhere {
                 Text("Another app's scan is running: one at a time.").note()

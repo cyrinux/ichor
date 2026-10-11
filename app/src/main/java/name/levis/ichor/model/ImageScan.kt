@@ -45,14 +45,16 @@ fun systemImagesScanId(node: String) = "talos:$node"
 @Serializable
 data class ImageScanOptions(val images: List<String> = emptyList(), val scanner: String = "")
 
-/** The scanners a scan may run in the cluster, by their core [id]; Trivy by default. */
+/** The scanners a scan may run in the cluster, by their core [id]; [DEFAULT] (Grype) when none was picked. */
 enum class ImageScanner(val id: String, val label: String) {
     TRIVY("trivy", "Trivy"),
     GRYPE("grype", "Grype"),
     ;
 
     companion object {
-        fun parse(id: String?): ImageScanner = entries.firstOrNull { it.id == id } ?: TRIVY
+        val DEFAULT = GRYPE
+
+        fun parse(id: String?): ImageScanner = entries.firstOrNull { it.id == id } ?: DEFAULT
     }
 }
 
