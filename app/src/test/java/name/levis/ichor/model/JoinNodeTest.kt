@@ -45,4 +45,49 @@ class JoinNodeTest {
         assertEquals("192.168.1.42", joinAddress("  192.168.1.42 \n"))
         assertEquals("", joinAddress("   "))
     }
+
+    @Test
+    fun decodesAConfigPreview() {
+        val got = TalosJson.decodeFromString(
+            JoinConfigPreview.serializer(),
+            """{"redactedYaml":"machine:\n    token: ******\n","warnings":["DHCP"],"needsBootstrap":false,"size":4096,
+               "role":"worker","hostname":"worker-3","template":"192.0.2.13"}""",
+        )
+        assertEquals("worker-3", got.hostname)
+        assertEquals(4096, got.size)
+        assertEquals(listOf("DHCP"), got.warnings)
+    }
+
+    private fun node(addr: String, hostname: String, role: String, reachable: Boolean = true) =
+        NodeOverview(node = addr, hostname = hostname, reachable = reachable, role = role)
+
+    @Test
+    fun templatesAreReachableMembersWorkersFirst() {
+        val nodes = listOf(
+            node("192.0.2.11", "cp-1", "controlplane"),
+            node("192.0.2.12", "worker-2", "worker"),
+            node("192.0.2.13", "worker-1", "worker"),
+            node("192.0.2.14", "worker-9", "worker", reachable = false),
+            node("192.0.2.15", "odd", "unknown"),
+            node("192.0.2.16", "cp-0", "init"),
+        )
+        assertEquals(listOf("worker-1", "worker-2", "cp-0", "cp-1"), joinTemplates(nodes).map { it.hostname })
+    }
+
+    @Test
+    fun theSuggestedHostnameIsTheFirstFree() {
+        assertEquals("worker-1", suggestedHostname("worker", emptyList()))
+        assertEquals("worker-3", suggestedHostname("worker", listOf("worker-1", "worker-2", "worker-4")))
+        assertEquals("controlplane-2", suggestedHostname("init", listOf("controlplane-1")))
+    }
+
+    @Test
+    fun installDisksAreWritableOnes() {
+        val disks = listOf(
+            DiskInfo(name = "sda", devPath = "/dev/sda"),
+            DiskInfo(name = "sr0", devPath = "/dev/sr0", readonly = true),
+            DiskInfo(name = "loop0"),
+        )
+        assertEquals(listOf("/dev/sda"), installDisks(disks))
+    }
 }

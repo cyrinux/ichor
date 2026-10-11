@@ -36,4 +36,41 @@ final class JoinNodeTests: XCTestCase {
         XCTAssertEqual(joinAddress("  192.168.1.42 \n"), "192.168.1.42")
         XCTAssertEqual(joinAddress("   "), "")
     }
+
+    func testConfigPreviewDecodes() throws {
+        let preview = try TalosJSON.decode(JoinConfigPreview.self, from: """
+        {"redactedYaml":"machine:\\n    token: ******\\n","warnings":null,"needsBootstrap":false,"size":4096,
+         "role":"worker","hostname":"worker-3","template":"192.0.2.13"}
+        """)
+        XCTAssertEqual(preview.hostname, "worker-3")
+        XCTAssertEqual(preview.size, 4096)
+        XCTAssertTrue(preview.warnings.isEmpty)
+    }
+
+    func testTemplatesAreReachableMembersWorkersFirst() {
+        let nodes = [
+            NodeOverview(node: "192.0.2.11", hostname: "cp-1", reachable: true, role: "controlplane"),
+            NodeOverview(node: "192.0.2.12", hostname: "worker-2", reachable: true, role: "worker"),
+            NodeOverview(node: "192.0.2.13", hostname: "worker-1", reachable: true, role: "worker"),
+            NodeOverview(node: "192.0.2.14", hostname: "worker-9", reachable: false, role: "worker"),
+            NodeOverview(node: "192.0.2.15", hostname: "odd", reachable: true, role: "unknown"),
+            NodeOverview(node: "192.0.2.16", hostname: "cp-0", reachable: true, role: "init"),
+        ]
+        XCTAssertEqual(joinTemplates(nodes).map(\.hostname), ["worker-1", "worker-2", "cp-0", "cp-1"])
+    }
+
+    func testSuggestedHostnameIsTheFirstFree() {
+        XCTAssertEqual(suggestedHostname(role: "worker", hostnames: []), "worker-1")
+        XCTAssertEqual(suggestedHostname(role: "worker", hostnames: ["worker-1", "worker-2", "worker-4"]), "worker-3")
+        XCTAssertEqual(suggestedHostname(role: "init", hostnames: ["controlplane-1"]), "controlplane-2")
+    }
+
+    func testInstallDisksAreWritableOnes() {
+        let disks = [
+            DiskInfo(name: "sda", devPath: "/dev/sda"),
+            DiskInfo(name: "sr0", devPath: "/dev/sr0", readonly: true),
+            DiskInfo(name: "loop0"),
+        ]
+        XCTAssertEqual(installDisks(disks), ["/dev/sda"])
+    }
 }
