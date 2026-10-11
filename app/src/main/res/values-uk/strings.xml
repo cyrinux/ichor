@@ -3934,7 +3934,7 @@
     <string name="helm_rollback_done">Відкочено до ревізії %1$s.</string>
     <string name="helm_rollback_footer">Оновлення робляться через Helm або ваш GitOps-інструмент. З історії реліз можна відкотити до старішої ревізії.</string>
     <string name="imagescan_title">Вразливості</string>
-    <string name="imagescan_hint">Перевіряє образи цих подів (за digest) на відомі вразливості за допомогою Trivy. Запускається як Job у просторі імен %1$s і потім видаляє себе.</string>
+    <string name="imagescan_hint">Перевіряє образи цих подів (за digest) на відомі вразливості за допомогою %1$s. Запускається як Job у просторі імен %2$s і потім видаляє себе.</string>
     <string name="imagescan_scan">Перевірити образи</string>
     <string name="imagescan_scan_again">Перевірити знову</string>
     <string name="imagescan_stop">Зупинити</string>
@@ -3942,8 +3942,17 @@
     <string name="imagescan_open">Відкрити звіт</string>
     <string name="imagescan_failed">Перевірка не вдалася: %1$s</string>
     <string name="imagescan_phase_preparing">Читання подів і їхніх образів…</string>
-    <string name="imagescan_phase_starting">Запуск Trivy…</string>
-    <string name="imagescan_phase_starting_reason">Запуск Trivy (%1$s)…</string>
+    <string name="imagescan_phase_starting">Запуск %1$s…</string>
+    <string name="imagescan_phase_starting_reason">Запуск %1$s (%2$s)…</string>
+    <string name="imagescan_channel_name">Перевірки образів</string>
+    <string name="imagescan_channel_desc">Хід перевірки ваших образів на вразливості</string>
+    <string name="imagescan_notification_public">Перевірка образів</string>
+    <string name="imagescan_notification_result_public">Перевірку образів завершено</string>
+    <string name="imagescan_notification_title">Перевірка образів %1$s</string>
+    <string name="imagescan_notification_done">Образи %1$s перевірено</string>
+    <string name="imagescan_notification_stopped">Перевірку %1$s зупинено</string>
+    <string name="imagescan_notification_failed">Перевірка %1$s не вдалася</string>
+    <string name="imagescan_notification_summary">критичних: %1$s · високих: %2$s · середніх: %3$s · низьких: %4$s</string>
     <string name="imagescan_phase_database">Завантаження бази вразливостей…</string>
     <string name="imagescan_phase_scanning">Перевірка %1$s з %2$s: %3$s</string>
     <string name="imagescan_phase_cleaning">Прибирання…</string>
@@ -4244,7 +4253,7 @@
     <string name="imagescan_system_title">Системні образи</string>
     <string name="imagescan_system_loading">Читання системних образів вузла…</string>
     <string name="imagescan_system_unavailable">Системні образи потребують ролі os:admin: %1$s</string>
-    <string name="imagescan_system_hint">Перевіряє за digest образи, які Talos запускає на цьому вузлі (kubelet, etcd, площина керування), на відомі вразливості за допомогою Trivy. Працює як Job у просторі імен %1$s, який потім видаляє себе.</string>
+    <string name="imagescan_system_hint">Перевіряє за digest образи, які Talos запускає на цьому вузлі (kubelet, etcd, площина керування), на відомі вразливості за допомогою %1$s. Працює як Job у просторі імен %2$s, який потім видаляє себе.</string>
     <string name="imagescan_system_scan">Перевірити системні образи</string>
     <string name="images_kubernetes_title">Образи Kubernetes</string>
     <string name="alert_action_wake">Розбудити</string>

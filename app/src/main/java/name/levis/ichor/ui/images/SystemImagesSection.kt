@@ -27,6 +27,7 @@ import name.levis.ichor.data.ImageScanSession
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ImageScanFormat
 import name.levis.ichor.model.ImageScanReport
+import name.levis.ichor.model.ImageScanner
 import name.levis.ichor.model.SystemImage
 import name.levis.ichor.model.shortDigest
 import name.levis.ichor.model.systemImagesScanId
@@ -43,7 +44,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
  * The images Talos runs on [node] outside of any app (kubelet, etcd, the control plane…), and
- * their vulnerability scan: the same Trivy Job as an app's, kept by [ImageScanRepository].
+ * their vulnerability scan: the same scanner Job as an app's, kept by [ImageScanRepository].
  */
 class SystemImagesViewModel(
     private val talos: TalosRepository,
@@ -55,7 +56,7 @@ class SystemImagesViewModel(
     override suspend fun fetch() = talos.systemImages(node)
 
     /** Scans [images] by ref (repo@digest when the node has it). */
-    fun scan(images: List<SystemImage>) = scans.start(systemImagesScanId(node), emptyList(), images.map { it.ref })
+    fun scan(images: List<SystemImage>) = scans.start(systemImagesScanId(node), node, emptyList(), images.map { it.ref })
 
     fun stop() = scans.stop()
 
@@ -70,6 +71,8 @@ data class SystemImagesUi(
     val session: ImageScanSession?,
     /** Another scan runs: one at a time. */
     val busyElsewhere: Boolean,
+    /** The scanner picked in Settings, named in the hint. */
+    val scanner: ImageScanner,
     val canScan: Boolean,
     val onScan: (List<SystemImage>) -> Unit,
     val onStop: () -> Unit,
@@ -104,7 +107,7 @@ private fun ScanControls(ui: SystemImagesUi, images: List<SystemImage>) {
     if (report != null) {
         ScanSummary(report)
     } else {
-        MutedText(stringResource(R.string.imagescan_system_hint, IMAGESCAN_NAMESPACE))
+        MutedText(stringResource(R.string.imagescan_system_hint, ui.scanner.label, IMAGESCAN_NAMESPACE))
     }
     if (ui.busyElsewhere) MutedText(stringResource(R.string.imagescan_busy_elsewhere))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

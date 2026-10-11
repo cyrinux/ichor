@@ -1,9 +1,12 @@
 import Foundation
 import IchorCore
+import UIKit
 
 /// The vulnerability scan of an app's images running or last run, app-wide and one at a time:
-/// it goes on while the user leaves the app's sheet or the Apps screen. The scan Job deletes
-/// itself in the cluster if the app is killed meanwhile.
+/// it goes on while the user leaves the app's sheet or the Apps screen. A background task keeps
+/// it going a little while once the app leaves the screen (locked); past that, the core reads
+/// the scanner's log again when the app comes back, while the finished Job keeps it. The scan
+/// Job deletes itself in the cluster if the app is killed meanwhile.
 @Observable
 @MainActor
 final class ImageScanJob {
@@ -11,6 +14,7 @@ final class ImageScanJob {
 
     private(set) var state: ImageScanState?
     private var stopScan: (@Sendable () -> Void)?
+    private var backgroundTask = UIBackgroundTaskIdentifier.invalid
 
     var isRunning: Bool { state?.running == true }
 
@@ -30,10 +34,11 @@ final class ImageScanJob {
     /// scan. Ignored while one runs.
     func start(client: TalosClient, context: String, appID: String, pods: [RoutePod], images: [String] = []) {
         guard !isRunning else { return }
-        var started = ImageScanState(context: context, appID: appID)
+        let scanner = ImageScanner.stored()
+        var started = ImageScanState(context: context, appID: appID, scanner: scanner)
         let scan: (events: AsyncStream<ImageScanEvent>, stop: @Sendable () -> Void)
         do {
-            scan = try client.imageScan(pods: pods, images: images)
+            scan = try client.imageScan(pods: pods, images: images, scanner: scanner)
         } catch {
             started.finish(report: nil, json: "", error: error.localizedDescription)
             state = started
@@ -42,6 +47,10 @@ final class ImageScanJob {
         // The handle to stop it is kept at once, and dropped once Go reported the scan done.
         stopScan = scan.stop
         state = started
+        backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Image scan") {
+            // Called on the main thread; the task must end before this returns.
+            MainActor.assumeIsolated { self.endBackgroundTask() }
+        }
         Task {
             for await event in scan.events {
                 switch event {
@@ -52,6 +61,7 @@ final class ImageScanJob {
                 }
             }
             stopScan = nil
+            endBackgroundTask()
         }
     }
 
@@ -60,5 +70,12 @@ final class ImageScanJob {
         guard isRunning else { return }
         state?.stopping = true
         stopScan?()
+    }
+
+    /// Ends the background task once, whoever comes first (scan over, or expiry).
+    private func endBackgroundTask() {
+        guard backgroundTask != .invalid else { return }
+        UIApplication.shared.endBackgroundTask(backgroundTask)
+        backgroundTask = .invalid
     }
 }

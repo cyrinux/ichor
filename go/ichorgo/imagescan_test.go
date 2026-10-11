@@ -974,3 +974,16 @@ func TestFindScanPodTimesOut(t *testing.T) {
 		t.Fatalf("got %v", err)
 	}
 }
+
+func TestFollowBackoff(t *testing.T) {
+	var total time.Duration
+	for attempt := range imageScanFollows {
+		total += followBackoff(attempt)
+	}
+
+	// With the app's one-second poll the follows span minutes: time for a phone that slept
+	// (screen locked) to get its network back.
+	if followBackoff(0) != netPerfPoll || followBackoff(9) != 32*netPerfPoll || total < 180*netPerfPoll {
+		t.Fatalf("backoff %v, %v, total %v", followBackoff(0), followBackoff(9), total)
+	}
+}

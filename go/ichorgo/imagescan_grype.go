@@ -26,10 +26,24 @@ const (
 	scannerGrype = "grype"
 )
 
+// grypeTemplate is the part of Grype's JSON that parseGrypeReport reads, one match per line:
+// `-o json` prints the whole document on one line, artifact metadata, match details and the
+// image's manifest and config included (48 MB for a Debian-based image), past what the log
+// reader takes.
+const grypeTemplate = `{"source":{"type":{{toJson .Source.Type}},"target":{"repoDigests":{{toJson .Source.Target.RepoDigests}}}},"distro":{"name":{{toJson .Distro.Name}},"version":{{toJson .Distro.Version}}},"matches":[
+{{- range $i, $m := .Matches}}{{if $i}},{{end}}
+{"vulnerability":{"id":{{toJson $m.Vulnerability.ID}},"dataSource":{{toJson $m.Vulnerability.DataSource}},"severity":{{toJson $m.Vulnerability.Severity}},"description":{{toJson $m.Vulnerability.Description}},"urls":{{toJson $m.Vulnerability.URLs}},"cvss":{{toJson $m.Vulnerability.Cvss}},"fix":{"versions":{{toJson $m.Vulnerability.Fix.Versions}}}},"relatedVulnerabilities":[{{range $j, $r := $m.RelatedVulnerabilities}}{{if $j}},{{end}}{"id":{{toJson $r.ID}},"description":{{toJson $r.Description}},"cvss":{{toJson $r.Cvss}}}{{end}}],"artifact":{"name":{{toJson $m.Artifact.Name}},"version":{{toJson $m.Artifact.Version}},"type":{{toJson $m.Artifact.Type}},"purl":{{toJson $m.Artifact.PURL}},"locations":[{{range $k, $l := $m.Artifact.Locations}}{{if $k}},{{end}}{"path":{{toJson $l.RealPath}}}{{end}}]}}
+{{- end}}
+]}
+`
+
 // grypeScanScript is imageScanScript for Grype: the same markers, the database downloaded
-// once, each image pulled from its registry ("registry:" never reads as a flag).
+// once, each image pulled from its registry ("registry:" never reads as a flag) and written
+// through grypeTemplate.
 const grypeScanScript = `n=$1; shift
 mkdir -p /work/cache /work/tmp || exit 2
+cat > /work/grype.tmpl <<'ICHOR_TEMPLATE'
+` + grypeTemplate + `ICHOR_TEMPLATE
 echo "@@$n db"
 if ! /grype db update >/dev/null 2>/work/err; then
   echo "@@$n dbfail"; tail -c 4000 /work/err; echo; echo "@@$n end db"; exit 3
@@ -37,7 +51,7 @@ fi
 i=0
 for img in "$@"; do
   echo "@@$n scan $i"
-  if /grype "registry:$img" -o json --file /work/r.json 2>/work/err; then
+  if /grype "registry:$img" -o template -t /work/grype.tmpl --file /work/r.json 2>/work/err; then
     echo "@@$n result $i"; cat /work/r.json; echo
   else
     echo "@@$n fail $i"; tail -c 4000 /work/err; echo

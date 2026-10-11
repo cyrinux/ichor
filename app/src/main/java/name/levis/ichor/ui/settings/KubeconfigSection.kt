@@ -132,7 +132,7 @@ fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: Co
     ImageScannerSetting()
 }
 
-/** The scanner an image scan runs in the cluster: Trivy (the default) or Grype. */
+/** The scanner an image scan runs in the cluster: Grype (the default) or Trivy. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ImageScannerSetting() {

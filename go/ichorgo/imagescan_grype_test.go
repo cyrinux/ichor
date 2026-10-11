@@ -162,8 +162,12 @@ func TestImageScanPodSpecGrype(t *testing.T) {
 		t.Fatalf("plain spec %s", plain)
 	}
 
-	// The script keeps the markers the log parser reads, and never lets an image read as a flag.
-	for _, want := range []string{`"@@$n db"`, `"@@$n dbfail"`, `"@@$n scan $i"`, `"@@$n result $i"`, `"@@$n fail $i"`, `"@@$n end $i"`, `"registry:$img"`, "-o json --file /work/r.json"} {
+	// The script keeps the markers the log parser reads, never lets an image read as a flag,
+	// and writes the report through the template (quoted heredoc: no $ expanded in it).
+	for _, want := range []string{
+		`"@@$n db"`, `"@@$n dbfail"`, `"@@$n scan $i"`, `"@@$n result $i"`, `"@@$n fail $i"`, `"@@$n end $i"`, `"registry:$img"`,
+		"-o template -t /work/grype.tmpl --file /work/r.json", "<<'ICHOR_TEMPLATE'\n" + grypeTemplate + "ICHOR_TEMPLATE\n",
+	} {
 		if !strings.Contains(grypeScanScript, want) {
 			t.Errorf("script lacks %s", want)
 		}
@@ -201,6 +205,33 @@ func TestScanLogParserGrype(t *testing.T) {
 
 	if first := report.Images[0]; first.Error != "" || len(first.Vulnerabilities) != 3 || first.OS != "alpine 3.18.0" {
 		t.Fatalf("first %+v", first)
+	}
+
+	// What grypeTemplate prints (Grype 0.120.1 on alpine:3.18.0, cut to 6 matches): one match
+	// per line, read whole.
+	template, err := os.ReadFile("testdata/grype-template-alpine.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	report = imageScanReport{Images: pendingImages(targets)}
+	p = newScanLogParser(grypeScanner, "n", targets, &report, func(imageScanProgress) {})
+	_ = p.read(strings.NewReader(scanLogWith("n", string(template))))
+
+	first := report.Images[0]
+	if first.Error != "" || len(first.Vulnerabilities) != 6 || first.OS != "alpine 3.18.0" || first.Summary.High != 2 || first.Summary.Fixable != 6 {
+		t.Fatalf("template %+v", first)
+	}
+
+	if v := first.Vulnerabilities[0]; v.ID != "CVE-2024-6119" || v.Package != "libcrypto3" || v.Fixed != "3.1.7-r0" || v.Score == 0 || v.Class != vulnClassOS {
+		t.Fatalf("template vuln %+v", v)
+	}
+
+	// The template never puts the whole report on one line, which the reader cuts.
+	for line := range strings.SplitSeq(string(template), "\n") {
+		if len(line) > imageScanMaxLine/64 {
+			t.Fatalf("line of %d bytes", len(line))
+		}
 	}
 
 	// The database could not be downloaded: Grype says so.
