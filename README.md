@@ -548,7 +548,7 @@ when no such label is set, as on bare metal.
 |---|---|
 | Client certificate, token (ServiceAccount) | Uses it as is |
 | `kubectl oidc-login` / kubelogin, `auth-provider: oidc` | Signs in in the browser (kubelogin's own `localhost` redirect, so nothing changes on the identity provider) or with a device code; renews the token with the refresh token |
-| `aws eks get-token`, aws-iam-authenticator | IAM Identity Center (device code, like `aws sso login`) or access keys; `--role-arn` through AssumeRole |
+| `aws eks get-token`, aws-iam-authenticator | IAM Identity Center (device code, like `aws sso login`; the account and role are picked from a list after the sign-in) or access keys; `--role-arn` through AssumeRole |
 | `gke-gcloud-auth-plugin` | A service account key, your Google account in the browser like gcloud (every build), Sign in with Google (Play build and iOS), the user credentials `gcloud auth application-default login` writes (`application_default_credentials.json`, also with `--login-config` for workforce identity), your organisation's own OAuth client (Desktop app type: sign-in in the browser, no key), or a workforce identity login config (browser sign-in at your organisation's identity provider) |
 | Azure `kubelogin` (AKS with Entra ID) | Device code or browser, or a service principal |
 | `doctl … exec-credential` | A DigitalOcean API token (short-lived cluster credentials from it) |

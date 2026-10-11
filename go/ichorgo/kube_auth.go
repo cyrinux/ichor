@@ -373,6 +373,9 @@ type kubeSignInKind struct {
 	SignedIn       bool   `json:"signedIn"`
 	User           string `json:"user,omitempty"`
 	SessionExpires int64  `json:"sessionExpires,omitempty"`
+	// Choices are the accounts and roles an IAM Identity Center sign-in may assume, when
+	// several: the user picks one and the app sends the four fields with it.
+	Choices []awsSSORole `json:"choices,omitempty"`
 }
 
 // signInFields lets a credentials method say what it asks for.
@@ -417,6 +420,10 @@ func KubeSignInInfo(storedYAML, contextName string) (out string, err error) {
 		info.Values = pick(state.Secrets, r.rememberedFields()...)
 	}
 
+	if _, ok := sc.method.(*eksMethod); ok && state.Method == sc.method.name() {
+		info.Choices = ssoChoices(state)
+	}
+
 	return toJSON(info)
 }
 
@@ -453,8 +460,12 @@ func KubeSetCredentials(storedYAML, contextName, secretsJSON string) (err error)
 	}
 
 	// A cluster discovery found signs in with the session that discovery's sign-in got.
-	if _, ok := cm.(gkeMethod); ok {
+	switch cm.(type) {
+	case gkeMethod:
 		state = withDiscoverySession(state)
+	case *eksMethod:
+		// The role picked after an IAM Identity Center sign-in takes that sign-in's session.
+		state = withSignedInSession(kubeAuth.load(sc.key), state)
 	}
 
 	state.Method = cm.name()

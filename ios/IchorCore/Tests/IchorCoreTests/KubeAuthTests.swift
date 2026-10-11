@@ -122,6 +122,23 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertEqual(kubeGoogleSignInSecretsJSON(), #"{"gcpGoogleSignIn":"ios"}"#)
     }
 
+    func testIdentityCenterRoleChoices() throws {
+        let info = try XCTUnwrap(try KubeSignInInfo.decode(#"""
+            {"method":"eks","kind":"credentials","options":[["awsSsoStartUrl","awsSsoRegion","awsAccountId","awsRoleName"]],"values":{"awsSsoStartUrl":"https://example.awsapps.com/start","awsSsoRegion":"eu-west-1"},"signedIn":true,"choices":[{"accountId":"123456789012","accountName":"Production","roleName":"ReadOnly"},{"accountId":"210987654321","roleName":"Admin"}]}
+            """#))
+        XCTAssertEqual(info.choices.count, 2)
+        XCTAssertEqual(info.choices[0].label, "Production · ReadOnly")
+        XCTAssertEqual(info.choices[1].label, "210987654321 · Admin")
+        // JSONSerialization may escape the slashes: compare what Go decodes.
+        let sent = try JSONSerialization.jsonObject(with: Data(info.choices[0].secretsJSON(values: info.values).utf8)) as? [String: String]
+        XCTAssertEqual(sent, ["awsAccountId": "123456789012", "awsRoleName": "ReadOnly", "awsSsoRegion": "eu-west-1",
+                              "awsSsoStartUrl": "https://example.awsapps.com/start"])
+        // Only the start URL and region are needed: the account and role come after the sign-in.
+        XCTAssertTrue(kubeFieldsComplete(info.fieldSets[0], values: info.values))
+        XCTAssertFalse(kubeFieldsComplete(info.fieldSets[0], values: ["awsSsoStartUrl": "https://example.awsapps.com/start"]))
+        XCTAssertEqual(try XCTUnwrap(try KubeSignInInfo.decode(#"{"method":"eks","kind":"credentials","signedIn":false}"#)).choices, [])
+    }
+
     func testCallbackSchemeOfTheRedirect() {
         // Google's iOS client comes back to its reversed client ID; the session closes on it.
         XCTAssertEqual(kubeCallbackScheme(of: "com.googleusercontent.apps.123-abc:/oauth2redirect"), "com.googleusercontent.apps.123-abc")

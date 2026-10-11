@@ -107818,6 +107818,76 @@
         }
       }
     },
+    "Enter the start URL from your AWS access portal and its region; the account and role are chosen after the sign-in. Leave them empty unless you know them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez l'URL de démarrage de votre portail d'accès AWS et sa région ; le compte et le rôle se choisissent après la connexion. Laissez-les vides si vous ne les connaissez pas."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce la URL de inicio de tu portal de acceso de AWS y su región; la cuenta y el rol se eligen después de iniciar sesión. Déjalos vacíos salvo que los conozcas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть початкову URL-адресу вашого порталу доступу AWS і її регіон; обліковий запис і роль вибираються після входу. Залиште їх порожніми, якщо не знаєте їх."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib die Start-URL deines AWS-Zugangsportals und ihre Region ein; Konto und Rolle wählst du nach der Anmeldung. Lass sie leer, wenn du sie nicht kennst."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserisci l'URL di avvio del tuo portale di accesso AWS e la sua regione; l'account e il ruolo si scelgono dopo l'accesso. Lasciali vuoti se non li conosci."
+          }
+        }
+      }
+    },
+    "Choose an account and role" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez un compte et un rôle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige una cuenta y un rol"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть обліковий запис і роль"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konto und Rolle wählen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli un account e un ruolo"
+          }
+        }
+      }
+    },
     "Save and sign in" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -55,6 +55,12 @@ final class KubeSignInFlow {
         }
     }
 
+    /// The sign-in worked but left a choice to make (IAM Identity Center with several accounts
+    /// and roles): back to the form, which shows the list.
+    func awaitChoice() {
+        if phase == .signedIn { phase = .idle }
+    }
+
     /// Starts the browser or device-code sign-in of `target`.
     func start(_ target: KubeSignInTarget) {
         start(TalosClient.startSignIn(kube: target.kube, context: target.context, talos: target.talos))

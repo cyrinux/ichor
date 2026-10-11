@@ -57,9 +57,16 @@ struct KubeSignInSheet: View {
         .task { await loadInfo() }
         .onChange(of: flow.phase) { _, phase in
             guard phase == .signedIn else { return }
-            model.reloadKubernetes()
-            onSignedIn()
-            Task { await loadInfo() }
+            Task {
+                await loadInfo()
+                // IAM Identity Center with several accounts and roles: the sheet stays on the list.
+                if info?.choices.isEmpty == false {
+                    flow.awaitChoice()
+                    return
+                }
+                model.reloadKubernetes()
+                onSignedIn()
+            }
         }
         .onDisappear { flow.cancel() }
     }
@@ -210,6 +217,7 @@ struct KubeCredentialsForm: View {
 
     @State private var option: Int
     @State private var values: [String: String]
+    @State private var picked: KubeSsoRoleChoice?
 
     private var fields: [String] {
         let sets = info.fieldSets
@@ -227,7 +235,9 @@ struct KubeCredentialsForm: View {
                 .pickerStyle(.segmented)
             }
         }
-        if fields == [kubeGoogleSignInField] {
+        if fields.contains(kubeAWSStartURLField) && !info.choices.isEmpty {
+            roleChoices
+        } else if fields == [kubeGoogleSignInField] {
             // Sign in with Google: Google's page in the browser sheet, nothing to type.
             Section {
                 Button("Sign in with Google") { onSubmit(kubeGoogleSignInSecretsJSON()) }
@@ -256,6 +266,38 @@ struct KubeCredentialsForm: View {
             } footer: {
                 credentialsFooter
             }
+        }
+    }
+
+    /// Signed in to IAM Identity Center with several accounts and roles: one is picked.
+    @ViewBuilder private var roleChoices: some View {
+        Section {
+            ForEach(info.choices, id: \.self) { choice in
+                Button {
+                    picked = choice
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: choice.label).foregroundStyle(.primary)
+                            Text(verbatim: choice.accountId).font(.footnote).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        if picked == choice {
+                            Image(systemName: "checkmark").foregroundStyle(.tint).accessibilityHidden(true)
+                        }
+                    }
+                }
+                .accessibilityAddTraits(picked == choice ? .isSelected : [])
+                .disabled(busy)
+            }
+        } header: {
+            Text("Choose an account and role")
+        }
+        Section {
+            Button("Save and sign in") {
+                if let picked { onSubmit(picked.secretsJSON(values: info.values)) }
+            }
+            .disabled(busy || picked == nil)
         }
     }
 

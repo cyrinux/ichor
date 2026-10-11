@@ -116,10 +116,9 @@ func (m *eksMethod) rememberedFields() []string {
 func (m *eksMethod) fromSecrets(s map[string]string) (kubeAuthState, error) {
 	switch {
 	case s[awsFieldSSOStartURL] != "":
-		for _, f := range []string{awsFieldSSORegion, awsFieldAccountID, awsFieldRoleName} {
-			if s[f] == "" {
-				return kubeAuthState{}, fmt.Errorf("IAM Identity Center needs %s", f)
-			}
+		// The account and role may be left out: they are picked from a list after the sign-in.
+		if s[awsFieldSSORegion] == "" {
+			return kubeAuthState{}, fmt.Errorf("IAM Identity Center needs %s", awsFieldSSORegion)
 		}
 
 		if u, err := url.Parse(s[awsFieldSSOStartURL]); err != nil || u.Scheme != "https" {
@@ -187,6 +186,11 @@ func (m *eksMethod) credentials(ctx context.Context, state kubeAuthState) (awsCr
 	token, state, err := m.ssoAccessToken(ctx, state)
 	if err != nil {
 		return awsCredentials{}, state, err
+	}
+
+	// Signed in, the role not picked yet: the sheet shows the list, not the browser.
+	if state.secret(awsFieldAccountID) == "" || state.secret(awsFieldRoleName) == "" {
+		return awsCredentials{}, state, signInRequired(authEKS, "choose an account and role")
 	}
 
 	return m.ssoRoleCredentials(ctx, token, state)
@@ -437,10 +441,44 @@ func (m *eksMethod) signIn(ctx context.Context, state kubeAuthState, prompt func
 		return state, err
 	}
 
-	signed := m.withSSOToken(state.withSession(map[string]string{"ssoClientId": client.ClientID, "ssoClientSecret": client.ClientSecret}), token)
-	signed.User = state.secret(awsFieldRoleName) + " @ " + state.secret(awsFieldAccountID)
+	signed := m.withSSOToken(state.withSession(map[string]string{
+		"ssoClientId": client.ClientID, "ssoClientSecret": client.ClientSecret, ssoRolesSession: "",
+		"roleKey": "", "roleSecret": "", "roleToken": "", "roleExpiry": "",
+	}), token)
 
-	return signed, nil
+	if state.secret(awsFieldAccountID) != "" && state.secret(awsFieldRoleName) != "" {
+		signed.User = ssoRoleLabel(awsSSORole{AccountID: state.secret(awsFieldAccountID), RoleName: state.secret(awsFieldRoleName)})
+
+		return signed, nil
+	}
+
+	return m.withRoleChoices(ctx, signed, token.AccessToken)
+}
+
+// withRoleChoices lists what the signed-in user may assume: the only role is taken, several
+// wait in the session for the user's choice (signed in, no user yet).
+func (m *eksMethod) withRoleChoices(ctx context.Context, signed kubeAuthState, token string) (kubeAuthState, error) {
+	roles, err := m.ssoRoles(ctx, token, signed.secret(awsFieldSSORegion))
+	if err != nil {
+		return signed, err
+	}
+
+	switch len(roles) {
+	case 0:
+		return signed, errors.New("IAM Identity Center gives this user no account and role to assume")
+	case 1:
+		return withChosenRole(signed, roles[0]), nil
+	}
+
+	list, err := json.Marshal(roles)
+	if err != nil {
+		return signed, err
+	}
+
+	out := signed.withSession(map[string]string{ssoRolesSession: string(list)})
+	out.User = ""
+
+	return out, nil
 }
 
 // awsDeviceError maps AWS's error names to RFC 8628's.

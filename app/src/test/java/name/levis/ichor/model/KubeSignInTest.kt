@@ -89,6 +89,29 @@ class KubeSignInTest {
     }
 
     @Test
+    fun identityCenterNeedsOnlyStartUrlAndRegion() {
+        val sso = listOf(AWS_SSO_START_URL, AWS_SSO_REGION, AWS_ACCOUNT_ID, AWS_ROLE_NAME)
+        assertTrue(credentialsComplete(sso, mapOf(AWS_SSO_START_URL to "https://example.awsapps.com/start", AWS_SSO_REGION to "eu-west-1")))
+        assertFalse(credentialsComplete(sso, mapOf(AWS_SSO_START_URL to "https://example.awsapps.com/start")))
+    }
+
+    @Test
+    fun roleChoicesDecodeAndSignIn() {
+        val info = TalosJson.decodeFromString(
+            KubeSignInInfo.serializer(),
+            """{"method":"eks","kind":"credentials","options":[["awsSsoStartUrl","awsSsoRegion","awsAccountId","awsRoleName"]],"values":{"awsSsoStartUrl":"https://example.awsapps.com/start","awsSsoRegion":"eu-west-1"},"signedIn":true,"choices":[{"accountId":"123456789012","accountName":"Production","roleName":"ReadOnly"},{"accountId":"210987654321","roleName":"Admin"}]}""",
+        )
+        assertEquals(2, info.choices.size)
+        assertEquals("Production · ReadOnly", info.choices[0].label)
+        assertEquals("210987654321 · Admin", info.choices[1].label)
+        assertEquals(
+            mapOf(AWS_SSO_START_URL to "https://example.awsapps.com/start", AWS_SSO_REGION to "eu-west-1", AWS_ACCOUNT_ID to "123456789012", AWS_ROLE_NAME to "ReadOnly"),
+            info.choices[0].credentials(info.values),
+        )
+        assertTrue(TalosJson.decodeFromString(KubeSignInInfo.serializer(), """{"method":"eks","kind":"credentials","signedIn":false}""").choices.isEmpty())
+    }
+
+    @Test
     fun promptDecodes() {
         val device = TalosJson.decodeFromString(SignInPrompt.serializer(), """{"kind":"device","url":"https://idp/device?code=AB","userCode":"AB-CD","verificationUrl":"https://idp/device","expiresIn":600}""")
         assertTrue(device.isDevice)
