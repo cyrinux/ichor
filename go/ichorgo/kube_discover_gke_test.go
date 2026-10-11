@@ -265,6 +265,8 @@ func TestKubeDiscoverOptions(t *testing.T) {
 		gcpFieldServiceAccount,
 		gcpFieldUserCredentials + "," + gcpFieldProjects,
 		gcpFieldOAuthClientID + "," + gcpFieldOAuthClientSecret + "," + gcpFieldOAuthRedirectURL + "," + gcpFieldProjects,
+		// gcloud's client, on every build: a marker the apps draw as a button.
+		gcpFieldGcloudSignIn + "," + gcpFieldProjects,
 	}, " | ")
 	if got := optionSets(options[discoverGKE]); got != want {
 		t.Errorf("without a Google client: %s", got)

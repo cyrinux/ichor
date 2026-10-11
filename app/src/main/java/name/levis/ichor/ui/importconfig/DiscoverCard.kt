@@ -43,6 +43,7 @@ import name.levis.ichor.data.GoogleAuthorization
 import name.levis.ichor.data.googleSignInSecrets
 import name.levis.ichor.model.DiscoveryProgress
 import name.levis.ichor.model.DiscoveryProvider
+import name.levis.ichor.model.GCP_GCLOUD_SIGN_IN
 import name.levis.ichor.model.GCP_GOOGLE_SIGN_IN
 import name.levis.ichor.model.GCP_OAUTH_CLIENT_ID
 import name.levis.ichor.model.GCP_PROJECTS
@@ -139,8 +140,8 @@ internal fun DiscoverCard(
                 }
             }
         }
-        // Google's own sign-in: nothing to type but the optional projects.
-        val typed = fields.filter { it != GCP_GOOGLE_SIGN_IN }
+        // Google's own sign-in or gcloud's: nothing to type but the optional projects.
+        val typed = fields.filter { it != GCP_GOOGLE_SIGN_IN && it != GCP_GCLOUD_SIGN_IN }
         CredentialFields(typed, values, onValue = { name, value -> values[name] = value }, enabled = !state.running)
         if (provider == DiscoveryProvider.GKE) {
             OutlinedButton(onClick = { scanning = true }, enabled = !state.running) { Text(stringResource(R.string.kube_discover_scan)) }
@@ -177,6 +178,7 @@ private fun DiscoverHints(fields: List<String>) {
         MutedText(stringResource(R.string.kube_discover_google_body))
         MutedText(stringResource(R.string.kube_signin_google_hint))
     }
+    if (GCP_GCLOUD_SIGN_IN in fields) MutedText(stringResource(R.string.kube_signin_gcp_gcloud_hint))
     if (GCP_USER_CREDENTIALS in fields) {
         MutedText(stringResource(R.string.kube_signin_gcp_user_hint))
         MutedText(stringResource(R.string.kube_signin_gcp_workforce_hint))

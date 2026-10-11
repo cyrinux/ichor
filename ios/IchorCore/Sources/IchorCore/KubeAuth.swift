@@ -161,9 +161,14 @@ public func kubeGoogleSignInSecretsJSON(projects: String = "") -> String {
                     values: [kubeGoogleSignInField: "ios", "gcpProjects": projects])
 }
 
-/// Discovery's OAuth and native iOS Google options need a browser round first.
+/// GKE's "Your Google account (like gcloud)" option: the browser sign-in with gcloud's own
+/// client, on every build. A marker drawn as a Sign in button, never a text field; it is
+/// submitted as "1".
+public let kubeGcloudSignInField = "gcpGcloudSignIn"
+
+/// Discovery's OAuth, gcloud and native iOS Google options need a browser round first.
 public func kubeDiscoverNeedsSignIn(_ fields: [String]) -> Bool {
-    fields.contains(kubeGoogleSignInField) || fields.contains("gcpOAuthClientId")
+    fields.contains(kubeGoogleSignInField) || fields.contains(kubeGcloudSignInField) || fields.contains("gcpOAuthClientId")
 }
 
 /// The URL scheme the in-app web session closes on for a sign-in coming back to
@@ -182,10 +187,13 @@ public func kubeFieldOptional(_ field: String) -> Bool {
 }
 
 /// The JSON object of `values` for `fields` (trimmed, empty ones left out), as KubeSetCredentials
-/// and DiscoverClusters take it.
+/// and DiscoverClusters take it; gcloud's sign-in sends its marker.
 public func kubeSecretsJSON(fields: [String], values: [String: String]) -> String {
     var secrets: [String: String] = [:]
-    for field in fields {
+    for field in fields where field == kubeGcloudSignInField {
+        secrets[field] = "1"
+    }
+    for field in fields where field != kubeGcloudSignInField {
         let value = (values[field] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         if !value.isEmpty { secrets[field] = value }
     }
@@ -193,9 +201,9 @@ public func kubeSecretsJSON(fields: [String], values: [String: String]) -> Strin
     return String(decoding: data, as: UTF8.self)
 }
 
-/// Whether every required field of `fields` has a value.
+/// Whether every required field of `fields` has a value; a marker needs none.
 public func kubeFieldsComplete(_ fields: [String], values: [String: String]) -> Bool {
-    fields.allSatisfy { kubeFieldOptional($0) || !(values[$0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    fields.allSatisfy { $0 == kubeGcloudSignInField || kubeFieldOptional($0) || !(values[$0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 }
 
 /// The providers cloud discovery offers, in the order shown (Go KubeDiscoverFields keys).

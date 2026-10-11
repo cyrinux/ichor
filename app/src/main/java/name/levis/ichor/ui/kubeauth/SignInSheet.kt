@@ -49,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.GCP_GCLOUD_SIGN_IN
 import name.levis.ichor.model.GCP_GOOGLE_SIGN_IN
 import name.levis.ichor.model.GCP_OAUTH_CLIENT_ID
 import name.levis.ichor.model.GCP_USER_CREDENTIALS
@@ -147,6 +148,12 @@ private fun CredentialsForm(info: KubeSignInInfo, checking: Boolean, onSubmit: (
         }
         return
     }
+    // Your Google account like gcloud: nothing to type, the browser does the rest.
+    if (fields == listOf(GCP_GCLOUD_SIGN_IN)) {
+        MutedText(stringResource(R.string.kube_signin_gcp_gcloud_hint))
+        SignInButton(checking) { onSubmit(fields, values.toMap()) }
+        return
+    }
     MutedText(stringResource(R.string.kube_signin_credentials_hint))
     CredentialFields(fields, values, onValue = { name, value -> values[name] = value }, enabled = !checking)
     if (GCP_USER_CREDENTIALS in fields) {
@@ -157,11 +164,13 @@ private fun CredentialsForm(info: KubeSignInInfo, checking: Boolean, onSubmit: (
         MutedText(stringResource(R.string.kube_signin_gcp_oauth_hint))
         MutedText(stringResource(R.string.kube_signin_gcp_oauth_web_hint))
     }
-    Button(
-        onClick = { onSubmit(fields, values.toMap()) },
-        enabled = !checking && credentialsComplete(fields, values),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    SignInButton(checking, enabled = credentialsComplete(fields, values)) { onSubmit(fields, values.toMap()) }
+}
+
+/** The sheet's Sign in button, a spinner while [checking]. */
+@Composable
+private fun SignInButton(checking: Boolean, enabled: Boolean = true, onClick: () -> Unit) {
+    Button(onClick = onClick, enabled = !checking && enabled, modifier = Modifier.fillMaxWidth()) {
         if (checking) {
             CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
         } else {

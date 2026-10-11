@@ -44,7 +44,7 @@ struct CloudDiscoveryView: View {
 
     private var working: Bool { busy || flow.isRunning }
     private var google: Bool { fields.contains(kubeGoogleSignInField) }
-    private var visibleFields: [String] { fields.filter { $0 != kubeGoogleSignInField } }
+    private var visibleFields: [String] { fields.filter { $0 != kubeGoogleSignInField && $0 != kubeGcloudSignInField } }
     private var complete: Bool { !fields.isEmpty && kubeFieldsComplete(visibleFields, values: values) }
     private var actionLabel: String {
         google ? String(localized: "Sign in with Google") :
