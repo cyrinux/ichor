@@ -5,6 +5,8 @@ import IchorCore
 enum CaptureEvent: Sendable {
     case packets([PacketSummary])
     case stats(packets: Int64, bytes: Int64)
+    /// A two-node capture's counters, with each node's.
+    case pairStats(PairCaptureStats)
     case done(path: String, packets: Int64, bytes: Int64, error: String?)
 }
 
@@ -38,6 +40,35 @@ extension TalosClient {
         let run = IchorgoStartPacketCapture(config, context, node, options.interface, options.trimmedFilter,
                                                 options.promiscuous, options.snapLen, options.duration.seconds,
                                                 options.sizeLimit.bytes, destPath, bridge)
+        let flusher = Task.detached {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 250_000_000)
+                bridge.flush()
+            }
+        }
+        continuation.onTermination = { _ in
+            flusher.cancel()
+            run?.cancel()
+            _ = bridge // keep the listener alive for the whole capture
+        }
+        return (stream, { run?.cancel() })
+    }
+
+    /// `packetCapture` on node and on `options.peer` at once, merged into destPath (one
+    /// interface per node, each summary naming its node).
+    func packetCapturePair(node: String, options: CaptureOptions, destPath: String) -> (events: AsyncStream<CaptureEvent>, stop: @Sendable () -> Void) {
+        let (stream, continuation) = AsyncStream.makeStream(of: CaptureEvent.self)
+        let bridge = PairCaptureBridge(
+            packets: { continuation.yield(.packets($0)) },
+            stats: { continuation.yield(.pairStats($0)) },
+            done: {
+                continuation.yield($0)
+                continuation.finish()
+            }
+        )
+        let run = IchorgoStartPacketCapturePair(config, context, "\(node),\(options.peer)", options.interfaces, options.trimmedFilter,
+                                                    options.promiscuous, options.snapLen, options.duration.seconds,
+                                                    options.sizeLimit.bytes, destPath, bridge)
         let flusher = Task.detached {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 250_000_000)
@@ -148,6 +179,48 @@ private final class CaptureBridge: NSObject, IchorgoCaptureListenerProtocol, @un
 
     func onStats(_ packets: Int64, bytes: Int64) {
         stats(packets, bytes)
+    }
+
+    func onDone(_ path: String?, packets: Int64, bytes: Int64, errMessage: String?) {
+        flush()
+        done(.done(path: path ?? "", packets: packets, bytes: bytes, error: errMessage.nonEmpty))
+    }
+}
+
+/// CaptureBridge for a two-node capture: the counters come as JSON with each node's.
+private final class PairCaptureBridge: NSObject, IchorgoPairCaptureListenerProtocol, @unchecked Sendable {
+    private let packets: @Sendable ([PacketSummary]) -> Void
+    private let stats: @Sendable (PairCaptureStats) -> Void
+    private let done: @Sendable (CaptureEvent) -> Void
+    private let lock = NSLock()
+    private var pending: [PacketSummary] = []
+
+    init(packets: @escaping @Sendable ([PacketSummary]) -> Void, stats: @escaping @Sendable (PairCaptureStats) -> Void,
+         done: @escaping @Sendable (CaptureEvent) -> Void) {
+        self.packets = packets
+        self.stats = stats
+        self.done = done
+    }
+
+    func flush() {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !pending.isEmpty else { return }
+        packets(pending)
+        pending = []
+    }
+
+    func onPacket(_ summaryJSON: String?) {
+        guard let summaryJSON, let packet = try? TalosJSON.decode(PacketSummary.self, from: summaryJSON) else { return }
+        lock.lock()
+        pending.append(packet)
+        if pending.count > liveCaptureRows { pending.removeFirst(pending.count - liveCaptureRows) }
+        lock.unlock()
+    }
+
+    func onStats(_ statsJSON: String?) {
+        guard let statsJSON, let decoded = try? TalosJSON.decode(PairCaptureStats.self, from: statsJSON) else { return }
+        stats(decoded)
     }
 
     func onDone(_ path: String?, packets: Int64, bytes: Int64, errMessage: String?) {

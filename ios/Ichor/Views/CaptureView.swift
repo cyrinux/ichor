@@ -7,9 +7,11 @@ struct CaptureView: View {
     let node: String
     let hostname: String
 
-    init(node: String, hostname: String) {
+    /// `peer`: a second node to capture on too, prefilled (the KubeSpan map's "Capture both ends").
+    init(node: String, hostname: String, peer: String = "", peerHostname: String = "") {
         self.node = node
         self.hostname = hostname
+        _options = State(initialValue: CaptureOptions(peer: peer, peerHostname: peerHostname.isEmpty ? peer : peerHostname))
     }
 
     @Environment(AppModel.self) private var model
@@ -17,6 +19,8 @@ struct CaptureView: View {
     @State private var session = CaptureSession()
     @State private var options = CaptureOptions()
     @State private var links: LoadState<[NetLink]> = .loading
+    /// The context's other nodes that answer: the second node a capture can run on.
+    @State private var peers: [NodeOverview] = []
     @State private var showVirtual = false
     /// The filter ValidateCaptureFilter last answered for, and its answer.
     @State private var validatedFilter: String?
@@ -64,6 +68,7 @@ struct CaptureView: View {
             Text("The packets captured so far stay in the saved captures.")
         }
         .task { await loadLinks() }
+        .task { await loadPeers() }
         .task(id: options.trimmedFilter) { await validateFilter() }
         .onDisappear { if session.isRunning { session.leave() } }
     }
@@ -80,12 +85,14 @@ struct CaptureView: View {
             } header: {
                 Text("Interface")
             }
+            peerSection
             filterSection
             Section("Limits") {
                 Picker("Duration", selection: $options.duration) {
                     ForEach(CaptureDuration.allCases) { Text($0.localizedLabel).tag($0) }
                 }
-                Picker("Maximum size", selection: $options.sizeLimit) {
+                Picker(options.isPaired ? String(localized: "Maximum size, per node") : String(localized: "Maximum size"),
+                       selection: $options.sizeLimit) {
                     ForEach(CaptureSizeLimit.allCases) { Text(verbatim: "\($0.rawValue) MiB").tag($0) }
                 }
                 Toggle(isOn: $options.promiscuous) {
@@ -103,6 +110,41 @@ struct CaptureView: View {
             }
         }
         .themedBackground()
+    }
+
+    /// "Second node": none, or one of the others; then its interface when it differs.
+    @ViewBuilder private var peerSection: some View {
+        if !peers.isEmpty || options.isPaired {
+            Section {
+                Picker("Second node", selection: Binding(get: { options.peer }, set: { peer in
+                    options.peer = peer
+                    options.peerHostname = peers.first { $0.node == peer }?.hostname ?? peer
+                })) {
+                    Text("None").tag("")
+                    // A prefilled node shows even before the list loads.
+                    if options.isPaired, !peers.contains(where: { $0.node == options.peer }) {
+                        Text(verbatim: options.peerHostname).tag(options.peer)
+                    }
+                    ForEach(peers) { n in Text(verbatim: n.hostname.isEmpty ? n.node : n.hostname).tag(n.node) }
+                }
+                if options.isPaired {
+                    TextField(String(localized: "Interface on \(options.peerHostname)"), text: $options.peerInterface,
+                              prompt: Text(verbatim: options.interface))
+                        .font(.body.monospaced())
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                }
+            } header: {
+                Text("Second node")
+            } footer: {
+                Text("Capture on a second node at the same time, such as both ends of a link: one file, each packet marked with its node.")
+            }
+        }
+    }
+
+    private func loadPeers() async {
+        guard let client = model.client, let nodes = try? await client.overview().nodes else { return }
+        peers = nodes.filter { $0.reachable && $0.node != node }.sorted { $0.hostname < $1.hostname }
     }
 
     @ViewBuilder private var interfacePicker: some View {
@@ -277,6 +319,10 @@ private struct CaptureLiveView: View {
             VStack(alignment: .leading) {
                 Text("\(session.packetCount) packets").font(.subheadline.monospacedDigit())
                 Text(verbatim: formatBytes(session.bytes)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                ForEach(session.nodeStats) { n in
+                    Text("\(n.hostname): \(n.packets) packets").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                }
+                if let gap = session.clockGapMs { ClockGapNote(gapMs: gap) }
             }
             Spacer()
             TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -311,6 +357,17 @@ private struct CaptureLiveView: View {
     }
 }
 
+/// "The two nodes' clocks are 12 ms apart": packets of the two are ordered no better than that.
+struct ClockGapNote: View {
+    let gapMs: Int64
+
+    var body: some View {
+        Text("The two nodes' clocks are \(gapMs) ms apart: packets of one node can be that much out of order against the other's.")
+            .font(.caption)
+            .foregroundStyle(gapMs >= clockGapWarnMs ? Color.statusWarn : .secondary)
+    }
+}
+
 /// "12  10:42:01.123  TCP  192.0.2.1:443 → 192.0.2.9:51000  [ACK] …"
 struct PacketRow: View {
     let packet: PacketSummary
@@ -319,6 +376,9 @@ struct PacketRow: View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 6) {
                 Text(verbatim: "\(packet.number)").foregroundStyle(.secondary)
+                if !packet.node.isEmpty {
+                    Text(verbatim: packet.node).fontWeight(.semibold).foregroundStyle(.secondary).lineLimit(1)
+                }
                 Text(Date(epochMillis: packet.ts), format: .dateTime.hour().minute().second().secondFraction(.fractional(3)))
                     .foregroundStyle(.secondary)
                 Text(verbatim: packet.proto.isEmpty ? "?" : packet.proto)

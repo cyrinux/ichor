@@ -75,10 +75,14 @@ fun rememberPacketPalette(): PacketPalette {
     }
 }
 
-/** `+1.234 TCP src → dst len info`, the protocol tag coloured. */
+/** `+1.234 [node] TCP src → dst len info`, the protocol tag coloured; the node in a two-node capture. */
 fun packetRowText(p: PacketSummary, start: Long, palette: PacketPalette): AnnotatedString = buildAnnotatedString {
     withStyle(SpanStyle(color = palette.dim)) { append(relativeTime(p.ts, start)) }
     append(' ')
+    if (p.node.isNotEmpty()) {
+        withStyle(SpanStyle(color = palette.dim, fontWeight = FontWeight.Bold)) { append("[${p.node}]") }
+        append(' ')
+    }
     val color = palette.proto.getValue(protoKind(p.proto))
     withStyle(SpanStyle(color = color, fontWeight = FontWeight.Bold)) { append(p.proto.ifEmpty { "?" }) }
     append(' ')

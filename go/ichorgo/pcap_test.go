@@ -592,7 +592,7 @@ func TestWriteCaptureLimitsAndSnaplen(t *testing.T) {
 		t.Fatalf("res=%+v err=%v", res, err)
 	}
 
-	err = eachPacket(dest, func(_ int, ci gopacket.CaptureInfo, data []byte, _ layers.LinkType) bool {
+	err = eachPacket(dest, func(_ int, ci gopacket.CaptureInfo, data []byte, _ layers.LinkType, _ string) bool {
 		if len(data) != 100 || ci.Length != len(pkt) {
 			t.Errorf("captured %d of %d", len(data), ci.Length)
 		}

@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.CaptureRepository
 import name.levis.ichor.model.PCAP_PAGE_SIZE
@@ -63,6 +64,8 @@ data class PcapView(
     val loading: Boolean = false,
     val error: UiText? = null,
     val loadedOnce: Boolean = false,
+    /** In a capture of two nodes, how far apart their clocks were (ms). */
+    val clockGapMs: Long? = null,
 ) {
     val hasMore: Boolean get() = packets.size < total
 }
@@ -79,7 +82,7 @@ class CaptureFileViewModel(private val captures: CaptureRepository, val file: Fi
             try {
                 val page = captures.read(file, current.packets.size, PCAP_PAGE_SIZE)
                 _state.update {
-                    it.copy(packets = it.packets + page.packets, total = page.total, loading = false, loadedOnce = true)
+                    it.copy(packets = it.packets + page.packets, total = page.total, loading = false, loadedOnce = true, clockGapMs = page.clockGapMs)
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -178,6 +181,7 @@ fun PcapFileList(vm: CaptureFileViewModel, onPacket: (PacketSummary) -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             )
+            state.clockGapMs?.let { gap -> ClockGapNote(gap, Modifier.padding(horizontal = 16.dp, vertical = 2.dp)) }
             PacketList(
                 packets = state.packets,
                 start = state.packets.firstOrNull()?.ts ?: 0,
@@ -193,6 +197,20 @@ fun PcapFileList(vm: CaptureFileViewModel, onPacket: (PacketSummary) -> Unit) {
         }
     }
 }
+
+/** "The two nodes' clocks are 12 ms apart": packets of the two are ordered no better than that. */
+@Composable
+fun ClockGapNote(gapMs: Long, modifier: Modifier = Modifier) {
+    Text(
+        stringResource(R.string.capture_clock_gap, gapMs.toInt()),
+        style = MaterialTheme.typography.labelMedium,
+        color = if (gapMs >= CLOCK_GAP_WARN_MS) LocalStatusColors.current.warn else MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier,
+    )
+}
+
+/** From this gap the note is shown as a warning: a request and its answer can swap places. */
+private const val CLOCK_GAP_WARN_MS = 5L
 
 @Composable
 private fun LoadMore(state: PcapView, onLoad: () -> Unit) {

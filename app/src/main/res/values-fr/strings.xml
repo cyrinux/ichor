@@ -1356,6 +1356,14 @@
     <string name="capture_filter_talos_excluded">Le trafic de l\'API Talos (port 50000) n\'est jamais capturé.</string>
     <string name="capture_duration">Durée</string>
     <string name="capture_max_size">Taille max.</string>
+    <string name="capture_second_node">Second nœud</string>
+    <string name="capture_second_node_desc">Capturer en même temps sur un second nœud, comme les deux bouts d\'un lien : un seul fichier, chaque paquet marqué de son nœud.</string>
+    <string name="capture_second_node_none">Aucun</string>
+    <string name="capture_second_iface">Interface sur %1$s</string>
+    <string name="capture_second_iface_same">Vide : la même interface.</string>
+    <string name="capture_max_size_each">Taille maximale, par nœud</string>
+    <string name="capture_clock_gap">Les horloges des deux nœuds ont %1$d ms d\'écart : les paquets d\'un nœud peuvent être décalés d\'autant par rapport à ceux de l\'autre.</string>
+    <string name="topology_link_capture">Capturer les deux bouts</string>
     <string name="capture_seconds">%1$d s</string>
     <string name="capture_minutes">%1$d min</string>
     <string name="capture_mib">%1$d Mio</string>

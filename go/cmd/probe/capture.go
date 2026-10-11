@@ -109,3 +109,61 @@ func pcapProbe(cfg, contextName, node, iface, filter, seconds string, masked boo
 
 	return b.String()
 }
+
+// pairProbe collects a two-node capture's callbacks.
+type pairProbe struct {
+	stats string
+	done  chan string
+}
+
+func (p *pairProbe) OnPacket(string)          {}
+func (p *pairProbe) OnStats(statsJSON string) { p.stats = statsJSON }
+
+func (p *pairProbe) OnDone(path string, packets, bytes int64, errMessage string) {
+	p.done <- fmt.Sprintf("done path_set=%v packets=%d bytes=%d err=%q", path != "", packets, bytes, errMessage)
+}
+
+// pcapPairProbe captures on two nodes at once into a temporary merged file, prints the last
+// counters and how many packets each node has in the file, then deletes it.
+func pcapPairProbe(cfg, contextName, nodes, iface, filter, seconds string) string {
+	secs, _ := strconv.Atoi(seconds) //nolint:errcheck
+
+	dir, err := os.MkdirTemp("", "pcap-pair-probe")
+	if err != nil {
+		return err.Error()
+	}
+
+	defer os.RemoveAll(dir) //nolint:errcheck
+
+	dest := filepath.Join(dir, "pair.pcapng")
+	p := &pairProbe{done: make(chan string, 1)}
+
+	ichorgo.StartPacketCapturePair(cfg, contextName, nodes, iface, filter, false, 0, secs, 0, dest, p)
+
+	var b strings.Builder
+
+	fmt.Fprintln(&b, <-p.done)
+	fmt.Fprintln(&b, "last stats:", p.stats)
+
+	page, err := ichorgo.ReadPcap(dest, 0, 1000)
+	if err != nil {
+		return b.String() + "ReadPcap: " + err.Error()
+	}
+
+	var parsed struct {
+		Packets []struct {
+			Node string `json:"node"`
+		} `json:"packets"`
+	}
+
+	_ = json.Unmarshal([]byte(page), &parsed) //nolint:errcheck
+
+	byNode := map[string]int{}
+	for _, pkt := range parsed.Packets {
+		byNode[pkt.Node]++
+	}
+
+	fmt.Fprintf(&b, "packets by node (first 1000): %v\n", byNode)
+
+	return b.String()
+}

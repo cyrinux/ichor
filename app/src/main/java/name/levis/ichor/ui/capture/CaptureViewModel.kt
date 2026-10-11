@@ -18,6 +18,9 @@ import name.levis.ichor.data.CaptureRepository
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.CaptureOptions
 import name.levis.ichor.model.LinkInfo
+import name.levis.ichor.model.NodeOverview
+import name.levis.ichor.model.PairNodeStats
+import name.levis.ichor.model.pairCaptureFileName
 import name.levis.ichor.model.MAX_LIVE_PACKETS
 import name.levis.ichor.model.PacketSummary
 import name.levis.ichor.model.appendCapped
@@ -33,6 +36,11 @@ class CaptureLinksViewModel(private val talos: TalosRepository, private val node
     override suspend fun fetch(): List<LinkInfo> = talos.network(node).links
 }
 
+/** The context's other nodes that answer: the second node a capture can run on. */
+class CapturePeersViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<List<NodeOverview>>() {
+    override suspend fun fetch(): List<NodeOverview> = talos.overview().nodes.filter { it.reachable && it.node != node }.sortedBy { it.hostname }
+}
+
 /** A capture started from this screen; [finishedAt] 0 while it runs. */
 data class CaptureSession(
     val file: File,
@@ -43,6 +51,10 @@ data class CaptureSession(
     val bytes: Long = 0,
     val finishedAt: Long = 0,
     val error: UiText? = null,
+    /** Each node's counters, in a capture of two nodes. */
+    val nodeStats: List<PairNodeStats> = emptyList(),
+    /** How far apart the two nodes' clocks are (ms), when known. */
+    val clockGapMs: Long? = null,
 ) {
     val running: Boolean get() = finishedAt == 0L
 
@@ -60,8 +72,11 @@ class CaptureViewModel(
     private val captures: CaptureRepository,
     private val node: String,
     private val hostname: String,
+    /** A second node to capture on too (the KubeSpan map's "Capture both ends"); "" for none. */
+    peer: String = "",
+    peerHost: String = "",
 ) : ViewModel() {
-    private val _options = MutableStateFlow(CaptureOptions())
+    private val _options = MutableStateFlow(CaptureOptions(peer = peer, peerHost = peerHost.ifEmpty { peer }))
     val options: StateFlow<CaptureOptions> = _options.asStateFlow()
 
     /** The Go core's verdict on the current filter, "" when valid. */
@@ -109,13 +124,14 @@ class CaptureViewModel(
     fun start() {
         if (_session.value?.running == true) return
         val opts = _options.value
-        val file = File(captures.dir, captureFileName(hostname, opts.iface))
+        val name = if (opts.paired) pairCaptureFileName(hostname, opts.peerHost, opts.iface) else captureFileName(hostname, opts.iface)
+        val file = File(captures.dir, name)
         val started = CaptureSession(file, opts, System.currentTimeMillis())
         _session.value = started
         stopped = false
         job = viewModelScope.launch {
             try {
-                val h = captures.start(node, opts, file)
+                val h = if (opts.paired) captures.startPair(node, opts, file) else captures.start(node, opts, file)
                 handle = h
                 if (stopped) h.stop() // stopped while starting
                 collect(h)
@@ -151,6 +167,8 @@ class CaptureViewModel(
                 packets = s.packets.appendCapped(packets, MAX_LIVE_PACKETS),
                 packetCount = done?.packets ?: stats?.packets ?: (s.packetCount + packets.size),
                 bytes = done?.bytes ?: stats?.bytes ?: s.bytes,
+                nodeStats = stats?.nodes ?: s.nodeStats,
+                clockGapMs = stats?.clockGapMs ?: s.clockGapMs,
             )
         }
         // Stopping early is not a failure, whatever the core reports for it.

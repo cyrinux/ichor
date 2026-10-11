@@ -63,9 +63,16 @@ fun CaptureScreen(
     hostname: String,
     onBack: () -> Unit,
     onCaptures: () -> Unit,
+    /** A second node to capture on too, prefilled ("" for none). */
+    peer: String = "",
+    peerHost: String = "",
     vm: CaptureViewModel = viewModel(
-        key = "capture-$node",
-        factory = factory { CaptureViewModel(app.captureRepository, node, hostname) },
+        key = "capture-$node-$peer",
+        factory = factory { CaptureViewModel(app.captureRepository, node, hostname, peer, peerHost) },
+    ),
+    peersVm: CapturePeersViewModel = viewModel(
+        key = "capture-peers-$node",
+        factory = factory { CapturePeersViewModel(app.talosRepository, node) },
     ),
     linksVm: CaptureLinksViewModel = viewModel(
         key = "capture-links-$node",
@@ -75,6 +82,7 @@ fun CaptureScreen(
     val context = LocalContext.current
     val captures = (context.applicationContext as TalosApp).captureRepository
     val links by linksVm.state.collectAsStateWithLifecycle()
+    val peers by peersVm.state.collectAsStateWithLifecycle()
     val options by vm.options.collectAsStateWithLifecycle()
     val filterError by vm.filterError.collectAsStateWithLifecycle()
     val filterChecking by vm.filterChecking.collectAsStateWithLifecycle()
@@ -86,7 +94,10 @@ fun CaptureScreen(
     var detail by remember { mutableStateOf<PacketSummary?>(null) }
     val save = rememberSaveCapture { message -> scope.launch { snackbar.showSnackbar(message.resolve(context)) } }
 
-    LaunchedEffect(Unit) { if (links == UiState.Loading) linksVm.refresh() }
+    LaunchedEffect(Unit) {
+        if (links == UiState.Loading) linksVm.refresh()
+        if (peers == UiState.Loading) peersVm.refresh()
+    }
     LaunchedEffect(links) { (links as? UiState.Loaded)?.let { vm.linksLoaded(it.data) } }
 
     val running = session?.running == true
@@ -120,7 +131,7 @@ fun CaptureScreen(
         Column(Modifier.pageContent(padding).fillMaxSize()) {
             val s = session
             if (s == null) {
-                CaptureSetup(links, options, filterError, filterChecking, onChange = vm::update, onStart = vm::start)
+                CaptureSetup(links, options, filterError, filterChecking, onChange = vm::update, onStart = vm::start, peers = peers)
             } else {
                 if (!s.running) {
                     FinishedActions(
@@ -207,6 +218,14 @@ private fun CaptureBar(session: CaptureSession, onStop: () -> Unit) {
                     "${pluralStringResource(R.plurals.capture_packets, count, count)} · ${formatBytes(session.bytes)} · $elapsed",
                     style = MaterialTheme.typography.bodyMedium,
                 )
+                if (session.nodeStats.isNotEmpty()) {
+                    val perNode = session.nodeStats.map { n ->
+                        val c = n.packets.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                        "${n.hostname}: ${pluralStringResource(R.plurals.capture_packets, c, c)}"
+                    }
+                    Text(perNode.joinToString("  ·  "), style = MaterialTheme.typography.labelMedium)
+                    session.clockGapMs?.let { ClockGapNote(it) }
+                }
                 val status = when {
                     session.running -> stringResource(R.string.capture_running, session.options.iface)
                     session.error != null -> stringResource(R.string.capture_failed, session.error.asString())
