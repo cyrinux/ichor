@@ -24,6 +24,9 @@ import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.ConfigApplyMode
 import name.levis.ichor.model.ConfigApplyState
 import name.levis.ichor.model.ConfigEdit
+import name.levis.ichor.model.ConfigSnippet
+import name.levis.ichor.model.DriftFix
+import name.levis.ichor.model.SnippetEdits
 import name.levis.ichor.model.ConfigPreview
 import name.levis.ichor.model.ConfigSyntaxError
 import name.levis.ichor.model.ConfigTree
@@ -111,6 +114,11 @@ class MachineConfigViewModel(
 
     /** Refused edits, to show once. */
     val messages: SharedFlow<UiText> = _messages.asSharedFlow()
+
+    private val _snippets = MutableStateFlow<UiState<List<ConfigSnippet>>?>(null)
+
+    /** The ready-made changes, read when the picker first opens. */
+    val snippets: StateFlow<UiState<List<ConfigSnippet>>?> = _snippets.asStateFlow()
 
     /** The Talos version whose schema describes the tree; empty until known (or when it cannot be). */
     private var schemaVersion = ""
@@ -209,6 +217,56 @@ class MachineConfigViewModel(
                     _editor.update { it.copy(draft = edited, treeStale = true, edits = it.edits + edit) }
                     describe(edited)
                 }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                _messages.tryEmit(e.uiText())
+            } finally {
+                _editor.update { it.copy(busy = false) }
+            }
+        }
+    }
+
+    fun loadSnippets() {
+        if (_snippets.value is UiState.Loaded) return
+        viewModelScope.launch { _snippets.value = uiStateOf { talos.configSnippets() } }
+    }
+
+    /** Snippet [id] with [params], as edits of the draft; the change shows in the tree, then the review. */
+    fun applySnippet(id: String, params: Map<String, String>) = applyEdits { draft -> talos.configSnippetEdits(draft, id, params) }
+
+    /**
+     * Opens a draft that gives this node the reference's value of a drift difference, then asks
+     * the node for the review: the screen lands on the diff.
+     */
+    fun applyDriftFix(fix: DriftFix) {
+        if (!_editor.value.editing) startEditing()
+        if (!_editor.value.editing) return
+        applyEdits(then = ::review) { draft -> talos.driftFixEdits(draft, fix) }
+    }
+
+    /**
+     * Applies the edits [source] computes for the draft, in order. A refusal (or a snippet that
+     * cannot do it) leaves the draft as it was and says why; [then] runs once they are in.
+     */
+    private fun applyEdits(then: () -> Unit = {}, source: suspend (draft: String) -> SnippetEdits) {
+        val draft = _editor.value.draft ?: return
+        if (_editor.value.busy) return
+        _editor.update { it.copy(busy = true) }
+        applying = viewModelScope.launch {
+            try {
+                val result = source(draft)
+                if (!result.fixable) {
+                    _messages.tryEmit(UiText.Raw(result.reason))
+                    return@launch
+                }
+                var edited = draft
+                for (edit in result.edits) edited = talos.machineConfigEdit(edited, edit)
+                if (_editor.value.draft != draft) return@launch // discarded meanwhile
+                _editor.update { it.copy(draft = edited, treeStale = true, edits = it.edits + result.edits) }
+                if (result.staged) _messages.tryEmit(UiText.Res(R.string.snippet_staged_note))
+                describe(edited)
+                then()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {

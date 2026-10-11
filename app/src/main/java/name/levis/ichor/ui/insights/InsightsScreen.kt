@@ -18,6 +18,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.DriftFix
+import name.levis.ichor.model.fix
 import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.factory
@@ -34,7 +36,11 @@ private val INSIGHTS_TABS = listOf(0, 1, 2)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InsightsScreen(onBack: () -> Unit) {
+fun InsightsScreen(
+    onBack: () -> Unit,
+    /** Opens [node]'s machine config with a draft that undoes a drift difference. */
+    onFix: (node: String, hostname: String, fix: DriftFix) -> Unit = { _, _, _ -> },
+) {
     val context = LocalContext.current
     val application = context.applicationContext as name.levis.ichor.TalosApp
     val config by application.configRepository.config.collectAsStateWithLifecycle()
@@ -98,6 +104,10 @@ fun InsightsScreen(onBack: () -> Unit) {
                                             Text("${change.node} · ${change.key}", style = MaterialTheme.typography.titleSmall)
                                             Text(stringResource(R.string.insights_reference, change.reference))
                                             Text("${change.before.ifEmpty { "∅" }} → ${change.after.ifEmpty { "∅" }}", fontFamily = FontFamily.Monospace)
+                                            change.fix()?.let { fix ->
+                                                val hostname = snapshot.nodes.firstOrNull { it.node == change.node }?.hostname?.ifEmpty { null } ?: change.node
+                                                TextButton(onClick = { onFix(change.node, hostname, fix) }) { Text(stringResource(R.string.insights_fix)) }
+                                            }
                                         }
                                     }
                                 }

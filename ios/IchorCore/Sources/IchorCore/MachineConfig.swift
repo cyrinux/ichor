@@ -151,7 +151,7 @@ public struct ConfigTree: Decodable, Equatable, Sendable {
 }
 
 /// One change to a draft (MachineConfigEdit): `doc` and `path` as the tree gave them.
-public struct ConfigEdit: Encodable, Equatable, Sendable {
+public struct ConfigEdit: Codable, Equatable, Sendable {
     public let doc: Int
     public let path: [String]
     /// set, add or remove.

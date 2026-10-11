@@ -20,6 +20,10 @@ import name.levis.ichor.model.CpReplaceWait
 import name.levis.ichor.model.ConfigApplyMode
 import name.levis.ichor.model.ConfigApplyProgress
 import name.levis.ichor.model.ConfigEdit
+import name.levis.ichor.model.ConfigSnippet
+import name.levis.ichor.model.ConfigSnippetList
+import name.levis.ichor.model.DriftFix
+import name.levis.ichor.model.SnippetEdits
 import name.levis.ichor.model.ConfigPreview
 import name.levis.ichor.model.ConfigSchemaStatus
 import name.levis.ichor.model.ConfigTree
@@ -101,6 +105,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.model.withLastKnown
 import name.levis.ichor.model.outage
@@ -242,6 +248,22 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** [draft] with [edit] applied. Local: nothing is sent to the node. */
     suspend fun machineConfigEdit(draft: String, edit: ConfigEdit): String = withContext(Dispatchers.IO) {
         Ichorgo.machineConfigEdit(draft, TalosJson.encodeToString(ConfigEdit.serializer(), edit))
+    }
+
+    /** The ready-made config changes. Local. */
+    suspend fun configSnippets(): List<ConfigSnippet> = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(ConfigSnippetList.serializer(), Ichorgo.configSnippets()).snippets
+    }
+
+    /** The edits of [draft] that snippet [id] makes with [params]. Local. */
+    suspend fun configSnippetEdits(draft: String, id: String, params: Map<String, String>): SnippetEdits = withContext(Dispatchers.IO) {
+        val json = TalosJson.encodeToString(MapSerializer(String.serializer(), String.serializer()), params)
+        TalosJson.decodeFromString(SnippetEdits.serializer(), Ichorgo.configSnippetEdits(draft, id, json))
+    }
+
+    /** The edits of [draft] that give it the reference's value of a drift difference. Local. */
+    suspend fun driftFixEdits(draft: String, fix: DriftFix): SnippetEdits = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(SnippetEdits.serializer(), Ichorgo.driftFixEdits(draft, fix.key, fix.before, fix.after))
     }
 
     /**

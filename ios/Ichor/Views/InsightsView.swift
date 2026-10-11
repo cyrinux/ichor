@@ -81,6 +81,14 @@ private struct InsightsContent: View {
                         Text(verbatim: "\(change.node) · \(change.key)").font(.headline)
                         Text("Reference: \(change.reference)").font(.caption)
                         Text(verbatim: "\(change.before.isEmpty ? "∅" : change.before) → \(change.after.isEmpty ? "∅" : change.after)").font(.caption.monospaced())
+                        if let fix = change.fix {
+                            let hostname = snapshot.nodes.first { $0.node == change.node }?.hostname ?? change.node
+                            NavigationLink {
+                                MachineConfigView(node: change.node, hostname: hostname.isEmpty ? change.node : hostname, fix: fix)
+                            } label: {
+                                Text("Fix with a patch…").font(.caption)
+                            }
+                        }
                     }
                 }
             }

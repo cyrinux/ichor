@@ -12,6 +12,14 @@ private enum ConfigTab: String {
 struct MachineConfigView: View {
     let node: String
     let hostname: String
+    /// A drift difference from Insights: the screen opens a draft that undoes it, then the review.
+    let fix: DriftFix?
+
+    init(node: String, hostname: String, fix: DriftFix? = nil) {
+        self.node = node
+        self.hostname = hostname
+        self.fix = fix
+    }
 
     @Environment(AppModel.self) private var model
     @AppStorage("machineConfig.tab") private var tab = ConfigTab.pretty
@@ -34,6 +42,8 @@ struct MachineConfigView: View {
     @State private var edits: [ConfigEdit] = []
     /// False once the YAML was typed into: that change is text, it cannot be replayed elsewhere.
     @State private var replayable = true
+    @State private var pickingSnippet = false
+    @State private var fixApplied = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -64,7 +74,15 @@ struct MachineConfigView: View {
         .fullScreenCover(isPresented: $followingTry, onDismiss: { Task { await finishTry() } }) {
             ConfigTryView(node: node, hostname: hostname, request: nil) { _ in }
         }
-        .task { await load() }
+        .sheet(isPresented: $pickingSnippet) {
+            SnippetPickerSheet { id, params in
+                Task { await applySnippet(id: id, params: params) }
+            }
+        }
+        .task {
+            await load()
+            await applyFixOnce()
+        }
     }
 
     private var header: some View {
@@ -156,6 +174,11 @@ struct MachineConfigView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Review") { reviewing = true }
                     .disabled(!canReview)
+            }
+            ToolbarItem(placement: .bottomBar) {
+                Button { pickingSnippet = true } label: {
+                    Label("Snippets", systemImage: "wand.and.stars")
+                }
             }
         } else if !showingMeta {
             ToolbarItemGroup(placement: .primaryAction) {
@@ -255,6 +278,54 @@ struct MachineConfigView: View {
             return nil
         } catch {
             return error.localizedDescription
+        }
+    }
+
+    /// Snippet `id` with `params`, as edits of the draft.
+    private func applySnippet(id: String, params: [String: String]) async {
+        guard let client = model.client, let current = draft else { return }
+        do {
+            await applyEdits(try await client.configSnippetEdits(current, id: id, params: params))
+        } catch {
+            message = error.localizedDescription
+        }
+    }
+
+    /// Opened from an Insights drift difference: a draft that undoes it, then the review.
+    private func applyFixOnce() async {
+        guard let fix, !fixApplied, let client = model.client, loadedYAML != nil else { return }
+        fixApplied = true
+        await startEditing()
+        guard let current = draft else { return }
+        do {
+            await applyEdits(try await client.driftFixEdits(current, fix: fix))
+        } catch {
+            message = error.localizedDescription
+            return
+        }
+        if canReview { reviewing = true }
+    }
+
+    /// The edits of a snippet or a fix, in order; a refusal leaves the draft as it was and says why.
+    private func applyEdits(_ result: SnippetEdits) async {
+        guard result.fixable else {
+            message = result.reason
+            return
+        }
+        guard let client = model.client, let current = draft else { return }
+        do {
+            var edited = current
+            for edit in result.edits {
+                edited = try await client.editMachineConfig(edited, edit: edit)
+            }
+            guard draft == current else { return }
+            describing?.cancel()
+            draft = edited
+            edits.append(contentsOf: result.edits)
+            message = result.staged ? String(localized: "Takes effect at the next boot: apply it staged or with a reboot.") : nil
+            await describe()
+        } catch {
+            message = error.localizedDescription
         }
     }
 

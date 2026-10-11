@@ -694,6 +694,11 @@ a fresh install. Backups move between Android and iOS.
 
 - **Machine config changes (node menu → Machine config → Edit):**
   - **Review first:** the node checks every change with a dry run before anything is applied.
+  - **Snippets:** while editing, ready-made changes cover the usual ones: NTP and DNS servers, an
+    interface MTU, a sysctl, kernel arguments, a kubelet or API server argument, a node label, a
+    registry mirror, KubeSpan on or off. You fill a few fields, the change lands in the draft and
+    goes through the same review. On Talos 1.12+ configs, a setting held in its own document
+    (ResolverConfig, TimeSyncConfig, KubeletConfig…) is changed there.
   - **Ways to apply it:**
 
     | Mode | What happens |
@@ -867,7 +872,9 @@ record an incident. These features are read-only and work with `os:reader`.
   Secure Boot, UKI and Talos versions. Without a saved baseline, each role is compared
   with its first reachable node; save a baseline to compare the same nodes over time.
   Differences can be intentional. Failed or unavailable fields stay unknown, and a
-  node absent from the baseline is not treated as a configuration change.
+  node absent from the baseline is not treated as a configuration change. A DNS, NTP or MTU
+  difference has **Fix with a patch…**: it opens that node's machine config with the
+  reference's value already in the draft, on the review (`os:admin` to apply).
 - **Incident recorder:** collects live Talos events and samples node readiness,
   service state, network link state and counters about every five seconds (plus API
   call time). It stops after ten minutes or when its screen leaves the foreground.

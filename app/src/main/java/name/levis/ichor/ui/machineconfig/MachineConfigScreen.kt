@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Search
@@ -54,6 +55,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.model.DriftFix
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ConfigApplyMode
 import name.levis.ichor.model.ConfigApplyState
@@ -90,6 +92,8 @@ fun MachineConfigScreen(
     node: String,
     hostname: String,
     onBack: () -> Unit,
+    /** A drift difference from Insights: the screen opens a draft that undoes it, then the review. */
+    fix: DriftFix? = null,
     vm: MachineConfigViewModel = viewModel(
         key = "machineconfig-$node",
         factory = factory { MachineConfigViewModel(app.talosRepository, node, hostname, app.configTryManager, app.configMultiManager) },
@@ -100,6 +104,15 @@ fun MachineConfigScreen(
     val revealed by vm.revealed.collectAsStateWithLifecycle()
     val editor by vm.editor.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
+    var fixApplied by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(state is UiState.Loaded) {
+        if (fix != null && !fixApplied && state is UiState.Loaded) {
+            fixApplied = true
+            vm.applyDriftFix(fix)
+        }
+    }
+    val snippets by vm.snippets.collectAsStateWithLifecycle()
+    var pickingSnippet by rememberSaveable { mutableStateOf(false) }
 
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
@@ -207,6 +220,12 @@ fun MachineConfigScreen(
                         )
                         TooltipIconButton(Icons.Outlined.Edit, stringResource(R.string.machine_config_edit), enabled = loaded != null, onClick = vm::startEditing)
                     }
+                    if (browsing && editor.editing) {
+                        TooltipIconButton(Icons.Outlined.AutoAwesome, stringResource(R.string.machine_config_snippets), enabled = !editor.busy, onClick = {
+                            vm.loadSnippets()
+                            pickingSnippet = true
+                        })
+                    }
                 },
             )
         },
@@ -308,6 +327,18 @@ fun MachineConfigScreen(
                 }
             }
         }
+    }
+
+    if (pickingSnippet) {
+        SnippetPickerDialog(
+            snippets = snippets,
+            onRetry = vm::loadSnippets,
+            onApply = { id, params ->
+                pickingSnippet = false
+                vm.applySnippet(id, params)
+            },
+            onDismiss = { pickingSnippet = false },
+        )
     }
 
     if (confirmingDiscard) {
