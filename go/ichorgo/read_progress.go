@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"context"
 	"encoding/json"
+	"slices"
 	"sync"
 	"time"
 )
@@ -10,9 +11,12 @@ import (
 // Read progress: a screen whose one call makes many reads (the checkup) is slow on a large
 // cluster, so the apps poll ReadProgress while the call runs and show its steps. A read is
 // keyed by its op and context: the background monitor's checkup of another cluster does not
-// take the screen's place. One read of an op runs at a time per context; starting it again
-// starts a new count, and the first read, if it still runs, keeps writing into a tracker
-// nobody reads any more.
+// take the screen's place. Reads of the same op and context may overlap (a refresh while the
+// first still runs, the monitor checking the cluster on screen): ReadProgress shows the newest
+// one still running, and a finished one leaves the list, so the screen never stays on a read
+// that ended while its own goes on. The last one to finish stays, readable as finished.
+
+// Lock order: readProgresses.mu, then a tracker's mu; never the other way round.
 
 // The states of a step.
 const (
@@ -22,17 +26,27 @@ const (
 	readStepFailed  = "failed"
 )
 
+// readProgresses holds, per key, the reads started there, oldest first.
 var readProgresses = struct {
 	mu sync.Mutex
-	op map[string]*readProgress
-}{op: map[string]*readProgress{}}
+	op map[string][]*readProgress
+}{op: map[string][]*readProgress{}}
 
 // readProgress tracks one read; its methods do nothing on a nil tracker, so code that is
 // also called without one (tests, other screens) needs no check.
 type readProgress struct {
+	key string
+
 	mu      sync.Mutex
 	running bool
 	steps   []readStep
+}
+
+func (p *readProgress) isRunning() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	return p.running
 }
 
 // readStep is one step as ReadProgress shows it. Its ID is a fixed word the apps translate,
@@ -60,15 +74,19 @@ func readProgressKey(op, contextName string) string { return op + "\x00" + conte
 // startReadProgress starts the count of op's read on contextName (unmasked) with its steps,
 // in the order they run.
 func startReadProgress(op, contextName string, steps ...string) *readProgress {
-	p := &readProgress{running: true, steps: make([]readStep, len(steps))}
+	key := readProgressKey(op, contextName)
+	p := &readProgress{key: key, running: true, steps: make([]readStep, len(steps))}
 
 	for i, id := range steps {
 		p.steps[i] = readStep{ID: id, State: readStepPending}
 	}
 
 	readProgresses.mu.Lock()
-	readProgresses.op[readProgressKey(op, contextName)] = p
-	readProgresses.mu.Unlock()
+	defer readProgresses.mu.Unlock()
+
+	// The finished one kept for reading is replaced by this read.
+	running := slices.DeleteFunc(readProgresses.op[key], func(r *readProgress) bool { return !r.isRunning() })
+	readProgresses.op[key] = append(running, p)
 
 	return p
 }
@@ -144,6 +162,33 @@ func (p *readProgress) finish() {
 	p.mu.Lock()
 	p.running = false
 	p.mu.Unlock()
+
+	readProgresses.mu.Lock()
+	defer readProgresses.mu.Unlock()
+
+	// Out of the list, unless no other read is left there: then it stays, readable as
+	// finished. One still running elsewhere in the list shows from now on.
+	if reads := readProgresses.op[p.key]; len(reads) > 1 {
+		readProgresses.op[p.key] = slices.DeleteFunc(reads, func(r *readProgress) bool { return r == p })
+	}
+}
+
+// shownReadProgress is what ReadProgress shows for key: the newest read still running, else
+// the one kept after the last finished. Called with readProgresses.mu held.
+func shownReadProgress(key string) *readProgress {
+	reads := readProgresses.op[key]
+
+	for i := len(reads) - 1; i >= 0; i-- {
+		if reads[i].isRunning() {
+			return reads[i]
+		}
+	}
+
+	if len(reads) > 0 {
+		return reads[len(reads)-1]
+	}
+
+	return nil
 }
 
 func (p *readProgress) snapshot() readProgressJSON {
@@ -191,7 +236,7 @@ func ReadProgress(configYAML, contextName, op string) (out string, err error) {
 	contextName = unmaskContext(configYAML, contextName)
 
 	readProgresses.mu.Lock()
-	p := readProgresses.op[readProgressKey(op, contextName)]
+	p := shownReadProgress(readProgressKey(op, contextName))
 	readProgresses.mu.Unlock()
 
 	raw, err := json.Marshal(p.snapshot())

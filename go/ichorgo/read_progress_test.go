@@ -17,10 +17,10 @@ type readProgressOut struct {
 	}
 }
 
-func readProgressFor(t *testing.T, op string) readProgressOut {
+func readProgressFor(t *testing.T, op string, contextName ...string) readProgressOut {
 	t.Helper()
 
-	out, err := ReadProgress("", "", op)
+	out, err := ReadProgress("", strings.Join(contextName, ""), op)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,6 +111,30 @@ func TestReadProgressPerContext(t *testing.T) {
 
 	if !strings.Contains(b, `"running":false`) || !strings.Contains(b, `"done":0`) {
 		t.Errorf("cluster b = %s", b)
+	}
+}
+
+func TestReadProgressSameContextOverlap(t *testing.T) {
+	// The screen reads a cluster; the background monitor checks the same one meanwhile.
+	screen := startReadProgress("test-overlap", "cluster-a", "x", "y")
+	screen.done("x")
+
+	monitor := startReadProgress("test-overlap", "cluster-a", "x", "y")
+	if got := readProgressFor(t, "test-overlap", "cluster-a"); got.Done != 0 || !got.Running {
+		t.Errorf("while both run, the newest shows: %+v", got)
+	}
+
+	// The monitor ends first: the screen's own read shows again, not a frozen finished one.
+	monitor.finish()
+
+	if got := readProgressFor(t, "test-overlap", "cluster-a"); !got.Running || got.Done != 1 {
+		t.Errorf("after the monitor ended: %+v", got)
+	}
+
+	screen.finish()
+
+	if got := readProgressFor(t, "test-overlap", "cluster-a"); got.Running || got.Done != 1 {
+		t.Errorf("after both ended, the last one stays readable: %+v", got)
 	}
 }
 
