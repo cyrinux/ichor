@@ -31,7 +31,7 @@ data class ImageScanSession(
     /** What it scans, for the notification: the app's name or the node. */
     val name: String = appId,
     /** The scanner it runs, the one picked in Settings when it started. */
-    val scanner: ImageScanner = ImageScanner.TRIVY,
+    val scanner: ImageScanner = ImageScanner.DEFAULT,
     val progress: ImageScanProgress? = null,
     val report: ImageScanReport? = null,
     val reportJson: String = "",
@@ -59,7 +59,7 @@ data class ImageScanSession(
 class ImageScanRepository(
     private val configs: ConfigRepository,
     private val kubeServers: KubeServers,
-    private val scanner: () -> ImageScanner = { ImageScanner.TRIVY },
+    private val scanner: () -> ImageScanner = { ImageScanner.DEFAULT },
     private val onStarted: () -> Unit = {},
 ) {
     private val _session = MutableStateFlow<ImageScanSession?>(null)

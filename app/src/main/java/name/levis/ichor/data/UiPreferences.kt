@@ -88,7 +88,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _nodeDebugShell = MutableStateFlow(prefs.getBoolean(KEY_NODE_DEBUG_SHELL, false))
     val nodeDebugShell: StateFlow<Boolean> = _nodeDebugShell.asStateFlow()
 
-    /** The vulnerability scanner an image scan runs in the cluster: Trivy by default. */
+    /** The vulnerability scanner an image scan runs in the cluster: Grype by default. */
     private val _imageScanner = MutableStateFlow(ImageScanner.parse(prefs.getString(KEY_IMAGE_SCANNER, null)))
     val imageScanner: StateFlow<ImageScanner> = _imageScanner.asStateFlow()
 

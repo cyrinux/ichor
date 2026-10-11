@@ -276,7 +276,7 @@ and, optionally, host to host.
 
 **Scan images** on an app's sheet (and on a Talos node's Images screen) looks for known
 vulnerabilities in the images it runs, by digest, with Trivy or Grype (Settings → Kubernetes →
-*Vulnerability scanner*, Trivy by default) in a short-lived Job of the `ichor-imagescan`
+*Vulnerability scanner*, Grype by default) in a short-lived Job of the `ichor-imagescan`
 namespace: the cluster downloads the vulnerability database and the image layers, not the phone.
 
 - **Pinned scanners:** `aquasec/trivy` and `anchore/grype` (its `-debug` variant, which has a

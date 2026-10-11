@@ -11,7 +11,7 @@ struct KubeconfigSection: View {
     @State private var busy = false
     @State private var message: String?
     @AppStorage(NodeDebugKeys.enabled) private var nodeDebug = false
-    @AppStorage(ImageScannerKeys.selected) private var imageScanner = ImageScanner.trivy
+    @AppStorage(ImageScannerKeys.selected) private var imageScanner = ImageScanner.defaultScanner
 
     var body: some View {
         Section {

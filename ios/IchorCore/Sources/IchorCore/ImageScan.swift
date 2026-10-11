@@ -25,7 +25,8 @@ public let imageScanNamespace = "ichor-imagescan"
 /// The scan id of a node's system images (an app's scan uses the app's id).
 public func systemImagesScanID(node: String) -> String { "talos:\(node)" }
 
-/// The scanners a scan may run in the cluster (the core's `scanner` option); Trivy by default.
+/// The scanners a scan may run in the cluster (the core's `scanner` option); `defaultScanner`
+/// (Grype) when none was picked.
 public enum ImageScanner: String, CaseIterable, Identifiable, Sendable {
     case trivy, grype
 
@@ -39,9 +40,12 @@ public enum ImageScanner: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// The scanner stored under `ImageScannerKeys.selected`, Trivy when none or unknown.
+    /// The scanner when none was picked.
+    public static let defaultScanner = ImageScanner.grype
+
+    /// The scanner stored under `ImageScannerKeys.selected`, `defaultScanner` when none or unknown.
     public static func stored(_ defaults: UserDefaults = .standard) -> ImageScanner {
-        defaults.string(forKey: ImageScannerKeys.selected).flatMap(ImageScanner.init(rawValue:)) ?? .trivy
+        defaults.string(forKey: ImageScannerKeys.selected).flatMap(ImageScanner.init(rawValue:)) ?? defaultScanner
     }
 }
 
@@ -55,14 +59,14 @@ public struct ImageScanOptions: Codable, Equatable, Sendable {
     public let images: [String]
     public let scanner: String
 
-    public init(images: [String] = [], scanner: String = ImageScanner.trivy.rawValue) {
+    public init(images: [String] = [], scanner: String = ImageScanner.defaultScanner.rawValue) {
         self.images = images
         self.scanner = scanner
     }
 }
 
 /// The options JSON of a scan of `images` (refs with no pod behind them) with `scanner`.
-public func imageScanOptions(images: [String], scanner: ImageScanner = .trivy) throws -> String {
+public func imageScanOptions(images: [String], scanner: ImageScanner = .defaultScanner) throws -> String {
     try TalosJSON.encode(ImageScanOptions(images: images, scanner: scanner.rawValue))
 }
 
@@ -410,7 +414,7 @@ public struct ImageScanState: Equatable, Sendable {
     public var stopped = false
     public var error: String?
 
-    public init(context: String, appID: String, scanner: ImageScanner = .trivy) {
+    public init(context: String, appID: String, scanner: ImageScanner = .defaultScanner) {
         self.context = context
         self.appID = appID
         self.scanner = scanner

@@ -9,7 +9,7 @@ struct AppScanSection: View {
 
     @Environment(AppModel.self) private var model
     @State private var operatorState: LoadState<OperatorReports> = .loading
-    @AppStorage(ImageScannerKeys.selected) private var scanner = ImageScanner.trivy
+    @AppStorage(ImageScannerKeys.selected) private var scanner = ImageScanner.defaultScanner
 
     private var job: ImageScanJob { ImageScanJob.shared }
     private var scan: ImageScanState? { job.scan(context: model.activeContext, appID: app.id) }

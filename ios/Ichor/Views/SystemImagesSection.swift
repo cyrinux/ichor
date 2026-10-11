@@ -10,7 +10,7 @@ struct SystemImagesSection: View {
 
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<[SystemImage]> = .loading
-    @AppStorage(ImageScannerKeys.selected) private var scanner = ImageScanner.trivy
+    @AppStorage(ImageScannerKeys.selected) private var scanner = ImageScanner.defaultScanner
 
     private var job: ImageScanJob { ImageScanJob.shared }
     private var scanID: String { systemImagesScanID(node: node) }
