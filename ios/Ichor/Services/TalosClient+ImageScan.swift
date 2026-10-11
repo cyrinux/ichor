@@ -9,8 +9,9 @@ enum ImageScanEvent: Sendable {
     case done(ImageScanReport?, json: String, error: String?)
 }
 
-/// Vulnerability scans of an app's images through the Kubernetes API (os:admin): a Trivy Job in
-/// the ichor-imagescan namespace, or the Trivy Operator's reports (see TalosClient for the
+/// Vulnerability scans of an app's images through the Kubernetes API (os:admin): a Job of the
+/// scanner picked in Settings (Trivy or Grype) in the ichor-imagescan namespace, or the Trivy
+/// Operator's reports (see TalosClient for the
 /// conventions).
 extension TalosClient {
     /// The Trivy Operator's reports on the pods' images; `available` false without it.
@@ -26,7 +27,7 @@ extension TalosClient {
     /// once Go deleted the scan Job.
     func imageScan(pods: [RoutePod], images: [String] = []) throws -> (events: AsyncStream<ImageScanEvent>, stop: @Sendable () -> Void) {
         let encoded = try TalosJSON.encode(pods)
-        let options = try imageScanOptions(images: images)
+        let options = try imageScanOptions(images: images, scanner: ImageScanner.stored())
         let (stream, continuation) = AsyncStream.makeStream(of: ImageScanEvent.self)
         let bridge = ImageScanBridge(
             progress: { continuation.yield(.progress($0)) },

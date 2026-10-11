@@ -14,8 +14,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +37,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.Feature
+import name.levis.ichor.model.ImageScanner
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.isKube
 import name.levis.ichor.ui.components.MutedText
@@ -124,6 +129,31 @@ fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: Co
         }
     }
     NodeDebugShellSetting(appLock)
+    ImageScannerSetting()
+}
+
+/** The scanner an image scan runs in the cluster: Trivy (the default) or Grype. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ImageScannerSetting() {
+    val prefs = (LocalContext.current.applicationContext as TalosApp).uiPreferences
+    val selected by prefs.imageScanner.collectAsStateWithLifecycle()
+
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.settings_image_scanner), style = MaterialTheme.typography.titleMedium)
+            MutedText(stringResource(R.string.settings_image_scanner_desc))
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                ImageScanner.entries.forEachIndexed { index, option ->
+                    SegmentedButton(
+                        selected = option == selected,
+                        onClick = { prefs.setImageScanner(option) },
+                        shape = SegmentedButtonDefaults.itemShape(index, ImageScanner.entries.size),
+                    ) { Text(option.label) }
+                }
+            }
+        }
+    }
 }
 
 /**

@@ -535,6 +535,8 @@
     <string name="settings_kube_open_kubenav">Відкрити kubenav</string>
     <string name="settings_node_debug_shell">Налагоджувальна оболонка вузла</string>
     <string name="settings_node_debug_shell_desc">На кластерах без Talos додає «Налагоджувальна оболонка…» до меню вузла: привілейований под у просторах імен вузла дає root-оболонку на вузлі. Под видаляється, коли оболонку закрито. Вимкнено за замовчуванням.</string>
+    <string name="settings_image_scanner">Сканер вразливостей</string>
+    <string name="settings_image_scanner_desc">Що запускає «Перевірити образи» в кластері: Trivy або Grype, який запускається в кластері так само; база даних Grype — від Anchore. Звіт і його експорт ті самі.</string>
     <string name="settings_kube_open_failed">Не вдалося відкрити вибраний файл</string>
     <string name="settings_section_config">Конфігурація</string>
     <string name="settings_encryption_key">Ключ шифрування</string>

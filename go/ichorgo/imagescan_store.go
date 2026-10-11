@@ -130,7 +130,7 @@ func keepScan(cluster, app string, report imageScanReport) imageScanReport {
 		return report
 	}
 
-	report = markNewFindings(report, previousScanLocked())
+	report = markNewFindings(report, previousScanLocked(report.Scanner))
 
 	if !slices.ContainsFunc(report.Images, func(img scannedImage) bool { return img.Error == "" }) {
 		return report
@@ -151,7 +151,7 @@ func markedWithHistory(report imageScanReport) imageScanReport {
 		return report
 	}
 
-	return markNewFindings(report, previousScanLocked())
+	return markNewFindings(report, previousScanLocked(report.Scanner))
 }
 
 // markNewFindings marks the findings of each image scanned without error that were not in
@@ -204,15 +204,17 @@ func vulnKey(v imageVuln) string {
 	return v.ID + "\x00" + v.Package + "\x00" + v.Installed + "\x00" + v.Target
 }
 
-// previousScanLocked finds a digest's newest kept scan without error; each kept report is
-// read once.
-func previousScanLocked() func(digest string) (scannedImage, bool) {
+// previousScanLocked finds a digest's newest kept scan without error by the same scanner
+// (Trivy and Grype name targets and advisories differently: compared, everything would be
+// new); each kept report is read once.
+func previousScanLocked(scanner string) func(digest string) (scannedImage, bool) {
 	index := readScanIndexLocked()
 	reports := map[string]*imageScanReport{}
+	family := scannerFamily(scanner)
 
 	return func(digest string) (scannedImage, bool) {
 		for i := len(index) - 1; i >= 0; i-- {
-			if !slices.Contains(index[i].Digests, digest) {
+			if !slices.Contains(index[i].Digests, digest) || scannerFamily(index[i].Scanner) != family {
 				continue
 			}
 
@@ -239,6 +241,14 @@ func previousScanLocked() func(digest string) (scannedImage, bool) {
 
 		return scannedImage{}, false
 	}
+}
+
+// scannerFamily is a report's scanner without its version: "Trivy" for "Trivy 0.75.0" and
+// "Trivy Operator".
+func scannerFamily(scanner string) string {
+	family, _, _ := strings.Cut(strings.TrimSpace(scanner), " ")
+
+	return family
 }
 
 // saveScanLocked writes report's file, then its index entry.

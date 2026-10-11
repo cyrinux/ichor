@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"slices"
 	"strconv"
@@ -190,12 +191,15 @@ func testTargets() []scanTarget {
 
 // scanLog is what the Trivy pod prints for nonce: a report for the first image, an error for
 // the second, with stray lines between.
-func scanLog(nonce string) string {
+func scanLog(nonce string) string { return scanLogWith(nonce, trivyFixture) }
+
+// scanLogWith is scanLog with fixture as the first image's report.
+func scanLogWith(nonce, fixture string) string {
 	m := "@@" + nonce + " "
 
 	return strings.Join([]string{
 		m + "db", "stray stderr line",
-		m + "scan 0", m + "result 0", trivyFixture, m + "end 0",
+		m + "scan 0", m + "result 0", fixture, m + "end 0",
 		m + "scan 1", m + "fail 1", "2026\tFATAL\tUNAUTHORIZED: authentication required", m + "end 1",
 		"@@forged result 1", "",
 	}, "\n")
@@ -207,7 +211,7 @@ func TestScanLogParser(t *testing.T) {
 
 	var phases []string
 
-	p := newScanLogParser("n0nce", targets, &report, func(pr imageScanProgress) {
+	p := newScanLogParser(trivyScanner, "n0nce", targets, &report, func(pr imageScanProgress) {
 		phases = append(phases, pr.Phase+":"+pr.Image)
 	})
 
@@ -239,7 +243,7 @@ func TestScanLogParserFailures(t *testing.T) {
 
 	// The database could not be downloaded.
 	report := imageScanReport{Images: pendingImages(targets)}
-	p := newScanLogParser("n", targets, &report, func(imageScanProgress) {})
+	p := newScanLogParser(trivyScanner, "n", targets, &report, func(imageScanProgress) {})
 	_ = p.read(strings.NewReader(m + "db\n" + m + "dbfail\nFATAL\tcontext deadline exceeded\n" + m + "end db\n"))
 
 	if err := p.outcome(netPerfPod{}); err == nil || !strings.Contains(err.Error(), "vulnerability database") {
@@ -248,7 +252,7 @@ func TestScanLogParserFailures(t *testing.T) {
 
 	// The pod was killed during the second image.
 	report = imageScanReport{Images: pendingImages(targets)}
-	p = newScanLogParser("n", targets, &report, func(imageScanProgress) {})
+	p = newScanLogParser(trivyScanner, "n", targets, &report, func(imageScanProgress) {})
 	_ = p.read(strings.NewReader(m + "scan 0\n" + m + "result 0\n" + trivyFixture + "\n" + m + "end 0\n" + m + "scan 1\n"))
 
 	var pod netPerfPod
@@ -265,7 +269,7 @@ func TestScanLogParserFailures(t *testing.T) {
 
 	// A report that is not JSON is that image's error.
 	report = imageScanReport{Images: pendingImages(targets)}
-	p = newScanLogParser("n", targets, &report, func(imageScanProgress) {})
+	p = newScanLogParser(trivyScanner, "n", targets, &report, func(imageScanProgress) {})
 	_ = p.read(strings.NewReader(m + "result 0\nnot json\n" + m + "end 0\n" + m + "end 7\n"))
 
 	if !strings.HasPrefix(report.Images[0].Error, "unreadable Trivy report") {
@@ -276,7 +280,7 @@ func TestScanLogParserFailures(t *testing.T) {
 func TestScanLogParserLongLine(t *testing.T) {
 	targets := testTargets()[:1]
 	report := imageScanReport{Images: pendingImages(targets)}
-	p := newScanLogParser("n", targets, &report, func(imageScanProgress) {})
+	p := newScanLogParser(trivyScanner, "n", targets, &report, func(imageScanProgress) {})
 
 	long := strings.Repeat("x", imageScanMaxLine+10)
 	if err := p.read(strings.NewReader("@@n result 0\n" + long + "\n@@n end 0\n")); err != nil {
@@ -464,6 +468,9 @@ type fakeImageScanAPI struct {
 	secret    string // the merged pull credentials posted
 	job       string // the Job posted
 	nsLabels  string // the scan namespace's labels when it exists, "" when it does not
+	fixture   string // the first image's report in the log, trivyFixture when empty
+	running   bool   // the pod's phase still says Running once its log ended
+	container string // the container whose log was read
 }
 
 func newFakeImageScanAPI(t *testing.T) *fakeImageScanAPI {
@@ -558,12 +565,15 @@ func (f *fakeImageScanAPI) serve(w http.ResponseWriter, r *http.Request) {
 
 		write(200, `{"items":[{"metadata":{"name":"scan"}}]}`)
 	case strings.HasSuffix(path, "/pods/scan/log") && f.cutFollow && r.URL.Query().Get("follow") == "true":
-		log := scanLog(f.nonce)
+		log := scanLogWith(f.nonce, cmpOr(f.fixture, trivyFixture))
 		w.Header().Set("Content-Length", strconv.Itoa(len(log)))
 		w.WriteHeader(200)
 		_, _ = io.WriteString(w, log[:len(log)/2]) // the connection drops halfway
 	case strings.HasSuffix(path, "/pods/scan/log"):
-		write(200, scanLog(f.nonce))
+		f.container = r.URL.Query().Get("container")
+		write(200, scanLogWith(f.nonce, cmpOr(f.fixture, trivyFixture)))
+	case strings.HasSuffix(path, "/pods/scan") && f.running:
+		write(200, `{"status":{"phase":"Running"}}`)
 	case strings.HasSuffix(path, "/pods/scan"):
 		write(200, `{"status":{"phase":"Succeeded"}}`)
 	default:
@@ -571,59 +581,83 @@ func (f *fakeImageScanAPI) serve(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// TestRunImageScan runs a scan once per scanner: the same Job, credentials and log framing,
+// the scanner's own report parsed.
 func TestRunImageScan(t *testing.T) {
-	f := newFakeImageScanAPI(t)
-
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	grype, err := os.ReadFile("testdata/grype-alpine.json")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var phases []string
+	for _, c := range []struct {
+		opts                        imageScanOptions
+		fixture, scanner, container string
+		vulns                       int
+	}{
+		{imageScanOptions{}, "", "Trivy " + trivyVersion, "trivy", 4},
+		{imageScanOptions{Scanner: scannerGrype}, string(grype), "Grype " + grypeVersion, "grype", 3},
+	} {
+		t.Run(c.container, func(t *testing.T) {
+			f := newFakeImageScanAPI(t)
+			f.fixture = c.fixture
 
-	report, err := runImageScan(context.Background(), k, []routePod{{Namespace: "web", Pod: "a"}, {Namespace: "web", Pod: "gone"}},
-		imageScanOptions{}, func(p imageScanProgress) { phases = append(phases, p.Phase) })
-	if err != nil {
-		t.Fatal(err)
-	}
+			k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	if len(report.Images) != 2 || report.Images[0].Ref != "docker.io/library/nginx@sha256:abc" || report.Images[0].Error != "" ||
-		len(report.Images[0].Vulnerabilities) != 4 || report.Images[1].Error == "" || report.Finished == 0 {
-		t.Fatalf("report %+v", report)
-	}
+			var phases []string
 
-	if want := []string{"preparing", "starting", "database", "scanning", "scanning", "cleaning"}; !slices.Equal(phases, want) {
-		t.Fatalf("phases %v", phases)
-	}
+			report, err := runImageScan(context.Background(), k, []routePod{{Namespace: "web", Pod: "a"}, {Namespace: "web", Pod: "gone"}},
+				c.opts, func(p imageScanProgress) { phases = append(phases, p.Phase) })
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	f.mu.Lock()
-	defer f.mu.Unlock()
+			if len(report.Images) != 2 || report.Images[0].Ref != "docker.io/library/nginx@sha256:abc" || report.Images[0].Error != "" ||
+				len(report.Images[0].Vulnerabilities) != c.vulns || report.Images[1].Error == "" || report.Finished == 0 ||
+				report.Scanner != c.scanner {
+				t.Fatalf("report %+v", report)
+			}
 
-	// The namespace is created once, then the Job, then its credentials, owned by it.
-	jobs := "/apis/batch/v1/namespaces/" + imageScanNamespace + "/jobs"
-	if want := []string{"/api/v1/namespaces", jobs, "/api/v1/namespaces/" + imageScanNamespace + "/secrets"}; !slices.Equal(f.posted, want) {
-		t.Fatalf("posted %v", f.posted)
-	}
+			if want := []string{"preparing", "starting", "database", "scanning", "scanning", "cleaning"}; !slices.Equal(phases, want) {
+				t.Fatalf("phases %v", phases)
+			}
 
-	if !strings.Contains(f.secret, `"ownerReferences":[{"apiVersion":"batch/v1","blockOwnerDeletion":false,"kind":"Job","name":"`+f.job+`","uid":"0f0e-uid"}]`) {
-		t.Fatalf("secret %s", f.secret)
-	}
+			f.mu.Lock()
+			defer f.mu.Unlock()
 
-	// The Job is deleted with its pod and credentials; the namespace stays.
-	if want := []string{jobs + "/" + f.job + "?propagationPolicy=Background"}; !slices.Equal(f.deleted, want) {
-		t.Fatalf("deleted %v", f.deleted)
-	}
+			if f.container != c.container {
+				t.Fatalf("log of container %q", f.container)
+			}
 
-	// Only the scanned registries' credentials are copied: ghcr.io, not quay.io.
-	var secret struct {
-		Data map[string]string `json:"data"`
-	}
+			// The namespace is created once, then the Job, then its credentials, owned by it.
+			jobs := "/apis/batch/v1/namespaces/" + imageScanNamespace + "/jobs"
+			if want := []string{"/api/v1/namespaces", jobs, "/api/v1/namespaces/" + imageScanNamespace + "/secrets"}; !slices.Equal(f.posted, want) {
+				t.Fatalf("posted %v", f.posted)
+			}
 
-	_ = json.Unmarshal([]byte(f.secret), &secret)
-	cfg, _ := base64.StdEncoding.DecodeString(secret.Data["config.json"])
+			if !strings.Contains(f.secret, `"ownerReferences":[{"apiVersion":"batch/v1","blockOwnerDeletion":false,"kind":"Job","name":"`+f.job+`","uid":"0f0e-uid"}]`) {
+				t.Fatalf("secret %s", f.secret)
+			}
 
-	if !strings.Contains(string(cfg), `"ghcr.io"`) || strings.Contains(string(cfg), "quay.io") {
-		t.Fatalf("credentials %s", cfg)
+			// The Job is deleted with its pod and credentials; the namespace stays.
+			if want := []string{jobs + "/" + f.job + "?propagationPolicy=Background"}; !slices.Equal(f.deleted, want) {
+				t.Fatalf("deleted %v", f.deleted)
+			}
+
+			// Only the scanned registries' credentials are copied: ghcr.io, not quay.io.
+			var secret struct {
+				Data map[string]string `json:"data"`
+			}
+
+			_ = json.Unmarshal([]byte(f.secret), &secret)
+			cfg, _ := base64.StdEncoding.DecodeString(secret.Data["config.json"])
+
+			if !strings.Contains(string(cfg), `"ghcr.io"`) || strings.Contains(string(cfg), "quay.io") {
+				t.Fatalf("credentials %s", cfg)
+			}
+		})
 	}
 }
 
@@ -642,6 +676,27 @@ func TestRunImageScanCutFollow(t *testing.T) {
 	}
 
 	if report.Images[0].Error != "" || len(report.Images[0].Vulnerabilities) != 4 || report.Images[1].Error == "not scanned" {
+		t.Fatalf("report %+v", report.Images)
+	}
+}
+
+// The log ends a moment before the pod's phase says Succeeded: a log read to its end is the
+// scan's result, not a follow to resume until "lost the pod's log".
+func TestRunImageScanPhaseLags(t *testing.T) {
+	f := newFakeImageScanAPI(t)
+	f.running = true
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	report, err := runImageScan(context.Background(), k, []routePod{{Namespace: "web", Pod: "a"}}, imageScanOptions{}, func(imageScanProgress) {})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if report.Images[0].Error != "" || len(report.Images[0].Vulnerabilities) != 4 {
 		t.Fatalf("report %+v", report.Images)
 	}
 }

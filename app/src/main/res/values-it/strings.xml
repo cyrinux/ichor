@@ -488,6 +488,8 @@
     <string name="settings_kube_open_kubenav">Apri kubenav</string>
     <string name="settings_node_debug_shell">Shell di debug dei nodi</string>
     <string name="settings_node_debug_shell_desc">Sui cluster senza Talos, aggiunge «Shell di debug…» al menu di un nodo: un pod privilegiato nei namespace del nodo dà una shell root sul nodo. Il pod viene eliminato alla chiusura della shell. Disattivato per impostazione predefinita.</string>
+    <string name="settings_image_scanner">Scanner di vulnerabilità</string>
+    <string name="settings_image_scanner_desc">Cosa esegue «Analizza immagini» nel cluster: Trivy, oppure Grype, eseguito nel cluster allo stesso modo; il database di Grype è quello di Anchore. Il report e le sue esportazioni sono gli stessi.</string>
     <string name="settings_kube_open_failed">Impossibile aprire il file scelto</string>
     <string name="settings_section_config">Configurazione</string>
     <string name="settings_encryption_key">Chiave di crittografia</string>
