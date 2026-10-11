@@ -4483,4 +4483,17 @@
     <string name="search_kind_cronjob">CronJob</string>
     <string name="search_kind_argo_app">Застосунок Argo CD</string>
     <string name="search_kind_flux_app">Застосунок Flux</string>
+    <string name="read_progress_title">Читання кластера</string>
+    <string name="read_progress_steps">%1$s з %2$s кроків</string>
+    <string name="read_progress_count">%1$s / %2$s</string>
+    <string name="read_progress_seconds">%1$s с</string>
+    <string name="read_progress_state_done">готово</string>
+    <string name="read_progress_state_running">триває</string>
+    <string name="read_progress_state_failed">не вдалося прочитати</string>
+    <string name="read_progress_state_pending">очікує</string>
+    <string name="read_progress_step_api">Групи API</string>
+    <string name="read_progress_step_pods">Поди</string>
+    <string name="read_progress_step_nodes">Вузли</string>
+    <string name="read_progress_step_pvcs">Запити томів</string>
+    <string name="read_progress_step_version">Версія Kubernetes</string>
 </resources>

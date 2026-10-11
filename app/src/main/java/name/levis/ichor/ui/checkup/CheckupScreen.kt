@@ -50,6 +50,7 @@ import name.levis.ichor.R
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.CheckupKind
 import name.levis.ichor.model.CheckupReport
+import name.levis.ichor.model.ReadProgress
 import name.levis.ichor.model.CheckupSection
 import name.levis.ichor.model.CheckupSectionId
 import name.levis.ichor.model.CheckupSeverity
@@ -82,6 +83,9 @@ import name.levis.ichor.ui.components.pageContent
 class CheckupViewModel(private val kube: KubeRepository) : LoadingViewModel<CheckupReport>() {
     override suspend fun fetch() = kube.checkup()
 
+    /** A checkup on a large cluster takes a while: its steps show while it reads. */
+    override val progressReader: suspend () -> ReadProgress = { kube.readProgress(CHECKUP_PROGRESS_OP) }
+
     /** A namespace deletion's outcome, shown once: the namespace, and the error if it failed. */
     data class Deleted(val namespace: String, val error: UiText?)
 
@@ -112,6 +116,7 @@ fun CheckupScreen(
     vm: CheckupViewModel = viewModel(factory = factory { CheckupViewModel(app.kubeRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val progress by vm.readProgress.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var confirmDelete by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -146,7 +151,7 @@ fun CheckupScreen(
             )
         },
     ) { padding ->
-        Loaded(state, vm::refresh, Modifier.pageContent(padding)) { report ->
+        Loaded(state, vm::refresh, Modifier.pageContent(padding), progress = progress, stepLabel = { checkupStepLabel(it) }) { report ->
             CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring), onDeleteLeftover = { confirmDelete = it })
         }
     }

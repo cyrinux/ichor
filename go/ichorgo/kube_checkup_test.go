@@ -49,6 +49,26 @@ func TestParseQuantity(t *testing.T) {
 	}
 }
 
+// checkCheckupProgress: after a checkup every step is over, and the volumes step counted
+// the two Ready nodes of the fixture.
+func checkCheckupProgress(t *testing.T, p readProgressOut) {
+	t.Helper()
+
+	if p.Running || p.Total != 17 || p.Done != 17 || len(p.Steps) != 17 {
+		t.Fatalf("progress = %+v", p)
+	}
+
+	for _, s := range p.Steps {
+		if s.State != readStepDone && s.State != readStepFailed {
+			t.Errorf("step %s is %s", s.ID, s.State)
+		}
+
+		if s.ID == checkStorage && (s.Count != 2 || s.Total != 2) {
+			t.Errorf("storage step counted %d/%d nodes, want 2/2", s.Count, s.Total)
+		}
+	}
+}
+
 func TestReadCheckup(t *testing.T) {
 	f := newFakeKubeAPI(t, map[string]string{
 		"GET /apis": `{"groups":[{"name":"external-secrets.io","preferredVersion":{"version":"v1"}},{"name":"cilium.io","preferredVersion":{"version":"v2"}}]}`,
@@ -139,10 +159,15 @@ func TestReadCheckup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r, err := readCheckup(context.Background(), k, checkupNow)
+	progress := startReadProgress("test-checkup", "", checkupSteps...)
+
+	r, err := readCheckup(withReadProgress(context.Background(), progress), k, checkupNow)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	progress.finish()
+	checkCheckupProgress(t, readProgressFor(t, "test-checkup"))
 
 	want := map[string][]string{
 		checkWorkloads:     {"podCrashLoop:critical:web-1", "podUnschedulable:critical:big-1", "podOOMKilled:warning:cache-0", "jobFailed:warning:migrate"},

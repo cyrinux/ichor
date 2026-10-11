@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -151,9 +152,16 @@ func readVolumeUse(ctx context.Context, k *kubeClient, nodes []checkNodeObject) 
 	ready := slices.DeleteFunc(slices.Clone(nodes), func(n checkNodeObject) bool { return !kubeConditions(n.Status.Conditions).is("Ready") })
 	summaries := make([]kubeletSummary, len(ready))
 
+	// The slow step of a checkup on a large cluster: the progress counts the kubelets asked.
+	progress := readProgressFrom(ctx)
+	progress.count(checkStorage, 0, len(ready))
+
+	var asked atomic.Int64
+
 	forEachLimit(ready, kubeletStatsParallel, func(i int, n checkNodeObject) {
 		nodeCtx, cancel := context.WithTimeout(ctx, kubeletStatsTimeout)
 		defer cancel()
+		defer func() { progress.count(checkStorage, int(asked.Add(1)), len(ready)) }()
 
 		_ = k.get(nodeCtx, "/api/v1/nodes/"+url.PathEscape(n.Metadata.Name)+"/proxy/stats/summary", &summaries[i]) //nolint:errcheck // unmeasured
 	})

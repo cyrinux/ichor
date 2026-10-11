@@ -4249,4 +4249,17 @@
     <string name="search_kind_cronjob">CronJob</string>
     <string name="search_kind_argo_app">App de Argo CD</string>
     <string name="search_kind_flux_app">App de Flux</string>
+    <string name="read_progress_title">Leyendo el clúster</string>
+    <string name="read_progress_steps">%1$s de %2$s pasos</string>
+    <string name="read_progress_count">%1$s / %2$s</string>
+    <string name="read_progress_seconds">%1$s s</string>
+    <string name="read_progress_state_done">hecho</string>
+    <string name="read_progress_state_running">en curso</string>
+    <string name="read_progress_state_failed">no se pudo leer</string>
+    <string name="read_progress_state_pending">en espera</string>
+    <string name="read_progress_step_api">Grupos de API</string>
+    <string name="read_progress_step_pods">Pods</string>
+    <string name="read_progress_step_nodes">Nodos</string>
+    <string name="read_progress_step_pvcs">Solicitudes de volumen</string>
+    <string name="read_progress_step_version">Versión de Kubernetes</string>
 </resources>

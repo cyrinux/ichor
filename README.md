@@ -348,6 +348,10 @@ claim, read from each node's kubelet; the nodes card the roles, taints and label
 the releases at their latest revision, each one opening its history, values, notes and manifest,
 where a failed upgrade can be rolled back.
 
+On a large cluster the first read takes a while: the screen shows what it is reading meanwhile,
+step by step (pods, nodes, claims, then each card), with a bar that fills as they finish and the
+kubelets asked so far for the volumes. `just probe checkup` prints the same steps to stderr.
+
 - **Thresholds:** a volume warns at 85 % and is critical at 95 % (inodes 90 / 98 %), a node at
   90 % of its allocatable CPU or memory requested, a quota at 90 %. A pod counts as stuck after
   5 minutes Pending or 10 minutes starting; a deletion after 10 minutes; a certificate request

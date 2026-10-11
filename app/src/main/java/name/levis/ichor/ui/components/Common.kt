@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.NodeHealth
+import name.levis.ichor.model.ReadProgress
 import name.levis.ichor.model.versionNotice
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
@@ -108,6 +109,8 @@ fun ErrorBox(message: UiText, onRetry: () -> Unit, modifier: Modifier = Modifier
  * Loading, error or the data with pull-to-refresh. A [header] (filters, a summary) sits
  * above the refreshable [content], outside the pull gesture; [freshness] adds the
  * "updated x min ago" line under it, for a screen without a bottom bar showing it.
+ * [progress], while it runs and nothing is on screen, shows the steps of a slow read
+ * (named by [stepLabel]) instead of the skeleton.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,10 +120,12 @@ fun <T> Loaded(
     modifier: Modifier = Modifier,
     header: (@Composable ColumnScope.(T) -> Unit)? = null,
     freshness: Boolean = false,
+    progress: ReadProgress? = null,
+    stepLabel: @Composable (String) -> String = { it },
     content: @Composable (T) -> Unit,
 ) {
     when (state) {
-        UiState.Loading -> LoadingBox(modifier)
+        UiState.Loading -> if (progress?.running == true) ReadProgressBox(progress, stepLabel, modifier) else LoadingBox(modifier)
         is UiState.Failed -> ErrorBox(state.message, refresh, modifier)
         is UiState.Loaded -> if (header == null && !freshness) {
             PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = refresh, modifier = modifier.fillMaxSize()) {
