@@ -4131,6 +4131,12 @@
     <string name="upgrade_prepull">Image vorab auf alle Nodes laden</string>
     <string name="upgrade_prepull_desc">Lade es jetzt auf jeden Node, damit jeder Neustart kurz ist.</string>
     <string name="kube_discover_progress_looking">Cluster werden gesucht…</string>
+    <string name="kube_discover_aws_refused_note">Kein Zugriff in %1$s: Cluster in diesen Regionen, falls vorhanden, sind nicht aufgeführt.</string>
+    <string name="kube_field_aws_regions">AWS-Regionen (optional, durch Kommas getrennt)</string>
+    <string name="kube_discover_aws_sso_hint">Meldet sich im Browser bei Ihrem AWS-Zugangsportal an und listet dann die EKS-Cluster der gewählten Konten und Rollen in den angegebenen Regionen auf (alle gängigen Regionen, wenn leer).</string>
+    <string name="kube_discover_aws_choose_roles">Konten und Rollen für die Suche wählen</string>
+    <string name="kube_discover_aws_no_access">Kein Zugriff in %1$s</string>
+    <string name="kube_discover_progress_regions">%1$s von %2$s Regionen durchsucht · %3$s Cluster gefunden</string>
     <string name="kube_discover_progress_projects">%1$s von %2$s Projekten durchsucht · %3$s Cluster gefunden</string>
     <string name="etcd_recover_button">Aus Snapshot wiederherstellen…</string>
     <string name="etcd_recover_lost">Kein etcd-Mitglied antwortet. Wenn jede Control Plane etcd verloren hat, starte es aus einem Snapshot neu.</string>

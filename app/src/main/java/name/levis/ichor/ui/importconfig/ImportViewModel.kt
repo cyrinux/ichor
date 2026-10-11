@@ -8,6 +8,7 @@ import name.levis.ichor.data.SignInEvent
 import name.levis.ichor.model.ImportTextRoute
 import name.levis.ichor.data.TalosJson
 import name.levis.ichor.model.SignInPrompt
+import name.levis.ichor.model.SsoRoleChoice
 import name.levis.ichor.model.TalosForm
 import name.levis.ichor.model.DiscoveryProgress
 import name.levis.ichor.model.DiscoveryProvider
@@ -75,6 +76,8 @@ sealed interface ImportState {
         val error: String? = null,
         /** The cloud credentials that found these clusters (discovery): the added ones sign in with them. */
         val discovery: Map<String, String>? = null,
+        /** The AWS regions the discovery could not read: clusters there, if any, are not listed. */
+        val refused: List<String> = emptyList(),
     ) : ImportState {
         val canImport: Boolean get() = takenNames.isEmpty() && choices.any { !it.skip }
 
@@ -101,6 +104,8 @@ sealed interface ImportState {
         val prompt: SignInPrompt? = null,
         /** The account needs a sign-in first (the discovery said so): the card says to sign in. */
         val needsSignIn: Boolean = false,
+        /** After an IAM Identity Center sign-in, the accounts and roles to pick the ones to look in from. */
+        val choices: List<SsoRoleChoice> = emptyList(),
     ) : ImportState {
         override fun toString() = "Discover($initial, running=$running)"
     }
@@ -217,10 +222,12 @@ class ImportViewModel(
             val poll = launch { pollDiscoverProgress() }
             val next = runCatching {
                 val yaml = auth.discover(provider.id, secrets)
-                ImportState.KubePreview(yaml, configs.validateKube(yaml), configs.kubeImportConflicts(yaml), discovery = secrets)
+                val refused = runCatching { auth.discoverProgress().refused }.getOrDefault(emptyList())
+                ImportState.KubePreview(yaml, configs.validateKube(yaml), configs.kubeImportConflicts(yaml), discovery = secrets, refused = refused)
             }.getOrElse {
                 if (signInNeeded(it.message) != null) {
-                    discover.copy(running = false, needsSignIn = true)
+                    // The roles were offered by a session that ended: sign in again first.
+                    discover.copy(running = false, needsSignIn = true, choices = emptyList())
                 } else {
                     discover.copy(running = false, error = it.userMessage())
                 }
@@ -232,12 +239,13 @@ class ImportViewModel(
 
     /**
      * Runs the browser sign-in the [provider] credentials [secrets] need (the organisation's
-     * OAuth client), then lists the account's clusters as [discover] does.
+     * OAuth client, IAM Identity Center), then lists the account's clusters as [discover]
+     * does; with several AWS accounts and roles, the card shows them to pick from first.
      */
     fun discoverWithSignIn(provider: DiscoveryProvider, secrets: Map<String, String>) {
         val discover = _state.value as? ImportState.Discover ?: return
         if (discover.running) return
-        val idle = discover.copy(running = false, signingIn = false, prompt = null, error = null, needsSignIn = false, progress = null)
+        val idle = discover.copy(running = false, signingIn = false, prompt = null, error = null, needsSignIn = false, progress = null, choices = emptyList())
         _state.value = idle.copy(running = true, signingIn = true)
         browserRun = viewModelScope.launch {
             try {
@@ -254,8 +262,9 @@ class ImportViewModel(
                     return@launch
                 }
                 onBrowserDone()
-                _state.value = idle
-                discover(provider, secrets)
+                val choices = auth.discoverSignInChoices()
+                _state.value = idle.copy(choices = choices)
+                if (choices.isEmpty()) discover(provider, secrets)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

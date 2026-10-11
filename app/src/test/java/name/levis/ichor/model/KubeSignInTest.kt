@@ -177,6 +177,12 @@ class KubeSignInTest {
         assertTrue(discoveryNeedsSignIn(oauth))
         assertFalse(discoveryNeedsSignIn(google))
         assertFalse(discoveryNeedsSignIn(listOf("gcpUserCredentialsJson", "gcpProjects")))
+        // EKS's IAM Identity Center signs in first; its regions may be left empty; access keys do not.
+        val sso = listOf(AWS_SSO_START_URL, AWS_SSO_REGION, AWS_REGIONS)
+        assertTrue(discoveryNeedsSignIn(sso))
+        assertFalse(discoveryNeedsSignIn(listOf("awsRegion", "awsAccessKeyId", "awsSecretAccessKey")))
+        assertTrue(credentialsComplete(sso, mapOf(AWS_SSO_START_URL to "https://example.awsapps.com/start", AWS_SSO_REGION to "eu-west-3")))
+        assertEquals(R.string.kube_signin_option_aws_sso, fieldSetLabel(sso))
         assertTrue(discoveryUsesGoogle(google))
         assertFalse(discoveryUsesGoogle(oauth))
         assertFalse(discoveryUsesGoogle(listOf("gcpServiceAccountJson")))
@@ -247,5 +253,18 @@ class KubeSignInTest {
         assertFalse(goErrorText("kube-sign-in-required: sign in to this cluster (oidc)").contains(KUBE_SIGN_IN_REQUIRED))
         assertEquals("connection refused", goErrorText("connection refused"))
         assertEquals(UiText.Raw("timeout"), Exception("timeout").uiText())
+    }
+
+    @Test
+    fun `EKS discovery sends the roles picked and reads the refused regions`() {
+        val choices = listOf(SsoRoleChoice("123456789012", "Production", "ReadOnly"), SsoRoleChoice("210987654321", roleName = "Admin"))
+        assertEquals("123456789012/ReadOnly 210987654321/Admin", roleSelection(choices))
+
+        val progress = TalosJson.decodeFromString(
+            DiscoveryProgress.serializer(),
+            """{"running":true,"projects":4,"scanned":4,"clusters":2,"refused":["eu-north-1"]}""",
+        )
+        assertEquals(listOf("eu-north-1"), progress.refused)
+        assertEquals(emptyList<String>(), TalosJson.decodeFromString(DiscoveryProgress.serializer(), """{"running":true}""").refused)
     }
 }

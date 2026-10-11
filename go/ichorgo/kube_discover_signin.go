@@ -11,7 +11,7 @@ import (
 )
 
 // A discovery that signs in in the browser (GKE with the organisation's OAuth client, or the
-// build's own Google client on iOS): the apps run StartDiscoverSignIn before DiscoverClusters,
+// build's own Google client on iOS; EKS with IAM Identity Center): the apps run StartDiscoverSignIn before DiscoverClusters,
 // and the session it gets is kept here, in memory only, for that discovery and for the
 // clusters the user then imports with the same credentials (KubeSetCredentials): one browser
 // round in all. One discovery runs at a time (the import sheet is modal); a new run replaces
@@ -23,6 +23,9 @@ const discoverSignInTimeout = omniConfirmTimeout
 var discoverySignIn struct {
 	mu    sync.Mutex
 	state *kubeAuthState
+	// eksRoles is the Identity Center role each discovered EKS cluster (by API server) was
+	// found with.
+	eksRoles map[string]awsSSORole
 }
 
 // StartDiscoverSignIn runs the browser sign-in the discovery credentials (secretsJSON, the
@@ -61,6 +64,12 @@ func runDiscoverSignIn(ctx context.Context, provider, secretsJSON string, listen
 		return err
 	}
 
+	prompt := func(p signInPrompt) { emitJSON(p, listener.OnPrompt) }
+
+	if provider == discoverEKS && eksNeedsBrowser(secrets) {
+		return runEKSDiscoverSignIn(ctx, secrets, prompt)
+	}
+
 	if provider != discoverGKE || !gkeNeedsBrowser(secrets) {
 		return nil
 	}
@@ -72,7 +81,7 @@ func runDiscoverSignIn(ctx context.Context, provider, secretsJSON string, listen
 
 	ForgetDiscoverSignIn()
 
-	signed, err := gkeMethod{}.signIn(ctx, state, func(p signInPrompt) { emitJSON(p, listener.OnPrompt) }, callbacks)
+	signed, err := gkeMethod{}.signIn(ctx, state, prompt, callbacks)
 	if err != nil {
 		return err
 	}
@@ -94,6 +103,7 @@ func ForgetDiscoverSignIn() {
 	defer discoverySignIn.mu.Unlock()
 
 	discoverySignIn.state = nil
+	discoverySignIn.eksRoles = nil
 }
 
 // gkeNeedsBrowser tells GKE credentials that sign in in the browser: the OAuth client,

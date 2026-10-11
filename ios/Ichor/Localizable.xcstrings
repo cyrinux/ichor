@@ -1,6 +1,222 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "No access in %@: clusters in these regions, if any, are not listed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun accès dans %@ : les clusters de ces régions, s’il y en a, ne sont pas listés."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin acceso en %@: los clústeres de estas regiones, si los hay, no aparecen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Zugriff in %@: Cluster in diesen Regionen, falls vorhanden, sind nicht aufgeführt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun accesso in %@: gli eventuali cluster di queste regioni non sono elencati."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає доступу в %@: кластери в цих регіонах, якщо вони є, не показано."
+          }
+        }
+      }
+    },
+    "AWS regions (optional, comma separated)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Régions AWS (facultatif, séparées par des virgules)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regiones de AWS (opcional, separadas por comas)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AWS-Regionen (optional, durch Kommas getrennt)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regioni AWS (facoltativo, separate da virgole)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Регіони AWS (необов’язково, через кому)"
+          }
+        }
+      }
+    },
+    "Signs in at your AWS access portal in the browser, then lists the EKS clusters of the accounts and roles you choose in the regions given (all common regions when empty)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se connecte à votre portail d’accès AWS dans le navigateur, puis liste les clusters EKS des comptes et rôles choisis dans les régions indiquées (toutes les régions courantes si vide)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión en tu portal de acceso de AWS en el navegador y luego lista los clústeres EKS de las cuentas y roles que elijas en las regiones indicadas (todas las regiones habituales si está vacío)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldet sich im Browser bei Ihrem AWS-Zugangsportal an und listet dann die EKS-Cluster der gewählten Konten und Rollen in den angegebenen Regionen auf (alle gängigen Regionen, wenn leer)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accede al portale di accesso AWS nel browser, poi elenca i cluster EKS degli account e dei ruoli scelti nelle regioni indicate (tutte le regioni comuni se vuoto)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Входить на ваш портал доступу AWS у браузері, потім показує кластери EKS вибраних облікових записів і ролей у вказаних регіонах (усі поширені регіони, якщо порожньо)."
+          }
+        }
+      }
+    },
+    "Choose the accounts and roles to look in" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez les comptes et rôles où chercher"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige las cuentas y roles donde buscar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konten und Rollen für die Suche wählen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli gli account e i ruoli in cui cercare"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть облікові записи й ролі для пошуку"
+          }
+        }
+      }
+    },
+    "No access in %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun accès dans %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin acceso en %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Zugriff in %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun accesso in %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає доступу в %@"
+          }
+        }
+      }
+    },
+    "Scanned %@ of %@ regions · %@ clusters found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scanned %1$@ of %2$@ regions · %3$@ clusters found"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ régions sur %2$@ parcourues · %3$@ clusters trouvés"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ de %2$@ regiones revisadas · %3$@ clústeres encontrados"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ von %2$@ Regionen durchsucht · %3$@ Cluster gefunden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ regioni su %2$@ analizzate · %3$@ cluster trovati"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переглянуто %1$@ з %2$@ регіонів · знайдено кластерів: %3$@"
+          }
+        }
+      }
+    },
     "Clusters & backup" : {
       "extractionState" : "manual",
       "localizations" : {

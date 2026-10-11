@@ -26,6 +26,8 @@ type fakeAWS struct {
 	// devices counts the device codes asked for; singleRole lists one account with one role.
 	devices    int
 	singleRole bool
+	// perRoleKeys hands each role its own access key, ASIA<ROLE>, instead of ASIASSO.
+	perRoleKeys bool
 }
 
 // The accounts and roles the fake portal lists (invented), the first page ending with a
@@ -127,7 +129,12 @@ func newFakeAWS(t *testing.T) *fakeAWS {
 				return
 			}
 
-			fmt.Fprintf(w, `{"roleCredentials":{"accessKeyId":"ASIASSO","secretAccessKey":"x","sessionToken":"y","expiration":%d}}`, time.Now().Add(time.Hour).UnixMilli())
+			key := "ASIASSO"
+			if a.perRoleKeys {
+				key = "ASIA" + strings.ToUpper(r.URL.Query().Get("role_name"))
+			}
+
+			fmt.Fprintf(w, `{"roleCredentials":{"accessKeyId":%q,"secretAccessKey":"x","sessionToken":"y","expiration":%d}}`, key, time.Now().Add(time.Hour).UnixMilli())
 		default:
 			http.NotFound(w, r)
 		}

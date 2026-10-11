@@ -7,6 +7,8 @@ struct DiscoveredClusters: Equatable {
     let kubeconfig: String
     /// Field → value JSON (see kubeSecretsJSON).
     let secrets: String
+    /// The AWS regions the discovery could not read: clusters there, if any, are not listed.
+    var refused: [String] = []
 }
 
 /// "Add from a cloud account" (K7): a provider, its account credentials, and the clusters
@@ -41,14 +43,26 @@ struct CloudDiscoveryView: View {
     @State private var pendingSecrets: String?
     @State private var signedSecrets: String?
     @State private var handedOff = false
+    /// After an IAM Identity Center sign-in with several accounts and roles: the ones offered,
+    /// and those ticked to look in.
+    @State private var roleChoices: [KubeSsoRoleChoice] = []
+    @State private var pickedRoles: Set<KubeSsoRoleChoice> = []
 
     private var working: Bool { busy || flow.isRunning }
     private var google: Bool { fields.contains(kubeGoogleSignInField) }
     private var visibleFields: [String] { fields.filter { $0 != kubeGoogleSignInField && $0 != kubeGcloudSignInField } }
-    private var complete: Bool { !fields.isEmpty && kubeFieldsComplete(visibleFields, values: values) }
+    private var choosing: Bool { !roleChoices.isEmpty && fields.contains(kubeAWSStartURLField) }
+    private var complete: Bool {
+        !fields.isEmpty && kubeFieldsComplete(visibleFields, values: values) && (!choosing || !pickedRoles.isEmpty)
+    }
     private var actionLabel: String {
         google ? String(localized: "Sign in with Google") :
-            kubeDiscoverNeedsSignIn(fields) ? String(localized: "Sign in and find clusters") : String(localized: "Find clusters")
+            kubeDiscoverNeedsSignIn(fields) && !choosing ? String(localized: "Sign in and find clusters") : String(localized: "Find clusters")
+    }
+    /// The hints of the fields shown; discovery's IAM Identity Center explains itself with the
+    /// regions' hint, the sign-in sheet's start URL hint names fields it does not have.
+    private var hints: [String] {
+        fields.filter { !(fields.contains(kubeAWSRegionsField) && $0 == kubeAWSStartURLField) }.compactMap(KubeAuthWording.fieldHint)
     }
 
     /// The credentials the provider takes (GKE: a service account key or gcloud user credentials).
@@ -83,7 +97,23 @@ struct CloudDiscoveryView: View {
                     }
                 }
                 if !visibleFields.isEmpty {
-                    KubeFieldsSection(fields: visibleFields, values: $values).disabled(working)
+                    KubeFieldsSection(fields: visibleFields, values: $values).disabled(working || choosing)
+                }
+                if choosing {
+                    Section("Choose the accounts and roles to look in") {
+                        ForEach(roleChoices, id: \.self) { choice in
+                            Toggle(isOn: Binding(
+                                get: { pickedRoles.contains(choice) },
+                                set: { on in if on { pickedRoles.insert(choice) } else { pickedRoles.remove(choice) } }
+                            )) {
+                                VStack(alignment: .leading) {
+                                    Text(verbatim: choice.label)
+                                    Text(verbatim: choice.accountId).font(.footnote).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                    .disabled(working)
                 }
                 if provider == "gke" {
                     Section {
@@ -92,7 +122,6 @@ struct CloudDiscoveryView: View {
                         Text("This file contains a refresh token or private key. Keep it private; anyone with it can access your Google account or service account.")
                     }
                 }
-                let hints = fields.compactMap(KubeAuthWording.fieldHint)
                 if !hints.isEmpty {
                     Section {
                         ForEach(hints, id: \.self) { Text($0).font(.footnote).foregroundStyle(.secondary) }
@@ -100,7 +129,7 @@ struct CloudDiscoveryView: View {
                 }
                 Section {
                     CloudDiscoverySignInRows(flow: flow, onCancel: cancelSignIn)
-                    if busy { DiscoverProgressRow(progress: progress) }
+                    if busy { DiscoverProgressRow(progress: progress, regions: provider == "eks") }
                     if let error { Text(error).font(.footnote).foregroundStyle(.statusBad) }
                     Button {
                         findClusters()
@@ -112,7 +141,7 @@ struct CloudDiscoveryView: View {
                     }
                     .disabled(working || !complete)
                 } footer: {
-                    if kubeDiscoverNeedsSignIn(fields) { Text("Sign in first, then find clusters.") }
+                    if kubeDiscoverNeedsSignIn(fields) && !choosing { Text("Sign in first, then find clusters.") }
                 }
             }
             .navigationTitle("Add from a cloud account")
@@ -149,7 +178,11 @@ struct CloudDiscoveryView: View {
             case .signedIn:
                 guard let secrets = pendingSecrets else { return }
                 signedSecrets = secrets
-                work = Task { await discover(secrets: secrets) }
+                // Several AWS accounts and roles: the user ticks the ones to look in first.
+                let choices = provider == "eks" ? TalosClient.discoverSignInChoices() : []
+                roleChoices = choices
+                pickedRoles = []
+                if choices.isEmpty { work = Task { await discover(secrets: secrets) } }
             case .failed(let message): error = message
             case .idle: pendingSecrets = nil
             default: break
@@ -180,6 +213,14 @@ struct CloudDiscoveryView: View {
         error = nil
         let secrets = google ? kubeGoogleSignInSecretsJSON(projects: values["gcpProjects"] ?? "") :
             kubeSecretsJSON(fields: fields, values: values)
+        if choosing {
+            let picked = roleChoices.filter(pickedRoles.contains)
+            var withRoles = values
+            withRoles[kubeAWSRoleSelectionField] = kubeRoleSelection(picked)
+            let selected = kubeSecretsJSON(fields: fields + [kubeAWSRoleSelectionField], values: withRoles)
+            work = Task { await discover(secrets: selected) }
+            return
+        }
         pendingSecrets = secrets
         if kubeDiscoverNeedsSignIn(fields), signedSecrets != secrets {
             flow.start(TalosClient.startDiscoverSignIn(provider: provider, secrets: secrets))
@@ -192,6 +233,8 @@ struct CloudDiscoveryView: View {
         flow.cancel()
         pendingSecrets = nil
         signedSecrets = nil
+        roleChoices = []
+        pickedRoles = []
         TalosClient.forgetDiscoverSignIn()
     }
 
@@ -228,12 +271,16 @@ struct CloudDiscoveryView: View {
             let kubeconfig = try await TalosClient.discoverClusters(provider: selectedProvider, secrets: secrets)
             guard !Task.isCancelled else { return }
             handedOff = true
-            onFound(DiscoveredClusters(kubeconfig: kubeconfig, secrets: secrets))
+            let refused = TalosClient.discoverProgress()?.refused ?? []
+            onFound(DiscoveredClusters(kubeconfig: kubeconfig, secrets: secrets, refused: refused))
             dismiss()
         } catch {
             guard !Task.isCancelled else { return }
             self.error = error.localizedDescription
-            if isKubeSignInRequired(error.localizedDescription) { signedSecrets = nil }
+            if isKubeSignInRequired(error.localizedDescription) {
+                signedSecrets = nil
+                roleChoices = []
+            }
         }
     }
 
@@ -246,21 +293,33 @@ struct CloudDiscoveryView: View {
     }
 }
 
-/// How far the running discovery got: a bar that fills as a Google account's projects are read
-/// (indeterminate while they are listed, and for the other clouds), and the counts.
+/// How far the running discovery got: a bar that fills as a Google account's projects (an AWS
+/// sign-in's regions) are read (indeterminate while they are listed, and for the other clouds),
+/// the counts, and the regions that refused.
 private struct DiscoverProgressRow: View {
     let progress: DiscoveryProgress?
+    /// Counting AWS regions rather than projects.
+    let regions: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let progress, let fraction = progress.fraction {
                 ProgressView(value: fraction)
-                Text("Scanned \(String(progress.scanned)) of \(String(progress.projects)) projects · \(String(progress.clusters)) clusters found")
-                    .font(.footnote).foregroundStyle(.secondary)
-                    .monospacedDigit()
+                Group {
+                    if regions {
+                        Text("Scanned \(String(progress.scanned)) of \(String(progress.projects)) regions · \(String(progress.clusters)) clusters found")
+                    } else {
+                        Text("Scanned \(String(progress.scanned)) of \(String(progress.projects)) projects · \(String(progress.clusters)) clusters found")
+                    }
+                }
+                .font(.footnote).foregroundStyle(.secondary)
+                .monospacedDigit()
             } else {
                 ProgressView().frame(maxWidth: .infinity, alignment: .leading)
                 Text("Looking for clusters…").font(.footnote).foregroundStyle(.secondary)
+            }
+            if let refused = progress?.refused, !refused.isEmpty {
+                Text("No access in \(refused.joined(separator: ", "))").font(.footnote).foregroundStyle(.secondary)
             }
         }
         .animation(.default, value: progress)
