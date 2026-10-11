@@ -3908,6 +3908,16 @@
     <string name="monitor_storage_smart_ok">%1$s sur %2$s passe de nouveau SMART</string>
     <string name="monitor_storage_trend">Prévenir avant qu\'un volume se remplisse</string>
     <string name="monitor_storage_trend_desc">Notifie quand la croissance d\'un volume sur la dernière semaine le rendrait critique d\'ici %1$d jours, puis une fois que ce n\'est plus le cas. Utilise l\'historique des vérifications ; nécessite le stockage des nœuds.</string>
+    <string name="monitor_sensors">Températures des nœuds</string>
+    <string name="monitor_sensors_desc">Alerte quand un nœud chauffe ou que ses cœurs sont bridés (clusters Talos ; lit les capteurs de chaque nœud à chaque vérification).</string>
+    <string name="monitor_sensors_auto">La limite de chaque capteur (critique − 5 °C, sinon son maximum)</string>
+    <string name="monitor_sensors_threshold">Alerter à %1$d °C</string>
+    <string name="monitor_sensor_hot">%1$s chauffe (%2$s °C)</string>
+    <string name="monitor_sensor_hot_ok">%1$s revenu à une température normale</string>
+    <string name="monitor_sensor_throttled">%1$s est bridé</string>
+    <string name="monitor_sensor_throttled_ok">%1$s n\'est plus bridé</string>
+    <string name="monitor_sensor_hot_text">%1$s, alerte à %2$s °C</string>
+    <string name="monitor_sensor_throttled_text">Ses cœurs tournent bien en dessous de leur vitesse : vérifiez son refroidissement.</string>
     <plurals name="monitor_storage_trend_full">
         <item quantity="one">%1$s sur %2$s plein dans ~%3$d jour</item>
         <item quantity="other">%1$s sur %2$s plein dans ~%3$d jours</item>

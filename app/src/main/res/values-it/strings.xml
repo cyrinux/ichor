@@ -3908,6 +3908,16 @@
     <string name="monitor_storage_smart_ok">%1$s su %2$s supera di nuovo SMART</string>
     <string name="monitor_storage_trend">Avvisa prima che un volume si riempia</string>
     <string name="monitor_storage_trend_desc">Notifica quando la crescita di un volume nell\'ultima settimana lo renderebbe critico entro %1$d giorni, e una volta quando non è più così. Usa la cronologia dei controlli; richiede l\'archiviazione dei nodi.</string>
+    <string name="monitor_sensors">Temperature dei nodi</string>
+    <string name="monitor_sensors_desc">Avvisa quando un nodo si scalda o i suoi core vengono limitati (cluster Talos; legge i sensori di ogni nodo a ogni controllo).</string>
+    <string name="monitor_sensors_auto">Il limite di ogni sensore (critico − 5 °C, altrimenti il suo massimo)</string>
+    <string name="monitor_sensors_threshold">Avvisa a %1$d °C</string>
+    <string name="monitor_sensor_hot">%1$s si scalda (%2$s °C)</string>
+    <string name="monitor_sensor_hot_ok">%1$s di nuovo a temperatura normale</string>
+    <string name="monitor_sensor_throttled">%1$s è limitato</string>
+    <string name="monitor_sensor_throttled_ok">%1$s non è più limitato</string>
+    <string name="monitor_sensor_hot_text">%1$s, avviso a %2$s °C</string>
+    <string name="monitor_sensor_throttled_text">I suoi core girano molto sotto la loro velocità: controlla il raffreddamento.</string>
     <plurals name="monitor_storage_trend_full">
         <item quantity="one">%1$s su %2$s pieno tra ~%3$d giorno</item>
         <item quantity="other">%1$s su %2$s pieno tra ~%3$d giorni</item>

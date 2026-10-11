@@ -127,6 +127,17 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
         null
     }
 
+    // And for node temperatures: one Talos call reads every node's hottest sensor (none for a
+    // cluster added from a kubeconfig); nothing is read with the setting off.
+    val watchSensors = store.sensorsWatched.value && !kube
+    val sensorIssues = if (watchSensors) {
+        runCatching { reads.talos.sensorHealth() }.getOrNull()?.let {
+            sensorIssuesOf(it, store.sensorThreshold.value, known = knownSensorIssues(prev, name))
+        }
+    } else {
+        null
+    }
+
     return if (kubeNodes != null) {
         val snapshot = kubeSnapshotOf(
             kubeNodes, name, context.certNotAfter, now, fingerprint, watchData, dataServices,
@@ -150,6 +161,8 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
             amIssues = amIssues,
             storageWatched = watchStorage,
             storageIssues = storageIssues,
+            sensorWatched = watchSensors,
+            sensorIssues = sensorIssues,
         )
         ClusterReading(snapshot, historyDetailOf(talos, storageHealth))
     }

@@ -142,6 +142,23 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: storageTrendKey) }
     }
 
+    static let sensorsKey = "monitor.sensors"
+    /// Opt-in: also read every node's hottest sensor, to alert when one runs hot or is throttled.
+    static var sensorsWatched: Bool {
+        get { UserDefaults.standard.bool(forKey: sensorsKey) }
+        set { UserDefaults.standard.set(newValue, forKey: sensorsKey) }
+    }
+
+    static let sensorThresholdKey = "monitor.sensorThreshold"
+    /// sensorThresholdAuto (each sensor's own limit) or the °C every node is held to.
+    static var sensorThreshold: Int {
+        get {
+            let value = UserDefaults.standard.integer(forKey: sensorThresholdKey)
+            return value == sensorThresholdAuto ? value : min(max(value, sensorThresholdRange.lowerBound), sensorThresholdRange.upperBound)
+        }
+        set { UserDefaults.standard.set(newValue, forKey: sensorThresholdKey) }
+    }
+
     static let storageWarnKey = "monitor.storageWarn"
     static let storageCritKey = "monitor.storageCrit"
     /// The fill (% used) a volume alerts from: a warning, then critical (StorageThresholds clamps them).
@@ -419,6 +436,10 @@ enum BackgroundMonitor {
         let watchStorage = storageWatched && !context.isKube
         let knownStorage = knownStorageIssues(previous, context: context.name)
         let thresholds = storageThresholds
+        // And node temperatures, the same way: one Talos call, nothing read with the setting off.
+        let watchSensors = sensorsWatched && !context.isKube
+        let knownSensors = knownSensorIssues(previous, context: context.name)
+        let sensorLimit = sensorThreshold
         let fingerprint = context.fingerprint
         async let dataRead = ifWatched(watchData, within: left) { try? await client.dataServices(hints: "") }
         async let gitopsRead = ifWatched(watchGitOps, within: left) { await readGitOps(client, known: known) }
@@ -429,12 +450,17 @@ enum BackgroundMonitor {
         async let storageRead = ifWatched(watchStorage, within: left) {
             await readStorage(client, thresholds: thresholds, known: knownStorage)
         }
+        async let sensorRead = ifWatched(watchSensors, within: left) { () -> [String: String]? in
+            guard let health = try? await client.clusterSensorHealth() else { return nil }
+            return sensorIssuesOf(health, threshold: sensorLimit, known: knownSensors)
+        }
         let dataServices = await dataRead
         let gitopsIssues = await gitopsRead
         let checkupIssues = await checkupRead
         let alertmanagerIssues = await alertmanagerRead
         let storage = await storageRead
         let storageIssues = storage?.issues
+        let sensorIssues = await sensorRead
         let now = Date()
         if let kubeNodes {
             return .read(kubeSnapshotOf(kubeNodes, context: context.name, certNotAfter: context.certNotAfter, takenAt: now,
@@ -452,7 +478,8 @@ enum BackgroundMonitor {
                                 gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
                                 checkupWatched: watchCheckup, checkupIssues: checkupIssues,
                                 alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
-                                storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn),
+                                storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn,
+                                sensorWatched: watchSensors, sensorIssues: sensorIssues),
                      extras)
     }
 
@@ -603,6 +630,10 @@ enum BackgroundMonitor {
             // "<node>|…": named from the issue kept, the current one or, once resolved, the last.
             guard let value = snapshot.storageIssues[subject] ?? previous?.storageIssues[subject] else { return (alert.title, alert.text) }
             return localizedStorage(alert, issue: StorageIssue(value: value), warn: snapshot.storageWarn)
+        case "sensor":
+            // "<node>|hot" or "<node>|throttled": named from the issue kept, the current one or, once resolved, the last.
+            guard let value = snapshot.sensorIssues[subject] ?? previous?.sensorIssues[subject] else { return (alert.title, alert.text) }
+            return localizedSensor(alert, issue: SensorIssue(value: value))
         case "unreachable":
             // The cluster is named in the subtitle.
             guard alert.problem else {
@@ -639,6 +670,18 @@ enum BackgroundMonitor {
     }
 
     /// A volume's fill, or a disk failing SMART, on a node named by its hostname.
+    /// A node running hot or throttled, worded as on Android.
+    private static func localizedSensor(_ alert: Alert, issue: SensorIssue) -> (title: String, text: String) {
+        let host = issue.hostname
+        if issue.isThrottled {
+            guard alert.problem else { return (String(localized: "\(host) no longer throttled"), String(localized: "Node temperatures")) }
+            return (String(localized: "\(host) is throttled"), String(localized: "Its cores run well below their speed: check its cooling."))
+        }
+        guard alert.problem else { return (String(localized: "\(host) back to a normal temperature"), String(localized: "Node temperatures")) }
+        return (String(localized: "\(host) runs hot (\(celsiusText(issue.celsius)) °C)"),
+                String(localized: "\(issue.label), alert at \(celsiusText(issue.limit)) °C"))
+    }
+
     private static func localizedStorage(_ alert: Alert, issue: StorageIssue, warn: Int) -> (title: String, text: String) {
         let name = issue.name
         let host = issue.hostname

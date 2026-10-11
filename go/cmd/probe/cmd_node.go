@@ -147,6 +147,10 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "sensor-health", run: func(e env) (string, error) {
+		// What the monitor's temperature alert reads: every node's hottest sensor.
+		return ichorgo.ClusterSensorHealth(e.cfg, e.context)
+	}},
 	{name: "sensors", args: "NODE", run: func(e env) (out string, err error) {
 		out, err = ichorgo.NodeSensors(e.cfg, e.context, flag.Arg(1))
 

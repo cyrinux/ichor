@@ -125,43 +125,51 @@ func NodeSensors(configYAML, contextName, node string) (out string, err error) {
 	}
 
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		errs := map[string]string{}
-
-		tree, listErrs := listSensorTree(ctx, s)
-		for section, e := range listErrs {
-			errs[section] = s.friendly(node, e)
-		}
-
-		contents := readSensorFiles(ctx, s, sensorReads(tree))
-
-		var freqs []*machineapi.CPUFreqStats
-
-		if resp, e := s.client.MachineClient.CPUFreqStats(ctx, &emptypb.Empty{}); e != nil {
-			if !isMissingPath(e) {
-				errs["cpuFreq"] = s.friendly(node, e)
-			}
-		} else if msg := first(resp.GetMessages()); msg != nil {
-			if m := metaError(msg.GetMetadata()); m != "" && !strings.Contains(m, "no such file") {
-				errs["cpuFreq"] = m
-			}
-
-			freqs = msg.GetCpuFreqStats()
-		}
-
-		out := buildSensors(tree, contents, freqs)
+		out := readSensors(ctx, s, node)
 
 		if pci, e := safe.StateListAll[*hardware.PCIDevice](ctx, s.client.COSI); e != nil {
-			errs["pci"] = s.friendly(node, e)
+			out.Errors["pci"] = s.friendly(node, e)
 		} else {
 			out.PCI = mapPCIDevices(safe.ToSlice(pci, identity))
 		}
 
-		for k, v := range errs {
-			out.Errors[k] = v
-		}
-
 		return toJSON(out)
 	})
+}
+
+// readSensors reads node's hwmon sensors, thermal zones and CPU frequencies (ctx already
+// targets node); a section that failed is in Errors, PCI is left empty.
+func readSensors(ctx context.Context, s *session, node string) nodeSensors {
+	errs := map[string]string{}
+
+	tree, listErrs := listSensorTree(ctx, s)
+	for section, e := range listErrs {
+		errs[section] = s.friendly(node, e)
+	}
+
+	contents := readSensorFiles(ctx, s, sensorReads(tree))
+
+	var freqs []*machineapi.CPUFreqStats
+
+	if resp, e := s.client.MachineClient.CPUFreqStats(ctx, &emptypb.Empty{}); e != nil {
+		if !isMissingPath(e) {
+			errs["cpuFreq"] = s.friendly(node, e)
+		}
+	} else if msg := first(resp.GetMessages()); msg != nil {
+		if m := metaError(msg.GetMetadata()); m != "" && !strings.Contains(m, "no such file") {
+			errs["cpuFreq"] = m
+		}
+
+		freqs = msg.GetCpuFreqStats()
+	}
+
+	out := buildSensors(tree, contents, freqs)
+
+	for k, v := range errs {
+		out.Errors[k] = v
+	}
+
+	return out
 }
 
 // listSensorTree lists the hwmon chips (and each chip's files), thermal zones and CPUs.

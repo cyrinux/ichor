@@ -338,6 +338,14 @@ where a failed upgrade can be rolled back.
   the thermal zones and `CPUFreqStats` (Talos 1.5+). Cores held below 70 % of their top speed
   under the `performance` governor, or a sensor above its max, mark the node *Throttled* there
   and, once that screen was opened, on its row in the node lists. A VM has no Sensors card.
+- **Temperature alert:** Settings → Alerts → Node temperatures (off by default, Talos clusters)
+  reads every node's hottest sensor at each background check.
+  - **Running hot:** a node at its sensor's critical limit − 5 °C (else its max) notifies at once.
+    You can set one temperature for every node instead (60–100 °C).
+  - **Back to normal:** said once the node is 3 °C under the limit, so a sensor hovering at the
+    limit does not flap.
+  - **Throttled:** notifies when seen on two checks in a row.
+  - **Tapping it:** opens the node's Hardware screen.
 - **Rollback:** on a node's upgrade screen, the menu offers `talosctl rollback` (os:admin): the node
   reboots at once into the Talos it ran before its last upgrade, for an upgrade that boots but
   misbehaves. Talos rolls back by itself one that does not boot.

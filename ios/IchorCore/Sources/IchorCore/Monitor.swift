@@ -49,6 +49,13 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     /// Open storage trend alerts (volume key → StorageTrendIssue value, see evaluateStorageTrends):
     /// set after the history ring is written, carried over by evaluate.
     public var storageTrends: [String: String]
+    /// Watching node temperatures was on for this check (opt-in, Talos clusters only), and it could be read.
+    public var sensorWatched: Bool
+    public var sensorChecked: Bool
+    /// Nodes running hot or throttled ("<node>|hot", "<node>|throttled" → SensorIssue value, see
+    /// sensorIssuesOf), kept like dataIssues.
+    public var sensorIssues: [String: String]
+    public var sensorPending: [String]
     /// The cluster was added from a kubeconfig: its nodes come from the Kubernetes API (ready or
     /// not, never unreachable), there is no etcd, and `certNotAfter` is the kubeconfig's credentials.
     public var kube: Bool
@@ -63,7 +70,9 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
                 amWatched: Bool = false, amChecked: Bool = false, amIssues: [String: String] = [:], amPending: [String] = [],
                 storageWatched: Bool = false, storageChecked: Bool = false, storageIssues: [String: String] = [:],
                 storagePending: [String] = [], storageWarn: Int = storageWarnDefault,
-                storageTrends: [String: String] = [:], kube: Bool = false) {
+                storageTrends: [String: String] = [:],
+                sensorWatched: Bool = false, sensorChecked: Bool = false, sensorIssues: [String: String] = [:],
+                sensorPending: [String] = [], kube: Bool = false) {
         self.context = context
         self.takenAt = takenAt
         self.nodes = nodes
@@ -93,6 +102,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.storagePending = storagePending
         self.storageWarn = storageWarn
         self.storageTrends = storageTrends
+        self.sensorWatched = sensorWatched
+        self.sensorChecked = sensorChecked
+        self.sensorIssues = sensorIssues
+        self.sensorPending = sensorPending
         self.kube = kube
     }
 
@@ -128,6 +141,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         storagePending = try c.field(.storagePending, [])
         storageWarn = try c.field(.storageWarn, storageWarnDefault)
         storageTrends = try c.field(.storageTrends, [:])
+        sensorWatched = try c.field(.sensorWatched, false)
+        sensorChecked = try c.field(.sensorChecked, false)
+        sensorIssues = try c.field(.sensorIssues, [:])
+        sensorPending = try c.field(.sensorPending, [])
         kube = try c.field(.kube, false)
     }
 
@@ -149,6 +166,11 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     var amTrack: IssueTrack {
         get { IssueTrack(watched: amWatched, checked: amChecked, issues: amIssues, pending: amPending) }
         set { (amWatched, amChecked, amIssues, amPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
+    }
+
+    var sensorTrack: IssueTrack {
+        get { IssueTrack(watched: sensorWatched, checked: sensorChecked, issues: sensorIssues, pending: sensorPending) }
+        set { (sensorWatched, sensorChecked, sensorIssues, sensorPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
     }
 
     var storageTrack: IssueTrack {
@@ -186,13 +208,15 @@ public struct NodeState: Codable, Equatable, Sendable {
 /// alertmanagerWatched: watching the Alertmanager was on; alertmanagerIssues (see alertmanagerIssuesOf): nil when unreadable.
 /// storageWatched: watching node storage was on; storageIssues (see storageIssuesOf): nil when unreadable;
 /// storageWarn: the warning threshold they were read with.
+/// sensorWatched: watching node temperatures was on; sensorIssues (see sensorIssuesOf): nil when unreadable.
 public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNotAfter: Int64, takenAt: Date,
                        dataWatched: Bool = false, dataServices: DataServices? = nil,
                        gitopsWatched: Bool = false, gitopsIssues: [String: String]? = nil,
                        checkupWatched: Bool = false, checkupIssues: [String: String]? = nil,
                        alertmanagerWatched: Bool = false, alertmanagerIssues: [String: String]? = nil,
                        storageWatched: Bool = false, storageIssues: [String: String]? = nil,
-                       storageWarn: Int = storageWarnDefault) -> ClusterSnapshot {
+                       storageWarn: Int = storageWarnDefault,
+                       sensorWatched: Bool = false, sensorIssues: [String: String]? = nil) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
     for n in overview.nodes {
         let reason = n.error ?? n.unmetConditions.map { "\($0.name): \($0.reason)" }.joined(separator: "; ")
@@ -221,7 +245,10 @@ public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNot
         storageWatched: storageWatched,
         storageChecked: storageWatched && storageIssues != nil,
         storageIssues: storageWatched ? storageIssues ?? [:] : [:],
-        storageWarn: storageWarn
+        storageWarn: storageWarn,
+        sensorWatched: sensorWatched,
+        sensorChecked: sensorWatched && sensorIssues != nil,
+        sensorIssues: sensorWatched ? sensorIssues ?? [:] : [:]
     )
 }
 
@@ -464,6 +491,7 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
         next.checkupTrack = evaluateCheckup(previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.amTrack = evaluateAlertmanager(previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.storageTrack = evaluateStorage(previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.sensorTrack = evaluateSensors(previous: previous, current: current, comparable: comparable, alerts: &alerts)
         // The trend alerts are evaluated once the history ring has this check (evaluateStorageTrends).
         next.storageTrends = comparable && current.storageWatched ? previous?.storageTrends ?? [:] : [:]
     }

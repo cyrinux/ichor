@@ -15,6 +15,8 @@ enum class AlertKind {
     STORAGE_PROBLEM, STORAGE_OK,
     /** A volume projected critical (or full) within days ([Alert.detail]: a [TrendDetail]), or no longer. */
     STORAGE_TREND, STORAGE_TREND_OK,
+    /** A node running hot or throttled ([Alert.detail]: a [SensorDetail]), or no longer. */
+    SENSOR_PROBLEM, SENSOR_OK,
     /** The cluster could not be read for several checks in a row ([Alert.detail]: how many), or answers again. */
     CLUSTER_UNREACHABLE, CLUSTER_REACHABLE,
 }
@@ -94,6 +96,7 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
     val checkup = if (blind) prev.checkupTrack else evaluateTrack(prev?.checkupTrack, cur.checkupTrack, comparable, { it }, ::checkupAlert, alerts)
     val am = if (blind) prev.amTrack else evaluateTrack(prev?.amTrack, cur.amTrack, comparable, ::amSeverity, ::amAlert, alerts)
     val storage = if (blind) prev.storageTrack else evaluateTrack(prev?.storageTrack, cur.storageTrack, comparable, ::storageSeverity, ::storageAlert, alerts)
+    val sensor = if (blind) prev.sensorTrack else evaluateTrack(prev?.sensorTrack, cur.sensorTrack, comparable, ::sensorSeverity, ::sensorAlert, alerts)
 
     val next = if (blind) prev.copy(certNotAfter = cur.certNotAfter) else cur
     return Evaluation(
@@ -120,6 +123,10 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             storageChecked = storage.checked,
             storageIssues = storage.issues,
             storagePending = storage.pending,
+            sensorWatched = sensor.watched,
+            sensorChecked = sensor.checked,
+            sensorIssues = sensor.issues,
+            sensorPending = sensor.pending,
             // Stepped after the run's history record (see [withStorageTrends]); kept until then.
             storageTrends = prev?.takeIf { comparable && storage.watched }?.storageTrends.orEmpty(),
         ),
@@ -134,6 +141,7 @@ private val ClusterSnapshot.gitopsTrack: Track get() = Track(gitopsWatched, gito
 private val ClusterSnapshot.checkupTrack: Track get() = Track(checkupWatched, checkupChecked, checkupIssues, checkupPending)
 private val ClusterSnapshot.amTrack: Track get() = Track(amWatched, amChecked, amIssues, amPending)
 private val ClusterSnapshot.storageTrack: Track get() = Track(storageWatched, storageChecked, storageIssues, storagePending)
+private val ClusterSnapshot.sensorTrack: Track get() = Track(sensorWatched, sensorChecked, sensorIssues, sensorPending)
 
 /**
  * Issues of one track (key → value, [severityOf] reading [DATA_CRITICAL] or [DATA_WARNING] from the
@@ -215,6 +223,15 @@ private fun storageAlert(key: String, value: String, problem: Boolean): Alert = 
     kind = if (problem) AlertKind.STORAGE_PROBLEM else AlertKind.STORAGE_OK,
     problem = problem,
     subject = StorageDetail.parse(value).hostname,
+    detail = value,
+)
+
+/** [key] "node|hot" or "node|throttled", [value] a [SensorDetail]: the node's hostname is the subject. */
+private fun sensorAlert(key: String, value: String, problem: Boolean): Alert = Alert(
+    key = "sensor:$key",
+    kind = if (problem) AlertKind.SENSOR_PROBLEM else AlertKind.SENSOR_OK,
+    problem = problem,
+    subject = SensorDetail.parse(value).hostname,
     detail = value,
 )
 
