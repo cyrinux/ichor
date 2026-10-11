@@ -90,3 +90,21 @@ val TemperatureSensor.limitFraction: Float?
 /** Above its max (or crit when it has no max). */
 val TemperatureSensor.hot: Boolean
     get() = (maxCelsius > 0 && celsius > maxCelsius) || (critCelsius > 0 && celsius >= critCelsius)
+
+/** What the background monitor reads of every node's sensors (Go ClusterSensorHealth). */
+@Serializable
+data class ClusterSensorHealth(
+    val context: String = "",
+    val nodes: List<NodeSensorHealth> = emptyList(),
+)
+
+@Serializable
+data class NodeSensorHealth(
+    val node: String,
+    val hostname: String = "",
+    /** The warmest sensor; null on a node without any (a VM). */
+    val hottest: TemperatureSensor? = null,
+    val throttled: Boolean = false,
+    /** The node could not be read. */
+    val error: String? = null,
+)

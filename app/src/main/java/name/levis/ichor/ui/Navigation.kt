@@ -307,6 +307,7 @@ private suspend fun ShareTarget.route(app: TalosApp, action: AlertActionRequest?
     ShareTarget.NODE -> clusterNode(app)
         ?.let { n -> Routes.node(n.node, n.hostname, n.role, nodeTab, action = if (action?.action == AlertAction.REBOOT) "reboot" else "") }
     ShareTarget.STORAGE -> clusterNode(app)?.let { n -> Routes.storage(n.node, n.hostname) }
+    ShareTarget.HARDWARE -> clusterNode(app)?.let { n -> Routes.hardware(n.node, n.hostname) }
     ShareTarget.ARGO_APP -> Routes.argoApp(namespace, name, sync = action?.action == AlertAction.SYNC)
     ShareTarget.FLUX_APP -> Routes.fluxApp(kind, namespace, name, reconcile = action?.action == AlertAction.RECONCILE)
     ShareTarget.DATA -> Routes.dataServices(DataServiceKind.entries.firstOrNull { it.catalogId == kind })

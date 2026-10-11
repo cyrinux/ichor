@@ -3903,6 +3903,16 @@
     <string name="monitor_storage_smart_ok">%1$s auf %2$s besteht SMART wieder</string>
     <string name="monitor_storage_trend">Warnen, bevor ein Volume voll wird</string>
     <string name="monitor_storage_trend_desc">Benachrichtigt, wenn ein Volume bei seinem Wachstum der letzten Woche innerhalb von %1$d Tagen kritisch würde, und einmal, wenn das nicht mehr so ist. Nutzt den Verlauf der Prüfungen; braucht den Speicher der Knoten.</string>
+    <string name="monitor_sensors">Node-Temperaturen</string>
+    <string name="monitor_sensors_desc">Warnt, wenn ein Node heiß läuft oder seine Kerne gedrosselt werden (Talos-Cluster; liest bei jeder Prüfung die Sensoren jedes Nodes).</string>
+    <string name="monitor_sensors_auto">Eigene Grenze jedes Sensors (kritisch − 5 °C, sonst sein Maximum)</string>
+    <string name="monitor_sensors_threshold">Warnen ab %1$d °C</string>
+    <string name="monitor_sensor_hot">%1$s läuft heiß (%2$s °C)</string>
+    <string name="monitor_sensor_hot_ok">%1$s wieder bei normaler Temperatur</string>
+    <string name="monitor_sensor_throttled">%1$s wird gedrosselt</string>
+    <string name="monitor_sensor_throttled_ok">%1$s nicht mehr gedrosselt</string>
+    <string name="monitor_sensor_hot_text">%1$s, Warnung ab %2$s °C</string>
+    <string name="monitor_sensor_throttled_text">Seine Kerne laufen deutlich unter ihrem Takt: prüfe die Kühlung.</string>
     <plurals name="monitor_storage_trend_full">
         <item quantity="one">%1$s auf %2$s in ~%3$d Tag voll</item>
         <item quantity="other">%1$s auf %2$s in ~%3$d Tagen voll</item>

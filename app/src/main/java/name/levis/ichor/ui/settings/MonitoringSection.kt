@@ -38,6 +38,9 @@ import name.levis.ichor.monitor.CERT_WARN_DAYS
 import name.levis.ichor.monitor.MonitorStore
 import name.levis.ichor.monitor.STORAGE_WARN_RANGE
 import name.levis.ichor.monitor.TREND_OPEN_DAYS
+import name.levis.ichor.monitor.SENSOR_THRESHOLD_AUTO
+import name.levis.ichor.monitor.SENSOR_THRESHOLD_DEFAULT
+import name.levis.ichor.monitor.SENSOR_THRESHOLD_RANGE
 import name.levis.ichor.monitor.storageCriticalRange
 import name.levis.ichor.monitor.UNREACHABLE_RUNS
 import name.levis.ichor.monitor.canPostNotifications
@@ -59,6 +62,7 @@ fun MonitoringSection(app: TalosApp) {
     val alertmanagerWatched by store.alertmanagerWatched.collectAsStateWithLifecycle()
     val storageWatched by store.storageWatched.collectAsStateWithLifecycle()
     val storageTrend by store.storageTrendAlerts.collectAsStateWithLifecycle()
+    val sensorsWatched by store.sensorsWatched.collectAsStateWithLifecycle()
     val unreachable by store.unreachableAlerts.collectAsStateWithLifecycle()
     val unreachableRuns by store.unreachableRuns.collectAsStateWithLifecycle()
     val interval by store.intervalMinutes.collectAsStateWithLifecycle()
@@ -178,6 +182,20 @@ fun MonitoringSection(app: TalosApp) {
                     modifier = Modifier.padding(start = 12.dp),
                 )
             }
+            // And for node temperatures: every node's hottest sensor is read at every check.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_sensors), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_sensors_desc))
+                }
+                Switch(
+                    checked = sensorsWatched,
+                    onCheckedChange = { store.setSensorsWatched(it) },
+                    enabled = enabled,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            if (sensorsWatched) SensorThreshold(store, enabled)
             // And for a cluster that stops answering: once, after that many checks in a row.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -233,6 +251,34 @@ private fun StorageThresholds(store: MonitorStore, enabled: Boolean) {
     val critical by store.storageCriticalPercent.collectAsStateWithLifecycle()
     PercentSlider(stringResource(R.string.monitor_storage_warn, warn), warn, STORAGE_WARN_RANGE, enabled, store::setStorageWarnPercent)
     PercentSlider(stringResource(R.string.monitor_storage_critical, critical), critical, storageCriticalRange(warn), enabled, store::setStorageCriticalPercent)
+}
+
+/** Each sensor's own limit (crit − 5 °C, else max), or one temperature for every node. */
+@Composable
+private fun SensorThreshold(store: MonitorStore, enabled: Boolean) {
+    val threshold by store.sensorThreshold.collectAsStateWithLifecycle()
+    val auto = threshold == SENSOR_THRESHOLD_AUTO
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(R.string.monitor_sensors_auto), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        Switch(
+            checked = auto,
+            onCheckedChange = { store.setSensorThreshold(if (it) SENSOR_THRESHOLD_AUTO else SENSOR_THRESHOLD_DEFAULT) },
+            enabled = enabled,
+            modifier = Modifier.padding(start = 12.dp),
+        )
+    }
+    if (!auto) {
+        val label = stringResource(R.string.monitor_sensors_threshold, threshold)
+        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Slider(
+            value = threshold.toFloat(),
+            onValueChange = { store.setSensorThreshold(it.roundToInt()) },
+            valueRange = SENSOR_THRESHOLD_RANGE.first.toFloat()..SENSOR_THRESHOLD_RANGE.last.toFloat(),
+            steps = SENSOR_THRESHOLD_RANGE.last - SENSOR_THRESHOLD_RANGE.first - 1,
+            enabled = enabled,
+            modifier = Modifier.semantics { contentDescription = label },
+        )
+    }
 }
 
 @Composable

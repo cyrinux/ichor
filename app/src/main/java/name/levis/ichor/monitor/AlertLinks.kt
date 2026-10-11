@@ -21,7 +21,7 @@ enum class AlertChannel(val id: String, val importance: Int, val title: Int, val
 val Alert.channel: AlertChannel
     get() = when (kind) {
         AlertKind.NODE_READY, AlertKind.NODE_NOT_READY, AlertKind.NODE_UNREACHABLE, AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK,
-        AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK,
+        AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK, AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK,
         -> AlertChannel.NODES
         AlertKind.ETCD_ALARM, AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK, AlertKind.AM_FIRING, AlertKind.AM_RESOLVED,
         AlertKind.CLUSTER_UNREACHABLE, AlertKind.CLUSTER_REACHABLE,
@@ -52,6 +52,8 @@ fun Alert.shareTarget(): ShareTarget? = when (kind) {
     // "storage:node|volume", "storage:node|smart|device" or "storage:node|volume:trend": that node's Storage screen.
     AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK, AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK ->
         ShareTarget.storage(key.substringAfter(':').substringBefore('|'), subject)
+    // "sensor:node|hot" or "sensor:node|throttled": that node's Hardware screen.
+    AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> ShareTarget.hardware(key.substringAfter(':').substringBefore('|'), subject)
 }
 
 /** Argo CD: "namespace/name"; Flux: "Kind namespace/name" (see [Alert.subject]). */

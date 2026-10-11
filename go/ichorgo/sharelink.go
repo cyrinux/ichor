@@ -62,6 +62,8 @@ var shareTargets = map[string]shareFields{
 	"alerts": {},
 	// A node's Storage screen (its volumes, mounts and disks).
 	"storage": {node: true},
+	// A node's Hardware screen (its sensors, the temperature alert's).
+	"hardware": {node: true},
 }
 
 var (

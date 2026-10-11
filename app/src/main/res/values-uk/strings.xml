@@ -4115,6 +4115,16 @@
     <string name="monitor_storage_smart_ok">%1$s на %2$s знову проходить SMART</string>
     <string name="monitor_storage_trend">Попереджати, перш ніж том заповниться</string>
     <string name="monitor_storage_trend_desc">Сповіщає, коли зростання тому за останній тиждень зробить його критичним протягом %1$d днів, і один раз, коли це вже не так. Використовує історію перевірок; потребує сховища вузлів.</string>
+    <string name="monitor_sensors">Температури вузлів</string>
+    <string name="monitor_sensors_desc">Сповіщає, коли вузол перегрівається або його ядра пригальмовуються (кластери Talos; читає датчики кожного вузла під час кожної перевірки).</string>
+    <string name="monitor_sensors_auto">Власна межа кожного датчика (критична − 5 °C, інакше його максимум)</string>
+    <string name="monitor_sensors_threshold">Сповіщати за %1$d °C</string>
+    <string name="monitor_sensor_hot">%1$s перегрівається (%2$s °C)</string>
+    <string name="monitor_sensor_hot_ok">%1$s знову має нормальну температуру</string>
+    <string name="monitor_sensor_throttled">%1$s пригальмовується</string>
+    <string name="monitor_sensor_throttled_ok">%1$s більше не пригальмовується</string>
+    <string name="monitor_sensor_hot_text">%1$s, сповіщення за %2$s °C</string>
+    <string name="monitor_sensor_throttled_text">Його ядра працюють значно нижче своєї частоти: перевірте охолодження.</string>
     <plurals name="monitor_storage_trend_full">
         <item quantity="one">%1$s на %2$s заповниться за ~%3$d день</item>
         <item quantity="few">%1$s на %2$s заповниться за ~%3$d дні</item>

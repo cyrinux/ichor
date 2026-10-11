@@ -158,7 +158,31 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.CLUSTER_REACHABLE -> context.getString(R.string.monitor_cluster_reachable)
     AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertTitle(context, alert)
     AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertTitle(context, alert)
+    AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertTitle(context, alert)
 }
+
+/** "worker-1 runs hot (88.0 °C)", "worker-1 is throttled", or the cleared forms, from a [SensorDetail]. */
+private fun sensorAlertTitle(context: Context, alert: Alert): String {
+    val d = SensorDetail.parse(alert.detail)
+    return when {
+        d.throttled && alert.problem -> context.getString(R.string.monitor_sensor_throttled, d.hostname)
+        d.throttled -> context.getString(R.string.monitor_sensor_throttled_ok, d.hostname)
+        alert.problem -> context.getString(R.string.monitor_sensor_hot, d.hostname, celsius(d.celsius))
+        else -> context.getString(R.string.monitor_sensor_hot_ok, d.hostname)
+    }
+}
+
+/** "Package id 0, alert at 80.0 °C", the throttling hint; "Node temperatures" once cleared. */
+private fun sensorAlertText(context: Context, alert: Alert): String {
+    val d = SensorDetail.parse(alert.detail)
+    return when {
+        !alert.problem -> context.getString(R.string.monitor_sensors)
+        d.throttled -> context.getString(R.string.monitor_sensor_throttled_text)
+        else -> context.getString(R.string.monitor_sensor_hot_text, d.label, celsius(d.limit))
+    }
+}
+
+private fun celsius(value: Double): String = String.format(java.util.Locale.ROOT, "%.1f", value)
 
 /**
  * "EPHEMERAL on worker-1 full in ~3 days" ("critical in" when that comes first, "in < 1 day"
@@ -299,4 +323,5 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.CLUSTER_REACHABLE -> context.getString(R.string.monitor_cluster_reachable_text)
     AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK -> storageAlertText(context, alert)
     AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> trendAlertText(context, alert)
+    AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> sensorAlertText(context, alert)
 }

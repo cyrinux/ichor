@@ -58,6 +58,11 @@ extension TalosClient {
         try await Self.json { [config, context] in IchorgoClusterStorageHealth(config, context, $0) }
     }
 
+    /// Every node's hottest sensor and throttling, for the temperature alert (os:reader).
+    func clusterSensorHealth() async throws -> ClusterSensorHealth {
+        try await Self.json { [config, context] in IchorgoClusterSensorHealth(config, context, $0) }
+    }
+
     /// `talosctl -n NODE etcd forfeit-leadership` (os:admin); node must be the leader.
     func etcdForfeitLeadership(node: String) async throws -> EtcdForfeitResult {
         try await Self.json { [config, context] in IchorgoEtcdForfeitLeadership(config, context, node, $0) }

@@ -81,6 +81,14 @@ data class ClusterSnapshot(
      * [storageTrendStep]), set after the run's history record (see [withStorageTrends]).
      */
     val storageTrends: Map<String, String> = emptyMap(),
+    /** Watching node temperatures was on for this check (opt-in, Talos clusters only). */
+    val sensorWatched: Boolean = false,
+    /** The sensors could be read this time. */
+    val sensorChecked: Boolean = false,
+    /** Nodes running hot or throttled ("node|hot", "node|throttled" → see [SensorDetail]), kept like [dataIssues]. */
+    val sensorIssues: Map<String, String> = emptyMap(),
+    /** Sensor warnings (throttling) seen once and not notified yet. */
+    val sensorPending: List<String> = emptyList(),
     /**
      * The cluster was added from a kubeconfig: its nodes come from the Kubernetes API (ready or
      * not, never unreachable), there is no etcd, and [certNotAfter] is the kubeconfig's credentials.
@@ -123,7 +131,13 @@ fun snapshotOf(
     /** Node storage watched ([storageIssues] null when watched but unreadable, see [storageIssuesOf]). */
     storageWatched: Boolean = false,
     storageIssues: Map<String, String>? = null,
+    /** Node temperatures watched ([sensorIssues] null when watched but unreadable, see [sensorIssuesOf]). */
+    sensorWatched: Boolean = false,
+    sensorIssues: Map<String, String>? = null,
 ): ClusterSnapshot = ClusterSnapshot(
+    sensorWatched = sensorWatched,
+    sensorChecked = sensorWatched && sensorIssues != null,
+    sensorIssues = sensorIssues?.takeIf { sensorWatched }.orEmpty(),
     storageWatched = storageWatched,
     storageChecked = storageWatched && storageIssues != null,
     storageIssues = storageIssues?.takeIf { storageWatched }.orEmpty(),

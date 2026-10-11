@@ -3911,6 +3911,16 @@
     <string name="monitor_storage_smart_ok">%1$s on %2$s passes SMART again</string>
     <string name="monitor_storage_trend">Warn before a volume fills up</string>
     <string name="monitor_storage_trend_desc">Notifies when a volume\'s growth over the last week would make it critical within %1$d days, and once it no longer does. Uses the history of the checks; needs node storage on.</string>
+    <string name="monitor_sensors">Node temperatures</string>
+    <string name="monitor_sensors_desc">Alert when a node runs hot or its cores are throttled (Talos clusters; reads every node\'s sensors at each check).</string>
+    <string name="monitor_sensors_auto">Each sensor\'s own limit (critical − 5 °C, else its max)</string>
+    <string name="monitor_sensors_threshold">Alert at %1$d °C</string>
+    <string name="monitor_sensor_hot">%1$s runs hot (%2$s °C)</string>
+    <string name="monitor_sensor_hot_ok">%1$s back to a normal temperature</string>
+    <string name="monitor_sensor_throttled">%1$s is throttled</string>
+    <string name="monitor_sensor_throttled_ok">%1$s no longer throttled</string>
+    <string name="monitor_sensor_hot_text">%1$s, alert at %2$s °C</string>
+    <string name="monitor_sensor_throttled_text">Its cores run well below their speed: check its cooling.</string>
     <plurals name="monitor_storage_trend_full">
         <item quantity="one">%1$s on %2$s full in ~%3$d day</item>
         <item quantity="other">%1$s on %2$s full in ~%3$d days</item>

@@ -8,8 +8,8 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         case cluster, etcd, health, argoCD = "argocd", flux, node, workloads
         case argoApp = "argo-app", fluxApp = "flux-app", workload, pod, cronJob = "cronjob"
         /// The data services screen, on the tab `kind` names (a catalog id); the cluster checkup;
-        /// the Alertmanager alerts; a node's Storage screen (`addr`, `host`).
-        case data, checkup, alerts, storage
+        /// the Alertmanager alerts; a node's Storage or Hardware screen (`addr`, `host`).
+        case data, checkup, alerts, storage, hardware
     }
 
     public var cluster: String
@@ -71,6 +71,11 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
     /// The Storage screen of the node at `address`.
     public static func storage(address: String, hostname: String) -> ShareTarget {
         ShareTarget(target: .storage, host: hostname, addr: address)
+    }
+
+    /// The Hardware screen (sensors) of the node at `address`.
+    public static func hardware(address: String, hostname: String) -> ShareTarget {
+        ShareTarget(target: .hardware, host: hostname, addr: address)
     }
 
     public static func kubernetes(tab: KubeFocus.Tab) -> ShareTarget {
@@ -137,6 +142,12 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
                 .map { StorageTrendIssue(value: $0).hostname }
                 ?? snapshot.storageIssues[subject].map { StorageIssue(value: $0).hostname } ?? ""
             return .storage(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept)
+        case "sensor":
+            // "<node>|hot" or "<node>|throttled": the node's Hardware screen.
+            let address = storageIssueNode(subject)
+            guard !address.isEmpty else { return nil }
+            let kept = snapshot.sensorIssues[subject].map { SensorIssue(value: $0).hostname } ?? ""
+            return .hardware(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept)
         case "unreachable": return .screen(.cluster)
         default: return nil
         }

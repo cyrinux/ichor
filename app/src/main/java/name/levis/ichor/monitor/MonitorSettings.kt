@@ -73,6 +73,27 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         _storageWatched.value = watched
     }
 
+    private val _sensorsWatched = MutableStateFlow(prefs.getBoolean(KEY_SENSORS, false))
+
+    /** Opt-in: also read every node's hottest sensor, to alert when one runs hot or is throttled. */
+    val sensorsWatched: StateFlow<Boolean> = _sensorsWatched.asStateFlow()
+
+    fun setSensorsWatched(watched: Boolean) {
+        prefs.edit().putBoolean(KEY_SENSORS, watched).apply()
+        _sensorsWatched.value = watched
+    }
+
+    private val _sensorThreshold = MutableStateFlow(sensorThresholdOf(prefs.getInt(KEY_SENSOR_THRESHOLD, SENSOR_THRESHOLD_AUTO)))
+
+    /** [SENSOR_THRESHOLD_AUTO] (each sensor's own limit) or the °C every node is held to. */
+    val sensorThreshold: StateFlow<Int> = _sensorThreshold.asStateFlow()
+
+    fun setSensorThreshold(celsius: Int) {
+        val threshold = sensorThresholdOf(celsius)
+        prefs.edit().putInt(KEY_SENSOR_THRESHOLD, threshold).apply()
+        _sensorThreshold.value = threshold
+    }
+
     private val _storageTrendAlerts = MutableStateFlow(prefs.getBoolean(KEY_STORAGE_TREND, false))
 
     /** Opt-in on top of [storageWatched]: warn days before a volume's fill trend reaches critical. */
@@ -184,6 +205,11 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_STORAGE_WARN = "storage_warn_percent"
         private const val KEY_STORAGE_CRITICAL = "storage_critical_percent"
         private const val KEY_STORAGE_TREND = "storage_trend_alerts"
+        private const val KEY_SENSORS = "sensors_watched"
+        private const val KEY_SENSOR_THRESHOLD = "sensor_threshold"
+
+        /** Automatic, or a °C in [SENSOR_THRESHOLD_RANGE]. */
+        fun sensorThresholdOf(value: Int): Int = if (value == SENSOR_THRESHOLD_AUTO) value else value.coerceIn(SENSOR_THRESHOLD_RANGE)
         private const val KEY_UNREACHABLE_RUNS = "unreachable_runs"
     }
 }

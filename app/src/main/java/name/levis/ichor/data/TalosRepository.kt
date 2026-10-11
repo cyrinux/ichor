@@ -43,6 +43,7 @@ import name.levis.ichor.model.ClusterUpgradeCommand
 import name.levis.ichor.model.ClusterUpgradePlan
 import name.levis.ichor.model.K8sUpgradePlan
 import name.levis.ichor.model.K8sVersionChoice
+import name.levis.ichor.model.ClusterSensorHealth
 import name.levis.ichor.model.ClusterStorageHealth
 import name.levis.ichor.model.MaintenanceAction
 import name.levis.ichor.model.MaintenancePlan
@@ -426,6 +427,11 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** Every node's volume fill and disk SMART verdict (the monitor's storage track; never cached). */
     suspend fun storageHealth(): ClusterStorageHealth = call { cfg, ctx ->
         TalosJson.decodeFromString(ClusterStorageHealth.serializer(), Ichorgo.clusterStorageHealth(cfg, ctx))
+    }
+
+    /** Every node's hottest sensor and throttling, for the monitor's temperature alert. */
+    suspend fun sensorHealth(): ClusterSensorHealth = call { cfg, ctx ->
+        TalosJson.decodeFromString(ClusterSensorHealth.serializer(), Ichorgo.clusterSensorHealth(cfg, ctx))
     }
 
     suspend fun services(node: String): List<ServiceInfo> = remember(servicesKey(node)) { servicesUncached(node) }

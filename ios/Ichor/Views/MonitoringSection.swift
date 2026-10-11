@@ -11,6 +11,8 @@ struct MonitoringSection: View {
     @State private var storageWatched = BackgroundMonitor.storageWatched
     @State private var storageThresholds = BackgroundMonitor.storageThresholds
     @State private var storageTrendWatched = BackgroundMonitor.storageTrendWatched
+    @State private var sensorsWatched = BackgroundMonitor.sensorsWatched
+    @State private var sensorThreshold = BackgroundMonitor.sensorThreshold
     @State private var unreachableWatched = BackgroundMonitor.unreachableWatched
     @State private var unreachableRuns = BackgroundMonitor.unreachableRuns
     @State private var message: String?
@@ -99,6 +101,31 @@ struct MonitoringSection: View {
                 }
                 .disabled(!enabled)
             }
+            // Opt-in too: one Talos call per check reads every node's hottest sensor.
+            Toggle(isOn: Binding(get: { sensorsWatched }, set: { on in
+                BackgroundMonitor.sensorsWatched = on
+                sensorsWatched = on
+            })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Node temperatures")
+                    Text("Alert when a node runs hot or its cores are throttled (Talos clusters; reads every node's sensors at each check).")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
+            if sensorsWatched {
+                Toggle("Each sensor's own limit (critical − 5 °C, else its max)", isOn: Binding(get: { sensorThreshold == sensorThresholdAuto }, set: { auto in
+                    setSensorThreshold(auto ? sensorThresholdAuto : sensorThresholdDefault)
+                }))
+                .disabled(!enabled)
+                if sensorThreshold != sensorThresholdAuto {
+                    Stepper(value: Binding(get: { sensorThreshold }, set: { setSensorThreshold($0) }), in: sensorThresholdRange) {
+                        Text("Alert at \(sensorThreshold) °C")
+                    }
+                    .disabled(!enabled)
+                }
+            }
             // Opt-in too: no extra call, only the runs a cluster did not answer in a row.
             Toggle(isOn: Binding(get: { unreachableWatched }, set: { on in
                 BackgroundMonitor.unreachableWatched = on
@@ -170,6 +197,11 @@ struct MonitoringSection: View {
     private func setStorage(_ thresholds: StorageThresholds) {
         BackgroundMonitor.storageThresholds = thresholds
         storageThresholds = thresholds
+    }
+
+    private func setSensorThreshold(_ celsius: Int) {
+        BackgroundMonitor.sensorThreshold = celsius
+        sensorThreshold = BackgroundMonitor.sensorThreshold
     }
 
     private func set(_ on: Bool) {
