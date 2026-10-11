@@ -4320,4 +4320,15 @@
     <string name="join_node_step_config">2. Конфігурація машини з наявного вузла: роль, ім’я хоста та диск для встановлення</string>
     <string name="join_node_step_apply">3. Застосувати її та стежити за вузлом, доки він не приєднається до кластера</string>
     <string name="join_node_coming">З’явиться в наступній версії.</string>
+    <string name="join_config_intro">Новий вузол отримує конфігурацію учасника з тією ж роллю, зі своїм іменем хоста, диском для встановлення та адресою. Учасника лише читають.</string>
+    <string name="join_config_no_template">Жоден учасник не відповідає: конфігурацію нового вузла створюють з конфігурації учасника.</string>
+    <string name="join_config_template">Шаблон</string>
+    <string name="join_config_role">Роль: %1$s (як у шаблону)</string>
+    <string name="join_config_hostname">Ім\'я хоста</string>
+    <string name="join_config_disk">Диск для встановлення</string>
+    <string name="join_config_address">Статична адреса (необов\'язково)</string>
+    <string name="join_config_address_help">З префіксом. Порожньо: вузол отримує адресу через DHCP.</string>
+    <string name="join_config_preview">Переглянути конфігурацію</string>
+    <string name="join_config_valid">Дійсна конфігурація для %1$s (%2$s)</string>
+    <string name="join_config_secrets">Секрети тут приховано. Повна конфігурація із секретами кластера йде лише на новий вузол, на кроці 3.</string>
 </resources>

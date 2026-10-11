@@ -4086,4 +4086,15 @@
     <string name="join_node_step_config">2. Configuration machine à partir d\'un nœud existant : rôle, nom d\'hôte et disque d\'installation</string>
     <string name="join_node_step_apply">3. L\'appliquer et suivre le nœud jusqu\'à ce qu\'il rejoigne le cluster</string>
     <string name="join_node_coming">Dans une prochaine version.</string>
+    <string name="join_config_intro">Le nouveau nœud reçoit la configuration d\'un membre du même rôle, avec son propre nom d\'hôte, son disque d\'installation et son adresse. Le membre est seulement lu.</string>
+    <string name="join_config_no_template">Aucun membre ne répond : la configuration du nouveau nœud est faite à partir de celle d\'un membre.</string>
+    <string name="join_config_template">Modèle</string>
+    <string name="join_config_role">Rôle : %1$s (celui du modèle)</string>
+    <string name="join_config_hostname">Nom d\'hôte</string>
+    <string name="join_config_disk">Disque d\'installation</string>
+    <string name="join_config_address">Adresse statique (facultative)</string>
+    <string name="join_config_address_help">Avec son préfixe. Vide : le nœud prend son adresse par DHCP.</string>
+    <string name="join_config_preview">Prévisualiser la configuration</string>
+    <string name="join_config_valid">Configuration valide pour %1$s (%2$s)</string>
+    <string name="join_config_secrets">Les secrets sont masqués ici. La configuration complète, avec les secrets du cluster, ne va qu\'au nouveau nœud, à l\'étape 3.</string>
 </resources>

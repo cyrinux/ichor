@@ -4086,4 +4086,15 @@
     <string name="join_node_step_config">2. Configurazione della macchina da un nodo esistente: ruolo, nome host e disco di installazione</string>
     <string name="join_node_step_apply">3. Applicarla e seguire il nodo finché non entra nel cluster</string>
     <string name="join_node_coming">In arrivo in una prossima versione.</string>
+    <string name="join_config_intro">Il nuovo nodo riceve la configurazione di un membro dello stesso ruolo, con il proprio nome host, disco di installazione e indirizzo. Il membro viene solo letto.</string>
+    <string name="join_config_no_template">Nessun membro risponde: la configurazione del nuovo nodo si crea da quella di un membro.</string>
+    <string name="join_config_template">Modello</string>
+    <string name="join_config_role">Ruolo: %1$s (quello del modello)</string>
+    <string name="join_config_hostname">Nome host</string>
+    <string name="join_config_disk">Disco di installazione</string>
+    <string name="join_config_address">Indirizzo statico (facoltativo)</string>
+    <string name="join_config_address_help">Con il prefisso. Vuoto: il nodo prende l\'indirizzo da DHCP.</string>
+    <string name="join_config_preview">Anteprima della configurazione</string>
+    <string name="join_config_valid">Configurazione valida per %1$s (%2$s)</string>
+    <string name="join_config_secrets">I segreti qui sono nascosti. La configurazione completa, con i segreti del cluster, va solo al nuovo nodo, al passo 3.</string>
 </resources>

@@ -13,6 +13,7 @@ import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ConfigApplyEvent
 import name.levis.ichor.model.MaintenanceInspection
+import name.levis.ichor.model.JoinConfigPreview
 import name.levis.ichor.model.CpReplacePlan
 import name.levis.ichor.model.CpReplaceWait
 import name.levis.ichor.model.ConfigApplyMode
@@ -781,6 +782,15 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     suspend fun maintenanceNodeInspect(address: String): MaintenanceInspection = withContext(Dispatchers.IO) {
         TalosJson.decodeFromString(MaintenanceInspection.serializer(), Ichorgo.maintenanceNodeInspect(address, 0L))
     }
+
+    /** A new node's config from [template]'s, redacted (never cached; the full one only goes to the node). */
+    suspend fun joinNodeConfigPreview(template: String, role: String, hostname: String, installDisk: String, staticAddress: String): JoinConfigPreview =
+        call { cfg, ctx ->
+            TalosJson.decodeFromString(
+                JoinConfigPreview.serializer(),
+                Ichorgo.joinNodeConfigPreview(cfg, ctx, template, role, hostname, installDisk, staticAddress, ""),
+            )
+        }
 
     /** `talosctl get TYPE ID -o yaml` (never cached: may hold secrets). */
     suspend fun resourceGet(node: String, namespace: String, type: String, id: String): String = call { cfg, ctx ->

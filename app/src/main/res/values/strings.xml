@@ -4086,5 +4086,18 @@
     <string name="join_node_step_config">2. Machine config from an existing node: role, host name and install disk</string>
     <string name="join_node_step_apply">3. Apply it and follow the node until it joins the cluster</string>
     <string name="join_node_coming">Coming in a next version.</string>
+    <string name="join_config_intro">The new node gets the config of a member of the same role, with its own host name, install disk and address. The member is only read.</string>
+    <string name="join_config_no_template">No member answers: the new node\'s config is made from a member\'s.</string>
+    <string name="join_config_template">Template</string>
+    <string name="join_config_role">Role: %1$s (the template\'s)</string>
+    <string name="join_config_hostname">Host name</string>
+    <string name="join_config_disk">Install disk</string>
+    <string name="join_config_address">Static address (optional)</string>
+    <string name="join_config_address_help">With its prefix. Empty: the node takes its address from DHCP.</string>
+    <string name="join_config_preview">Preview the config</string>
+    <string name="join_config_valid">Valid config for %1$s (%2$s)</string>
+    <string name="join_config_secrets">The secrets are hidden here. The full config, with the cluster\'s secrets, only goes to the new node, in step 3.</string>
     <string name="join_node_address_hint" translatable="false">192.168.1.42</string>
+    <string name="join_config_disk_hint" translatable="false">/dev/sda</string>
+    <string name="join_config_address_hint" translatable="false">192.168.1.50/24</string>
 </resources>

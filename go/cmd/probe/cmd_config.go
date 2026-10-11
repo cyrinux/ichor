@@ -54,6 +54,22 @@ var configCommands = []command{
 
 		return ichorgo.MachineConfigPreview(e.cfg, e.context, flag.Arg(1), base, draft)
 	}},
+	{name: "join-config", args: "TEMPLATE ROLE HOSTNAME DISK [ADDRESS|-] [sealed]", run: func(e env) (string, error) {
+		// A new node's config from TEMPLATE's, redacted. With "sealed", the full config with
+		// the cluster's secrets, for `talosctl apply-config --insecure -n IP -f -`: keep it off
+		// disk.
+		address := flag.Arg(5)
+		if address == "-" || address == "sealed" {
+			address = ""
+		}
+
+		generate := ichorgo.JoinNodeConfigPreview
+		if flag.Arg(5) == "sealed" || flag.Arg(6) == "sealed" {
+			generate = ichorgo.JoinNodeConfigSealed
+		}
+
+		return generate(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), address, "")
+	}},
 	{name: "config-edit", args: "FILE EDITJSON", run: func(env) (string, error) {
 		// FILE with one field edit applied (see MachineConfigEdit), printed. Local.
 		file, err := os.ReadFile(flag.Arg(1))

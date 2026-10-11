@@ -4086,4 +4086,15 @@
     <string name="join_node_step_config">2. Configuración de máquina a partir de un nodo existente: rol, nombre de host y disco de instalación</string>
     <string name="join_node_step_apply">3. Aplicarla y seguir el nodo hasta que se una al clúster</string>
     <string name="join_node_coming">Llegará en una próxima versión.</string>
+    <string name="join_config_intro">El nuevo nodo recibe la configuración de un miembro del mismo rol, con su propio nombre de host, disco de instalación y dirección. El miembro solo se lee.</string>
+    <string name="join_config_no_template">Ningún miembro responde: la configuración del nuevo nodo se crea a partir de la de un miembro.</string>
+    <string name="join_config_template">Plantilla</string>
+    <string name="join_config_role">Rol: %1$s (el de la plantilla)</string>
+    <string name="join_config_hostname">Nombre de host</string>
+    <string name="join_config_disk">Disco de instalación</string>
+    <string name="join_config_address">Dirección estática (opcional)</string>
+    <string name="join_config_address_help">Con su prefijo. Vacía: el nodo toma su dirección por DHCP.</string>
+    <string name="join_config_preview">Ver la configuración</string>
+    <string name="join_config_valid">Configuración válida para %1$s (%2$s)</string>
+    <string name="join_config_secrets">Los secretos están ocultos aquí. La configuración completa, con los secretos del clúster, solo va al nuevo nodo, en el paso 3.</string>
 </resources>
