@@ -4179,6 +4179,10 @@
     <string name="kube_discover_scan">Scan credentials QR code</string>
     <string name="kube_discover_scan_invalid">Scan a gcloud user credentials file or a service account key.</string>
     <string name="kube_discover_credentials_warning">This file contains a refresh token or private key. Keep it private; anyone with it can access your Google account or service account.</string>
+    <string name="kube_discover_scan_aws">Scan ~/.aws/config QR code</string>
+    <string name="kube_discover_scan_aws_invalid">Scan an ~/.aws/config that signs in with IAM Identity Center (an sso-session, or a profile with sso_start_url).</string>
+    <string name="kube_discover_scan_aws_hint">Scan your ~/.aws/config (qrencode -t ansiutf8 &lt; ~/.aws/config). It holds no secret: only the start URL, region, account and role. The first profile that uses IAM Identity Center is taken.</string>
+    <string name="kube_import_aws_keys_refused">This file holds AWS access keys. Enter them in the EKS cluster search instead.</string>
     <string name="join_node_menu">Add a node…</string>
     <string name="join_node_title">Add a node</string>
     <string name="join_node_step_inspect">1. Inspect the new node</string>

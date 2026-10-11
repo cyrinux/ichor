@@ -9,9 +9,10 @@ func ClassifyImportText(text string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	route := struct {
-		Kind     string `json:"kind"`
-		Provider string `json:"provider,omitempty"`
-		Field    string `json:"field,omitempty"`
+		Kind     string            `json:"kind"`
+		Provider string            `json:"provider,omitempty"`
+		Field    string            `json:"field,omitempty"`
+		Values   map[string]string `json:"values,omitempty"` // only for secret-free files
 	}{Kind: "unknown"}
 	switch gcpCredentialType(text) {
 	case gcpTypeAuthorizedUser, gcpTypeWorkforceUser:
@@ -21,7 +22,12 @@ func ClassifyImportText(text string) (out string, err error) {
 	case "service_account":
 		route.Kind, route.Provider, route.Field = "credentials", discoverGKE, gcpFieldServiceAccount
 	default:
-		if IsKubeconfig(text) {
+		if aws, ok := parseAWSConfig(text); ok {
+			route.Kind, route.Provider, route.Field, route.Values = "credentials", discoverEKS, awsFieldSSOStartURL, aws.values()
+		} else if hasAWSAccessKeys(text) {
+			// Access keys are typed on the EKS discovery screen, never routed from a scan.
+			route.Kind, route.Provider, route.Field = "refused", discoverEKS, awsFieldAccessKey
+		} else if IsKubeconfig(text) {
 			route.Kind = "kubeconfig"
 		} else {
 			var shape struct {

@@ -100,16 +100,24 @@ internal fun DiscoverCard(
     val fields = sets.getOrElse(option) { sets.firstOrNull().orEmpty() }
     // Signed in to IAM Identity Center with several accounts and roles: tick the ones to look in.
     val choosing = state.choices.isNotEmpty() && AWS_SSO_START_URL in fields
-    val picked = remember(state.choices) { mutableStateListOf<SsoRoleChoice>() }
+    // An imported ~/.aws/config names a profile's account and role: ticked once the choices arrive.
+    val picked = remember(state.choices) {
+        mutableStateListOf<SsoRoleChoice>().apply { addAll(state.choices.filter { it.matches(values) }) }
+    }
     LaunchedEffect(scanned) {
         val text = scanned ?: return@LaunchedEffect
         try {
             val decoded = Ichorgo.decodeImportText(text)
             val route = TalosJson.decodeFromString(ImportTextRoute.serializer(), Ichorgo.classifyImportText(decoded))
-            if (route.isGkeCredential) {
+            if (provider == DiscoveryProvider.GKE && route.isGkeCredential) {
                 option = sets.indexOfFirst { route.field in it }.coerceAtLeast(0)
                 values.clear()
                 values[route.field] = decoded
+                scanError = false
+            } else if (provider == DiscoveryProvider.EKS && route.isEksIdentityCenter) {
+                option = sets.indexOfFirst { AWS_SSO_START_URL in it }.coerceAtLeast(0)
+                values.clear()
+                values.putAll(route.values)
                 scanError = false
             } else scanError = true
         } catch (_: Exception) { scanError = true }
@@ -164,6 +172,11 @@ internal fun DiscoverCard(
             OutlinedButton(onClick = { scanning = true }, enabled = !state.running) { Text(stringResource(R.string.kube_discover_scan)) }
             if (scanError) Text(stringResource(R.string.kube_discover_scan_invalid), color = LocalStatusColors.current.bad)
             MutedText(stringResource(R.string.kube_discover_credentials_warning))
+        }
+        if (provider == DiscoveryProvider.EKS && AWS_SSO_START_URL in fields && !choosing) {
+            OutlinedButton(onClick = { scanning = true }, enabled = !state.running) { Text(stringResource(R.string.kube_discover_scan_aws)) }
+            if (scanError) Text(stringResource(R.string.kube_discover_scan_aws_invalid), color = LocalStatusColors.current.bad)
+            MutedText(stringResource(R.string.kube_discover_scan_aws_hint))
         }
         DiscoverHints(fields)
         if (state.running && !state.signingIn) DiscoverProgressRow(state.progress, regions = provider == DiscoveryProvider.EKS)

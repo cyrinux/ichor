@@ -64,6 +64,11 @@ public struct KubeSsoRoleChoice: Codable, Equatable, Hashable, Sendable {
     /// "<account name> · <role>", the account ID when the account has no name.
     public var label: String { "\(accountName.isEmpty ? accountId : accountName) · \(roleName)" }
 
+    /// This account and role are the ones `values` name (an imported ~/.aws/config profile).
+    public func matches(_ values: [String: String]) -> Bool {
+        accountId == values["awsAccountId"] && roleName == values["awsRoleName"]
+    }
+
     /// The KubeSetCredentials JSON that signs in with this role: the start URL and region of
     /// `values`, this account and role.
     public func secretsJSON(values: [String: String]) -> String {
@@ -434,16 +439,27 @@ public struct ImportTextRoute: Decodable, Sendable {
     public let kind: String
     public let provider: String?
     public let field: String
+    /// The fields of a secret-free file (an ~/.aws/config: start URL, regions, account, role) to prefill.
+    public let values: [String: String]
     public var isGkeCredential: Bool {
         kind == "credentials" && provider == "gke" &&
             ["gcpUserCredentialsJson", "gcpServiceAccountJson", kubeLoginConfigField].contains(field)
     }
 
-    private enum CodingKeys: String, CodingKey { case kind, provider, field }
+    /// An ~/.aws/config that signs in with IAM Identity Center: EKS discovery with `values`.
+    public var isEksIdentityCenter: Bool {
+        kind == "credentials" && provider == "eks" && values["awsSsoStartUrl"] != nil
+    }
+
+    /// An ~/.aws/credentials file: access keys are typed on the EKS discovery screen, not scanned.
+    public var isAwsAccessKeys: Bool { kind == "refused" && provider == "eks" }
+
+    private enum CodingKeys: String, CodingKey { case kind, provider, field, values }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         kind = try c.decode(String.self, forKey: .kind)
         provider = try c.decodeIfPresent(String.self, forKey: .provider)
         field = try c.decodeIfPresent(String.self, forKey: .field) ?? ""
+        values = try c.decodeIfPresent([String: String].self, forKey: .values) ?? [:]
     }
 }

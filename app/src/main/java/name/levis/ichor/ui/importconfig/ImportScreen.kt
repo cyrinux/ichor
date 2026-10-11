@@ -152,7 +152,7 @@ fun ImportScreen(
                 }
                 else -> SourcePicker(
                     source = source,
-                    error = (s as? ImportState.Invalid)?.message,
+                    error = (s as? ImportState.Invalid)?.let { invalid -> invalid.messageRes?.let { stringResource(it) } ?: invalid.message },
                     pasted = pasted,
                     onPasted = { pasted = it },
                     form = form,
