@@ -4413,6 +4413,10 @@
     <string name="kube_discover_scan">Сканувати QR-код облікових даних</string>
     <string name="kube_discover_scan_invalid">Скануйте файл облікових даних користувача gcloud або ключ сервісного облікового запису.</string>
     <string name="kube_discover_credentials_warning">Цей файл містить токен оновлення або приватний ключ. Зберігайте його в таємниці: кожен, хто його має, може отримати доступ до вашого облікового запису Google або сервісного облікового запису.</string>
+    <string name="kube_discover_scan_aws">Сканувати QR-код ~/.aws/config</string>
+    <string name="kube_discover_scan_aws_invalid">Скануйте ~/.aws/config, що входить через IAM Identity Center (sso-session або профіль із sso_start_url).</string>
+    <string name="kube_discover_scan_aws_hint">Скануйте свій ~/.aws/config (qrencode -t ansiutf8 &lt; ~/.aws/config). Він не містить секретів: лише початкову URL-адресу, регіон, обліковий запис і роль. Береться перший профіль з IAM Identity Center.</string>
+    <string name="kube_import_aws_keys_refused">Цей файл містить ключі доступу AWS. Введіть їх натомість у пошуку кластерів EKS.</string>
     <string name="join_node_menu">Додати вузол…</string>
     <string name="join_node_title">Додати вузол</string>
     <string name="join_node_step_inspect">1. Перевірити новий вузол</string>

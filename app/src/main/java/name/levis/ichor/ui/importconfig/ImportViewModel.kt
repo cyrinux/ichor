@@ -1,7 +1,9 @@
 package name.levis.ichor.ui.importconfig
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import name.levis.ichor.R
 import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.KubeAuthRepository
 import name.levis.ichor.data.SignInEvent
@@ -110,7 +112,8 @@ sealed interface ImportState {
         override fun toString() = "Discover($initial, running=$running)"
     }
 
-    data class Invalid(val message: String) : ImportState
+    /** [messageRes], when set, is shown instead of [message]. */
+    data class Invalid(val message: String, @StringRes val messageRes: Int? = null) : ImportState
     data object Saved : ImportState
 }
 
@@ -160,6 +163,13 @@ class ImportViewModel(
                 initial = DiscoveryProvider.GKE, initialValues = mapOf(route.field to yaml),
             )
         }
+        if (route.isEksIdentityCenter) {
+            return ImportState.Discover(
+                discoveryOptions(auth.discoveryOptions(), discoveryFields(auth.discoveryFields())),
+                initial = DiscoveryProvider.EKS, initialValues = route.values,
+            )
+        }
+        if (route.isAwsAccessKeys) return ImportState.Invalid("", R.string.kube_import_aws_keys_refused)
         return if (kube) {
             ImportState.KubePreview(yaml, configs.validateKube(yaml), configs.kubeImportConflicts(yaml))
         } else {

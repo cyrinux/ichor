@@ -1,6 +1,146 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Scan ~/.aws/config QR code" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scanner le QR code de ~/.aws/config"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escanear el código QR de ~/.aws/config"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-Code von ~/.aws/config scannen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scansiona il codice QR di ~/.aws/config"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сканувати QR-код ~/.aws/config"
+          }
+        }
+      }
+    },
+    "Scan an ~/.aws/config that signs in with IAM Identity Center (an sso-session, or a profile with sso_start_url)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scannez un ~/.aws/config qui se connecte avec IAM Identity Center (une sso-session, ou un profil avec sso_start_url)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escanea un ~/.aws/config que inicie sesión con IAM Identity Center (una sso-session, o un perfil con sso_start_url)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scanne eine ~/.aws/config, die sich mit IAM Identity Center anmeldet (eine sso-session oder ein Profil mit sso_start_url)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scansiona un ~/.aws/config che accede con IAM Identity Center (una sso-session, o un profilo con sso_start_url)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скануйте ~/.aws/config, що входить через IAM Identity Center (sso-session або профіль із sso_start_url)."
+          }
+        }
+      }
+    },
+    "Scan your ~/.aws/config (qrencode -t ansiutf8 < ~/.aws/config). It holds no secret: only the start URL, region, account and role. The first profile that uses IAM Identity Center is taken." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scannez votre ~/.aws/config (qrencode -t ansiutf8 < ~/.aws/config). Il ne contient aucun secret : seulement l’URL de démarrage, la région, le compte et le rôle. Le premier profil qui utilise IAM Identity Center est retenu."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escanea tu ~/.aws/config (qrencode -t ansiutf8 < ~/.aws/config). No contiene ningún secreto: solo la URL de inicio, la región, la cuenta y el rol. Se toma el primer perfil que usa IAM Identity Center."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scanne deine ~/.aws/config (qrencode -t ansiutf8 < ~/.aws/config). Sie enthält kein Geheimnis: nur Start-URL, Region, Konto und Rolle. Verwendet wird das erste Profil mit IAM Identity Center."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scansiona il tuo ~/.aws/config (qrencode -t ansiutf8 < ~/.aws/config). Non contiene segreti: solo l’URL di avvio, la regione, l’account e il ruolo. Viene usato il primo profilo che usa IAM Identity Center."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скануйте свій ~/.aws/config (qrencode -t ansiutf8 < ~/.aws/config). Він не містить секретів: лише початкову URL-адресу, регіон, обліковий запис і роль. Береться перший профіль з IAM Identity Center."
+          }
+        }
+      }
+    },
+    "This file holds AWS access keys. Enter them in the EKS cluster search instead." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce fichier contient des clés d’accès AWS. Saisissez-les plutôt dans la recherche de clusters EKS."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este archivo contiene claves de acceso de AWS. Introdúcelas en la búsqueda de clústeres EKS."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Datei enthält AWS-Zugriffsschlüssel. Gib sie stattdessen in der EKS-Clustersuche ein."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo file contiene chiavi di accesso AWS. Inseriscile invece nella ricerca dei cluster EKS."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей файл містить ключі доступу AWS. Введіть їх натомість у пошуку кластерів EKS."
+          }
+        }
+      }
+    },
     "No access in %@: clusters in these regions, if any, are not listed." : {
       "extractionState" : "manual",
       "localizations" : {

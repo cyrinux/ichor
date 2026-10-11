@@ -4179,6 +4179,10 @@
     <string name="kube_discover_scan">Scanner le code QR des identifiants</string>
     <string name="kube_discover_scan_invalid">Scannez un fichier d’identifiants utilisateur gcloud ou une clé de compte de service.</string>
     <string name="kube_discover_credentials_warning">Ce fichier contient un jeton de renouvellement ou une clé privée. Gardez-le confidentiel : quiconque le possède peut accéder à votre compte Google ou compte de service.</string>
+    <string name="kube_discover_scan_aws">Scanner le QR code de ~/.aws/config</string>
+    <string name="kube_discover_scan_aws_invalid">Scannez un ~/.aws/config qui se connecte avec IAM Identity Center (une sso-session, ou un profil avec sso_start_url).</string>
+    <string name="kube_discover_scan_aws_hint">Scannez votre ~/.aws/config (qrencode -t ansiutf8 &lt; ~/.aws/config). Il ne contient aucun secret : seulement l’URL de démarrage, la région, le compte et le rôle. Le premier profil qui utilise IAM Identity Center est retenu.</string>
+    <string name="kube_import_aws_keys_refused">Ce fichier contient des clés d’accès AWS. Saisissez-les plutôt dans la recherche de clusters EKS.</string>
     <string name="join_node_menu">Ajouter un nœud…</string>
     <string name="join_node_title">Ajouter un nœud</string>
     <string name="join_node_step_inspect">1. Inspecter le nouveau nœud</string>

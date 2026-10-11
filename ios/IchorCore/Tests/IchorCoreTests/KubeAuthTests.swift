@@ -68,6 +68,23 @@ final class KubeAuthTests: XCTestCase {
         }
     }
 
+    func testAWSConfigRouteOpensEksDiscovery() throws {
+        let json = """
+        {"kind":"credentials","provider":"eks","field":"awsSsoStartUrl","values":{"awsSsoStartUrl":"https://example.awsapps.com/start",\
+        "awsSsoRegion":"us-east-1","awsAccountId":"123456789012","awsRoleName":"ReadOnly","awsRegions":"eu-west-1"}}
+        """
+        let route = try TalosJSON.decode(ImportTextRoute.self, from: json)
+        XCTAssertTrue(route.isEksIdentityCenter)
+        XCTAssertFalse(route.isGkeCredential)
+        XCTAssertEqual(route.values["awsRegions"], "eu-west-1")
+        XCTAssertTrue(KubeSsoRoleChoice(accountId: "123456789012", roleName: "ReadOnly").matches(route.values))
+        XCTAssertFalse(KubeSsoRoleChoice(accountId: "123456789012", roleName: "Admin").matches(route.values))
+        let keys = try TalosJSON.decode(ImportTextRoute.self, from: "{\"kind\":\"refused\",\"provider\":\"eks\",\"field\":\"awsAccessKeyId\"}")
+        XCTAssertTrue(keys.isAwsAccessKeys)
+        XCTAssertFalse(keys.isEksIdentityCenter)
+        XCTAssertTrue(keys.values.isEmpty)
+    }
+
     func testSignInRequiredReason() {
         let message = "kube-sign-in-required: sign in to this cluster (eks): the session expired"
         XCTAssertEqual(kubeSignInRequiredReason(message), "sign in to this cluster (eks): the session expired")

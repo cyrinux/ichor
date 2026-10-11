@@ -21,10 +21,13 @@ struct CloudDiscoveryView: View {
         self.onFound = onFound
         _provider = State(initialValue: provider)
         _values = State(initialValue: initialValues)
-        initialField = initialValues.keys.first
+        _profileRole = State(initialValue: initialValues)
+        initialFields = Set(initialValues.keys)
     }
 
-    private let initialField: String?
+    private let initialFields: Set<String>
+    /// An imported ~/.aws/config's account and role, ticked once the sign-in lists the choices.
+    @State private var profileRole: [String: String]
     @State private var scanning = false
     @State private var didLoad = false
 
@@ -122,6 +125,13 @@ struct CloudDiscoveryView: View {
                         Text("This file contains a refresh token or private key. Keep it private; anyone with it can access your Google account or service account.")
                     }
                 }
+                if provider == "eks" && fields.contains(kubeAWSStartURLField) && !choosing {
+                    Section {
+                        Button("Scan ~/.aws/config QR code") { scanning = true }.disabled(working)
+                    } footer: {
+                        Text("Scan your ~/.aws/config (qrencode -t ansiutf8 < ~/.aws/config). It holds no secret: only the start URL, region, account and role. The first profile that uses IAM Identity Center is taken.")
+                    }
+                }
                 if !hints.isEmpty {
                     Section {
                         ForEach(hints, id: \.self) { Text($0).font(.footnote).foregroundStyle(.secondary) }
@@ -181,7 +191,7 @@ struct CloudDiscoveryView: View {
                 // Several AWS accounts and roles: the user ticks the ones to look in first.
                 let choices = provider == "eks" ? TalosClient.discoverSignInChoices() : []
                 roleChoices = choices
-                pickedRoles = []
+                pickedRoles = Set(choices.filter { $0.matches(profileRole) })
                 if choices.isEmpty { work = Task { await discover(secrets: secrets) } }
             case .failed(let message): error = message
             case .idle: pendingSecrets = nil
@@ -201,7 +211,7 @@ struct CloudDiscoveryView: View {
         do {
             fieldsByProvider = try await TalosClient.discoverFields()
             optionsByProvider = try await TalosClient.discoverOptions()
-            if !didLoad, let initialField { option = sets.firstIndex { $0.contains(initialField) } ?? 0 }
+            if !didLoad, !initialFields.isEmpty { option = sets.firstIndex { !initialFields.isDisjoint(with: $0) } ?? 0 }
             didLoad = true
         } catch {
             self.error = error.localizedDescription
@@ -241,6 +251,7 @@ struct CloudDiscoveryView: View {
     private func resetCredentials() {
         cancelSignIn()
         values = [:]
+        profileRole = [:]
         error = nil
     }
 
@@ -248,6 +259,17 @@ struct CloudDiscoveryView: View {
         do {
             let decoded = try await TalosClient.decodeImportText(text)
             let route = try await TalosClient.classifyImportText(decoded)
+            if provider == "eks" {
+                guard route.isEksIdentityCenter else {
+                    error = String(localized: "Scan an ~/.aws/config that signs in with IAM Identity Center (an sso-session, or a profile with sso_start_url).")
+                    return
+                }
+                option = sets.firstIndex { $0.contains(kubeAWSStartURLField) } ?? 0
+                values = route.values
+                profileRole = route.values
+                error = nil
+                return
+            }
             guard route.isGkeCredential else {
                 error = String(localized: "Scan a gcloud user credentials file or a service account key.")
                 return

@@ -265,10 +265,15 @@ struct ImportView: View {
             do {
                 let yaml = try await TalosClient.decodeImportText(text)
                 let route = try await TalosClient.classifyImportText(yaml)
-                if route.isGkeCredential {
-                    let start = DiscoveryStart(provider: "gke", initialValues: [route.field: yaml])
+                if route.isGkeCredential || route.isEksIdentityCenter {
+                    let start = route.isGkeCredential ? DiscoveryStart(provider: "gke", initialValues: [route.field: yaml]) :
+                        DiscoveryStart(provider: "eks", initialValues: route.values)
                     if sourceDismissing { pendingDiscovery = start } else { discovery = start }
                     error = nil
+                    return
+                }
+                if route.isAwsAccessKeys {
+                    error = String(localized: "This file holds AWS access keys. Enter them in the EKS cluster search instead.")
                     return
                 }
                 if await TalosClient.isKubeconfig(yaml) {

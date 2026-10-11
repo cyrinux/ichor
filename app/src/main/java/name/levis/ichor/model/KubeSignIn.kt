@@ -44,6 +44,9 @@ data class SsoRoleChoice(val accountId: String = "", val accountName: String = "
     /** "<account name> · <role>", the account ID when the account has no name. */
     val label: String get() = "${accountName.ifBlank { accountId }} · $roleName"
 
+    /** This account and role are the ones [values] name (an imported ~/.aws/config profile). */
+    fun matches(values: Map<String, String>): Boolean = accountId == values[AWS_ACCOUNT_ID] && roleName == values[AWS_ROLE_NAME]
+
     /** The fields that sign in with this role: the start URL and region of [values], this account and role. */
     fun credentials(values: Map<String, String>): Map<String, String> =
         values.filterKeys { it == AWS_SSO_START_URL || it == AWS_SSO_REGION } + mapOf(AWS_ACCOUNT_ID to accountId, AWS_ROLE_NAME to roleName)

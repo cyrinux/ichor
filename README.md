@@ -579,6 +579,17 @@ private: it contains a refresh token or private key.
 qrencode -t ansiutf8 < ~/.config/gcloud/application_default_credentials.json
 ```
 
+**EKS Identity Center by QR:** paste or scan the `~/.aws/config` that `aws configure sso`
+wrote, from the import screen or with **Scan ~/.aws/config QR code** in EKS discovery. It
+opens discovery on IAM Identity Center with the start URL and its region filled in; tap
+**Sign in and find clusters**, and the profile's account and role are already ticked. The first profile that uses Identity Center is taken (an `sso-session` alone
+works too, then you pick the account and role). The file holds no secret. An
+`~/.aws/credentials` file is refused: type access keys on the EKS discovery screen.
+
+```sh
+qrencode -t ansiutf8 < ~/.aws/config
+```
+
 **GKE with your Google account, no setup**: pick "Your Google account (like gcloud)" on the
 GKE sign-in sheet and tap **Sign in**. Google's sign-in opens in the browser (your
 organisation's SSO applies) and comes back by itself; the app then keeps the session as
