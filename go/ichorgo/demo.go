@@ -244,6 +244,8 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			{ID: "demo-coredns", Namespace: containerNSK8s, PodNamespace: "kube-system", Pod: "coredns-demo", Name: "coredns", Image: "registry.k8s.io/coredns/coredns:v1.12.0", Status: "CONTAINER_RUNNING", Pid: 300, Memory: 24 << 20, CPUNanos: uint64(time.Since(demoBoot).Seconds() * 2e7)},
 			{ID: "demo-web", Namespace: containerNSK8s, PodNamespace: "demo", Pod: "hello-ichor", Name: "web", Image: "nginx:1.27", Status: "CONTAINER_RUNNING", Pid: 320, Memory: 16 << 20, CPUNanos: uint64(time.Since(demoBoot).Seconds() * 1e7)},
 		}})
+	case "NodeMetaKeys":
+		return toJSON(demoMetaKeys())
 	case "TalosSystemImages":
 		return toJSON(demoSystemImages(n.Role == "controlplane"))
 	case "NodeImages":

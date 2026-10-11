@@ -674,6 +674,16 @@ a fresh install. Backups move between Android and iOS.
   service) asks for the typed hostname; a Kubernetes container asks a plain confirm, as the
   kubelet starts it again. With the app lock on, you authenticate first.
 
+- **META keys (node menu → Machine config → META, `os:admin`):**
+  - **What they are:** the boot-time values Talos reads before the machine config, such as the
+    network config of a metal node (0x0a). This is the last-resort fix for a node that cannot boot
+    with its config.
+  - **Writing or deleting a key:** asks for the typed hostname, like `talosctl meta write` and
+    `talosctl meta delete`. With the app lock on, you authenticate first.
+  - **What the app refuses or hides:** keys that only Talos writes (upgrade, STATE encryption)
+    cannot be changed. Secret values are never shown. The activity log keeps the key and the
+    size, never the value.
+
 - **Machine config changes (node menu → Machine config → Edit):**
   - **Review first:** the node checks every change with a dry run before anything is applied.
   - **Ways to apply it:**

@@ -301,6 +301,38 @@ func (m fakeTalosMachine) Restart(ctx context.Context, req *machineapi.RestartRe
 	return &machineapi.RestartResponse{Messages: []*machineapi.Restart{{}}}, nil
 }
 
+// MetaWrite sets the node's MetaKey resource, as Talos does.
+func (m fakeTalosMachine) MetaWrite(ctx context.Context, req *machineapi.MetaWriteRequest) (*machineapi.MetaWriteResponse, error) {
+	node, err := m.f.enter(ctx, "MetaWrite")
+	if err != nil {
+		return nil, err
+	}
+
+	k := runtime.NewMetaKey(runtime.NamespaceName, runtime.MetaKeyTagToID(uint8(req.GetKey())))
+	k.TypedSpec().Value = string(req.GetValue())
+	m.f.put(node, k)
+
+	return &machineapi.MetaWriteResponse{Messages: []*machineapi.MetaWrite{{}}}, nil
+}
+
+// MetaDelete removes the node's MetaKey resource.
+func (m fakeTalosMachine) MetaDelete(ctx context.Context, req *machineapi.MetaDeleteRequest) (*machineapi.MetaDeleteResponse, error) {
+	node, err := m.f.enter(ctx, "MetaDelete")
+	if err != nil {
+		return nil, err
+	}
+
+	id := runtime.MetaKeyTagToID(uint8(req.GetKey()))
+
+	m.f.mu.Lock()
+	m.f.resources[node] = slices.DeleteFunc(m.f.resources[node], func(r resource.Resource) bool {
+		return r.Metadata().Type() == runtime.MetaKeyType && r.Metadata().ID() == id
+	})
+	m.f.mu.Unlock()
+
+	return &machineapi.MetaDeleteResponse{Messages: []*machineapi.MetaDelete{{}}}, nil
+}
+
 func (m fakeTalosMachine) Reset(ctx context.Context, req *machineapi.ResetRequest) (*machineapi.ResetResponse, error) {
 	if _, err := m.f.enter(ctx, "Reset"); err != nil {
 		return nil, err

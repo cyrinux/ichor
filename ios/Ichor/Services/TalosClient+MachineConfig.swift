@@ -128,3 +128,25 @@ private final class ConfigTryBridge: NSObject, IchorgoConfigTryListenerProtocol,
         done(configTryOutcome(outcome: outcome ?? "", errMessage: errMessage ?? ""))
     }
 }
+
+/// The META partition of a node (see TalosClient for the conventions).
+extension TalosClient {
+    /// The keys, the secret ones without their value (os:reader).
+    func metaKeys(node: String) async throws -> MetaKeyList {
+        try await Self.json { [config, context] in IchorgoNodeMetaKeys(config, context, node, $0) }
+    }
+
+    /// Sets `key`; Talos reads it at the next boot (os:admin).
+    func metaWrite(node: String, key: Int, value: String) async throws {
+        try await Self.run { [config, context] error -> Void in
+            _ = IchorgoNodeMetaWrite(config, context, node, key, value, error)
+        }
+    }
+
+    /// Removes `key` (os:admin).
+    func metaDelete(node: String, key: Int) async throws {
+        try await Self.run { [config, context] error -> Void in
+            _ = IchorgoNodeMetaDelete(config, context, node, key, error)
+        }
+    }
+}
