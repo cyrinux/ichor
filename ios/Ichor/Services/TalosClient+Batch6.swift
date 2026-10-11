@@ -41,6 +41,12 @@ extension TalosClient {
         try await Self.json { [config, context] in IchorgoNodeVolumes(config, context, node, $0) }
     }
 
+    /// node's physical disks with their partitions, bar segments and encryption (os:reader);
+    /// `supported` is false before Talos had block resources.
+    func disks(node: String) async throws -> NodeDisks {
+        try await Self.json { [config, context] in IchorgoNodeDisks(config, context, node, $0) }
+    }
+
     /// `talosctl usage PATH -d DEPTH` on node (os:reader).
     func diskUsage(node: String, path: String, depth: Int = 1) async throws -> DiskUsage {
         try await Self.json { [config, context] in IchorgoNodeDiskUsage(config, context, node, path, depth, $0) }

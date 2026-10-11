@@ -1,8 +1,8 @@
 import SwiftUI
 import IchorCore
 
-/// A node's storage (os:reader): mounted filesystems, Talos volumes, a disk usage explorer and
-/// the disks' health. Each part loads on its own, so one that this Talos version lacks only
+/// A node's storage (os:reader): each disk's partitions, mounted filesystems, Talos volumes, a
+/// disk usage explorer and the disks' health. Each part loads on its own, so one that this Talos version lacks only
 /// shows its notice.
 struct StorageView: View {
     let node: String
@@ -17,6 +17,7 @@ struct StorageView: View {
     @Environment(AppModel.self) private var model
     @State private var mounts: LoadState<NodeMounts> = .loading
     @State private var volumes: LoadState<NodeVolumes> = .loading
+    @State private var disks: LoadState<NodeDisks> = .loading
     @State private var health: LoadState<NodeDiskHealth> = .loading
     /// The directory the disk usage explorer shows; nil until the user picks one (measuring a
     /// large tree takes minutes, so nothing is measured unasked).
@@ -30,6 +31,7 @@ struct StorageView: View {
 
     var body: some View {
         List {
+            DiskLayoutSection(state: disks, support: model.support(.disks, node: node))
             Section("Mounts") {
                 SectionStateView(state: mounts) { loaded in
                     let shown = listedMounts(loaded.mounts, showAll: showAllMounts)
@@ -73,6 +75,7 @@ struct StorageView: View {
             // Also what the node's Talos version can do: Volumes and Disk health are asked
             // again even when they were not available before (the node may have been upgraded).
             await model.reloadFeatures(node: node)
+            await loadDisks()
             await loadMounts()
             await loadVolumes()
             await loadHealth()
@@ -84,6 +87,7 @@ struct StorageView: View {
         .navigationBarTitleDisplayMode(.inline)
         // Independent reads, so a slow one does not hold back the others. On the list rather
         // than on rows, which come and go while scrolling.
+        .task { await loadDisks() }
         .task { await loadMounts() }
         .task { await loadVolumes() }
         .task { await loadHealth() }
@@ -119,6 +123,14 @@ struct StorageView: View {
         guard model.support(.volumes, node: node).supported else { return }
         let result: LoadState<NodeVolumes> = await .from { try await client.volumes(node: node) }
         if !Task.isCancelled { volumes = volumes.refreshed(with: result) }
+    }
+
+    private func loadDisks() async {
+        guard let client = model.client else { return }
+        await model.loadFeatures(node: node)
+        guard model.support(.disks, node: node).supported else { return }
+        let result: LoadState<NodeDisks> = await .from { try await client.disks(node: node) }
+        if !Task.isCancelled { disks = disks.refreshed(with: result) }
     }
 
     private func loadUsage() async {
