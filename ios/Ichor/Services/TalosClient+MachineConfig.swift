@@ -44,6 +44,22 @@ extension TalosClient {
         return try await Self.run { IchorgoMachineConfigEdit(draft, editJSON, $0) }
     }
 
+    /// The ready-made config changes. Local.
+    func configSnippets() async throws -> ConfigSnippetList {
+        try await Self.json { IchorgoConfigSnippets($0) }
+    }
+
+    /// The edits of `draft` that snippet `id` makes with `params`. Local.
+    func configSnippetEdits(_ draft: String, id: String, params: [String: String]) async throws -> SnippetEdits {
+        let paramsJSON = (try? TalosJSON.encode(params)) ?? "{}"
+        return try await Self.json { IchorgoConfigSnippetEdits(draft, id, paramsJSON, $0) }
+    }
+
+    /// The edits of `draft` that give it the reference's value of a drift difference. Local.
+    func driftFixEdits(_ draft: String, fix: DriftFix) async throws -> SnippetEdits {
+        try await Self.json { IchorgoDriftFixEdits(draft, fix.key, fix.before, fix.after, $0) }
+    }
+
     /// What applying `draft` would change, validated by the node with a dry run (os:admin).
     /// `base` is the config the draft was made from, secrets hidden.
     func previewMachineConfig(node: String, base: String, draft: String) async throws -> ConfigPreview {

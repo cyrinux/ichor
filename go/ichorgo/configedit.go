@@ -15,6 +15,12 @@ const (
 	configOpSet    = "set"
 	configOpAdd    = "add"
 	configOpRemove = "remove"
+	// configOpPut sets the value at path whatever is there, making the objects on the way:
+	// what a snippet does to a config that may not have the section yet.
+	configOpPut = "put"
+
+	// configTypeYAML is a whole YAML value (a list, an object): only snippets make it.
+	configTypeYAML = "yaml"
 )
 
 // configEdit is one change to a draft: set replaces the scalar at Path, add puts a new value
@@ -31,7 +37,8 @@ type configEdit struct {
 // MachineConfigEdit applies one field edit to a machine config draft and returns the new
 // draft YAML. editJSON is {"doc","path","op","key","type","value"}: doc and path as given by
 // MachineConfigDescribe; op is "set" (replace the scalar at path), "add" (a new "key" in the
-// object at path, or a new item at the end of the list at path) or "remove"; type is the
+// object at path, or a new item at the end of the list at path), "remove" or "put" (the
+// value at path whatever is there, the objects on the way made); type is the
 // type of the new value (object and array start empty; "any" reads value as YAML). Hidden
 // secrets cannot be set. Nothing is sent to the node.
 func MachineConfigEdit(draftYAML, editJSON string) (out string, err error) {
@@ -59,6 +66,10 @@ func MachineConfigEdit(draftYAML, editJSON string) (out string, err error) {
 }
 
 func applyConfigEdit(root *yaml.Node, edit configEdit) error {
+	if edit.Op == configOpPut {
+		return putConfigValue(root, edit)
+	}
+
 	parent, target, index, err := findConfigNode(root, edit.Path)
 	if err != nil {
 		return err
@@ -164,6 +175,75 @@ func addConfigValue(target *yaml.Node, edit configEdit) error {
 	return nil
 }
 
+// putConfigValue sets edit's value at its path, making the objects missing on the way; a list
+// on the way must already have the item.
+func putConfigValue(root *yaml.Node, edit configEdit) error {
+	if len(edit.Path) == 0 {
+		return errors.New("a whole document cannot be replaced here; use the YAML editor")
+	}
+
+	value, err := newConfigValue(edit.Type, edit.Value)
+	if err != nil {
+		return err
+	}
+
+	node := root
+
+	for i, seg := range edit.Path {
+		last := i == len(edit.Path)-1
+
+		if node.Kind == yaml.ScalarNode && node.ShortTag() == "!!null" {
+			*node = yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+		}
+
+		switch node.Kind {
+		case yaml.MappingNode:
+			child := mappingValue(node, seg)
+			if child == nil {
+				child = &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+				if last {
+					child = value
+				}
+
+				node.Content = append(node.Content, &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: seg}, child)
+			} else if last {
+				if child.Kind == yaml.ScalarNode && child.Value == redacted {
+					return errors.New("a hidden secret cannot be changed here")
+				}
+
+				*child = *value
+			}
+
+			node = child
+		case yaml.SequenceNode:
+			n, convErr := strconv.Atoi(seg)
+			if convErr != nil || n < 0 || n >= len(node.Content) {
+				return fmt.Errorf("no item %s in this config", strings.Join(edit.Path[:i+1], "."))
+			}
+
+			if last {
+				*node.Content[n] = *value
+			}
+
+			node = node.Content[n]
+		default:
+			return fmt.Errorf("%s is a single value, not an object", strings.Join(edit.Path[:i], "."))
+		}
+	}
+
+	return nil
+}
+
+// blockStyle makes n and what it holds print as the rest of the config does (snippets write
+// their values as JSON, which YAML would keep in flow style), quotes only where needed.
+func blockStyle(n *yaml.Node) {
+	n.Style = 0
+
+	for _, c := range n.Content {
+		blockStyle(c)
+	}
+}
+
 func removeConfigValue(parent *yaml.Node, index int) error {
 	if parent == nil {
 		return errors.New("a whole document cannot be removed here; use the YAML editor")
@@ -214,6 +294,17 @@ func newConfigValue(typ, value string) (*yaml.Node, error) {
 		}
 
 		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!float", Value: strconv.FormatFloat(f, 'g', -1, 64)}, nil
+	}
+
+	if typ == configTypeYAML {
+		var doc yaml.Node
+		if err := yaml.Unmarshal([]byte(value), &doc); err != nil || len(doc.Content) == 0 {
+			return nil, fmt.Errorf("not a YAML value: %q", value)
+		}
+
+		blockStyle(doc.Content[0])
+
+		return doc.Content[0], nil
 	}
 
 	// Any type: what YAML reads, so true, 5 and text all work.

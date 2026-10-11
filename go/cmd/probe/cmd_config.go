@@ -90,6 +90,27 @@ var configCommands = []command{
 
 		return "deleted", ichorgo.NodeMetaDelete(e.cfg, e.context, flag.Arg(1), int(key))
 	}},
+	{name: "config-snippets", run: func(env) (string, error) {
+		return ichorgo.ConfigSnippets()
+	}},
+	{name: "snippet-edits", args: "FILE ID PARAMSJSON", run: func(env) (string, error) {
+		// The edits of FILE (a redacted config) that snippet ID makes. Local.
+		file, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.ConfigSnippetEdits(string(file), flag.Arg(2), flag.Arg(3))
+	}},
+	{name: "drift-fix", args: "FILE KEY BEFORE AFTER", run: func(env) (string, error) {
+		// The edits of FILE that give it the reference's value of a drift key. Local.
+		file, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.DriftFixEdits(string(file), flag.Arg(2), flag.Arg(3), flag.Arg(4))
+	}},
 	{name: "config-edit", args: "FILE EDITJSON", run: func(env) (string, error) {
 		// FILE with one field edit applied (see MachineConfigEdit), printed. Local.
 		file, err := os.ReadFile(flag.Arg(1))

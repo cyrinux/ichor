@@ -10,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.DriftFix
 import name.levis.ichor.model.LogSource
 import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.address
@@ -123,10 +124,17 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
         arguments = listOf(
             navArgument("addr") { type = NavType.StringType },
             navArgument("host") { type = NavType.StringType },
+            navArgument("fix") { type = NavType.StringType; defaultValue = "" },
+            navArgument("before") { type = NavType.StringType; defaultValue = "" },
+            navArgument("after") { type = NavType.StringType; defaultValue = "" },
         ),
     ) { entry ->
-        val addr = entry.arguments?.getString("addr").orEmpty()
-        MachineConfigScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
+        val args = entry.arguments
+        val addr = args?.getString("addr").orEmpty()
+        val fix = args?.getString("fix").orEmpty().takeIf { it.isNotEmpty() }?.let {
+            DriftFix(it, args?.getString("before").orEmpty(), args?.getString("after").orEmpty())
+        }
+        MachineConfigScreen(node = addr, hostname = args?.getString("host") ?: addr, onBack = { nav.popBackStack() }, fix = fix)
     }
     composable(Routes.NETWORK, arguments = nodeArguments()) { entry ->
         val addr = entry.arguments?.getString("addr").orEmpty()

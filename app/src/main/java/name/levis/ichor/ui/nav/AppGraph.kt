@@ -19,7 +19,12 @@ import name.levis.ichor.ui.support.SupportBundleScreen
 
 /** The app's own screens: settings, diagnosis, changelog, licenses, funding, support. */
 internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks) {
-    composable(Routes.INSIGHTS) { name.levis.ichor.ui.insights.InsightsScreen(onBack = { nav.popBackStack() }) }
+    composable(Routes.INSIGHTS) {
+        name.levis.ichor.ui.insights.InsightsScreen(
+            onBack = { nav.popBackStack() },
+            onFix = { addr, host, fix -> nav.navigate(Routes.machineConfig(addr, host, fix)) },
+        )
+    }
     composable(Routes.CHANGELOG) { ChangelogScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.LICENSES) { LicensesScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.SUPPORTED_INTEGRATIONS) {

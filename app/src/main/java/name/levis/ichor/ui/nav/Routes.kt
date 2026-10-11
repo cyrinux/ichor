@@ -3,6 +3,7 @@ package name.levis.ichor.ui.nav
 import android.net.Uri
 import androidx.navigation.NavHostController
 import name.levis.ichor.model.DataServiceKind
+import name.levis.ichor.model.DriftFix
 import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.NodeOverview
@@ -113,7 +114,7 @@ internal object Routes {
     const val DEBUG = "debug?addr={addr}&host={host}&ctx={ctx}"
     const val POD_SHELL = "pod-shell?ctx={ctx}&ns={ns}&pod={pod}&c={c}"
     const val KUBE_NODE_DEBUG = "kube-node-debug?ctx={ctx}&node={node}&ns={ns}"
-    const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}"
+    const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}&fix={fix}&before={before}&after={after}"
     const val NETWORK = "network?addr={addr}&host={host}"
     const val HARDWARE = "hardware?addr={addr}&host={host}"
     const val IMAGES = "images?addr={addr}&host={host}"
@@ -155,7 +156,10 @@ internal object Routes {
 
     fun events(addr: String = "", host: String = "") = "events?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
-    fun machineConfig(addr: String, host: String) = "machineconfig?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
+    /** [fix]: a drift difference the screen opens a draft for (see MachineConfigScreen). */
+    fun machineConfig(addr: String, host: String, fix: DriftFix? = null) =
+        "machineconfig?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}" +
+            fix?.let { "&fix=${Uri.encode(it.key)}&before=${Uri.encode(it.before)}&after=${Uri.encode(it.after)}" }.orEmpty()
 
     /** [context]: the cluster (talosconfig context) of the node; blank for the one on screen. */
     fun debug(addr: String, host: String, context: String = "") =
