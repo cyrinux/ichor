@@ -8,6 +8,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.model.ReadProgress
+import name.levis.ichor.model.pollReadProgress
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -53,6 +55,16 @@ abstract class LoadingViewModel<T> : ViewModel() {
     /** Whether the data on screen is a part [showPartial] put there, not a finished [fetch]. */
     private var partial = false
 
+    /**
+     * How far a slow [fetch] got (Go ReadProgress), for a screen that overrides it: polled
+     * while nothing is on screen, so the user sees the steps instead of a bare skeleton.
+     */
+    protected open val progressReader: (suspend () -> ReadProgress)? = null
+    private val _progress = MutableStateFlow<ReadProgress?>(null)
+    /** The running read's progress while the screen waits on it, null otherwise. */
+    val readProgress: StateFlow<ReadProgress?> = _progress.asStateFlow()
+    private var progressPoll: Job? = null
+
     /** [reset] drops the current data first, e.g. when the data source (context) changed. */
     fun refresh(reset: Boolean = false) {
         job?.cancel()
@@ -64,6 +76,12 @@ abstract class LoadingViewModel<T> : ViewModel() {
             else -> cached()?.let { UiState.Loaded(it.value, refreshing = true, fetchedAt = it.at) } ?: UiState.Loading
         }
         if (_state.value !is UiState.Loaded) watch = watchRestores()
+        progressPoll?.cancel()
+        _progress.value = null
+        val reader = progressReader
+        if (reader != null && _state.value is UiState.Loading) {
+            progressPoll = viewModelScope.launch { pollReadProgress(reader, emit = { _progress.value = it }) }
+        }
         job = viewModelScope.launch {
             _state.value = try {
                 UiState.Loaded(fetch()).also { partial = false }
@@ -77,6 +95,8 @@ abstract class LoadingViewModel<T> : ViewModel() {
                     UiState.Failed(e.uiText())
                 }
             }
+            progressPoll?.cancel()
+            _progress.value = null
             _settled.value++
         }
     }

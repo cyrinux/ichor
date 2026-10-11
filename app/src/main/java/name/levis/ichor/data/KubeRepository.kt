@@ -7,6 +7,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.model.KubeChange
 import name.levis.ichor.model.ApiHealthReport
 import name.levis.ichor.model.CheckupReport
+import name.levis.ichor.model.ReadProgress
 import name.levis.ichor.model.KubeTopNodes
 import name.levis.ichor.model.KubeTopPods
 import name.levis.ichor.model.IntegrationReport
@@ -282,6 +283,14 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
      */
     suspend fun checkup(): CheckupReport = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(CheckupReport.serializer(), Ichorgo.kubeCheckup(cfg, ctx, server))
+    }
+
+    /**
+     * How far the running read [op] on the active cluster got ("checkup": [checkup]); polled
+     * while it runs. Off the main thread: in screenshot mode the result waits for the mask.
+     */
+    suspend fun readProgress(op: String): ReadProgress = go.kube { cfg, ctx, _ ->
+        TalosJson.decodeFromString(ReadProgress.serializer(), Ichorgo.readProgress(cfg, ctx, op))
     }
 
     /**

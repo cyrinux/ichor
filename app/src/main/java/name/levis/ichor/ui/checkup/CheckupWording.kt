@@ -47,6 +47,23 @@ fun sectionLook(id: String): SectionLook? = when (id) {
     else -> null
 }
 
+/** The ReadProgress op of a checkup (Go KubeCheckup). */
+const val CHECKUP_PROGRESS_OP = "checkup"
+
+/**
+ * A checkup progress step by name: the shared reads first (their ids are not section ids,
+ * "nodes" is the node list here), then the section readers by their card titles.
+ */
+@Composable
+fun checkupStepLabel(id: String): String = when (id) {
+    "api" -> stringResource(R.string.read_progress_step_api)
+    "pods" -> stringResource(R.string.read_progress_step_pods)
+    "nodes" -> stringResource(R.string.read_progress_step_nodes)
+    "pvcs" -> stringResource(R.string.read_progress_step_pvcs)
+    "version" -> stringResource(R.string.read_progress_step_version)
+    else -> sectionLook(id)?.let { stringResource(it.title) } ?: id
+}
+
 /** How long ago [since] was at [now], "" when unknown. */
 @Composable
 fun ageSince(since: Long, now: Long): String =

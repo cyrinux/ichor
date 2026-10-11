@@ -127,8 +127,11 @@ var kubeCommands = []command{
 		return out, err
 	}},
 	{name: "checkup", args: "", run: func(e env) (out string, err error) {
-		// checkup: what no other screen shows (failing pods, full volumes, dead webhooks...).
+		// checkup: what no other screen shows (failing pods, full volumes, dead webhooks...),
+		// with its progress on stderr every 500 ms while it reads.
+		stop := watchReadProgress(e, "checkup")
 		out, err = ichorgo.KubeCheckup(e.cfg, e.context, e.kubeServer)
+		stop()
 
 		return out, err
 	}},
@@ -415,6 +418,36 @@ func probeSearch(e env) (string, error) {
 	}
 
 	return ichorgo.SearchSnapshots(string(in), flag.Arg(1), 0)
+}
+
+// watchReadProgress prints the progress of op on e's context to stderr every 500 ms until the
+// returned func is called, so a slow read can be followed from the terminal.
+func watchReadProgress(e env, op string) func() {
+	done := make(chan struct{})
+	stopped := make(chan struct{})
+
+	go func() {
+		defer close(stopped)
+
+		tick := time.NewTicker(500 * time.Millisecond)
+		defer tick.Stop()
+
+		for {
+			select {
+			case <-done:
+				return
+			case <-tick.C:
+				if line, err := ichorgo.ReadProgress(e.cfg, e.context, op); err == nil {
+					fmt.Fprintln(os.Stderr, line)
+				}
+			}
+		}
+	}()
+
+	return func() {
+		close(done)
+		<-stopped
+	}
 }
 
 // helmRevisionArg is an optional revision argument: none is 0, the previous revision.

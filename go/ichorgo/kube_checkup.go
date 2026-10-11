@@ -36,11 +36,30 @@ const (
 	checkupTimeout = 60 * time.Second
 	// checkupMaxFindings caps a section's findings; Truncated counts the rest.
 	checkupMaxFindings = 40
+	// checkupProgressOp is the ReadProgress op of a checkup; checkupDemoStep paces its demo.
+	checkupProgressOp = "checkup"
+	checkupDemoStep   = 100 * time.Millisecond
 	// How long something may stay in a transient state before it is a finding.
 	pendingGrace     = 5 * time.Minute
 	startingGrace    = 10 * time.Minute
 	terminatingGrace = 10 * time.Minute
 )
+
+// The steps of a checkup's progress: the shared reads, then the section readers (one reader
+// fills the capacity and nodes sections, under "capacity").
+const (
+	checkupStepAPI     = "api"
+	checkupStepPods    = "pods"
+	checkupStepNodes   = "nodes"
+	checkupStepPVCs    = "pvcs"
+	checkupStepVersion = "version"
+)
+
+var checkupSteps = []string{
+	checkupStepAPI, checkupStepPods, checkupStepNodes, checkupStepPVCs, checkupStepVersion,
+	checkWorkloads, checkEvents, checkStorage, checkUpgrade, checkWebhooks, checkCapacity,
+	checkLoadBalancers, checkTerminating, checkCertificates, checkSecrets, checkHelm, checkMonitoring,
+}
 
 // checkupReport is what the cluster hides behind green nodes: one section per kind of
 // trouble, each with its findings, and the lists the apps draw (nodes, volumes, releases).
@@ -96,10 +115,15 @@ func KubeCheckup(configYAML, contextName, kubeServer string) (out string, err er
 	contextName = unmaskContext(configYAML, contextName)
 
 	if isDemoContext(configYAML, contextName) {
+		playDemoCheckupProgress(contextName)
+
 		return toJSON(demoCheckup(time.Now()))
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), checkupTimeout)
+	progress := startReadProgress(checkupProgressOp, contextName, checkupSteps...)
+	defer progress.finish()
+
+	ctx, cancel := context.WithTimeout(withReadProgress(context.Background(), progress), checkupTimeout)
 	defer cancel()
 
 	report, err := withKubeContext(ctx, kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) (checkupReport, error) {
@@ -110,6 +134,19 @@ func KubeCheckup(configYAML, contextName, kubeServer string) (out string, err er
 	}
 
 	return toJSON(report)
+}
+
+// playDemoCheckupProgress walks a few steps so the demo shows the progress the apps draw.
+func playDemoCheckupProgress(contextName string) {
+	steps := []string{checkupStepAPI, checkupStepPods, checkStorage}
+	progress := startReadProgress(checkupProgressOp, contextName, steps...)
+	defer progress.finish()
+
+	for _, step := range steps {
+		progress.begin(step)
+		time.Sleep(checkupDemoStep)
+		progress.done(step)
+	}
 }
 
 // checkupInput is what several sections share, read once.
@@ -127,7 +164,13 @@ type checkupInput struct {
 // readCheckup reads the shared lists, then every section in parallel. It fails only when
 // the API server answers nothing (its API groups); a section that fails carries its error.
 func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupReport, error) {
+	progress := readProgressFrom(ctx)
+
+	endAPI := progress.track(checkupStepAPI)
+
 	groups, err := readAPIGroups(ctx, k)
+	endAPI(err != nil)
+
 	if err != nil {
 		return checkupReport{}, err
 	}
@@ -139,27 +182,53 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 		version string
 	)
 
-	wg.Go(func() { in.pods, in.podsErr = listCheckPods(ctx, k) })
-	wg.Go(func() { in.nodes, in.nodesErr = listObjects[checkNodeObject](ctx, k, "/api/v1/nodes") })
-	wg.Go(func() { in.pvcs, in.pvcsErr = listObjects[pvcObject](ctx, k, "/api/v1/persistentvolumeclaims") })
-	wg.Go(func() { version = readAPIVersion(ctx, k) })
+	wg.Go(func() {
+		end := progress.track(checkupStepPods)
+		in.pods, in.podsErr = listCheckPods(ctx, k)
+		end(in.podsErr != nil)
+	})
+	wg.Go(func() {
+		end := progress.track(checkupStepNodes)
+		in.nodes, in.nodesErr = listObjects[checkNodeObject](ctx, k, "/api/v1/nodes")
+		end(in.nodesErr != nil)
+	})
+	wg.Go(func() {
+		end := progress.track(checkupStepPVCs)
+		in.pvcs, in.pvcsErr = listObjects[pvcObject](ctx, k, "/api/v1/persistentvolumeclaims")
+		end(in.pvcsErr != nil)
+	})
+	wg.Go(func() {
+		end := progress.track(checkupStepVersion)
+		version = readAPIVersion(ctx, k)
+		end(false)
+	})
 	wg.Wait()
 
 	report := checkupReport{KubeVersion: version}
 	sections := make([]checkupSection, 13)
 
-	wg.Go(func() { sections[0] = checkupWorkloads(ctx, k, in) })
-	wg.Go(func() { sections[1] = checkupEvents(ctx, k, in) })
-	wg.Go(func() { sections[2], report.Volumes = checkupStorage(ctx, k, in) })
-	wg.Go(func() { sections[3] = checkupUpgrade(ctx, k, version) })
-	wg.Go(func() { sections[4] = checkupWebhooks(ctx, k) })
-	wg.Go(func() { sections[5], sections[6], report.Nodes = checkupCapacity(ctx, k, in, version) })
-	wg.Go(func() { sections[7] = checkupLoadBalancers(ctx, k, in) })
-	wg.Go(func() { sections[8] = checkupTerminating(ctx, k, in) })
-	wg.Go(func() { sections[9] = checkupCSRs(ctx, k, in) })
-	wg.Go(func() { sections[10] = checkupExternalSecrets(ctx, k, in) })
-	wg.Go(func() { sections[11], report.Releases = checkupHelm(ctx, k, in) })
-	wg.Go(func() { sections[12] = checkupMonitoring(ctx, k, in) })
+	// section runs one section reader as its progress step; the step fails when a section it
+	// fills could not be read at all.
+	section := func(step string, read func(), filled ...int) {
+		wg.Go(func() {
+			end := progress.track(step)
+			read()
+			end(slices.ContainsFunc(filled, func(i int) bool { return sections[i].Status == checkUnknown }))
+		})
+	}
+
+	section(checkWorkloads, func() { sections[0] = checkupWorkloads(ctx, k, in) }, 0)
+	section(checkEvents, func() { sections[1] = checkupEvents(ctx, k, in) }, 1)
+	section(checkStorage, func() { sections[2], report.Volumes = checkupStorage(ctx, k, in) }, 2)
+	section(checkUpgrade, func() { sections[3] = checkupUpgrade(ctx, k, version) }, 3)
+	section(checkWebhooks, func() { sections[4] = checkupWebhooks(ctx, k) }, 4)
+	section(checkCapacity, func() { sections[5], sections[6], report.Nodes = checkupCapacity(ctx, k, in, version) }, 5, 6)
+	section(checkLoadBalancers, func() { sections[7] = checkupLoadBalancers(ctx, k, in) }, 7)
+	section(checkTerminating, func() { sections[8] = checkupTerminating(ctx, k, in) }, 8)
+	section(checkCertificates, func() { sections[9] = checkupCSRs(ctx, k, in) }, 9)
+	section(checkSecrets, func() { sections[10] = checkupExternalSecrets(ctx, k, in) }, 10)
+	section(checkHelm, func() { sections[11], report.Releases = checkupHelm(ctx, k, in) }, 11)
+	section(checkMonitoring, func() { sections[12] = checkupMonitoring(ctx, k, in) }, 12)
 	wg.Wait()
 
 	report.Sections = sections

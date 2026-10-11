@@ -14,9 +14,11 @@ struct CheckupView: View {
     /// The leftover namespace whose deletion waits for a confirmation.
     @State private var confirmDelete: String?
     @State private var message: String?
+    /// How far the first read got, while there is nothing else to show.
+    @State private var progress: ReadProgress?
 
     var body: some View {
-        LoadStateView(state: state, retry: load) { report in
+        LoadStateView(state: state, retry: load, progress: progress, stepLabel: Self.stepLabel) { report in
             let now = Int64(Date().timeIntervalSince1970 * 1000)
             List {
                 CheckupVerdictSection(report: report)
@@ -74,11 +76,43 @@ struct CheckupView: View {
 
     private func load() async {
         guard let client = model.client else { return }
-        let loaded: LoadState<CheckupReport> = await .from { try await client.checkup() }
+        // A checkup on a large cluster takes a while: its steps show while nothing else does.
+        let waiting: Bool = { if case .loading = state { return true } else { return false } }()
+        let poll: Task<Void, Never>? = waiting ? Task { await pollProgress(client) } : nil
+        let loaded: LoadState<CheckupReport> = await withTaskCancellationHandler {
+            await .from { try await client.checkup() }
+        } onCancel: {
+            poll?.cancel()
+        }
+        poll?.cancel()
+        progress = nil
         if case .loaded(let report, _, _) = loaded, !chosen {
             open = Set(report.shownSections.filter { $0.status == .critical || $0.status == .warning }.map(\.id))
         }
         state = state.refreshed(with: loaded)
+    }
+
+    /// Shows how far the checkup got until cancelled; a progress not running yet is skipped.
+    private func pollProgress(_ client: TalosClient) async {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .milliseconds(250))
+            let read = await client.readProgress(TalosClient.checkupProgressOp)
+            guard !Task.isCancelled else { return }
+            if let read, read.running { progress = read }
+        }
+    }
+
+    /// A checkup step by name: the shared reads first ("nodes" is the node list here, not the
+    /// nodes section), then the section readers by their titles.
+    private static func stepLabel(_ id: String) -> String {
+        switch id {
+        case "api": String(localized: "API groups")
+        case "pods": String(localized: "Reading pods")
+        case "nodes": String(localized: "Reading nodes")
+        case "pvcs": String(localized: "Volume claims")
+        case "version": String(localized: "Kubernetes version")
+        default: CheckupSectionID(rawValue: id)?.title ?? id
+        }
     }
 }
 

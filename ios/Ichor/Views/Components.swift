@@ -1,10 +1,13 @@
 import SwiftUI
 import IchorCore
 
-/// Skeleton / error with retry / content for a LoadState.
+/// Skeleton / error with retry / content for a LoadState. `progress`, while it runs and nothing
+/// is on screen, shows the steps of a slow read (named by `stepLabel`) instead of the skeleton.
 struct LoadStateView<T, Content: View>: View {
     let state: LoadState<T>
     let retry: () async -> Void
+    var progress: ReadProgress?
+    var stepLabel: ((String) -> String)?
     @ViewBuilder let content: (T) -> Content
     @Environment(AppModel.self) private var model: AppModel?
 
@@ -14,7 +17,11 @@ struct LoadStateView<T, Content: View>: View {
         case .loading where model?.vpnHeldBack == true, .failed where model?.vpnHeldBack == true:
             VpnRequiredView(retry: retry)
         case .loading:
-            SkeletonView()
+            if let progress, progress.running {
+                ReadProgressView(progress: progress, stepLabel: stepLabel ?? { $0 })
+            } else {
+                SkeletonView()
+            }
         case .failed(let message):
             // A cluster that needs its user to sign in: the way to, rather than an error.
             if let reason = kubeSignInRequiredReason(message), let target = model?.activeSignInTarget {
