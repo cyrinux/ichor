@@ -95,6 +95,7 @@ func TestDemoPublicReadsAndActions(t *testing.T) {
 			func() (string, error) { return NodeSensors(yaml, "", n.Node) },
 			func() (string, error) { return NodeMounts(yaml, "", n.Node) },
 			func() (string, error) { return NodeVolumes(yaml, "", n.Node) },
+			func() (string, error) { return NodeDisks(yaml, "", n.Node) },
 			func() (string, error) { return NodeDiskUsage(yaml, "", n.Node, "/var/log", 1) },
 			func() (string, error) { return NodeDiskHealth(yaml, "", n.Node) },
 			func() (string, error) { return ResourceTypes(yaml, "", n.Node) },

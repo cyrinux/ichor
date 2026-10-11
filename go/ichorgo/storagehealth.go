@@ -300,8 +300,8 @@ func demoStorageHealth(configYAML, contextName string) (string, error) {
 		result.Nodes = append(result.Nodes, nodeStorage{
 			Node: n.Node, Hostname: n.Hostname,
 			Volumes: buildVolumeFill(n.Node, []mountUsage{
-				{Filesystem: "/dev/nvme0n1p5", MountedOn: "/system/state", Size: 100 << 20, Available: 94 << 20},
-				{Filesystem: "/dev/nvme0n1p6", MountedOn: "/var", Size: 100 << 30, Available: ephemeralFree},
+				{Filesystem: "/dev/nvme0n1p3", MountedOn: "/system/state", Size: 100 << 20, Available: 94 << 20},
+				{Filesystem: "/dev/nvme0n1p4", MountedOn: "/var", Size: 100 << 30, Available: ephemeralFree},
 			}, nil),
 			Disks: buildDiskConditions(n.Node, []diskSMART{disk}),
 		})

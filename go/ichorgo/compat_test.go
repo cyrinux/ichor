@@ -79,7 +79,7 @@ func TestNotAvailableNamesTheVersion(t *testing.T) {
 
 // requiredFeatures are the names the apps rely on.
 var requiredFeatures = []string{
-	"events", "containers", "containerRestart", "processes", "logFollow", "serviceControl", "packetCapture", "upgrade", "volumes",
+	"events", "containers", "containerRestart", "processes", "logFollow", "serviceControl", "packetCapture", "upgrade", "volumes", "disks",
 	"diskUsage", "mounts", "kubespan", "etcd", "etcdSnapshot", "etcdMemberActions", "resourceBrowser",
 	"supportBundle", "diskHealth", "issueConfig", "network", "connections", "time", "hardware", "images",
 	"imagePull", "machineConfig", "debugShell", "reset", "sensors", "meta",
@@ -149,16 +149,16 @@ func TestComputeFeatures(t *testing.T) {
 		{"v1.13.0", []string{"diskHealth"}},
 		{"v1.12.4", []string{"debugShell", "diskHealth"}},
 		{"v1.8.0", []string{"debugShell", "diskHealth"}},
-		{"v1.7.6", []string{"debugShell", "diskHealth", "volumes"}},
-		{"v1.5.0", []string{"debugShell", "diskHealth", "volumes"}},
-		{"v1.4.8", []string{"debugShell", "diskHealth", "images", "sensors", "volumes"}},
-		{"v1.3.7", []string{"connections", "debugShell", "diskHealth", "etcd", "images", "meta", "reset", "sensors", "volumes"}},
+		{"v1.7.6", []string{"debugShell", "diskHealth", "disks", "volumes"}},
+		{"v1.5.0", []string{"debugShell", "diskHealth", "disks", "volumes"}},
+		{"v1.4.8", []string{"debugShell", "diskHealth", "disks", "images", "sensors", "volumes"}},
+		{"v1.3.7", []string{"connections", "debugShell", "diskHealth", "disks", "etcd", "images", "meta", "reset", "sensors", "volumes"}},
 		{"v1.2.0", []string{
-			"connections", "debugShell", "diskHealth", "etcd", "etcdMemberActions", "hardware", "images", "kubespan",
+			"connections", "debugShell", "diskHealth", "disks", "etcd", "etcdMemberActions", "hardware", "images", "kubespan",
 			"machineConfig", "meta", "network", "reset", "resourceBrowser", "sensors", "volumes",
 		}},
 		{"v1.1.3", []string{
-			"connections", "debugShell", "diskHealth", "etcd", "etcdMemberActions", "hardware", "images", "kubespan",
+			"connections", "debugShell", "diskHealth", "disks", "etcd", "etcdMemberActions", "hardware", "images", "kubespan",
 			"machineConfig", "meta", "network", "packetCapture", "reset", "resourceBrowser", "sensors", "volumes",
 		}},
 		{"v1.10.3", []string{"debugShell", "diskHealth"}}, // 1.10 > 1.8: compared as numbers

@@ -147,20 +147,7 @@ func NodeVolumes(configYAML, contextName, node string) (out string, err error) {
 }
 
 func mapVolumes(volumes []*block.VolumeStatus, mounts []*block.MountStatus) []volumeInfo {
-	mountedOn := map[string]string{}
-
-	for _, m := range mounts {
-		spec := m.TypedSpec()
-
-		id := spec.Spec.VolumeID
-		if id == "" {
-			id = m.Metadata().ID()
-		}
-
-		if prev, ok := mountedOn[id]; !ok || len(spec.Target) < len(prev) {
-			mountedOn[id] = spec.Target
-		}
-	}
+	mountedOn := volumeMountPoints(mounts)
 
 	out := make([]volumeInfo, 0, len(volumes))
 
