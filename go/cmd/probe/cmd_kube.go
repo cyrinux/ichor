@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/cyrinux/ichor/go/ichorgo"
 )
@@ -20,6 +22,7 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "search", args: "QUERY", run: probeSearch},
 	{name: "workloads", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.KubeWorkloads(e.cfg, e.context, e.kubeServer)
 
@@ -367,6 +370,51 @@ func runCordon(e env) (out string, err error) {
 	}
 
 	return out, err
+}
+
+// probeCluster stands for the cluster id the apps store: the probe only prints the targets.
+const probeCluster = "probeclusterabcd"
+
+// probeSearch reads the context's overview, pods and workloads the way the apps cache them,
+// then ranks them for QUERY with SearchSnapshots. A read that fails (no Talos API on a
+// kubeconfig cluster) is left out.
+func probeSearch(e env) (string, error) {
+	reads := []struct {
+		key  string
+		read func() (string, error)
+	}{
+		{"overview", func() (string, error) { return ichorgo.ClusterOverview(e.cfg, e.context) }},
+		{"pods", func() (string, error) { return ichorgo.KubePods(e.cfg, e.context, e.kubeServer) }},
+		{"workloads", func() (string, error) { return ichorgo.KubeWorkloads(e.cfg, e.context, e.kubeServer) }},
+	}
+
+	type entry struct {
+		Cluster string `json:"cluster"`
+		Context string `json:"context"`
+		Key     string `json:"key"`
+		At      int64  `json:"at"`
+		JSON    string `json:"json"`
+	}
+
+	var entries []entry
+
+	for _, r := range reads {
+		blob, err := r.read()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", r.key, err)
+
+			continue
+		}
+
+		entries = append(entries, entry{probeCluster, e.context, r.key, time.Now().UnixMilli(), blob})
+	}
+
+	in, err := json.Marshal(map[string]any{"entries": entries})
+	if err != nil {
+		return "", err
+	}
+
+	return ichorgo.SearchSnapshots(string(in), flag.Arg(1), 0)
 }
 
 // helmRevisionArg is an optional revision argument: none is 0, the previous revision.
