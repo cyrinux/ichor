@@ -165,7 +165,7 @@ struct MonitoringSection: View {
                 }
             }
         } header: {
-            Text("Monitoring")
+            Text("Alerts")
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within \(certWarnDays) days. iOS schedules background checks itself, so there is no check interval to choose as on Android, and alerts can be delayed. The home-screen widget shows the last check.")

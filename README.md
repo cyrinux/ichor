@@ -502,7 +502,7 @@ The `talosconfig*` filenames are gitignored in this repository.
 
 **Renewal:** the certificate lasts `--crt-ttl` (default one year). Settings shows the expiry
 date. When background alerts are on, the app notifies daily from 14 days before expiry. To
-renew, generate a new file and import it (Settings → Add a cluster): a cluster already
+renew, generate a new file and import it (Settings → Clusters & backup → Add a cluster): a cluster already
 imported, i.e. the same context name and CA, is updated in place.
 
 ### Importing it
@@ -669,7 +669,7 @@ pod's log sheet (link icon), a CronJob's card (Android) or a pod or CronJob's co
 ### Backup and restore
 
 The stored config's key never leaves the phone, so moving to a new phone takes a backup:
-**Settings → Back up clusters and settings** (with the app lock on, you authenticate
+**Settings → Clusters & backup → Back up clusters and settings** (with the app lock on, you authenticate
 first). Restore it from the same section, or from **Restore a backup** on the first screen of
 a fresh install. Backups move between Android and iOS.
 
@@ -956,7 +956,7 @@ Disk activity alone does not establish saturation, especially on parallel device
 
 ## Updates
 
-The Android app updates itself from this repository's GitHub releases (Settings → Updates):
+The Android app updates itself from this repository's GitHub releases (Settings → About → Updates):
 
 - **When it checks:** once a day, or when you tap "Check now".
 - **What it downloads:** the signed APK for the phone's ABI, after you confirm.
@@ -1043,7 +1043,7 @@ models, formatting, lock state and power-request rules.
 - **Background alerts:** best effort. iOS decides when background checks run, and skips them
   while the device is locked, because the config cannot be decrypted then; with a security key
   required, also after iOS closed the app, until it is unlocked again.
-- **Leftover data:** Keychain items survive uninstalling the app. Use Settings → Delete to
+- **Leftover data:** Keychain items survive uninstalling the app. Use Settings → Clusters & backup → Delete to
   remove the config.
 - **Widget:** shares the last check with the app through an App Group, which a free Apple ID
   may not support when sideloading. In that case the widget stays empty.

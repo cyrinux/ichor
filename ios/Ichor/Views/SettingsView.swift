@@ -1,242 +1,26 @@
 import SwiftUI
 import IchorCore
 
+/// Settings: one row per group (see IchorCore's SettingsPage), each opening its own page.
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.openURL) private var openURL
-    @State private var confirmDelete = false
-    /// "Back up first" was chosen: the backup starts once the delete sheet is gone.
-    @State private var backupAfterSheet = false
-    @State private var backupRequested = false
-    @State private var lockError: String?
 
     var body: some View {
-        @Bindable var model = model
         Form {
-            Section {
-                Picker("Theme", selection: $model.theme) {
-                    ForEach(ThemeMode.allCases) { Text($0.label).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                // iOS manages the per-app language in the Settings app (the bundle declares its localizations).
-                Button {
-                    if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
-                } label: {
-                    LabeledContent("Language", value: Self.currentLanguage)
-                }
-                .foregroundStyle(.primary)
-            } header: {
-                Text("Appearance")
-            } footer: {
-                Text("Ichor follows the iPhone language. To use another one for this app only, open its page in the Settings app and choose Language.")
-            }
-            LiveStatsSection()
-            Section {
-                Toggle("App lock", isOn: Binding(get: { model.lock.enabled }, set: { setLock($0) }))
-                    .disabled(model.lock.enabled && (lockRequired || model.requiresKey))
-                if let lockError { Text(lockError).font(.footnote).foregroundStyle(.statusBad) }
-            } header: {
-                Text("Security")
-            } footer: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Face ID / Touch ID, or the device passcode, to open the app and before reboot or shutdown. Also hides the app in the app switcher.")
-                    if lockRequired && model.lock.enabled { Text("Always on while a cluster is imported.") }
-                    else if model.requiresKey && model.lock.enabled { Text("Always on while a security key is required.") }
-                }
-            }
-            // A YubiKey (or any FIDO2 key) tapped on the iPhone as another way in, see IchorCore/SecurityKeys.swift.
-            if model.lock.enabled { SecurityKeysSection() }
-            PrivacySection()
-            MonitoringSection()
-            AISection()
-            if model.allows(.kubeconfig) { KubeconfigSection() }
-            Section {
-                if let protection = SecureConfigStore.protection {
-                    LabeledContent("Encryption key", value: protection.label)
-                }
-                NavigationLink(model.kubeYAML == nil ? LocalizedStringKey("Add a cluster (import a talosconfig)") : "Add a cluster", value: Route.importConfig)
-                if model.allows(.issueConfig) {
-                    NavigationLink("Renew my certificate…", value: Route.issueConfig(renew: true))
-                    NavigationLink("Create a config for another device…", value: Route.issueConfig(renew: false))
-                }
-                // Both stores go: with kubeconfig clusters stored, say so.
-                Button(model.kubeYAML == nil ? LocalizedStringKey("Delete stored talosconfig") : "Delete all clusters", role: .destructive) {
-                    confirmDelete = true
-                }
-            } header: {
-                Text("Config")
-            } footer: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Add a cluster imports a talosconfig or a kubeconfig. The clusters already stored are kept.")
-                    if model.allows(.issueConfig) {
-                        Text("Renew this context's client certificate, or issue a restricted talosconfig for another device.")
+            ForEach(SettingsPage.visible(kubeconfig: model.allows(.kubeconfig)), id: \.self) { page in
+                NavigationLink(value: Route.settingsPage(page)) {
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(page.title)
+                            Text(page.summary).font(.caption).foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        Image(systemName: page.systemImage)
                     }
-                    // README "Leftover data": the Keychain outlives the app.
-                    Text("Configs are stored in the iOS Keychain, which keeps them after the app is uninstalled. Delete them here to remove them from this device.")
                 }
             }
-            BackupSection(requested: $backupRequested)
-            SupportSection()
-            AboutSection()
-            UpdatesSection()
         }
         .themedBackground()
         .navigationTitle("Settings")
-        // Every cluster's client keys go, for good without a backup: typed, like a reboot.
-        .sheet(isPresented: $confirmDelete, onDismiss: {
-            if backupAfterSheet {
-                backupAfterSheet = false
-                backupRequested = true
-            }
-        }) {
-            HostnameConfirmationSheet(
-                title: model.kubeYAML == nil ? String(localized: "Delete talosconfig?") : String(localized: "Delete all clusters?"),
-                message: String(localized: "The config of every cluster, with their client keys, will be removed from this device."),
-                hostname: Self.deleteAllToken,
-                actionTitle: String(localized: "Delete"),
-                alternative: model.hasConfig ? (title: String(localized: "Back up first"), action: { backupAfterSheet = true }) : nil
-            ) {
-                confirmDelete = false
-                model.clear()
-            }
-        }
-    }
-
-    /// What to type to delete every cluster; not translated, like a hostname.
-    private static let deleteAllToken = "DELETE"
-
-    /// The language the app is shown in, named in that language ("Français", "Deutsch"…).
-    private static var currentLanguage: String {
-        let code = Bundle.main.preferredLocalizations.first ?? "en"
-        let name = Locale(identifier: code).localizedString(forLanguageCode: code) ?? code
-        return name.prefix(1).uppercased() + name.dropFirst()
-    }
-
-    /// The lock cannot be turned off while a real cluster is stored.
-    private var lockRequired: Bool { AppLockState.required(for: model.summary?.contexts ?? []) }
-
-    /// Both enabling and disabling require authenticating first.
-    private func setLock(_ enabled: Bool) {
-        guard Authenticator.isAvailable else {
-            lockError = String(localized: "Set up a passcode (and optionally Face ID) on this device first.")
-            return
-        }
-        Task {
-            if let failure = await Authenticator.authenticate(reason: enabled ? String(localized: "Enable app lock") : String(localized: "Disable app lock")) {
-                lockError = failure
-            } else {
-                lockError = nil
-                model.setLockEnabled(enabled)
-            }
-        }
-    }
-}
-
-/// Support bundle (any role), integration requests (os:admin: they read the API groups) and
-/// bug reports.
-private struct SupportSection: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        Section {
-            if model.allows(.supportBundle) {
-                let support = model.clusterSupport(.supportBundle)
-                NavigationLink(value: Route.supportBundle) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Create a support bundle…")
-                        Text("Collect logs and cluster details of the nodes into a zip, like talosctl support.")
-                            .font(.caption).foregroundStyle(.secondary)
-                        if let notice = support.localizedNotice {
-                            Text(notice).font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                .disabled(!support.supported)
-            }
-            if model.allows(.workloads) {
-                NavigationLink(value: Route.integrations) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Request an integration…")
-                        Text("Ask for an operator this cluster runs that Ichor does not show yet.")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-            }
-            // On this device only, whatever the cluster: no role needed.
-            NavigationLink(value: Route.activity(cluster: "")) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Activity log")
-                    Text("Every change Ichor made to your clusters (reboots, scaling, syncs, rollbacks…), kept 90 days on this device.")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-            }
-            Link(destination: IntegrationLinks.reportBug) { Label("Report a bug", systemImage: "ladybug") }
-        } header: {
-            Text("Support")
-        }
-    }
-}
-
-/// Screenshot mode: Go masks IPs, node and context names, plus the extra words. The words
-/// apply when the field is submitted or the screen closes, not on every keystroke. And the
-/// icons of the Apps inventory: off, only the bundled ones are shown (a third-party request).
-private struct PrivacySection: View {
-    @Environment(AppModel.self) private var model
-    @AppStorage(AppIconSettings.remoteKey) private var remoteIcons = false
-    @AppStorage(AuditEventKeys.enabled) private var auditEvents = false
-    @State private var words = ""
-    @FocusState private var editingWords: Bool
-
-    var body: some View {
-        Section {
-            Toggle(isOn: Binding(get: { model.privacyMask }, set: { on in
-                Task { await model.setPrivacyMask(on, words: normalizedMaskWords(words)) }
-            })) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Screenshot mode")
-                    Text("Hide IP addresses, node names and app logos, e.g. for screenshots or screen sharing")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            if model.privacyMask {
-                VStack(alignment: .leading, spacing: 4) {
-                    TextField("Also hide these words", text: $words)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .focused($editingWords)
-                        .onSubmit(commit)
-                    Text("Comma-separated, e.g. a domain or a customer name").font(.caption).foregroundStyle(.secondary)
-                }
-            }
-            Toggle(isOn: $auditEvents) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Record actions in the cluster")
-                    Text("Also write a Kubernetes Event (reason IchorAction) on each object the app changes, so the cluster’s own history shows what the phone did: kubectl get events, the Argo CD or Lens timelines. Only for Kubernetes objects: node reboots and Talos changes send nothing. Best effort, never blocks an action.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .onChange(of: auditEvents) { _, on in TalosClient.setAuditEvents(on) }
-            Toggle(isOn: $remoteIcons) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Download missing app icons")
-                    Text("About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details. Icons an Argo CD app links in its ichor.levis.name/icon annotation are downloaded too.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-        } header: {
-            Text("Privacy")
-        }
-        .onAppear { words = model.privacyWords }
-        .onChange(of: editingWords) { _, editing in if !editing { commit() } }
-        .onDisappear(perform: commit)
-    }
-
-    private func commit() {
-        words = normalizedMaskWords(words)
-        guard model.privacyMask, words != model.privacyWords else { return }
-        Task { await model.setPrivacyMask(true, words: words) }
     }
 }

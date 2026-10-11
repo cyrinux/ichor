@@ -190,6 +190,8 @@ enum Route: Hashable {
     case alerts
     case health
     case settings
+    /// One group of Settings on its own page.
+    case settingsPage(SettingsPage)
     case importConfig
     /// The imported clusters: switch, color, remove, add.
     case clusters
@@ -286,6 +288,7 @@ struct MainNavigation: View {
                     case .alerts: AlertsView(path: $path)
                     case .health: HealthView()
                     case .settings: SettingsView()
+                    case .settingsPage(let page): SettingsPageView(page: page)
                     case .diagnosis(let note): DiagnosisView(initialNote: note)
                     case .importConfig: ImportView { path.removeAll() }
                     case .clusters: ClustersView()

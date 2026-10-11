@@ -503,8 +503,19 @@
     <string name="settings_delete_body">La configuration chiffrée de tous les clusters, avec leurs clés client, sera supprimée de cet appareil.</string>
     <string name="settings_delete_backup_first">Sauvegarder d’abord</string>
 
+    <string name="settings_section_clusters">Clusters et sauvegarde</string>
+    <string name="settings_page_appearance_summary">Thème, langue, utilisation en direct</string>
+    <string name="settings_page_security_summary">Verrouillage de l’app, clés de sécurité</string>
+    <string name="settings_page_privacy_summary">Mode capture d’écran, événements du cluster, icônes d’apps</string>
+    <string name="settings_page_alerts_summary">Vérifications en arrière-plan, surveillances, seuils</string>
+    <string name="settings_page_ai_summary">Fournisseur, clé d’API, modèle</string>
+    <string name="settings_page_kubernetes_summary">Shell de débogage des nœuds, export du kubeconfig</string>
+    <string name="settings_page_clusters_summary">Ajouter, renouveler, sauvegarder, supprimer</string>
+    <string name="settings_page_support_summary">Bundle de support, journal d’activité, signaler un bug</string>
+    <string name="settings_page_about_summary">Version, nouveautés, licences, mises à jour</string>
+
     <!-- Monitoring and notifications -->
-    <string name="monitor_section">Surveillance</string>
+    <string name="monitor_section">Alertes</string>
     <string name="monitor_notifications_blocked">Les notifications sont bloquées pour cette app&#160;; autorisez-les dans les paramètres Android.</string>
     <string name="monitor_background_alerts">Alertes en arrière-plan</string>
     <string name="monitor_background_alerts_desc">Prévient quand un nœud tombe ou redevient disponible, lors de nouvelles alarmes etcd, et chaque jour quand le certificat client expire dans moins de %1$d jours. Silencieux tant que le cluster est injoignable (par exemple hors VPN).</string>
