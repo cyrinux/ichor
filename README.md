@@ -380,6 +380,10 @@ where a failed upgrade can be rolled back.
     limit does not flap.
   - **Throttled:** notifies when seen on two checks in a row.
   - **Tapping it:** opens the node's Hardware screen.
+- **Disk partitions:** a node's *Storage* screen opens on its disks: per disk a bar of its
+  partitions (EFI, META, STATE, EPHEMERAL, user volumes) and the unallocated space, then one row
+  per partition with its filesystem, whether it is encrypted, its UUID and size, read with
+  `os:reader` from the `block.talos.dev` resources (Talos 1.8+).
 - **Rollback:** on a node's upgrade screen, the menu offers `talosctl rollback` (os:admin): the node
   reboots at once into the Talos it ran before its last upgrade, for an upgrade that boots but
   misbehaves. Talos rolls back by itself one that does not boot.

@@ -1595,6 +1595,15 @@
     <string name="storage_title">Storage</string>
     <string name="storage_section_mounts">Mounts</string>
     <string name="storage_section_volumes">Volumes</string>
+    <string name="storage_section_disks">Disks</string>
+    <string name="storage_disks_empty">No disk reported</string>
+    <string name="storage_disk_unallocated">Unallocated</string>
+    <string name="storage_disk_partition_n">Partition %1$d</string>
+    <string name="storage_disk_uuid">UUID %1$s</string>
+    <string name="storage_disk_encryption_enabled">Encrypted</string>
+    <string name="storage_disk_encryption_disabled">Not encrypted</string>
+    <string name="storage_disk_encryption_unknown">Unknown</string>
+    <string name="storage_disk_bar_desc">%1$s, %2$s</string>
     <string name="storage_section_health">Disk health</string>
     <string name="storage_section_usage">Disk usage</string>
     <string name="storage_mounts_empty">No mounted filesystem reported</string>

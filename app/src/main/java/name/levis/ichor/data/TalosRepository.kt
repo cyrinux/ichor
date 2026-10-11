@@ -73,6 +73,7 @@ import name.levis.ichor.model.NodeSensors
 import name.levis.ichor.model.NodeNetwork
 import name.levis.ichor.model.NodeTime
 import name.levis.ichor.model.DiskHealthReport
+import name.levis.ichor.model.DiskLayoutList
 import name.levis.ichor.model.DiskUsage
 import name.levis.ichor.model.EtcdForfeitResult
 import name.levis.ichor.model.EtcdMemberPlan
@@ -731,6 +732,11 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** Volume status (`talosctl get volumestatus`); [VolumeList.supported] false on older Talos. */
     suspend fun volumes(node: String): VolumeList = call { cfg, ctx ->
         TalosJson.decodeFromString(VolumeList.serializer(), Ichorgo.nodeVolumes(cfg, ctx, node))
+    }
+
+    /** Disks with their partitions, free space and encryption; [DiskLayoutList.supported] false before Talos 1.8. */
+    suspend fun disks(node: String): DiskLayoutList = call { cfg, ctx ->
+        TalosJson.decodeFromString(DiskLayoutList.serializer(), Ichorgo.nodeDisks(cfg, ctx, node))
     }
 
     /** `talosctl usage PATH -d DEPTH`. */

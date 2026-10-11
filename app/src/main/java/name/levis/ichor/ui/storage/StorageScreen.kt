@@ -44,6 +44,7 @@ import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.ui.history.VolumeFillHistory
 import name.levis.ichor.model.DiskHealthReport
+import name.levis.ichor.model.DiskLayoutList
 import name.levis.ichor.model.DiskUsage
 import name.levis.ichor.model.FeatureSupport
 import name.levis.ichor.model.Mount
@@ -81,6 +82,7 @@ import name.levis.ichor.ui.components.pageContent
 private const val DISK_USAGE_DEPTH = 1
 
 data class StorageState(
+    val disks: Section<DiskLayoutList> = Section.Loading,
     val mounts: Section<List<Mount>> = Section.Loading,
     val volumes: Section<VolumeList> = Section.Loading,
     val health: Section<DiskHealthReport> = Section.Loading,
@@ -90,7 +92,7 @@ data class StorageState(
     val refreshing: Boolean = false,
 )
 
-/** Mounts, volumes, disk health and the disk usage explorer of one node, each loaded on its own. */
+/** Disks, mounts, volumes, disk health and the disk usage explorer of one node, each loaded on its own. */
 class StorageViewModel(private val talos: TalosRepository, private val node: String) : ViewModel() {
     private val _state = MutableStateFlow(StorageState())
     val state: StateFlow<StorageState> = _state.asStateFlow()
@@ -108,10 +110,11 @@ class StorageViewModel(private val talos: TalosRepository, private val node: Str
         job?.cancel()
         _state.update { it.copy(refreshing = true) }
         job = viewModelScope.launch {
+            val disks = launch { sectionOf { talos.disks(node) }.let { r -> _state.update { it.copy(disks = r) } } }
             val mounts = launch { sectionOf { talos.mounts(node).mounts }.let { r -> _state.update { it.copy(mounts = r) } } }
             val volumes = launch { sectionOf { talos.volumes(node) }.let { r -> _state.update { it.copy(volumes = r) } } }
             val health = launch { sectionOf { talos.diskHealth(node) }.let { r -> _state.update { it.copy(health = r) } } }
-            listOf(mounts, volumes, health).forEach { it.join() }
+            listOf(disks, mounts, volumes, health).forEach { it.join() }
             _state.update { it.copy(refreshing = false) }
         }
         _state.value.usagePath?.let(::open)
@@ -162,6 +165,11 @@ fun StorageScreen(
     ) { padding ->
         PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = vm::refresh, modifier = Modifier.pageContent(padding).fillMaxSize()) {
             LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                item(key = "disks") {
+                    SectionCard(stringResource(R.string.storage_section_disks), features.support(TalosFeature.DISKS)) {
+                        SectionBody(state.disks) { DiskLayoutContent(it) }
+                    }
+                }
                 item(key = "mounts") {
                     SectionCard(stringResource(R.string.storage_section_mounts), features.support(TalosFeature.MOUNTS)) {
                         SectionBody(state.mounts) { MountsContent(it) }

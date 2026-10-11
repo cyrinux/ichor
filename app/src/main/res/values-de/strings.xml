@@ -1589,6 +1589,15 @@
     <string name="storage_title">Speicher</string>
     <string name="storage_section_mounts">Einhängepunkte</string>
     <string name="storage_section_volumes">Volumes</string>
+    <string name="storage_section_disks">Datenträger</string>
+    <string name="storage_disks_empty">Kein Datenträger gemeldet</string>
+    <string name="storage_disk_unallocated">Nicht zugewiesen</string>
+    <string name="storage_disk_partition_n">Partition %1$d</string>
+    <string name="storage_disk_uuid">UUID %1$s</string>
+    <string name="storage_disk_encryption_enabled">Verschlüsselt</string>
+    <string name="storage_disk_encryption_disabled">Nicht verschlüsselt</string>
+    <string name="storage_disk_encryption_unknown">Unbekannt</string>
+    <string name="storage_disk_bar_desc">%1$s, %2$s</string>
     <string name="storage_section_health">Festplattenzustand</string>
     <string name="storage_section_usage">Speichernutzung</string>
     <string name="storage_mounts_empty">Kein eingehängtes Dateisystem gemeldet</string>
