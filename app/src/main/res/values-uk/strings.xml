@@ -1697,6 +1697,15 @@
     <string name="storage_title">Сховище</string>
     <string name="storage_section_mounts">Точки монтування</string>
     <string name="storage_section_volumes">Томи</string>
+    <string name="storage_section_disks">Диски</string>
+    <string name="storage_disks_empty">Немає дисків</string>
+    <string name="storage_disk_unallocated">Не розподілено</string>
+    <string name="storage_disk_partition_n">Розділ %1$d</string>
+    <string name="storage_disk_uuid">UUID %1$s</string>
+    <string name="storage_disk_encryption_enabled">Зашифровано</string>
+    <string name="storage_disk_encryption_disabled">Не зашифровано</string>
+    <string name="storage_disk_encryption_unknown">Невідомо</string>
+    <string name="storage_disk_bar_desc">%1$s, %2$s</string>
     <string name="storage_section_health">Стан дисків</string>
     <string name="storage_section_usage">Використання диска</string>
     <string name="storage_mounts_empty">Змонтованих файлових систем не виявлено</string>

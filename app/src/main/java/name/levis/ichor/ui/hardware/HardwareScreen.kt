@@ -251,6 +251,7 @@ internal fun DiskRow(d: DiskInfo) {
             Text(d.devPath.ifEmpty { d.name }, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             if (d.systemDisk) StatusPill(stringResource(R.string.hardware_system_disk), MaterialTheme.colorScheme.primary, Modifier.padding(start = 8.dp))
             if (d.readonly) StatusPill(stringResource(R.string.hardware_readonly), colors.warn, Modifier.padding(start = 8.dp))
+            if (d.transport.isNotBlank()) StatusPill(d.transport, colors.muted, Modifier.padding(start = 8.dp))
             Text(
                 formatBytes(d.size),
                 style = MaterialTheme.typography.bodyMedium,

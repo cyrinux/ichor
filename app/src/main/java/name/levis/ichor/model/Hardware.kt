@@ -62,6 +62,8 @@ data class DiskInfo(
     val size: Long = 0,
     /** ssd, hdd, nvme, sd or unknown. */
     val type: String = "",
+    /** nvme, sata, virtio, usb... "" when unknown. */
+    val transport: String = "",
     val wwid: String = "",
     val busPath: String = "",
     val systemDisk: Boolean = false,
