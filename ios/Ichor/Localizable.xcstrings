@@ -1,6 +1,111 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Filled in from the imported file: sign in to list its clusters." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rempli depuis le fichier importé : connectez-vous pour lister ses clusters."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rellenado desde el archivo importado: inicia sesión para listar sus clústeres."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus der importierten Datei ausgefüllt: melde dich an, um ihre Cluster aufzulisten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilato dal file importato: accedi per elencarne i cluster."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заповнено з імпортованого файлу: увійдіть, щоб побачити його кластери."
+          }
+        }
+      }
+    },
+    "Sidero Omni: your omniconfig" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidero Omni : votre omniconfig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidero Omni: tu omniconfig"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidero Omni: deine omniconfig"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidero Omni: il tuo omniconfig"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidero Omni: ваш omniconfig"
+          }
+        }
+      }
+    },
+    "Import or scan your omniconfig.yaml, or the talosconfig Omni gives for your whole account: the Omni sign-in opens with the address and account filled in, then adds every cluster. These files hold no secret." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importez ou scannez votre omniconfig.yaml, ou le talosconfig qu'Omni fournit pour tout votre compte : la connexion Omni s'ouvre avec l'adresse et le compte remplis, puis ajoute chaque cluster. Ces fichiers ne contiennent aucun secret."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importa o escanea tu omniconfig.yaml, o el talosconfig que Omni da para toda tu cuenta: el inicio de sesión de Omni se abre con la dirección y la cuenta rellenadas y luego añade cada clúster. Estos archivos no contienen ningún secreto."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importiere oder scanne deine omniconfig.yaml oder die talosconfig, die Omni für dein ganzes Konto ausgibt: die Omni-Anmeldung öffnet sich mit ausgefüllter Adresse und Konto und fügt dann jeden Cluster hinzu. Diese Dateien enthalten kein Geheimnis."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importa o scansiona il tuo omniconfig.yaml, o il talosconfig che Omni fornisce per l'intero account: l'accesso a Omni si apre con indirizzo e account già compilati, poi aggiunge ogni cluster. Questi file non contengono segreti."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імпортуйте або відскануйте свій omniconfig.yaml чи talosconfig, який Omni видає для всього облікового запису: вхід в Omni відкриється із заповненими адресою та обліковим записом, а потім додасть кожен кластер. Ці файли не містять секретів."
+          }
+        }
+      }
+    },
     "Scan ~/.aws/config QR code" : {
       "extractionState" : "manual",
       "localizations" : {

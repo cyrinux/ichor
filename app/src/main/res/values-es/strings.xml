@@ -3802,6 +3802,9 @@
     <string name="import_form_omni_identity_hint">El correo de tu cuenta de Omni, o la identidad de una cuenta de servicio (nombre@serviceaccount.omni.sidero.dev)</string>
     <string name="omni_add_title">Añadir clústeres desde Sidero Omni</string>
     <string name="omni_add_body">Inicia sesión en tu instancia de Omni: sus clústeres aparecen en la vista previa, ya con sesión iniciada, Kubernetes incluido.</string>
+    <string name="omni_prefilled">Rellenado desde el archivo importado: inicia sesión para listar sus clústeres.</string>
+    <string name="help_omni_title">Sidero Omni: tu omniconfig</string>
+    <string name="help_omni_body">Importa o escanea tu omniconfig.yaml, o el talosconfig que Omni da para toda tu cuenta: el inicio de sesión de Omni se abre con la dirección y la cuenta rellenadas y luego añade cada clúster. Estos archivos no contienen ningún secreto.</string>
     <string name="omni_field_url">URL de Omni (https://…omni.siderolabs.io)</string>
     <string name="omni_field_email">Correo de la cuenta</string>
     <string name="omni_mode_account">Cuenta</string>

@@ -454,6 +454,11 @@ public struct ImportTextRoute: Decodable, Sendable {
     /// An ~/.aws/credentials file: access keys are typed on the EKS discovery screen, not scanned.
     public var isAwsAccessKeys: Bool { kind == "refused" && provider == "eks" }
 
+    /// An omnictl config, or a whole Omni account's talosconfig: the Omni sign-in prefilled with
+    /// `values` (omniUrl, omniEmail); `field` is serviceAccountKey for a service account identity.
+    public var isOmni: Bool { kind == "credentials" && provider == "omni" && values["omniUrl"] != nil }
+    public var isOmniServiceAccount: Bool { isOmni && field == "serviceAccountKey" }
+
     private enum CodingKeys: String, CodingKey { case kind, provider, field, values }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
