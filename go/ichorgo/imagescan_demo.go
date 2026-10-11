@@ -35,9 +35,10 @@ func demoSystemImages(controlPlane bool) []systemImage {
 // imageScanDemoStep is how long each demo scan step takes.
 var imageScanDemoStep = 700 * time.Millisecond
 
-// runDemoImageScan plays a scan of two images and returns a canned report.
-func runDemoImageScan(ctx context.Context, emit func(imageScanProgress)) (imageScanReport, error) {
-	report := newImageScanReport(imageScanSourceScan, "Trivy "+trivyVersion)
+// runDemoImageScan plays a scan of two images and returns a canned report, said to be
+// scanner's.
+func runDemoImageScan(ctx context.Context, scanner scannerSpec, emit func(imageScanProgress)) (imageScanReport, error) {
+	report := newImageScanReport(imageScanSourceScan, scanner.label())
 	images := demoScannedImages(time.Now().UnixMilli())
 	steps := len(images)
 

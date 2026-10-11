@@ -157,7 +157,7 @@ class TalosApp : Application() {
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
     val netPerfRepository by lazy { NetPerfRepository(configRepository, kubeServers) }
     /** The image vulnerability scan running or last run, app-wide (see ImageScanRepository). */
-    val imageScanRepository by lazy { ImageScanRepository(configRepository, kubeServers) }
+    val imageScanRepository by lazy { ImageScanRepository(configRepository, kubeServers) { uiPreferences.imageScanner.value } }
     val ciliumRepository by lazy { CiliumRepository(configRepository, kubeServers) }
     /** Any kind as YAML, Helm releases, followed pod logs and port-forwards (Kubernetes API only). */
     val kubeBrowser by lazy { KubeBrowserRepository(configRepository, kubeServers) }

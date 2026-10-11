@@ -488,6 +488,8 @@
     <string name="settings_kube_open_kubenav">Abrir kubenav</string>
     <string name="settings_node_debug_shell">Shell de depuración de nodos</string>
     <string name="settings_node_debug_shell_desc">En clústeres sin Talos, añade «Shell de depuración…» al menú de un nodo: un pod privilegiado en los namespaces del nodo da una shell root en el nodo. El pod se borra al cerrar la shell. Desactivado por defecto.</string>
+    <string name="settings_image_scanner">Escáner de vulnerabilidades</string>
+    <string name="settings_image_scanner_desc">Lo que «Analizar imágenes» ejecuta en el clúster: Trivy, o Grype, ejecutado en el clúster de la misma forma; la base de datos de Grype es la de Anchore. El informe y sus exportaciones son los mismos.</string>
     <string name="settings_kube_open_failed">No se ha podido abrir el archivo elegido</string>
     <string name="settings_section_config">Configuración</string>
     <string name="settings_encryption_key">Clave de cifrado</string>

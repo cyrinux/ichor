@@ -481,6 +481,8 @@
     <string name="settings_kube_open_kubenav">kubenav öffnen</string>
     <string name="settings_node_debug_shell">Debug-Shell für Knoten</string>
     <string name="settings_node_debug_shell_desc">Auf Clustern ohne Talos fügt dies „Debug-Shell…“ zum Menü eines Knotens hinzu: Ein privilegierter Pod in den Namespaces des Knotens gibt eine Root-Shell auf dem Knoten. Der Pod wird beim Schließen der Shell gelöscht. Standardmäßig aus.</string>
+    <string name="settings_image_scanner">Schwachstellenscanner</string>
+    <string name="settings_image_scanner_desc">Was „Images prüfen“ im Cluster ausführt: Trivy oder Grype, das im Cluster genauso läuft; die Datenbank von Grype ist die von Anchore. Bericht und Exporte bleiben gleich.</string>
     <string name="settings_kube_open_failed">Die ausgewählte Datei konnte nicht geöffnet werden</string>
     <string name="settings_section_config">Konfiguration</string>
     <string name="settings_encryption_key">Verschlüsselungsschlüssel</string>

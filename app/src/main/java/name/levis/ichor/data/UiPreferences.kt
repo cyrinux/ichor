@@ -19,6 +19,7 @@ import name.levis.ichor.model.KubeHomeAction
 import name.levis.ichor.model.KubeHomeBar
 import name.levis.ichor.model.KubeHomeCard
 import name.levis.ichor.model.KubeHomeLayout
+import name.levis.ichor.model.ImageScanner
 
 enum class ThemeMode(@StringRes val label: Int) {
     AUTO(R.string.settings_theme_auto),
@@ -86,6 +87,10 @@ class UiPreferences(private val prefs: SharedPreferences) {
      */
     private val _nodeDebugShell = MutableStateFlow(prefs.getBoolean(KEY_NODE_DEBUG_SHELL, false))
     val nodeDebugShell: StateFlow<Boolean> = _nodeDebugShell.asStateFlow()
+
+    /** The vulnerability scanner an image scan runs in the cluster: Trivy by default. */
+    private val _imageScanner = MutableStateFlow(ImageScanner.parse(prefs.getString(KEY_IMAGE_SCANNER, null)))
+    val imageScanner: StateFlow<ImageScanner> = _imageScanner.asStateFlow()
 
     /**
      * Keeps the last results of each cluster on disk, encrypted, to show them when it cannot
@@ -157,6 +162,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _nodeDebugShell.value = enabled
     }
 
+    fun setImageScanner(scanner: ImageScanner) {
+        prefs.edit().putString(KEY_IMAGE_SCANNER, scanner.id).apply()
+        _imageScanner.value = scanner
+    }
+
     fun setOfflineCache(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_OFFLINE_CACHE, enabled).apply()
         _offlineCache.value = enabled
@@ -226,6 +236,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_REMOTE_APP_ICONS = "remote_app_icons"
         private const val KEY_AUDIT_EVENTS = "audit_events"
         private const val KEY_NODE_DEBUG_SHELL = "node_debug_shell"
+        private const val KEY_IMAGE_SCANNER = "image_scanner"
         private const val KEY_OFFLINE_CACHE = "offline_cache"
         private const val KEY_OVERVIEW_LAYOUT = "overview_layout"
         private const val KEY_NODES_EXPANDED = "overview_nodes_expanded"

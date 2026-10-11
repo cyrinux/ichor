@@ -483,6 +483,8 @@
     <string name="settings_kube_open_kubenav">Open kubenav</string>
     <string name="settings_node_debug_shell">Node debug shell</string>
     <string name="settings_node_debug_shell_desc">On clusters without Talos, adds “Debug shell…” to a node’s menu: a privileged pod in the node’s namespaces gives a root shell on the node. The pod is deleted when the shell closes. Off by default.</string>
+    <string name="settings_image_scanner">Vulnerability scanner</string>
+    <string name="settings_image_scanner_desc">What “Scan images” runs in the cluster: Trivy, or Grype, run in the cluster the same way; Grype’s database is Anchore’s. The report and its exports are the same.</string>
     <string name="settings_kube_open_failed">Could not open the chosen file</string>
     <string name="settings_section_config">Config</string>
     <string name="settings_encryption_key">Encryption key</string>

@@ -121,8 +121,20 @@ final class ImageScanTests: XCTestCase {
     }
 
     func testImageScanOptions() throws {
-        XCTAssertEqual(try imageScanOptions(images: []), "")
-        let options = try imageScanOptions(images: ["ghcr.io/example/kubelet@sha256:a1"])
-        XCTAssertEqual(try TalosJSON.decode([String: [String]].self, from: options), ["images": ["ghcr.io/example/kubelet@sha256:a1"]])
+        XCTAssertEqual(try TalosJSON.decode(ImageScanOptions.self, from: imageScanOptions(images: [])),
+                       ImageScanOptions(images: [], scanner: "trivy"))
+        let options = try imageScanOptions(images: ["ghcr.io/example/kubelet@sha256:a1"], scanner: .grype)
+        XCTAssertEqual(try TalosJSON.decode(ImageScanOptions.self, from: options),
+                       ImageScanOptions(images: ["ghcr.io/example/kubelet@sha256:a1"], scanner: "grype"))
+    }
+
+    func testImageScannerStored() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "ImageScanTests.\(UUID().uuidString)"))
+        XCTAssertEqual(ImageScanner.stored(defaults), .trivy)
+        defaults.set("grype", forKey: ImageScannerKeys.selected)
+        XCTAssertEqual(ImageScanner.stored(defaults), .grype)
+        defaults.set("other", forKey: ImageScannerKeys.selected)
+        XCTAssertEqual(ImageScanner.stored(defaults), .trivy)
+        XCTAssertEqual(ImageScanner.allCases.map(\.label), ["Trivy", "Grype"])
     }
 }

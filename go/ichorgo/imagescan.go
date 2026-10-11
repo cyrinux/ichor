@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// An image scan looks for known vulnerabilities in the images an app runs, with Trivy in a
-// short-lived pod of the cluster, like a network test: the cluster downloads the
+// An image scan looks for known vulnerabilities in the images an app runs, with Trivy (or
+// Grype, see imagescan_grype.go) in a short-lived pod of the cluster, like a network test: the cluster downloads the
 // vulnerability database and the image layers, not the phone. The images are scanned as they
 // run, by the digest the kubelet pulled (status.containerStatuses[].imageID), with the pods'
 // own pull secrets. When the Trivy Operator runs in the cluster, its reports are read instead
@@ -28,7 +28,7 @@ const (
 // Image scan phases reported through ImageScanListener.OnProgress.
 const (
 	imageScanPhasePreparing = "preparing" // reading the pods, their images and pull secrets
-	imageScanPhaseStarting  = "starting"  // starting the Trivy pod, pulling its image
+	imageScanPhaseStarting  = "starting"  // starting the scanner's pod, pulling its image
 	imageScanPhaseDatabase  = "database"  // downloading the vulnerability database
 	imageScanPhaseScanning  = "scanning"  // one image (step of steps)
 	imageScanPhaseCleaning  = "cleaning"  // deleting the namespace
@@ -36,7 +36,7 @@ const (
 
 // Report sources.
 const (
-	imageScanSourceScan     = "scan"     // a Trivy pod run by the app
+	imageScanSourceScan     = "scan"     // a scanner pod run by the app
 	imageScanSourceOperator = "operator" // the Trivy Operator's VulnerabilityReports
 )
 
@@ -82,6 +82,11 @@ type imageScanOptions struct {
 	Images []string `json:"images,omitempty"`
 	// App names what is scanned in the kept report (an inventory app id, "talos:<node>").
 	App string `json:"app,omitempty"`
+	// Scanner is "trivy" (the default when empty) or "grype".
+	Scanner string `json:"scanner,omitempty"`
+	// GrypeDBUpdateURL replaces Grype's database listing URL, for a cluster that cannot
+	// reach grype.anchore.io.
+	GrypeDBUpdateURL string `json:"grypeDBUpdateURL,omitempty"`
 }
 
 // imageRefRe is what an Images entry may be: a repository (a registry host with an optional
@@ -109,6 +114,10 @@ func decodeImageScanOptions(s string) (imageScanOptions, error) {
 		}
 	}
 
+	if err := checkScanner(o); err != nil {
+		return o, err
+	}
+
 	var images []string
 
 	for _, ref := range o.Images {
@@ -129,12 +138,13 @@ func decodeImageScanOptions(s string) (imageScanOptions, error) {
 	return o, nil
 }
 
-// StartImageScan scans the images of the given pods for known vulnerabilities with Trivy
-// (os:admin): pods [{namespace,pod}] as KubeAppWorkloads ([] when options has images),
-// options {"dbRepository","javaDBRepository","images","app"} or "", images being refs scanned
-// with no pod behind them (TalosSystemImages' refs), app what the kept report is of (see
-// ImageScanHistory). It reads the pods' images by digest and their pull secrets,
-// creates a namespace, runs one Trivy pod there that downloads the database then scans each
+// StartImageScan scans the images of the given pods for known vulnerabilities with Trivy or
+// Grype (os:admin): pods [{namespace,pod}] as KubeAppWorkloads ([] when options has images),
+// options {"scanner","dbRepository","javaDBRepository","grypeDBUpdateURL","images","app"} or
+// "", scanner being "trivy" (the default) or "grype", images refs scanned with no pod behind
+// them (TalosSystemImages' refs), app what the kept report is of (see ImageScanHistory). It
+// reads the pods' images by digest and their pull secrets, creates a namespace, runs one
+// scanner pod there that downloads the database then scans each
 // image in turn, and deletes the namespace at the end, also on failure or Cancel. The pull
 // secrets are copied into that namespace for the run. A completed report is kept on the
 // phone, its findings not in the last scan of the same image marked new. kubeServer: see
@@ -163,7 +173,7 @@ func StartImageScan(configYAML, contextName, kubeServer, pods, options string, l
 }
 
 func startImageScan(ctx context.Context, target kubeTarget, pods, options string, emit func(imageScanProgress)) (imageScanReport, error) {
-	report := newImageScanReport(imageScanSourceScan, "Trivy "+trivyVersion)
+	report := newImageScanReport(imageScanSourceScan, trivyScanner.label())
 
 	refs, err := decodeRoutePods(pods)
 	if err != nil {
@@ -176,7 +186,7 @@ func startImageScan(ctx context.Context, target kubeTarget, pods, options string
 	}
 
 	if isDemoContext(target.config, target.context) {
-		report, err = runDemoImageScan(ctx, emit)
+		report, err = runDemoImageScan(ctx, scannerOf(opts), emit)
 	} else {
 		report, err = runImageScanWith(ctx, target, refs, opts, emit)
 	}

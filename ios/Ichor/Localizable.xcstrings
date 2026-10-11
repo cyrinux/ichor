@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Vulnerability scanner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scanner de vulnérabilités"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escáner de vulnerabilidades"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сканер вразливостей"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schwachstellenscanner"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scanner di vulnerabilità"
+          }
+        }
+      }
+    },
+    "What “Scan images” runs in the cluster: Trivy, or Grype, run in the cluster the same way; Grype’s database is Anchore’s. The report and its exports are the same." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce que « Analyser les images » lance dans le cluster : Trivy, ou Grype, lancé dans le cluster de la même façon ; la base de données de Grype est celle d’Anchore. Le rapport et ses exports sont les mêmes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo que «Analizar imágenes» ejecuta en el clúster: Trivy, o Grype, ejecutado en el clúster de la misma forma; la base de datos de Grype es la de Anchore. El informe y sus exportaciones son los mismos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Що запускає «Перевірити образи» в кластері: Trivy або Grype, який запускається в кластері так само; база даних Grype — від Anchore. Звіт і його експорт ті самі."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was „Images prüfen“ im Cluster ausführt: Trivy oder Grype, das im Cluster genauso läuft; die Datenbank von Grype ist die von Anchore. Bericht und Exporte bleiben gleich."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cosa esegue «Analizza immagini» nel cluster: Trivy, oppure Grype, eseguito nel cluster allo stesso modo; il database di Grype è quello di Anchore. Il report e le sue esportazioni sono gli stessi."
+          }
+        }
+      }
+    },
     "The two nodes' clocks are %lld ms apart: packets of one node can be that much out of order against the other's." : {
       "extractionState" : "manual",
       "localizations" : {

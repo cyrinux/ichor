@@ -25,9 +25,45 @@ public let imageScanNamespace = "ichor-imagescan"
 /// The scan id of a node's system images (an app's scan uses the app's id).
 public func systemImagesScanID(node: String) -> String { "talos:\(node)" }
 
-/// The options of a scan of image refs with no pod behind them ("" when there are none).
-public func imageScanOptions(images: [String]) throws -> String {
-    images.isEmpty ? "" : try TalosJSON.encode(["images": images])
+/// The scanners a scan may run in the cluster (the core's `scanner` option); Trivy by default.
+public enum ImageScanner: String, CaseIterable, Identifiable, Sendable {
+    case trivy, grype
+
+    public var id: String { rawValue }
+
+    /// The product name, not translated.
+    public var label: String {
+        switch self {
+        case .trivy: "Trivy"
+        case .grype: "Grype"
+        }
+    }
+
+    /// The scanner stored under `ImageScannerKeys.selected`, Trivy when none or unknown.
+    public static func stored(_ defaults: UserDefaults = .standard) -> ImageScanner {
+        defaults.string(forKey: ImageScannerKeys.selected).flatMap(ImageScanner.init(rawValue:)) ?? .trivy
+    }
+}
+
+/// The settings key (`@AppStorage`) of the scanner an image scan runs.
+public enum ImageScannerKeys {
+    public static let selected = "imageScanner"
+}
+
+/// A scan's options: the image refs scanned with no pod behind them, and the scanner.
+public struct ImageScanOptions: Codable, Equatable, Sendable {
+    public let images: [String]
+    public let scanner: String
+
+    public init(images: [String] = [], scanner: String = ImageScanner.trivy.rawValue) {
+        self.images = images
+        self.scanner = scanner
+    }
+}
+
+/// The options JSON of a scan of `images` (refs with no pod behind them) with `scanner`.
+public func imageScanOptions(images: [String], scanner: ImageScanner = .trivy) throws -> String {
+    try TalosJSON.encode(ImageScanOptions(images: images, scanner: scanner.rawValue))
 }
 
 /// An image Talos runs on a node outside of any app (TalosSystemImages): kubelet, etcd…
