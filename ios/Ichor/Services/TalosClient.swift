@@ -493,8 +493,9 @@ struct TalosClient: Sendable {
         }
     }
 
-    static func json<T: Decodable>(_ call: @escaping @Sendable (NSErrorPointer) -> String) async throws -> T {
-        let output = try await run(call)
+    /// `name` is the calling function, for the startup trace.
+    static func json<T: Decodable>(_ name: String = #function, _ call: @escaping @Sendable (NSErrorPointer) -> String) async throws -> T {
+        let output = try await run(name, call)
         return try TalosJSON.decode(T.self, from: output)
     }
 
@@ -502,11 +503,14 @@ struct TalosClient: Sendable {
     /// reached). On Swift's cooperative pool (one thread per core) a few of them, left from the
     /// cluster switched away from, starved every later task: the overview spun forever. GCD
     /// adds threads when they block.
-    static func run<T: Sendable>(_ call: @escaping @Sendable (NSErrorPointer) -> T) async throws -> T {
+    /// `name` is the calling function: with the startup trace on, each call logs it and its time.
+    static func run<T: Sendable>(_ name: String = #function, _ call: @escaping @Sendable (NSErrorPointer) -> T) async throws -> T {
         try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 var error: NSError?
+                let span = StartupTrace.begin(name)
                 let result = call(&error)
+                StartupTrace.end(span)
                 if let error {
                     continuation.resume(throwing: TalosError(message: error.localizedDescription))
                 } else {

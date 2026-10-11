@@ -29,13 +29,16 @@ func newSessionCache(idle time.Duration, open func(configYAML, contextName strin
 
 // acquire returns a session and a release func that must be called when done with it.
 func (c *sessionCache) acquire(configYAML, contextName string) (*session, func(), error) {
+	start := time.Now()
 	key := cacheKey(configYAML, contextName)
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	entry, ok := c.entries[key]
-	if !ok {
+	if ok {
+		trace("session.reused", start)
+	} else {
 		s, err := c.open(configYAML, contextName)
 		if err != nil {
 			return nil, nil, err
@@ -43,6 +46,9 @@ func (c *sessionCache) acquire(configYAML, contextName string) (*session, func()
 
 		entry = &cacheEntry{session: s}
 		c.entries[key] = entry
+
+		// Includes the wait for the cache lock, which another context's open may hold.
+		trace("session.open", start)
 	}
 
 	if entry.timer != nil {

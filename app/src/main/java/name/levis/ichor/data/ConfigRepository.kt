@@ -3,6 +3,7 @@ package name.levis.ichor.data
 import android.content.Context
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ConfigSummary
+import name.levis.ichor.util.StartupTrace
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.ImportChoice
 import name.levis.ichor.model.ImportConflict
@@ -75,6 +76,7 @@ class ConfigRepository(
      * first start.
      */
     suspend fun load(): StoredConfig? = writing {
+        StartupTrace.markOnce("config lock acquired")
         // Already loaded by another caller (the monitor, the widget) while this one waited.
         _config.value?.let { return@writing it }
         val stored = try {
@@ -86,14 +88,17 @@ class ConfigRepository(
             throw ConfigUnreadableException(e)
         } ?: return@writing null
         _config.value = stored
+        StartupTrace.markOnce("config emitted")
         stored
     }
 
     private fun readStored(): StoredConfig? {
         val talos = store.read()?.decodeToString()
         val kube = kubeStore.read()?.decodeToString()
+        StartupTrace.markOnce("config decrypted")
         if (talos == null && kube == null) return null
         val summary = linked(parse(talos.orEmpty(), kube.orEmpty()))
+        StartupTrace.markOnce("config parsed", "${summary.contexts.size} contexts")
         return StoredConfig(talos.orEmpty(), kube.orEmpty(), summary, resolveActive(summary, prefs.getString(KEY_CONTEXT, null), savedIndex()))
     }
 

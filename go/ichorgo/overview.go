@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/netip"
 	"strings"
+	"time"
 
 	"github.com/cosi-project/runtime/pkg/safe"
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
@@ -76,13 +77,25 @@ type nodeProbe struct {
 func ClusterOverview(configYAML, contextName string) (out string, err error) {
 	defer maskResult(&out, &err)
 
-	contextName = unmaskContext(configYAML, contextName)
+	start := time.Now()
+	defer trace("overview.total", start)
 
-	if isDemoContext(configYAML, contextName) {
+	contextName = unmaskContext(configYAML, contextName)
+	demo := isDemoContext(configYAML, contextName)
+
+	trace("overview.resolve", start)
+
+	if demo {
+		if traceEnabled() {
+			traceCounts("overview.all_nodes", start, len(demoNodes()), 0)
+		}
+
 		return demoRead("ClusterOverview", configYAML, contextName, "")
 	}
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
+		trace("overview.session", start)
+
 		name, cfg, err := resolveContext(configYAML, contextName)
 		if err != nil {
 			return "", err
@@ -93,11 +106,13 @@ func ClusterOverview(configYAML, contextName string) (out string, err error) {
 		domains := make([]string, len(nodes))
 		peerEndpoints := make([]map[string][]netip.Addr, len(nodes))
 
-		forEachNode(nodes, func(i int, node string) {
+		tracedFanout(start, nodes, func(i int, node string) bool {
 			p := probeNode(ctx, s.client, node)
 			result.Nodes[i], domains[i], peerEndpoints[i] = buildNodeOverview(node, p), p.domain, p.peerEndpoints
 
 			s.rememberVersion(node, result.Nodes[i].Version)
+
+			return result.Nodes[i].Reachable
 		})
 
 		result.Nodes = withPeerSeenPublicIPs(result.Nodes, peerEndpoints)

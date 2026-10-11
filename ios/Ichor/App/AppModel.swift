@@ -357,9 +357,14 @@ final class AppModel {
 
     /// Loads the stored configs (Keychain); nothing is read before the first unlock.
     func load() async {
-        defer { loaded = true }
+        StartupTrace.markOnce("config load start")
+        defer {
+            loaded = true
+            StartupTrace.markOnce("config emitted")
+        }
         WakeOnLanStore.shared.loadIfNeeded()
         let stored = StoredConfigs.load()
+        StartupTrace.markOnce("config decrypted")
         let parsed = await stored.parsed()
         // Fail closed: one store unreadable shows neither (the other alone could overwrite it).
         unreadable = parsed.unreadable

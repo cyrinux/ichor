@@ -8,6 +8,7 @@ import (
 	"maps"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/client"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
@@ -50,6 +51,8 @@ type contextSummary struct {
 func ParseConfig(configYAML string) (out string, err error) {
 	defer maskResult(&out, &err)
 
+	start := time.Now()
+
 	privacy.learnConfig(configYAML)
 
 	cfg, err := loadConfig(configYAML)
@@ -70,6 +73,8 @@ func ParseConfig(configYAML string) (out string, err error) {
 	}
 
 	summary.Current = defaultContextName(cfg)
+
+	traceCounts("config.parse", start, len(summary.Contexts), 0)
 
 	return toJSON(summary)
 }

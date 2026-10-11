@@ -12,6 +12,9 @@ struct IchorApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        // First, so the startup trace (when on) sees the whole launch.
+        TalosClient.applyStoredStartupTrace()
+        StartupTrace.markOnce("app.init start")
         // Before any Talos call, including the background refresh task registered below.
         TalosClient.applyStoredPrivacyMask()
         TalosClient.applyStoredAuditEvents()
@@ -27,6 +30,7 @@ struct IchorApp: App {
         BackgroundMonitor.register()
         BackgroundMonitor.registerCategories()
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+        StartupTrace.markOnce("app.init end")
     }
 
     var body: some Scene {

@@ -1,6 +1,6 @@
 // Command probe exercises the ichorgo API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] [-omni-browser] COMMAND [ARGS]
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] [-omni-browser] [-timing] COMMAND [ARGS]
 //
 // An Omni context signs in with OMNI_SERVICE_ACCOUNT_KEY from the environment, or in the
 // browser with -omni-browser.
@@ -86,10 +86,16 @@ func main() {
 	ageRecipient := flag.String("age-recipient", "", "snapshot-probe: encrypt for this age or SSH public key")
 	omniBrowser := flag.Bool("omni-browser", false, "an Omni account context: confirm a new key in the browser first (a service account reads OMNI_SERVICE_ACCOUNT_KEY)")
 	dataDir := flag.String("data-dir", "", "keep what the app keeps across launches (audit log, scan reports) in this directory")
-	flag.Parse()
+	timing := flag.Bool("timing", false, "print the startup trace (config parse, session, first node, all nodes) to stderr")
+	// Flags may also follow the command: `probe overview -timing -context lab`.
+	_ = flag.CommandLine.Parse(hoistFlags(flag.CommandLine, os.Args[1:])) //nolint:errcheck // ExitOnError
 
 	if flag.NArg() == 0 {
 		fail(errors.New(usage()))
+	}
+
+	if *timing {
+		ichorgo.SetTraceListener(stderrTrace{})
 	}
 
 	if *dataDir != "" {
@@ -278,6 +284,39 @@ func promChat(e env, sourceJSON, provider, question, model string) error {
 	}
 
 	return nil
+}
+
+// hoistFlags moves the flags of fs found after the command in front of it, so that one Parse
+// reads them; any other argument keeps its place, even one starting with "-".
+func hoistFlags(fs *flag.FlagSet, args []string) []string {
+	var flags, rest []string
+
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		if arg == "--" {
+			rest = append(rest, args[i:]...)
+
+			break
+		}
+
+		name, _, hasValue := strings.Cut(strings.TrimLeft(arg, "-"), "=")
+
+		f := fs.Lookup(name)
+		if !strings.HasPrefix(arg, "-") || f == nil {
+			rest = append(rest, arg)
+
+			continue
+		}
+
+		flags = append(flags, arg)
+
+		if b, ok := f.Value.(interface{ IsBoolFlag() bool }); !hasValue && (!ok || !b.IsBoolFlag()) && i+1 < len(args) {
+			i++
+			flags = append(flags, args[i])
+		}
+	}
+
+	return append(flags, rest...)
 }
 
 func fail(err error) {

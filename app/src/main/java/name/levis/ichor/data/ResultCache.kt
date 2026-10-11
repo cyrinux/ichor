@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.serialization.KSerializer
+import name.levis.ichor.util.StartupTrace
 
 /**
  * The results [TalosRepository] keeps: in memory for the screens, on disk through [offline]
@@ -58,7 +59,10 @@ class ResultCache(
     /** Reads what [offline] kept of the active cluster, so [cached] has it before the first fetch. */
     suspend fun restoreOffline() {
         val cluster = cluster() ?: return
-        offline?.load(cluster) ?: return
+        val offline = offline ?: return
+        StartupTrace.markOnce("restoreOffline start")
+        val files = offline.load(cluster)
+        StartupTrace.markOnce("restoreOffline end", "$files files")
         _restores.update { it + 1 }
     }
 

@@ -11,6 +11,7 @@ import name.levis.ichorgo.ConfigTryListener
 import name.levis.ichorgo.MaintenanceListener
 import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.Ichorgo
+import name.levis.ichor.util.StartupTrace
 import name.levis.ichor.model.ConfigApplyEvent
 import name.levis.ichor.model.MaintenanceInspection
 import name.levis.ichor.model.MetaKeyList
@@ -422,7 +423,10 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     }
 
     private suspend fun overviewUncached(): ClusterOverview = call { cfg, ctx ->
-        TalosJson.decodeFromString(ClusterOverview.serializer(), Ichorgo.clusterOverview(cfg, ctx))
+        StartupTrace.markOnce("go clusterOverview start")
+        Ichorgo.clusterOverview(cfg, ctx)
+            .also { StartupTrace.markOnce("go clusterOverview end") }
+            .let { TalosJson.decodeFromString(ClusterOverview.serializer(), it) }
     }
 
     /** Every node's volume fill and disk SMART verdict (the monitor's storage track; never cached). */
