@@ -30,6 +30,15 @@ class ResultCache(
     @Suppress("UNCHECKED_CAST")
     fun <T> cached(key: String): TalosRepository.Timed<T>? = (cache[scope() + key] ?: restored(key)) as TalosRepository.Timed<T>?
 
+    /** Every result in memory for what is on screen now, by key (not what [offline] kept). */
+    @Suppress("UNCHECKED_CAST")
+    fun cachedAll(): Map<String, TalosRepository.Timed<Any>> {
+        val scope = scope()
+        return cache.filterKeys { it.startsWith(scope) }
+            .map { (key, value) -> key.removePrefix(scope) to value as TalosRepository.Timed<Any> }
+            .toMap()
+    }
+
     private fun restored(key: String, cluster: String? = cluster()): TalosRepository.Timed<Any>? {
         val serializer = PERSISTED[key.substringBefore('|')] ?: return null
         val stored = offline?.peek(cluster ?: return null, key) ?: return null

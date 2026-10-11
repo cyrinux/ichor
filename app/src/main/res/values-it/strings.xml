@@ -4207,4 +4207,25 @@
     <string name="join_config_preview">Anteprima della configurazione</string>
     <string name="join_config_valid">Configurazione valida per %1$s (%2$s)</string>
     <string name="join_config_secrets">I segreti qui sono nascosti. La configurazione completa, con i segreti del cluster, va solo al nuovo nodo, al passo 3.</string>
+
+    <!-- Search across clusters -->
+    <string name="overview_action_search">Cerca</string>
+    <string name="search_title">Cerca nei cluster</string>
+    <string name="search_hint">Pod, workload, nodi, app…</string>
+    <string name="search_recent">Ricerche recenti</string>
+    <string name="search_recent_remove">Rimuovi dalle ricerche recenti</string>
+    <string name="search_empty">Nessun risultato per «%1$s»</string>
+    <string name="search_nothing_known">Ancora niente di noto: apri un cluster una volta</string>
+    <string name="search_refresh_active">Aggiorna il cluster attivo</string>
+    <string name="search_refresh_failed">Impossibile aggiornare il cluster attivo: mostra l\'ultimo stato visto</string>
+    <string name="search_last_seen">Visto %1$s</string>
+    <string name="search_offline_needed">Attiva «Conserva l\'ultimo stato noto» nelle Impostazioni per cercare anche negli altri cluster</string>
+    <string name="search_shown">%1$d di %2$d risultati mostrati</string>
+    <string name="search_clear">Cancella</string>
+    <string name="search_kind_node">Nodo</string>
+    <string name="search_kind_pod">Pod</string>
+    <string name="search_kind_workload">Workload</string>
+    <string name="search_kind_cronjob">CronJob</string>
+    <string name="search_kind_argo_app">App Argo CD</string>
+    <string name="search_kind_flux_app">App Flux</string>
 </resources>

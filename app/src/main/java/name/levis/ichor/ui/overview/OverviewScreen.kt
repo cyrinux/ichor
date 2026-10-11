@@ -177,6 +177,8 @@ fun OverviewScreen(
     onNodeDebug: (node: String) -> Unit,
     /** The action audit log of a cluster, by its context name. */
     onActivity: (cluster: String) -> Unit,
+    /** The search across clusters. */
+    onSearch: () -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
     liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
@@ -217,6 +219,7 @@ fun OverviewScreen(
                 onNodeDebug = onNodeDebug,
                 onAllNodes = onKubeNodes,
                 onActivity = onActivity,
+                onSearch = onSearch,
             ),
         )
         return
@@ -393,6 +396,7 @@ fun OverviewScreen(
                                 onSelect = app::selectCluster,
                                 onManage = { showClusters = true },
                                 onDismiss = { clusterMenu = false },
+                                onSearch = onSearch,
                                 onUpgradeCluster = { onUpgradeCluster("") }.takeIf { config?.activeSummary?.allows(Feature.UPGRADE) == true },
                                 onUpgradeKubernetes = onUpgradeKubernetes.takeIf { config?.activeSummary?.allows(Feature.UPGRADE) == true },
                                 onAddNode = onAddNode.takeIf { config?.activeSummary?.let { !it.isKube && !it.omni } == true },
@@ -413,6 +417,7 @@ fun OverviewScreen(
                             onKubeSpan = onKubeSpan,
                             onEtcd = onEtcd,
                             onSettings = onSettings,
+                            onSearch = onSearch,
                         ),
                         reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node },
                         health = config?.activeSummary?.allows(Feature.HEALTH) == true,

@@ -197,6 +197,33 @@ func TestSearchSnapshotsKeysAndBadBlobs(t *testing.T) {
 	}
 }
 
+// Android's OfflineCache keeps the pods, workloads and CronJobs lists as bare JSON arrays
+// (a List serializer), iOS as the Go objects: both are read.
+func TestSearchSnapshotsBareListBlobs(t *testing.T) {
+	entries := []map[string]any{
+		testSearchEntry(t, searchClusterA, "pods|*", 1, []kubePod{{Namespace: "web", Name: "shop-api-1", Healthy: true}}),
+		testSearchEntry(t, searchClusterA, "workloads|web", 1, []kubeWorkload{{Kind: "Deployment", Namespace: "web", Name: "shop-api", Desired: 1, Ready: 1}}),
+		testSearchEntry(t, searchClusterA, "cronjobs|*", 1, []kubeCronJob{{Namespace: "web", Name: "shop-api-report", Schedule: "@daily"}}),
+		{"cluster": searchClusterA, "context": "ctx", "key": "pods|other", "at": 1, "json": "[not json"},
+	}
+
+	got := runSearch(t, entries, "shop-api", 0)
+	if got.Total != 3 {
+		t.Fatalf("got %+v", got)
+	}
+
+	kinds := map[string]bool{}
+	for _, r := range got.Results {
+		kinds[r.Kind] = true
+	}
+
+	for _, kind := range []string{"pod", "workload", "cronjob"} {
+		if !kinds[kind] {
+			t.Errorf("no %s in %+v", kind, got.Results)
+		}
+	}
+}
+
 func TestSearchSnapshotsLimitAndEmpty(t *testing.T) {
 	got := runSearch(t, searchFixture(t), "a", 2)
 	if len(got.Results) != 2 || got.Total <= 2 {

@@ -116,6 +116,8 @@ class KubeHomeNavigation(
     val onAllNodes: (NodeFilter?) -> Unit,
     /** The action audit log of a cluster, by its context name. */
     val onActivity: (cluster: String) -> Unit,
+    /** The search across clusters. */
+    val onSearch: () -> Unit,
 )
 
 /**
@@ -209,6 +211,7 @@ fun KubeHomeScreen(
                                 onSelect = app::selectCluster,
                                 onManage = { showClusters = true },
                                 onDismiss = { clusterMenu = false },
+                                onSearch = nav.onSearch,
                             )
                         }
                     }

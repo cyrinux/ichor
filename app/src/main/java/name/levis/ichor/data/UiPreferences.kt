@@ -20,6 +20,7 @@ import name.levis.ichor.model.KubeHomeBar
 import name.levis.ichor.model.KubeHomeCard
 import name.levis.ichor.model.KubeHomeLayout
 import name.levis.ichor.model.ImageScanner
+import name.levis.ichor.model.withRecent
 
 enum class ThemeMode(@StringRes val label: Int) {
     AUTO(R.string.settings_theme_auto),
@@ -126,6 +127,15 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _kubeObjectBar = MutableStateFlow(KubeObjectAction.bar.parse(prefs.getString(KEY_KUBE_OBJECT_BAR, null)))
     val kubeObjectBar: StateFlow<KubeObjectBar> = _kubeObjectBar.asStateFlow()
 
+    /**
+     * The last searches across clusters, latest first; they may name pods or apps, so they are
+     * dropped with the last known state (screenshot mode changed, every cluster removed).
+     */
+    private val _recentSearches = MutableStateFlow(
+        prefs.getString(KEY_RECENT_SEARCHES, null).orEmpty().split('\n').filter { it.isNotBlank() },
+    )
+    val recentSearches: StateFlow<List<String>> = _recentSearches.asStateFlow()
+
     private val _privacyMask = MutableStateFlow(
         PrivacyMask(prefs.getBoolean(KEY_PRIVACY_MASK, false), prefs.getString(KEY_PRIVACY_WORDS, "").orEmpty()),
     )
@@ -207,6 +217,18 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _kubeObjectBar.value = bar
     }
 
+    fun addRecentSearch(query: String) = setRecentSearches(_recentSearches.value.withRecent(query))
+
+    fun removeRecentSearch(query: String) = setRecentSearches(_recentSearches.value - query)
+
+    fun clearRecentSearches() = setRecentSearches(emptyList())
+
+    private fun setRecentSearches(queries: List<String>) {
+        if (queries == _recentSearches.value) return
+        prefs.edit().putString(KEY_RECENT_SEARCHES, queries.joinToString("\n")).apply()
+        _recentSearches.value = queries
+    }
+
     /** How much [screen] scales its dense monospace text (logs, packets): 1 is the theme size. */
     fun monoTextScale(screen: String): Float = prefs.getFloat(KEY_MONO_TEXT_SCALE + screen, 1f)
 
@@ -246,6 +268,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_KUBERNETES_BAR = "kubernetes_bar"
         private const val KEY_KUBE_OBJECT_BAR = "kube_object_bar"
         private const val KEY_MONO_TEXT_SCALE = "mono_text_scale_"
+        private const val KEY_RECENT_SEARCHES = "recent_searches"
 
         /** Reads the language without the app singletons (usable from attachBaseContext). */
         fun storedLanguage(context: Context): String =
