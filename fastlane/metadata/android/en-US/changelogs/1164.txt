@@ -1,0 +1,5 @@
+• EKS clusters sign in with IAM Identity Center with only the start URL: the account and role are picked from a list
+• A pasted or scanned workforce login config opens its GKE sign-in option
+• Say how far apart the two nodes' clocks are in a two-node capture
+• Capture packets on two nodes at once
+• Opt-in alert when a node runs hot or is throttled
