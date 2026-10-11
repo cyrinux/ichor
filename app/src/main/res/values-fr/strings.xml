@@ -4139,6 +4139,12 @@
     <string name="upgrade_prepull">Pré-télécharger l\'image sur tous les nœuds</string>
     <string name="upgrade_prepull_desc">Téléchargez-la maintenant sur chaque nœud, pour que chaque redémarrage soit court.</string>
     <string name="kube_discover_progress_looking">Recherche des clusters…</string>
+    <string name="kube_discover_aws_refused_note">Aucun accès dans %1$s : les clusters de ces régions, s’il y en a, ne sont pas listés.</string>
+    <string name="kube_field_aws_regions">Régions AWS (facultatif, séparées par des virgules)</string>
+    <string name="kube_discover_aws_sso_hint">Se connecte à votre portail d’accès AWS dans le navigateur, puis liste les clusters EKS des comptes et rôles choisis dans les régions indiquées (toutes les régions courantes si vide).</string>
+    <string name="kube_discover_aws_choose_roles">Choisissez les comptes et rôles où chercher</string>
+    <string name="kube_discover_aws_no_access">Aucun accès dans %1$s</string>
+    <string name="kube_discover_progress_regions">%1$s régions sur %2$s parcourues · %3$s clusters trouvés</string>
     <string name="kube_discover_progress_projects">%1$s projets sur %2$s parcourus · %3$s clusters trouvés</string>
     <string name="etcd_recover_button">Restaurer depuis un snapshot…</string>
     <string name="etcd_recover_lost">Aucun membre etcd ne répond. Si chaque control plane a perdu etcd, redémarrez-le depuis un snapshot.</string>

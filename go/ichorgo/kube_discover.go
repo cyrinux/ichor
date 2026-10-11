@@ -61,7 +61,9 @@ func KubeDiscoverFields() (out string, err error) {
 }
 
 // KubeDiscoverOptions lists, as JSON, the providers whose discovery takes one of several
-// credentials, each a set of fields. GKE, in this order: a service account key; gcloud user
+// credentials, each a set of fields. EKS: IAM Identity Center (start URL, its region, the
+// optional regions to read; signs in with StartDiscoverSignIn first, then the user picks the
+// roles from DiscoverSignInChoices), then access keys. GKE, in this order: a service account key; gcloud user
 // credentials; the organisation's OAuth client (ID, secret, redirect URL); your Google
 // account with gcloud's client (gcpGcloudSignIn, a marker drawn as a button); a workforce
 // login config (gcpLoginConfigJson); "Sign in with Google" (gcpGoogleSignIn, a marker the
@@ -82,7 +84,12 @@ func KubeDiscoverOptions() (out string, err error) {
 		gke = append(gke, set)
 	}
 
-	return toJSON(map[string][][]string{discoverGKE: gke})
+	eks := [][]string{
+		{awsFieldSSOStartURL, awsFieldSSORegion, awsFieldRegions},
+		{awsFieldRegion, awsFieldAccessKey, awsFieldSecretKey, awsFieldSessionToken},
+	}
+
+	return toJSON(map[string][][]string{discoverEKS: eks, discoverGKE: gke})
 }
 
 // DiscoverClusters lists the clusters of a cloud account (provider: eks, gke, aks,
@@ -107,7 +114,11 @@ func DiscoverClusters(provider, secretsJSON string) (out string, err error) {
 
 	switch provider {
 	case discoverEKS:
-		clusters, err = discoverEKSClusters(ctx, secrets)
+		if eksNeedsBrowser(secrets) {
+			clusters, err = discoverEKSSSOClusters(ctx, secrets)
+		} else {
+			clusters, err = discoverEKSClusters(ctx, secrets)
+		}
 	case discoverGKE:
 		clusters, err = discoverGKEClusters(ctx, secrets)
 	case discoverAKS:

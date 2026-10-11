@@ -563,7 +563,7 @@ when no such label is set, as on bare metal.
 |---|---|
 | Client certificate, token (ServiceAccount) | Uses it as is |
 | `kubectl oidc-login` / kubelogin, `auth-provider: oidc` | Signs in in the browser (kubelogin's own `localhost` redirect, so nothing changes on the identity provider) or with a device code; renews the token with the refresh token |
-| `aws eks get-token`, aws-iam-authenticator | IAM Identity Center (device code, like `aws sso login`; the account and role are picked from a list after the sign-in) or access keys; `--role-arn` through AssumeRole |
+| `aws eks get-token`, aws-iam-authenticator | IAM Identity Center (device code, like `aws sso login`; the account and role are picked from a list after the sign-in) or access keys; `--role-arn` through AssumeRole. No kubeconfig yet: **Add from a cloud account** → EKS → IAM Identity Center |
 | `gke-gcloud-auth-plugin` | A service account key, your Google account in the browser like gcloud (every build), Sign in with Google (Play build and iOS), the user credentials `gcloud auth application-default login` writes (`application_default_credentials.json`, also with `--login-config` for workforce identity), your organisation's own OAuth client (Desktop app type: sign-in in the browser, no key), or a workforce identity login config (browser sign-in at your organisation's identity provider) |
 | Azure `kubelogin` (AKS with Entra ID) | Device code or browser, or a service principal |
 | `doctl … exec-credential` | A DigitalOcean API token (short-lived cluster credentials from it) |
@@ -615,6 +615,16 @@ your own account, your Google account in the browser like gcloud (every build), 
 client), or your organisation's OAuth client in the browser, with no file to paste: the app then
 looks through every project you can see (or the project IDs you enter), and the clusters you add
 reuse that sign-in without a second prompt.
+
+**EKS with IAM Identity Center, no kubeconfig**: on **Add from a cloud account**, pick EKS, then
+"IAM Identity Center", and enter your access portal's start URL and its region. **Sign in and
+find clusters** opens the portal in the browser with the device code filled in, as
+`aws configure sso` does; the app then lists the accounts and roles you may assume (one is
+taken as is) and you tick those to look in. It reads their clusters in the regions you enter,
+or in the Identity Center region and the common regions when you leave them empty, a few at a
+time; a region the role may not list (`eks:ListClusters`, `eks:DescribeCluster`) is skipped and
+named. The clusters you add sign in with the role they were found with and the same session:
+no second browser round.
 A Talos cluster can also use one of these kubeconfig clusters for its Kubernetes
 screens (cluster menu → **Kubernetes access**): your own identity and RBAC instead of the
 admin kubeconfig, which also works with an `os:reader` talosconfig.

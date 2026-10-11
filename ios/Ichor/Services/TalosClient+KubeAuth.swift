@@ -92,6 +92,14 @@ extension TalosClient {
         signInRun { IchorgoStartDiscoverSignIn(provider, secrets, $0) }
     }
 
+    /// The accounts and roles the discovery's IAM Identity Center sign-in may assume, when the
+    /// user has several to pick from; empty otherwise.
+    static func discoverSignInChoices() -> [KubeSsoRoleChoice] {
+        var error: NSError?
+        let json = IchorgoDiscoverSignInChoices(&error)
+        return error == nil ? decodeKubeSsoRoleChoices(json) : []
+    }
+
     /// Drops the discovery session after cancellation or after imported clusters have it.
     static func forgetDiscoverSignIn() { IchorgoForgetDiscoverSignIn() }
 

@@ -55,6 +55,15 @@ const val AWS_SSO_REGION = "awsSsoRegion"
 const val AWS_ACCOUNT_ID = "awsAccountId"
 const val AWS_ROLE_NAME = "awsRoleName"
 
+/** EKS discovery's optional regions to read with IAM Identity Center (go/ichorgo/kube_discover_eks.go). */
+const val AWS_REGIONS = "awsRegions"
+
+/** EKS discovery's roles to read clusters with: "<accountId>/<roleName>", space separated. */
+const val AWS_ROLE_SELECTION = "awsRoleSelection"
+
+/** The [AWS_ROLE_SELECTION] value for [choices]. */
+fun roleSelection(choices: Collection<SsoRoleChoice>): String = choices.joinToString(" ") { "${it.accountId}/${it.roleName}" }
+
 /** What an interactive sign-in asks the user to do: open a page, or enter a code on one. */
 @Serializable
 data class SignInPrompt(
@@ -126,6 +135,7 @@ private val FIELDS = listOf(
     CredentialField(AWS_ACCOUNT_ID, R.string.kube_field_aws_account_id, FieldKind.TEXT, optional = true),
     CredentialField(AWS_ROLE_NAME, R.string.kube_field_aws_role_name, FieldKind.TEXT, optional = true),
     CredentialField("awsRegion", R.string.kube_field_aws_region, FieldKind.TEXT),
+    CredentialField(AWS_REGIONS, R.string.kube_field_aws_regions, FieldKind.TEXT, optional = true),
     CredentialField("gcpServiceAccountJson", R.string.kube_field_gcp_service_account, FieldKind.JSON),
     CredentialField(GCP_USER_CREDENTIALS, R.string.kube_field_gcp_user_credentials, FieldKind.JSON),
     CredentialField(GCP_PROJECTS, R.string.kube_field_gcp_projects, FieldKind.TEXT, optional = true),
@@ -209,10 +219,17 @@ enum class DiscoveryProvider(val id: String, @StringRes val label: Int) {
 
 /**
  * How far a running cloud discovery got (DiscoverProgress): GKE with a Google account reads
- * many projects. [projects] is 0 while they are still being listed.
+ * many projects, EKS with IAM Identity Center many regions. [projects] is 0 while they are
+ * still being listed; [refused] is the AWS regions that would not list clusters.
  */
 @Serializable
-data class DiscoveryProgress(val running: Boolean = false, val projects: Int = 0, val scanned: Int = 0, val clusters: Int = 0)
+data class DiscoveryProgress(
+    val running: Boolean = false,
+    val projects: Int = 0,
+    val scanned: Int = 0,
+    val clusters: Int = 0,
+    val refused: List<String> = emptyList(),
+)
 
 /** The fields each provider asks for (KubeDiscoverFields), only for the providers the app shows. */
 fun discoveryFields(byProvider: Map<String, List<String>>): Map<DiscoveryProvider, List<String>> =
@@ -225,9 +242,12 @@ fun discoveryFields(byProvider: Map<String, List<String>>): Map<DiscoveryProvide
 fun discoveryOptions(byProvider: Map<String, List<List<String>>>, fields: Map<DiscoveryProvider, List<String>>): Map<DiscoveryProvider, List<List<String>>> =
     fields.mapValues { (p, set) -> byProvider[p.id]?.filter { it.isNotEmpty() }?.takeIf { it.isNotEmpty() } ?: listOf(set) }
 
-/** A discovery credential set that signs in in the browser first (the organisation's OAuth client, gcloud's, or a workforce login config). */
+/**
+ * A discovery credential set that signs in in the browser first (the organisation's OAuth
+ * client, gcloud's, a workforce login config, or IAM Identity Center).
+ */
 fun discoveryNeedsSignIn(fields: List<String>): Boolean =
-    GCP_OAUTH_CLIENT_ID in fields || GCP_GCLOUD_SIGN_IN in fields || GCP_LOGIN_CONFIG in fields
+    GCP_OAUTH_CLIENT_ID in fields || GCP_GCLOUD_SIGN_IN in fields || GCP_LOGIN_CONFIG in fields || AWS_SSO_START_URL in fields
 
 /** A discovery credential set that is Google's own sign-in (Play build): a button, nothing to type but the projects. */
 fun discoveryUsesGoogle(fields: List<String>): Boolean = GCP_GOOGLE_SIGN_IN in fields

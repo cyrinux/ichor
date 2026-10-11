@@ -14,6 +14,7 @@ enum KubeAuthWording {
         case "awsAccountId": String(localized: "AWS account ID")
         case "awsRoleName": String(localized: "Role name")
         case "awsRegion": String(localized: "AWS region")
+        case "awsRegions": String(localized: "AWS regions (optional, comma separated)")
         case "gcpServiceAccountJson": String(localized: "Service account key (JSON)")
         case "gcpUserCredentialsJson": String(localized: "gcloud user credentials (application_default_credentials.json)")
         case "gcpProjects": String(localized: "Project IDs (optional)")
@@ -38,6 +39,7 @@ enum KubeAuthWording {
         switch field {
         case "awsSsoStartUrl": "https://my-org.awsapps.com/start"
         case "awsSsoRegion", "awsRegion": "eu-west-1"
+        case "awsRegions": "eu-west-1, us-east-1"
         case "awsAccountId": "123456789012"
         case "rancherApiKey": "token-xxxxx:secret"
         case "rancherServer": "https://rancher.example.com"
@@ -57,6 +59,8 @@ enum KubeAuthWording {
                 + String(localized: "A workforce identity session (gcloud auth application-default login --login-config=…) is imported the same way.")
         case kubeAWSStartURLField:
             String(localized: "Enter the start URL from your AWS access portal and its region; the account and role are chosen after the sign-in. Leave them empty unless you know them.")
+        case kubeAWSRegionsField:
+            String(localized: "Signs in at your AWS access portal in the browser, then lists the EKS clusters of the accounts and roles you choose in the regions given (all common regions when empty).")
         case "gcpGcloudSignIn":
             String(localized: "Opens Google's sign-in in the browser, as gcloud auth application-default login does on a computer. Works on every build; your organisation's SSO applies. The consent page names Google Cloud SDK.")
         case kubeLoginConfigField:

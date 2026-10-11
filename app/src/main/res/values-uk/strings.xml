@@ -4373,6 +4373,12 @@
     <string name="upgrade_prepull">Попередньо завантажити образ на всі вузли</string>
     <string name="upgrade_prepull_desc">Завантажте його зараз на кожен вузол, щоб кожне перезавантаження було коротким.</string>
     <string name="kube_discover_progress_looking">Пошук кластерів…</string>
+    <string name="kube_discover_aws_refused_note">Немає доступу в %1$s: кластери в цих регіонах, якщо вони є, не показано.</string>
+    <string name="kube_field_aws_regions">Регіони AWS (необов’язково, через кому)</string>
+    <string name="kube_discover_aws_sso_hint">Входить на ваш портал доступу AWS у браузері, потім показує кластери EKS вибраних облікових записів і ролей у вказаних регіонах (усі поширені регіони, якщо порожньо).</string>
+    <string name="kube_discover_aws_choose_roles">Виберіть облікові записи й ролі для пошуку</string>
+    <string name="kube_discover_aws_no_access">Немає доступу в %1$s</string>
+    <string name="kube_discover_progress_regions">Переглянуто %1$s з %2$s регіонів · знайдено кластерів: %3$s</string>
     <string name="kube_discover_progress_projects">Переглянуто %1$s з %2$s проєктів · знайдено кластерів: %3$s</string>
     <string name="etcd_recover_button">Відновити зі знімка…</string>
     <string name="etcd_recover_lost">Жоден учасник etcd не відповідає. Якщо всі control plane втратили etcd, запустіть його знову зі знімка.</string>

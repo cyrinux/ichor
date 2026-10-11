@@ -9,6 +9,18 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertFalse(kubeDiscoverNeedsSignIn(["gcpUserCredentialsJson", "gcpProjects"]))
         XCTAssertFalse(kubeDiscoverNeedsSignIn(["awsRegion", "awsAccessKeyId", "awsSecretAccessKey"]))
         XCTAssertFalse(kubeDiscoverNeedsSignIn([]))
+        // EKS's IAM Identity Center signs in first; its regions may be left empty.
+        XCTAssertTrue(kubeDiscoverNeedsSignIn([kubeAWSStartURLField, kubeAWSRegionField, kubeAWSRegionsField]))
+        XCTAssertTrue(kubeFieldsComplete([kubeAWSStartURLField, kubeAWSRegionField, kubeAWSRegionsField],
+                                         values: [kubeAWSStartURLField: "https://example.awsapps.com/start", kubeAWSRegionField: "eu-west-3"]))
+    }
+
+    func testDiscoverRoleSelection() {
+        let choices = decodeKubeSsoRoleChoices(#"[{"accountId":"123456789012","accountName":"Production","roleName":"ReadOnly"},{"accountId":"210987654321","roleName":"Admin"}]"#)
+        XCTAssertEqual(choices.count, 2)
+        XCTAssertEqual(choices[1].label, "210987654321 · Admin")
+        XCTAssertEqual(kubeRoleSelection(choices), "123456789012/ReadOnly 210987654321/Admin")
+        XCTAssertEqual(decodeKubeSsoRoleChoices(""), [])
     }
 
     func testGcloudSignInIsAMarker() throws {
@@ -228,7 +240,11 @@ final class KubeAuthTests: XCTestCase {
         let reading = DiscoveryProgress.decode(#"{"running":true,"projects":200,"scanned":50,"clusters":3}"#)
         XCTAssertEqual(reading?.fraction, 0.25)
         XCTAssertEqual(reading?.clusters, 3)
+        XCTAssertEqual(reading?.refused, [])
         XCTAssertNil(DiscoveryProgress.decode("not json"))
+
+        let regions = DiscoveryProgress.decode(#"{"running":true,"projects":4,"scanned":4,"clusters":2,"refused":["eu-north-1"]}"#)
+        XCTAssertEqual(regions?.refused, ["eu-north-1"])
     }
 
     func testImportedSignInContexts() {

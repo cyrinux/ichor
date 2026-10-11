@@ -292,6 +292,8 @@ type kubeSignInContext struct {
 	key    string
 	method signInMethod
 	user   *kubeStoreUser
+	// server is the cluster's API server URL.
+	server string
 }
 
 // signInContext finds the sign-in method of the named stored context; nil method when its
@@ -314,6 +316,9 @@ func signInContext(storedYAML, name string) (kubeSignInContext, error) {
 
 	cluster, _ := doc.cluster(ctx.Context.Cluster)
 	out := kubeSignInContext{key: kubeFingerprint(name, cluster), user: user}
+	if cluster != nil {
+		out.server = cluster.Cluster.Server
+	}
 
 	method, _ := kubeAuthMethod(user)
 
@@ -464,8 +469,9 @@ func KubeSetCredentials(storedYAML, contextName, secretsJSON string) (err error)
 	case gkeMethod:
 		state = withDiscoverySession(state)
 	case *eksMethod:
-		// The role picked after an IAM Identity Center sign-in takes that sign-in's session.
-		state = withSignedInSession(kubeAuth.load(sc.key), state)
+		// The role picked after an IAM Identity Center sign-in takes that sign-in's session;
+		// a cluster an Identity Center discovery found takes the discovery's, and its role.
+		state = withEKSDiscoverySession(withSignedInSession(kubeAuth.load(sc.key), state), sc.server)
 	}
 
 	state.Method = cm.name()

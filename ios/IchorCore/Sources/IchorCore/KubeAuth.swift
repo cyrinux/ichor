@@ -25,6 +25,20 @@ public let kubeAWSStartURLField = "awsSsoStartUrl"
 public let kubeAWSRegionField = "awsSsoRegion"
 public let kubeAWSAccountField = "awsAccountId"
 public let kubeAWSRoleField = "awsRoleName"
+/// EKS discovery's optional regions to read with IAM Identity Center.
+public let kubeAWSRegionsField = "awsRegions"
+/// EKS discovery's roles to read clusters with: "<accountId>/<roleName>", space separated.
+public let kubeAWSRoleSelectionField = "awsRoleSelection"
+
+/// The `kubeAWSRoleSelectionField` value for `choices`, in the order given.
+public func kubeRoleSelection(_ choices: [KubeSsoRoleChoice]) -> String {
+    choices.map { "\($0.accountId)/\($0.roleName)" }.joined(separator: " ")
+}
+
+/// DiscoverSignInChoices' answer: the accounts and roles to pick from, none for "".
+public func decodeKubeSsoRoleChoices(_ json: String) -> [KubeSsoRoleChoice] {
+    json.isEmpty ? [] : (try? TalosJSON.decode([KubeSsoRoleChoice].self, from: json)) ?? []
+}
 
 /// An AWS account and a role IAM Identity Center lets the signed-in user assume.
 public struct KubeSsoRoleChoice: Codable, Equatable, Hashable, Sendable {
@@ -216,11 +230,11 @@ public let kubeGcloudSignInField = "gcpGcloudSignIn"
 /// out; the sign-in then opens the organisation's identity provider in the browser.
 public let kubeLoginConfigField = "gcpLoginConfigJson"
 
-/// Discovery's OAuth, gcloud, workforce login config and native iOS Google options need a
-/// browser round first.
+/// Discovery's OAuth, gcloud, workforce login config, native iOS Google and IAM Identity
+/// Center options need a browser round first.
 public func kubeDiscoverNeedsSignIn(_ fields: [String]) -> Bool {
     fields.contains(kubeGoogleSignInField) || fields.contains(kubeGcloudSignInField) || fields.contains("gcpOAuthClientId")
-        || fields.contains(kubeLoginConfigField)
+        || fields.contains(kubeLoginConfigField) || fields.contains(kubeAWSStartURLField)
 }
 
 /// The URL scheme the in-app web session closes on for a sign-in coming back to
@@ -237,7 +251,7 @@ public func kubeCallbackScheme(of redirectPrefix: String?) -> String {
 public func kubeFieldOptional(_ field: String) -> Bool {
     // The account and role of IAM Identity Center are picked from a list after the sign-in.
     field == "awsSessionToken" || field == "gcpProjects" || field == "gcpOAuthRedirectUrl" ||
-        field == kubeAWSAccountField || field == kubeAWSRoleField
+        field == kubeAWSAccountField || field == kubeAWSRoleField || field == kubeAWSRegionsField
 }
 
 /// The JSON object of `values` for `fields` (trimmed, empty ones left out), as KubeSetCredentials
@@ -275,18 +289,32 @@ public func decodeKubeDiscoverOptions(_ json: String) throws -> [String: [[Strin
 }
 
 /// How far a running cloud discovery got (Go DiscoverProgress): GKE with a Google account reads
-/// many projects. `projects` is 0 while they are still being listed.
+/// many projects, EKS with IAM Identity Center many regions. `projects` is 0 while they are
+/// still being listed; `refused` is the AWS regions that would not list clusters.
 public struct DiscoveryProgress: Decodable, Equatable {
     public var running = false
     public var projects = 0
     public var scanned = 0
     public var clusters = 0
+    public var refused: [String] = []
 
-    public init(running: Bool = false, projects: Int = 0, scanned: Int = 0, clusters: Int = 0) {
+    public init(running: Bool = false, projects: Int = 0, scanned: Int = 0, clusters: Int = 0, refused: [String] = []) {
         self.running = running
         self.projects = projects
         self.scanned = scanned
         self.clusters = clusters
+        self.refused = refused
+    }
+
+    private enum CodingKeys: String, CodingKey { case running, projects, scanned, clusters, refused }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        running = try c.field(.running, false)
+        projects = try c.field(.projects, 0)
+        scanned = try c.field(.scanned, 0)
+        clusters = try c.field(.clusters, 0)
+        refused = try c.field(.refused, [])
     }
 
     /// The share of the projects read, nil while they are listed (or none are read).

@@ -68,6 +68,13 @@ internal fun KubePreviewCard(
         if (rows.none { it.importable }) {
             Text(stringResource(R.string.import_kube_none_importable), color = LocalStatusColors.current.warn, style = MaterialTheme.typography.bodyMedium)
         }
+        if (preview.refused.isNotEmpty()) {
+            Text(
+                stringResource(R.string.kube_discover_aws_refused_note, preview.refused.joinToString(", ")),
+                color = LocalStatusColors.current.warn,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
         if (adding) Text(stringResource(R.string.import_adds_cluster), style = MaterialTheme.typography.bodyMedium)
         preview.error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
         MutedText(stringResource(R.string.import_stored_encrypted))

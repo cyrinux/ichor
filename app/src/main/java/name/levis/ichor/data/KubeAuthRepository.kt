@@ -13,6 +13,7 @@ import name.levis.ichor.model.DiscoveryProgress
 import name.levis.ichor.model.KubeSignInInfo
 import name.levis.ichor.model.isKube
 import name.levis.ichor.model.SignInPrompt
+import name.levis.ichor.model.SsoRoleChoice
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.SignInListener
 import name.levis.ichorgo.SignInRun
@@ -105,6 +106,16 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
             activeSignIn.compareAndSet(run, null)
             run.cancel()
         }
+    }
+
+    /**
+     * The accounts and roles the discovery's IAM Identity Center sign-in may assume, when the
+     * user has several to pick from; empty otherwise.
+     */
+    suspend fun discoverSignInChoices(): List<SsoRoleChoice> = withContext(Dispatchers.IO) {
+        Ichorgo.discoverSignInChoices().takeIf { it.isNotBlank() }
+            ?.let { TalosJson.decodeFromString(ListSerializer(SsoRoleChoice.serializer()), it) }
+            .orEmpty()
     }
 
     /** Drops the session a discovery's sign-in got (the import screen closed). */

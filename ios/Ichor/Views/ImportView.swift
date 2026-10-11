@@ -66,7 +66,7 @@ struct ImportView: View {
                     Task { await save(yaml) }
                 }
             case .kube(let yaml, let summary, let conflicts)?:
-                KubePreviewList(summary: summary, conflicts: conflicts, busy: busy, onCancel: cancelPreview) { choices in
+                KubePreviewList(summary: summary, conflicts: conflicts, refused: discovered?.refused ?? [], busy: busy, onCancel: cancelPreview) { choices in
                     Task { await saveKube(yaml, summary: summary, conflicts: conflicts, choices: choices) }
                 }
             case nil:
@@ -463,6 +463,8 @@ private struct PreviewList: View {
 private struct KubePreviewList: View {
     let summary: ConfigSummary
     let conflicts: [KubeImportConflict]
+    /// The AWS regions a discovery could not read.
+    let refused: [String]
     let busy: Bool
     let onCancel: () -> Void
     let onImport: ([KubeImportChoice]) -> Void
@@ -470,10 +472,11 @@ private struct KubePreviewList: View {
     @State private var selected: Set<Int>
     @State private var replacing: Set<Int> = []
 
-    init(summary: ConfigSummary, conflicts: [KubeImportConflict], busy: Bool,
+    init(summary: ConfigSummary, conflicts: [KubeImportConflict], refused: [String] = [], busy: Bool,
          onCancel: @escaping () -> Void, onImport: @escaping ([KubeImportChoice]) -> Void) {
         self.summary = summary
         self.conflicts = conflicts
+        self.refused = refused
         self.busy = busy
         self.onCancel = onCancel
         self.onImport = onImport
@@ -490,6 +493,12 @@ private struct KubePreviewList: View {
             ForEach(Array(summary.contexts.enumerated()), id: \.element.id) { index, ctx in
                 Section {
                     row(ctx, index: index)
+                }
+            }
+            if !refused.isEmpty {
+                Section {
+                    Text("No access in \(refused.joined(separator: ", ")): clusters in these regions, if any, are not listed.")
+                        .font(.footnote).foregroundStyle(.statusWarn)
                 }
             }
             Section {
