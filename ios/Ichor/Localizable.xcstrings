@@ -1070,37 +1070,37 @@
         }
       }
     },
-    "Screenshot mode, cluster events, app icons" : {
+    "Screenshot mode, cluster events, app icons, last known state" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Screenshot-Modus, Cluster-Events, App-Symbole"
+            "value" : "Screenshot-Modus, Cluster-Events, App-Symbole, letzter bekannter Zustand"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modo captura, eventos del clúster, iconos de apps"
+            "value" : "Modo captura, eventos del clúster, iconos de apps, último estado conocido"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mode capture d'écran, événements du cluster, icônes d'apps"
+            "value" : "Mode capture d'écran, événements du cluster, icônes d'apps, dernier état connu"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modalità screenshot, eventi del cluster, icone delle app"
+            "value" : "Modalità screenshot, eventi del cluster, icone delle app, ultimo stato noto"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Режим знімків екрана, події кластера, значки застосунків"
+            "value" : "Режим знімків екрана, події кластера, значки застосунків, останній відомий стан"
           }
         }
       }

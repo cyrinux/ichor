@@ -51,7 +51,7 @@ extension SettingsPage {
         switch self {
         case .appearance: "Theme, language, live usage"
         case .security: "App lock, security keys"
-        case .privacy: "Screenshot mode, cluster events, app icons"
+        case .privacy: "Screenshot mode, cluster events, app icons, last known state"
         case .alerts: "Background checks, watches, thresholds"
         case .ai: "Provider, API key, model"
         case .kubernetes: "Node debug shell, kubeconfig export"

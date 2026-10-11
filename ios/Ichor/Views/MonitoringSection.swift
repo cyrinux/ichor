@@ -155,15 +155,6 @@ struct MonitoringSection: View {
                 }
             }
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
-            // Off: what was kept is deleted (AppModel.setKeepLastKnown).
-            Toggle(isOn: Binding(get: { model.keepLastKnown }, set: { model.setKeepLastKnown($0) })) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Keep last known state")
-                    Text("Save the last data fetched from each cluster on this phone, encrypted, so it still shows when the cluster can't be reached. Kept for 24 hours and never backed up.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
         } header: {
             Text("Alerts")
         } footer: {

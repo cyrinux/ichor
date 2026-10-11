@@ -506,7 +506,7 @@
     <string name="settings_section_clusters">Clústeres y copia de seguridad</string>
     <string name="settings_page_appearance_summary">Tema, idioma, uso en directo</string>
     <string name="settings_page_security_summary">Bloqueo de la app, llaves de seguridad</string>
-    <string name="settings_page_privacy_summary">Modo captura, eventos del clúster, iconos de apps</string>
+    <string name="settings_page_privacy_summary">Modo captura, eventos del clúster, iconos de apps, último estado conocido</string>
     <string name="settings_page_alerts_summary">Comprobaciones en segundo plano, vigilancias, umbrales</string>
     <string name="settings_page_ai_summary">Proveedor, clave de API, modelo</string>
     <string name="settings_page_kubernetes_summary">Shell de depuración de nodos, exportar kubeconfig</string>
