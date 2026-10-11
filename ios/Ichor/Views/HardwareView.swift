@@ -131,6 +131,7 @@ struct HardwareView: View {
                     HStack {
                         Text(verbatim: disk.devPath.isEmpty ? disk.name : disk.devPath).font(.body.monospaced())
                         if disk.systemDisk { StatusPill(label: String(localized: "System disk"), color: .blue) }
+                        if !disk.transport.isEmpty { StatusPill(label: disk.transport, color: .secondary) }
                         Spacer()
                         Text(verbatim: byteCount(Int64(clamping: disk.size), style: .file)).monospacedDigit()
                     }

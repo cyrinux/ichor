@@ -126,11 +126,13 @@ public struct DiskInfo: Decodable, Equatable, Identifiable, Sendable {
     public let busPath: String
     public let systemDisk: Bool
     public let readonly: Bool
+    /// nvme, sata, virtio, usb... "" when unknown (and from older cores).
+    public let transport: String
 
     public var id: String { name }
 
     public init(name: String, devPath: String = "", model: String = "", serial: String = "", size: UInt64 = 0, type: String = "ssd",
-                wwid: String = "", busPath: String = "", systemDisk: Bool = false, readonly: Bool = false) {
+                wwid: String = "", busPath: String = "", systemDisk: Bool = false, readonly: Bool = false, transport: String = "") {
         self.name = name
         self.devPath = devPath
         self.model = model
@@ -141,6 +143,26 @@ public struct DiskInfo: Decodable, Equatable, Identifiable, Sendable {
         self.busPath = busPath
         self.systemDisk = systemDisk
         self.readonly = readonly
+        self.transport = transport
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case name, devPath, model, serial, size, type, wwid, busPath, systemDisk, readonly, transport
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.field(.name, "")
+        devPath = try c.field(.devPath, "")
+        model = try c.field(.model, "")
+        serial = try c.field(.serial, "")
+        size = try c.field(.size, 0)
+        type = try c.field(.type, "")
+        wwid = try c.field(.wwid, "")
+        busPath = try c.field(.busPath, "")
+        systemDisk = try c.field(.systemDisk, false)
+        readonly = try c.field(.readonly, false)
+        transport = try c.field(.transport, "")
     }
 }
 
