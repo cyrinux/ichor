@@ -213,6 +213,20 @@ shell, so it needs os:admin; the first run pulls the image.
 - **More:** a run can be cancelled. The raw output sits under each result, and **Share** sends
   the result as text.
 
+### Packet capture
+
+**Node → Capture** is `talosctl pcap`: pick an interface, an optional tcpdump filter, how long
+and how big, and watch the packets arrive. The file is saved on the phone and opens in the app
+or in Wireshark.
+
+- **Two nodes at once:** pick a **Second node** (or, on the KubeSpan map, tap a link and then
+  **Capture both ends**).
+  - **The run:** both nodes are captured with the same filter. Each node gets its own interface
+    and its own size limit, and both stop together.
+  - **The file:** one file, packets in time order, each marked with its node. It is pcapng
+    inside, and Wireshark shows the node as the interface.
+  - **Timing:** a clock difference between the nodes shifts their packets against each other.
+
 ### Network test
 
 **Kubernetes → Network** (also under **Cluster insights → Network**) measures the network from a

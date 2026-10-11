@@ -1354,6 +1354,13 @@
     <string name="capture_filter_talos_excluded">Talos API traffic (port 50000) is never captured.</string>
     <string name="capture_duration">Duration</string>
     <string name="capture_max_size">Max size</string>
+    <string name="capture_second_node">Second node</string>
+    <string name="capture_second_node_desc">Capture on a second node at the same time, such as both ends of a link: one file, each packet marked with its node.</string>
+    <string name="capture_second_node_none">None</string>
+    <string name="capture_second_iface">Interface on %1$s</string>
+    <string name="capture_second_iface_same">Empty: the same interface.</string>
+    <string name="capture_max_size_each">Maximum size, per node</string>
+    <string name="topology_link_capture">Capture both ends</string>
     <string name="capture_seconds">%1$d s</string>
     <string name="capture_minutes">%1$d min</string>
     <string name="capture_mib">%1$d MiB</string>

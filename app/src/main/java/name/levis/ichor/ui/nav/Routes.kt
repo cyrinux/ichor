@@ -119,7 +119,7 @@ internal object Routes {
     const val HARDWARE = "hardware?addr={addr}&host={host}"
     const val IMAGES = "images?addr={addr}&host={host}"
     const val ISSUE_CONFIG = "issueconfig"
-    const val CAPTURE = "capture?addr={addr}&host={host}"
+    const val CAPTURE = "capture?addr={addr}&host={host}&peer={peer}&peerHost={peerHost}"
     const val NET_TOOLS = "nettools?addr={addr}&host={host}"
     const val CAPTURES = "captures"
     const val CAPTURE_FILE = "capturefile?name={name}"
@@ -133,7 +133,10 @@ internal object Routes {
     fun maintenance(addr: String, host: String, drain: Boolean = false) =
         "maintenance?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&drain=$drain"
 
-    fun capture(addr: String, host: String) = "capture?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
+    /** [peer]: a second node to capture on too, prefilled ("" for none). */
+    fun capture(addr: String, host: String, peer: String = "", peerHost: String = "") =
+        "capture?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}" +
+            (if (peer.isNotEmpty()) "&peer=${Uri.encode(peer)}&peerHost=${Uri.encode(peerHost)}" else "")
     fun netTools(addr: String, host: String) = "nettools?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
     fun captureFile(name: String) = "capturefile?name=${Uri.encode(name)}"

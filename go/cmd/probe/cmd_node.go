@@ -195,6 +195,10 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
+	{name: "pcap-pair", args: "NODEA,NODEB IFACE[,IFACE] FILTER SECONDS", run: func(e env) (string, error) {
+		// Captures on both nodes at once, merged into one file (deleted after).
+		return pcapPairProbe(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4)), nil
+	}},
 	{name: "pcap", args: "NODE IFACE FILTER SECONDS", run: func(e env) (out string, err error) {
 		out = pcapProbe(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), e.mask)
 

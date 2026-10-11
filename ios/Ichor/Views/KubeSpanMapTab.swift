@@ -57,7 +57,8 @@ struct KubeSpanMapTab: View {
                     link: shown,
                     names: names,
                     test: tests[index],
-                    onTest: netPerf.isRunning ? nil : { test(client: shown.a, server: shown.b) }
+                    onTest: netPerf.isRunning ? nil : { test(client: shown.a, server: shown.b) },
+                    ends: captureEnds(shown)
                 )
             }
         }
@@ -101,6 +102,13 @@ struct KubeSpanMapTab: View {
         picked = []
         link = nil
         testing = true
+    }
+
+    /// The link's two nodes when both are talosconfig targets (a capture goes through their Talos API).
+    private func captureEnds(_ link: TopologyLink) -> (TopologyNode, TopologyNode)? {
+        guard let a = topology.nodes.first(where: { $0.id == link.a && !$0.node.isEmpty }),
+              let b = topology.nodes.first(where: { $0.id == link.b && !$0.node.isEmpty }) else { return nil }
+        return (a, b)
     }
 }
 

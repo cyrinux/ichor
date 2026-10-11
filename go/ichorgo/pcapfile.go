@@ -91,9 +91,11 @@ func openPcap(path string) (packetReader, io.Closer, error) {
 	return r, f, nil
 }
 
-// eachPacket calls fn for every packet of path until it returns false. A truncated last
-// packet (a capture still being written) ends the file quietly.
-func eachPacket(path string, fn func(i int, ci gopacket.CaptureInfo, data []byte, lt layers.LinkType) bool) error {
+// eachPacket calls fn for every packet of path until it returns false, with the link type of
+// the interface it was captured on and, in a file of several interfaces (a capture of two
+// nodes), that interface's name. A truncated last packet (a capture still being written)
+// ends the file quietly.
+func eachPacket(path string, fn func(i int, ci gopacket.CaptureInfo, data []byte, lt layers.LinkType, iface string) bool) error {
 	r, closer, err := openPcap(path)
 	if err != nil {
 		return err
@@ -101,7 +103,7 @@ func eachPacket(path string, fn func(i int, ci gopacket.CaptureInfo, data []byte
 
 	defer closer.Close() //nolint:errcheck
 
-	lt := r.LinkType()
+	interfaceOf := packetInterfaces(r)
 
 	for i := 0; ; i++ {
 		data, ci, err := r.ReadPacketData()
@@ -113,9 +115,35 @@ func eachPacket(path string, fn func(i int, ci gopacket.CaptureInfo, data []byte
 			return fmt.Errorf("packet %d: %w", i, err)
 		}
 
-		if !fn(i, ci, data, lt) {
+		lt, iface := interfaceOf(ci.InterfaceIndex)
+		if !fn(i, ci, data, lt, iface) {
 			return nil
 		}
+	}
+}
+
+// packetInterfaces maps a packet's interface index to its link type and, when the file has
+// several interfaces, its name ("" otherwise: a single capture names none).
+func packetInterfaces(r packetReader) func(index int) (layers.LinkType, string) {
+	lt := r.LinkType()
+
+	ng, ok := r.(*pcapgo.NgReader)
+	if !ok {
+		return func(int) (layers.LinkType, string) { return lt, "" }
+	}
+
+	// Asked per packet: the reader learns the interfaces as it meets them.
+	return func(index int) (layers.LinkType, string) {
+		intf, err := ng.Interface(index)
+		if err != nil {
+			return lt, ""
+		}
+
+		if ng.NInterfaces() < 2 {
+			return intf.LinkType, ""
+		}
+
+		return intf.LinkType, intf.Name
 	}
 }
 
@@ -134,11 +162,13 @@ func ReadPcap(path string, offset, limit int) (out string, err error) {
 
 	page := pcapPage{Packets: []packetSummary{}}
 
-	err = eachPacket(path, func(i int, ci gopacket.CaptureInfo, data []byte, lt layers.LinkType) bool {
+	err = eachPacket(path, func(i int, ci gopacket.CaptureInfo, data []byte, lt layers.LinkType, iface string) bool {
 		page.Total++
 
 		if i >= offset && i < offset+limit {
-			page.Packets = append(page.Packets, summarize(i, ci, data, lt))
+			s := summarize(i, ci, data, lt)
+			s.Node = iface
+			page.Packets = append(page.Packets, s)
 		}
 
 		return true
@@ -160,7 +190,7 @@ func PacketDetail(path string, index int) (out string, err error) {
 		count  int
 	)
 
-	err = eachPacket(path, func(i int, ci gopacket.CaptureInfo, data []byte, lt layers.LinkType) bool {
+	err = eachPacket(path, func(i int, ci gopacket.CaptureInfo, data []byte, lt layers.LinkType, _ string) bool {
 		count++
 
 		if i == index {

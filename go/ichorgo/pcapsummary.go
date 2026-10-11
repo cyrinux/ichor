@@ -20,6 +20,8 @@ type packetSummary struct {
 	Dst   string `json:"dst"`
 	Proto string `json:"proto"`
 	Info  string `json:"info"`
+	// Node is the hostname the packet was captured on, in a capture of several nodes.
+	Node string `json:"node,omitempty"`
 }
 
 const maxInfoLen = 160

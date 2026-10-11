@@ -6,9 +6,13 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.withContext
 import name.levis.ichorgo.CaptureListener
+import name.levis.ichorgo.PairCaptureListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.CAPTURE_SNAP_LEN
 import name.levis.ichor.model.CaptureOptions
+import name.levis.ichor.model.PairCaptureStats
+import name.levis.ichor.model.PairNodeStats
+import name.levis.ichor.model.isPairCapturePart
 import name.levis.ichor.model.PacketDetail
 import name.levis.ichor.model.PacketSummary
 import name.levis.ichor.model.PcapPage
@@ -18,7 +22,8 @@ import java.io.File
 /** Events of a running packet capture. [Done.error] is null when it ended normally or was stopped. */
 sealed interface CaptureEvent {
     data class Packet(val summary: PacketSummary) : CaptureEvent
-    data class Stats(val packets: Long, val bytes: Long) : CaptureEvent
+    /** [nodes]: each node's counters, in a capture of two nodes. */
+    data class Stats(val packets: Long, val bytes: Long, val nodes: List<PairNodeStats> = emptyList()) : CaptureEvent
     data class Done(val path: String, val packets: Long, val bytes: Long, val error: String?) : CaptureEvent
 }
 
@@ -81,6 +86,45 @@ class CaptureRepository(private val configs: ConfigRepository, filesDir: File) {
         CaptureHandle(events, run::cancel)
     }
 
+    /**
+     * Starts capturing on [node] and [CaptureOptions.peer] at once, both merged into [dest] (one
+     * interface per node); events as [start]'s, the counters with each node's.
+     */
+    suspend fun startPair(node: String, options: CaptureOptions, dest: File): CaptureHandle = withContext(Dispatchers.IO) {
+        val stored = configs.forCall()
+        dest.parentFile?.mkdirs()
+        val events = Channel<CaptureEvent>(Channel.UNLIMITED)
+        val run = Ichorgo.startPacketCapturePair(
+            stored.yaml,
+            stored.activeContext,
+            "$node,${options.peer}",
+            options.ifaces,
+            options.filter.trim(),
+            options.promiscuous,
+            CAPTURE_SNAP_LEN,
+            options.maxSeconds,
+            options.maxBytes,
+            dest.path,
+            object : PairCaptureListener {
+                override fun onPacket(summaryJson: String) {
+                    runCatching { TalosJson.decodeFromString(PacketSummary.serializer(), summaryJson) }
+                        .onSuccess { events.trySend(CaptureEvent.Packet(it)) }
+                }
+
+                override fun onStats(statsJson: String) {
+                    runCatching { TalosJson.decodeFromString(PairCaptureStats.serializer(), statsJson) }
+                        .onSuccess { events.trySend(CaptureEvent.Stats(it.packets, it.bytes, it.nodes)) }
+                }
+
+                override fun onDone(path: String, packets: Long, bytes: Long, errMessage: String) {
+                    events.trySend(CaptureEvent.Done(path, packets, bytes, errMessage.ifEmpty { null }?.let(::goErrorText)))
+                    events.close()
+                }
+            },
+        )
+        CaptureHandle(events, run::cancel)
+    }
+
     suspend fun read(file: File, offset: Int, limit: Int): PcapPage = withContext(Dispatchers.IO) {
         TalosJson.decodeFromString(PcapPage.serializer(), Ichorgo.readPcap(file.path, offset.toLong(), limit.toLong()))
     }
@@ -93,7 +137,7 @@ class CaptureRepository(private val configs: ConfigRepository, filesDir: File) {
     suspend fun list(): List<CaptureFile> = withContext(Dispatchers.IO) {
         // Partial files of a capture killed with the process (captures last 10 min at most).
         val stale = System.currentTimeMillis() - STALE_PART_MILLIS
-        dir.listFiles { f -> f.name.endsWith(".pcap.part") && f.lastModified() < stale }?.forEach { it.delete() }
+        dir.listFiles { f -> (f.name.endsWith(".pcap.part") || isPairCapturePart(f.name)) && f.lastModified() < stale }?.forEach { it.delete() }
         dir.listFiles { f -> f.isFile && isCaptureFileName(f.name) }.orEmpty()
             .map { CaptureFile(it, it.length(), it.lastModified()) }
             .sortedByDescending { it.modified }

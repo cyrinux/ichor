@@ -108,4 +108,37 @@ class PacketCaptureTest {
         assertEquals("00:42", formatElapsed(42))
         assertEquals("05:00", formatElapsed(300))
     }
+
+    @Test
+    fun aPairCaptureNamesBothNodesAndItsInterfaces() {
+        val utc = TimeZone.getTimeZone("UTC")
+        assertEquals("worker-1_worker-2-eth0-19700101-000000.pcap", pairCaptureFileName("worker-1", "worker-2", "eth0", Date(0), utc))
+        assertTrue(isCaptureFileName(pairCaptureFileName("a", "b", "eth0", Date(0), utc)))
+
+        val one = CaptureOptions(iface = "eth0")
+        assertFalse(one.paired)
+        assertEquals("eth0", one.ifaces)
+        assertEquals("eth0", one.copy(peer = "192.0.2.12").ifaces)
+        assertEquals("eth0,wg0", one.copy(peer = "192.0.2.12", peerIface = "wg0").ifaces)
+        assertEquals("eth0", one.copy(peer = "192.0.2.12", peerIface = "eth0").ifaces)
+    }
+
+    @Test
+    fun theMergeLeftoversAreNotCaptures() {
+        assertTrue(isPairCapturePart("a_b-eth0-20260101-000000.pcap.node1"))
+        assertTrue(isPairCapturePart("a_b-eth0-20260101-000000.pcap.node2.part"))
+        assertFalse(isPairCapturePart("a-eth0-20260101-000000.pcap"))
+        assertFalse(isCaptureFileName("a_b-eth0-20260101-000000.pcap.node1"))
+    }
+
+    @Test
+    fun pairStatsAndNodeSummariesDecode() {
+        val stats = TalosJson.decodeFromString(
+            PairCaptureStats.serializer(),
+            """{"packets":7,"bytes":900,"nodes":[{"node":"192.0.2.11","hostname":"worker-1","packets":3,"bytes":400},{"node":"192.0.2.12","hostname":"worker-2","packets":4,"bytes":500}]}""",
+        )
+        assertEquals(listOf("worker-1", "worker-2"), stats.nodes.map { it.hostname })
+        val summary = TalosJson.decodeFromString(PacketSummary.serializer(), """{"n":0,"proto":"UDP","node":"worker-2"}""")
+        assertEquals("worker-2", summary.node)
+    }
 }

@@ -36,6 +36,8 @@ final class CaptureSession {
     private(set) var packets: [PacketSummary] = []
     private(set) var packetCount: Int64 = 0
     private(set) var bytes: Int64 = 0
+    /// Each node's counters, in a capture of two nodes.
+    private(set) var nodeStats: [PairNodeStats] = []
     private(set) var startedAt: Date?
     private(set) var stoppedAt: Date?
     private var task: Task<Void, Never>?
@@ -47,8 +49,10 @@ final class CaptureSession {
         guard !isRunning else { return }
         let url: URL
         do {
-            url = try CaptureStore.directory()
-                .appendingPathComponent(captureFilename(hostname: hostname, interface: options.interface, date: Date()))
+            let name = options.isPaired
+                ? pairCaptureFilename(hostname: hostname, peerHostname: options.peerHostname, interface: options.interface, date: Date())
+                : captureFilename(hostname: hostname, interface: options.interface, date: Date())
+            url = try CaptureStore.directory().appendingPathComponent(name)
         } catch {
             state = .finished(file: nil, error: error.localizedDescription)
             return
@@ -56,11 +60,14 @@ final class CaptureSession {
         packets = []
         packetCount = 0
         bytes = 0
+        nodeStats = []
         startedAt = Date()
         stoppedAt = nil
         state = .running
         UIApplication.shared.isIdleTimerDisabled = true
-        let capture = client.packetCapture(node: node, options: options, destPath: url.path)
+        let capture = options.isPaired
+            ? client.packetCapturePair(node: node, options: options, destPath: url.path)
+            : client.packetCapture(node: node, options: options, destPath: url.path)
         stopCapture = capture.stop
         task = Task {
             var outcome: State?
@@ -71,6 +78,10 @@ final class CaptureSession {
                 case .stats(let count, let size):
                     packetCount = count
                     bytes = size
+                case .pairStats(let stats):
+                    packetCount = stats.packets
+                    bytes = stats.bytes
+                    nodeStats = stats.nodes
                 case .done(let path, let count, let size, let error):
                     packetCount = count
                     bytes = size

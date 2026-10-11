@@ -66,7 +66,12 @@ class TopologyViewModel(private val talos: TalosRepository) : LoadingViewModel<C
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopologyContent(topology: ClusterTopology, onNode: (TopologyNode) -> Unit) {
+fun TopologyContent(
+    topology: ClusterTopology,
+    onNode: (TopologyNode) -> Unit,
+    /** Opens a capture on both ends of a link; null where captures are not offered. */
+    onCaptureBoth: ((TopologyNode, TopologyNode) -> Unit)? = null,
+) {
     var link by remember { mutableStateOf<TopologyLink?>(null) }
     val names = topology.nodes.associate { it.id to it.hostname.ifBlank { it.id } }
     // Node names of the network test are Kubernetes node names: the hostnames on Talos.
@@ -137,8 +142,16 @@ fun TopologyContent(topology: ClusterTopology, onNode: (TopologyNode) -> Unit) {
 
     link?.let { shown ->
         ModalBottomSheet(onDismissRequest = { link = null }) {
+            // Both ends must be nodes the talosconfig targets (captures go through their Talos API).
+            val ends = listOf(shown.a, shown.b).mapNotNull { id -> topology.nodes.firstOrNull { it.id == id && it.node.isNotBlank() } }
             LinkDetails(
                 shown, names, tests[shown],
+                onCapture = onCaptureBoth?.takeIf { ends.size == 2 }?.let { open ->
+                    {
+                        link = null
+                        open(ends[0], ends[1])
+                    }
+                },
                 onTest = { test(client = shown.a, server = shown.b) }.takeUnless { session?.running == true },
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
             )
@@ -171,6 +184,8 @@ private fun LinkDetails(
     /** Opens the network test over this link; null while one runs. */
     onTest: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    /** Opens a capture on both ends; null when not offered. */
+    onCapture: (() -> Unit)? = null,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("${names[link.a] ?: link.a}  ↔  ${names[link.b] ?: link.b}", style = MaterialTheme.typography.titleMedium)
@@ -187,6 +202,11 @@ private fun LinkDetails(
         }
         OutlinedButton(onClick = { onTest?.invoke() }, enabled = onTest != null, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.topology_link_test_run))
+        }
+        onCapture?.let { capture ->
+            OutlinedButton(onClick = capture, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.topology_link_capture))
+            }
         }
     }
 }

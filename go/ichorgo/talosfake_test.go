@@ -81,6 +81,10 @@ type fakeTalos struct {
 	// recovered is what EtcdRecover received, per node; bootstraps the Bootstrap requests.
 	recovered  map[string][]byte
 	bootstraps []*machineapi.BootstrapRequest
+	// pcaps are the pcap streams a node's PacketCapture sends; pcapHold keeps a node's stream
+	// open after it (until the capture is stopped), like a live capture.
+	pcaps    map[string][]byte
+	pcapHold map[string]bool
 }
 
 type fakeConfigApply struct {
@@ -343,6 +347,27 @@ func (m fakeTalosMachine) Reset(ctx context.Context, req *machineapi.ResetReques
 	m.f.mu.Unlock()
 
 	return &machineapi.ResetResponse{Messages: []*machineapi.Reset{{ActorId: "reset-1"}}}, nil
+}
+
+func (m fakeTalosMachine) PacketCapture(_ *machineapi.PacketCaptureRequest, stream grpc.ServerStreamingServer[common.Data]) error {
+	node, err := m.f.enter(stream.Context(), "PacketCapture")
+	if err != nil {
+		return err
+	}
+
+	m.f.mu.Lock()
+	data, hold := m.f.pcaps[node], m.f.pcapHold[node]
+	m.f.mu.Unlock()
+
+	if err := stream.Send(&common.Data{Bytes: data}); err != nil {
+		return err
+	}
+
+	if hold {
+		<-stream.Context().Done()
+	}
+
+	return nil
 }
 
 func (m fakeTalosMachine) EtcdSnapshot(_ *machineapi.EtcdSnapshotRequest, stream grpc.ServerStreamingServer[common.Data]) error {

@@ -76,6 +76,8 @@ class KubeSpanViewModel(private val talos: TalosRepository) : LoadingViewModel<K
 fun KubeSpanScreen(
     onBack: () -> Unit,
     onNode: (TopologyNode) -> Unit,
+    /** Opens a capture on both ends of a link (both nodes of the talosconfig). */
+    onCaptureBoth: ((TopologyNode, TopologyNode) -> Unit)? = null,
     vm: KubeSpanViewModel = viewModel(factory = factory { KubeSpanViewModel(app.talosRepository) }),
     mapVm: TopologyViewModel = viewModel(factory = factory { TopologyViewModel(app.talosRepository) }),
     diagVm: KubeSpanDiagViewModel = viewModel(factory = factory { KubeSpanDiagViewModel(app.talosRepository) }),
@@ -108,7 +110,7 @@ fun KubeSpanScreen(
             }
             SwipeTabPager(listOf(MAP_TAB, PEERS_TAB), tab, onSelect = { tab = it }) { page ->
                 if (page == MAP_TAB) {
-                    Loaded(mapState, mapVm::refresh) { TopologyContent(it, onNode) }
+                    Loaded(mapState, mapVm::refresh) { TopologyContent(it, onNode, onCaptureBoth) }
                 } else {
                     Loaded(state, vm::refresh) { data ->
                         val hostnames = vm.hostnames()

@@ -1356,6 +1356,13 @@
     <string name="capture_filter_talos_excluded">El tráfico de la API de Talos (puerto 50000) nunca se captura.</string>
     <string name="capture_duration">Duración</string>
     <string name="capture_max_size">Tamaño máx.</string>
+    <string name="capture_second_node">Segundo nodo</string>
+    <string name="capture_second_node_desc">Capturar a la vez en un segundo nodo, como los dos extremos de un enlace: un solo archivo, cada paquete marcado con su nodo.</string>
+    <string name="capture_second_node_none">Ninguno</string>
+    <string name="capture_second_iface">Interfaz en %1$s</string>
+    <string name="capture_second_iface_same">Vacío: la misma interfaz.</string>
+    <string name="capture_max_size_each">Tamaño máximo, por nodo</string>
+    <string name="topology_link_capture">Capturar ambos extremos</string>
     <string name="capture_seconds">%1$d s</string>
     <string name="capture_minutes">%1$d min</string>
     <string name="capture_mib">%1$d MiB</string>

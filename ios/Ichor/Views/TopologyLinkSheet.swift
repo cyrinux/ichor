@@ -10,6 +10,8 @@ struct TopologyLinkSheet: View {
     let test: NetPerfReport?
     /// Opens the network test over this link; nil while one runs.
     let onTest: (() -> Void)?
+    /// Both ends, when both are nodes of the talosconfig: a capture can run on them.
+    var ends: (TopologyNode, TopologyNode)?
 
     @Environment(\.dismiss) private var dismiss
 
@@ -33,6 +35,13 @@ struct TopologyLinkSheet: View {
                         Label("Test this link", systemImage: "speedometer")
                     }
                     .disabled(onTest == nil)
+                    if let ends {
+                        NavigationLink {
+                            CaptureView(node: ends.0.node, hostname: ends.0.hostname, peer: ends.1.node, peerHostname: ends.1.hostname)
+                        } label: {
+                            Label("Capture both ends", systemImage: "waveform.path.ecg")
+                        }
+                    }
                 }
             }
             .themedBackground()

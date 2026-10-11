@@ -32,6 +32,7 @@ import name.levis.ichor.model.CaptureOptions
 import name.levis.ichor.model.CaptureProblem
 import name.levis.ichor.model.FilterPreset
 import name.levis.ichor.model.LinkInfo
+import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.captureInterfaces
 import name.levis.ichor.model.isUp
 import name.levis.ichor.model.problem
@@ -59,6 +60,48 @@ private val CaptureProblem.message: Int
         CaptureProblem.BAD_DURATION, CaptureProblem.BAD_SIZE -> R.string.capture_problem_options
     }
 
+/** "Second node": none, or one of [peers]; then its interface when it differs. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PeerPicker(peers: UiState<List<NodeOverview>>, options: CaptureOptions, onChange: ((CaptureOptions) -> CaptureOptions) -> Unit) {
+    val nodes = (peers as? UiState.Loaded)?.data.orEmpty()
+    if (nodes.isEmpty() && !options.paired) return
+    SectionTitle(stringResource(R.string.capture_second_node))
+    MutedText(stringResource(R.string.capture_second_node_desc))
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FilterChip(
+            selected = !options.paired,
+            onClick = { onChange { it.copy(peer = "", peerHost = "", peerIface = "") } },
+            label = { Text(stringResource(R.string.capture_second_node_none)) },
+        )
+        // A prefilled node (from the KubeSpan map) shows even before the list loads.
+        val shown = if (options.paired && nodes.none { it.node == options.peer }) {
+            nodes + NodeOverview(node = options.peer, hostname = options.peerHost, reachable = true)
+        } else {
+            nodes
+        }
+        shown.forEach { n ->
+            FilterChip(
+                selected = n.node == options.peer,
+                onClick = { onChange { it.copy(peer = n.node, peerHost = n.hostname.ifBlank { n.node }) } },
+                label = { Text(n.hostname.ifBlank { n.node }) },
+            )
+        }
+    }
+    if (options.paired) {
+        OutlinedTextField(
+            value = options.peerIface,
+            onValueChange = { value -> onChange { it.copy(peerIface = value.trim()) } },
+            label = { Text(stringResource(R.string.capture_second_iface, options.peerHost)) },
+            placeholder = { Text(options.iface, fontFamily = FontFamily.Monospace) },
+            supportingText = { Text(stringResource(R.string.capture_second_iface_same)) },
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
 @Composable
 fun durationLabel(seconds: Long): String =
     if (seconds >= 60) stringResource(R.string.capture_minutes, (seconds / 60).toInt()) else stringResource(R.string.capture_seconds, seconds.toInt())
@@ -75,6 +118,8 @@ fun CaptureSetup(
     filterChecking: Boolean,
     onChange: ((CaptureOptions) -> CaptureOptions) -> Unit,
     onStart: () -> Unit,
+    /** The other nodes a second capture can run on (null: not offered). */
+    peers: UiState<List<NodeOverview>>? = null,
 ) {
     val colors = LocalStatusColors.current
     var showVirtual by rememberSaveable { mutableStateOf(false) }
@@ -118,6 +163,8 @@ fun CaptureSetup(
             }
         }
 
+        peers?.let { PeerPicker(it, options, onChange) }
+
         SectionTitle(stringResource(R.string.capture_filter))
         OutlinedTextField(
             value = options.filter,
@@ -155,7 +202,7 @@ fun CaptureSetup(
             }
         }
 
-        SectionTitle(stringResource(R.string.capture_max_size))
+        SectionTitle(stringResource(if (options.paired) R.string.capture_max_size_each else R.string.capture_max_size))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CAPTURE_MAX_SIZES.forEach { bytes ->
                 FilterChip(

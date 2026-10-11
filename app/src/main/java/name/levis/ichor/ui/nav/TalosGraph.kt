@@ -148,13 +148,21 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
         val addr = entry.arguments?.getString("addr").orEmpty()
         ImagesScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
     }
-    composable(Routes.CAPTURE, arguments = nodeArguments()) { entry ->
+    composable(
+        Routes.CAPTURE,
+        arguments = nodeArguments() + listOf(
+            navArgument("peer") { type = NavType.StringType; defaultValue = "" },
+            navArgument("peerHost") { type = NavType.StringType; defaultValue = "" },
+        ),
+    ) { entry ->
         val addr = entry.arguments?.getString("addr").orEmpty()
         CaptureScreen(
             node = addr,
             hostname = entry.arguments?.getString("host") ?: addr,
             onBack = { nav.popBackStack() },
             onCaptures = { nav.navigate(Routes.CAPTURES) },
+            peer = entry.arguments?.getString("peer").orEmpty(),
+            peerHost = entry.arguments?.getString("peerHost").orEmpty(),
         )
     }
     composable(Routes.CAPTURES) {
@@ -302,6 +310,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             onBack = { nav.popBackStack() },
             // Only a node the talosconfig targets has a detail screen.
             onNode = { n -> if (n.node.isNotBlank()) nav.navigate(Routes.node(n.node, n.hostname, n.role)) },
+            onCaptureBoth = { a, b -> nav.navigate(Routes.capture(a.node, a.hostname, b.node, b.hostname)) },
         )
     }
     composable(Routes.ETCD) {

@@ -13,12 +13,15 @@ public struct PacketSummary: Decodable, Equatable, Identifiable, Sendable {
     public let dst: String
     public let proto: String
     public let info: String
+    /// The hostname it was captured on, in a capture of two nodes; empty otherwise.
+    public let node: String
 
     public var id: Int { n }
     /// 1-based, as shown.
     public var number: Int { n + 1 }
 
-    public init(n: Int, ts: Int64 = 0, len: Int = 0, src: String = "", dst: String = "", proto: String = "", info: String = "") {
+    public init(n: Int, ts: Int64 = 0, len: Int = 0, src: String = "", dst: String = "", proto: String = "", info: String = "",
+                node: String = "") {
         self.n = n
         self.ts = ts
         self.len = len
@@ -26,9 +29,10 @@ public struct PacketSummary: Decodable, Equatable, Identifiable, Sendable {
         self.dst = dst
         self.proto = proto
         self.info = info
+        self.node = node
     }
 
-    private enum CodingKeys: String, CodingKey { case n, ts, len, src, dst, proto, info }
+    private enum CodingKeys: String, CodingKey { case n, ts, len, src, dst, proto, info, node }
 
     // Go omits or nulls empty fields.
     public init(from decoder: Decoder) throws {
@@ -40,6 +44,7 @@ public struct PacketSummary: Decodable, Equatable, Identifiable, Sendable {
         dst = try c.field(.dst, "")
         proto = try c.field(.proto, "")
         info = try c.field(.info, "")
+        node = try c.field(.node, "")
     }
 
     /// Color family of the protocol tag.
@@ -181,18 +186,35 @@ public struct CaptureOptions: Equatable, Sendable {
     public var sizeLimit: CaptureSizeLimit
     /// Bytes kept per packet, 0 = whole packets.
     public var snapLen: Int
+    /// A second node captured at the same time (its address), "" for one node.
+    public var peer: String
+    public var peerHostname: String
+    /// The second node's interface, "" for the same as `interface`.
+    public var peerInterface: String
 
     public init(interface: String = "", filter: String = "", promiscuous: Bool = false,
-                duration: CaptureDuration = .s30, sizeLimit: CaptureSizeLimit = .mib20, snapLen: Int = 0) {
+                duration: CaptureDuration = .s30, sizeLimit: CaptureSizeLimit = .mib20, snapLen: Int = 0,
+                peer: String = "", peerHostname: String = "", peerInterface: String = "") {
         self.interface = interface
         self.filter = filter
         self.promiscuous = promiscuous
         self.duration = duration
         self.sizeLimit = sizeLimit
         self.snapLen = snapLen
+        self.peer = peer
+        self.peerHostname = peerHostname
+        self.peerInterface = peerInterface
     }
 
     public var trimmedFilter: String { filter.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    public var isPaired: Bool { !peer.trimmingCharacters(in: .whitespaces).isEmpty }
+
+    /// The interfaces as the core takes them: "eth0", or "eth0,wg0" when the second node's differs.
+    public var interfaces: String {
+        let other = peerInterface.trimmingCharacters(in: .whitespaces)
+        return isPaired && !other.isEmpty && other != interface ? "\(interface),\(other)" : interface
+    }
 }
 
 public enum CaptureOptionsProblem: Equatable, Sendable {
@@ -258,4 +280,47 @@ public func totalCaptureSize(_ files: [CaptureFile]) -> Int64 {
 public func formatElapsed(_ seconds: Int) -> String {
     let s = max(seconds, 0)
     return String(format: "%02d:%02d", s / 60, s % 60)
+}
+
+/// A two-node capture's counters, the totals and each node's (Go PairCaptureListener.OnStats).
+public struct PairCaptureStats: Decodable, Equatable, Sendable {
+    public let packets: Int64
+    public let bytes: Int64
+    public let nodes: [PairNodeStats]
+
+    private enum CodingKeys: String, CodingKey { case packets, bytes, nodes }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        packets = try c.field(.packets, 0)
+        bytes = try c.field(.bytes, 0)
+        nodes = try c.field(.nodes, [])
+    }
+}
+
+public struct PairNodeStats: Decodable, Equatable, Sendable, Identifiable {
+    public let node: String
+    public let hostname: String
+    public let packets: Int64
+    public let bytes: Int64
+
+    public var id: String { node }
+
+    private enum CodingKeys: String, CodingKey { case node, hostname, packets, bytes }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        node = try c.field(.node, "")
+        hostname = try c.field(.hostname, "")
+        packets = try c.field(.packets, 0)
+        bytes = try c.field(.bytes, 0)
+    }
+}
+
+/// A two-node capture's file: "<host-a>_<host-b>-<iface>-<stamp>.pcap" (pcapng inside, which
+/// readers detect).
+public func pairCaptureFilename(hostname: String, peerHostname: String, interface: String, date: Date,
+                                timeZone: TimeZone = .current) -> String {
+    captureFilename(hostname: "\(captureFileSafe(hostname, fallback: "node"))_\(captureFileSafe(peerHostname, fallback: "node"))",
+                    interface: interface, date: date, timeZone: timeZone)
 }

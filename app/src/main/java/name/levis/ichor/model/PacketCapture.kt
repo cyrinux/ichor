@@ -22,7 +22,20 @@ data class PacketSummary(
     val dst: String = "",
     val proto: String = "",
     val info: String = "",
+    /** The hostname it was captured on, in a capture of two nodes; empty otherwise. */
+    val node: String = "",
 )
+
+/** A two-node capture's counters, the totals and each node's (Go PairCaptureListener.OnStats). */
+@Serializable
+data class PairCaptureStats(
+    val packets: Long = 0,
+    val bytes: Long = 0,
+    val nodes: List<PairNodeStats> = emptyList(),
+)
+
+@Serializable
+data class PairNodeStats(val node: String = "", val hostname: String = "", val packets: Long = 0, val bytes: Long = 0)
 
 /** A page of a pcap file read back ([total] packets in the whole file). */
 @Serializable
@@ -72,7 +85,17 @@ data class CaptureOptions(
     val promiscuous: Boolean = false,
     val maxSeconds: Long = DEFAULT_CAPTURE_SECONDS,
     val maxBytes: Long = DEFAULT_CAPTURE_BYTES,
-)
+    /** A second node captured at the same time (its address), "" for one node. */
+    val peer: String = "",
+    val peerHost: String = "",
+    /** The second node's interface, "" for the same as [iface]. */
+    val peerIface: String = "",
+) {
+    val paired: Boolean get() = peer.isNotBlank()
+
+    /** The interfaces as the core takes them: "eth0", or "eth0,wg0" when the second node's differs. */
+    val ifaces: String get() = if (paired && peerIface.isNotBlank() && peerIface != iface) "$iface,${peerIface.trim()}" else iface
+}
 
 /** Why the capture cannot start yet. */
 enum class CaptureProblem { NO_INTERFACE, BAD_FILTER, BAD_DURATION, BAD_SIZE }
@@ -106,6 +129,13 @@ fun captureFileName(hostname: String, iface: String, now: Date = Date(), zone: T
     val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).apply { timeZone = zone }.format(now)
     return "${safeFilePart(hostname)}-${safeFilePart(iface)}-$stamp.pcap"
 }
+
+/** A two-node capture's file: "<host-a>_<host-b>-<iface>-<stamp>.pcap" (pcapng inside, which readers detect). */
+fun pairCaptureFileName(hostname: String, peerHost: String, iface: String, now: Date = Date(), zone: TimeZone = TimeZone.getDefault()): String =
+    captureFileName("${safeFilePart(hostname)}_${safeFilePart(peerHost)}", iface, now, zone)
+
+/** The per-node files a two-node capture writes next to its file until they are merged. */
+fun isPairCapturePart(name: String): Boolean = Regex("""\.pcap\.node\d(\.part)?$""").containsMatchIn(name)
 
 private fun safeFilePart(part: String) = part.replace(Regex("[^A-Za-z0-9._-]+"), "-").trim('-', '.').ifEmpty { "unknown" }
 

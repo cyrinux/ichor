@@ -1356,6 +1356,13 @@
     <string name="capture_filter_talos_excluded">Il traffico dell\'API Talos (porta 50000) non viene mai catturato.</string>
     <string name="capture_duration">Durata</string>
     <string name="capture_max_size">Dimensione max</string>
+    <string name="capture_second_node">Secondo nodo</string>
+    <string name="capture_second_node_desc">Cattura contemporaneamente su un secondo nodo, come i due capi di un collegamento: un unico file, ogni pacchetto marcato con il suo nodo.</string>
+    <string name="capture_second_node_none">Nessuno</string>
+    <string name="capture_second_iface">Interfaccia su %1$s</string>
+    <string name="capture_second_iface_same">Vuoto: la stessa interfaccia.</string>
+    <string name="capture_max_size_each">Dimensione massima, per nodo</string>
+    <string name="topology_link_capture">Cattura entrambi i capi</string>
     <string name="capture_seconds">%1$d s</string>
     <string name="capture_minutes">%1$d min</string>
     <string name="capture_mib">%1$d MiB</string>

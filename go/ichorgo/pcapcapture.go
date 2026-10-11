@@ -66,6 +66,8 @@ type captureOptions struct {
 
 type captureResult struct {
 	packets, bytes int64
+	// full: the size limit ended it (a pair capture then stops its other end too).
+	full bool
 }
 
 // StartPacketCapture captures packets on node's interface iface into destPath (a pcap file),
@@ -322,6 +324,8 @@ func copyPackets(
 
 		size := int64(pcapPacketHeaderLen + len(data))
 		if res.bytes+size > opts.maxBytes {
+			res.full = true
+
 			return nil
 		}
 
