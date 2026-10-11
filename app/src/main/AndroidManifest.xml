@@ -241,6 +241,18 @@
                 android:value="Follows a container image pull the user started on their Talos nodes (ahead of an upgrade) while they switch apps, so the download is not cut off midway; it stops when the pull ends." />
         </service>
 
+        <!-- An image vulnerability scan runs for minutes in the cluster and the app reads its
+             report from the scanner's log; same reasons as the image pull service, and it runs
+             only while the scan does. -->
+        <service
+            android:name=".ui.imagescan.ImageScanService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Follows a vulnerability scan of container images the user started in their Kubernetes cluster while they switch apps or lock the screen, so its report is not lost; it stops when the scan ends." />
+        </service>
+
         <receiver
             android:name=".update.InstallResultReceiver"
             android:exported="false" />

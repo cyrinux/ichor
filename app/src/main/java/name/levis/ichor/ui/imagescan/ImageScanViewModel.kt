@@ -31,7 +31,7 @@ class ImageScanViewModel(private val scans: ImageScanRepository) : LoadingViewMo
         refresh(reset = true)
     }
 
-    fun scan(app: InventoryApp) = scans.start(app.id, app.routePods)
+    fun scan(app: InventoryApp) = scans.start(app.id, app.name, app.routePods)
 
     fun stop() = scans.stop()
 

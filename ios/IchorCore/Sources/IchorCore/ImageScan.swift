@@ -398,6 +398,8 @@ public struct ImageScanState: Equatable, Sendable {
     /// The cluster context and app it scans.
     public let context: String
     public let appID: String
+    /// The scanner it runs, the one picked in Settings when it started.
+    public let scanner: ImageScanner
     public var progress: ImageScanProgress?
     public var report: ImageScanReport?
     public var reportJSON = ""
@@ -408,9 +410,10 @@ public struct ImageScanState: Equatable, Sendable {
     public var stopped = false
     public var error: String?
 
-    public init(context: String, appID: String) {
+    public init(context: String, appID: String, scanner: ImageScanner = .trivy) {
         self.context = context
         self.appID = appID
+        self.scanner = scanner
     }
 
     /// The finished scan's report, when it scanned at least one image (not stopped or failed early).

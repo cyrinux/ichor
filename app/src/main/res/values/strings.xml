@@ -3730,7 +3730,7 @@
     <string name="helm_rollback_done">Rolled back to revision %1$s.</string>
     <string name="helm_rollback_footer">Upgrades are done with Helm or your GitOps tool. From the history, the release can be rolled back to an older revision.</string>
     <string name="imagescan_title">Vulnerabilities</string>
-    <string name="imagescan_hint">Checks the images these pods run, by digest, for known vulnerabilities with Trivy. It runs as a Job in the %1$s namespace, which deletes itself afterwards.</string>
+    <string name="imagescan_hint">Checks the images these pods run, by digest, for known vulnerabilities with %1$s. It runs as a Job in the %2$s namespace, which deletes itself afterwards.</string>
     <string name="imagescan_scan">Scan images</string>
     <string name="imagescan_scan_again">Scan again</string>
     <string name="imagescan_stop">Stop</string>
@@ -3738,8 +3738,17 @@
     <string name="imagescan_open">Open report</string>
     <string name="imagescan_failed">The scan failed: %1$s</string>
     <string name="imagescan_phase_preparing">Reading the pods and their images…</string>
-    <string name="imagescan_phase_starting">Starting Trivy…</string>
-    <string name="imagescan_phase_starting_reason">Starting Trivy (%1$s)…</string>
+    <string name="imagescan_phase_starting">Starting %1$s…</string>
+    <string name="imagescan_phase_starting_reason">Starting %1$s (%2$s)…</string>
+    <string name="imagescan_channel_name">Image scans</string>
+    <string name="imagescan_channel_desc">Progress of a vulnerability scan of your images</string>
+    <string name="imagescan_notification_public">Scanning images</string>
+    <string name="imagescan_notification_result_public">Image scan finished</string>
+    <string name="imagescan_notification_title">Scanning the images of %1$s</string>
+    <string name="imagescan_notification_done">Images of %1$s scanned</string>
+    <string name="imagescan_notification_stopped">Scan of %1$s stopped</string>
+    <string name="imagescan_notification_failed">Scan of %1$s failed</string>
+    <string name="imagescan_notification_summary">%1$s critical · %2$s high · %3$s medium · %4$s low</string>
     <string name="imagescan_phase_database">Downloading the vulnerability database…</string>
     <string name="imagescan_phase_scanning">Scanning %1$s of %2$s: %3$s</string>
     <string name="imagescan_phase_cleaning">Cleaning up…</string>
@@ -4026,7 +4035,7 @@
     <string name="imagescan_system_title">System images</string>
     <string name="imagescan_system_loading">Reading the node\'s system images…</string>
     <string name="imagescan_system_unavailable">System images need the os:admin role: %1$s</string>
-    <string name="imagescan_system_hint">Checks the images Talos runs on this node (kubelet, etcd, the control plane), by digest, for known vulnerabilities with Trivy. It runs as a Job in the %1$s namespace, which deletes itself afterwards.</string>
+    <string name="imagescan_system_hint">Checks the images Talos runs on this node (kubelet, etcd, the control plane), by digest, for known vulnerabilities with %1$s. It runs as a Job in the %2$s namespace, which deletes itself afterwards.</string>
     <string name="imagescan_system_scan">Scan system images</string>
     <string name="images_kubernetes_title">Kubernetes images</string>
     <string name="alert_action_wake">Wake</string>

@@ -184,6 +184,7 @@ private fun systemImagesUi(node: String, vm: SystemImagesViewModel, onOpen: (Ima
     val config by application.configRepository.config.collectAsStateWithLifecycle()
     val state by vm.state.collectAsStateWithLifecycle()
     val session by vm.session.collectAsStateWithLifecycle()
+    val scanner by application.uiPreferences.imageScanner.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     val context = config?.activeContext
     val id = systemImagesScanId(node)
@@ -191,6 +192,7 @@ private fun systemImagesUi(node: String, vm: SystemImagesViewModel, onOpen: (Ima
         state = state,
         session = session?.takeIf { it.appId == id && it.context == context },
         busyElsewhere = session?.let { it.running && (it.appId != id || it.context != context) } == true,
+        scanner = scanner,
         canScan = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
         onScan = vm::scan,
         onStop = vm::stop,

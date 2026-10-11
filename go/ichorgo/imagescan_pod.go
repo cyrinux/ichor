@@ -216,7 +216,7 @@ func followImageScan(ctx context.Context, k *kubeClient, scanner scannerSpec, jo
 
 	var lastErr error
 
-	for range imageScanFollows {
+	for attempt := range imageScanFollows {
 		parser := newScanLogParser(scanner, nonce, targets, report, emit)
 		streamErr := k.stream(ctx, logPath(true), "text/plain, */*", parser.read)
 
@@ -226,7 +226,7 @@ func followImageScan(ctx context.Context, k *kubeClient, scanner scannerSpec, jo
 
 		var pod netPerfPod
 		if lastErr = k.get(ctx, podPath, &pod); lastErr != nil {
-			sleepCtx(ctx, netPerfPoll)
+			sleepCtx(ctx, followBackoff(attempt))
 
 			continue
 		}
@@ -239,7 +239,7 @@ func followImageScan(ctx context.Context, k *kubeClient, scanner scannerSpec, jo
 
 			lastErr = streamErr
 
-			sleepCtx(ctx, netPerfPoll)
+			sleepCtx(ctx, followBackoff(attempt))
 
 			continue
 		}
@@ -259,6 +259,12 @@ func followImageScan(ctx context.Context, k *kubeClient, scanner scannerSpec, jo
 	}
 
 	return netPerfRefused("lost the %s pod's log", scanner.name)
+}
+
+// followBackoff is the wait before follow attempt+1: doubling up to 32 polls, so the attempts
+// span minutes, time for a phone that slept (screen locked) to get its network back.
+func followBackoff(attempt int) time.Duration {
+	return netPerfPoll << min(attempt, 5)
 }
 
 func sleepCtx(ctx context.Context, d time.Duration) {
