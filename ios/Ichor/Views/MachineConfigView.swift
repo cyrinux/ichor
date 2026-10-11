@@ -3,7 +3,7 @@ import IchorCore
 import UniformTypeIdentifiers
 
 private enum ConfigTab: String {
-    case pretty, yaml
+    case pretty, yaml, meta
 }
 
 /// Machine config (os:admin) as a schema-described tree or as YAML, secrets masked unless
@@ -38,7 +38,11 @@ struct MachineConfigView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-            LoadStateView(state: state, retry: load) { yaml in content(yaml) }
+            if showingMeta {
+                MetaKeysView(node: node, hostname: hostname)
+            } else {
+                LoadStateView(state: state, retry: load) { yaml in content(yaml) }
+            }
         }
         .navigationTitle("Machine config")
         .navigationBarTitleDisplayMode(.inline)
@@ -68,9 +72,15 @@ struct MachineConfigView: View {
             Picker("Machine config", selection: $tab) {
                 Text("Fields").tag(ConfigTab.pretty)
                 Text(verbatim: "YAML").tag(ConfigTab.yaml)
+                // META is not part of the draft: out of the way while editing.
+                if draft == nil {
+                    Text(verbatim: "META").tag(ConfigTab.meta)
+                }
             }
             .pickerStyle(.segmented)
-            if draft != nil {
+            if showingMeta {
+                EmptyView() // the META keys are not the config: nothing to reveal
+            } else if draft != nil {
                 Label("Editing a draft: nothing changes on the node until you review and try it.", systemImage: "pencil")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -103,6 +113,9 @@ struct MachineConfigView: View {
         .padding(.vertical, 8)
     }
 
+    /// The META tab, only while reading: editing shows the fields instead.
+    private var showingMeta: Bool { tab == .meta && draft == nil }
+
     @ViewBuilder private func content(_ yaml: String) -> some View {
         switch tab {
         case .yaml:
@@ -111,7 +124,7 @@ struct MachineConfigView: View {
             } else {
                 ConfigYamlLines(yaml: yaml, query: query, refresh: load)
             }
-        case .pretty:
+        case .pretty, .meta:
             if let error = tree?.error {
                 ContentUnavailableView {
                     Label("The YAML is not valid", systemImage: "exclamationmark.triangle")
@@ -144,7 +157,7 @@ struct MachineConfigView: View {
                 Button("Review") { reviewing = true }
                     .disabled(!canReview)
             }
-        } else {
+        } else if !showingMeta {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button(action: copy) {
                     Label("Copy", systemImage: "doc.on.doc")

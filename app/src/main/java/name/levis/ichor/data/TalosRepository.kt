@@ -13,6 +13,7 @@ import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ConfigApplyEvent
 import name.levis.ichor.model.MaintenanceInspection
+import name.levis.ichor.model.MetaKeyList
 import name.levis.ichor.model.JoinConfigPreview
 import name.levis.ichor.model.CpReplacePlan
 import name.levis.ichor.model.CpReplaceWait
@@ -181,6 +182,19 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** `talosctl -n NODE restart [-k] ID` (os:admin); [namespace] is `system` or `k8s.io`. */
     suspend fun containerRestart(node: String, namespace: String, id: String) = call { cfg, ctx ->
         Ichorgo.containerRestart(cfg, ctx, node, namespace, id)
+    }
+
+    /** The keys of [node]'s META partition (never cached: values change under it). */
+    suspend fun metaKeys(node: String): MetaKeyList = call { cfg, ctx ->
+        TalosJson.decodeFromString(MetaKeyList.serializer(), Ichorgo.nodeMetaKeys(cfg, ctx, node))
+    }
+
+    suspend fun metaWrite(node: String, key: Int, value: String) = call { cfg, ctx ->
+        Ichorgo.nodeMetaWrite(cfg, ctx, node, key.toLong(), value)
+    }
+
+    suspend fun metaDelete(node: String, key: Int) = call { cfg, ctx ->
+        Ichorgo.nodeMetaDelete(cfg, ctx, node, key.toLong())
     }
 
     /** `talosctl -n NODE service ID start|stop|restart` (os:operator or os:admin). */

@@ -70,6 +70,26 @@ var configCommands = []command{
 
 		return generate(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), address, "")
 	}},
+	{name: "meta", args: "NODE", run: func(e env) (string, error) {
+		return ichorgo.NodeMetaKeys(e.cfg, e.context, flag.Arg(1))
+	}},
+	{name: "meta-write", args: "NODE KEY VALUE", run: func(e env) (string, error) {
+		// Writes the key for real (KEY: 10 or 0x0a); Talos reads it at the next boot.
+		key, err := strconv.ParseInt(flag.Arg(2), 0, 64)
+		if err != nil {
+			return "", err
+		}
+
+		return "written", ichorgo.NodeMetaWrite(e.cfg, e.context, flag.Arg(1), int(key), flag.Arg(3))
+	}},
+	{name: "meta-delete", args: "NODE KEY", run: func(e env) (string, error) {
+		key, err := strconv.ParseInt(flag.Arg(2), 0, 64)
+		if err != nil {
+			return "", err
+		}
+
+		return "deleted", ichorgo.NodeMetaDelete(e.cfg, e.context, flag.Arg(1), int(key))
+	}},
 	{name: "config-edit", args: "FILE EDITJSON", run: func(env) (string, error) {
 		// FILE with one field edit applied (see MachineConfigEdit), printed. Local.
 		file, err := os.ReadFile(flag.Arg(1))

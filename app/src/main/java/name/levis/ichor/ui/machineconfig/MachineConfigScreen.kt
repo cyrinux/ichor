@@ -77,10 +77,11 @@ import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 
-/** The two ways the config is shown: field by field, or as its YAML text. */
+/** The ways the config is shown: field by field, or as its YAML text; and the node's META keys. */
 private enum class ConfigView(@StringRes val label: Int) {
     FIELDS(R.string.machine_config_view_fields),
     YAML(R.string.machine_config_view_yaml),
+    META(R.string.machine_config_view_meta),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,6 +94,7 @@ fun MachineConfigScreen(
         key = "machineconfig-$node",
         factory = factory { MachineConfigViewModel(app.talosRepository, node, hostname, app.configTryManager, app.configMultiManager) },
     ),
+    metaVm: MetaKeysViewModel = viewModel(key = "meta-$node", factory = factory { MetaKeysViewModel(app.talosRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val revealed by vm.revealed.collectAsStateWithLifecycle()
@@ -191,7 +193,7 @@ fun MachineConfigScreen(
                     if (!running) BackButton(::back)
                 },
                 actions = {
-                    if (browsing && !editor.editing) {
+                    if (browsing && !editor.editing && view != ConfigView.META) {
                         TooltipIconButton(
                             Icons.Outlined.ContentCopy,
                             stringResource(R.string.machine_config_copy),
@@ -243,7 +245,9 @@ fun MachineConfigScreen(
             )
             else -> Column(body) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (editor.editing) {
+                    if (view == ConfigView.META) {
+                        // The META keys are not the config: nothing to reveal or search.
+                    } else if (editor.editing) {
                         InfoNotice(stringResource(R.string.machine_config_editing_note))
                     } else {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -255,9 +259,9 @@ fun MachineConfigScreen(
                         }
                         if (revealed) RevealedBanner()
                     }
-                    ViewPicker(view) { view = it }
+                    ViewPicker(view, withMeta = !editor.editing) { view = it }
                     // The YAML editor is the text itself: there is nothing to filter while typing in it.
-                    if (!(editor.editing && view == ConfigView.YAML)) {
+                    if (view != ConfigView.META && !(editor.editing && view == ConfigView.YAML)) {
                         OutlinedTextField(
                             value = query,
                             onValueChange = { query = it },
@@ -271,7 +275,14 @@ fun MachineConfigScreen(
                         )
                     }
                 }
-                when (val s = state) {
+                if (view == ConfigView.META) {
+                    MetaKeysPane(
+                        metaVm,
+                        hostname,
+                        authenticated = ::authenticated,
+                        onMessage = { message -> scope.launch { snackbar.showSnackbar(message.resolve(context), withDismissAction = true) } },
+                    )
+                } else when (val s = state) {
                     UiState.Loading -> LoadingBox(style = SkeletonStyle.TEXT)
                     is UiState.Failed -> ErrorBox(s.message, vm::refresh)
                     is UiState.Loaded -> {
@@ -401,13 +412,15 @@ fun MachineConfigScreen(
 }
 
 @Composable
-private fun ViewPicker(selected: ConfigView, onSelect: (ConfigView) -> Unit) {
+private fun ViewPicker(selected: ConfigView, withMeta: Boolean, onSelect: (ConfigView) -> Unit) {
+    // While editing, META is out of the way: it is not part of the draft.
+    val views = ConfigView.entries.filter { withMeta || it != ConfigView.META }
     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-        ConfigView.entries.forEachIndexed { i, v ->
+        views.forEachIndexed { i, v ->
             SegmentedButton(
                 selected = v == selected,
                 onClick = { onSelect(v) },
-                shape = SegmentedButtonDefaults.itemShape(i, ConfigView.entries.size),
+                shape = SegmentedButtonDefaults.itemShape(i, views.size),
                 icon = {},
             ) { Text(stringResource(v.label)) }
         }
