@@ -235,6 +235,14 @@ struct KubeCredentialsForm: View {
             } footer: {
                 Text("Your Google account, through Google's sign-in page.")
             }
+        } else if fields == [kubeGcloudSignInField] {
+            // Your Google account like gcloud: Google's page in the browser sheet, nothing to type.
+            Section {
+                Button("Sign in") { onSubmit(kubeSecretsJSON(fields: fields, values: [:])) }
+                    .disabled(busy)
+            } footer: {
+                if let hint = KubeAuthWording.fieldHint(kubeGcloudSignInField) { Text(hint) }
+            }
         } else {
             KubeFieldsSection(fields: fields, values: $values)
             if let hint = fields.lazy.compactMap(KubeAuthWording.fieldHint).first {

@@ -160,6 +160,23 @@ class KubeSignInTest {
     }
 
     @Test
+    fun gcloudSignInIsAMarkerThatSignsInFirst() {
+        val gcloud = listOf(GCP_GCLOUD_SIGN_IN)
+        assertEquals(R.string.kube_signin_option_gcp_gcloud, fieldSetLabel(gcloud))
+        // Nothing to type: complete as it is, and the marker is what gets sent.
+        assertTrue(credentialsComplete(gcloud, emptyMap()))
+        assertEquals(mapOf(GCP_GCLOUD_SIGN_IN to "1"), credentialsFor(gcloud, emptyMap()))
+        // Discovery signs in in the browser first, not with the Play build's Google picker.
+        val discovery = listOf(GCP_GCLOUD_SIGN_IN, "gcpProjects")
+        assertTrue(discoveryNeedsSignIn(discovery))
+        assertFalse(discoveryUsesGoogle(discovery))
+        assertEquals(mapOf(GCP_GCLOUD_SIGN_IN to "1", "gcpProjects" to "sample-proj"), credentialsFor(discovery, mapOf("gcpProjects" to " sample-proj ")))
+        // The sheet reopens on it after a sign-in (the core remembers the marker).
+        val info = KubeSignInInfo(method = "gke", options = listOf(listOf("gcpServiceAccountJson"), gcloud), values = mapOf(GCP_GCLOUD_SIGN_IN to "1"))
+        assertEquals(1, info.rememberedOption)
+    }
+
+    @Test
     fun importedNamesAreNewAndReplacedContexts() {
         val conflicts = listOf(ImportConflict(0, "eks-1", sameAs = "eks"), ImportConflict(1, "gke-1"))
         val choices = listOf(ImportChoice(0, replace = true), ImportChoice(1), ImportChoice(2, skip = true))

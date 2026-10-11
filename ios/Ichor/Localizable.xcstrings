@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Your Google account (like gcloud)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre compte Google (comme gcloud)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu cuenta de Google (como gcloud)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Google-Konto (wie gcloud)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo account Google (come gcloud)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш обліковий запис Google (як gcloud)"
+          }
+        }
+      }
+    },
+    "Opens Google's sign-in in the browser, as gcloud auth application-default login does on a computer. Works on every build; your organisation's SSO applies. The consent page names Google Cloud SDK." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre la connexion Google dans le navigateur, comme gcloud auth application-default login sur un ordinateur. Fonctionne sur toutes les versions ; le SSO de votre organisation s'applique. La page de consentement indique Google Cloud SDK."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre el inicio de sesión de Google en el navegador, como hace gcloud auth application-default login en un ordenador. Funciona en todas las versiones; se aplica el SSO de tu organización. La página de consentimiento muestra Google Cloud SDK."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet die Google-Anmeldung im Browser, wie gcloud auth application-default login auf einem Computer. Funktioniert in jedem Build; das SSO deiner Organisation gilt. Die Zustimmungsseite nennt Google Cloud SDK."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apre l'accesso Google nel browser, come fa gcloud auth application-default login su un computer. Funziona in ogni build; si applica il SSO della tua organizzazione. La pagina di consenso indica Google Cloud SDK."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває вхід Google у браузері, як gcloud auth application-default login на комп'ютері. Працює в кожній збірці; діє SSO вашої організації. Сторінка згоди називає Google Cloud SDK."
+          }
+        }
+      }
+    },
     "The new node gets the config of a member of the same role, with its own host name, install disk and address. The member is only read." : {
       "extractionState" : "manual",
       "localizations" : {

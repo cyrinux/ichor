@@ -3447,6 +3447,8 @@
     <string name="kube_field_gcp_oauth_client_secret">Secreto de cliente OAuth</string>
     <string name="kube_signin_option_gcp_oauth">El cliente OAuth de tu organización</string>
     <string name="kube_signin_gcp_oauth_hint">Pide al administrador de Google Cloud un cliente OAuth de tipo Aplicación de escritorio (APIs y servicios → Credenciales) con una pantalla de consentimiento Interna. Iniciar sesión abre después tu cuenta de Google en el navegador.</string>
+    <string name="kube_signin_option_gcp_gcloud">Tu cuenta de Google (como gcloud)</string>
+    <string name="kube_signin_gcp_gcloud_hint">Abre el inicio de sesión de Google en el navegador, como hace gcloud auth application-default login en un ordenador. Funciona en todas las versiones; se aplica el SSO de tu organización. La página de consentimiento muestra Google Cloud SDK.</string>
     <string name="kube_signin_option_google">Iniciar sesión con Google</string>
     <string name="kube_signin_google_hint">Tu cuenta de Google, con el inicio de sesión de Google. Necesita los servicios de Google Play.</string>
     <string name="kube_signin_google_unavailable">El inicio de sesión de Google no está disponible en este dispositivo.</string>
