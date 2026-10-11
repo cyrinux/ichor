@@ -1,0 +1,7 @@
+• GKE workforce identity login config option on Android and iOS
+• Config snippets, and "Fix with a patch" from the drift view
+• GKE workforce identity sign-in in the browser from a login config (Go core)
+• Read, write and delete META keys from the machine config screen
+• GKE clusters can sign in with your Google account in the browser, nothing to set up
+• Make a new node's machine config from an existing member
+• Add a node: inspect a Talos node in maintenance mode from the phone
