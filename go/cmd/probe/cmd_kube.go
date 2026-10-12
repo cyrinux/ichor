@@ -57,6 +57,12 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "node-loss", args: "[NODE]", run: func(e env) (out string, err error) {
+		// node-loss [NODE]: what losing NODE costs; the worst node when omitted.
+		out, err = ichorgo.KubeCapacityNodeLoss(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+
+		return out, err
+	}},
 	{name: "top-pods", args: "[NAMESPACE [SELECTOR]]", run: func(e env) (out string, err error) {
 		// top-pods [NAMESPACE [SELECTOR]]: every namespace and pod when omitted.
 		out, err = ichorgo.KubeTopPods(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
