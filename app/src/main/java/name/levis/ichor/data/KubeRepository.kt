@@ -9,6 +9,8 @@ import name.levis.ichor.model.ApiHealthReport
 import name.levis.ichor.model.CheckupReport
 import name.levis.ichor.model.ReadProgress
 import name.levis.ichor.model.KubeTopNodes
+import name.levis.ichor.model.KubeCapacity
+import name.levis.ichor.model.NodeLossPlan
 import name.levis.ichor.model.KubeTopPods
 import name.levis.ichor.model.IntegrationReport
 import name.levis.ichor.model.Inventory
@@ -283,6 +285,19 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
      */
     suspend fun checkup(): CheckupReport = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(CheckupReport.serializer(), Ichorgo.kubeCheckup(cfg, ctx, server))
+    }
+
+    /**
+     * The cluster's capacity: free room per node, each workload's priority, QoS and OOM risk,
+     * and the N+1 verdict. Lists every pod: on demand, never cached.
+     */
+    suspend fun capacity(): KubeCapacity = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeCapacity.serializer(), Ichorgo.kubeCapacity(cfg, ctx, server))
+    }
+
+    /** What losing the Kubernetes node [node] would cost; null: the worst node, with the others as candidates. */
+    suspend fun nodeLoss(node: String?): NodeLossPlan = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(NodeLossPlan.serializer(), Ichorgo.kubeCapacityNodeLoss(cfg, ctx, server, node.orEmpty()))
     }
 
     /**

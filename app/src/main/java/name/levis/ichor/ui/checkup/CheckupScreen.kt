@@ -113,6 +113,7 @@ fun CheckupScreen(
     onBack: () -> Unit,
     onOpenRelease: (namespace: String, name: String) -> Unit,
     onOpenMonitoring: () -> Unit,
+    onOpenCapacity: () -> Unit,
     vm: CheckupViewModel = viewModel(factory = factory { CheckupViewModel(app.kubeRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -152,15 +153,16 @@ fun CheckupScreen(
         },
     ) { padding ->
         Loaded(state, vm::refresh, Modifier.pageContent(padding), progress = progress, stepLabel = { checkupStepLabel(it) }) { report ->
-            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring), onDeleteLeftover = { confirmDelete = it })
+            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring, onOpenCapacity), onDeleteLeftover = { confirmDelete = it })
         }
     }
 }
 
-/** Where the checkup leads: a Helm release, the Monitoring tab of the Metrics screen. */
+/** Where the checkup leads: a Helm release, the Monitoring tab of the Metrics screen, the Capacity screen. */
 private class CheckupLinks(
     val onOpenRelease: (namespace: String, name: String) -> Unit,
     val onOpenMonitoring: () -> Unit,
+    val onOpenCapacity: () -> Unit,
 )
 
 @Composable
@@ -299,7 +301,10 @@ private fun SectionBody(
     }
     if (section.truncated > 0) MutedText(stringResource(R.string.checkup_truncated, section.truncated.toString()))
     when (section.id) {
-        CheckupSectionId.CAPACITY -> NodeRequests(report.nodes)
+        CheckupSectionId.CAPACITY -> {
+            TextButton(onClick = links.onOpenCapacity) { Text(stringResource(R.string.capacity_checkup_link)) }
+            NodeRequests(report.nodes)
+        }
         CheckupSectionId.NODES -> NodeTaints(report.nodes)
         CheckupSectionId.STORAGE -> VolumeLevels(report.volumes)
         CheckupSectionId.HELM -> HelmReleases(report.releases, now, links.onOpenRelease)

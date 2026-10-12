@@ -87,6 +87,8 @@ class KubeHomeNavigation(
     val onMetrics: () -> Unit,
     val onAlerts: () -> Unit,
     val onCheckup: () -> Unit,
+    /** Free room per node, workloads by priority, and what losing a node costs. */
+    val onCapacity: () -> Unit,
     val onApiHealth: () -> Unit,
     val onNetworkPolicies: () -> Unit,
     val onArgoCD: () -> Unit,

@@ -96,6 +96,8 @@ fun KubeObjectScreen(
     onOwner: (KubeObjectRef) -> Unit,
     onHelmRelease: (namespace: String, name: String) -> Unit,
     onDeleted: () -> Unit,
+    /** Opens the scale dialog once, as the screen opens (a Capacity screen suggestion). */
+    openScale: Boolean = false,
     vm: KubeObjectViewModel = viewModel(
         key = "kube-object-${ref.group}/${ref.resource}/${ref.namespace}/${ref.name}",
         factory = factory { KubeObjectViewModel(app.kubeBrowser, ref) },
@@ -152,6 +154,14 @@ fun KubeObjectScreen(
             onRetry = vm::loadDeletePreview,
             onDismiss = vm::cancelDelete,
         )
+    }
+
+    var scaleOpened by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(openScale) {
+        if (openScale && !scaleOpened) {
+            scaleOpened = true
+            vm.startScale()
+        }
     }
 
     // Asked only for a kind that scales: a refused scale shows disabled, with the reason.

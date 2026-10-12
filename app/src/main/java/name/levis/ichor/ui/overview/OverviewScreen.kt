@@ -180,6 +180,8 @@ fun OverviewScreen(
     /** The Kubernetes nodes screen of a cluster added from a kubeconfig, on one filter (null: all). */
     onKubeNodes: (NodeFilter?) -> Unit,
     onCheckup: () -> Unit,
+    /** The Capacity screen (from the Kubernetes home). */
+    onCapacity: () -> Unit,
     onApiHealth: () -> Unit,
     onNetworkPolicies: () -> Unit,
     onResources: () -> Unit,
@@ -216,6 +218,7 @@ fun OverviewScreen(
                 onMetrics = onMetrics,
                 onAlerts = onAlerts,
                 onCheckup = onCheckup,
+                onCapacity = onCapacity,
                 onApiHealth = onApiHealth,
                 onNetworkPolicies = onNetworkPolicies,
                 onArgoCD = onArgoCD,

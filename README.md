@@ -437,6 +437,26 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     starting again continues with the others.
   - **Going back:** there is no undo; returning to the previous version is another upgrade.
 
+### Capacity
+
+**Kubernetes → Capacity** (also linked from the checkup's capacity card) answers "can one more fit,
+and what goes if a node goes down?":
+
+- **Free room** for the cluster and per node: CPU, memory and pod slots left by requests (the
+  scheduler's view), with each node's memory requests and live usage as two bars when
+  metrics-server answers, and a mark on a node whose pods' memory limits exceed it.
+- **N+1:** whether the pods of any one node would fit on the others, or which node would leave
+  pods Pending.
+- **Workloads, the first to go first:** lowest priority first, those with no PriorityClass flagged,
+  each with its numeric priority, QoS class, risk (OOM-killed or near its memory limit, evicted
+  first as BestEffort, no memory limit) and how many more replicas of its size fit today.
+- **What if a node goes down:** a node, or the worst one, is lost in a simulation of the
+  scheduler: where its pods land, which lower priority pods they preempt, which stay Pending, then
+  what to scale down, lowest priority first, within PodDisruptionBudgets and never a
+  `system-*` class. A suggestion opens the object's scale dialog; nothing is scaled from this
+  screen. It is an estimate by requests: affinity, topology spread and volume node affinity are
+  not modelled, and the sheet says so.
+
 ### Argo CD app icons
 
 Ichor names an Argo CD app's logo from its Helm chart, its name or the images it runs. An app it

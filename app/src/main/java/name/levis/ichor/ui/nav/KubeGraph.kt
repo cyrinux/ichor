@@ -24,6 +24,7 @@ import name.levis.ichor.ui.alerts.AlertsScreen
 import name.levis.ichor.ui.apihealth.ApiHealthScreen
 import name.levis.ichor.ui.apihealth.AuditScreen
 import name.levis.ichor.ui.apps.AppsScreen
+import name.levis.ichor.ui.capacity.CapacityScreen
 import name.levis.ichor.ui.checkup.CheckupScreen
 import name.levis.ichor.ui.debug.DebugShellScreen
 import name.levis.ichor.ui.debug.ShellKey
@@ -151,7 +152,11 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             onBack = { nav.popBackStack() },
             onOpenRelease = { ns, name -> nav.navigate(KubeBrowserRoutes.helmRelease(ns, name)) },
             onOpenMonitoring = { nav.navigate(Routes.metrics(METRICS_TAB_MONITORING)) },
+            onOpenCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
         )
+    }
+    composable(Routes.KUBE_CAPACITY) {
+        CapacityScreen(onBack = { nav.popBackStack() }, onScale = { nav.navigate(KubeBrowserRoutes.obj(it, openScale = true)) })
     }
     composable(
         Routes.FLOWS,
