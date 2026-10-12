@@ -51,6 +51,12 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "capacity", args: "", run: func(e env) (out string, err error) {
+		// capacity: free room per node, workloads by priority with their QoS and OOM risk, N+1.
+		out, err = ichorgo.KubeCapacity(e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
 	{name: "top-pods", args: "[NAMESPACE [SELECTOR]]", run: func(e env) (out string, err error) {
 		// top-pods [NAMESPACE [SELECTOR]]: every namespace and pod when omitted.
 		out, err = ichorgo.KubeTopPods(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))

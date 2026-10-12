@@ -36,27 +36,54 @@ type checkPod struct {
 	Scheduled  kubeCondition
 	Waiting    string   // the message of a waiting container
 	Claims     []string // the PersistentVolumeClaims it mounts
+
+	// Limits, 0 when some container has none (the pod is then not bounded).
+	CPULimit    float64
+	MemoryLimit float64
+	// PriorityClassName is spec.priorityClassName, "" when none; Priority its value, set from
+	// the class when the API server did not resolve it (see resolvePriority).
+	PriorityClassName string
+	Priority          int32
+	prioritySet       bool
+	QoS               string // BestEffort, Burstable or Guaranteed (computed when Pending)
+	Labels            labelSet
+	Static            bool // a mirror pod of the kubelet's: no controller recreates it elsewhere
+}
+
+// The pod QoS classes, in the order the kubelet evicts them under node pressure.
+const (
+	qosBestEffort = "BestEffort"
+	qosBurstable  = "Burstable"
+	qosGuaranteed = "Guaranteed"
+)
+
+type podContainerResources struct {
+	Resources struct {
+		Requests map[string]string `json:"requests"`
+		Limits   map[string]string `json:"limits"`
+	} `json:"resources"`
 }
 
 // podExtra holds the fields of a pod that podObject leaves out.
 type podExtra struct {
 	Metadata struct {
-		DeletionTimestamp *time.Time `json:"deletionTimestamp"`
-		Finalizers        []string   `json:"finalizers"`
+		DeletionTimestamp *time.Time        `json:"deletionTimestamp"`
+		Finalizers        []string          `json:"finalizers"`
+		Labels            map[string]string `json:"labels"`
+		Annotations       map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {
-		Containers []struct {
-			Resources struct {
-				Requests map[string]string `json:"requests"`
-			} `json:"resources"`
-		} `json:"containers"`
-		Volumes []struct {
+		Containers        []podContainerResources `json:"containers"`
+		PriorityClassName string                  `json:"priorityClassName"`
+		Priority          *int32                  `json:"priority"`
+		Volumes           []struct {
 			PersistentVolumeClaim *struct {
 				ClaimName string `json:"claimName"`
 			} `json:"persistentVolumeClaim"`
 		} `json:"volumes"`
 	} `json:"spec"`
 	Status struct {
+		QOSClass              string          `json:"qosClass"`
 		Conditions            []kubeCondition `json:"conditions"`
 		InitContainerStatuses []waitingStatus `json:"initContainerStatuses"`
 		ContainerStatuses     []waitingStatus `json:"containerStatuses"`
@@ -106,19 +133,46 @@ func decodeCheckPod(raw json.RawMessage) (checkPod, error) {
 	}
 
 	p := checkPod{
-		kubePod:    mapPod(obj),
-		Phase:      obj.Status.Phase,
-		Finalizers: extra.Metadata.Finalizers,
-		Scheduled:  kubeConditions(extra.Status.Conditions).get("PodScheduled"),
+		kubePod:           mapPod(obj),
+		Phase:             obj.Status.Phase,
+		Finalizers:        extra.Metadata.Finalizers,
+		Scheduled:         kubeConditions(extra.Status.Conditions).get("PodScheduled"),
+		PriorityClassName: extra.Spec.PriorityClassName,
+		QoS:               extra.Status.QOSClass,
+		Labels:            labelSet(extra.Metadata.Labels),
+	}
+
+	_, p.Static = extra.Metadata.Annotations[mirrorPodAnnotation]
+
+	if extra.Spec.Priority != nil {
+		p.Priority, p.prioritySet = *extra.Spec.Priority, true
 	}
 
 	if extra.Metadata.DeletionTimestamp != nil {
 		p.Deleted = *extra.Metadata.DeletionTimestamp
 	}
 
+	cpuBounded, memoryBounded := len(extra.Spec.Containers) > 0, len(extra.Spec.Containers) > 0
+
 	for _, c := range extra.Spec.Containers {
 		p.CPU += parseQuantity(c.Resources.Requests["cpu"])
 		p.Memory += parseQuantity(c.Resources.Requests["memory"])
+		p.CPULimit += parseQuantity(c.Resources.Limits["cpu"])
+		p.MemoryLimit += parseQuantity(c.Resources.Limits["memory"])
+		cpuBounded = cpuBounded && c.Resources.Limits["cpu"] != ""
+		memoryBounded = memoryBounded && c.Resources.Limits["memory"] != ""
+	}
+
+	if !cpuBounded {
+		p.CPULimit = 0
+	}
+
+	if !memoryBounded {
+		p.MemoryLimit = 0
+	}
+
+	if p.QoS == "" {
+		p.QoS = podQoS(extra.Spec.Containers)
 	}
 
 	for _, v := range extra.Spec.Volumes {
