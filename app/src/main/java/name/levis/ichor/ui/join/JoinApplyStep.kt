@@ -38,6 +38,7 @@ import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.KeepScreenOn
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.ToggleRow
 import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.upgrade.TimelineRow
@@ -61,17 +62,18 @@ fun JoinApplyStep(request: JoinRequest?, onOpenNode: (address: String, hostname:
             onClose = app.joinManager::dismiss,
         )
         request == null -> MutedText(stringResource(R.string.join_apply_waiting))
-        else -> JoinSummary(request) { app.joinManager.start(request) }
+        else -> JoinSummary(request) { app.joinManager.start(it) }
     }
 }
 
 @Composable
-private fun JoinSummary(request: JoinRequest, onJoin: () -> Unit) {
+private fun JoinSummary(request: JoinRequest, onJoin: (JoinRequest) -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
     val scope = rememberCoroutineScope()
     var warnings by remember(request.role) { mutableStateOf<List<String>>(emptyList()) }
     var confirm by remember { mutableStateOf(false) }
+    var replacing by remember(request.hostname) { mutableStateOf(false) }
     LaunchedEffect(request.role) {
         warnings = runCatching { app.talosRepository.nodeJoinWarnings(request.role) }.getOrDefault(emptyList())
     }
@@ -96,6 +98,12 @@ private fun JoinSummary(request: JoinRequest, onJoin: () -> Unit) {
             SummaryRow(R.string.join_config_template, request.template)
             if (request.staticAddress.isNotBlank()) SummaryRow(R.string.join_config_address, request.staticAddress)
             warnings.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.warn) }
+            ToggleRow(
+                title = stringResource(R.string.join_apply_replacing),
+                checked = replacing,
+                onChange = { replacing = it },
+                description = stringResource(R.string.join_apply_replacing_help, request.hostname),
+            )
             Button(onClick = { confirm = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.join_apply_join))
             }
@@ -109,7 +117,7 @@ private fun JoinSummary(request: JoinRequest, onJoin: () -> Unit) {
             confirmLabel = stringResource(R.string.join_apply_join),
             onConfirm = {
                 confirm = false
-                authenticated(onJoin)
+                authenticated { onJoin(request.copy(replacing = replacing)) }
             },
             onDismiss = { confirm = false },
             emphasized = true,

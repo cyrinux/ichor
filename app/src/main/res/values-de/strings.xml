@@ -4219,6 +4219,8 @@
     <string name="join_apply_join">Beitreten</string>
     <string name="join_apply_confirm_title">%1$s beitreten lassen?</string>
     <string name="join_apply_confirm_body">Die Konfiguration geht an %1$s, das Talos auf %2$s installiert und die Platte dabei löscht.</string>
+    <string name="join_apply_replacing">Ersetzt einen Knoten mit diesem Hostnamen</string>
+    <string name="join_apply_replacing_help">Für eine Maschine, die %1$s ersetzt, während die Cluster-Erkennung die alte noch auflistet. Ihre alten Adressen werden nie verfolgt.</string>
     <string name="join_run_stop_hint">Sobald die Konfiguration gesendet ist, lässt sich die Installation nicht rückgängig machen: Anhalten beendet nur das Verfolgen.</string>
     <string name="join_run_stop">Verfolgen beenden</string>
     <string name="join_run_stop_body">%1$s installiert weiter und erscheint in der Übersicht, sobald er beigetreten ist.</string>

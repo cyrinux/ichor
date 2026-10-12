@@ -4227,6 +4227,8 @@
     <string name="join_apply_join">Join</string>
     <string name="join_apply_confirm_title">Join %1$s?</string>
     <string name="join_apply_confirm_body">The config goes to %1$s, which installs Talos to %2$s and erases it.</string>
+    <string name="join_apply_replacing">Replaces a node with this host name</string>
+    <string name="join_apply_replacing_help">For a machine that takes the place of %1$s while cluster discovery still lists the old one. Its old addresses are never followed.</string>
     <string name="join_run_stop_hint">Once the config is sent, the install cannot be undone: stopping only stops following it.</string>
     <string name="join_run_stop">Stop following</string>
     <string name="join_run_stop_body">%1$s goes on installing and appears on the overview once it joins.</string>

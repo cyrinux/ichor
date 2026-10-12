@@ -281,6 +281,7 @@ internal class TalosStreams(private val configs: ConfigRepository) {
         hostname: String,
         installDisk: String,
         staticAddress: String,
+        replacing: Boolean,
         stop: Flow<Any>,
     ): Flow<JoinEvent> = callbackFlow {
         val stored = configs.forCall()
@@ -295,7 +296,7 @@ internal class TalosStreams(private val configs: ConfigRepository) {
                 close()
             }
         }
-        val run = Ichorgo.startNodeJoin(stored.yaml, stored.activeContext, address, template, role, hostname, installDisk, staticAddress, "", listener)
+        val run = Ichorgo.startNodeJoin(stored.yaml, stored.activeContext, address, template, role, hostname, installDisk, staticAddress, "", replacing, listener)
         launch {
             stop.first()
             run.cancel()

@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Replaces a node with this host name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplace un nœud portant ce nom d'hôte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reemplaza un nodo con este nombre de host"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersetzt einen Knoten mit diesem Hostnamen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sostituisce un nodo con questo nome host"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінює вузол із цим іменем хоста"
+          }
+        }
+      }
+    },
+    "For a machine that takes the place of %@ while cluster discovery still lists the old one. Its old addresses are never followed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour une machine qui prend la place de %@ alors que la découverte du cluster liste encore l'ancienne. Ses anciennes adresses ne sont jamais suivies."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para una máquina que ocupa el lugar de %@ mientras el descubrimiento del clúster aún lista la antigua. Sus direcciones antiguas nunca se siguen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für eine Maschine, die %@ ersetzt, während die Cluster-Erkennung die alte noch auflistet. Ihre alten Adressen werden nie verfolgt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per una macchina che prende il posto di %@ mentre la scoperta del cluster elenca ancora quella vecchia. I suoi vecchi indirizzi non vengono mai seguiti."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для машини, що заміняє %@, поки виявлення кластера ще показує стару. Її старі адреси ніколи не відстежуються."
+          }
+        }
+      }
+    },
     "Inspect a node in maintenance mode and preview its config first." : {
       "extractionState" : "manual",
       "localizations" : {

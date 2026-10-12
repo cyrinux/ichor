@@ -13,6 +13,7 @@ struct JoinApplySection: View {
     @State private var confirming = false
     @State private var authError: String?
     @State private var confirmStop = false
+    @State private var replacing = false
     private var job: JoinJob { .shared }
 
     var body: some View {
@@ -39,7 +40,7 @@ struct JoinApplySection: View {
                         actionTitle: String(localized: "Join")
                     ) {
                         confirming = false
-                        Task { await join(request) }
+                        Task { await join(request.withReplacing(replacing)) }
                     }
                 }
             }
@@ -58,6 +59,11 @@ struct JoinApplySection: View {
         }
         ForEach(warnings, id: \.self) { warning in
             Label { Text(verbatim: warning).font(.footnote) } icon: { Image(systemName: "exclamationmark.triangle").foregroundStyle(.statusWarn) }
+        }
+        VStack(alignment: .leading, spacing: 3) {
+            Toggle("Replaces a node with this host name", isOn: $replacing)
+            Text("For a machine that takes the place of \(request.hostname) while cluster discovery still lists the old one. Its old addresses are never followed.")
+                .font(.caption).foregroundStyle(.secondary)
         }
         if let authError {
             Text(verbatim: authError).foregroundStyle(.statusBad)

@@ -4227,6 +4227,8 @@
     <string name="join_apply_join">Unir</string>
     <string name="join_apply_confirm_title">¿Unir %1$s?</string>
     <string name="join_apply_confirm_body">La config va a %1$s, que instala Talos en %2$s y lo borra.</string>
+    <string name="join_apply_replacing">Reemplaza un nodo con este nombre de host</string>
+    <string name="join_apply_replacing_help">Para una máquina que ocupa el lugar de %1$s mientras el descubrimiento del clúster aún lista la antigua. Sus direcciones antiguas nunca se siguen.</string>
     <string name="join_run_stop_hint">Una vez enviada la config, la instalación no se puede deshacer: detener solo deja de seguirla.</string>
     <string name="join_run_stop">Dejar de seguir</string>
     <string name="join_run_stop_body">%1$s sigue instalándose y aparece en el resumen cuando se una.</string>

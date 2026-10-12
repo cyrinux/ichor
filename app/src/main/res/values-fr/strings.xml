@@ -4227,6 +4227,8 @@
     <string name="join_apply_join">Rejoindre</string>
     <string name="join_apply_confirm_title">Faire rejoindre %1$s ?</string>
     <string name="join_apply_confirm_body">La config part vers %1$s, qui installe Talos sur %2$s et l\'efface.</string>
+    <string name="join_apply_replacing">Remplace un nœud portant ce nom d\'hôte</string>
+    <string name="join_apply_replacing_help">Pour une machine qui prend la place de %1$s alors que la découverte du cluster liste encore l\'ancienne. Ses anciennes adresses ne sont jamais suivies.</string>
     <string name="join_run_stop_hint">Une fois la config envoyée, l\'installation ne peut pas être annulée : arrêter ne fait qu\'arrêter le suivi.</string>
     <string name="join_run_stop">Arrêter le suivi</string>
     <string name="join_run_stop_body">%1$s continue son installation et apparaît dans la vue d\'ensemble une fois intégré.</string>

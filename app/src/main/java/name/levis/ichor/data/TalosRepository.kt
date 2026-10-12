@@ -850,8 +850,16 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     }
 
     /** See [TalosStreams.joinNode]. */
-    fun joinNode(address: String, template: String, role: String, hostname: String, installDisk: String, staticAddress: String, stop: Flow<Any>): Flow<JoinEvent> =
-        streams.joinNode(address, template, role, hostname, installDisk, staticAddress, stop)
+    fun joinNode(
+        address: String,
+        template: String,
+        role: String,
+        hostname: String,
+        installDisk: String,
+        staticAddress: String,
+        replacing: Boolean,
+        stop: Flow<Any>,
+    ): Flow<JoinEvent> = streams.joinNode(address, template, role, hostname, installDisk, staticAddress, replacing, stop)
 
     /** `talosctl get TYPE ID -o yaml` (never cached: may hold secrets). */
     suspend fun resourceGet(node: String, namespace: String, type: String, id: String): String = call { cfg, ctx ->

@@ -82,6 +82,15 @@ final class JoinNodeTests: XCTestCase {
         XCTAssertTrue(joinDiskFits("/dev/vda", node: bare))
     }
 
+    func testReplacingKeepsTheRequest() {
+        let request = JoinRequest(address: "10.0.0.5", template: "192.0.2.11", role: "worker", hostname: "worker-3",
+                                  disk: "/dev/sda", staticAddress: "")
+        XCTAssertFalse(request.replacing)
+        let replacing = request.withReplacing(true)
+        XCTAssertTrue(replacing.replacing)
+        XCTAssertEqual(replacing.withReplacing(false), request)
+    }
+
     func testJoinProgressDecodes() throws {
         let event = try TalosJSON.decode(JoinProgress.self, from: """
         {"phase":"rebooting","message":"installing to /dev/sda and rebooting","at":1700000000000,"address":"192.0.2.20"}

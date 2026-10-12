@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"encoding/json"
 	"errors"
+	"net/netip"
 	"slices"
 	"strings"
 	"testing"
@@ -129,8 +130,13 @@ func installAfterApply(t *testing.T, f *fakeTalos, typ machine.Type) {
 }
 
 func startJoin(cfg, address, role string, rec *joinRecorder, timeout time.Duration) *JoinRun {
+	return startJoinReplacing(cfg, address, role, false, rec, timeout)
+}
+
+func startJoinReplacing(cfg, address, role string, replacing bool, rec *joinRecorder, timeout time.Duration) *JoinRun {
 	j := &nodeJoin{
-		config: cfg, context: "fake", address: address, listener: maskedJoinListener{rec}, interval: joinPollInterval,
+		replacing: replacing,
+		config:    cfg, context: "fake", address: address, listener: maskedJoinListener{rec}, interval: joinPollInterval,
 		req: joinConfigRequest{template: joinTemplateNode, role: role, hostname: "worker-3", installDisk: "/dev/sda", staticAddress: joinNewNode + "/24"},
 	}
 
@@ -315,6 +321,51 @@ func TestStartNodeJoinRefusesATakenHostname(t *testing.T) {
 
 	if n != 0 {
 		t.Errorf("%d applies, want none", n)
+	}
+}
+
+// Replacing a node discovery still lists: the taken hostname is accepted, the join goes on.
+func TestStartNodeJoinReplacingATakenHostname(t *testing.T) {
+	f, cfg, address := joinCluster(t, machine.TypeWorker)
+	installAfterApply(t, f, machine.TypeWorker)
+
+	m := cluster.NewMember(cluster.NamespaceName, "worker-3")
+	m.TypedSpec().Hostname = "worker-3"
+	m.TypedSpec().Addresses = []netip.Addr{netip.MustParseAddr("192.0.2.30")}
+	f.put(joinTemplateNode, m)
+
+	rec := newJoinRecorder()
+	startJoinReplacing(cfg, address, joinRoleWorker, true, rec, time.Minute)
+
+	node, errMessage, events := rec.wait(t)
+	if errMessage != "" || node != joinNewNode {
+		t.Fatalf("got %q, %q; want joined at %s", node, errMessage, joinNewNode)
+	}
+
+	if !slices.ContainsFunc(events, func(e joinProgress) bool { return strings.Contains(e.Message, "replacing the worker-3") }) {
+		t.Errorf("the replaced member is not said: %+v", events)
+	}
+}
+
+func TestRediscoveredSkipsKnownAndReplacedNodes(t *testing.T) {
+	member := func(host, addr string) clusterMember {
+		return clusterMember{hostname: host, addresses: []netip.Addr{netip.MustParseAddr(addr)}}
+	}
+
+	members := []clusterMember{member("worker-3", "192.0.2.30"), member("worker-3", "192.0.2.31"), member("worker-4", "192.0.2.40")}
+
+	for _, tc := range []struct {
+		name              string
+		targets, replaced []string
+		want              string
+	}{
+		{"first match", nil, nil, "192.0.2.30"},
+		{"the replaced one is skipped", nil, []string{"192.0.2.30"}, "192.0.2.31"},
+		{"a known node is skipped", []string{"192.0.2.30:50000", "192.0.2.31"}, nil, ""},
+	} {
+		if got := rediscovered(members, "worker-3", tc.targets, tc.replaced); got != tc.want {
+			t.Errorf("%s: got %q, want %q", tc.name, got, tc.want)
+		}
 	}
 }
 

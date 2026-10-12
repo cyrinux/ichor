@@ -45,7 +45,7 @@ extension TalosClient {
             }
         )
         let run = IchorgoStartNodeJoin(config, context, request.address, request.template, request.role, request.hostname,
-                                       request.disk, request.staticAddress, "", bridge)
+                                       request.disk, request.staticAddress, "", request.replacing, bridge)
         continuation.onTermination = { _ in
             run?.cancel()
             _ = bridge // keep the listener alive for the whole run

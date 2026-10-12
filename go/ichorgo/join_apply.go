@@ -99,10 +99,12 @@ func NodeJoinWarnings(role string) (out string, err error) {
 // applying → installing → rebooting → booted → joining (Talos ready, its Kubernetes node
 // Ready; for a control plane, its etcd member healthy) → registering → done. OnDone gets the
 // node's address: staticAddress's, else address, else where cluster discovery finds the
-// hostname after a DHCP change. Bounded by 15 minutes; Cancel only stops following. Needs
-// os:admin on the cluster; refused in privacy mode and on the demo. Recorded in the activity
-// log as node-join (hostname, role, address; never the config).
-func StartNodeJoin(configYAML, contextName, address, templateNode, role, hostname, installDisk, staticAddress, extraEditsJSON string, listener JoinListener) *JoinRun {
+// hostname after a DHCP change. A hostname a cluster member already has is refused, unless
+// replacing: the new node replaces that member (a dead node discovery still lists), and the
+// member's addresses are then never followed. Bounded by 15 minutes; Cancel only stops
+// following. Needs os:admin on the cluster; refused in privacy mode and on the demo. Recorded
+// in the activity log as node-join (hostname, role, address; never the config).
+func StartNodeJoin(configYAML, contextName, address, templateNode, role, hostname, installDisk, staticAddress, extraEditsJSON string, replacing bool, listener JoinListener) *JoinRun {
 	contextName, templateNode = unmaskTarget(configYAML, contextName, templateNode)
 
 	listener = maskedJoinListener{listener}
@@ -114,6 +116,7 @@ func StartNodeJoin(configYAML, contextName, address, templateNode, role, hostnam
 			template: templateNode, role: role, hostname: hostname, installDisk: installDisk, staticAddress: staticAddress,
 		},
 		editsJSON: extraEditsJSON,
+		replacing: replacing,
 	}
 
 	return j.start(joinTimeout)
@@ -127,9 +130,13 @@ type nodeJoin struct {
 	editsJSON       string
 	listener        JoinListener
 	interval        time.Duration
+	// replacing: the hostname may be a member's, the node this one replaces.
+	replacing bool
 
 	applied bool   // the config was sent: Cancel cannot undo anything any more
 	node    string // where the installed node is followed
+	// replaced are the addresses of the members already named like the new node: never followed.
+	replaced []string
 }
 
 func (j *nodeJoin) start(timeout time.Duration) *JoinRun {
@@ -159,10 +166,12 @@ func (j *nodeJoin) auditAction() auditAction {
 		node = j.address
 	}
 
-	return auditAction{
-		Action: "node-join", Node: node,
-		Params: "hostname=" + strings.TrimSpace(j.req.hostname) + " role=" + strings.TrimSpace(j.req.role),
+	params := "hostname=" + strings.TrimSpace(j.req.hostname) + " role=" + strings.TrimSpace(j.req.role)
+	if j.replacing {
+		params += " replacing=true"
 	}
+
+	return auditAction{Action: "node-join", Node: node, Params: params}
 }
 
 func (j *nodeJoin) emit(phase, message string) {
@@ -197,7 +206,7 @@ func (j *nodeJoin) run(ctx context.Context, timeout time.Duration) error {
 
 	defer release()
 
-	if err := j.checkHostnameFree(ctx, s); err != nil {
+	if err := j.checkHostname(ctx, s); err != nil {
 		return err
 	}
 
@@ -375,10 +384,11 @@ func etcdMemberHealthy(nodeCtx context.Context, c *client.Client) bool {
 	return st != nil && st.GetMemberId() != 0 && !st.GetIsLearner() && len(st.GetErrors()) == 0
 }
 
-// checkHostnameFree refuses a hostname a cluster member already has: the run would follow
-// that member (by its hostname after a DHCP change) and report it joined. A cluster without
-// discovery cannot tell, and is not refused.
-func (j *nodeJoin) checkHostnameFree(ctx context.Context, s *session) error {
+// checkHostname refuses a hostname a cluster member already has: the run would follow that
+// member (by its hostname after a DHCP change) and report it joined. When replacing, the
+// member is the node being replaced: its addresses are remembered, never to be followed. A
+// cluster without discovery cannot tell, and is not refused.
+func (j *nodeJoin) checkHostname(ctx context.Context, s *session) error {
 	lctx, cancel := context.WithTimeout(ctx, callTimeout)
 	defer cancel()
 
@@ -388,9 +398,21 @@ func (j *nodeJoin) checkHostnameFree(ctx context.Context, s *session) error {
 	}
 
 	for _, m := range members {
-		if strings.EqualFold(m.hostname, j.req.hostname) {
-			return fmt.Errorf("a cluster member is already named %s: pick another host name (a replaced node stays listed until discovery forgets it, about 30 minutes)", j.req.hostname)
+		if !strings.EqualFold(m.hostname, j.req.hostname) {
+			continue
 		}
+
+		if !j.replacing {
+			return fmt.Errorf("a cluster member is already named %s: pick another host name, or say the new node replaces it", j.req.hostname)
+		}
+
+		for _, a := range m.addresses {
+			j.replaced = append(j.replaced, a.String())
+		}
+	}
+
+	if len(j.replaced) > 0 {
+		j.emit(joinPhaseApplying, "replacing the "+j.req.hostname+" discovery still lists ("+strings.Join(j.replaced, ", ")+"): it is never followed")
 	}
 
 	return nil
@@ -410,21 +432,29 @@ func (j *nodeJoin) rediscover(ctx context.Context, s *session) {
 		return
 	}
 
+	if addr := rediscovered(members, j.req.hostname, targets, j.replaced); addr != "" && addr != j.node {
+		j.node = addr
+		j.emit(joinPhaseRebooting, j.req.hostname+" came back at "+addr)
+	}
+}
+
+// rediscovered is the address of the member named hostname that is the new node: not an
+// address the context targets (another node), nor one of the replaced member's; "" if none.
+func rediscovered(members []clusterMember, hostname string, targets, replaced []string) string {
 	for _, m := range members {
-		if !strings.EqualFold(m.hostname, j.req.hostname) {
+		if !strings.EqualFold(m.hostname, hostname) {
 			continue
 		}
 
 		addr := preferredAddress(m.addresses)
-		known := slices.ContainsFunc(targets, func(t string) bool { return strings.EqualFold(endpointHost(t), addr) })
+		other := func(t string) bool { return strings.EqualFold(endpointHost(t), addr) }
 
-		if addr != "" && addr != j.node && !known {
-			j.node = addr
-			j.emit(joinPhaseRebooting, j.req.hostname+" came back at "+addr)
+		if addr != "" && !slices.ContainsFunc(targets, other) && !slices.Contains(replaced, addr) {
+			return addr
 		}
-
-		return
 	}
+
+	return ""
 }
 
 // joinNodeAddress is where the installed node answers: its static address, else the

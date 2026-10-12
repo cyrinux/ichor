@@ -23,6 +23,8 @@ data class JoinRequest(
     val hostname: String,
     val disk: String,
     val staticAddress: String,
+    /** The new node replaces a member discovery still lists under [hostname] (a dead node). */
+    val replacing: Boolean = false,
 )
 
 /** The node join the app follows: at most one at a time. */
@@ -69,7 +71,7 @@ class JoinManager(
         val stopped = MutableStateFlow(false).also { stopRequested = it }
         job = scope.launch {
             try {
-                talos.joinNode(request.address, request.template, request.role, request.hostname, request.disk, request.staticAddress, stopped.filter { it })
+                talos.joinNode(request.address, request.template, request.role, request.hostname, request.disk, request.staticAddress, request.replacing, stopped.filter { it })
                     .collect { event ->
                         when (event) {
                             is JoinEvent.Progress -> _current.update { it?.copy(events = it.events + event.progress) }

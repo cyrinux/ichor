@@ -119,14 +119,24 @@ public struct JoinRequest: Equatable, Sendable {
     public let disk: String
     /// A prefix, or "" for DHCP.
     public let staticAddress: String
+    /// The new node replaces a member discovery still lists under `hostname` (a dead node).
+    public let replacing: Bool
 
-    public init(address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String) {
+    public init(address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
+                replacing: Bool = false) {
         self.address = address
         self.template = template
         self.role = role
         self.hostname = hostname
         self.disk = disk
         self.staticAddress = staticAddress
+        self.replacing = replacing
+    }
+
+    /// The same request, replacing (or not) the member already named `hostname`.
+    public func withReplacing(_ on: Bool) -> JoinRequest {
+        JoinRequest(address: address, template: template, role: role, hostname: hostname, disk: disk,
+                    staticAddress: staticAddress, replacing: on)
     }
 }
 

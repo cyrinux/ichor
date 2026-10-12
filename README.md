@@ -451,6 +451,9 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     Ready) → added to the context's nodes. A control plane also waits for its etcd member to be
     healthy, and etcd counts one more member. After 15 minutes the run stops and says what to
     check (console, disk, network). Stopping only stops following: the install cannot be undone.
+  - **Host names:** a host name a cluster member already has is refused, since the run could end
+    up following that member. To replace a dead node that cluster discovery still lists, turn on
+    "Replaces a node with this host name": the old member's addresses are then never followed.
 
 ### Capacity
 
