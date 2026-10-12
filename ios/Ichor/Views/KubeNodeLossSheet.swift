@@ -34,7 +34,9 @@ struct KubeNodeLossSheet: View {
                     }
                 }
             }
-            .navigationTitle(Text(verbatim: CapacityText.capacityLossTitle(node.isEmpty ? worst : node)))
+            .navigationTitle(Text(verbatim: node.isEmpty && worst.isEmpty
+                    ? CapacityText.capacityWhatIf
+                    : CapacityText.capacityLossTitle(node.isEmpty ? worst : node)))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
@@ -128,15 +130,18 @@ struct KubeNodeLossSheet: View {
         }
     }
 
+    /// Reads the plan of `node`; the previous plan stays on screen meanwhile, and an answer for a
+    /// node no longer picked (the Go call cannot be interrupted) is dropped.
     private func load() async {
         guard let client = model.client else { return }
-        state = .loading
-        let loaded: LoadState<NodeLossPlan> = await .from { try await client.nodeLoss(node: node.isEmpty ? nil : node) }
+        let asked = node
+        let loaded: LoadState<NodeLossPlan> = await .from { try await client.nodeLoss(node: asked.isEmpty ? nil : asked) }
+        guard !Task.isCancelled, asked == node else { return }
         if case .loaded(let plan, _, _) = loaded, plan.worstCase {
             candidates = plan.candidates
             worst = plan.node
         }
-        state = loaded
+        state = state.refreshed(with: loaded)
     }
 }
 
