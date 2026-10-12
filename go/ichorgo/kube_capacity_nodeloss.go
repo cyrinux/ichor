@@ -33,8 +33,9 @@ var nodeLossAssumptions = []string{
 }
 
 // nodeLossPlan is KubeCapacityNodeLoss's answer. CPU is in cores, memory in bytes. Lost:
-// the requests and count of the pods that must move. Covered: the suggestions free at least
-// what the Pending pods ask (true when nothing is Pending).
+// the requests and count of the pods that must move. A preempted pod that finds room
+// elsewhere is in Placed too. Covered: the suggestions free at least what the Pending pods
+// ask beyond the room left (true when nothing is Pending).
 type nodeLossPlan struct {
 	Node          string               `json:"node"`
 	WorstCase     bool                 `json:"worstCase"`
@@ -194,6 +195,9 @@ type lossSim struct {
 	never     map[string]bool      // classes with preemptionPolicy Never
 	pdbs      map[string]pdbObject // "namespace/name"
 	byKey     map[string]capacityWorkload
+	// unscheduled counts each workload's pods that have no node yet: scaling down removes
+	// them first, and they free nothing.
+	unscheduled map[string]int
 }
 
 func newLossSim(in capacityInput) lossSim {
@@ -203,6 +207,13 @@ func newLossSim(in capacityInput) lossSim {
 		nodes: nodes, pods: pods, owners: controllerOwners(in.sets),
 		workloads: capacityWorkloads(pods, in.sets, in.pdbs, map[string]kubeTopPod{}, nodes),
 		never:     map[string]bool{}, pdbs: map[string]pdbObject{}, byKey: map[string]capacityWorkload{},
+		unscheduled: map[string]int{},
+	}
+
+	for _, p := range pods {
+		if p.Node == "" && p.running() {
+			s.unscheduled[s.simPod(p).key]++
+		}
 	}
 
 	for _, c := range in.classes {
@@ -258,6 +269,7 @@ func stays(p checkPod) bool {
 func (s lossSim) lose(node string) nodeLossPlan {
 	plan := emptyNodeLossPlan(node)
 	room := s.remaining(node)
+	budget := s.disruptionBudget()
 
 	var queue []simPod
 
@@ -291,11 +303,11 @@ func (s lossSim) lose(node string) nodeLossPlan {
 			continue
 		}
 
-		if evicted, on := s.preempt(room, p); on != "" {
+		if evicted, on := s.preempt(room, p, budget); on != "" {
 			for _, e := range evicted {
 				plan.Preempted = append(plan.Preempted, nodeLossPreempted{
 					Namespace: e.Namespace, Name: e.Name, Workload: e.workload, Priority: e.Priority, PriorityClassName: e.PriorityClassName,
-					Node: on, By: p.Namespace + "/" + p.Name, PDBViolated: s.byKey[e.key].PDBAllowed == 0,
+					Node: on, By: p.Namespace + "/" + p.Name, PDBViolated: budget.take(e),
 				})
 			}
 
@@ -311,7 +323,7 @@ func (s lossSim) lose(node string) nodeLossPlan {
 		})
 	}
 
-	plan.Suggestions, plan.Covered = s.suggest(plan.Pending)
+	plan.Suggestions, plan.Covered = s.suggest(plan.Pending, room)
 
 	return plan
 }
@@ -387,11 +399,11 @@ func preemptable(p simPod, victim int32) bool {
 	return p.Priority < victim && p.Priority < systemPriority && !strings.HasPrefix(p.PriorityClassName, "system-")
 }
 
-// preempt finds the node where evicting lower priority pods (lowest first) makes room for p,
-// evicts them and places p. The node whose evicted set has the lowest highest priority wins,
-// then the fewest PodDisruptionBudget violations, then the fewest pods. on is "" when p may
-// not preempt (policy Never) or no node works.
-func (s lossSim) preempt(room []simNode, p simPod) (evicted []simPod, on string) {
+// preempt finds the node where evicting lower priority pods makes room for p, evicts them and
+// places p. The node whose evicted set has the lowest highest priority wins, then the fewest
+// PodDisruptionBudget violations, then the fewest pods. on is "" when p may not preempt
+// (policy Never) or no node works.
+func (s lossSim) preempt(room []simNode, p simPod, budget disruptionBudget) (evicted []simPod, on string) {
 	if s.never[p.PriorityClassName] {
 		return nil, ""
 	}
@@ -400,7 +412,7 @@ func (s lossSim) preempt(room []simNode, p simPod) (evicted []simPod, on string)
 
 	for i, n := range room {
 		set, ok := evictionSet(n, p)
-		if ok && (best < 0 || s.betterEviction(set, bestSet)) {
+		if ok && (best < 0 || betterEviction(set, bestSet, budget)) {
 			best, bestSet = i, set
 		}
 	}
@@ -418,7 +430,9 @@ func (s lossSim) preempt(room []simNode, p simPod) (evicted []simPod, on string)
 	return bestSet, room[best].name
 }
 
-// evictionSet is the lowest priority pods of n to evict, in order, until p fits.
+// evictionSet is the pods of n to evict so that p fits: the lower priority ones, lowest
+// first, until it does; then, as the scheduler reprieves, the highest of them are kept again
+// while p still fits without them.
 func evictionSet(n simNode, p simPod) ([]simPod, bool) {
 	var lower []simPod
 
@@ -435,30 +449,88 @@ func evictionSet(n simNode, p simPod) ([]simPod, bool) {
 	for i, q := range lower {
 		n.cpu, n.memory, n.slots = n.cpu+q.CPU, n.memory+q.Memory, n.slots+1
 		if n.fits(p) {
-			return lower[:i+1], true
+			return reprieve(n, p, slices.Clone(lower[:i+1])), true
 		}
 	}
 
 	return nil, false
 }
 
-func (s lossSim) betterEviction(a, b []simPod) bool {
+// reprieve keeps back, highest priority first, the pods of set p still fits without; n is
+// the node with all of set evicted.
+func reprieve(n simNode, p simPod, set []simPod) []simPod {
+	for j := len(set) - 1; j >= 0; j-- {
+		q := set[j]
+
+		kept := n
+		kept.cpu, kept.memory, kept.slots = n.cpu-q.CPU, n.memory-q.Memory, n.slots-1
+
+		if kept.fits(p) {
+			n = kept
+			set = slices.Delete(set, j, j+1)
+		}
+	}
+
+	return set
+}
+
+func betterEviction(a, b []simPod, budget disruptionBudget) bool {
 	top := func(set []simPod) int32 {
 		return slices.MaxFunc(set, func(x, y simPod) int { return cmp.Compare(x.Priority, y.Priority) }).Priority
 	}
-	violations := func(set []simPod) int {
-		n := 0
 
-		for _, q := range set {
-			if s.byKey[q.key].PDBAllowed == 0 {
-				n++
-			}
+	return cmp.Or(
+		cmp.Compare(top(a), top(b)),
+		cmp.Compare(budget.violations(a), budget.violations(b)),
+		cmp.Compare(len(a), len(b)),
+	) < 0
+}
+
+// disruptionBudget is what each covered workload's PodDisruptionBudget still allows
+// ("Kind/namespace/name" → disruptions), spent as the simulation preempts.
+type disruptionBudget map[string]int
+
+func (s lossSim) disruptionBudget() disruptionBudget {
+	b := disruptionBudget{}
+
+	for key, w := range s.byKey {
+		if w.PDB != "" {
+			b[key] = max(0, w.PDBAllowed)
 		}
-
-		return n
 	}
 
-	return cmp.Or(cmp.Compare(top(a), top(b)), cmp.Compare(violations(a), violations(b)), cmp.Compare(len(a), len(b))) < 0
+	return b
+}
+
+// violations is how many pods of set their budgets would not allow.
+func (b disruptionBudget) violations(set []simPod) int {
+	used, n := map[string]int{}, 0
+
+	for _, q := range set {
+		allowed, covered := b[q.key]
+		if !covered {
+			continue
+		}
+
+		used[q.key]++
+		if used[q.key] > allowed {
+			n++
+		}
+	}
+
+	return n
+}
+
+// take spends e's disruption and tells whether its budget had none left (a violation).
+func (b disruptionBudget) take(e simPod) bool {
+	allowed, covered := b[e.key]
+	if !covered {
+		return false
+	}
+
+	b[e.key] = allowed - 1
+
+	return allowed <= 0
 }
 
 // pendingReason is the first resource no remaining node has: a pod slot, then memory, then CPU.

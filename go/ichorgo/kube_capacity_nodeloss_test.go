@@ -182,8 +182,8 @@ func TestSimulateNodeLossHonoursPDBs(t *testing.T) {
 				t.Errorf("suggestion %+v", s)
 			}
 
-			// 3 GiB short, 1 GiB a replica: never enough within the budget.
-			if s.Frees.Pods != 3-tc.scaleTo || plan.Covered {
+			// 2 GiB short (3 asked, 1 free), 1 GiB a replica: two replicas cover it.
+			if s.Frees.Pods != 3-tc.scaleTo || plan.Covered != (tc.scaleTo == 1) {
 				t.Errorf("frees %+v covered %v", s.Frees, plan.Covered)
 			}
 		})
@@ -281,6 +281,87 @@ func TestSimulateNodeLossPreemptionPolicyNever(t *testing.T) {
 	}
 }
 
+func TestSimulateNodeLossReprievesWhatIsNotNeeded(t *testing.T) {
+	in := capacityInput{
+		nodes: []checkNodeObject{lossNode(t, "n1", 4, 8, 10), lossNode(t, "n2", 4, 4, 10)},
+		pods: []checkPod{
+			lossPod("web", "high-0", "n1", "StatefulSet/high", "", 100, 3),
+			// Evicting tiny-0 alone is not enough; once mid-0 goes, tiny-0 may stay.
+			lossPod("web", "tiny-0", "n2", "StatefulSet/tiny", "", 1, 0.5),
+			lossPod("web", "mid-0", "n2", "StatefulSet/mid", "", 50, 3.5),
+		},
+	}
+
+	plan := simulateNodeLoss(in, "n1")
+
+	if got := podNames(plan.Preempted, func(p nodeLossPreempted) string { return p.Name }); len(got) != 1 || got[0] != "mid-0" {
+		t.Errorf("preempted %v", got)
+	}
+}
+
+func TestSimulateNodeLossSpendsPDBsAcrossEvictions(t *testing.T) {
+	web := func(name string) checkPod {
+		p := lossPod("web", name, "n2", "StatefulSet/web", "", 0, 1)
+		p.Labels = labelSet{"app": "web"}
+
+		return p
+	}
+	pdb := lossPDB(t, "web", "web", "web", `"maxUnavailable":1`)
+	pdb.Status.DisruptionsAllowed = 1
+	in := capacityInput{
+		nodes: []checkNodeObject{lossNode(t, "n1", 4, 8, 10), lossNode(t, "n2", 4, 2, 10)},
+		pods:  []checkPod{lossPod("db", "db-0", "n1", "StatefulSet/db", "", 100, 2), web("web-0"), web("web-1")},
+		pdbs:  []pdbObject{pdb},
+	}
+
+	plan := simulateNodeLoss(in, "n1")
+
+	got := podNames(plan.Preempted, func(p nodeLossPreempted) string { return fmt.Sprintf("%s:%v", p.Name, p.PDBViolated) })
+	if len(got) != 2 || got[0] != "web-0:false" && got[0] != "web-1:false" || got[1] != "web-0:true" && got[1] != "web-1:true" {
+		t.Errorf("preempted %v", got)
+	}
+}
+
+func TestSimulateNodeLossShortfallIsWhatIsMissing(t *testing.T) {
+	small := func(name string) checkPod {
+		p := lossPod("web", name, "n2", "StatefulSet/w", "", 0, 0.9)
+		p.CPU = 0.01
+
+		return p
+	}
+	in := capacityInput{
+		nodes: []checkNodeObject{lossNode(t, "n1", 4, 8, 10), lossNode(t, "n2", 4, 4, 10)},
+		pods:  []checkPod{lossPod("batch", "big-0", "n1", "StatefulSet/big", "", 0, 3), small("w-0"), small("w-1"), small("w-2"), small("w-3")},
+	}
+
+	plan := simulateNodeLoss(in, "n1")
+
+	// n2 has CPU to spare: only memory is short (3 GiB asked, 0.4 free), three replicas cover it.
+	if got := suggestionNames(plan); len(got) != 1 || got[0] != "StatefulSet/w→1" || !plan.Covered {
+		t.Errorf("suggestions %v covered %v", got, plan.Covered)
+	}
+}
+
+func TestSimulateNodeLossUnscheduledReplicasFreeNothing(t *testing.T) {
+	unscheduled := lossPod("web", "w-1", "", "StatefulSet/w", "", 0, 3.5)
+	unscheduled.Phase = "Pending"
+	in := capacityInput{
+		nodes: []checkNodeObject{lossNode(t, "n1", 4, 8, 10), lossNode(t, "n2", 4, 4, 10)},
+		pods:  []checkPod{lossPod("batch", "big-0", "n1", "StatefulSet/big", "", 0, 3), lossPod("web", "w-0", "n2", "StatefulSet/w", "", 0, 3.5), unscheduled},
+	}
+
+	plan := simulateNodeLoss(in, "n1")
+
+	if len(plan.Suggestions) != 1 {
+		t.Fatalf("suggestions %+v", plan.Suggestions)
+	}
+
+	// The unscheduled replica goes first: scaling 2 → 0 frees the one that runs.
+	if s := plan.Suggestions[0]; s.ScaleTo != 0 || s.Frees.Pods != 1 || s.Frees.Memory != 3.5*gib || !plan.Covered {
+		t.Errorf("suggestion %+v covered %v", s, plan.Covered)
+	}
+}
+
 func TestKubeCapacityNodeLossReadsTheCluster(t *testing.T) {
 	in, err := readCapacityInput(context.Background(), openFakeKube(t, capacityFake(t)))
 	if err != nil {
@@ -298,8 +379,9 @@ func TestKubeCapacityNodeLossReadsTheCluster(t *testing.T) {
 		t.Errorf("pending %+v", plan.Pending)
 	}
 
-	// The DaemonSet, the bare pod and the Pending Deployment are skipped: db scales to 0, still short.
-	if got := suggestionNames(plan); len(got) != 1 || got[0] != "StatefulSet/db→0" || plan.Covered {
+	// The DaemonSet, the bare pod and the Pending Deployment are skipped: web-a asks 1 CPU and
+	// 2 GiB, w2 keeps 0.5 and 1 GiB free, db's one replica frees the rest.
+	if got := suggestionNames(plan); len(got) != 1 || got[0] != "StatefulSet/db→0" || !plan.Covered {
 		t.Errorf("suggestions %v covered %v", got, plan.Covered)
 	}
 }
