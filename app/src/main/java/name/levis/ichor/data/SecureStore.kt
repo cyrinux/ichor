@@ -13,10 +13,8 @@ import name.levis.ichor.security.SealedFile
 import name.levis.ichor.security.SecurityKeyRequiredException
 import java.io.File
 import java.security.KeyStore
-import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
-import javax.crypto.spec.GCMParameterSpec
 
 /** Where the key protecting the config lives, strongest first. */
 enum class KeyProtection(@StringRes val label: Int) {
@@ -26,10 +24,11 @@ enum class KeyProtection(@StringRes val label: Int) {
 }
 
 /**
- * Stores small secrets in a file encrypted with AES-256-GCM. The key is generated inside
- * the Android Keystore and never leaves it: in the StrongBox secure element when the device
- * has one (Android's counterpart of the Secure Enclave), otherwise in the TEE.
- * File layout: [12-byte IV][ciphertext+tag].
+ * Stores secrets in a file encrypted with AES-256-GCM. The key is generated inside the Android
+ * Keystore and never leaves it: in the StrongBox secure element when the device has one
+ * (Android's counterpart of the Secure Enclave), otherwise in the TEE. It wraps a random data
+ * key that encrypts the content ([EnvelopeFormat] v2); files written before are read too
+ * (v1, the content directly under the Keystore key) and rewritten by [upgrade].
  *
  * With a security key required ([outer], see SecurityKeys.kt) that payload is sealed once more
  * with the data key only a tap of the key unwraps ([SealedFile]): the file then reads only
@@ -43,9 +42,7 @@ class SecureStore(
 ) {
 
     fun write(plaintext: ByteArray) {
-        val cipher = Cipher.getInstance(TRANSFORMATION)
-        cipher.init(Cipher.ENCRYPT_MODE, key())
-        val inner = cipher.iv + cipher.doFinal(plaintext)
+        val inner = EnvelopeFormat.encrypt(plaintext, key())
         val holder = outer
         val payload = if (holder != null && holder.sealing()) {
             // Never written unsealed while the key is required: a missing DEK is a bug upstream.
@@ -63,18 +60,23 @@ class SecureStore(
 
     fun read(): ByteArray? {
         if (!file.exists()) return null
-        val payload = unseal(file.readBytes())
-        require(payload.size > IV_SIZE) { "Stored config is corrupted" }
-        // Never a new key here: it could not decrypt the file, and would replace the one that can.
-        val key = checkNotNull(existingKey()) { "The key of the stored config is missing" }
-        val cipher = Cipher.getInstance(TRANSFORMATION)
-        cipher.init(
-            Cipher.DECRYPT_MODE,
-            key,
-            GCMParameterSpec(TAG_BITS, payload, 0, IV_SIZE),
-        )
-        return cipher.doFinal(payload, IV_SIZE, payload.size - IV_SIZE)
+        return EnvelopeFormat.decrypt(unseal(file.readBytes()), storedKey())
     }
+
+    /**
+     * Rewrites a file stored before the envelope format (v1) as v2, sealed as the current mode
+     * asks; true when it did. A v2 file, or none, is left alone. Throws like [read].
+     */
+    fun upgrade(): Boolean {
+        if (!file.exists()) return false
+        val payload = unseal(file.readBytes())
+        if (EnvelopeFormat.isEnvelope(payload)) return false
+        write(EnvelopeFormat.decrypt(payload, storedKey()))
+        return true
+    }
+
+    /** Never a new key here: it could not decrypt the file, and would replace the one that can. */
+    private fun storedKey(): SecretKey = checkNotNull(existingKey()) { "The key of the stored config is missing" }
 
     /**
      * The Keystore payload of a stored file: opened with the DEK when sealed. A sealed file with
@@ -163,9 +165,6 @@ class SecureStore(
 
     private companion object {
         const val ANDROID_KEYSTORE = "AndroidKeyStore"
-        const val TRANSFORMATION = "AES/GCM/NoPadding"
-        const val IV_SIZE = 12
-        const val TAG_BITS = 128
     }
 }
 

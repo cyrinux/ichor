@@ -49,6 +49,7 @@ import name.levis.ichor.ui.share.OpenLink
 import name.levis.ichor.ui.debug.LiveShell
 import name.levis.ichor.ui.debug.shellKey
 import name.levis.ichor.ui.theme.TalosTheme
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -285,6 +286,16 @@ private fun Root(app: TalosApp, targets: LaunchTargets) {
             ConfigLoad.Done
         } catch (e: ConfigUnreadableException) {
             ConfigLoad.Unreadable(e.cause?.let { "${it.javaClass.simpleName}: ${it.message}" }.orEmpty())
+        }
+        // After the screen is shown: an older file is rewritten once, a failure leaves it readable.
+        if (load == ConfigLoad.Done) {
+            try {
+                app.configRepository.upgradeStorage()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Read again as v1 next start, and upgraded then.
+            }
         }
     }
 

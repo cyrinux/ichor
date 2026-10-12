@@ -550,7 +550,9 @@ Pick one of these:
   Both forms work, as does the older `ichor-config:` text form (base64url of gzip).
 
 Delete `talosconfig.png` and the copy in `Download/` afterwards; both contain the private key.
-The app stores the config AES-GCM encrypted with an Android Keystore key, excluded from backups.
+The app stores the config AES-GCM encrypted, excluded from backups: an Android Keystore key (in
+the StrongBox chip when the phone has one) wraps a random data key that encrypts the config, so
+it opens in milliseconds however many clusters it holds.
 
 ### Several clusters
 
