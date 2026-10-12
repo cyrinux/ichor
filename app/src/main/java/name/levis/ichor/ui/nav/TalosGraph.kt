@@ -43,6 +43,7 @@ import name.levis.ichor.ui.maintenance.MaintenanceScreen
 import name.levis.ichor.ui.network.NetworkScreen
 import name.levis.ichor.ui.node.NodeDetailScreen
 import name.levis.ichor.ui.node.NodeMenuEntry
+import name.levis.ichor.ui.node.NodeTabsScreen
 import name.levis.ichor.ui.node.PowerAction
 import name.levis.ichor.ui.nodes.NodesScreen
 import name.levis.ichor.ui.overview.OverviewViewModel
@@ -72,49 +73,65 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             navArgument("addr") { type = NavType.StringType },
             navArgument("host") { type = NavType.StringType },
             navArgument("role") { type = NavType.StringType; defaultValue = "unknown" },
-            navArgument("tab") { type = NavType.IntType; defaultValue = 0 },
             navArgument("action") { type = NavType.StringType; defaultValue = "" },
         ),
     ) { entry ->
         val addr = entry.arguments?.getString("addr").orEmpty()
         val host = entry.arguments?.getString("host") ?: addr
+        NodeDetailScreen(
+            node = addr,
+            hostname = host,
+            role = entry.arguments?.getString("role") ?: "unknown",
+            initialAction = when (entry.arguments?.getString("action")) {
+                "reboot" -> PowerAction.REBOOT
+                "shutdown" -> PowerAction.SHUTDOWN
+                else -> null
+            },
+            initialCordon = entry.arguments?.getString("action") == "cordon",
+            onBack = { nav.popBackStack() },
+            onTab = { tab -> nav.navigate(Routes.nodeTabs(addr, host, tab)) },
+            onMenu = { item ->
+                when (item) {
+                    NodeMenuEntry.KERNEL_LOG -> Routes.logs(addr, host, null)
+                    NodeMenuEntry.EVENTS -> Routes.events(addr, host)
+                    NodeMenuEntry.NETWORK -> Routes.network(addr, host)
+                    NodeMenuEntry.HARDWARE -> Routes.hardware(addr, host)
+                    NodeMenuEntry.IMAGES -> Routes.images(addr, host)
+                    NodeMenuEntry.STORAGE -> Routes.storage(addr, host)
+                    NodeMenuEntry.RESOURCES -> Routes.resources(addr, host)
+                    NodeMenuEntry.DEBUG_SHELL -> Routes.debug(addr, host)
+                    NodeMenuEntry.CAPTURE -> Routes.capture(addr, host)
+                    NodeMenuEntry.NET_TOOLS -> Routes.netTools(addr, host)
+                    NodeMenuEntry.CAPTURES -> Routes.CAPTURES
+                    NodeMenuEntry.MACHINE_CONFIG -> Routes.machineConfig(addr, host)
+                    NodeMenuEntry.UPGRADE -> Routes.upgrade(addr, host)
+                    NodeMenuEntry.MAINTENANCE -> Routes.maintenance(addr, host)
+                    NodeMenuEntry.DRAIN -> Routes.maintenance(addr, host, drain = true)
+                    // Handled on the node screen: the tabs through onTab, the others a confirmation.
+                    else -> null
+                }?.let { nav.navigate(it) }
+            },
+        )
+    }
+    composable(
+        Routes.NODE_TABS,
+        arguments = listOf(
+            navArgument("addr") { type = NavType.StringType },
+            navArgument("host") { type = NavType.StringType },
+            navArgument("tab") { type = NavType.IntType; defaultValue = 0 },
+        ),
+    ) { entry ->
+        val addr = entry.arguments?.getString("addr").orEmpty()
+        val host = entry.arguments?.getString("host") ?: addr
         CompositionLocalProvider(LocalKubeLinks provides kubeLinks) {
-            NodeDetailScreen(
+            NodeTabsScreen(
                 node = addr,
                 hostname = host,
-                role = entry.arguments?.getString("role") ?: "unknown",
                 initialTab = entry.arguments?.getInt("tab") ?: 0,
-                initialAction = when (entry.arguments?.getString("action")) {
-                    "reboot" -> PowerAction.REBOOT
-                    "shutdown" -> PowerAction.SHUTDOWN
-                    else -> null
-                },
-                initialCordon = entry.arguments?.getString("action") == "cordon",
                 onBack = { nav.popBackStack() },
                 onLogs = { service -> nav.navigate(Routes.logs(addr, host, service)) },
                 onContainerLogs = { c ->
                     nav.navigate(Routes.containerLogs(addr, host, c.id, containerLogTitle(c), containerLogSubtitle(c)))
-                },
-                onMenu = { item ->
-                    when (item) {
-                        NodeMenuEntry.KERNEL_LOG -> Routes.logs(addr, host, null)
-                        NodeMenuEntry.EVENTS -> Routes.events(addr, host)
-                        NodeMenuEntry.NETWORK -> Routes.network(addr, host)
-                        NodeMenuEntry.HARDWARE -> Routes.hardware(addr, host)
-                        NodeMenuEntry.IMAGES -> Routes.images(addr, host)
-                        NodeMenuEntry.STORAGE -> Routes.storage(addr, host)
-                        NodeMenuEntry.RESOURCES -> Routes.resources(addr, host)
-                        NodeMenuEntry.DEBUG_SHELL -> Routes.debug(addr, host)
-                        NodeMenuEntry.CAPTURE -> Routes.capture(addr, host)
-                        NodeMenuEntry.NET_TOOLS -> Routes.netTools(addr, host)
-                        NodeMenuEntry.CAPTURES -> Routes.CAPTURES
-                        NodeMenuEntry.MACHINE_CONFIG -> Routes.machineConfig(addr, host)
-                        NodeMenuEntry.UPGRADE -> Routes.upgrade(addr, host)
-                        NodeMenuEntry.MAINTENANCE -> Routes.maintenance(addr, host)
-                        NodeMenuEntry.DRAIN -> Routes.maintenance(addr, host, drain = true)
-                        // Handled on the node screen (a confirmation, no screen of its own).
-                        NodeMenuEntry.CORDON, NodeMenuEntry.RESET -> null
-                    }?.let { nav.navigate(it) }
                 },
             )
         }

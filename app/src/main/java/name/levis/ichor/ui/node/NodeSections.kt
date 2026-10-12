@@ -10,17 +10,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.PowerSettingsNew
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,16 +32,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
-import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.FeatureSupport
 import name.levis.ichor.model.NodeFeatures
-import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.notice
 import name.levis.ichor.model.support
 import name.levis.ichor.ui.components.SectionTitle
-import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.text
-import name.levis.ichor.ui.share.rememberShareLink
 
 /** The narrowest a tile gets: four of them across a usual phone, three across a small one. */
 private val TILE_MIN_WIDTH = 76.dp
@@ -54,77 +46,65 @@ private const val MIN_COLUMNS = 3
 private const val DISABLED_ALPHA = 0.38f
 
 /**
- * The node's menu, as a sheet: the read-only screens as a grid of tiles, then the entries
- * that act on the node as rows, the power actions last. [busy] entries are disabled for
- * another reason (e.g. an upgrade elsewhere); [cordoned] is null when unknown; [powerActions]
- * is empty for a role without them. The caller closes the sheet on a pick.
+ * The node screen's sections, as items of its list: Status and Inspect as grids of tiles, the
+ * entries that act on the node as rows, the power actions last. [groups] are the ones the role
+ * leaves (see [nodeMenuGroups]); [busy] entries are disabled for another reason (e.g. an upgrade
+ * elsewhere); [cordoned] is null when unknown; [powerActions] is empty for a role without them.
  */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun NodeMenuSheet(
-    title: String,
-    summary: ContextSummary?,
+internal fun LazyListScope.nodeSections(
+    groups: List<Pair<NodeMenuGroup, List<NodeMenuEntry>>>,
     features: NodeFeatures?,
     busy: Set<NodeMenuEntry>,
     cordoned: Boolean?,
-    shareTarget: ShareTarget,
     powerActions: List<PowerAction>,
     powerEnabled: Boolean,
     onPick: (NodeMenuEntry) -> Unit,
     onPower: (PowerAction) -> Unit,
-    onDismiss: () -> Unit,
 ) {
-    val share = rememberShareLink()
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 16.dp).navigationBarsPadding(),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.titleLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
-                )
-                TooltipIconButton(Icons.Outlined.Share, stringResource(R.string.share_link), onClick = {
-                    onDismiss()
-                    share(shareTarget)
-                })
-            }
-            nodeMenuGroups(summary).forEach { (group, entries) ->
-                SectionTitle(stringResource(group.title), Modifier.padding(top = 8.dp))
-                if (group == NodeMenuGroup.INSPECT) {
-                    TileGrid(entries) { entry, modifier ->
-                        val notice = entry.notice(features)
-                        MenuTile(stringResource(entry.label), entry.icon, notice, entry !in busy && notice == null, onClick = { onPick(entry) }, modifier = modifier)
-                    }
-                } else {
-                    entries.forEach { entry ->
-                        val notice = entry.notice(features)
-                        MenuRow(
-                            label = stringResource(if (entry == NodeMenuEntry.CORDON && cordoned == true) R.string.node_menu_uncordon else entry.label),
-                            icon = entry.icon,
-                            notice = notice,
-                            enabled = entry !in busy && notice == null,
-                            onClick = { onPick(entry) },
-                        )
-                    }
-                }
-            }
-            if (powerActions.isNotEmpty()) {
-                SectionTitle(stringResource(R.string.node_menu_group_power), Modifier.padding(top = 8.dp))
-                powerActions.forEach { action ->
-                    MenuRow(
-                        label = stringResource(action.title),
-                        icon = Icons.Outlined.PowerSettingsNew,
-                        notice = null,
-                        enabled = powerEnabled,
-                        onClick = { onPower(action) },
-                        color = MaterialTheme.colorScheme.error,
+    val kubePods = groups.any { (_, entries) -> NodeMenuEntry.TAB_KUBE_PODS in entries }
+    groups.forEach { (group, entries) ->
+        item(key = group.name) { SectionTitle(stringResource(group.title), Modifier.padding(top = 8.dp)) }
+        if (group == NodeMenuGroup.STATUS || group == NodeMenuGroup.INSPECT) {
+            item(key = "${group.name}-tiles") {
+                TileGrid(entries) { entry, modifier ->
+                    val notice = entry.notice(features)
+                    // A tab this Talos lacks stays reachable, dimmed: it says what it needs.
+                    val reachable = entry.tab != null || notice == null
+                    MenuTile(
+                        label = stringResource(entry.label(cordoned, kubePods)),
+                        icon = entry.icon,
+                        notice = notice,
+                        enabled = entry !in busy && reachable,
+                        dimmed = notice != null,
+                        onClick = { onPick(entry) },
+                        modifier = modifier,
                     )
                 }
             }
+        } else {
+            items(entries, key = { it.name }) { entry ->
+                val notice = entry.notice(features)
+                MenuRow(
+                    label = stringResource(entry.label(cordoned, kubePods)),
+                    icon = entry.icon,
+                    notice = notice,
+                    enabled = entry !in busy && notice == null,
+                    onClick = { onPick(entry) },
+                )
+            }
+        }
+    }
+    if (powerActions.isNotEmpty()) {
+        item(key = "power") { SectionTitle(stringResource(R.string.node_menu_group_power), Modifier.padding(top = 8.dp)) }
+        items(powerActions, key = { it.name }) { action ->
+            MenuRow(
+                label = stringResource(action.title),
+                icon = Icons.Outlined.PowerSettingsNew,
+                notice = null,
+                enabled = powerEnabled,
+                onClick = { onPower(action) },
+                color = MaterialTheme.colorScheme.error,
+            )
         }
     }
 }
@@ -151,7 +131,15 @@ private fun TileGrid(entries: List<NodeMenuEntry>, tile: @Composable (NodeMenuEn
 }
 
 @Composable
-private fun MenuTile(label: String, icon: ImageVector, notice: String?, enabled: Boolean, onClick: () -> Unit, modifier: Modifier) {
+private fun MenuTile(
+    label: String,
+    icon: ImageVector,
+    notice: String?,
+    enabled: Boolean,
+    dimmed: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier,
+) {
     Surface(
         onClick = onClick,
         enabled = enabled,
@@ -160,7 +148,7 @@ private fun MenuTile(label: String, icon: ImageVector, notice: String?, enabled:
         modifier = modifier,
     ) {
         Column(
-            Modifier.alpha(if (enabled) 1f else DISABLED_ALPHA).padding(horizontal = 4.dp, vertical = 12.dp),
+            Modifier.alpha(if (enabled && !dimmed) 1f else DISABLED_ALPHA).padding(horizontal = 4.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {

@@ -328,8 +328,14 @@ private suspend fun ShareTarget.route(app: TalosApp, action: AlertActionRequest?
     ShareTarget.HEALTH -> Routes.HEALTH.takeUnless { app.configRepository.config.value?.activeIsKube == true }
     ShareTarget.ARGO_CD -> Routes.ARGO_CD
     ShareTarget.FLUX -> Routes.FLUX
-    ShareTarget.NODE -> clusterNode(app)
-        ?.let { n -> Routes.node(n.node, n.hostname, n.role, nodeTab, action = if (action?.action == AlertAction.REBOOT) "reboot" else "") }
+    // A reboot confirmation lives on the node screen; a link naming a tab opens the node's tabs.
+    ShareTarget.NODE -> clusterNode(app)?.let { n ->
+        when {
+            action?.action == AlertAction.REBOOT -> Routes.node(n.node, n.hostname, n.role, action = "reboot")
+            tab.isNotEmpty() -> Routes.nodeTabs(n.node, n.hostname, nodeTab)
+            else -> Routes.node(n.node, n.hostname, n.role)
+        }
+    }
     ShareTarget.STORAGE -> clusterNode(app)?.let { n -> Routes.storage(n.node, n.hostname) }
     ShareTarget.HARDWARE -> clusterNode(app)?.let { n -> Routes.hardware(n.node, n.hostname) }
     ShareTarget.ARGO_APP -> Routes.argoApp(namespace, name, sync = action?.action == AlertAction.SYNC)
