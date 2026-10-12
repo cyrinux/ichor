@@ -75,11 +75,14 @@ jobs:
           echo "version=$next" >>"$GITHUB_OUTPUT"
 
       # The commit's own CI must be green: the tag ships what android.yml and ios.yml built.
+      # They skip website-only commits (their paths-ignore), so the check goes to main's last
+      # commit outside the website: the app in HEAD is the one built there.
       - name: Check CI on the commit
         id: ci
         if: steps.next.outputs.version != ''
         run: |
-          sha="$(git rev-parse HEAD)"
+          sha="$(git log --first-parent -1 --format=%H HEAD -- . \
+            ':!docs' ':!docs-i18n' ':!scripts/site-i18n.py' ':!.github/workflows/pages.yml')"
           ok=true
           for workflow in android.yml ios.yml; do
             conclusion="$(gh run list --workflow "$workflow" --commit "$sha" --event push --limit 1 \

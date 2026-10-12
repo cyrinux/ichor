@@ -1,9 +1,12 @@
 name: Plumber
 
 on:
+  # It lints the workflows: website pages alone give it nothing to check.
   pull_request:
+    paths-ignore: ["docs/**", "docs-i18n/**"]
   push:
     branches: [main]
+    paths-ignore: ["docs/**", "docs-i18n/**"]
 
 permissions:
   contents: read
