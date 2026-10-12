@@ -17,6 +17,7 @@ struct KubernetesView: View {
     /// A screen pushed from the toolbar or a pod.
     enum NetScreen: Hashable {
         case checkup
+        case capacity
         case apiHealth
         case policies
         case flows(HubbleFilter)
@@ -118,6 +119,7 @@ struct KubernetesView: View {
     private func open(_ action: KubernetesAction) {
         switch action {
         case .checkup: netScreen = .checkup
+        case .capacity: netScreen = .capacity
         case .networkPolicies: netScreen = .policies
         case .share: break
         case .apiHealth: netScreen = .apiHealth
@@ -180,6 +182,7 @@ struct KubernetesView: View {
         .navigationDestination(item: $netScreen) { screen in
             switch screen {
             case .checkup: CheckupView()
+            case .capacity: KubeCapacityView()
             case .apiHealth: ApiHealthView()
             case .policies: NetPoliciesView()
             case .flows(let filter): LiveFlowsView(cilium: cilium ?? CiliumStatus(), filter: filter)
@@ -466,6 +469,7 @@ extension KubernetesAction: BarActionLook {
         case .helm: "shippingbox"
         case .events: "list.bullet.rectangle"
         case .apiAddress: "server.rack"
+        case .capacity: "gauge.with.dots.needle.33percent"
         }
     }
 
@@ -480,6 +484,7 @@ extension KubernetesAction: BarActionLook {
         case .helm: Text("Helm releases")
         case .events: Text("Kubernetes events")
         case .apiAddress: Text("Kubernetes API address")
+        case .capacity: Text(verbatim: CapacityText.capacityTitle)
         }
     }
 }

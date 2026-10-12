@@ -43,6 +43,9 @@ public enum KubernetesAction: String, BarAction {
     /// The cluster's events kept live.
     case events = "EVENTS"
     case apiAddress = "API_ADDRESS"
+    /// Free room per node, workloads by priority, and what losing a node costs; last, so the
+    /// default icons stay.
+    case capacity = "CAPACITY"
 
     public var id: String { rawValue }
     public static let barStorageKey = "kubernetes.bar"
@@ -61,6 +64,8 @@ public enum KubeHomeAction: String, BarAction {
     case helm = "HELM"
     case dataServices = "DATA_SERVICES"
     case checkup = "CHECKUP"
+    /// Free room per node, workloads by priority, and what losing a node costs.
+    case capacity = "CAPACITY"
     case apiHealth = "API_HEALTH"
     case networkPolicies = "NETWORK_POLICIES"
     /// Every cluster's nodes, pods, workloads and apps (in the menu by default).

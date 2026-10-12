@@ -222,6 +222,7 @@ private struct CheckupSectionBody: View {
         }
         switch section.section {
         case .capacity:
+            NavigationLink { KubeCapacityView() } label: { Text(verbatim: CapacityText.capacityCheckupLink) }
             let nodes = report.nodes.sorted { max($0.cpuPercent, $0.memoryPercent) > max($1.cpuPercent, $1.memoryPercent) }
             CheckupRows(title: CheckupText.checkupRequestsTitle, rows: nodes) { CheckupNodeRequests(node: $0) }
         case .nodes:
