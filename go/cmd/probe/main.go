@@ -64,6 +64,19 @@ type maintenanceProbe struct{ done chan string }
 func (m maintenanceProbe) OnProgress(json string)   { fmt.Println(json) }
 func (m maintenanceProbe) OnDone(errMessage string) { m.done <- errMessage }
 
+type joinProbe struct{ done chan string }
+
+func (j joinProbe) OnProgress(json string) { fmt.Println(json) }
+func (j joinProbe) OnDone(nodeAddress, errMessage string) {
+	if errMessage != "" {
+		j.done <- errMessage
+
+		return
+	}
+
+	j.done <- "joined as " + nodeAddress + " (add it with `talosctl config node`)"
+}
+
 // lineCounter counts followed log lines.
 type lineCounter struct {
 	lines atomic.Int64

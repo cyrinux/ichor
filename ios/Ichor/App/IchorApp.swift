@@ -54,6 +54,7 @@ struct IchorApp: App {
                     if phase == .background, BackgroundMonitor.alertsEnabled { BackgroundMonitor.schedule() }
                     if phase == .background { UpgradeJob.shared.didEnterBackground() }
                     if phase == .background { MaintenanceJob.shared.didEnterBackground() }
+                    if phase == .background { JoinJob.shared.didEnterBackground() }
                     if phase == .background { ClusterUpgradeJob.shared.didEnterBackground() }
                     if phase == .background { K8sUpgradeJob.shared.didEnterBackground() }
                     if phase == .background { ConfigTryJob.shared.didEnterBackground() }
@@ -267,7 +268,7 @@ struct MainNavigation: View {
                     case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
                     case .clusterUpgrade(let version): ClusterUpgradePlanView(initialVersion: version)
                     case .k8sUpgrade: K8sUpgradePlanView()
-                    case .joinNode: JoinNodeView()
+                    case .joinNode: JoinNodeView(path: $path)
                     case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
                     case .nodeTab(let ref, let tab): NodeDetailView(ref: ref, initialTab: tab)
                     case .nodes(let filter, let nodes): NodesView(nodes: nodes, filter: filter, path: $path)

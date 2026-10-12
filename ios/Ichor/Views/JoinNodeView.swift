@@ -3,12 +3,14 @@ import IchorCore
 
 /// "Add a node…": a machine booted from the Talos ISO waits in maintenance mode; type the address
 /// its console shows and see its version, disks and interfaces; then make its config from a
-/// member's (JoinConfigSection). Applying it is the next step (a placeholder for now).
+/// member's (JoinConfigSection); then send it and follow the node until it joins (JoinApplySection).
 struct JoinNodeView: View {
+    @Binding var path: [Route]
     @Environment(AppModel.self) private var model
     @State private var address = ""
     @State private var inspection: LoadState<MaintenanceInspection>?
     @State private var request = 0
+    @State private var configured: JoinRequest?
 
     var body: some View {
         List {
@@ -44,14 +46,28 @@ struct JoinNodeView: View {
                     inspectionSections(node)
                 }
             }
-            JoinConfigSection(disks: newNodeDisks)
-            Section {
-                Text("3. Apply it and follow the node until it joins the cluster")
-                Text("Coming in a next version.").font(.footnote).foregroundStyle(.secondary)
+            JoinConfigSection(disks: newNodeDisks, configured: $configured)
+            JoinApplySection(request: joinRequest) { ref in
+                path.removeLast()
+                path.append(.node(ref))
             }
+        }
+        // A new address forgets the inspection: steps 2 and 3 only use an inspected node.
+        .onChange(of: address) { _, _ in
+            request += 1
+            inspection = nil
         }
         .navigationTitle("Add a node")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    /// Steps 1 and 2 done: a node in maintenance mode and a previewed config. The address is the
+    /// one the node was inspected at, and the disk one of its own.
+    private var joinRequest: JoinRequest? {
+        guard case .loaded(let node, _, _) = inspection, node.maintenance, let c = configured,
+              joinDiskFits(c.disk, node: node) else { return nil }
+        return JoinRequest(address: node.address, template: c.template, role: c.role, hostname: c.hostname,
+                           disk: c.disk, staticAddress: c.staticAddress)
     }
 
     /// The writable disks of the inspected node, for step 2.

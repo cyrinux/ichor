@@ -227,7 +227,15 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
         NetToolsScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
     }
     composable(Routes.K8S_UPGRADE) { K8sUpgradeScreen(onBack = { nav.popBackStack() }) }
-    composable(Routes.JOIN_NODE) { JoinNodeScreen(onBack = { nav.popBackStack() }) }
+    composable(Routes.JOIN_NODE) {
+        JoinNodeScreen(
+            onBack = { nav.popBackStack() },
+            onOpenNode = { addr, hostname, role ->
+                nav.popBackStack()
+                nav.navigate(Routes.node(addr, hostname, role))
+            },
+        )
+    }
     composable(Routes.ISSUE_CONFIG) { IssueConfigScreen(onBack = { nav.popBackStack() }) }
     composable(
         Routes.LOGS,

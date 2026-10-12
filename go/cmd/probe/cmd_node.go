@@ -48,6 +48,21 @@ var nodeCommands = []command{
 		// Read-only: a node in maintenance mode over the insecure maintenance API.
 		return ichorgo.MaintenanceNodeInspect(flag.Arg(1), 0)
 	}},
+	{name: "join", args: "ADDRESS TEMPLATE ROLE HOSTNAME DISK [STATIC-CIDR|-] [replace]", run: func(e env) (out string, err error) {
+		// Writes for real: sends TEMPLATE's config, with the cluster's secrets, to the node in
+		// maintenance mode at ADDRESS, which installs Talos to DISK and joins. "replace": the
+		// node replaces a member discovery still lists under HOSTNAME. Disposable clusters only.
+		static := flag.Arg(6)
+		if static == "-" || static == "replace" {
+			static = ""
+		}
+
+		replace := flag.Arg(6) == "replace" || flag.Arg(7) == "replace"
+		j := joinProbe{done: make(chan string, 1)}
+		ichorgo.StartNodeJoin(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), static, "", replace, j)
+
+		return "done: " + <-j.done, nil
+	}},
 	{name: "upgrade-ext", args: "NODE IMAGE", run: func(e env) (out string, err error) {
 		// Read-only: the node's extensions against the Image Factory's list for IMAGE's version.
 		return ichorgo.UpgradeExtensionCheck(e.cfg, e.context, flag.Arg(1), flag.Arg(2))

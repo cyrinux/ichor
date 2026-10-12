@@ -90,4 +90,55 @@ class JoinNodeTest {
         )
         assertEquals(listOf("/dev/sda"), installDisks(disks))
     }
+
+    @Test
+    fun theDiskMustBeOneOfTheInspectedNode() {
+        val node = MaintenanceInspection(address = "10.0.0.5", maintenance = true, disks = listOf(DiskInfo(name = "sda", devPath = "/dev/sda")))
+        assertTrue(joinDiskFits("/dev/sda", node))
+        assertFalse(joinDiskFits("/dev/nvme0n1", node))
+        assertTrue(joinDiskFits("/dev/vda", node.copy(disks = emptyList())))
+    }
+
+    @Test
+    fun decodesJoinProgress() {
+        val got = TalosJson.decodeFromString(
+            JoinProgress.serializer(),
+            """{"phase":"rebooting","message":"installing to /dev/sda and rebooting","at":1700000000000,"address":"192.0.2.20"}""",
+        )
+        assertEquals(JoinPhase.REBOOTING, JoinPhase.of(got.phase))
+        assertEquals("192.0.2.20", got.address)
+        assertNull(JoinPhase.of("unknown"))
+    }
+
+    private fun progress(phase: String, message: String = phase, at: Long = 1) = JoinProgress(phase, message, at)
+
+    @Test
+    fun theTimelineMarksTheLatestPhaseCurrent() {
+        val steps = joinTimeline(
+            listOf(progress("applying", at = 1), progress("installing", at = 2), progress("rebooting", "down", 3), progress("rebooting", "still down", 4)),
+            finished = false,
+            failed = false,
+        )
+        assertEquals(JoinPhase.entries, steps.map { it.phase })
+        assertEquals(
+            listOf(StepStatus.DONE, StepStatus.DONE, StepStatus.CURRENT, StepStatus.PENDING, StepStatus.PENDING, StepStatus.PENDING, StepStatus.PENDING),
+            steps.map { it.status },
+        )
+        val rebooting = steps[JoinPhase.REBOOTING.ordinal]
+        assertEquals(3L, rebooting.at)
+        assertEquals("still down", rebooting.message)
+    }
+
+    @Test
+    fun aFailedJoinFailsItsLatestPhaseAndADoneOneIsAllDone() {
+        val failed = joinTimeline(listOf(progress("applying"), progress("installing")), finished = true, failed = true)
+        assertEquals(StepStatus.FAILED, failed[JoinPhase.INSTALLING.ordinal].status)
+        assertEquals(StepStatus.PENDING, failed[JoinPhase.BOOTED.ordinal].status)
+
+        val refused = joinTimeline(emptyList(), finished = true, failed = true)
+        assertEquals(StepStatus.FAILED, refused.first().status)
+
+        val done = joinTimeline(listOf(progress("applying"), progress("done")), finished = true, failed = false)
+        assertTrue(done.all { it.status == StepStatus.DONE })
+    }
 }

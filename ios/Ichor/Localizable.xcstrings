@@ -1,6 +1,654 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Replaces a node with this host name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplace un nœud portant ce nom d'hôte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reemplaza un nodo con este nombre de host"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersetzt einen Knoten mit diesem Hostnamen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sostituisce un nodo con questo nome host"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінює вузол із цим іменем хоста"
+          }
+        }
+      }
+    },
+    "For a machine that takes the place of %@ while cluster discovery still lists the old one. Its old addresses are never followed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour une machine qui prend la place de %@ alors que la découverte du cluster liste encore l'ancienne. Ses anciennes adresses ne sont jamais suivies."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para una máquina que ocupa el lugar de %@ mientras el descubrimiento del clúster aún lista la antigua. Sus direcciones antiguas nunca se siguen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für eine Maschine, die %@ ersetzt, während die Cluster-Erkennung die alte noch auflistet. Ihre alten Adressen werden nie verfolgt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per una macchina che prende il posto di %@ mentre la scoperta del cluster elenca ancora quella vecchia. I suoi vecchi indirizzi non vengono mai seguiti."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для машини, що заміняє %@, поки виявлення кластера ще показує стару. Її старі адреси ніколи не відстежуються."
+          }
+        }
+      }
+    },
+    "Inspect a node in maintenance mode and preview its config first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspectez d'abord un nœud en mode maintenance et prévisualisez sa config."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspecciona primero un nodo en modo mantenimiento y previsualiza su config."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfe zuerst einen Knoten im Wartungsmodus und zeige seine Konfiguration in der Vorschau an."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ispeziona prima un nodo in modalità manutenzione e visualizza l'anteprima della sua config."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спершу перевірте вузол у режимі обслуговування й перегляньте його конфігурацію."
+          }
+        }
+      }
+    },
+    "Join" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rejoindre"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unir"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beitreten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unisci"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приєднати"
+          }
+        }
+      }
+    },
+    "Join %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faire rejoindre %@ ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Unir %@?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ beitreten lassen?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unire %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приєднати %@?"
+          }
+        }
+      }
+    },
+    "The config goes to %@, which installs Talos to %@ and erases it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The config goes to %1$@, which installs Talos to %2$@ and erases it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La config part vers %1$@, qui installe Talos sur %2$@ et l'efface."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La config va a %1$@, que instala Talos en %2$@ y lo borra."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Konfiguration geht an %1$@, das Talos auf %2$@ installiert und die Platte dabei löscht."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La config va a %1$@, che installa Talos su %2$@ e lo cancella."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конфігурація піде на %1$@, який встановить Talos на %2$@ і зітре його."
+          }
+        }
+      }
+    },
+    "Once the config is sent, the install cannot be undone: stopping only stops following it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une fois la config envoyée, l'installation ne peut pas être annulée : arrêter ne fait qu'arrêter le suivi."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una vez enviada la config, la instalación no se puede deshacer: detener solo deja de seguirla."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sobald die Konfiguration gesendet ist, lässt sich die Installation nicht rückgängig machen: Anhalten beendet nur das Verfolgen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una volta inviata la config, l'installazione non si può annullare: fermare interrompe solo il monitoraggio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Після надсилання конфігурації встановлення не скасувати: зупинка лише припиняє стеження."
+          }
+        }
+      }
+    },
+    "%@ goes on installing and appears on the overview once it joins." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ continue son installation et apparaît dans la vue d'ensemble une fois intégré."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sigue instalándose y aparece en el resumen cuando se una."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ installiert weiter und erscheint in der Übersicht, sobald er beigetreten ist."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ continua l'installazione e compare nella panoramica una volta unito."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ продовжує встановлення й з’явиться в огляді, щойно приєднається."
+          }
+        }
+      }
+    },
+    "%@ joined the cluster as %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ joined the cluster as %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ a rejoint le cluster en tant que %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ se unió al clúster como %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ist dem Cluster als %2$@ beigetreten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ si è unito al cluster come %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ приєднався до кластера як %2$@"
+          }
+        }
+      }
+    },
+    "Send the config" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer la config"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar la config"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfiguration senden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia la config"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надіслати конфігурацію"
+          }
+        }
+      }
+    },
+    "Install" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Встановити"
+          }
+        }
+      }
+    },
+    "Join the cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rejoindre le cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unirse al clúster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dem Cluster beitreten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unirsi al cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приєднатися до кластера"
+          }
+        }
+      }
+    },
+    "Add to the cluster's nodes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter aux nœuds du cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir a los nodos del clúster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu den Knoten des Clusters hinzufügen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi ai nodi del cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати до вузлів кластера"
+          }
+        }
+      }
+    },
+    "The join ended without a result." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'ajout s'est terminé sans résultat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La unión terminó sin resultado."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Beitritt endete ohne Ergebnis."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'unione è terminata senza risultato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приєднання завершилося без результату."
+          }
+        }
+      }
+    },
+    "%@ joined, but %@ could not be added to the cluster's nodes: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ joined, but %2$@ could not be added to the cluster's nodes: %3$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ a rejoint le cluster, mais %2$@ n'a pas pu être ajouté aux nœuds du cluster : %3$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ se unió, pero %2$@ no se pudo añadir a los nodos del clúster: %3$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ist beigetreten, aber %2$@ konnte nicht zu den Knoten des Clusters hinzugefügt werden: %3$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ si è unito, ma %2$@ non è stato aggiunto ai nodi del cluster: %3$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ приєднався, але %2$@ не вдалося додати до вузлів кластера: %3$@"
+          }
+        }
+      }
+    },
+    "Keep Ichor open until the node joins" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gardez Ichor ouvert jusqu'à ce que le nœud rejoigne le cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén Ichor abierto hasta que el nodo se una"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lass Ichor geöffnet, bis der Knoten beigetreten ist"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tieni Ichor aperto finché il nodo non si unisce"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тримайте Ichor відкритим, доки вузол не приєднається"
+          }
+        }
+      }
+    },
+    "The install goes on without Ichor, but in the background iOS pauses following it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'installation continue sans Ichor, mais en arrière-plan iOS met son suivi en pause."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La instalación sigue sin Ichor, pero en segundo plano iOS pausa su seguimiento."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Installation läuft ohne Ichor weiter, aber im Hintergrund pausiert iOS das Verfolgen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'installazione prosegue senza Ichor, ma in background iOS mette in pausa il monitoraggio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Встановлення триває без Ichor, але у фоні iOS призупиняє стеження."
+          }
+        }
+      }
+    },
+    "Ichor stops following the new node while it is in the background. Open it until the node joins." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor arrête de suivre le nouveau nœud quand il est en arrière-plan. Ouvrez-le jusqu'à ce que le nœud rejoigne le cluster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor deja de seguir el nuevo nodo mientras está en segundo plano. Ábrelo hasta que el nodo se una."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor verfolgt den neuen Knoten im Hintergrund nicht weiter. Öffne es, bis der Knoten beigetreten ist."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor smette di seguire il nuovo nodo quando è in background. Aprilo finché il nodo non si unisce."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor припиняє стежити за новим вузлом, коли працює у фоні. Відкрийте його, доки вузол не приєднається."
+          }
+        }
+      }
+    },
     "Search clusters" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4987,41 +5635,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "3. Застосувати її та стежити за вузлом, доки він не приєднається до кластера"
-          }
-        }
-      }
-    },
-    "Coming in a next version." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dans une prochaine version."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Llegará en una próxima versión."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kommt in einer nächsten Version."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In arrivo in una prossima versione."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "З’явиться в наступній версії."
           }
         }
       }
