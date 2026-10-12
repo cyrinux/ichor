@@ -155,6 +155,24 @@
         padding: 0 1.5rem;
       }
 
+      /* Beta tester call, above the header */
+      .beta-banner {
+        margin: 0;
+        padding: 0.6rem 1.5rem;
+        background: var(--accent);
+        color: #14243b;
+        font-size: 0.95rem;
+        text-align: center;
+      }
+      .beta-banner a {
+        font-weight: 600;
+      }
+      .beta-banner a:focus-visible {
+        outline: 3px solid var(--ink);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+
       /* Header */
       .top {
         display: flex;
@@ -427,6 +445,54 @@
         color: var(--ink-2);
         max-width: var(--measure);
         margin: 0 0 2rem;
+      }
+
+      /* Beta tester sign-up */
+      .beta-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+        gap: 1rem 1.5rem;
+        max-width: 48rem;
+      }
+      .beta-form .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      .beta-form .wide {
+        grid-column: 1 / -1;
+      }
+      .beta-form label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--ink-2);
+      }
+      .beta-form input,
+      .beta-form textarea {
+        font: inherit;
+        color: var(--ink);
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 0.7rem 0.85rem;
+        width: 100%;
+      }
+      .beta-form textarea {
+        min-height: 7rem;
+        resize: vertical;
+      }
+      .beta-form input:focus-visible,
+      .beta-form textarea:focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 1px;
+      }
+      .beta-form .button {
+        cursor: pointer;
+        font: inherit;
+        font-weight: 500;
+      }
+      .beta-form .note {
+        margin: 0;
       }
 
       /* talosctl -> app mapping, the page's main device */
@@ -1536,6 +1602,11 @@
     />
   </head>
   <body>
+    <p class="beta-banner">
+      Looking for <strong>Play Store beta testers</strong>: join on
+      <a href="https://discord.com/channels/1557446655312404500/1557446751869214810">Discord</a> or
+      <a href="#beta">sign up by mail</a>.
+    </p>
     <div class="wrap">
       <header class="top">
         <a class="brand" href="./">
@@ -3138,6 +3209,55 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
           </p>
         </section>
 
+        <section id="beta" aria-labelledby="beta-title">
+          <h2 id="beta-title">Become a Play Store beta tester</h2>
+          <p class="intro">
+            Ichor is getting ready for Google Play, and the closed test needs
+            testers before it can go public. Join the testers on
+            <a href="https://discord.com/channels/1557446655312404500/1557446751869214810">Discord</a>, or leave the email of
+            the Google account your phone uses for the Play Store and you will
+            get an invite.
+          </p>
+          <form
+            class="beta-form"
+            id="beta-form"
+            action="mailto:ichorformobile@proton.me?subject=Ichor%20Play%20Store%20beta"
+            method="post"
+            enctype="text/plain">
+            <div class="field">
+              <label for="beta-name">Name</label>
+              <input id="beta-name" name="name" type="text" autocomplete="name" />
+            </div>
+            <div class="field">
+              <label for="beta-email">Google account email</label>
+              <input
+                id="beta-email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                required />
+            </div>
+            <div class="field wide">
+              <label for="beta-device">Phone and Android version</label>
+              <input id="beta-device" name="device" type="text" />
+            </div>
+            <div class="field wide">
+              <label for="beta-message">Message</label>
+              <textarea id="beta-message" name="message"></textarea>
+            </div>
+            <div class="field wide">
+              <div class="actions">
+                <button class="button primary" type="submit">Send by mail</button>
+              </div>
+              <p class="note">
+                This opens your mail app with the message ready to send to
+                <a href="mailto:ichorformobile@proton.me" translate="no"
+                  >ichorformobile@proton.me</a
+                >; nothing goes through this site.
+              </p>
+            </div>
+          </form>
+        </section>
         <section id="install" aria-labelledby="install-title">
           <h2 id="install-title">Install</h2>
           <ol class="steps">
@@ -3470,6 +3590,29 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
           }
         });
       });
+
+      // The beta form has no server: it writes the mail and hands it to the mail app.
+      var betaForm = document.getElementById("beta-form");
+      if (betaForm) {
+        betaForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+          var value = function (id) {
+            return document.getElementById(id).value.trim();
+          };
+          var body = [
+            "Name: " + value("beta-name"),
+            "Google account: " + value("beta-email"),
+            "Phone and Android version: " + value("beta-device"),
+            "",
+            value("beta-message"),
+          ].join("\n");
+          location.href =
+            "mailto:ichorformobile@proton.me?subject=" +
+            encodeURIComponent("Ichor Play Store beta") +
+            "&body=" +
+            encodeURIComponent(body);
+        });
+      }
 
       document.querySelectorAll("[data-copy]").forEach(function (button) {
         var label = button.textContent;
