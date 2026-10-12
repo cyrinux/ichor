@@ -649,6 +649,7 @@ final class AppModel {
     func clear() {
         SecureConfigStore.delete()
         LastKnownStore.wipe()
+        SearchRecents.clear()
         PublicIPStore.wipe()
         MetricsStore.keep(fingerprints: []) // their credentials go with the config
         AlertmanagerStore.keep(fingerprints: [])
@@ -710,6 +711,7 @@ final class AppModel {
         SharedStore.clear()
         // Stored with the old names.
         LastKnownStore.wipe()
+        SearchRecents.clear()
         forgetFeatures()
         await reparse()
         dataGeneration += 1

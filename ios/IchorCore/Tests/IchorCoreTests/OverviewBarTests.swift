@@ -5,19 +5,19 @@ final class OverviewBarTests: XCTestCase {
     func testDefaultKeepsFourIconsWithGitOpsAndEtcd() {
         let bar = OverviewBar()
         XCTAssertEqual(bar.icons, [.health, .workloads, .gitOps, .etcd])
-        XCTAssertEqual(bar.menu, [.events, .metrics, .alerts, .kubespan, .settings])
+        XCTAssertEqual(bar.menu, [.events, .metrics, .alerts, .kubespan, .search, .settings])
         XCTAssertTrue(bar.isDefault)
     }
 
     func testMovesWithinTheBarAndTheMenu() {
         XCTAssertEqual(OverviewBar().down(.health).icons, [.workloads, .health, .gitOps, .etcd])
-        XCTAssertEqual(OverviewBar().up(.kubespan).menu, [.events, .metrics, .kubespan, .alerts, .settings])
+        XCTAssertEqual(OverviewBar().up(.kubespan).menu, [.events, .metrics, .kubespan, .alerts, .search, .settings])
     }
 
     func testMovingPastTheLineCrossesIntoTheMenuAndBack() {
         let down = OverviewBar().down(.etcd)
         XCTAssertEqual(down.icons, [.health, .workloads, .gitOps])
-        XCTAssertEqual(down.menu, [.etcd, .events, .metrics, .alerts, .kubespan, .settings])
+        XCTAssertEqual(down.menu, [.etcd, .events, .metrics, .alerts, .kubespan, .search, .settings])
         XCTAssertEqual(OverviewBar().up(.events).icons, [.health, .workloads, .gitOps, .etcd, .events])
         XCTAssertEqual(down.up(.etcd), OverviewBar())
     }
@@ -30,17 +30,17 @@ final class OverviewBarTests: XCTestCase {
     func testToMenuAndToBarJumpToTheLine() {
         let bar = OverviewBar().toMenu(.health)
         XCTAssertEqual(bar.icons, [.workloads, .gitOps, .etcd])
-        XCTAssertEqual(bar.menu, [.health, .events, .metrics, .alerts, .kubespan, .settings])
+        XCTAssertEqual(bar.menu, [.health, .events, .metrics, .alerts, .kubespan, .search, .settings])
         let back = OverviewBar().toBar(.settings)
         XCTAssertEqual(back.icons, [.health, .workloads, .gitOps, .etcd, .settings])
-        XCTAssertEqual(back.menu, [.events, .metrics, .alerts, .kubespan])
+        XCTAssertEqual(back.menu, [.events, .metrics, .alerts, .kubespan, .search])
         XCTAssertEqual(bar.toMenu(.metrics), bar)
         XCTAssertEqual(back.toBar(.settings), back)
     }
 
     func testEncodeRoundTripsInAndroidForm() {
         let bar = OverviewBar().toBar(.kubespan).toMenu(.health)
-        XCTAssertEqual(bar.encoded, "WORKLOADS,GITOPS,ETCD,KUBESPAN|HEALTH,EVENTS,METRICS,ALERTS,SETTINGS")
+        XCTAssertEqual(bar.encoded, "WORKLOADS,GITOPS,ETCD,KUBESPAN|HEALTH,EVENTS,METRICS,ALERTS,SEARCH,SETTINGS")
         XCTAssertEqual(OverviewBar.parse(bar.encoded), bar)
         let empty = OverviewBar().toMenu(.health).toMenu(.workloads).toMenu(.gitOps).toMenu(.etcd)
         XCTAssertEqual(OverviewBar.parse(empty.encoded), empty)
@@ -56,31 +56,31 @@ final class OverviewBarTests: XCTestCase {
     func testParseSkipsUnknownAndRepeatedAndAppendsMissingToTheMenu() {
         let bar = OverviewBar.parse("SETTINGS,GONE,SETTINGS|ETCD,SETTINGS")
         XCTAssertEqual(bar.icons, [.settings])
-        XCTAssertEqual(bar.menu, [.etcd, .health, .workloads, .gitOps, .events, .metrics, .alerts, .kubespan])
+        XCTAssertEqual(bar.menu, [.etcd, .health, .workloads, .gitOps, .events, .metrics, .alerts, .kubespan, .search])
         XCTAssertFalse(bar.isDefault)
     }
 
     func testABarSavedBeforeGitOpsKeepsItsArrangement() {
         let bar = OverviewBar.parse("HEALTH,EVENTS,WORKLOADS|METRICS,KUBESPAN,ETCD,SETTINGS")
         XCTAssertEqual(bar.icons, [.health, .events, .workloads])
-        XCTAssertEqual(bar.menu, [.metrics, .kubespan, .etcd, .settings, .gitOps, .alerts])
+        XCTAssertEqual(bar.menu, [.metrics, .kubespan, .etcd, .settings, .gitOps, .alerts, .search])
         XCTAssertFalse(bar.isDefault)
     }
 
     func testSlotsPutTheLineAfterTheIcons() {
         XCTAssertEqual(OverviewBar().slots, [.action(.health), .action(.workloads), .action(.gitOps), .action(.etcd), .menuLine,
                                              .action(.events), .action(.metrics), .action(.alerts), .action(.kubespan),
-                                             .action(.settings)])
+                                             .action(.search), .action(.settings)])
     }
 
     func testMovingAcrossTheLineChangesTheIcons() {
-        // Slots: health, workloads, gitOps, etcd, |, events, metrics, alerts, kubespan, settings.
+        // Slots: health, workloads, gitOps, etcd, |, events, metrics, alerts, kubespan, search, settings.
         let down = OverviewBar().moving(fromOffsets: [0], toOffset: 6)
         XCTAssertEqual(down.icons, [.workloads, .gitOps, .etcd])
-        XCTAssertEqual(down.menu, [.events, .health, .metrics, .alerts, .kubespan, .settings])
-        let up = OverviewBar().moving(fromOffsets: [9], toOffset: 0)
+        XCTAssertEqual(down.menu, [.events, .health, .metrics, .alerts, .kubespan, .search, .settings])
+        let up = OverviewBar().moving(fromOffsets: [10], toOffset: 0)
         XCTAssertEqual(up.icons, [.settings, .health, .workloads, .gitOps, .etcd])
-        XCTAssertEqual(up.menu, [.events, .metrics, .alerts, .kubespan])
+        XCTAssertEqual(up.menu, [.events, .metrics, .alerts, .kubespan, .search])
         XCTAssertEqual(OverviewBar().moving(fromOffsets: [3], toOffset: 0).icons, [.etcd, .health, .workloads, .gitOps])
     }
 

@@ -21,6 +21,8 @@ public enum OverviewAction: String, BarAction {
     case metrics = "METRICS"
     case alerts = "ALERTS"
     case kubespan = "KUBESPAN"
+    /// Every cluster's nodes, pods, workloads and apps (in the menu by default).
+    case search = "SEARCH"
     case settings = "SETTINGS"
 
     public var id: String { rawValue }
@@ -61,6 +63,8 @@ public enum KubeHomeAction: String, BarAction {
     case checkup = "CHECKUP"
     case apiHealth = "API_HEALTH"
     case networkPolicies = "NETWORK_POLICIES"
+    /// Every cluster's nodes, pods, workloads and apps (in the menu by default).
+    case search = "SEARCH"
     case settings = "SETTINGS"
 
     public var id: String { rawValue }

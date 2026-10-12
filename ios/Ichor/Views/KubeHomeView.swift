@@ -14,6 +14,7 @@ extension KubeHomeAction: BarActionLook {
         case .checkup: "stethoscope"
         case .apiHealth: "heart.text.square"
         case .networkPolicies: "shield.lefthalf.filled"
+        case .search: "magnifyingglass"
         case .settings: "gearshape"
         }
     }
@@ -30,6 +31,7 @@ extension KubeHomeAction: BarActionLook {
         case .checkup: Text(CheckupText.checkupTitle)
         case .apiHealth: Text("API server")
         case .networkPolicies: Text("Network policies")
+        case .search: Text("Search clusters")
         case .settings: Text("Settings")
         }
     }
@@ -365,6 +367,7 @@ struct KubeHomeView: View {
         case .checkup: screen = .checkup
         case .apiHealth: screen = .apiHealth
         case .networkPolicies: screen = .policies
+        case .search: path.append(.search)
         case .settings: path.append(.settings)
         }
     }

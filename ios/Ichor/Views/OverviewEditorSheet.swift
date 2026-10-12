@@ -12,6 +12,7 @@ extension OverviewAction: BarActionLook {
         case .alerts: "bell.badge"
         case .kubespan: "point.3.connected.trianglepath.dotted"
         case .etcd: "cylinder.split.1x2"
+        case .search: "magnifyingglass"
         case .settings: "gearshape"
         }
     }
@@ -26,6 +27,7 @@ extension OverviewAction: BarActionLook {
         case .alerts: Text("Alerts")
         case .kubespan: Text(verbatim: "KubeSpan")
         case .etcd: Text(verbatim: "etcd")
+        case .search: Text("Search clusters")
         case .settings: Text("Settings")
         }
     }
