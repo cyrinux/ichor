@@ -87,6 +87,9 @@ internal object Routes {
     const val KUBE_EVENTS = "kube-events"
     const val API_HEALTH = "apihealth"
     const val CHECKUP = "checkup"
+
+    /** Free room per node, workloads by priority, and what losing a node costs. */
+    const val KUBE_CAPACITY = "kube-capacity"
     const val AUDIT = "audit"
     const val FLOWS = "flows?ns={ns}&pod={pod}"
 

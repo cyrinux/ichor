@@ -17,8 +17,8 @@ import name.levis.ichor.model.KubeObjectRef
 /** Routes of the resource browser, Helm and port-forward screens. */
 object KubeBrowserRoutes {
     const val KINDS = "kube-browser"
-    private const val LIST = "kube-browser-list?g={g}&v={v}&r={r}&k={k}&namespaced={namespaced}&edit={edit}"
-    private const val OBJECT = "kube-object?g={g}&v={v}&r={r}&k={k}&ns={ns}&name={name}&edit={edit}"
+    private const val LIST = "kube-browser-list?g={g}&v={v}&r={r}&k={k}&namespaced={namespaced}&edit={edit}&scale={scale}"
+    private const val OBJECT = "kube-object?g={g}&v={v}&r={r}&k={k}&ns={ns}&name={name}&edit={edit}&scale={scale}&openScale={openScale}"
     const val HELM = "kube-helm"
     const val APPLY = "kube-apply"
     const val STORAGE = "kube-storage"
@@ -33,8 +33,10 @@ object KubeBrowserRoutes {
     fun list(r: ApiResource) =
         "kube-browser-list?g=${e(r.group)}&v=${e(r.version)}&r=${e(r.resource)}&k=${e(r.kind)}&namespaced=${r.namespaced}&edit=${r.editable}&scale=${r.scalable}"
 
-    fun obj(o: KubeObjectRef) =
-        "kube-object?g=${e(o.group)}&v=${e(o.version)}&r=${e(o.resource)}&k=${e(o.kind)}&ns=${e(o.namespace)}&name=${e(o.name)}&edit=${o.editable}&scale=${o.scalable}"
+    /** [openScale]: the object's scale dialog opens with the screen (the Capacity screen's suggestions). */
+    fun obj(o: KubeObjectRef, openScale: Boolean = false) =
+        "kube-object?g=${e(o.group)}&v=${e(o.version)}&r=${e(o.resource)}&k=${e(o.kind)}&ns=${e(o.namespace)}&name=${e(o.name)}&edit=${o.editable}&scale=${o.scalable}" +
+            if (openScale) "&openScale=true" else ""
 
     fun helmRelease(namespace: String, name: String) = "kube-helm-release?ns=${e(namespace)}&name=${e(name)}"
 
@@ -70,11 +72,12 @@ object KubeBrowserRoutes {
                 links.onObject(KubeObjectRef(type.group, type.version, type.resource, type.kind, row.namespace, row.name, type.editable, type.scalable))
             })
         }
-        composable(OBJECT, arguments = strings("g", "v", "r", "k", "ns", "name") + flags("edit", "scale")) { entry ->
+        composable(OBJECT, arguments = strings("g", "v", "r", "k", "ns", "name") + flags("edit", "scale", "openScale")) { entry ->
             val a = entry.arguments
             val ref = KubeObjectRef(a.str("g"), a.str("v"), a.str("r"), a.str("k"), a.str("ns"), a.str("name"), a?.getBoolean("edit") == true, a?.getBoolean("scale") == true)
             KubeObjectScreen(
                 ref,
+                openScale = a?.getBoolean("openScale") == true,
                 onBack = { nav.popBackStack() },
                 onPortForward = { links.onPortForward(ref.namespace, ref.name) },
                 onOwner = links.onObject,

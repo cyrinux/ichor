@@ -242,6 +242,7 @@ internal fun KubeToolsCard(nav: KubeHomeNavigation) {
                 OutlinedButton(onClick = nav.onMetrics) { Text(stringResource(R.string.metrics_title)) }
                 OutlinedButton(onClick = { nav.onDataServices(null) }) { Text(stringResource(R.string.data_services_title)) }
                 OutlinedButton(onClick = nav.onCheckup) { Text(stringResource(R.string.checkup_title)) }
+                OutlinedButton(onClick = nav.onCapacity) { Text(stringResource(R.string.capacity_title)) }
                 OutlinedButton(onClick = nav.onApiHealth) { Text(stringResource(R.string.apihealth_title)) }
                 OutlinedButton(onClick = nav.onNetworkPolicies) { Text(stringResource(R.string.netpol_title)) }
             }

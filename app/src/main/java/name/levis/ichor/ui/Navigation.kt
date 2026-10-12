@@ -254,6 +254,7 @@ fun Navigation(
                 onAllNodes = { nav.navigate(Routes.nodes(it)) },
                 onKubeNodes = { nav.navigate(Routes.kubeNodes(it)) },
                 onCheckup = { nav.navigate(Routes.CHECKUP) },
+                onCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
                 onApiHealth = { nav.navigate(Routes.API_HEALTH) },
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
                 onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
