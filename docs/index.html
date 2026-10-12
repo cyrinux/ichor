@@ -447,54 +447,6 @@
         margin: 0 0 2rem;
       }
 
-      /* Beta tester sign-up */
-      .beta-form {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
-        gap: 1rem 1.5rem;
-        max-width: 48rem;
-      }
-      .beta-form .field {
-        display: flex;
-        flex-direction: column;
-        gap: 0.35rem;
-      }
-      .beta-form .wide {
-        grid-column: 1 / -1;
-      }
-      .beta-form label {
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: var(--ink-2);
-      }
-      .beta-form input,
-      .beta-form textarea {
-        font: inherit;
-        color: var(--ink);
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 0.7rem 0.85rem;
-        width: 100%;
-      }
-      .beta-form textarea {
-        min-height: 7rem;
-        resize: vertical;
-      }
-      .beta-form input:focus-visible,
-      .beta-form textarea:focus-visible {
-        outline: 3px solid var(--accent);
-        outline-offset: 1px;
-      }
-      .beta-form .button {
-        cursor: pointer;
-        font: inherit;
-        font-weight: 500;
-      }
-      .beta-form .note {
-        margin: 0;
-      }
-
       /* talosctl -> app mapping, the page's main device */
       .map {
         width: 100%;
@@ -644,6 +596,11 @@
         flex-wrap: wrap;
         gap: 1.25rem;
         margin-bottom: 0.75rem;
+      }
+      footer .foss {
+        font-size: 0.78rem;
+        opacity: 0.7;
+        margin-top: 1rem;
       }
 
       @media (max-width: 860px) {
@@ -1605,7 +1562,7 @@
     <p class="beta-banner">
       Looking for <strong>Play Store beta testers</strong>: join on
       <a href="https://discord.com/channels/1557446655312404500/1557446751869214810">Discord</a> or
-      <a href="#beta">sign up by mail</a>.
+      <a href="https://play.google.com/apps/internaltest/4700386183016339646">join the beta on Google Play</a>.
     </p>
     <div class="wrap">
       <header class="top">
@@ -1661,17 +1618,8 @@
               nothing to install on the cluster and nothing in between.
             </p>
             <div class="actions">
-              <a
-                class="button primary"
-                data-i18n
-                href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor.foss%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D"
-                >Add to Obtainium</a
-              >
-              <a
-                class="button"
-                data-i18n
-                href="https://github.com/cyrinux/ichor/releases/latest"
-                >Download the APK</a
+              <a class="button primary" data-i18n href="https://play.google.com/apps/internaltest/4700386183016339646"
+                >Get it on Google Play (beta)</a
               >
               <a class="button" href="#ios" translate="no">iPhone</a>
             </div>
@@ -3212,51 +3160,16 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
         <section id="beta" aria-labelledby="beta-title">
           <h2 id="beta-title">Become a Play Store beta tester</h2>
           <p class="intro">
-            Ichor is getting ready for Google Play, and the closed test needs
-            testers before it can go public. Join the testers on
-            <a href="https://discord.com/channels/1557446655312404500/1557446751869214810">Discord</a>, or leave the email of
-            the Google account your phone uses for the Play Store and you will
-            get an invite.
+            Ichor is in testing on Google Play before it goes public. Open the
+            beta link on your Android phone, join the test and install Ichor
+            from the Play Store. Questions or feedback: the testers are on
+            <a href="https://discord.com/channels/1557446655312404500/1557446751869214810">Discord</a>.
           </p>
-          <form
-            class="beta-form"
-            id="beta-form"
-            action="mailto:ichorformobile@proton.me?subject=Ichor%20Play%20Store%20beta"
-            method="post"
-            enctype="text/plain">
-            <div class="field">
-              <label for="beta-name">Name</label>
-              <input id="beta-name" name="name" type="text" autocomplete="name" />
-            </div>
-            <div class="field">
-              <label for="beta-email">Google account email</label>
-              <input
-                id="beta-email"
-                name="email"
-                type="email"
-                autocomplete="email"
-                required />
-            </div>
-            <div class="field wide">
-              <label for="beta-device">Phone and Android version</label>
-              <input id="beta-device" name="device" type="text" />
-            </div>
-            <div class="field wide">
-              <label for="beta-message">Message</label>
-              <textarea id="beta-message" name="message"></textarea>
-            </div>
-            <div class="field wide">
-              <div class="actions">
-                <button class="button primary" type="submit">Send by mail</button>
-              </div>
-              <p class="note">
-                This opens your mail app with the message ready to send to
-                <a href="mailto:ichorformobile@proton.me" translate="no"
-                  >ichorformobile@proton.me</a
-                >; nothing goes through this site.
-              </p>
-            </div>
-          </form>
+          <div class="actions">
+            <a class="button primary" data-i18n href="https://play.google.com/apps/internaltest/4700386183016339646"
+              >Join the beta on Google Play</a
+            >
+          </div>
         </section>
         <section id="install" aria-labelledby="install-title">
           <h2 id="install-title">Install</h2>
@@ -3273,16 +3186,9 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
             <li>
               <h3>Install the app</h3>
               <p>
-                On Android, add it to
-                <a
-                  href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor.foss%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D"
-                  >Obtainium</a
-                >
-                to get updates, or download the APK for your phone (arm64-v8a
-                for almost all of them) from the
-                <a href="https://github.com/cyrinux/ichor/releases/latest"
-                  >latest release</a
-                >.
+                On Android, join the
+                <a href="https://play.google.com/apps/internaltest/4700386183016339646">Play Store beta</a> and install Ichor from
+                Google Play.
               </p>
             </li>
             <li>
@@ -3298,15 +3204,11 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
             <div>
               <h3>Android</h3>
               <p>
-                Android 8 and later, one APK per ABI. The app checks GitHub
-                releases for updates and verifies each download's checksum and
-                signing key before installing.
+                Android 8 and later, from Google Play while Ichor is in beta.
+                Updates come through the Play Store.
               </p>
-              <a
-                class="button"
-                data-i18n
-                href="https://github.com/cyrinux/ichor/releases/latest"
-                >Latest release</a
+              <a class="button" data-i18n href="https://play.google.com/apps/internaltest/4700386183016339646"
+                >Join the beta</a
               >
             </div>
             <div>
@@ -3449,7 +3351,7 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
             <a
               class="button primary"
               data-i18n
-              href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor.foss%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D"
+              href="https://play.google.com/apps/internaltest/4700386183016339646"
               >Get Ichor</a
             >
             <a class="button" href="#install" data-i18n>How to install</a>
@@ -3550,6 +3452,10 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
             />
           </a>
         </div>
+        <p class="foss">
+          Open-source build: <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor.foss%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D" translate="no">Obtainium</a> ·
+          <a href="https://github.com/cyrinux/ichor/releases/latest">APK</a>
+        </p>
         <p>
           Apache-2.0. Not affiliated with Sidero Labs; Talos is a trademark of
           Sidero Labs, Inc.
@@ -3590,29 +3496,6 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
           }
         });
       });
-
-      // The beta form has no server: it writes the mail and hands it to the mail app.
-      var betaForm = document.getElementById("beta-form");
-      if (betaForm) {
-        betaForm.addEventListener("submit", function (event) {
-          event.preventDefault();
-          var value = function (id) {
-            return document.getElementById(id).value.trim();
-          };
-          var body = [
-            "Name: " + value("beta-name"),
-            "Google account: " + value("beta-email"),
-            "Phone and Android version: " + value("beta-device"),
-            "",
-            value("beta-message"),
-          ].join("\n");
-          location.href =
-            "mailto:ichorformobile@proton.me?subject=" +
-            encodeURIComponent("Ichor Play Store beta") +
-            "&body=" +
-            encodeURIComponent(body);
-        });
-      }
 
       document.querySelectorAll("[data-copy]").forEach(function (button) {
         var label = button.textContent;
