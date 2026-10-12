@@ -104,7 +104,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             attention = entry.arguments?.getBoolean("attention") == true,
             onBack = { nav.popBackStack() },
             // A pod's node, on its Pods tab.
-            onNode = { addr, host, role -> nav.navigate(Routes.node(addr, host, role, tab = 4)) },
+            onNode = { addr, host, _ -> nav.navigate(Routes.nodeTabs(addr, host, tab = 4)) },
             onArgoCD = { nav.navigate(Routes.ARGO_CD) },
             onArgoApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
             onFlux = { nav.navigate(Routes.FLUX) },

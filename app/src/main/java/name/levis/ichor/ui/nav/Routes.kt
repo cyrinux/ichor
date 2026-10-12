@@ -17,7 +17,8 @@ internal object Routes {
     const val DEMO = "demo"
     const val DEMO_KUBE = "demo-kube"
     const val OVERVIEW = "overview"
-    const val NODE = "node?addr={addr}&host={host}&role={role}&tab={tab}&action={action}"
+    const val NODE = "node?addr={addr}&host={host}&role={role}&action={action}"
+    const val NODE_TABS = "node/tabs?addr={addr}&host={host}&tab={tab}"
     const val LOGS = "logs?addr={addr}&host={host}&service={service}&container={container}&title={title}&subtitle={subtitle}"
     const val STORAGE = "storage?addr={addr}&host={host}"
     const val RESOURCES = "resources?addr={addr}&host={host}"
@@ -198,16 +199,24 @@ internal object Routes {
     fun logs(addr: String, host: String, service: String?) =
         "logs?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&service=${Uri.encode(service.orEmpty())}"
 
-    /** [tab]: 0 services, 1 resources, 2 live, 3 processes, 4 pods; [action]: "reboot"/"shutdown"/"cordon" opens its confirmation. */
-    fun node(addr: String, host: String, role: String, tab: Int = 0, action: String = "") =
-        "node?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&role=${Uri.encode(role)}&tab=$tab&action=$action"
+    /** The node screen (its sections); [action]: "reboot"/"shutdown"/"cordon" opens its confirmation. */
+    fun node(addr: String, host: String, role: String, action: String = "") =
+        "node?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&role=${Uri.encode(role)}&action=$action"
+
+    /** The node's tabs on [tab]: 0 services, 1 resources, 2 live, 3 processes, 4 pods, then cgroups and Kubernetes pods. */
+    fun nodeTabs(addr: String, host: String, tab: Int = 0) =
+        "node/tabs?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&tab=$tab"
+
+    /** The node screen for [tab] 0 (the node itself), its tabs on [tab] otherwise (e.g. its pods). */
+    fun nodeOrTab(addr: String, host: String, role: String, tab: Int) =
+        if (tab == 0) node(addr, host, role) else nodeTabs(addr, host, tab)
 }
 
 /** What a node row's swipe or action sheet leads to, from home or the Nodes screen. */
 internal fun NavHostController.openNodeAction(n: NodeOverview, action: NodeAction) {
     when (action) {
-        NodeAction.LIVE -> navigate(Routes.node(n.node, n.hostname, n.role, tab = 2))
-        NodeAction.SERVICES -> navigate(Routes.node(n.node, n.hostname, n.role))
+        NodeAction.LIVE -> navigate(Routes.nodeTabs(n.node, n.hostname, tab = 2))
+        NodeAction.SERVICES -> navigate(Routes.nodeTabs(n.node, n.hostname))
         NodeAction.KERNEL_LOG -> navigate(Routes.logs(n.node, n.hostname, null))
         NodeAction.SHELL -> navigate(Routes.debug(n.node, n.hostname))
         NodeAction.DRAIN -> navigate(Routes.maintenance(n.node, n.hostname, drain = true))

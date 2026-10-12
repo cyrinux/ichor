@@ -42,7 +42,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             name = name,
             initialSync = entry.arguments?.getBoolean("sync") == true,
             onBack = { nav.popBackStack() },
-            onNode = { n, tab -> nav.navigate(Routes.node(n.node, n.hostname, n.role, tab)) },
+            onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
             onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
             onDiff = { nav.navigate(Routes.argoDiff(ns, name)) },
         )
@@ -83,7 +83,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             name = name,
             initialReconcile = entry.arguments?.getBoolean("reconcile") == true,
             onBack = { nav.popBackStack() },
-            onNode = { n, tab -> nav.navigate(Routes.node(n.node, n.hostname, n.role, tab)) },
+            onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
             onDiff = { nav.navigate(Routes.fluxDiff(kind, ns, name)) },
         )
     }
