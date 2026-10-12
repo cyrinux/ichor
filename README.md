@@ -577,7 +577,10 @@ the cluster on screen.
 clusters" in the top bar's ⋯ menu, which can be moved to the bar). Results come from
 what each cluster last showed: other clusters than the one on screen need "Keep last known
 state" on. Typing never calls a cluster; a result opens its screen on its cluster, like a share
-link.
+link. The search also opens from the app icon: a long press on Android ("Search clusters"),
+a Home Screen quick action on iOS. On iOS the clusters and the Argo CD and Flux apps the phone
+knows also show in Spotlight and open Ichor on them; only their names are indexed, and only
+while "Keep last known state" is on and neither the app lock nor the screenshot mode is.
 
 ### Kubernetes clusters without Talos
 

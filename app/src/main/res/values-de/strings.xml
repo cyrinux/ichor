@@ -446,6 +446,8 @@
     <string name="clusters_menu_remove">Entfernen</string>
     <string name="clusters_vpn_only_hint">Nur VPN: ohne verbundenes VPN versucht die App den Cluster nicht zu erreichen, und Hintergrundprüfungen warten darauf.</string>
     <string name="shortcut_cluster_removed">Dieser Cluster wurde entfernt</string>
+    <string name="shortcut_search_short">Suchen</string>
+    <string name="shortcut_search_long">Cluster durchsuchen</string>
 
     <!-- Settings -->
     <string name="settings_title">Einstellungen</string>
