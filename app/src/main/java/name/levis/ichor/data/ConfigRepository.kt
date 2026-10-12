@@ -55,6 +55,15 @@ class ConfigRepository(
         kubeStore.reseal()
     }
 
+    /**
+     * Rewrites files stored before the envelope format so the next start decrypts them in
+     * milliseconds (see EnvelopeFormat). Once the config was loaded: the files read then.
+     */
+    suspend fun upgradeStorage() = writing {
+        val upgraded = listOf(store, kubeStore).count { it.upgrade() }
+        if (upgraded > 0) StartupTrace.markOnce("config migrated v1→v2", "$upgraded files")
+    }
+
     /** Where the key protecting the stored config lives (null before the first import). */
     fun keyProtection(): KeyProtection? = runCatching { store.protection() ?: kubeStore.protection() }.getOrNull()
     private val prefs = context.getSharedPreferences("ichor", Context.MODE_PRIVATE)
