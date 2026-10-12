@@ -317,7 +317,7 @@
   "Phone and Android version": "Телефон і версія Android",
   "Message": "Повідомлення",
   "Send by mail": "Надіслати поштою",
-  "This opens your mail app with the message ready to send to <a href=\"mailto:ichortesters@levis.name\" translate=\"no\" >ichortesters@levis.name</a >; nothing goes through this site.": "Відкриється ваш поштовий застосунок із повідомленням, готовим до надсилання на <a href=\"mailto:ichortesters@levis.name\" translate=\"no\" >ichortesters@levis.name</a >; через цей сайт нічого не проходить.",
+  "This opens your mail app with the message ready to send to <a href=\"mailto:ichorformobile@proton.me\" translate=\"no\" >ichorformobile@proton.me</a >; nothing goes through this site.": "Відкриється ваш поштовий застосунок із повідомленням, готовим до надсилання на <a href=\"mailto:ichorformobile@proton.me\" translate=\"no\" >ichorformobile@proton.me</a >; через цей сайт нічого не проходить.",
   "Create a talosconfig for the phone": "Створіть talosconfig для телефона",
   "On your workstation, sign a read-only certificate on one control-plane node, then list your nodes.": "На робочій машині підпишіть сертифікат лише для читання на одному вузлі control plane, а потім виведіть список своїх вузлів.",
   "Install the app": "Встановіть застосунок",

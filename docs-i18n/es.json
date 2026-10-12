@@ -317,7 +317,7 @@
   "Phone and Android version": "Teléfono y versión de Android",
   "Message": "Mensaje",
   "Send by mail": "Enviar por correo",
-  "This opens your mail app with the message ready to send to <a href=\"mailto:ichortesters@levis.name\" translate=\"no\" >ichortesters@levis.name</a >; nothing goes through this site.": "Se abre tu app de correo con el mensaje listo para enviar a <a href=\"mailto:ichortesters@levis.name\" translate=\"no\" >ichortesters@levis.name</a >; nada pasa por este sitio.",
+  "This opens your mail app with the message ready to send to <a href=\"mailto:ichorformobile@proton.me\" translate=\"no\" >ichorformobile@proton.me</a >; nothing goes through this site.": "Se abre tu app de correo con el mensaje listo para enviar a <a href=\"mailto:ichorformobile@proton.me\" translate=\"no\" >ichorformobile@proton.me</a >; nada pasa por este sitio.",
   "Create a talosconfig for the phone": "Crea un talosconfig para el teléfono",
   "On your workstation, sign a read-only certificate on one control-plane node, then list your nodes.": "En tu estación de trabajo, firma un certificado de solo lectura en un nodo del plano de control y luego enumera tus nodos.",
   "Install the app": "Instala la app",
