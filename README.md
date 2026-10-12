@@ -436,6 +436,21 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   - **Cancel:** stops after the node being changed. The nodes done keep the new version, and
     starting again continues with the others.
   - **Going back:** there is no undo; returning to the previous version is another upgrade.
+- **Adding a node from the phone (overview menu → Add a node…, os:admin):** boot the new machine
+  from the Talos ISO and type the address its console shows.
+  - **Maintenance mode:** the node is read over the maintenance API (disks, links, version), which
+    has no authentication: the phone must be on the same LAN or on a VPN that reaches it, and a
+    public address is refused.
+  - **Its config:** made in memory from a member of the same role (its secrets, CAs and tokens),
+    with the new host name, install disk and, optionally, a static address. Only a redacted
+    preview is shown, and nothing secret is stored on the phone.
+  - **What is sent, and how:** after the host name is typed (and the app lock passed), the full
+    config goes once, over TLS without client authentication, to the address you typed, as
+    `talosctl apply-config --insecure` does. It is never retried, nor sent to another address.
+  - **Following it:** send → install → reboot → booted → joining (Talos ready, the Kubernetes node
+    Ready) → added to the context's nodes. A control plane also waits for its etcd member to be
+    healthy, and etcd counts one more member. After 15 minutes the run stops and says what to
+    check (console, disk, network). Stopping only stops following: the install cannot be undone.
 
 ### Capacity
 
@@ -577,10 +592,7 @@ the cluster on screen.
 clusters" in the top bar's ⋯ menu, which can be moved to the bar). Results come from
 what each cluster last showed: other clusters than the one on screen need "Keep last known
 state" on. Typing never calls a cluster; a result opens its screen on its cluster, like a share
-link. The search also opens from the app icon: a long press on Android ("Search clusters"),
-a Home Screen quick action on iOS. On iOS the clusters and the Argo CD and Flux apps the phone
-knows also show in Spotlight and open Ichor on them; only their names are indexed, and only
-while "Keep last known state" is on and neither the app lock nor the screenshot mode is.
+link.
 
 ### Kubernetes clusters without Talos
 

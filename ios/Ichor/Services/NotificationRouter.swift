@@ -16,9 +16,6 @@ final class NotificationRouter {
     /// A cluster's quick action was chosen: its fingerprint, to show that cluster.
     var pendingCluster: String?
 
-    /// The "Search clusters" quick action was chosen: open the search, once unlocked.
-    var pendingSearch = false
-
     /// A freeze reminder was tapped: open the Argo CD sync windows.
     var pendingArgoWindows = false
 

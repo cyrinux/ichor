@@ -49,18 +49,8 @@ import name.levis.ichor.ui.nav.talosGraph
 import kotlinx.coroutines.launch
 
 
-/**
- * Screens a notification or the static launcher shortcut (res/xml/shortcuts.xml) can open
- * directly (see MainActivity.EXTRA_OPEN, which carries the name).
- */
-enum class DeepLink {
-    ISSUE_CONFIG, DEMO, DEMO_KUBE, ARGO_WINDOWS, ARGO_CD, FLUX, CHECKUP, CONFIG_TRY, SEARCH;
-
-    companion object {
-        /** The screen an EXTRA_OPEN value names; null for anything else. */
-        fun named(name: String?): DeepLink? = entries.firstOrNull { it.name == name }
-    }
-}
+/** Screens a notification can open directly (see MainActivity.EXTRA_OPEN). */
+enum class DeepLink { ISSUE_CONFIG, DEMO, DEMO_KUBE, ARGO_WINDOWS, ARGO_CD, FLUX, CHECKUP, CONFIG_TRY }
 
 /**
  * [deepLink]: a screen to open once over the overview; [onDeepLinkHandled] then clears it.
@@ -179,11 +169,6 @@ fun Navigation(
             }
             DeepLink.CHECKUP -> if (!startWithImport && canUseKube()) {
                 nav.navigate(Routes.CHECKUP) { launchSingleTop = true }
-            }
-            // The launcher's "Search clusters": the last-known data of every cluster, so no role
-            // check here (its refresh action asks for one); nothing to search before an import.
-            DeepLink.SEARCH -> if (!startWithImport) {
-                nav.navigate(Routes.SEARCH) { launchSingleTop = true }
             }
         }
         onDeepLinkHandled()

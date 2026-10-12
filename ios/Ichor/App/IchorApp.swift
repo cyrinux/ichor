@@ -1,4 +1,3 @@
-import CoreSpotlight
 import SwiftUI
 import Ichorgo
 import IchorCore
@@ -46,14 +45,11 @@ struct IchorApp: App {
                     if url.isFileURL { IncomingConfig.receive(url) }
                     if url.scheme == "ichor", url.host == "open" { NotificationRouter.shared.pendingShareLink = url }
                 }
-                // A Spotlight result (SpotlightIndex): its share link, routed like any other.
-                .onContinueUserActivity(CSSearchableItemActionType) { activity in
-                    if let url = SpotlightIndex.link(of: activity) { NotificationRouter.shared.pendingShareLink = url }
-                }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .background, BackgroundMonitor.alertsEnabled { BackgroundMonitor.schedule() }
                     if phase == .background { UpgradeJob.shared.didEnterBackground() }
                     if phase == .background { MaintenanceJob.shared.didEnterBackground() }
+                    if phase == .background { JoinJob.shared.didEnterBackground() }
                     if phase == .background { ClusterUpgradeJob.shared.didEnterBackground() }
                     if phase == .background { K8sUpgradeJob.shared.didEnterBackground() }
                     if phase == .background { ConfigTryJob.shared.didEnterBackground() }
@@ -267,7 +263,7 @@ struct MainNavigation: View {
                     case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
                     case .clusterUpgrade(let version): ClusterUpgradePlanView(initialVersion: version)
                     case .k8sUpgrade: K8sUpgradePlanView()
-                    case .joinNode: JoinNodeView()
+                    case .joinNode: JoinNodeView(path: $path)
                     case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
                     case .nodeTab(let ref, let tab): NodeDetailView(ref: ref, initialTab: tab)
                     case .nodes(let filter, let nodes): NodesView(nodes: nodes, filter: filter, path: $path)
@@ -330,13 +326,9 @@ struct MainNavigation: View {
         .onChange(of: NotificationRouter.shared.pendingShareLink) { _, pending in
             if pending != nil { openShareLink() }
         }
-        .onChange(of: NotificationRouter.shared.pendingSearch) { _, pending in
-            if pending { openSearch() }
-        }
         // Mounted under the lock screen once unlocked: a link waits for the next unlock.
         .onChange(of: model.lock.locked) { _, locked in
             if !locked, NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
-            if !locked, NotificationRouter.shared.pendingSearch { openSearch() }
             if !locked { openImport() }
         }
         .onChange(of: NotificationRouter.shared.pendingImportText) { _, pending in
@@ -350,7 +342,6 @@ struct MainNavigation: View {
             if NotificationRouter.shared.pendingCluster != nil { openCluster() }
             if NotificationRouter.shared.pendingArgoWindows { openArgoWindows() }
             if NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
-            if NotificationRouter.shared.pendingSearch { openSearch() }
             if NotificationRouter.shared.pendingGitOps != nil { openGitOps() }
             openImport()
         }
@@ -395,14 +386,6 @@ struct MainNavigation: View {
         guard let fingerprint = NotificationRouter.shared.pendingCluster else { return }
         NotificationRouter.shared.pendingCluster = nil
         if model.selectCluster(fingerprint: fingerprint) { path = [] }
-    }
-
-    /// From the "Search clusters" quick action: the search over the cluster on screen's home,
-    /// once unlocked.
-    private func openSearch() {
-        guard !model.lock.locked, NotificationRouter.shared.pendingSearch else { return }
-        NotificationRouter.shared.pendingSearch = false
-        path = [.search]
     }
 
     /// From a share link: like a quick action, the overview of the cluster it names (the

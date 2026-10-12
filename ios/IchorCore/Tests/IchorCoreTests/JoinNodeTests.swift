@@ -73,4 +73,46 @@ final class JoinNodeTests: XCTestCase {
         ]
         XCTAssertEqual(installDisks(disks), ["/dev/sda"])
     }
+
+    func testTheDiskMustBeOneOfTheInspectedNode() throws {
+        let node = try TalosJSON.decode(MaintenanceInspection.self, from: #"{"address":"10.0.0.5","maintenance":true,"disks":[{"name":"sda","devPath":"/dev/sda","size":1}]}"#)
+        XCTAssertTrue(joinDiskFits("/dev/sda", node: node))
+        XCTAssertFalse(joinDiskFits("/dev/nvme0n1", node: node))
+        let bare = try TalosJSON.decode(MaintenanceInspection.self, from: #"{"address":"10.0.0.5","maintenance":true,"disks":[]}"#)
+        XCTAssertTrue(joinDiskFits("/dev/vda", node: bare))
+    }
+
+    func testJoinProgressDecodes() throws {
+        let event = try TalosJSON.decode(JoinProgress.self, from: """
+        {"phase":"rebooting","message":"installing to /dev/sda and rebooting","at":1700000000000,"address":"192.0.2.20"}
+        """)
+        XCTAssertEqual(JoinPhase(rawValue: event.phase), .rebooting)
+        XCTAssertEqual(event.address, "192.0.2.20")
+        let bare = try TalosJSON.decode(JoinProgress.self, from: #"{"phase":"applying","message":"","at":1}"#)
+        XCTAssertEqual(bare.address, "")
+    }
+
+    func testJoinTimelineMarksTheLatestPhaseCurrent() {
+        let steps = joinTimeline([
+            JoinProgress(phase: "applying", at: 1), JoinProgress(phase: "installing", at: 2),
+            JoinProgress(phase: "rebooting", message: "down", at: 3), JoinProgress(phase: "rebooting", message: "still down", at: 4),
+        ])
+        XCTAssertEqual(steps.map(\.phase), JoinPhase.allCases)
+        XCTAssertEqual(steps.map(\.state), [.done, .done, .current, .pending, .pending, .pending, .pending])
+        XCTAssertEqual(steps[2].at, 3)
+        XCTAssertEqual(steps[2].message, "still down")
+    }
+
+    func testJoinTimelineFailureAndSuccess() {
+        let failed = joinTimeline([JoinProgress(phase: "applying"), JoinProgress(phase: "installing")], failure: "timeout")
+        XCTAssertEqual(failed[1].state, .failed)
+        XCTAssertEqual(failed[1].message, "timeout")
+        XCTAssertEqual(failed[3].state, .pending)
+
+        let refused = joinTimeline([], failure: "demo")
+        XCTAssertEqual(refused.first?.state, .failed)
+
+        let done = joinTimeline([JoinProgress(phase: "applying"), JoinProgress(phase: "done")], finished: true)
+        XCTAssertTrue(done.allSatisfy { $0.state == .done })
+    }
 }

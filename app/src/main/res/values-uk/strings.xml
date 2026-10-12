@@ -500,8 +500,6 @@
     <string name="clusters_menu_remove">Вилучити</string>
     <string name="clusters_vpn_only_hint">Лише VPN: без підключеного VPN застосунок не звертається до кластера, а фонові перевірки чекають на нього.</string>
     <string name="shortcut_cluster_removed">Цей кластер видалено</string>
-    <string name="shortcut_search_short">Пошук</string>
-    <string name="shortcut_search_long">Пошук у кластерах</string>
 
     <!-- Settings -->
     <string name="settings_title">Налаштування</string>
@@ -4455,7 +4453,33 @@
     <string name="join_node_installed">%1$s уже встановлено: він вимагає клієнтський сертифікат. Тут можна додати лише вузол, завантажений з ISO і ще не встановлений.</string>
     <string name="join_node_step_config">2. Конфігурація машини з наявного вузла: роль, ім’я хоста та диск для встановлення</string>
     <string name="join_node_step_apply">3. Застосувати її та стежити за вузлом, доки він не приєднається до кластера</string>
-    <string name="join_node_coming">З’явиться в наступній версії.</string>
+    <string name="join_apply_waiting">Спершу перевірте вузол у режимі обслуговування й перегляньте його конфігурацію.</string>
+    <string name="join_apply_address">Адреса</string>
+    <string name="join_apply_role">Роль</string>
+    <string name="join_apply_join">Приєднати</string>
+    <string name="join_apply_confirm_title">Приєднати %1$s?</string>
+    <string name="join_apply_confirm_body">Конфігурація піде на %1$s, який встановить Talos на %2$s і зітре його.</string>
+    <string name="join_run_stop_hint">Після надсилання конфігурації встановлення не скасувати: зупинка лише припиняє стеження.</string>
+    <string name="join_run_stop">Припинити стеження</string>
+    <string name="join_run_stop_body">%1$s продовжує встановлення й з’явиться в огляді, щойно приєднається.</string>
+    <string name="join_run_done">%1$s приєднався до кластера як %2$s</string>
+    <string name="join_run_open_node">Відкрити вузол</string>
+    <string name="join_run_no_address">Приєднання завершилося без адреси вузла.</string>
+    <string name="join_run_not_added">%1$s приєднався, але його не вдалося додати до вузлів %2$s: %3$s</string>
+    <string name="join_channel_name">Приєднання вузла</string>
+    <string name="join_channel_desc">Перебіг додавання вузла до кластера</string>
+    <string name="join_notification_public">Додавання вузла</string>
+    <string name="join_notification_result_public">Приєднання вузла завершено</string>
+    <string name="join_notification_title">Додавання %1$s</string>
+    <string name="join_notification_done">%1$s приєднався</string>
+    <string name="join_notification_failed">Не вдалося додати %1$s</string>
+    <string name="join_phase_applying">Надіслати конфігурацію</string>
+    <string name="join_phase_installing">Встановити</string>
+    <string name="join_phase_rebooting">Перезавантажити</string>
+    <string name="join_phase_booted">Завантажено</string>
+    <string name="join_phase_joining">Приєднатися до кластера</string>
+    <string name="join_phase_registering">Додати до вузлів кластера</string>
+    <string name="join_phase_done">Готово</string>
     <string name="join_config_intro">Новий вузол отримує конфігурацію учасника з тією ж роллю, зі своїм іменем хоста, диском для встановлення та адресою. Учасника лише читають.</string>
     <string name="join_config_no_template">Жоден учасник не відповідає: конфігурацію нового вузла створюють з конфігурації учасника.</string>
     <string name="join_config_template">Шаблон</string>

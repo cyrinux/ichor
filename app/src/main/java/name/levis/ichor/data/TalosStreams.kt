@@ -6,6 +6,7 @@ import name.levis.ichorgo.EtcdRecoverListener
 import name.levis.ichorgo.EventListener
 import name.levis.ichorgo.HealthListener
 import name.levis.ichorgo.ImagePullListener
+import name.levis.ichorgo.JoinListener
 import name.levis.ichorgo.LogListener
 import name.levis.ichorgo.NetToolListener
 import name.levis.ichorgo.SnapshotListener
@@ -15,6 +16,7 @@ import name.levis.ichor.model.EtcdFixProgress
 import name.levis.ichor.model.EtcdRecoverProgress
 import name.levis.ichor.model.ImagePullNamespace
 import name.levis.ichor.model.ImagePullProgress
+import name.levis.ichor.model.JoinProgress
 import name.levis.ichor.model.SnapshotEncryption
 import name.levis.ichor.model.NetTool
 import name.levis.ichor.model.NetToolEvent
@@ -25,6 +27,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 /** Events streamed by the cluster health check. */
 sealed interface HealthEvent {
@@ -55,6 +59,12 @@ sealed interface EtcdFixEvent {
 sealed interface ImagePullEvent {
     data class Progress(val progress: ImagePullProgress) : ImagePullEvent
     data class Done(val error: String?) : ImagePullEvent
+}
+
+/** A node join's steps, then its end: [Done.address] the joined node's, [Done.error] null when it joined. */
+sealed interface JoinEvent {
+    data class Progress(val progress: JoinProgress) : JoinEvent
+    data class Done(val address: String, val error: String?) : JoinEvent
 }
 
 /** Items of a live stream (events, followed log). [Done] ends it; [error] null when cancelled. */
@@ -255,6 +265,41 @@ internal class TalosStreams(private val configs: ConfigRepository) {
             }
         }
         val run = Ichorgo.startEtcdRecover(stored.yaml, stored.activeContext, node, path, identity, passphrase, skipHashCheck, listener)
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED) // every step is kept: the timeline needs them
+
+    /**
+     * StartNodeJoin: [template]'s config, made the new node's, sent to the node in maintenance
+     * mode at [address]; then the node followed until it joins. [stop] emitting stops the run,
+     * which still reports its end (closing the flow stops it too, without that report). Once the
+     * config is sent, only the following stops: an install cannot be undone.
+     */
+    fun joinNode(
+        address: String,
+        template: String,
+        role: String,
+        hostname: String,
+        installDisk: String,
+        staticAddress: String,
+        stop: Flow<Any>,
+    ): Flow<JoinEvent> = callbackFlow {
+        val stored = configs.forCall()
+        val listener = object : JoinListener {
+            override fun onProgress(json: String) {
+                runCatching { TalosJson.decodeFromString(JoinProgress.serializer(), json) }.getOrNull()
+                    ?.let { trySend(JoinEvent.Progress(it)) }
+            }
+
+            override fun onDone(nodeAddress: String, errMessage: String) {
+                trySend(JoinEvent.Done(nodeAddress, errMessage.ifEmpty { null }?.let(::goErrorText)))
+                close()
+            }
+        }
+        val run = Ichorgo.startNodeJoin(stored.yaml, stored.activeContext, address, template, role, hostname, installDisk, staticAddress, "", listener)
+        launch {
+            stop.first()
+            run.cancel()
+        }
         awaitClose { run.cancel() }
     }.buffer(Channel.UNLIMITED) // every step is kept: the timeline needs them
 

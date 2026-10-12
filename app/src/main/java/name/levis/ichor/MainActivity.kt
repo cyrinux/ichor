@@ -232,7 +232,7 @@ private fun Intent.deepLink(): DeepLink? {
         "", "/" -> return DeepLink.DEMO
         "/kube" -> return DeepLink.DEMO_KUBE
     }
-    return DeepLink.named(getStringExtra(MainActivity.EXTRA_OPEN))
+    return getStringExtra(MainActivity.EXTRA_OPEN)?.let { name -> DeepLink.entries.firstOrNull { it.name == name } }
 }
 
 /**

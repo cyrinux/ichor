@@ -448,8 +448,6 @@
     <string name="clusters_menu_remove">Remove</string>
     <string name="clusters_vpn_only_hint">VPN only: without a VPN connected the app does not try the cluster, and background checks wait for it.</string>
     <string name="shortcut_cluster_removed">This cluster was removed</string>
-    <string name="shortcut_search_short">Search</string>
-    <string name="shortcut_search_long">Search clusters</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -4221,7 +4219,33 @@
     <string name="join_node_installed">%1$s is already installed: it asks for a client certificate. Only a node booted from the ISO and not installed yet can be added here.</string>
     <string name="join_node_step_config">2. Machine config from an existing node: role, host name and install disk</string>
     <string name="join_node_step_apply">3. Apply it and follow the node until it joins the cluster</string>
-    <string name="join_node_coming">Coming in a next version.</string>
+    <string name="join_apply_waiting">Inspect a node in maintenance mode and preview its config first.</string>
+    <string name="join_apply_address">Address</string>
+    <string name="join_apply_role">Role</string>
+    <string name="join_apply_join">Join</string>
+    <string name="join_apply_confirm_title">Join %1$s?</string>
+    <string name="join_apply_confirm_body">The config goes to %1$s, which installs Talos to %2$s and erases it.</string>
+    <string name="join_run_stop_hint">Once the config is sent, the install cannot be undone: stopping only stops following it.</string>
+    <string name="join_run_stop">Stop following</string>
+    <string name="join_run_stop_body">%1$s goes on installing and appears on the overview once it joins.</string>
+    <string name="join_run_done">%1$s joined the cluster as %2$s</string>
+    <string name="join_run_open_node">Open node</string>
+    <string name="join_run_no_address">The join ended without the node\'s address.</string>
+    <string name="join_run_not_added">%1$s joined, but could not be added to the nodes of %2$s: %3$s</string>
+    <string name="join_channel_name">Node join</string>
+    <string name="join_channel_desc">Progress of a node being added to the cluster</string>
+    <string name="join_notification_public">Adding a node</string>
+    <string name="join_notification_result_public">Node join finished</string>
+    <string name="join_notification_title">Adding %1$s</string>
+    <string name="join_notification_done">%1$s joined</string>
+    <string name="join_notification_failed">Adding %1$s failed</string>
+    <string name="join_phase_applying">Send the config</string>
+    <string name="join_phase_installing">Install</string>
+    <string name="join_phase_rebooting">Reboot</string>
+    <string name="join_phase_booted">Booted</string>
+    <string name="join_phase_joining">Join the cluster</string>
+    <string name="join_phase_registering">Add to the cluster\'s nodes</string>
+    <string name="join_phase_done">Done</string>
     <string name="join_config_intro">The new node gets the config of a member of the same role, with its own host name, install disk and address. The member is only read.</string>
     <string name="join_config_no_template">No member answers: the new node\'s config is made from a member\'s.</string>
     <string name="join_config_template">Template</string>

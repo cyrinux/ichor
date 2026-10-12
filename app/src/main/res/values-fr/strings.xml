@@ -453,8 +453,6 @@
     <string name="clusters_menu_remove">Retirer</string>
     <string name="clusters_vpn_only_hint">VPN uniquement : sans VPN connecté, l\'app n\'essaie pas de joindre le cluster et les vérifications en arrière-plan l\'attendent.</string>
     <string name="shortcut_cluster_removed">Ce cluster a été supprimé</string>
-    <string name="shortcut_search_short">Rechercher</string>
-    <string name="shortcut_search_long">Rechercher dans les clusters</string>
 
     <!-- Settings -->
     <string name="settings_title">Paramètres</string>
@@ -4221,7 +4219,33 @@
     <string name="join_node_installed">%1$s est déjà installé : il demande un certificat client. Seul un nœud démarré sur l\'ISO et pas encore installé peut être ajouté ici.</string>
     <string name="join_node_step_config">2. Configuration machine à partir d\'un nœud existant : rôle, nom d\'hôte et disque d\'installation</string>
     <string name="join_node_step_apply">3. L\'appliquer et suivre le nœud jusqu\'à ce qu\'il rejoigne le cluster</string>
-    <string name="join_node_coming">Dans une prochaine version.</string>
+    <string name="join_apply_waiting">Inspectez d\'abord un nœud en mode maintenance et prévisualisez sa config.</string>
+    <string name="join_apply_address">Adresse</string>
+    <string name="join_apply_role">Rôle</string>
+    <string name="join_apply_join">Rejoindre</string>
+    <string name="join_apply_confirm_title">Faire rejoindre %1$s ?</string>
+    <string name="join_apply_confirm_body">La config part vers %1$s, qui installe Talos sur %2$s et l\'efface.</string>
+    <string name="join_run_stop_hint">Une fois la config envoyée, l\'installation ne peut pas être annulée : arrêter ne fait qu\'arrêter le suivi.</string>
+    <string name="join_run_stop">Arrêter le suivi</string>
+    <string name="join_run_stop_body">%1$s continue son installation et apparaît dans la vue d\'ensemble une fois intégré.</string>
+    <string name="join_run_done">%1$s a rejoint le cluster en tant que %2$s</string>
+    <string name="join_run_open_node">Ouvrir le nœud</string>
+    <string name="join_run_no_address">L\'ajout s\'est terminé sans l\'adresse du nœud.</string>
+    <string name="join_run_not_added">%1$s a rejoint le cluster, mais n\'a pas pu être ajouté aux nœuds de %2$s : %3$s</string>
+    <string name="join_channel_name">Ajout de nœud</string>
+    <string name="join_channel_desc">Progression d\'un nœud en cours d\'ajout au cluster</string>
+    <string name="join_notification_public">Ajout d\'un nœud</string>
+    <string name="join_notification_result_public">Ajout du nœud terminé</string>
+    <string name="join_notification_title">Ajout de %1$s</string>
+    <string name="join_notification_done">%1$s a rejoint le cluster</string>
+    <string name="join_notification_failed">Échec de l\'ajout de %1$s</string>
+    <string name="join_phase_applying">Envoyer la config</string>
+    <string name="join_phase_installing">Installer</string>
+    <string name="join_phase_rebooting">Redémarrer</string>
+    <string name="join_phase_booted">Démarré</string>
+    <string name="join_phase_joining">Rejoindre le cluster</string>
+    <string name="join_phase_registering">Ajouter aux nœuds du cluster</string>
+    <string name="join_phase_done">Terminé</string>
     <string name="join_config_intro">Le nouveau nœud reçoit la configuration d\'un membre du même rôle, avec son propre nom d\'hôte, son disque d\'installation et son adresse. Le membre est seulement lu.</string>
     <string name="join_config_no_template">Aucun membre ne répond : la configuration du nouveau nœud est faite à partir de celle d\'un membre.</string>
     <string name="join_config_template">Modèle</string>

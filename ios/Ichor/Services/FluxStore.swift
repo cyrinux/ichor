@@ -24,7 +24,6 @@ final class FluxStore {
         let loaded = try await client.flux()
         self.key = key
         status = loaded
-        SpotlightIndex.index(flux: loaded.apps, key: key)
         return loaded
     }
 

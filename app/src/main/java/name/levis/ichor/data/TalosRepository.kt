@@ -844,6 +844,15 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
             )
         }
 
+    /** What to confirm before joining a node of [role]: one warning per line, from the Go core. */
+    suspend fun nodeJoinWarnings(role: String): List<String> = withContext(Dispatchers.IO) {
+        Ichorgo.nodeJoinWarnings(role).lines().filter { it.isNotBlank() }
+    }
+
+    /** See [TalosStreams.joinNode]. */
+    fun joinNode(address: String, template: String, role: String, hostname: String, installDisk: String, staticAddress: String, stop: Flow<Any>): Flow<JoinEvent> =
+        streams.joinNode(address, template, role, hostname, installDisk, staticAddress, stop)
+
     /** `talosctl get TYPE ID -o yaml` (never cached: may hold secrets). */
     suspend fun resourceGet(node: String, namespace: String, type: String, id: String): String = call { cfg, ctx ->
         TalosJson.decodeFromString(ResourceDetail.serializer(), Ichorgo.resourceGet(cfg, ctx, node, namespace, type, id)).yaml

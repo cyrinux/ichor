@@ -446,8 +446,6 @@
     <string name="clusters_menu_remove">Entfernen</string>
     <string name="clusters_vpn_only_hint">Nur VPN: ohne verbundenes VPN versucht die App den Cluster nicht zu erreichen, und Hintergrundprüfungen warten darauf.</string>
     <string name="shortcut_cluster_removed">Dieser Cluster wurde entfernt</string>
-    <string name="shortcut_search_short">Suchen</string>
-    <string name="shortcut_search_long">Cluster durchsuchen</string>
 
     <!-- Settings -->
     <string name="settings_title">Einstellungen</string>
@@ -4213,7 +4211,33 @@
     <string name="join_node_installed">%1$s ist bereits installiert: Er verlangt ein Client-Zertifikat. Hier lässt sich nur ein vom ISO gestarteter, noch nicht installierter Node hinzufügen.</string>
     <string name="join_node_step_config">2. Maschinenkonfiguration aus einem bestehenden Node: Rolle, Hostname und Installationsdatenträger</string>
     <string name="join_node_step_apply">3. Anwenden und den Node verfolgen, bis er dem Cluster beitritt</string>
-    <string name="join_node_coming">Kommt in einer nächsten Version.</string>
+    <string name="join_apply_waiting">Prüfe zuerst einen Knoten im Wartungsmodus und zeige seine Konfiguration in der Vorschau an.</string>
+    <string name="join_apply_address">Adresse</string>
+    <string name="join_apply_role">Rolle</string>
+    <string name="join_apply_join">Beitreten</string>
+    <string name="join_apply_confirm_title">%1$s beitreten lassen?</string>
+    <string name="join_apply_confirm_body">Die Konfiguration geht an %1$s, das Talos auf %2$s installiert und die Platte dabei löscht.</string>
+    <string name="join_run_stop_hint">Sobald die Konfiguration gesendet ist, lässt sich die Installation nicht rückgängig machen: Anhalten beendet nur das Verfolgen.</string>
+    <string name="join_run_stop">Verfolgen beenden</string>
+    <string name="join_run_stop_body">%1$s installiert weiter und erscheint in der Übersicht, sobald er beigetreten ist.</string>
+    <string name="join_run_done">%1$s ist dem Cluster als %2$s beigetreten</string>
+    <string name="join_run_open_node">Knoten öffnen</string>
+    <string name="join_run_no_address">Der Beitritt endete ohne die Adresse des Knotens.</string>
+    <string name="join_run_not_added">%1$s ist beigetreten, konnte aber nicht zu den Knoten von %2$s hinzugefügt werden: %3$s</string>
+    <string name="join_channel_name">Knotenbeitritt</string>
+    <string name="join_channel_desc">Fortschritt eines Knotens, der dem Cluster hinzugefügt wird</string>
+    <string name="join_notification_public">Knoten wird hinzugefügt</string>
+    <string name="join_notification_result_public">Knotenbeitritt abgeschlossen</string>
+    <string name="join_notification_title">%1$s wird hinzugefügt</string>
+    <string name="join_notification_done">%1$s ist beigetreten</string>
+    <string name="join_notification_failed">Hinzufügen von %1$s fehlgeschlagen</string>
+    <string name="join_phase_applying">Konfiguration senden</string>
+    <string name="join_phase_installing">Installieren</string>
+    <string name="join_phase_rebooting">Neustart</string>
+    <string name="join_phase_booted">Gestartet</string>
+    <string name="join_phase_joining">Dem Cluster beitreten</string>
+    <string name="join_phase_registering">Zu den Knoten des Clusters hinzufügen</string>
+    <string name="join_phase_done">Fertig</string>
     <string name="join_config_intro">Der neue Node bekommt die Konfiguration eines Mitglieds mit derselben Rolle, mit eigenem Hostnamen, eigener Installationsfestplatte und Adresse. Das Mitglied wird nur gelesen.</string>
     <string name="join_config_no_template">Kein Mitglied antwortet: Die Konfiguration des neuen Nodes wird aus der eines Mitglieds erstellt.</string>
     <string name="join_config_template">Vorlage</string>

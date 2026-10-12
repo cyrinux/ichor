@@ -23,14 +23,10 @@ object ClusterShortcuts {
     private const val ICON_DP = 108f
     private const val LETTER_DP = 40f
     private const val LIGHT_BACKGROUND = 0.5
-    /** res/xml/shortcuts.xml: "Search clusters", which counts toward the launcher's limit. */
-    private const val STATIC_SHORTCUTS = 1
 
-    /** How many cluster shortcuts the launcher shows: its limit less the static "Search clusters" one. */
+    /** How many shortcuts the launcher shows. */
     fun max(context: Context): Int =
-        runCatching { ShortcutManagerCompat.getMaxShortcutCountPerActivity(context) - STATIC_SHORTCUTS }
-            .getOrDefault(0)
-            .coerceAtLeast(0)
+        runCatching { ShortcutManagerCompat.getMaxShortcutCountPerActivity(context) }.getOrDefault(0)
 
     /**
      * Makes [specs] the app's shortcuts. Pinned shortcuts (on the home screen) whose id is

@@ -134,10 +134,6 @@
                 <data android:mimeType="text/x-yaml" />
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
-            <!-- The static "Search clusters" launcher shortcut (one per build's applicationId). -->
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts" />
         </activity>
 
         <!-- Shares saved packet captures with the app the user picks. -->
@@ -184,6 +180,18 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Follows a node maintenance the user started on one of their Talos nodes (cordon, drain its pods, reboot, wait for the node to come back) while they switch apps, so it is not cut off midway; it stops when the maintenance ends." />
+        </service>
+
+        <!-- Following a node join (send its config, install, reboot, wait until it joins) keeps
+             the app talking to the cluster for the minutes the install takes; it runs only while
+             the join does. -->
+        <service
+            android:name=".ui.join.JoinService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Follows a new Talos node the user is adding to their cluster (its config sent, Talos installing, the reboot, the node joining) while they switch apps, so following it is not cut off midway; it stops when the join ends." />
         </service>
 
         <!-- A machine config tried on a node reverts by itself after 1 to 10 minutes unless the

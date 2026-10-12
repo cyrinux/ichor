@@ -63,10 +63,7 @@ final class AppModel {
             if let index = summary?.contexts.firstIndex(where: { $0.name == activeContext }) {
                 UserDefaults.standard.set(index, forKey: Keys.contextIndex)
             }
-            if activeContext != oldValue {
-                publishWidgetClusters()
-                updateSpotlight()
-            }
+            if activeContext != oldValue { publishWidgetClusters() }
         }
     }
 
@@ -262,7 +259,6 @@ final class AppModel {
         UserDefaults.standard.set(names, forKey: Keys.clusterNames)
         QuickActions.update(summary: summary, labels: labels)
         publishWidgetClusters()
-        updateSpotlight()
     }
 
     /// Shows the cluster a quick action stands for; false when it is no longer imported.
@@ -539,13 +535,13 @@ final class AppModel {
         apply(talos: patched, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, preferred: context)
     }
 
-    /// Adds discovered `nodes` (addresses) to the active context's nodes, keeping the other
-    /// contexts; the overview reloads with them.
-    func addNodes(_ nodes: [String]) async throws {
+    /// Adds discovered `nodes` (addresses) to the nodes of `contextName` (the active context by
+    /// default), keeping the other contexts; the overview reloads with them.
+    func addNodes(_ nodes: [String], to contextName: String? = nil) async throws {
         try checkWritable()
         guard let current = yaml else { throw TalosError(message: String(localized: "No talosconfig is stored.")) }
         let context = activeContext
-        let updated = try await TalosClient.addContextNodes(stored: current, context: context, nodes: nodes)
+        let updated = try await TalosClient.addContextNodes(stored: current, context: contextName ?? context, nodes: nodes)
         let parsed = try await TalosClient.parse(updated)
         try SecureConfigStore.save(Data(updated.utf8))
         apply(talos: updated, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, preferred: context)
@@ -635,13 +631,6 @@ final class AppModel {
         SharedStore.publish(clusters: clusters, active: activeSummary.map(monitorClusterKey))
     }
 
-    /// Spotlight lists its items outside the app: only with the last known state kept, no app
-    /// lock and no screenshot mode (any of them on deletes what was indexed).
-    private func updateSpotlight() {
-        SpotlightIndex.update(summary: summary, active: activeContext, labels: labels,
-                              enabled: keepLastKnown && !lock.enabled && !privacyMask)
-    }
-
     /// The VPN came up: a VPN-only cluster on screen reloads.
     private func reloadIfHeldBack() {
         if let shown = activeSummary?.fingerprint, vpnOnly.contains(shown) { dataGeneration += 1 }
@@ -682,7 +671,6 @@ final class AppModel {
         summary = nil
         QuickActions.update(summary: nil, labels: labels)
         publishWidgetClusters()
-        SpotlightIndex.wipe()
     }
 
     /// Callers must have authenticated the user first; the lock off drops the enrolled keys too.
@@ -690,7 +678,6 @@ final class AppModel {
         lock.setEnabled(enabled)
         UserDefaults.standard.set(enabled, forKey: Keys.lock)
         if !enabled { setSecurityKeys(nil) }
-        updateSpotlight()
     }
 
     /// Callers must have authenticated the user first. No key left forgets the data key too.
@@ -706,7 +693,6 @@ final class AppModel {
         keepLastKnown = enabled
         UserDefaults.standard.set(enabled, forKey: Keys.keepLastKnown)
         if !enabled { LastKnownStore.wipe() }
-        updateSpotlight()
     }
 
     /// Turns the screenshot mode on or off (or changes its words): drops the data held with
@@ -720,7 +706,6 @@ final class AppModel {
         UserDefaults.standard.set(enabled, forKey: PrivacyKeys.enabled)
         UserDefaults.standard.set(words, forKey: PrivacyKeys.words)
         TalosClient.setPrivacyMask(enabled: enabled, extraWords: words)
-        updateSpotlight()
         guard affectsData else { return }
         // Also resets the alert diff, which would otherwise see every node renamed.
         SharedStore.clear()
@@ -801,6 +786,5 @@ final class AppModel {
         }
         QuickActions.update(summary: newSummary, labels: labels)
         publishWidgetClusters()
-        updateSpotlight()
     }
 }

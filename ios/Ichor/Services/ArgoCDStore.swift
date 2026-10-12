@@ -30,7 +30,6 @@ final class ArgoCDStore {
         self.key = key
         status = loaded
         if let cluster, !cluster.demo { FreezeReminders.sync(loaded, cluster: cluster.fingerprint) }
-        SpotlightIndex.index(argo: loaded.apps, key: key)
         clearExpired(loaded, key: key, with: client)
         return loaded
     }

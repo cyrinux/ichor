@@ -386,3 +386,14 @@ func (l maskedNetToolListener) OnOutput(line string) {
 func (l maskedNetToolListener) OnDone(resultJSON string, errMessage string) {
 	l.NetToolListener.OnDone(privacy.mask(resultJSON), privacy.maskPlain(errMessage))
 }
+
+type maskedJoinListener struct{ JoinListener }
+
+func (l maskedJoinListener) OnProgress(json string) {
+	l.JoinListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedJoinListener) OnDone(nodeAddress string, errMessage string) {
+	// The address goes into the stored talosconfig: it stays real (joins refuse privacy mode).
+	l.JoinListener.OnDone(nodeAddress, privacy.maskPlain(errMessage))
+}

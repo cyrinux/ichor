@@ -66,6 +66,8 @@ import name.levis.ichor.ui.upgrade.UpgradeService
 import name.levis.ichor.ui.images.ImagePullService
 import name.levis.ichor.ui.imagescan.ImageScanService
 import name.levis.ichor.ui.maintenance.MaintenanceService
+import name.levis.ichor.ui.join.JoinService
+import name.levis.ichor.data.JoinManager
 import name.levis.ichor.ui.upgrade.K8sUpgradeService
 import name.levis.ichor.data.K8sUpgradeManager
 import name.levis.ichor.data.NetToolTargets
@@ -202,6 +204,15 @@ class TalosApp : Application() {
     }
     /** The followed node maintenance; MaintenanceService keeps the app alive while it runs. */
     val maintenanceManager by lazy { MaintenanceManager(talosRepository, onStarted = { MaintenanceService.start(this) }) }
+    /** The followed node join; JoinService keeps the app alive while it runs. */
+    val joinManager by lazy {
+        JoinManager(
+            talosRepository,
+            configRepository,
+            text = { id, args -> AppLocale.wrap(this).getString(id, *args.toTypedArray()) },
+            onStarted = { JoinService.start(this) },
+        )
+    }
     /** The followed machine config try; ConfigTryService keeps its countdown going off screen. */
     val configTryManager by lazy { ConfigTryManager(talosRepository::tryMachineConfig, onStarted = { ConfigTryService.start(this) }) }
     /** The followed multi-node config apply; ConfigMultiService keeps the app alive while it runs. */
