@@ -103,3 +103,83 @@ public func suggestedHostname(role: String, hostnames: [String]) -> String {
 public func installDisks(_ disks: [DiskInfo]) -> [String] {
     disks.filter { !$0.readonly && !$0.devPath.isEmpty }.map(\.devPath)
 }
+
+/// `disk` is one of `node`'s writable disks, or the node listed none (a typed path then).
+public func joinDiskFits(_ disk: String, node: MaintenanceInspection) -> Bool {
+    let disks = installDisks(node.disks)
+    return disks.isEmpty || disks.contains(disk)
+}
+
+/// What the user confirmed for the new node: the maintenance `address` and step 2's choices.
+public struct JoinRequest: Equatable, Sendable {
+    public let address: String
+    public let template: String
+    public let role: String
+    public let hostname: String
+    public let disk: String
+    /// A prefix, or "" for DHCP.
+    public let staticAddress: String
+    /// The new node replaces a member discovery still lists under `hostname` (a dead node).
+    public let replacing: Bool
+
+    public init(address: String, template: String, role: String, hostname: String, disk: String, staticAddress: String,
+                replacing: Bool = false) {
+        self.address = address
+        self.template = template
+        self.role = role
+        self.hostname = hostname
+        self.disk = disk
+        self.staticAddress = staticAddress
+        self.replacing = replacing
+    }
+
+    /// The same request, replacing (or not) the member already named `hostname`.
+    public func withReplacing(_ on: Bool) -> JoinRequest {
+        JoinRequest(address: address, template: template, role: role, hostname: hostname, disk: disk,
+                    staticAddress: staticAddress, replacing: on)
+    }
+}
+
+/// One step of a node join (StartNodeJoin): `at` is unix ms, `address` where the node is followed.
+public struct JoinProgress: Decodable, Equatable, Sendable {
+    public let phase: String
+    public let message: String
+    public let at: Int64
+    public let address: String
+
+    public init(phase: String, message: String = "", at: Int64 = 0, address: String = "") {
+        self.phase = phase
+        self.message = message
+        self.at = at
+        self.address = address
+    }
+
+    private enum CodingKeys: String, CodingKey { case phase, message, at, address }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        phase = try c.field(.phase, "")
+        message = try c.field(.message, "")
+        at = try c.field(.at, 0)
+        address = try c.field(.address, "")
+    }
+}
+
+/// Phases of a node join, in order.
+public enum JoinPhase: String, CaseIterable, Comparable, Sendable {
+    case applying, installing, rebooting, booted, joining, registering, done
+
+    public static func < (a: Self, b: Self) -> Bool {
+        allCases.firstIndex(of: a)! < allCases.firstIndex(of: b)!
+    }
+}
+
+/// A row of the join timeline.
+public typealias JoinStep = TimelineStep<JoinPhase>
+
+/// Timeline of the join from the events so far, like maintenanceTimeline: phases only move
+/// forward, `finished` marks them all done, `failure` marks the furthest one failed.
+public func joinTimeline(_ events: [JoinProgress], finished: Bool = false, failure: String? = nil) -> [JoinStep] {
+    foldTimeline(events, phases: JoinPhase.allCases, finished: finished, failure: failure,
+                 phase: { JoinPhase(rawValue: $0.phase) }, at: \.at, message: \.message)
+}

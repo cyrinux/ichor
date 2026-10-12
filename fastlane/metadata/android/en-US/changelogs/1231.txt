@@ -1,0 +1,5 @@
+• Add a node from the phone: send its config and follow it until it joins (#386)
+• Open the cluster search from the app icon, and find clusters and GitOps apps in Spotlight
+• Website points Android users to the Google Play beta
+• Capacity screen on iOS: free resources per cluster, OOM and eviction risk per workload, and what losing a node would cost
+• Capacity screen: free resources per cluster, OOM and eviction risk per workload, and what losing a node would cost

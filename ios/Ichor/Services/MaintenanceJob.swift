@@ -93,7 +93,7 @@ final class MaintenanceJob {
             stopping = false
             endBackgroundTask()
             UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [Self.foregroundNotification])
-            UIApplication.shared.isIdleTimerDisabled = UpgradeJob.shared.isActive
+            UIApplication.shared.isIdleTimerDisabled = UpgradeJob.shared.isActive || JoinJob.shared.isActive
         }
     }
 

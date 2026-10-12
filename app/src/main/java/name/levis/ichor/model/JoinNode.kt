@@ -60,3 +60,57 @@ fun suggestedHostname(role: String, hostnames: Collection<String>): String {
 
 /** The disks a config can install to: writable ones, by their device path. */
 fun installDisks(disks: List<DiskInfo>): List<String> = disks.filter { !it.readonly && it.devPath.isNotBlank() }.map { it.devPath }
+
+/** [disk] is one of [node]'s writable disks, or the node listed none (a typed path then). */
+fun joinDiskFits(disk: String, node: MaintenanceInspection): Boolean =
+    installDisks(node.disks).let { it.isEmpty() || disk in it }
+
+// Mirrors go/ichorgo/join_apply.go.
+
+/** One step of a node join, as StartNodeJoin reports it. [address]: where the node is followed. */
+@Serializable
+data class JoinProgress(
+    val phase: String = "",
+    val message: String = "",
+    val at: Long = 0,
+    val address: String = "",
+)
+
+/** The phases of a join, in order. */
+enum class JoinPhase(val wire: String) {
+    APPLYING("applying"),
+    INSTALLING("installing"),
+    REBOOTING("rebooting"),
+    BOOTED("booted"),
+    JOINING("joining"),
+    REGISTERING("registering"),
+    DONE("done"),
+    ;
+
+    companion object {
+        fun of(wire: String): JoinPhase? = entries.firstOrNull { it.wire.equals(wire, ignoreCase = true) }
+    }
+}
+
+data class JoinStep(val phase: JoinPhase, val status: StepStatus, val at: Long = 0, val message: String = "")
+
+/**
+ * The join's timeline from the [events] so far, like [maintenanceTimeline]: phases before the
+ * latest one are done, the latest is current (failed when [failed]), the rest pending; all
+ * done once [finished] without failure.
+ */
+fun joinTimeline(events: List<JoinProgress>, finished: Boolean, failed: Boolean): List<JoinStep> {
+    val known = events.mapNotNull { e -> JoinPhase.of(e.phase)?.let { it to e } }
+    val reached = known.maxOfOrNull { it.first.ordinal } ?: if (failed) 0 else -1
+    return JoinPhase.entries.map { phase ->
+        val own = known.filter { it.first == phase }.map { it.second }
+        val status = when {
+            finished && !failed -> StepStatus.DONE
+            phase.ordinal < reached -> StepStatus.DONE
+            phase.ordinal == reached && failed -> StepStatus.FAILED
+            phase.ordinal == reached -> StepStatus.CURRENT
+            else -> StepStatus.PENDING
+        }
+        JoinStep(phase, status, own.firstOrNull()?.at ?: 0, own.lastOrNull()?.message.orEmpty())
+    }
+}

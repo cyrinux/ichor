@@ -6,6 +6,8 @@ import IchorCore
 struct JoinConfigSection: View {
     /// The new node's writable disks from step 1, offered as choices.
     let disks: [String]
+    /// The choices behind the shown preview (address left empty), nil while there is none.
+    @Binding var configured: JoinRequest?
 
     @Environment(AppModel.self) private var model
     @State private var members: LoadState<[NodeOverview]> = .loading
@@ -146,6 +148,7 @@ struct JoinConfigSection: View {
     private func stale() {
         request += 1
         preview = nil
+        configured = nil
     }
 
     private func loadMembers() async {
@@ -166,7 +169,14 @@ struct JoinConfigSection: View {
                 hostname: hostname.trimmingCharacters(in: .whitespaces), installDisk: disk.trimmingCharacters(in: .whitespaces),
                 staticAddress: address.trimmingCharacters(in: .whitespaces))
         }
-        if current == request { preview = loaded }
+        guard current == request else { return }
+        preview = loaded
+        if case .loaded = loaded {
+            configured = JoinRequest(
+                address: "", template: template.node, role: joinRole(template.role),
+                hostname: hostname.trimmingCharacters(in: .whitespaces), disk: disk.trimmingCharacters(in: .whitespaces),
+                staticAddress: address.trimmingCharacters(in: .whitespaces))
+        }
     }
 
     private func roleLabel(_ role: String) -> String {

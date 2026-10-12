@@ -39,12 +39,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.JoinRequest
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.MaintenanceInspection
 import name.levis.ichor.model.installDisks
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.joinAddress
+import name.levis.ichor.model.joinDiskFits
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
@@ -70,7 +72,12 @@ class JoinNodeViewModel(private val talos: TalosRepository) : ViewModel() {
     val inspection: StateFlow<UiState<MaintenanceInspection>?> = _inspection.asStateFlow()
     private var inspecting: Job? = null
 
+    /** A new address forgets the inspection: steps 2 and 3 only use an inspected node. */
     fun type(address: String) {
+        if (address != _address.value) {
+            inspecting?.cancel()
+            _inspection.value = null
+        }
         _address.value = address
     }
 
@@ -84,13 +91,14 @@ class JoinNodeViewModel(private val talos: TalosRepository) : ViewModel() {
 
 /**
  * "Add a node…": a machine booted from the Talos ISO waits in maintenance mode; type the address
- * its console shows and see its version, disks and links; then make its config from a member's.
- * Applying it is the next step (a placeholder for now).
+ * its console shows and see its version, disks and links; then make its config from a member's;
+ * then send it and follow the node until it joins ([onOpenNode] opens it afterwards).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JoinNodeScreen(
     onBack: () -> Unit,
+    onOpenNode: (address: String, hostname: String, role: String) -> Unit,
     vm: JoinNodeViewModel = viewModel(key = "join-node", factory = factory { JoinNodeViewModel(app.talosRepository) }),
     configVm: JoinConfigViewModel = viewModel(key = "join-config", factory = factory { JoinConfigViewModel(app.talosRepository) }),
 ) {
@@ -125,9 +133,15 @@ fun JoinNodeScreen(
                 is UiState.Failed -> ErrorBox(state.message, vm::inspect)
                 is UiState.Loaded -> InspectionView(state.data)
             }
-            val disks = (inspection as? UiState.Loaded)?.data?.takeIf { it.maintenance }?.disks.orEmpty()
-            JoinConfigStep(configVm, installDisks(disks))
-            NextSteps()
+            val node = (inspection as? UiState.Loaded)?.data?.takeIf { it.maintenance }
+            JoinConfigStep(configVm, installDisks(node?.disks.orEmpty()))
+            val form by configVm.form.collectAsStateWithLifecycle()
+            val preview by configVm.preview.collectAsStateWithLifecycle()
+            // The address the node was inspected at, and one of its disks when it listed them.
+            val request = node?.takeIf { form.complete && preview is UiState.Loaded && joinDiskFits(form.disk, it) }?.let {
+                JoinRequest(it.address, form.template, form.role, form.hostname, form.disk, form.address)
+            }
+            JoinApplyStep(request, onOpenNode)
         }
     }
 }
@@ -195,17 +209,6 @@ private fun Section(title: String, error: String?, empty: Boolean, content: @Com
                 empty -> MutedText(stringResource(R.string.hardware_none))
                 else -> content()
             }
-        }
-    }
-}
-
-/** Step 3, shipped by the next change. */
-@Composable
-private fun NextSteps() {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(stringResource(R.string.join_node_step_apply), style = MaterialTheme.typography.bodyMedium)
-            MutedText(stringResource(R.string.join_node_coming))
         }
     }
 }
