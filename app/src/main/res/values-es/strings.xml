@@ -4316,9 +4316,10 @@
     <string name="capacity_loss_suggestion_detail">%1$s, prioridad %2$s; libera %3$s CPU y %4$s</string>
     <string name="capacity_loss_pdb_blocks">Su presupuesto de interrupción no deja ir ninguna réplica.</string>
     <string name="capacity_loss_pdb_min">Su presupuesto de interrupción mantiene %1$s.</string>
-    <string name="capacity_loss_not_covered">Aun así, %1$s pods quedan Pending.</string>
     <string name="capacity_loss_system_note">Las clases del sistema (system-cluster-critical, system-node-critical) nunca se sugieren.</string>
     <string name="capacity_loss_estimate">Una estimación</string>
     <string name="capacity_loss_open_scale">Abrir el escalado</string>
     <string name="capacity_checkup_link">Abrir la pantalla Capacidad</string>
+    <string name="capacity_loss_not_enough">Aun así, no todos los pods Pending encuentran sitio.</string>
+    <string name="capacity_loss_no_scale">Escálalo desde su propia pantalla.</string>
 </resources>

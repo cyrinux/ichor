@@ -62,7 +62,7 @@ fun NodeLossSheet(
                     InlineError(s.message.asString())
                     TextButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
                 }
-                is UiState.Loaded -> PlanBody(s.data, onNode, onScale)
+                is UiState.Loaded -> PlanBody(s.data, state, onNode, onScale)
             }
         }
     }
@@ -70,13 +70,14 @@ fun NodeLossSheet(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun PlanBody(plan: NodeLossPlan, onNode: (String) -> Unit, onScale: (KubeObjectRef) -> Unit) {
+private fun PlanBody(plan: NodeLossPlan, state: NodeLossState, onNode: (String) -> Unit, onScale: (KubeObjectRef) -> Unit) {
     val colors = LocalStatusColors.current
     Text(stringResource(R.string.capacity_loss_title, plan.node), style = MaterialTheme.typography.titleMedium)
-    if (plan.worstCase && plan.candidates.size > 1) {
-        MutedText(stringResource(R.string.capacity_loss_worst, plan.node))
+    // Opened on the worst case: its candidates stay to compare the nodes.
+    if (state.candidates.size > 1) {
+        MutedText(stringResource(R.string.capacity_loss_worst, state.worst))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            plan.candidates.forEach { c ->
+            state.candidates.forEach { c ->
                 FilterChip(
                     selected = c.name == plan.node,
                     onClick = { onNode(c.name) },
@@ -118,7 +119,7 @@ private fun PlanBody(plan: NodeLossPlan, onNode: (String) -> Unit, onScale: (Kub
         Text(stringResource(R.string.capacity_loss_suggestions_title), style = MaterialTheme.typography.labelLarge)
         plan.suggestions.forEach { SuggestionRow(it, onScale) }
     }
-    if (!plan.covered) Text(stringResource(R.string.capacity_loss_not_covered, plan.pending.size.toString()), color = colors.warn, style = MaterialTheme.typography.bodyMedium)
+    if (!plan.covered) Text(stringResource(R.string.capacity_loss_not_enough), color = colors.warn, style = MaterialTheme.typography.bodyMedium)
     if (plan.pending.isNotEmpty()) MutedText(stringResource(R.string.capacity_loss_system_note))
 
     Text(stringResource(R.string.capacity_loss_estimate), style = MaterialTheme.typography.labelLarge)
@@ -137,8 +138,9 @@ private fun SuggestionRow(s: NodeLossSuggestion, onScale: (KubeObjectRef) -> Uni
             .padding(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
+        val subject = "${s.kind} ${s.namespace}/${s.name}"
         Text(
-            stringResource(R.string.capacity_loss_suggestion, "${s.kind} ${s.namespace}/${s.name}", s.replicas.toString(), s.scaleTo.toString()),
+            if (s.pdbBlocks) subject else stringResource(R.string.capacity_loss_suggestion, subject, s.replicas.toString(), s.scaleTo.toString()),
             style = MaterialTheme.typography.bodyMedium,
             fontFamily = FontFamily.Monospace,
         )
@@ -155,5 +157,6 @@ private fun SuggestionRow(s: NodeLossSuggestion, onScale: (KubeObjectRef) -> Uni
             s.pdbBlocks -> Text(stringResource(R.string.capacity_loss_pdb_blocks), color = colors.warn, style = MaterialTheme.typography.bodySmall)
             s.pdb.isNotEmpty() -> MutedText(stringResource(R.string.capacity_loss_pdb_min, s.pdbMinAvailable.toString()))
         }
+        if (ref == null) MutedText(stringResource(R.string.capacity_loss_no_scale))
     }
 }

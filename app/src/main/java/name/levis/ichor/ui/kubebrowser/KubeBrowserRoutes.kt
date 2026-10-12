@@ -17,7 +17,7 @@ import name.levis.ichor.model.KubeObjectRef
 /** Routes of the resource browser, Helm and port-forward screens. */
 object KubeBrowserRoutes {
     const val KINDS = "kube-browser"
-    private const val LIST = "kube-browser-list?g={g}&v={v}&r={r}&k={k}&namespaced={namespaced}&edit={edit}"
+    private const val LIST = "kube-browser-list?g={g}&v={v}&r={r}&k={k}&namespaced={namespaced}&edit={edit}&scale={scale}"
     private const val OBJECT = "kube-object?g={g}&v={v}&r={r}&k={k}&ns={ns}&name={name}&edit={edit}&scale={scale}&openScale={openScale}"
     const val HELM = "kube-helm"
     const val APPLY = "kube-apply"

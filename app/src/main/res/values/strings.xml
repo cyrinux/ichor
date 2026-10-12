@@ -4319,9 +4319,10 @@
     <string name="capacity_loss_suggestion_detail">%1$s, priority %2$s; frees %3$s CPU and %4$s</string>
     <string name="capacity_loss_pdb_blocks">Its disruption budget lets no replica go.</string>
     <string name="capacity_loss_pdb_min">Its disruption budget keeps %1$s.</string>
-    <string name="capacity_loss_not_covered">Even then, %1$s pods stay Pending.</string>
     <string name="capacity_loss_system_note">System classes (system-cluster-critical, system-node-critical) are never suggested.</string>
     <string name="capacity_loss_estimate">An estimate</string>
     <string name="capacity_loss_open_scale">Open the scale dialog</string>
     <string name="capacity_checkup_link">Open the Capacity screen</string>
+    <string name="capacity_loss_not_enough">Even then, not every Pending pod finds room.</string>
+    <string name="capacity_loss_no_scale">Scale it from its own screen.</string>
 </resources>

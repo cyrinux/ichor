@@ -38,6 +38,7 @@ import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.CapacityFilter
 import name.levis.ichor.model.KubeCapacity
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.NodeLossCandidate
 import name.levis.ichor.model.NodeLossPlan
 import name.levis.ichor.model.filteredBy
 import name.levis.ichor.ui.LoadingViewModel
@@ -54,9 +55,15 @@ import name.levis.ichor.ui.uiText
 
 /**
  * The node-loss sheet's state: the node asked for (null: the worst one) and its plan, kept by
- * the ViewModel so a rotation keeps it open.
+ * the ViewModel so a rotation keeps it open. [candidates] and [worst] come from the worst-case
+ * plan and stay while another candidate is picked.
  */
-data class NodeLossState(val node: String?, val plan: UiState<NodeLossPlan> = UiState.Loading)
+data class NodeLossState(
+    val node: String?,
+    val plan: UiState<NodeLossPlan> = UiState.Loading,
+    val candidates: List<NodeLossCandidate> = emptyList(),
+    val worst: String = "",
+)
 
 /** A capacity read lists every pod of the cluster: loaded on demand, never polled. */
 class CapacityViewModel(private val kube: KubeRepository) : LoadingViewModel<KubeCapacity>() {
@@ -67,12 +74,22 @@ class CapacityViewModel(private val kube: KubeRepository) : LoadingViewModel<Kub
     private var lossJob: Job? = null
 
     /** Opens the sheet on what losing [node] (null: the worst node) would cost. */
-    fun openLoss(node: String?) {
+    fun openLoss(node: String?) = load(NodeLossState(node))
+
+    /** Another of the worst case's candidates: the picker stays. */
+    fun pickLoss(node: String) = load(_loss.value?.copy(node = node, plan = UiState.Loading) ?: NodeLossState(node))
+
+    private fun load(start: NodeLossState) {
         lossJob?.cancel()
-        _loss.value = NodeLossState(node)
+        _loss.value = start
         lossJob = viewModelScope.launch {
-            val result = cancellableCatching { kube.nodeLoss(node) }
-            _loss.value = NodeLossState(node, result.fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) }))
+            val result = cancellableCatching { kube.nodeLoss(start.node) }
+            val plan = result.getOrNull()
+            _loss.value = start.copy(
+                plan = result.fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) }),
+                candidates = if (plan?.worstCase == true) plan.candidates else start.candidates,
+                worst = if (plan?.worstCase == true) plan.node else start.worst,
+            )
         }
     }
 
@@ -102,8 +119,8 @@ fun CapacityScreen(
     loss?.let { l ->
         NodeLossSheet(
             l,
-            onNode = vm::openLoss,
-            onRetry = { vm.openLoss(l.node) },
+            onNode = vm::pickLoss,
+            onRetry = { vm.pickLoss(l.node.orEmpty()) },
             onScale = { ref ->
                 vm.closeLoss()
                 onScale(ref)

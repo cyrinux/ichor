@@ -4316,9 +4316,10 @@
     <string name="capacity_loss_suggestion_detail">%1$s, priorità %2$s; libera %3$s CPU e %4$s</string>
     <string name="capacity_loss_pdb_blocks">Il suo budget di interruzione non lascia andare alcuna replica.</string>
     <string name="capacity_loss_pdb_min">Il suo budget di interruzione ne mantiene %1$s.</string>
-    <string name="capacity_loss_not_covered">Anche così, %1$s pod restano Pending.</string>
     <string name="capacity_loss_system_note">Le classi di sistema (system-cluster-critical, system-node-critical) non vengono mai proposte.</string>
     <string name="capacity_loss_estimate">Una stima</string>
     <string name="capacity_loss_open_scale">Apri il ridimensionamento</string>
     <string name="capacity_checkup_link">Apri la schermata Capacità</string>
+    <string name="capacity_loss_not_enough">Anche così, non tutti i pod Pending trovano posto.</string>
+    <string name="capacity_loss_no_scale">Ridimensionalo dalla sua schermata.</string>
 </resources>

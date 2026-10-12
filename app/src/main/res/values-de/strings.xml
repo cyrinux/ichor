@@ -4308,9 +4308,10 @@
     <string name="capacity_loss_suggestion_detail">%1$s, Priorität %2$s; gibt %3$s CPU und %4$s frei</string>
     <string name="capacity_loss_pdb_blocks">Sein Disruption Budget lässt keine Replika gehen.</string>
     <string name="capacity_loss_pdb_min">Sein Disruption Budget behält %1$s.</string>
-    <string name="capacity_loss_not_covered">Selbst dann bleiben %1$s Pods Pending.</string>
     <string name="capacity_loss_system_note">Systemklassen (system-cluster-critical, system-node-critical) werden nie vorgeschlagen.</string>
     <string name="capacity_loss_estimate">Eine Schätzung</string>
     <string name="capacity_loss_open_scale">Skalierung öffnen</string>
     <string name="capacity_checkup_link">Kapazitätsansicht öffnen</string>
+    <string name="capacity_loss_not_enough">Selbst dann findet nicht jeder Pending-Pod Platz.</string>
+    <string name="capacity_loss_no_scale">Über die eigene Ansicht skalieren.</string>
 </resources>

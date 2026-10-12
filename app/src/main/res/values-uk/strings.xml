@@ -4550,9 +4550,10 @@
     <string name="capacity_loss_suggestion_detail">%1$s, пріоритет %2$s; звільняє %3$s CPU і %4$s</string>
     <string name="capacity_loss_pdb_blocks">Бюджет збоїв не дозволяє прибрати жодної репліки.</string>
     <string name="capacity_loss_pdb_min">Бюджет збоїв зберігає %1$s.</string>
-    <string name="capacity_loss_not_covered">Навіть тоді %1$s подів залишаться в Pending.</string>
     <string name="capacity_loss_system_note">Системні класи (system-cluster-critical, system-node-critical) ніколи не пропонуються.</string>
     <string name="capacity_loss_estimate">Оцінка</string>
     <string name="capacity_loss_open_scale">Відкрити масштабування</string>
     <string name="capacity_checkup_link">Відкрити екран «Ємність»</string>
+    <string name="capacity_loss_not_enough">Навіть тоді не всі поди в Pending знайдуть місце.</string>
+    <string name="capacity_loss_no_scale">Масштабуйте його з його власного екрана.</string>
 </resources>
