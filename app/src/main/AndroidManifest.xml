@@ -134,6 +134,10 @@
                 <data android:mimeType="text/x-yaml" />
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
+            <!-- The static "Search clusters" launcher shortcut (one per build's applicationId). -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
 
         <!-- Shares saved packet captures with the app the user picks. -->

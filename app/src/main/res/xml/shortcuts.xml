@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static launcher shortcuts (long press on the icon); the per-cluster ones are dynamic
+     (ClusterShortcuts, whose max() leaves this one its slot). targetPackage must be the literal
+     applicationId: this copy is the play build's, src/foss/res/xml has the .foss one. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="search"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_search"
+        android:shortcutShortLabel="@string/shortcut_search_short"
+        android:shortcutLongLabel="@string/shortcut_search_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="name.levis.ichor"
+            android:targetClass="name.levis.ichor.MainActivity">
+            <!-- MainActivity.EXTRA_OPEN = DeepLink.SEARCH -->
+            <extra android:name="name.levis.ichor.OPEN" android:value="SEARCH" />
+        </intent>
+    </shortcut>
+</shortcuts>
