@@ -276,6 +276,27 @@ final class KubeAuthTests: XCTestCase {
 
         let regions = DiscoveryProgress.decode(#"{"running":true,"projects":4,"scanned":4,"clusters":2,"refused":["eu-north-1"]}"#)
         XCTAssertEqual(regions?.refused, ["eu-north-1"])
+
+        let named = DiscoveryProgress.decode(
+            #"{"running":true,"projects":4,"scanned":1,"clusters":3,"current":["proj-a","proj-b"],"found":["web.europe-west1.gke"]}"#)
+        XCTAssertEqual(named?.current, ["proj-a", "proj-b"])
+        XCTAssertEqual(named?.found, ["web.europe-west1.gke"])
+        XCTAssertEqual(named?.foundMore, 2)
+        XCTAssertEqual(regions?.current, [])
+        XCTAssertEqual(regions?.foundMore, 2)
+    }
+
+    func testSignInProgress() {
+        let running = SignInProgress.decode(#"{"running":true,"done":2,"total":8,"current":"web.europe-west1.gke","failed":["api.europe-west1.gke"]}"#)
+        XCTAssertEqual(running, SignInProgress(running: true, done: 2, total: 8, current: "web.europe-west1.gke", failed: ["api.europe-west1.gke"]))
+        XCTAssertEqual(running?.fraction, 0.25)
+        XCTAssertEqual(SignInProgress.decode(#"{"running":false,"done":0,"total":0}"#)?.fraction, 0)
+        XCTAssertNil(SignInProgress.decode("not json"))
+
+        XCTAssertEqual(try decodeSignInDiscovered(#"{"failed":[{"name":"api.europe-west1.gke","error":"the key was refused"}]}"#),
+                       ["api.europe-west1.gke: the key was refused"])
+        XCTAssertEqual(try decodeSignInDiscovered(#"{"failed":[]}"#), [])
+        XCTAssertThrowsError(try decodeSignInDiscovered("not json"))
     }
 
     func testImportedSignInContexts() {

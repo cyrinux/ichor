@@ -12,6 +12,9 @@ import kotlinx.serialization.builtins.serializer
 import name.levis.ichor.model.DiscoveryProgress
 import name.levis.ichor.model.KubeSignInInfo
 import name.levis.ichor.model.isKube
+import name.levis.ichor.model.SignInDiscoveredResult
+import name.levis.ichor.model.SignInFailure
+import name.levis.ichor.model.SignInProgress
 import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.SsoRoleChoice
 import name.levis.ichorgo.Ichorgo
@@ -166,16 +169,19 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
     fun discoverProgress(): DiscoveryProgress = TalosJson.decodeFromString(DiscoveryProgress.serializer(), Ichorgo.discoverProgress())
 
     /**
-     * Signs the contexts [names] in with the [secrets] that found them (discovery), when they
-     * sign in with credentials. Best effort: one that cannot (an AKS user kubeconfig that
-     * needs a device sign-in, keys refused) shows "Sign in" on its home instead.
+     * Signs the contexts [names] in with the [secrets] that found them (discovery), one after
+     * the other, those that sign in with credentials; [signInProgress] says how far it got.
+     * Those that cannot (keys refused) are returned and show "Sign in" on their home; those
+     * that need the user (a device or browser sign-in) are left to them.
      */
-    suspend fun signInDiscovered(names: List<String>, secrets: Map<String, String>) {
-        val stored = configs.config.value ?: return
-        names.filter { name -> stored.summary.contexts.any { it.name == name && it.signIn.isNotEmpty() } }.forEach { name ->
-            runCatching { setCredentials(name, secrets) }
-        }
+    suspend fun signInDiscovered(names: List<String>, secrets: Map<String, String>): List<SignInFailure> = withContext(Dispatchers.IO) {
+        val kube = configs.config.value?.kubeYaml?.takeIf { it.isNotBlank() } ?: return@withContext emptyList()
+        val raw = Ichorgo.signInDiscovered(kube, TalosJson.encodeToString(ListSerializer(String.serializer()), names), encodeSecrets(secrets))
+        TalosJson.decodeFromString(SignInDiscoveredResult.serializer(), raw).failed
     }
+
+    /** How far the running [signInDiscovered] got. */
+    fun signInProgress(): SignInProgress = TalosJson.decodeFromString(SignInProgress.serializer(), Ichorgo.signInProgress())
 
     /** Whether [context] is a talosconfig context (Omni signs those in); names are unique across both configs. */
     private fun isTalos(context: String): Boolean =

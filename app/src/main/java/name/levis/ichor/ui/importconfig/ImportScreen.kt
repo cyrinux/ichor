@@ -147,7 +147,11 @@ fun ImportScreen(
                     onCancel = vm::reset,
                 )
                 is ImportState.Omni -> OmniCard(s, onAccount = vm::omniAccount, onServiceAccount = vm::omniServiceAccount, onCancel = vm::reset)
-                ImportState.Validating, ImportState.Saved -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+                is ImportState.Validating -> s.signIn?.let { SignInProgressCard(it) } ?: Box(Modifier.fillMaxSize(), Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+                is ImportState.Added -> SignInFailedCard(s.failed, onDone = vm::finishAdded)
+                ImportState.Saved -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                     CircularProgressIndicator()
                 }
                 else -> SourcePicker(

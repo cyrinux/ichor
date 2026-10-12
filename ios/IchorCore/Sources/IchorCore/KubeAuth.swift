@@ -295,23 +295,30 @@ public func decodeKubeDiscoverOptions(_ json: String) throws -> [String: [[Strin
 
 /// How far a running cloud discovery got (Go DiscoverProgress): GKE with a Google account reads
 /// many projects, EKS with IAM Identity Center many regions. `projects` is 0 while they are
-/// still being listed; `refused` is the AWS regions that would not list clusters.
+/// still being listed; `refused` is the AWS regions that would not list clusters; `current` the
+/// projects (regions) being read right now; `found` the first clusters found (`clusters` counts
+/// them all).
 public struct DiscoveryProgress: Decodable, Equatable {
     public var running = false
     public var projects = 0
     public var scanned = 0
     public var clusters = 0
     public var refused: [String] = []
+    public var current: [String] = []
+    public var found: [String] = []
 
-    public init(running: Bool = false, projects: Int = 0, scanned: Int = 0, clusters: Int = 0, refused: [String] = []) {
+    public init(running: Bool = false, projects: Int = 0, scanned: Int = 0, clusters: Int = 0, refused: [String] = [],
+                current: [String] = [], found: [String] = []) {
         self.running = running
         self.projects = projects
         self.scanned = scanned
         self.clusters = clusters
         self.refused = refused
+        self.current = current
+        self.found = found
     }
 
-    private enum CodingKeys: String, CodingKey { case running, projects, scanned, clusters, refused }
+    private enum CodingKeys: String, CodingKey { case running, projects, scanned, clusters, refused, current, found }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -320,6 +327,8 @@ public struct DiscoveryProgress: Decodable, Equatable {
         scanned = try c.field(.scanned, 0)
         clusters = try c.field(.clusters, 0)
         refused = try c.field(.refused, [])
+        current = try c.field(.current, [])
+        found = try c.field(.found, [])
     }
 
     /// The share of the projects read, nil while they are listed (or none are read).
@@ -327,9 +336,67 @@ public struct DiscoveryProgress: Decodable, Equatable {
         projects > 0 ? Double(min(scanned, projects)) / Double(projects) : nil
     }
 
+    /// The clusters counted but not named in `found`.
+    public var foundMore: Int { max(clusters - found.count, 0) }
+
     public static func decode(_ json: String) -> DiscoveryProgress? {
         try? TalosJSON.decode(DiscoveryProgress.self, from: json)
     }
+}
+
+/// How far the sign-ins after a cloud import got (Go SignInProgress): `done` of `total` clusters,
+/// `current` the one being signed in, `failed` those that could not be.
+public struct SignInProgress: Decodable, Equatable {
+    public var running = false
+    public var done = 0
+    public var total = 0
+    public var current = ""
+    public var failed: [String] = []
+
+    public init(running: Bool = false, done: Int = 0, total: Int = 0, current: String = "", failed: [String] = []) {
+        self.running = running
+        self.done = done
+        self.total = total
+        self.current = current
+        self.failed = failed
+    }
+
+    private enum CodingKeys: String, CodingKey { case running, done, total, current, failed }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        running = try c.field(.running, false)
+        done = try c.field(.done, 0)
+        total = try c.field(.total, 0)
+        current = try c.field(.current, "")
+        failed = try c.field(.failed, [])
+    }
+
+    /// The share of the clusters signed in (tried), 0 before the first.
+    public var fraction: Double {
+        total > 0 ? Double(min(done, total)) / Double(total) : 0
+    }
+
+    public static func decode(_ json: String) -> SignInProgress? {
+        try? TalosJSON.decode(SignInProgress.self, from: json)
+    }
+}
+
+/// A discovered cluster SignInDiscovered could not sign in, and why.
+public struct SignInFailure: Decodable, Equatable {
+    public var name: String
+    public var error: String
+
+    public init(name: String, error: String) {
+        self.name = name
+        self.error = error
+    }
+}
+
+/// SignInDiscovered's answer: the clusters that could not be signed in, as "name: error".
+public func decodeSignInDiscovered(_ json: String) throws -> [String] {
+    struct Result: Decodable { var failed: [SignInFailure]? }
+    return try (TalosJSON.decode(Result.self, from: json).failed ?? []).map { "\($0.name): \($0.error)" }
 }
 
 /// The credentials `provider` takes, as field sets: its options, else its one set of fields.

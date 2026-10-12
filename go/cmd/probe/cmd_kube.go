@@ -23,6 +23,7 @@ var kubeCommands = []command{
 		return out, err
 	}},
 	{name: "search", args: "QUERY", run: probeSearch},
+	{name: "discover", args: "PROVIDER SECRETS_JSON", noConfig: true, run: probeDiscover},
 	{name: "workloads", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.KubeWorkloads(e.cfg, e.context, e.kubeServer)
 
@@ -389,6 +390,39 @@ func runCordon(e env) (out string, err error) {
 
 // probeCluster stands for the cluster id the apps store: the probe only prints the targets.
 const probeCluster = "probeclusterabcd"
+
+// probeDiscover runs a cloud discovery (PROVIDER: gke, eks, …; SECRETS_JSON: the fields
+// KubeDiscoverFields names) and prints DiscoverProgress to stderr while it runs, the way the
+// apps poll it; then the summary of what was found, never the kubeconfig (it may carry
+// tokens).
+func probeDiscover(e env) (string, error) {
+	done := make(chan struct{})
+
+	go func() {
+		tick := time.NewTicker(500 * time.Millisecond)
+		defer tick.Stop()
+
+		for {
+			select {
+			case <-done:
+				return
+			case <-tick.C:
+				if p, err := ichorgo.DiscoverProgress(); err == nil {
+					fmt.Fprintln(os.Stderr, p)
+				}
+			}
+		}
+	}()
+
+	yaml, err := ichorgo.DiscoverClusters(flag.Arg(1), flag.Arg(2))
+	close(done)
+
+	if err != nil {
+		return "", err
+	}
+
+	return ichorgo.ParseKubeconfig(yaml)
+}
 
 // probeSearch reads the context's overview, pods and workloads the way the apps cache them,
 // then ranks them for QUERY with SearchSnapshots. A read that fails (no Talos API on a

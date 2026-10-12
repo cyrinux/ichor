@@ -4165,6 +4165,11 @@
     <string name="upgrade_prepull">Descargar antes la imagen en todos los nodos</string>
     <string name="upgrade_prepull_desc">Descárgala ahora en cada nodo para que cada reinicio sea corto.</string>
     <string name="kube_discover_progress_looking">Buscando clústeres…</string>
+    <string name="kube_discover_progress_reading">Leyendo %1$s…</string>
+    <string name="kube_discover_found_more">+%1$s más</string>
+    <string name="kube_import_adding_count">Añadiendo %1$s clústeres</string>
+    <string name="kube_import_signing_in">Iniciando sesión en %1$s…</string>
+    <string name="kube_import_signin_failed">Clústeres añadidos. No se pudo iniciar sesión en algunos:</string>
     <string name="kube_discover_aws_refused_note">Sin acceso en %1$s: los clústeres de estas regiones, si los hay, no aparecen.</string>
     <string name="kube_field_aws_regions">Regiones de AWS (opcional, separadas por comas)</string>
     <string name="kube_discover_aws_sso_hint">Inicia sesión en tu portal de acceso de AWS en el navegador y luego lista los clústeres EKS de las cuentas y roles que elijas en las regiones indicadas (todas las regiones habituales si está vacío).</string>

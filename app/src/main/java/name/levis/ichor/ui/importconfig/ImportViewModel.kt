@@ -10,6 +10,8 @@ import name.levis.ichor.data.SignInEvent
 import name.levis.ichor.model.ImportTextRoute
 import name.levis.ichor.model.OMNI_SERVICE_ACCOUNT_KEY
 import name.levis.ichor.data.TalosJson
+import name.levis.ichor.model.SignInFailure
+import name.levis.ichor.model.SignInProgress
 import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.SsoRoleChoice
 import name.levis.ichor.model.TalosForm
@@ -30,6 +32,7 @@ import name.levis.ichorgo.Ichorgo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,7 +40,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** How often a running cloud discovery's progress is read. */
+/** How often a running cloud discovery's (or its sign-ins') progress is read. */
 private const val DISCOVER_PROGRESS_POLL_MS = 250L
 
 sealed interface ImportState {
@@ -56,7 +59,12 @@ sealed interface ImportState {
         val initialValues: Map<String, String> = emptyMap(),
         val serviceAccount: Boolean = false,
     ) : ImportState
-    data object Validating : ImportState
+
+    /** Checking or saving; [signIn] while the clusters found in a cloud account are signed in. */
+    data class Validating(val signIn: SignInProgress? = null) : ImportState
+
+    /** The clusters found in a cloud account are added, but [failed] could not be signed in. */
+    data class Added(val failed: List<SignInFailure>) : ImportState
 
     /**
      * A valid talosconfig, with its contexts named like stored ones ([conflicts]) and what the
@@ -144,7 +152,7 @@ class ImportViewModel(
      * kubeconfig from a talosconfig, the user does not pick.
      */
     fun submit(text: String) {
-        _state.value = ImportState.Validating
+        _state.value = ImportState.Validating()
         viewModelScope.launch {
             _state.value = runCatching { preview(text) }.getOrElse { ImportState.Invalid(it.userMessage()) }
         }
@@ -152,7 +160,7 @@ class ImportViewModel(
 
     /** Builds a talosconfig from the "Enter details" [form] and previews it like any other. */
     fun submitForm(form: TalosForm) {
-        _state.value = ImportState.Validating
+        _state.value = ImportState.Validating()
         viewModelScope.launch {
             _state.value = runCatching {
                 preview(withContext(Dispatchers.IO) { Ichorgo.buildTalosconfig(form.toJson()) })
@@ -221,7 +229,7 @@ class ImportViewModel(
             _state.value = ImportState.Omni()
             return
         }
-        _state.value = ImportState.Validating
+        _state.value = ImportState.Validating()
         viewModelScope.launch {
             _state.value = runCatching {
                 ImportState.Discover(discoveryOptions(auth.discoveryOptions(), discoveryFields(auth.discoveryFields())), initial = provider)
@@ -374,28 +382,56 @@ class ImportViewModel(
     }
 
     fun confirm() {
-        val save: suspend () -> Unit = when (val preview = _state.value) {
-            is ImportState.Preview -> if (preview.canImport) ({ configs.save(preview.yaml, preview.choices) }) else return
+        /** Saves, and returns the clusters that could not be signed in. */
+        val save: suspend () -> List<SignInFailure> = when (val preview = _state.value) {
+            is ImportState.Preview -> if (preview.canImport) ({ configs.save(preview.yaml, preview.choices); emptyList() }) else return
             is ImportState.KubePreview -> if (preview.canImport) ({ saveKube(preview) }) else return
             else -> return
         }
         val preview = _state.value
-        _state.value = ImportState.Validating
+        _state.value = ImportState.Validating()
         viewModelScope.launch {
             _state.value = runCatching { save() }.fold(
-                onSuccess = { ImportState.Saved },
+                onSuccess = { failed -> if (failed.isEmpty()) ImportState.Saved else ImportState.Added(failed) },
                 onFailure = { failed(preview, it.userMessage()) },
             )
         }
     }
 
-    /** Stores the kept contexts of [preview]; those found in a cloud account sign in with its credentials. */
-    private suspend fun saveKube(preview: ImportState.KubePreview) {
+    /**
+     * Stores the kept contexts of [preview]; those found in a cloud account sign in with its
+     * credentials, one after the other, the screen naming each. Returns those that could not.
+     */
+    private suspend fun saveKube(preview: ImportState.KubePreview): List<SignInFailure> = coroutineScope {
         val before = configs.config.value?.summary?.contexts.orEmpty().map { it.name }.toSet()
         configs.saveKube(preview.yaml, preview.choices)
-        val secrets = preview.discovery ?: return
+        val secrets = preview.discovery ?: return@coroutineScope emptyList()
         val after = configs.config.value?.summary?.contexts.orEmpty().filter { it.isKube }.map { it.name }
-        auth.signInDiscovered(importedContextNames(before, after, preview.conflicts, preview.choices), secrets)
+        val poll = launch { pollSignInProgress() }
+        try {
+            auth.signInDiscovered(importedContextNames(before, after, preview.conflicts, preview.choices), secrets)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // The clusters are stored: those not signed in say so on their home.
+            emptyList()
+        } finally {
+            poll.cancel()
+        }
+    }
+
+    /** Shows which cluster the import is signing in until it is cancelled. */
+    private suspend fun pollSignInProgress() {
+        while (true) {
+            delay(DISCOVER_PROGRESS_POLL_MS)
+            val progress = runCatching { auth.signInProgress() }.getOrNull() ?: continue
+            if (progress.running && _state.value is ImportState.Validating) _state.value = ImportState.Validating(progress)
+        }
+    }
+
+    /** The import with sign-in failures was seen: leave the import screen. */
+    fun finishAdded() {
+        if (_state.value is ImportState.Added) _state.value = ImportState.Saved
     }
 
     /** [preview] again, with the save's [error]. */
@@ -419,7 +455,7 @@ class ImportViewModel(
     /** Adds the Talos demo, or with [kube] the Kubernetes one (a kubeconfig cluster). */
     fun startDemo(kube: Boolean) {
         if (_state.value is ImportState.Validating || _state.value is ImportState.Saved) return
-        _state.value = ImportState.Validating
+        _state.value = ImportState.Validating()
         viewModelScope.launch {
             _state.value = runCatching { if (kube) configs.saveKubeDemo() else configs.saveDemo() }.fold(
                 onSuccess = { ImportState.Saved },

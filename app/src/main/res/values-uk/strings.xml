@@ -4399,6 +4399,11 @@
     <string name="upgrade_prepull">Попередньо завантажити образ на всі вузли</string>
     <string name="upgrade_prepull_desc">Завантажте його зараз на кожен вузол, щоб кожне перезавантаження було коротким.</string>
     <string name="kube_discover_progress_looking">Пошук кластерів…</string>
+    <string name="kube_discover_progress_reading">Читання %1$s…</string>
+    <string name="kube_discover_found_more">+%1$s ще</string>
+    <string name="kube_import_adding_count">Додавання кластерів: %1$s</string>
+    <string name="kube_import_signing_in">Вхід до %1$s…</string>
+    <string name="kube_import_signin_failed">Кластери додано. До деяких не вдалося увійти:</string>
     <string name="kube_discover_aws_refused_note">Немає доступу в %1$s: кластери в цих регіонах, якщо вони є, не показано.</string>
     <string name="kube_field_aws_regions">Регіони AWS (необов’язково, через кому)</string>
     <string name="kube_discover_aws_sso_hint">Входить на ваш портал доступу AWS у браузері, потім показує кластери EKS вибраних облікових записів і ролей у вказаних регіонах (усі поширені регіони, якщо порожньо).</string>

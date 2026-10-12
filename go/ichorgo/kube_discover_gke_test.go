@@ -379,21 +379,17 @@ func TestDiscoverProgress(t *testing.T) {
 
 	discoverWith(t, discoverGKE, map[string]string{gcpFieldUserCredentials: adcJSON("authorized_user", "rt-1")})
 
-	var p struct {
-		Running                     bool
-		Projects, Scanned, Clusters int
-	}
-	raw, err := DiscoverProgress()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err := json.Unmarshal([]byte(raw), &p); err != nil {
-		t.Fatal(err)
-	}
+	p := readDiscoverProgress(t)
 
 	if p.Running || p.Projects != 3 || p.Scanned != 3 || p.Clusters != 2 {
 		t.Errorf("progress %+v", p)
+	}
+
+	// Nothing is being read once done; the clusters found are named.
+	slices.Sort(p.Found)
+
+	if len(p.Current) != 0 || !slices.Equal(p.Found, []string{"sample-proj-a-gke.europe-west1.gke", "sample-proj-c-gke.europe-west1.gke"}) {
+		t.Errorf("current %v, found %v", p.Current, p.Found)
 	}
 }
 

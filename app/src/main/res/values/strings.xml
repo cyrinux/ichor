@@ -4165,6 +4165,11 @@
     <string name="upgrade_prepull">Pre-pull the image on all nodes</string>
     <string name="upgrade_prepull_desc">Download it on every node now, so each node\'s reboot is short.</string>
     <string name="kube_discover_progress_looking">Looking for clusters…</string>
+    <string name="kube_discover_progress_reading">Reading %1$s…</string>
+    <string name="kube_discover_found_more">+%1$s more</string>
+    <string name="kube_import_adding_count">Adding %1$s clusters</string>
+    <string name="kube_import_signing_in">Signing in to %1$s…</string>
+    <string name="kube_import_signin_failed">Clusters added. Some could not be signed in:</string>
     <string name="kube_discover_aws_refused_note">No access in %1$s: clusters in these regions, if any, are not listed.</string>
     <string name="kube_field_aws_regions">AWS regions (optional, comma separated)</string>
     <string name="kube_discover_aws_sso_hint">Signs in at your AWS access portal in the browser, then lists the EKS clusters of the accounts and roles you choose in the regions given (all common regions when empty).</string>

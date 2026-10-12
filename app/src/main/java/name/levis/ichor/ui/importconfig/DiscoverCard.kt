@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
@@ -64,6 +65,7 @@ import name.levis.ichor.model.discoveryUsesGoogle
 import name.levis.ichor.model.fieldSetLabel
 import name.levis.ichor.model.roleSelection
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.kubeauth.CredentialFields
 import name.levis.ichor.ui.kubeauth.Waiting
 import name.levis.ichor.ui.kubeauth.rememberGoogleSignIn
@@ -295,8 +297,10 @@ private fun DiscoverActions(
 
 /**
  * How far the running discovery got: a bar that fills as a Google account's projects (an AWS sign-in's regions) are
- * read (indeterminate while they are listed, and for the other clouds), and the counts.
+ * read (indeterminate while they are listed, and for the other clouds), the counts, the projects being read and the
+ * clusters found so far.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DiscoverProgressRow(progress: DiscoveryProgress?, regions: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -317,6 +321,17 @@ private fun DiscoverProgressRow(progress: DiscoveryProgress?, regions: Boolean) 
         } else {
             LinearProgressIndicator(Modifier.fillMaxWidth())
             MutedText(stringResource(R.string.kube_discover_progress_looking))
+        }
+        val current = progress?.current.orEmpty()
+        if (current.isNotEmpty()) MutedText(stringResource(R.string.kube_discover_progress_reading, current.joinToString(", ")), maxLines = 2, overflow = TextOverflow.Ellipsis)
+        val found = progress?.found.orEmpty()
+        if (found.isNotEmpty()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                val ok = LocalStatusColors.current.ok
+                found.forEach { StatusPill(it, ok) }
+                val more = progress?.foundMore ?: 0
+                if (more > 0) StatusPill(stringResource(R.string.kube_discover_found_more, more.toString()), LocalStatusColors.current.muted)
+            }
         }
         val refused = progress?.refused.orEmpty()
         if (refused.isNotEmpty()) MutedText(stringResource(R.string.kube_discover_aws_no_access, refused.joinToString(", ")))

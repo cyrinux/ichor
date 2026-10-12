@@ -223,7 +223,8 @@ enum class DiscoveryProvider(val id: String, @StringRes val label: Int) {
 /**
  * How far a running cloud discovery got (DiscoverProgress): GKE with a Google account reads
  * many projects, EKS with IAM Identity Center many regions. [projects] is 0 while they are
- * still being listed; [refused] is the AWS regions that would not list clusters.
+ * still being listed; [refused] is the AWS regions that would not list clusters; [current] the
+ * projects (regions) being read right now; [found] the first clusters found ([clusters] counts them all).
  */
 @Serializable
 data class DiscoveryProgress(
@@ -232,7 +233,32 @@ data class DiscoveryProgress(
     val scanned: Int = 0,
     val clusters: Int = 0,
     val refused: List<String> = emptyList(),
+    val current: List<String> = emptyList(),
+    val found: List<String> = emptyList(),
+) {
+    /** The clusters counted but not named in [found]. */
+    val foundMore: Int get() = (clusters - found.size).coerceAtLeast(0)
+}
+
+/**
+ * How far the sign-ins after a cloud import got (SignInProgress): [done] of [total] clusters,
+ * [current] the one being signed in, [failed] those that could not be.
+ */
+@Serializable
+data class SignInProgress(
+    val running: Boolean = false,
+    val done: Int = 0,
+    val total: Int = 0,
+    val current: String = "",
+    val failed: List<String> = emptyList(),
 )
+
+/** A discovered cluster SignInDiscovered could not sign in, and why. */
+@Serializable
+data class SignInFailure(val name: String, val error: String)
+
+@Serializable
+data class SignInDiscoveredResult(val failed: List<SignInFailure> = emptyList())
 
 /** The fields each provider asks for (KubeDiscoverFields), only for the providers the app shows. */
 fun discoveryFields(byProvider: Map<String, List<String>>): Map<DiscoveryProvider, List<String>> =

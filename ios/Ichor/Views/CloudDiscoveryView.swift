@@ -317,7 +317,7 @@ struct CloudDiscoveryView: View {
 
 /// How far the running discovery got: a bar that fills as a Google account's projects (an AWS
 /// sign-in's regions) are read (indeterminate while they are listed, and for the other clouds),
-/// the counts, and the regions that refused.
+/// the counts, the projects being read, the clusters found so far and the regions that refused.
 private struct DiscoverProgressRow: View {
     let progress: DiscoveryProgress?
     /// Counting AWS regions rather than projects.
@@ -339,6 +339,18 @@ private struct DiscoverProgressRow: View {
             } else {
                 ProgressView().frame(maxWidth: .infinity, alignment: .leading)
                 Text("Looking for clusters…").font(.footnote).foregroundStyle(.secondary)
+            }
+            if let current = progress?.current, !current.isEmpty {
+                Text("Reading \(current.joined(separator: ", "))…")
+                    .font(.footnote).foregroundStyle(.secondary).lineLimit(2)
+            }
+            if let progress, !progress.found.isEmpty {
+                ChipFlow {
+                    ForEach(progress.found, id: \.self) { StatusPill(label: $0, color: .statusOK) }
+                    if progress.foundMore > 0 {
+                        StatusPill(label: String(localized: "+\(String(progress.foundMore)) more"), color: .secondary)
+                    }
+                }
             }
             if let refused = progress?.refused, !refused.isEmpty {
                 Text("No access in \(refused.joined(separator: ", "))").font(.footnote).foregroundStyle(.secondary)

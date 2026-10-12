@@ -78,6 +78,22 @@ extension TalosClient {
         return error == nil ? DiscoveryProgress.decode(json) : nil
     }
 
+    /// Signs the discovered contexts `names` of the stored kubeconfig in with the account's
+    /// `secrets`, one after the other, those that sign in with credentials; the others wait for
+    /// the user. The failures, as "name: error".
+    static func signInDiscovered(kube: String, names: [String], secrets: String) async throws -> [String] {
+        let namesJSON = String(decoding: try JSONEncoder().encode(names), as: UTF8.self)
+        let json = try await run { IchorgoSignInDiscovered(kube, namesJSON, secrets, $0) }
+        return try decodeSignInDiscovered(json)
+    }
+
+    /// How far the running signInDiscovered got.
+    static func signInProgress() -> SignInProgress? {
+        var error: NSError?
+        let json = IchorgoSignInProgress(&error)
+        return error == nil ? SignInProgress.decode(json) : nil
+    }
+
     /// A running interactive sign-in: its events (finished after `done`), `complete` hands
     /// over a callback URL the app received, `cancel` stops waiting.
     typealias SignInRun = (events: AsyncStream<KubeSignInEvent>, complete: @Sendable (String) -> Void, cancel: @Sendable () -> Void)

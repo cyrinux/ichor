@@ -28,6 +28,8 @@ struct ImportView: View {
     /// The credentials cloud discovery found the previewed clusters with: the added ones that
     /// sign in with credentials are signed in with them.
     @State private var discovered: DiscoveredClusters?
+    /// How far the sign-ins of the discovered clusters just added got, while they run.
+    @State private var signIn: SignInProgress?
     /// The Sidero Omni sheet, while up (its clusters come as a talosconfig); prefilled from a
     /// scanned omnictl config.
     @State private var omniStart: DiscoveryStart?
@@ -68,17 +70,10 @@ struct ImportView: View {
 
     var body: some View {
         Group {
-            switch preview {
-            case .talos(let yaml, let summary)?:
-                PreviewList(summary: summary, adding: model.hasConfig, busy: busy, onCancel: cancelPreview) {
-                    Task { await save(yaml) }
-                }
-            case .kube(let yaml, let summary, let conflicts)?:
-                KubePreviewList(summary: summary, conflicts: conflicts, refused: discovered?.refused ?? [], busy: busy, onCancel: cancelPreview) { choices in
-                    Task { await saveKube(yaml, summary: summary, conflicts: conflicts, choices: choices) }
-                }
-            case nil:
-                picker
+            if let signIn {
+                SignInProgressCard(progress: signIn)
+            } else {
+                content
             }
         }
         .navigationTitle("Add a cluster")
@@ -116,6 +111,22 @@ struct ImportView: View {
             NotificationRouter.shared.pendingImportText = nil
             preview = nil
             validate(text)
+        }
+    }
+
+    /// The preview waiting for the user's go, else the sources.
+    @ViewBuilder private var content: some View {
+        switch preview {
+        case .talos(let yaml, let summary)?:
+            PreviewList(summary: summary, adding: model.hasConfig, busy: busy, onCancel: cancelPreview) {
+                Task { await save(yaml) }
+            }
+        case .kube(let yaml, let summary, let conflicts)?:
+            KubePreviewList(summary: summary, conflicts: conflicts, refused: discovered?.refused ?? [], busy: busy, onCancel: cancelPreview) { choices in
+                Task { await saveKube(yaml, summary: summary, conflicts: conflicts, choices: choices) }
+            }
+        case nil:
+            picker
         }
     }
 
@@ -364,9 +375,9 @@ struct ImportView: View {
         }
     }
 
-    /// Signs the discovered clusters just added in with the account's credentials, those that
-    /// sign in with credentials; the others (OIDC, Azure device code) wait for the user. The
-    /// errors of the others, by context.
+    /// Signs the discovered clusters just added in with the account's credentials, one after
+    /// the other in the core, the screen naming each; those that sign in otherwise (OIDC, Azure
+    /// device code, a browser) wait for the user. The errors of the others, by context.
     private func signInDiscovered(summary: ConfigSummary, conflicts: [KubeImportConflict],
                                   choices: [KubeImportChoice], secrets: String) async -> [String] {
         guard let kube = model.kubeYAML else { return [] }
@@ -377,19 +388,27 @@ struct ImportView: View {
             replacing: Set(choices.filter { $0.replace == true }.map(\.index)),
             conflicts: conflicts.map { (index: $0.index, suggested: $0.suggested) }
         )
-        var failures: [String] = []
-        for name in names {
-            do {
-                try await TalosClient.setCredentials(kube: kube, context: name, secrets: secrets)
-            } catch {
-                let message = error.localizedDescription
-                if !isNotCredentialsMethod(message) && !isKubeSignInRequired(message) {
-                    failures.append("\(name): \(message)")
-                }
-            }
+        let poll = Task { await pollSignInProgress() }
+        defer {
+            poll.cancel()
+            signIn = nil
+        }
+        let failures: [String]
+        do {
+            failures = try await TalosClient.signInDiscovered(kube: kube, names: names, secrets: secrets)
+        } catch {
+            failures = [error.localizedDescription]
         }
         model.reloadKubernetes()
         return failures
+    }
+
+    /// Shows which discovered cluster is being signed in until cancelled.
+    private func pollSignInProgress() async {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .milliseconds(250))
+            if !Task.isCancelled, let read = TalosClient.signInProgress(), read.running { signIn = read }
+        }
     }
 }
 

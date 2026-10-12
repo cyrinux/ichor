@@ -4165,6 +4165,11 @@
     <string name="upgrade_prepull">Pre-scarica l\'immagine su tutti i nodi</string>
     <string name="upgrade_prepull_desc">Scaricala ora su ogni nodo, così ogni riavvio è breve.</string>
     <string name="kube_discover_progress_looking">Ricerca dei cluster…</string>
+    <string name="kube_discover_progress_reading">Lettura di %1$s…</string>
+    <string name="kube_discover_found_more">+%1$s altri</string>
+    <string name="kube_import_adding_count">Aggiunta di %1$s cluster</string>
+    <string name="kube_import_signing_in">Accesso a %1$s…</string>
+    <string name="kube_import_signin_failed">Cluster aggiunti. Non è stato possibile accedere ad alcuni:</string>
     <string name="kube_discover_aws_refused_note">Nessun accesso in %1$s: gli eventuali cluster di queste regioni non sono elencati.</string>
     <string name="kube_field_aws_regions">Regioni AWS (facoltativo, separate da virgole)</string>
     <string name="kube_discover_aws_sso_hint">Accede al portale di accesso AWS nel browser, poi elenca i cluster EKS degli account e dei ruoli scelti nelle regioni indicate (tutte le regioni comuni se vuoto).</string>

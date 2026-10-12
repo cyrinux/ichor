@@ -4157,6 +4157,11 @@
     <string name="upgrade_prepull">Image vorab auf alle Nodes laden</string>
     <string name="upgrade_prepull_desc">Lade es jetzt auf jeden Node, damit jeder Neustart kurz ist.</string>
     <string name="kube_discover_progress_looking">Cluster werden gesucht…</string>
+    <string name="kube_discover_progress_reading">%1$s wird gelesen…</string>
+    <string name="kube_discover_found_more">+%1$s weitere</string>
+    <string name="kube_import_adding_count">%1$s Cluster werden hinzugefügt</string>
+    <string name="kube_import_signing_in">Anmeldung bei %1$s…</string>
+    <string name="kube_import_signin_failed">Cluster hinzugefügt. Bei einigen schlug die Anmeldung fehl:</string>
     <string name="kube_discover_aws_refused_note">Kein Zugriff in %1$s: Cluster in diesen Regionen, falls vorhanden, sind nicht aufgeführt.</string>
     <string name="kube_field_aws_regions">AWS-Regionen (optional, durch Kommas getrennt)</string>
     <string name="kube_discover_aws_sso_hint">Meldet sich im Browser bei Ihrem AWS-Zugangsportal an und listet dann die EKS-Cluster der gewählten Konten und Rollen in den angegebenen Regionen auf (alle gängigen Regionen, wenn leer).</string>
