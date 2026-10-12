@@ -448,6 +448,8 @@
     <string name="clusters_menu_remove">Remove</string>
     <string name="clusters_vpn_only_hint">VPN only: without a VPN connected the app does not try the cluster, and background checks wait for it.</string>
     <string name="shortcut_cluster_removed">This cluster was removed</string>
+    <string name="shortcut_search_short">Search</string>
+    <string name="shortcut_search_long">Search clusters</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

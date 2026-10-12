@@ -453,6 +453,8 @@
     <string name="clusters_menu_remove">Quitar</string>
     <string name="clusters_vpn_only_hint">Solo VPN: sin una VPN conectada la app no intenta alcanzar el clúster y las comprobaciones en segundo plano la esperan.</string>
     <string name="shortcut_cluster_removed">Este clúster se ha eliminado</string>
+    <string name="shortcut_search_short">Buscar</string>
+    <string name="shortcut_search_long">Buscar en los clústeres</string>
 
     <!-- Settings -->
     <string name="settings_title">Ajustes</string>
