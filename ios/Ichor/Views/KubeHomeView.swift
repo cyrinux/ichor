@@ -12,6 +12,7 @@ extension KubeHomeAction: BarActionLook {
         case .helm: "shippingbox"
         case .dataServices: "externaldrive.connected.to.line.below"
         case .checkup: "stethoscope"
+        case .capacity: "gauge.with.dots.needle.33percent"
         case .apiHealth: "heart.text.square"
         case .networkPolicies: "shield.lefthalf.filled"
         case .search: "magnifyingglass"
@@ -29,6 +30,7 @@ extension KubeHomeAction: BarActionLook {
         case .helm: Text("Helm releases")
         case .dataServices: Text("Data services")
         case .checkup: Text(CheckupText.checkupTitle)
+        case .capacity: Text(verbatim: CapacityText.capacityTitle)
         case .apiHealth: Text("API server")
         case .networkPolicies: Text("Network policies")
         case .search: Text("Search clusters")
@@ -79,6 +81,7 @@ struct KubeHomeView: View {
         case resources
         case helm
         case checkup
+        case capacity
         case apiHealth
         case policies
     }
@@ -201,6 +204,7 @@ struct KubeHomeView: View {
             case .resources: KubeBrowserView()
             case .helm: HelmReleasesView()
             case .checkup: CheckupView()
+            case .capacity: KubeCapacityView()
             case .apiHealth: ApiHealthView()
             case .policies: NetPoliciesView()
             }
@@ -365,6 +369,7 @@ struct KubeHomeView: View {
         case .helm: screen = .helm
         case .dataServices: path.append(.dataServices(hints: "", downNodes: loadedNotReadyNodes))
         case .checkup: screen = .checkup
+        case .capacity: screen = .capacity
         case .apiHealth: screen = .apiHealth
         case .networkPolicies: screen = .policies
         case .search: path.append(.search)
