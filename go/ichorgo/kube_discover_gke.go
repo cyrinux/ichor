@@ -218,13 +218,19 @@ func listGKEClustersOf(ctx context.Context, account gkeAccount, projects []strin
 			slots <- struct{}{}
 			defer func() { <-slots }()
 
+			read := discoveryProgress.reading(project)
 			clusters, err := listGKEClusters(ctx, account, project)
+			read()
 
 			mu.Lock()
 			defer mu.Unlock()
 
 			discoveryProgress.scanned.Add(1)
 			discoveryProgress.clusters.Add(int64(len(clusters)))
+
+			for _, c := range clusters {
+				discoveryProgress.addFound(c.name)
+			}
 
 			switch {
 			case gcpRefused(err):

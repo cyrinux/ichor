@@ -317,13 +317,19 @@ func scanEKSRegions(ctx context.Context, scans []eksRegionScan) ([]eksFoundClust
 			slots <- struct{}{}
 			defer func() { <-slots }()
 
+			read := discoveryProgress.reading(scan.region)
 			clusters, err := listEKSClusters(ctx, scan)
+			read()
 
 			mu.Lock()
 			defer mu.Unlock()
 
 			discoveryProgress.scanned.Add(1)
 			discoveryProgress.clusters.Add(int64(len(clusters)))
+
+			for _, c := range clusters {
+				discoveryProgress.addFound(c.name + "." + c.region + ".eks")
+			}
 
 			switch {
 			case unauthorized(err):

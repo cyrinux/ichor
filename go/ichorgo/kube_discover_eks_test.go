@@ -182,15 +182,17 @@ func TestDiscoverEKSWithIdentityCenter(t *testing.T) {
 		}
 	}
 
-	progress, _ := DiscoverProgress()
+	p := readDiscoverProgress(t)
 
-	var p struct {
-		Projects, Scanned int
-		Refused           []string
+	if p.Projects != 4 || p.Scanned != 4 || !slices.Equal(p.Refused, []string{"eu-north-1"}) {
+		t.Errorf("progress %+v", p)
 	}
 
-	if err := json.Unmarshal([]byte(progress), &p); err != nil || p.Projects != 4 || p.Scanned != 4 || !slices.Equal(p.Refused, []string{"eu-north-1"}) {
-		t.Errorf("progress %s (%v)", progress, err)
+	// Each cluster found is named once (demo-eks is found by two roles), no region still read.
+	slices.Sort(p.Found)
+
+	if len(p.Current) != 0 || strings.Join(p.Found, ",") != "admin-only.eu-west-3.eks,demo-eks.eu-west-3.eks,prod.eu-west-3.eks,shop.eu-west-3.eks" {
+		t.Errorf("current %v, found %v", p.Current, p.Found)
 	}
 
 	// demo-eks was found by ReadOnly first: that is the role it signs in with.
