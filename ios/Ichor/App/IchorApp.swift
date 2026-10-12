@@ -220,6 +220,8 @@ enum Route: Hashable {
     case diagnosis(note: String)
     /// The action audit log; cluster: a context name, "" for every cluster.
     case activity(cluster: String)
+    /// Every cluster's nodes, pods, workloads and GitOps apps, as last seen.
+    case search
 }
 
 /// The home screen: the Talos overview, or the Kubernetes home of a cluster added from a kubeconfig.
@@ -305,6 +307,7 @@ struct MainNavigation: View {
                     case .apps(let hostnames, let filter): AppsView(hostnames: hostnames, filter: filter)
                     case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)
                     case .activity(let cluster): ActivityLogView(cluster: cluster)
+                    case .search: SearchView { target in Task { await open(target) } }
                     }
                 }
         }
@@ -398,16 +401,22 @@ struct MainNavigation: View {
                 linkMessage = String(localized: "Not a valid Ichor link")
                 return
             }
-            guard let context = model.summary?.contexts.context(forCluster: target.cluster, active: model.activeContext),
-                  model.selectCluster(fingerprint: context.fingerprint) else {
-                linkMessage = String(localized: "This link is for a cluster that isn’t on this phone")
-                return
-            }
-            path = []
-            guard let route = await target.route(client: model.client, kube: model.activeIsKube) else { return }
-            path = [actionRoute(route, for: action)]
-            if action?.action != .reboot { NotificationRouter.shared.alertActionRequest = action }
+            await open(target, action: action)
         }
+    }
+
+    /// The overview of `target`'s cluster (the context on screen when it is one of that
+    /// cluster), then the screen it names over it: a share link, a search result.
+    private func open(_ target: ShareTarget, action: AlertActionRequest? = nil) async {
+        guard let context = model.summary?.contexts.context(forCluster: target.cluster, active: model.activeContext),
+              model.selectCluster(fingerprint: context.fingerprint) else {
+            linkMessage = String(localized: "This link is for a cluster that isn’t on this phone")
+            return
+        }
+        path = []
+        guard let route = await target.route(client: model.client, kube: model.activeIsKube) else { return }
+        path = [actionRoute(route, for: action)]
+        if action?.action != .reboot { NotificationRouter.shared.alertActionRequest = action }
     }
 
     /// The node screen with its reboot confirmation for an alert's Reboot (when this config may

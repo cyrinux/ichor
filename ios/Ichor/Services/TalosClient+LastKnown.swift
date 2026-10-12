@@ -10,8 +10,8 @@ extension TalosClient {
         return (try TalosJSON.decode(T.self, from: json), json)
     }
 
-    /// The Go call behind each domain, as the plain methods make it.
-    private func rawJSON(_ domain: LastKnownDomain) async throws -> String {
+    /// The Go call behind each domain, as the plain methods make it (also what search ranks).
+    func rawJSON(_ domain: LastKnownDomain) async throws -> String {
         // Kubernetes domains through the cluster's Kubernetes access (kubeConfig), Talos ones as is.
         try await Self.run { [config, context, kubeConfig = self.kubeConfig, kubeContext = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
             switch domain {

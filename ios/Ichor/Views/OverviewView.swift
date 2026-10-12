@@ -457,6 +457,7 @@ struct OverviewView: View {
         case .alerts: .alerts
         case .kubespan: .kubespan
         case .etcd: .etcd
+        case .search: .search
         case .settings: .settings
         }
     }
