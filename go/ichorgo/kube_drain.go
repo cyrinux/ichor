@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -82,6 +83,9 @@ type pdbObject struct {
 	} `json:"metadata"`
 	Spec struct {
 		Selector *labelSelector `json:"selector"`
+		// MinAvailable and MaxUnavailable are an int or a percentage ("50%"), nil when unset.
+		MinAvailable   json.RawMessage `json:"minAvailable"`
+		MaxUnavailable json.RawMessage `json:"maxUnavailable"`
 	} `json:"spec"`
 	Status struct {
 		DisruptionsAllowed int `json:"disruptionsAllowed"`

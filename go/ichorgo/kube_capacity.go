@@ -173,6 +173,17 @@ type capacityInput struct {
 }
 
 func readCapacity(ctx context.Context, k *kubeClient) (kubeCapacity, error) {
+	in, err := readCapacityInput(ctx, k)
+	if err != nil {
+		return kubeCapacity{}, err
+	}
+
+	return buildCapacity(in), nil
+}
+
+// readCapacityInput reads every list the capacity and the node-loss simulation need, in
+// parallel; only the nodes and the pods are required.
+func readCapacityInput(ctx context.Context, k *kubeClient) (capacityInput, error) {
 	var (
 		in capacityInput
 		wg sync.WaitGroup
@@ -199,14 +210,14 @@ func readCapacity(ctx context.Context, k *kubeClient) (kubeCapacity, error) {
 	wg.Wait()
 
 	if in.nodesErr != nil {
-		return kubeCapacity{}, in.nodesErr
+		return in, in.nodesErr
 	}
 
 	if in.podsErr != nil {
-		return kubeCapacity{}, in.podsErr
+		return in, in.podsErr
 	}
 
-	return buildCapacity(in), nil
+	return in, nil
 }
 
 // readCapacityNodeMetrics is the nodes' usage alone (the nodes themselves are read once, by
