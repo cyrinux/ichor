@@ -47,6 +47,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.rememberLazyListState
+import name.levis.ichor.ui.components.JumpSection
+import name.levis.ichor.ui.components.SectionJumpRail
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.CheckupKind
 import name.levis.ichor.model.CheckupReport
@@ -179,18 +183,30 @@ private fun CheckupList(
         mutableStateOf(sections.filter { it.state == CheckupStatus.CRITICAL || it.state == CheckupStatus.WARNING }.map { it.id })
     }
 
-    LazyColumn(
-        Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        item(key = "verdict") { CheckupVerdict(report, sections.size) }
-        items(sections, key = { it.id }) { section ->
-            val expanded = section.id in open
-            SectionCard(section, expanded, onToggle = { open = if (expanded) open - section.id else open + section.id }) {
-                SectionBody(section, report, now, links, onDeleteLeftover)
+    // The rail: the verdict, then one dot per card (a card's title, as on the card).
+    val verdictLabel = stringResource(R.string.checkup_section_verdict)
+    val labels = sections.map { section -> sectionLook(section.id)?.let { stringResource(it.title) } ?: section.id }
+    val jumps = remember(sections, verdictLabel, labels) {
+        listOf(JumpSection("verdict", verdictLabel, 0)) + sections.mapIndexed { i, section -> JumpSection(section.id, labels[i], 1 + i) }
+    }
+    val listState = rememberLazyListState()
+
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            state = listState,
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            item(key = "verdict") { CheckupVerdict(report, sections.size) }
+            items(sections, key = { it.id }) { section ->
+                val expanded = section.id in open
+                SectionCard(section, expanded, onToggle = { open = if (expanded) open - section.id else open + section.id }) {
+                    SectionBody(section, report, now, links, onDeleteLeftover)
+                }
             }
         }
+        SectionJumpRail(jumps, listState, Modifier.align(Alignment.CenterEnd))
     }
 }
 

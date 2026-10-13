@@ -27,93 +27,97 @@ struct EtcdView: View {
     var body: some View {
         LoadStateView(state: state, retry: load) { etcd in
             let hostnames = Dictionary(etcd.members.map { ($0.id, $0.hostname) }, uniquingKeysWith: { first, _ in first })
-            List {
-                if let error = etcd.error { ErrorOrNoticeText(message: error) }
-                if model.allows(.etcdDefrag) {
-                    let order = defragOrder(etcd.statuses)
-                    let reclaimable = order.reduce(Int64(0)) { $0 + $1.reclaimable }
-                    Section {
-                        if let progress {
-                            HStack { ProgressView(); Text(progress) }
-                        } else {
-                            if let result { Text(result).font(.footnote) }
-                            Text(String(localized: "\(order.count) members to defragment.") + " "
-                                + String(localized: "About \(formatBytes(reclaimable)) reclaimable. Members are done one at a time, followers first and the leader last."))
-                                .font(.footnote).foregroundStyle(.secondary)
-                            Button("Defragment all") { confirm = order }
-                                .disabled(order.isEmpty || reclaimable == 0)
-                        }
-                    } header: {
-                        Text("Defragmentation")
-                    }
-                }
-                if model.allows(.etcdSnapshot) {
-                    EtcdSnapshotSection(etcd: etcd, hostnames: hostnames, job: snapshot)
-                }
-                if !fix.idle {
-                    EtcdFixSection(job: fix)
-                }
-                if recover.loading || recover.running || recover.finished {
-                    EtcdRecoverSection(job: recover)
-                }
-                // EtcdRecover and Bootstrap are admin-only in Talos, like the member actions; only
-                // for a cluster that lost etcd (Go refuses it otherwise).
-                if model.allows(.etcdMemberActions) && etcd.etcdLost && recover.idle {
-                    Section {
-                        Text("No etcd member answers. If every control plane lost etcd, start it again from a snapshot.")
-                            .foregroundStyle(.statusBad)
-                        Button("Recover from snapshot…", role: .destructive) {
-                            recoverEtcd = etcd
-                            importingSnapshot = true
-                        }
-                    }
-                }
-                if !etcd.alarms.isEmpty || alarmMessage != nil || etcd.alarmsError != nil {
-                    Section("Alarms") {
-                        if let alarmsError = etcd.alarmsError { Text("Could not check alarms: \(alarmsError)").foregroundStyle(.statusBad) }
-                        ForEach(etcd.alarms, id: \.self) { Text(verbatim: "\(hostnames[$0.memberId] ?? $0.memberId): \($0.alarm)").foregroundStyle(.statusBad) }
-                        if let alarmMessage { Text(alarmMessage).font(.footnote).foregroundStyle(.secondary) }
-                        // Defragmentation and disarm, like the separate buttons.
-                        if model.allows(.etcdDefrag) && etcd.hasNospace && fix.idle {
-                            Button("Fix NOSPACE…") { confirmFix = etcd }
-                        }
-                        if model.allows(.etcdDefrag) && !etcd.alarms.isEmpty {
-                            if disarming {
-                                HStack { ProgressView(); Text("Disarming…") }
+            SectionRailScroll(sections: jumpSections(etcd)) {
+                List {
+                    if let error = etcd.error { ErrorOrNoticeText(message: error) }
+                    if model.allows(.etcdDefrag) {
+                        let order = defragOrder(etcd.statuses)
+                        let reclaimable = order.reduce(Int64(0)) { $0 + $1.reclaimable }
+                        Section {
+                            if let progress {
+                                HStack { ProgressView(); Text(progress) }
                             } else {
-                                Button("Disarm alarms", role: .destructive) { confirmDisarm = true }
-                                    .disabled(disarmNode(etcd) == nil)
+                                if let result { Text(result).font(.footnote) }
+                                Text(String(localized: "\(order.count) members to defragment.") + " "
+                                    + String(localized: "About \(formatBytes(reclaimable)) reclaimable. Members are done one at a time, followers first and the leader last."))
+                                    .font(.footnote).foregroundStyle(.secondary)
+                                Button("Defragment all") { confirm = order }
+                                    .disabled(order.isEmpty || reclaimable == 0)
+                            }
+                        } header: {
+                            Text("Defragmentation").sectionTarget("defrag")
+                        }
+                    }
+                    if model.allows(.etcdSnapshot) {
+                        EtcdSnapshotSection(etcd: etcd, hostnames: hostnames, job: snapshot)
+                    }
+                    if !fix.idle {
+                        EtcdFixSection(job: fix)
+                    }
+                    if recover.loading || recover.running || recover.finished {
+                        EtcdRecoverSection(job: recover)
+                    }
+                    // EtcdRecover and Bootstrap are admin-only in Talos, like the member actions; only
+                    // for a cluster that lost etcd (Go refuses it otherwise).
+                    if model.allows(.etcdMemberActions) && etcd.etcdLost && recover.idle {
+                        Section {
+                            Text("No etcd member answers. If every control plane lost etcd, start it again from a snapshot.")
+                                .foregroundStyle(.statusBad)
+                            Button("Recover from snapshot…", role: .destructive) {
+                                recoverEtcd = etcd
+                                importingSnapshot = true
                             }
                         }
                     }
-                }
-                if model.allows(.etcdMemberActions) {
-                    EtcdMemberActionsSection(etcd: etcd, support: model.clusterSupport(.etcdMemberActions),
-                                             busy: memberBusy, message: memberMessage,
-                                             onForfeit: { forfeit = $0 }, onRemove: { removing = $0 })
-                }
-                Section {
-                    ForEach(etcd.statuses) { status in
-                        MemberStatusRow(status: status, hostname: hostnames[status.memberId] ?? status.node,
-                                        lag: etcdLag(status, in: etcd.statuses))
-                            .swipeActions {
-                                if model.allows(.etcdDefrag) && progress == nil && status.error == nil {
-                                    Button("Defragment") { confirm = [status] }.tint(.orange)
+                    if hasAlarmsSection(etcd) {
+                        Section {
+                            if let alarmsError = etcd.alarmsError { Text("Could not check alarms: \(alarmsError)").foregroundStyle(.statusBad) }
+                            ForEach(etcd.alarms, id: \.self) { Text(verbatim: "\(hostnames[$0.memberId] ?? $0.memberId): \($0.alarm)").foregroundStyle(.statusBad) }
+                            if let alarmMessage { Text(alarmMessage).font(.footnote).foregroundStyle(.secondary) }
+                            // Defragmentation and disarm, like the separate buttons.
+                            if model.allows(.etcdDefrag) && etcd.hasNospace && fix.idle {
+                                Button("Fix NOSPACE…") { confirmFix = etcd }
+                            }
+                            if model.allows(.etcdDefrag) && !etcd.alarms.isEmpty {
+                                if disarming {
+                                    HStack { ProgressView(); Text("Disarming…") }
+                                } else {
+                                    Button("Disarm alarms", role: .destructive) { confirmDisarm = true }
+                                        .disabled(disarmNode(etcd) == nil)
                                 }
                             }
+                        } header: {
+                            Text("Alarms").sectionTarget("alarms")
+                        }
                     }
-                } header: {
-                    Text("Members (\(etcd.members.count))")
-                } footer: {
-                    let lagging = laggingMembers(etcd.statuses)
-                    if !lagging.isEmpty {
-                        Text("Lagging members: \(lagging.map { hostnames[$0.memberId] ?? $0.node }.joined(separator: ", "))")
-                            .foregroundStyle(.statusWarn)
+                    if model.allows(.etcdMemberActions) {
+                        EtcdMemberActionsSection(etcd: etcd, support: model.clusterSupport(.etcdMemberActions),
+                                                 busy: memberBusy, message: memberMessage,
+                                                 onForfeit: { forfeit = $0 }, onRemove: { removing = $0 })
+                    }
+                    Section {
+                        ForEach(etcd.statuses) { status in
+                            MemberStatusRow(status: status, hostname: hostnames[status.memberId] ?? status.node,
+                                            lag: etcdLag(status, in: etcd.statuses))
+                                .swipeActions {
+                                    if model.allows(.etcdDefrag) && progress == nil && status.error == nil {
+                                        Button("Defragment") { confirm = [status] }.tint(.orange)
+                                    }
+                                }
+                        }
+                    } header: {
+                        Text("Members (\(etcd.members.count))").sectionTarget("members")
+                    } footer: {
+                        let lagging = laggingMembers(etcd.statuses)
+                        if !lagging.isEmpty {
+                            Text("Lagging members: \(lagging.map { hostnames[$0.memberId] ?? $0.node }.joined(separator: ", "))")
+                                .foregroundStyle(.statusWarn)
+                        }
                     }
                 }
+                .refreshable { await load() }
+                .themedBackground()
             }
-            .refreshable { await load() }
-            .themedBackground()
         }
         .navigationTitle(Text(verbatim: "etcd"))
         .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.etcd)) } }
@@ -229,6 +233,20 @@ struct EtcdView: View {
         let reclaimed = formatBytes(targets.reduce(Int64(0)) { $0 + $1.reclaimable })
         result = String(localized: "Defragmented \(targets.count) members.") + " " + String(localized: "About \(reclaimed) reclaimed.")
         await load()
+    }
+
+    /// The rail's sections, present under the same conditions as in the list.
+    private func jumpSections(_ etcd: EtcdOverview) -> [JumpSection] {
+        [
+            model.allows(.etcdDefrag) ? JumpSection(id: "defrag", label: String(localized: "Defragmentation")) : nil,
+            model.allows(.etcdSnapshot) ? JumpSection(id: "snapshot", label: String(localized: "Backup")) : nil,
+            hasAlarmsSection(etcd) ? JumpSection(id: "alarms", label: String(localized: "Alarms")) : nil,
+            JumpSection(id: "members", label: String(localized: "Members")),
+        ].compactMap { $0 }
+    }
+
+    private func hasAlarmsSection(_ etcd: EtcdOverview) -> Bool {
+        !etcd.alarms.isEmpty || alarmMessage != nil || etcd.alarmsError != nil
     }
 
     private func load() async {

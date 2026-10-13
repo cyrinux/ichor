@@ -127066,6 +127066,76 @@
           }
         }
       }
+    },
+    "Members" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Membres"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Miembros"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Учасники"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mitglieder"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Membri"
+          }
+        }
+      }
+    },
+    "Verdict" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verdict"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veredicto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Висновок"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ergebnis"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verdetto"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

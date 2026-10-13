@@ -82,11 +82,72 @@ struct SectionJumpRail: View {
     }
 }
 
+/// A list with a section rail over its trailing edge: the list's section headers mark
+/// themselves with `.sectionTarget(id)` (an id of `sections`), wherever they are declared; the
+/// rail fills the section in view and scrolls to the one picked. `showsRail` false hides it.
+struct SectionRailScroll<Content: View>: View {
+    let sections: [JumpSection]
+    var showsRail = true
+    @ViewBuilder let content: () -> Content
+
+    @State private var tops: [String: Double] = [:]
+    @State private var listTop: Double = 0
+    @State private var current: String?
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            content()
+                .environment(\.sectionTops, $tops)
+                .onGeometryChange(for: Double.self) { Double($0.frame(in: .global).minY + $0.safeAreaInsets.top) } action: { listTop = $0 }
+                .onChange(of: tops) { updateCurrent() }
+                .onChange(of: listTop) { updateCurrent() }
+                .onChange(of: sections) { updateCurrent() }
+                .overlay(alignment: .trailing) {
+                    if showsRail {
+                        SectionJumpRail(sections: sections, current: current) { section, animated in
+                            withAnimation(animated ? .default : nil) { proxy.scrollTo(section.id, anchor: .top) }
+                        }
+                    }
+                }
+        }
+    }
+
+    private func updateCurrent() {
+        current = SectionJump.current(sections: sections, visibleTops: tops, top: listTop, previous: current)
+    }
+}
+
+private struct SectionTopsKey: EnvironmentKey {
+    static var defaultValue: Binding<[String: Double]>? { nil }
+}
+
+extension EnvironmentValues {
+    /// The on-screen tops of the section headers in view, by section id, set by
+    /// `SectionRailScroll`; nil outside one.
+    var sectionTops: Binding<[String: Double]>? {
+        get { self[SectionTopsKey.self] }
+        set { self[SectionTopsKey.self] = newValue }
+    }
+}
+
+/// Makes a header the scroll target of section `id` and reports its on-screen top while it is
+/// in view (dropped once it scrolls away): what `SectionJump.current` reads.
+private struct SectionTarget: ViewModifier {
+    let id: String
+    @Environment(\.sectionTops) private var tops
+
+    func body(content: Content) -> some View {
+        content
+            .id(id)
+            .onGeometryChange(for: Double.self) { Double($0.frame(in: .global).minY) } action: { tops?.wrappedValue[id] = $0 }
+            .onDisappear { tops?.wrappedValue[id] = nil }
+    }
+}
+
 extension View {
-    /// Reports this header's on-screen top into `tops` (by section `id`) while it is in view,
-    /// and drops it once it scrolls away: what `SectionJump.current` reads.
-    func trackSection(_ id: String, tops: Binding<[String: Double]>) -> some View {
-        onGeometryChange(for: Double.self) { Double($0.frame(in: .global).minY) } action: { tops.wrappedValue[id] = $0 }
-            .onDisappear { tops.wrappedValue[id] = nil }
+    /// The header (or, in a section without one, the first row) of section `id` of the
+    /// enclosing `SectionRailScroll`.
+    func sectionTarget(_ id: String) -> some View {
+        modifier(SectionTarget(id: id))
     }
 }

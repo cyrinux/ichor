@@ -20,20 +20,23 @@ struct CheckupView: View {
     var body: some View {
         LoadStateView(state: state, retry: load, progress: progress, stepLabel: Self.stepLabel) { report in
             let now = Int64(Date().timeIntervalSince1970 * 1000)
-            List {
-                CheckupVerdictSection(report: report)
-                ForEach(report.shownSections) { section in
-                    Section {
-                        DisclosureGroup(isExpanded: expanded(section.id)) {
-                            CheckupSectionBody(section: section, report: report, now: now) { confirmDelete = $0 }
-                        } label: {
-                            CheckupSectionLabel(section: section)
+            SectionRailScroll(sections: jumpSections(report)) {
+                List {
+                    CheckupVerdictSection(report: report)
+                    ForEach(report.shownSections) { section in
+                        Section {
+                            DisclosureGroup(isExpanded: expanded(section.id)) {
+                                CheckupSectionBody(section: section, report: report, now: now) { confirmDelete = $0 }
+                            } label: {
+                                CheckupSectionLabel(section: section)
+                            }
+                            .sectionTarget(section.id)
                         }
                     }
                 }
+                .refreshable { await load() }
+                .themedBackground()
             }
-            .refreshable { await load() }
-            .themedBackground()
         }
         .task { await load() }
         // A new API address (set on the Kubernetes screen): read again through it.
@@ -72,6 +75,12 @@ struct CheckupView: View {
         } catch {
             message = String(localized: "Could not delete \(namespace): \(error.localizedDescription)")
         }
+    }
+
+    /// The verdict, then one per card shown, named as on the card.
+    private func jumpSections(_ report: CheckupReport) -> [JumpSection] {
+        [JumpSection(id: "verdict", label: String(localized: "Verdict"))]
+            + report.shownSections.map { JumpSection(id: $0.id, label: $0.section?.title ?? $0.id) }
     }
 
     private func load() async {
@@ -139,6 +148,7 @@ private struct CheckupVerdictSection: View {
                     Text(verbatim: "Kubernetes \(report.kubeVersion)").font(.caption.monospaced()).foregroundStyle(.secondary)
                 }
             }
+            .sectionTarget("verdict")
             Text(verbatim: critical + warnings == 0
                 ? CheckupText.checkupAllClear("\(report.shownSections.count)")
                 : CheckupText.checkupCounts("\(critical)", "\(warnings)"))
