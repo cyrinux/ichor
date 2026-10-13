@@ -138,7 +138,8 @@ final class AppModel {
         privacyMask = UserDefaults.standard.bool(forKey: PrivacyKeys.enabled)
         privacyWords = UserDefaults.standard.string(forKey: PrivacyKeys.words) ?? ""
         lock = AppLockState(enabled: UserDefaults.standard.bool(forKey: Keys.lock))
-        keepLastKnown = UserDefaults.standard.bool(forKey: Keys.keepLastKnown)
+        // On unless the user turned it off: the home opens on it at once.
+        keepLastKnown = UserDefaults.standard.object(forKey: Keys.keepLastKnown) as? Bool ?? true
         clusterColors = UserDefaults.standard.dictionary(forKey: Keys.clusterColors) as? [String: Int] ?? [:]
         clusterNames = UserDefaults.standard.dictionary(forKey: Keys.clusterNames) as? [String: String] ?? [:]
         kubeServers = UserDefaults.standard.dictionary(forKey: Keys.kubeServers) as? [String: String] ?? [:]

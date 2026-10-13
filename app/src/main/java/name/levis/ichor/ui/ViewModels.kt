@@ -39,6 +39,12 @@ abstract class LoadingViewModel<T> : ViewModel() {
     protected open fun cached(): TalosRepository.Timed<T>? = null
 
     /**
+     * What the last background check saw, shown (marked as such) when [cached] has nothing,
+     * instead of a skeleton: never kept as a result, replaced by the last known or fresh value.
+     */
+    protected open fun seed(): TalosRepository.Timed<T>? = null
+
+    /**
      * Whether a failed refresh leaves the data on screen, marked with the error, instead of
      * an error box. Only where the screen shows [name.levis.ichor.ui.components.DataFreshness],
      * which tells the user the data could not be refreshed.
@@ -73,9 +79,11 @@ abstract class LoadingViewModel<T> : ViewModel() {
         val previous = _state.value
         _state.value = when {
             !reset && previous is UiState.Loaded -> previous.copy(refreshing = true)
-            else -> cached()?.let { UiState.Loaded(it.value, refreshing = true, fetchedAt = it.at) } ?: UiState.Loading
+            else -> cached()?.let { UiState.Loaded(it.value, refreshing = true, fetchedAt = it.at) }
+                ?: seed()?.let { UiState.Loaded(it.value, refreshing = true, fetchedAt = it.at, fromMonitor = true) }
+                ?: UiState.Loading
         }
-        if (_state.value !is UiState.Loaded) watch = watchRestores()
+        if ((_state.value as? UiState.Loaded)?.fromMonitor != false) watch = watchRestores()
         progressPoll?.cancel()
         _progress.value = null
         val reader = progressReader
@@ -119,7 +127,8 @@ abstract class LoadingViewModel<T> : ViewModel() {
      * nothing while none is on screen. A refresh in flight replaces it when it completes.
      */
     protected fun updateLoaded(transform: (T) -> T) {
-        val current = _state.value as? UiState.Loaded ?: return
+        // A seed is not the cluster's data: a live change on it would pass it off as fresh.
+        val current = (_state.value as? UiState.Loaded)?.takeUnless { it.fromMonitor } ?: return
         _state.value = current.copy(data = transform(current.data), fetchedAt = System.currentTimeMillis(), error = null)
     }
 

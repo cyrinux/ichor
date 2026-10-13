@@ -99,6 +99,7 @@
     <string name="overview_status_down">Недосяжний</string>
     <string name="overview_unreachable_title">Кластер недосяжний</string>
     <string name="overview_last_known_state">Показано останній відомий стан.</string>
+    <string name="overview_seed_from_monitor">За фоновою перевіркою о %1$s (%2$s)</string>
     <string name="overview_node_last_seen">Востаннє на зв\'язку %1$s</string>
     <string name="overview_node_public_ip">Публічна IP-адреса</string>
     <string name="overview_public_ip_detect">Знайти публічні IP</string>

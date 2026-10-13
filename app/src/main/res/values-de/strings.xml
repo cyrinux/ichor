@@ -85,6 +85,7 @@
     <string name="overview_status_down">Nicht erreichbar</string>
     <string name="overview_unreachable_title">Cluster nicht erreichbar</string>
     <string name="overview_last_known_state">Letzter bekannter Zustand.</string>
+    <string name="overview_seed_from_monitor">Laut Hintergrundprüfung von %1$s (%2$s)</string>
     <string name="overview_node_last_seen">Zuletzt gesehen %1$s</string>
     <string name="overview_node_public_ip">Öffentliche IP</string>
     <string name="overview_public_ip_detect">Öffentliche IPs finden</string>

@@ -85,6 +85,7 @@
     <string name="overview_status_down">Injoignable</string>
     <string name="overview_unreachable_title">Cluster injoignable</string>
     <string name="overview_last_known_state">Dernier état connu affiché.</string>
+    <string name="overview_seed_from_monitor">D’après la vérification en arrière-plan de %1$s (%2$s)</string>
     <string name="overview_node_last_seen">Vu pour la dernière fois %1$s</string>
     <string name="overview_node_public_ip">IP publique</string>
     <string name="overview_public_ip_detect">Trouver les IP publiques</string>

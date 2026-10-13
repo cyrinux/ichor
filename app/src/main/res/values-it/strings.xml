@@ -85,6 +85,7 @@
     <string name="overview_status_down">Irraggiungibile</string>
     <string name="overview_unreachable_title">Cluster irraggiungibile</string>
     <string name="overview_last_known_state">Viene mostrato l\'ultimo stato noto.</string>
+    <string name="overview_seed_from_monitor">Dal controllo in background delle %1$s (%2$s)</string>
     <string name="overview_node_last_seen">Visto l\'ultima volta %1$s</string>
     <string name="overview_node_public_ip">IP pubblico</string>
     <string name="overview_public_ip_detect">Trova IP pubblici</string>

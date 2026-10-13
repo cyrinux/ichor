@@ -887,6 +887,12 @@ a fresh install. Backups move between Android and iOS.
     on asks for a tap of every enrolled key; turning it off asks for one tap. A key set to always
     verify the user (fingerprint or PIN on the key itself) computes another secret, so changing
     that setting after enrolment needs the requirement turned off and on again.
+- **Keep last known state (Settings → Privacy, on by default):** the last data fetched from each
+  cluster is kept on the phone, encrypted, for 24 hours and never backed up, so the home opens on
+  it at once and still shows it when the cluster cannot be reached. Turn it off to keep cluster
+  data in memory only (an install that had turned it off keeps it off). With it off but background
+  alerts on, the home opens on the nodes the last background check saw, labelled as such, while
+  it refreshes; never in screenshot mode.
 - **Notifications:** with the app lock on, alerts show only a generic text on the lock screen.
   The widget shows counts only, no hostnames.
 - **Kubeconfig export:** the kubeconfig is written only to the file you choose. kubenav has no

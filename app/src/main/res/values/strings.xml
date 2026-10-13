@@ -87,6 +87,7 @@
     <string name="overview_status_down">Unreachable</string>
     <string name="overview_unreachable_title">Can\'t reach the cluster</string>
     <string name="overview_last_known_state">Showing the last known state.</string>
+    <string name="overview_seed_from_monitor">From the background check at %1$s (%2$s)</string>
     <string name="overview_node_last_seen">Last seen %1$s</string>
     <string name="overview_node_public_ip">Public IP</string>
     <string name="overview_public_ip_detect">Find public IPs</string>

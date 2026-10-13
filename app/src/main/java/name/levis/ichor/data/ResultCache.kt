@@ -42,7 +42,10 @@ class ResultCache(
 
     private fun restored(key: String, cluster: String? = cluster()): TalosRepository.Timed<Any>? {
         val serializer = PERSISTED[key.substringBefore('|')] ?: return null
-        val stored = offline?.peek(cluster ?: return null, key) ?: return null
+        val offline = offline ?: return null
+        cluster ?: return null
+        // Before [restoreOffline] read the cluster's files: this one file, so the screen has it now.
+        val stored = offline.peek(cluster, key) ?: offline.loadOne(cluster, key).let { offline.peek(cluster, key) } ?: return null
         // Stored by an older version whose model no longer decodes: as good as nothing.
         val value = runCatching { TalosJson.decodeFromString(serializer, stored.value) }.getOrNull() ?: return null
         return TalosRepository.Timed(value, stored.at)

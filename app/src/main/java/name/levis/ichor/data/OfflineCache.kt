@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * The last results fetched from each cluster, kept on disk when the user turned on "Keep last
- * known state" (off by default), so a screen still has something to show when the cluster
+ * known state" (on by default), so a screen still has something to show when the cluster
  * cannot be reached, even after the app was closed.
  *
  * One file per cluster and result, encrypted by [seal] (AES-GCM with a Keystore key in the
@@ -75,6 +75,26 @@ class OfflineCache(
         return files.size
     }
 
+    /** "fingerprint|key" of the files [loadOne] tried, so a missing one is not looked for again. */
+    private val triedOne = ConcurrentHashMap.newKeySet<String>()
+
+    /**
+     * Reads the one stored result [key] of the cluster [fingerprint] before [load] read them all
+     * (the home's, for its first frame), so [peek] has it: one small file, outside the lock that
+     * [load] and [retain] may hold for long. Once per file; nothing when [load] already ran.
+     */
+    fun loadOne(fingerprint: String, key: String) {
+        if (!enabled() || fingerprint.isBlank() || fingerprint in read || !triedOne.add("$fingerprint|$key")) return
+        val epoch = generation.get()
+        val file = File(clusterDir(fingerprint), hash(key))
+        val entry = runCatching { seal.read(file)?.let { TalosJson.decodeFromString(Entry.serializer(), it.decodeToString()) } }.getOrNull()
+        // Unreadable, expired or another key's: left to [load], which deletes it.
+        if (entry == null || entry.key != key || expired(entry.at)) return
+        // [clear] ran meanwhile: what was read may be from before screenshot mode.
+        if (epoch != generation.get()) return
+        loaded.getOrPut(fingerprint) { ConcurrentHashMap() }.putIfAbsent(key, TalosRepository.Timed(entry.json, entry.at))
+    }
+
     /** The stored JSON of [key] for the cluster [fingerprint], once [load]ed; null if none or expired. */
     fun peek(fingerprint: String, key: String): TalosRepository.Timed<String>? {
         if (!enabled()) return null
@@ -114,6 +134,7 @@ class OfflineCache(
         locked {
             loaded.clear()
             read.clear()
+            triedOne.clear()
             if (!directory.exists()) return@locked // nothing was ever kept: no key to drop either
             directory.deleteRecursively()
             // The files are gone: a key that cannot be deleted only protects nothing.

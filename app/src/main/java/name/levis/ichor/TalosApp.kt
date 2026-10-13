@@ -53,6 +53,12 @@ import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.monitor.AlertActionToken
 import name.levis.ichor.monitor.AlertSnoozes
 import name.levis.ichor.monitor.MonitorStore
+import name.levis.ichor.monitor.seed
+import name.levis.ichor.monitor.toKubeNodesSeed
+import name.levis.ichor.monitor.toOverviewSeed
+import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.KubeNodesOverview
+import name.levis.ichor.data.realFingerprint
 import name.levis.ichor.monitor.clusterFingerprints
 import name.levis.ichor.monitor.canPostNotifications
 import name.levis.ichor.monitor.syncMonitoring
@@ -288,6 +294,14 @@ class TalosApp : Application() {
             KeystoreValue(java.io.File(noBackupFilesDir, "monitor-snapshot.enc"), "ichor-monitor-snapshot"),
         )
     }
+
+    /** The Talos home from the last background check of the cluster on screen, until it answers. */
+    fun overviewSeed(): TalosRepository.Timed<ClusterOverview>? =
+        monitorStore.seed(configRepository.config.value?.realFingerprint, kube = false, masked = uiPreferences.privacyMask.value.enabled) { it.toOverviewSeed() }
+
+    /** The Kubernetes home's nodes from the last background check of the cluster on screen. */
+    fun kubeNodesSeed(): TalosRepository.Timed<KubeNodesOverview>? =
+        monitorStore.seed(configRepository.config.value?.realFingerprint, kube = true, masked = uiPreferences.privacyMask.value.enabled) { it.toKubeNodesSeed() }
 
     /** The alerts snoozed from their notification. */
     val alertSnoozes by lazy { AlertSnoozes(getSharedPreferences(AlertSnoozes.FILE, Context.MODE_PRIVATE)) }
@@ -536,8 +550,9 @@ class TalosApp : Application() {
                 .collect { (stored, generation) ->
                     when {
                         stored != null -> {
-                            offlineCache.retain(stored.summary.contexts.map { it.fingerprint })
+                            // The cluster on screen first: deleting the removed ones' can wait.
                             talosRepository.restoreOffline()
+                            offlineCache.retain(stored.summary.contexts.map { it.fingerprint })
                         }
                         // Generation 0: not loaded yet (locked); later, every cluster was removed.
                         generation > 0 -> {

@@ -9,6 +9,8 @@ struct OverviewView: View {
     @Environment(SupportPrompt.self) private var support
     @Environment(AISettings.self) private var ai
     @State private var state: LoadState<ClusterOverview> = .loading
+    /// `state` is only what the last background check saw (a seed), until the cluster answers.
+    @State private var fromMonitor = false
     @State private var update: TalosUpdateInfo?
     /// Release notes to present after an app update.
     @State private var whatsNew: WhatsNewContent?
@@ -55,7 +57,7 @@ struct OverviewView: View {
             if let context = model.activeSummary, context.needsEndpoint {
                 NoEndpointsView(context: context).themedBackground()
             } else {
-                LoadStateView(state: state, retry: load) { overview in
+                LoadStateView(state: state, retry: load, fromMonitor: fromMonitor) { overview in
                     // No node answered (VPN off, another network): one notice instead of a list of red
                     // nodes, unless they are known from before (then the list, under a banner).
                     if let outage = overview.outage, !showNodesAnyway, !overview.showsLastKnown {
@@ -200,7 +202,7 @@ struct OverviewView: View {
                 ClusterLiveStore.shared.clear()
                 return
             }
-            guard visible, scenePhase == .active, case .loaded(let overview, _, _) = state, overview.outage == nil,
+            guard visible, scenePhase == .active, !fromMonitor, case .loaded(let overview, _, _) = state, overview.outage == nil,
                   let client = model.client else { return }
             await ClusterLiveStore.shared.poll(with: client, key: loadID, nodes: overview.nodes.count)
         }
@@ -238,6 +240,7 @@ struct OverviewView: View {
         }
         .onChange(of: model.dataGeneration) {
             state = .loading
+            fromMonitor = false
             discovered = []
             inventory = .loading
             dataServices = nil
@@ -253,6 +256,7 @@ struct OverviewView: View {
         // Another cluster: never its name over the previous one's nodes.
         .onChange(of: model.activeContext) {
             state = .loading
+            fromMonitor = false
             discovered = []
             inventory = .loading
             dataServices = nil
@@ -408,7 +412,7 @@ struct OverviewView: View {
     /// Restarts (or stops) the live sampling when one of its conditions changes.
     private var liveID: String {
         var nodes = -1
-        if case .loaded(let overview, _, _) = state, overview.outage == nil { nodes = overview.nodes.count }
+        if !fromMonitor, case .loaded(let overview, _, _) = state, overview.outage == nil { nodes = overview.nodes.count }
         return "\(loadID)|\(liveStats)|\(visible)|\(scenePhase == .active)|\(nodes)"
     }
 
@@ -478,8 +482,16 @@ struct OverviewView: View {
         guard let client = model.client else { return }
         StartupTrace.markOnce("overview load start")
         // Nothing on screen: the last known overview (when kept) while this one loads.
-        if case .loaded = state {} else { state = model.seeded(LoadState<ClusterOverview>.loading, from: .overview) }
-        if case .loaded = state { StartupTrace.markOnce("overview first Loaded", detail: "(last known)") }
+        if case .loaded = state {} else {
+            state = model.seeded(LoadState<ClusterOverview>.loading, from: .overview)
+            if case .loaded = state { StartupTrace.markOnce("overview first Loaded", detail: "(last known)") }
+        }
+        // Else the nodes the last background check saw, said as such.
+        if case .loading = state, let snapshot = model.monitorSeed(kube: false) {
+            state = .loaded(snapshot.overviewSeed(), at: snapshot.takenAt)
+            fromMonitor = true
+            StartupTrace.markOnce("overview first Loaded", detail: "(background check)")
+        }
         // The call is not cancelled with its task: a slow load of the previous context can
         // end after the new one's, and must not replace it.
         let id = loadID
@@ -488,6 +500,7 @@ struct OverviewView: View {
         guard id == loadID else { return }
         let loaded = merged(fetched, for: target)
         state = state.refreshed(with: loaded)
+        if case .loaded = loaded { fromMonitor = false }
         if case .loaded = state { StartupTrace.markOnce("overview first Loaded", detail: "(fresh)") }
         if case .loaded(let overview, _, _) = loaded {
             // Alongside the rest: listing every node's containers takes a while.
@@ -528,7 +541,8 @@ struct OverviewView: View {
         guard case .loaded(let overview, let at, _) = fetched else { return fetched }
         var previous: ClusterOverview?
         var previousAt = at
-        if case .loaded(let shown, let shownAt, _) = state {
+        // The background check's seed is not the cluster's data: nothing to fill nodes in from.
+        if !fromMonitor, case .loaded(let shown, let shownAt, _) = state {
             previous = shown
             previousAt = shownAt
         }
