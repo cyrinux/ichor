@@ -18,6 +18,9 @@ enum CapacityText {
     static var capacityWhatIf: String { String(localized: "What if a node goes down") }
     static var capacityNodesTitle: String { String(localized: "Nodes") }
     static var capacityWorkloadsTitle: String { String(localized: "Workloads, the first to go first") }
+    static var capacitySectionSummary: String { String(localized: "Summary") }
+    static var capacitySectionWorkloads: String { String(localized: "Workloads") }
+    static func sectionRailJumpTo(_ a: String) -> String { String(localized: "Jump to \(a)") }
     static var capacityWorkloadsEmpty: String { String(localized: "No workload matches this filter.") }
     static var capacityFilterAll: String { String(localized: "All") }
     static var capacityFilterAtRisk: String { String(localized: "At risk") }
