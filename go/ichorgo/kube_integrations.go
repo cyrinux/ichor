@@ -235,10 +235,10 @@ func integrationGroupsText(groups []integrationGroup) string {
 func demoIntegrations() integrationReport {
 	return integrationReport{
 		Families: []integrationFamily{
-			{ID: "metallb.io", Groups: []integrationGroup{
-				{Name: "metallb.io", Version: "v1beta1", Kinds: []string{"BGPPeer", "IPAddressPool", "L2Advertisement"}},
+			{ID: "keda.sh", Groups: []integrationGroup{
+				{Name: "keda.sh", Version: "v1alpha1", Kinds: []string{"ScaledJob", "ScaledObject", "TriggerAuthentication"}},
 			}},
 		},
-		Supported: []string{groupArgo, groupCertManager, groupKyverno, groupLonghorn, groupMonitoring, groupCNPG, groupTraefik, groupPolicyReport},
+		Supported: []string{groupArgo, groupCertManager, groupKyverno, groupLonghorn, groupMetalLB, groupMonitoring, groupCNPG, groupTraefik, groupPolicyReport},
 	}
 }
