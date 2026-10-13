@@ -32,6 +32,9 @@ targets:
     platform: iOS
     sources:
       - Ichor
+      # Compiled into the app and the widget: the Live Activity's buttons (OperationIntent)
+      # run in the app's process, and both must know the intent type.
+      - Shared
       # The app-inventory icons, shared with Android (scripts/sync-app-icons.py): a folder
       # reference, so they land in the bundle under appicons/.
       - path: ../app/src/main/assets/appicons
@@ -102,6 +105,10 @@ targets:
         # Reaching nodes on the Wi-Fi network, searching it for them, and Wake-on-LAN.
         NSLocalNetworkUsageDescription: Reach your clusters' nodes on this network, search it for them, and wake them with Wake-on-LAN.
         UIBackgroundModes: [fetch]
+        # A run the app follows (upgrade, maintenance, config try…) shows as a Live Activity,
+        # updated while the app runs (no push updates).
+        NSSupportsLiveActivities: true
+        NSSupportsLiveActivitiesFrequentUpdates: false
         BGTaskSchedulerPermittedIdentifiers: [name.levis.ichor.refresh]
         # "Open with", the share sheet and AirDrop: YAML files (talosconfigs, kubeconfigs) and
         # *.kubeconfig land in the import preview (IncomingConfig.swift). A copy, not in place.
@@ -128,11 +135,14 @@ targets:
   TalosWidget:
     type: app-extension
     platform: iOS
-    sources: [TalosWidget]
+    sources: [TalosWidget, Shared]
     dependencies:
       - package: IchorCore
       - sdk: WidgetKit.framework
       - sdk: SwiftUI.framework
+      # The runs' Live Activity and its buttons.
+      - sdk: ActivityKit.framework
+      - sdk: AppIntents.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: name.levis.ichor.widget

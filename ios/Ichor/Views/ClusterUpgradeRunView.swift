@@ -84,13 +84,5 @@ struct ClusterUpgradeRunView: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// What the roll does now: the node's own upgrade phase, the gate, or the pause.
-    private func phaseText(_ p: ClusterUpgradeProgress) -> String {
-        switch p.rollPhase {
-        case .gate: String(localized: "checking the cluster's health")
-        case .paused: String(localized: "paused")
-        case .done: String(localized: "Done")
-        case .node: p.nodePhase.isEmpty ? String(localized: "Requested") : p.nodePhase
-        }
-    }
+    private func phaseText(_ p: ClusterUpgradeProgress) -> String { p.localizedPhase }
 }

@@ -204,7 +204,7 @@ struct ClusterWidgetView: View {
     }
 }
 
-@main
+/// The Home Screen cluster widget; IchorWidgets bundles it with the runs' Live Activity.
 struct TalosWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "TalosClusterWidget", intent: ClusterWidgetIntent.self, provider: Provider()) { entry in
