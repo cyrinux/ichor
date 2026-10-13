@@ -7,10 +7,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class KubeRouteList(val routes: List<KubeRoute> = emptyList())
 
-/** A URL an app is served at: a host of an Ingress or HTTPRoute whose backend selects its pods. */
+/**
+ * A URL an app is served at: a host of an Ingress, HTTPRoute or Traefik IngressRoute(TCP) whose
+ * backend selects its pods.
+ */
 @Serializable
 data class KubeRoute(
-    /** Ingress or HTTPRoute. */
+    /** Ingress, HTTPRoute, IngressRoute or IngressRouteTCP, shown as is. */
     val kind: String,
     val namespace: String,
     val name: String,

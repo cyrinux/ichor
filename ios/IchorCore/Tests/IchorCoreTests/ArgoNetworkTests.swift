@@ -124,6 +124,18 @@ final class ArgoNetworkTests: XCTestCase {
         XCTAssertEqual(try decode(json).marking(down: ["demo-worker-3"]), try decode(json), "already critical")
     }
 
+    func testDecodesTraefikRoutes() throws {
+        let net = try decode(#"""
+        {"nodes":[
+          {"id":"ir/monitoring/grafana","layer":2,"kind":"IngressRoute","namespace":"monitoring","name":"grafana","detail":"10.0.0.240","health":"ok","url":"","managed":true},
+          {"id":"irtcp/edge/web","layer":2,"kind":"IngressRouteTCP","namespace":"edge","name":"web","detail":"","health":"ok","url":"","managed":false}],
+         "edges":[]}
+        """#)
+        XCTAssertEqual(net.nodes.map(\.kind), [.ingressRoute, .ingressRouteTCP])
+        XCTAssertTrue(net.nodes.allSatisfy { $0.kind.routesTraffic })
+        XCTAssertFalse(ArgoNetKind.service.routesTraffic)
+    }
+
     func testProblemReasons() {
         XCTAssertEqual(ArgoNetProblem(kind: .node, name: "w3", detail: "NotReady").reason, .nodeNotReady("w3"))
         XCTAssertEqual(ArgoNetProblem(kind: .node, name: "w3", detail: "SchedulingDisabled").reason, .nodeCordoned("w3"))
@@ -133,6 +145,7 @@ final class ArgoNetworkTests: XCTestCase {
         XCTAssertEqual(ArgoNetProblem(kind: .ingress, name: "i").reason, .noHealthyBackend("Ingress", "i"))
         XCTAssertEqual(ArgoNetProblem(kind: .httpRoute, name: "r").reason, .noHealthyBackend("HTTPRoute", "r"))
         XCTAssertEqual(ArgoNetProblem(kind: .gateway, name: "g").reason, .noHealthyBackend("Gateway", "g"))
+        XCTAssertEqual(ArgoNetProblem(kind: .ingressRoute, name: "t").reason, .noHealthyBackend("IngressRoute", "t"))
         XCTAssertEqual(ArgoNetProblem(kind: .unknown, name: "x", detail: "d").reason, .other("", "x", "d"))
     }
 }

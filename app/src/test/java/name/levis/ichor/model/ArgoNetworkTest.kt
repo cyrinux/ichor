@@ -201,11 +201,15 @@ class ArgoNetworkTest {
         assertEquals(ArgoNetWording.NODE_CORDONED, ArgoNetProblem(kind = "Node", detail = "SchedulingDisabled").wording)
         assertEquals(ArgoNetWording.NO_HEALTHY_BACKEND, ArgoNetProblem(kind = "Ingress").wording)
         assertEquals(ArgoNetWording.NO_HEALTHY_BACKEND, ArgoNetProblem(kind = "Gateway").wording)
+        assertEquals(ArgoNetWording.NO_HEALTHY_BACKEND, ArgoNetProblem(kind = "IngressRoute").wording)
     }
 
     @Test
     fun sharedRoutesAreTheOnesTheAppDoesNotManage() {
         assertTrue(ArgoNetNode(id = "gw/traefik/homelab", kind = ArgoNetNode.GATEWAY, managed = false).shared)
+        assertTrue(ArgoNetNode(id = "ir/edge/web", kind = ArgoNetNode.INGRESS_ROUTE, managed = false).shared)
+        assertTrue(ArgoNetNode(id = "irtcp/edge/web", kind = ArgoNetNode.INGRESS_ROUTE_TCP, managed = false).shared)
+        assertFalse(ArgoNetNode(id = "ir/edge/web", kind = ArgoNetNode.INGRESS_ROUTE, managed = true).shared)
         assertFalse(network.node("ing/demo/worker")!!.shared)
         assertFalse(network.node("pod/demo/worker-6f4b8-pqrst")!!.shared)
     }

@@ -242,10 +242,7 @@ func demoIntegrations() integrationReport {
 			{ID: "metallb.io", Groups: []integrationGroup{
 				{Name: "metallb.io", Version: "v1beta1", Kinds: []string{"BGPPeer", "IPAddressPool", "L2Advertisement"}},
 			}},
-			{ID: "traefik.io", Groups: []integrationGroup{
-				{Name: "traefik.io", Version: "v1alpha1", Kinds: []string{"IngressRoute", "Middleware", "TLSOption"}},
-			}},
 		},
-		Supported: []string{groupArgo, groupCertManager, groupLonghorn, groupMonitoring, groupCNPG},
+		Supported: []string{groupArgo, groupCertManager, groupLonghorn, groupMonitoring, groupCNPG, groupTraefik},
 	}
 }

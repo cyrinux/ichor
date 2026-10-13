@@ -161,7 +161,7 @@ val ArgoNetNode.kindIcon: ImageVector
         ArgoNetNode.HOST -> Icons.Outlined.Public
         ArgoNetNode.LOAD_BALANCER -> Icons.Outlined.Router
         ArgoNetNode.GATEWAY -> Icons.Outlined.Hub
-        ArgoNetNode.INGRESS, ArgoNetNode.HTTP_ROUTE -> Icons.AutoMirrored.Outlined.AltRoute
+        in ArgoNetNode.ROUTE_KINDS -> Icons.AutoMirrored.Outlined.AltRoute
         ArgoNetNode.SERVICE -> Icons.Outlined.Lan
         ArgoNetNode.POD -> Icons.Outlined.ViewInAr
         else -> Icons.Outlined.Computer
