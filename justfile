@@ -154,7 +154,7 @@ probe *args:
 
 # Generate the release signing key. Back it up: an app signed with another key
 # cannot update the installed one.
-android-keystore-gen path=env_var_or_default("ICHOR_KEYSTORE", home_directory() + "/ichor-release.jks") alias=env_var_or_default("ICHOR_KEY_ALIAS", "ichor"):
+android-keystore-gen path=env_var_or_default("ICHOR_KEYSTORE", env_var("HOME") + "/ichor-release.jks") alias=env_var_or_default("ICHOR_KEY_ALIAS", "ichor"):
     #!/usr/bin/env bash
     set -euo pipefail
     if [ -e "{{ path }}" ]; then
