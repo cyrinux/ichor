@@ -235,14 +235,10 @@ func integrationGroupsText(groups []integrationGroup) string {
 func demoIntegrations() integrationReport {
 	return integrationReport{
 		Families: []integrationFamily{
-			{ID: "kyverno.io", Groups: []integrationGroup{
-				{Name: "kyverno.io", Version: "v1", Kinds: []string{"ClusterPolicy", "Policy"}},
-				{Name: "reports.kyverno.io", Version: "v1", Kinds: []string{"ClusterEphemeralReport", "EphemeralReport"}},
-			}},
 			{ID: "metallb.io", Groups: []integrationGroup{
 				{Name: "metallb.io", Version: "v1beta1", Kinds: []string{"BGPPeer", "IPAddressPool", "L2Advertisement"}},
 			}},
 		},
-		Supported: []string{groupArgo, groupCertManager, groupLonghorn, groupMonitoring, groupCNPG, groupTraefik},
+		Supported: []string{groupArgo, groupCertManager, groupKyverno, groupLonghorn, groupMonitoring, groupCNPG, groupTraefik, groupPolicyReport},
 	}
 }
