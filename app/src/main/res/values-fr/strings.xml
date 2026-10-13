@@ -4309,6 +4309,9 @@
     <string name="capacity_nodes_title">Nœuds</string>
     <string name="capacity_workloads_title">Charges de travail, les premières à partir en tête</string>
     <string name="capacity_workloads_empty">Aucune charge de travail ne correspond à ce filtre.</string>
+    <string name="capacity_section_summary">Résumé</string>
+    <string name="capacity_section_workloads">Charges de travail</string>
+    <string name="section_rail_jump_to">Aller à %1$s</string>
     <string name="capacity_filter_all">Toutes</string>
     <string name="capacity_filter_at_risk">À risque</string>
     <string name="capacity_no_class">Sans classe de priorité</string>

@@ -4543,6 +4543,9 @@
     <string name="capacity_nodes_title">Вузли</string>
     <string name="capacity_workloads_title">Навантаження, першими ті, що підуть першими</string>
     <string name="capacity_workloads_empty">Жодне навантаження не відповідає цьому фільтру.</string>
+    <string name="capacity_section_summary">Підсумок</string>
+    <string name="capacity_section_workloads">Навантаження</string>
+    <string name="section_rail_jump_to">Перейти до: %1$s</string>
     <string name="capacity_filter_all">Усі</string>
     <string name="capacity_filter_at_risk">Під загрозою</string>
     <string name="capacity_no_class">Без класу пріоритету</string>
