@@ -91,23 +91,7 @@ struct ScanProgressLines: View {
         }
     }
 
-    private func phaseText(_ p: ImageScanProgress?, scanner: String) -> String {
-        switch p?.phase {
-        case ImageScanPhase.starting:
-            guard let p, !p.message.isEmpty else { return String(localized: "Starting \(scanner)…") }
-            return String(localized: "Starting \(scanner) (\(p.message))…")
-        case ImageScanPhase.database:
-            return String(localized: "Downloading the vulnerability database…")
-        case ImageScanPhase.scanning:
-            let p = p ?? ImageScanProgress()
-            let image = String(p.image.split(separator: "/").last ?? "")
-            return String(localized: "Scanning \(String(p.step)) of \(String(p.steps)): \(image)")
-        case ImageScanPhase.cleaning:
-            return String(localized: "Cleaning up…")
-        default:
-            return String(localized: "Reading the pods and their images…")
-        }
-    }
+    private func phaseText(_ p: ImageScanProgress?, scanner: String) -> String { imageScanPhaseText(p, scanner: scanner) }
 }
 
 /// "Critical 2  High 5  …": one chip per severity, muted when none (Unknown only when found).

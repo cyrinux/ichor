@@ -261,14 +261,5 @@ struct K8sUpgradeRunView: View {
         }
     }
 
-    private func stepText(_ p: K8sUpgradeProgress) -> String {
-        switch p.phase {
-        case "done": String(localized: "Done")
-        case "proxy": String(localized: "kube-proxy DaemonSet")
-        default:
-            p.total > 0
-                ? String(localized: "Kubernetes upgrade \(min(p.index + 1, p.total))/\(p.total): \(p.name) \(p.component.isEmpty ? p.phase : p.component)")
-                : p.message
-        }
-    }
+    private func stepText(_ p: K8sUpgradeProgress) -> String { p.localizedStep }
 }

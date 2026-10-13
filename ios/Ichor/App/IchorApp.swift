@@ -31,6 +31,8 @@ struct IchorApp: App {
         BackgroundMonitor.register()
         BackgroundMonitor.registerCategories()
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+        // The runs' Live Activities, and their buttons' handler.
+        OperationActivities.start()
         StartupTrace.markOnce("app.init end")
     }
 
@@ -44,7 +46,12 @@ struct IchorApp: App {
                 // A share link or a config file while the app runs (the scene delegate takes them at launch).
                 .onOpenURL { url in
                     if url.isFileURL { IncomingConfig.receive(url) }
-                    if url.scheme == "ichor", url.host == "open" { NotificationRouter.shared.pendingShareLink = url }
+                    if let kind = OperationKind(link: url) {
+                        // A run's Live Activity: its screen.
+                        NotificationRouter.shared.pendingOperation = kind
+                    } else if url.scheme == "ichor", url.host == "open" {
+                        NotificationRouter.shared.pendingShareLink = url
+                    }
                 }
                 // A Spotlight result (SpotlightIndex): its share link, routed like any other.
                 .onContinueUserActivity(CSSearchableItemActionType) { activity in
@@ -213,6 +220,11 @@ enum Route: Hashable {
     /// The drain of a node (the maintenance screen, drain only); on a cluster without Talos,
     /// node and hostname are its Kubernetes name.
     case drain(node: String, hostname: String)
+    /// A node's upgrade, maintenance or machine config screen, where its followed run shows
+    /// (a run's Live Activity).
+    case upgrade(node: String, hostname: String)
+    case maintenance(node: String, hostname: String)
+    case machineConfig(node: String, hostname: String)
     /// A root shell on a node of a cluster without Talos, by its Kubernetes name.
     case kubeNodeDebug(node: String)
     /// Events timeline for one node, or all of them (node nil); hostnames by address.
@@ -308,6 +320,9 @@ struct MainNavigation: View {
                     case .storage(let node, let hostname): StorageView(node: node, hostname: hostname)
                     case .hardware(let node, let hostname): HardwareView(node: node, hostname: hostname)
                     case .drain(let node, let hostname): MaintenanceView(node: node, hostname: hostname, drainOnly: true)
+                    case .upgrade(let node, let hostname): UpgradeView(node: node, hostname: hostname)
+                    case .maintenance(let node, let hostname): MaintenanceView(node: node, hostname: hostname)
+                    case .machineConfig(let node, let hostname): MachineConfigView(node: node, hostname: hostname)
                     case .kubeNodeDebug(let node): KubeNodeDebugView(node: node)
                     case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
                     case .apps(let hostnames, let filter): AppsView(hostnames: hostnames, filter: filter)
@@ -334,10 +349,14 @@ struct MainNavigation: View {
         .onChange(of: NotificationRouter.shared.pendingSearch) { _, pending in
             if pending { openSearch() }
         }
+        .onChange(of: NotificationRouter.shared.pendingOperation) { _, pending in
+            if pending != nil { openOperation() }
+        }
         // Mounted under the lock screen once unlocked: a link waits for the next unlock.
         .onChange(of: model.lock.locked) { _, locked in
             if !locked, NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
             if !locked, NotificationRouter.shared.pendingSearch { openSearch() }
+            if !locked, NotificationRouter.shared.pendingOperation != nil { openOperation() }
             if !locked { openImport() }
         }
         .onChange(of: NotificationRouter.shared.pendingImportText) { _, pending in
@@ -353,6 +372,7 @@ struct MainNavigation: View {
             if NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
             if NotificationRouter.shared.pendingSearch { openSearch() }
             if NotificationRouter.shared.pendingGitOps != nil { openGitOps() }
+            if NotificationRouter.shared.pendingOperation != nil { openOperation() }
             openImport()
         }
         .messageAlert($freezeMessage)
@@ -396,6 +416,39 @@ struct MainNavigation: View {
         guard let fingerprint = NotificationRouter.shared.pendingCluster else { return }
         NotificationRouter.shared.pendingCluster = nil
         if model.selectCluster(fingerprint: fingerprint) { path = [] }
+    }
+
+    /// From a run's Live Activity: the screen that shows the run, once unlocked; the app as it
+    /// was for a run with no screen of its own (an image pull or scan) or one already cleared.
+    private func openOperation() {
+        guard !model.lock.locked, let kind = NotificationRouter.shared.pendingOperation else { return }
+        NotificationRouter.shared.pendingOperation = nil
+        guard let route = operationRoute(kind), path.last != route else { return }
+        path.append(route)
+    }
+
+    private func operationRoute(_ kind: OperationKind) -> Route? {
+        switch kind {
+        case .upgrade:
+            guard let target = UpgradeJob.shared.target else { return nil }
+            return Route.upgrade(node: target.node, hostname: target.hostname)
+        case .maintenance:
+            guard let target = MaintenanceJob.shared.target else { return nil }
+            return target.kube ? Route.drain(node: target.node, hostname: target.hostname)
+                : Route.maintenance(node: target.node, hostname: target.hostname)
+        case .configTry:
+            guard let target = ConfigTryJob.shared.target else { return nil }
+            return Route.machineConfig(node: target.node, hostname: target.hostname)
+        case .clusterUpgrade:
+            guard let version = ClusterUpgradeJob.shared.version else { return nil }
+            return Route.clusterUpgrade(version: version)
+        case .k8sUpgrade:
+            return K8sUpgradeJob.shared.version == nil ? nil : Route.k8sUpgrade
+        case .join:
+            return JoinJob.shared.request == nil ? nil : Route.joinNode
+        case .configMulti, .imagePull, .imageScan:
+            return nil
+        }
     }
 
     /// From the "Search clusters" quick action: the search over the cluster on screen's home,

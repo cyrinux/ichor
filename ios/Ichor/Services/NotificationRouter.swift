@@ -31,6 +31,9 @@ final class NotificationRouter {
     /// A share link (ichor://open?…) was opened: the screen it names, once unlocked.
     var pendingShareLink: URL?
 
+    /// A run's Live Activity was tapped (ichor://open?op=…): the run's screen, once unlocked.
+    var pendingOperation: OperationKind?
+
     /// Reboot, Sync, Reconcile or Silence on an alert: asked of its screen once the alert's link
     /// (pendingShareLink, set with it) has opened it on its cluster.
     var pendingAlertAction: AlertActionRequest?

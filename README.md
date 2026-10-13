@@ -462,6 +462,12 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   **Pause** / **Resume** and **Abort** for a cluster upgrade, **Stop following** for what cannot be
   stopped, **Keep** / **Revert now** for a try. With the app lock on, Stop, Abort and Keep open the
   run's screen instead. Tapping the notification opens the run's screen.
+- **Live Activities (iOS):** the same runs show on the Lock Screen and in the Dynamic Island: the
+  step, a bar where the run counts, a config try's countdown, the same buttons, then the result
+  (gone 15 minutes later). With the app lock on, the activity names no node, version or cluster.
+  iOS updates it only while Ichor runs: once Ichor is suspended it shows the last step and when
+  it was true, and the "Keep Ichor open" notification still asks you to come back. With Live
+  Activities turned off in Settings › Ichor, nothing changes.
 
 ### Capacity
 

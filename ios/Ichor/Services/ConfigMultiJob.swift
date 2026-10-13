@@ -21,6 +21,9 @@ final class ConfigMultiJob {
     private(set) var progress: MultiConfigProgress?
     /// nil while running (or before); then nil inside on success, the error otherwise.
     private(set) var outcome: String??
+    /// Stopped by the user: the nodes done keep the change, the others were not reached. The
+    /// outcome then says so, as a failure would: back to the draft.
+    private(set) var stopped = false
     private var task: Task<Void, Never>?
     private var backgroundTask = UIBackgroundTaskIdentifier.invalid
 
@@ -35,6 +38,7 @@ final class ConfigMultiJob {
         target = Target(nodes: nodes, mode: mode)
         progress = nil
         outcome = nil
+        stopped = false
         UIApplication.shared.isIdleTimerDisabled = true
         backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Config rollout") {
             // Called on the main thread; the task must end before this returns.
@@ -45,12 +49,17 @@ final class ConfigMultiJob {
         let events = client.applyMachineConfigMulti(nodes: nodes, edits: edits, mode: mode)
         task = Task {
             var result: String? = String(localized: "The config could not be applied.")
+            var answered = false
             for await event in events {
                 switch event {
                 case .progress(let update): progress = update
-                case .done(let error): result = error
+                case .done(let error):
+                    result = error
+                    answered = true
                 }
             }
+            // Stopped before the core said how it ended (a late stop leaves its answer).
+            if stopped, !answered { result = String(localized: "Stopped: the nodes done keep the change, the others were not reached.") }
             outcome = .some(result)
             task = nil
             endBackgroundTask()
@@ -59,6 +68,14 @@ final class ConfigMultiJob {
             announce(result ?? String(localized: "Every node has the change."))
         }
         return true
+    }
+
+    /// Stops the rollout (ending the stream cancels the core's run): the nodes done keep the
+    /// change, the node in flight finishes its step, the others are not reached.
+    func stop() {
+        guard isActive, !stopped else { return }
+        stopped = true
+        task?.cancel()
     }
 
     /// The scene went to the background: reminds the user to come back while the rollout needs

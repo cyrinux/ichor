@@ -96,6 +96,10 @@ final class QuickActionSceneDelegate: NSObject, UIWindowSceneDelegate {
             IncomingConfig.receive(url)
             return
         }
+        if let kind = OperationKind(link: url) {
+            NotificationRouter.shared.pendingOperation = kind
+            return
+        }
         guard url.scheme == "ichor", url.host == "open" else { return }
         NotificationRouter.shared.pendingShareLink = url
     }
