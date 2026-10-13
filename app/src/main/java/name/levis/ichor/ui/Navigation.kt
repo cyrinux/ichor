@@ -54,7 +54,10 @@ import kotlinx.coroutines.launch
  * directly (see MainActivity.EXTRA_OPEN, which carries the name).
  */
 enum class DeepLink {
-    ISSUE_CONFIG, DEMO, DEMO_KUBE, ARGO_WINDOWS, ARGO_CD, FLUX, CHECKUP, CONFIG_TRY, SEARCH;
+    ISSUE_CONFIG, DEMO, DEMO_KUBE, ARGO_WINDOWS, ARGO_CD, FLUX, CHECKUP, CONFIG_TRY, SEARCH,
+
+    // A followed run's notification (OperationService): the screen it shows on.
+    UPGRADE, MAINTENANCE, CONFIG_MULTI, CLUSTER_UPGRADE, K8S_UPGRADE, JOIN_NODE;
 
     companion object {
         /** The screen an EXTRA_OPEN value names; null for anything else. */
@@ -184,6 +187,26 @@ fun Navigation(
             // check here (its refresh action asks for one); nothing to search before an import.
             DeepLink.SEARCH -> if (!startWithImport) {
                 nav.navigate(Routes.SEARCH) { launchSingleTop = true }
+            }
+            // A followed run's notification: back on the screen that shows it, while it is followed.
+            DeepLink.UPGRADE -> app.upgradeManager.current.value?.takeIf { !startWithImport }?.let {
+                nav.navigate(Routes.upgrade(it.node, it.hostname)) { launchSingleTop = true }
+            }
+            DeepLink.MAINTENANCE -> app.maintenanceManager.current.value?.takeIf { !startWithImport }?.let {
+                nav.navigate(Routes.maintenance(it.node, it.hostname)) { launchSingleTop = true }
+            }
+            // The node whose machine config screen started the apply; its address names it there.
+            DeepLink.CONFIG_MULTI -> app.configMultiManager.current.value?.takeIf { !startWithImport }?.let {
+                nav.navigate(Routes.machineConfig(it.origin, it.origin)) { launchSingleTop = true }
+            }
+            DeepLink.CLUSTER_UPGRADE -> app.clusterUpgradeManager.current.value?.takeIf { !startWithImport }?.let {
+                nav.navigate(Routes.clusterUpgrade(it.version)) { launchSingleTop = true }
+            }
+            DeepLink.K8S_UPGRADE -> if (!startWithImport && app.k8sUpgradeManager.current.value != null) {
+                nav.navigate(Routes.K8S_UPGRADE) { launchSingleTop = true }
+            }
+            DeepLink.JOIN_NODE -> if (!startWithImport && app.joinManager.current.value != null) {
+                nav.navigate(Routes.JOIN_NODE) { launchSingleTop = true }
             }
         }
         onDeepLinkHandled()

@@ -3,6 +3,7 @@ package name.levis.ichor.data
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,9 @@ data class ConfigMultiRunState(
 ) : FollowedRun {
     override val finished: Boolean get() = run.finished
     override val error: String? get() = run.error
+
+    /** Stopped by the user: the nodes done keep the change, the others are not reached. */
+    val stopping: Boolean get() = run.stopped
 }
 
 /** How a multi-node apply is run: TalosRepository.applyMachineConfigMulti, a fake in the tests. */
@@ -47,34 +51,56 @@ class ConfigMultiManager(
 ) {
     private val _current = MutableStateFlow<ConfigMultiRunState?>(null)
     val current: StateFlow<ConfigMultiRunState?> = _current.asStateFlow()
+    private var job: Job? = null
+
+    /** Which run the collector reports for: a stopped or replaced run's late events are dropped. */
+    private var generation = 0
 
     /** Starts the run unless one is already followed; returns false then. */
     @Synchronized
     fun start(origin: String, label: String, nodes: List<String>, edits: List<ConfigEdit>, mode: ConfigApplyMode): Boolean {
         if (_current.value?.running == true || nodes.isEmpty()) return false
+        val run = ++generation
         _current.value = ConfigMultiRunState(origin, label, MultiApplyRun(mode))
-        scope.launch {
+        job = scope.launch {
             try {
-                runMulti(nodes, edits, mode).collect { event -> update { it.copy(run = it.run.after(event)) } }
+                runMulti(nodes, edits, mode).collect { event -> update(run) { it.copy(run = it.run.after(event)) } }
                 // The run always ends with how it ended; without it, nothing can be said.
-                update { if (it.running) it.copy(run = it.run.copy(finished = true, error = "")) else it }
+                update(run) { if (it.running) it.copy(run = it.run.copy(finished = true, error = "")) else it }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
-                update { it.copy(run = it.run.copy(finished = true, error = e.userMessage())) }
+                update(run) { it.copy(run = it.run.copy(finished = true, error = e.userMessage())) }
             }
         }
         onStarted()
         return true
     }
 
+    /**
+     * Cancels the run (the core's ConfigApplyRun.Cancel, through the flow): the nodes done keep
+     * the change, the node in flight finishes its step, the others are not reached.
+     */
+    @Synchronized
+    fun stop() {
+        if (_current.value?.running != true) return
+        generation++ // what the cancelled run still sends is not its outcome
+        job?.cancel()
+        _current.update { state -> state?.copy(run = state.run.copy(finished = true, error = null, stopped = true)) }
+    }
+
     /** Forgets a finished run. */
     @Synchronized
     fun dismiss() {
-        if (_current.value?.finished == true) _current.value = null
+        if (_current.value?.finished == true) {
+            job = null
+            _current.value = null
+        }
     }
 
-    private fun update(change: (ConfigMultiRunState) -> ConfigMultiRunState) {
-        _current.update { it?.let(change) }
+    // Under the same lock as stop() and start(): a run stopped or replaced cannot be written to.
+    @Synchronized
+    private fun update(run: Int, change: (ConfigMultiRunState) -> ConfigMultiRunState) {
+        if (run == generation) _current.update { it?.let(change) }
     }
 }

@@ -79,6 +79,33 @@ class ConfigMultiManagerTest {
     }
 
     @Test
+    fun stopEndsTheRunAsStoppedNotFailed() = runBlocking {
+        val fake = FakeRun()
+        val m = manager(fake)
+
+        m.start("10.0.0.1", "lab", listOf("10.0.0.3", "10.0.0.1"), listOf(edit), ConfigApplyMode.REBOOT)
+        m.stop()
+
+        val state = m.current.value!!
+        assertTrue(state.finished)
+        assertTrue(state.stopping)
+        // The screen reads the run: stopped, not "every node has the change".
+        assertTrue(state.run.stopped)
+        assertNull(state.error)
+        // Nothing more is read from the cancelled run, and a new one may start.
+        fake.events.send(MultiConfigEvent.Done("late"))
+        assertNull(m.current.value!!.error)
+        assertTrue(m.start("10.0.0.2", "lab", listOf("10.0.0.2"), listOf(edit), ConfigApplyMode.AUTO))
+    }
+
+    @Test
+    fun stopWithoutARunDoesNothing() {
+        val m = manager(FakeRun())
+        m.stop()
+        assertNull(m.current.value)
+    }
+
+    @Test
     fun nothingToApplyIsNotStarted() {
         val m = manager(FakeRun())
         assertFalse(m.start("10.0.0.1", "lab", emptyList(), listOf(edit), ConfigApplyMode.AUTO))

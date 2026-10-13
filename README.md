@@ -421,7 +421,8 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
     keeps two phones from rolling at once. If the app stops mid-roll, the lock expires within
     minutes, and the plan screen offers **Continue**, starting with the nodes left.
   - **In the background:** Android keeps the roll going in a notification ("Upgrading 3/7:
-    worker-2, Rebooting"). iOS stops it once suspended, so keep Ichor open until the end.
+    worker-2, Rebooting") with a progress bar, Pause / Resume and Abort. iOS stops it once
+    suspended, so keep Ichor open until the end.
 - **Kubernetes upgrade (cluster menu → Upgrade Kubernetes…), like `talosctl upgrade-k8s` (os:admin):**
   - **Versions offered:** the latest patch of the minor the cluster runs and of the next one,
     within what every node's Talos supports. Another version can be typed, inside the same limits.
@@ -454,6 +455,13 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   - **Host names:** a host name a cluster member already has is refused, since the run could end
     up following that member. To replace a dead node that cluster discovery still lists, turn on
     "Replaces a node with this host name": the old member's addresses are then never followed.
+- **Long runs in the background (Android):** an upgrade, a cluster or Kubernetes upgrade, a
+  maintenance, a node join, a config try or apply, an image pull or scan goes on after you leave
+  the app, each in its own notification of the one **Operations** channel. It shows the step and,
+  where the run counts (nodes, images), a progress bar. Its buttons act from the shade: **Stop**,
+  **Pause** / **Resume** and **Abort** for a cluster upgrade, **Stop following** for what cannot be
+  stopped, **Keep** / **Revert now** for a try. With the app lock on, Stop, Abort and Keep open the
+  run's screen instead. Tapping the notification opens the run's screen.
 
 ### Capacity
 

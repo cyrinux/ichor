@@ -162,111 +162,19 @@
                 android:value="Keeps an interactive debug shell (a remote terminal on a Talos node) open while the user switches screens or apps, until they exit it from the app or its notification." />
         </service>
 
-        <!-- Following a Talos upgrade keeps the app talking to the node (install, reboot, wait
-             for it to come back) for up to 30 minutes: no data is synced, so dataSync does not
-             fit (and it is time-limited from API 35); it runs only while the upgrade does. -->
+        <!-- Following a run the user started (a Talos or Kubernetes upgrade, a rolling cluster
+             upgrade, a node maintenance, a node join, a machine config try or rollout, an image
+             pull or vulnerability scan) keeps the app talking to the nodes or the cluster for
+             minutes to half an hour: no data is synced, so dataSync does not fit (and it is
+             time-limited from API 35). One service follows them all, one notification each, and
+             runs only while one of them does. -->
         <service
-            android:name=".ui.upgrade.UpgradeService"
+            android:name=".ui.OperationService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Follows a Talos OS upgrade the user started on one of their nodes (install, reboot, wait for the node to come back) while they switch apps, so the upgrade is not cut off mid-install; it stops when the upgrade ends." />
-        </service>
-
-        <!-- Following a node maintenance (cordon, drain, reboot, wait for the node) keeps the app
-             talking to the cluster while a drain waits for PodDisruptionBudgets; same reasons as
-             the upgrade service, and it runs only while the maintenance does. -->
-        <service
-            android:name=".ui.maintenance.MaintenanceService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Follows a node maintenance the user started on one of their Talos nodes (cordon, drain its pods, reboot, wait for the node to come back) while they switch apps, so it is not cut off midway; it stops when the maintenance ends." />
-        </service>
-
-        <!-- Following a node join (send its config, install, reboot, wait until it joins) keeps
-             the app talking to the cluster for the minutes the install takes; it runs only while
-             the join does. -->
-        <service
-            android:name=".ui.join.JoinService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Follows a new Talos node the user is adding to their cluster (its config sent, Talos installing, the reboot, the node joining) while they switch apps, so following it is not cut off midway; it stops when the join ends." />
-        </service>
-
-        <!-- A machine config tried on a node reverts by itself after 1 to 10 minutes unless the
-             user keeps it: following the try keeps its countdown and the Keep button alive while
-             they switch apps, and it runs only until the try is kept or reverted. -->
-        <service
-            android:name=".ui.machineconfig.ConfigTryService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Follows a machine configuration change the user is trying on one of their Talos nodes, which the node reverts by itself after 1 to 10 minutes unless kept, so the user can keep it from the notification after switching apps; it stops when the try is kept or reverted." />
-        </service>
-
-        <!-- Applying a machine config change to several nodes one after the other waits for each
-             node to reboot in reboot mode, minutes per node; same reasons as the maintenance
-             service, and it runs only while the rollout does. -->
-        <service
-            android:name=".ui.machineconfig.ConfigMultiService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Follows a machine configuration change the user is applying to several of their Talos nodes one after the other (each may reboot and is waited for) while they switch apps, so the rollout is not cut off halfway; it stops when the rollout ends." />
-        </service>
-
-        <!-- A rolling upgrade of every node takes many minutes per node (drain, install, reboot,
-             health gate); same reasons as the upgrade service, and it runs only while the roll
-             does. -->
-        <service
-            android:name=".ui.upgrade.ClusterUpgradeService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Follows a Talos OS upgrade the user started on every node of their cluster, one node after the other (drain, install, reboot, health checks), while they switch apps, so the roll is not cut off halfway; it stops when the roll ends." />
-        </service>
-
-        <!-- A Kubernetes upgrade changes each control plane, then each node's kubelet, waiting for
-             each one; same reasons as the upgrade service, and it runs only while it does. -->
-        <service
-            android:name=".ui.upgrade.K8sUpgradeService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Follows a Kubernetes version upgrade the user started on their Talos cluster (each control plane's components, then each node's kubelet, waited for one after the other) while they switch apps, so it is not cut off halfway; it stops when the upgrade ends." />
-        </service>
-
-        <!-- Pulling an image on every node before an upgrade keeps the app talking to the nodes
-             for minutes on a slow link; same reasons as the maintenance service, and it runs
-             only while the pull does. -->
-        <service
-            android:name=".ui.images.ImagePullService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Follows a container image pull the user started on their Talos nodes (ahead of an upgrade) while they switch apps, so the download is not cut off midway; it stops when the pull ends." />
-        </service>
-
-        <!-- An image vulnerability scan runs for minutes in the cluster and the app reads its
-             report from the scanner's log; same reasons as the image pull service, and it runs
-             only while the scan does. -->
-        <service
-            android:name=".ui.imagescan.ImageScanService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Follows a vulnerability scan of container images the user started in their Kubernetes cluster while they switch apps or lock the screen, so its report is not lost; it stops when the scan ends." />
+                android:value="Follows the long operations the user started on their Talos or Kubernetes cluster while they switch apps or lock the screen, so they are not cut off midway: a Talos OS upgrade of one node or of every node one after the other (drain, install, reboot, wait for the node), a Kubernetes version upgrade, a node maintenance (cordon, drain, reboot), a new node joining the cluster, a machine configuration change tried on a node (which the node reverts by itself after 1 to 10 minutes unless kept from the notification) or applied to several nodes, a container image pull on the nodes, and a vulnerability scan of images in the cluster. Each shows its progress with Stop where possible; the service stops when they all end." />
         </service>
 
         <receiver
@@ -278,9 +186,9 @@
             android:name=".monitor.FreezeExtendReceiver"
             android:exported="false" />
 
-        <!-- Keep and Revert now on a machine config try's notification. -->
+        <!-- The buttons of a followed run's notification: Stop, Pause, Resume, Abort, Keep, Revert now. -->
         <receiver
-            android:name=".ui.machineconfig.ConfigTryActionReceiver"
+            android:name=".ui.operations.OperationActionReceiver"
             android:exported="false" />
 
         <!-- Snooze and Wake on an alert's notification. -->

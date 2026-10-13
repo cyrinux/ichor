@@ -967,6 +967,7 @@
     <string name="machine_config_multi_does_not_fit">Estos cambios no encajan con la configuración de este nodo, así que se omite: %1$s</string>
     <string name="machine_config_multi_progress">Nodo %1$d de %2$d</string>
     <string name="machine_config_multi_done">Todos los nodos tienen el cambio.</string>
+    <string name="machine_config_multi_stopped">Detenido: los nodos terminados conservan el cambio, los demás no se alcanzaron.</string>
     <string name="machine_config_multi_state_pending">En espera</string>
     <string name="machine_config_multi_state_applying">Aplicando</string>
     <string name="machine_config_multi_state_done">Hecho</string>
@@ -977,6 +978,10 @@
     <string name="config_multi_notification_result_public">El despliegue de la configuración terminó</string>
     <string name="config_multi_notification_title">Aplicando un cambio de configuración en %1$s</string>
     <string name="config_multi_notification_done">Cambio de configuración aplicado en %1$s</string>
+    <string name="operations_channel_name">Operaciones</string>
+    <string name="operations_channel_desc">El progreso y el resultado de las operaciones largas iniciadas desde la app: actualizaciones, mantenimiento, cambios de configuración, incorporación de nodos, descargas y análisis de imágenes</string>
+    <string name="operation_stop">Detener</string>
+    <string name="config_multi_notification_stopped">Cambio de configuración detenido en %1$s</string>
     <string name="config_multi_notification_failed">El despliegue de la configuración en %1$s se detuvo</string>
     <string name="config_multi_already_running">Ya se está aplicando un cambio de configuración en %1$s: espera a que termine.</string>
     <string name="machine_config_apply_applying">Aplicando el cambio…</string>
@@ -1542,8 +1547,6 @@
     <string name="upgrade_done_versions">Actualizado: %1$s → %2$s</string>
     <string name="upgrade_acknowledge_title">Riesgos que aceptar antes de empezar</string>
     <string name="upgrade_acknowledge_check">Entiendo estos riesgos</string>
-    <string name="upgrade_channel_name">Actualizaciones de Talos</string>
-    <string name="upgrade_channel_desc">El progreso y el resultado de las actualizaciones de Talos iniciadas desde la app</string>
     <string name="upgrade_notification_title">Actualizando %1$s</string>
     <string name="upgrade_notification_public">Actualización de Talos en curso</string>
     <string name="upgrade_notification_done">%1$s actualizado</string>
@@ -3017,8 +3020,6 @@
     <string name="maintenance_done_reboot_cordoned">%1$s ha vuelto y está Ready. Estaba acordonado antes del mantenimiento, así que sigue acordonado.</string>
     <string name="maintenance_done_shutdown">%1$s está apagado y sigue acordonado.</string>
     <string name="maintenance_done_none">%1$s está drenado y sigue acordonado.</string>
-    <string name="maintenance_channel_name">Mantenimiento de nodos</string>
-    <string name="maintenance_channel_desc">El progreso y el resultado de los mantenimientos de nodos iniciados desde la app</string>
     <string name="maintenance_notification_title">Mantenimiento de %1$s</string>
     <string name="maintenance_notification_public">Mantenimiento de nodo en curso</string>
     <string name="maintenance_notification_done">Mantenimiento de %1$s terminado</string>
@@ -3754,8 +3755,6 @@
     <string name="imagescan_phase_preparing">Leyendo los pods y sus imágenes…</string>
     <string name="imagescan_phase_starting">Iniciando %1$s…</string>
     <string name="imagescan_phase_starting_reason">Iniciando %1$s (%2$s)…</string>
-    <string name="imagescan_channel_name">Análisis de imágenes</string>
-    <string name="imagescan_channel_desc">Progreso de un análisis de vulnerabilidades de tus imágenes</string>
     <string name="imagescan_notification_public">Analizando imágenes</string>
     <string name="imagescan_notification_result_public">Análisis de imágenes terminado</string>
     <string name="imagescan_notification_title">Analizando las imágenes de %1$s</string>
@@ -4141,8 +4140,6 @@
     <string name="cp_replace_waiting">Esperando un nuevo miembro de etcd sano…</string>
     <string name="cp_replace_joined">El nuevo miembro se ha unido: etcd está sano.</string>
     <string name="cp_replace_wait_stop">Dejar de esperar</string>
-    <string name="image_pull_channel_name">Descargas de imágenes</string>
-    <string name="image_pull_channel_desc">Progreso de la descarga de una imagen en tus nodos</string>
     <string name="image_pull_notification_public">Descargando una imagen</string>
     <string name="image_pull_notification_result_public">Descarga de la imagen terminada</string>
     <string name="image_pull_notification_title">Descargando una imagen en los nodos</string>
@@ -4241,8 +4238,6 @@
     <string name="join_run_open_node">Abrir nodo</string>
     <string name="join_run_no_address">La unión terminó sin la dirección del nodo.</string>
     <string name="join_run_not_added">%1$s se unió, pero no se pudo añadir a los nodos de %2$s: %3$s</string>
-    <string name="join_channel_name">Unión de nodo</string>
-    <string name="join_channel_desc">Progreso de un nodo que se está añadiendo al clúster</string>
     <string name="join_notification_public">Añadiendo un nodo</string>
     <string name="join_notification_result_public">Unión del nodo terminada</string>
     <string name="join_notification_title">Añadiendo %1$s</string>

@@ -36,6 +36,9 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.operations.OperationText
+import name.levis.ichor.ui.operations.res
+import name.levis.ichor.ui.operations.resolve
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /** The scan in the cluster's namespace, named in the hint. */
@@ -138,19 +141,21 @@ fun ScanProgressLines(session: ImageScanSession, onStop: () -> Unit) {
 }
 
 /** The scan's phase in words, on its screen and in its notification. */
-fun scanPhaseText(res: Context, p: ImageScanProgress?, scanner: ImageScanner): String = when (p?.phase) {
+fun scanPhaseLabel(p: ImageScanProgress?, scanner: ImageScanner): OperationText = when (p?.phase) {
     IMAGESCAN_PHASE_STARTING -> if (p.message.isNotEmpty()) {
-        res.getString(R.string.imagescan_phase_starting_reason, scanner.label, p.message)
+        res(R.string.imagescan_phase_starting_reason, scanner.label, p.message)
     } else {
-        res.getString(R.string.imagescan_phase_starting, scanner.label)
+        res(R.string.imagescan_phase_starting, scanner.label)
     }
-    IMAGESCAN_PHASE_DATABASE -> res.getString(R.string.imagescan_phase_database)
-    IMAGESCAN_PHASE_SCANNING -> res.getString(
+    IMAGESCAN_PHASE_DATABASE -> res(R.string.imagescan_phase_database)
+    IMAGESCAN_PHASE_SCANNING -> res(
         R.string.imagescan_phase_scanning,
         p.step.toString(),
         p.steps.toString(),
         p.image.substringAfterLast('/'),
     )
-    IMAGESCAN_PHASE_CLEANING -> res.getString(R.string.imagescan_phase_cleaning)
-    else -> res.getString(R.string.imagescan_phase_preparing)
+    IMAGESCAN_PHASE_CLEANING -> res(R.string.imagescan_phase_cleaning)
+    else -> res(R.string.imagescan_phase_preparing)
 }
+
+fun scanPhaseText(res: Context, p: ImageScanProgress?, scanner: ImageScanner): String = scanPhaseLabel(p, scanner).resolve(res)

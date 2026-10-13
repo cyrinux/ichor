@@ -964,6 +964,7 @@
     <string name="machine_config_multi_does_not_fit">These edits do not fit this node\'s config, so it is skipped: %1$s</string>
     <string name="machine_config_multi_progress">Node %1$d of %2$d</string>
     <string name="machine_config_multi_done">Every node has the change.</string>
+    <string name="machine_config_multi_stopped">Stopped: the nodes done keep the change, the others were not reached.</string>
     <string name="machine_config_multi_state_pending">Waiting</string>
     <string name="machine_config_multi_state_applying">Applying</string>
     <string name="machine_config_multi_state_done">Done</string>
@@ -974,6 +975,10 @@
     <string name="config_multi_notification_result_public">The config rollout ended</string>
     <string name="config_multi_notification_title">Applying a config change on %1$s</string>
     <string name="config_multi_notification_done">Config change applied on %1$s</string>
+    <string name="operations_channel_name">Operations</string>
+    <string name="operations_channel_desc">The progress and result of the long runs started from the app: upgrades, maintenance, config changes, node joins, image pulls and scans</string>
+    <string name="operation_stop">Stop</string>
+    <string name="config_multi_notification_stopped">Config change stopped on %1$s</string>
     <string name="config_multi_notification_failed">The config rollout on %1$s stopped</string>
     <string name="config_multi_already_running">A config change is already being applied on %1$s: wait for it to end.</string>
     <string name="machine_config_apply_applying">Applying the change…</string>
@@ -1540,8 +1545,6 @@
     <string name="upgrade_done_versions">Upgraded: %1$s → %2$s</string>
     <string name="upgrade_acknowledge_title">Risks to accept before starting</string>
     <string name="upgrade_acknowledge_check">I understand these risks</string>
-    <string name="upgrade_channel_name">Talos upgrades</string>
-    <string name="upgrade_channel_desc">The progress and result of the Talos upgrades started from the app</string>
     <string name="upgrade_notification_title">Upgrading %1$s</string>
     <string name="upgrade_notification_public">Talos upgrade running</string>
     <string name="upgrade_notification_done">%1$s upgraded</string>
@@ -3015,8 +3018,6 @@
     <string name="maintenance_done_reboot_cordoned">%1$s is back and Ready. It was cordoned before the maintenance, so it stays cordoned.</string>
     <string name="maintenance_done_shutdown">%1$s is shut down and stays cordoned.</string>
     <string name="maintenance_done_none">%1$s is drained and stays cordoned.</string>
-    <string name="maintenance_channel_name">Node maintenance</string>
-    <string name="maintenance_channel_desc">The progress and result of the node maintenances started from the app</string>
     <string name="maintenance_notification_title">Maintenance of %1$s</string>
     <string name="maintenance_notification_public">Node maintenance running</string>
     <string name="maintenance_notification_done">Maintenance of %1$s done</string>
@@ -3754,8 +3755,6 @@
     <string name="imagescan_phase_preparing">Reading the pods and their images…</string>
     <string name="imagescan_phase_starting">Starting %1$s…</string>
     <string name="imagescan_phase_starting_reason">Starting %1$s (%2$s)…</string>
-    <string name="imagescan_channel_name">Image scans</string>
-    <string name="imagescan_channel_desc">Progress of a vulnerability scan of your images</string>
     <string name="imagescan_notification_public">Scanning images</string>
     <string name="imagescan_notification_result_public">Image scan finished</string>
     <string name="imagescan_notification_title">Scanning the images of %1$s</string>
@@ -4141,8 +4140,6 @@
     <string name="cp_replace_waiting">Waiting for a new healthy etcd member…</string>
     <string name="cp_replace_joined">The new member joined: etcd is healthy.</string>
     <string name="cp_replace_wait_stop">Stop waiting</string>
-    <string name="image_pull_channel_name">Image pulls</string>
-    <string name="image_pull_channel_desc">Progress of an image pull on your nodes</string>
     <string name="image_pull_notification_public">Pulling an image</string>
     <string name="image_pull_notification_result_public">Image pull finished</string>
     <string name="image_pull_notification_title">Pulling an image on the nodes</string>
@@ -4241,8 +4238,6 @@
     <string name="join_run_open_node">Open node</string>
     <string name="join_run_no_address">The join ended without the node\'s address.</string>
     <string name="join_run_not_added">%1$s joined, but could not be added to the nodes of %2$s: %3$s</string>
-    <string name="join_channel_name">Node join</string>
-    <string name="join_channel_desc">Progress of a node being added to the cluster</string>
     <string name="join_notification_public">Adding a node</string>
     <string name="join_notification_result_public">Node join finished</string>
     <string name="join_notification_title">Adding %1$s</string>

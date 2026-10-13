@@ -1032,6 +1032,7 @@
     <string name="machine_config_multi_does_not_fit">Ці зміни не підходять до конфігурації цього вузла, тому його пропущено: %1$s</string>
     <string name="machine_config_multi_progress">Вузол %1$d з %2$d</string>
     <string name="machine_config_multi_done">Усі вузли отримали зміну.</string>
+    <string name="machine_config_multi_stopped">Зупинено: завершені вузли зберігають зміну, до інших не дійшло.</string>
     <string name="machine_config_multi_state_pending">Очікує</string>
     <string name="machine_config_multi_state_applying">Застосування</string>
     <string name="machine_config_multi_state_done">Готово</string>
@@ -1042,6 +1043,10 @@
     <string name="config_multi_notification_result_public">Розгортання конфігурації завершено</string>
     <string name="config_multi_notification_title">Застосування зміни конфігурації на %1$s</string>
     <string name="config_multi_notification_done">Зміну конфігурації застосовано на %1$s</string>
+    <string name="operations_channel_name">Операції</string>
+    <string name="operations_channel_desc">Перебіг і результат довгих операцій, запущених із застосунку: оновлення, обслуговування, зміни конфігурації, приєднання вузлів, завантаження та сканування образів</string>
+    <string name="operation_stop">Зупинити</string>
+    <string name="config_multi_notification_stopped">Зміну конфігурації зупинено на %1$s</string>
     <string name="config_multi_notification_failed">Розгортання конфігурації на %1$s зупинено</string>
     <string name="config_multi_already_running">На %1$s уже застосовується зміна конфігурації: дочекайтеся завершення.</string>
     <string name="machine_config_apply_applying">Застосування зміни…</string>
@@ -1635,8 +1640,6 @@
     <string name="upgrade_done_versions">Оновлено: %1$s → %2$s</string>
     <string name="upgrade_acknowledge_title">Ризики, які треба прийняти перед початком</string>
     <string name="upgrade_acknowledge_check">Я розумію ці ризики</string>
-    <string name="upgrade_channel_name">Оновлення Talos</string>
-    <string name="upgrade_channel_desc">Перебіг і результат оновлень Talos, запущених із застосунку</string>
     <string name="upgrade_notification_title">Оновлення %1$s</string>
     <string name="upgrade_notification_public">Триває оновлення Talos</string>
     <string name="upgrade_notification_done">%1$s оновлено</string>
@@ -3203,8 +3206,6 @@
     <string name="maintenance_done_reboot_cordoned">%1$s повернувся і Ready. Його було ізольовано ще до обслуговування, тож він лишається ізольованим.</string>
     <string name="maintenance_done_shutdown">%1$s вимкнено, і він лишається ізольованим.</string>
     <string name="maintenance_done_none">%1$s звільнено, і він лишається ізольованим.</string>
-    <string name="maintenance_channel_name">Обслуговування вузлів</string>
-    <string name="maintenance_channel_desc">Перебіг і результат обслуговувань вузлів, запущених із застосунку</string>
     <string name="maintenance_notification_title">Обслуговування %1$s</string>
     <string name="maintenance_notification_public">Триває обслуговування вузла</string>
     <string name="maintenance_notification_done">Обслуговування %1$s завершено</string>
@@ -3958,8 +3959,6 @@
     <string name="imagescan_phase_preparing">Читання подів і їхніх образів…</string>
     <string name="imagescan_phase_starting">Запуск %1$s…</string>
     <string name="imagescan_phase_starting_reason">Запуск %1$s (%2$s)…</string>
-    <string name="imagescan_channel_name">Перевірки образів</string>
-    <string name="imagescan_channel_desc">Хід перевірки ваших образів на вразливості</string>
     <string name="imagescan_notification_public">Перевірка образів</string>
     <string name="imagescan_notification_result_public">Перевірку образів завершено</string>
     <string name="imagescan_notification_title">Перевірка образів %1$s</string>
@@ -4375,8 +4374,6 @@
     <string name="cp_replace_waiting">Очікування нового справного учасника etcd…</string>
     <string name="cp_replace_joined">Новий учасник приєднався: etcd справний.</string>
     <string name="cp_replace_wait_stop">Зупинити очікування</string>
-    <string name="image_pull_channel_name">Завантаження образів</string>
-    <string name="image_pull_channel_desc">Хід завантаження образу на ваші вузли</string>
     <string name="image_pull_notification_public">Завантаження образу</string>
     <string name="image_pull_notification_result_public">Завантаження образу завершено</string>
     <string name="image_pull_notification_title">Завантаження образу на вузли</string>
@@ -4475,8 +4472,6 @@
     <string name="join_run_open_node">Відкрити вузол</string>
     <string name="join_run_no_address">Приєднання завершилося без адреси вузла.</string>
     <string name="join_run_not_added">%1$s приєднався, але його не вдалося додати до вузлів %2$s: %3$s</string>
-    <string name="join_channel_name">Приєднання вузла</string>
-    <string name="join_channel_desc">Перебіг додавання вузла до кластера</string>
     <string name="join_notification_public">Додавання вузла</string>
     <string name="join_notification_result_public">Приєднання вузла завершено</string>
     <string name="join_notification_title">Додавання %1$s</string>
