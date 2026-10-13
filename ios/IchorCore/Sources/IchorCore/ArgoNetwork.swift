@@ -18,6 +18,8 @@ public enum ArgoNetKind: String, Sendable, CaseIterable, WireEnum {
     case gateway = "Gateway"
     case ingress = "Ingress"
     case httpRoute = "HTTPRoute"
+    case ingressRoute = "IngressRoute"
+    case ingressRouteTCP = "IngressRouteTCP"
     case service = "Service"
     case pod = "Pod"
     case node = "Node"
@@ -26,7 +28,12 @@ public enum ArgoNetKind: String, Sendable, CaseIterable, WireEnum {
     public static let wireFallback: Self = .unknown
 
     /// A Gateway or a route, which a shared one (not the app's) can be.
-    public var routesTraffic: Bool { self == .gateway || self == .ingress || self == .httpRoute }
+    public var routesTraffic: Bool {
+        switch self {
+        case .gateway, .ingress, .httpRoute, .ingressRoute, .ingressRouteTCP: true
+        case .host, .loadBalancer, .service, .pod, .node, .unknown: false
+        }
+    }
 }
 
 /// The network view of one app (os:admin).
@@ -158,7 +165,7 @@ public struct ArgoNetProblem: Decodable, Equatable, Sendable {
         case .node: detail == "SchedulingDisabled" ? .nodeCordoned(name) : .nodeNotReady(name)
         case .pod: .pod(name, detail)
         case .service: .serviceWithoutPods(name)
-        case .ingress, .httpRoute, .gateway: .noHealthyBackend(kind.rawValue, name)
+        case .ingress, .httpRoute, .ingressRoute, .ingressRouteTCP, .gateway: .noHealthyBackend(kind.rawValue, name)
         case .host, .loadBalancer, .unknown: .other(kind.rawValue, name, detail)
         }
     }

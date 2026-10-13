@@ -47,6 +47,7 @@ var integrationSpecs = []integrationSpec{
 	{ID: "calico", Name: "Calico", Website: "https://docs.tigera.io/calico/latest/about/", Groups: []string{groupCalicoCRD, groupCalico}, AnyGroup: true},
 	{ID: "external-secrets", Name: "External Secrets Operator", Website: "https://external-secrets.io", Groups: []string{groupExternalSecrets}},
 	{ID: "gateway-api", Name: "Gateway API", Website: "https://gateway-api.sigs.k8s.io", Groups: []string{groupGatewayAPI}},
+	{ID: "traefik", Name: "Traefik", Website: "https://traefik.io", Groups: []string{groupTraefik}},
 	{ID: "prometheus-operator", Name: "Prometheus Operator", Website: "https://prometheus-operator.dev", Groups: []string{groupMonitoring}},
 	{ID: "prometheus", Name: "Prometheus", Website: "https://prometheus.io", ServiceKind: "prometheus"},
 	{ID: "thanos", Name: "Thanos", Website: "https://thanos.io", ServiceKind: "thanos"},

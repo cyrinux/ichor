@@ -99,9 +99,10 @@ class UiPreferences(private val prefs: SharedPreferences) {
 
     /**
      * Keeps the last results of each cluster on disk, encrypted, to show them when it cannot
-     * be reached. Off by default: otherwise cluster data never leaves memory.
+     * be reached, and at once at launch. On by default (a launch shows the home from it); a
+     * user who turned it off keeps it off.
      */
-    private val _offlineCache = MutableStateFlow(prefs.getBoolean(KEY_OFFLINE_CACHE, false))
+    private val _offlineCache = MutableStateFlow(prefs.getBoolean(KEY_OFFLINE_CACHE, true))
     val offlineCache: StateFlow<Boolean> = _offlineCache.asStateFlow()
 
     /** The overview's cards: their order and which are hidden (long-press a card to change). */

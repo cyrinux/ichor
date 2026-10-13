@@ -140,6 +140,7 @@ type argoNetInput struct {
 	ingresses  []ingressObject
 	httpRoutes []httpRouteObject
 	gateways   []gatewayObject
+	traefik    traefikRouteSet
 	nodes      []netNodeObject
 }
 
@@ -212,6 +213,13 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 		func() { fail(getList(ctx, k, "/apis/networking.k8s.io/v1/ingresses", &ingresses)) },
 		func() { fail(ignoreNotFound(getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/httproutes", &httpRoutes))) },
 		func() { _ = getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/gateways", &gateways) },
+		func() {
+			traefik, err := readTraefikRoutes(ctx, k, "", true)
+			fail(err)
+			mu.Lock()
+			in.traefik = traefik
+			mu.Unlock()
+		},
 		// Node readiness only colours the last column: without it the graph still shows.
 		func() { _ = getList(ctx, k, "/api/v1/nodes", &nodes) },
 	)
@@ -361,12 +369,25 @@ func buildArgoNetwork(in argoNetInput) argoNetwork {
 	return g.out
 }
 
-// argoNetRoutes adds the Ingresses and HTTPRoutes sending traffic to the app's Services, their
-// hosts, and the Gateways the HTTPRoutes attach to.
+// argoNetRoutes adds the Ingresses, HTTPRoutes and Traefik routes sending traffic to the app's
+// Services, their hosts, and the Gateways the HTTPRoutes attach to.
 func argoNetRoutes(g *argoNetGraph, in argoNetInput, services map[serviceRef]bool, managed map[string]bool) {
 	for _, r := range ingressRoutes(in.ingresses, services) {
 		rid := g.add(argoNetNode{ID: "ing/" + r.Namespace + "/" + r.Name, Layer: argoLayerRoute, Kind: "Ingress", Namespace: r.Namespace, Name: r.Name,
 			Detail: ingressAddress(in.ingresses, r.Namespace, r.Name), Managed: managed["Ingress/"+r.Namespace+"/"+r.Name]})
+		hid := g.add(argoNetNode{ID: "host/" + r.URL, Layer: argoLayerHost, Kind: "Host", Name: hostOf(r.URL), Detail: r.URL, URL: r.URL})
+		g.link(hid, rid)
+		g.link(rid, "svc/"+r.Namespace+"/"+r.Service)
+	}
+
+	for _, r := range traefikRoutes(in.traefik, services) {
+		prefix := "ir/"
+		if r.Kind == "IngressRouteTCP" {
+			prefix = "irtcp/"
+		}
+
+		rid := g.add(argoNetNode{ID: prefix + r.Namespace + "/" + r.Name, Layer: argoLayerRoute, Kind: r.Kind, Namespace: r.Namespace, Name: r.Name,
+			Detail: traefikAddress(in.traefik, r.Kind, r.Namespace, r.Name), Managed: managed[r.Kind+"/"+r.Namespace+"/"+r.Name]})
 		hid := g.add(argoNetNode{ID: "host/" + r.URL, Layer: argoLayerHost, Kind: "Host", Name: hostOf(r.URL), Detail: r.URL, URL: r.URL})
 		g.link(hid, rid)
 		g.link(rid, "svc/"+r.Namespace+"/"+r.Service)

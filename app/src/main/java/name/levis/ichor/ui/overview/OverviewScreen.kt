@@ -127,10 +127,14 @@ import name.levis.ichor.ui.components.pageContent
 class OverviewViewModel(
     val talos: TalosRepository,
     val configs: ConfigRepository,
+    /** The last background check's view of the cluster, when nothing is cached (see [LoadingViewModel.seed]). */
+    private val monitorSeed: () -> TalosRepository.Timed<ClusterOverview>? = { null },
 ) : LoadingViewModel<ClusterOverview>() {
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<ClusterOverview>? =
         talos.cached<ClusterOverview>(OVERVIEW).also { StartupTrace.markOnce(if (it == null) "overview cached miss" else "overview cached hit") }
+    override fun seed(): TalosRepository.Timed<ClusterOverview>? =
+        monitorSeed().also { StartupTrace.markOnce(if (it == null) "overview seed miss" else "overview seed hit") }
     override val restores get() = talos.restores
     override suspend fun fetch(): ClusterOverview {
         StartupTrace.markOnce("overview fetch start")
@@ -198,7 +202,7 @@ fun OverviewScreen(
     onActivity: (cluster: String) -> Unit,
     /** The search across clusters. */
     onSearch: () -> Unit,
-    vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
+    vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository, app::overviewSeed) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
     liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
     discoveryVm: NodeDiscoveryViewModel = viewModel(factory = factory { NodeDiscoveryViewModel(app.talosRepository) }),
@@ -344,8 +348,8 @@ fun OverviewScreen(
 
     val liveEnabled by app.uiPreferences.liveClusterStats.collectAsStateWithLifecycle()
     val liveState by liveVm.state.collectAsStateWithLifecycle()
-    // Live stats and discovery only make sense once a node answers.
-    val loaded = state is UiState.Loaded && outage == null
+    // Live stats and discovery only make sense once a node answers (not on the background check's seed).
+    val loaded = (state as? UiState.Loaded)?.fromMonitor == false && outage == null
     // Live CPU and memory only while the overview is on screen, once it loaded, and if not turned off.
     // Fewer samples on a large cluster: each one asks every node.
     val nodeCount = (state as? UiState.Loaded)?.data?.nodes?.size ?: 0

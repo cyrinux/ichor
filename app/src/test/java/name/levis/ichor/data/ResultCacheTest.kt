@@ -33,6 +33,26 @@ class ResultCacheTest {
     }
 
     @Test
+    fun theLastKnownOverviewIsThereBeforeTheClusterWasRestored() = runBlocking {
+        val sealer = object : OfflineCache.Sealer {
+            override fun write(file: java.io.File, bytes: ByteArray) = file.writeBytes(bytes)
+            override fun read(file: java.io.File): ByteArray? = if (file.exists()) file.readBytes() else null
+            override fun forget() = Unit
+        }
+        val dir = kotlin.io.path.createTempDirectory("offline").toFile()
+        try {
+            val json = """{"context":"lab","nodes":[{"node":"192.0.2.10","hostname":"cp-1","reachable":true}]}"""
+            OfflineCache(dir, sealer, enabled = { true }).save("fp", OVERVIEW, json, at = System.currentTimeMillis(), epoch = 0)
+            // A new launch: restoreOffline has not run yet.
+            val launch = ResultCache(OfflineCache(dir, sealer, enabled = { true }), scope = { "1|lab|" }, cluster = { "fp" })
+            val cached = launch.cached<name.levis.ichor.model.ClusterOverview>(OVERVIEW)
+            assertEquals("cp-1", cached?.value?.nodes?.single()?.hostname)
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
+
+    @Test
     fun invalidateDropsEverythingAndSignals() = runBlocking {
         cache.remember("a") { "1" }
         cache.remember("b|features|n1") { "2" }

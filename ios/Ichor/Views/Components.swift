@@ -8,6 +8,8 @@ struct LoadStateView<T, Content: View>: View {
     let retry: () async -> Void
     var progress: ReadProgress?
     var stepLabel: ((String) -> String)?
+    /// The data is only what the last background check saw (a seed): the footer says so.
+    var fromMonitor = false
     @ViewBuilder let content: (T) -> Content
     @Environment(AppModel.self) private var model: AppModel?
 
@@ -40,7 +42,7 @@ struct LoadStateView<T, Content: View>: View {
             }
         case .loaded(let value, let at, let refreshError):
             content(value)
-                .safeAreaInset(edge: .bottom, spacing: 0) { FreshnessFooter(at: at, refreshError: refreshError) }
+                .safeAreaInset(edge: .bottom, spacing: 0) { FreshnessFooter(at: at, refreshError: refreshError, fromMonitor: fromMonitor) }
         }
     }
 }
@@ -236,13 +238,21 @@ extension Binding {
 struct FreshnessFooter: View {
     let at: Date
     var refreshError: String?
+    /// The data is the last background check's, not a fetch's.
+    var fromMonitor = false
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 15)) { context in
             let time = at.formatted(date: .omitted, time: .standard)
             let ago = Self.ago(context.date.timeIntervalSince(at))
             Group {
-                if let refreshError {
+                if fromMonitor {
+                    VStack(alignment: .leading, spacing: 2) {
+                        if let refreshError { Text("Couldn't refresh: \(refreshError)").lineLimit(2) }
+                        Text("From the background check at \(time) (\(ago))")
+                    }
+                    .foregroundStyle(refreshError == nil ? Color.secondary : Color.statusWarn)
+                } else if let refreshError {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Couldn't refresh: \(refreshError)").lineLimit(2)
                         Text("Showing data from \(time) (\(ago))")

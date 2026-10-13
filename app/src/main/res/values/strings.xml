@@ -87,6 +87,7 @@
     <string name="overview_status_down">Unreachable</string>
     <string name="overview_unreachable_title">Can\'t reach the cluster</string>
     <string name="overview_last_known_state">Showing the last known state.</string>
+    <string name="overview_seed_from_monitor">From the background check at %1$s (%2$s)</string>
     <string name="overview_node_last_seen">Last seen %1$s</string>
     <string name="overview_node_public_ip">Public IP</string>
     <string name="overview_public_ip_detect">Find public IPs</string>
@@ -306,6 +307,7 @@
     <string name="etcd_section_alarms">Alarms</string>
     <string name="etcd_alarms_check_failed">Could not check alarms: %1$s</string>
     <string name="etcd_section_members">Members (%1$d)</string>
+    <string name="etcd_section_members_short">Members</string>
     <string name="etcd_section_unprobed">Members not in this talosconfig</string>
     <string name="etcd_status_error">Error</string>
     <string name="etcd_status_errors">Errors</string>
@@ -3319,6 +3321,7 @@
     <!-- A product name and a version number: the same in every language. -->
     <string name="checkup_kube_version" translatable="false">Kubernetes %1$s</string>
     <string name="checkup_intro">What the other screens do not show, read from the Kubernetes API. Nothing is changed unless you tap an action.</string>
+    <string name="checkup_section_verdict">Verdict</string>
     <string name="checkup_verdict_critical">Needs attention</string>
     <string name="checkup_verdict_warning">Warnings</string>
     <string name="checkup_verdict_ok">All clear</string>

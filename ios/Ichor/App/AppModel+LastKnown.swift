@@ -64,4 +64,12 @@ extension AppModel {
               let value = try? TalosJSON.decode(T.self, from: entry.json) else { return nil }
         return (value, entry.date)
     }
+
+    /// The last background check of the active cluster, when it may seed the home (see
+    /// ClusterSnapshot.seedable): never for the demo, which no check watches.
+    func monitorSeed(kube: Bool) -> ClusterSnapshot? {
+        guard let context = activeSummary, !context.demo else { return nil }
+        let snapshot = SharedStore.snapshots(activeCluster: monitorClusterKey(context))[monitorClusterKey(context)]
+        return snapshot?.seedable(kube: kube, masked: privacyMask) == true ? snapshot : nil
+    }
 }

@@ -85,6 +85,7 @@
     <string name="overview_status_down">Nicht erreichbar</string>
     <string name="overview_unreachable_title">Cluster nicht erreichbar</string>
     <string name="overview_last_known_state">Letzter bekannter Zustand.</string>
+    <string name="overview_seed_from_monitor">Laut Hintergrundprüfung von %1$s (%2$s)</string>
     <string name="overview_node_last_seen">Zuletzt gesehen %1$s</string>
     <string name="overview_node_public_ip">Öffentliche IP</string>
     <string name="overview_public_ip_detect">Öffentliche IPs finden</string>
@@ -304,6 +305,7 @@
     <string name="etcd_section_alarms">Alarme</string>
     <string name="etcd_alarms_check_failed">Alarme konnten nicht geprüft werden: %1$s</string>
     <string name="etcd_section_members">Mitglieder (%1$d)</string>
+    <string name="etcd_section_members_short">Mitglieder</string>
     <string name="etcd_section_unprobed">Mitglieder außerhalb dieser talosconfig</string>
     <string name="etcd_status_error">Fehler</string>
     <string name="etcd_status_errors">Fehler</string>
@@ -3311,6 +3313,7 @@
     <string name="audit_unauthorized_fix">Sein Token oder Zertifikat ist abgelaufen oder gelöscht (ein entfernter Service-Account, eine alte Kubeconfig): geben Sie ihm neue Anmeldedaten oder stoppen Sie ihn. Das Log kennt nur seine Adresse.</string>
     <string name="checkup_title">Cluster-Check</string>
     <string name="checkup_intro">Was die anderen Ansichten nicht zeigen, aus der Kubernetes-API gelesen. Nichts wird verändert, außer Sie tippen auf eine Aktion.</string>
+    <string name="checkup_section_verdict">Ergebnis</string>
     <string name="checkup_verdict_critical">Handlungsbedarf</string>
     <string name="checkup_verdict_warning">Warnungen</string>
     <string name="checkup_verdict_ok">Alles in Ordnung</string>

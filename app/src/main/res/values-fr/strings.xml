@@ -85,6 +85,7 @@
     <string name="overview_status_down">Injoignable</string>
     <string name="overview_unreachable_title">Cluster injoignable</string>
     <string name="overview_last_known_state">Dernier état connu affiché.</string>
+    <string name="overview_seed_from_monitor">D’après la vérification en arrière-plan de %1$s (%2$s)</string>
     <string name="overview_node_last_seen">Vu pour la dernière fois %1$s</string>
     <string name="overview_node_public_ip">IP publique</string>
     <string name="overview_public_ip_detect">Trouver les IP publiques</string>
@@ -309,6 +310,7 @@
     <string name="etcd_section_alarms">Alarmes</string>
     <string name="etcd_alarms_check_failed">Impossible de vérifier les alarmes : %1$s</string>
     <string name="etcd_section_members">Membres (%1$d)</string>
+    <string name="etcd_section_members_short">Membres</string>
     <string name="etcd_section_unprobed">Membres absents de ce talosconfig</string>
     <string name="etcd_status_error">Erreur</string>
     <string name="etcd_status_errors">Erreurs</string>
@@ -3319,6 +3321,7 @@
     <string name="audit_unauthorized_fix">Son jeton ou certificat a expiré ou a été supprimé (compte de service retiré, ancien kubeconfig) : donnez-lui de nouveaux identifiants, ou arrêtez-le. Le journal ne connaît que son adresse.</string>
     <string name="checkup_title">Bilan du cluster</string>
     <string name="checkup_intro">Ce que les autres écrans ne montrent pas, lu depuis l’API Kubernetes. Rien n’est modifié sauf si vous touchez une action.</string>
+    <string name="checkup_section_verdict">Verdict</string>
     <string name="checkup_verdict_critical">À traiter</string>
     <string name="checkup_verdict_warning">Avertissements</string>
     <string name="checkup_verdict_ok">Rien à signaler</string>

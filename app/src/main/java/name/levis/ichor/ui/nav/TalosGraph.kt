@@ -61,7 +61,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
         val home = remember(entry) { nav.getBackStackEntry(Routes.OVERVIEW) }
         NodesScreen(
             initialFilter = NodeFilter.entries.firstOrNull { it.name == entry.arguments?.getString("filter") },
-            vm = viewModel(viewModelStoreOwner = home, factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
+            vm = viewModel(viewModelStoreOwner = home, factory = factory { OverviewViewModel(app.talosRepository, app.configRepository, app::overviewSeed) }),
             onBack = { nav.popBackStack() },
             onNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
             onNodeAction = nav::openNodeAction,

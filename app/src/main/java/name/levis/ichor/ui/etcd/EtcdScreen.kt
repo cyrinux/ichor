@@ -6,6 +6,10 @@ import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.rememberLazyListState
+import name.levis.ichor.ui.components.JumpSection
+import name.levis.ichor.ui.components.SectionJumpRail
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -436,98 +440,128 @@ private fun EtcdContent(
     val nodeNames = remember(etcd, knownHostnames) { etcd.nodeHostnames(knownHostnames) }
     val running = defrag is DefragState.Running
     val failed = remember(etcd) { etcd.replaceCandidates().associateBy { it.id } }
+    // Every optional item below, decided once: the list and its section rail read the same values.
+    val showDefrag = canDefrag || defrag != DefragState.Idle
+    val showMemberPanel = members.state is MemberActionState.Running || members.state is MemberActionState.Done || members.state is MemberActionState.Failed
+    val onRecover = recover.onRecover?.takeIf { recover.state.idle }
+    val onFix = fix.onFix?.takeIf { fix.state.idle }
+    val disarmFailed = alarms.state as? DisarmState.Failed
+    val lagging = laggingMembers(etcd.statuses)
+    val unprobed = etcd.members.filter { m -> etcd.statuses.none { it.memberId == m.id } }
+    val shape = EtcdListShape(
+        error = etcd.error != null,
+        defrag = showDefrag,
+        memberPanel = showMemberPanel,
+        snapshot = snapshot != null,
+        fixPanel = !fix.state.idle,
+        recoverPanel = !recover.state.idle,
+        recoverButton = onRecover != null,
+        alarmsError = etcd.alarmsError != null,
+        alarms = etcd.alarms.size,
+        fixButton = onFix != null,
+        disarmButton = alarms.onDisarm != null,
+        disarmFailed = disarmFailed != null,
+        lagging = lagging.isNotEmpty(),
+        statuses = etcd.statuses.size,
+        unprobed = unprobed.size,
+    )
+    val parts = etcdSections(shape)
+    val labels = parts.map { (part, _) -> stringResource(part.title) }
+    val sections = remember(parts, labels) { parts.mapIndexed { i, (part, index) -> JumpSection(part.key, labels[i], index) } }
+    val listState = rememberLazyListState()
 
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        etcd.error?.let { item { Text(it, color = colors.bad) } }
-        if (canDefrag || defrag != DefragState.Idle) {
-            item {
-                DefragPanel(
-                    defrag = defrag,
-                    order = defragOrder(etcd.statuses),
-                    hostnames = nodeNames,
-                    canDefrag = canDefrag,
-                    onDefrag = onDefrag,
-                    onDismiss = onDismissDefrag,
-                )
-            }
-        }
-        if (members.state is MemberActionState.Running || members.state is MemberActionState.Done || members.state is MemberActionState.Failed) {
-            item { MemberActionPanel(members.state, members.onDismiss) }
-        }
-        snapshot?.let { snap ->
-            item { SnapshotPanel(snap.state, snap.onSave, snap.onCancel, snap.onDismiss, snap.notice) }
-        }
-        if (!fix.state.idle) {
-            item { EtcdFixPanel(fix.state, fix.onCancel, fix.onDismiss) }
-        }
-        if (!recover.state.idle) {
-            item { EtcdRecoverPanel(recover.state, recover.onCancel, recover.onDismiss) }
-        }
-        recover.onRecover?.takeIf { recover.state.idle }?.let { onRecover ->
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(stringResource(R.string.etcd_recover_lost), color = colors.bad, style = MaterialTheme.typography.bodyMedium)
-                    OutlinedButton(onClick = onRecover, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_recover_button)) }
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            etcd.error?.let { item { Text(it, color = colors.bad) } }
+            if (showDefrag) {
+                item {
+                    DefragPanel(
+                        defrag = defrag,
+                        order = defragOrder(etcd.statuses),
+                        hostnames = nodeNames,
+                        canDefrag = canDefrag,
+                        onDefrag = onDefrag,
+                        onDismiss = onDismissDefrag,
+                    )
                 }
             }
-        }
-        etcd.alarmsError?.let { error ->
-            item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
-            item { Text(stringResource(R.string.etcd_alarms_check_failed, error), color = colors.bad) }
-        }
-        if (etcd.alarms.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
-            items(etcd.alarms) { alarm ->
-                Text("${hostnames[alarm.memberId] ?: alarm.memberId}: ${alarm.alarm}", color = colors.bad)
+            if (showMemberPanel) {
+                item { MemberActionPanel(members.state, members.onDismiss) }
             }
-            fix.onFix?.takeIf { fix.state.idle }?.let { onFix ->
-                item {
-                    Button(onClick = onFix, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_fix_button)) }
-                }
+            snapshot?.let { snap ->
+                item(key = EtcdPart.SNAPSHOT.key) { SnapshotPanel(snap.state, snap.onSave, snap.onCancel, snap.onDismiss, snap.notice) }
             }
-            alarms.onDisarm?.let { onDisarm ->
+            if (!fix.state.idle) {
+                item(key = EtcdPart.FIX.key) { EtcdFixPanel(fix.state, fix.onCancel, fix.onDismiss) }
+            }
+            if (!recover.state.idle) {
+                item(key = EtcdPart.RECOVER.key) { EtcdRecoverPanel(recover.state, recover.onCancel, recover.onDismiss) }
+            }
+            onRecover?.let { onRecover ->
                 item {
-                    OutlinedButton(onClick = onDisarm, enabled = alarms.state != DisarmState.Running, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(if (alarms.state == DisarmState.Running) R.string.etcd_disarming else R.string.etcd_disarm_alarms))
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(stringResource(R.string.etcd_recover_lost), color = colors.bad, style = MaterialTheme.typography.bodyMedium)
+                        OutlinedButton(onClick = onRecover, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_recover_button)) }
                     }
                 }
             }
-        }
-        (alarms.state as? DisarmState.Failed)?.let { failed ->
-            item {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(failed.message, color = colors.bad, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                    TextButton(onClick = alarms.onDismiss) { Text(stringResource(R.string.common_ok)) }
+            etcd.alarmsError?.let { error ->
+                item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
+                item { Text(stringResource(R.string.etcd_alarms_check_failed, error), color = colors.bad) }
+            }
+            if (etcd.alarms.isNotEmpty()) {
+                item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
+                items(etcd.alarms) { alarm ->
+                    Text("${hostnames[alarm.memberId] ?: alarm.memberId}: ${alarm.alarm}", color = colors.bad)
+                }
+                onFix?.let { onFix ->
+                    item {
+                        Button(onClick = onFix, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_fix_button)) }
+                    }
+                }
+                alarms.onDisarm?.let { onDisarm ->
+                    item {
+                        OutlinedButton(onClick = onDisarm, enabled = alarms.state != DisarmState.Running, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(if (alarms.state == DisarmState.Running) R.string.etcd_disarming else R.string.etcd_disarm_alarms))
+                        }
+                    }
                 }
             }
-        }
-        item { SectionTitle(stringResource(R.string.etcd_section_members, etcd.members.size)) }
-        val lagging = laggingMembers(etcd.statuses)
-        if (lagging.isNotEmpty()) {
-            item {
-                val names = lagging.joinToString(", ") { hostnames[it.memberId] ?: it.node }
-                Text(pluralStringResource(R.plurals.etcd_lagging_members, lagging.size, lagging.size, names), color = colors.warn)
+            disarmFailed?.let { failed ->
+                item {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(failed.message, color = colors.bad, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                        TextButton(onClick = alarms.onDismiss) { Text(stringResource(R.string.common_ok)) }
+                    }
+                }
+            }
+            item(key = EtcdPart.MEMBERS.key) { SectionTitle(stringResource(R.string.etcd_section_members, etcd.members.size)) }
+            if (lagging.isNotEmpty()) {
+                item {
+                    val names = lagging.joinToString(", ") { hostnames[it.memberId] ?: it.node }
+                    Text(pluralStringResource(R.plurals.etcd_lagging_members, lagging.size, lagging.size, names), color = colors.warn)
+                }
+            }
+            items(etcd.statuses, key = { it.node }) { status ->
+                val hostname = nodeNames[status.node] ?: status.node
+                MemberStatusCard(
+                    status = status,
+                    hostname = hostname,
+                    lag = etcdLag(status, etcd.statuses),
+                    actions = members.actionsFor(status.memberId, hostname, status.takeIf { it.isLeader && it.error == null }, failed[status.memberId]),
+                    onDefrag = if (canDefrag && !running && status.error == null) {
+                        { onDefrag(DefragRequest(listOf(status), nodeNames)) }
+                    } else {
+                        null
+                    },
+                )
+            }
+            if (unprobed.isNotEmpty()) {
+                item(key = EtcdPart.UNPROBED.key) { SectionTitle(stringResource(R.string.etcd_section_unprobed)) }
+                items(unprobed, key = { it.id }) { MemberCard(it, members.actionsFor(it.id, it.hostname, leader = null, failed = failed[it.id])) }
             }
         }
-        items(etcd.statuses, key = { it.node }) { status ->
-            val hostname = nodeNames[status.node] ?: status.node
-            MemberStatusCard(
-                status = status,
-                hostname = hostname,
-                lag = etcdLag(status, etcd.statuses),
-                actions = members.actionsFor(status.memberId, hostname, status.takeIf { it.isLeader && it.error == null }, failed[status.memberId]),
-                onDefrag = if (canDefrag && !running && status.error == null) {
-                    { onDefrag(DefragRequest(listOf(status), nodeNames)) }
-                } else {
-                    null
-                },
-            )
-        }
-        val unprobed = etcd.members.filter { m -> etcd.statuses.none { it.memberId == m.id } }
-        if (unprobed.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.etcd_section_unprobed)) }
-            items(unprobed, key = { it.id }) { MemberCard(it, members.actionsFor(it.id, it.hostname, leader = null, failed = failed[it.id])) }
-        }
+        SectionJumpRail(sections, listState, Modifier.align(Alignment.CenterEnd))
     }
 }
 

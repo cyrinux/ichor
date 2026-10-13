@@ -24,7 +24,7 @@ extension ArgoNetKind {
         case .host: "globe"
         case .loadBalancer: "point.3.connected.trianglepath.dotted"
         case .gateway: "network"
-        case .ingress, .httpRoute: "arrow.triangle.branch"
+        case .ingress, .httpRoute, .ingressRoute, .ingressRouteTCP: "arrow.triangle.branch"
         case .service: "square.stack.3d.up"
         case .pod: "shippingbox"
         case .node: "cpu"

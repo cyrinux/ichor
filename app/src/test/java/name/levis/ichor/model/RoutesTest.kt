@@ -18,6 +18,15 @@ class RoutesTest {
     }
 
     @Test
+    fun decodesATraefikRoute() {
+        val json = """{"routes":[{"kind":"IngressRoute","namespace":"monitoring","name":"grafana",""" +
+            """"url":"https://grafana.home.example","service":"grafana"}]}"""
+        val route = TalosJson.decodeFromString(KubeRouteList.serializer(), json).routes.single()
+        assertEquals("IngressRoute", route.kind)
+        assertEquals("grafana.home.example", route.label)
+    }
+
+    @Test
     fun routePodsOncePerPodEncodedForGo() {
         val app = InventoryApp(
             id = "web",

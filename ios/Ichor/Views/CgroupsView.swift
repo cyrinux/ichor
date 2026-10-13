@@ -254,7 +254,7 @@ struct PressureSection: View {
             }
             Button("Details", action: onDetails)
         } header: {
-            Text("Pressure")
+            Text("Pressure").sectionTarget("pressure")
         } footer: {
             Text("Share of the last 10 s that tasks waited for each resource")
         }

@@ -16,9 +16,10 @@ import (
 )
 
 // kubeRoute is an address an app is reachable at from outside the cluster: a host of an
-// Ingress or of a Gateway API HTTPRoute whose backend is a Service selecting its pods.
+// Ingress, of a Gateway API HTTPRoute or of a Traefik IngressRoute(TCP) whose backend is a
+// Service selecting its pods.
 type kubeRoute struct {
-	Kind      string `json:"kind"` // Ingress or HTTPRoute
+	Kind      string `json:"kind"` // Ingress, HTTPRoute, IngressRoute or IngressRouteTCP
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
 	URL       string `json:"url"`
@@ -56,8 +57,8 @@ type serviceRef struct{ namespace, name string }
 
 // KubeAppRoutes lists the URLs the given pods are served at, through the Kubernetes API
 // with the admin kubeconfig Talos issues (os:admin): the Services selecting them, then the
-// Ingresses and HTTPRoutes (gateway.networking.k8s.io/v1, when installed) sending traffic to
-// those Services. pods: [{namespace,pod}]. {"routes":[{kind,namespace,name,url,service}]}.
+// Ingresses, HTTPRoutes (gateway.networking.k8s.io/v1) and Traefik IngressRoutes and
+// IngressRouteTCPs (traefik.io/v1alpha1), when installed, sending traffic to those Services. pods: [{namespace,pod}]. {"routes":[{kind,namespace,name,url,service}]}.
 // kubeServer: see KubePods.
 func KubeAppRoutes(configYAML, contextName, kubeServer, pods string) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -86,9 +87,10 @@ func appRoutes(ctx context.Context, k *kubeClient, pods []routePod) (kubeRouteLi
 		ingresses  kubeList[ingressObject]
 		httpRoutes kubeList[httpRouteObject]
 		gateways   kubeList[gatewayObject]
+		traefik    traefikRouteSet
 	)
 
-	errs := make([]error, 3)
+	errs := make([]error, 4)
 
 	var wg sync.WaitGroup
 
@@ -99,6 +101,8 @@ func appRoutes(ctx context.Context, k *kubeClient, pods []routePod) (kubeRouteLi
 	})
 	// Only used to tell http from https: a URL is still worth showing without it.
 	wg.Go(func() { _ = getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/gateways", &gateways) })
+	// Traefik's CRDs are optional too.
+	wg.Go(func() { traefik, errs[3] = readTraefikRoutes(ctx, k, "", false) })
 	wg.Wait()
 
 	if err := errors.Join(errs...); err != nil {
@@ -110,6 +114,7 @@ func appRoutes(ctx context.Context, k *kubeClient, pods []routePod) (kubeRouteLi
 	}
 
 	routes := append(ingressRoutes(ingresses.Items, services), httpRouteRoutes(httpRoutes.Items, gateways.Items, services)...)
+	routes = append(routes, traefikRoutes(traefik, services)...)
 
 	return kubeRouteList{Routes: uniqueRoutes(routes)}, nil
 }

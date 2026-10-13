@@ -57,6 +57,7 @@ struct SensorsSection: View {
                 Spacer()
                 if sensors.throttled { StatusPill(label: String(localized: "Throttled"), color: .statusBad) }
             }
+            .sectionTarget("sensors")
         }
     }
 
@@ -120,7 +121,7 @@ struct PCISection: View {
     let sensors: NodeSensors
 
     var body: some View {
-        Section("PCI devices") {
+        Section {
             SectionError(message: sensors.errors["pci"])
             ForEach(sensors.pci) { device in
                 VStack(alignment: .leading, spacing: 3) {
@@ -134,6 +135,8 @@ struct PCISection: View {
                         .foregroundStyle(.secondary)
                 }
             }
+        } header: {
+            Text("PCI devices").sectionTarget("pci")
         }
     }
 }

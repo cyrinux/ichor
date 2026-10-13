@@ -239,10 +239,7 @@ func demoIntegrations() integrationReport {
 				{Name: "kyverno.io", Version: "v1", Kinds: []string{"ClusterPolicy", "Policy"}},
 				{Name: "reports.kyverno.io", Version: "v1", Kinds: []string{"ClusterEphemeralReport", "EphemeralReport"}},
 			}},
-			{ID: "traefik.io", Groups: []integrationGroup{
-				{Name: "traefik.io", Version: "v1alpha1", Kinds: []string{"IngressRoute", "Middleware", "TLSOption"}},
-			}},
 		},
-		Supported: []string{groupArgo, groupCertManager, groupLonghorn, groupMonitoring, groupCNPG},
+		Supported: []string{groupArgo, groupCertManager, groupLonghorn, groupMonitoring, groupCNPG, groupTraefik},
 	}
 }

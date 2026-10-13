@@ -153,6 +153,8 @@ data class ArgoNetNode(
         const val GATEWAY = "Gateway"
         const val INGRESS = "Ingress"
         const val HTTP_ROUTE = "HTTPRoute"
+        const val INGRESS_ROUTE = "IngressRoute"
+        const val INGRESS_ROUTE_TCP = "IngressRouteTCP"
         const val SERVICE = "Service"
         const val POD = "Pod"
         const val NODE = "Node"
@@ -165,7 +167,9 @@ data class ArgoNetNode(
         const val LAYER_NODE = 5
         val LAYERS = LAYER_HOST..LAYER_NODE
 
-        private val SHARED_KINDS = setOf(GATEWAY, INGRESS, HTTP_ROUTE)
+        /** The kinds that route traffic to Services: drawn with the route icon. */
+        val ROUTE_KINDS = setOf(INGRESS, HTTP_ROUTE, INGRESS_ROUTE, INGRESS_ROUTE_TCP)
+        private val SHARED_KINDS = ROUTE_KINDS + GATEWAY
     }
 }
 
@@ -181,7 +185,7 @@ data class ArgoNetEdge(val from: String, val to: String, val health: String = ""
 /** The likely root cause, for the app to word by [wording]. */
 @Serializable
 data class ArgoNetProblem(
-    /** Node, Pod, Service, Ingress or Gateway (HTTPRoute possible). */
+    /** Node, Pod, Service, Ingress or Gateway (HTTPRoute, IngressRoute(TCP) possible). */
     val kind: String = "",
     val namespace: String = "",
     val name: String = "",

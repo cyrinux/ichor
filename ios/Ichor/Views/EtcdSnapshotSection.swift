@@ -182,7 +182,7 @@ struct EtcdSnapshotSection: View {
                 }
             }
         } header: {
-            Text("Backup")
+            Text("Backup").sectionTarget("snapshot")
         } footer: {
             Text("Saves a snapshot of the etcd database to a file you choose, to recover the cluster with talosctl bootstrap --recover-from.")
         }

@@ -34,8 +34,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   with their schedule, next run and recent runs, and run one now (`kubectl create job --from`,
   with an icon and a title of your choice, see [CronJobs](#cronjobs)); measure the
   network between two nodes (TCP throughput and latency, see [Network test](#network-test));
-  open an app in the browser from its sheet, at the hosts of the Ingresses and Gateway API
-  HTTPRoutes whose Services select its pods; browse any resource, CRDs included, with the
+  open an app in the browser from its sheet, at the hosts of the Ingresses, Gateway API
+  HTTPRoutes and Traefik IngressRoutes whose Services select its pods; browse any resource, CRDs included, with the
   columns `kubectl get` prints, read and edit its YAML (a dry-run diff first; a change made
   meanwhile is never overwritten), apply pasted manifests like `kubectl apply --server-side`
   (each object previewed as a diff first; a field another manager owns is refused, never taken
@@ -56,7 +56,7 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   their commit on GitHub, GitLab, Gitea, Forgejo, Codeberg or Bitbucket. An app an ApplicationSet or a parent app manages keeps its spec:
   only sync, refresh and terminate are offered there, since its owner would revert the rest.
   Each app also has a network view, like Argo CD's own but down to the nodes: host → Gateway →
-  Ingress/HTTPRoute → Service → pods → node, every box coloured by health, traffic flowing along
+  Ingress/HTTPRoute/IngressRoute → Service → pods → node, every box coloured by health, traffic flowing along
   the healthy paths, and the likely root cause named (a node not ready, a crash-looping pod, a
   Service without ready pods).
   An app the icon catalog does not know (a personal project) can bring its own logo, see
@@ -174,7 +174,7 @@ reads those roles and explains up front when a feature needs more.
 | **Kubeconfig export** | `Kubeconfig` | **`os:admin`** |
 | **Kubernetes workloads and pods, rollout restart, pod delete** | `Kubeconfig`, then the Kubernetes API | **`os:admin`** |
 | **Kubernetes CronJobs, run now** | `Kubeconfig`, then the Kubernetes API (cronjobs, jobs) | **`os:admin`** |
-| **App web addresses (Ingress, HTTPRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, gateways) | **`os:admin`** |
+| **App web addresses (Ingress, HTTPRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
 | **Cluster checkup, events of a pod or workload** | `Kubeconfig`, then the Kubernetes API (pods, nodes, events, claims, webhooks, quotas, services, CSRs, secrets metadata…) and each kubelet's `stats/summary` through the API server proxy | **`os:admin`** |
@@ -890,6 +890,12 @@ a fresh install. Backups move between Android and iOS.
     on asks for a tap of every enrolled key; turning it off asks for one tap. A key set to always
     verify the user (fingerprint or PIN on the key itself) computes another secret, so changing
     that setting after enrolment needs the requirement turned off and on again.
+- **Keep last known state (Settings → Privacy, on by default):** the last data fetched from each
+  cluster is kept on the phone, encrypted, for 24 hours and never backed up, so the home opens on
+  it at once and still shows it when the cluster cannot be reached. Turn it off to keep cluster
+  data in memory only (an install that had turned it off keeps it off). With it off but background
+  alerts on, the home opens on the nodes the last background check saw, labelled as such, while
+  it refreshes; never in screenshot mode.
 - **Notifications:** with the app lock on, alerts show only a generic text on the lock screen.
   The widget shows counts only, no hostnames.
 - **Kubeconfig export:** the kubeconfig is written only to the file you choose. kubenav has no
