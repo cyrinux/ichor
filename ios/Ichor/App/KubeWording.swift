@@ -61,6 +61,20 @@ extension ContextSummary {
     }
 }
 
+extension ClusterGroup {
+    /// A cluster list section's title: "Talos", "AWS · account 12…12", "Omni · ops@example.com".
+    var localizedTitle: String {
+        let shown: String? = owner.map { owner in
+            switch provider {
+            case .aws: String(localized: "account \(owner)")
+            case .gcp: String(localized: "project \(owner)")
+            default: owner
+            }
+        }
+        return [provider.brand, shown].compactMap { $0 }.joined(separator: " · ")
+    }
+}
+
 extension CloudContext {
     /// The location and owner under a cloud context's cluster name: "EKS · eu-north-1 · account 12…12".
     var localizedDetail: String {

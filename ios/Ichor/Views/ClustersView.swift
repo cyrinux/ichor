@@ -92,18 +92,27 @@ struct ClustersView: View {
 
     var body: some View {
         List {
-            Section {
-                ForEach(model.summary?.contexts ?? []) { context in
-                    row(context)
-                }
-            } footer: {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("The app takes the colors of the cluster on screen.")
-                    // What the lock on a row means, once there is one.
-                    if model.summary?.contexts.contains(where: { model.vpnOnly.contains($0.fingerprint) }) == true {
-                        Text("VPN only: without a VPN connected the app does not try the cluster, and background checks wait for it.")
+            let contexts = model.summary?.contexts ?? []
+            // A long list in sections, per provider and account; a short one as it is.
+            if let groups = clusterGroups(contexts, masked: model.labels.masked) {
+                ForEach(groups) { group in
+                    Section {
+                        ForEach(group.contexts) { row($0) }
+                    } header: {
+                        Label {
+                            Text(verbatim: group.localizedTitle)
+                        } icon: {
+                            BundledLogo(name: group.logo).frame(width: 18, height: 18).accessibilityHidden(true)
+                        }
+                    } footer: {
+                        if group.id == groups.last?.id { footer }
                     }
-                    Text("Touch and hold a cluster for its endpoints and the VPN only setting.")
+                }
+            } else {
+                Section {
+                    ForEach(contexts) { row($0) }
+                } footer: {
+                    footer
                 }
             }
             if let error {
@@ -145,6 +154,18 @@ struct ClustersView: View {
             Button("Cancel", role: .cancel) {}
         } message: { context in
             Text("Shown on this device only, the talosconfig keeps \(context.name). Leave empty to use it again.")
+        }
+    }
+
+    /// Under the clusters, once.
+    private var footer: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("The app takes the colors of the cluster on screen.")
+            // What the lock on a row means, once there is one.
+            if model.summary?.contexts.contains(where: { model.vpnOnly.contains($0.fingerprint) }) == true {
+                Text("VPN only: without a VPN connected the app does not try the cluster, and background checks wait for it.")
+            }
+            Text("Touch and hold a cluster for its endpoints and the VPN only setting.")
         }
     }
 

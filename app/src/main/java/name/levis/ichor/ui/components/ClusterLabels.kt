@@ -9,7 +9,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.CloudContext
+import name.levis.ichor.model.ClusterGroup
 import name.levis.ichor.model.ClusterLabels
+import name.levis.ichor.model.ClusterProvider
 
 /** How clusters are called on screen: the names the user gave them, unless screenshot mode is on. */
 @Composable
@@ -25,4 +27,17 @@ fun rememberClusterLabels(): ClusterLabels {
 fun cloudDetail(cloud: CloudContext): String {
     val owner = if (cloud.provider == CloudContext.EKS) R.string.kube_eks_account else R.string.kube_gke_project
     return listOf(cloud.provider, cloud.location, stringResource(owner, cloud.shortOwner)).joinToString(" · ")
+}
+
+/** A cluster list section's title: "Talos", "AWS · account 12…12", "Omni · ops@example.com". */
+@Composable
+fun clusterGroupTitle(group: ClusterGroup): String {
+    val owner = group.owner?.let { owner ->
+        when (group.provider) {
+            ClusterProvider.AWS -> stringResource(R.string.kube_eks_account, owner)
+            ClusterProvider.GCP -> stringResource(R.string.kube_gke_project, owner)
+            else -> owner
+        }
+    }
+    return listOfNotNull(group.provider.brand, owner).joinToString(" · ")
 }
