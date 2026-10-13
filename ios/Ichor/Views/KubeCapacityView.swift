@@ -11,32 +11,70 @@ struct KubeCapacityView: View {
     @State private var filter = CapacityFilter.all
     /// The node whose loss the sheet shows ("" for the worst one).
     @State private var loss: NodeLossRequest?
+    /// On-screen tops of the section headers in view, the list's top edge and the section the
+    /// section rail fills.
+    @State private var headerTops: [String: Double] = [:]
+    @State private var listTop: Double = 0
+    @State private var currentSection: String?
+
+    private static let summaryId = "summary"
+    private static let nodesId = "nodes"
+    private static let workloadsId = "workloads"
+    private static let railMinimumRows = 12
+
+    private var sections: [JumpSection] {
+        [
+            JumpSection(id: Self.summaryId, label: CapacityText.capacitySectionSummary),
+            JumpSection(id: Self.nodesId, label: CapacityText.capacityNodesTitle),
+            JumpSection(id: Self.workloadsId, label: CapacityText.capacitySectionWorkloads),
+        ]
+    }
 
     var body: some View {
         LoadStateView(state: state, retry: load) { capacity in
             let workloads = capacity.workloads.filtered(filter)
-            List {
-                Section {
-                    CapacityHeader(capacity: capacity) { loss = NodeLossRequest(node: "") }
-                }
-                Section {
-                    ForEach(capacity.nodes) { node in
-                        CapacityNodeRow(node: node, metrics: capacity.metricsAvailable) { loss = NodeLossRequest(node: node.name) }
+            ScrollViewReader { proxy in
+                List {
+                    Section {
+                        CapacityHeader(capacity: capacity) { loss = NodeLossRequest(node: "") }
+                            .id(Self.summaryId)
+                            .trackSection(Self.summaryId, tops: $headerTops)
                     }
-                } header: {
-                    Text(verbatim: CapacityText.capacityNodesTitle)
-                }
-                Section {
-                    if workloads.isEmpty {
-                        Text(verbatim: CapacityText.capacityWorkloadsEmpty).foregroundStyle(.secondary)
+                    Section {
+                        ForEach(capacity.nodes) { node in
+                            CapacityNodeRow(node: node, metrics: capacity.metricsAvailable) { loss = NodeLossRequest(node: node.name) }
+                        }
+                    } header: {
+                        Text(verbatim: CapacityText.capacityNodesTitle)
+                            .id(Self.nodesId)
+                            .trackSection(Self.nodesId, tops: $headerTops)
                     }
-                    ForEach(workloads) { CapacityWorkloadRow(workload: $0) }
-                } header: {
-                    Text(verbatim: CapacityText.capacityWorkloadsTitle)
+                    Section {
+                        if workloads.isEmpty {
+                            Text(verbatim: CapacityText.capacityWorkloadsEmpty).foregroundStyle(.secondary)
+                        }
+                        ForEach(workloads) { CapacityWorkloadRow(workload: $0) }
+                    } header: {
+                        Text(verbatim: CapacityText.capacityWorkloadsTitle)
+                            .id(Self.workloadsId)
+                            .trackSection(Self.workloadsId, tops: $headerTops)
+                    }
+                }
+                .refreshable { await load() }
+                .themedBackground()
+                .onGeometryChange(for: Double.self) { Double($0.frame(in: .global).minY + $0.safeAreaInsets.top) } action: { listTop = $0 }
+                .onChange(of: headerTops) { updateCurrentSection() }
+                .onChange(of: listTop) { updateCurrentSection() }
+                .overlay(alignment: .trailing) {
+                    // The rail only helps once the list is longer than a screen; without measuring
+                    // the content, a dozen node and workload rows is taken as that point.
+                    if capacity.nodes.count + workloads.count >= Self.railMinimumRows {
+                        SectionJumpRail(sections: sections, current: currentSection) { section, animated in
+                            withAnimation(animated ? .default : nil) { proxy.scrollTo(section.id, anchor: .top) }
+                        }
+                    }
                 }
             }
-            .refreshable { await load() }
-            .themedBackground()
         }
         .task { await load() }
         // A new API address (set on the Kubernetes screen): read again through it.
@@ -58,6 +96,10 @@ struct KubeCapacityView: View {
         }
         .navigationTitle(Text(verbatim: CapacityText.capacityTitle))
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func updateCurrentSection() {
+        currentSection = SectionJump.current(sections: sections, visibleTops: headerTops, top: listTop, previous: currentSection)
     }
 
     private func load() async {
