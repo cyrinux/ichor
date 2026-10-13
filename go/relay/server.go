@@ -38,6 +38,8 @@ type Options struct {
 	// Workers is the number of deliveries in flight; Timeout bounds each.
 	Workers int
 	Timeout time.Duration
+	// AllowHTTP accepts plain-http push endpoints (an in-cluster ntfy); https only otherwise.
+	AllowHTTP bool
 }
 
 // Relay serves the pairing API and the Alertmanager webhook, and delivers the pushes.
@@ -49,6 +51,8 @@ type Relay struct {
 	now     func() time.Time
 	workers int
 	timeout time.Duration
+	// allowHTTP accepts plain-http push endpoints.
+	allowHTTP bool
 
 	// closing guards jobs: handlers enqueue under the read lock, Close closes under the write
 	// lock, so a handler outliving the http.Server's shutdown never sends on a closed channel.
@@ -73,7 +77,9 @@ func New(o Options) *Relay {
 		now:     o.Now,
 		workers: o.Workers,
 		timeout: o.Timeout,
-		jobs:    make(chan delivery, queueSize),
+
+		allowHTTP: o.AllowHTTP,
+		jobs:      make(chan delivery, queueSize),
 	}
 	if r.log == nil {
 		r.log = slog.Default()
@@ -173,7 +179,7 @@ func (r *Relay) handlePutDevice(w http.ResponseWriter, req *http.Request) {
 
 		return
 	}
-	if err := validateDevice(device); err != nil {
+	if err := validateDevice(device, r.allowHTTP); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 
 		return

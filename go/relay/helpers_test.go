@@ -287,7 +287,8 @@ func newTestRelay(t *testing.T) *testRelay {
 
 	tr := &testRelay{kube: fk, store: store}
 	now := func() time.Time { return testNow.Add(time.Duration(tr.offset.Load())) }
-	tr.relay = New(Options{Store: store, Now: now, Client: &http.Client{Timeout: 5 * time.Second}})
+	// httptest serves plain http.
+	tr.relay = New(Options{Store: store, Now: now, Client: &http.Client{Timeout: 5 * time.Second}, AllowHTTP: true})
 	tr.relay.Start()
 	tr.srv = httptest.NewServer(tr.relay.Handler())
 	t.Cleanup(tr.srv.Close)

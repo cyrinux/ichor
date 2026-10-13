@@ -13,6 +13,7 @@
 //	RELAY_NAMESPACE  namespace of the Secret (default: the ServiceAccount's)
 //	RELAY_SECRET     name of the Secret (default ichor-relay)
 //	RELAY_KUBE_API   API server URL without credentials, for a local run behind `kubectl proxy`
+//	RELAY_ALLOW_HTTP true accepts plain-http push endpoints (an in-cluster ntfy); https only otherwise
 //
 // Endpoints: GET /healthz; GET /v1/pairing, PUT /v1/devices and DELETE /v1/devices/{id} with the
 // X-Ichor-Pairing header (reached through the API server's service proxy); POST /alertmanager
@@ -41,6 +42,7 @@ const shutdownTimeout = 20 * time.Second
 
 type config struct {
 	listen, namespace, secret, kubeAPI string
+	allowHTTP                          bool
 }
 
 func main() {
@@ -58,6 +60,7 @@ func parseConfig(args []string) (config, error) {
 	fs.StringVar(&c.namespace, "namespace", os.Getenv("RELAY_NAMESPACE"), "namespace of the Secret")
 	fs.StringVar(&c.secret, "secret", cmp.Or(os.Getenv("RELAY_SECRET"), "ichor-relay"), "name of the Secret")
 	fs.StringVar(&c.kubeAPI, "kube-api", os.Getenv("RELAY_KUBE_API"), "API server URL without credentials (kubectl proxy)")
+	fs.BoolVar(&c.allowHTTP, "allow-http", os.Getenv("RELAY_ALLOW_HTTP") == "true", "accept plain-http push endpoints")
 	if err := fs.Parse(args); err != nil {
 		return config{}, err
 	}
@@ -98,7 +101,7 @@ func run(log *slog.Logger, args []string) error {
 	}
 	log.Info("state loaded", "namespace", c.namespace, "secret", c.secret, "devices", len(store.Snapshot().Devices))
 
-	r := relay.New(relay.Options{Store: store, Logger: log})
+	r := relay.New(relay.Options{Store: store, Logger: log, AllowHTTP: c.allowHTTP})
 	r.Start()
 
 	srv := &http.Server{

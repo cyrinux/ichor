@@ -25,13 +25,23 @@ var (
 	errTooManyDevices = fmt.Errorf("at most %d devices can be paired", MaxDevices)
 )
 
-// validateDevice checks a device sent by a phone. The messages quote no value.
-func validateDevice(d Device) error {
+// validateDevice checks a device sent by a phone. Push endpoints are https unless allowHTTP
+// (an in-cluster ntfy over plain http): the pairing token must not turn the relay into a
+// cleartext client of any address. The messages quote no value.
+func validateDevice(d Device, allowHTTP bool) error {
 	if !deviceIDPattern.MatchString(d.ID) {
 		return errors.New("id: 1 to 64 characters among A-Z a-z 0-9 _ -")
 	}
 
-	if err := validateURL(d.Endpoint, "http", "https"); err != nil {
+	schemes := []string{"https"}
+	if allowHTTP {
+		schemes = append(schemes, "http")
+	}
+	if err := validateURL(d.Endpoint, schemes...); err != nil {
+		if !allowHTTP && strings.HasPrefix(d.Endpoint, "http:") {
+			return errors.New("endpoint: plain http is refused (the relay runs with RELAY_ALLOW_HTTP off)")
+		}
+
 		return fmt.Errorf("endpoint: %w", err)
 	}
 

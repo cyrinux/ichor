@@ -172,6 +172,20 @@ func TestPutDeviceValidation(t *testing.T) {
 	}
 }
 
+func TestPlainHTTPEndpointNeedsOptIn(t *testing.T) {
+	d := Device{ID: "n", Platform: PlatformNtfy, Endpoint: "http://ntfy.monitoring.svc/alerts"}
+	if err := validateDevice(d, false); err == nil || !strings.Contains(err.Error(), "RELAY_ALLOW_HTTP") {
+		t.Errorf("http endpoint without the opt-in: %v, want a refusal naming RELAY_ALLOW_HTTP", err)
+	}
+	if err := validateDevice(d, true); err != nil {
+		t.Errorf("http endpoint with the opt-in: %v", err)
+	}
+	d.Endpoint = "https://ntfy.example/alerts"
+	if err := validateDevice(d, false); err != nil {
+		t.Errorf("https endpoint: %v", err)
+	}
+}
+
 func TestDeviceCapAndUpsert(t *testing.T) {
 	tr := newTestRelay(t)
 	err := tr.store.Update(t.Context(), func(s *State) error {
