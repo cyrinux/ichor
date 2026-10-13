@@ -62,20 +62,13 @@ import name.levis.ichor.security.PrefsLockSettings
 import name.levis.ichor.update.UpdateManager
 import name.levis.ichor.update.createStoreUpdater
 import name.levis.ichor.ui.debug.DebugShells
-import name.levis.ichor.ui.upgrade.UpgradeService
-import name.levis.ichor.ui.images.ImagePullService
-import name.levis.ichor.ui.imagescan.ImageScanService
-import name.levis.ichor.ui.maintenance.MaintenanceService
-import name.levis.ichor.ui.join.JoinService
+import name.levis.ichor.ui.OperationService
+import name.levis.ichor.ui.operations.OperationKind
 import name.levis.ichor.data.JoinManager
-import name.levis.ichor.ui.upgrade.K8sUpgradeService
 import name.levis.ichor.data.K8sUpgradeManager
 import name.levis.ichor.data.NetToolTargets
-import name.levis.ichor.ui.upgrade.ClusterUpgradeService
 import name.levis.ichor.data.ClusterUpgradeManager
-import name.levis.ichor.ui.machineconfig.ConfigTryService
 import name.levis.ichor.data.ConfigTryManager
-import name.levis.ichor.ui.machineconfig.ConfigMultiService
 import name.levis.ichor.data.ConfigMultiManager
 import name.levis.ichor.data.ClusterNames
 import name.levis.ichor.data.WakeOnLanStore
@@ -172,13 +165,13 @@ class TalosApp : Application() {
     val debugShells by lazy { DebugShells(this, configRepository, kubeServers) }
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
     val netPerfRepository by lazy { NetPerfRepository(configRepository, kubeServers) }
-    /** The image vulnerability scan running or last run, app-wide; ImageScanService keeps the app alive while it runs. */
+    /** The image vulnerability scan running or last run, app-wide; OperationService keeps the app alive while it runs. */
     val imageScanRepository by lazy {
         ImageScanRepository(
             configRepository,
             kubeServers,
             scanner = { uiPreferences.imageScanner.value },
-            onStarted = { ImageScanService.start(this) },
+            onStarted = { OperationService.start(this, OperationKind.IMAGE_SCAN) },
         )
     }
     val ciliumRepository by lazy { CiliumRepository(configRepository, kubeServers) }
@@ -198,37 +191,37 @@ class TalosApp : Application() {
     val supportBundleRepository by lazy {
         SupportBundleRepository(configRepository, kubeServers, filesDir) { configRepository.config.value?.activeSummary?.fingerprint?.let { historyRepository.export(it) } }
     }
-    /** The followed upgrade; UpgradeService keeps the app alive while it runs. */
+    /** The followed upgrade; OperationService keeps the app alive while it runs. */
     val upgradeManager by lazy {
-        UpgradeManager(configRepository, kubeServers, onStarted = { UpgradeService.start(this) }, onFinished = talosRepository::forgetFeatures)
+        UpgradeManager(configRepository, kubeServers, onStarted = { OperationService.start(this, OperationKind.UPGRADE) }, onFinished = talosRepository::forgetFeatures)
     }
-    /** The followed node maintenance; MaintenanceService keeps the app alive while it runs. */
-    val maintenanceManager by lazy { MaintenanceManager(talosRepository, onStarted = { MaintenanceService.start(this) }) }
-    /** The followed node join; JoinService keeps the app alive while it runs. */
+    /** The followed node maintenance; OperationService keeps the app alive while it runs. */
+    val maintenanceManager by lazy { MaintenanceManager(talosRepository, onStarted = { OperationService.start(this, OperationKind.MAINTENANCE) }) }
+    /** The followed node join; OperationService keeps the app alive while it runs. */
     val joinManager by lazy {
         JoinManager(
             talosRepository,
             configRepository,
             text = { id, args -> AppLocale.wrap(this).getString(id, *args.toTypedArray()) },
-            onStarted = { JoinService.start(this) },
+            onStarted = { OperationService.start(this, OperationKind.JOIN) },
         )
     }
-    /** The followed machine config try; ConfigTryService keeps its countdown going off screen. */
-    val configTryManager by lazy { ConfigTryManager(talosRepository::tryMachineConfig, onStarted = { ConfigTryService.start(this) }) }
-    /** The followed multi-node config apply; ConfigMultiService keeps the app alive while it runs. */
+    /** The followed machine config try; OperationService keeps its countdown going off screen. */
+    val configTryManager by lazy { ConfigTryManager(talosRepository::tryMachineConfig, onStarted = { OperationService.start(this, OperationKind.CONFIG_TRY) }) }
+    /** The followed multi-node config apply; OperationService keeps the app alive while it runs. */
     val configMultiManager by lazy {
-        ConfigMultiManager(talosRepository::applyMachineConfigMulti, onStarted = { ConfigMultiService.start(this) })
+        ConfigMultiManager(talosRepository::applyMachineConfigMulti, onStarted = { OperationService.start(this, OperationKind.CONFIG_MULTI) })
     }
-    /** The followed rolling cluster upgrade; ClusterUpgradeService keeps the app alive while it runs. */
+    /** The followed rolling cluster upgrade; OperationService keeps the app alive while it runs. */
     val clusterUpgradeManager by lazy {
-        ClusterUpgradeManager(talosRepository::startClusterUpgrade, onStarted = { ClusterUpgradeService.start(this) })
+        ClusterUpgradeManager(talosRepository::startClusterUpgrade, onStarted = { OperationService.start(this, OperationKind.CLUSTER_UPGRADE) })
     }
-    /** The followed Kubernetes upgrade; K8sUpgradeService keeps the app alive while it runs. */
+    /** The followed Kubernetes upgrade; OperationService keeps the app alive while it runs. */
     val k8sUpgradeManager by lazy {
-        K8sUpgradeManager(talosRepository::startK8sUpgrade, onStarted = { K8sUpgradeService.start(this) })
+        K8sUpgradeManager(talosRepository::startK8sUpgrade, onStarted = { OperationService.start(this, OperationKind.K8S_UPGRADE) })
     }
-    /** The followed image pull; ImagePullService keeps the app alive while it runs. */
-    val imagePullManager by lazy { ImagePullManager(talosRepository, onStarted = { ImagePullService.start(this) }) }
+    /** The followed image pull; OperationService keeps the app alive while it runs. */
+    val imagePullManager by lazy { ImagePullManager(talosRepository, onStarted = { OperationService.start(this, OperationKind.IMAGE_PULL) }) }
     val talosUpdateChecker by lazy { TalosUpdateChecker() }
     /** The Talos release each cluster's update card was skipped for. */
     val skippedTalosUpdates by lazy { SkippedTalosUpdates(getSharedPreferences(SkippedTalosUpdates.FILE, Context.MODE_PRIVATE)) }

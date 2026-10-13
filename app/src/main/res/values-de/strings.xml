@@ -970,6 +970,10 @@
     <string name="config_multi_notification_result_public">Das Ausrollen der Konfiguration ist beendet</string>
     <string name="config_multi_notification_title">Konfigurationsänderung wird auf %1$s angewendet</string>
     <string name="config_multi_notification_done">Konfigurationsänderung auf %1$s angewendet</string>
+    <string name="operations_channel_name">Vorgänge</string>
+    <string name="operations_channel_desc">Fortschritt und Ergebnis der langen Vorgänge, die in der App gestartet wurden: Upgrades, Wartung, Konfigurationsänderungen, Node-Beitritte, Image-Downloads und -Scans</string>
+    <string name="operation_stop">Stoppen</string>
+    <string name="config_multi_notification_stopped">Konfigurationsänderung auf %1$s gestoppt</string>
     <string name="config_multi_notification_failed">Das Ausrollen der Konfiguration auf %1$s wurde angehalten</string>
     <string name="config_multi_already_running">Auf %1$s wird schon eine Konfigurationsänderung angewendet: Warte, bis sie fertig ist.</string>
     <string name="machine_config_apply_applying">Änderung wird angewendet…</string>
@@ -1535,8 +1539,6 @@
     <string name="upgrade_done_versions">Aktualisiert: %1$s → %2$s</string>
     <string name="upgrade_acknowledge_title">Vor dem Start zu akzeptierende Risiken</string>
     <string name="upgrade_acknowledge_check">Ich verstehe diese Risiken</string>
-    <string name="upgrade_channel_name">Talos-Upgrades</string>
-    <string name="upgrade_channel_desc">Fortschritt und Ergebnis der in der App gestarteten Talos-Upgrades</string>
     <string name="upgrade_notification_title">%1$s wird aktualisiert</string>
     <string name="upgrade_notification_public">Talos-Upgrade läuft</string>
     <string name="upgrade_notification_done">%1$s aktualisiert</string>
@@ -3009,8 +3011,6 @@
     <string name="maintenance_done_reboot_cordoned">%1$s ist zurück und Ready. Er war schon vor der Wartung abgesperrt und bleibt es daher.</string>
     <string name="maintenance_done_shutdown">%1$s ist heruntergefahren und bleibt abgesperrt.</string>
     <string name="maintenance_done_none">%1$s ist geleert und bleibt abgesperrt.</string>
-    <string name="maintenance_channel_name">Knotenwartung</string>
-    <string name="maintenance_channel_desc">Fortschritt und Ergebnis der in der App gestarteten Knotenwartungen</string>
     <string name="maintenance_notification_title">Wartung von %1$s</string>
     <string name="maintenance_notification_public">Knotenwartung läuft</string>
     <string name="maintenance_notification_done">Wartung von %1$s abgeschlossen</string>
@@ -3746,8 +3746,6 @@
     <string name="imagescan_phase_preparing">Pods und ihre Images werden gelesen…</string>
     <string name="imagescan_phase_starting">%1$s wird gestartet…</string>
     <string name="imagescan_phase_starting_reason">%1$s wird gestartet (%2$s)…</string>
-    <string name="imagescan_channel_name">Image-Prüfungen</string>
-    <string name="imagescan_channel_desc">Fortschritt einer Schwachstellenprüfung deiner Images</string>
     <string name="imagescan_notification_public">Images werden geprüft</string>
     <string name="imagescan_notification_result_public">Image-Prüfung abgeschlossen</string>
     <string name="imagescan_notification_title">Images von %1$s werden geprüft</string>
@@ -4133,8 +4131,6 @@
     <string name="cp_replace_waiting">Warte auf ein neues gesundes etcd-Mitglied…</string>
     <string name="cp_replace_joined">Das neue Mitglied ist beigetreten: etcd ist gesund.</string>
     <string name="cp_replace_wait_stop">Warten beenden</string>
-    <string name="image_pull_channel_name">Image-Downloads</string>
-    <string name="image_pull_channel_desc">Fortschritt eines Image-Downloads auf deinen Nodes</string>
     <string name="image_pull_notification_public">Image wird geladen</string>
     <string name="image_pull_notification_result_public">Image-Download beendet</string>
     <string name="image_pull_notification_title">Image wird auf die Nodes geladen</string>
@@ -4233,8 +4229,6 @@
     <string name="join_run_open_node">Knoten öffnen</string>
     <string name="join_run_no_address">Der Beitritt endete ohne die Adresse des Knotens.</string>
     <string name="join_run_not_added">%1$s ist beigetreten, konnte aber nicht zu den Knoten von %2$s hinzugefügt werden: %3$s</string>
-    <string name="join_channel_name">Knotenbeitritt</string>
-    <string name="join_channel_desc">Fortschritt eines Knotens, der dem Cluster hinzugefügt wird</string>
     <string name="join_notification_public">Knoten wird hinzugefügt</string>
     <string name="join_notification_result_public">Knotenbeitritt abgeschlossen</string>
     <string name="join_notification_title">%1$s wird hinzugefügt</string>

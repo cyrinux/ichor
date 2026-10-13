@@ -977,6 +977,10 @@
     <string name="config_multi_notification_result_public">Le déploiement de la config est terminé</string>
     <string name="config_multi_notification_title">Application d\'une modification de config sur %1$s</string>
     <string name="config_multi_notification_done">Modification de config appliquée sur %1$s</string>
+    <string name="operations_channel_name">Opérations</string>
+    <string name="operations_channel_desc">La progression et le résultat des opérations longues lancées depuis l\'app : mises à jour, maintenance, modifications de config, ajouts de nœuds, téléchargements et analyses d\'images</string>
+    <string name="operation_stop">Arrêter</string>
+    <string name="config_multi_notification_stopped">Modification de config arrêtée sur %1$s</string>
     <string name="config_multi_notification_failed">Le déploiement de la config sur %1$s s\'est arrêté</string>
     <string name="config_multi_already_running">Une modification de config est déjà en cours sur %1$s : attendez qu\'elle se termine.</string>
     <string name="machine_config_apply_applying">Application de la modification…</string>
@@ -1542,8 +1546,6 @@
     <string name="upgrade_done_versions">Mis à jour&#160;: %1$s → %2$s</string>
     <string name="upgrade_acknowledge_title">Risques à accepter avant de démarrer</string>
     <string name="upgrade_acknowledge_check">Je comprends ces risques</string>
-    <string name="upgrade_channel_name">Mises à jour de Talos</string>
-    <string name="upgrade_channel_desc">La progression et le résultat des mises à jour de Talos lancées depuis l\'application</string>
     <string name="upgrade_notification_title">Mise à jour de %1$s</string>
     <string name="upgrade_notification_public">Mise à jour de Talos en cours</string>
     <string name="upgrade_notification_done">%1$s mis à jour</string>
@@ -3017,8 +3019,6 @@
     <string name="maintenance_done_reboot_cordoned">%1$s est revenu et Ready. Il était isolé avant la maintenance, il reste donc isolé.</string>
     <string name="maintenance_done_shutdown">%1$s est éteint et reste isolé.</string>
     <string name="maintenance_done_none">%1$s est drainé et reste isolé.</string>
-    <string name="maintenance_channel_name">Maintenance des nœuds</string>
-    <string name="maintenance_channel_desc">La progression et le résultat des maintenances de nœuds lancées depuis l\'application</string>
     <string name="maintenance_notification_title">Maintenance de %1$s</string>
     <string name="maintenance_notification_public">Maintenance de nœud en cours</string>
     <string name="maintenance_notification_done">Maintenance de %1$s terminée</string>
@@ -3754,8 +3754,6 @@
     <string name="imagescan_phase_preparing">Lecture des pods et de leurs images…</string>
     <string name="imagescan_phase_starting">Démarrage de %1$s…</string>
     <string name="imagescan_phase_starting_reason">Démarrage de %1$s (%2$s)…</string>
-    <string name="imagescan_channel_name">Analyses d\'images</string>
-    <string name="imagescan_channel_desc">Progression d\'une analyse de vulnérabilités de vos images</string>
     <string name="imagescan_notification_public">Analyse d\'images en cours</string>
     <string name="imagescan_notification_result_public">Analyse d\'images terminée</string>
     <string name="imagescan_notification_title">Analyse des images de %1$s</string>
@@ -4141,8 +4139,6 @@
     <string name="cp_replace_waiting">En attente d\'un nouveau membre etcd sain…</string>
     <string name="cp_replace_joined">Le nouveau membre a rejoint le cluster : etcd est sain.</string>
     <string name="cp_replace_wait_stop">Arrêter l\'attente</string>
-    <string name="image_pull_channel_name">Téléchargements d\'images</string>
-    <string name="image_pull_channel_desc">Progression du téléchargement d\'une image sur vos nœuds</string>
     <string name="image_pull_notification_public">Téléchargement d\'une image</string>
     <string name="image_pull_notification_result_public">Téléchargement de l\'image terminé</string>
     <string name="image_pull_notification_title">Téléchargement d\'une image sur les nœuds</string>
@@ -4241,8 +4237,6 @@
     <string name="join_run_open_node">Ouvrir le nœud</string>
     <string name="join_run_no_address">L\'ajout s\'est terminé sans l\'adresse du nœud.</string>
     <string name="join_run_not_added">%1$s a rejoint le cluster, mais n\'a pas pu être ajouté aux nœuds de %2$s : %3$s</string>
-    <string name="join_channel_name">Ajout de nœud</string>
-    <string name="join_channel_desc">Progression d\'un nœud en cours d\'ajout au cluster</string>
     <string name="join_notification_public">Ajout d\'un nœud</string>
     <string name="join_notification_result_public">Ajout du nœud terminé</string>
     <string name="join_notification_title">Ajout de %1$s</string>

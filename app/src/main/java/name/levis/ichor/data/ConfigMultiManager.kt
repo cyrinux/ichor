@@ -3,6 +3,7 @@ package name.levis.ichor.data
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +27,8 @@ data class ConfigMultiRunState(
     val origin: String,
     override val hostname: String,
     val run: MultiApplyRun,
+    /** Stopped by the user: the nodes done keep the change, the others are not reached. */
+    val stopping: Boolean = false,
 ) : FollowedRun {
     override val finished: Boolean get() = run.finished
     override val error: String? get() = run.error
@@ -47,13 +50,14 @@ class ConfigMultiManager(
 ) {
     private val _current = MutableStateFlow<ConfigMultiRunState?>(null)
     val current: StateFlow<ConfigMultiRunState?> = _current.asStateFlow()
+    private var job: Job? = null
 
     /** Starts the run unless one is already followed; returns false then. */
     @Synchronized
     fun start(origin: String, label: String, nodes: List<String>, edits: List<ConfigEdit>, mode: ConfigApplyMode): Boolean {
         if (_current.value?.running == true || nodes.isEmpty()) return false
         _current.value = ConfigMultiRunState(origin, label, MultiApplyRun(mode))
-        scope.launch {
+        job = scope.launch {
             try {
                 runMulti(nodes, edits, mode).collect { event -> update { it.copy(run = it.run.after(event)) } }
                 // The run always ends with how it ended; without it, nothing can be said.
@@ -68,10 +72,24 @@ class ConfigMultiManager(
         return true
     }
 
+    /**
+     * Cancels the run (the core's ConfigApplyRun.Cancel, through the flow): the nodes done keep
+     * the change, the node in flight finishes its step, the others are not reached.
+     */
+    @Synchronized
+    fun stop() {
+        if (_current.value?.running != true) return
+        job?.cancel()
+        update { it.copy(run = it.run.copy(finished = true, error = null), stopping = true) }
+    }
+
     /** Forgets a finished run. */
     @Synchronized
     fun dismiss() {
-        if (_current.value?.finished == true) _current.value = null
+        if (_current.value?.finished == true) {
+            job = null
+            _current.value = null
+        }
     }
 
     private fun update(change: (ConfigMultiRunState) -> ConfigMultiRunState) {
