@@ -94,7 +94,10 @@ struct KubeStorageView: View {
                     }
                 }
                 if model.activeSummary?.demo == false, snapshots?.canCreate(claim) == true {
-                    Button("Create snapshot") { confirmSnapshot = claim }.disabled(snapshotBusy).kubeGated(.createVolumeSnapshot, in: claim.namespace)
+                    VStack(alignment: .leading) {
+                        Button("Create snapshot") { confirmSnapshot = claim }.disabled(snapshotBusy).kubeGated(.createVolumeSnapshot, in: claim.namespace)
+                        KubeDeniedNote(action: .createVolumeSnapshot, namespace: claim.namespace)
+                    }.loadsKubeActionAccess(namespace: claim.namespace)
                 }
             }
         }
