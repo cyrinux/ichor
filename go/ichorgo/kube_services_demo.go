@@ -1,8 +1,9 @@
 package ichorgo
 
-// The demo's Services, as the checkup and routes demos describe them: hello-ichor's public
-// load balancer still without an address (Cilium's pool is exhausted), a worker with no
-// ready pod, the Traefik entry point and the routed apps.
+// The demo's Services, as the checkup, routes and load balancing demos describe them:
+// hello-ichor's public load balancer still without an address (MetalLB's default pool is
+// exhausted), a worker with no ready pod, the Traefik entry point, the DNS server and the
+// routed apps.
 func demoServices(namespace string) func() kubeServices {
 	return func() kubeServices {
 		svc := func(ns, name, typ, clusterIP string, ready, total int, ports ...string) serviceRow {
@@ -29,6 +30,9 @@ func demoServices(namespace string) func() kubeServices {
 		traefik := svc("networking", "traefik", "LoadBalancer", "10.96.0.80", 1, 1, "80:30080/TCP", "443:30443/TCP")
 		traefik.Addresses = []string{"192.0.2.240"}
 
+		dns := svc("dns", "blocky", "LoadBalancer", "10.96.0.53", 1, 1, "53:30053/UDP")
+		dns.Addresses = []string{"192.0.2.241"}
+
 		services := []serviceRow{
 			routed(svc("demo", "hello-ichor", "ClusterIP", "10.96.12.40", 2, 2, "80/TCP")),
 			public,
@@ -38,6 +42,7 @@ func demoServices(namespace string) func() kubeServices {
 			routed(svc("media", "immich-server", "ClusterIP", "10.96.51.8", 1, 1, "2283/TCP")),
 			routed(svc("default", "vaultwarden", "ClusterIP", "10.96.70.4", 1, 1, "80/TCP")),
 			traefik,
+			dns,
 		}
 
 		for i := range services {
@@ -49,7 +54,7 @@ func demoServices(namespace string) func() kubeServices {
 
 		out := kubeServices{Services: services}
 		if anyPending(services) {
-			out.LBController = lbControllerCilium
+			out.LBController = lbControllerMetalLB
 		}
 
 		return out

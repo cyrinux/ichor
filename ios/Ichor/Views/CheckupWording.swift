@@ -138,9 +138,14 @@ extension CheckupFinding {
         case .nodePressure: return CheckupText.checkupNodePressure(f.extra)
         case .nodeCordoned: return age.isEmpty ? CheckupText.checkupNodeCordonedPlain : CheckupText.checkupNodeCordoned(age)
         case .nodeVersionSkew: return CheckupText.checkupNodeVersionSkew(f.extra, f.reason)
-        case .lbPending: return CheckupText.checkupLbPending(age)
+        case .lbPending:
+            guard let cause = LBCause(rawValue: f.reason) else { return CheckupText.checkupLbPending(age) }
+            return LoadBalancingText.checkupPendingCause(age, lbCauseText(cause))
         case .lbPoolExhausted: return CheckupText.checkupLbPoolExhausted("\(Int(f.value.rounded()))")
         case .lbPoolConflict: return CheckupText.checkupLbPoolConflict
+        case .lbPoolUnadvertised: return LoadBalancingText.checkupPoolUnadvertised
+        case .lbConfigError: return LoadBalancingText.checkupConfigError
+        case .lbBGPPeerDown: return LoadBalancingText.checkupBGPPeerDown(f.extra.isEmpty ? f.name : f.extra)
         case .namespaceTerminating, .podTerminating, .pvcTerminating: return CheckupText.checkupTerminating(age)
         case .netperfLeftover: return CheckupText.checkupNetperfLeftover(age)
         case .csrPending: return CheckupText.checkupCsrPending("\(f.count)", f.extra)
@@ -188,6 +193,9 @@ extension CheckupFinding {
         case .lbPending: return CheckupText.checkupLbPendingFix
         case .lbPoolExhausted: return CheckupText.checkupLbPoolExhaustedFix
         case .lbPoolConflict: return CheckupText.checkupLbPoolConflictFix
+        case .lbPoolUnadvertised: return LoadBalancingText.checkupPoolUnadvertisedFix
+        case .lbConfigError: return LoadBalancingText.checkupConfigErrorFix
+        case .lbBGPPeerDown: return LoadBalancingText.checkupBGPPeerDownFix
         case .namespaceTerminating: return CheckupText.checkupNamespaceTerminatingFix
         case .podTerminating: return CheckupText.checkupPodTerminatingFix
         case .pvcTerminating: return CheckupText.checkupPvcTerminatingFix

@@ -118,6 +118,7 @@ fun CheckupScreen(
     onOpenRelease: (namespace: String, name: String) -> Unit,
     onOpenMonitoring: () -> Unit,
     onOpenCapacity: () -> Unit,
+    onOpenLoadBalancing: () -> Unit,
     vm: CheckupViewModel = viewModel(factory = factory { CheckupViewModel(app.kubeRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -157,16 +158,17 @@ fun CheckupScreen(
         },
     ) { padding ->
         Loaded(state, vm::refresh, Modifier.pageContent(padding), progress = progress, stepLabel = { checkupStepLabel(it) }) { report ->
-            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring, onOpenCapacity), onDeleteLeftover = { confirmDelete = it })
+            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring, onOpenCapacity, onOpenLoadBalancing), onDeleteLeftover = { confirmDelete = it })
         }
     }
 }
 
-/** Where the checkup leads: a Helm release, the Monitoring tab of the Metrics screen, the Capacity screen. */
+/** Where the checkup leads: a Helm release, the Monitoring tab of the Metrics screen, the Capacity and Load balancing screens. */
 private class CheckupLinks(
     val onOpenRelease: (namespace: String, name: String) -> Unit,
     val onOpenMonitoring: () -> Unit,
     val onOpenCapacity: () -> Unit,
+    val onOpenLoadBalancing: () -> Unit,
 )
 
 @Composable
@@ -324,6 +326,9 @@ private fun SectionBody(
         CheckupSectionId.NODES -> NodeTaints(report.nodes)
         CheckupSectionId.STORAGE -> VolumeLevels(report.volumes)
         CheckupSectionId.HELM -> HelmReleases(report.releases, now, links.onOpenRelease)
+        CheckupSectionId.LOAD_BALANCERS -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
+            TextButton(onClick = links.onOpenLoadBalancing) { Text(stringResource(R.string.lb_open)) }
+        }
         CheckupSectionId.MONITORING -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
             TextButton(onClick = links.onOpenMonitoring) { Text(stringResource(R.string.checkup_open_monitoring)) }
         }

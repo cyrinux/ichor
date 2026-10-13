@@ -41,6 +41,11 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "kube-loadbalancing", args: "", run: func(e env) (out string, err error) {
+		out, err = ichorgo.KubeLoadBalancing(e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
 	{name: "app-routes", args: "PODS_JSON", run: func(e env) (out string, err error) {
 		// app-routes '[{"namespace":"shop","pod":"web-1"}]': the URLs those pods are served at.
 		out, err = ichorgo.KubeAppRoutes(e.cfg, e.context, e.kubeServer, flag.Arg(1))

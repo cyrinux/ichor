@@ -54,6 +54,7 @@ data class ServiceRow(
 enum class LbController(val wire: String) {
     METALLB("metallb"),
     CILIUM("cilium"),
+    KUBE_VIP("kube-vip"),
     ;
 
     companion object {

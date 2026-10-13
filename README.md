@@ -41,7 +41,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   (each object previewed as a diff first; a field another manager owns is refused, never taken
   over), list Helm releases and roll one back to an earlier revision
   (a dry-run plan first; a release Flux manages is suspended first), follow a pod's log and
-  port-forward to it on the phone (127.0.0.1 only); or export a kubeconfig.
+  port-forward to it on the phone (127.0.0.1 only); see what gives LoadBalancer Services their
+  address (MetalLB and Cilium pools with their free addresses, MetalLB advertisements and BGP
+  peers, kube-vip ranges and leases) and why one has none; or export a kubeconfig.
 - **Argo CD:** when the cluster runs it, list its Applications with their health and sync state,
   follow a sync wave by wave, and sync (with prune, dry run, selected resources…), refresh,
   terminate a sync, pause or resume auto-sync, or roll back to an earlier deployment. Ichor
@@ -99,7 +101,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   before the next Kubernetes upgrade, admission webhooks whose Service has no ready endpoint,
   what pods request against what each node offers (and whether one node's pods would still fit
   elsewhere), quotas at their limit, nodes left cordoned or under pressure, LoadBalancer Services
-  without an address and empty Cilium pools, namespaces, pods and claims stuck in Terminating,
+  without an address (and why), empty MetalLB or Cilium pools, MetalLB pools nothing advertises,
+  a refused MetalLB configuration and BGP sessions down, namespaces, pods and claims stuck in Terminating,
   certificate requests nobody approved, External Secrets that do not sync and Helm releases
   failed or stuck. Every finding says what to change. Read-only; the critical ones can also
   notify in the background (Settings → Alerts). A pod's log sheet and a workload's sheet show

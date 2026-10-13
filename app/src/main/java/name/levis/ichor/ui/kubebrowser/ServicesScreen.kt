@@ -19,6 +19,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -88,6 +89,7 @@ class ServicesViewModel(private val browser: KubeBrowserRepository) : LoadingVie
 fun ServicesScreen(
     onBack: () -> Unit,
     onService: (KubeObjectRef) -> Unit,
+    onLoadBalancing: () -> Unit,
     vm: ServicesViewModel = viewModel(factory = factory { ServicesViewModel(app.kubeBrowser) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
@@ -113,7 +115,12 @@ fun ServicesScreen(
             KubeFilters(control, listed, query, { query = it }, R.string.kube_services_search)
             val notes = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             if (loaded?.partialAccess == true) MutedText(stringResource(R.string.kube_services_partial), modifier = notes)
-            if (loaded?.anyPending == true) MutedText(stringResource(lbHint(loaded.lbController)), modifier = notes)
+            if (loaded?.anyPending == true) {
+                MutedText(stringResource(lbHint(loaded.lbController)), modifier = notes)
+                TextButton(onClick = onLoadBalancing, modifier = Modifier.padding(horizontal = 4.dp)) {
+                    Text(stringResource(R.string.lb_open))
+                }
+            }
             HorizontalDivider()
             val rest = Modifier.weight(1f)
             val s = state
@@ -147,6 +154,7 @@ fun ServicesScreen(
 private fun lbHint(controller: String): Int = when (LbController.of(controller)) {
     LbController.METALLB -> R.string.kube_services_hint_metallb
     LbController.CILIUM -> R.string.kube_services_hint_cilium
+    LbController.KUBE_VIP -> R.string.kube_services_hint_kubevip
     null -> R.string.kube_services_hint_none
 }
 

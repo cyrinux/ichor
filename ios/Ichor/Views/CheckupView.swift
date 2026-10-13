@@ -245,6 +245,12 @@ private struct CheckupSectionBody: View {
                     CheckupReleaseRow(release: release, now: now)
                 }
             }
+        case .loadbalancers:
+            if !section.findings.isEmpty || !section.error.isEmpty {
+                NavigationLink { KubeLoadBalancingView() } label: {
+                    Label(LoadBalancingText.open, systemImage: "point.3.connected.trianglepath.dotted").font(.callout)
+                }
+            }
         case .monitoring:
             // Each down target and failing rule, from the Metrics screen's source (or the first found).
             NavigationLink { PromMonitoringView(source: nil) } label: {

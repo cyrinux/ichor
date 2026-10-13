@@ -29,7 +29,7 @@ public enum CheckupKind: String, Sendable {
     case deprecatedAPI, webhookDown, webhookSkipped
     case nodeRequestsHigh, nodePodsFull, noRoomToDrain, quotaNearLimit
     case nodeNotReady, nodePressure, nodeCordoned, nodeVersionSkew
-    case lbPending, lbPoolExhausted, lbPoolConflict
+    case lbPending, lbPoolExhausted, lbPoolConflict, lbPoolUnadvertised, lbConfigError, lbBGPPeerDown
     case namespaceTerminating, podTerminating, pvcTerminating
     /// A network test namespace the app could not delete (it was closed mid-run).
     case netperfLeftover

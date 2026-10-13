@@ -41,6 +41,8 @@ var integrationSpecs = []integrationSpec{
 	{ID: "cert-manager", Name: "cert-manager", Website: "https://cert-manager.io", Groups: []string{groupCertManager, groupACME}},
 	{ID: "castai", Name: "CAST AI", Website: "https://cast.ai", Groups: []string{groupCastAI}},
 	{ID: "cilium", Name: "Cilium", Website: "https://cilium.io", Groups: []string{groupCilium}},
+	{ID: "metallb", Name: "MetalLB", Website: "https://metallb.io", Groups: []string{groupMetalLB}},
+	{ID: "kube-vip", Name: "kube-vip", Website: "https://kube-vip.io"},
 	// Calico's CRDs come with the Kubernetes datastore; with the etcd one only its API server tells.
 	{ID: "calico", Name: "Calico", Website: "https://docs.tigera.io/calico/latest/about/", Groups: []string{groupCalicoCRD, groupCalico}, AnyGroup: true},
 	{ID: "external-secrets", Name: "External Secrets Operator", Website: "https://external-secrets.io", Groups: []string{groupExternalSecrets}},

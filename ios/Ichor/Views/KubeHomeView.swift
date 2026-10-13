@@ -342,6 +342,9 @@ struct KubeHomeView: View {
             NavigationLink { KubeServicesView() } label: {
                 Label("Services", systemImage: "network")
             }
+            NavigationLink { KubeLoadBalancingView() } label: {
+                Label(LoadBalancingText.title, systemImage: "point.3.connected.trianglepath.dotted")
+            }
             NavigationLink { KubeJobsView() } label: {
                 Label("Jobs", systemImage: "checklist")
             }

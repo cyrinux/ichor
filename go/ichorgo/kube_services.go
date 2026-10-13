@@ -27,7 +27,7 @@ const (
 
 // kubeServices is KubeServices' answer. PartialAccess: EndpointSlices or routes could not be
 // read, so some ready counts or URLs may be missing. LBController names what should give a
-// LoadBalancer Service its address (metallb, cilium), set only when one waits for it.
+// LoadBalancer Service its address (metallb, kube-vip, cilium), set only when one waits for it.
 type kubeServices struct {
 	Services      []serviceRow `json:"services"`
 	PartialAccess bool         `json:"partialAccess"`
@@ -174,20 +174,27 @@ func readServices(ctx context.Context, k *kubeClient, namespace string, now time
 	return out, nil
 }
 
-// readLBController names the load balancer controller installed, by its API group: MetalLB
-// first (it is installed for that alone), else Cilium's LB IPAM. "" when neither, or unknown.
+// readLBController names the load balancer controller installed: MetalLB first (it is
+// installed for that alone), then kube-vip (its ConfigMap), else Cilium's LB IPAM. "" when
+// none, or unknown.
 func readLBController(ctx context.Context, k *kubeClient) string {
 	groups, err := readAPIGroups(ctx, k)
 	if err != nil {
 		return ""
 	}
 
-	return lbControllerOf(groups)
+	_, metallb := groups[groupMetalLB]
+
+	return lbControllerOf(groups, !metallb && readKubeVipConfig(ctx, k) != nil)
 }
 
-func lbControllerOf(groups map[string]string) string {
-	if _, ok := groups["metallb.io"]; ok {
+func lbControllerOf(groups map[string]string, kubeVip bool) string {
+	if _, ok := groups[groupMetalLB]; ok {
 		return lbControllerMetalLB
+	}
+
+	if kubeVip {
+		return lbControllerKubeVip
 	}
 
 	if _, ok := groups[groupCilium]; ok {
