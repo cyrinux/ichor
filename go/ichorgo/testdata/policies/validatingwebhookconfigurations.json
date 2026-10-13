@@ -1,0 +1,14 @@
+{
+  "kind": "ValidatingWebhookConfigurationList",
+  "apiVersion": "admissionregistration.k8s.io/v1",
+  "metadata": {},
+  "items": [
+    {
+      "metadata": { "name": "kyverno-resource-validating-webhook-cfg" },
+      "webhooks": [
+        { "name": "validate-resource.kyverno.svc", "failurePolicy": "Fail",
+          "clientConfig": { "service": { "namespace": "kyverno", "name": "kyverno-svc" } } }
+      ]
+    }
+  ]
+}

@@ -125,6 +125,12 @@ var dataCommands = []command{
 
 		return out, err
 	}},
+	{name: "kube-policies", args: "", run: func(e env) (out string, err error) {
+		// kube-policies: the Kyverno policies and their PolicyReport findings (read-only).
+		out, err = ichorgo.KubePolicies(e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
 	{name: "hubble", args: "[SECONDS] [all|drops] [NAMESPACE [POD]]", run: func(e env) (out string, err error) {
 		// hubble [SECONDS] [all|drops] [NAMESPACE [POD]]: read-only exec in the cilium agents.
 		out = hubbleRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
