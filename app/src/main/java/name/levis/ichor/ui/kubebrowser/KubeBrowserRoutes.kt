@@ -23,6 +23,7 @@ object KubeBrowserRoutes {
     const val APPLY = "kube-apply"
     const val STORAGE = "kube-storage"
     const val SERVICES = "kube-services"
+    const val LOAD_BALANCING = "kube-load-balancing"
     const val JOBS = "kube-jobs"
     private const val HELM_RELEASE = "kube-helm-release?ns={ns}&name={name}"
     private const val FORWARD = "kube-forward?ns={ns}&pod={pod}"
@@ -96,7 +97,10 @@ object KubeBrowserRoutes {
             )
         }
         composable(SERVICES) {
-            ServicesScreen(onBack = { nav.popBackStack() }, onService = links.onObject)
+            ServicesScreen(onBack = { nav.popBackStack() }, onService = links.onObject, onLoadBalancing = { nav.navigate(LOAD_BALANCING) })
+        }
+        composable(LOAD_BALANCING) {
+            name.levis.ichor.ui.loadbalancing.LoadBalancingScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)
         }
         composable(JOBS) {
             JobsScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)

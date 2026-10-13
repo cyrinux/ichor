@@ -22,7 +22,9 @@ import name.levis.ichor.R
 import name.levis.ichor.model.CheckupFinding
 import name.levis.ichor.model.CheckupKind
 import name.levis.ichor.model.CheckupSectionId
+import name.levis.ichor.model.LbCause
 import name.levis.ichor.ui.components.localizedDuration
+import name.levis.ichor.ui.loadbalancing.lbCauseText
 import name.levis.ichor.util.formatBytes
 import name.levis.ichor.util.formatPercent
 import kotlin.math.roundToInt
@@ -107,9 +109,13 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
         CheckupKind.NODE_CORDONED ->
             if (age.isEmpty()) stringResource(R.string.checkup_nodeCordoned_plain) else stringResource(R.string.checkup_nodeCordoned, age)
         CheckupKind.NODE_VERSION_SKEW -> stringResource(R.string.checkup_nodeVersionSkew, f.extra, f.reason)
-        CheckupKind.LB_PENDING -> stringResource(R.string.checkup_lbPending, age)
+        CheckupKind.LB_PENDING -> LbCause.ofReason(f.reason)?.let { stringResource(R.string.checkup_lbPending_cause, age, stringResource(lbCauseText(it))) }
+            ?: stringResource(R.string.checkup_lbPending, age)
         CheckupKind.LB_POOL_EXHAUSTED -> stringResource(R.string.checkup_lbPoolExhausted, f.value.roundToInt().toString())
         CheckupKind.LB_POOL_CONFLICT -> stringResource(R.string.checkup_lbPoolConflict)
+        CheckupKind.LB_POOL_UNADVERTISED -> stringResource(R.string.checkup_lbPoolUnadvertised)
+        CheckupKind.LB_CONFIG_ERROR -> stringResource(R.string.checkup_lbConfigError)
+        CheckupKind.LB_BGP_PEER_DOWN -> stringResource(R.string.checkup_lbBGPPeerDown, f.extra.ifEmpty { f.name })
         CheckupKind.NAMESPACE_TERMINATING, CheckupKind.POD_TERMINATING, CheckupKind.PVC_TERMINATING ->
             stringResource(R.string.checkup_terminating, age)
         CheckupKind.NETPERF_LEFTOVER -> stringResource(R.string.checkup_netperfLeftover, age)
@@ -161,6 +167,9 @@ fun checkupFix(kind: String): Int = when (kind) {
     CheckupKind.LB_PENDING -> R.string.checkup_lbPending_fix
     CheckupKind.LB_POOL_EXHAUSTED -> R.string.checkup_lbPoolExhausted_fix
     CheckupKind.LB_POOL_CONFLICT -> R.string.checkup_lbPoolConflict_fix
+    CheckupKind.LB_POOL_UNADVERTISED -> R.string.checkup_lbPoolUnadvertised_fix
+    CheckupKind.LB_CONFIG_ERROR -> R.string.checkup_lbConfigError_fix
+    CheckupKind.LB_BGP_PEER_DOWN -> R.string.checkup_lbBGPPeerDown_fix
     CheckupKind.NAMESPACE_TERMINATING -> R.string.checkup_namespaceTerminating_fix
     CheckupKind.POD_TERMINATING -> R.string.checkup_podTerminating_fix
     CheckupKind.PVC_TERMINATING -> R.string.checkup_pvcTerminating_fix

@@ -142,6 +142,11 @@ extension TalosClient {
         return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeServices(config, context, kubeServer, ns, $0) }
     }
 
+    /// The load balancer controllers, their pools, advertisements and BGP peers, and why a Service has no address.
+    func loadBalancing() async throws -> KubeLoadBalancing {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeLoadBalancing(config, context, kubeServer, $0) }
+    }
+
     /// The Jobs of `namespace` (nil for every one), failures first.
     func jobs(namespace: String?) async throws -> KubeJobs {
         let ns = namespace ?? ""

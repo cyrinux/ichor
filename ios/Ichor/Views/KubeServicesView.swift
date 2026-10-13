@@ -56,8 +56,13 @@ struct KubeServicesView: View {
                     .font(.footnote).foregroundStyle(.secondary)
             }
             if services.anyPending {
-                lbHint(LBController(rawValue: services.lbController))
-                    .font(.footnote).foregroundStyle(.secondary)
+                NavigationLink { KubeLoadBalancingView() } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        lbHint(LBController(rawValue: services.lbController))
+                            .font(.footnote).foregroundStyle(.secondary)
+                        Text(verbatim: LoadBalancingText.open).font(.footnote)
+                    }
+                }
             }
             ForEach(shown) { service in
                 NavigationLink {
@@ -90,6 +95,8 @@ struct KubeServicesView: View {
             Text("A load balancer has no address: check MetalLB’s IPAddressPool, and an L2Advertisement or BGPAdvertisement that announces it.")
         case .cilium:
             Text("A load balancer has no address: check the CiliumLoadBalancerIPPool (addresses left, its service selector) and that Cilium’s LB IPAM is on.")
+        case .kubeVip:
+            Text(verbatim: LoadBalancingText.servicesHintKubeVip)
         case nil:
             Text("A load balancer has no address and no controller was found to give one: install MetalLB, turn on Cilium’s LB IPAM, or use a cloud’s load balancer.")
         }

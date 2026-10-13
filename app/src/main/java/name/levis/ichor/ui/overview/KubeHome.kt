@@ -106,6 +106,8 @@ class KubeHomeNavigation(
     val onStorage: () -> Unit,
     /** The Services with their addresses, ready endpoints and routes. */
     val onServices: () -> Unit,
+    /** The load balancer controllers, their pools and peers, and why a Service has no address. */
+    val onLoadBalancing: () -> Unit,
     /** The Jobs, failures first. */
     val onJobs: () -> Unit,
     /** The cluster's events, live. */

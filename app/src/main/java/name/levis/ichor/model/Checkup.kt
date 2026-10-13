@@ -52,6 +52,12 @@ object CheckupKind {
     const val LB_PENDING = "lbPending"
     const val LB_POOL_EXHAUSTED = "lbPoolExhausted"
     const val LB_POOL_CONFLICT = "lbPoolConflict"
+    /** A MetalLB pool no L2Advertisement or BGPAdvertisement covers. */
+    const val LB_POOL_UNADVERTISED = "lbPoolUnadvertised"
+    /** A MetalLB component that refused its configuration (message: MetalLB's summary). */
+    const val LB_CONFIG_ERROR = "lbConfigError"
+    /** A BGP session a speaker reports down (name: the peer, node: the speaker's, extra: its address). */
+    const val LB_BGP_PEER_DOWN = "lbBGPPeerDown"
     const val NAMESPACE_TERMINATING = "namespaceTerminating"
     const val POD_TERMINATING = "podTerminating"
     const val PVC_TERMINATING = "pvcTerminating"

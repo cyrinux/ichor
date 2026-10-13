@@ -188,6 +188,7 @@ fun OverviewScreen(
     onHelm: () -> Unit,
     onStorage: () -> Unit,
     onServices: () -> Unit,
+    onLoadBalancing: () -> Unit,
     onJobs: () -> Unit,
     /** The cluster's Kubernetes events, live (from the Kubernetes home). */
     onKubeEvents: () -> Unit,
@@ -233,6 +234,7 @@ fun OverviewScreen(
                 onHelm = onHelm,
                 onStorage = onStorage,
                 onServices = onServices,
+                onLoadBalancing = onLoadBalancing,
                 onJobs = onJobs,
                 onEvents = onKubeEvents,
                 onDrain = onDrain,
