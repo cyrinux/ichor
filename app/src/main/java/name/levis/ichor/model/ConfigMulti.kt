@@ -67,6 +67,8 @@ data class MultiApplyRun(
     val finished: Boolean = false,
     /** Set when it ended in a failure (empty when the run said nothing). */
     val error: String? = null,
+    /** Ended by Stop: the nodes done keep the change, the others were not reached. */
+    val stopped: Boolean = false,
 ) {
     fun after(event: MultiConfigEvent): MultiApplyRun = when (event) {
         is MultiConfigEvent.Progress -> copy(progress = event.progress)

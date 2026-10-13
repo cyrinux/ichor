@@ -188,14 +188,21 @@ fun MultiApplyContent(run: MultiApplyRun, onDone: () -> Unit, modifier: Modifier
         }
         if (run.finished) {
             val failed = run.error != null
+            // Stopped: not every node has the change, so the draft is kept like after a failure.
+            val unfinished = failed || run.stopped
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Icon(
-                    if (failed) Icons.Outlined.ErrorOutline else Icons.Outlined.CheckCircle,
+                    if (unfinished) Icons.Outlined.ErrorOutline else Icons.Outlined.CheckCircle,
                     contentDescription = null,
-                    tint = if (failed) status.bad else status.ok,
+                    tint = when {
+                        failed -> status.bad
+                        run.stopped -> status.warn
+                        else -> status.ok
+                    },
                 )
                 Text(
                     when {
+                        run.stopped -> stringResource(R.string.machine_config_multi_stopped)
                         !failed -> stringResource(R.string.machine_config_multi_done)
                         run.error.isNullOrEmpty() -> stringResource(R.string.machine_config_try_no_answer)
                         else -> run.error
@@ -203,7 +210,7 @@ fun MultiApplyContent(run: MultiApplyRun, onDone: () -> Unit, modifier: Modifier
                 )
             }
             Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(if (failed) R.string.machine_config_back_to_draft else R.string.machine_config_done))
+                Text(stringResource(if (unfinished) R.string.machine_config_back_to_draft else R.string.machine_config_done))
             }
         }
     }

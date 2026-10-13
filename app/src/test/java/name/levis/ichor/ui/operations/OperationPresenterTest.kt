@@ -99,7 +99,7 @@ class OperationPresenterTest {
         )
         assertEquals(listOf(OperationAction.STOP), n.actions)
 
-        val stopped = run.copy(run = run.run.copy(finished = true), stopping = true)
+        val stopped = run.copy(run = run.run.copy(finished = true, stopped = true))
         assertEquals(OperationResult(res(R.string.config_multi_notification_stopped, "lab"), raw("w-1")), ConfigMultiPresenter.result(stopped))
         // Not started yet: a spinner.
         assertEquals(OperationProgress.INDETERMINATE, ConfigMultiPresenter.progress(run.copy(run = MultiApplyRun(ConfigApplyMode.AUTO))).progress)

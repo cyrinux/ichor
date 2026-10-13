@@ -967,6 +967,7 @@
     <string name="machine_config_multi_does_not_fit">Queste modifiche non si adattano alla configurazione di questo nodo, quindi viene saltato: %1$s</string>
     <string name="machine_config_multi_progress">Nodo %1$d di %2$d</string>
     <string name="machine_config_multi_done">Tutti i nodi hanno la modifica.</string>
+    <string name="machine_config_multi_stopped">Interrotto: i nodi completati mantengono la modifica, gli altri non sono stati raggiunti.</string>
     <string name="machine_config_multi_state_pending">In attesa</string>
     <string name="machine_config_multi_state_applying">Applicazione</string>
     <string name="machine_config_multi_state_done">Fatto</string>

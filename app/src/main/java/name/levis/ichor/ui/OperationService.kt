@@ -59,6 +59,8 @@ class OperationService : Service() {
     private var shownRunning = emptySet<OperationKind>()
     /** Just started: their result is posted even if they ended before being shown running. */
     private var started = emptySet<OperationKind>()
+    /** Their result is posted: not again until they run again. */
+    private var resultPosted = emptySet<OperationKind>()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -103,8 +105,9 @@ class OperationService : Service() {
         // Ended since shown, or ended before it could be: the progress goes, the result comes.
         val manager = NotificationManagerCompat.from(this)
         (shownRunning - runningKinds).forEach { manager.cancel(it.progressId) }
-        states.filter { !it.running && (it.kind in shownRunning || it.kind in started) }
-            .forEach { state -> state.result?.let { notify(state.kind.resultId, resultNotification(state)) } }
+        val ended = states.filter { !it.running && it.result != null && it.kind !in resultPosted && (it.kind in shownRunning || it.kind in started) }
+        ended.forEach { notify(it.kind.resultId, resultNotification(it)) }
+        resultPosted = resultPosted - runningKinds + ended.map { it.kind }
         shownRunning = runningKinds
         started = emptySet()
         if (lead == null) stopSelf(lastStartId) // a run started since then keeps the service

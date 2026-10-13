@@ -964,6 +964,7 @@
     <string name="machine_config_multi_does_not_fit">These edits do not fit this node\'s config, so it is skipped: %1$s</string>
     <string name="machine_config_multi_progress">Node %1$d of %2$d</string>
     <string name="machine_config_multi_done">Every node has the change.</string>
+    <string name="machine_config_multi_stopped">Stopped: the nodes done keep the change, the others were not reached.</string>
     <string name="machine_config_multi_state_pending">Waiting</string>
     <string name="machine_config_multi_state_applying">Applying</string>
     <string name="machine_config_multi_state_done">Done</string>

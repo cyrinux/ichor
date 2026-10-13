@@ -408,13 +408,13 @@ class MachineConfigViewModel(
 
     /**
      * Leaves a finished multi-node run. Every node done: back to this node's config, read
-     * again. Failed: back to the draft, as after a single apply.
+     * again. Failed or stopped: back to the draft, as after a single apply.
      */
     fun finishMulti() {
         val run = _editor.value.multi?.run ?: return
         if (!run.finished) return
         multiRuns.dismiss()
-        if (run.error == null) {
+        if (run.error == null && !run.stopped) {
             _editor.update { ConfigEditorState(tree = it.tree, treeStale = true) }
             refresh(reset = true)
         } else {

@@ -967,6 +967,7 @@
     <string name="machine_config_multi_does_not_fit">Ces modifications ne conviennent pas à la config de ce nœud, il est donc ignoré : %1$s</string>
     <string name="machine_config_multi_progress">Nœud %1$d sur %2$d</string>
     <string name="machine_config_multi_done">Tous les nœuds ont la modification.</string>
+    <string name="machine_config_multi_stopped">Arrêté : les nœuds terminés gardent la modification, les autres n\'ont pas été atteints.</string>
     <string name="machine_config_multi_state_pending">En attente</string>
     <string name="machine_config_multi_state_applying">Application</string>
     <string name="machine_config_multi_state_done">Terminé</string>

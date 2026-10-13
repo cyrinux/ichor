@@ -967,6 +967,7 @@
     <string name="machine_config_multi_does_not_fit">Estos cambios no encajan con la configuración de este nodo, así que se omite: %1$s</string>
     <string name="machine_config_multi_progress">Nodo %1$d de %2$d</string>
     <string name="machine_config_multi_done">Todos los nodos tienen el cambio.</string>
+    <string name="machine_config_multi_stopped">Detenido: los nodos terminados conservan el cambio, los demás no se alcanzaron.</string>
     <string name="machine_config_multi_state_pending">En espera</string>
     <string name="machine_config_multi_state_applying">Aplicando</string>
     <string name="machine_config_multi_state_done">Hecho</string>

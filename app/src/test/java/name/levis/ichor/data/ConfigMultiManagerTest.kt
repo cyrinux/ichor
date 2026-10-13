@@ -89,6 +89,8 @@ class ConfigMultiManagerTest {
         val state = m.current.value!!
         assertTrue(state.finished)
         assertTrue(state.stopping)
+        // The screen reads the run: stopped, not "every node has the change".
+        assertTrue(state.run.stopped)
         assertNull(state.error)
         // Nothing more is read from the cancelled run, and a new one may start.
         fake.events.send(MultiConfigEvent.Done("late"))
