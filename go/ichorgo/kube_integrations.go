@@ -239,9 +239,6 @@ func demoIntegrations() integrationReport {
 				{Name: "kyverno.io", Version: "v1", Kinds: []string{"ClusterPolicy", "Policy"}},
 				{Name: "reports.kyverno.io", Version: "v1", Kinds: []string{"ClusterEphemeralReport", "EphemeralReport"}},
 			}},
-			{ID: "metallb.io", Groups: []integrationGroup{
-				{Name: "metallb.io", Version: "v1beta1", Kinds: []string{"BGPPeer", "IPAddressPool", "L2Advertisement"}},
-			}},
 			{ID: "traefik.io", Groups: []integrationGroup{
 				{Name: "traefik.io", Version: "v1alpha1", Kinds: []string{"IngressRoute", "Middleware", "TLSOption"}},
 			}},

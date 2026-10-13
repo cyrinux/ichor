@@ -41,6 +41,11 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "kube-loadbalancing", args: "", run: func(e env) (out string, err error) {
+		out, err = ichorgo.KubeLoadBalancing(e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
 	{name: "jobs", args: "[NAMESPACE]", run: func(e env) (out string, err error) {
 		// jobs [NAMESPACE]: every namespace when omitted.
 		out, err = ichorgo.KubeJobs(e.cfg, e.context, e.kubeServer, flag.Arg(1))
