@@ -20,6 +20,15 @@ public enum OperationKind: String, Codable, Hashable, Sendable, CaseIterable {
         self = kind
     }
 
+    /// Its run shows on a screen of its own, which the activity opens; a config rollout, an
+    /// image pull and an image scan show in a sheet or a section instead (the app as it was).
+    public var hasScreen: Bool {
+        switch self {
+        case .configMulti, .imagePull, .imageScan: false
+        default: true
+        }
+    }
+
     /// Its SF Symbol, in the activity and the Dynamic Island.
     public var symbol: String {
         switch self {
@@ -42,9 +51,9 @@ public enum OperationPhase: String, Codable, Hashable, Sendable {
     public var ended: Bool { self == .succeeded || self == .failed || self == .stopped }
 }
 
-/// A button on a running operation's activity. With the app lock on, those that
-/// `opensAppWhenLocked` open the app on the run instead (unlocked first), like the run's own
-/// screen; the others act once the device is unlocked.
+/// A button on a running operation's activity; every one asks for the device to be unlocked
+/// first. With the app lock on, those that `opensAppWhenLocked` open the app on the run instead
+/// (unlocked first), like the run's own screen.
 public enum OperationButton: String, Codable, Hashable, Sendable, CaseIterable {
     case stop, stopFollowing, pause, resume, abort, keep, revert
 
@@ -53,6 +62,12 @@ public enum OperationButton: String, Codable, Hashable, Sendable, CaseIterable {
         case .stop, .abort, .keep: true
         case .stopFollowing, .pause, .resume, .revert: false
         }
+    }
+
+    /// With the app lock on, the button opens `kind`'s screen rather than acting; a run with no
+    /// screen of its own keeps the button (it would otherwise lead nowhere).
+    public func opensApp(for kind: OperationKind, locked: Bool) -> Bool {
+        locked && opensAppWhenLocked && kind.hasScreen
     }
 
     /// What each run offers while it runs: `stopping` once a stop was asked (nothing more to ask),

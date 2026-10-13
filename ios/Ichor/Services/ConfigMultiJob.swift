@@ -49,13 +49,17 @@ final class ConfigMultiJob {
         let events = client.applyMachineConfigMulti(nodes: nodes, edits: edits, mode: mode)
         task = Task {
             var result: String? = String(localized: "The config could not be applied.")
+            var answered = false
             for await event in events {
                 switch event {
                 case .progress(let update): progress = update
-                case .done(let error): result = error
+                case .done(let error):
+                    result = error
+                    answered = true
                 }
             }
-            if stopped { result = String(localized: "Stopped: the nodes done keep the change, the others were not reached.") }
+            // Stopped before the core said how it ended (a late stop leaves its answer).
+            if stopped, !answered { result = String(localized: "Stopped: the nodes done keep the change, the others were not reached.") }
             outcome = .some(result)
             task = nil
             endBackgroundTask()

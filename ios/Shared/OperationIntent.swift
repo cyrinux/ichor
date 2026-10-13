@@ -7,6 +7,8 @@ import IchorCore
 struct OperationIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Act on a run"
     static var isDiscoverable = false
+    // Never from a locked device: Pause, Revert… change the cluster.
+    static var authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
 
     @Parameter(title: "Run")
     var kind: String

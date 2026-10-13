@@ -23,6 +23,12 @@ final class OperationActivityTests: XCTestCase {
 
     func testStopAbortAndKeepOpenTheAppWhenLocked() {
         XCTAssertEqual(OperationButton.allCases.filter(\.opensAppWhenLocked), [.stop, .abort, .keep])
+        XCTAssertTrue(OperationButton.stop.opensApp(for: .maintenance, locked: true))
+        XCTAssertFalse(OperationButton.stop.opensApp(for: .maintenance, locked: false))
+        XCTAssertFalse(OperationButton.pause.opensApp(for: .clusterUpgrade, locked: true))
+        // No screen to open: the button stays a button.
+        XCTAssertFalse(OperationButton.stop.opensApp(for: .imagePull, locked: true))
+        XCTAssertEqual(OperationKind.allCases.filter { !$0.hasScreen }, [.configMulti, .imagePull, .imageScan])
     }
 
     func testABarOnlyWhereTheCoreCounts() {

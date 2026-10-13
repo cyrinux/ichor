@@ -137,7 +137,7 @@ private struct OperationButtons: View {
     var body: some View {
         HStack(spacing: 6) {
             ForEach(content.buttons, id: \.self) { button in
-                if content.locked, button.opensAppWhenLocked {
+                if button.opensApp(for: kind, locked: content.locked) {
                     Link(destination: kind.link) { Text(button.label) }
                 } else {
                     Button(intent: OperationIntent(kind: kind, button: button)) { Text(button.label) }

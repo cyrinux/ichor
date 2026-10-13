@@ -24,8 +24,22 @@ enum OperationActivities {
         for activity in Activity<OperationAttributes>.activities {
             Task { await activity.end(nil, dismissalPolicy: .immediate) }
         }
+        // The app lock turned on or off (a setting, not observable): mask or unmask at once.
+        NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated { resync() }
+        }
         observe()
     }
+
+    /// What the jobs show now, sent again only where it changed (the lock's masking).
+    private static func resync() {
+        let locked = lockEnabled
+        guard locked != shownLocked else { return }
+        sync(current())
+    }
+
+    /// The app lock as last shown.
+    private static var shownLocked = false
 
     private static func observe() {
         let contents = withObservationTracking {
@@ -37,11 +51,15 @@ enum OperationActivities {
     }
 
     private static func sync(_ contents: [OperationKind: OperationContent]) {
+        shownLocked = lockEnabled
         for kind in OperationKind.allCases {
-            let activity = Activity<OperationAttributes>.activities.first { $0.attributes.kind == kind && $0.activityState == .active }
+            // Ended ones too: a finished run's card stays up to 15 minutes, until it is cleared
+            // or the next run of its kind replaces it.
+            let all = Activity<OperationAttributes>.activities.filter { $0.attributes.kind == kind }
+            let activity = all.first { $0.activityState == .active }
             guard let content = contents[kind] else {
                 shown[kind] = nil
-                if let activity { Task { await activity.end(nil, dismissalPolicy: .immediate) } }
+                for gone in all { Task { await gone.end(nil, dismissalPolicy: .immediate) } }
                 continue
             }
             if let last = shown[kind], !changed(last, content) { continue }
@@ -52,6 +70,8 @@ enum OperationActivities {
             } else if let activity {
                 Task { await activity.update(update) }
             } else if ActivityAuthorizationInfo().areActivitiesEnabled {
+                // The last run's result gives way to the new run.
+                for gone in all { Task { await gone.end(nil, dismissalPolicy: .immediate) } }
                 // Refused when the user turned them off meanwhile or too many run: the jobs'
                 // notifications are the fallback, as before.
                 _ = try? Activity.request(attributes: OperationAttributes(kind: kind), content: update)
@@ -69,7 +89,7 @@ enum OperationActivities {
     /// A button on an activity (OperationIntent, in this process). Those that open the app when
     /// the app lock is on are links then; refused here too, the lock may have come on since.
     private static func act(_ kind: OperationKind, _ button: OperationButton) {
-        if button.opensAppWhenLocked, lockEnabled { return }
+        if button.opensApp(for: kind, locked: lockEnabled) { return }
         switch (kind, button) {
         case (.upgrade, .stopFollowing): UpgradeJob.shared.stopFollowing()
         case (.join, .stopFollowing): JoinJob.shared.requestStop()
@@ -158,7 +178,7 @@ enum OperationActivities {
         guard job.target != nil else { return nil }
         let title = String(localized: "Config rollout")
         if let outcome = job.outcome {
-            if job.stopped { return OperationContent(title: title, step: outcome ?? "", phase: .stopped) }
+            if job.stopped, let stopped = outcome { return OperationContent(title: title, step: stopped, phase: .stopped) }
             return OperationContent(title: title, step: outcome ?? String(localized: "Every node has the change."), phase: outcome == nil ? .succeeded : .failed)
         }
         guard let p = job.progress, let count = operationCount(index: p.index, total: p.total) else {
