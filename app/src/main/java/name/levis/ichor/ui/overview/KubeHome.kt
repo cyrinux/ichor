@@ -74,9 +74,14 @@ import name.levis.ichor.model.signInNeeded
 import androidx.compose.runtime.produceState
 import name.levis.ichor.ui.components.pageContent
 
-class KubeHomeViewModel(val kube: KubeRepository) : LoadingViewModel<KubeNodesOverview>() {
+class KubeHomeViewModel(
+    val kube: KubeRepository,
+    /** The last background check's nodes, when nothing is cached (see [LoadingViewModel.seed]). */
+    private val monitorSeed: () -> TalosRepository.Timed<KubeNodesOverview>? = { null },
+) : LoadingViewModel<KubeNodesOverview>() {
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<KubeNodesOverview>? = kube.cached(KUBE_NODES)
+    override fun seed(): TalosRepository.Timed<KubeNodesOverview>? = monitorSeed()
     override val restores get() = kube.restores
     override suspend fun fetch() = kube.kubeNodes()
 }
@@ -134,7 +139,7 @@ class KubeHomeNavigation(
 @Composable
 fun KubeHomeScreen(
     nav: KubeHomeNavigation,
-    vm: KubeHomeViewModel = viewModel(factory = factory { KubeHomeViewModel(app.kubeRepository) }),
+    vm: KubeHomeViewModel = viewModel(factory = factory { KubeHomeViewModel(app.kubeRepository, app::kubeNodesSeed) }),
     argoVm: ArgoViewModel = viewModel(key = "overview-argocd", factory = factory { ArgoViewModel(app.gitOpsRepository, app.kubeRepository, freezeReminderHook(app)) }),
     fluxVm: FluxViewModel = viewModel(key = "overview-flux", factory = factory { FluxViewModel(app.gitOpsRepository, app.kubeRepository) }),
     dataVm: DataServicesViewModel = viewModel(key = "overview-data-services", factory = factory { DataServicesViewModel(app.dataServicesRepository) }),

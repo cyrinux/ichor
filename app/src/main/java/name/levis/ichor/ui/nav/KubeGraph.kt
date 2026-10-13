@@ -67,7 +67,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
         val home = remember(entry) { nav.getBackStackEntry(Routes.OVERVIEW) }
         KubeNodesScreen(
             initialFilter = NodeFilter.entries.firstOrNull { it.name == entry.arguments?.getString("filter") },
-            vm = viewModel(viewModelStoreOwner = home, factory = factory { KubeHomeViewModel(app.kubeRepository) }),
+            vm = viewModel(viewModelStoreOwner = home, factory = factory { KubeHomeViewModel(app.kubeRepository, app::kubeNodesSeed) }),
             onBack = { nav.popBackStack() },
             onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
             onDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },

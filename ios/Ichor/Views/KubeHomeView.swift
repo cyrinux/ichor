@@ -88,6 +88,8 @@ struct KubeHomeView: View {
 
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<KubeNodesOverview> = .loading
+    /// `state` is only what the last background check saw (a seed), until the cluster answers.
+    @State private var fromMonitor = false
     /// The node whose cordon to change, after a confirmation.
     @State private var cordoning: KubeNodeInfo?
     @State private var screen: Screen?
@@ -111,7 +113,7 @@ struct KubeHomeView: View {
     @State private var look = HistoryLook()
 
     var body: some View {
-        LoadStateView(state: state, retry: load) { overview in
+        LoadStateView(state: state, retry: load, fromMonitor: fromMonitor) { overview in
             List {
                 if model.activeSummary?.demo == true {
                     Section {
@@ -215,6 +217,7 @@ struct KubeHomeView: View {
         // Another cluster: never its name over the previous one's nodes.
         .onChange(of: loadID) {
             state = .loading
+            fromMonitor = false
             argo = nil
             flux = nil
             dataServices = nil
@@ -420,9 +423,15 @@ struct KubeHomeView: View {
         // The call is not cancelled with its task: a slow load of the previous context can
         // end after the new one's, and must not replace it.
         let id = loadID
+        // Nothing on screen: the nodes the last background check saw, said as such.
+        if case .loading = state, let snapshot = model.monitorSeed(kube: true) {
+            state = .loaded(snapshot.kubeNodesSeed(), at: snapshot.takenAt)
+            fromMonitor = true
+        }
         let fetched: LoadState<KubeNodesOverview> = await .from { try await client.kubeNodes() }
         guard id == loadID else { return }
         state = state.refreshed(with: fetched)
+        if case .loaded = fetched { fromMonitor = false }
         // Kept on a failed refresh; hidden when the API server cannot say (before 1.28).
         if let me = try? await client.kubeWhoAmI(), id == loadID { whoAmI = me }
         guard id == loadID else { return }

@@ -85,6 +85,7 @@
     <string name="overview_status_down">Inaccesible</string>
     <string name="overview_unreachable_title">No se puede acceder al clúster</string>
     <string name="overview_last_known_state">Se muestra el último estado conocido.</string>
+    <string name="overview_seed_from_monitor">Según la comprobación en segundo plano de las %1$s (%2$s)</string>
     <string name="overview_node_last_seen">Visto por última vez %1$s</string>
     <string name="overview_node_public_ip">IP pública</string>
     <string name="overview_public_ip_detect">Buscar IP públicas</string>
