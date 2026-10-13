@@ -151,7 +151,8 @@ public enum OperationButtonHandler {
     public static var perform: ((OperationKind, OperationButton) -> Void)?
 }
 
-#if canImport(ActivityKit)
+// iOS only: ActivityKit imports on macOS (the package's tests run there too) but is unavailable.
+#if canImport(ActivityKit) && os(iOS)
 import ActivityKit
 
 /// The Live Activity of a run: one per kind at a time. Defined once here, so the app and the
