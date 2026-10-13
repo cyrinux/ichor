@@ -47,6 +47,28 @@ class NodeMenuTest {
     }
 
     @Test
+    fun railIndicesFollowTheItemsNodeSectionsEmits() {
+        // After the header (0): Status title + tiles, Inspect title + tiles, then one row per entry.
+        val groups = nodeMenuGroups(admin)
+        val jumps = nodeJumpSections(groups, power = true)
+        var index = 1
+        val expected = groups.map { (group, entries) ->
+            NodeJump(group.name, group.title, index).also {
+                index += 1 + if (group == NodeMenuGroup.STATUS || group == NodeMenuGroup.INSPECT) 1 else entries.size
+            }
+        } + NodeJump("power", R.string.node_menu_group_power, index)
+        assertEquals(expected, jumps)
+        assertEquals(listOf(1, 3, 5), jumps.take(3).map { it.index })
+    }
+
+    @Test
+    fun aReaderGetsNoPowerDot() {
+        val jumps = nodeJumpSections(nodeMenuGroups(null), power = false)
+        assertEquals(listOf(NodeMenuGroup.STATUS.name, NodeMenuGroup.INSPECT.name), jumps.map { it.key })
+        assertEquals(listOf(1, 3), jumps.map { it.index })
+    }
+
+    @Test
     fun onlyStatusEntriesOpenATab() {
         NodeMenuEntry.entries.forEach { entry ->
             if (entry.group == NodeMenuGroup.STATUS) assertNotNull(entry.name, entry.tab) else assertNull(entry.name, entry.tab)

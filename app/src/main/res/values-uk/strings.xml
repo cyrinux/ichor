@@ -341,6 +341,7 @@
     <string name="etcd_section_alarms">Тривоги</string>
     <string name="etcd_alarms_check_failed">Не вдалося перевірити тривоги: %1$s</string>
     <string name="etcd_section_members">Учасники (%1$d)</string>
+    <string name="etcd_section_members_short">Учасники</string>
     <string name="etcd_section_unprobed">Учасники, яких немає в цьому talosconfig</string>
     <string name="etcd_status_error">Помилка</string>
     <string name="etcd_status_errors">Помилки</string>
@@ -3520,6 +3521,7 @@
     <string name="audit_unauthorized_fix">Його токен чи сертифікат прострочений або видалений (видалений обліковий запис служби, старий kubeconfig): дайте йому нові облікові дані або зупиніть його. Журнал знає лише його адресу.</string>
     <string name="checkup_title">Перевірка кластера</string>
     <string name="checkup_intro">Те, чого не показують інші екрани, прочитане з API Kubernetes. Нічого не змінюється, доки ви не торкнетеся дії.</string>
+    <string name="checkup_section_verdict">Висновок</string>
     <string name="checkup_verdict_critical">Потребує уваги</string>
     <string name="checkup_verdict_warning">Попередження</string>
     <string name="checkup_verdict_ok">Усе гаразд</string>

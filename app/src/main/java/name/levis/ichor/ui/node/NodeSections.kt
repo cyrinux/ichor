@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.node
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -45,6 +46,28 @@ private val TILE_GAP = 8.dp
 private const val MIN_COLUMNS = 3
 private const val DISABLED_ALPHA = 0.38f
 
+/** Status and Inspect show their entries as one grid of tiles, the other groups as one row each. */
+private val NodeMenuGroup.tiled get() = this == NodeMenuGroup.STATUS || this == NodeMenuGroup.INSPECT
+
+/** A section of the node screen's rail: [key] of its title item, its [title], its list [index]. */
+data class NodeJump(val key: String, @StringRes val title: Int, val index: Int)
+
+/**
+ * The titles [nodeSections] emits for [groups] (and Power when [power]), with their indices in
+ * the list; [first] is the index of its first item (the screen's header comes before it).
+ */
+internal fun nodeJumpSections(groups: List<Pair<NodeMenuGroup, List<NodeMenuEntry>>>, power: Boolean, first: Int = 1): List<NodeJump> =
+    buildList {
+        var index = first
+        groups.forEach { (group, entries) ->
+            add(NodeJump(group.name, group.title, index))
+            index += 1 + if (group.tiled) 1 else entries.size
+        }
+        if (power) add(NodeJump(POWER_KEY, R.string.node_menu_group_power, index))
+    }
+
+private const val POWER_KEY = "power"
+
 /**
  * The node screen's sections, as items of its list: Status and Inspect as grids of tiles, the
  * entries that act on the node as rows, the power actions last. [groups] are the ones the role
@@ -64,7 +87,7 @@ internal fun LazyListScope.nodeSections(
     val kubePods = groups.any { (_, entries) -> NodeMenuEntry.TAB_KUBE_PODS in entries }
     groups.forEach { (group, entries) ->
         item(key = group.name) { SectionTitle(stringResource(group.title), Modifier.padding(top = 8.dp)) }
-        if (group == NodeMenuGroup.STATUS || group == NodeMenuGroup.INSPECT) {
+        if (group.tiled) {
             item(key = "${group.name}-tiles") {
                 TileGrid(entries) { entry, modifier ->
                     val notice = entry.notice(features)
@@ -95,7 +118,7 @@ internal fun LazyListScope.nodeSections(
         }
     }
     if (powerActions.isNotEmpty()) {
-        item(key = "power") { SectionTitle(stringResource(R.string.node_menu_group_power), Modifier.padding(top = 8.dp)) }
+        item(key = POWER_KEY) { SectionTitle(stringResource(R.string.node_menu_group_power), Modifier.padding(top = 8.dp)) }
         items(powerActions, key = { it.name }) { action ->
             MenuRow(
                 label = stringResource(action.title),

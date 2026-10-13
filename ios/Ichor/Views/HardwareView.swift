@@ -20,32 +20,62 @@ struct HardwareView: View {
 
     var body: some View {
         LoadStateView(state: state, retry: load) { hw in
-            List {
-                // Sensors first: a hot or throttled node is why one opens this screen. Hidden on a VM.
-                switch sensors {
-                case .loaded(let s, _, _) where !s.sensorsEmpty || s.sensorsError != nil:
-                    SensorsSection(sensors: s)
-                case .failed(let message):
-                    Section("Sensors") { SectionError(message: message) }
-                default:
-                    EmptyView()
+            SectionRailScroll(sections: jumpSections) {
+                List {
+                    // Sensors first: a hot or throttled node is why one opens this screen. Hidden on a VM.
+                    switch sensors {
+                    case .loaded(let s, _, _) where !s.sensorsEmpty || s.sensorsError != nil:
+                        SensorsSection(sensors: s)
+                    case .failed(let message):
+                        Section { SectionError(message: message) } header: { Text("Sensors").sectionTarget("sensors") }
+                    default:
+                        EmptyView()
+                    }
+                    systemSection(hw)
+                    processorsSection(hw)
+                    memorySection(hw)
+                    disksSection(hw)
+                    extensionsSection(hw)
+                    securitySection(hw)
+                    if pciShown, case .loaded(let s, _, _) = sensors {
+                        PCISection(sensors: s)
+                    }
                 }
-                systemSection(hw)
-                processorsSection(hw)
-                memorySection(hw)
-                disksSection(hw)
-                extensionsSection(hw)
-                securitySection(hw)
-                if case .loaded(let s, _, _) = sensors, !s.pci.isEmpty || s.errors["pci"] != nil {
-                    PCISection(sensors: s)
-                }
+                .refreshable { await load() }
+                .themedBackground()
             }
-            .refreshable { await load() }
-            .themedBackground()
         }
         .navigationTitle(String(localized: "About \(hostname)"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
+    }
+
+    /// The Sensors section shows when there are sensors (or their read failed), PCI when there
+    /// are devices; the hardware sections always.
+    private var sensorsShown: Bool {
+        switch sensors {
+        case .loaded(let s, _, _): !s.sensorsEmpty || s.sensorsError != nil
+        case .failed: true
+        default: false
+        }
+    }
+
+    private var pciShown: Bool {
+        if case .loaded(let s, _, _) = sensors { return !s.pci.isEmpty || s.errors["pci"] != nil }
+        return false
+    }
+
+    private var jumpSections: [JumpSection] {
+        [
+            JumpSection(id: "sensors", label: String(localized: "Sensors")),
+            JumpSection(id: "system", label: String(localized: "System")),
+            JumpSection(id: "processors", label: String(localized: "Processors")),
+            JumpSection(id: "memory", label: String(localized: "Memory")),
+            JumpSection(id: "disks", label: String(localized: "Disks")),
+            JumpSection(id: "extensions", label: String(localized: "System extensions")),
+            JumpSection(id: "security", label: String(localized: "Security")),
+            JumpSection(id: "pci", label: String(localized: "PCI devices")),
+        ].filter { ($0.id != "sensors" || sensorsShown) && ($0.id != "pci" || pciShown) }
     }
 
     private func load() async {
@@ -58,7 +88,7 @@ struct HardwareView: View {
     }
 
     private func systemSection(_ hw: NodeHardware) -> some View {
-        Section("System") {
+        Section {
             SectionError(message: hw.errors["system"])
             if let system = hw.system {
                 InfoRow(label: String(localized: "Manufacturer"), value: system.manufacturer)
@@ -69,6 +99,8 @@ struct HardwareView: View {
                 InfoRow(label: String(localized: "UUID"), value: system.uuid, monospaced: true)
                 InfoRow(label: String(localized: "BIOS version"), value: system.biosVersion)
             }
+        } header: {
+            Text("System").sectionTarget("system")
         }
     }
 
@@ -82,7 +114,7 @@ struct HardwareView: View {
                 }
             }
         } header: {
-            Text("Processors")
+            Text("Processors").sectionTarget("processors")
         } footer: {
             if hw.processors.count > 1 {
                 Text("\(Int(hw.totalCores)) cores, \(Int(hw.totalThreads)) threads in total")
@@ -113,7 +145,7 @@ struct HardwareView: View {
                 }
             }
         } header: {
-            Text("Memory")
+            Text("Memory").sectionTarget("memory")
         }
     }
 
@@ -124,7 +156,7 @@ struct HardwareView: View {
     }
 
     private func disksSection(_ hw: NodeHardware) -> some View {
-        Section("Disks") {
+        Section {
             SectionError(message: hw.errors["disks"])
             ForEach(sortedDisks(hw.disks)) { disk in
                 VStack(alignment: .leading, spacing: 3) {
@@ -138,6 +170,8 @@ struct HardwareView: View {
                     Text(verbatim: diskDetails(disk)).font(.caption).foregroundStyle(.secondary)
                 }
             }
+        } header: {
+            Text("Disks").sectionTarget("disks")
         }
     }
 
@@ -148,7 +182,7 @@ struct HardwareView: View {
     }
 
     private func extensionsSection(_ hw: NodeHardware) -> some View {
-        Section("System extensions") {
+        Section {
             SectionError(message: hw.errors["extensions"])
             if hw.extensions.isEmpty && hw.errors["extensions"] == nil {
                 Text("None").foregroundStyle(.secondary)
@@ -172,11 +206,13 @@ struct HardwareView: View {
                     }
                 }
             }
+        } header: {
+            Text("System extensions").sectionTarget("extensions")
         }
     }
 
     private func securitySection(_ hw: NodeHardware) -> some View {
-        Section("Security") {
+        Section {
             SectionError(message: hw.errors["security"])
             if let security = hw.security {
                 FlagRow(label: String(localized: "Secure Boot"), on: security.secureBoot)
@@ -187,6 +223,8 @@ struct HardwareView: View {
                 InfoRow(label: String(localized: "UKI signing key"), value: security.ukiSigningKeyFingerprint, monospaced: true)
                 InfoRow(label: String(localized: "PCR signing key"), value: security.pcrSigningKeyFingerprint, monospaced: true)
             }
+        } header: {
+            Text("Security").sectionTarget("security")
         }
     }
 

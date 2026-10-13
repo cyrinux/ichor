@@ -37,6 +37,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.Alignment
+import name.levis.ichor.ui.components.JumpSection
+import name.levis.ichor.ui.components.SectionJumpRail
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.Feature
@@ -210,40 +215,50 @@ fun NodeDetailScreen(
             )
         },
     ) { padding ->
-        LazyColumn(
-            Modifier.pageContent(padding).fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            item(key = "header") { NodeHeader(node, role, cordoned[node]) }
-            nodeSections(
-                groups = nodeMenuGroups(config?.activeSummary),
-                features = features,
-                // One upgrade at a time in the app.
-                busy = buildSet {
-                    if (upgradeBusyElsewhere || maintenanceRunning) add(NodeMenuEntry.UPGRADE)
-                    if (upgrading?.running == true || (maintenanceRunning && maintenance?.node != node)) {
-                        add(NodeMenuEntry.MAINTENANCE)
-                        add(NodeMenuEntry.DRAIN)
-                    }
-                    if (cordonBusy || (maintenanceRunning && maintenance?.node == node)) add(NodeMenuEntry.CORDON)
-                    if (resetState is ResetState.Running || upgrading?.running == true || maintenanceRunning) add(NodeMenuEntry.RESET)
-                },
-                cordoned = cordoned[node],
-                // Power actions only exist for configs whose role allows them.
-                powerActions = if (canPower) PowerAction.entries else emptyList(),
-                powerEnabled = powerState !is PowerState.Running,
-                onPick = { entry ->
-                    val tab = entry.tab
-                    when {
-                        tab != null -> onTab(tab)
-                        entry == NodeMenuEntry.CORDON -> confirmingCordon = true
-                        entry == NodeMenuEntry.RESET -> confirmingReset = true
-                        else -> onMenu(entry)
-                    }
-                },
-                onPower = { confirming = it },
-            )
+        val groups = nodeMenuGroups(config?.activeSummary)
+        // Power actions only exist for configs whose role allows them.
+        val powerActions = if (canPower) PowerAction.entries else emptyList()
+        val jumps = nodeJumpSections(groups, power = powerActions.isNotEmpty())
+        val labels = jumps.map { stringResource(it.title) }
+        val sections = remember(jumps, labels) { jumps.mapIndexed { i, jump -> JumpSection(jump.key, labels[i], jump.index) } }
+        val listState = rememberLazyListState()
+        Box(Modifier.pageContent(padding).fillMaxSize()) {
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                state = listState,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                item(key = "header") { NodeHeader(node, role, cordoned[node]) }
+                nodeSections(
+                    groups = groups,
+                    features = features,
+                    // One upgrade at a time in the app.
+                    busy = buildSet {
+                        if (upgradeBusyElsewhere || maintenanceRunning) add(NodeMenuEntry.UPGRADE)
+                        if (upgrading?.running == true || (maintenanceRunning && maintenance?.node != node)) {
+                            add(NodeMenuEntry.MAINTENANCE)
+                            add(NodeMenuEntry.DRAIN)
+                        }
+                        if (cordonBusy || (maintenanceRunning && maintenance?.node == node)) add(NodeMenuEntry.CORDON)
+                        if (resetState is ResetState.Running || upgrading?.running == true || maintenanceRunning) add(NodeMenuEntry.RESET)
+                    },
+                    cordoned = cordoned[node],
+                    powerActions = powerActions,
+                    powerEnabled = powerState !is PowerState.Running,
+                    onPick = { entry ->
+                        val tab = entry.tab
+                        when {
+                            tab != null -> onTab(tab)
+                            entry == NodeMenuEntry.CORDON -> confirmingCordon = true
+                            entry == NodeMenuEntry.RESET -> confirmingReset = true
+                            else -> onMenu(entry)
+                        }
+                    },
+                    onPower = { confirming = it },
+                )
+            }
+            SectionJumpRail(sections, listState, Modifier.align(Alignment.CenterEnd))
         }
     }
 

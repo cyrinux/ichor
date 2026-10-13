@@ -310,6 +310,7 @@
     <string name="etcd_section_alarms">Alarmas</string>
     <string name="etcd_alarms_check_failed">No se pudieron comprobar las alarmas: %1$s</string>
     <string name="etcd_section_members">Miembros (%1$d)</string>
+    <string name="etcd_section_members_short">Miembros</string>
     <string name="etcd_section_unprobed">Miembros que no están en este talosconfig</string>
     <string name="etcd_status_error">Error</string>
     <string name="etcd_status_errors">Errores</string>
@@ -3320,6 +3321,7 @@
     <string name="audit_unauthorized_fix">Su token o certificado caducó o se borró (una cuenta de servicio eliminada, un kubeconfig antiguo): dele credenciales nuevas o deténgalo. El registro solo conoce su dirección.</string>
     <string name="checkup_title">Chequeo del clúster</string>
     <string name="checkup_intro">Lo que las demás pantallas no muestran, leído de la API de Kubernetes. No se cambia nada salvo que toques una acción.</string>
+    <string name="checkup_section_verdict">Veredicto</string>
     <string name="checkup_verdict_critical">Requiere atención</string>
     <string name="checkup_verdict_warning">Advertencias</string>
     <string name="checkup_verdict_ok">Todo en orden</string>
