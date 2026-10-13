@@ -119,3 +119,37 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "$TAG" --notes ""
+
+  # Announces the release in the Discord #changelog channel through its webhook, once the
+  # GitHub release exists so the title can link to it. The message is the release's entry
+  # from scripts/changelog.py (scripts/discord-notes.py). Skipped until the
+  # DISCORD_CHANGELOG_WEBHOOK secret of the `release` environment is set (channel settings >
+  # Integrations > Webhooks > New Webhook > Copy Webhook URL).
+  discord:
+    needs: [publish]
+    runs-on: ubuntu-latest
+    environment: release # DISCORD_CHANGELOG_WEBHOOK is an environment secret
+    permissions:
+      contents: read
+    env:
+      WEBHOOK: ${{ secrets.DISCORD_CHANGELOG_WEBHOOK }}
+    steps:
+      - name: Check the webhook
+        if: env.WEBHOOK == ''
+        run: echo "DISCORD_CHANGELOG_WEBHOOK is not set, skipping the Discord announcement."
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: env.WEBHOOK != ''
+        with:
+          fetch-depth: 0 # scripts/changelog.py reads the tags and history
+          persist-credentials: false
+
+      - name: Post to #changelog
+        if: env.WEBHOOK != ''
+        env:
+          URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}
+        run: |
+          scripts/discord-notes.py --url "$URL" >payload.json
+          curl --fail-with-body --silent --show-error \
+            -H 'Content-Type: application/json' \
+            --data @payload.json "$WEBHOOK"
