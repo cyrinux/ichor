@@ -547,6 +547,7 @@ fun OverviewScreen(
                     certificate = config?.activeSummary,
                     onIssueConfig = onIssueConfig,
                     onInsights = onInsights,
+                    onCapacity = onCapacity,
                     apps = apps,
                     onApps = onApps,
                     dataServices = dataServices.takeIf { dataHints.isNotEmpty() },
@@ -598,6 +599,7 @@ private fun NodeList(
     certificate: ContextSummary?,
     onIssueConfig: () -> Unit,
     onInsights: () -> Unit,
+    onCapacity: () -> Unit,
     apps: UiState<Inventory>,
     onApps: (attention: Boolean) -> Unit,
     dataServices: UiState<DataServices>?,
@@ -704,6 +706,7 @@ private fun NodeList(
                         clusterSummary(overview.nodes),
                         live,
                         onInsights,
+                        onCapacity,
                         Modifier.longPressToCustomize(onCustomize),
                     )
                 }

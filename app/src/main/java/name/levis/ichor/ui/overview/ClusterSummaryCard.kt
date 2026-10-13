@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -12,12 +13,14 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.SdCard
+import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -46,7 +49,7 @@ private const val UNKNOWN = "—"
  * The cluster at a glance, above the nodes: its name and overall state, how many nodes on
  * which Talos version, and the capacity of the nodes that answered. With [live] usage, CPU
  * and memory follow it; without, they show the overview's snapshot. Tapping it opens the
- * cluster insights, which its footer names.
+ * cluster insights, which its footer names; the footer's Capacity link opens [onCapacity].
  */
 @Composable
 fun ClusterSummaryCard(
@@ -54,6 +57,7 @@ fun ClusterSummaryCard(
     summary: ClusterSummary,
     live: ClusterLiveState?,
     onInsights: () -> Unit,
+    onCapacity: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(onClick = onInsights, modifier = modifier.fillMaxWidth()) {
@@ -79,24 +83,34 @@ fun ClusterSummaryCard(
                 val reached = summary.total - summary.unreachable
                 MemoryStat(summary, live?.usage?.takeIf { it.nodes >= reached }, Modifier.weight(1f))
             }
-            InsightsFooter()
+            Footer(onCapacity)
         }
     }
 }
 
-/** The way into the cluster insights, so the card reads as tappable. */
+/**
+ * The way into the cluster insights, so the card reads as tappable, and a shortcut to the
+ * Capacity screen beside it (its own button, so it does not open the insights).
+ */
 @Composable
-private fun InsightsFooter() {
+private fun Footer(onCapacity: () -> Unit) {
     val color = MaterialTheme.colorScheme.primary
-    Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(Icons.Outlined.Insights, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
         Text(
             stringResource(R.string.insights_title),
             style = MaterialTheme.typography.labelLarge,
             color = color,
-            modifier = Modifier.weight(1f).padding(start = 8.dp),
+            modifier = Modifier.weight(1f, fill = false).padding(start = 8.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
         Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = color)
+        Spacer(Modifier.weight(1f))
+        TextButton(onClick = onCapacity) {
+            Icon(Icons.Outlined.Speed, contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+            Text(stringResource(R.string.capacity_title), maxLines = 1)
+        }
     }
 }
 
