@@ -1,0 +1,19 @@
+{
+  "kind": "DeploymentList",
+  "apiVersion": "apps/v1",
+  "metadata": {},
+  "items": [
+    {
+      "metadata": { "name": "kyverno-admission-controller", "namespace": "kyverno",
+        "labels": { "app.kubernetes.io/part-of": "kyverno", "app.kubernetes.io/component": "admission-controller" } },
+      "spec": { "replicas": 1 },
+      "status": { "readyReplicas": 0 }
+    },
+    {
+      "metadata": { "name": "kyverno-background-controller", "namespace": "kyverno",
+        "labels": { "app.kubernetes.io/part-of": "kyverno", "app.kubernetes.io/component": "background-controller" } },
+      "spec": { "replicas": 1 },
+      "status": { "readyReplicas": 1 }
+    }
+  ]
+}

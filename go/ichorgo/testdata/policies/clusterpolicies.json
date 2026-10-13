@@ -1,0 +1,43 @@
+{
+  "kind": "ClusterPolicyList",
+  "apiVersion": "kyverno.io/v1",
+  "metadata": {},
+  "items": [
+    {
+      "metadata": { "name": "disallow-privileged", "annotations": {} },
+      "spec": {
+        "validationFailureAction": "Enforce",
+        "background": true,
+        "rules": [ { "name": "privileged-containers", "validate": {} } ]
+      },
+      "status": { "conditions": [ { "type": "Ready", "status": "True", "reason": "Succeeded" } ] }
+    },
+    {
+      "metadata": {
+        "name": "require-labels",
+        "annotations": {
+          "policies.kyverno.io/category": "Best Practices",
+          "policies.kyverno.io/severity": "medium",
+          "policies.kyverno.io/description": "Every pod must carry a team label and an owner label so that its alerts and its ownership are obvious to whoever answers the incident, and so dashboards can group the namespaces of the cluster the way the teams who own them actually think about the work."
+        }
+      },
+      "spec": {
+        "validationFailureAction": "Audit",
+        "rules": [
+          { "name": "require-team", "validate": { "failureAction": "Enforce" } },
+          { "name": "require-owner", "validate": {} },
+          { "name": "mutate-team", "mutate": {} }
+        ]
+      },
+      "status": { "ready": true }
+    },
+    {
+      "metadata": { "name": "verify-image-signatures" },
+      "spec": { "rules": [ { "name": "verify-signature", "verifyImages": {} } ] },
+      "status": {
+        "ready": true,
+        "conditions": [ { "type": "Ready", "status": "False", "reason": "WebhookNotConfigured", "message": "the validating webhook configuration is missing" } ]
+      }
+    }
+  ]
+}
