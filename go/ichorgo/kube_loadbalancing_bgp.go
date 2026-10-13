@@ -132,7 +132,12 @@ func parseBGPSessions(text, node string) []bgpSession {
 			continue
 		}
 
-		v, err := strconv.ParseFloat(strings.Fields(value)[0], 64)
+		fields := strings.Fields(value)
+		if len(fields) == 0 {
+			continue
+		}
+
+		v, err := strconv.ParseFloat(fields[0], 64)
 		if err != nil {
 			continue
 		}
@@ -184,7 +189,8 @@ func (s bgpSessions) of(address string) []lbBGPSession {
 }
 
 // samePeer tells whether a metric's peer label ("192.0.2.1", "192.0.2.1:179",
-// "[2001:db8::1]:179") names address.
+// "[2001:db8::1]:179", native mode's "2001:db8::1:179") names address: the address alone,
+// or followed by ":<port>" (or "]:<port>").
 func samePeer(label, address string) bool {
 	label = strings.TrimPrefix(label, "[")
 
@@ -192,13 +198,17 @@ func samePeer(label, address string) bool {
 		return true
 	}
 
-	port, ok := strings.CutPrefix(label, address)
+	rest, ok := strings.CutPrefix(label, address)
 	if !ok {
 		return false
 	}
 
-	port = strings.TrimPrefix(strings.TrimPrefix(port, "]"), ":")
+	port, ok := strings.CutPrefix(strings.TrimPrefix(rest, "]"), ":")
+	if !ok || port == "" {
+		return false
+	}
+
 	_, err := strconv.Atoi(port)
 
-	return port != "" && err == nil
+	return err == nil
 }

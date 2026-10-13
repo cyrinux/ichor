@@ -99,9 +99,10 @@ func poolRanges(lines []string) []addrRange {
 }
 
 func rangesSize(ranges []addrRange) int {
+	// Capped before adding: int is 32 bits on android/arm, where two capped ranges would overflow.
 	total := 0
 	for _, r := range ranges {
-		total = min(total+r.size(), maxPoolSize)
+		total = min(total, maxPoolSize-r.size()) + r.size()
 	}
 
 	return total

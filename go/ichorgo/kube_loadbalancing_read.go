@@ -161,6 +161,8 @@ func (in lbInputs) runs(app string) bool {
 }
 
 // controllers lists the controllers found, in the order they take a Service without class.
+// A kube-vip without its ConfigMap often holds only the control plane's address (kubeadm):
+// it comes last, after Cilium, so it does not take the Services Cilium serves.
 func (in lbInputs) controllers() []string {
 	out := []string{}
 
@@ -168,12 +170,16 @@ func (in lbInputs) controllers() []string {
 		out = append(out, lbControllerMetalLB)
 	}
 
-	if in.kubeVip != nil {
+	if in.kubeVip != nil && in.kubeVip.configMap {
 		out = append(out, lbControllerKubeVip)
 	}
 
 	if _, ok := in.groups[groupCilium]; ok {
 		out = append(out, lbControllerCilium)
+	}
+
+	if in.kubeVip != nil && !in.kubeVip.configMap {
+		out = append(out, lbControllerKubeVip)
 	}
 
 	return out

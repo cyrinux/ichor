@@ -83,7 +83,10 @@ func TestLBCauses(t *testing.T) {
 			lbCauseNoController},
 		{"kube-vip without range", lbInputs{kubeVip: &kubeVipState{configMap: true}, pods: []lbPod{{Name: "kube-vip-n1", App: lbControllerKubeVip}}},
 			lbPending, lbCauseNoPool},
-		{"kube-vip range for another namespace", lbInputs{kubeVip: &kubeVipState{ranges: []lbKubeVipRange{{Scope: "lab", CIDRs: []string{"192.0.2.0/29"}}}}},
+		{"control-plane kube-vip leaves Services to Cilium", lbInputs{groups: map[string]string{groupCilium: "v2"}, kubeVip: &kubeVipState{},
+			cilium: decodeAll[ciliumPoolObject](t, `[{"metadata":{"name":"blue"},"spec":{"blocks":[{"cidr":"192.0.2.0/30"}],"serviceSelector":{"matchLabels":{"color":"blue"}}}}]`)},
+			lbPending, lbCausePoolNotMatched},
+		{"kube-vip range for another namespace", lbInputs{kubeVip: &kubeVipState{configMap: true, ranges: []lbKubeVipRange{{Scope: "lab", CIDRs: []string{"192.0.2.0/29"}}}}},
 			lbPending, lbCausePoolNotMatched},
 		{"cilium pool for other services", lbInputs{groups: map[string]string{groupCilium: "v2"},
 			cilium: decodeAll[ciliumPoolObject](t, `[{"metadata":{"name":"blue"},"spec":{"blocks":[{"cidr":"192.0.2.0/30"}],"serviceSelector":{"matchLabels":{"color":"blue"}}}}]`)},
@@ -116,6 +119,7 @@ func TestAddrRanges(t *testing.T) {
 		{[]string{"192.0.2.10-192.0.2.20"}, 11, "192.0.2.20", "192.0.2.21"},
 		{[]string{"192.0.2.7", "2001:db8::/126"}, 5, "2001:db8::3", "2001:db8::4"},
 		{[]string{"2001:db8::/64"}, maxPoolSize, "2001:db8::ffff", "2001:db9::"},
+		{[]string{"2001:db8::/64", "2001:db9::/64", "192.0.2.1"}, maxPoolSize, "2001:db9::1", "2001:dba::"},
 		{[]string{"not-an-address", "192.0.2.20-192.0.2.10"}, 0, "", "192.0.2.15"},
 	} {
 		ranges := poolRanges(tc.lines)
@@ -148,6 +152,12 @@ func TestBGPSessions(t *testing.T) {
 
 	if got := sessions.of("192.0.2.10"); len(got) != 1 || !got[0].Up {
 		t.Errorf("192.0.2.10 must not take 192.0.2.1's sessions: %+v", got)
+	}
+
+	// FRR-K8s labels the bare address: 192.0.2.10's session is not 192.0.2.1's on port 0.
+	frrOnly := bgpSessions(parseBGPSessions(`frrk8s_bgp_session_up{peer="192.0.2.10"} 0`+"\n"+`metallb_bgp_session_up{peer="192.0.2.1:179"} `+"\n", "n3"))
+	if got := frrOnly.of("192.0.2.1"); len(got) != 0 {
+		t.Errorf("192.0.2.1 took another peer's session, or a line without value: %+v", got)
 	}
 }
 

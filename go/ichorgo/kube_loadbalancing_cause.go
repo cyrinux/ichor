@@ -164,8 +164,8 @@ func (in lbInputs) metallbCause(s lbServiceObject) string {
 	candidates := slices.DeleteFunc(slices.Clone(m.pools), func(p metallbPool) bool { return !in.metallbPoolServes(p, s) })
 	rows := map[string]lbPool{}
 
-	for _, p := range lbPoolRows(in, true) {
-		rows[p.Name] = p
+	for _, p := range m.pools {
+		rows[p.Metadata.Name] = metallbPoolRow(in, p, true)
 	}
 
 	switch {
