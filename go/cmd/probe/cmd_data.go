@@ -9,6 +9,9 @@ import (
 
 // GitOps, the network and data services.
 var dataCommands = []command{
+	{name: "crossplane", args: "", run: func(e env) (out string, err error) {
+		return ichorgo.KubeCrossplane(e.cfg, e.context, e.kubeServer)
+	}},
 	{name: "dataservices", args: "[HINTS]", run: func(e env) (out string, err error) {
 		// dataservices [HINTS], e.g. "garage" or "longhorn,cloudnative-pg"; none checks all.
 		out, err = ichorgo.KubeDataServices(e.cfg, e.context, e.kubeServer, flag.Arg(1))

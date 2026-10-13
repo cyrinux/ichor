@@ -1,0 +1,79 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "bucket-standard",
+        "namespace": ""
+      },
+      "spec": {
+        "compositeTypeRef": {
+          "kind": "XBucket",
+          "apiVersion": "platform.example.org/v1beta1"
+        }
+      },
+      "status": {
+        "conditions": []
+      }
+    },
+    {
+      "metadata": {
+        "name": "database-standard",
+        "namespace": ""
+      },
+      "spec": {
+        "compositeTypeRef": {
+          "kind": "XDatabase",
+          "apiVersion": "platform.example.org/v1beta1"
+        }
+      },
+      "status": {
+        "conditions": []
+      }
+    },
+    {
+      "metadata": {
+        "name": "bucket-legacy",
+        "namespace": ""
+      },
+      "spec": {
+        "compositeTypeRef": {
+          "kind": "XBucket",
+          "apiVersion": "platform.example.org/v1alpha1"
+        }
+      },
+      "status": {
+        "conditions": []
+      }
+    },
+    {
+      "metadata": {
+        "name": "wrong-kind",
+        "namespace": ""
+      },
+      "spec": {
+        "compositeTypeRef": {
+          "kind": "Other",
+          "apiVersion": "platform.example.org/v1beta1"
+        }
+      },
+      "status": {
+        "conditions": []
+      }
+    },
+    {
+      "metadata": {
+        "name": "wrong-group",
+        "namespace": ""
+      },
+      "spec": {
+        "compositeTypeRef": {
+          "kind": "XBucket",
+          "apiVersion": "other.example.org/v1beta1"
+        }
+      },
+      "status": {
+        "conditions": []
+      }
+    }
+  ]
+}

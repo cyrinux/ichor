@@ -1,0 +1,37 @@
+{
+  "groupVersion": "sql.example.org/v1",
+  "resources": [
+    {
+      "name": "databases",
+      "kind": "Database",
+      "namespaced": true,
+      "verbs": [
+        "get",
+        "list"
+      ],
+      "categories": [
+        "managed"
+      ]
+    },
+    {
+      "name": "databases/status",
+      "kind": "Database",
+      "verbs": [
+        "get"
+      ],
+      "categories": [
+        "managed"
+      ]
+    },
+    {
+      "name": "notlistable",
+      "kind": "Other",
+      "verbs": [
+        "get"
+      ],
+      "categories": [
+        "managed"
+      ]
+    }
+  ]
+}

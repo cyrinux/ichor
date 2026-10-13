@@ -1,0 +1,68 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "assets-bucket",
+        "namespace": "",
+        "annotations": {
+          "crossplane.io/external-name": "assets-external"
+        },
+        "labels": {
+          "crossplane.io/composite": "assets"
+        }
+      },
+      "spec": {
+        "providerConfigRef": {
+          "name": "storage-auth"
+        },
+        "managementPolicies": [
+          "Observe",
+          "Update"
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True",
+            "reason": "Available",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          },
+          {
+            "type": "Synced",
+            "status": "True",
+            "reason": "ReconcileSuccess",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "broken-bucket",
+        "namespace": ""
+      },
+      "spec": {},
+      "status": {
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "False",
+            "reason": "Unavailable",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          },
+          {
+            "type": "Synced",
+            "status": "False",
+            "reason": "ReconcileError",
+            "message": "AccessDenied: User is not authorized to create this bucket",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          }
+        ]
+      }
+    }
+  ]
+}

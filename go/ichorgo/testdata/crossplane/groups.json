@@ -1,0 +1,39 @@
+{
+  "groups": [
+    {
+      "name": "pkg.crossplane.io",
+      "preferredVersion": {
+        "version": "v1",
+        "groupVersion": "pkg.crossplane.io/v1"
+      }
+    },
+    {
+      "name": "apiextensions.crossplane.io",
+      "preferredVersion": {
+        "version": "v2",
+        "groupVersion": "apiextensions.crossplane.io/v2"
+      }
+    },
+    {
+      "name": "platform.example.org",
+      "preferredVersion": {
+        "version": "v1beta1",
+        "groupVersion": "platform.example.org/v1beta1"
+      }
+    },
+    {
+      "name": "storage.example.org",
+      "preferredVersion": {
+        "version": "v1",
+        "groupVersion": "storage.example.org/v1"
+      }
+    },
+    {
+      "name": "sql.example.org",
+      "preferredVersion": {
+        "version": "v1",
+        "groupVersion": "sql.example.org/v1"
+      }
+    }
+  ]
+}

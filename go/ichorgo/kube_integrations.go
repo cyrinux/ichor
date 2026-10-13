@@ -55,6 +55,8 @@ type integrationGroup struct {
 	Name    string   `json:"name"`
 	Version string   `json:"version"`
 	Kinds   []string `json:"kinds"`
+	// Crossplane categories identify dynamic provider and composite groups.
+	Crossplane bool `json:"-"`
 }
 
 // KubeIntegrations lists the API groups the cluster serves that Ichor does not read yet,
@@ -88,8 +90,18 @@ func readIntegrations(ctx context.Context, k *kubeClient) (integrationReport, er
 	}
 
 	readIntegrationKinds(ctx, k, unknown)
+	requests := make([]integrationGroup, 0, len(unknown))
+	for _, g := range unknown {
+		if g.Crossplane {
+			if !slices.Contains(report.Supported, "crossplane") {
+				report.Supported = append(report.Supported, "crossplane")
+			}
+		} else {
+			requests = append(requests, g)
+		}
+	}
 	slices.Sort(report.Supported)
-	report.Families = integrationFamilies(unknown)
+	report.Families = integrationFamilies(requests)
 
 	return report, nil
 }
@@ -109,8 +121,9 @@ func readIntegrationKinds(ctx context.Context, k *kubeClient, groups []integrati
 
 			var doc struct {
 				Resources []struct {
-					Name string `json:"name"`
-					Kind string `json:"kind"`
+					Name       string   `json:"name"`
+					Kind       string   `json:"kind"`
+					Categories []string `json:"categories"`
 				} `json:"resources"`
 			}
 
@@ -120,6 +133,9 @@ func readIntegrationKinds(ctx context.Context, k *kubeClient, groups []integrati
 			}
 
 			for _, r := range doc.Resources {
+				if !strings.Contains(r.Name, "/") && (slices.Contains(r.Categories, "managed") || slices.Contains(r.Categories, "crossplane")) {
+					g.Crossplane = true
+				}
 				// "foos/status" and "foos/scale" are subresources of a kind already listed.
 				if !strings.Contains(r.Name, "/") && r.Kind != "" && !slices.Contains(g.Kinds, r.Kind) {
 					g.Kinds = append(g.Kinds, r.Kind)
@@ -233,7 +249,7 @@ func integrationGroupsText(groups []integrationGroup) string {
 }
 
 func demoIntegrations() integrationReport {
-	return integrationReport{
+	report := integrationReport{
 		Families: []integrationFamily{
 			{ID: "kyverno.io", Groups: []integrationGroup{
 				{Name: "kyverno.io", Version: "v1", Kinds: []string{"ClusterPolicy", "Policy"}},
@@ -243,6 +259,8 @@ func demoIntegrations() integrationReport {
 				{Name: "metallb.io", Version: "v1beta1", Kinds: []string{"BGPPeer", "IPAddressPool", "L2Advertisement"}},
 			}},
 		},
-		Supported: []string{groupArgo, groupCertManager, groupLonghorn, groupMonitoring, groupCNPG, groupTraefik},
+		Supported: []string{"crossplane", groupCrossplanePkg, groupCrossplaneAPIExt, groupArgo, groupCertManager, groupLonghorn, groupMonitoring, groupCNPG, groupTraefik},
 	}
+	slices.Sort(report.Supported)
+	return report
 }
