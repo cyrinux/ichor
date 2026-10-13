@@ -82,19 +82,24 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.adjacentContext
 import name.levis.ichor.model.CLUSTER_NAME_MAX
 import name.levis.ichor.model.CLUSTER_SEEDS
+import name.levis.ichor.model.ClusterGroup
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.accessLabel
+import name.levis.ichor.model.clusterGroups
 import name.levis.ichor.model.hueOf
 import name.levis.ichor.model.isKube
 import name.levis.ichor.model.parseCloudContext
 import name.levis.ichor.model.seedFromHue
 import name.levis.ichor.model.seedOf
 import name.levis.ichor.monitor.CERT_WARN_DAYS
+import name.levis.ichor.ui.components.BundledLogo
 import name.levis.ichor.ui.components.ClusterLogo
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.cloudDetail
+import name.levis.ichor.ui.components.clusterGroupTitle
 import name.levis.ichor.ui.importconfig.certExpiry
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.daysUntil
@@ -269,7 +274,9 @@ fun ClusterSheet(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
             )
-            contexts.forEach { context ->
+            // A long list in sections, per provider and account; a short one as it is.
+            val groups = remember(contexts, labels.masked) { clusterGroups(contexts, labels.masked) }
+            val row: @Composable (ContextSummary) -> Unit = { context ->
                 ClusterRow(
                     context = context,
                     labels = labels,
@@ -294,6 +301,14 @@ fun ClusterSheet(
                     beingRemoved = context.name in removingNames,
                     onActivity = onActivity?.let { open -> { open(context) } },
                 )
+            }
+            if (groups == null) {
+                contexts.forEach { row(it) }
+            } else {
+                groups.forEach { group ->
+                    ClusterGroupHeader(group)
+                    group.contexts.forEach { row(it) }
+                }
             }
             // What the lock on a row means, once there is one.
             if (contexts.any { it.fingerprint in vpnOnly }) {
@@ -351,6 +366,18 @@ fun ClusterSheet(
             },
             onDismiss = { coloring = null },
         )
+    }
+}
+
+/** A section of a long cluster list: its provider's logo and its title. */
+@Composable
+private fun ClusterGroupHeader(group: ClusterGroup) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp),
+    ) {
+        BundledLogo(group.logo, Modifier.padding(end = 8.dp).size(18.dp))
+        SectionTitle(clusterGroupTitle(group))
     }
 }
 
