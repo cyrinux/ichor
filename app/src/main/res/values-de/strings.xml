@@ -4301,6 +4301,9 @@
     <string name="capacity_nodes_title">Knoten</string>
     <string name="capacity_workloads_title">Workloads, die zuerst gehen zuerst</string>
     <string name="capacity_workloads_empty">Kein Workload passt zu diesem Filter.</string>
+    <string name="capacity_section_summary">Übersicht</string>
+    <string name="capacity_section_workloads">Workloads</string>
+    <string name="section_rail_jump_to">Zu %1$s springen</string>
     <string name="capacity_filter_all">Alle</string>
     <string name="capacity_filter_at_risk">Gefährdet</string>
     <string name="capacity_no_class">Keine Prioritätsklasse</string>

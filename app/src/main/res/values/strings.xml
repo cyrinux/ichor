@@ -4312,6 +4312,9 @@
     <string name="capacity_nodes_title">Nodes</string>
     <string name="capacity_workloads_title">Workloads, the first to go first</string>
     <string name="capacity_workloads_empty">No workload matches this filter.</string>
+    <string name="capacity_section_summary">Summary</string>
+    <string name="capacity_section_workloads">Workloads</string>
+    <string name="section_rail_jump_to">Jump to %1$s</string>
     <string name="capacity_filter_all">All</string>
     <string name="capacity_filter_at_risk">At risk</string>
     <string name="capacity_no_class">No priority class</string>

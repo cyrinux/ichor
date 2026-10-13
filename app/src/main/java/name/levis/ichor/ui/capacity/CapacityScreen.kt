@@ -1,12 +1,14 @@
 package name.levis.ichor.ui.capacity
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -46,8 +49,10 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.JumpSection
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SectionJumpRail
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
@@ -149,25 +154,41 @@ fun CapacityScreen(
 private fun CapacityList(capacity: KubeCapacity, onLoss: (node: String?) -> Unit) {
     var filter by rememberSaveable { mutableStateOf(CapacityFilter.ALL) }
     val workloads = remember(capacity, filter) { capacity.workloads.filteredBy(filter) }
+    val listState = rememberLazyListState()
+    val summaryLabel = stringResource(R.string.capacity_section_summary)
+    val nodesLabel = stringResource(R.string.capacity_nodes_title)
+    val workloadsLabel = stringResource(R.string.capacity_section_workloads)
+    // Header positions follow the items below: header, nodes title, one row per node, workloads title.
+    val sections = remember(capacity.nodes.size, summaryLabel, nodesLabel, workloadsLabel) {
+        listOf(
+            JumpSection("header", summaryLabel, 0),
+            JumpSection("nodes-title", nodesLabel, 1),
+            JumpSection("workloads-title", workloadsLabel, 2 + capacity.nodes.size),
+        )
+    }
 
-    LazyColumn(
-        Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        item(key = "header") { CapacityHeader(capacity, onWhatIf = { onLoss(null) }) }
-        item(key = "nodes-title") { Text(stringResource(R.string.capacity_nodes_title), style = MaterialTheme.typography.titleSmall) }
-        items(capacity.nodes, key = { "node:${it.name}" }) { n -> CapacityNodeRow(n, capacity.metricsAvailable, onOpen = { onLoss(n.name) }) }
-        item(key = "workloads-title") {
-            Text(stringResource(R.string.capacity_workloads_title), style = MaterialTheme.typography.titleSmall)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                CapacityFilter.entries.forEach { f ->
-                    FilterChip(selected = filter == f, onClick = { filter = f }, label = { Text(filterLabel(f)) })
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            state = listState,
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            item(key = "header") { CapacityHeader(capacity, onWhatIf = { onLoss(null) }) }
+            item(key = "nodes-title") { Text(stringResource(R.string.capacity_nodes_title), style = MaterialTheme.typography.titleSmall) }
+            items(capacity.nodes, key = { "node:${it.name}" }) { n -> CapacityNodeRow(n, capacity.metricsAvailable, onOpen = { onLoss(n.name) }) }
+            item(key = "workloads-title") {
+                Text(stringResource(R.string.capacity_workloads_title), style = MaterialTheme.typography.titleSmall)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CapacityFilter.entries.forEach { f ->
+                        FilterChip(selected = filter == f, onClick = { filter = f }, label = { Text(filterLabel(f)) })
+                    }
                 }
             }
+            if (workloads.isEmpty()) item(key = "workloads-empty") { MutedText(stringResource(R.string.capacity_workloads_empty)) }
+            items(workloads, key = { it.key }) { w -> CapacityWorkloadRow(w) }
         }
-        if (workloads.isEmpty()) item(key = "workloads-empty") { MutedText(stringResource(R.string.capacity_workloads_empty)) }
-        items(workloads, key = { it.key }) { w -> CapacityWorkloadRow(w) }
+        SectionJumpRail(sections, listState, Modifier.align(Alignment.CenterEnd))
     }
 }
 
