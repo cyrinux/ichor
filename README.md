@@ -11,6 +11,9 @@ Any other Kubernetes cluster works too, from its kubeconfig: see
 
 Website: <https://cyrinux.github.io/ichor/>
 
+In the app, **Settings → About → Ichor website** opens the project site.
+**About → Integrations → Platform → Talos Linux** opens the Talos website.
+
 Want to explore without a Talos cluster? Tap **Try demo** on the import screen.
 The built-in demo works offline and shows five sample nodes, live metrics, services,
 logs, events, etcd, networking, storage, hardware and resources. The overview marks

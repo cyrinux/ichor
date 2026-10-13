@@ -666,6 +666,8 @@
     <string name="about_source">Вихідний код на GitHub</string>
     <string name="about_license">Ліцензія: Apache 2.0</string>
     <string name="about_licenses">Ліцензії відкритого коду</string>
+    <string name="about_website">Вебсайт Ichor</string>
+    <string name="supported_integrations_platform">Платформа</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="supported_integrations_title">Інтеграції</string>
     <string name="supported_integrations_desc">Проєкти, які Ichor читає через Kubernetes API, виявлені в кластері за їхніми групами API, запущеними подами або Services. Торкніться проєкту, щоб відкрити його сайт.</string>

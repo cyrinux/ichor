@@ -60,6 +60,8 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.UiText
 import name.levis.ichorgo.Ichorgo
+import name.levis.ichor.data.TALOS_URL
+import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.data.TalosJson
 import name.levis.ichor.ui.components.pageContent
 
@@ -76,6 +78,7 @@ private data class SupportedIntegrationsView(val list: SupportedIntegrations, va
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SupportedIntegrationsScreen(configs: ConfigRepository, kube: KubeRepository, onBack: () -> Unit) {
+    val context = LocalContext.current
     val config by configs.config.collectAsStateWithLifecycle()
     val canAsk = config?.activeSummary?.allows(Feature.WORKLOADS) == true
     val static = remember { staticSupportedIntegrations() }
@@ -109,6 +112,23 @@ fun SupportedIntegrationsScreen(configs: ConfigRepository, kube: KubeRepository,
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            item {
+                SectionTitle(stringResource(R.string.supported_integrations_platform))
+                Card(Modifier.fillMaxWidth().clickable { openUrl(context, TALOS_URL) }) {
+                    Row(
+                        Modifier.padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(stringResource(R.string.about_talos), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                        Icon(
+                            Icons.AutoMirrored.Outlined.OpenInNew,
+                            contentDescription = stringResource(R.string.supported_integrations_website, "Talos Linux"),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
             item {
                 MutedText(stringResource(R.string.supported_integrations_desc))
                 view.problem?.let { MutedText(it.asString(), Modifier.padding(top = 4.dp)) }
