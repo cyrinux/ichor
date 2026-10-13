@@ -48,6 +48,8 @@ struct DataServicesView: View {
                     case .certManager: CertificatesList(status: services.certManager!, refresh: load)
                     case .velero: VeleroList(status: services.velero!, refresh: load)
                     case .ceph: CephList(status: services.ceph!, refresh: load)
+                    case .snapshots: SnapshotsList(status: services.snapshots!)
+                    case .backupJobs: BackupJobsList(status: services.backupJobs!)
                     case .castai: CastAIList(status: services.castai!, refresh: load)
                     }
                 }

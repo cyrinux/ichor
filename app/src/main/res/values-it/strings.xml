@@ -4405,4 +4405,19 @@
     <string name="checkup_lbConfigError_fix">Correggi ciò che indica il messaggio (pool sovrapposti, un peer errato…): fino ad allora MetalLB mantiene l’ultima configurazione valida.</string>
     <string name="checkup_lbBGPPeerDown">Sessione BGP interrotta con %1$s</string>
     <string name="checkup_lbBGPPeerDown_fix">Controlla il router: il suo indirizzo e i numeri di AS, che accetti questo nodo, e che nulla filtri il TCP 179 tra loro.</string>
+
+    <string name="backup_items">%1$d elementi di backup</string>
+    <string name="snapshot_ready">Snapshot pronto</string>
+    <string name="snapshot_pending">Snapshot in attesa</string>
+    <string name="snapshot_source">PVC: %1$s · classe: %2$s</string>
+    <string name="snapshot_created">Creato: %1$s</string>
+    <string name="snapshot_last_good">Ultimo snapshot valido: %1$s</string>
+    <string name="snapshot_stale">Nessuno snapshot valido da 48 ore</string>
+    <string name="snapshot_default">Classe snapshot predefinita</string>
+    <string name="snapshot_empty">Nessuno snapshot dei volumi.</string>
+    <string name="backup_last_success">Ultimo backup riuscito: %1$s</string>
+    <string name="backup_failure_streak">Errori consecutivi osservati: %1$d</string>
+    <string name="backup_suspended">Pianificazione backup sospesa</string>
+    <string name="snapshot_create">Crea snapshot</string>
+    <string name="snapshot_confirm">Crea uno snapshot CSI di %1$s con la classe predefinita del suo driver.</string>
 </resources>

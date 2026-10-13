@@ -4639,4 +4639,19 @@
     <string name="checkup_lbConfigError_fix">Виправте те, що вказано в повідомленні (пули, що перекриваються, хибний пір…): доти MetalLB тримає останню справну конфігурацію.</string>
     <string name="checkup_lbBGPPeerDown">BGP-сесію з %1$s розірвано</string>
     <string name="checkup_lbBGPPeerDown_fix">Перевірте маршрутизатор: його адресу й номери AS, що він приймає цей вузол і що ніщо не фільтрує TCP 179 між ними.</string>
+
+    <string name="backup_items">%1$d елементів резервного копіювання</string>
+    <string name="snapshot_ready">Знімок готовий</string>
+    <string name="snapshot_pending">Знімок очікує</string>
+    <string name="snapshot_source">PVC: %1$s · клас: %2$s</string>
+    <string name="snapshot_created">Створено: %1$s</string>
+    <string name="snapshot_last_good">Останній справний знімок: %1$s</string>
+    <string name="snapshot_stale">Немає справного знімка протягом 48 годин</string>
+    <string name="snapshot_default">Тип знімка за замовчуванням</string>
+    <string name="snapshot_empty">Немає знімків томів.</string>
+    <string name="backup_last_success">Остання успішна резервна копія: %1$s</string>
+    <string name="backup_failure_streak">Спостережені послідовні збої: %1$d</string>
+    <string name="backup_suspended">Розклад резервного копіювання призупинено</string>
+    <string name="snapshot_create">Створити знімок</string>
+    <string name="snapshot_confirm">Створити знімок CSI для %1$s з типом за замовчуванням для його драйвера.</string>
 </resources>

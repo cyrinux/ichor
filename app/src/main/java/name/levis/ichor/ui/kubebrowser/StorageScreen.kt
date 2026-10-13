@@ -20,6 +20,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.isDemo
+import name.levis.ichor.model.VolumeSnapshots
+import name.levis.ichor.ui.components.ConfirmDialog
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -97,10 +103,40 @@ fun StorageScreen(
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val state by vm.state.collectAsStateWithLifecycle()
+    val config by app.configRepository.config.collectAsStateWithLifecycle()
+    val generation by app.configRepository.generation.collectAsStateWithLifecycle()
+    var snapshots by remember { mutableStateOf<VolumeSnapshots?>(null) }
+    var confirming by remember { mutableStateOf<StorageClaim?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    var result by remember { mutableStateOf<String?>(null) }
+    val actionScope = rememberCoroutineScope()
     val namespaces: NamespacesViewModel = viewModel(factory = factory { NamespacesViewModel(app.kubeRepository) })
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
     val control = rememberKubeScope(app, namespaces, mask.enabled)
     LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setNamespace(control.scope.namespace) }
+    LaunchedEffect(control.scope, control.ready, generation, config?.activeContext) {
+        snapshots = null
+        confirming = null
+        if (control.ready) snapshots = runCatching { app.dataServicesRepository.volumeSnapshots(control.scope.namespace.orEmpty()) }.getOrNull()
+    }
+    confirming?.let { claim ->
+        ConfirmDialog(stringResource(R.string.snapshot_create), stringResource(R.string.snapshot_confirm, claim.key),
+            stringResource(R.string.snapshot_create), onConfirm = {
+                confirming = null
+                busy = true
+                actionScope.launch {
+                    result = runCatching { app.dataServicesRepository.createVolumeSnapshot(claim.namespace, claim.name) }
+                        .fold({ it }, { it.localizedMessage.orEmpty() })
+                    busy = false
+                    vm.refresh()
+                }
+            }, onDismiss = { confirming = null })
+    }
+    result?.let {
+        androidx.compose.material3.AlertDialog(onDismissRequest = { result = null },
+            title = { Text(stringResource(R.string.snapshot_create)) }, text = { Text(it) },
+            confirmButton = { androidx.compose.material3.TextButton(onClick = { result = null }) { Text(stringResource(R.string.common_ok)) } })
+    }
     var query by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
@@ -113,6 +149,7 @@ fun StorageScreen(
         },
     ) { padding ->
         Column(Modifier.pageContent(padding).fillMaxSize()) {
+            if (busy) androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth())
             val loaded = (state as? UiState.Loaded)?.data
             val listed = remember(loaded) { loaded?.claims.orEmpty().map { it.namespace }.distinct().sorted() }
             KubeFilters(control, listed, query, { query = it }, R.string.storage_kube_search)
@@ -137,6 +174,8 @@ fun StorageScreen(
                                     showNamespace = control.scope.namespace == null,
                                     onClick = { onClaim(KubeObjectRef.pvc(c.namespace, c.name)) },
                                     onDataService = onDataService,
+                                    canSnapshot = !busy && config?.activeSummary?.isDemo == false && snapshots?.canCreate(c) == true,
+                                    onSnapshot = { confirming = c },
                                 )
                                 HorizontalDivider()
                             }
@@ -158,7 +197,8 @@ internal fun StorageLevel.color(): Color = when (this) {
 }
 
 @Composable
-private fun ClaimRow(c: StorageClaim, showNamespace: Boolean, onClick: () -> Unit, onDataService: (DataServiceKind) -> Unit) {
+private fun ClaimRow(c: StorageClaim, showNamespace: Boolean, onClick: () -> Unit, onDataService: (DataServiceKind) -> Unit, canSnapshot: Boolean, onSnapshot: () -> Unit) {
+    val denial = name.levis.ichor.ui.components.rememberKubeDenial(name.levis.ichor.model.KubeAction.CREATE_VOLUME_SNAPSHOT, c.namespace)
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
@@ -203,6 +243,10 @@ private fun ClaimRow(c: StorageClaim, showNamespace: Boolean, onClick: () -> Uni
         }
         c.managedKind?.let { kind ->
             AssistChip(onClick = { onDataService(kind) }, label = { Text(stringResource(R.string.storage_kube_open, kind.title)) })
+        }
+        if (canSnapshot) {
+            AssistChip(onClick = onSnapshot, enabled = denial == null, label = { Text(stringResource(R.string.snapshot_create)) })
+            denial?.let { name.levis.ichor.ui.components.KubeDenialNote(it) }
         }
     }
 }

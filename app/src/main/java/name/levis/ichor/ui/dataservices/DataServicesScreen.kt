@@ -176,6 +176,8 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
                 DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!, certificates)
                 DataServiceKind.VELERO -> VeleroTab(services.velero!!)
                 DataServiceKind.CEPH -> CephTab(services.ceph!!)
+                DataServiceKind.SNAPSHOTS -> SnapshotsTab(services.snapshots!!)
+                DataServiceKind.BACKUP_JOBS -> BackupJobsTab(services.backupJobs!!)
                 DataServiceKind.CASTAI -> CastAITab(services.castai!!)
             }
         }

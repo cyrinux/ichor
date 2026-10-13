@@ -383,6 +383,12 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     for p in services.ceph?.pools ?? [] where p.health == .critical { out["ceph|\(p.kind)/\(p.label)"] = dataCritical }
     // A recommendation CAST AI cannot apply is critical; a read-only or HPA one was chosen: shown, not alerted.
     for r in services.castai?.recommendations ?? [] where r.health == .critical { out["castai|\(r.label)"] = dataCritical }
+    if services.snapshots?.error.isEmpty != false {
+        for c in services.snapshots?.claims ?? [] where c.watched && c.stale { out["snapshots|\(c.namespace)/\(c.name)"] = dataWarning }
+    }
+    if services.backupJobs?.jobsError.isEmpty != false {
+        for j in services.backupJobs?.jobs ?? [] where !j.suspended && j.failureStreak >= 3 { out["backupjobs|\(j.namespace)/\(j.name)"] = dataCritical }
+    }
     return out
 }
 
@@ -398,6 +404,8 @@ public func dataSystemTitle(_ key: String) -> String {
     case "certmanager": "cert-manager"
     case "velero": "Velero"
     case "ceph": "Rook Ceph"
+    case "snapshots": "CSI VolumeSnapshots"
+    case "backupjobs": "Backup CronJobs"
     case "castai": "CAST AI"
     default: "CloudNativePG"
     }

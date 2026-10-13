@@ -245,7 +245,8 @@ func demoDataServices(now time.Time) dataServices {
 		},
 	}
 
-	return dataServices{SealedSecrets: demoSealedSecrets(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, Ceph: ceph, CastAI: demoCastAI(now)}
+	snapshots := demoVolumeSnapshots(now)
+	return dataServices{SealedSecrets: demoSealedSecrets(now), Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, Ceph: ceph, CastAI: demoCastAI(now)}
 }
 
 // demoCastAI is the demo cluster's CAST AI recommendations: the Workload Autoscaler right-sizing

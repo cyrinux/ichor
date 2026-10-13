@@ -73,6 +73,7 @@ private val DataServiceKind.fallbackIcon: ImageVector
         DataServiceKind.CERT_MANAGER -> Icons.Outlined.VerifiedUser
         DataServiceKind.VELERO -> Icons.Outlined.SettingsBackupRestore
         DataServiceKind.CEPH -> Icons.Outlined.Storage
+        DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> Icons.Outlined.SettingsBackupRestore
         DataServiceKind.CASTAI -> Icons.Outlined.Tune
     }
 
@@ -147,6 +148,7 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
         DataServiceKind.CERT_MANAGER -> pluralStringResource(R.plurals.certmanager_certificates, summary.total, summary.total)
         DataServiceKind.VELERO -> pluralStringResource(R.plurals.velero_schedules, summary.total, summary.total)
         DataServiceKind.CEPH -> pluralStringResource(R.plurals.ceph_clusters, summary.total, summary.total)
+        DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> stringResource(R.string.backup_items, summary.total)
         DataServiceKind.CASTAI -> {
             val saving = services.castai?.takeIf { it.compared > 0 && it.cpuDeltaMilli != 0L }
                 ?.let { stringResource(R.string.castai_cpu_delta, formatMilliCores(it.cpuDeltaMilli, signed = true)) }

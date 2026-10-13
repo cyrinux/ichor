@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 
 /** The app's Kubernetes actions whose permissions the core asks before the tap ([wire]: its name there). */
 enum class KubeAction(val wire: String) {
+    CREATE_VOLUME_SNAPSHOT("createVolumeSnapshot"),
     RESTART_WORKLOAD("restartWorkload"),
     RESTART_STATEFUL_SET("restartStatefulSet"),
     RESTART_DAEMON_SET("restartDaemonSet"),
