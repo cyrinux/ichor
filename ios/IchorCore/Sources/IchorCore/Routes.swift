@@ -15,9 +15,10 @@ public struct KubeRouteList: Decodable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey { case routes }
 }
 
-/// A URL an app is served at: a host of an Ingress or HTTPRoute whose backend selects its pods.
+/// A URL an app is served at: a host of an Ingress, HTTPRoute or Traefik IngressRoute(TCP) whose
+/// backend selects its pods.
 public struct KubeRoute: Decodable, Hashable, Identifiable, Sendable {
-    /// Ingress or HTTPRoute.
+    /// Ingress, HTTPRoute, IngressRoute or IngressRouteTCP, shown as is.
     public let kind: String
     public let namespace: String
     public let name: String

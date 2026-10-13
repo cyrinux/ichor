@@ -11,6 +11,13 @@ final class RoutesTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(KubeRouteList.self, from: Data("{}".utf8)).routes, [])
     }
 
+    func testDecodesATraefikRoute() throws {
+        let json = #"{"routes":[{"kind":"IngressRoute","namespace":"monitoring","name":"grafana","url":"https://grafana.home.example","service":"grafana"}]}"#
+        let route = try XCTUnwrap(try JSONDecoder().decode(KubeRouteList.self, from: Data(json.utf8)).routes.first)
+        XCTAssertEqual(route.kind, "IngressRoute")
+        XCTAssertEqual(route.label, "grafana.home.example")
+    }
+
     func testRoutePodsOncePerPod() throws {
         let app = InventoryApp(id: "web", name: "Web", pods: [
             InventoryPod(namespace: "shop", pod: "web-0", node: "n1"),

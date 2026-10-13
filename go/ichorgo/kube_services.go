@@ -99,6 +99,7 @@ type serviceRoutes struct {
 	ingresses  []ingressObject
 	httpRoutes []httpRouteObject
 	gateways   []gatewayObject
+	traefik    traefikRouteSet
 }
 
 // KubeServices lists the Services of namespace ("" for all) with their addresses, ready
@@ -128,10 +129,10 @@ func readServices(ctx context.Context, k *kubeClient, namespace string, now time
 
 	// The rest only completes the rows: read together, each allowed to fail.
 	var (
-		endpointSlices          []endpointSliceObject
-		routes                  serviceRoutes
-		sliceErr, ingErr, hrErr error
-		wg                      sync.WaitGroup
+		endpointSlices                 []endpointSliceObject
+		routes                         serviceRoutes
+		sliceErr, ingErr, hrErr, irErr error
+		wg                             sync.WaitGroup
 	)
 
 	wg.Go(func() {
@@ -149,6 +150,7 @@ func readServices(ctx context.Context, k *kubeClient, namespace string, now time
 	wg.Go(func() {
 		routes.gateways, _ = listObjects[gatewayObject](ctx, k, "/apis/"+groupGatewayAPI+"/v1/gateways")
 	})
+	wg.Go(func() { routes.traefik, irErr = readTraefikRoutes(ctx, k, namespace, false) })
 	wg.Wait()
 
 	if len(routes.httpRoutes) > 0 {
@@ -162,7 +164,7 @@ func readServices(ctx context.Context, k *kubeClient, namespace string, now time
 
 	out := kubeServices{
 		Services:      joinServices(services, counts, routes, now),
-		PartialAccess: sliceErr != nil || ingErr != nil || hrErr != nil,
+		PartialAccess: sliceErr != nil || ingErr != nil || hrErr != nil || irErr != nil,
 	}
 
 	if anyPending(out.Services) {

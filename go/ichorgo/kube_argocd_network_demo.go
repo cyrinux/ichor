@@ -6,8 +6,8 @@ import (
 )
 
 // demoArgoNetwork is the network view of a demo Argo CD app, built by the same code as a real
-// one from demo objects: an Ingress with TLS, an HTTPRoute behind a shared Gateway, a
-// LoadBalancer Service, a Service whose pods crash-loop, and a cordoned node.
+// one from demo objects: an Ingress with TLS, an HTTPRoute behind a shared Gateway, a Traefik
+// IngressRoute, a LoadBalancer Service, a Service whose pods crash-loop, and a cordoned node.
 func demoArgoNetwork(app string) argoNetwork {
 	in := argoNetInput{nodes: demoNetNodes()}
 
@@ -47,6 +47,12 @@ func demoArgoNetwork(app string) argoNetwork {
 		  "spec":{"parentRefs":[{"name":"homelab","namespace":"traefik"}],"hostnames":["grafana.homelab.lan"],"rules":[{"backendRefs":[{"name":"grafana","port":80}]}]}}`)}
 		in.gateways = []gatewayObject{demoNetObject[gatewayObject](`{"metadata":{"name":"homelab","namespace":"traefik"},
 		  "spec":{"listeners":[{"name":"https","hostname":"*.homelab.lan","port":443,"protocol":"HTTPS"}]},"status":{"addresses":[{"value":"10.0.0.240"}]}}`)}
+		resources = append(resources, argoResourceStatus{Group: groupTraefik, Kind: "IngressRoute", Namespace: "monitoring", Name: "grafana"})
+		in.traefik = traefikRouteSet{
+			http: []ingressRouteObject{demoNetObject[ingressRouteObject](`{"metadata":{"name":"grafana","namespace":"monitoring"},
+			  "spec":{"entryPoints":["websecure"],"routes":[{"match":"Host(` + "`grafana.home.example`" + `)","kind":"Rule","services":[{"name":"grafana","port":80}]}],"tls":{}}}`)},
+			entries: map[string]traefikEntry{traefikWeb: {80, "10.0.0.240"}, traefikWebsecure: {443, "10.0.0.240"}},
+		}
 	case "traefik":
 		svc("traefik", "traefik", "LoadBalancer", "10.96.0.80", "traefik", `{"name":"web","port":80,"targetPort":"web"},{"name":"websecure","port":443,"targetPort":"websecure"}`, `{"ip":"10.0.0.240"}`)
 		pod("traefik", "traefik-8c6d-w7r2m", "traefik", "demo-worker-1", "Running", 1, 0)

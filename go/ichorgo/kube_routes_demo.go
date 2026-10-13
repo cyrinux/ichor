@@ -15,6 +15,7 @@ var demoRouteTable = []struct {
 	{"immich-server-", kubeRoute{Kind: "HTTPRoute", Namespace: "media", Name: "immich", URL: "https://photos.home.example", Service: "immich-server"}},
 	{"vaultwarden-", kubeRoute{Kind: "Ingress", Namespace: "default", Name: "vaultwarden", URL: "https://vault.home.example", Service: "vaultwarden"}},
 	{"paperless-", kubeRoute{Kind: "Ingress", Namespace: "default", Name: "paperless", URL: "https://paperless.home.example", Service: "paperless"}},
+	{"grafana-", kubeRoute{Kind: "IngressRoute", Namespace: "monitoring", Name: "grafana", URL: "https://grafana.home.example", Service: "grafana"}},
 	{"uptime-kuma-", kubeRoute{Kind: "HTTPRoute", Namespace: "default", Name: "uptime-kuma", URL: "http://status.home.example:8080/dashboard", Service: "uptime-kuma"}},
 }
 
