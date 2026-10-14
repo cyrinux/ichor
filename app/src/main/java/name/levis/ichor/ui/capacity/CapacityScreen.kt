@@ -59,12 +59,12 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.uiText
 
 /**
- * The node-loss sheet's state: the node asked for (null: the worst one) and its plan, kept by
- * the ViewModel so a rotation keeps it open. [candidates] and [worst] come from the worst-case
- * plan and stay while another candidate is picked.
+ * The node-loss sheet's state: the nodes asked for (empty: the worst one) and their plan, kept
+ * by the ViewModel so a rotation keeps it open. [candidates] and [worst] come from the
+ * worst-case plan and stay while other nodes are picked.
  */
 data class NodeLossState(
-    val node: String?,
+    val selected: Set<String> = emptySet(),
     val plan: UiState<NodeLossPlan> = UiState.Loading,
     val candidates: List<NodeLossCandidate> = emptyList(),
     val worst: String = "",
@@ -79,16 +79,29 @@ class CapacityViewModel(private val kube: KubeRepository) : LoadingViewModel<Kub
     private var lossJob: Job? = null
 
     /** Opens the sheet on what losing [node] (null: the worst node) would cost. */
-    fun openLoss(node: String?) = load(NodeLossState(node))
+    fun openLoss(node: String?) = load(NodeLossState(selected = node?.let(::setOf) ?: emptySet()))
 
-    /** Another of the worst case's candidates: the picker stays. */
-    fun pickLoss(node: String) = load(_loss.value?.copy(node = node, plan = UiState.Loading) ?: NodeLossState(node))
+    /** Toggles [node] in the selection: one node simulates at once, several wait for the button. */
+    fun toggleLoss(node: String) {
+        val current = _loss.value ?: NodeLossState()
+        val selected = if (node in current.selected) current.selected - node else current.selected + node
+
+        when (selected.size) {
+            0, 1 -> load(current.copy(selected = selected, plan = UiState.Loading))
+            else -> _loss.value = current.copy(selected = selected)
+        }
+    }
+
+    /** Simulates every selected node at once. */
+    fun simulateLoss() {
+        _loss.value?.let { load(it.copy(plan = UiState.Loading)) }
+    }
 
     private fun load(start: NodeLossState) {
         lossJob?.cancel()
         _loss.value = start
         lossJob = viewModelScope.launch {
-            val result = cancellableCatching { kube.nodeLoss(start.node) }
+            val result = cancellableCatching { kube.nodeLoss(start.selected.toList()) }
             val plan = result.getOrNull()
             _loss.value = start.copy(
                 plan = result.fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) }),
@@ -124,8 +137,9 @@ fun CapacityScreen(
     loss?.let { l ->
         NodeLossSheet(
             l,
-            onNode = vm::pickLoss,
-            onRetry = { vm.pickLoss(l.node.orEmpty()) },
+            onToggle = vm::toggleLoss,
+            onSimulate = vm::simulateLoss,
+            onRetry = vm::simulateLoss,
             onScale = { ref ->
                 vm.closeLoss()
                 onScale(ref)

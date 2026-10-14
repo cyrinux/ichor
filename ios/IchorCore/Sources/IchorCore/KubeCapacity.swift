@@ -219,10 +219,12 @@ public struct NPlusOne: Decodable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey { case ok, node, pendingPods }
 }
 
-/// Losing `node` (Go `KubeCapacityNodeLoss`): where its pods land, what they evict, what stays
-/// Pending and what to scale down, lowest priority first. `worstCase`: chosen as the worst of `candidates`.
+/// Losing `node` — one node, or the joined names when several were picked (`nodes`) — where
+/// their pods land, what they evict, what stays Pending and what to scale down, lowest
+/// priority first. `worstCase`: chosen as the worst of `candidates`.
 public struct NodeLossPlan: Decodable, Equatable, Sendable {
     public let node: String
+    public let nodes: [String]
     public let worstCase: Bool
     public let cpuLost: Double
     public let memoryLost: Double
@@ -239,6 +241,7 @@ public struct NodeLossPlan: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         node = try c.field(.node, "")
+        nodes = try c.field(.nodes, [])
         worstCase = try c.field(.worstCase, false)
         cpuLost = try c.field(.cpuLost, 0)
         memoryLost = try c.field(.memoryLost, 0)
@@ -254,7 +257,7 @@ public struct NodeLossPlan: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case node, worstCase, cpuLost, memoryLost, podsLost, daemonSetPods, placed, preempted, pending, suggestions, covered, candidates, assumptions
+        case node, nodes, worstCase, cpuLost, memoryLost, podsLost, daemonSetPods, placed, preempted, pending, suggestions, covered, candidates, assumptions
     }
 }
 

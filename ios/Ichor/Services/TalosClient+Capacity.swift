@@ -12,10 +12,10 @@ extension TalosClient {
         }
     }
 
-    /// What losing the Kubernetes node `node` would cost; nil: the worst node, with the others as candidates.
-    func nodeLoss(node: String?) async throws -> NodeLossPlan {
+    /// What losing the Kubernetes nodes `nodes` together would cost; empty: the worst node, with the others as candidates.
+    func nodeLoss(nodes: [String]) async throws -> NodeLossPlan {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoKubeCapacityNodeLoss(config, context, kubeServer, node ?? "", $0)
+            IchorgoKubeCapacityNodeLoss(config, context, kubeServer, nodes.joined(separator: ","), $0)
         }
     }
 }

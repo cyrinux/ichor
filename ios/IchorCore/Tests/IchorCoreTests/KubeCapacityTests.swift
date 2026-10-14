@@ -108,6 +108,13 @@ final class KubeCapacityTests: XCTestCase {
         XCTAssertEqual(plan.candidates.map(\.name), ["demo-worker-1", "demo-worker-2"])
         XCTAssertEqual(plan.suggestions[0].freesMemory, 1073741824)
         XCTAssertTrue(plan.suggestions[1].pdbBlocks)
+        // The worst case carries no explicit selection; an older payload without `nodes` decodes empty.
+        XCTAssertEqual(plan.nodes, [])
+
+        let picked = try JSONDecoder().decode(NodeLossPlan.self, from: Data(
+            #"{"node":"demo-worker-1, demo-worker-2","nodes":["demo-worker-1","demo-worker-2"],"worstCase":false}"#.utf8))
+        XCTAssertEqual(picked.nodes, ["demo-worker-1", "demo-worker-2"])
+        XCTAssertFalse(picked.worstCase)
 
         // A suggestion opens the browser's scale sheet of its workload; a kind it cannot scale, none.
         XCTAssertEqual(plan.suggestions[0].scaleResource?.resource, "deployments")
