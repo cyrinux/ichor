@@ -27,6 +27,12 @@ var dataCommands = []command{
 		}
 		return "null", nil
 	}},
+	{name: "volume-snapshots", args: "[NAMESPACE]", run: func(e env) (string, error) {
+		return ichorgo.KubeVolumeSnapshots(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+	}},
+	{name: "create-volume-snapshot", args: "NAMESPACE PVC", run: func(e env) (string, error) {
+		return ichorgo.KubeCreateVolumeSnapshot(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+	}},
 	{name: "dataservices", args: "[HINTS]", run: func(e env) (out string, err error) {
 		// dataservices [HINTS], e.g. "garage" or "longhorn,cloudnative-pg"; none checks all.
 		out, err = ichorgo.KubeDataServices(e.cfg, e.context, e.kubeServer, flag.Arg(1))

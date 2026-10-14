@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.model.VolumeSnapshots
 import name.levis.ichor.model.CertDetails
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.GarageBlockReport
@@ -10,6 +11,14 @@ import name.levis.ichorgo.Ichorgo
 
 /** Longhorn, Garage, CloudNativePG and cert-manager: their health and the actions on them. */
 class DataServicesRepository(go: GoCall) : GoRepository(go) {
+    suspend fun volumeSnapshots(namespace: String = ""): VolumeSnapshots = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(VolumeSnapshots.serializer(), Ichorgo.kubeVolumeSnapshots(cfg, ctx, server, namespace))
+    }
+
+    suspend fun createVolumeSnapshot(namespace: String, pvc: String): String = go.kube { cfg, ctx, server ->
+        Ichorgo.kubeCreateVolumeSnapshot(cfg, ctx, server, namespace, pvc)
+    }
+
     /**
      * Health of Longhorn, Garage and CloudNativePG (os:admin). [hints]: their catalog ids seen in
      * the inventory (see [name.levis.ichor.model.dataServiceHints]); "" checks everything.

@@ -65,6 +65,7 @@ func dataServiceSummary(_ kind: DataServiceKind, _ services: DataServices) -> St
     case .certManager: head = String(localized: "\(summary.total) certificates")
     case .velero: head = String(localized: "\(summary.total) Velero schedules")
     case .ceph: head = String(localized: "\(summary.total) Ceph clusters")
+    case .snapshots, .backupJobs: head = String(localized: "\(summary.total) backup items")
     case .castai:
         let castai = services.castai
         let saving = castai.flatMap { $0.compared > 0 && $0.cpuDeltaMilli != 0 ? String(localized: "\(formatMilliCores($0.cpuDeltaMilli, signed: true)) CPU") : nil }
@@ -201,6 +202,7 @@ struct KindIcon: View {
         case .certManager: "checkmark.seal"
         case .velero: "clock.arrow.circlepath"
         case .ceph: "internaldrive"
+        case .snapshots, .backupJobs: "clock.arrow.circlepath"
         case .castai: "slider.horizontal.3"
         }
     }

@@ -4410,4 +4410,19 @@
     <string name="checkup_lbConfigError_fix">Fix what the message names (overlapping pools, a bad peer…): until then MetalLB keeps its last good configuration.</string>
     <string name="checkup_lbBGPPeerDown">BGP session down with %1$s</string>
     <string name="checkup_lbBGPPeerDown_fix">Check the router: its address and AS numbers, that it accepts this node, and that nothing filters TCP 179 between them.</string>
+
+    <string name="backup_items">%1$d backup items</string>
+    <string name="snapshot_ready">Snapshot ready</string>
+    <string name="snapshot_pending">Snapshot pending</string>
+    <string name="snapshot_source">PVC: %1$s · class: %2$s</string>
+    <string name="snapshot_created">Created: %1$s</string>
+    <string name="snapshot_last_good">Last good snapshot: %1$s</string>
+    <string name="snapshot_stale">No good snapshot in 48 hours</string>
+    <string name="snapshot_default">Default snapshot class</string>
+    <string name="snapshot_empty">No volume snapshots.</string>
+    <string name="backup_last_success">Last successful backup: %1$s</string>
+    <string name="backup_failure_streak">Observed consecutive failures: %1$d</string>
+    <string name="backup_suspended">Backup schedule suspended</string>
+    <string name="snapshot_create">Create snapshot</string>
+    <string name="snapshot_confirm">Create a CSI snapshot of %1$s using the default class for its driver.</string>
 </resources>

@@ -47,6 +47,8 @@ func byHealthThenKey[T any](f func(T) (health, key string)) func(a, b T) int {
 // section is a system that is not installed.
 type dataServices struct {
 	SealedSecrets *sealedSecretsStatus `json:"sealedSecrets,omitempty"`
+	Snapshots     *volumeSnapshots     `json:"snapshots,omitempty"`
+	BackupJobs    *backupJobStatus     `json:"backupJobs,omitempty"`
 	Longhorn      *longhornStatus      `json:"longhorn,omitempty"`
 	Garage        *garageStatus        `json:"garage,omitempty"`
 	CNPG          *cnpgStatus          `json:"cnpg,omitempty"`
@@ -128,6 +130,11 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 	}
 
 	var wg sync.WaitGroup
+
+	if _, ok := groups[groupSnapshot]; ok {
+		wg.Go(func() { r := readVolumeSnapshots(ctx, k, "", now); out.Snapshots = &r })
+	}
+	wg.Go(func() { out.BackupJobs = readBackupJobs(ctx, k, now) })
 
 	if v, ok := groups[groupLonghorn]; ok {
 		wg.Go(func() { out.Longhorn = readLonghorn(ctx, k, v) })

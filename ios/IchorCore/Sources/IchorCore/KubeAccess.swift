@@ -6,6 +6,7 @@ import Foundation
 
 /// An app action KubeActionAccess answers for (its key in `actions`).
 public enum KubeAction: String, CaseIterable, Sendable {
+    case createVolumeSnapshot
     case restartWorkload, restartStatefulSet, restartDaemonSet, scale, scaleStatefulSet
     case deletePod, execPod, debugPod, debugNode, suspendCronJob, triggerCronJob, helmRollback, argoSync
     case fluxReconcile, fluxReconcileHelmRelease, fluxReconcileGitRepository, fluxReconcileOCIRepository

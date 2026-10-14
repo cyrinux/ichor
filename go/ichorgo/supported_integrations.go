@@ -57,6 +57,7 @@ var integrationSpecs = []integrationSpec{
 	{ID: "mimir", Name: "Mimir", Website: "https://grafana.com/oss/mimir/", ServiceKind: "mimir"},
 	{ID: "victoriametrics", Name: "VictoriaMetrics", Website: "https://victoriametrics.com", ServiceKind: "victoriametrics"},
 	{ID: "sealed-secrets", Name: "Sealed Secrets", Website: "https://github.com/bitnami/sealed-secrets", Groups: []string{groupSealedSecrets}, Resource: "sealedsecrets"},
+	{ID: "kubernetes-csi", Name: "CSI VolumeSnapshots", Website: "https://kubernetes.io/docs/concepts/storage/volume-snapshots/", Groups: []string{groupSnapshot}, Resource: "volumesnapshots"},
 }
 
 // groupGatewayAPI is the Gateway API's group: HTTPRoutes and Gateways.

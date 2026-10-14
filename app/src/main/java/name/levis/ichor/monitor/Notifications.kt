@@ -299,6 +299,8 @@ private fun gitopsAlertText(context: Context, alert: Alert): String {
 
 /** "Longhorn · critical" from a data alert's "system|severity" detail. */
 private fun dataAlertText(context: Context, alert: Alert): String {
+    if (alert.problem && alert.detail.substringBefore('|') == "snapshots") return context.getString(R.string.snapshot_stale)
+    if (alert.problem && alert.detail.substringBefore('|') == "backupjobs") return context.getString(R.string.backup_failure_streak, 3)
     val system = dataServiceKindOf(alert.detail.substringBefore('|')).title
     if (!alert.problem) return system
     val severity = when (alert.detail.substringAfter('|')) {

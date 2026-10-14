@@ -4407,4 +4407,19 @@
     <string name="checkup_lbConfigError_fix">Corrigez ce que le message indique (pools qui se chevauchent, pair invalide…) : d’ici là, MetalLB garde sa dernière configuration valide.</string>
     <string name="checkup_lbBGPPeerDown">Session BGP coupée avec %1$s</string>
     <string name="checkup_lbBGPPeerDown_fix">Vérifiez le routeur : son adresse et ses numéros d’AS, qu’il accepte ce nœud, et que rien ne filtre le TCP 179 entre eux.</string>
+
+    <string name="backup_items">%1$d éléments de sauvegarde</string>
+    <string name="snapshot_ready">Instantané prêt</string>
+    <string name="snapshot_pending">Instantané en attente</string>
+    <string name="snapshot_source">PVC : %1$s · classe : %2$s</string>
+    <string name="snapshot_created">Créé : %1$s</string>
+    <string name="snapshot_last_good">Dernier instantané valide : %1$s</string>
+    <string name="snapshot_stale">Aucun instantané valide depuis 48 heures</string>
+    <string name="snapshot_default">Classe d’instantané par défaut</string>
+    <string name="snapshot_empty">Aucun instantané de volume.</string>
+    <string name="backup_last_success">Dernière sauvegarde réussie : %1$s</string>
+    <string name="backup_failure_streak">Échecs consécutifs observés : %1$d</string>
+    <string name="backup_suspended">Planification des sauvegardes suspendue</string>
+    <string name="snapshot_create">Créer un instantané</string>
+    <string name="snapshot_confirm">Créer un instantané CSI de %1$s avec la classe par défaut de son pilote.</string>
 </resources>
