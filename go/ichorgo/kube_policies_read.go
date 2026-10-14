@@ -348,6 +348,7 @@ func aggregatePolicyReports(rows []kyvernoPolicy, reports []policyReportObject, 
 	}
 
 	nsIndex := map[string]int{}
+	rowNS := make([]map[string]*policyNSRow, len(rows))
 
 	for _, r := range append(slices.Clone(reports), clusterReports...) {
 		for _, res := range r.Results {
@@ -378,6 +379,15 @@ func aggregatePolicyReports(rows []kyvernoPolicy, reports []policyReportObject, 
 			case policyResultSkip:
 				row.Skip++
 			}
+
+			// Where it counts: the namespaced report's namespace or, in a ClusterPolicyReport, its
+			// resource's ("" for a cluster-scoped one: the totals only).
+			ns := r.Metadata.Namespace
+			if ns == "" && len(res.Resources) > 0 {
+				ns = res.Resources[0].Namespace
+			}
+
+			addPolicyNSResult(rowNS, i, ns, res.Result)
 
 			if res.Result == policyResultFail || res.Result == policyResultError {
 				f := policyFailure{Rule: res.Rule, Message: res.Message, Severity: res.Severity}
@@ -426,7 +436,48 @@ func aggregatePolicyReports(rows []kyvernoPolicy, reports []policyReportObject, 
 		row := &rows[i]
 		slices.SortFunc(row.Failing, func(a, b policyFailure) int { return cmp.Compare(b.At, a.At) }) // newest first
 		row.Failing = clipPolicyFailings(row.Failing, policyFailingMax)
+		row.ByNamespace = sortedPolicyNSRows(rowNS[i])
 	}
+}
+
+// addPolicyNSResult counts one result of row i under namespace ns ("" counts nowhere).
+func addPolicyNSResult(rowNS []map[string]*policyNSRow, i int, ns, result string) {
+	if ns == "" {
+		return
+	}
+
+	if rowNS[i] == nil {
+		rowNS[i] = map[string]*policyNSRow{}
+	}
+
+	n := rowNS[i][ns]
+	if n == nil {
+		n = &policyNSRow{Namespace: ns}
+		rowNS[i][ns] = n
+	}
+
+	switch result {
+	case policyResultPass:
+		n.Pass++
+	case policyResultFail:
+		n.Fail++
+	case policyResultWarn:
+		n.Warn++
+	case policyResultError:
+		n.ErrorCount++
+	}
+}
+
+// sortedPolicyNSRows is one policy's namespace counts by namespace name, empty (not nil) without any.
+func sortedPolicyNSRows(byNS map[string]*policyNSRow) []policyNSRow {
+	out := make([]policyNSRow, 0, len(byNS))
+	for _, n := range byNS {
+		out = append(out, *n)
+	}
+
+	slices.SortFunc(out, func(a, b policyNSRow) int { return strings.Compare(a.Namespace, b.Namespace) })
+
+	return out
 }
 
 // clipPolicyFailings keeps the first n failing resources.

@@ -63,11 +63,15 @@ public struct PolicyReport: Decodable, Equatable, Sendable {
     }
 
     /// The policies a `namespace` (nil: every one) and a `query` keep, in the report's order. A
-    /// namespace keeps its own policies and the cluster-wide ones, which apply to it too.
+    /// namespace keeps its own policies, and the cluster-wide ones that checked something there
+    /// or are not ready (a broken policy matters everywhere).
     public func filtered(namespace: String?, query: String) -> [KyvernoPolicy] {
         let q = query.trimmingCharacters(in: .whitespaces)
         return policies
-            .filter { namespace == nil || $0.clusterWide || $0.namespace == namespace }
+            .filter { policy in
+                guard let namespace else { return true }
+                return policy.namespace == namespace || (policy.clusterWide && (!policy.ready || policy.checks(namespace)))
+            }
             .filter { policy in
                 q.isEmpty || ([policy.name, policy.namespace, policy.category, policy.severity, policy.description, policy.action.rawValue] + policy.ruleNames)
                     .contains { $0.localizedCaseInsensitiveContains(q) }
@@ -177,14 +181,28 @@ public struct KyvernoPolicy: Decodable, Equatable, Identifiable, Sendable {
     public let skip: Int
     /// The newest failing resources, at most 20; `fail` counts them all.
     public let failing: [PolicyFailure]
+    /// The same counts per namespace: a ClusterPolicy's results spread over every namespace.
+    public let byNamespace: [PolicyNamespaceTotals]
 
     public var id: String { "\(namespace)/\(name)" }
     public var clusterWide: Bool { namespace.isEmpty }
 
+    /// Its counts in `namespace`, or across the cluster for nil.
+    public func counts(namespace: String?) -> PolicyResultCounts {
+        guard let namespace else { return PolicyResultCounts(fail: fail, warn: warn, pass: pass) }
+        guard let row = byNamespace.first(where: { $0.namespace == namespace }) else { return PolicyResultCounts() }
+        return PolicyResultCounts(fail: row.fail, warn: row.warn, pass: row.pass)
+    }
+
+    /// It has results in `namespace`: it checked something there.
+    public func checks(_ namespace: String) -> Bool {
+        byNamespace.contains { $0.namespace == namespace && $0.pass + $0.fail + $0.warn + $0.errors > 0 }
+    }
+
     public init(namespace: String = "", name: String, action: PolicyAction = .unknown, background: Bool = false, ready: Bool = true,
                 readyReason: String = "", readyMessage: String = "", category: String = "", severity: String = "", description: String = "",
                 rules: PolicyRules = PolicyRules(), ruleNames: [String] = [], pass: Int = 0, fail: Int = 0, warn: Int = 0, errors: Int = 0,
-                skip: Int = 0, failing: [PolicyFailure] = []) {
+                skip: Int = 0, failing: [PolicyFailure] = [], byNamespace: [PolicyNamespaceTotals] = []) {
         self.namespace = namespace
         self.name = name
         self.action = action
@@ -203,6 +221,7 @@ public struct KyvernoPolicy: Decodable, Equatable, Identifiable, Sendable {
         self.errors = errors
         self.skip = skip
         self.failing = failing
+        self.byNamespace = byNamespace
     }
 
     public init(from decoder: Decoder) throws {
@@ -225,12 +244,26 @@ public struct KyvernoPolicy: Decodable, Equatable, Identifiable, Sendable {
         errors = try c.field(.errors, 0)
         skip = try c.field(.skip, 0)
         failing = try c.field(.failing, [])
+        byNamespace = try c.field(.byNamespace, [])
     }
 
     private enum CodingKeys: String, CodingKey {
         case namespace, name, action, background, ready, readyReason, readyMessage, category, severity, description
-        case rules, ruleNames, pass, fail, warn, skip, failing
+        case rules, ruleNames, pass, fail, warn, skip, failing, byNamespace
         case errors = "error"
+    }
+}
+
+/// A policy's failing, warning and passing results, over the cluster or in one namespace.
+public struct PolicyResultCounts: Equatable, Sendable {
+    public let fail: Int
+    public let warn: Int
+    public let pass: Int
+
+    public init(fail: Int = 0, warn: Int = 0, pass: Int = 0) {
+        self.fail = fail
+        self.warn = warn
+        self.pass = pass
     }
 }
 

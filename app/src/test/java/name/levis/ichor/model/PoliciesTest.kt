@@ -71,7 +71,8 @@ class PoliciesTest {
               "warn": 0,
               "error": 0,
               "skip": 0,
-              "failing": null
+              "failing": null,
+              "byNamespace": null
             },
             {
               "namespace": "",
@@ -91,12 +92,42 @@ class PoliciesTest {
               "ruleNames": [
                 "privileged-containers"
               ],
-              "pass": 0,
+              "pass": 15,
               "fail": 0,
               "warn": 0,
               "error": 0,
               "skip": 0,
-              "failing": null
+              "failing": null,
+              "byNamespace": [
+                {
+                  "namespace": "billing",
+                  "pass": 9,
+                  "fail": 0,
+                  "warn": 0,
+                  "error": 0
+                },
+                {
+                  "namespace": "media",
+                  "pass": 3,
+                  "fail": 0,
+                  "warn": 0,
+                  "error": 0
+                },
+                {
+                  "namespace": "shop",
+                  "pass": 1,
+                  "fail": 0,
+                  "warn": 0,
+                  "error": 0
+                },
+                {
+                  "namespace": "vault",
+                  "pass": 2,
+                  "fail": 0,
+                  "warn": 0,
+                  "error": 0
+                }
+              ]
             },
             {
               "namespace": "shop",
@@ -123,7 +154,16 @@ class PoliciesTest {
               "warn": 2,
               "error": 0,
               "skip": 0,
-              "failing": null
+              "failing": null,
+              "byNamespace": [
+                {
+                  "namespace": "shop",
+                  "pass": 3,
+                  "fail": 0,
+                  "warn": 2,
+                  "error": 0
+                }
+              ]
             },
             {
               "namespace": "",
@@ -176,6 +216,15 @@ class PoliciesTest {
                   "message": "Validation error: missing label owner",
                   "severity": "medium",
                   "at": 1760000000
+                }
+              ],
+              "byNamespace": [
+                {
+                  "namespace": "shop",
+                  "pass": 0,
+                  "fail": 7,
+                  "warn": 0,
+                  "error": 0
                 }
               ]
             }
@@ -262,15 +311,29 @@ class PoliciesTest {
     }
 
     @Test
-    fun aNamespaceKeepsItsOwnAndTheClusterWidePoliciesInOrder() {
+    fun aNamespaceKeepsItsOwnPoliciesAndTheClusterWideOnesThatCheckedIt() {
         assertEquals(demo.policies, demo.filtered(null, ""))
-        // restrict-image-registries is the one namespaced policy (shop); billing has none of its own.
+        // billing: no policy of its own; require-labels has no result there, so it is left out,
+        // and the not-ready one stays (a broken policy matters everywhere).
+        assertEquals(listOf("verify-image-signatures", "disallow-privileged"), demo.filtered("billing", "").map { it.name })
         assertEquals(
-            listOf("verify-image-signatures", "disallow-privileged", "require-labels"),
-            demo.filtered("billing", "").map { it.name },
+            listOf("verify-image-signatures", "disallow-privileged", "restrict-image-registries", "require-labels"),
+            demo.filtered("shop", "").map { it.name },
         )
-        assertEquals(4, demo.filtered("shop", "").size)
         assertEquals(listOf("billing", "media", "shop", "vault"), demo.policyNamespaces)
+    }
+
+    @Test
+    fun aPickedNamespaceShowsThePolicysCountsThere() {
+        val labels = demo.policies.single { it.name == "require-labels" }
+        assertEquals(PolicyResultCounts(fail = 7), labels.counts(null))
+        assertEquals(PolicyResultCounts(fail = 7), labels.counts("shop"))
+        assertEquals(PolicyResultCounts(), labels.counts("billing"))
+        val privileged = demo.policies.single { it.name == "disallow-privileged" }
+        assertEquals(PolicyResultCounts(pass = 15), privileged.counts(null))
+        assertEquals(PolicyResultCounts(pass = 9), privileged.counts("billing"))
+        assertTrue(privileged.checks("vault"))
+        assertFalse(labels.checks("vault"))
     }
 
     @Test

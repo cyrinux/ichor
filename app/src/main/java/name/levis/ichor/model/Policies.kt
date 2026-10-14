@@ -74,10 +74,26 @@ data class KyvernoPolicy(
     val skip: Int = 0,
     /** The newest failing resources, at most 20; [fail] counts them all. */
     val failing: List<PolicyFailure> = emptyList(),
+    /** The same counts per namespace: a ClusterPolicy's results spread over every namespace. */
+    val byNamespace: List<PolicyNamespaceTotals> = emptyList(),
 ) {
     val key: String get() = "$namespace/$name"
     val clusterWide: Boolean get() = namespace.isEmpty()
+
+    /** Its counts in [namespace], or across the cluster for null. */
+    fun counts(namespace: String?): PolicyResultCounts {
+        if (namespace == null) return PolicyResultCounts(fail, warn, pass)
+        val row = byNamespace.firstOrNull { it.namespace == namespace } ?: return PolicyResultCounts()
+        return PolicyResultCounts(row.fail, row.warn, row.pass)
+    }
+
+    /** It has results in [namespace]: it checked something there. */
+    fun checks(namespace: String): Boolean =
+        byNamespace.any { it.namespace == namespace && it.pass + it.fail + it.warn + it.errors > 0 }
 }
+
+/** A policy's failing, warning and passing results, over the cluster or in one namespace. */
+data class PolicyResultCounts(val fail: Int = 0, val warn: Int = 0, val pass: Int = 0)
 
 /** A policy's rules by kind. */
 @Serializable
@@ -136,12 +152,13 @@ data class PolicyNamespaceTotals(
 
 /**
  * The policies a [namespace] (null: every one) and a [query] keep, in the report's order. A
- * namespace keeps its own policies and the cluster-wide ones, which apply to it too.
+ * namespace keeps its own policies, and the cluster-wide ones that checked something there or
+ * are not ready (a broken policy matters everywhere).
  */
 fun PolicyReport.filtered(namespace: String?, query: String): List<KyvernoPolicy> {
     val q = query.trim()
     return policies
-        .filter { namespace == null || it.clusterWide || it.namespace == namespace }
+        .filter { namespace == null || it.namespace == namespace || (it.clusterWide && (!it.ready || it.checks(namespace))) }
         .filter { p ->
             q.isEmpty() || (listOf(p.name, p.namespace, p.category, p.severity, p.description, p.action) + p.ruleNames)
                 .any { it.contains(q, ignoreCase = true) }

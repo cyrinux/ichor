@@ -515,8 +515,9 @@ policy blocking this rollout, and can I relax it?" in two taps:
   lets them through unchecked.
 - **The policies:** not ready ones first, then those in **Enforce** mode (a request that breaks a
   rule is refused) before those in **Audit** mode (it is let through and only reported), each
-  with its failing, warning and passing counts from the policy reports. A namespace and a search
-  narrow the list.
+  with its failing, warning and passing counts from the policy reports. A search narrows the
+  list, and a namespace keeps its own policies and the cluster-wide ones that checked something
+  there (or are not ready), each with its counts in that namespace.
 - **One policy:** its rules, why it is not ready, and the newest resources it fails with
   Kyverno's message; a Pod, Deployment or other well-known kind opens its object screen.
 
