@@ -10,7 +10,19 @@
         "list"
       ],
       "categories": [
-        "crossplane"
+        "composite"
+      ]
+    },
+    {
+      "name": "bucketclaims",
+      "kind": "BucketClaim",
+      "namespaced": true,
+      "verbs": [
+        "get",
+        "list"
+      ],
+      "categories": [
+        "claim"
       ]
     },
     {

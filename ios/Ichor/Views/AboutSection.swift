@@ -3,6 +3,7 @@ import IchorCore
 
 enum ProjectLinks {
     static let repo = URL(string: "https://github.com/cyrinux/ichor")!
+    static let website = URL(string: "https://cyrinux.github.io/ichor/")!
     static let talos = URL(string: "https://www.talos.dev")!
     static let sponsor = URL(string: "https://github.com/sponsors/cyrinux")!
     static let btc = Donation.btc
@@ -17,7 +18,7 @@ struct AboutSection: View {
             LabeledContent("Version", value: Self.version)
             NavigationLink(value: Route.changelog) { Label("What's new", systemImage: "sparkles") }
             Link(destination: ProjectLinks.repo) { Label("Source code on GitHub", systemImage: "chevron.left.forwardslash.chevron.right") }
-            Link(destination: ProjectLinks.talos) { Label("Talos Linux (talos.dev)", systemImage: "arrow.up.right.square") }
+            Link(destination: ProjectLinks.website) { Label("Ichor website", systemImage: "arrow.up.right.square") }
             NavigationLink(value: Route.licenses) { Label("Open-source licenses", systemImage: "doc.text") }
             NavigationLink(value: Route.supportedIntegrations) { Label("Integrations", systemImage: "puzzlepiece.extension") }
             if Distribution.donations {

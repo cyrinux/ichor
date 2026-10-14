@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"slices"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -23,7 +24,7 @@ func crossplaneAPI(t *testing.T) (*fakeKubeAPI, *kubeClient, map[string]string) 
 		"/apis/sql.example.org/v1":             "sql.example.org.json",
 		"/apis/pkg.crossplane.io/v1/providers": "providers.json",
 		"/apis/pkg.crossplane.io/v1/functions": "functions.json",
-		"/apis/apiextensions.crossplane.io/v1/compositeresourcedefinitions": "definitions.json",
+		"/apis/apiextensions.crossplane.io/v2/compositeresourcedefinitions": "definitions.json",
 		"/apis/apiextensions.crossplane.io/v1/compositions":                 "compositions.json",
 		"/apis/platform.example.org/v1beta1/xbuckets":                       "composites-v1.json",
 		"/apis/platform.example.org/v1beta1/xdatabases":                     "composites-v2.json",
@@ -63,7 +64,7 @@ func TestReadCrossplane(t *testing.T) {
 		if d.Scope == "Namespaced" && (d.ClaimKind != "" || d.Compositions != 1 || d.Composites != 1) {
 			t.Errorf("v2 definition: %+v", d)
 		}
-		if d.Group != groupCrossplaneAPIExt || d.Resource != "compositeresourcedefinitions" {
+		if d.Group != groupCrossplaneAPIExt || d.Version != "v2" || d.Resource != "compositeresourcedefinitions" {
 			t.Errorf("definition ref: %+v", d)
 		}
 	}
@@ -100,10 +101,10 @@ func TestReadCrossplanePartialErrors(t *testing.T) {
 	for _, section := range []string{"managed", "definitions", "package", "discovery"} {
 		t.Run(section, func(t *testing.T) {
 			f, k, groups := crossplaneAPI(t)
-			path := map[string]string{"managed": "/apis/sql.example.org/v1/databases", "definitions": "/apis/apiextensions.crossplane.io/v1/compositeresourcedefinitions", "package": "/apis/pkg.crossplane.io/v1/providers", "discovery": "/apis/sql.example.org/v1"}[section]
+			path := map[string]string{"managed": "/apis/sql.example.org/v1/databases", "definitions": "/apis/apiextensions.crossplane.io/v2/compositeresourcedefinitions", "package": "/apis/pkg.crossplane.io/v1/providers", "discovery": "/apis/sql.example.org/v1"}[section]
 			f.answerWith("GET "+path, 403, `{"kind":"Status","reason":"Forbidden","message":"listing denied"}`)
 			out, err := readCrossplane(context.Background(), k, groups, fixtureNow)
-			if err != nil || !out.Installed || !strings.Contains(out.Error, path) || len(out.Managed) == 0 {
+			if err != nil || !out.Installed || len(out.Managed) == 0 || (section != "discovery" && !strings.Contains(out.Error, path)) || (section == "discovery" && out.Error != "") {
 				t.Fatalf("partial status: %+v %v", out, err)
 			}
 		})
@@ -119,26 +120,35 @@ func TestReadCrossplaneAbsent(t *testing.T) {
 
 func TestCrossplaneHealth(t *testing.T) {
 	for _, tc := range []struct {
-		name, status, reason, at string
-		paused                   bool
-		health, why              string
+		name, status, reason, at, created string
+		paused                            bool
+		health, why                       string
 	}{
-		{"sync error", "False", "ReconcileError", "", false, healthCritical, xpReasonSyncFailed},
-		{"pause condition", "False", "ReconcilePaused", "", false, healthWarning, xpReasonPaused},
-		{"pause annotation", "True", "", "", true, healthWarning, xpReasonPaused},
-		{"old creating", "False", "Creating", "2026-10-03T11:00:00Z", false, healthWarning, xpReasonNotReady},
-		{"young creating", "False", "Creating", "2026-10-03T11:58:00Z", false, healthOK, ""},
-		{"unknown age", "False", "Creating", "invalid", false, healthOK, ""},
-		{"unavailable", "False", "Unavailable", "", false, healthWarning, xpReasonNotReady},
-		{"deleting", "False", "Deleting", "", false, healthWarning, xpReasonDeleting},
+		{"sync error", "False", "ReconcileError", "", "", false, healthCritical, xpReasonSyncFailed},
+		{"pause condition", "False", "ReconcilePaused", "", "", false, healthWarning, xpReasonPaused},
+		{"pause annotation", "True", "", "", "", true, healthWarning, xpReasonPaused},
+		{"old creating", "False", "Creating", "2026-10-03T11:00:00Z", "", false, healthWarning, xpReasonNotReady},
+		{"young creating", "False", "Creating", "2026-10-03T11:58:00Z", "", false, healthOK, ""},
+		{"unknown age", "False", "Creating", "invalid", "", false, healthOK, ""},
+		{"unavailable", "False", "Unavailable", "", "", false, healthWarning, xpReasonNotReady},
+		{"deleting", "False", "Deleting", "", "", false, healthWarning, xpReasonDeleting},
+		{"missing condition past grace", "", "", "", "2026-10-03T11:00:00Z", false, healthWarning, xpReasonNotReady},
+		{"missing condition within grace", "", "", "", "2026-10-03T11:58:00Z", false, healthOK, ""},
+		{"unknown condition past grace", "Unknown", "", "2026-10-03T11:00:00Z", "", false, healthWarning, xpReasonNotReady},
+		{"unknown sync past grace", "Unknown", "", "2026-10-03T11:00:00Z", "", false, healthWarning, xpReasonNotReady},
+		{"other sync failure past grace", "False", "ReconcileSuccess", "2026-10-03T11:00:00Z", "", false, healthWarning, xpReasonNotReady},
+		{"other sync failure within grace", "False", "ReconcileSuccess", "2026-10-03T11:58:00Z", "", false, healthOK, ""},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var obj xpResourceObject
+			obj.Metadata.CreationTimestamp = tc.created
 			conditionType := "Ready"
-			if strings.HasPrefix(tc.name, "sync") || tc.name == "pause condition" {
+			if strings.Contains(tc.name, "sync") || tc.name == "pause condition" {
 				conditionType = "Synced"
 			}
-			obj.Status.Conditions = []kubeCondition{{Type: conditionType, Status: tc.status, Reason: tc.reason, LastTransitionTime: tc.at}}
+			if tc.status != "" {
+				obj.Status.Conditions = []kubeCondition{{Type: conditionType, Status: tc.status, Reason: tc.reason, LastTransitionTime: tc.at}}
+			}
 			if tc.paused {
 				obj.Metadata.Annotations = map[string]string{"crossplane.io/paused": "true"}
 			}
@@ -147,6 +157,70 @@ func TestCrossplaneHealth(t *testing.T) {
 				t.Fatalf("health: %+v", out)
 			}
 		})
+	}
+}
+
+func TestCrossplaneProblemRowsAreCappedAndPrioritized(t *testing.T) {
+	rows := make([]xpObject, 0, 620)
+	for i := range 600 {
+		rows = append(rows, xpObject{Health: healthWarning, LastTransition: int64(i + 1), xpObjectRef: xpObjectRef{Name: fmt.Sprintf("warning-%03d", i)}})
+	}
+	for i := range 20 {
+		rows = append(rows, xpObject{Health: healthCritical, LastTransition: int64(i + 1), xpObjectRef: xpObjectRef{Name: fmt.Sprintf("critical-%03d", i)}})
+	}
+	var managed xpManagedRows
+	managed.add(rows)
+	managed.compact()
+	if managed.total != 620 || managed.counts.Warning != 600 || managed.counts.Critical != 20 || len(managed.problems) != xpManagedProblemLimit {
+		t.Fatalf("problem cap: total=%d counts=%+v rows=%d", managed.total, managed.counts, len(managed.problems))
+	}
+	for _, row := range managed.problems[:20] {
+		if row.Health != healthCritical {
+			t.Fatalf("critical rows should lead: %+v", managed.problems[:20])
+		}
+	}
+	if managed.problems[20].Name != "warning-599" {
+		t.Fatalf("most recent warnings should follow critical rows: %s", managed.problems[20].Name)
+	}
+}
+
+func TestCrossplaneCompositesStartBeforeManagedDiscoveryFinishes(t *testing.T) {
+	f, k, groups := crossplaneAPI(t)
+	discoveryStarted := make(chan struct{})
+	compositeStarted := make(chan struct{})
+	releaseDiscovery := make(chan struct{})
+	var onceDiscovery, onceComposite sync.Once
+	f.beforeAnswer = func(r *http.Request) {
+		if r.URL.Path == "/apis/storage.example.org/v1" {
+			onceDiscovery.Do(func() { close(discoveryStarted) })
+			<-releaseDiscovery
+		}
+		if r.URL.Path == "/apis/platform.example.org/v1beta1/xbuckets" {
+			onceComposite.Do(func() { close(compositeStarted) })
+		}
+	}
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		_, _ = readCrossplane(context.Background(), k, groups, fixtureNow)
+	}()
+	select {
+	case <-discoveryStarted:
+	case <-time.After(5 * time.Second):
+		close(releaseDiscovery)
+		t.Fatal("managed discovery did not start")
+	}
+	select {
+	case <-compositeStarted:
+	case <-time.After(2 * time.Second):
+		close(releaseDiscovery)
+		t.Fatal("composite reads waited for managed discovery")
+	}
+	close(releaseDiscovery)
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("Crossplane reader did not finish")
 	}
 }
 
@@ -211,12 +285,66 @@ func TestCrossplaneManagedPaginationAndCap(t *testing.T) {
 func TestReadIntegrationsCrossplaneGroupsAreSupported(t *testing.T) {
 	_, k, _ := crossplaneAPI(t)
 	out, err := readIntegrations(context.Background(), k)
-	if err != nil || len(out.Families) != 0 || !slices.Contains(out.Supported, "crossplane") {
+	if err != nil || len(out.Families) != 0 || !slices.Contains(out.Supported, "platform.example.org") || slices.Contains(out.Supported, "crossplane") {
 		t.Fatalf("integrations: %+v %v", out, err)
 	}
 	raw, err := SupportedIntegrations()
 	if err != nil || !strings.Contains(raw, `"id":"crossplane"`) {
 		t.Fatalf("supported: %s %v", raw, err)
+	}
+}
+
+func TestReadIntegrationsUsesCrossplaneCategoriesOnlyWhenInstalled(t *testing.T) {
+	for _, tc := range []struct {
+		category  string
+		installed bool
+	}{
+		{"managed", false},
+		{"managed", true},
+		{"composite", true},
+		{"claim", true},
+	} {
+		t.Run(fmt.Sprintf("%s installed=%t", tc.category, tc.installed), func(t *testing.T) {
+			groups := `{"groups":[{"name":"provider.example.org","preferredVersion":{"version":"v1"}}]}`
+			if tc.installed {
+				groups = `{"groups":[{"name":"pkg.crossplane.io","preferredVersion":{"version":"v1"}},{"name":"provider.example.org","preferredVersion":{"version":"v1"}}]}`
+			}
+			discovery := fmt.Sprintf(`{"groupVersion":"provider.example.org/v1","resources":[{"name":"widgets","kind":"Widget","verbs":["get","list"],"categories":[%q]}]}`, tc.category)
+			_, k := actionsKube(t, map[string]string{"GET /apis": groups, "GET /apis/provider.example.org/v1": discovery})
+			out, err := readIntegrations(context.Background(), k)
+			if err != nil {
+				t.Fatal(err)
+			}
+			isSupported := slices.Contains(out.Supported, "provider.example.org")
+			isRequested := false
+			for _, family := range out.Families {
+				for _, group := range family.Groups {
+					if group.Name == "provider.example.org" && group.Version == "v1" && slices.Contains(group.Kinds, "Widget") {
+						isRequested = true
+					}
+				}
+			}
+			if tc.installed && (!isSupported || isRequested) {
+				t.Fatalf("Crossplane category left as request: %+v", out)
+			}
+			if !tc.installed && (isSupported || !isRequested) {
+				t.Fatalf("non-Crossplane managed group hidden: %+v", out)
+			}
+		})
+	}
+}
+
+func TestDiscoverCrossplaneManagedSkipsBuiltinGroups(t *testing.T) {
+	f, k, groups := crossplaneAPI(t)
+	groups["metrics.k8s.io"] = "v1beta1"
+	_, err := discoverCrossplaneManaged(context.Background(), k, groups)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, request := range f.recorded() {
+		if strings.Contains(request.path, "metrics.k8s.io") {
+			t.Fatalf("built-in discovery was queried: %s", request.path)
+		}
 	}
 }
 
@@ -233,7 +361,7 @@ func TestKubeCrossplaneDemo(t *testing.T) {
 	if err := json.Unmarshal([]byte(raw), &out); err != nil {
 		t.Fatal(err)
 	}
-	if !out.Installed || len(out.Packages) != 3 || len(out.Definitions) != 2 || len(out.Composites) != 2 || len(out.Claims) != 1 || out.ManagedTotal != 9 {
+	if !out.Installed || len(out.Packages) != 3 || len(out.Definitions) != 2 || len(out.Composites) != 1 || len(out.Claims) != 1 || out.ManagedTotal != 9 {
 		t.Fatalf("demo: %+v", out)
 	}
 	reasons := []string{}

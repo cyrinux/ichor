@@ -602,6 +602,8 @@ enum BackgroundMonitor {
             let label = issue.last ?? subject
             let system = dataSystemTitle(subject)
             guard alert.problem else { return (String(localized: "\(label) is healthy again"), system) }
+            if issue.first == "snapshots" { return (String(localized: "\(label) needs attention"), String(localized: "No good snapshot in 48 hours")) }
+            if issue.first == "backupjobs" { return (String(localized: "\(label) needs attention"), String(localized: "Observed consecutive failures: \(3)")) }
             let severity = snapshot.dataIssues[subject] == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
             return (String(localized: "\(label) needs attention"), "\(system) · \(severity)")
         case "gitops":

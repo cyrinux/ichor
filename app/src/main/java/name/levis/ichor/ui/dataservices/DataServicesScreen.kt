@@ -85,6 +85,7 @@ fun DataServicesScreen(
     LonghornResultToasts(vm.longhorn.results)
     CertificateRenewToasts(vm.certificates.results)
     CnpgBackupToasts(vm.cnpg.results)
+    CnpgPromoteToasts(vm.cnpg.promoteResults)
 
     val fingerprint = config?.realFingerprint?.takeUnless { mask.enabled }
     var editing by remember { mutableStateOf(false) }
@@ -176,6 +177,8 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
                 DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!, certificates)
                 DataServiceKind.VELERO -> VeleroTab(services.velero!!)
                 DataServiceKind.CEPH -> CephTab(services.ceph!!)
+                DataServiceKind.SNAPSHOTS -> SnapshotsTab(services.snapshots!!)
+                DataServiceKind.BACKUP_JOBS -> BackupJobsTab(services.backupJobs!!)
                 DataServiceKind.CASTAI -> CastAITab(services.castai!!)
             }
         }

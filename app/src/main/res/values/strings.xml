@@ -606,6 +606,8 @@
     <string name="about_source">Source code on GitHub</string>
     <string name="about_license">License: Apache 2.0</string>
     <string name="about_licenses">Open-source licenses</string>
+    <string name="about_website">Ichor website</string>
+    <string name="supported_integrations_platform">Platform</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="supported_integrations_title">Integrations</string>
     <string name="supported_integrations_desc">The projects Ichor reads through the Kubernetes API, found on the cluster by their API groups, their running pods or their Services. Tap one to open its website.</string>
@@ -4408,6 +4410,35 @@
     <string name="checkup_lbConfigError_fix">Fix what the message names (overlapping pools, a bad peer…): until then MetalLB keeps its last good configuration.</string>
     <string name="checkup_lbBGPPeerDown">BGP session down with %1$s</string>
     <string name="checkup_lbBGPPeerDown_fix">Check the router: its address and AS numbers, that it accepts this node, and that nothing filters TCP 179 between them.</string>
+
+    <string name="backup_items">%1$d backup items</string>
+    <string name="snapshot_ready">Snapshot ready</string>
+    <string name="snapshot_pending">Snapshot pending</string>
+    <string name="snapshot_source">PVC: %1$s · class: %2$s</string>
+    <string name="snapshot_created">Created: %1$s</string>
+    <string name="snapshot_last_good">Last good snapshot: %1$s</string>
+    <string name="snapshot_stale">No good snapshot in 48 hours</string>
+    <string name="snapshot_default">Default snapshot class</string>
+    <string name="snapshot_empty">No volume snapshots.</string>
+    <string name="backup_last_success">Last successful backup: %1$s</string>
+    <string name="backup_failure_streak">Observed consecutive failures: %1$d</string>
+    <string name="backup_suspended">Backup schedule suspended</string>
+    <string name="snapshot_create">Create snapshot</string>
+    <string name="snapshot_confirm">Create a CSI snapshot of %1$s using the default class for its driver.</string>
+
+    <string name="cnpg_promote_title">Promote replica</string>
+    <string name="cnpg_promote_instance">Promote %1$s</string>
+    <string name="cnpg_promote_primary">Current primary: %1$s</string>
+    <string name="cnpg_promote_target">Target instance: %1$s</string>
+    <string name="cnpg_promote_lag">Replication lag: %1$s</string>
+    <string name="cnpg_lag_unknown">Unknown replication lag</string>
+    <string name="cnpg_lag_warning">The replica is behind the primary. Promotion may lose data.</string>
+    <string name="cnpg_lag_unknown_warning">Replication lag could not be verified. Promotion may lose data.</string>
+    <string name="cnpg_promote_risk">Promotion switches the primary and interrupts connections. Data that has not reached the replica may be lost.</string>
+    <string name="cnpg_promote_unavailable">This instance cannot be promoted in the cluster\'s current state.</string>
+    <string name="cnpg_promote_requested">Promotion to %1$s requested</string>
+    <string name="cnpg_promote_failed">Could not promote %1$s: %2$s</string>
+    <string name="cnpg_promote_loading">Reading promotion preview…</string>
     <string name="kpol_title">Policies</string>
     <string name="kpol_not_installed">Kyverno is not installed on this cluster</string>
     <string name="kpol_not_installed_hint">Kyverno admits or refuses workloads by policy and reports what breaks the rules.</string>

@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -50,6 +51,14 @@ func mapCrossplaneObject(o xpResourceObject, ref xpObjectRef, now time.Time) xpO
 		x.Reasons = append(x.Reasons, xpReasonSyncFailed)
 		x.LastTransition = x.Synced.LastTransition
 	}
+	if x.Health != healthCritical && !x.Paused && !slices.Contains(x.Reasons, xpReasonNotReady) {
+		if since, stale := xpReconciliationStale(o, x, now); stale {
+			x.Reasons = append(x.Reasons, xpReasonNotReady)
+			if x.LastTransition == 0 {
+				x.LastTransition = since
+			}
+		}
+	}
 	if x.Ready.Status == "False" && (x.Ready.Reason == "Unavailable" || (x.Ready.LastTransition > 0 && now.Sub(time.UnixMilli(x.Ready.LastTransition)) > xpNotReadyGrace && x.Ready.Reason != "Deleting")) {
 		x.Reasons = append(x.Reasons, xpReasonNotReady)
 		if x.LastTransition == 0 {
@@ -74,8 +83,28 @@ func mapCrossplaneObject(o xpResourceObject, ref xpObjectRef, now time.Time) xpO
 	return x
 }
 
-// xpManagedRows holds all problem rows and a bounded, deterministic sample of healthy
-// rows. Counts cover every decoded row, including the healthy rows omitted from the UI.
+func xpReconciliationStale(o xpResourceObject, x xpObject, now time.Time) (int64, bool) {
+	stale := func(c xpCondition) bool {
+		return c.Status == "" || c.Status == "Unknown" ||
+			(c.Status == "False" && c.Reason != "ReconcileError" && c.Reason != "ReconcilePaused")
+	}
+	if !stale(x.Ready) && !stale(x.Synced) {
+		return 0, false
+	}
+	since := int64(0)
+	for _, c := range []xpCondition{x.Ready, x.Synced} {
+		if stale(c) && c.LastTransition > since {
+			since = c.LastTransition
+		}
+	}
+	if since == 0 {
+		since = unixMilli(o.Metadata.CreationTimestamp)
+	}
+	return since, since > 0 && now.Sub(time.UnixMilli(since)) > xpNotReadyGrace
+}
+
+// xpManagedRows holds bounded, deterministic samples of healthy and problem rows.
+// Counts cover every decoded row, including rows omitted from the UI.
 type xpManagedRows struct {
 	problems []xpObject
 	healthy  []xpObject
@@ -93,7 +122,6 @@ func (a *xpManagedRows) add(items []xpObject) {
 			a.problems = append(a.problems, x)
 		}
 	}
-	a.capHealthy()
 }
 
 func (a *xpManagedRows) capHealthy() {
@@ -103,12 +131,39 @@ func (a *xpManagedRows) capHealthy() {
 	}
 }
 
+func (a *xpManagedRows) capProblems() {
+	slices.SortFunc(a.problems, func(a, b xpObject) int {
+		if a.Health != b.Health {
+			if a.Health == healthCritical {
+				return -1
+			}
+			if b.Health == healthCritical {
+				return 1
+			}
+		}
+		if a.LastTransition != b.LastTransition {
+			if a.LastTransition > b.LastTransition {
+				return -1
+			}
+			return 1
+		}
+		return strings.Compare(a.key(), b.key())
+	})
+	if len(a.problems) > xpManagedProblemLimit {
+		a.problems = a.problems[:xpManagedProblemLimit]
+	}
+}
+
+func (a *xpManagedRows) compact() {
+	a.capProblems()
+	a.capHealthy()
+}
+
 func (a *xpManagedRows) merge(b xpManagedRows) {
 	a.total += b.total
 	a.counts.merge(b.counts)
 	a.problems = append(a.problems, b.problems...)
 	a.healthy = append(a.healthy, b.healthy...)
-	a.capHealthy()
 }
 
 func listCrossplaneManaged(ctx context.Context, k *kubeClient, resources []kubeBrowserResource, now time.Time) ([]xpObject, int, xpCounts, error) {
@@ -140,6 +195,7 @@ func listCrossplaneManaged(ctx context.Context, k *kubeClient, resources []kubeB
 				if err != nil {
 					errs[i] = fmt.Errorf("%s: %v", ref.path(), kubeError(err))
 				}
+				local.compact()
 				mu.Lock()
 				total.merge(local)
 				mu.Unlock()
@@ -151,8 +207,8 @@ func listCrossplaneManaged(ctx context.Context, k *kubeClient, resources []kubeB
 	}
 	close(jobs)
 	wg.Wait()
+	total.compact()
 	rows := append([]xpObject{}, total.problems...)
 	rows = append(rows, total.healthy...)
-	sortCrossplaneObjects(rows)
-	return rows, total.total, total.counts, crossplaneErrors(errs)
+	return rows, total.total, total.counts, errors.Join(errs...)
 }

@@ -54,6 +54,9 @@ import name.levis.ichor.ui.components.expandable
 @Composable
 fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
     val busy by actions.busy.collectAsStateWithLifecycle()
+    val promoteBusy by actions.promoteBusy.collectAsStateWithLifecycle()
+    var promotion by remember { mutableStateOf<Pair<CnpgCluster, String>?>(null) }
+    promotion?.let { (cluster, instance) -> CnpgPromoteConfirmDialog(cluster, instance, actions, onDismiss = { promotion = null }, onConfirm = { actions.promote(cluster, instance); promotion = null }) }
     var confirming by remember { mutableStateOf<CnpgCluster?>(null) }
     confirming?.let { c ->
         CnpgBackupConfirmDialog(
@@ -115,6 +118,8 @@ fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
                 onToggle = { expanded = if (c.label in expanded) expanded - c.label else expanded + c.label },
                 backingUp = c.label in busy,
                 onBackup = { confirming = c },
+                promoting = c.label in promoteBusy,
+                onPromote = { promotion = c to it },
             )
             HorizontalDivider()
         }
@@ -122,7 +127,7 @@ fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
 }
 
 @Composable
-private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit, backingUp: Boolean, onBackup: () -> Unit) {
+private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit, backingUp: Boolean, onBackup: () -> Unit, promoting: Boolean, onPromote: (String) -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(Modifier.fillMaxWidth().expandable(open, onToggle = onToggle).animateContentSize().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -144,12 +149,12 @@ private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit, back
             }
             Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, contentDescription = null, tint = muted)
         }
-        if (open) Details(c, backingUp, onBackup)
+        if (open) Details(c, backingUp, onBackup, promoting, onPromote)
     }
 }
 
 @Composable
-private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit) {
+private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit, promoting: Boolean, onPromote: (String) -> Unit) {
     Column(Modifier.padding(start = 22.dp, top = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         if (c.phase.isNotEmpty()) InfoRow(stringResource(R.string.cnpg_phase), listOf(c.phase, c.phaseReason).filter { it.isNotEmpty() }.joinToString(": "))
         if (c.currentPrimary.isNotEmpty()) {
@@ -160,6 +165,7 @@ private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit) {
             Text(stringResource(R.string.cnpg_instances), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
             c.instancePods.forEach { DataPodLine(it.name, it.ready, it.node, it.phase, it.role, indent = 8.dp) }
         }
+        CnpgPromoteButtons(c, promoting, onPromote)
         InfoRow(stringResource(R.string.cnpg_archiving), archivingText(c.archiving))
         InfoRow(
             stringResource(R.string.cnpg_backups),

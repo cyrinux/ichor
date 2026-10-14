@@ -56,10 +56,10 @@ class KubeAccessTest {
     fun wireNamesMatchTheCore() {
         assertEquals(
             listOf(
-                "restartWorkload", "restartStatefulSet", "restartDaemonSet", "scale", "scaleStatefulSet",
+                "createVolumeSnapshot", "restartWorkload", "restartStatefulSet", "restartDaemonSet", "scale", "scaleStatefulSet",
                 "deletePod", "execPod", "debugPod", "debugNode", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync",
                 "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
-                "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode",
+                "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode", "cnpgPromote",
             ),
             KubeAction.entries.map { it.wire },
         )

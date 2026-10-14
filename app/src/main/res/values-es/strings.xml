@@ -611,6 +611,8 @@
     <string name="about_source">Código fuente en GitHub</string>
     <string name="about_license">Licencia: Apache 2.0</string>
     <string name="about_licenses">Licencias de código abierto</string>
+    <string name="about_website">Sitio web de Ichor</string>
+    <string name="supported_integrations_platform">Plataforma</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="supported_integrations_title">Integraciones</string>
     <string name="supported_integrations_desc">Los proyectos que Ichor lee a través de la API de Kubernetes, detectados en el clúster por sus grupos de API, sus pods en ejecución o sus Services. Toca uno para abrir su sitio web.</string>
@@ -4405,6 +4407,35 @@
     <string name="checkup_lbConfigError_fix">Corrige lo que indica el mensaje (pools que se solapan, un par incorrecto…): mientras tanto, MetalLB mantiene su última configuración válida.</string>
     <string name="checkup_lbBGPPeerDown">Sesión BGP caída con %1$s</string>
     <string name="checkup_lbBGPPeerDown_fix">Revisa el router: su dirección y números de AS, que acepte este nodo, y que nada filtre el TCP 179 entre ellos.</string>
+
+    <string name="backup_items">%1$d elementos de copia de seguridad</string>
+    <string name="snapshot_ready">Instantánea lista</string>
+    <string name="snapshot_pending">Instantánea pendiente</string>
+    <string name="snapshot_source">PVC: %1$s · clase: %2$s</string>
+    <string name="snapshot_created">Creada: %1$s</string>
+    <string name="snapshot_last_good">Última instantánea válida: %1$s</string>
+    <string name="snapshot_stale">Sin instantánea válida en 48 horas</string>
+    <string name="snapshot_default">Clase de instantánea predeterminada</string>
+    <string name="snapshot_empty">No hay instantáneas de volumen.</string>
+    <string name="backup_last_success">Última copia correcta: %1$s</string>
+    <string name="backup_failure_streak">Fallos consecutivos observados: %1$d</string>
+    <string name="backup_suspended">Programación de copias suspendida</string>
+    <string name="snapshot_create">Crear instantánea</string>
+    <string name="snapshot_confirm">Crear una instantánea CSI de %1$s con la clase predeterminada de su controlador.</string>
+
+    <string name="cnpg_promote_title">Promover réplica</string>
+    <string name="cnpg_promote_instance">Promover %1$s</string>
+    <string name="cnpg_promote_primary">Primario actual: %1$s</string>
+    <string name="cnpg_promote_target">Instancia de destino: %1$s</string>
+    <string name="cnpg_promote_lag">Retraso de replicación: %1$s</string>
+    <string name="cnpg_lag_unknown">Retraso de replicación desconocido</string>
+    <string name="cnpg_lag_warning">La réplica está retrasada respecto al primario. La promoción puede perder datos.</string>
+    <string name="cnpg_lag_unknown_warning">No se pudo verificar el retraso de replicación. La promoción puede perder datos.</string>
+    <string name="cnpg_promote_risk">La promoción cambia el primario e interrumpe las conexiones. Los datos que no hayan llegado a la réplica pueden perderse.</string>
+    <string name="cnpg_promote_unavailable">Esta instancia no puede promoverse en el estado actual del clúster.</string>
+    <string name="cnpg_promote_requested">Promoción a %1$s solicitada</string>
+    <string name="cnpg_promote_failed">No se pudo promover %1$s: %2$s</string>
+    <string name="cnpg_promote_loading">Leyendo vista previa de promoción…</string>
     <string name="kpol_title">Políticas</string>
     <string name="kpol_not_installed">Kyverno no está instalado en este clúster</string>
     <string name="kpol_not_installed_hint">Kyverno admite o rechaza cargas de trabajo según políticas e informa de lo que incumple las reglas.</string>

@@ -10,6 +10,10 @@ struct KubeStorageView: View {
     @State private var scope = KubeBrowserScope()
     @State private var state: LoadState<KubeStorage> = .loading
     @State private var query = ""
+    @State private var snapshots: VolumeSnapshots?
+    @State private var confirmSnapshot: StorageClaim?
+    @State private var snapshotBusy = false
+    @State private var snapshotResult: String?
 
     /// What decides the list: the scope, and the cluster, API address and screenshot mode.
     private struct Trigger: Hashable {
@@ -37,11 +41,31 @@ struct KubeStorageView: View {
                 }
             }
         }
+        .loadsKubeActionAccess(namespace: control.scope.namespace)
         .searchable(text: $query, prompt: Text("Search PVCs, classes or pods"))
         .autocorrectionDisabled()
         .textInputAutocapitalization(.never)
         .navigationTitle(Text("Storage"))
         .navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog("Create snapshot", isPresented: Binding(get: { confirmSnapshot != nil }, set: { if !$0 { confirmSnapshot = nil } })) {
+            Button("Create snapshot") {
+                guard let claim = confirmSnapshot, let client = model.client else { return }
+                confirmSnapshot = nil
+                snapshotBusy = true
+                let source = kubeNamespacesKey(model)
+                Task {
+                    do { snapshotResult = try await client.createVolumeSnapshot(namespace: claim.namespace, pvc: claim.name) }
+                    catch { snapshotResult = error.localizedDescription }
+                    snapshotBusy = false
+                    if source == kubeNamespacesKey(model) { await load(scope.control(model: model).scope) }
+                }
+            }
+        } message: {
+            Text("Create a CSI snapshot of \(confirmSnapshot?.id ?? "") using the default class for its driver.")
+        }
+        .alert("Create snapshot", isPresented: Binding(get: { snapshotResult != nil }, set: { if !$0 { snapshotResult = nil } })) {
+            Button("OK") { snapshotResult = nil }
+        } message: { Text(verbatim: snapshotResult ?? "") }
         .task(id: kubeNamespacesKey(model)) { await scope.loadNamespaces(model: model) }
         .task(id: Trigger(scope: control.scope, ready: control.ready, source: kubeNamespacesKey(model))) {
             if control.ready { await load(control.scope) }
@@ -51,6 +75,7 @@ struct KubeStorageView: View {
     private func list(_ storage: KubeStorage, showNamespace: Bool, scope: KubeScope) -> some View {
         let shown = filterStorageClaims(storage.claims, query: query)
         return List {
+            if snapshotBusy { ProgressView() }
             if storage.partialAccess {
                 Text("These credentials may not read volumes, classes or nodes: some details are missing.")
                     .font(.footnote).foregroundStyle(.secondary)
@@ -67,6 +92,12 @@ struct KubeStorageView: View {
                         Label(String(localized: "Open in \(kind.title)"), systemImage: "externaldrive.connected.to.line.below")
                             .font(.footnote)
                     }
+                }
+                if model.activeSummary?.demo == false, snapshots?.canCreate(claim) == true {
+                    VStack(alignment: .leading) {
+                        Button("Create snapshot") { confirmSnapshot = claim }.disabled(snapshotBusy).kubeGated(.createVolumeSnapshot, in: claim.namespace)
+                        KubeDeniedNote(.createVolumeSnapshot, in: claim.namespace)
+                    }.loadsKubeActionAccess(namespace: claim.namespace)
                 }
             }
         }
@@ -85,9 +116,13 @@ struct KubeStorageView: View {
     private func load(_ scope: KubeScope) async {
         guard let client = model.client else { return }
         let key = kubeNamespacesKey(model)
+        snapshots = nil
+        confirmSnapshot = nil
+        let snapshotData = try? await client.volumeSnapshots(namespace: scope.namespace ?? "")
         let fetched: LoadState<KubeStorage> = await .from { try await client.storage(namespace: scope.namespace) }
         guard key == kubeNamespacesKey(model), !Task.isCancelled else { return }
         state = state.refreshed(with: fetched)
+        snapshots = snapshotData
     }
 }
 

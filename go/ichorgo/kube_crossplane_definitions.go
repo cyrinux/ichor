@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"sync"
@@ -11,6 +12,7 @@ import (
 type xpMetadata struct {
 	Name              string            `json:"name"`
 	Namespace         string            `json:"namespace"`
+	CreationTimestamp string            `json:"creationTimestamp"`
 	Annotations       map[string]string `json:"annotations"`
 	Labels            map[string]string `json:"labels"`
 	DeletionTimestamp string            `json:"deletionTimestamp"`
@@ -93,11 +95,14 @@ func readCrossplanePackages(ctx context.Context, k *kubeClient) ([]xpPackage, er
 		out = append(out, rs...)
 	}
 	slices.SortFunc(out, byHealthThenKey(func(x xpPackage) (string, string) { return x.Health, x.key() }))
-	return out, crossplaneErrors(errs)
+	return out, errors.Join(errs...)
 }
 
-func readCrossplaneDefinitions(ctx context.Context, k *kubeClient) ([]xpDefinition, error) {
-	ref := xpReference(groupCrossplaneAPIExt, xpVersion, "compositeresourcedefinitions", "CompositeResourceDefinition")
+func readCrossplaneDefinitions(ctx context.Context, k *kubeClient, version string) ([]xpDefinition, error) {
+	if version == "" {
+		version = xpVersion
+	}
+	ref := xpReference(groupCrossplaneAPIExt, version, "compositeresourcedefinitions", "CompositeResourceDefinition")
 	var definitions []xpDefinitionObject
 	var compositions []xpCompositionObject
 	var definitionErr, compositionErr error
@@ -141,7 +146,7 @@ func readCrossplaneDefinitions(ctx context.Context, k *kubeClient) ([]xpDefiniti
 		out = append(out, d)
 	}
 	slices.SortFunc(out, byHealthThenKey(func(x xpDefinition) (string, string) { return x.Health, x.key() }))
-	return out, crossplaneErrors([]error{definitionErr, compositionErr})
+	return out, errors.Join(definitionErr, compositionErr)
 }
 
 func readCrossplaneComposites(ctx context.Context, k *kubeClient, definitions []xpDefinition, now time.Time) ([]xpObject, []xpObject, error) {
@@ -207,5 +212,5 @@ func readCrossplaneComposites(ctx context.Context, k *kubeClient, definitions []
 	}
 	sortCrossplaneObjects(composites)
 	sortCrossplaneObjects(claims)
-	return composites, claims, crossplaneErrors(append(errs, listErrs...))
+	return composites, claims, errors.Join(append(errs, listErrs...)...)
 }

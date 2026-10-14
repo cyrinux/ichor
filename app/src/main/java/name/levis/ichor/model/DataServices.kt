@@ -18,6 +18,8 @@ data class DataServices(
     val velero: VeleroStatus? = null,
     val ceph: CephStatus? = null,
     val castai: CastAIStatus? = null,
+    val snapshots: VolumeSnapshots? = null,
+    val backupJobs: BackupJobStatus? = null,
 )
 
 /** Health of one item (a volume, a Postgres cluster), worst first. */
@@ -51,6 +53,8 @@ enum class DataServiceKind(val catalogId: String) {
     VELERO("velero"),
     CEPH("rook"),
     CASTAI("castai"),
+    SNAPSHOTS("kubernetes-csi"),
+    BACKUP_JOBS("backup-cronjobs"),
 }
 
 /** Product names: never translated. */
@@ -65,6 +69,8 @@ val DataServiceKind.title: String
         DataServiceKind.CERT_MANAGER -> "cert-manager"
         DataServiceKind.VELERO -> "Velero"
         DataServiceKind.CEPH -> "Rook Ceph"
+        DataServiceKind.SNAPSHOTS -> "CSI VolumeSnapshots"
+        DataServiceKind.BACKUP_JOBS -> "Backup CronJobs"
         DataServiceKind.CASTAI -> "CAST AI"
     }
 
@@ -80,6 +86,8 @@ val DataServiceKind.alertSystem: String
         DataServiceKind.CERT_MANAGER -> "certmanager"
         DataServiceKind.VELERO -> "velero"
         DataServiceKind.CEPH -> "ceph"
+        DataServiceKind.SNAPSHOTS -> "snapshots"
+        DataServiceKind.BACKUP_JOBS -> "backupjobs"
         DataServiceKind.CASTAI -> "castai"
     }
 
@@ -106,6 +114,8 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.VELERO.takeIf { velero != null },
         DataServiceKind.CEPH.takeIf { ceph != null },
         DataServiceKind.CASTAI.takeIf { castai != null },
+        DataServiceKind.SNAPSHOTS.takeIf { snapshots != null },
+        DataServiceKind.BACKUP_JOBS.takeIf { backupJobs != null },
     )
 
 /**
@@ -124,6 +134,8 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.CERT_MANAGER -> certManager?.summary()
     DataServiceKind.VELERO -> velero?.summary()
     DataServiceKind.CEPH -> ceph?.summary()
+    DataServiceKind.SNAPSHOTS -> snapshots?.summary()
+    DataServiceKind.BACKUP_JOBS -> backupJobs?.summary()
     DataServiceKind.CASTAI -> castai?.summary()
 }
 

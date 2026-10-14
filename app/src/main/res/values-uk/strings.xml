@@ -666,6 +666,8 @@
     <string name="about_source">Вихідний код на GitHub</string>
     <string name="about_license">Ліцензія: Apache 2.0</string>
     <string name="about_licenses">Ліцензії відкритого коду</string>
+    <string name="about_website">Вебсайт Ichor</string>
+    <string name="supported_integrations_platform">Платформа</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="supported_integrations_title">Інтеграції</string>
     <string name="supported_integrations_desc">Проєкти, які Ichor читає через Kubernetes API, виявлені в кластері за їхніми групами API, запущеними подами або Services. Торкніться проєкту, щоб відкрити його сайт.</string>
@@ -4639,6 +4641,35 @@
     <string name="checkup_lbConfigError_fix">Виправте те, що вказано в повідомленні (пули, що перекриваються, хибний пір…): доти MetalLB тримає останню справну конфігурацію.</string>
     <string name="checkup_lbBGPPeerDown">BGP-сесію з %1$s розірвано</string>
     <string name="checkup_lbBGPPeerDown_fix">Перевірте маршрутизатор: його адресу й номери AS, що він приймає цей вузол і що ніщо не фільтрує TCP 179 між ними.</string>
+
+    <string name="backup_items">%1$d елементів резервного копіювання</string>
+    <string name="snapshot_ready">Знімок готовий</string>
+    <string name="snapshot_pending">Знімок очікує</string>
+    <string name="snapshot_source">PVC: %1$s · клас: %2$s</string>
+    <string name="snapshot_created">Створено: %1$s</string>
+    <string name="snapshot_last_good">Останній справний знімок: %1$s</string>
+    <string name="snapshot_stale">Немає справного знімка протягом 48 годин</string>
+    <string name="snapshot_default">Тип знімка за замовчуванням</string>
+    <string name="snapshot_empty">Немає знімків томів.</string>
+    <string name="backup_last_success">Остання успішна резервна копія: %1$s</string>
+    <string name="backup_failure_streak">Спостережені послідовні збої: %1$d</string>
+    <string name="backup_suspended">Розклад резервного копіювання призупинено</string>
+    <string name="snapshot_create">Створити знімок</string>
+    <string name="snapshot_confirm">Створити знімок CSI для %1$s з типом за замовчуванням для його драйвера.</string>
+
+    <string name="cnpg_promote_title">Підвищити репліку</string>
+    <string name="cnpg_promote_instance">Підвищити %1$s</string>
+    <string name="cnpg_promote_primary">Поточний основний екземпляр: %1$s</string>
+    <string name="cnpg_promote_target">Цільовий екземпляр: %1$s</string>
+    <string name="cnpg_promote_lag">Відставання реплікації: %1$s</string>
+    <string name="cnpg_lag_unknown">Невідоме відставання реплікації</string>
+    <string name="cnpg_lag_warning">Репліка відстає від основного екземпляра. Підвищення може призвести до втрати даних.</string>
+    <string name="cnpg_lag_unknown_warning">Не вдалося перевірити відставання реплікації. Підвищення може призвести до втрати даних.</string>
+    <string name="cnpg_promote_risk">Підвищення змінює основний екземпляр і перериває з’єднання. Дані, що не досягли репліки, можуть бути втрачені.</string>
+    <string name="cnpg_promote_unavailable">Цей екземпляр неможливо підвищити в поточному стані кластера.</string>
+    <string name="cnpg_promote_requested">Запитано підвищення до %1$s</string>
+    <string name="cnpg_promote_failed">Не вдалося підвищити %1$s: %2$s</string>
+    <string name="cnpg_promote_loading">Завантаження попереднього перегляду підвищення…</string>
     <string name="kpol_title">Політики</string>
     <string name="kpol_not_installed">Kyverno не встановлено в цьому кластері</string>
     <string name="kpol_not_installed_hint">Kyverno допускає або відхиляє робочі навантаження за політиками й повідомляє, що порушує правила.</string>
