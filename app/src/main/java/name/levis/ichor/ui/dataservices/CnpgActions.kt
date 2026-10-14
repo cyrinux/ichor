@@ -28,6 +28,16 @@ class CnpgActions(
     private val dataServices: DataServicesRepository,
     private val onChanged: () -> Unit,
 ) {
+    private val promotion = KeyedActions<CnpgPromoteResult>(scope)
+    val promoteBusy: StateFlow<Set<String>> get() = promotion.busy
+    val promoteResults: Flow<CnpgPromoteResult> get() = promotion.results
+    suspend fun preview(cluster: CnpgCluster, instance: String) = dataServices.cnpgPromotePreview(cluster.namespace, cluster.name, instance)
+    fun promote(cluster: CnpgCluster, instance: String) {
+        promotion.launch(cluster.label, { dataServices.cnpgPromote(cluster.namespace, cluster.name, instance) }, {
+            CnpgPromoteResult(cluster.label, instance, it.exceptionOrNull()?.uiText())
+        }, onChanged)
+    }
+
     private val actions = KeyedActions<CnpgBackupResult>(scope)
     /** Labels of the clusters with a backup request in flight. */
     val busy: StateFlow<Set<String>> get() = actions.busy

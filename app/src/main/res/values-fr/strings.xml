@@ -4422,4 +4422,18 @@
     <string name="backup_suspended">Planification des sauvegardes suspendue</string>
     <string name="snapshot_create">Créer un instantané</string>
     <string name="snapshot_confirm">Créer un instantané CSI de %1$s avec la classe par défaut de son pilote.</string>
+
+    <string name="cnpg_promote_title">Promouvoir une réplique</string>
+    <string name="cnpg_promote_instance">Promouvoir %1$s</string>
+    <string name="cnpg_promote_primary">Primaire actuel : %1$s</string>
+    <string name="cnpg_promote_target">Instance cible : %1$s</string>
+    <string name="cnpg_promote_lag">Retard de réplication : %1$s</string>
+    <string name="cnpg_lag_unknown">Retard de réplication inconnu</string>
+    <string name="cnpg_lag_warning">La réplique est en retard sur le primaire. La promotion peut entraîner une perte de données.</string>
+    <string name="cnpg_lag_unknown_warning">Le retard de réplication n’a pas pu être vérifié. La promotion peut entraîner une perte de données.</string>
+    <string name="cnpg_promote_risk">La promotion change le primaire et interrompt les connexions. Les données qui n’ont pas atteint la réplique peuvent être perdues.</string>
+    <string name="cnpg_promote_unavailable">Cette instance ne peut pas être promue dans l’état actuel du cluster.</string>
+    <string name="cnpg_promote_requested">Promotion vers %1$s demandée</string>
+    <string name="cnpg_promote_failed">Impossible de promouvoir %1$s : %2$s</string>
+    <string name="cnpg_promote_loading">Lecture de l’aperçu de promotion…</string>
 </resources>

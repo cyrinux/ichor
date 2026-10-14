@@ -4422,4 +4422,18 @@
     <string name="backup_suspended">Programación de copias suspendida</string>
     <string name="snapshot_create">Crear instantánea</string>
     <string name="snapshot_confirm">Crear una instantánea CSI de %1$s con la clase predeterminada de su controlador.</string>
+
+    <string name="cnpg_promote_title">Promover réplica</string>
+    <string name="cnpg_promote_instance">Promover %1$s</string>
+    <string name="cnpg_promote_primary">Primario actual: %1$s</string>
+    <string name="cnpg_promote_target">Instancia de destino: %1$s</string>
+    <string name="cnpg_promote_lag">Retraso de replicación: %1$s</string>
+    <string name="cnpg_lag_unknown">Retraso de replicación desconocido</string>
+    <string name="cnpg_lag_warning">La réplica está retrasada respecto al primario. La promoción puede perder datos.</string>
+    <string name="cnpg_lag_unknown_warning">No se pudo verificar el retraso de replicación. La promoción puede perder datos.</string>
+    <string name="cnpg_promote_risk">La promoción cambia el primario e interrumpe las conexiones. Los datos que no hayan llegado a la réplica pueden perderse.</string>
+    <string name="cnpg_promote_unavailable">Esta instancia no puede promoverse en el estado actual del clúster.</string>
+    <string name="cnpg_promote_requested">Promoción a %1$s solicitada</string>
+    <string name="cnpg_promote_failed">No se pudo promover %1$s: %2$s</string>
+    <string name="cnpg_promote_loading">Leyendo vista previa de promoción…</string>
 </resources>

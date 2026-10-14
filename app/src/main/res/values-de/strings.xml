@@ -4414,4 +4414,18 @@
     <string name="backup_suspended">Sicherungszeitplan ausgesetzt</string>
     <string name="snapshot_create">Snapshot erstellen</string>
     <string name="snapshot_confirm">CSI-Snapshot von %1$s mit der Standardklasse seines Treibers erstellen.</string>
+
+    <string name="cnpg_promote_title">Replikat hochstufen</string>
+    <string name="cnpg_promote_instance">%1$s hochstufen</string>
+    <string name="cnpg_promote_primary">Aktueller Primärknoten: %1$s</string>
+    <string name="cnpg_promote_target">Zielinstanz: %1$s</string>
+    <string name="cnpg_promote_lag">Replikationsrückstand: %1$s</string>
+    <string name="cnpg_lag_unknown">Unbekannter Replikationsrückstand</string>
+    <string name="cnpg_lag_warning">Das Replikat liegt hinter dem Primärknoten. Die Hochstufung kann Datenverlust verursachen.</string>
+    <string name="cnpg_lag_unknown_warning">Der Replikationsrückstand konnte nicht geprüft werden. Die Hochstufung kann Datenverlust verursachen.</string>
+    <string name="cnpg_promote_risk">Die Hochstufung wechselt den Primärknoten und unterbricht Verbindungen. Daten, die das Replikat noch nicht erreicht haben, können verloren gehen.</string>
+    <string name="cnpg_promote_unavailable">Diese Instanz kann im aktuellen Clusterzustand nicht hochgestuft werden.</string>
+    <string name="cnpg_promote_requested">Hochstufung auf %1$s angefordert</string>
+    <string name="cnpg_promote_failed">%1$s konnte nicht hochgestuft werden: %2$s</string>
+    <string name="cnpg_promote_loading">Vorschau der Hochstufung wird geladen…</string>
 </resources>

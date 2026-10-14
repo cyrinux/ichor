@@ -1,6 +1,7 @@
 package name.levis.ichor.data
 
 import name.levis.ichor.model.VolumeSnapshots
+import name.levis.ichor.model.CnpgPromotePreview
 import name.levis.ichor.model.CertDetails
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.GarageBlockReport
@@ -64,6 +65,14 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
      */
     suspend fun cnpgBackup(namespace: String, name: String): String = go.kube { cfg, ctx, server ->
         Ichorgo.kubeCNPGBackup(cfg, ctx, server, namespace, name)
+    }
+
+    suspend fun cnpgPromotePreview(namespace: String, name: String, instance: String): CnpgPromotePreview = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(CnpgPromotePreview.serializer(), Ichorgo.kubeCNPGPromotePreview(cfg, ctx, server, namespace, name, instance))
+    }
+
+    suspend fun cnpgPromote(namespace: String, name: String, instance: String) = go.kube { cfg, ctx, server ->
+        Ichorgo.kubeCNPGPromote(cfg, ctx, server, namespace, name, instance)
     }
 
     /**

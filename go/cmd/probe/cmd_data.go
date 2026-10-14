@@ -10,6 +10,13 @@ import (
 
 // GitOps, the network and data services.
 var dataCommands = []command{
+	{name: "cnpg-promote-preview", args: "NAMESPACE CLUSTER INSTANCE", run: func(e env) (string, error) {
+		return ichorgo.KubeCNPGPromotePreview(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+	}},
+	{name: "cnpg-promote", args: "NAMESPACE CLUSTER INSTANCE", run: func(e env) (string, error) {
+		err := ichorgo.KubeCNPGPromote(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+		return "requested", err
+	}},
 	{name: "crossplane", args: "", run: func(e env) (out string, err error) {
 		return ichorgo.KubeCrossplane(e.cfg, e.context, e.kubeServer)
 	}},
