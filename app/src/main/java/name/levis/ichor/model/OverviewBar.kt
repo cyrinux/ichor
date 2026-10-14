@@ -33,7 +33,9 @@ typealias KubeHomeBar = ActionBar<KubeHomeAction>
 /** What the Kubernetes screen's app bar offers: the screens it leads to, its share link and the API address. */
 enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOWS, RESOURCES, HELM, STORAGE, SERVICES, JOBS, EVENTS, API_ADDRESS,
     /** Kyverno's admission policies; last, so the saved and default bars keep their icons. */
-    POLICIES;
+    POLICIES,
+    /** What scales the cluster: HPAs, KEDA, VPA, Karpenter; last, so the saved bars keep theirs. */
+    AUTOSCALING;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 3)

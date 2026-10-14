@@ -190,6 +190,8 @@ fun OverviewScreen(
     onNetworkPolicies: () -> Unit,
     /** Kyverno's admission policies (from the Kubernetes home). */
     onPolicies: () -> Unit,
+    /** What scales the cluster (from the Kubernetes home). */
+    onAutoscaling: () -> Unit,
     onResources: () -> Unit,
     onHelm: () -> Unit,
     onStorage: () -> Unit,
@@ -229,6 +231,7 @@ fun OverviewScreen(
                 onApiHealth = onApiHealth,
                 onNetworkPolicies = onNetworkPolicies,
                 onPolicies = onPolicies,
+                onAutoscaling = onAutoscaling,
                 onArgoCD = onArgoCD,
                 onFlux = onFlux,
                 onDataServices = onDataServices,

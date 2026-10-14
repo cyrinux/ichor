@@ -525,6 +525,28 @@ policy blocking this rollout, and can I relax it?" in two taps:
 A cluster without Kyverno says so; credentials that cannot read the policy reports still show
 the policies, with their counts at zero and the reason.
 
+### Autoscaling
+
+**Kubernetes → Autoscaling** shows everything that scales the cluster, to answer "is this service
+stuck at its max, is KEDA paused, what does the recommender want, is the Karpenter pool at its
+limit?" in two taps:
+
+- **Needs attention:** every HPA at its max or limited, a paused or failing KEDA ScaledObject, a
+  VPA without a recommendation yet, a pool at its limit, and a pending, drifted or disrupting
+  NodeClaim — each opening its detail sheet.
+- **Horizontal (HPA):** where the replica count sits between its bounds, the metrics it scales on
+  (current against target), and the AbleToScale / ScalingActive / ScalingLimited conditions. An
+  HPA KEDA created is linked to its ScaledObject instead of shown twice.
+- **KEDA:** the ScaledObjects with their triggers (a query, a topic, a cron window — never a
+  secret), their fallback, and the pause annotations; the ScaledJobs next to them.
+- **Vertical (VPA):** per container, the live requests against what the recommender suggests,
+  with the lower and upper bounds. No recommendation yet says so, not zero.
+- **Node pools (Karpenter):** each pool's usage against its limits, its disruption budgets, and
+  its NodeClaims with their instance type and state.
+
+A group the cluster does not run (KEDA, VPA, Karpenter) collapses to one "not installed" line;
+credentials that cannot read one group show the reason in that group's header only.
+
 ### Argo CD app icons
 
 Ichor names an Argo CD app's logo from its Helm chart, its name or the images it runs. An app it

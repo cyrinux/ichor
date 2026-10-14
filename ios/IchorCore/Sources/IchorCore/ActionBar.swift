@@ -48,6 +48,8 @@ public enum KubernetesAction: String, BarAction {
     case capacity = "CAPACITY"
     /// Kyverno's admission policies (the screens' `policies` are the network ones); last too.
     case admissionPolicies = "POLICIES"
+    /// What scales the cluster: HPAs, KEDA, VPA, Karpenter; last, so the saved bars keep theirs.
+    case autoscaling = "AUTOSCALING"
 
     public var id: String { rawValue }
     public static let barStorageKey = "kubernetes.bar"

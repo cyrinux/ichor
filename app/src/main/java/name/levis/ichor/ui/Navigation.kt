@@ -296,6 +296,7 @@ fun Navigation(
                 onApiHealth = { nav.navigate(Routes.API_HEALTH) },
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
                 onPolicies = { nav.navigate(Routes.POLICIES) },
+                onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
                 onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
                 onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
                 onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
