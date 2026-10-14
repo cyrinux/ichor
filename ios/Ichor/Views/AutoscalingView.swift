@@ -11,12 +11,22 @@ struct AutoscalingView: View {
     @State private var selected: Selection?
 
     /// What a tap opens: one row of one group, with the claims next to its pool.
-    enum Selection: Hashable {
+    enum Selection: Hashable, Identifiable {
         case hpa(HpaRow)
         case scaledObject(ScaledObjectRow)
         case scaledJob(ScaledJobRow)
         case vpa(VpaRow)
         case pool(NodePoolRow, claims: [NodeClaimRow])
+
+        var id: String {
+            switch self {
+            case .hpa(let row): "hpa/" + row.id
+            case .scaledObject(let row): "so/" + row.id
+            case .scaledJob(let row): "sj/" + row.id
+            case .vpa(let row): "vpa/" + row.id
+            case .pool(let row, _): "pool/" + row.id
+            }
+        }
     }
 
     var body: some View {
