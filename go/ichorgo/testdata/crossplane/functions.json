@@ -1,0 +1,31 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "function-compose",
+        "namespace": ""
+      },
+      "spec": {
+        "package": "registry.example.org/function/compose:v1"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Installed",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          },
+          {
+            "type": "Healthy",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          }
+        ]
+      }
+    }
+  ]
+}

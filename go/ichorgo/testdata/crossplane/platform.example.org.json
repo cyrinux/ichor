@@ -1,0 +1,37 @@
+{
+  "groupVersion": "platform.example.org/v1beta1",
+  "resources": [
+    {
+      "name": "xbuckets",
+      "kind": "XBucket",
+      "namespaced": false,
+      "verbs": [
+        "get",
+        "list"
+      ],
+      "categories": [
+        "crossplane"
+      ]
+    },
+    {
+      "name": "xbuckets/status",
+      "kind": "XBucket",
+      "verbs": [
+        "get"
+      ],
+      "categories": [
+        "managed"
+      ]
+    },
+    {
+      "name": "notlistable",
+      "kind": "Other",
+      "verbs": [
+        "get"
+      ],
+      "categories": [
+        "managed"
+      ]
+    }
+  ]
+}

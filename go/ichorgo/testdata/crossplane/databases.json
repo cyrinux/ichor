@@ -1,0 +1,57 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "paused-db",
+        "namespace": "apps"
+      },
+      "spec": {},
+      "status": {
+        "conditions": [
+          {
+            "type": "Synced",
+            "status": "False",
+            "reason": "ReconcilePaused",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "new-db",
+        "namespace": "apps"
+      },
+      "spec": {},
+      "status": {
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "False",
+            "reason": "Creating",
+            "lastTransitionTime": "2026-10-03T11:58:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "old-db",
+        "namespace": "apps"
+      },
+      "spec": {},
+      "status": {
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "False",
+            "reason": "Creating",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          }
+        ]
+      }
+    }
+  ]
+}

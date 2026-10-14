@@ -10,6 +10,9 @@ import (
 
 // GitOps, the network and data services.
 var dataCommands = []command{
+	{name: "crossplane", args: "", run: func(e env) (out string, err error) {
+		return ichorgo.KubeCrossplane(e.cfg, e.context, e.kubeServer)
+	}},
 	{name: "sealed-secrets", run: func(e env) (string, error) {
 		raw, err := ichorgo.KubeDataServices(e.cfg, e.context, e.kubeServer, "sealed-secrets")
 		if err != nil {

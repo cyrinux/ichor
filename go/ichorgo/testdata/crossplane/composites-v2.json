@@ -1,0 +1,43 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "app-db",
+        "namespace": "apps"
+      },
+      "spec": {
+        "crossplane": {
+          "compositionRef": {
+            "name": "database-standard"
+          },
+          "resourceRefs": [
+            {
+              "name": "db"
+            },
+            {
+              "name": "user"
+            }
+          ]
+        }
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          },
+          {
+            "type": "Synced",
+            "status": "True",
+            "reason": "",
+            "message": "",
+            "lastTransitionTime": "2026-10-03T11:00:00Z"
+          }
+        ]
+      }
+    }
+  ]
+}
