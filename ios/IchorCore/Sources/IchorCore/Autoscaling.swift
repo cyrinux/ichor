@@ -28,7 +28,7 @@ public enum AutoscaleState: String, Sendable, WireEnum {
 }
 
 /// Everything that scales the cluster (os:admin); a group the cluster lacks says so.
-public struct AutoscalingReport: Decodable, Equatable, Sendable {
+public struct AutoscalingReport: Decodable, Equatable, Hashable, Sendable {
     public let hpa: HpaGroup
     public let keda: KedaGroup
     public let vpa: VpaGroup
@@ -97,7 +97,7 @@ public struct AutoscalingReport: Decodable, Equatable, Sendable {
 }
 
 /// What every group says about itself before its rows.
-public struct AutoscalingGroupState: Decodable, Equatable, Sendable {
+public struct AutoscalingGroupState: Decodable, Equatable, Hashable, Sendable {
     public let installed: Bool
     public let version: String
     /// This group's read failed (often a 403): the other groups still show.
@@ -122,7 +122,7 @@ public struct AutoscalingGroupState: Decodable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey { case installed, version, error, truncated }
 }
 
-public struct HpaGroup: Decodable, Equatable, Sendable {
+public struct HpaGroup: Decodable, Equatable, Hashable, Sendable {
     public let installed: Bool
     public let version: String
     public let error: String
@@ -151,7 +151,7 @@ public struct HpaGroup: Decodable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey { case installed, version, error, truncated, items }
 }
 
-public struct KedaGroup: Decodable, Equatable, Sendable {
+public struct KedaGroup: Decodable, Equatable, Hashable, Sendable {
     public let installed: Bool
     public let version: String
     public let error: String
@@ -184,7 +184,7 @@ public struct KedaGroup: Decodable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey { case installed, version, error, truncated, scaledObjects, scaledJobs }
 }
 
-public struct VpaGroup: Decodable, Equatable, Sendable {
+public struct VpaGroup: Decodable, Equatable, Hashable, Sendable {
     public let installed: Bool
     public let version: String
     public let error: String
@@ -213,7 +213,7 @@ public struct VpaGroup: Decodable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey { case installed, version, error, truncated, items }
 }
 
-public struct KarpenterGroup: Decodable, Equatable, Sendable {
+public struct KarpenterGroup: Decodable, Equatable, Hashable, Sendable {
     public let installed: Bool
     public let version: String
     public let error: String
@@ -247,7 +247,7 @@ public struct KarpenterGroup: Decodable, Equatable, Sendable {
 }
 
 /// The workload an autoscaler drives.
-public struct AutoscaleTarget: Decodable, Equatable, Sendable {
+public struct AutoscaleTarget: Decodable, Equatable, Hashable, Sendable {
     public let kind: String
     public let name: String
 
@@ -268,7 +268,7 @@ public struct AutoscaleTarget: Decodable, Equatable, Sendable {
 }
 
 /// One HorizontalPodAutoscaler. One KEDA created (managedBy keda) links its ScaledObject.
-public struct HpaRow: Decodable, Equatable, Identifiable, Sendable {
+public struct HpaRow: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let namespace: String
     public let name: String
     public let target: AutoscaleTarget
@@ -330,7 +330,7 @@ public struct HpaRow: Decodable, Equatable, Identifiable, Sendable {
 }
 
 /// One metric the HPA scales on: current against target, as the user reads them.
-public struct HpaMetric: Decodable, Equatable, Identifiable, Sendable {
+public struct HpaMetric: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let type: String
     public let name: String
     public let current: String
@@ -358,7 +358,7 @@ public struct HpaMetric: Decodable, Equatable, Identifiable, Sendable {
     private enum CodingKeys: String, CodingKey { case type, name, current, target }
 }
 
-public struct HpaConditions: Decodable, Equatable, Sendable {
+public struct HpaConditions: Decodable, Equatable, Hashable, Sendable {
     public let ableToScale: Bool
     public let scalingActive: Bool
     public let scalingLimited: Bool
@@ -383,7 +383,7 @@ public struct HpaConditions: Decodable, Equatable, Sendable {
 }
 
 /// One KEDA ScaledObject; current and desired come from the HPA it owns.
-public struct ScaledObjectRow: Decodable, Equatable, Identifiable, Sendable {
+public struct ScaledObjectRow: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let namespace: String
     public let name: String
     public let target: AutoscaleTarget
@@ -454,7 +454,7 @@ public struct ScaledObjectRow: Decodable, Equatable, Identifiable, Sendable {
     }
 }
 
-public struct ScaledJobRow: Decodable, Equatable, Identifiable, Sendable {
+public struct ScaledJobRow: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let namespace: String
     public let name: String
     public let triggers: [KedaTrigger]
@@ -494,7 +494,7 @@ public struct ScaledJobRow: Decodable, Equatable, Identifiable, Sendable {
 }
 
 /// One trigger: its type and the one setting the user recognises. Never a secret.
-public struct KedaTrigger: Decodable, Equatable, Identifiable, Sendable {
+public struct KedaTrigger: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let type: String
     public let summary: String
 
@@ -516,7 +516,7 @@ public struct KedaTrigger: Decodable, Equatable, Identifiable, Sendable {
 }
 
 /// One VerticalPodAutoscaler with its recommendation per container.
-public struct VpaRow: Decodable, Equatable, Identifiable, Sendable {
+public struct VpaRow: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let namespace: String
     public let name: String
     public let target: AutoscaleTarget
@@ -557,7 +557,7 @@ public struct VpaRow: Decodable, Equatable, Identifiable, Sendable {
 }
 
 /// The recommender's answer for one container next to its live requests ("" when unread).
-public struct VpaContainer: Decodable, Equatable, Identifiable, Sendable {
+public struct VpaContainer: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let name: String
     public let cpuTarget: String
     public let memoryTarget: String
@@ -602,7 +602,7 @@ public struct VpaContainer: Decodable, Equatable, Identifiable, Sendable {
 }
 
 /// One Karpenter NodePool: its limits against what it runs, and how it may disrupt nodes.
-public struct NodePoolRow: Decodable, Equatable, Identifiable, Sendable {
+public struct NodePoolRow: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let name: String
     public let limits: NodePoolLimits
     public let resources: NodePoolResources
@@ -647,7 +647,7 @@ public struct NodePoolRow: Decodable, Equatable, Identifiable, Sendable {
     private enum CodingKeys: String, CodingKey { case name, limits, resources, atLimit, disruption, weight, ready, message, capacityTypes }
 }
 
-public struct NodePoolLimits: Decodable, Equatable, Sendable {
+public struct NodePoolLimits: Decodable, Equatable, Hashable, Sendable {
     public let cpu: String
     public let memory: String
 
@@ -665,7 +665,7 @@ public struct NodePoolLimits: Decodable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey { case cpu, memory }
 }
 
-public struct NodePoolResources: Decodable, Equatable, Sendable {
+public struct NodePoolResources: Decodable, Equatable, Hashable, Sendable {
     public let cpu: String
     public let memory: String
     public let nodes: Int
@@ -686,7 +686,7 @@ public struct NodePoolResources: Decodable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey { case cpu, memory, nodes }
 }
 
-public struct NodePoolDisruption: Decodable, Equatable, Sendable {
+public struct NodePoolDisruption: Decodable, Equatable, Hashable, Sendable {
     public let consolidationPolicy: String
     public let consolidateAfter: String
     public let budgets: [NodePoolBudget]
@@ -707,7 +707,7 @@ public struct NodePoolDisruption: Decodable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey { case consolidationPolicy, consolidateAfter, budgets }
 }
 
-public struct NodePoolBudget: Decodable, Equatable, Identifiable, Sendable {
+public struct NodePoolBudget: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let nodes: String
     public let schedule: String
     public let duration: String
@@ -734,7 +734,7 @@ public struct NodePoolBudget: Decodable, Equatable, Identifiable, Sendable {
 }
 
 /// One Karpenter NodeClaim: a node being launched, running, or on its way out.
-public struct NodeClaimRow: Decodable, Equatable, Identifiable, Sendable {
+public struct NodeClaimRow: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let name: String
     public let pool: String
     public let nodeName: String
@@ -803,7 +803,7 @@ public struct NodeClaimRow: Decodable, Equatable, Identifiable, Sendable {
 }
 
 /// One (workload, autoscaler kind) pair: what the workload sheet names.
-public struct AutoscaledWorkload: Decodable, Equatable, Identifiable, Sendable {
+public struct AutoscaledWorkload: Decodable, Equatable, Hashable, Identifiable, Sendable {
     public let kind: String
     public let namespace: String
     public let name: String
@@ -852,7 +852,7 @@ public struct AutoscaledWorkload: Decodable, Equatable, Identifiable, Sendable {
 }
 
 /// One problem row of the "Needs attention" section, across the four groups.
-public struct AutoscalingProblem: Equatable, Identifiable, Sendable {
+public struct AutoscalingProblem: Equatable, Hashable, Identifiable, Sendable {
     public enum Group: String, Sendable, WireEnum {
         case hpa = "hpa"
         case keda = "keda"

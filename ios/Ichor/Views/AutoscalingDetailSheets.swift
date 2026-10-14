@@ -379,8 +379,3 @@ struct NodePoolSheet: View {
             .compactMap { $0 }.joined(separator: "  ·  ")
     }
 }
-
-/// A unix-ms stamp as the relative time the rows show.
-private func relativeTime(_ ms: Int64) -> String {
-    Text(Date(timeIntervalSince1970: TimeInterval(ms) / 1000), format: .relative(presentation: .named)).description
-}
