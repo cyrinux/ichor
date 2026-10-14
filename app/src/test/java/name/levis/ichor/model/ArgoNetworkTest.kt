@@ -209,6 +209,8 @@ class ArgoNetworkTest {
         assertTrue(ArgoNetNode(id = "gw/traefik/homelab", kind = ArgoNetNode.GATEWAY, managed = false).shared)
         assertTrue(ArgoNetNode(id = "ir/edge/web", kind = ArgoNetNode.INGRESS_ROUTE, managed = false).shared)
         assertTrue(ArgoNetNode(id = "irtcp/edge/web", kind = ArgoNetNode.INGRESS_ROUTE_TCP, managed = false).shared)
+        assertTrue(ArgoNetNode(id = "gr/edge/api", kind = ArgoNetNode.GRPC_ROUTE, managed = false).shared)
+        assertTrue(ArgoNetNode(id = "tr/edge/tls", kind = ArgoNetNode.TLS_ROUTE, managed = false).shared)
         assertFalse(ArgoNetNode(id = "ir/edge/web", kind = ArgoNetNode.INGRESS_ROUTE, managed = true).shared)
         assertFalse(network.node("ing/demo/worker")!!.shared)
         assertFalse(network.node("pod/demo/worker-6f4b8-pqrst")!!.shared)

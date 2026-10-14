@@ -3,7 +3,7 @@ package name.levis.ichor.model
 import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo/kube_argocd_network.go: how traffic reaches an Argo CD app,
-// host → Gateway → Ingress/HTTPRoute → Service → Pod → node, left to right.
+// host → Gateway → Ingress/HTTPRoute/GRPCRoute/TLSRoute → Service → Pod → node, left to right.
 
 /** The network graph of one Argo CD app; empty for an app with no Service. */
 @Serializable
@@ -127,9 +127,9 @@ data class ArgoNetwork(
 data class ArgoNetNode(
     /** "svc/ns/name", "pod/ns/name", "node/name", "host/https://..."... */
     val id: String,
-    /** 0 host or load balancer, 1 Gateway, 2 Ingress or HTTPRoute, 3 Service, 4 Pod, 5 node. */
+    /** 0 host or load balancer, 1 Gateway, 2 Ingress, HTTPRoute, GRPCRoute or TLSRoute, 3 Service, 4 Pod, 5 node. */
     val layer: Int = 0,
-    /** Host, LoadBalancer, Gateway, Ingress, HTTPRoute, Service, Pod or Node. */
+    /** Host, LoadBalancer, Gateway, Ingress, HTTPRoute, GRPCRoute, TLSRoute, Service, Pod or Node. */
     val kind: String = "",
     val namespace: String = "",
     val name: String = "",
@@ -153,6 +153,8 @@ data class ArgoNetNode(
         const val GATEWAY = "Gateway"
         const val INGRESS = "Ingress"
         const val HTTP_ROUTE = "HTTPRoute"
+        const val GRPC_ROUTE = "GRPCRoute"
+        const val TLS_ROUTE = "TLSRoute"
         const val INGRESS_ROUTE = "IngressRoute"
         const val INGRESS_ROUTE_TCP = "IngressRouteTCP"
         const val SERVICE = "Service"
@@ -168,7 +170,7 @@ data class ArgoNetNode(
         val LAYERS = LAYER_HOST..LAYER_NODE
 
         /** The kinds that route traffic to Services: drawn with the route icon. */
-        val ROUTE_KINDS = setOf(INGRESS, HTTP_ROUTE, INGRESS_ROUTE, INGRESS_ROUTE_TCP)
+        val ROUTE_KINDS = setOf(INGRESS, HTTP_ROUTE, GRPC_ROUTE, TLS_ROUTE, INGRESS_ROUTE, INGRESS_ROUTE_TCP)
         private val SHARED_KINDS = ROUTE_KINDS + GATEWAY
     }
 }
@@ -185,7 +187,7 @@ data class ArgoNetEdge(val from: String, val to: String, val health: String = ""
 /** The likely root cause, for the app to word by [wording]. */
 @Serializable
 data class ArgoNetProblem(
-    /** Node, Pod, Service, Ingress or Gateway (HTTPRoute, IngressRoute(TCP) possible). */
+    /** Node, Pod, Service, Ingress or Gateway (HTTPRoute, GRPCRoute, TLSRoute, IngressRoute(TCP) possible). */
     val kind: String = "",
     val namespace: String = "",
     val name: String = "",

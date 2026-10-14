@@ -17,6 +17,7 @@ var demoRouteTable = []struct {
 	{"paperless-", kubeRoute{Kind: "Ingress", Namespace: "default", Name: "paperless", URL: "https://paperless.home.example", Service: "paperless"}},
 	{"grafana-", kubeRoute{Kind: "IngressRoute", Namespace: "monitoring", Name: "grafana", URL: "https://grafana.home.example", Service: "grafana"}},
 	{"uptime-kuma-", kubeRoute{Kind: "HTTPRoute", Namespace: "default", Name: "uptime-kuma", URL: "http://status.home.example:8080/dashboard", Service: "uptime-kuma"}},
+	{"mosquitto-0", kubeRoute{Kind: "TLSRoute", Namespace: "home", Name: "mosquitto", URL: "https://mqtt.home.example", Service: "mosquitto"}},
 }
 
 // demoRoutes are the routes of the built-in demo cluster serving one of pods.

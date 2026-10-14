@@ -140,6 +140,28 @@ func TestArgoNetworkGateway(t *testing.T) {
 	}
 }
 
+// The demo TLSRoute passes through the same Gateway on its TLS listener: host → Gateway →
+// TLSRoute → Service, managed by the app.
+func TestArgoNetworkTLSRoute(t *testing.T) {
+	n := demoArgoNetwork("grafana")
+
+	tr := netNode(t, n, "tr/monitoring/grafana")
+	if !tr.Managed || tr.Kind != "TLSRoute" || tr.Layer != argoLayerRoute {
+		t.Fatalf("route %+v", tr)
+	}
+
+	got := netEdges(n)
+	for _, want := range []string{
+		"host/https://grafana.homelab.lan:8443>gw/traefik/homelab",
+		"gw/traefik/homelab>tr/monitoring/grafana",
+		"tr/monitoring/grafana>svc/monitoring/grafana",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("edges lack %s: %s", want, got)
+		}
+	}
+}
+
 func TestArgoNetworkLoadBalancerAndWarnings(t *testing.T) {
 	n := demoArgoNetwork("traefik")
 	if lb := netNode(t, n, "lb/10.0.0.240"); lb.Kind != "LoadBalancer" || lb.Detail != "LoadBalancer" {

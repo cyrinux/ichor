@@ -38,7 +38,7 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   with an icon and a title of your choice, see [CronJobs](#cronjobs)); measure the
   network between two nodes (TCP throughput and latency, see [Network test](#network-test));
   open an app in the browser from its sheet, at the hosts of the Ingresses, Gateway API
-  HTTPRoutes and Traefik IngressRoutes whose Services select its pods (kgateway included: its
+  HTTPRoutes, GRPCRoutes and TLSRoutes and Traefik IngressRoutes whose Services select its pods (kgateway included: its
   routing objects are the standard ones, and the network map's Gateway boxes name the
   controller serving them — kgateway, Traefik, Cilium, Envoy Gateway, Istio, NGINX Gateway
   Fabric); browse any resource, CRDs included, with the
@@ -62,7 +62,7 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   their commit on GitHub, GitLab, Gitea, Forgejo, Codeberg or Bitbucket. An app an ApplicationSet or a parent app manages keeps its spec:
   only sync, refresh and terminate are offered there, since its owner would revert the rest.
   Each app also has a network view, like Argo CD's own but down to the nodes: host → Gateway →
-  Ingress/HTTPRoute/IngressRoute → Service → pods → node, every box coloured by health, traffic flowing along
+  Ingress/HTTPRoute/GRPCRoute/TLSRoute/IngressRoute → Service → pods → node, every box coloured by health, traffic flowing along
   the healthy paths, and the likely root cause named (a node not ready, a crash-looping pod, a
   Service without ready pods).
   An app the icon catalog does not know (a personal project) can bring its own logo, see
@@ -187,7 +187,7 @@ reads those roles and explains up front when a feature needs more.
 | **CloudNativePG replica promotion** | `Kubeconfig`, then the Kubernetes API (clusters/status, pods and optional pods/proxy for lag) | **`os:admin`** |
 | **Velero: run a schedule now, delete a backup** | `Kubeconfig`, then the Kubernetes API (velero.io schedules, backups, deletebackuprequests) | **`os:admin`** |
 | **Velero: restore a backup with a preview and namespace mapping** | `Kubeconfig`, then the Kubernetes API (velero.io backups, restores, backupstoragelocations) | **`os:admin`** |
-| **App web addresses (Ingress, HTTPRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
+| **App web addresses (Ingress, HTTPRoute, GRPCRoute, TLSRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, grpcroutes, tlsroutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
 | **Policies (Kyverno)** | `Kubeconfig`, then the Kubernetes API (kyverno.io policies, wgpolicyk8s.io policy reports, Kyverno's Deployments and webhooks) | **`os:admin`** |

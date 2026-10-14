@@ -6,8 +6,9 @@ import (
 )
 
 // demoArgoNetwork is the network view of a demo Argo CD app, built by the same code as a real
-// one from demo objects: an Ingress with TLS, an HTTPRoute behind a shared Gateway, a Traefik
-// IngressRoute, a LoadBalancer Service, a Service whose pods crash-loop, and a cordoned node.
+// one from demo objects: an Ingress with TLS, an HTTPRoute and a TLSRoute behind a shared
+// Gateway, a Traefik IngressRoute, a LoadBalancer Service, a Service whose pods crash-loop,
+// and a cordoned node.
 func demoArgoNetwork(app string) argoNetwork {
 	in := argoNetInput{nodes: demoNetNodes()}
 
@@ -43,10 +44,17 @@ func demoArgoNetwork(app string) argoNetwork {
 		svc("monitoring", "grafana", "ClusterIP", "10.96.80.3", "grafana", `{"name":"http","port":80,"targetPort":3000}`, "")
 		pod("monitoring", "grafana-6d8b-9fz2t", "grafana", "demo-worker-2", "Running", 1, 0)
 		resources = append(resources, argoResourceStatus{Group: "gateway.networking.k8s.io", Kind: "HTTPRoute", Namespace: "monitoring", Name: "grafana"})
-		in.httpRoutes = []httpRouteObject{demoNetObject[httpRouteObject](`{"metadata":{"name":"grafana","namespace":"monitoring"},
-		  "spec":{"parentRefs":[{"name":"homelab","namespace":"traefik"}],"hostnames":["grafana.homelab.lan"],"rules":[{"backendRefs":[{"name":"grafana","port":80}]}]}}`)}
+		httpRoute := demoNetObject[gatewayRouteObject](`{"metadata":{"name":"grafana","namespace":"monitoring"},
+		  "spec":{"parentRefs":[{"name":"homelab","namespace":"traefik"}],"hostnames":["grafana.homelab.lan"],"rules":[{"backendRefs":[{"name":"grafana","port":80}]}]}}`)
+		httpRoute.Kind = "HTTPRoute"
+		in.gatewayRoutes = []gatewayRouteObject{httpRoute}
+		resources = append(resources, argoResourceStatus{Group: "gateway.networking.k8s.io", Kind: "TLSRoute", Namespace: "monitoring", Name: "grafana"})
+		tlsRoute := demoNetObject[gatewayRouteObject](`{"metadata":{"name":"grafana","namespace":"monitoring"},
+		  "spec":{"parentRefs":[{"name":"homelab","namespace":"traefik","sectionName":"tls"}],"rules":[{"backendRefs":[{"name":"grafana","port":80}]}]}}`)
+		tlsRoute.Kind = "TLSRoute"
+		in.gatewayRoutes = append(in.gatewayRoutes, tlsRoute)
 		in.gateways = []gatewayObject{demoNetObject[gatewayObject](`{"metadata":{"name":"homelab","namespace":"traefik"},
-		  "spec":{"gatewayClassName":"traefik","listeners":[{"name":"https","hostname":"*.homelab.lan","port":443,"protocol":"HTTPS"}]},"status":{"addresses":[{"value":"10.0.0.240"}]}}`)}
+		  "spec":{"gatewayClassName":"traefik","listeners":[{"name":"https","hostname":"*.homelab.lan","port":443,"protocol":"HTTPS"},{"name":"tls","hostname":"grafana.homelab.lan","port":8443,"protocol":"TLS"}]},"status":{"addresses":[{"value":"10.0.0.240"}]}}`)}
 		in.gatewayClasses = []gatewayClassObject{demoNetObject[gatewayClassObject](`{"metadata":{"name":"traefik"},
 		  "spec":{"controllerName":"traefik.io/gateway-controller"}}`)}
 		resources = append(resources, argoResourceStatus{Group: groupTraefik, Kind: "IngressRoute", Namespace: "monitoring", Name: "grafana"})
