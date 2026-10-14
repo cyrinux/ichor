@@ -4705,4 +4705,21 @@
     <string name="kpol_mode_mixed">Деякі правила відхиляють запит, що їх порушує, інші лише повідомляють про нього</string>
     <string name="kpol_category">Категорія</string>
     <string name="kpol_severity">Серйозність</string>
+    <string name="velero_backup_now">Створити копію зараз</string>
+    <string name="velero_backup_now_title">Створити копію %1$s зараз?</string>
+    <string name="velero_backup_now_text">Velero запускає копію з налаштуваннями цього розкладу (простори імен: %1$s, сховище: %2$s). Вона додається до запланованих і спливає так само.</string>
+    <string name="velero_backup_now_started">Копію %1$s запущено</string>
+    <string name="velero_action_failed">%1$s: %2$s</string>
+    <string name="velero_blocked_paused">Розклад призупинено: відновіть його, щоб створити копію</string>
+    <string name="velero_blocked_invalid">Розклад не пройшов перевірку</string>
+    <string name="velero_blocked_running">Копія цього розкладу вже виконується</string>
+    <string name="velero_backups">Резервні копії</string>
+    <string name="velero_backups_empty">Копій не залишилося</string>
+    <string name="velero_deleting">видалення…</string>
+    <string name="velero_expires">спливає %1$s</string>
+    <string name="velero_delete">Видалити</string>
+    <string name="velero_delete_title">Видалити копію %1$s?</string>
+    <string name="velero_delete_text">Velero видаляє дані цієї копії зі сховища, а потім саму копію. Відновити її після цього не вийде.</string>
+    <string name="velero_delete_requested">Видалення %1$s запитано</string>
+    <string name="velero_delete_errors">Не вдалося видалити: %1$s</string>
 </resources>

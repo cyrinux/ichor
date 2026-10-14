@@ -155,3 +155,89 @@ public struct VeleroLocation: Decodable, Equatable, Identifiable, Sendable {
 public enum VeleroReason: String, Sendable {
     case failed, location, partiallyFailed, stale, invalid
 }
+
+/// Why "Back up now" is not offered on a schedule.
+public enum VeleroBackupBlocker: Sendable {
+    case paused, invalid, running
+}
+
+public extension VeleroSchedule {
+    /// nil when Velero would take a backup now.
+    var backupNowBlocker: VeleroBackupBlocker? {
+        if phase == "FailedValidation" { return .invalid }
+        if paused { return .paused }
+        if inProgress { return .running }
+        return nil
+    }
+}
+
+/// A schedule's backups, or the ones taken by hand when `schedule` is "", newest first.
+public struct VeleroBackups: Decodable, Equatable, Sendable {
+    public let namespace: String
+    public let schedule: String
+    public let backups: [VeleroBackupDetail]
+    /// The deletion requests could not be read: the backups still show.
+    public let error: String
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        namespace = try c.field(.namespace, "")
+        schedule = try c.field(.schedule, "")
+        backups = try c.field(.backups, [])
+        error = try c.field(.error, "")
+    }
+
+    private enum CodingKeys: String, CodingKey { case namespace, schedule, backups, error }
+}
+
+public struct VeleroBackupDetail: Decodable, Equatable, Identifiable, Sendable {
+    public let name: String
+    public let phase: String
+    public let startedAt: Int64
+    public let completedAt: Int64
+    /// Unix ms, 0 when it never expires.
+    public let expiresAt: Int64
+    public let errors: Int
+    public let warnings: Int
+    public let failureReason: String
+    public let storageLocation: String
+    public let includedNamespaces: [String]
+    public let itemsBackedUp: Int
+    public let totalItems: Int
+    public let running: Bool
+    public let finished: Bool
+    /// Being deleted, or a deletion request for it is pending.
+    public let deleting: Bool
+    /// Velero's errors from the latest deletion that failed.
+    public let deleteErrors: [String]
+
+    public var id: String { name }
+    /// A finished backup nobody is deleting yet: Velero refuses the others.
+    public var deletable: Bool { finished && !deleting }
+    public var at: Int64 { completedAt > 0 ? completedAt : startedAt }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.field(.name, "")
+        phase = try c.field(.phase, "")
+        startedAt = try c.field(.startedAt, 0)
+        completedAt = try c.field(.completedAt, 0)
+        expiresAt = try c.field(.expiresAt, 0)
+        errors = try c.field(.errors, 0)
+        warnings = try c.field(.warnings, 0)
+        failureReason = try c.field(.failureReason, "")
+        storageLocation = try c.field(.storageLocation, "")
+        includedNamespaces = try c.field(.includedNamespaces, [])
+        itemsBackedUp = try c.field(.itemsBackedUp, 0)
+        totalItems = try c.field(.totalItems, 0)
+        running = try c.field(.running, false)
+        finished = try c.field(.finished, false)
+        deleting = try c.field(.deleting, false)
+        deleteErrors = try c.field(.deleteErrors, [])
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case name, phase, startedAt, completedAt, expiresAt, errors, warnings, failureReason, storageLocation, includedNamespaces
+        case itemsBackedUp, totalItems, running, finished, deleting, deleteErrors
+    }
+}

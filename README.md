@@ -182,6 +182,7 @@ reads those roles and explains up front when a feature needs more.
 | **Kubernetes CronJobs, run now** | `Kubeconfig`, then the Kubernetes API (cronjobs, jobs) | **`os:admin`** |
 | **CSI snapshots, snapshot creation and backup CronJob health** | `Kubeconfig`, then the Kubernetes API (volumesnapshots, volumesnapshotcontents, volumesnapshotclasses, PVCs, storageclasses, cronjobs, jobs) | **`os:admin`** |
 | **CloudNativePG replica promotion** | `Kubeconfig`, then the Kubernetes API (clusters/status, pods and optional pods/proxy for lag) | **`os:admin`** |
+| **Velero: run a schedule now, delete a backup** | `Kubeconfig`, then the Kubernetes API (velero.io schedules, backups, deletebackuprequests) | **`os:admin`** |
 | **App web addresses (Ingress, HTTPRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |

@@ -4471,4 +4471,21 @@
     <string name="kpol_mode_mixed">Certaines règles refusent une requête qui les enfreint, d’autres la signalent seulement</string>
     <string name="kpol_category">Catégorie</string>
     <string name="kpol_severity">Gravité</string>
+    <string name="velero_backup_now">Sauvegarder maintenant</string>
+    <string name="velero_backup_now_title">Sauvegarder %1$s maintenant ?</string>
+    <string name="velero_backup_now_text">Velero lance une sauvegarde avec les réglages de cette planification (namespaces : %1$s, emplacement de stockage : %2$s). Elle s’ajoute aux sauvegardes planifiées et expire comme elles.</string>
+    <string name="velero_backup_now_started">Sauvegarde %1$s lancée</string>
+    <string name="velero_action_failed">%1$s : %2$s</string>
+    <string name="velero_blocked_paused">La planification est en pause : réactivez-la pour la sauvegarder</string>
+    <string name="velero_blocked_invalid">La planification n’a pas passé la validation</string>
+    <string name="velero_blocked_running">Une sauvegarde de cette planification est en cours</string>
+    <string name="velero_backups">Sauvegardes</string>
+    <string name="velero_backups_empty">Aucune sauvegarde restante</string>
+    <string name="velero_deleting">suppression…</string>
+    <string name="velero_expires">expire le %1$s</string>
+    <string name="velero_delete">Supprimer</string>
+    <string name="velero_delete_title">Supprimer la sauvegarde %1$s ?</string>
+    <string name="velero_delete_text">Velero supprime les données de cette sauvegarde de son emplacement de stockage, puis la sauvegarde elle-même. Elle ne pourra plus être restaurée.</string>
+    <string name="velero_delete_requested">Suppression de %1$s demandée</string>
+    <string name="velero_delete_errors">Échec de la suppression : %1$s</string>
 </resources>

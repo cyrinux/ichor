@@ -4463,4 +4463,21 @@
     <string name="kpol_mode_mixed">Manche Regeln lehnen eine Anfrage ab, die gegen sie verstößt, andere melden sie nur</string>
     <string name="kpol_category">Kategorie</string>
     <string name="kpol_severity">Schweregrad</string>
+    <string name="velero_backup_now">Jetzt sichern</string>
+    <string name="velero_backup_now_title">%1$s jetzt sichern?</string>
+    <string name="velero_backup_now_text">Velero startet eine Sicherung mit den Einstellungen dieses Zeitplans (Namespaces: %1$s, Speicherort: %2$s). Sie kommt zu den geplanten hinzu und läuft wie diese ab.</string>
+    <string name="velero_backup_now_started">Sicherung %1$s gestartet</string>
+    <string name="velero_action_failed">%1$s: %2$s</string>
+    <string name="velero_blocked_paused">Der Zeitplan ist pausiert: zum Sichern fortsetzen</string>
+    <string name="velero_blocked_invalid">Der Zeitplan hat die Prüfung nicht bestanden</string>
+    <string name="velero_blocked_running">Eine Sicherung dieses Zeitplans läuft</string>
+    <string name="velero_backups">Sicherungen</string>
+    <string name="velero_backups_empty">Keine Sicherungen mehr</string>
+    <string name="velero_deleting">wird gelöscht…</string>
+    <string name="velero_expires">läuft ab am %1$s</string>
+    <string name="velero_delete">Löschen</string>
+    <string name="velero_delete_title">Sicherung %1$s löschen?</string>
+    <string name="velero_delete_text">Velero entfernt die Daten dieser Sicherung aus ihrem Speicherort und dann die Sicherung selbst. Sie kann danach nicht mehr wiederhergestellt werden.</string>
+    <string name="velero_delete_requested">Löschen von %1$s angefordert</string>
+    <string name="velero_delete_errors">Löschen fehlgeschlagen: %1$s</string>
 </resources>

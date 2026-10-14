@@ -4474,4 +4474,21 @@
     <string name="kpol_mode_mixed">Some rules refuse a request that breaks them, others only report it</string>
     <string name="kpol_category">Category</string>
     <string name="kpol_severity">Severity</string>
+    <string name="velero_backup_now">Back up now</string>
+    <string name="velero_backup_now_title">Back up %1$s now?</string>
+    <string name="velero_backup_now_text">Velero starts a backup with this schedule\'s settings (namespaces: %1$s, storage location: %2$s). It runs next to the scheduled ones and expires like them.</string>
+    <string name="velero_backup_now_started">Backup %1$s started</string>
+    <string name="velero_action_failed">%1$s: %2$s</string>
+    <string name="velero_blocked_paused">The schedule is paused: unpause it to back it up</string>
+    <string name="velero_blocked_invalid">The schedule failed validation</string>
+    <string name="velero_blocked_running">A backup of this schedule is running</string>
+    <string name="velero_backups">Backups</string>
+    <string name="velero_backups_empty">No backups left</string>
+    <string name="velero_deleting">deleting…</string>
+    <string name="velero_expires">expires %1$s</string>
+    <string name="velero_delete">Delete</string>
+    <string name="velero_delete_title">Delete backup %1$s?</string>
+    <string name="velero_delete_text">Velero removes this backup\'s data from its storage location, then the backup itself. It cannot be restored afterwards.</string>
+    <string name="velero_delete_requested">Deletion of %1$s requested</string>
+    <string name="velero_delete_errors">Deletion failed: %1$s</string>
 </resources>

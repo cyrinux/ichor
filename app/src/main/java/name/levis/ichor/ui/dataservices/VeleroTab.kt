@@ -20,9 +20,11 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -32,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
 import name.levis.ichor.model.VeleroAdhocBackup
 import name.levis.ichor.model.VeleroBackup
@@ -49,11 +52,18 @@ import name.levis.ichor.util.timeAgo
 
 /**
  * Velero's storage locations, its schedules (problems first) with their last backup, opening to
- * the details, and the backups taken by hand that failed in the last week.
+ * the details (back up now, the schedule's backups), and the backups taken by hand that failed
+ * in the last week.
  */
 @Composable
-fun VeleroTab(status: VeleroStatus) {
+fun VeleroTab(status: VeleroStatus, actions: VeleroActions) {
     var expanded by rememberSaveable { mutableStateOf(setOf<String>()) }
+    var askNow by remember { mutableStateOf<VeleroSchedule?>(null) }
+    var askDelete by remember { mutableStateOf<Pair<String, String>?>(null) }
+    askNow?.let { s -> VeleroBackupNowDialog(s, onConfirm = { actions.backupNow(s); askNow = null }, onDismiss = { askNow = null }) }
+    askDelete?.let { (ns, backup) ->
+        VeleroDeleteBackupDialog(ns, backup, onConfirm = { actions.delete(ns, backup); askDelete = null }, onDismiss = { askDelete = null })
+    }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
@@ -61,13 +71,19 @@ fun VeleroTab(status: VeleroStatus) {
         if (status.locations.isNotEmpty()) item(key = "locations-end") { HorizontalDivider() }
         if (status.schedules.isEmpty()) item(key = "empty") { EmptyText(stringResource(R.string.velero_empty)) }
         items(status.schedules, key = { "s:${it.label}" }) { s ->
-            ScheduleRow(s, open = s.label in expanded, onToggle = { expanded = if (s.label in expanded) expanded - s.label else expanded + s.label })
+            ScheduleRow(s, open = s.label in expanded, onToggle = { expanded = if (s.label in expanded) expanded - s.label else expanded + s.label }) {
+                Details(s)
+                Column(Modifier.padding(start = 22.dp, top = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    VeleroBackupNowButton(s, actions, onAsk = { askNow = s })
+                    VeleroBackupsSection(s, actions, onDelete = { askDelete = s.namespace to it.name })
+                }
+            }
             HorizontalDivider()
         }
         if (status.adhoc.isNotEmpty()) item(key = "adhoc") {
             SectionTitle(stringResource(R.string.velero_adhoc), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         }
-        items(status.adhoc, key = { "a:${it.label}" }) { AdhocRow(it) }
+        items(status.adhoc, key = { "a:${it.label}" }) { b -> AdhocRow(b, actions, onDelete = { askDelete = b.namespace to b.name }) }
     }
 }
 
@@ -100,7 +116,7 @@ private fun LocationRow(loc: VeleroLocation) {
 }
 
 @Composable
-private fun ScheduleRow(s: VeleroSchedule, open: Boolean, onToggle: () -> Unit) {
+private fun ScheduleRow(s: VeleroSchedule, open: Boolean, onToggle: () -> Unit, details: @Composable () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(Modifier.fillMaxWidth().clickable(onClick = onToggle).animateContentSize().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -122,7 +138,7 @@ private fun ScheduleRow(s: VeleroSchedule, open: Boolean, onToggle: () -> Unit) 
             }
             Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, contentDescription = null, tint = muted)
         }
-        if (open) Details(s)
+        if (open) details()
     }
 }
 
@@ -147,7 +163,8 @@ private fun Details(s: VeleroSchedule) {
 }
 
 @Composable
-private fun AdhocRow(b: VeleroAdhocBackup) {
+private fun AdhocRow(b: VeleroAdhocBackup, actions: VeleroActions, onDelete: () -> Unit) {
+    val busy by actions.busy.collectAsStateWithLifecycle()
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         HealthDot(b.serviceHealth)
         Spacer(Modifier.size(12.dp))
@@ -162,6 +179,8 @@ private fun AdhocRow(b: VeleroAdhocBackup) {
                 overflow = TextOverflow.Ellipsis,
             )
         }
+        if (VeleroActions.deleteKey(b.namespace, b.name) in busy) Text(stringResource(R.string.velero_deleting), style = MaterialTheme.typography.labelSmall)
+        else TextButton(onClick = onDelete) { Text(stringResource(R.string.velero_delete)) }
     }
 }
 
