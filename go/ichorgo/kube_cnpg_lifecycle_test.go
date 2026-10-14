@@ -89,10 +89,10 @@ func TestCNPGLifecycleDemoRefused(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := KubeCNPGRestartPrimary(cfg, "demo", "", "demo", "auth-db"); err == nil {
+	if err := KubeCNPGRestartPrimary(cfg, "Demo cluster", "", "demo", "auth-db"); err == nil {
 		t.Fatal("demo restart accepted")
 	}
-	if err := KubeCNPGHibernate(cfg, "demo", "", "demo", "auth-db", true); err == nil {
+	if err := KubeCNPGHibernate(cfg, "Demo cluster", "", "demo", "auth-db", true); err == nil {
 		t.Fatal("demo hibernation accepted")
 	}
 }
