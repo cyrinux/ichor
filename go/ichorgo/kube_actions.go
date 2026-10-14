@@ -71,21 +71,6 @@ func KubeScale(configYAML, contextName, kubeServer, kind, namespace, name string
 	return out, err
 }
 
-// hpaObject is a HorizontalPodAutoscaler: what it scales and between which bounds.
-type hpaObject struct {
-	Metadata struct {
-		Name string `json:"name"`
-	} `json:"metadata"`
-	Spec struct {
-		ScaleTargetRef struct {
-			Kind string `json:"kind"`
-			Name string `json:"name"`
-		} `json:"scaleTargetRef"`
-		MinReplicas *int32 `json:"minReplicas"`
-		MaxReplicas int32  `json:"maxReplicas"`
-	} `json:"spec"`
-}
-
 // autoscalerWarning names the HorizontalPodAutoscaler that targets the workload, "" when
 // none (or when they cannot be read: the scale itself succeeded).
 func autoscalerWarning(ctx context.Context, k *kubeClient, kind, namespace, name string) string {

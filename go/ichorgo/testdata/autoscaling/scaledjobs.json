@@ -1,0 +1,5 @@
+{"kind":"ScaledJobList","apiVersion":"keda.sh/v1alpha1","metadata":{},"items":[
+{"metadata":{"name":"thumbnailer","namespace":"media"},
+ "spec":{"maxReplicaCount":20,"triggers":[{"type":"rabbitmq","metadata":{"host":"amqp://guest:never-shown@rabbit.queue:5672","queueName":"thumbnails"}}]},
+ "status":{"conditions":[{"type":"Ready","status":"True","reason":"ScaledJobReady"}]}}
+]}

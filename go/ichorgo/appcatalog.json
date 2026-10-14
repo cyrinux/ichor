@@ -12,6 +12,7 @@
 {"id":"kubernetes-dashboard","name":"Kubernetes Dashboard","cat":"devops","icon":"kubernetes-dashboard","prefixes":["kubernetesui/","docker.io/kubernetesui/"],"match":["dashboard-web","dashboard-api","dashboard-auth"]},
 {"id":"headlamp","name":"Headlamp","cat":"devops"},
 {"id":"descheduler","name":"Descheduler","cat":"system","icon":"kubernetes"},
+{"id":"karpenter","name":"Karpenter","cat":"system","icon":"kubernetes","prefixes":["public.ecr.aws/karpenter/"]},
 {"id":"cluster-autoscaler","name":"Cluster Autoscaler","cat":"system","icon":"kubernetes"},
 {"id":"vpa","name":"Vertical Pod Autoscaler","cat":"system","icon":"kubernetes","match":["vpa-recommender","vpa-updater","vpa-admission-controller"]},
 {"id":"nvidia","name":"NVIDIA GPU","cat":"system","prefixes":["nvcr.io/nvidia/"],"match":["k8s-device-plugin","gpu-operator","dcgm-exporter"]},
