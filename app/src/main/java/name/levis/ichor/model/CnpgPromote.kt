@@ -10,5 +10,5 @@ data class CnpgPromotePreview(
 )
 
 val CnpgCluster.promotablePods: List<CnpgPod>
-    get() = if (hibernated || (targetPrimary.isNotEmpty() && targetPrimary != currentPrimary)) emptyList()
+    get() = if (phase == "Primary instance is being restarted in-place" || hibernated || (targetPrimary.isNotEmpty() && targetPrimary != currentPrimary)) emptyList()
     else instancePods.filter { it.ready && it.name != currentPrimary && it.role != "primary" }

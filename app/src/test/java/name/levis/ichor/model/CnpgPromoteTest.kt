@@ -20,6 +20,7 @@ class CnpgPromoteTest {
              {"name":"pg-1","ready":true},{"name":"pg-2","ready":true},{"name":"pg-3","ready":false}]}
         """)
         assertEquals(listOf("pg-2"), cluster.promotablePods.map { it.name })
+        assertTrue(cluster.copy(phase="Primary instance is being restarted in-place").promotablePods.isEmpty())
         assertTrue(cluster.copy(hibernated=true).promotablePods.isEmpty())
         assertTrue(cluster.copy(targetPrimary="pg-2").promotablePods.isEmpty())
     }

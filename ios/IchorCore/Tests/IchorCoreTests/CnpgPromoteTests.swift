@@ -14,5 +14,10 @@ final class CnpgPromoteTests: XCTestCase {
         "instancePods":[{"name":"pg-1","ready":true},{"name":"pg-2","ready":true},{"name":"pg-3","ready":false}]}
         """)
         XCTAssertEqual(cluster.promotablePods.map(\.name), ["pg-2"])
+        let restarting = try TalosJSON.decode(CnpgCluster.self, from: """
+        {"namespace":"shop","name":"pg","currentPrimary":"pg-1","phase":"Primary instance is being restarted in-place",
+        "instancePods":[{"name":"pg-2","ready":true}]}
+        """)
+        XCTAssertTrue(restarting.promotablePods.isEmpty())
     }
 }
