@@ -134,15 +134,15 @@ type netNodeObject struct {
 
 // argoNetInput is what the graph is built from, read from the API server.
 type argoNetInput struct {
-	app           argoObject
-	services      []netService
-	pods          []netPod
-	ingresses     []ingressObject
-	gatewayRoutes []gatewayRouteObject // HTTPRoutes, GRPCRoutes and TLSRoutes
-	gateways      []gatewayObject
+	app            argoObject
+	services       []netService
+	pods           []netPod
+	ingresses      []ingressObject
+	gatewayRoutes  []gatewayRouteObject // HTTPRoutes, GRPCRoutes and TLSRoutes
+	gateways       []gatewayObject
 	gatewayClasses []gatewayClassObject
-	traefik       traefikRouteSet
-	nodes         []netNodeObject
+	traefik        traefikRouteSet
+	nodes          []netNodeObject
 }
 
 func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string) (argoNetwork, error) {
@@ -204,11 +204,11 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 	}
 
 	var (
-		ingresses kubeList[ingressObject]
-		gwRoutes  []gatewayRouteObject
-		gateways  kubeList[gatewayObject]
+		ingresses      kubeList[ingressObject]
+		gwRoutes       []gatewayRouteObject
+		gateways       kubeList[gatewayObject]
 		gatewayClasses kubeList[gatewayClassObject]
-		nodes     kubeList[netNodeObject]
+		nodes          kubeList[netNodeObject]
 	)
 
 	tasks = append(tasks,
