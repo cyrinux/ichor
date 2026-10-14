@@ -54,6 +54,7 @@ var integrationSpecs = []integrationSpec{
 	{ID: "vpa", Name: "Vertical Pod Autoscaler", Website: "https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler", Groups: []string{groupVPA}, Resource: "verticalpodautoscalers"},
 	{ID: "karpenter", Name: "Karpenter", Website: "https://karpenter.sh", Groups: []string{groupKarpenter}, Resource: "nodepools"},
 	{ID: "gateway-api", Name: "Gateway API", Website: "https://gateway-api.sigs.k8s.io", Groups: []string{groupGatewayAPI}},
+	{ID: "kgateway", Name: "kgateway", Website: "https://kgateway.dev", Groups: []string{groupKgateway}},
 	{ID: "traefik", Name: "Traefik", Website: "https://traefik.io", Groups: []string{groupTraefik}},
 	{ID: "prometheus-operator", Name: "Prometheus Operator", Website: "https://prometheus-operator.dev", Groups: []string{groupMonitoring}},
 	{ID: "prometheus", Name: "Prometheus", Website: "https://prometheus.io", ServiceKind: "prometheus"},
@@ -68,6 +69,10 @@ var integrationSpecs = []integrationSpec{
 
 // groupGatewayAPI is the Gateway API's group: HTTPRoutes and Gateways.
 const groupGatewayAPI = "gateway.networking.k8s.io"
+
+// groupKgateway is kgateway's own CRD group (TrafficPolicy, Backend, GatewayParameters...):
+// its routing objects are the standard Gateway API ones.
+const groupKgateway = "gateway.kgateway.dev"
 
 // How an integration was found.
 const (

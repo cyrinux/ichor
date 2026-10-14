@@ -173,6 +173,59 @@ func TestAppRoutesHTTPRoutePublicPort(t *testing.T) {
 	}
 }
 
+// kgateway's proxy Service (one LoadBalancer per Gateway, named after it) publishes the
+// listener's port under the Gateway's address: the URL shows it.
+func TestAppRoutesHTTPRouteKgatewayProxy(t *testing.T) {
+	k := openRoutesKube(t, map[string]string{
+		"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[]}`,
+		"GET /apis/gateway.networking.k8s.io/v1/gateways": `{"items":[
+			{"metadata":{"name":"edge","namespace":"shop"},"spec":{"gatewayClassName":"kgateway","listeners":[
+				{"name":"http","port":8080,"protocol":"HTTP"}]},"status":{"addresses":[{"value":"198.51.100.7"}]}}]}`,
+		"GET /apis/gateway.networking.k8s.io/v1/httproutes": `{"items":[
+			{"metadata":{"name":"web","namespace":"shop"},"spec":{
+				"parentRefs":[{"name":"edge"}],
+				"rules":[{"backendRefs":[{"name":"web"}]}]}}]}`,
+		"GET /api/v1/services": `{"items":[
+			{"metadata":{"name":"edge","namespace":"shop"},"spec":{"type":"LoadBalancer","ports":[
+				{"name":"http","port":8080,"protocol":"TCP","targetPort":8080}]},
+			 "status":{"loadBalancer":{"ingress":[{"ip":"198.51.100.7"}]}}}]}`,
+	})
+
+	list, err := appRoutes(context.Background(), k, []routePod{{"shop", "web-1"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got, want := routeURLs(list.Routes), "HTTPRoute http://198.51.100.7:8080 web"; got != want {
+		t.Fatalf("got\n%s\nwant\n%s", got, want)
+	}
+}
+
+func TestGatewayController(t *testing.T) {
+	classes := []gatewayClassObject{
+		demoNetObject[gatewayClassObject](`{"metadata":{"name":"kgateway"},"spec":{"controllerName":"kgateway.dev/kgateway"}}`),
+		demoNetObject[gatewayClassObject](`{"metadata":{"name":"traefik"},"spec":{"controllerName":"traefik.io/gateway-controller"}}`),
+		demoNetObject[gatewayClassObject](`{"metadata":{"name":"unknown"},"spec":{"controllerName":"example.io/gateway"}}`),
+		demoNetObject[gatewayClassObject](`{"metadata":{"name":"bare"},"spec":{"controllerName":"justname"}}`),
+	}
+
+	for _, tc := range []struct{ class, want string }{
+		{"kgateway", "kgateway"},
+		{"traefik", "Traefik"},
+		{"unknown", "example.io"},
+		{"bare", "justname"},
+		{"missing", ""},
+	} {
+		if got := gatewayController(tc.class, classes); got != tc.want {
+			t.Errorf("gatewayController(%q) = %q, want %q", tc.class, got, tc.want)
+		}
+	}
+
+	if got := gatewayController("kgateway", nil); got != "" {
+		t.Errorf("no classes: %q", got)
+	}
+}
+
 func TestAppRoutesTailscaleIngress(t *testing.T) {
 	for _, tc := range []struct {
 		name, spec, status, want string

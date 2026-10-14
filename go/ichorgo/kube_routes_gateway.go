@@ -1,6 +1,9 @@
 package ichorgo
 
-import "slices"
+import (
+	"slices"
+	"strings"
+)
 
 // Gateway API objects (gateway.networking.k8s.io/v1), the fields the app reads.
 
@@ -51,7 +54,8 @@ type gatewayObject struct {
 		Namespace string `json:"namespace"`
 	} `json:"metadata"`
 	Spec struct {
-		Listeners []gatewayListener `json:"listeners"`
+		GatewayClassName string            `json:"gatewayClassName"`
+		Listeners        []gatewayListener `json:"listeners"`
 	} `json:"spec"`
 	Status struct {
 		Addresses []struct {
@@ -60,6 +64,46 @@ type gatewayObject struct {
 	} `json:"status"`
 	// publicPorts maps listener ports to the ports clients reach them at (withPublicPorts).
 	publicPorts map[int32]int32
+}
+
+// gatewayClassObject is a GatewayClass: which controller serves its Gateways.
+type gatewayClassObject struct {
+	Metadata struct {
+		Name string `json:"name"`
+	} `json:"metadata"`
+	Spec struct {
+		ControllerName string `json:"controllerName"`
+	} `json:"spec"`
+}
+
+// gatewayControllerNames maps a GatewayClass's controllerName to the short name the network
+// map shows next to the Gateway's address (no version; the box is narrow).
+var gatewayControllerNames = map[string]string{
+	"kgateway.dev/kgateway":                         "kgateway",
+	"traefik.io/gateway-controller":                 "Traefik",
+	"io.cilium/gateway-controller":                  "Cilium",
+	"gateway.envoyproxy.io/gatewayclass-controller": "Envoy Gateway",
+	"istio.io/gateway-controller":                   "Istio",
+	"gateway.nginx.org/nginx-gateway-controller":    "NGINX Gateway Fabric",
+}
+
+// gatewayController names the controller serving the Gateways of className, "" when the
+// class is unknown to the cluster or to the app; an unknown controller shows its domain.
+func gatewayController(className string, classes []gatewayClassObject) string {
+	i := slices.IndexFunc(classes, func(c gatewayClassObject) bool { return c.Metadata.Name == className })
+	if i < 0 {
+		return ""
+	}
+
+	if name, ok := gatewayControllerNames[classes[i].Spec.ControllerName]; ok {
+		return name
+	}
+
+	if domain, _, ok := strings.Cut(classes[i].Spec.ControllerName, "/"); ok {
+		return domain
+	}
+
+	return classes[i].Spec.ControllerName
 }
 
 // routeTarget is a path of an HTTPRoute and the Service it sends it to.
