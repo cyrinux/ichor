@@ -53,6 +53,9 @@ var dataCommands = []command{
 	{name: "velero-delete-backup", args: "NAMESPACE BACKUP", run: func(e env) (string, error) {
 		return ichorgo.KubeVeleroDeleteBackup(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
 	}},
+	{name: "vms", args: "[NAMESPACE]", run: func(e env) (string, error) {
+		return ichorgo.KubeVirtualMachines(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+	}},
 	{name: "crossplane", args: "", run: func(e env) (out string, err error) {
 		return ichorgo.KubeCrossplane(e.cfg, e.context, e.kubeServer)
 	}},

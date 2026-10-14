@@ -1,0 +1,4 @@
+{"kind":"DataVolumeList","apiVersion":"cdi.kubevirt.io/v1beta1","metadata":{},"items":[
+ {"metadata":{"name":"web-01-root","namespace":"vms"},"status":{"phase":"Succeeded","progress":"100.0%"}},
+ {"metadata":{"name":"win11-test-root","namespace":"lab"},"status":{"phase":"ImportInProgress","progress":"40.00%"}}
+]}
