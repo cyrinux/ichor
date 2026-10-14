@@ -73,6 +73,15 @@ type kubeActionAccess struct {
 // scale are a Deployment's, fluxReconcile a Kustomization's (its suspend follows it), and
 // each other kind has its own name.
 var kubeActionChecks = map[string][]accessNeed{
+	"cnpgRestartPrimary": {
+		{ssarAttributes{Verb: "patch", Group: groupCNPG, Resource: "clusters", Subresource: "status"}, true},
+		{ssarAttributes{Verb: "get", Group: groupCNPG, Resource: "clusters"}, true},
+		{ssarAttributes{Verb: "get", Resource: "pods"}, true},
+	},
+	"cnpgHibernate": {
+		{ssarAttributes{Verb: "patch", Group: groupCNPG, Resource: "clusters"}, true},
+		{ssarAttributes{Verb: "get", Group: groupCNPG, Resource: "clusters"}, true},
+	},
 	"cnpgPromote": {
 		{ssarAttributes{Verb: "patch", Group: groupCNPG, Resource: "clusters", Subresource: "status"}, true},
 		{ssarAttributes{Verb: "get", Group: groupCNPG, Resource: "clusters"}, true},

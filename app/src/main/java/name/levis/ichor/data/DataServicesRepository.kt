@@ -19,6 +19,8 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
     suspend fun createVolumeSnapshot(namespace: String, pvc: String): String = go.kube { cfg, ctx, server ->
         Ichorgo.kubeCreateVolumeSnapshot(cfg, ctx, server, namespace, pvc)
     }
+ suspend fun cnpgRestartPrimary(namespace: String, name: String) = go.kube { cfg, ctx, server -> Ichorgo.kubeCNPGRestartPrimary(cfg, ctx, server, namespace, name) }
+ suspend fun cnpgHibernate(namespace: String, name: String, enabled: Boolean) = go.kube { cfg, ctx, server -> Ichorgo.kubeCNPGHibernate(cfg, ctx, server, namespace, name, enabled) }
 
     /**
      * Health of Longhorn, Garage and CloudNativePG (os:admin). [hints]: their catalog ids seen in

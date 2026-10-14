@@ -4670,4 +4670,14 @@
     <string name="cnpg_promote_requested">Запитано підвищення до %1$s</string>
     <string name="cnpg_promote_failed">Не вдалося підвищити %1$s: %2$s</string>
     <string name="cnpg_promote_loading">Завантаження попереднього перегляду підвищення…</string>
+
+    <string name="cnpg_restart_primary">Перезапустити основний екземпляр</string>
+    <string name="cnpg_hibernate_action">Приспати кластер</string>
+    <string name="cnpg_wake_action">Пробудити кластер</string>
+    <string name="cnpg_restart_risk">Перезапуск основного екземпляра перериває з’єднання. CloudNativePG перезапускає PostgreSQL на місці та зберігає його PVC.</string>
+    <string name="cnpg_hibernate_risk">Присипляння зупиняє кластер і перериває всі з’єднання. Його PVC зберігаються до пробудження кластера.</string>
+    <string name="cnpg_wake_risk">CloudNativePG запускає кластер зі збереженими PVC. З’єднання недоступні, доки екземпляри не будуть готові.</string>
+    <string name="cnpg_restart_target">Основний екземпляр для перезапуску: %1$s</string>
+    <string name="cnpg_lifecycle_requested">Запитано дію над кластером</string>
+    <string name="cnpg_lifecycle_failed">Не вдалося оновити кластер: %1$s</string>
 </resources>

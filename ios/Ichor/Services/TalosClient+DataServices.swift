@@ -3,6 +3,17 @@ import IchorCore
 import Ichorgo
 
 extension TalosClient {
+ func cnpgRestartPrimary(namespace: String, name: String) async throws {
+ try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
+ _ = IchorgoKubeCNPGRestartPrimary(config, context, server, namespace, name, error)
+ }
+ }
+ func cnpgHibernate(namespace: String, name: String, enabled: Bool) async throws {
+ try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
+ _ = IchorgoKubeCNPGHibernate(config, context, server, namespace, name, enabled, error)
+ }
+ }
+
     func cnpgPromotePreview(namespace: String, name: String, instance: String) async throws -> CnpgPromotePreview {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeCNPGPromotePreview(config, context, kubeServer, namespace, name, instance, $0)

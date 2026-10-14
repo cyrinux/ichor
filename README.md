@@ -184,6 +184,7 @@ reads those roles and explains up front when a feature needs more.
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
 | **Cluster checkup, events of a pod or workload** | `Kubeconfig`, then the Kubernetes API (pods, nodes, events, claims, webhooks, quotas, services, CSRs, secrets metadata…) and each kubelet's `stats/summary` through the API server proxy | **`os:admin`** |
 | **Talos rollback (`talosctl rollback`)** | `Rollback` | **`os:admin`** |
+| **CloudNativePG primary restart and hibernate/wake** | `Kubeconfig`, then the Kubernetes API: get clusters and pods, patch `clusters/status` for restart, patch clusters for hibernation | **`os:admin`** |
 | **Node reset (`talosctl reset`)** | `Reset` | **`os:admin`** |
 
 Notes:

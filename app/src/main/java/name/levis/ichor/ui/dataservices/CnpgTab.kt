@@ -54,6 +54,11 @@ import name.levis.ichor.ui.components.expandable
 @Composable
 fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
     val busy by actions.busy.collectAsStateWithLifecycle()
+    val lifecycleBusy by actions.lifecycleBusy.collectAsStateWithLifecycle()
+    var lifecycleTarget by remember { mutableStateOf<Pair<CnpgCluster, CnpgLifecycleAction>?>(null) }
+    lifecycleTarget?.let { (cluster, action) -> CnpgLifecycleConfirmDialog(cluster, action,
+        onDismiss = { lifecycleTarget = null }, onConfirm = { actions.lifecycle(cluster, action); lifecycleTarget = null }) }
+
     val promoteBusy by actions.promoteBusy.collectAsStateWithLifecycle()
     var promotion by remember { mutableStateOf<Pair<CnpgCluster, String>?>(null) }
     promotion?.let { (cluster, instance) -> CnpgPromoteConfirmDialog(cluster, instance, actions, onDismiss = { promotion = null }, onConfirm = { actions.promote(cluster, instance); promotion = null }) }
@@ -120,6 +125,8 @@ fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
                 onBackup = { confirming = c },
                 promoting = c.label in promoteBusy,
                 onPromote = { promotion = c to it },
+                lifecycleBusy = c.label in lifecycleBusy,
+                onLifecycle = { lifecycleTarget = c to it },
             )
             HorizontalDivider()
         }
@@ -127,7 +134,7 @@ fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
 }
 
 @Composable
-private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit, backingUp: Boolean, onBackup: () -> Unit, promoting: Boolean, onPromote: (String) -> Unit) {
+private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit, backingUp: Boolean, onBackup: () -> Unit, promoting: Boolean, onPromote: (String) -> Unit, lifecycleBusy: Boolean, onLifecycle: (CnpgLifecycleAction) -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(Modifier.fillMaxWidth().expandable(open, onToggle = onToggle).animateContentSize().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -149,12 +156,12 @@ private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit, back
             }
             Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, contentDescription = null, tint = muted)
         }
-        if (open) Details(c, backingUp, onBackup, promoting, onPromote)
+        if (open) Details(c, backingUp, onBackup, promoting, onPromote, lifecycleBusy, onLifecycle)
     }
 }
 
 @Composable
-private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit, promoting: Boolean, onPromote: (String) -> Unit) {
+private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit, promoting: Boolean, onPromote: (String) -> Unit, lifecycleBusy: Boolean, onLifecycle: (CnpgLifecycleAction) -> Unit) {
     Column(Modifier.padding(start = 22.dp, top = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         if (c.phase.isNotEmpty()) InfoRow(stringResource(R.string.cnpg_phase), listOf(c.phase, c.phaseReason).filter { it.isNotEmpty() }.joinToString(": "))
         if (c.currentPrimary.isNotEmpty()) {
@@ -165,7 +172,8 @@ private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit, pr
             Text(stringResource(R.string.cnpg_instances), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
             c.instancePods.forEach { DataPodLine(it.name, it.ready, it.node, it.phase, it.role, indent = 8.dp) }
         }
-        CnpgPromoteButtons(c, promoting, onPromote)
+        CnpgLifecycleButtons(c, backingUp || promoting || lifecycleBusy, onLifecycle)
+        CnpgPromoteButtons(c, backingUp || promoting || lifecycleBusy, onPromote)
         InfoRow(stringResource(R.string.cnpg_archiving), archivingText(c.archiving))
         InfoRow(
             stringResource(R.string.cnpg_backups),
@@ -180,7 +188,7 @@ private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit, pr
         if (c.recoverableAt > 0) InfoRow(stringResource(R.string.cnpg_recoverable), agoOrNever(c.recoverableAt))
         // The Go core picks the method; a cluster set up for none of them is refused with a reason.
         if (!c.hibernated) {
-            OutlinedButton(onClick = onBackup, enabled = !backingUp, modifier = Modifier.padding(top = 8.dp)) {
+            OutlinedButton(onClick = onBackup, enabled = !backingUp && !promoting && !lifecycleBusy, modifier = Modifier.padding(top = 8.dp)) {
                 Text(stringResource(R.string.cnpg_backup_now))
             }
         }

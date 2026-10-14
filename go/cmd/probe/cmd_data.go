@@ -10,6 +10,16 @@ import (
 
 // GitOps, the network and data services.
 var dataCommands = []command{
+	{name: "cnpg-restart-primary", args: "NAMESPACE CLUSTER", run: func(e env) (string, error) {
+		return "", ichorgo.KubeCNPGRestartPrimary(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+	}},
+	{name: "cnpg-hibernate", args: "NAMESPACE CLUSTER ENABLED", run: func(e env) (string, error) {
+		enabled, err := strconv.ParseBool(flag.Arg(3))
+		if err != nil {
+			return "", err
+		}
+		return "", ichorgo.KubeCNPGHibernate(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), enabled)
+	}},
 	{name: "cnpg-promote-preview", args: "NAMESPACE CLUSTER INSTANCE", run: func(e env) (string, error) {
 		return ichorgo.KubeCNPGPromotePreview(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
 	}},

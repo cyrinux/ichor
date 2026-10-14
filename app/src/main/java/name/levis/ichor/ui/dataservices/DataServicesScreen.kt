@@ -86,6 +86,7 @@ fun DataServicesScreen(
     CertificateRenewToasts(vm.certificates.results)
     CnpgBackupToasts(vm.cnpg.results)
     CnpgPromoteToasts(vm.cnpg.promoteResults)
+    CnpgLifecycleToasts(vm.cnpg.lifecycleResults)
 
     val fingerprint = config?.realFingerprint?.takeUnless { mask.enabled }
     var editing by remember { mutableStateOf(false) }

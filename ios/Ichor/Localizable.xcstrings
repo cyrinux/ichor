@@ -129965,6 +129965,375 @@
           }
         }
       }
+    },
+    "Restart primary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restart primary"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redémarrer le primaire"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar primario"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезапустити основний екземпляр"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primärknoten neu starten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riavvia primario"
+          }
+        }
+      }
+    },
+    "Hibernate cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibernate cluster"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre le cluster en veille"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibernar clúster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приспати кластер"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster in Ruhezustand versetzen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iberna cluster"
+          }
+        }
+      }
+    },
+    "Wake cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wake cluster"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réveiller le cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activar clúster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пробудити кластер"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster aufwecken"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riattiva cluster"
+          }
+        }
+      }
+    },
+    "Restarting the primary interrupts connections. CloudNativePG restarts PostgreSQL in place and preserves its PVCs." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restarting the primary interrupts connections. CloudNativePG restarts PostgreSQL in place and preserves its PVCs."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le redémarrage du primaire interrompt les connexions. CloudNativePG redémarre PostgreSQL sur place et conserve ses PVC."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar el primario interrumpe las conexiones. CloudNativePG reinicia PostgreSQL en su lugar y conserva sus PVC."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезапуск основного екземпляра перериває з’єднання. CloudNativePG перезапускає PostgreSQL на місці та зберігає його PVC."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Neustart des Primärknotens unterbricht Verbindungen. CloudNativePG startet PostgreSQL an Ort und Stelle neu und behält seine PVCs."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il riavvio del primario interrompe le connessioni. CloudNativePG riavvia PostgreSQL sul posto e conserva i suoi PVC."
+          }
+        }
+      }
+    },
+    "Hibernation stops the cluster and interrupts all connections. Its PVCs are preserved until you wake the cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibernation stops the cluster and interrupts all connections. Its PVCs are preserved until you wake the cluster."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mise en veille arrête le cluster et interrompt toutes les connexions. Ses PVC sont conservés jusqu’au réveil du cluster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La hibernación detiene el clúster e interrumpe todas las conexiones. Sus PVC se conservan hasta que active el clúster."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Присипляння зупиняє кластер і перериває всі з’єднання. Його PVC зберігаються до пробудження кластера."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Ruhezustand stoppt den Cluster und unterbricht alle Verbindungen. Seine PVCs bleiben bis zum Aufwecken erhalten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’ibernazione arresta il cluster e interrompe tutte le connessioni. I suoi PVC vengono conservati fino alla riattivazione."
+          }
+        }
+      }
+    },
+    "CloudNativePG starts the cluster using its preserved PVCs. Connections remain unavailable until the instances are ready." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG starts the cluster using its preserved PVCs. Connections remain unavailable until the instances are ready."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG démarre le cluster avec ses PVC conservés. Les connexions restent indisponibles jusqu’à ce que les instances soient prêtes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG inicia el clúster usando sus PVC conservados. Las conexiones siguen sin estar disponibles hasta que las instancias estén listas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG запускає кластер зі збереженими PVC. З’єднання недоступні, доки екземпляри не будуть готові."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG startet den Cluster mit seinen erhaltenen PVCs. Verbindungen sind erst verfügbar, wenn die Instanzen bereit sind."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG avvia il cluster usando i PVC conservati. Le connessioni restano indisponibili finché le istanze non sono pronte."
+          }
+        }
+      }
+    },
+    "Primary to restart: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primary to restart: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primaire à redémarrer : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primario a reiniciar: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Основний екземпляр для перезапуску: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu zu startender Primärknoten: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primario da riavviare: %@"
+          }
+        }
+      }
+    },
+    "Cluster action requested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster action requested"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Action sur le cluster demandée"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acción de clúster solicitada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запитано дію над кластером"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clusteraktion angefordert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Azione sul cluster richiesta"
+          }
+        }
+      }
+    },
+    "Could not update cluster: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not update cluster: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de modifier le cluster : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo actualizar el clúster: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося оновити кластер: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster konnte nicht aktualisiert werden: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile aggiornare il cluster: %@"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

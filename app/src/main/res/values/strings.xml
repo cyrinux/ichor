@@ -4439,4 +4439,14 @@
     <string name="cnpg_promote_requested">Promotion to %1$s requested</string>
     <string name="cnpg_promote_failed">Could not promote %1$s: %2$s</string>
     <string name="cnpg_promote_loading">Reading promotion preview…</string>
+
+    <string name="cnpg_restart_primary">Restart primary</string>
+    <string name="cnpg_hibernate_action">Hibernate cluster</string>
+    <string name="cnpg_wake_action">Wake cluster</string>
+    <string name="cnpg_restart_risk">Restarting the primary interrupts connections. CloudNativePG restarts PostgreSQL in place and preserves its PVCs.</string>
+    <string name="cnpg_hibernate_risk">Hibernation stops the cluster and interrupts all connections. Its PVCs are preserved until you wake the cluster.</string>
+    <string name="cnpg_wake_risk">CloudNativePG starts the cluster using its preserved PVCs. Connections remain unavailable until the instances are ready.</string>
+    <string name="cnpg_restart_target">Primary to restart: %1$s</string>
+    <string name="cnpg_lifecycle_requested">Cluster action requested</string>
+    <string name="cnpg_lifecycle_failed">Could not update cluster: %1$s</string>
 </resources>

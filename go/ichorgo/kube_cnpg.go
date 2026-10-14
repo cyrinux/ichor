@@ -63,9 +63,11 @@ const (
 
 type cnpgClusterObject struct {
 	Metadata struct {
-		Name        string            `json:"name"`
-		Namespace   string            `json:"namespace"`
-		Annotations map[string]string `json:"annotations"`
+		UID             string            `json:"uid"`
+		ResourceVersion string            `json:"resourceVersion"`
+		Name            string            `json:"name"`
+		Namespace       string            `json:"namespace"`
+		Annotations     map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {
 		Instances int `json:"instances"`

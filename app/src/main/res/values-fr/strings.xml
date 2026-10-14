@@ -4436,4 +4436,14 @@
     <string name="cnpg_promote_requested">Promotion vers %1$s demandée</string>
     <string name="cnpg_promote_failed">Impossible de promouvoir %1$s : %2$s</string>
     <string name="cnpg_promote_loading">Lecture de l’aperçu de promotion…</string>
+
+    <string name="cnpg_restart_primary">Redémarrer le primaire</string>
+    <string name="cnpg_hibernate_action">Mettre le cluster en veille</string>
+    <string name="cnpg_wake_action">Réveiller le cluster</string>
+    <string name="cnpg_restart_risk">Le redémarrage du primaire interrompt les connexions. CloudNativePG redémarre PostgreSQL sur place et conserve ses PVC.</string>
+    <string name="cnpg_hibernate_risk">La mise en veille arrête le cluster et interrompt toutes les connexions. Ses PVC sont conservés jusqu’au réveil du cluster.</string>
+    <string name="cnpg_wake_risk">CloudNativePG démarre le cluster avec ses PVC conservés. Les connexions restent indisponibles jusqu’à ce que les instances soient prêtes.</string>
+    <string name="cnpg_restart_target">Primaire à redémarrer : %1$s</string>
+    <string name="cnpg_lifecycle_requested">Action sur le cluster demandée</string>
+    <string name="cnpg_lifecycle_failed">Impossible de modifier le cluster : %1$s</string>
 </resources>

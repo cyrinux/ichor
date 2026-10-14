@@ -4428,4 +4428,14 @@
     <string name="cnpg_promote_requested">Hochstufung auf %1$s angefordert</string>
     <string name="cnpg_promote_failed">%1$s konnte nicht hochgestuft werden: %2$s</string>
     <string name="cnpg_promote_loading">Vorschau der Hochstufung wird geladen…</string>
+
+    <string name="cnpg_restart_primary">Primärknoten neu starten</string>
+    <string name="cnpg_hibernate_action">Cluster in Ruhezustand versetzen</string>
+    <string name="cnpg_wake_action">Cluster aufwecken</string>
+    <string name="cnpg_restart_risk">Der Neustart des Primärknotens unterbricht Verbindungen. CloudNativePG startet PostgreSQL an Ort und Stelle neu und behält seine PVCs.</string>
+    <string name="cnpg_hibernate_risk">Der Ruhezustand stoppt den Cluster und unterbricht alle Verbindungen. Seine PVCs bleiben bis zum Aufwecken erhalten.</string>
+    <string name="cnpg_wake_risk">CloudNativePG startet den Cluster mit seinen erhaltenen PVCs. Verbindungen sind erst verfügbar, wenn die Instanzen bereit sind.</string>
+    <string name="cnpg_restart_target">Neu zu startender Primärknoten: %1$s</string>
+    <string name="cnpg_lifecycle_requested">Clusteraktion angefordert</string>
+    <string name="cnpg_lifecycle_failed">Cluster konnte nicht aktualisiert werden: %1$s</string>
 </resources>

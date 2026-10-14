@@ -4436,4 +4436,14 @@
     <string name="cnpg_promote_requested">Promoción a %1$s solicitada</string>
     <string name="cnpg_promote_failed">No se pudo promover %1$s: %2$s</string>
     <string name="cnpg_promote_loading">Leyendo vista previa de promoción…</string>
+
+    <string name="cnpg_restart_primary">Reiniciar primario</string>
+    <string name="cnpg_hibernate_action">Hibernar clúster</string>
+    <string name="cnpg_wake_action">Activar clúster</string>
+    <string name="cnpg_restart_risk">Reiniciar el primario interrumpe las conexiones. CloudNativePG reinicia PostgreSQL en su lugar y conserva sus PVC.</string>
+    <string name="cnpg_hibernate_risk">La hibernación detiene el clúster e interrumpe todas las conexiones. Sus PVC se conservan hasta que active el clúster.</string>
+    <string name="cnpg_wake_risk">CloudNativePG inicia el clúster usando sus PVC conservados. Las conexiones siguen sin estar disponibles hasta que las instancias estén listas.</string>
+    <string name="cnpg_restart_target">Primario a reiniciar: %1$s</string>
+    <string name="cnpg_lifecycle_requested">Acción de clúster solicitada</string>
+    <string name="cnpg_lifecycle_failed">No se pudo actualizar el clúster: %1$s</string>
 </resources>

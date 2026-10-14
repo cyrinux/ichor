@@ -4436,4 +4436,14 @@
     <string name="cnpg_promote_requested">Promozione a %1$s richiesta</string>
     <string name="cnpg_promote_failed">Impossibile promuovere %1$s: %2$s</string>
     <string name="cnpg_promote_loading">Lettura anteprima della promozione…</string>
+
+    <string name="cnpg_restart_primary">Riavvia primario</string>
+    <string name="cnpg_hibernate_action">Iberna cluster</string>
+    <string name="cnpg_wake_action">Riattiva cluster</string>
+    <string name="cnpg_restart_risk">Il riavvio del primario interrompe le connessioni. CloudNativePG riavvia PostgreSQL sul posto e conserva i suoi PVC.</string>
+    <string name="cnpg_hibernate_risk">L’ibernazione arresta il cluster e interrompe tutte le connessioni. I suoi PVC vengono conservati fino alla riattivazione.</string>
+    <string name="cnpg_wake_risk">CloudNativePG avvia il cluster usando i PVC conservati. Le connessioni restano indisponibili finché le istanze non sono pronte.</string>
+    <string name="cnpg_restart_target">Primario da riavviare: %1$s</string>
+    <string name="cnpg_lifecycle_requested">Azione sul cluster richiesta</string>
+    <string name="cnpg_lifecycle_failed">Impossibile aggiornare il cluster: %1$s</string>
 </resources>
