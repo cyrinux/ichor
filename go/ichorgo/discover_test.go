@@ -53,6 +53,10 @@ func TestPreferredAddress(t *testing.T) {
 		"fe80::1":      addrs("fe80::1"),
 		"":             nil,
 		"192.168.1.10": addrs("192.168.1.10", "10.0.0.5"),
+		// An overlay VPN address sorts first on the node but is the last resort.
+		"192.168.1.11": addrs("100.84.0.11", "192.168.1.11", "fd00::11"),
+		"fd00::12":     addrs("100.84.0.12", "fd00::12"),
+		"100.84.0.13":  addrs("100.84.0.13", "fe80::13"),
 	}
 
 	for want, in := range cases {

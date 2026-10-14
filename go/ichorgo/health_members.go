@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"context"
 	"net/netip"
+	"strings"
 	"time"
 
 	clusterapi "github.com/siderolabs/talos/pkg/machinery/api/cluster"
@@ -14,23 +15,30 @@ import (
 const memberProbeTimeout = 3 * time.Second
 
 // reachableClusterInfo is the cluster members for the health check, each at the first of its
-// addresses the Talos API answers on. Left to itself, Talos checks a member at its first
-// address, which can be an overlay one (a VPN interface such as NetBird's wt0) the Talos API
-// is not reachable on, and then reports the cluster unhealthy. Empty (Talos discovers the
-// members itself) when they cannot be listed.
+// addresses the Talos API answers on, trying first those the talosconfig lists (known: its
+// nodes and endpoints). Left to itself, Talos checks a member at its first address, the
+// lowest routed one, which can be an overlay one (a VPN interface such as NetBird's wt0 in
+// 100.64.0.0/10) the Talos API is not reachable on, and then reports the cluster unhealthy.
+// Empty (Talos discovers the members itself) when they cannot be listed.
 //
-// Probes go through the context's endpoint, which usually shares the runner's network: the
-// runner is the node that dials the members during the check.
-func reachableClusterInfo(ctx context.Context, c *client.Client, targets []string) *clusterapi.ClusterInfo {
+// Probes go through the context's endpoint, not the runner (the node that dials the members
+// during the check): an address the talosconfig lists is the one known to work, so it goes
+// first even when another one answers the endpoint.
+func reachableClusterInfo(ctx context.Context, c *client.Client, targets, known []string) *clusterapi.ClusterInfo {
 	members, err := listMembers(ctx, c, targets)
 	if err != nil {
 		return &clusterapi.ClusterInfo{}
 	}
 
+	knownSet := make(map[string]bool, len(known))
+	for _, k := range known {
+		knownSet[strings.ToLower(endpointHost(k))] = true
+	}
+
 	addresses := make([]string, len(members))
 
 	forEachNode(members, func(i int, m clusterMember) {
-		addresses[i] = reachableAddress(ctx, c, m.addresses)
+		addresses[i] = reachableAddress(ctx, c, knownFirst(m.addresses, knownSet))
 	})
 
 	info := &clusterapi.ClusterInfo{}
@@ -49,8 +57,24 @@ func reachableClusterInfo(ctx context.Context, c *client.Client, targets []strin
 	return info
 }
 
-// reachableAddress is the first address the Talos API answers on, else the first address (the
-// one Talos would use, so the check still reports the member down), "" when there is none.
+// knownFirst is addresses with those in known first, each group in its order.
+func knownFirst(addresses []netip.Addr, known map[string]bool) []netip.Addr {
+	out := make([]netip.Addr, 0, len(addresses))
+
+	for _, isKnown := range []bool{true, false} {
+		for _, a := range addresses {
+			if known[a.String()] == isKnown {
+				out = append(out, a)
+			}
+		}
+	}
+
+	return out
+}
+
+// reachableAddress is the first address the Talos API answers on, else the first address (a
+// talosconfig one, or the one Talos would use: the check still reports the member down), ""
+// when there is none.
 func reachableAddress(ctx context.Context, c *client.Client, addresses []netip.Addr) string {
 	if len(addresses) == 0 {
 		return ""

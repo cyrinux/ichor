@@ -180,22 +180,29 @@ func classifyMembers(targets, hostnames []string, members []clusterMember) []dis
 	return out
 }
 
+// cgnatPrefix is the shared address space overlay VPNs (NetBird, Tailscale) number their
+// interfaces from: Talos lists those addresses first (they sort low), the LAN is a better bet.
+var cgnatPrefix = netip.MustParsePrefix("100.64.0.0/10")
+
 // preferredAddress is the address to reach a clusterMember at: a global IPv4 first (the one
-// talosconfigs usually list), then a global IPv6, then whatever there is.
+// talosconfigs usually list), then a global IPv6, then an overlay VPN one, then whatever
+// there is.
 func preferredAddress(addresses []netip.Addr) string {
 	rank := func(a netip.Addr) int {
 		switch {
+		case cgnatPrefix.Contains(a):
+			return 2
 		case a.Is4() && !a.IsLinkLocalUnicast() && !a.IsLoopback():
 			return 0
 		case a.IsGlobalUnicast() && !a.IsLinkLocalUnicast():
 			return 1
 		default:
-			return 2
+			return 3
 		}
 	}
 
 	best := ""
-	bestRank := 3
+	bestRank := 4
 
 	for _, a := range addresses {
 		if r := rank(a); r < bestRank {

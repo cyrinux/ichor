@@ -134,11 +134,14 @@ func TestStartClusterHealthFake(t *testing.T) {
 
 // A member whose first address is an overlay one the Talos API does not answer on (a VPN
 // interface) is checked at the next address that answers; one that answers on none keeps
-// its first address, so the check still reports it down.
+// its first address, so the check still reports it down. An address the talosconfig lists
+// goes first, even when the overlay one answers the endpoint too.
 func TestStartClusterHealthFakeReachableMembers(t *testing.T) {
 	f := newFakeTalos()
 	f.addNode(t, "192.0.2.21", "v1.11.0", machine.TypeControlPlane)
 	f.addNode(t, "192.0.2.22", "v1.11.0", machine.TypeWorker)
+	f.addNode(t, "100.64.0.4", "v1.11.0", machine.TypeWorker)
+	f.addNode(t, "192.0.2.24", "v1.11.0", machine.TypeWorker)
 	f.health = func(string, grpc.ServerStreamingServer[clusterapi.HealthCheckProgress]) error { return nil }
 
 	member := func(id string, typ machine.Type, addresses ...string) *cluster.Member {
@@ -155,10 +158,11 @@ func TestStartClusterHealthFakeReachableMembers(t *testing.T) {
 		member("worker-1", machine.TypeWorker, "fe80::2", "100.64.0.2", "192.0.2.22"),
 		member("worker-2", machine.TypeWorker, "100.64.0.3", "192.0.2.23"),
 		member("worker-3", machine.TypeWorker),
+		member("worker-4", machine.TypeWorker, "100.64.0.4", "192.0.2.24"),
 	)
 
 	r := newHealthRecorder()
-	StartClusterHealth(f.start(t, "192.0.2.21"), "fake", r)
+	StartClusterHealth(f.start(t, "192.0.2.21", "192.0.2.24"), "fake", r)
 
 	if got := r.wait(t); got != "" {
 		t.Fatalf("OnDone(%q)", got)
@@ -176,7 +180,7 @@ func TestStartClusterHealthFakeReachableMembers(t *testing.T) {
 		t.Errorf("control planes = %s", got)
 	}
 
-	if got := strings.Join(slices.Sorted(slices.Values(info.GetWorkerNodes())), ","); got != "100.64.0.3,192.0.2.22" {
+	if got := strings.Join(slices.Sorted(slices.Values(info.GetWorkerNodes())), ","); got != "100.64.0.3,192.0.2.22,192.0.2.24" {
 		t.Errorf("workers = %s", got)
 	}
 }
