@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.BuildConfig
 import name.levis.ichor.data.REPO_URL_BASE
 import name.levis.ichor.data.SPONSOR_URL
-import name.levis.ichor.data.TALOS_URL
+import name.levis.ichor.data.ICHOR_WEBSITE_URL
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 
@@ -58,7 +58,7 @@ fun AboutSection(onChangelog: () -> Unit, onLicenses: () -> Unit, onSupportedInt
             Link(Icons.Outlined.Gavel, stringResource(R.string.about_license)) { openUrl(context, REPO_URL_BASE + BuildConfig.UPDATE_REPO + LICENSE_PATH) }
             Link(Icons.Outlined.Description, stringResource(R.string.about_licenses), onLicenses)
             Link(Icons.Outlined.Extension, stringResource(R.string.supported_integrations_title), onSupportedIntegrations)
-            Link(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.about_talos)) { openUrl(context, TALOS_URL) }
+            Link(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.about_website)) { openUrl(context, ICHOR_WEBSITE_URL) }
             if (BuildConfig.FEATURE_FUNDING) Link(Icons.Outlined.FavoriteBorder, stringResource(R.string.funding_title), onFunding)
             if (BuildConfig.DONATIONS) {
                 Link(Icons.Outlined.FavoriteBorder, stringResource(R.string.about_sponsor)) { openUrl(context, SPONSOR_URL) }

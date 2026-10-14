@@ -12,6 +12,12 @@ struct SupportedIntegrationsView: View {
 
     var body: some View {
         List {
+            Section("Platform") {
+                Link(destination: ProjectLinks.talos) {
+                    Label("Talos Linux (talos.dev)", systemImage: "arrow.up.right.square")
+                }
+                .foregroundStyle(.primary)
+            }
             Section {
                 ForEach(list.items) { item in
                     SupportedIntegrationRow(item: item, checked: list.checked)

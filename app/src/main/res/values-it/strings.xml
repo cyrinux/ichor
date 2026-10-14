@@ -611,6 +611,8 @@
     <string name="about_source">Codice sorgente su GitHub</string>
     <string name="about_license">Licenza: Apache 2.0</string>
     <string name="about_licenses">Licenze open source</string>
+    <string name="about_website">Sito web di Ichor</string>
+    <string name="supported_integrations_platform">Piattaforma</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="supported_integrations_title">Integrazioni</string>
     <string name="supported_integrations_desc">I progetti che Ichor legge tramite l’API di Kubernetes, rilevati sul cluster dai loro gruppi di API, dai pod in esecuzione o dai loro Service. Tocca un progetto per aprirne il sito.</string>
