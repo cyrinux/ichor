@@ -51,6 +51,7 @@ type fakeTalos struct {
 	pull             func(stream grpc.ServerStreamingServer[machineapi.ImageServicePullResponse]) error
 	lifecycleUpgrade func(stream grpc.ServerStreamingServer[machineapi.LifecycleServiceUpgradeResponse]) error
 	health           func(node string, stream grpc.ServerStreamingServer[clusterapi.HealthCheckProgress]) error
+	healthInfos      []*clusterapi.ClusterInfo // the ClusterInfo of each HealthCheck, in order
 	snapshot         func(stream grpc.ServerStreamingServer[common.Data]) error
 	rebootErr        error
 	resets           []*machineapi.ResetRequest   // the Reset requests received, in order
@@ -901,11 +902,15 @@ type fakeTalosCluster struct {
 	f *fakeTalos
 }
 
-func (c fakeTalosCluster) HealthCheck(_ *clusterapi.HealthCheckRequest, stream grpc.ServerStreamingServer[clusterapi.HealthCheckProgress]) error {
+func (c fakeTalosCluster) HealthCheck(req *clusterapi.HealthCheckRequest, stream grpc.ServerStreamingServer[clusterapi.HealthCheckProgress]) error {
 	node, err := c.f.enter(stream.Context(), "HealthCheck")
 	if err != nil {
 		return err
 	}
+
+	c.f.mu.Lock()
+	c.f.healthInfos = append(c.f.healthInfos, req.GetClusterInfo())
+	c.f.mu.Unlock()
 
 	return c.f.health(node, stream)
 }

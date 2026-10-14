@@ -76,10 +76,12 @@ func runHealth(ctx context.Context, configYAML, contextName string, listener Hea
 
 	runner := cps[0]
 
-	// An empty ClusterInfo makes Talos check the discovered cluster members, like
-	// `talosctl health` without flags. Passing the talosconfig's node list instead would make
-	// it wait for nodes that are not (or no longer) members, and report the cluster unhealthy.
-	stream, err := s.client.ClusterHealthCheck(client.WithNode(ctx, runner), healthWaitTimeout, &clusterapi.ClusterInfo{})
+	// The discovered cluster members, like `talosctl health` without flags, but at addresses
+	// that answer. Passing the talosconfig's node list instead would make it wait for nodes
+	// that are not (or no longer) members, and report the cluster unhealthy.
+	info := reachableClusterInfo(ctx, s.client, targetNodes(s.context))
+
+	stream, err := s.client.ClusterHealthCheck(client.WithNode(ctx, runner), healthWaitTimeout, info)
 	if err != nil {
 		return friendlyError(err)
 	}
