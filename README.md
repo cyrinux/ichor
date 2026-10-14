@@ -499,12 +499,12 @@ and what goes if a node goes down?":
 - **Workloads, the first to go first:** lowest priority first, those with no PriorityClass flagged,
   each with its numeric priority, QoS class, risk (OOM-killed or near its memory limit, evicted
   first as BestEffort, no memory limit) and how many more replicas of its size fit today.
-- **What if a node goes down:** a node, or the worst one, is lost in a simulation of the
-  scheduler: where its pods land, which lower priority pods they preempt, which stay Pending, then
-  what to scale down, lowest priority first, within PodDisruptionBudgets and never a
-  `system-*` class. A suggestion opens the object's scale dialog; nothing is scaled from this
-  screen. It is an estimate by requests: affinity, topology spread and volume node affinity are
-  not modelled, and the sheet says so.
+- **What if a node goes down:** a node, several picked together, or the worst one, is lost in a
+  simulation of the scheduler: where its pods land, which lower priority pods they preempt, which
+  stay Pending, then what to scale down, lowest priority first, within PodDisruptionBudgets and
+  never a `system-*` class. A suggestion opens the object's scale dialog; nothing is scaled from
+  this screen. It is an estimate by requests: affinity, topology spread and volume node affinity
+  are not modelled, and the sheet says so.
 
 ### Policies
 

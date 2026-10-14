@@ -4338,8 +4338,10 @@
     <string name="capacity_risk_evict_first">evicted first under node pressure (BestEffort)</string>
     <string name="capacity_risk_unbounded">no memory limit (Burstable)</string>
     <string name="capacity_risk_ok">bounded</string>
-    <string name="capacity_loss_loading">Simulating the loss of a node…</string>
+    <string name="capacity_loss_loading">Simulating…</string>
     <string name="capacity_loss_title">If %1$s goes down</string>
+    <string name="capacity_loss_title_multi">If %1$s go down</string>
+    <string name="capacity_loss_simulate">Simulate losing %1$d nodes</string>
     <string name="capacity_loss_worst">%1$s is the node whose loss costs the most. Another one:</string>
     <string name="capacity_loss_candidate">%1$s (%2$s Pending)</string>
     <string name="capacity_loss_lost">%1$s pods must move, asking %2$s CPU and %3$s; %4$s DaemonSet or static pods go with the node.</string>

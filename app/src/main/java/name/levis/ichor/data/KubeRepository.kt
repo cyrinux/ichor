@@ -295,9 +295,12 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
         TalosJson.decodeFromString(KubeCapacity.serializer(), Ichorgo.kubeCapacity(cfg, ctx, server))
     }
 
-    /** What losing the Kubernetes node [node] would cost; null: the worst node, with the others as candidates. */
-    suspend fun nodeLoss(node: String?): NodeLossPlan = go.kube { cfg, ctx, server ->
-        TalosJson.decodeFromString(NodeLossPlan.serializer(), Ichorgo.kubeCapacityNodeLoss(cfg, ctx, server, node.orEmpty()))
+    /**
+     * What losing the Kubernetes nodes [nodes] together would cost; empty: the worst node,
+     * with the others as candidates.
+     */
+    suspend fun nodeLoss(nodes: List<String>): NodeLossPlan = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(NodeLossPlan.serializer(), Ichorgo.kubeCapacityNodeLoss(cfg, ctx, server, nodes.joinToString(",")))
     }
 
     /**

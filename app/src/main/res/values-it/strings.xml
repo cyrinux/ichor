@@ -4335,8 +4335,10 @@
     <string name="capacity_risk_evict_first">sfrattato per primo sotto pressione del nodo (BestEffort)</string>
     <string name="capacity_risk_unbounded">nessun limite di memoria (Burstable)</string>
     <string name="capacity_risk_ok">limitato</string>
-    <string name="capacity_loss_loading">Simulazione della perdita di un nodo…</string>
+    <string name="capacity_loss_loading">Simulazione…</string>
     <string name="capacity_loss_title">Se %1$s cade</string>
+    <string name="capacity_loss_title_multi">Se %1$s cadono</string>
+    <string name="capacity_loss_simulate">Simula la perdita di %1$d nodi</string>
     <string name="capacity_loss_worst">%1$s è il nodo la cui perdita costa di più. Un altro:</string>
     <string name="capacity_loss_candidate">%1$s (%2$s Pending)</string>
     <string name="capacity_loss_lost">%1$s pod devono spostarsi, chiedendo %2$s CPU e %3$s; %4$s pod DaemonSet o statici se ne vanno con il nodo.</string>

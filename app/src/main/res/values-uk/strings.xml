@@ -4569,8 +4569,10 @@
     <string name="capacity_risk_evict_first">витісняється першим під тиском на вузол (BestEffort)</string>
     <string name="capacity_risk_unbounded">без ліміту пам\'яті (Burstable)</string>
     <string name="capacity_risk_ok">обмежено</string>
-    <string name="capacity_loss_loading">Моделювання втрати вузла…</string>
+    <string name="capacity_loss_loading">Моделювання…</string>
     <string name="capacity_loss_title">Якщо %1$s впаде</string>
+    <string name="capacity_loss_title_multi">Якщо %1$s впадуть</string>
+    <string name="capacity_loss_simulate">Змоделювати втрату %1$d вузлів</string>
     <string name="capacity_loss_worst">%1$s — вузол, втрата якого коштує найбільше. Інший:</string>
     <string name="capacity_loss_candidate">%1$s (%2$s Pending)</string>
     <string name="capacity_loss_lost">%1$s подів мають переїхати, просячи %2$s CPU і %3$s; %4$s подів DaemonSet або статичних зникають разом із вузлом.</string>

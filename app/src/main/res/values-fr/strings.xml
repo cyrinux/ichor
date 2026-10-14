@@ -4335,8 +4335,10 @@
     <string name="capacity_risk_evict_first">évincé en premier sous pression du nœud (BestEffort)</string>
     <string name="capacity_risk_unbounded">pas de limite mémoire (Burstable)</string>
     <string name="capacity_risk_ok">borné</string>
-    <string name="capacity_loss_loading">Simulation de la perte d\'un nœud…</string>
+    <string name="capacity_loss_loading">Simulation…</string>
     <string name="capacity_loss_title">Si %1$s tombe</string>
+    <string name="capacity_loss_title_multi">Si %1$s tombent</string>
+    <string name="capacity_loss_simulate">Simuler la perte de %1$d nœuds</string>
     <string name="capacity_loss_worst">%1$s est le nœud dont la perte coûte le plus. Un autre :</string>
     <string name="capacity_loss_candidate">%1$s (%2$s Pending)</string>
     <string name="capacity_loss_lost">%1$s pods doivent partir, demandant %2$s CPU et %3$s ; %4$s pods DaemonSet ou statiques disparaissent avec le nœud.</string>

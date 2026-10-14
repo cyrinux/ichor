@@ -69,8 +69,8 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
-	{name: "node-loss", args: "[NODE]", run: func(e env) (out string, err error) {
-		// node-loss [NODE]: what losing NODE costs; the worst node when omitted.
+	{name: "node-loss", args: "[NODE[,NODE...]]", run: func(e env) (out string, err error) {
+		// node-loss [NODE[,NODE...]]: what losing the nodes costs; the worst node when omitted.
 		out, err = ichorgo.KubeCapacityNodeLoss(e.cfg, e.context, e.kubeServer, flag.Arg(1))
 
 		return out, err

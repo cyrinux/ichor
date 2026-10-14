@@ -37,7 +37,8 @@ var nodeLossAssumptions = []string{
 // elsewhere is in Placed too. Covered: the suggestions free at least what the Pending pods
 // ask beyond the room left (true when nothing is Pending).
 type nodeLossPlan struct {
-	Node          string               `json:"node"`
+	Node          string               `json:"node"`  // the lost node, or the joined names when several are lost
+	Nodes         []string             `json:"nodes"` // the explicit selection; empty for the worst case
 	WorstCase     bool                 `json:"worstCase"`
 	CPULost       float64              `json:"cpuLost"`
 	MemoryLost    float64              `json:"memoryLost"`
@@ -110,43 +111,75 @@ type nodeLossCandidate struct {
 	Preempted int    `json:"preempted"`
 }
 
-// KubeCapacityNodeLoss simulates losing the Kubernetes node kubeNode, as JSON (see
-// nodeLossPlan): where its pods land, what they preempt, what stays Pending and what to scale
-// down. kubeNode "" simulates every schedulable node and answers the worst, with the others
-// as candidates. It only reads, the same lists as KubeCapacity (same RBAC). kubeServer: see
-// KubePods.
+// KubeCapacityNodeLoss simulates losing the Kubernetes nodes of the comma-separated
+// kubeNode list, as JSON (see nodeLossPlan): where their pods land, what they preempt, what
+// stays Pending and what to scale down. One name behaves like a single lost node; ""
+// simulates every schedulable node and answers the worst, with the others as candidates. It
+// only reads, the same lists as KubeCapacity (same RBAC). kubeServer: see KubePods.
 func KubeCapacityNodeLoss(configYAML, contextName, kubeServer, kubeNode string) (out string, err error) {
 	defer maskResult(&out, &err)
 
-	contextName, kubeNode = unmaskTarget(configYAML, contextName, strings.TrimSpace(kubeNode))
+	contextName, kubeNode = unmaskTargets(configYAML, contextName, kubeNode)
 
-	if kubeNode != "" && (!kubeNamePattern.MatchString(kubeNode) || strings.Contains(kubeNode, "..")) {
-		return "", fmt.Errorf("invalid Kubernetes node name %q", kubeNode)
+	nodes, err := parseKubeNodeList(kubeNode)
+	if err != nil {
+		return "", err
 	}
 
 	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer},
-		func() nodeLossPlan { return demoKubeNodeLoss(kubeNode) },
+		func() nodeLossPlan { return demoKubeNodeLoss(nodes) },
 		func(ctx context.Context, k *kubeClient) (nodeLossPlan, error) {
 			in, err := readCapacityInput(ctx, k)
 			if err != nil {
 				return nodeLossPlan{}, err
 			}
 
-			if kubeNode != "" && !slices.ContainsFunc(in.nodes, func(n checkNodeObject) bool { return n.Metadata.Name == kubeNode }) {
-				return nodeLossPlan{}, fmt.Errorf("no Kubernetes node %q", kubeNode)
+			for _, node := range nodes {
+				if !slices.ContainsFunc(in.nodes, func(n checkNodeObject) bool { return n.Metadata.Name == node }) {
+					return nodeLossPlan{}, fmt.Errorf("no Kubernetes node %q", node)
+				}
 			}
 
-			return simulateNodeLoss(in, kubeNode), nil
+			return simulateNodeLoss(in, nodes), nil
 		})
 }
 
-// simulateNodeLoss is the plan for losing node, or the worst node when node is ""; pure.
-func simulateNodeLoss(in capacityInput, node string) nodeLossPlan {
+// parseKubeNodeList reads a comma-separated node list: "" is no node (the worst case), one
+// name a single lost node. Empty elements and duplicates are refused.
+func parseKubeNodeList(kubeNode string) ([]string, error) {
+	if strings.TrimSpace(kubeNode) == "" {
+		return nil, nil
+	}
+
+	var nodes []string
+
+	for _, part := range strings.Split(kubeNode, ",") {
+		name := strings.TrimSpace(part)
+
+		switch {
+		case name == "":
+			return nil, fmt.Errorf("invalid Kubernetes node list %q: empty node", kubeNode)
+		case slices.Contains(nodes, name):
+			return nil, fmt.Errorf("duplicate Kubernetes node %q", name)
+		case !kubeNamePattern.MatchString(name) || strings.Contains(name, ".."):
+			return nil, fmt.Errorf("invalid Kubernetes node name %q", name)
+		}
+
+		nodes = append(nodes, name)
+	}
+
+	return nodes, nil
+}
+
+// simulateNodeLoss is the plan for losing nodes, or the worst node when the list is empty;
+// pure.
+func simulateNodeLoss(in capacityInput, nodes []string) nodeLossPlan {
 	s := newLossSim(in)
 
-	if node != "" {
-		plan := s.lose(node)
+	if len(nodes) > 0 {
+		plan := s.lose(nodes...)
 		plan.Candidates = []nodeLossCandidate{}
+		plan.Nodes = nodes
 
 		return plan
 	}
@@ -174,14 +207,14 @@ func simulateNodeLoss(in capacityInput, node string) nodeLossPlan {
 		worst = emptyNodeLossPlan("")
 	}
 
-	worst.WorstCase, worst.Candidates = true, candidates
+	worst.WorstCase, worst.Candidates, worst.Nodes = true, candidates, []string{}
 
 	return worst
 }
 
 func emptyNodeLossPlan(node string) nodeLossPlan {
 	return nodeLossPlan{
-		Node: node, Placed: []nodeLossPlaced{}, Preempted: []nodeLossPreempted{}, Pending: []nodeLossPending{},
+		Node: node, Nodes: []string{}, Placed: []nodeLossPlaced{}, Preempted: []nodeLossPreempted{}, Pending: []nodeLossPending{},
 		Suggestions: []nodeLossSuggestion{}, Covered: true, Candidates: []nodeLossCandidate{}, Assumptions: nodeLossAssumptions,
 	}
 }
@@ -265,16 +298,16 @@ func stays(p checkPod) bool {
 	return p.Static || strings.HasPrefix(p.Owner, "DaemonSet/") || strings.HasPrefix(p.Owner, "Node/")
 }
 
-// lose simulates losing node: queue its pods, place, preempt, then suggest.
-func (s lossSim) lose(node string) nodeLossPlan {
-	plan := emptyNodeLossPlan(node)
-	room := s.remaining(node)
+// lose simulates losing nodes: queue their pods, place, preempt, then suggest.
+func (s lossSim) lose(nodes ...string) nodeLossPlan {
+	plan := emptyNodeLossPlan(strings.Join(nodes, ", "))
+	room := s.remaining(nodes...)
 	budget := s.disruptionBudget()
 
 	var queue []simPod
 
 	for _, p := range s.pods {
-		if p.Node != node || !p.running() {
+		if !slices.Contains(nodes, p.Node) || !p.running() {
 			continue
 		}
 
@@ -336,12 +369,13 @@ func sortQueue(queue []simPod) {
 	})
 }
 
-// remaining is the schedulable nodes but node, with their free room and evictable pods.
-func (s lossSim) remaining(node string) []simNode {
+// remaining is the schedulable nodes but the lost ones, with their free room and evictable
+// pods.
+func (s lossSim) remaining(nodes ...string) []simNode {
 	var room []simNode
 
 	for _, n := range s.nodes {
-		if n.Name == node || !n.schedulable() {
+		if slices.Contains(nodes, n.Name) || !n.schedulable() {
 			continue
 		}
 

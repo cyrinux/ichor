@@ -129652,37 +129652,37 @@
         }
       }
     },
-    "Simulating the loss of a node…" : {
+    "Simulating…" : {
       "extractionState" : "manual",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Simulation de la perte d'un nœud…"
+            "value" : "Simulation…"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Simulando la pérdida de un nodo…"
+            "value" : "Simulando…"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Моделювання втрати вузла…"
+            "value" : "Моделювання…"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Simuliere den Ausfall eines Knotens…"
+            "value" : "Simuliere…"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Simulazione della perdita di un nodo…"
+            "value" : "Simulazione…"
           }
         }
       }
@@ -129718,6 +129718,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Se %@ cade"
+          }
+        }
+      }
+    },
+    "If %@ go down" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si %@ tombent"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si %@ caen"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Якщо %@ впадуть"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn %@ ausfallen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se %@ cadono"
+          }
+        }
+      }
+    },
+    "Simulate losing %@ nodes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simuler la perte de %@ nœuds"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simular la pérdida de %@ nodos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змоделювати втрату %@ вузлів"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausfall von %@ Knoten simulieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simula la perdita di %@ nodi"
           }
         }
       }

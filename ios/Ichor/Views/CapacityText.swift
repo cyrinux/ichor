@@ -40,8 +40,10 @@ enum CapacityText {
     static var capacityRiskEvictFirst: String { String(localized: "evicted first under node pressure (BestEffort)") }
     static var capacityRiskUnbounded: String { String(localized: "no memory limit (Burstable)") }
     static var capacityRiskOk: String { String(localized: "bounded") }
-    static var capacityLossLoading: String { String(localized: "Simulating the loss of a node…") }
+    static var capacityLossLoading: String { String(localized: "Simulating…") }
     static func capacityLossTitle(_ a: String) -> String { String(localized: "If \(a) goes down") }
+    static func capacityLossTitleMulti(_ a: String) -> String { String(localized: "If \(a) go down") }
+    static func capacityLossSimulate(_ a: String) -> String { String(localized: "Simulate losing \(a) nodes") }
     static func capacityLossWorst(_ a: String) -> String { String(localized: "\(a) is the node whose loss costs the most. Another one:") }
     static func capacityLossCandidate(_ a: String, _ b: String) -> String { String(localized: "\(a) (\(b) Pending)") }
     static func capacityLossLost(_ a: String, _ b: String, _ c: String, _ d: String) -> String { String(localized: "\(a) pods must move, asking \(b) CPU and \(c); \(d) DaemonSet or static pods go with the node.") }

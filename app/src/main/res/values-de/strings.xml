@@ -4327,8 +4327,10 @@
     <string name="capacity_risk_evict_first">wird bei Knotendruck zuerst verdrängt (BestEffort)</string>
     <string name="capacity_risk_unbounded">kein Speicherlimit (Burstable)</string>
     <string name="capacity_risk_ok">begrenzt</string>
-    <string name="capacity_loss_loading">Simuliere den Ausfall eines Knotens…</string>
+    <string name="capacity_loss_loading">Simuliere…</string>
     <string name="capacity_loss_title">Wenn %1$s ausfällt</string>
+    <string name="capacity_loss_title_multi">Wenn %1$s ausfallen</string>
+    <string name="capacity_loss_simulate">Ausfall von %1$d Knoten simulieren</string>
     <string name="capacity_loss_worst">%1$s ist der Knoten, dessen Ausfall am meisten kostet. Ein anderer:</string>
     <string name="capacity_loss_candidate">%1$s (%2$s Pending)</string>
     <string name="capacity_loss_lost">%1$s Pods müssen umziehen und fordern %2$s CPU und %3$s; %4$s DaemonSet- oder statische Pods gehen mit dem Knoten.</string>

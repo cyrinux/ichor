@@ -1,27 +1,35 @@
 import SwiftUI
 import IchorCore
 
-/// What losing a node costs: where its pods land, what they evict, what stays Pending, then
-/// what to scale down, lowest priority first (system classes never). Opened on the worst node
-/// (`start` ""), it keeps the other candidates to compare; a suggestion opens the workload's
-/// scale sheet, nothing is scaled from here.
+/// What losing a node — or several picked together — costs: where their pods land, what they
+/// evict, what stays Pending, then what to scale down, lowest priority first (system classes
+/// never). Opened on the worst node (empty selection), it keeps the other candidates to
+/// compare, several at a time; a suggestion opens the workload's scale sheet, nothing is
+/// scaled from here.
 struct KubeNodeLossSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppModel.self) private var model
-    @State private var node: String
+    @State private var selected: Set<String>
     @State private var state: LoadState<NodeLossPlan> = .loading
-    /// The worst case's candidates and node, kept while another candidate is shown.
+    /// The worst case's candidates and node, kept while other nodes are picked.
     @State private var candidates: [NodeLossCandidate] = []
     @State private var worst = ""
     @State private var scaling: NodeLossSuggestion?
 
     init(start: String) {
-        _node = State(initialValue: start)
+        _selected = State(initialValue: start.isEmpty ? [] : [start])
+    }
+
+    /// "What if a node goes down" before the worst case answers, then the asked node or nodes.
+    private var titleText: String {
+        if selected.isEmpty { return worst.isEmpty ? CapacityText.capacityWhatIf : CapacityText.capacityLossTitle(worst) }
+        if selected.count == 1, let only = selected.first { return CapacityText.capacityLossTitle(only) }
+        return CapacityText.capacityLossTitleMulti(selected.sorted().joined(separator: ", "))
     }
 
     var body: some View {
         NavigationStack {
-            LoadStateView(state: state, retry: load) { plan in
+            LoadStateView(state: state, retry: { Task { await load() } }) { plan in
                 List {
                     summary(plan)
                     if !plan.preempted.isEmpty { preempted(plan) }
@@ -34,14 +42,14 @@ struct KubeNodeLossSheet: View {
                     }
                 }
             }
-            .navigationTitle(Text(verbatim: node.isEmpty && worst.isEmpty
-                    ? CapacityText.capacityWhatIf
-                    : CapacityText.capacityLossTitle(node.isEmpty ? worst : node)))
+            .navigationTitle(Text(verbatim: titleText))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
             }
-            .task(id: node) { await load() }
+            // One node (or none: the worst case) simulates as soon as it is picked; several
+            // wait for the Simulate button.
+            .task(id: selected) { if selected.count <= 1 { await load() } }
             .sheet(item: $scaling) { s in
                 if let resource = s.scaleResource {
                     CapacityScaleSheet(resource: resource, namespace: s.namespace, name: s.name)
@@ -50,17 +58,39 @@ struct KubeNodeLossSheet: View {
         }
     }
 
+    private func toggle(_ name: String) {
+        if selected.contains(name) { selected.remove(name) } else { selected.insert(name) }
+    }
+
     @ViewBuilder
     private func summary(_ plan: NodeLossPlan) -> some View {
         Section {
             if candidates.count > 1 {
                 Text(verbatim: CapacityText.capacityLossWorst(worst)).font(.callout)
-                Picker(selection: $node) {
+                ChipFlow(spacing: 8) {
                     ForEach(candidates) { c in
-                        Text(verbatim: CapacityText.capacityLossCandidate(c.name, "\(c.pending)")).tag(c.name == worst && node.isEmpty ? "" : c.name)
+                        Button { toggle(c.name) } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: selected.contains(c.name) ? "checkmark.circle.fill" : "circle")
+                                Text(verbatim: CapacityText.capacityLossCandidate(c.name, "\(c.pending)"))
+                            }
+                            .font(.caption.weight(.medium))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(
+                                selected.contains(c.name) ? Color.statusOK.opacity(0.15) : Color.secondary.opacity(0.12),
+                                in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(selected.contains(c.name) ? Color.statusOK : Color.primary)
+                        .accessibilityAddTraits(selected.contains(c.name) ? [.isSelected] : [])
                     }
-                } label: {
-                    Text(verbatim: CapacityText.capacityNodesTitle)
+                }
+                if selected.count > 1 {
+                    Button { Task { await load() } } label: {
+                        Text(verbatim: CapacityText.capacityLossSimulate("\(selected.count)"))
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
             }
             Text(verbatim: CapacityText.capacityLossLost("\(plan.podsLost)", formatCPU(plan.cpuLost), formatBytes(Int64(plan.memoryLost)), "\(plan.daemonSetPods)"))
@@ -130,13 +160,13 @@ struct KubeNodeLossSheet: View {
         }
     }
 
-    /// Reads the plan of `node`; the previous plan stays on screen meanwhile, and an answer for a
-    /// node no longer picked (the Go call cannot be interrupted) is dropped.
+    /// Reads the plan of the selected nodes; the previous plan stays on screen meanwhile, and
+    /// an answer for a selection no longer picked (the Go call cannot be interrupted) is dropped.
     private func load() async {
         guard let client = model.client else { return }
-        let asked = node
-        let loaded: LoadState<NodeLossPlan> = await .from { try await client.nodeLoss(node: asked.isEmpty ? nil : asked) }
-        guard !Task.isCancelled, asked == node else { return }
+        let asked = selected
+        let loaded: LoadState<NodeLossPlan> = await .from { try await client.nodeLoss(nodes: asked.sorted()) }
+        guard !Task.isCancelled, asked == selected else { return }
         if case .loaded(let plan, _, _) = loaded, plan.worstCase {
             candidates = plan.candidates
             worst = plan.node

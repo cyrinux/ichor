@@ -138,13 +138,15 @@ data class NPlusOne(
 )
 
 /**
- * Losing [node] (Go `KubeCapacityNodeLoss`): where its pods land ([placed]), what they evict
- * ([preempted]), what stays [pending], and what to scale down, lowest priority first.
- * [worstCase]: the node was chosen as the worst of [candidates].
+ * Losing [node] — one node, or the joined names when several were picked ([nodes]) — where
+ * their pods land ([placed]), what they evict ([preempted]), what stays [pending], and what
+ * to scale down, lowest priority first. [worstCase]: the node was chosen as the worst of
+ * [candidates].
  */
 @Serializable
 data class NodeLossPlan(
     val node: String = "",
+    val nodes: List<String> = emptyList(),
     val worstCase: Boolean = false,
     val cpuLost: Double = 0.0,
     val memoryLost: Double = 0.0,
