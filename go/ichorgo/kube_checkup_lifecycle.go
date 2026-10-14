@@ -2,17 +2,23 @@ package ichorgo
 
 import (
 	"context"
-	"slices"
-	"strconv"
 	"strings"
 	"time"
 )
 
 // The findings of the loadbalancers section.
 const (
-	findLBPending       = "lbPending"       // a LoadBalancer Service without an address (Extra: its class)
-	findLBPoolExhausted = "lbPoolExhausted" // a Cilium pool with no address left (Value: its size)
+	findLBPending       = "lbPending"       // a LoadBalancer Service without an address (Extra: its class, Reason: an lbCause)
+	findLBPoolExhausted = "lbPoolExhausted" // a MetalLB or Cilium pool with no address left (Value: its size)
 	findLBPoolConflict  = "lbPoolConflict"  // a Cilium pool overlapping another (Message)
+	// findLBPoolUnadvertised is a MetalLB pool no L2Advertisement or BGPAdvertisement covers.
+	findLBPoolUnadvertised = "lbPoolUnadvertised"
+	// findLBConfigError is a MetalLB component that refused its configuration (Name: the
+	// component, Node: a speaker's node, Message: MetalLB's summary).
+	findLBConfigError = "lbConfigError"
+	// findLBBGPPeerDown is a BGP session a speaker reports down (Name: the BGPPeer, Node: the
+	// speaker's node, Extra: the peer address).
+	findLBBGPPeerDown = "lbBGPPeerDown"
 )
 
 // The findings of the terminating section: deleted, and still there. Since is when the
@@ -41,8 +47,16 @@ const (
 	csrDeniedRecent = 24 * time.Hour
 )
 
+// lbMeta is a Service's metadata with its annotations, where MetalLB and kube-vip read the
+// pool and the addresses asked for.
+type lbMeta struct {
+	checkMeta
+
+	Annotations map[string]string `json:"annotations"`
+}
+
 type lbServiceObject struct {
-	Metadata checkMeta `json:"metadata"`
+	Metadata lbMeta `json:"metadata"`
 	Spec     struct {
 		Type              string `json:"type"`
 		LoadBalancerClass string `json:"loadBalancerClass"`
@@ -65,56 +79,57 @@ type conditionedObject struct {
 }
 
 // checkupLoadBalancers finds the Services of type LoadBalancer nothing gave an address to,
-// and with Cilium the pools that ran out. Absent when the cluster has neither.
+// and why; the pools that ran out; with MetalLB, the pools nothing advertises, a refused
+// configuration and the BGP sessions down. Absent when the cluster has none of it.
 func checkupLoadBalancers(ctx context.Context, k *kubeClient, in checkupInput) checkupSection {
-	services, err := listObjects[lbServiceObject](ctx, k, "/api/v1/services?fieldSelector=spec.type%3DLoadBalancer")
+	var pods []lbPod
+	if in.podsErr == nil {
+		pods = lbPodsOf(in.pods)
+	}
+
+	lb, err := readLBInputs(ctx, k, in.groups, pods)
 	if err != nil {
-		// A server that cannot select on the type lists them all.
-		services, err = listObjects[lbServiceObject](ctx, k, "/api/v1/services")
+		return newSection(checkLoadBalancers, 0, nil, err)
 	}
 
-	services = slices.DeleteFunc(services, func(s lbServiceObject) bool { return s.Spec.Type != "LoadBalancer" })
-
-	var (
-		pools   []conditionedObject
-		poolErr error
-	)
-
-	if _, ok := in.groups[groupCilium]; ok {
-		pools, poolErr = readCiliumPools(ctx, k)
+	objects := len(lb.cilium)
+	if lb.metallb != nil {
+		objects += len(lb.metallb.pools) + len(lb.metallb.peers)
 	}
 
-	if err == nil && poolErr == nil && len(services) == 0 && len(pools) == 0 {
+	if len(lb.services) == 0 && objects == 0 && lb.readErr == nil {
 		return absentSection(checkLoadBalancers)
 	}
 
-	findings := lbFindings(services, in.now)
-	findings = append(findings, poolFindings(pools, len(findings) > 0)...)
+	findings := lbFindings(lb, in.now)
+	waiting := len(findings) > 0
+	findings = append(findings, poolFindings(lb.cilium, waiting)...)
+	findings = append(findings, metallbFindings(lb, waiting)...)
 
-	return newSection(checkLoadBalancers, len(services)+len(pools), findings, err, poolErr)
+	return newSection(checkLoadBalancers, len(lb.services)+objects, findings, lb.readErr)
 }
 
 // readCiliumPools reads Cilium's load balancer IP pools, whichever version serves them.
-func readCiliumPools(ctx context.Context, k *kubeClient) ([]conditionedObject, error) {
-	pools, err := listObjects[conditionedObject](ctx, k, "/apis/cilium.io/v2/ciliumloadbalancerippools")
+func readCiliumPools(ctx context.Context, k *kubeClient) ([]ciliumPoolObject, error) {
+	pools, err := listObjects[ciliumPoolObject](ctx, k, "/apis/cilium.io/v2/ciliumloadbalancerippools")
 	if isNotFound(err) {
-		pools, err = listObjects[conditionedObject](ctx, k, "/apis/cilium.io/v2alpha1/ciliumloadbalancerippools")
+		pools, err = listObjects[ciliumPoolObject](ctx, k, "/apis/cilium.io/v2alpha1/ciliumloadbalancerippools")
 	}
 
 	return pools, ignoreNotFound(err)
 }
 
-func lbFindings(services []lbServiceObject, now time.Time) []checkupFinding {
+func lbFindings(in lbInputs, now time.Time) []checkupFinding {
 	findings := []checkupFinding{}
 
-	for _, s := range services {
+	for _, s := range in.services {
 		if len(s.Status.LoadBalancer.Ingress) > 0 || s.Metadata.DeletionTimestamp != nil || !olderThan(s.Metadata.CreationTimestamp, now, lbGrace) {
 			continue
 		}
 
 		findings = append(findings, checkupFinding{
 			Kind: findLBPending, Severity: sevCritical, Namespace: s.Metadata.Namespace, Name: s.Metadata.Name,
-			Extra: s.Spec.LoadBalancerClass, Since: milli(s.Metadata.CreationTimestamp),
+			Extra: s.Spec.LoadBalancerClass, Reason: lbCauseOf(in, s), Since: milli(s.Metadata.CreationTimestamp),
 		})
 	}
 
@@ -124,22 +139,18 @@ func lbFindings(services []lbServiceObject, now time.Time) []checkupFinding {
 // poolFindings reads the conditions Cilium keeps on a pool: cilium.io/IPsAvailable and
 // cilium.io/IPsTotal carry their number as the message. An empty pool is critical once a
 // Service waits for an address.
-func poolFindings(pools []conditionedObject, waiting bool) []checkupFinding {
+func poolFindings(pools []ciliumPoolObject, waiting bool) []checkupFinding {
 	findings := []checkupFinding{}
 
 	for _, p := range pools {
-		conds := kubeConditions(p.Status.Conditions)
-
-		if c := conds.get("cilium.io/PoolConflict"); c.Status == "True" {
+		if c := kubeConditions(p.Status.Conditions).get("cilium.io/PoolConflict"); c.Status == "True" {
 			findings = append(findings, checkupFinding{Kind: findLBPoolConflict, Severity: sevWarning, Name: p.Metadata.Name, Message: c.Message})
 		}
 
-		available, err := strconv.Atoi(strings.TrimSpace(conds.get("cilium.io/IPsAvailable").Message))
-		if err != nil || available > 0 {
+		total, available, ok := p.counts()
+		if !ok || available > 0 {
 			continue
 		}
-
-		total, _ := strconv.Atoi(strings.TrimSpace(conds.get("cilium.io/IPsTotal").Message)) //nolint:errcheck // 0 when unknown
 
 		f := checkupFinding{Kind: findLBPoolExhausted, Severity: sevWarning, Name: p.Metadata.Name, Value: float64(total)}
 		if waiting {

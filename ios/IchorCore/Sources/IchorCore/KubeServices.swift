@@ -24,6 +24,7 @@ public struct KubeServices: Decodable, Sendable {
 /// What gives LoadBalancer Services their address, as the core names it.
 public enum LBController: String, Sendable {
     case metallb, cilium
+    case kubeVip = "kube-vip"
 }
 
 /// A Service. `ports`: kubectl's "80/TCP" ("80:30080/TCP" with a node port). `addresses`: the

@@ -208,6 +208,10 @@ func TestReadCheckup(t *testing.T) {
 		t.Fatalf("events %+v status %s", e, events.Status)
 	}
 
+	if pending := sectionByID(t, r, checkLoadBalancers).Findings[0]; pending.Reason != lbCausePoolExhausted {
+		t.Errorf("pending load balancer: reason %q, want %q", pending.Reason, lbCausePoolExhausted)
+	}
+
 	if csr := sectionByID(t, r, checkCertificates).Findings[0]; csr.Count != 2 || csr.Extra != "kubernetes.io/kubelet-serving" {
 		t.Fatalf("csr %+v", csr)
 	}

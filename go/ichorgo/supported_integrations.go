@@ -41,10 +41,14 @@ var integrationSpecs = []integrationSpec{
 	{ID: "cert-manager", Name: "cert-manager", Website: "https://cert-manager.io", Groups: []string{groupCertManager, groupACME}},
 	{ID: "castai", Name: "CAST AI", Website: "https://cast.ai", Groups: []string{groupCastAI}},
 	{ID: "cilium", Name: "Cilium", Website: "https://cilium.io", Groups: []string{groupCilium}},
+	{ID: "metallb", Name: "MetalLB", Website: "https://metallb.io", Groups: []string{groupMetalLB}},
+	{ID: "kube-vip", Name: "kube-vip", Website: "https://kube-vip.io"},
 	// Calico's CRDs come with the Kubernetes datastore; with the etcd one only its API server tells.
 	{ID: "calico", Name: "Calico", Website: "https://docs.tigera.io/calico/latest/about/", Groups: []string{groupCalicoCRD, groupCalico}, AnyGroup: true},
 	{ID: "crossplane", Name: "Crossplane", Website: "https://www.crossplane.io", Groups: []string{groupCrossplanePkg, groupCrossplaneAPIExt}, AnyGroup: true},
 	{ID: "external-secrets", Name: "External Secrets Operator", Website: "https://external-secrets.io", Groups: []string{groupExternalSecrets}},
+	// Kyverno is read through its policies and the (standard) policy reports it writes.
+	{ID: "kyverno", Name: "Kyverno", Website: "https://kyverno.io", Groups: []string{groupKyverno, groupPolicyReport}, Resource: "clusterpolicies"},
 	{ID: "gateway-api", Name: "Gateway API", Website: "https://gateway-api.sigs.k8s.io", Groups: []string{groupGatewayAPI}},
 	{ID: "traefik", Name: "Traefik", Website: "https://traefik.io", Groups: []string{groupTraefik}},
 	{ID: "prometheus-operator", Name: "Prometheus Operator", Website: "https://prometheus-operator.dev", Groups: []string{groupMonitoring}},
@@ -52,6 +56,7 @@ var integrationSpecs = []integrationSpec{
 	{ID: "thanos", Name: "Thanos", Website: "https://thanos.io", ServiceKind: "thanos"},
 	{ID: "mimir", Name: "Mimir", Website: "https://grafana.com/oss/mimir/", ServiceKind: "mimir"},
 	{ID: "victoriametrics", Name: "VictoriaMetrics", Website: "https://victoriametrics.com", ServiceKind: "victoriametrics"},
+	{ID: "sealed-secrets", Name: "Sealed Secrets", Website: "https://github.com/bitnami/sealed-secrets", Groups: []string{groupSealedSecrets}, Resource: "sealedsecrets"},
 }
 
 // groupGatewayAPI is the Gateway API's group: HTTPRoutes and Gateways.
@@ -313,6 +318,7 @@ func demoSupportedIntegrations() supportedIntegrations {
 		"rook":                ds.Ceph != nil,
 		"velero":              ds.Velero != nil,
 		"cert-manager":        ds.CertManager != nil,
+		"sealed-secrets":      ds.SealedSecrets != nil,
 		"castai":              ds.CastAI != nil,
 		"cilium":              demoCiliumStatus().Installed,
 		"gateway-api":         true,

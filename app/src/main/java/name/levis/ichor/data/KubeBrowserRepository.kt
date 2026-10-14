@@ -1,6 +1,7 @@
 package name.levis.ichor.data
 
 import name.levis.ichor.model.KubeJobs
+import name.levis.ichor.model.KubeLoadBalancing
 import name.levis.ichor.model.KubeServices
 import name.levis.ichor.model.KubeStorage
 import kotlinx.coroutines.Dispatchers
@@ -177,6 +178,11 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     /** The Services of [namespace] (null for every one), with addresses, ready endpoints and routes. */
     suspend fun services(namespace: String?): KubeServices = kubeCall { cfg, ctx, server ->
         TalosJson.decodeFromString(KubeServices.serializer(), Ichorgo.kubeServices(cfg, ctx, server, namespace.orEmpty()))
+    }
+
+    /** The load balancer controllers, their pools, advertisements and BGP peers, and why a Service has no address. */
+    suspend fun loadBalancing(): KubeLoadBalancing = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeLoadBalancing.serializer(), Ichorgo.kubeLoadBalancing(cfg, ctx, server))
     }
 
     /** The Jobs of [namespace] (null for every one), failures first. */

@@ -46,16 +46,17 @@ func byHealthThenKey[T any](f func(T) (health, key string)) func(a, b T) int {
 // dataServices is the health of the storage and database operators a cluster runs. A nil
 // section is a system that is not installed.
 type dataServices struct {
-	Longhorn    *longhornStatus    `json:"longhorn,omitempty"`
-	Garage      *garageStatus      `json:"garage,omitempty"`
-	CNPG        *cnpgStatus        `json:"cnpg,omitempty"`
-	Dragonfly   *dragonflyStatus   `json:"dragonfly,omitempty"`
-	MariaDB     *mariadbStatus     `json:"mariadb,omitempty"`
-	Percona     *perconaStatus     `json:"percona,omitempty"`
-	CertManager *certManagerStatus `json:"certManager,omitempty"`
-	Velero      *veleroStatus      `json:"velero,omitempty"`
-	Ceph        *cephStatus        `json:"ceph,omitempty"`
-	CastAI      *castAIStatus      `json:"castai,omitempty"`
+	SealedSecrets *sealedSecretsStatus `json:"sealedSecrets,omitempty"`
+	Longhorn      *longhornStatus      `json:"longhorn,omitempty"`
+	Garage        *garageStatus        `json:"garage,omitempty"`
+	CNPG          *cnpgStatus          `json:"cnpg,omitempty"`
+	Dragonfly     *dragonflyStatus     `json:"dragonfly,omitempty"`
+	MariaDB       *mariadbStatus       `json:"mariadb,omitempty"`
+	Percona       *perconaStatus       `json:"percona,omitempty"`
+	CertManager   *certManagerStatus   `json:"certManager,omitempty"`
+	Velero        *veleroStatus        `json:"velero,omitempty"`
+	Ceph          *cephStatus          `json:"ceph,omitempty"`
+	CastAI        *castAIStatus        `json:"castai,omitempty"`
 }
 
 // KubeDataServices reports the health of the storage and database operators the cluster
@@ -157,6 +158,10 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 
 	if v, ok := groups[groupCertManager]; ok {
 		wg.Go(func() { out.CertManager = readCertManager(ctx, k, v, now) })
+	}
+
+	if _, ok := groups[groupSealedSecrets]; ok {
+		wg.Go(func() { out.SealedSecrets = readSealedSecrets(ctx, k, now) })
 	}
 
 	if _, ok := groups[groupVelero]; ok {

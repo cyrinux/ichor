@@ -67,9 +67,11 @@ func demoCheckup(now time.Time) checkupReport {
 		newSection(checkNodes, 5, []checkupFinding{
 			{Kind: findNodeCordoned, Severity: sevWarning, Name: "demo-worker-2", Since: ago(3 * 24 * time.Hour)},
 		}),
-		newSection(checkLoadBalancers, 3, []checkupFinding{
-			{Kind: findLBPending, Severity: sevCritical, Namespace: "demo", Name: "hello-ichor-public", Since: ago(50 * time.Minute)},
+		newSection(checkLoadBalancers, 6, []checkupFinding{
+			{Kind: findLBPending, Severity: sevCritical, Namespace: "demo", Name: "hello-ichor-public", Reason: lbCausePoolExhausted, Since: ago(50 * time.Minute)},
 			{Kind: findLBPoolExhausted, Severity: sevCritical, Name: "default-pool", Value: 2},
+			{Kind: findLBBGPPeerDown, Severity: sevCritical, Name: "upstream-router", Node: "demo-worker-2", Extra: "192.0.2.1"},
+			{Kind: findLBPoolUnadvertised, Severity: sevWarning, Name: "lab-pool"},
 		}),
 		newSection(checkTerminating, 20, []checkupFinding{
 			{Kind: findNamespaceTerminating, Severity: sevWarning, Name: "old-staging", Message: "Some resources are remaining: widgets.example.com has 2 resource instances. Some content in the namespace has finalizers remaining: example.com/cleanup in 2 resource instances.", Since: ago(6 * 24 * time.Hour)},

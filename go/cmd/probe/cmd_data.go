@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"strconv"
 
@@ -11,6 +12,20 @@ import (
 var dataCommands = []command{
 	{name: "crossplane", args: "", run: func(e env) (out string, err error) {
 		return ichorgo.KubeCrossplane(e.cfg, e.context, e.kubeServer)
+	}},
+	{name: "sealed-secrets", run: func(e env) (string, error) {
+		raw, err := ichorgo.KubeDataServices(e.cfg, e.context, e.kubeServer, "sealed-secrets")
+		if err != nil {
+			return "", err
+		}
+		var report map[string]json.RawMessage
+		if err := json.Unmarshal([]byte(raw), &report); err != nil {
+			return "", err
+		}
+		if section, ok := report["sealedSecrets"]; ok {
+			return string(section), nil
+		}
+		return "null", nil
 	}},
 	{name: "dataservices", args: "[HINTS]", run: func(e env) (out string, err error) {
 		// dataservices [HINTS], e.g. "garage" or "longhorn,cloudnative-pg"; none checks all.
@@ -125,6 +140,12 @@ var dataCommands = []command{
 	}},
 	{name: "netpol", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.KubeNetworkPolicies(e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
+	{name: "kube-policies", args: "", run: func(e env) (out string, err error) {
+		// kube-policies: the Kyverno policies and their PolicyReport findings (read-only).
+		out, err = ichorgo.KubePolicies(e.cfg, e.context, e.kubeServer)
 
 		return out, err
 	}},

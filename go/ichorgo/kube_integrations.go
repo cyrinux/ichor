@@ -251,15 +251,11 @@ func integrationGroupsText(groups []integrationGroup) string {
 func demoIntegrations() integrationReport {
 	report := integrationReport{
 		Families: []integrationFamily{
-			{ID: "kyverno.io", Groups: []integrationGroup{
-				{Name: "kyverno.io", Version: "v1", Kinds: []string{"ClusterPolicy", "Policy"}},
-				{Name: "reports.kyverno.io", Version: "v1", Kinds: []string{"ClusterEphemeralReport", "EphemeralReport"}},
-			}},
-			{ID: "metallb.io", Groups: []integrationGroup{
-				{Name: "metallb.io", Version: "v1beta1", Kinds: []string{"BGPPeer", "IPAddressPool", "L2Advertisement"}},
+			{ID: "keda.sh", Groups: []integrationGroup{
+				{Name: "keda.sh", Version: "v1alpha1", Kinds: []string{"ScaledJob", "ScaledObject", "TriggerAuthentication"}},
 			}},
 		},
-		Supported: []string{"crossplane", groupCrossplanePkg, groupCrossplaneAPIExt, groupArgo, groupCertManager, groupLonghorn, groupMonitoring, groupCNPG, groupTraefik},
+		Supported: []string{"crossplane", groupCrossplanePkg, groupCrossplaneAPIExt, groupArgo, groupCertManager, groupKyverno, groupLonghorn, groupMetalLB, groupMonitoring, groupCNPG, groupTraefik, groupPolicyReport},
 	}
 	slices.Sort(report.Supported)
 	return report
