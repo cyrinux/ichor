@@ -27,10 +27,11 @@ import (
 type fakeKubeAPI struct {
 	*httptest.Server
 
-	mu       sync.Mutex
-	answers  map[string]string // "GET /path" -> body
-	statuses map[string]int    // "GET /path" -> HTTP status, 200 when unset
-	requests []fakeKubeRequest
+	mu           sync.Mutex
+	answers      map[string]string // "GET /path" -> body
+	statuses     map[string]int    // "GET /path" -> HTTP status, 200 when unset
+	requests     []fakeKubeRequest
+	beforeAnswer func(*http.Request)
 }
 
 // answerWith makes f answer key ("GET /path") with status and body.
@@ -61,6 +62,9 @@ func newFakeKubeAPI(t *testing.T, answers map[string]string) *fakeKubeAPI {
 		answer, ok := f.answers[r.Method+" "+r.URL.Path]
 		status := f.statuses[r.Method+" "+r.URL.Path]
 		f.mu.Unlock()
+		if f.beforeAnswer != nil {
+			f.beforeAnswer(r)
+		}
 
 		if r.URL.Path == "/version" && !ok {
 			answer, ok = `{"gitVersion":"v1.34.0"}`, true

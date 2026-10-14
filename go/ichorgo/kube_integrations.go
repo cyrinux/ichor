@@ -89,13 +89,13 @@ func readIntegrations(ctx context.Context, k *kubeClient) (integrationReport, er
 		}
 	}
 
-	readIntegrationKinds(ctx, k, unknown)
+	_, hasCrossplanePackages := groups[groupCrossplanePkg]
+	_, hasCrossplaneExtensions := groups[groupCrossplaneAPIExt]
+	readIntegrationKinds(ctx, k, unknown, hasCrossplanePackages || hasCrossplaneExtensions)
 	requests := make([]integrationGroup, 0, len(unknown))
 	for _, g := range unknown {
 		if g.Crossplane {
-			if !slices.Contains(report.Supported, "crossplane") {
-				report.Supported = append(report.Supported, "crossplane")
-			}
+			report.Supported = append(report.Supported, g.Name)
 		} else {
 			requests = append(requests, g)
 		}
@@ -108,7 +108,7 @@ func readIntegrations(ctx context.Context, k *kubeClient) (integrationReport, er
 
 // readIntegrationKinds fills the kinds of groups from their discovery documents; a group that
 // does not answer keeps none.
-func readIntegrationKinds(ctx context.Context, k *kubeClient, groups []integrationGroup) {
+func readIntegrationKinds(ctx context.Context, k *kubeClient, groups []integrationGroup, crossplaneInstalled bool) {
 	var (
 		wg    sync.WaitGroup
 		slots = make(chan struct{}, integrationKindReads)
@@ -133,7 +133,8 @@ func readIntegrationKinds(ctx context.Context, k *kubeClient, groups []integrati
 			}
 
 			for _, r := range doc.Resources {
-				if !strings.Contains(r.Name, "/") && (slices.Contains(r.Categories, "managed") || slices.Contains(r.Categories, "crossplane")) {
+				if crossplaneInstalled && !strings.Contains(r.Name, "/") &&
+					(containsAny(r.Categories, "managed", "composite", "claim", "crossplane")) {
 					g.Crossplane = true
 				}
 				// "foos/status" and "foos/scale" are subresources of a kind already listed.
@@ -147,6 +148,15 @@ func readIntegrationKinds(ctx context.Context, k *kubeClient, groups []integrati
 	}
 
 	wg.Wait()
+}
+
+func containsAny(values []string, candidates ...string) bool {
+	for _, candidate := range candidates {
+		if slices.Contains(values, candidate) {
+			return true
+		}
+	}
+	return false
 }
 
 // isBuiltinGroup reports whether name is a Kubernetes group ("apps", "batch",
@@ -255,7 +265,7 @@ func demoIntegrations() integrationReport {
 				{Name: "keda.sh", Version: "v1alpha1", Kinds: []string{"ScaledJob", "ScaledObject", "TriggerAuthentication"}},
 			}},
 		},
-		Supported: []string{"crossplane", groupCrossplanePkg, groupCrossplaneAPIExt, groupArgo, groupCertManager, groupKyverno, groupLonghorn, groupMetalLB, groupMonitoring, groupCNPG, groupTraefik, groupPolicyReport},
+		Supported: []string{groupCrossplanePkg, groupCrossplaneAPIExt, groupArgo, groupCertManager, groupKyverno, groupLonghorn, groupMetalLB, groupMonitoring, groupCNPG, groupTraefik, groupPolicyReport},
 	}
 	slices.Sort(report.Supported)
 	return report
