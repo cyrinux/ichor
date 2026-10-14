@@ -95,7 +95,7 @@ func buildAutoscaling(raw autoscalingRaw, now time.Time) autoscalingReport {
 	r.Karpenter.NodePools, t5 = clipRows(r.Karpenter.NodePools)
 	r.Karpenter.NodeClaims, t6 = clipRows(r.Karpenter.NodeClaims)
 	r.HPA.Truncated, r.KEDA.Truncated, r.VPA.Truncated, r.Karpenter.Truncated = t1, t2 || t3, t4, t5 || t6
-	r.Workloads, _ = clipRows(r.Workloads)
+	r.Workloads, r.WorkloadsTruncated = clipRows(r.Workloads)
 
 	return r
 }
@@ -225,6 +225,7 @@ type hpaMetricSource struct {
 }
 
 type hpaMetricValue struct {
+	Type               string `json:"type"` // a target's: Utilization, AverageValue or Value
 	AverageUtilization *int32 `json:"averageUtilization"`
 	AverageValue       string `json:"averageValue"`
 	Value              string `json:"value"`
@@ -267,6 +268,21 @@ func (s hpaMetricSource) name() string {
 
 // text is the value as the user reads it: "63%" for a utilization, else the quantity; "-"
 // when none is set (the metrics pipeline is down).
+// as is a current value in the unit of the target type: the API fills a Resource metric's
+// averageUtilization and averageValue together, and only the one the target uses compares.
+func (v hpaMetricValue) as(targetType string) string {
+	switch {
+	case targetType == "Utilization" && v.AverageUtilization != nil:
+		return hpaMetricValue{AverageUtilization: v.AverageUtilization}.text()
+	case targetType == "AverageValue" && v.AverageValue != "":
+		return v.AverageValue
+	case targetType == "Value" && v.Value != "":
+		return v.Value
+	default:
+		return v.text()
+	}
+}
+
 func (v hpaMetricValue) text() string {
 	switch {
 	case v.AverageUtilization != nil:
@@ -327,7 +343,7 @@ func hpaMetricOf(spec hpaMetricSpec, current []hpaMetricSpec) hpaMetric {
 
 	for _, c := range current {
 		if cur := c.source(); c.Type == spec.Type && cur.name() == out.Name {
-			out.Current = cur.Current.text()
+			out.Current = cur.Current.as(src.Target.Type)
 
 			break
 		}

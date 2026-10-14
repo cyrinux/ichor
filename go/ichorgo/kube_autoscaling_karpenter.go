@@ -54,6 +54,7 @@ type nodeClaimObject struct {
 		Name              string            `json:"name"`
 		Labels            map[string]string `json:"labels"`
 		CreationTimestamp string            `json:"creationTimestamp"`
+		DeletionTimestamp string            `json:"deletionTimestamp"`
 	} `json:"metadata"`
 	Status struct {
 		NodeName   string         `json:"nodeName"`
@@ -166,7 +167,8 @@ func nodeClaimRowOf(c nodeClaimObject, now time.Time) nodeClaimRow {
 		Ready:        conds.is("Ready"),
 		Created:      unixMilli(c.Metadata.CreationTimestamp),
 		Drifted:      conds.is("Drifted"),
-		Disrupting:   conds.is("Disrupting") || conds.is("Disrupted") || conds.is("Terminating"),
+		Disrupting: c.Metadata.DeletionTimestamp != "" || conds.is("Disrupted") || conds.is("InstanceTerminating") ||
+			conds.is("Disrupting") || conds.is("Terminating"), // the last two: pre-v1 names
 	}
 
 	row.Pending = row.NodeName == "" && row.Created > 0 && now.Sub(time.UnixMilli(row.Created)) > karpenterPendingAfter

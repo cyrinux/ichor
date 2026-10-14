@@ -106,7 +106,7 @@ func scaledObjectRowOf(o scaledObjectObject, hpa hpaRow) scaledObjectRow {
 		Target:    autoscaleTarget{Kind: o.Spec.ScaleTargetRef.Kind, Name: o.Spec.ScaleTargetRef.Name},
 		Min:       0,
 		Max:       kedaDefaultMax,
-		Current:   hpa.Current,
+		Current:   hpa.Current, // 0 while paused without a count: KEDA removed its HPA
 		Desired:   hpa.Desired,
 		Triggers:  kedaTriggers(o.Spec.Triggers),
 		HPAName:   o.Status.HPAName,
@@ -128,6 +128,11 @@ func scaledObjectRowOf(o scaledObjectObject, hpa hpaRow) scaledObjectRow {
 	}
 
 	row.Paused, row.PausedReplicas = kedaPaused(o.Metadata.Annotations)
+	row.Paused = row.Paused || o.Status.Conditions.is("Paused") // KEDA 2.12+ says so too
+	// KEDA removes its HPA while paused: a count it was paused at is the replicas it runs.
+	if row.PausedReplicas != nil && hpa.Name == "" {
+		row.Current, row.Desired = *row.PausedReplicas, *row.PausedReplicas
+	}
 
 	conds := o.Status.Conditions
 	row.Ready, row.Active, row.Fallback = conds.is("Ready"), conds.is("Active"), conds.is("Fallback")
@@ -137,15 +142,25 @@ func scaledObjectRowOf(o scaledObjectObject, hpa hpaRow) scaledObjectRow {
 	return row
 }
 
-// kedaPaused reads the pause annotations: paused at a count, or paused where it stands.
+// kedaPaused reads the pause annotations the way KEDA does: paused-replicas pauses whatever
+// its value (with a count when it is one); paused pauses unless it parses as false.
 func kedaPaused(annotations map[string]string) (bool, *int) {
 	if v, ok := annotations[kedaPausedReplicasAnnotation]; ok {
 		if n, err := strconv.Atoi(strings.TrimSpace(v)); err == nil && n >= 0 {
 			return true, &n
 		}
+
+		return true, nil
 	}
 
-	return strings.EqualFold(strings.TrimSpace(annotations[kedaPausedAnnotation]), "true"), nil
+	v, ok := annotations[kedaPausedAnnotation]
+	if !ok {
+		return false, nil
+	}
+
+	paused, err := strconv.ParseBool(strings.TrimSpace(v))
+
+	return err != nil || paused, nil
 }
 
 // kedaMessage is the condition worth reading: why it is not ready, else why it fell back.
@@ -194,6 +209,7 @@ func scaledJobRowOf(o scaledJobObject) scaledJobRow {
 	}
 
 	row.Paused, _ = kedaPaused(o.Metadata.Annotations)
+	row.Paused = row.Paused || o.Status.Conditions.is("Paused")
 
 	switch {
 	case row.Paused:

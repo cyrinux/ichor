@@ -42,6 +42,8 @@ type autoscalingReport struct {
 	VPA       vpaGroup             `json:"vpa"`
 	Karpenter karpenterGroup       `json:"karpenter"`
 	Workloads []autoscaledWorkload `json:"workloads"`
+	// WorkloadsTruncated says the index was cut at autoscalingRowsMax.
+	WorkloadsTruncated bool `json:"workloadsTruncated"`
 }
 
 // autoscalingGroupState is what every group says about itself.

@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
@@ -376,5 +377,84 @@ func TestAutoscalingDemo(t *testing.T) {
 	got, err := KubeAutoscaling(demo, demoKubeContext, "")
 	if err != nil || !strings.Contains(got, `"workloads"`) {
 		t.Errorf("demo read %q, %v", got, err)
+	}
+}
+
+// TestHPAMetricUnits compares current with target in the target's unit: a Resource metric's
+// current carries both a utilization and an average value.
+func TestHPAMetricUnits(t *testing.T) {
+	pct := int32(94)
+	current := []hpaMetricSpec{{Type: "Resource", Resource: &hpaMetricSource{Name: "cpu", Current: hpaMetricValue{AverageUtilization: &pct, AverageValue: "470m"}}}}
+
+	for _, tc := range []struct {
+		target hpaMetricValue
+		want   string
+	}{
+		{hpaMetricValue{Type: "AverageValue", AverageValue: "500m"}, "470m"},
+		{hpaMetricValue{Type: "Utilization", AverageUtilization: &pct}, "94%"},
+	} {
+		got := hpaMetricOf(hpaMetricSpec{Type: "Resource", Resource: &hpaMetricSource{Name: "cpu", Target: tc.target}}, current)
+		if got.Current != tc.want {
+			t.Errorf("target %s: current %q, want %q", tc.target.Type, got.Current, tc.want)
+		}
+	}
+}
+
+func TestKEDAPaused(t *testing.T) {
+	five := 5
+	for _, tc := range []struct {
+		annotations map[string]string
+		paused      bool
+		count       *int
+	}{
+		{nil, false, nil},
+		{map[string]string{kedaPausedReplicasAnnotation: "5"}, true, &five},
+		{map[string]string{kedaPausedReplicasAnnotation: "abc"}, true, nil},
+		{map[string]string{kedaPausedAnnotation: "1"}, true, nil},
+		{map[string]string{kedaPausedAnnotation: "yes"}, true, nil}, // KEDA pauses on what it cannot parse
+		{map[string]string{kedaPausedAnnotation: "false"}, false, nil},
+	} {
+		paused, count := kedaPaused(tc.annotations)
+		if paused != tc.paused || (count == nil) != (tc.count == nil) || (count != nil && *count != *tc.count) {
+			t.Errorf("%v: paused %v count %v", tc.annotations, paused, count)
+		}
+	}
+
+	// The Paused condition alone pauses; paused at a count without its HPA runs that count.
+	var o scaledObjectObject
+	o.Status.Conditions = kubeConditions{{Type: "Ready", Status: "True"}, {Type: "Paused", Status: "True"}}
+	if row := scaledObjectRowOf(o, hpaRow{}); !row.Paused || row.State != autoscalePaused {
+		t.Errorf("paused by condition %+v", row)
+	}
+
+	o.Metadata.Annotations = map[string]string{kedaPausedReplicasAnnotation: "3"}
+	if row := scaledObjectRowOf(o, hpaRow{}); row.Current != 3 || row.Desired != 3 {
+		t.Errorf("paused at 3 %+v", row)
+	}
+}
+
+func TestNodeClaimDisrupting(t *testing.T) {
+	var c nodeClaimObject
+	c.Metadata.DeletionTimestamp = "2026-10-01T09:00:00Z"
+	if row := nodeClaimRowOf(c, time.Now()); !row.Disrupting {
+		t.Errorf("deleted claim %+v", row)
+	}
+
+	c.Metadata.DeletionTimestamp = ""
+	c.Status.Conditions = kubeConditions{{Type: "InstanceTerminating", Status: "True"}}
+	if row := nodeClaimRowOf(c, time.Now()); !row.Disrupting {
+		t.Errorf("terminating claim %+v", row)
+	}
+}
+
+func TestAutoscalingWorkloadsTruncated(t *testing.T) {
+	hpas := make([]hpaObject, autoscalingRowsMax+1)
+	for i := range hpas {
+		hpas[i].Metadata.Namespace, hpas[i].Metadata.Name = "load", fmt.Sprintf("hpa-%05d", i)
+	}
+
+	r := buildAutoscaling(autoscalingRaw{hpas: hpas}, time.Now())
+	if !r.WorkloadsTruncated || !r.HPA.Truncated || len(r.Workloads) != autoscalingRowsMax {
+		t.Errorf("workloads %d truncated %v, hpa truncated %v", len(r.Workloads), r.WorkloadsTruncated, r.HPA.Truncated)
 	}
 }
