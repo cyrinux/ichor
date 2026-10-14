@@ -84,4 +84,27 @@ extension TalosClient {
             IchorgoKubeCNPGBackup(config, context, kubeServer, namespace, name, error)
         }
     }
+
+    /// The backups of the Velero schedule namespace/schedule, or the ones taken by hand when it is "" (os:admin).
+    func veleroBackups(namespace: String, schedule: String) async throws -> VeleroBackups {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeVeleroBackups(config, context, kubeServer, namespace, schedule, $0)
+        }
+    }
+
+    /// Backs the Velero schedule namespace/schedule up now, like `velero backup create --from-schedule`
+    /// (os:admin): the new Backup's name. Refused when paused, invalid, or while one of its backups runs.
+    func veleroBackupNow(namespace: String, schedule: String) async throws -> String {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+            IchorgoKubeVeleroBackupNow(config, context, kubeServer, namespace, schedule, error)
+        }
+    }
+
+    /// Asks Velero to delete the backup namespace/backup and its data, like `velero backup delete`
+    /// (os:admin): the deletion request's name. Refused while it runs or is already being deleted.
+    func veleroDeleteBackup(namespace: String, backup: String) async throws -> String {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+            IchorgoKubeVeleroDeleteBackup(config, context, kubeServer, namespace, backup, error)
+        }
+    }
 }

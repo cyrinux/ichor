@@ -4471,4 +4471,21 @@
     <string name="kpol_mode_mixed">Alcune regole rifiutano una richiesta che le viola, altre la segnalano soltanto</string>
     <string name="kpol_category">Categoria</string>
     <string name="kpol_severity">Gravità</string>
+    <string name="velero_backup_now">Esegui backup ora</string>
+    <string name="velero_backup_now_title">Eseguire ora il backup di %1$s?</string>
+    <string name="velero_backup_now_text">Velero avvia un backup con le impostazioni di questa pianificazione (namespace: %1$s, posizione di archiviazione: %2$s). Si aggiunge a quelli pianificati e scade come loro.</string>
+    <string name="velero_backup_now_started">Backup %1$s avviato</string>
+    <string name="velero_action_failed">%1$s: %2$s</string>
+    <string name="velero_blocked_paused">La pianificazione è in pausa: riattivala per eseguire il backup</string>
+    <string name="velero_blocked_invalid">La pianificazione non ha superato la convalida</string>
+    <string name="velero_blocked_running">È in corso un backup di questa pianificazione</string>
+    <string name="velero_backups">Backup</string>
+    <string name="velero_backups_empty">Nessun backup rimasto</string>
+    <string name="velero_deleting">eliminazione…</string>
+    <string name="velero_expires">scade il %1$s</string>
+    <string name="velero_delete">Elimina</string>
+    <string name="velero_delete_title">Eliminare il backup %1$s?</string>
+    <string name="velero_delete_text">Velero rimuove i dati di questo backup dalla posizione di archiviazione, poi il backup stesso. Non potrà più essere ripristinato.</string>
+    <string name="velero_delete_requested">Eliminazione di %1$s richiesta</string>
+    <string name="velero_delete_errors">Eliminazione non riuscita: %1$s</string>
 </resources>

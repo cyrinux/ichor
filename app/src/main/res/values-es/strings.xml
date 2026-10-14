@@ -4471,4 +4471,21 @@
     <string name="kpol_mode_mixed">Algunas reglas rechazan una solicitud que las incumple; otras solo lo informan</string>
     <string name="kpol_category">Categoría</string>
     <string name="kpol_severity">Gravedad</string>
+    <string name="velero_backup_now">Copia de seguridad ahora</string>
+    <string name="velero_backup_now_title">¿Hacer copia de %1$s ahora?</string>
+    <string name="velero_backup_now_text">Velero inicia una copia con los ajustes de esta programación (namespaces: %1$s, ubicación de almacenamiento: %2$s). Se suma a las programadas y caduca como ellas.</string>
+    <string name="velero_backup_now_started">Copia %1$s iniciada</string>
+    <string name="velero_action_failed">%1$s: %2$s</string>
+    <string name="velero_blocked_paused">La programación está en pausa: reactívela para hacer la copia</string>
+    <string name="velero_blocked_invalid">La programación no superó la validación</string>
+    <string name="velero_blocked_running">Hay una copia de esta programación en curso</string>
+    <string name="velero_backups">Copias de seguridad</string>
+    <string name="velero_backups_empty">No quedan copias</string>
+    <string name="velero_deleting">eliminando…</string>
+    <string name="velero_expires">caduca el %1$s</string>
+    <string name="velero_delete">Eliminar</string>
+    <string name="velero_delete_title">¿Eliminar la copia %1$s?</string>
+    <string name="velero_delete_text">Velero elimina los datos de esta copia de su ubicación de almacenamiento y luego la copia. Después no se podrá restaurar.</string>
+    <string name="velero_delete_requested">Eliminación de %1$s solicitada</string>
+    <string name="velero_delete_errors">Error al eliminar: %1$s</string>
 </resources>

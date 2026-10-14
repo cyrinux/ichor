@@ -29,6 +29,8 @@ enum class KubeAction(val wire: String) {
     CORDON_NODE("cordonNode"),
     DRAIN_NODE("drainNode"),
     CNPG_PROMOTE("cnpgPromote"),
+    VELERO_BACKUP_NOW("veleroBackupNow"),
+    VELERO_DELETE_BACKUP("veleroDeleteBackup"),
     ;
 
     /** The action asked for an object of a kind, on that kind's own resource; null for a kind the core does not ask about (offered). */

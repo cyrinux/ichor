@@ -125,9 +125,9 @@ func backupVeleroSchedule(ctx context.Context, k *kubeClient, namespace, schedul
 	return created.Metadata.Name, nil
 }
 
-// veleroBackupFromSchedule is Velero's builder.FromSchedule: the schedule's labels and
-// annotations, its name label, the template's own labels on top, the template as the spec,
-// and an owner reference only when the schedule asks for one.
+// veleroBackupFromSchedule is Velero's builder.FromSchedule: the template's labels when it
+// sets any, else the schedule's, plus the schedule's name label; the annotations the same way;
+// the template as the spec; an owner reference only when the schedule asks for one.
 func veleroBackupFromSchedule(s veleroScheduleRaw, namespace string, now time.Time) (map[string]any, error) {
 	spec := map[string]any{}
 	if rawSet(s.Spec.Template) {
@@ -136,31 +136,26 @@ func veleroBackupFromSchedule(s veleroScheduleRaw, namespace string, now time.Ti
 		}
 	}
 
-	labels := map[string]any{}
-	for k, v := range s.Metadata.Labels {
-		labels[k] = v
+	var templateLabels, templateAnnotations map[string]any
+	if meta, ok := spec["metadata"].(map[string]any); ok {
+		templateLabels, _ = meta["labels"].(map[string]any)
+		templateAnnotations, _ = meta["annotations"].(map[string]any)
+	}
+
+	labels := orTemplate(templateLabels, s.Metadata.Labels)
+	if labels == nil {
+		labels = map[string]any{}
 	}
 
 	labels[veleroScheduleLabel] = veleroLabelValue(s.Metadata.Name)
 
-	if meta, ok := spec["metadata"].(map[string]any); ok {
-		if tl, ok := meta["labels"].(map[string]any); ok {
-			for k, v := range tl {
-				labels[k] = v
-			}
-		}
-	}
-
-	annotations := map[string]any{}
-	for k, v := range s.Metadata.Annotations {
-		annotations[k] = v
-	}
-
 	metadata := map[string]any{
-		"name":        s.Metadata.Name + "-" + now.UTC().Format(veleroBackupNameTime),
-		"namespace":   namespace,
-		"labels":      labels,
-		"annotations": annotations,
+		"name":      s.Metadata.Name + "-" + now.UTC().Format(veleroBackupNameTime),
+		"namespace": namespace,
+		"labels":    labels,
+	}
+	if annotations := orTemplate(templateAnnotations, s.Metadata.Annotations); annotations != nil {
+		metadata["annotations"] = annotations
 	}
 
 	if s.Spec.UseOwnerReferencesInBackup {
@@ -176,6 +171,30 @@ func veleroBackupFromSchedule(s veleroScheduleRaw, namespace string, now time.Ti
 		"metadata":   metadata,
 		"spec":       spec,
 	}, nil
+}
+
+// orTemplate is a copy of the template's map when it sets one, else of the schedule's own; nil
+// when neither does.
+func orTemplate(template map[string]any, own map[string]string) map[string]any {
+	if template != nil {
+		out := make(map[string]any, len(template)+1)
+		for k, v := range template {
+			out[k] = v
+		}
+
+		return out
+	}
+
+	if own == nil {
+		return nil
+	}
+
+	out := make(map[string]any, len(own)+1)
+	for k, v := range own {
+		out[k] = v
+	}
+
+	return out
 }
 
 // veleroLabelValue is Velero's label.GetValidName: a name too long for a label value is cut

@@ -107,8 +107,12 @@ func TestVeleroBackupsList(t *testing.T) {
 		t.Errorf("failed deletion %+v", d)
 	}
 
-	if q := f.recorded()[0].query + f.recorded()[1].query; !strings.Contains(q, "velero.io%2Fschedule-name%3Dapps-daily") {
-		t.Errorf("schedule selector missing: %q", q)
+	// The two lists are read in parallel: find the backups one by its path.
+	selected := slices.ContainsFunc(f.recorded(), func(r fakeKubeRequest) bool {
+		return strings.HasSuffix(r.path, "/backups") && strings.Contains(r.query, "velero.io%2Fschedule-name%3Dapps-daily")
+	})
+	if !selected {
+		t.Errorf("schedule selector missing in %+v", f.recorded())
 	}
 }
 
@@ -169,9 +173,10 @@ func TestVeleroBackupNow(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The schedule's labels, its name label, the template's labels on top.
+	// The template sets labels: those (not the schedule's), plus the name label; it sets no
+	// annotations: the schedule's.
 	if body.Kind != "Backup" || body.Metadata.Name != "apps-daily-20261004120000" ||
-		body.Metadata.Labels["velero.io/schedule-name"] != "apps-daily" || body.Metadata.Labels["team"] != "platform" ||
+		body.Metadata.Labels["velero.io/schedule-name"] != "apps-daily" || body.Metadata.Labels["team"] != "" ||
 		body.Metadata.Labels["tier"] != "silver" || body.Metadata.Labels["backup-kind"] != "nightly" || body.Metadata.Annotations["owner"] != "ops" {
 		t.Errorf("metadata %+v", body.Metadata)
 	}
@@ -182,6 +187,33 @@ func TestVeleroBackupNow(t *testing.T) {
 
 	if body.Spec["storageLocation"] != "default" || body.Spec["ttl"] != "720h0m0s" || len(body.Spec["includedNamespaces"].([]any)) != 2 {
 		t.Errorf("spec %+v", body.Spec)
+	}
+}
+
+// TestVeleroBackupFromScheduleMetadata: without template labels the schedule's own are kept;
+// without any annotations none are sent.
+func TestVeleroBackupFromScheduleMetadata(t *testing.T) {
+	var s veleroScheduleRaw
+	s.Metadata.Name = "apps-daily"
+	s.Metadata.Labels = map[string]string{"team": "platform"}
+	s.Spec.Template = json.RawMessage(`{"includedNamespaces":["demo"],"metadata":{"annotations":{"reason":"nightly"}}}`)
+
+	b, err := veleroBackupFromSchedule(s, "velero", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	meta := b["metadata"].(map[string]any)
+	labels, annotations := meta["labels"].(map[string]any), meta["annotations"].(map[string]any)
+	if labels["team"] != "platform" || labels["velero.io/schedule-name"] != "apps-daily" || annotations["reason"] != "nightly" {
+		t.Errorf("metadata %+v", meta)
+	}
+
+	s.Spec.Template = nil
+	s.Metadata.Labels = nil
+	b, _ = veleroBackupFromSchedule(s, "velero", time.Now())
+	if meta := b["metadata"].(map[string]any); meta["annotations"] != nil || len(meta["labels"].(map[string]any)) != 1 {
+		t.Errorf("bare metadata %+v", meta)
 	}
 }
 
