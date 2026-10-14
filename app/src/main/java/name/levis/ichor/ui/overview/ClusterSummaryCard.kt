@@ -4,7 +4,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,9 +16,9 @@ import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -101,15 +100,13 @@ private fun Footer(onCapacity: () -> Unit) {
             stringResource(R.string.insights_title),
             style = MaterialTheme.typography.labelLarge,
             color = color,
-            modifier = Modifier.weight(1f, fill = false).padding(start = 8.dp),
+            modifier = Modifier.weight(1f).padding(start = 8.dp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
         Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = color)
-        Spacer(Modifier.weight(1f))
-        TextButton(onClick = onCapacity) {
-            Icon(Icons.Outlined.Speed, contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(18.dp))
-            Text(stringResource(R.string.capacity_title), maxLines = 1)
+        IconButton(onClick = onCapacity) {
+            Icon(Icons.Outlined.Speed, contentDescription = stringResource(R.string.capacity_title))
         }
     }
 }
