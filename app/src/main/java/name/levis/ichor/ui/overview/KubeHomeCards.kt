@@ -245,6 +245,7 @@ internal fun KubeToolsCard(nav: KubeHomeNavigation) {
                 OutlinedButton(onClick = nav.onCapacity) { Text(stringResource(R.string.capacity_title)) }
                 OutlinedButton(onClick = nav.onApiHealth) { Text(stringResource(R.string.apihealth_title)) }
                 OutlinedButton(onClick = nav.onNetworkPolicies) { Text(stringResource(R.string.netpol_title)) }
+                OutlinedButton(onClick = nav.onPolicies) { Text(stringResource(R.string.kpol_title)) }
                 OutlinedButton(onClick = nav.onLoadBalancing) { Text(stringResource(R.string.lb_title)) }
             }
         }

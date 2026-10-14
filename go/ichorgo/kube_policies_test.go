@@ -260,6 +260,11 @@ func TestPoliciesDemo(t *testing.T) {
 	if got.Policies[0].Name != "verify-image-signatures" || got.Policies[0].Ready {
 		t.Errorf("demo order: %+v", firstNames(got.Policies))
 	}
+
+	// The whole list in the reader's order (not ready, Enforce, Mixed, Audit): the apps show it as is.
+	if !slices.IsSortedFunc(got.Policies, kyvernoPolicyLess) {
+		t.Errorf("demo not in reader order: %v", firstNames(got.Policies))
+	}
 }
 
 // TestKyvernoGroupsSupported keeps the Integration-request demo honest: Kyverno is listed as

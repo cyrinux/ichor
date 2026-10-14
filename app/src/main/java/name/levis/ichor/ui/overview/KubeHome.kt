@@ -96,6 +96,8 @@ class KubeHomeNavigation(
     val onCapacity: () -> Unit,
     val onApiHealth: () -> Unit,
     val onNetworkPolicies: () -> Unit,
+    /** Kyverno's admission policies and their findings. */
+    val onPolicies: () -> Unit,
     val onArgoCD: () -> Unit,
     val onFlux: () -> Unit,
     /** The Data services screen, on one system's tab (null: the first). */

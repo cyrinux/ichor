@@ -83,6 +83,9 @@ internal object Routes {
         "workloads?tab=${focus.tab}&key=${Uri.encode(focus.key)}&ns=${Uri.encode(focus.namespace)}&name=${Uri.encode(focus.name)}"
     const val NETWORK_POLICIES = "netpol"
 
+    /** The admission policies (Kyverno), their findings and the engine's health. */
+    const val POLICIES = "policies"
+
     /** The cluster's Kubernetes events, live. */
     const val KUBE_EVENTS = "kube-events"
     const val API_HEALTH = "apihealth"
