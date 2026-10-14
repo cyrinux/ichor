@@ -4436,6 +4436,34 @@
     <string name="cnpg_promote_requested">Promozione a %1$s richiesta</string>
     <string name="cnpg_promote_failed">Impossibile promuovere %1$s: %2$s</string>
     <string name="cnpg_promote_loading">Lettura anteprima della promozione…</string>
+
+    <string name="cnpg_restart_primary">Riavvia primario</string>
+    <string name="cnpg_hibernate_action">Iberna cluster</string>
+    <string name="cnpg_wake_action">Riattiva cluster</string>
+    <string name="cnpg_restart_risk">Il riavvio del primario interrompe le connessioni. CloudNativePG riavvia PostgreSQL sul posto e conserva i suoi PVC.</string>
+    <string name="cnpg_hibernate_risk">L’ibernazione arresta il cluster e interrompe tutte le connessioni. I suoi PVC vengono conservati fino alla riattivazione.</string>
+    <string name="cnpg_wake_risk">CloudNativePG avvia il cluster usando i PVC conservati. Le connessioni restano indisponibili finché le istanze non sono pronte.</string>
+    <string name="cnpg_restart_target">Primario da riavviare: %1$s</string>
+    <string name="cnpg_lifecycle_requested">Azione sul cluster richiesta</string>
+    <string name="cnpg_lifecycle_failed">Impossibile aggiornare il cluster: %1$s</string>
+
+    <string name="longhorn_salvage">Recupera volume</string>
+    <string name="longhorn_salvage_risk">Il recupero può perdere dati. Scegli le repliche da recuperare; i loro timestamp non garantiscono la coerenza.</string>
+    <string name="longhorn_salvage_choose">Scegli le repliche esplicitamente. Nessuna viene selezionata automaticamente.</string>
+    <string name="longhorn_salvage_unavailable">Il recupero richiede un volume scollegato guasto e repliche disponibili.</string>
+    <string name="longhorn_salvage_replica">%1$s su %2$s · sana: %3$s · errore: %4$s</string>
+    <string name="longhorn_salvage_requested">Recupero richiesto</string>
+    <string name="longhorn_salvage_failed">Impossibile recuperare il volume: %1$s</string>
+    <string name="longhorn_volume_name">Nome volume</string>
+
+    <string name="longhorn_attach">Collega volume</string>
+    <string name="longhorn_detach">Scollega volume</string>
+    <string name="longhorn_attachment_risk">Modificare il collegamento di un volume può interrompere il carico di lavoro. Lo scollegamento usa il normale collegamento API Longhorn; un controller può mantenere o ripristinare il proprio collegamento.</string>
+    <string name="longhorn_attachment_choose">Scegli un nodo disponibile</string>
+    <string name="longhorn_attachment_current">Attualmente collegato a: %1$s</string>
+    <string name="longhorn_attachment_unavailable">Impossibile modificare il collegamento di questo volume nello stato attuale.</string>
+    <string name="longhorn_attachment_requested">Modifica del collegamento del volume richiesta</string>
+    <string name="longhorn_attachment_failed">Impossibile modificare il collegamento del volume: %1$s</string>
     <string name="kpol_title">Policy</string>
     <string name="kpol_not_installed">Kyverno non è installato su questo cluster</string>
     <string name="kpol_not_installed_hint">Kyverno ammette o rifiuta i carichi di lavoro in base a policy e segnala ciò che viola le regole.</string>

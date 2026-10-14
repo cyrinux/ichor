@@ -4428,6 +4428,34 @@
     <string name="cnpg_promote_requested">Hochstufung auf %1$s angefordert</string>
     <string name="cnpg_promote_failed">%1$s konnte nicht hochgestuft werden: %2$s</string>
     <string name="cnpg_promote_loading">Vorschau der Hochstufung wird geladen…</string>
+
+    <string name="cnpg_restart_primary">Primärknoten neu starten</string>
+    <string name="cnpg_hibernate_action">Cluster in Ruhezustand versetzen</string>
+    <string name="cnpg_wake_action">Cluster aufwecken</string>
+    <string name="cnpg_restart_risk">Der Neustart des Primärknotens unterbricht Verbindungen. CloudNativePG startet PostgreSQL an Ort und Stelle neu und behält seine PVCs.</string>
+    <string name="cnpg_hibernate_risk">Der Ruhezustand stoppt den Cluster und unterbricht alle Verbindungen. Seine PVCs bleiben bis zum Aufwecken erhalten.</string>
+    <string name="cnpg_wake_risk">CloudNativePG startet den Cluster mit seinen erhaltenen PVCs. Verbindungen sind erst verfügbar, wenn die Instanzen bereit sind.</string>
+    <string name="cnpg_restart_target">Neu zu startender Primärknoten: %1$s</string>
+    <string name="cnpg_lifecycle_requested">Clusteraktion angefordert</string>
+    <string name="cnpg_lifecycle_failed">Cluster konnte nicht aktualisiert werden: %1$s</string>
+
+    <string name="longhorn_salvage">Volume retten</string>
+    <string name="longhorn_salvage_risk">Die Rettung kann Datenverlust verursachen. Wählen Sie die wiederherzustellenden Replikate; ihre Zeitstempel garantieren keine Konsistenz.</string>
+    <string name="longhorn_salvage_choose">Wählen Sie Replikate ausdrücklich aus. Keines wird automatisch ausgewählt.</string>
+    <string name="longhorn_salvage_unavailable">Die Rettung erfordert ein getrenntes fehlerhaftes Volume und verfügbare Replikate.</string>
+    <string name="longhorn_salvage_replica">%1$s auf %2$s · gesund: %3$s · Fehler: %4$s</string>
+    <string name="longhorn_salvage_requested">Rettung angefordert</string>
+    <string name="longhorn_salvage_failed">Volume konnte nicht gerettet werden: %1$s</string>
+    <string name="longhorn_volume_name">Volume-Name</string>
+
+    <string name="longhorn_attach">Volume verbinden</string>
+    <string name="longhorn_detach">Volume trennen</string>
+    <string name="longhorn_attachment_risk">Eine Änderung der Volume-Verbindung kann die Arbeitslast unterbrechen. Das Trennen nutzt die reguläre Longhorn-API-Verbindung; ein Controller kann seine eigene Verbindung beibehalten oder wiederherstellen.</string>
+    <string name="longhorn_attachment_choose">Verfügbaren Knoten auswählen</string>
+    <string name="longhorn_attachment_current">Derzeit verbunden mit: %1$s</string>
+    <string name="longhorn_attachment_unavailable">Die Verbindung dieses Volumes kann im aktuellen Zustand nicht geändert werden.</string>
+    <string name="longhorn_attachment_requested">Änderung der Volume-Verbindung angefordert</string>
+    <string name="longhorn_attachment_failed">Volume-Verbindung konnte nicht geändert werden: %1$s</string>
     <string name="kpol_title">Richtlinien</string>
     <string name="kpol_not_installed">Kyverno ist auf diesem Cluster nicht installiert</string>
     <string name="kpol_not_installed_hint">Kyverno lässt Workloads nach Richtlinien zu oder lehnt sie ab und meldet, was gegen die Regeln verstößt.</string>

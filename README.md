@@ -189,6 +189,9 @@ reads those roles and explains up front when a feature needs more.
 | **Policies (Kyverno)** | `Kubeconfig`, then the Kubernetes API (kyverno.io policies, wgpolicyk8s.io policy reports, Kyverno's Deployments and webhooks) | **`os:admin`** |
 | **Cluster checkup, events of a pod or workload** | `Kubeconfig`, then the Kubernetes API (pods, nodes, events, claims, webhooks, quotas, services, CSRs, secrets metadata…) and each kubelet's `stats/summary` through the API server proxy | **`os:admin`** |
 | **Talos rollback (`talosctl rollback`)** | `Rollback` | **`os:admin`** |
+| **CloudNativePG primary restart and hibernate/wake** | `Kubeconfig`, then the Kubernetes API: get clusters and pods, patch `clusters/status` for restart, patch clusters for hibernation | **`os:admin`** |
+| **Longhorn faulted-volume salvage** | `Kubeconfig`, then the Kubernetes API: get volumes, list replicas/nodes, create `services/proxy` to the Longhorn manager | **`os:admin`** |
+| **Longhorn volume attach/detach** | `Kubeconfig`, then the Kubernetes API: get volumes/nodes, list nodes for preview, create `services/proxy` to the Longhorn manager | **`os:admin`** |
 | **Node reset (`talosctl reset`)** | `Reset` | **`os:admin`** |
 
 Notes:

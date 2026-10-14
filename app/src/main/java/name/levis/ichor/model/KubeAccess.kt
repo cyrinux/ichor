@@ -29,6 +29,10 @@ enum class KubeAction(val wire: String) {
     CORDON_NODE("cordonNode"),
     DRAIN_NODE("drainNode"),
     CNPG_PROMOTE("cnpgPromote"),
+    CNPG_RESTART_PRIMARY("cnpgRestartPrimary"),
+    CNPG_HIBERNATE("cnpgHibernate"),
+    LONGHORN_SALVAGE("longhornSalvage"),
+    LONGHORN_ATTACHMENT("longhornAttachment"),
     VELERO_BACKUP_NOW("veleroBackupNow"),
     VELERO_DELETE_BACKUP("veleroDeleteBackup"),
     ;

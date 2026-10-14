@@ -1,5 +1,8 @@
 package name.levis.ichor.data
 
+import kotlinx.serialization.encodeToString
+import name.levis.ichor.model.LonghornAttachmentPreview
+import name.levis.ichor.model.LonghornSalvagePreview
 import name.levis.ichor.model.VolumeSnapshots
 import name.levis.ichor.model.CnpgPromotePreview
 import name.levis.ichor.model.CertDetails
@@ -13,6 +16,12 @@ import name.levis.ichorgo.Ichorgo
 
 /** Longhorn, Garage, CloudNativePG and cert-manager: their health and the actions on them. */
 class DataServicesRepository(go: GoCall) : GoRepository(go) {
+ suspend fun longhornAttachmentPreview(namespace: String, name: String): LonghornAttachmentPreview = go.kube { cfg, ctx, server -> TalosJson.decodeFromString(LonghornAttachmentPreview.serializer(), Ichorgo.kubeLonghornAttachmentPreview(cfg, ctx, server, namespace, name)) }
+ suspend fun longhornAttachment(namespace: String, name: String, node: String, attach: Boolean) = go.kube { cfg, ctx, server -> Ichorgo.kubeLonghornAttachment(cfg, ctx, server, namespace, name, node, attach) }
+
+ suspend fun longhornSalvagePreview(namespace: String, name: String): LonghornSalvagePreview = go.kube { cfg, ctx, server -> TalosJson.decodeFromString(LonghornSalvagePreview.serializer(), Ichorgo.kubeLonghornSalvagePreview(cfg, ctx, server, namespace, name)) }
+ suspend fun longhornSalvage(namespace: String, name: String, replicas: Set<String>) = go.kube { cfg, ctx, server -> Ichorgo.kubeLonghornSalvage(cfg, ctx, server, namespace, name, TalosJson.encodeToString(replicas.toList())) }
+
     suspend fun volumeSnapshots(namespace: String = ""): VolumeSnapshots = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(VolumeSnapshots.serializer(), Ichorgo.kubeVolumeSnapshots(cfg, ctx, server, namespace))
     }
@@ -20,6 +29,8 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
     suspend fun createVolumeSnapshot(namespace: String, pvc: String): String = go.kube { cfg, ctx, server ->
         Ichorgo.kubeCreateVolumeSnapshot(cfg, ctx, server, namespace, pvc)
     }
+ suspend fun cnpgRestartPrimary(namespace: String, name: String) = go.kube { cfg, ctx, server -> Ichorgo.kubeCNPGRestartPrimary(cfg, ctx, server, namespace, name) }
+ suspend fun cnpgHibernate(namespace: String, name: String, enabled: Boolean) = go.kube { cfg, ctx, server -> Ichorgo.kubeCNPGHibernate(cfg, ctx, server, namespace, name, enabled) }
 
     /**
      * Health of Longhorn, Garage and CloudNativePG (os:admin). [hints]: their catalog ids seen in

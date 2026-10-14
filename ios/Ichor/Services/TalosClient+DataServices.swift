@@ -3,6 +3,40 @@ import IchorCore
 import Ichorgo
 
 extension TalosClient {
+    func longhornAttachmentPreview(namespace: String, name: String) async throws -> LonghornAttachmentPreview {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] in
+            IchorgoKubeLonghornAttachmentPreview(config, context, server, namespace, name, $0)
+        }
+    }
+    func longhornAttachment(namespace: String, name: String, node: String, attach: Bool) async throws {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeLonghornAttachment(config, context, server, namespace, name, node, attach, error)
+        }
+    }
+
+    func longhornSalvagePreview(namespace: String, name: String) async throws -> LonghornSalvagePreview {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] in
+            IchorgoKubeLonghornSalvagePreview(config, context, server, namespace, name, $0)
+        }
+    }
+    func longhornSalvage(namespace: String, name: String, replicas: Set<String>) async throws {
+        let names = String(decoding: try JSONEncoder().encode(replicas.sorted()), as: UTF8.self)
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeLonghornSalvage(config, context, server, namespace, name, names, error)
+        }
+    }
+
+ func cnpgRestartPrimary(namespace: String, name: String) async throws {
+ try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
+ _ = IchorgoKubeCNPGRestartPrimary(config, context, server, namespace, name, error)
+ }
+ }
+ func cnpgHibernate(namespace: String, name: String, enabled: Bool) async throws {
+ try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
+ _ = IchorgoKubeCNPGHibernate(config, context, server, namespace, name, enabled, error)
+ }
+ }
+
     func cnpgPromotePreview(namespace: String, name: String, instance: String) async throws -> CnpgPromotePreview {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeCNPGPromotePreview(config, context, kubeServer, namespace, name, instance, $0)

@@ -11,6 +11,7 @@ struct CnpgList: View {
     @State private var problemsOnly: Bool?
     @State private var query = ""
     @State private var promotion: CnpgPromotionTarget?
+    @State private var confirmLifecycle: CnpgLifecycleTarget?
     @State private var confirmBackup: CnpgCluster?
     @State private var running: Set<String> = []
     @State private var resultMessage: String?
@@ -53,7 +54,7 @@ struct CnpgList: View {
                     .foregroundStyle(.secondary)
                 }
                 ForEach(rows) { cluster in
-                    ClusterRow(cluster: cluster, busy: running.contains(cluster.id), onBackup: { confirmBackup = cluster }, onPromote: { promotion = CnpgPromotionTarget(cluster: cluster, instance: $0) })
+                    ClusterRow(cluster: cluster, busy: running.contains(cluster.id), onBackup: { confirmBackup = cluster }, onPromote: { promotion = CnpgPromotionTarget(cluster: cluster, instance: $0) }, onLifecycle: { confirmLifecycle = CnpgLifecycleTarget(cluster: cluster, action: $0) })
                 }
             }
         }
@@ -75,6 +76,12 @@ struct CnpgList: View {
                 Task { await promote(target.cluster, instance: target.instance) }
             }.loadsKubeActionAccess(namespace: target.cluster.namespace)
         }
+        .sheet(item: $confirmLifecycle) { target in
+            CnpgLifecycleSheet(target: target) {
+                confirmLifecycle = nil
+                Task { await lifecycle(target) }
+            }.loadsKubeActionAccess(namespace: target.cluster.namespace)
+        }
         .messageAlert($resultMessage)
     }
 
@@ -87,6 +94,22 @@ struct CnpgList: View {
             resultMessage = String(localized: "Promotion to \(instance) requested")
             await refresh()
         } catch { resultMessage = String(localized: "Could not promote \(cluster.label): \(error.localizedDescription)") }
+    }
+
+    private func lifecycle(_ target: CnpgLifecycleTarget) async {
+        let cluster = target.cluster
+        guard let client = model.client, !running.contains(cluster.id) else { return }
+        running.insert(cluster.id)
+        defer { running.remove(cluster.id) }
+        do {
+            switch target.action {
+            case .restart: try await client.cnpgRestartPrimary(namespace: cluster.namespace, name: cluster.name)
+            case .hibernate: try await client.cnpgHibernate(namespace: cluster.namespace, name: cluster.name, enabled: true)
+            case .wake: try await client.cnpgHibernate(namespace: cluster.namespace, name: cluster.name, enabled: false)
+            }
+            resultMessage = String(localized: "Cluster action requested")
+            await refresh()
+        } catch { resultMessage = String(localized: "Could not update cluster: \(error.localizedDescription)") }
     }
 
     private func backup(_ cluster: CnpgCluster) async {
@@ -108,6 +131,7 @@ private struct ClusterRow: View {
     let busy: Bool
     let onBackup: () -> Void
     let onPromote: (String) -> Void
+    let onLifecycle: (CnpgLifecycleAction) -> Void
 
     var body: some View {
         DisclosureGroup {
@@ -172,6 +196,7 @@ private struct ClusterRow: View {
                 .disabled(busy).kubeGated(.cnpgPromote, in: cluster.namespace)
         }
         KubeDeniedNote(.cnpgPromote, in: cluster.namespace)
+        CnpgLifecycleButtons(cluster: cluster, busy: busy, onAction: onLifecycle)
         LabeledContent("WAL archiving", value: archivingText)
         LabeledContent("Backups", value: backupMethod)
         LabeledContent("Last backup", value: relativeTime(cluster.lastSuccessAt))

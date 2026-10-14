@@ -131488,6 +131488,1031 @@
           }
         }
       }
+    },
+    "Restart primary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restart primary"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redémarrer le primaire"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar primario"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезапустити основний екземпляр"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primärknoten neu starten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riavvia primario"
+          }
+        }
+      }
+    },
+    "Hibernate cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibernate cluster"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre le cluster en veille"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibernar clúster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приспати кластер"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster in Ruhezustand versetzen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iberna cluster"
+          }
+        }
+      }
+    },
+    "Wake cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wake cluster"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réveiller le cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activar clúster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пробудити кластер"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster aufwecken"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riattiva cluster"
+          }
+        }
+      }
+    },
+    "Restarting the primary interrupts connections. CloudNativePG restarts PostgreSQL in place and preserves its PVCs." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restarting the primary interrupts connections. CloudNativePG restarts PostgreSQL in place and preserves its PVCs."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le redémarrage du primaire interrompt les connexions. CloudNativePG redémarre PostgreSQL sur place et conserve ses PVC."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar el primario interrumpe las conexiones. CloudNativePG reinicia PostgreSQL en su lugar y conserva sus PVC."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезапуск основного екземпляра перериває з’єднання. CloudNativePG перезапускає PostgreSQL на місці та зберігає його PVC."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Neustart des Primärknotens unterbricht Verbindungen. CloudNativePG startet PostgreSQL an Ort und Stelle neu und behält seine PVCs."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il riavvio del primario interrompe le connessioni. CloudNativePG riavvia PostgreSQL sul posto e conserva i suoi PVC."
+          }
+        }
+      }
+    },
+    "Hibernation stops the cluster and interrupts all connections. Its PVCs are preserved until you wake the cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibernation stops the cluster and interrupts all connections. Its PVCs are preserved until you wake the cluster."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mise en veille arrête le cluster et interrompt toutes les connexions. Ses PVC sont conservés jusqu’au réveil du cluster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La hibernación detiene el clúster e interrumpe todas las conexiones. Sus PVC se conservan hasta que active el clúster."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Присипляння зупиняє кластер і перериває всі з’єднання. Його PVC зберігаються до пробудження кластера."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Ruhezustand stoppt den Cluster und unterbricht alle Verbindungen. Seine PVCs bleiben bis zum Aufwecken erhalten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’ibernazione arresta il cluster e interrompe tutte le connessioni. I suoi PVC vengono conservati fino alla riattivazione."
+          }
+        }
+      }
+    },
+    "CloudNativePG starts the cluster using its preserved PVCs. Connections remain unavailable until the instances are ready." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG starts the cluster using its preserved PVCs. Connections remain unavailable until the instances are ready."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG démarre le cluster avec ses PVC conservés. Les connexions restent indisponibles jusqu’à ce que les instances soient prêtes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG inicia el clúster usando sus PVC conservados. Las conexiones siguen sin estar disponibles hasta que las instancias estén listas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG запускає кластер зі збереженими PVC. З’єднання недоступні, доки екземпляри не будуть готові."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG startet den Cluster mit seinen erhaltenen PVCs. Verbindungen sind erst verfügbar, wenn die Instanzen bereit sind."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG avvia il cluster usando i PVC conservati. Le connessioni restano indisponibili finché le istanze non sono pronte."
+          }
+        }
+      }
+    },
+    "Primary to restart: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primary to restart: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primaire à redémarrer : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primario a reiniciar: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Основний екземпляр для перезапуску: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu zu startender Primärknoten: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primario da riavviare: %@"
+          }
+        }
+      }
+    },
+    "Cluster action requested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster action requested"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Action sur le cluster demandée"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acción de clúster solicitada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запитано дію над кластером"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clusteraktion angefordert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Azione sul cluster richiesta"
+          }
+        }
+      }
+    },
+    "Could not update cluster: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not update cluster: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de modifier le cluster : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo actualizar el clúster: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося оновити кластер: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster konnte nicht aktualisiert werden: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile aggiornare il cluster: %@"
+          }
+        }
+      }
+    },
+    "Salvage volume" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvage volume"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Récupérer le volume"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recuperar volumen"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновити том"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume retten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recupera volume"
+          }
+        }
+      }
+    },
+    "Salvage may lose data. Choose the replicas whose data you want to recover; their timestamps do not guarantee consistency." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvage may lose data. Choose the replicas whose data you want to recover; their timestamps do not guarantee consistency."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La récupération peut perdre des données. Choisissez les répliques à récupérer ; leurs horodatages ne garantissent pas la cohérence."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La recuperación puede perder datos. Elija las réplicas cuyos datos desea recuperar; sus marcas de tiempo no garantizan la coherencia."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновлення може призвести до втрати даних. Виберіть репліки для відновлення; їхні часові мітки не гарантують узгодженості."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Rettung kann Datenverlust verursachen. Wählen Sie die wiederherzustellenden Replikate; ihre Zeitstempel garantieren keine Konsistenz."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il recupero può perdere dati. Scegli le repliche da recuperare; i loro timestamp non garantiscono la coerenza."
+          }
+        }
+      }
+    },
+    "Choose replicas explicitly. No replica is selected automatically." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose replicas explicitly. No replica is selected automatically."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez explicitement les répliques. Aucune n’est sélectionnée automatiquement."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elija las réplicas explícitamente. Ninguna se selecciona automáticamente."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть репліки явно. Жодна репліка не вибирається автоматично."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählen Sie Replikate ausdrücklich aus. Keines wird automatisch ausgewählt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli le repliche esplicitamente. Nessuna viene selezionata automaticamente."
+          }
+        }
+      }
+    },
+    "Salvage requires a detached faulted volume and available replicas." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvage requires a detached faulted volume and available replicas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La récupération nécessite un volume détaché en panne et des répliques disponibles."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La recuperación requiere un volumen separado con errores y réplicas disponibles."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для відновлення потрібні від’єднаний несправний том і доступні репліки."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Rettung erfordert ein getrenntes fehlerhaftes Volume und verfügbare Replikate."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il recupero richiede un volume scollegato guasto e repliche disponibili."
+          }
+        }
+      }
+    },
+    "%1$@ on %2$@ · healthy: %3$@ · failed: %4$@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ on %2$@ · healthy: %3$@ · failed: %4$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ sur %2$@ · sain : %3$@ · échec : %4$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ en %2$@ · sano: %3$@ · fallo: %4$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ на %2$@ · справна: %3$@ · збій: %4$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ auf %2$@ · gesund: %3$@ · Fehler: %4$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ su %2$@ · sana: %3$@ · errore: %4$@"
+          }
+        }
+      }
+    },
+    "Salvage requested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvage requested"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Récupération demandée"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recuperación solicitada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запитано відновлення"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rettung angefordert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recupero richiesto"
+          }
+        }
+      }
+    },
+    "Could not salvage volume: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not salvage volume: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de récupérer le volume : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo recuperar el volumen: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося відновити том: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume konnte nicht gerettet werden: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile recuperare il volume: %@"
+          }
+        }
+      }
+    },
+    "Volume name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume name"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom du volume"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre del volumen"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва тому"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume-Name"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome volume"
+          }
+        }
+      }
+    },
+    "Attach volume" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attach volume"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attacher le volume"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conectar volumen"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приєднати том"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume verbinden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collega volume"
+          }
+        }
+      }
+    },
+    "Detach volume" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detach volume"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détacher le volume"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desconectar volumen"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Від’єднати том"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume trennen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scollega volume"
+          }
+        }
+      }
+    },
+    "Changing a volume attachment may interrupt its workload. Detach uses the ordinary Longhorn API attachment; a workload controller may keep or restore its own attachment." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changing a volume attachment may interrupt its workload. Detach uses the ordinary Longhorn API attachment; a workload controller may keep or restore its own attachment."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer l’attachement d’un volume peut interrompre sa charge de travail. Le détachement utilise l’attachement API Longhorn ordinaire ; un contrôleur peut conserver ou rétablir son propre attachement."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar la conexión de un volumen puede interrumpir su carga de trabajo. La desconexión usa la conexión API normal de Longhorn; un controlador puede mantener o restaurar su propia conexión."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зміна приєднання тому може перервати його робоче навантаження. Від’єднання використовує звичайне приєднання API Longhorn; контролер може зберегти або відновити власне приєднання."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Änderung der Volume-Verbindung kann die Arbeitslast unterbrechen. Das Trennen nutzt die reguläre Longhorn-API-Verbindung; ein Controller kann seine eigene Verbindung beibehalten oder wiederherstellen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modificare il collegamento di un volume può interrompere il carico di lavoro. Lo scollegamento usa il normale collegamento API Longhorn; un controller può mantenere o ripristinare il proprio collegamento."
+          }
+        }
+      }
+    },
+    "Choose an available node" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose an available node"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir un nœud disponible"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir un nodo disponible"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть доступний вузол"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verfügbaren Knoten auswählen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli un nodo disponibile"
+          }
+        }
+      }
+    },
+    "Currently attached to: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Currently attached to: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actuellement attaché à : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualmente conectado a: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зараз приєднано до: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derzeit verbunden mit: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attualmente collegato a: %@"
+          }
+        }
+      }
+    },
+    "This volume cannot change attachment in its current state." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This volume cannot change attachment in its current state."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce volume ne peut pas changer d’attachement dans son état actuel."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este volumen no puede cambiar de conexión en su estado actual."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неможливо змінити приєднання цього тому в його поточному стані."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Verbindung dieses Volumes kann im aktuellen Zustand nicht geändert werden."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile modificare il collegamento di questo volume nello stato attuale."
+          }
+        }
+      }
+    },
+    "Volume attachment change requested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume attachment change requested"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changement d’attachement du volume demandé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambio de conexión del volumen solicitado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запитано зміну приєднання тому"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderung der Volume-Verbindung angefordert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifica del collegamento del volume richiesta"
+          }
+        }
+      }
+    },
+    "Could not change volume attachment: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not change volume attachment: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de changer l’attachement du volume : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo cambiar la conexión del volumen: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося змінити приєднання тому: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume-Verbindung konnte nicht geändert werden: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile modificare il collegamento del volume: %@"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

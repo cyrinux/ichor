@@ -4436,6 +4436,34 @@
     <string name="cnpg_promote_requested">Promotion vers %1$s demandée</string>
     <string name="cnpg_promote_failed">Impossible de promouvoir %1$s : %2$s</string>
     <string name="cnpg_promote_loading">Lecture de l’aperçu de promotion…</string>
+
+    <string name="cnpg_restart_primary">Redémarrer le primaire</string>
+    <string name="cnpg_hibernate_action">Mettre le cluster en veille</string>
+    <string name="cnpg_wake_action">Réveiller le cluster</string>
+    <string name="cnpg_restart_risk">Le redémarrage du primaire interrompt les connexions. CloudNativePG redémarre PostgreSQL sur place et conserve ses PVC.</string>
+    <string name="cnpg_hibernate_risk">La mise en veille arrête le cluster et interrompt toutes les connexions. Ses PVC sont conservés jusqu’au réveil du cluster.</string>
+    <string name="cnpg_wake_risk">CloudNativePG démarre le cluster avec ses PVC conservés. Les connexions restent indisponibles jusqu’à ce que les instances soient prêtes.</string>
+    <string name="cnpg_restart_target">Primaire à redémarrer : %1$s</string>
+    <string name="cnpg_lifecycle_requested">Action sur le cluster demandée</string>
+    <string name="cnpg_lifecycle_failed">Impossible de modifier le cluster : %1$s</string>
+
+    <string name="longhorn_salvage">Récupérer le volume</string>
+    <string name="longhorn_salvage_risk">La récupération peut perdre des données. Choisissez les répliques à récupérer ; leurs horodatages ne garantissent pas la cohérence.</string>
+    <string name="longhorn_salvage_choose">Choisissez explicitement les répliques. Aucune n’est sélectionnée automatiquement.</string>
+    <string name="longhorn_salvage_unavailable">La récupération nécessite un volume détaché en panne et des répliques disponibles.</string>
+    <string name="longhorn_salvage_replica">%1$s sur %2$s · sain : %3$s · échec : %4$s</string>
+    <string name="longhorn_salvage_requested">Récupération demandée</string>
+    <string name="longhorn_salvage_failed">Impossible de récupérer le volume : %1$s</string>
+    <string name="longhorn_volume_name">Nom du volume</string>
+
+    <string name="longhorn_attach">Attacher le volume</string>
+    <string name="longhorn_detach">Détacher le volume</string>
+    <string name="longhorn_attachment_risk">Changer l’attachement d’un volume peut interrompre sa charge de travail. Le détachement utilise l’attachement API Longhorn ordinaire ; un contrôleur peut conserver ou rétablir son propre attachement.</string>
+    <string name="longhorn_attachment_choose">Choisir un nœud disponible</string>
+    <string name="longhorn_attachment_current">Actuellement attaché à : %1$s</string>
+    <string name="longhorn_attachment_unavailable">Ce volume ne peut pas changer d’attachement dans son état actuel.</string>
+    <string name="longhorn_attachment_requested">Changement d’attachement du volume demandé</string>
+    <string name="longhorn_attachment_failed">Impossible de changer l’attachement du volume : %1$s</string>
     <string name="kpol_title">Politiques</string>
     <string name="kpol_not_installed">Kyverno n’est pas installé sur ce cluster</string>
     <string name="kpol_not_installed_hint">Kyverno admet ou refuse les charges de travail selon des politiques et signale ce qui enfreint les règles.</string>

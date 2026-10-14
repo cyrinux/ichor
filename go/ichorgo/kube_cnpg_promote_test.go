@@ -42,6 +42,7 @@ func TestCNPGPromotePreviewLag(t *testing.T) {
 }
 func TestCNPGPromoteRefusals(t *testing.T) {
 	for _, tc := range []struct{ name, cluster, pod string }{
+		{"primary restart", strings.Replace(promoteClusterJSON, `"targetPrimary":"pg-1"`, `"targetPrimary":"pg-1","phase":"Primary instance is being restarted in-place"`, 1), promotePodJSON},
 		{"primary label", promoteClusterJSON, strings.Replace(promotePodJSON, `"cnpg.io/cluster":"pg"`, `"cnpg.io/cluster":"pg","cnpg.io/instanceRole":"primary"`, 1)},
 		{"primary", strings.ReplaceAll(promoteClusterJSON, "pg-1", "pg-2"), promotePodJSON},
 		{"non-ready", promoteClusterJSON, strings.Replace(promotePodJSON, `"status":"True"`, `"status":"False"`, 1)},
