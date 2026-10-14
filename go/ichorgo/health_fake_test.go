@@ -133,15 +133,18 @@ func TestStartClusterHealthFake(t *testing.T) {
 }
 
 // A member whose first address is an overlay one the Talos API does not answer on (a VPN
-// interface) is checked at the next address that answers; one that answers on none keeps
-// its first address, so the check still reports it down. An address the talosconfig lists
-// goes first, even when the overlay one answers the endpoint too.
+// interface) is checked at the next address that answers. An address the talosconfig lists
+// goes first, then the LAN ones, then overlay ones, even when the overlay one answers the
+// endpoint too (a worker the talosconfig does not list). One that answers on none keeps its
+// first address in that order, so the check still reports it down.
 func TestStartClusterHealthFakeReachableMembers(t *testing.T) {
 	f := newFakeTalos()
 	f.addNode(t, "192.0.2.21", "v1.11.0", machine.TypeControlPlane)
 	f.addNode(t, "192.0.2.22", "v1.11.0", machine.TypeWorker)
 	f.addNode(t, "100.64.0.4", "v1.11.0", machine.TypeWorker)
 	f.addNode(t, "192.0.2.24", "v1.11.0", machine.TypeWorker)
+	f.addNode(t, "100.64.0.5", "v1.11.0", machine.TypeWorker)
+	f.addNode(t, "192.0.2.25", "v1.11.0", machine.TypeWorker)
 	f.health = func(string, grpc.ServerStreamingServer[clusterapi.HealthCheckProgress]) error { return nil }
 
 	member := func(id string, typ machine.Type, addresses ...string) *cluster.Member {
@@ -159,6 +162,8 @@ func TestStartClusterHealthFakeReachableMembers(t *testing.T) {
 		member("worker-2", machine.TypeWorker, "100.64.0.3", "192.0.2.23"),
 		member("worker-3", machine.TypeWorker),
 		member("worker-4", machine.TypeWorker, "100.64.0.4", "192.0.2.24"),
+		member("worker-5", machine.TypeWorker, "100.64.0.5", "192.0.2.25"),
+		member("worker-6", machine.TypeWorker, "100.64.0.6"),
 	)
 
 	r := newHealthRecorder()
@@ -180,7 +185,7 @@ func TestStartClusterHealthFakeReachableMembers(t *testing.T) {
 		t.Errorf("control planes = %s", got)
 	}
 
-	if got := strings.Join(slices.Sorted(slices.Values(info.GetWorkerNodes())), ","); got != "100.64.0.3,192.0.2.22,192.0.2.24" {
+	if got := strings.Join(slices.Sorted(slices.Values(info.GetWorkerNodes())), ","); got != "100.64.0.6,192.0.2.22,192.0.2.23,192.0.2.24,192.0.2.25" {
 		t.Errorf("workers = %s", got)
 	}
 }
