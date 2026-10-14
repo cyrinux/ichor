@@ -4689,4 +4689,13 @@
     <string name="longhorn_salvage_requested">Запитано відновлення</string>
     <string name="longhorn_salvage_failed">Не вдалося відновити том: %1$s</string>
     <string name="longhorn_volume_name">Назва тому</string>
+
+    <string name="longhorn_attach">Приєднати том</string>
+    <string name="longhorn_detach">Від’єднати том</string>
+    <string name="longhorn_attachment_risk">Зміна приєднання тому може перервати його робоче навантаження. Від’єднання використовує звичайне приєднання API Longhorn; контролер може зберегти або відновити власне приєднання.</string>
+    <string name="longhorn_attachment_choose">Виберіть доступний вузол</string>
+    <string name="longhorn_attachment_current">Зараз приєднано до: %1$s</string>
+    <string name="longhorn_attachment_unavailable">Неможливо змінити приєднання цього тому в його поточному стані.</string>
+    <string name="longhorn_attachment_requested">Запитано зміну приєднання тому</string>
+    <string name="longhorn_attachment_failed">Не вдалося змінити приєднання тому: %1$s</string>
 </resources>

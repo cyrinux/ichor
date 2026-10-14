@@ -32,6 +32,7 @@ class CnpgActions(
     val lifecycleBusy: StateFlow<Set<String>> get() = lifecycle.busy
     val lifecycleResults: Flow<CnpgLifecycleResult> get() = lifecycle.results
     fun lifecycle(cluster: CnpgCluster, action: CnpgLifecycleAction) {
+        if (cluster.label in busy.value || cluster.label in promoteBusy.value || cluster.label in lifecycleBusy.value) return
         lifecycle.launch(cluster.label, {
             when (action) {
                 CnpgLifecycleAction.RESTART -> dataServices.cnpgRestartPrimary(cluster.namespace, cluster.name)
@@ -45,6 +46,7 @@ class CnpgActions(
     val promoteResults: Flow<CnpgPromoteResult> get() = promotion.results
     suspend fun preview(cluster: CnpgCluster, instance: String) = dataServices.cnpgPromotePreview(cluster.namespace, cluster.name, instance)
     fun promote(cluster: CnpgCluster, instance: String) {
+        if (cluster.label in busy.value || cluster.label in promoteBusy.value || cluster.label in lifecycleBusy.value) return
         promotion.launch(cluster.label, { dataServices.cnpgPromote(cluster.namespace, cluster.name, instance) }, {
             CnpgPromoteResult(cluster.label, instance, it.exceptionOrNull()?.uiText())
         }, onChanged)
@@ -57,6 +59,7 @@ class CnpgActions(
     val results: Flow<CnpgBackupResult> get() = actions.results
 
     fun backup(cluster: CnpgCluster) {
+        if (cluster.label in busy.value || cluster.label in promoteBusy.value || cluster.label in lifecycleBusy.value) return
         val key = cluster.label
         actions.launch(key, { dataServices.cnpgBackup(cluster.namespace, cluster.name) }, {
             CnpgBackupResult(key, it.getOrNull().orEmpty(), it.exceptionOrNull()?.uiText())

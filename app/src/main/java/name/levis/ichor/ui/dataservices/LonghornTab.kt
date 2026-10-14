@@ -65,6 +65,11 @@ fun LonghornTab(status: LonghornStatus, actions: LonghornActions, garageDetected
     var query by rememberSaveable { mutableStateOf("") }
     val rows = remember(status, filter, query) { status.volumes.filtered(filter, query) }
     val busy by actions.busy.collectAsStateWithLifecycle()
+    val attachmentBusy by actions.attachmentBusy.collectAsStateWithLifecycle()
+    var attachmentTarget by remember { mutableStateOf<Pair<LonghornVolume, Boolean>?>(null) }
+    attachmentTarget?.let { (v, attach) -> LonghornAttachmentDialog(v, attach, actions,
+        onDismiss = { attachmentTarget = null }, onConfirm = { node -> actions.attachment(v, node, attach); attachmentTarget = null }) }
+
     val salvageBusy by actions.salvageBusy.collectAsStateWithLifecycle()
     var salvageTarget by remember { mutableStateOf<LonghornVolume?>(null) }
     salvageTarget?.let { v -> LonghornSalvageDialog(v, actions, onDismiss = { salvageTarget = null }, onConfirm = { replicas -> actions.salvage(v, replicas); salvageTarget = null }) }
@@ -132,7 +137,7 @@ fun LonghornTab(status: LonghornStatus, actions: LonghornActions, garageDetected
             )
         }
         items(rows, key = { "v:${it.name}" }) { v ->
-            VolumeRow(v, v.key in busy || v.key in salvageBusy, onSalvage = { salvageTarget = v }, onAction = { onVolume(v, it) })
+            VolumeRow(v, v.key in busy || v.key in salvageBusy || v.key in attachmentBusy, onAttachment = { attachmentTarget = v to it }, onSalvage = { salvageTarget = v }, onAction = { onVolume(v, it) })
             HorizontalDivider()
         }
         if (status.nodes.isNotEmpty()) item(key = "nodes") {
@@ -146,7 +151,7 @@ private val LonghornVolume.key get() = longhornActionKey(namespace, name)
 private val LonghornNode.key get() = longhornActionKey(namespace, "node/$name")
 
 @Composable
-private fun VolumeRow(v: LonghornVolume, busy: Boolean, onSalvage: () -> Unit, onAction: (LonghornAction) -> Unit) {
+private fun VolumeRow(v: LonghornVolume, busy: Boolean, onAttachment: (Boolean) -> Unit, onSalvage: () -> Unit, onAction: (LonghornAction) -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val colors = LocalStatusColors.current
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -180,6 +185,7 @@ private fun VolumeRow(v: LonghornVolume, busy: Boolean, onSalvage: () -> Unit, o
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            LonghornAttachmentButton(v, busy, onAttachment)
             LonghornSalvageButton(v, busy, onSalvage)
             // 0 is also what an unread engine gives: the status line already counts the rebuilds.
             if (v.rebuilding > 0 && v.rebuildProgress > 0) OperationProgress(stringResource(R.string.longhorn_rebuild_progress, v.rebuildProgress), v.rebuildProgress)

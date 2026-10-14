@@ -56,11 +56,24 @@ class LonghornActions(
     private val dataServices: DataServicesRepository,
     private val onChanged: () -> Unit,
 ) {
+    private val attachment = KeyedActions<LonghornAttachmentResult>(scope)
+    val attachmentBusy: StateFlow<Set<String>> get() = attachment.busy
+    val attachmentResults: Flow<LonghornAttachmentResult> get() = attachment.results
+    suspend fun attachmentPreview(volume: name.levis.ichor.model.LonghornVolume) = dataServices.longhornAttachmentPreview(volume.namespace, volume.name)
+    fun attachment(volume: name.levis.ichor.model.LonghornVolume, node: String, attach: Boolean) {
+        val key = longhornActionKey(volume.namespace, volume.name)
+        if (key in busy.value || key in salvageBusy.value || key in attachmentBusy.value) return
+        attachment.launch(longhornActionKey(volume.namespace, volume.name), { dataServices.longhornAttachment(volume.namespace, volume.name, node, attach) }, {
+            LonghornAttachmentResult(it.exceptionOrNull()?.uiText())
+        }, onChanged)
+    }
     private val salvage = KeyedActions<LonghornSalvageResult>(scope)
     val salvageBusy: StateFlow<Set<String>> get() = salvage.busy
     val salvageResults: Flow<LonghornSalvageResult> get() = salvage.results
     suspend fun salvagePreview(volume: name.levis.ichor.model.LonghornVolume) = dataServices.longhornSalvagePreview(volume.namespace, volume.name)
     fun salvage(volume: name.levis.ichor.model.LonghornVolume, replicas: Set<String>) {
+        val key = longhornActionKey(volume.namespace, volume.name)
+        if (key in busy.value || key in salvageBusy.value || key in attachmentBusy.value) return
         salvage.launch(longhornActionKey(volume.namespace, volume.name), { dataServices.longhornSalvage(volume.namespace, volume.name, replicas) }, {
             LonghornSalvageResult(volume.label, it.exceptionOrNull()?.uiText())
         }, onChanged)
@@ -72,6 +85,7 @@ class LonghornActions(
     val results: Flow<LonghornActionResult> get() = actions.results
 
     fun run(key: String, namespace: String, name: String, label: String, action: LonghornAction, value: Int = 0) {
+        if (key in busy.value || key in salvageBusy.value || key in attachmentBusy.value) return
         actions.launch(key, { dataServices.longhornAction(namespace, name, action, value) }, {
             LonghornActionResult(action, label, value, it.exceptionOrNull()?.uiText())
         }, onChanged)

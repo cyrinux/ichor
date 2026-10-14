@@ -4455,4 +4455,13 @@
     <string name="longhorn_salvage_requested">Recupero richiesto</string>
     <string name="longhorn_salvage_failed">Impossibile recuperare il volume: %1$s</string>
     <string name="longhorn_volume_name">Nome volume</string>
+
+    <string name="longhorn_attach">Collega volume</string>
+    <string name="longhorn_detach">Scollega volume</string>
+    <string name="longhorn_attachment_risk">Modificare il collegamento di un volume può interrompere il carico di lavoro. Lo scollegamento usa il normale collegamento API Longhorn; un controller può mantenere o ripristinare il proprio collegamento.</string>
+    <string name="longhorn_attachment_choose">Scegli un nodo disponibile</string>
+    <string name="longhorn_attachment_current">Attualmente collegato a: %1$s</string>
+    <string name="longhorn_attachment_unavailable">Impossibile modificare il collegamento di questo volume nello stato attuale.</string>
+    <string name="longhorn_attachment_requested">Modifica del collegamento del volume richiesta</string>
+    <string name="longhorn_attachment_failed">Impossibile modificare il collegamento del volume: %1$s</string>
 </resources>

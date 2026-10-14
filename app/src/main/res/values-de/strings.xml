@@ -4447,4 +4447,13 @@
     <string name="longhorn_salvage_requested">Rettung angefordert</string>
     <string name="longhorn_salvage_failed">Volume konnte nicht gerettet werden: %1$s</string>
     <string name="longhorn_volume_name">Volume-Name</string>
+
+    <string name="longhorn_attach">Volume verbinden</string>
+    <string name="longhorn_detach">Volume trennen</string>
+    <string name="longhorn_attachment_risk">Eine Änderung der Volume-Verbindung kann die Arbeitslast unterbrechen. Das Trennen nutzt die reguläre Longhorn-API-Verbindung; ein Controller kann seine eigene Verbindung beibehalten oder wiederherstellen.</string>
+    <string name="longhorn_attachment_choose">Verfügbaren Knoten auswählen</string>
+    <string name="longhorn_attachment_current">Derzeit verbunden mit: %1$s</string>
+    <string name="longhorn_attachment_unavailable">Die Verbindung dieses Volumes kann im aktuellen Zustand nicht geändert werden.</string>
+    <string name="longhorn_attachment_requested">Änderung der Volume-Verbindung angefordert</string>
+    <string name="longhorn_attachment_failed">Volume-Verbindung konnte nicht geändert werden: %1$s</string>
 </resources>

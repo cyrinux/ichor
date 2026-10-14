@@ -4455,4 +4455,13 @@
     <string name="longhorn_salvage_requested">Recuperación solicitada</string>
     <string name="longhorn_salvage_failed">No se pudo recuperar el volumen: %1$s</string>
     <string name="longhorn_volume_name">Nombre del volumen</string>
+
+    <string name="longhorn_attach">Conectar volumen</string>
+    <string name="longhorn_detach">Desconectar volumen</string>
+    <string name="longhorn_attachment_risk">Cambiar la conexión de un volumen puede interrumpir su carga de trabajo. La desconexión usa la conexión API normal de Longhorn; un controlador puede mantener o restaurar su propia conexión.</string>
+    <string name="longhorn_attachment_choose">Elegir un nodo disponible</string>
+    <string name="longhorn_attachment_current">Actualmente conectado a: %1$s</string>
+    <string name="longhorn_attachment_unavailable">Este volumen no puede cambiar de conexión en su estado actual.</string>
+    <string name="longhorn_attachment_requested">Cambio de conexión del volumen solicitado</string>
+    <string name="longhorn_attachment_failed">No se pudo cambiar la conexión del volumen: %1$s</string>
 </resources>

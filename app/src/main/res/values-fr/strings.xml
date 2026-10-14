@@ -4455,4 +4455,13 @@
     <string name="longhorn_salvage_requested">Récupération demandée</string>
     <string name="longhorn_salvage_failed">Impossible de récupérer le volume : %1$s</string>
     <string name="longhorn_volume_name">Nom du volume</string>
+
+    <string name="longhorn_attach">Attacher le volume</string>
+    <string name="longhorn_detach">Détacher le volume</string>
+    <string name="longhorn_attachment_risk">Changer l’attachement d’un volume peut interrompre sa charge de travail. Le détachement utilise l’attachement API Longhorn ordinaire ; un contrôleur peut conserver ou rétablir son propre attachement.</string>
+    <string name="longhorn_attachment_choose">Choisir un nœud disponible</string>
+    <string name="longhorn_attachment_current">Actuellement attaché à : %1$s</string>
+    <string name="longhorn_attachment_unavailable">Ce volume ne peut pas changer d’attachement dans son état actuel.</string>
+    <string name="longhorn_attachment_requested">Changement d’attachement du volume demandé</string>
+    <string name="longhorn_attachment_failed">Impossible de changer l’attachement du volume : %1$s</string>
 </resources>

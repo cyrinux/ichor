@@ -73,6 +73,11 @@ type kubeActionAccess struct {
 // scale are a Deployment's, fluxReconcile a Kustomization's (its suspend follows it), and
 // each other kind has its own name.
 var kubeActionChecks = map[string][]accessNeed{
+	"longhornAttachment": {
+		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy"}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "nodes"}, true},
+	},
 	"longhornSalvage": {
 		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy"}, true},
 		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},

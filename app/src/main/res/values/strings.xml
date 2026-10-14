@@ -4458,4 +4458,13 @@
     <string name="longhorn_salvage_requested">Salvage requested</string>
     <string name="longhorn_salvage_failed">Could not salvage volume: %1$s</string>
     <string name="longhorn_volume_name">Volume name</string>
+
+    <string name="longhorn_attach">Attach volume</string>
+    <string name="longhorn_detach">Detach volume</string>
+    <string name="longhorn_attachment_risk">Changing a volume attachment may interrupt its workload. Detach uses the ordinary Longhorn API attachment; a workload controller may keep or restore its own attachment.</string>
+    <string name="longhorn_attachment_choose">Choose an available node</string>
+    <string name="longhorn_attachment_current">Currently attached to: %1$s</string>
+    <string name="longhorn_attachment_unavailable">This volume cannot change attachment in its current state.</string>
+    <string name="longhorn_attachment_requested">Volume attachment change requested</string>
+    <string name="longhorn_attachment_failed">Could not change volume attachment: %1$s</string>
 </resources>
