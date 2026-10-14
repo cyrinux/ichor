@@ -103,7 +103,7 @@
 
 {"id":"cert-manager","name":"cert-manager","cat":"security","prefixes":["quay.io/jetstack/"]},
 {"id":"external-secrets","name":"External Secrets","cat":"security","icon":"","prefixes":["ghcr.io/external-secrets/","oci.external-secrets.io/"]},
-{"id":"sealed-secrets","name":"Sealed Secrets","cat":"security","icon":""},
+{"id":"sealed-secrets","name":"Sealed Secrets","cat":"security","icon":"","prefixes":["docker.io/bitnami/sealed-secrets","ghcr.io/bitnami/sealed-secrets"]},
 {"id":"vault","name":"Vault","cat":"security","icon":"hashicorp-vault","match":["vault","vault-k8s","vault-secrets-operator"]},
 {"id":"onepassword","name":"1Password Connect","cat":"security","icon":"1password","prefixes":["1password/","docker.io/1password/"]},
 {"id":"infisical","name":"Infisical","cat":"security"},

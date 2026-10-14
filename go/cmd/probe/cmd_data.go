@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"strconv"
 
@@ -9,6 +10,20 @@ import (
 
 // GitOps, the network and data services.
 var dataCommands = []command{
+	{name: "sealed-secrets", run: func(e env) (string, error) {
+		raw, err := ichorgo.KubeDataServices(e.cfg, e.context, e.kubeServer, "sealed-secrets")
+		if err != nil {
+			return "", err
+		}
+		var report map[string]json.RawMessage
+		if err := json.Unmarshal([]byte(raw), &report); err != nil {
+			return "", err
+		}
+		if section, ok := report["sealedSecrets"]; ok {
+			return string(section), nil
+		}
+		return "null", nil
+	}},
 	{name: "dataservices", args: "[HINTS]", run: func(e env) (out string, err error) {
 		// dataservices [HINTS], e.g. "garage" or "longhorn,cloudnative-pg"; none checks all.
 		out, err = ichorgo.KubeDataServices(e.cfg, e.context, e.kubeServer, flag.Arg(1))

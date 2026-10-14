@@ -55,6 +55,7 @@ var integrationSpecs = []integrationSpec{
 	{ID: "thanos", Name: "Thanos", Website: "https://thanos.io", ServiceKind: "thanos"},
 	{ID: "mimir", Name: "Mimir", Website: "https://grafana.com/oss/mimir/", ServiceKind: "mimir"},
 	{ID: "victoriametrics", Name: "VictoriaMetrics", Website: "https://victoriametrics.com", ServiceKind: "victoriametrics"},
+	{ID: "sealed-secrets", Name: "Sealed Secrets", Website: "https://github.com/bitnami/sealed-secrets", Groups: []string{groupSealedSecrets}, Resource: "sealedsecrets"},
 }
 
 // groupGatewayAPI is the Gateway API's group: HTTPRoutes and Gateways.
@@ -316,6 +317,7 @@ func demoSupportedIntegrations() supportedIntegrations {
 		"rook":                ds.Ceph != nil,
 		"velero":              ds.Velero != nil,
 		"cert-manager":        ds.CertManager != nil,
+		"sealed-secrets":      ds.SealedSecrets != nil,
 		"castai":              ds.CastAI != nil,
 		"cilium":              demoCiliumStatus().Installed,
 		"gateway-api":         true,
