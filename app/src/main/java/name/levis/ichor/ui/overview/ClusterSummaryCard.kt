@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Memory
-import androidx.compose.material.icons.outlined.SdCard
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material3.Card
@@ -28,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
@@ -180,7 +180,7 @@ private fun MemoryStat(summary: ClusterSummary, live: ClusterUsage?, modifier: M
     val shown by animateFloatAsState(used ?: 0f, label = "memory")
     Column(modifier) {
         Stat(
-            Icons.Outlined.SdCard,
+            ImageVector.vectorResource(R.drawable.ic_memory_alt),
             if (total > 0) formatBytes(total) else UNKNOWN,
             used?.let { stringResource(R.string.overview_stat_memory_used, (it * 100).roundToInt()) }
                 ?: stringResource(R.string.overview_stat_memory),
