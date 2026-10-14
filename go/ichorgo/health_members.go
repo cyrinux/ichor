@@ -57,13 +57,25 @@ func reachableClusterInfo(ctx context.Context, c *client.Client, targets, known 
 	return info
 }
 
-// knownFirst is addresses with those in known first, each group in its order.
+// knownFirst is addresses in probe order, each group in its order: those in known, then the
+// others, then overlay VPN ones (a worker the talosconfig does not list still goes LAN first).
 func knownFirst(addresses []netip.Addr, known map[string]bool) []netip.Addr {
+	tier := func(a netip.Addr) int {
+		switch {
+		case known[a.String()]:
+			return 0
+		case cgnatPrefix.Contains(a):
+			return 2
+		default:
+			return 1
+		}
+	}
+
 	out := make([]netip.Addr, 0, len(addresses))
 
-	for _, isKnown := range []bool{true, false} {
+	for t := range 3 {
 		for _, a := range addresses {
-			if known[a.String()] == isKnown {
+			if tier(a) == t {
 				out = append(out, a)
 			}
 		}
@@ -72,9 +84,8 @@ func knownFirst(addresses []netip.Addr, known map[string]bool) []netip.Addr {
 	return out
 }
 
-// reachableAddress is the first address the Talos API answers on, else the first address (a
-// talosconfig one, or the one Talos would use: the check still reports the member down), ""
-// when there is none.
+// reachableAddress is the first address the Talos API answers on, else the first address (so
+// the check still reports the member down), "" when there is none.
 func reachableAddress(ctx context.Context, c *client.Client, addresses []netip.Addr) string {
 	if len(addresses) == 0 {
 		return ""
