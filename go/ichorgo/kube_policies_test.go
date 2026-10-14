@@ -181,6 +181,63 @@ func TestPoliciesWithoutKyverno(t *testing.T) {
 	}
 }
 
+// TestPoliciesPreferredVersionWithoutPolicies covers Kyverno 1.15: the group's preferred
+// version is v2 but it serves no ClusterPolicy or Policy (they stay under v1; v2 serves
+// updaterequests, admissionreports, cleanuppolicies). The lists fall back to the storage
+// version, the report keeps the preferred version, and no error surfaces.
+func TestPoliciesPreferredVersionWithoutPolicies(t *testing.T) {
+	r, f := policyRead(t, map[string]string{
+		"GET /apis": `{"groups":[{"name":"kyverno.io","preferredVersion":{"version":"v2"}}]}`,
+		"GET /apis/kyverno.io/v1/clusterpolicies":                                   policiesFixture(t, "clusterpolicies.json"),
+		"GET /apis/kyverno.io/v1/policies":                                          policiesFixture(t, "policies.json"),
+		"GET /apis/apps/v1/deployments":                                             policiesFixture(t, "deployments.json"),
+		"GET /apis/admissionregistration.k8s.io/v1/validatingwebhookconfigurations": policiesFixture(t, "validatingwebhookconfigurations.json"),
+	})
+
+	if !r.Installed || r.Version != "v2" || r.Error != "" {
+		t.Fatalf("installed %v version %q error %q", r.Installed, r.Version, r.Error)
+	}
+
+	if len(r.Policies) != 4 {
+		t.Fatalf("policies %d, want 4", len(r.Policies))
+	}
+
+	// The preferred version was asked first, then the storage version answered: one
+	// request per kind and version, no retry beyond the fallback.
+	rec := f.recorded()
+	for _, path := range []string{
+		"/apis/kyverno.io/v2/clusterpolicies", "/apis/kyverno.io/v2/policies",
+		"/apis/kyverno.io/v1/clusterpolicies", "/apis/kyverno.io/v1/policies",
+	} {
+		if n := countRequests(rec, path); n != 1 {
+			t.Errorf("%s asked %d times, want 1", path, n)
+		}
+	}
+}
+
+// TestPoliciesPreferredVersionServesPolicies covers a future Kyverno whose preferred
+// version serves the policies themselves: they are read from it and the storage version is
+// never asked.
+func TestPoliciesPreferredVersionServesPolicies(t *testing.T) {
+	r, f := policyRead(t, map[string]string{
+		"GET /apis": `{"groups":[{"name":"kyverno.io","preferredVersion":{"version":"v2"}}]}`,
+		"GET /apis/kyverno.io/v2/clusterpolicies":                                   policiesFixture(t, "clusterpolicies.json"),
+		"GET /apis/kyverno.io/v2/policies":                                          policiesFixture(t, "policies.json"),
+		"GET /apis/apps/v1/deployments":                                             policiesFixture(t, "deployments.json"),
+		"GET /apis/admissionregistration.k8s.io/v1/validatingwebhookconfigurations": policiesFixture(t, "validatingwebhookconfigurations.json"),
+	})
+
+	if !r.Installed || r.Version != "v2" || r.Error != "" || len(r.Policies) != 4 {
+		t.Fatalf("installed %v version %q error %q policies %d", r.Installed, r.Version, r.Error, len(r.Policies))
+	}
+
+	rec := f.recorded()
+	if countRequests(rec, "/apis/kyverno.io/v1/clusterpolicies") != 0 ||
+		countRequests(rec, "/apis/kyverno.io/v1/policies") != 0 {
+		t.Errorf("storage version asked without a 404: %v", rec)
+	}
+}
+
 // policyReadQuery is readPolicies over one query-aware fake API (see newQueryKubeAPI).
 func policyReadQuery(t *testing.T, answers map[string]string, byQuery map[string]func(*http.Request) string) (policiesReport, *fakeKubeAPI) {
 	t.Helper()

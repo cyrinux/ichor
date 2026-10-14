@@ -107,10 +107,14 @@ func readPolicies(ctx context.Context, k *kubeClient) (policiesReport, error) {
 	)
 
 	wg.Go(func() {
-		policyErr = firstErr(
-			getList(ctx, k, "/apis/"+groupKyverno+"/"+version+"/clusterpolicies", &clusterPolicies),
-			getList(ctx, k, "/apis/"+groupKyverno+"/"+version+"/policies", &policies),
-		)
+		policyErr = listKyvernoPolicies(ctx, k, version, &clusterPolicies, &policies)
+		// The preferred version may not serve the policies at all (Kyverno 1.15: v2
+		// preferred, ClusterPolicy and Policy under v1). A 404 says this group version
+		// does not serve them: retry the storage version. Only a 404 falls back — a 403
+		// is a permission problem, not a missing resource.
+		if isNotFound(policyErr) && version != kyvernoPoliciesVersion {
+			policyErr = listKyvernoPolicies(ctx, k, kyvernoPoliciesVersion, &clusterPolicies, &policies)
+		}
 	})
 	wg.Go(func() {
 		engineErr = firstErr(
@@ -157,6 +161,16 @@ func firstErr(errs ...error) error {
 	}
 
 	return nil
+}
+
+// listKyvernoPolicies lists the ClusterPolicies and the namespaced Policies at one group
+// version. The two lists share the group version: if it does not serve the policies, both
+// 404 together.
+func listKyvernoPolicies(ctx context.Context, k *kubeClient, version string, clusterPolicies, policies *kubeList[kyvernoPolicyObject]) error {
+	return firstErr(
+		getList(ctx, k, "/apis/"+groupKyverno+"/"+version+"/clusterpolicies", clusterPolicies),
+		getList(ctx, k, "/apis/"+groupKyverno+"/"+version+"/policies", policies),
+	)
 }
 
 // readKyvernoPolicies maps the two policy kinds into rows, ClusterPolicies first.
