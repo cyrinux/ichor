@@ -28,6 +28,8 @@ struct KubernetesView: View {
         case events
         /// Kyverno's admission policies (`policies` is the network ones).
         case admissionPolicies
+        /// What scales the cluster: HPAs, KEDA, VPA, Karpenter.
+        case autoscaling
     }
 
     @Environment(AppModel.self) private var model
@@ -130,6 +132,7 @@ struct KubernetesView: View {
         case .helm: netScreen = .helm
         case .events: netScreen = .events
         case .admissionPolicies: netScreen = .admissionPolicies
+        case .autoscaling: netScreen = .autoscaling
         case .apiAddress:
             serverInput = model.client?.kubeServer ?? ""
             editingServer = true
@@ -193,6 +196,7 @@ struct KubernetesView: View {
             case .helm: HelmReleasesView()
             case .events: KubeLiveEventsView()
             case .admissionPolicies: PoliciesView()
+            case .autoscaling: AutoscalingView()
             }
         }
         .task(id: model.client?.kubeServer) {
@@ -475,6 +479,7 @@ extension KubernetesAction: BarActionLook {
         case .apiAddress: "server.rack"
         case .capacity: "gauge.with.dots.needle.33percent"
         case .admissionPolicies: "checkmark.shield"
+        case .autoscaling: "arrow.up.and.down"
         }
     }
 
@@ -491,6 +496,7 @@ extension KubernetesAction: BarActionLook {
         case .apiAddress: Text("Kubernetes API address")
         case .capacity: Text(verbatim: CapacityText.capacityTitle)
         case .admissionPolicies: Text("Policies")
+        case .autoscaling: Text("Autoscaling")
         }
     }
 }

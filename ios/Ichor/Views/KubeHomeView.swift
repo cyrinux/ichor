@@ -354,6 +354,9 @@ struct KubeHomeView: View {
             NavigationLink { PoliciesView() } label: {
                 Label("Policies", systemImage: "checkmark.shield")
             }
+            NavigationLink { AutoscalingView() } label: {
+                Label("Autoscaling", systemImage: "arrow.up.and.down")
+            }
             NavigationLink(value: Route.metrics) {
                 Label("Metrics", systemImage: "chart.xyaxis.line")
             }

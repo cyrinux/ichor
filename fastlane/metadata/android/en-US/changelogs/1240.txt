@@ -1,0 +1,1 @@
+• Autoscaling screen: HPAs, KEDA ScaledObjects, VPA recommendations and Karpenter pools, problems first

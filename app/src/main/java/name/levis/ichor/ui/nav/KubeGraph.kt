@@ -38,6 +38,7 @@ import name.levis.ichor.ui.kubenodes.KubeNodesScreen
 import name.levis.ichor.ui.metrics.METRICS_TAB_MONITORING
 import name.levis.ichor.ui.netpol.NetworkPoliciesScreen
 import name.levis.ichor.ui.overview.KubeHomeViewModel
+import name.levis.ichor.ui.autoscaling.AutoscalingScreen
 import name.levis.ichor.ui.policies.PoliciesScreen
 
 /** The Kubernetes screens: nodes, workloads, events, apps, metrics, the checkup, flows, data services, pod shells. */
@@ -142,12 +143,14 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
                 onJobs = { nav.navigate(KubeBrowserRoutes.JOBS) },
                 onEvents = { nav.navigate(Routes.KUBE_EVENTS) },
                 onPolicies = { nav.navigate(Routes.POLICIES) },
+                onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
             )
         }
     }
     composable(Routes.KUBE_EVENTS) { KubeEventsScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
     composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.POLICIES) { PoliciesScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
+    composable(Routes.AUTOSCALING) { AutoscalingScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
     composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = { nav.navigate(Routes.AUDIT) }) }
     composable(Routes.AUDIT) { AuditScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.CHECKUP) {

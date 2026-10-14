@@ -85,6 +85,8 @@ internal object Routes {
 
     /** The admission policies (Kyverno), their findings and the engine's health. */
     const val POLICIES = "policies"
+    /** What scales the cluster: HPAs, KEDA, VPA and Karpenter. */
+    const val AUTOSCALING = "autoscaling"
 
     /** The cluster's Kubernetes events, live. */
     const val KUBE_EVENTS = "kube-events"
