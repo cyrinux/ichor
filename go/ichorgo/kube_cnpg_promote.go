@@ -65,7 +65,6 @@ type cnpgInstanceStatus struct {
 }
 
 func cnpgActionNames(config, contextName, namespace, name, instance string) (string, string, string, string, error) {
-	contextName = unmaskContext(config, contextName)
 	namespace, name, instance = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name)), privacy.reveal(strings.TrimSpace(instance))
 	if err := validateKubeName("cluster", namespace, name); err != nil {
 		return "", "", "", "", err
@@ -80,6 +79,7 @@ func cnpgActionNames(config, contextName, namespace, name, instance string) (str
 func KubeCNPGPromotePreview(configYAML, contextName, kubeServer, namespace, name, instance string) (out string, err error) {
 	defer maskResult(&out, &err)
 	contextName, namespace, name, instance, err = cnpgActionNames(configYAML, contextName, namespace, name, instance)
+	contextName = unmaskContext(configYAML, contextName)
 	if err != nil {
 		return "", err
 	}
@@ -130,6 +130,7 @@ func demoCNPGPromotePreview(namespace, name, instance string) cnpgPromotePreview
 func KubeCNPGPromote(configYAML, contextName, kubeServer, namespace, name, instance string) (err error) {
 	defer maskErr(&err)
 	contextName, namespace, name, instance, err = cnpgActionNames(configYAML, contextName, namespace, name, instance)
+	contextName = unmaskContext(configYAML, contextName)
 	if err != nil {
 		return err
 	}
