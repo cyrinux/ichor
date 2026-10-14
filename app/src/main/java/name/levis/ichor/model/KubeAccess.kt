@@ -31,6 +31,7 @@ enum class KubeAction(val wire: String) {
     CNPG_PROMOTE("cnpgPromote"),
     CNPG_RESTART_PRIMARY("cnpgRestartPrimary"),
     CNPG_HIBERNATE("cnpgHibernate"),
+    LONGHORN_SALVAGE("longhornSalvage"),
     ;
 
     /** The action asked for an object of a kind, on that kind's own resource; null for a kind the core does not ask about (offered). */

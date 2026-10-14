@@ -4446,4 +4446,13 @@
     <string name="cnpg_restart_target">Primario a reiniciar: %1$s</string>
     <string name="cnpg_lifecycle_requested">Acción de clúster solicitada</string>
     <string name="cnpg_lifecycle_failed">No se pudo actualizar el clúster: %1$s</string>
+
+    <string name="longhorn_salvage">Recuperar volumen</string>
+    <string name="longhorn_salvage_risk">La recuperación puede perder datos. Elija las réplicas cuyos datos desea recuperar; sus marcas de tiempo no garantizan la coherencia.</string>
+    <string name="longhorn_salvage_choose">Elija las réplicas explícitamente. Ninguna se selecciona automáticamente.</string>
+    <string name="longhorn_salvage_unavailable">La recuperación requiere un volumen separado con errores y réplicas disponibles.</string>
+    <string name="longhorn_salvage_replica">%1$s en %2$s · sano: %3$s · fallo: %4$s</string>
+    <string name="longhorn_salvage_requested">Recuperación solicitada</string>
+    <string name="longhorn_salvage_failed">No se pudo recuperar el volumen: %1$s</string>
+    <string name="longhorn_volume_name">Nombre del volumen</string>
 </resources>

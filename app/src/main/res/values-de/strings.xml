@@ -4438,4 +4438,13 @@
     <string name="cnpg_restart_target">Neu zu startender Primärknoten: %1$s</string>
     <string name="cnpg_lifecycle_requested">Clusteraktion angefordert</string>
     <string name="cnpg_lifecycle_failed">Cluster konnte nicht aktualisiert werden: %1$s</string>
+
+    <string name="longhorn_salvage">Volume retten</string>
+    <string name="longhorn_salvage_risk">Die Rettung kann Datenverlust verursachen. Wählen Sie die wiederherzustellenden Replikate; ihre Zeitstempel garantieren keine Konsistenz.</string>
+    <string name="longhorn_salvage_choose">Wählen Sie Replikate ausdrücklich aus. Keines wird automatisch ausgewählt.</string>
+    <string name="longhorn_salvage_unavailable">Die Rettung erfordert ein getrenntes fehlerhaftes Volume und verfügbare Replikate.</string>
+    <string name="longhorn_salvage_replica">%1$s auf %2$s · gesund: %3$s · Fehler: %4$s</string>
+    <string name="longhorn_salvage_requested">Rettung angefordert</string>
+    <string name="longhorn_salvage_failed">Volume konnte nicht gerettet werden: %1$s</string>
+    <string name="longhorn_volume_name">Volume-Name</string>
 </resources>

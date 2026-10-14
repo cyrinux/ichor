@@ -10,6 +10,12 @@ import (
 
 // GitOps, the network and data services.
 var dataCommands = []command{
+	{name: "longhorn-salvage-preview", args: "NAMESPACE VOLUME", run: func(e env) (string, error) {
+		return ichorgo.KubeLonghornSalvagePreview(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+	}},
+	{name: "longhorn-salvage", args: "NAMESPACE VOLUME REPLICAS_JSON", run: func(e env) (string, error) {
+		return "requested", ichorgo.KubeLonghornSalvage(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+	}},
 	{name: "cnpg-restart-primary", args: "NAMESPACE CLUSTER", run: func(e env) (string, error) {
 		return "", ichorgo.KubeCNPGRestartPrimary(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
 	}},

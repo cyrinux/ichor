@@ -11,6 +11,7 @@ struct LonghornList: View {
     @Environment(AppModel.self) private var model
     @State private var filter: VolumeFilter?
     @State private var query = ""
+    @State private var salvageTarget: LonghornVolume?
     @State private var replicasFor: LonghornVolume?
     @State private var confirmEvict: LonghornNode?
     @State private var running: Set<String> = []
@@ -71,6 +72,12 @@ struct LonghornList: View {
         } message: { node in
             Text("Longhorn copies every replica on \(node.name) to other nodes, then removes them. Scheduling stays off until you turn it back on.")
         }
+        .sheet(item: $salvageTarget) { volume in
+            LonghornSalvageSheet(volume: volume) { names in
+                salvageTarget = nil
+                Task { await salvage(volume, names: names) }
+            }.loadsKubeActionAccess(namespace: volume.namespace)
+        }
         .messageAlert($resultMessage)
     }
 
@@ -80,7 +87,14 @@ struct LonghornList: View {
         let act = { (action: LonghornAction) in
             if action == .replicas { replicasFor = volume } else { Task { await run(LonghornRequest(volume: volume, action: action)) } }
         }
-        return LonghornVolumeRow(volume: volume, busy: busy)
+        return VStack(alignment: .leading) {
+            LonghornVolumeRow(volume: volume, busy: busy)
+            if volume.robustness == "faulted" {
+                Button { salvageTarget = volume } label: { Text("Salvage volume") }
+                    .disabled(busy).kubeGated(.longhornSalvage, in: volume.namespace)
+                KubeDeniedNote(.longhornSalvage, in: volume.namespace)
+            }
+        }.loadsKubeActionAccess(namespace: volume.namespace)
             .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, onAction: act) }
             .contextMenu { LonghornActionButtons(actions: actions, inMenu: true, onAction: act) }
     }
@@ -94,6 +108,18 @@ struct LonghornList: View {
         return LonghornNodeRow(node: node, busy: busy)
             .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, onAction: act) }
             .contextMenu { LonghornActionButtons(actions: actions, inMenu: true, onAction: act) }
+    }
+
+    private func salvage(_ volume: LonghornVolume, names: Set<String>) async {
+        let key = LonghornRequest.key(namespace: volume.namespace, name: volume.name, node: false)
+        guard let client = model.client, !running.contains(key) else { return }
+        running.insert(key)
+        defer { running.remove(key) }
+        do {
+            try await client.longhornSalvage(namespace: volume.namespace, name: volume.name, replicas: names)
+            resultMessage = String(localized: "Salvage requested")
+            await refresh()
+        } catch { resultMessage = String(localized: "Could not salvage volume: \(error.localizedDescription)") }
     }
 
     private func run(_ request: LonghornRequest) async {

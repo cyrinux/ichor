@@ -3,6 +3,18 @@ import IchorCore
 import Ichorgo
 
 extension TalosClient {
+    func longhornSalvagePreview(namespace: String, name: String) async throws -> LonghornSalvagePreview {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] in
+            IchorgoKubeLonghornSalvagePreview(config, context, server, namespace, name, $0)
+        }
+    }
+    func longhornSalvage(namespace: String, name: String, replicas: Set<String>) async throws {
+        let names = String(decoding: try JSONEncoder().encode(replicas.sorted()), as: UTF8.self)
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeLonghornSalvage(config, context, server, namespace, name, names, error)
+        }
+    }
+
  func cnpgRestartPrimary(namespace: String, name: String) async throws {
  try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
  _ = IchorgoKubeCNPGRestartPrimary(config, context, server, namespace, name, error)
