@@ -43,11 +43,12 @@ func demoCrossplane(now time.Time) crossplaneStatus {
 			d.Compositions = 2
 			d.CompositionNames = []string{"bucket-small", "bucket-standard"}
 		}
-		// Still show the namespaced XR already created while its definition recovers.
+		// Do not invent an XR before its XRD has established the generated API.
 		if i == 1 {
 			d.Established = condition("False", "ReconcileError", "waiting for the generated CRD", time.Hour)
 			d.Health = healthWarning
 			d.Reasons = []string{xpReasonNotEstablished}
+			d.Composites = 0
 		}
 		out.Definitions = append(out.Definitions, d)
 		out.Counts.add(d.Health)
@@ -64,10 +65,6 @@ func demoCrossplane(now time.Time) crossplaneStatus {
 	x.Composition = "bucket-standard"
 	x.Resources = 1
 	x.Claim = "assets-claim"
-	out.Composites = append(out.Composites, x)
-	x = makeObject("platform.example.org", "xdatabases", "XDatabase", "app-db", "apps")
-	x.Composition = "database-standard"
-	x.Resources = 2
 	out.Composites = append(out.Composites, x)
 	x = makeObject("platform.example.org", "bucketclaims", "BucketClaim", "assets-claim", "apps")
 	x.Composite = "assets"

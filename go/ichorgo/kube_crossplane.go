@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"slices"
 	"sync"
@@ -16,6 +15,7 @@ const (
 	groupCrossplaneAPIExt     = "apiextensions.crossplane.io"
 	xpVersion                 = "v1"
 	xpManagedOKLimit          = 500
+	xpManagedProblemLimit     = 500
 	xpNotReadyGrace           = 15 * time.Minute
 	xpReasonSyncFailed        = "syncFailed"
 	xpReasonProviderUnhealthy = "providerUnhealthy"
@@ -35,7 +35,7 @@ type crossplaneStatus struct {
 	Claims       []xpObject     `json:"claims"`
 	Managed      []xpObject     `json:"managed"`
 	ManagedTotal int            `json:"managedTotal"`
-	// Only healthy managed rows are capped; every problem and all counts survive truncation.
+	// Managed rows are bounded by health and recency; totals and counts include omitted rows.
 	Truncated bool     `json:"truncated"`
 	Counts    xpCounts `json:"counts"`
 }
@@ -171,20 +171,20 @@ func readCrossplane(ctx context.Context, k *kubeClient, groups map[string]string
 	out.Installed = true
 	out.Version = xpVersion // The stable package/XRD API, not the installed controller image version.
 	var resources []kubeBrowserResource
-	var packageErr, definitionErr, discoveryErr error
+	var packageErr, definitionErr, discoveryErr, compositeErr error
 	var wg sync.WaitGroup
 	if _, ok := groups[groupCrossplanePkg]; ok {
 		wg.Go(func() { out.Packages, packageErr = readCrossplanePackages(ctx, k) })
 	}
 	if _, ok := groups[groupCrossplaneAPIExt]; ok {
-		wg.Go(func() { out.Definitions, definitionErr = readCrossplaneDefinitions(ctx, k) })
+		wg.Go(func() {
+			out.Definitions, definitionErr = readCrossplaneDefinitions(ctx, k, groups[groupCrossplaneAPIExt])
+			out.Composites, out.Claims, compositeErr = readCrossplaneComposites(ctx, k, out.Definitions, now)
+		})
 	}
 	wg.Go(func() { resources, discoveryErr = discoverCrossplaneManaged(ctx, k, groups) })
 	wg.Wait()
-	var compositeErr, managedErr error
-	wg.Go(func() {
-		out.Composites, out.Claims, compositeErr = readCrossplaneComposites(ctx, k, out.Definitions, now)
-	})
+	var managedErr error
 	wg.Go(func() {
 		out.Managed, out.ManagedTotal, out.Counts, managedErr = listCrossplaneManaged(ctx, k, resources, now)
 	})
@@ -217,11 +217,13 @@ func readCrossplane(ctx context.Context, k *kubeClient, groups map[string]string
 func discoverCrossplaneManaged(ctx context.Context, k *kubeClient, groups map[string]string) ([]kubeBrowserResource, error) {
 	names := make([]string, 0, len(groups))
 	for name := range groups {
+		if isBuiltinGroup(name) {
+			continue
+		}
 		names = append(names, name)
 	}
 	slices.Sort(names)
 	results := make([][]kubeBrowserResource, len(names))
-	errs := make([]error, len(names))
 	slots := make(chan struct{}, discoveryParallel)
 	var wg sync.WaitGroup
 	for i, name := range names {
@@ -231,7 +233,7 @@ func discoverCrossplaneManaged(ctx context.Context, k *kubeClient, groups map[st
 			path := "/apis/" + name + "/" + groups[name]
 			var doc discoveryResourceList
 			if err := k.get(ctx, path, &doc); err != nil {
-				errs[i] = fmt.Errorf("%s: %v", path, kubeError(err))
+				// Failed discovery for an unrelated group is not a Crossplane failure.
 				return
 			}
 			// Some discovery servers omit groupVersion; the requested path is authoritative.
@@ -248,7 +250,7 @@ func discoverCrossplaneManaged(ctx context.Context, k *kubeClient, groups map[st
 	for _, rs := range results {
 		out = append(out, rs...)
 	}
-	return out, crossplaneErrors(errs)
+	return out, nil
 }
 
 // xpList reads paged typed objects; errors retain completed pages for a partial report.
@@ -270,11 +272,6 @@ func xpList[T any](ctx context.Context, k *kubeClient, path string) ([]T, error)
 
 func sortCrossplaneObjects(items []xpObject) {
 	slices.SortFunc(items, byHealthThenKey(func(x xpObject) (string, string) { return x.Health, x.key() }))
-}
-
-// Keep provider error messages in the JSON so the caller can diagnose them; never log them.
-func crossplaneErrors(errs []error) error {
-	return errors.Join(errs...)
 }
 
 func xpPaused(annotations map[string]string, c xpCondition) bool {
