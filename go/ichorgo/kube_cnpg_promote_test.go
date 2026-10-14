@@ -121,7 +121,7 @@ func TestCNPGPromoteDemoAndValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := KubeCNPGPromote(cfg, "demo", "", "shop", "pg", "pg-2"); err == nil {
+	if err := KubeCNPGPromote(cfg, "Demo cluster", "", "shop", "pg", "pg-2"); err == nil {
 		t.Fatal("demo promoted")
 	}
 	if _, err := KubeCNPGPromotePreview("", "", "", "shop", "../pg", "pg-2"); err == nil {
