@@ -38,7 +38,10 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   with an icon and a title of your choice, see [CronJobs](#cronjobs)); measure the
   network between two nodes (TCP throughput and latency, see [Network test](#network-test));
   open an app in the browser from its sheet, at the hosts of the Ingresses, Gateway API
-  HTTPRoutes, GRPCRoutes and TLSRoutes and Traefik IngressRoutes whose Services select its pods; browse any resource, CRDs included, with the
+  HTTPRoutes, GRPCRoutes and TLSRoutes and Traefik IngressRoutes whose Services select its pods (kgateway included: its
+  routing objects are the standard ones, and the network map's Gateway boxes name the
+  controller serving them — kgateway, Traefik, Cilium, Envoy Gateway, Istio, NGINX Gateway
+  Fabric); browse any resource, CRDs included, with the
   columns `kubectl get` prints, read and edit its YAML (a dry-run diff first; a change made
   meanwhile is never overwritten), apply pasted manifests like `kubectl apply --server-side`
   (each object previewed as a diff first; a field another manager owns is refused, never taken

@@ -140,6 +140,7 @@ type argoNetInput struct {
 	ingresses     []ingressObject
 	gatewayRoutes []gatewayRouteObject // HTTPRoutes, GRPCRoutes and TLSRoutes
 	gateways      []gatewayObject
+	gatewayClasses []gatewayClassObject
 	traefik       traefikRouteSet
 	nodes         []netNodeObject
 }
@@ -206,6 +207,7 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 		ingresses kubeList[ingressObject]
 		gwRoutes  []gatewayRouteObject
 		gateways  kubeList[gatewayObject]
+		gatewayClasses kubeList[gatewayClassObject]
 		nodes     kubeList[netNodeObject]
 	)
 
@@ -225,6 +227,9 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 			mu.Unlock()
 		},
 		func() { _ = getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/gateways", &gateways) },
+		// The controller name on the Gateway boxes is a nice-to-have: a restricted
+		// kubeconfig keeps the graph.
+		func() { _ = getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/gatewayclasses", &gatewayClasses) },
 		func() {
 			traefik, err := readTraefikRoutes(ctx, k, "", true)
 			fail(err)
@@ -242,6 +247,7 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 	}
 
 	in.ingresses, in.gatewayRoutes, in.gateways, in.nodes = ingresses.Items, gwRoutes, gateways.Items, nodes.Items
+	in.gatewayClasses = gatewayClasses.Items
 	if len(in.gatewayRoutes) > 0 {
 		in.gateways = withPublicPorts(ctx, k, in.gateways)
 	}
@@ -428,7 +434,7 @@ func argoNetGatewayRoutes(g *argoNetGraph, in argoNetInput, services map[service
 
 		for _, gw := range parents {
 			gid := g.add(argoNetNode{ID: "gw/" + gw.Metadata.Namespace + "/" + gw.Metadata.Name, Layer: argoLayerGateway, Kind: "Gateway",
-				Namespace: gw.Metadata.Namespace, Name: gw.Metadata.Name, Detail: gatewayAddress(gw), Managed: managed["Gateway/"+gw.Metadata.Namespace+"/"+gw.Metadata.Name]})
+				Namespace: gw.Metadata.Namespace, Name: gw.Metadata.Name, Detail: gatewayDetail(gw, in.gatewayClasses), Managed: managed["Gateway/"+gw.Metadata.Namespace+"/"+gw.Metadata.Name]})
 			g.link(hid, gid)
 			g.link(gid, rid)
 		}
@@ -482,6 +488,22 @@ func gatewayAddress(gw gatewayObject) string {
 	}
 
 	return ""
+}
+
+// gatewayDetail is "Traefik · 10.0.0.240": the controller serving the Gateway, then its
+// address; the address alone when the class is unknown, the controller alone when the
+// Gateway has no address yet.
+func gatewayDetail(gw gatewayObject, classes []gatewayClassObject) string {
+	controller, address := gatewayController(gw.Spec.GatewayClassName, classes), gatewayAddress(gw)
+
+	switch {
+	case controller == "":
+		return address
+	case address == "":
+		return controller
+	default:
+		return controller + " · " + address
+	}
 }
 
 // serviceDetail is "ClusterIP 10.96.0.12 · 80→8080, 443→https".

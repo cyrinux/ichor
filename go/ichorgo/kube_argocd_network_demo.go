@@ -54,7 +54,9 @@ func demoArgoNetwork(app string) argoNetwork {
 		tlsRoute.Kind = "TLSRoute"
 		in.gatewayRoutes = append(in.gatewayRoutes, tlsRoute)
 		in.gateways = []gatewayObject{demoNetObject[gatewayObject](`{"metadata":{"name":"homelab","namespace":"traefik"},
-		  "spec":{"listeners":[{"name":"https","hostname":"*.homelab.lan","port":443,"protocol":"HTTPS"},{"name":"tls","hostname":"grafana.homelab.lan","port":8443,"protocol":"TLS"}]},"status":{"addresses":[{"value":"10.0.0.240"}]}}`)}
+		  "spec":{"gatewayClassName":"traefik","listeners":[{"name":"https","hostname":"*.homelab.lan","port":443,"protocol":"HTTPS"},{"name":"tls","hostname":"grafana.homelab.lan","port":8443,"protocol":"TLS"}]},"status":{"addresses":[{"value":"10.0.0.240"}]}}`)}
+		in.gatewayClasses = []gatewayClassObject{demoNetObject[gatewayClassObject](`{"metadata":{"name":"traefik"},
+		  "spec":{"controllerName":"traefik.io/gateway-controller"}}`)}
 		resources = append(resources, argoResourceStatus{Group: groupTraefik, Kind: "IngressRoute", Namespace: "monitoring", Name: "grafana"})
 		in.traefik = traefikRouteSet{
 			http: []ingressRouteObject{demoNetObject[ingressRouteObject](`{"metadata":{"name":"grafana","namespace":"monitoring"},
