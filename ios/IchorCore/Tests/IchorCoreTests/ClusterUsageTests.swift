@@ -69,6 +69,18 @@ final class ClusterUsageTests: XCTestCase {
         XCTAssertEqual(appendHistory([0.1], nil, max: 2), [0.1])
     }
 
+    func testSparklineSpansTheWidthUntilTheWindowIsFull() {
+        let width = 350.0
+        let points = 36
+        XCTAssertEqual(sparklineStep(count: 2, points: points, width: width), width, accuracy: 1e-9)
+        XCTAssertEqual(sparklineStep(count: points - 1, points: points, width: width), width / Double(points - 2), accuracy: 1e-9)
+        XCTAssertEqual(sparklineStep(count: points, points: points, width: width), width / Double(points - 1), accuracy: 1e-9)
+        XCTAssertEqual(sparklineStep(count: points + 1, points: points, width: width), width / Double(points - 1), accuracy: 1e-9)
+        for count in 2..<points {
+            XCTAssertEqual(width - sparklineStep(count: count, points: points, width: width) * Double(count - 1), 0, accuracy: 1e-9)
+        }
+    }
+
     func testDecodesTheGoCoreJSON() throws {
         let json = #"{"at":1800000000000,"nodes":[{"node":"10.0.0.1","cpuBusy":1.5,"cpuTotal":10,"cpuCount":4,"memTotal":8589934592,"memAvailable":4294967296}]}"#
         let decoded = try JSONDecoder().decode(ClusterStatsSample.self, from: Data(json.utf8))

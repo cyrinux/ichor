@@ -4570,4 +4570,40 @@
     <string name="velero_delete_text">Velero entfernt die Daten dieser Sicherung aus ihrem Speicherort und dann die Sicherung selbst. Sie kann danach nicht mehr wiederhergestellt werden.</string>
     <string name="velero_delete_requested">Löschen von %1$s angefordert</string>
     <string name="velero_delete_errors">Löschen fehlgeschlagen: %1$s</string>
+    <string name="velero_restore">Wiederherstellen</string>
+    <string name="velero_restore_title">Backup %1$s wiederherstellen?</string>
+    <string name="velero_restore_no_volumes">keine Volume-Snapshots</string>
+    <string name="velero_restore_every_namespace">Jeder Namespace des Backups wird wiederhergestellt.</string>
+    <string name="velero_restore_choose_namespaces">Wiederherzustellende Namespaces wählen</string>
+    <string name="velero_restore_target_same">leer: gleicher Name</string>
+    <string name="velero_restore_existing">Vorhandene Objekte</string>
+    <string name="velero_restore_existing_leave">belassen</string>
+    <string name="velero_restore_existing_update">aktualisieren (überschreiben)</string>
+    <string name="velero_restore_volumes">Volumes wiederherstellen</string>
+    <string name="velero_restore_volumes_yes">wie gesichert</string>
+    <string name="velero_restore_volumes_no">nein</string>
+    <string name="velero_restore_risk">Beim Wiederherstellen werden die Objekte des Backups neu angelegt. Namespaces, die es nicht gibt, werden erstellt; bestehende erhalten die Objekte des Backups, mit Aktualisieren werden sie überschrieben.</string>
+    <string name="velero_restore_reason_partially_failed">Das Backup wurde mit Fehlern abgeschlossen: einige Objekte könnten fehlen</string>
+    <string name="velero_restore_reason_location">Der Speicherort des Backups ist nicht verfügbar: seine Daten sind nicht lesbar</string>
+    <string name="velero_restore_reason_expired">Das Backup ist abgelaufen: seine Daten sind gelöscht</string>
+    <string name="velero_restore_reason_running">Eine Wiederherstellung dieses Backups läuft bereits</string>
+    <string name="velero_restore_reason_all_namespaces">Dieses Backup enthält jeden Namespace: die Wiederherstellung stellt sie alle wieder her</string>
+    <string name="velero_restore_started">Wiederherstellung %1$s gestartet</string>
+    <string name="velero_restore_running">wird wiederhergestellt…</string>
+    <string name="velero_restore_validation_errors">Velero hat die Wiederherstellung abgelehnt: %1$s</string>
+    <string name="velero_restore_close">Schließen</string>
+    <string name="velero_restore_items_label">Objekte</string>
+    <string name="velero_restore_volumes_label">Volume-Snapshots</string>
+    <plurals name="velero_restore_items">
+        <item quantity="one">%1$d Objekt</item>
+        <item quantity="other">%1$d Objekte</item>
+    </plurals>
+    <plurals name="velero_restore_volumes">
+        <item quantity="one">%1$d Volume-Snapshot</item>
+        <item quantity="other">%1$d Volume-Snapshots</item>
+    </plurals>
+    <plurals name="velero_restore_progress">
+        <item quantity="one">%1$d von %2$d Objekt</item>
+        <item quantity="other">%1$d von %2$d Objekten</item>
+    </plurals>
 </resources>

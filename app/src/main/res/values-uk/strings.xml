@@ -4812,4 +4812,46 @@
     <string name="velero_delete_text">Velero видаляє дані цієї копії зі сховища, а потім саму копію. Відновити її після цього не вийде.</string>
     <string name="velero_delete_requested">Видалення %1$s запитано</string>
     <string name="velero_delete_errors">Не вдалося видалити: %1$s</string>
+    <string name="velero_restore">Відновити</string>
+    <string name="velero_restore_title">Відновити резервну копію %1$s?</string>
+    <string name="velero_restore_no_volumes">без знімків томів</string>
+    <string name="velero_restore_every_namespace">Відновлюються всі простори імен із резервної копії.</string>
+    <string name="velero_restore_choose_namespaces">Виберіть простори імен для відновлення</string>
+    <string name="velero_restore_target_same">порожньо: та сама назва</string>
+    <string name="velero_restore_existing">Наявні об\'єкти</string>
+    <string name="velero_restore_existing_leave">залишити</string>
+    <string name="velero_restore_existing_update">оновити (перезаписати)</string>
+    <string name="velero_restore_volumes">Відновити томи</string>
+    <string name="velero_restore_volumes_yes">як у резервній копії</string>
+    <string name="velero_restore_volumes_no">ні</string>
+    <string name="velero_restore_risk">Відновлення знову створює об\'єкти резервної копії. Простори імен, яких не існує, буде створено; наявні отримують об\'єкти копії, і з оновленням їх перезаписано.</string>
+    <string name="velero_restore_reason_partially_failed">Резервну копію завершено з помилками: деяких об\'єктів може бракувати</string>
+    <string name="velero_restore_reason_location">Місце зберігання резервної копії недоступне: її дані неможливо прочитати</string>
+    <string name="velero_restore_reason_expired">Термін дії резервної копії минув: її дані видалено</string>
+    <string name="velero_restore_reason_running">Відновлення цієї резервної копії вже триває</string>
+    <string name="velero_restore_reason_all_namespaces">Ця копія містить усі простори імен: відновлення відновить їх усі</string>
+    <string name="velero_restore_started">Відновлення %1$s розпочато</string>
+    <string name="velero_restore_running">відновлення…</string>
+    <string name="velero_restore_validation_errors">Velero відмовив у відновленні: %1$s</string>
+    <string name="velero_restore_close">Закрити</string>
+    <string name="velero_restore_items_label">Об\'єкти</string>
+    <string name="velero_restore_volumes_label">Знімки томів</string>
+    <plurals name="velero_restore_items">
+        <item quantity="one">%1$d об\'єкт</item>
+        <item quantity="few">%1$d об\'єкти</item>
+        <item quantity="many">%1$d об\'єктів</item>
+        <item quantity="other">%1$d об\'єкта</item>
+    </plurals>
+    <plurals name="velero_restore_volumes">
+        <item quantity="one">%1$d знімок тому</item>
+        <item quantity="few">%1$d знімки томів</item>
+        <item quantity="many">%1$d знімків томів</item>
+        <item quantity="other">%1$d знімка томів</item>
+    </plurals>
+    <plurals name="velero_restore_progress">
+        <item quantity="one">%1$d з %2$d об\'єкта</item>
+        <item quantity="few">%1$d з %2$d об\'єктів</item>
+        <item quantity="many">%1$d з %2$d об\'єктів</item>
+        <item quantity="other">%1$d з %2$d об\'єктів</item>
+    </plurals>
 </resources>

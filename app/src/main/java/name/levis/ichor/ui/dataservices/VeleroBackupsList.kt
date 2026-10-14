@@ -73,10 +73,10 @@ private fun blockerText(blocker: VeleroBackupBlocker): String = when (blocker) {
 
 /**
  * The schedule's backups, loaded when opened and again after each action: phase, when, counts,
- * expiry, and Delete on the finished ones.
+ * expiry, and Delete and Restore on the finished ones.
  */
 @Composable
-fun VeleroBackupsSection(schedule: VeleroSchedule, actions: VeleroActions, onDelete: (VeleroBackupDetail) -> Unit) {
+fun VeleroBackupsSection(schedule: VeleroSchedule, actions: VeleroActions, onDelete: (VeleroBackupDetail) -> Unit, onRestore: (VeleroBackupDetail) -> Unit) {
     var open by rememberSaveable(schedule.label) { mutableStateOf(false) }
     val changes by actions.changes.collectAsStateWithLifecycle()
     var list by remember(schedule.label) { mutableStateOf<VeleroBackups?>(null) }
@@ -107,13 +107,13 @@ fun VeleroBackupsSection(schedule: VeleroSchedule, actions: VeleroActions, onDel
         else -> {
             if (backups.error.isNotEmpty()) InlineError(stringResource(R.string.data_services_unreadable, backups.error))
             if (backups.backups.isEmpty()) Text(stringResource(R.string.velero_backups_empty), style = MaterialTheme.typography.labelSmall, color = muted)
-            backups.backups.forEach { VeleroBackupRow(schedule.namespace, it, actions, onDelete) }
+            backups.backups.forEach { VeleroBackupRow(schedule.namespace, it, actions, onDelete, onRestore) }
         }
     }
 }
 
 @Composable
-private fun VeleroBackupRow(namespace: String, b: VeleroBackupDetail, actions: VeleroActions, onDelete: (VeleroBackupDetail) -> Unit) {
+private fun VeleroBackupRow(namespace: String, b: VeleroBackupDetail, actions: VeleroActions, onDelete: (VeleroBackupDetail) -> Unit, onRestore: (VeleroBackupDetail) -> Unit) {
     val colors = LocalStatusColors.current
     val busy by actions.busy.collectAsStateWithLifecycle()
     val deleting = b.deleting || VeleroActions.deleteKey(namespace, b.name) in busy
@@ -136,7 +136,10 @@ private fun VeleroBackupRow(namespace: String, b: VeleroBackupDetail, actions: V
                 Text(stringResource(R.string.velero_delete_errors, b.deleteErrors.joinToString("; ")), style = MaterialTheme.typography.labelSmall, color = colors.bad)
             }
         }
-        if (b.deletable && !deleting) TextButton(onClick = { onDelete(b) }) { Text(stringResource(R.string.velero_delete)) }
+        if (b.deletable && !deleting) {
+            TextButton(onClick = { onRestore(b) }) { Text(stringResource(R.string.velero_restore)) }
+            TextButton(onClick = { onDelete(b) }) { Text(stringResource(R.string.velero_delete)) }
+        }
     }
 }
 

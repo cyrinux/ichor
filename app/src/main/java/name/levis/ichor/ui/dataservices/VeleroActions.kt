@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import name.levis.ichor.R
 import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.model.KubeAction
+import name.levis.ichor.model.VeleroRestoreOptions
 import name.levis.ichor.model.VeleroSchedule
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
@@ -26,8 +27,9 @@ import name.levis.ichor.ui.uiText
 data class VeleroActionResult(val deletion: Boolean, val target: String, val created: String, val error: UiText?)
 
 /**
- * Velero backups now and deletions, run in [scope] (a ViewModel's). [onChanged] runs after one
- * went through, to refresh the data services; [changes] tells the open backup lists to reload.
+ * Velero backups now, deletions and restores, run in [scope] (a ViewModel's). [onChanged] runs
+ * after one went through, to refresh the data services; [changes] tells the open backup lists
+ * to reload.
  */
 class VeleroActions(
     private val scope: CoroutineScope,
@@ -43,12 +45,16 @@ class VeleroActions(
     private val _changes = MutableStateFlow(0)
     val changes: StateFlow<Int> = _changes.asStateFlow()
 
-    private fun changed() {
+    /** The open backup lists reload, and the data services with them. */
+    fun changed() {
         _changes.update { it + 1 }
         onChanged()
     }
 
     suspend fun backups(namespace: String, schedule: String) = dataServices.veleroBackups(namespace, schedule)
+
+    /** What restoring [namespace]/[backup] holds; the same read follows a restore's progress. */
+    suspend fun restorePreview(namespace: String, backup: String) = dataServices.veleroRestorePreview(namespace, backup)
 
     fun backupNow(schedule: VeleroSchedule) {
         actions.launch(backupKey(schedule), { dataServices.veleroBackupNow(schedule.namespace, schedule.name) }, {
@@ -61,6 +67,10 @@ class VeleroActions(
             VeleroActionResult(true, backup, it.getOrNull().orEmpty(), it.exceptionOrNull()?.uiText())
         }, ::changed)
     }
+
+    /** Restores [namespace]/[backup] with [options]: the Restore's name, whose progress the dialog follows. */
+    suspend fun restore(namespace: String, backup: String, options: VeleroRestoreOptions): String =
+        dataServices.veleroRestore(namespace, backup, options).also { changed() }
 
     companion object {
         fun backupKey(schedule: VeleroSchedule) = "now:${schedule.label}"

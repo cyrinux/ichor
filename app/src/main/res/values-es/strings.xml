@@ -4578,4 +4578,40 @@
     <string name="velero_delete_text">Velero elimina los datos de esta copia de su ubicación de almacenamiento y luego la copia. Después no se podrá restaurar.</string>
     <string name="velero_delete_requested">Eliminación de %1$s solicitada</string>
     <string name="velero_delete_errors">Error al eliminar: %1$s</string>
+    <string name="velero_restore">Restaurar</string>
+    <string name="velero_restore_title">¿Restaurar la copia %1$s?</string>
+    <string name="velero_restore_no_volumes">sin instantáneas de volumen</string>
+    <string name="velero_restore_every_namespace">Se restauran todos los espacios de nombres de la copia.</string>
+    <string name="velero_restore_choose_namespaces">Elige los espacios de nombres a restaurar</string>
+    <string name="velero_restore_target_same">vacío: el mismo nombre</string>
+    <string name="velero_restore_existing">Objetos existentes</string>
+    <string name="velero_restore_existing_leave">dejar</string>
+    <string name="velero_restore_existing_update">actualizar (sobrescribir)</string>
+    <string name="velero_restore_volumes">Restaurar volúmenes</string>
+    <string name="velero_restore_volumes_yes">como están en la copia</string>
+    <string name="velero_restore_volumes_no">no</string>
+    <string name="velero_restore_risk">Al restaurar se vuelven a crear los objetos de la copia. Los espacios de nombres que no existen se crean; los que existen reciben los objetos de la copia, y con actualizar se sobrescriben.</string>
+    <string name="velero_restore_reason_partially_failed">La copia terminó con errores: pueden faltar objetos</string>
+    <string name="velero_restore_reason_location">La ubicación de almacenamiento de la copia no está disponible: no se pueden leer sus datos</string>
+    <string name="velero_restore_reason_expired">La copia ha caducado: sus datos se han borrado</string>
+    <string name="velero_restore_reason_running">Ya se está restaurando esta copia</string>
+    <string name="velero_restore_reason_all_namespaces">Esta copia contiene todos los espacios de nombres: al restaurarla se restauran todos</string>
+    <string name="velero_restore_started">Restauración %1$s iniciada</string>
+    <string name="velero_restore_running">restaurando…</string>
+    <string name="velero_restore_validation_errors">Velero rechazó la restauración: %1$s</string>
+    <string name="velero_restore_close">Cerrar</string>
+    <string name="velero_restore_items_label">Objetos</string>
+    <string name="velero_restore_volumes_label">Instantáneas de volumen</string>
+    <plurals name="velero_restore_items">
+        <item quantity="one">%1$d objeto</item>
+        <item quantity="other">%1$d objetos</item>
+    </plurals>
+    <plurals name="velero_restore_volumes">
+        <item quantity="one">%1$d instantánea de volumen</item>
+        <item quantity="other">%1$d instantáneas de volumen</item>
+    </plurals>
+    <plurals name="velero_restore_progress">
+        <item quantity="one">%1$d de %2$d objeto</item>
+        <item quantity="other">%1$d de %2$d objetos</item>
+    </plurals>
 </resources>

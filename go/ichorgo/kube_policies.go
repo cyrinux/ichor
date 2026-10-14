@@ -89,6 +89,9 @@ type kyvernoPolicy struct {
 	ErrorCount   int             `json:"error"` // a result value collides with Go's error type
 	Skip         int             `json:"skip"`
 	Failing      []policyFailure `json:"failing"`
+	// ByNamespace is the same counts per namespace, sorted by name, for the screen's namespace
+	// filter: a ClusterPolicy's results spread over every namespace it checks.
+	ByNamespace []policyNSRow `json:"byNamespace"`
 }
 
 // policyRules counts a policy's rules by kind, as their spec blocks are set or not.

@@ -183,6 +183,7 @@ reads those roles and explains up front when a feature needs more.
 | **CSI snapshots, snapshot creation and backup CronJob health** | `Kubeconfig`, then the Kubernetes API (volumesnapshots, volumesnapshotcontents, volumesnapshotclasses, PVCs, storageclasses, cronjobs, jobs) | **`os:admin`** |
 | **CloudNativePG replica promotion** | `Kubeconfig`, then the Kubernetes API (clusters/status, pods and optional pods/proxy for lag) | **`os:admin`** |
 | **Velero: run a schedule now, delete a backup** | `Kubeconfig`, then the Kubernetes API (velero.io schedules, backups, deletebackuprequests) | **`os:admin`** |
+| **Velero: restore a backup with a preview and namespace mapping** | `Kubeconfig`, then the Kubernetes API (velero.io backups, restores, backupstoragelocations) | **`os:admin`** |
 | **App web addresses (Ingress, HTTPRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
@@ -515,8 +516,9 @@ policy blocking this rollout, and can I relax it?" in two taps:
   lets them through unchecked.
 - **The policies:** not ready ones first, then those in **Enforce** mode (a request that breaks a
   rule is refused) before those in **Audit** mode (it is let through and only reported), each
-  with its failing, warning and passing counts from the policy reports. A namespace and a search
-  narrow the list.
+  with its failing, warning and passing counts from the policy reports. A search narrows the
+  list, and a namespace keeps its own policies and the cluster-wide ones that checked something
+  there (or are not ready), each with its counts in that namespace.
 - **One policy:** its rules, why it is not ready, and the newest resources it fails with
   Kyverno's message; a Pod, Deployment or other well-known kind opens its object screen.
 

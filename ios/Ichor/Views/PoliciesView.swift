@@ -44,7 +44,7 @@ struct PoliciesView: View {
             }
             Section {
                 ForEach(rows) { policy in
-                    Button { selected = policy } label: { PolicyRow(policy: policy) }
+                    Button { selected = policy } label: { PolicyRow(policy: policy, namespace: chosen) }
                 }
             } footer: {
                 if report.reportsTruncated {
@@ -131,9 +131,10 @@ private struct PolicyEngineSection: View {
     }
 }
 
-/// Name and mode, its scope, not-ready reason and counts.
+/// Name and mode, its scope, not-ready reason and counts (in `namespace` when one is picked).
 private struct PolicyRow: View {
     let policy: KyvernoPolicy
+    let namespace: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -158,7 +159,8 @@ private struct PolicyRow: View {
                     }
                 }
             }
-            PolicyCounts(fail: policy.fail, warn: policy.warn, pass: policy.pass)
+            let counts = policy.counts(namespace: namespace)
+            PolicyCounts(fail: counts.fail, warn: counts.warn, pass: counts.pass)
         }
     }
 }

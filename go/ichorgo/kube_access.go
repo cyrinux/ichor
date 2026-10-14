@@ -109,6 +109,13 @@ var kubeActionChecks = map[string][]accessNeed{
 		{ssarAttributes{Verb: "create", Group: groupVelero, Resource: "deletebackuprequests"}, true},
 		{ssarAttributes{Verb: "get", Group: groupVelero, Resource: "backups"}, true},
 	},
+	// Velero: a restore is a Restore the server's restore controller carries out; reading its
+	// preview needs the backups and the storage locations. SelfSubjectAccessReview cannot see
+	// Velero's own refusals (a backup still running, an unavailable storage location).
+	"veleroRestore": {
+		{ssarAttributes{Verb: "create", Group: groupVelero, Resource: "restores"}, true},
+		{ssarAttributes{Verb: "get", Group: groupVelero, Resource: "backups"}, true},
+	},
 	"createVolumeSnapshot": {
 		{ssarAttributes{Verb: "create", Group: groupSnapshot, Resource: "volumesnapshots"}, true},
 		{ssarAttributes{Verb: "get", Resource: "persistentvolumeclaims"}, true},
@@ -169,7 +176,7 @@ type accessNeed struct {
 // triggerCronJob, helmRollback, argoSync, fluxReconcile (fluxReconcileHelmRelease,
 // fluxReconcileGitRepository, fluxReconcileOCIRepository, fluxReconcileHelmRepository,
 // fluxReconcileBucket), cordonNode, drainNode, cnpgPromote, createVolumeSnapshot,
-// veleroBackupNow, veleroDeleteBackup. Answers are cached a few minutes.
+// veleroBackupNow, veleroDeleteBackup, veleroRestore. Answers are cached a few minutes.
 // kubeServer: see KubePods.
 func KubeActionAccess(configYAML, contextName, kubeServer, namespace string) (out string, err error) {
 	defer maskResult(&out, &err)

@@ -165,7 +165,7 @@ private fun PolicyList(
             item(key = "empty") { EmptyText(emptyOrNoMatch(query, R.string.kpol_empty, R.string.kpol_no_match)) }
         }
         items(rows, key = { it.key }) { policy ->
-            PolicyRow(policy, onClick = { onOpen(policy) })
+            PolicyRow(policy, selected, onClick = { onOpen(policy) })
             HorizontalDivider()
         }
         if (report.reportsTruncated) {
@@ -222,9 +222,9 @@ private fun WebhookLine(engine: PolicyEngine) {
     Text(text, style = MaterialTheme.typography.bodySmall, color = color)
 }
 
-/** Name and mode, its scope, not-ready reason and counts. */
+/** Name and mode, its scope, not-ready reason and counts (in [namespace] when one is picked). */
 @Composable
-private fun PolicyRow(policy: KyvernoPolicy, onClick: () -> Unit) {
+private fun PolicyRow(policy: KyvernoPolicy, namespace: String?, onClick: () -> Unit) {
     Column(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -247,6 +247,7 @@ private fun PolicyRow(policy: KyvernoPolicy, onClick: () -> Unit) {
                 if (policy.readyReason.isNotEmpty()) MutedText(policy.readyReason, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
-        ResultCounts(policy.fail, policy.warn, policy.pass, Modifier.padding(top = 2.dp))
+        val counts = policy.counts(namespace)
+        ResultCounts(counts.fail, counts.warn, counts.pass, Modifier.padding(top = 2.dp))
     }
 }

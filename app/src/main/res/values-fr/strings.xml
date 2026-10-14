@@ -4578,4 +4578,40 @@
     <string name="velero_delete_text">Velero supprime les données de cette sauvegarde de son emplacement de stockage, puis la sauvegarde elle-même. Elle ne pourra plus être restaurée.</string>
     <string name="velero_delete_requested">Suppression de %1$s demandée</string>
     <string name="velero_delete_errors">Échec de la suppression : %1$s</string>
+    <string name="velero_restore">Restaurer</string>
+    <string name="velero_restore_title">Restaurer la sauvegarde %1$s ?</string>
+    <string name="velero_restore_no_volumes">aucun instantané de volume</string>
+    <string name="velero_restore_every_namespace">Tous les espaces de noms de la sauvegarde sont restaurés.</string>
+    <string name="velero_restore_choose_namespaces">Choisissez les espaces de noms à restaurer</string>
+    <string name="velero_restore_target_same">vide : le même nom</string>
+    <string name="velero_restore_existing">Objets existants</string>
+    <string name="velero_restore_existing_leave">conserver</string>
+    <string name="velero_restore_existing_update">mettre à jour (écraser)</string>
+    <string name="velero_restore_volumes">Restaurer les volumes</string>
+    <string name="velero_restore_volumes_yes">comme sauvegardés</string>
+    <string name="velero_restore_volumes_no">non</string>
+    <string name="velero_restore_risk">La restauration recrée les objets de la sauvegarde. Les espaces de noms qui n\'existent pas sont créés ; ceux qui existent reçoivent les objets de la sauvegarde, qui les écrasent avec la mise à jour.</string>
+    <string name="velero_restore_reason_partially_failed">La sauvegarde s\'est terminée avec des erreurs : des objets peuvent manquer</string>
+    <string name="velero_restore_reason_location">L\'emplacement de stockage de la sauvegarde est indisponible : ses données sont illisibles</string>
+    <string name="velero_restore_reason_expired">La sauvegarde a expiré : ses données sont supprimées</string>
+    <string name="velero_restore_reason_running">Une restauration de cette sauvegarde est déjà en cours</string>
+    <string name="velero_restore_reason_all_namespaces">Cette sauvegarde contient tous les espaces de noms : la restaurer les restaure tous</string>
+    <string name="velero_restore_started">Restauration %1$s lancée</string>
+    <string name="velero_restore_running">restauration…</string>
+    <string name="velero_restore_validation_errors">Velero a refusé la restauration : %1$s</string>
+    <string name="velero_restore_close">Fermer</string>
+    <string name="velero_restore_items_label">Objets</string>
+    <string name="velero_restore_volumes_label">Instantanés de volume</string>
+    <plurals name="velero_restore_items">
+        <item quantity="one">%1$d objet</item>
+        <item quantity="other">%1$d objets</item>
+    </plurals>
+    <plurals name="velero_restore_volumes">
+        <item quantity="one">%1$d instantané de volume</item>
+        <item quantity="other">%1$d instantanés de volume</item>
+    </plurals>
+    <plurals name="velero_restore_progress">
+        <item quantity="one">%1$d objet sur %2$d</item>
+        <item quantity="other">%1$d objets sur %2$d</item>
+    </plurals>
 </resources>

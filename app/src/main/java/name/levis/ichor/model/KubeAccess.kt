@@ -35,6 +35,7 @@ enum class KubeAction(val wire: String) {
     LONGHORN_ATTACHMENT("longhornAttachment"),
     VELERO_BACKUP_NOW("veleroBackupNow"),
     VELERO_DELETE_BACKUP("veleroDeleteBackup"),
+    VELERO_RESTORE("veleroRestore"),
     ;
 
     /** The action asked for an object of a kind, on that kind's own resource; null for a kind the core does not ask about (offered). */

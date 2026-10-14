@@ -53,6 +53,13 @@ var dataCommands = []command{
 	{name: "velero-delete-backup", args: "NAMESPACE BACKUP", run: func(e env) (string, error) {
 		return ichorgo.KubeVeleroDeleteBackup(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
 	}},
+	{name: "velero-restore-preview", args: "NAMESPACE BACKUP", run: func(e env) (string, error) {
+		// velero-restore-preview NAMESPACE BACKUP: what the backup holds and its Restores.
+		return ichorgo.KubeVeleroRestorePreview(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+	}},
+	{name: "velero-restore", args: "NAMESPACE BACKUP [OPTIONS_JSON]", run: func(e env) (string, error) {
+		return ichorgo.KubeVeleroRestore(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+	}},
 	{name: "vms", args: "[NAMESPACE]", run: func(e env) (string, error) {
 		return ichorgo.KubeVirtualMachines(e.cfg, e.context, e.kubeServer, flag.Arg(1))
 	}},

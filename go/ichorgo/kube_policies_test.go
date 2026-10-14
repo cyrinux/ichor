@@ -265,6 +265,22 @@ func TestPoliciesDemo(t *testing.T) {
 	if !slices.IsSortedFunc(got.Policies, kyvernoPolicyLess) {
 		t.Errorf("demo not in reader order: %v", firstNames(got.Policies))
 	}
+
+	// The policies' per-namespace counts add up to the namespace totals, as a live read's do.
+	sums := map[string]policyNSRow{}
+	for _, p := range got.Policies {
+		for _, n := range p.ByNamespace {
+			s := sums[n.Namespace]
+			s.Namespace, s.Pass, s.Fail, s.Warn, s.ErrorCount = n.Namespace, s.Pass+n.Pass, s.Fail+n.Fail, s.Warn+n.Warn, s.ErrorCount+n.ErrorCount
+			sums[n.Namespace] = s
+		}
+	}
+
+	for _, ns := range got.Namespaces {
+		if sums[ns.Namespace] != ns {
+			t.Errorf("namespace %s: policies sum to %+v, totals say %+v", ns.Namespace, sums[ns.Namespace], ns)
+		}
+	}
 }
 
 // TestKyvernoGroupsSupported keeps the Integration-request demo honest: Kyverno is listed as
@@ -373,4 +389,51 @@ func newQueryKubeAPI(t *testing.T, answers map[string]string, byQuery map[string
 	t.Cleanup(f.Close)
 
 	return f
+}
+
+// TestPolicyCountsByNamespace: a policy's results are also counted per namespace, the
+// namespaced report's own or, in a ClusterPolicyReport, the resource's; a cluster-scoped
+// resource counts in the totals only.
+func TestPolicyCountsByNamespace(t *testing.T) {
+	decode := func(s string) []policyReportObject {
+		var out []policyReportObject
+		if err := json.Unmarshal([]byte(s), &out); err != nil {
+			t.Fatal(err)
+		}
+
+		return out
+	}
+
+	reports := decode(`[
+		{"metadata":{"namespace":"shop"},"results":[
+			{"source":"kyverno","policy":"require-labels","result":"fail","resources":[{"kind":"Pod","namespace":"shop","name":"a"}]},
+			{"source":"kyverno","policy":"require-labels","result":"fail","resources":[{"kind":"Pod","namespace":"shop","name":"b"}]},
+			{"source":"kyverno","policy":"shop/local","result":"pass","resources":[{"kind":"Pod","namespace":"shop","name":"a"}]}]},
+		{"metadata":{"namespace":"media"},"results":[
+			{"source":"kyverno","policy":"require-labels","result":"pass","resources":[{"kind":"Pod","namespace":"media","name":"c"}]}]}]`)
+	cluster := decode(`[
+		{"metadata":{},"results":[
+			{"source":"kyverno","policy":"require-labels","result":"warn","resources":[{"kind":"Deployment","namespace":"billing","name":"d"}]},
+			{"source":"kyverno","policy":"require-labels","result":"fail","resources":[{"kind":"Namespace","name":"billing"}]},
+			{"source":"other","policy":"require-labels","result":"fail","resources":[{"kind":"Pod","namespace":"billing","name":"e"}]}]}]`)
+
+	rows := []kyvernoPolicy{{Name: "require-labels"}, {Namespace: "shop", Name: "local"}}
+
+	var out policiesReport
+
+	aggregatePolicyReports(rows, reports, cluster, &out)
+
+	labels := rows[0]
+	if labels.Fail != 3 || labels.Pass != 1 || labels.Warn != 1 {
+		t.Fatalf("require-labels totals fail %d pass %d warn %d", labels.Fail, labels.Pass, labels.Warn)
+	}
+
+	want := []policyNSRow{{Namespace: "billing", Warn: 1}, {Namespace: "media", Pass: 1}, {Namespace: "shop", Fail: 2}}
+	if !slices.Equal(labels.ByNamespace, want) {
+		t.Errorf("require-labels by namespace %+v, want %+v", labels.ByNamespace, want)
+	}
+
+	if got := rows[1].ByNamespace; !slices.Equal(got, []policyNSRow{{Namespace: "shop", Pass: 1}}) {
+		t.Errorf("local by namespace %+v", got)
+	}
 }
