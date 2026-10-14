@@ -12,6 +12,8 @@ import name.levis.ichor.model.GarageInstance
 import name.levis.ichor.model.GarageRepairResult
 import name.levis.ichor.model.LonghornAction
 import name.levis.ichor.model.VeleroBackups
+import name.levis.ichor.model.VeleroRestoreOptions
+import name.levis.ichor.model.VeleroRestorePreview
 import name.levis.ichorgo.Ichorgo
 
 /** Longhorn, Garage, CloudNativePG and cert-manager: their health and the actions on them. */
@@ -106,6 +108,24 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
      */
     suspend fun veleroDeleteBackup(namespace: String, backup: String): String = go.kube { cfg, ctx, server ->
         Ichorgo.kubeVeleroDeleteBackup(cfg, ctx, server, namespace, backup)
+    }
+
+    /**
+     * What restoring the Velero backup [namespace]/[backup] holds (os:admin): its namespaces,
+     * items and volumes, whether it can be restored, and the Restores of it already there.
+     * Never cached: the same read follows a restore's progress.
+     */
+    suspend fun veleroRestorePreview(namespace: String, backup: String): VeleroRestorePreview = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(VeleroRestorePreview.serializer(), Ichorgo.kubeVeleroRestorePreview(cfg, ctx, server, namespace, backup))
+    }
+
+    /**
+     * Restores the Velero backup [namespace]/[backup] with [options], like
+     * `velero restore create --from-backup` (os:admin): the Restore's name. Throws when refused
+     * (the backup cannot be a source, its storage location is down, a restore is running).
+     */
+    suspend fun veleroRestore(namespace: String, backup: String, options: VeleroRestoreOptions): String = go.kube { cfg, ctx, server ->
+        Ichorgo.kubeVeleroRestore(cfg, ctx, server, namespace, backup, TalosJson.encodeToString(VeleroRestoreOptions.serializer(), options))
     }
 
     /**

@@ -141,4 +141,23 @@ extension TalosClient {
             IchorgoKubeVeleroDeleteBackup(config, context, kubeServer, namespace, backup, error)
         }
     }
+
+    /// What restoring the Velero backup namespace/backup holds (os:admin): its namespaces, items
+    /// and volumes, whether it can be restored, and the Restores of it already there. The same
+    /// read follows a restore's progress.
+    func veleroRestorePreview(namespace: String, backup: String) async throws -> VeleroRestorePreview {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeVeleroRestorePreview(config, context, kubeServer, namespace, backup, $0)
+        }
+    }
+
+    /// Restores the Velero backup namespace/backup with options, like
+    /// `velero restore create --from-backup` (os:admin): the Restore's name. Refused while the
+    /// backup cannot be a source, its storage location is down, or a restore of it runs.
+    func veleroRestore(namespace: String, backup: String, options: VeleroRestoreOptions) async throws -> String {
+        let json = String(decoding: try JSONEncoder().encode(options), as: UTF8.self)
+        return try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+            IchorgoKubeVeleroRestore(config, context, kubeServer, namespace, backup, json, error)
+        }
+    }
 }

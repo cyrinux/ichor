@@ -4516,4 +4516,40 @@
     <string name="velero_delete_text">Velero rimuove i dati di questo backup dalla posizione di archiviazione, poi il backup stesso. Non potrà più essere ripristinato.</string>
     <string name="velero_delete_requested">Eliminazione di %1$s richiesta</string>
     <string name="velero_delete_errors">Eliminazione non riuscita: %1$s</string>
+    <string name="velero_restore">Ripristina</string>
+    <string name="velero_restore_title">Ripristinare il backup %1$s?</string>
+    <string name="velero_restore_no_volumes">nessuno snapshot di volume</string>
+    <string name="velero_restore_every_namespace">Vengono ripristinati tutti i namespace del backup.</string>
+    <string name="velero_restore_choose_namespaces">Scegli i namespace da ripristinare</string>
+    <string name="velero_restore_target_same">vuoto: stesso nome</string>
+    <string name="velero_restore_existing">Oggetti esistenti</string>
+    <string name="velero_restore_existing_leave">lascia</string>
+    <string name="velero_restore_existing_update">aggiorna (sovrascrive)</string>
+    <string name="velero_restore_volumes">Ripristina i volumi</string>
+    <string name="velero_restore_volumes_yes">come da backup</string>
+    <string name="velero_restore_volumes_no">no</string>
+    <string name="velero_restore_risk">Il ripristino ricrea gli oggetti del backup. I namespace che non esistono vengono creati; quelli esistenti ricevono gli oggetti del backup, che con l\'aggiornamento li sovrascrivono.</string>
+    <string name="velero_restore_reason_partially_failed">Il backup è terminato con errori: alcuni oggetti potrebbero mancare</string>
+    <string name="velero_restore_reason_location">La posizione di archiviazione del backup non è disponibile: i suoi dati non sono leggibili</string>
+    <string name="velero_restore_reason_expired">Il backup è scaduto: i suoi dati sono stati eliminati</string>
+    <string name="velero_restore_reason_running">Un ripristino di questo backup è già in corso</string>
+    <string name="velero_restore_reason_all_namespaces">Questo backup contiene tutti i namespace: ripristinarlo li ripristina tutti</string>
+    <string name="velero_restore_started">Ripristino %1$s avviato</string>
+    <string name="velero_restore_running">ripristino…</string>
+    <string name="velero_restore_validation_errors">Velero ha rifiutato il ripristino: %1$s</string>
+    <string name="velero_restore_close">Chiudi</string>
+    <string name="velero_restore_items_label">Oggetti</string>
+    <string name="velero_restore_volumes_label">Snapshot di volume</string>
+    <plurals name="velero_restore_items">
+        <item quantity="one">%1$d oggetto</item>
+        <item quantity="other">%1$d oggetti</item>
+    </plurals>
+    <plurals name="velero_restore_volumes">
+        <item quantity="one">%1$d snapshot di volume</item>
+        <item quantity="other">%1$d snapshot di volume</item>
+    </plurals>
+    <plurals name="velero_restore_progress">
+        <item quantity="one">%1$d di %2$d oggetto</item>
+        <item quantity="other">%1$d di %2$d oggetti</item>
+    </plurals>
 </resources>

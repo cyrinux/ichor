@@ -28,12 +28,13 @@ struct VeleroDeleteBackupSheet: View {
 }
 
 /// A schedule's backups, loaded when opened and again after each action (`reload`), with Delete
-/// on the finished ones.
+/// and Restore on the finished ones.
 struct VeleroBackupsDisclosure: View {
     let schedule: VeleroSchedule
     let reload: Int
     let deleting: Set<String>
     let onDelete: (VeleroBackupTarget) -> Void
+    let onRestore: (VeleroRestoreTarget) -> Void
 
     @Environment(AppModel.self) private var model
     @State private var open = false
@@ -49,6 +50,8 @@ struct VeleroBackupsDisclosure: View {
                 ForEach(list.backups) { backup in
                     BackupRow(backup: backup, deleting: backup.deleting || deleting.contains("\(schedule.namespace)/\(backup.name)")) {
                         onDelete(VeleroBackupTarget(namespace: schedule.namespace, name: backup.name))
+                    } onRestore: {
+                        onRestore(VeleroRestoreTarget(namespace: schedule.namespace, name: backup.name))
                     }
                 }
             } else if error == nil {
@@ -71,6 +74,7 @@ private struct BackupRow: View {
     let backup: VeleroBackupDetail
     let deleting: Bool
     let onDelete: () -> Void
+    let onRestore: () -> Void
 
     var body: some View {
         HStack(alignment: .top) {
@@ -85,6 +89,7 @@ private struct BackupRow: View {
             }
             Spacer()
             if backup.deletable && !deleting {
+                Button("Restore", action: onRestore).buttonStyle(.borderless).font(.caption)
                 Button("Delete", role: .destructive, action: onDelete).buttonStyle(.borderless).font(.caption)
             }
         }

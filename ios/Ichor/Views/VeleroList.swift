@@ -11,6 +11,7 @@ struct VeleroList: View {
     @Environment(AppModel.self) private var model
     @State private var confirmBackup: VeleroSchedule?
     @State private var deleteTarget: VeleroBackupTarget?
+    @State private var restoreTarget: VeleroRestoreTarget?
     /// Schedule labels with a backup now in flight, and "namespace/backup" with a deletion in flight.
     @State private var running: Set<String> = []
     /// Bumped after each action: the open backup lists reload.
@@ -29,7 +30,7 @@ struct VeleroList: View {
                 }
                 ForEach(status.schedules) { schedule in
                     ScheduleRow(schedule: schedule, busy: running.contains(schedule.label), changes: changes, deleting: running,
-                                onBackupNow: { confirmBackup = schedule }, onDelete: { deleteTarget = $0 })
+                                onBackupNow: { confirmBackup = schedule }, onDelete: { deleteTarget = $0 }, onRestore: { restoreTarget = $0 })
                 }
             }
             if !status.adhoc.isEmpty {
@@ -37,6 +38,8 @@ struct VeleroList: View {
                     ForEach(status.adhoc) { adhoc in
                         AdhocRow(backup: adhoc, deleting: running.contains(adhoc.label)) {
                             deleteTarget = VeleroBackupTarget(namespace: adhoc.namespace, name: adhoc.backup.name)
+                        } onRestore: {
+                            restoreTarget = VeleroRestoreTarget(namespace: adhoc.namespace, name: adhoc.backup.name)
                         }
                     }
                 }
@@ -59,6 +62,10 @@ struct VeleroList: View {
                 deleteTarget = nil
                 Task { await delete(target) }
             }.loadsKubeActionAccess(namespace: target.namespace)
+        }
+        .sheet(item: $restoreTarget) { target in
+            VeleroRestoreSheet(target: target, refresh: refresh)
+                .loadsKubeActionAccess(namespace: target.namespace)
         }
         .messageAlert($resultMessage)
     }
@@ -136,6 +143,7 @@ private struct ScheduleRow: View {
     let deleting: Set<String>
     let onBackupNow: () -> Void
     let onDelete: (VeleroBackupTarget) -> Void
+    let onRestore: (VeleroRestoreTarget) -> Void
 
     var body: some View {
         DisclosureGroup {
@@ -202,7 +210,7 @@ private struct ScheduleRow: View {
             Text(blockerText(blocker)).font(.caption).foregroundStyle(.secondary)
         }
         KubeDeniedNote(.veleroBackupNow, in: schedule.namespace)
-        VeleroBackupsDisclosure(schedule: schedule, reload: changes, deleting: deleting, onDelete: onDelete)
+        VeleroBackupsDisclosure(schedule: schedule, reload: changes, deleting: deleting, onDelete: onDelete, onRestore: onRestore)
     }
 
     private func blockerText(_ blocker: VeleroBackupBlocker) -> String {
@@ -218,6 +226,7 @@ private struct AdhocRow: View {
     let backup: VeleroAdhocBackup
     let deleting: Bool
     let onDelete: () -> Void
+    var onRestore: (() -> Void)?
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -230,6 +239,11 @@ private struct AdhocRow: View {
             if deleting {
                 Text("deleting…").font(.caption).foregroundStyle(.secondary)
             } else {
+                // Only a partially failed backup can be a restore source; the others failed for good.
+                if backup.backup.phase == "PartiallyFailed", let onRestore {
+                    Button("Restore", action: onRestore).buttonStyle(.borderless).font(.caption)
+                        .kubeGated(.veleroRestore, in: backup.namespace)
+                }
                 Button("Delete", role: .destructive, action: onDelete).buttonStyle(.borderless).font(.caption)
                     .kubeGated(.veleroDeleteBackup, in: backup.namespace)
             }
