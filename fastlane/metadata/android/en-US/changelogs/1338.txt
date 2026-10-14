@@ -1,0 +1,7 @@
+• Name the Gateway API controller on Gateway boxes and list kgateway as supported
+• Simulate losing two or more nodes at once in the capacity screen
+• Restore a Velero backup with a preview and namespace mapping
+• Autoscaling screen on Android and iOS for HPAs, KEDA, VPA and Karpenter
+• Keep "Cluster insights" readable beside the Capacity shortcut
+• Probe overlay VPN addresses last in the health check
+• Prefer talosconfig and LAN addresses over overlay VPN ones
