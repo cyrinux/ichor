@@ -43,12 +43,13 @@ func KubeCNPGRestartPrimary(configYAML, contextName, kubeServer, namespace, name
 		return err
 	}
 	action := auditAction{Server: kubeServer, Action: "cnpg-restart-primary", Namespace: namespace, Object: "Cluster/" + name}
-	defer func() { recordAction(&err, configYAML, contextName, action) }()
-	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
-		var primary string
-		primary, err = restartCNPGPrimary(ctx, k, namespace, name)
-		action.Params = "primary=" + primary
-		return err
+	return recordedRun(configYAML, contextName, func() auditAction { return action }, func() error {
+		return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
+			var primary string
+			primary, err = restartCNPGPrimary(ctx, k, namespace, name)
+			action.Params = "primary=" + primary
+			return err
+		})
 	})
 }
 
