@@ -186,7 +186,7 @@ func cnpgPromotionWarnings(c cnpgActionCluster, p cnpgActionPod, instance string
 	if c.Metadata.Annotations["cnpg.io/hibernation"] == "on" || conditionStatus(c.Status.Conditions, "cnpg.io/hibernation") == "True" {
 		warnings = append(warnings, "hibernated")
 	}
-	if c.Status.CurrentPrimary == "" || (c.Status.TargetPrimary != "" && c.Status.CurrentPrimary != c.Status.TargetPrimary) || strings.Contains(strings.ToLower(c.Status.Phase), "switchover") || strings.Contains(strings.ToLower(c.Status.Phase), "failover") {
+	if c.Status.CurrentPrimary == "" || (c.Status.TargetPrimary != "" && c.Status.CurrentPrimary != c.Status.TargetPrimary) || strings.Contains(strings.ToLower(c.Status.Phase), "switchover") || strings.Contains(strings.ToLower(c.Status.Phase), "failover") || c.Status.Phase == cnpgPrimaryRestartPhase {
 		warnings = append(warnings, "switching")
 	}
 	if raw := c.Metadata.Annotations["cnpg.io/fencedInstances"]; raw != "" {

@@ -26,7 +26,7 @@
       },
       "goal": 300,
       "raised": 0,
-      "status": "open",
+      "status": "shipped",
       "products": [
         "fund_data_actions_2",
         "fund_data_actions_5",
@@ -53,7 +53,7 @@
       },
       "goal": 200,
       "raised": 0,
-      "status": "open",
+      "status": "shipped",
       "products": [
         "fund_data_more_2",
         "fund_data_more_5",

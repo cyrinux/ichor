@@ -10,6 +10,16 @@ import (
 
 // GitOps, the network and data services.
 var dataCommands = []command{
+	{name: "longhorn-attachment-preview", args: "NAMESPACE VOLUME", run: func(e env) (string, error) {
+		return ichorgo.KubeLonghornAttachmentPreview(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+	}},
+	{name: "longhorn-attachment", args: "NAMESPACE VOLUME NODE ATTACH", run: func(e env) (string, error) {
+		attach, err := strconv.ParseBool(flag.Arg(4))
+		if err != nil {
+			return "", err
+		}
+		return "requested", ichorgo.KubeLonghornAttachment(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), attach)
+	}},
 	{name: "longhorn-salvage-preview", args: "NAMESPACE VOLUME", run: func(e env) (string, error) {
 		return ichorgo.KubeLonghornSalvagePreview(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
 	}},

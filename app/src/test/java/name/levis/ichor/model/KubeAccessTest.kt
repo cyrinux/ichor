@@ -59,7 +59,7 @@ class KubeAccessTest {
                 "createVolumeSnapshot", "restartWorkload", "restartStatefulSet", "restartDaemonSet", "scale", "scaleStatefulSet",
                 "deletePod", "execPod", "debugPod", "debugNode", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync",
                 "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
-                "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode", "cnpgPromote", "cnpgRestartPrimary", "cnpgHibernate", "longhornSalvage",
+                "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode", "cnpgPromote", "cnpgRestartPrimary", "cnpgHibernate", "longhornSalvage", "longhornAttachment",
             ),
             KubeAction.entries.map { it.wire },
         )
