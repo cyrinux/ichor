@@ -1,0 +1,5 @@
+• Stretch the overview CPU graph across the card until its window is full
+• Read KubeVirt virtual machines, their instances, migrations and disk imports from the Go core
+• Run a Velero schedule now and delete its backups from Android and iOS
+• Run a Velero schedule now, list its backups and delete one from the Go core
+• Read HPAs, KEDA, VPA recommendations and Karpenter pools in one autoscaling report
