@@ -1,10 +1,18 @@
 package ichorgo
 
 // Kyverno's API groups: its policies, and the standard policy reports it writes. Each read
-// asks the preferred version its discovery offers; the report tells which one it got.
+// asks the preferred version its discovery offers; the report tells which one it got. The
+// policies themselves are read from the preferred version when it serves them, else from
+// kyvernoPoliciesVersion: Kyverno 1.15 made v2 the group's preferred version while
+// ClusterPolicy and Policy stay under v1 (v2 serves updaterequests, admissionreports,
+// cleanuppolicies), and a future release may serve them under v2.
 const (
 	groupKyverno      = "kyverno.io"
 	groupPolicyReport = "wgpolicyk8s.io"
+
+	// kyvernoPoliciesVersion is the storage version of ClusterPolicy and Policy, served by
+	// every Kyverno release; the fallback when the preferred version does not serve them.
+	kyvernoPoliciesVersion = "v1"
 )
 
 // What one report result says, and the action a policy applies its rules with. "Mixed" is
