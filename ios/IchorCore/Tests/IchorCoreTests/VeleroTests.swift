@@ -59,4 +59,28 @@ final class VeleroTests: XCTestCase {
         let inventory = try TalosJSON.decode(ClusterInventory.self, from: #"{"apps":[{"id":"velero","name":"Velero"},{"id":"longhorn","name":"Longhorn"}]}"#)
         XCTAssertEqual(dataServiceHints(inventory), "longhorn,velero")
     }
+
+    func testBackupListDecodesWithDefaults() throws {
+        let list = try TalosJSON.decode(VeleroBackups.self, from: #"""
+        {"namespace":"velero","schedule":"apps-daily","future":1,"backups":[
+         {"name":"apps-daily-2","phase":"Completed","startedAt":10,"completedAt":20,"expiresAt":99,"finished":true,"totalItems":4},
+         {"name":"apps-daily-1","phase":"Completed","startedAt":5,"finished":true,"deleting":true},
+         {"name":"apps-daily-0","phase":"InProgress","startedAt":1,"running":true},
+         {"name":"apps-daily-x","phase":"Failed","finished":true,"deleteErrors":["read-only location"]}]}
+        """#)
+        XCTAssertEqual(list.backups.map(\.deletable), [true, false, false, true])
+        XCTAssertEqual(list.backups[0].at, 20)
+        XCTAssertEqual(list.backups[1].at, 5)
+        XCTAssertEqual(list.backups[3].deleteErrors, ["read-only location"])
+        XCTAssertEqual(list.error, "")
+        XCTAssertEqual(try TalosJSON.decode(VeleroBackupDetail.self, from: "{}").includedNamespaces, [])
+    }
+
+    func testBackupNowBlockers() throws {
+        let s = try services.velero!.schedules
+        XCTAssertEqual(s.first { $0.name == "failing" }?.backupNowBlocker, nil)
+        XCTAssertEqual(s.first { $0.name == "partial" }?.backupNowBlocker, .running)
+        XCTAssertEqual(s.first { $0.name == "invalid" }?.backupNowBlocker, .invalid)
+        XCTAssertEqual(s.first { $0.name == "paused" }?.backupNowBlocker, .paused)
+    }
 }

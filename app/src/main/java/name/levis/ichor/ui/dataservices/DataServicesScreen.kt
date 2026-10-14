@@ -89,6 +89,7 @@ fun DataServicesScreen(
     CnpgBackupToasts(vm.cnpg.results)
     CnpgPromoteToasts(vm.cnpg.promoteResults)
     CnpgLifecycleToasts(vm.cnpg.lifecycleResults)
+    VeleroResultToasts(vm.velero.results)
 
     val fingerprint = config?.realFingerprint?.takeUnless { mask.enabled }
     var editing by remember { mutableStateOf(false) }
@@ -131,7 +132,7 @@ fun DataServicesScreen(
                 else app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
             }
             if (data.detected.isEmpty()) NoDataServices(onSupportedIntegrations, onRequestIntegration)
-            else Systems(data, downNodes, initial, vm.garage, vm.longhorn, vm.certificates, vm.cnpg)
+            else Systems(data, downNodes, initial, vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero)
         }
     }
 }
@@ -152,7 +153,7 @@ private fun NoDataServices(onSupportedIntegrations: () -> Unit, onRequestIntegra
 }
 
 @Composable
-private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions, cnpg: CnpgActions) {
+private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions, cnpg: CnpgActions, velero: VeleroActions) {
     val kinds = services.detected
     // Picked once: a system detected later, before it in the list, doesn't take its place.
     var selected by rememberSaveable { mutableStateOf(initial ?: kinds.first()) }
@@ -178,7 +179,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
                 DataServiceKind.MARIADB -> MariaDbTab(services.mariadb!!)
                 DataServiceKind.PERCONA -> PerconaTab(services.percona!!)
                 DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!, certificates)
-                DataServiceKind.VELERO -> VeleroTab(services.velero!!)
+                DataServiceKind.VELERO -> VeleroTab(services.velero!!, velero)
                 DataServiceKind.CEPH -> CephTab(services.ceph!!)
                 DataServiceKind.SNAPSHOTS -> SnapshotsTab(services.snapshots!!)
                 DataServiceKind.BACKUP_JOBS -> BackupJobsTab(services.backupJobs!!)

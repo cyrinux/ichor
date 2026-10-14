@@ -14,6 +14,7 @@ import name.levis.ichor.data.BackupManager
 import name.levis.ichor.data.AiPreferences
 import name.levis.ichor.data.CaptureRepository
 import name.levis.ichor.data.CiliumRepository
+import name.levis.ichor.data.PolicyRepository
 import name.levis.ichor.data.NetPerfHistory
 import name.levis.ichor.data.ImageScanRepository
 import name.levis.ichor.data.NetPerfRepository
@@ -181,6 +182,7 @@ class TalosApp : Application() {
         )
     }
     val ciliumRepository by lazy { CiliumRepository(configRepository, kubeServers) }
+    val policyRepository by lazy { PolicyRepository(configRepository, kubeServers) }
     /** Any kind as YAML, Helm releases, followed pod logs and port-forwards (Kubernetes API only). */
     val kubeBrowser by lazy { KubeBrowserRepository(configRepository, kubeServers) }
     /** Which Kubernetes actions the active cluster's credentials may run, and who they are. */

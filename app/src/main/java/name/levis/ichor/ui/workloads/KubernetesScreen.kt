@@ -61,7 +61,7 @@ private val KUBE_TABS = listOf(0, 1, 2, 3)
  * policies and, with Cilium or Calico,
  * the live flows ([onFlows] with the namespace and pod to narrow them to, or nulls), and from
  * its menu the browser of every kind ([onResources]), the Helm releases ([onHelm]) and the
- * live cluster events ([onEvents]).
+ * live cluster events ([onEvents]), and the admission policies ([onPolicies]).
  * [focus] (a share link) opens a tab, scoped to and searched for one item, whose sheet opens
  * once its row loads.
  */
@@ -80,6 +80,7 @@ fun KubernetesScreen(
     onServices: () -> Unit,
     onJobs: () -> Unit,
     onEvents: () -> Unit,
+    onPolicies: () -> Unit,
     focus: KubeFocus = KubeFocus(0),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(focus.tab) }
@@ -156,6 +157,7 @@ fun KubernetesScreen(
                                 KubernetesAction.JOBS -> onJobs()
                                 KubernetesAction.EVENTS -> onEvents()
                                 KubernetesAction.API_ADDRESS -> editing = true
+                                KubernetesAction.POLICIES -> onPolicies()
                             }
                         },
                         customizeLabel = stringResource(R.string.bar_edit_title),

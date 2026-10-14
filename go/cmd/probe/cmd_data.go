@@ -43,6 +43,16 @@ var dataCommands = []command{
 		err := ichorgo.KubeCNPGPromote(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
 		return "requested", err
 	}},
+	{name: "velero-backups", args: "NAMESPACE [SCHEDULE]", run: func(e env) (string, error) {
+		// velero-backups NAMESPACE [SCHEDULE]: a schedule's backups, or the ones taken by hand.
+		return ichorgo.KubeVeleroBackups(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+	}},
+	{name: "velero-backup-now", args: "NAMESPACE SCHEDULE", run: func(e env) (string, error) {
+		return ichorgo.KubeVeleroBackupNow(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+	}},
+	{name: "velero-delete-backup", args: "NAMESPACE BACKUP", run: func(e env) (string, error) {
+		return ichorgo.KubeVeleroDeleteBackup(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+	}},
 	{name: "crossplane", args: "", run: func(e env) (out string, err error) {
 		return ichorgo.KubeCrossplane(e.cfg, e.context, e.kubeServer)
 	}},
@@ -185,6 +195,12 @@ var dataCommands = []command{
 	{name: "kube-policies", args: "", run: func(e env) (out string, err error) {
 		// kube-policies: the Kyverno policies and their PolicyReport findings (read-only).
 		out, err = ichorgo.KubePolicies(e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
+	{name: "kube-autoscaling", args: "", run: func(e env) (out string, err error) {
+		// kube-autoscaling: HPAs, KEDA, VPA recommendations and Karpenter pools (read-only).
+		out, err = ichorgo.KubeAutoscaling(e.cfg, e.context, e.kubeServer)
 
 		return out, err
 	}},

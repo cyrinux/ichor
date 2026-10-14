@@ -11,6 +11,7 @@ import name.levis.ichor.model.GarageBlockReport
 import name.levis.ichor.model.GarageInstance
 import name.levis.ichor.model.GarageRepairResult
 import name.levis.ichor.model.LonghornAction
+import name.levis.ichor.model.VeleroBackups
 import name.levis.ichorgo.Ichorgo
 
 /** Longhorn, Garage, CloudNativePG and cert-manager: their health and the actions on them. */
@@ -84,6 +85,27 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
 
     suspend fun cnpgPromote(namespace: String, name: String, instance: String) = go.kube { cfg, ctx, server ->
         Ichorgo.kubeCNPGPromote(cfg, ctx, server, namespace, name, instance)
+    }
+
+    /** The backups of the Velero schedule [namespace]/[schedule], or the ones taken by hand when it is "" (os:admin). Never cached. */
+    suspend fun veleroBackups(namespace: String, schedule: String): VeleroBackups = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(VeleroBackups.serializer(), Ichorgo.kubeVeleroBackups(cfg, ctx, server, namespace, schedule))
+    }
+
+    /**
+     * Backs the Velero schedule [namespace]/[schedule] up now, like `velero backup create --from-schedule`
+     * (os:admin): the new Backup's name. Throws when refused (paused, invalid, a backup running).
+     */
+    suspend fun veleroBackupNow(namespace: String, schedule: String): String = go.kube { cfg, ctx, server ->
+        Ichorgo.kubeVeleroBackupNow(cfg, ctx, server, namespace, schedule)
+    }
+
+    /**
+     * Asks Velero to delete the backup [namespace]/[backup] and its data, like `velero backup delete`
+     * (os:admin): the deletion request's name. Throws when refused (still running, already deleting).
+     */
+    suspend fun veleroDeleteBackup(namespace: String, backup: String): String = go.kube { cfg, ctx, server ->
+        Ichorgo.kubeVeleroDeleteBackup(cfg, ctx, server, namespace, backup)
     }
 
     /**

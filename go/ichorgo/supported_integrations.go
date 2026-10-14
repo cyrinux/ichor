@@ -49,6 +49,10 @@ var integrationSpecs = []integrationSpec{
 	{ID: "external-secrets", Name: "External Secrets Operator", Website: "https://external-secrets.io", Groups: []string{groupExternalSecrets}},
 	// Kyverno is read through its policies and the (standard) policy reports it writes.
 	{ID: "kyverno", Name: "Kyverno", Website: "https://kyverno.io", Groups: []string{groupKyverno, groupPolicyReport}, Resource: "clusterpolicies"},
+	// The autoscalers: KEDA's ScaledObjects, the VPA's recommendations and Karpenter's pools.
+	{ID: "keda", Name: "KEDA", Website: "https://keda.sh", Groups: []string{groupKEDA}, Resource: "scaledobjects"},
+	{ID: "vpa", Name: "Vertical Pod Autoscaler", Website: "https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler", Groups: []string{groupVPA}, Resource: "verticalpodautoscalers"},
+	{ID: "karpenter", Name: "Karpenter", Website: "https://karpenter.sh", Groups: []string{groupKarpenter}, Resource: "nodepools"},
 	{ID: "gateway-api", Name: "Gateway API", Website: "https://gateway-api.sigs.k8s.io", Groups: []string{groupGatewayAPI}},
 	{ID: "traefik", Name: "Traefik", Website: "https://traefik.io", Groups: []string{groupTraefik}},
 	{ID: "prometheus-operator", Name: "Prometheus Operator", Website: "https://prometheus-operator.dev", Groups: []string{groupMonitoring}},

@@ -32,6 +32,9 @@ class DataServicesViewModel(private val dataServices: DataServicesRepository) : 
     /** On-demand CloudNativePG backups; the new backup shows in a fresh reading once done. */
     val cnpg = CnpgActions(viewModelScope, dataServices, onChanged = { refresh() })
 
+    /** Velero backups now and deletions; the schedule's progress shows in a fresh reading. */
+    val velero = VeleroActions(viewModelScope, dataServices, onChanged = { refresh() })
+
     /** Catalog ids from the inventory; "" checks everything (Garage needs a listing of every pod then). */
     private var hints = ""
     private var source: Any? = null

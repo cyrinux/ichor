@@ -14,6 +14,7 @@ public enum KubeAction: String, CaseIterable, Sendable {
     /// create and delete on services/proxy: an Alertmanager reached through the service proxy.
     case alertmanagerSilence, alertmanagerExpire
     case cnpgPromote, cnpgRestartPrimary, cnpgHibernate, longhornSalvage, longhornAttachment
+    case veleroBackupNow, veleroDeleteBackup
 
     /// Asked in a namespace; the node actions are cluster-wide whatever the namespace.
     public var isNamespaced: Bool {
