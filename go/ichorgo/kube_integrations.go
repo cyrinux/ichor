@@ -261,11 +261,11 @@ func integrationGroupsText(groups []integrationGroup) string {
 func demoIntegrations() integrationReport {
 	report := integrationReport{
 		Families: []integrationFamily{
-			{ID: "keda.sh", Groups: []integrationGroup{
-				{Name: "keda.sh", Version: "v1alpha1", Kinds: []string{"ScaledJob", "ScaledObject", "TriggerAuthentication"}},
+			{ID: "kubevirt.io", Groups: []integrationGroup{
+				{Name: "kubevirt.io", Version: "v1", Kinds: []string{"VirtualMachine", "VirtualMachineInstance", "VirtualMachineInstanceMigration"}},
 			}},
 		},
-		Supported: []string{groupCrossplanePkg, groupCrossplaneAPIExt, groupArgo, groupCertManager, groupKyverno, groupLonghorn, groupMetalLB, groupMonitoring, groupCNPG, groupTraefik, groupPolicyReport},
+		Supported: []string{groupKEDA, groupCrossplanePkg, groupCrossplaneAPIExt, groupArgo, groupCertManager, groupKyverno, groupLonghorn, groupMetalLB, groupMonitoring, groupCNPG, groupTraefik, groupPolicyReport},
 	}
 	slices.Sort(report.Supported)
 	return report

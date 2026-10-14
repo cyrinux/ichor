@@ -288,8 +288,8 @@ func TestKyvernoGroupsSupported(t *testing.T) {
 		}
 	}
 
-	// MetalLB is supported too: KEDA is the family the demo still asks for.
-	if !slices.Equal(ids, []string{"keda.sh"}) {
+	// MetalLB and KEDA are supported too: KubeVirt is the family the demo still asks for.
+	if !slices.Equal(ids, []string{"kubevirt.io"}) {
 		t.Errorf("families %v", ids)
 	}
 }
