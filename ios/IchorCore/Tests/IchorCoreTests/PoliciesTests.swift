@@ -62,7 +62,8 @@ final class PoliciesTests: XCTestCase {
           "warn": 0,
           "error": 0,
           "skip": 0,
-          "failing": null
+          "failing": null,
+          "byNamespace": null
         },
         {
           "namespace": "",
@@ -82,12 +83,42 @@ final class PoliciesTests: XCTestCase {
           "ruleNames": [
             "privileged-containers"
           ],
-          "pass": 0,
+          "pass": 15,
           "fail": 0,
           "warn": 0,
           "error": 0,
           "skip": 0,
-          "failing": null
+          "failing": null,
+          "byNamespace": [
+            {
+              "namespace": "billing",
+              "pass": 9,
+              "fail": 0,
+              "warn": 0,
+              "error": 0
+            },
+            {
+              "namespace": "media",
+              "pass": 3,
+              "fail": 0,
+              "warn": 0,
+              "error": 0
+            },
+            {
+              "namespace": "shop",
+              "pass": 1,
+              "fail": 0,
+              "warn": 0,
+              "error": 0
+            },
+            {
+              "namespace": "vault",
+              "pass": 2,
+              "fail": 0,
+              "warn": 0,
+              "error": 0
+            }
+          ]
         },
         {
           "namespace": "shop",
@@ -114,7 +145,16 @@ final class PoliciesTests: XCTestCase {
           "warn": 2,
           "error": 0,
           "skip": 0,
-          "failing": null
+          "failing": null,
+          "byNamespace": [
+            {
+              "namespace": "shop",
+              "pass": 3,
+              "fail": 0,
+              "warn": 2,
+              "error": 0
+            }
+          ]
         },
         {
           "namespace": "",
@@ -167,6 +207,15 @@ final class PoliciesTests: XCTestCase {
               "message": "Validation error: missing label owner",
               "severity": "medium",
               "at": 1760000000
+            }
+          ],
+          "byNamespace": [
+            {
+              "namespace": "shop",
+              "pass": 0,
+              "fail": 7,
+              "warn": 0,
+              "error": 0
             }
           ]
         }
@@ -249,12 +298,27 @@ final class PoliciesTests: XCTestCase {
         XCTAssertEqual(report.policies.first?.errors, 2)
     }
 
-    func testANamespaceKeepsItsOwnAndTheClusterWidePoliciesInOrder() throws {
+    func testANamespaceKeepsItsOwnPoliciesAndTheClusterWideOnesThatCheckedIt() throws {
         let report = try decode(json)
         XCTAssertEqual(report.filtered(namespace: nil, query: ""), report.policies)
-        XCTAssertEqual(report.filtered(namespace: "billing", query: "").map(\.name), ["verify-image-signatures", "disallow-privileged", "require-labels"])
-        XCTAssertEqual(report.filtered(namespace: "shop", query: "").count, 4)
+        // billing: require-labels has no result there; the not-ready one stays.
+        XCTAssertEqual(report.filtered(namespace: "billing", query: "").map(\.name), ["verify-image-signatures", "disallow-privileged"])
+        XCTAssertEqual(report.filtered(namespace: "shop", query: "").map(\.name),
+                       ["verify-image-signatures", "disallow-privileged", "restrict-image-registries", "require-labels"])
         XCTAssertEqual(report.namespaceNames, ["billing", "media", "shop", "vault"])
+    }
+
+    func testAPickedNamespaceShowsThePolicysCountsThere() throws {
+        let report = try decode(json)
+        let labels = try XCTUnwrap(report.policies.first { $0.name == "require-labels" })
+        XCTAssertEqual(labels.counts(namespace: nil), PolicyResultCounts(fail: 7))
+        XCTAssertEqual(labels.counts(namespace: "shop"), PolicyResultCounts(fail: 7))
+        XCTAssertEqual(labels.counts(namespace: "billing"), PolicyResultCounts())
+        let privileged = try XCTUnwrap(report.policies.first { $0.name == "disallow-privileged" })
+        XCTAssertEqual(privileged.counts(namespace: nil), PolicyResultCounts(pass: 15))
+        XCTAssertEqual(privileged.counts(namespace: "billing"), PolicyResultCounts(pass: 9))
+        XCTAssertTrue(privileged.checks("vault"))
+        XCTAssertFalse(labels.checks("vault"))
     }
 
     func testSearchesNameCategorySeverityAndRules() throws {
