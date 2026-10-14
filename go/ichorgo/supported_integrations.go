@@ -66,7 +66,7 @@ var integrationSpecs = []integrationSpec{
 	{ID: "kubernetes-csi", Name: "CSI VolumeSnapshots", Website: "https://kubernetes.io/docs/concepts/storage/volume-snapshots/", Groups: []string{groupSnapshot}, Resource: "volumesnapshots"},
 }
 
-// groupGatewayAPI is the Gateway API's group: HTTPRoutes and Gateways.
+// groupGatewayAPI is the Gateway API's group: HTTPRoutes, GRPCRoutes, TLSRoutes and Gateways.
 const groupGatewayAPI = "gateway.networking.k8s.io"
 
 // How an integration was found.

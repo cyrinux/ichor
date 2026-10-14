@@ -18,6 +18,8 @@ public enum ArgoNetKind: String, Sendable, CaseIterable, WireEnum {
     case gateway = "Gateway"
     case ingress = "Ingress"
     case httpRoute = "HTTPRoute"
+    case grpcRoute = "GRPCRoute"
+    case tlsRoute = "TLSRoute"
     case ingressRoute = "IngressRoute"
     case ingressRouteTCP = "IngressRouteTCP"
     case service = "Service"
@@ -30,7 +32,7 @@ public enum ArgoNetKind: String, Sendable, CaseIterable, WireEnum {
     /// A Gateway or a route, which a shared one (not the app's) can be.
     public var routesTraffic: Bool {
         switch self {
-        case .gateway, .ingress, .httpRoute, .ingressRoute, .ingressRouteTCP: true
+        case .gateway, .ingress, .httpRoute, .grpcRoute, .tlsRoute, .ingressRoute, .ingressRouteTCP: true
         case .host, .loadBalancer, .service, .pod, .node, .unknown: false
         }
     }
@@ -165,7 +167,7 @@ public struct ArgoNetProblem: Decodable, Equatable, Sendable {
         case .node: detail == "SchedulingDisabled" ? .nodeCordoned(name) : .nodeNotReady(name)
         case .pod: .pod(name, detail)
         case .service: .serviceWithoutPods(name)
-        case .ingress, .httpRoute, .ingressRoute, .ingressRouteTCP, .gateway: .noHealthyBackend(kind.rawValue, name)
+        case .ingress, .httpRoute, .grpcRoute, .tlsRoute, .ingressRoute, .ingressRouteTCP, .gateway: .noHealthyBackend(kind.rawValue, name)
         case .host, .loadBalancer, .unknown: .other(kind.rawValue, name, detail)
         }
     }

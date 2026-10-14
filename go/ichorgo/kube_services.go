@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -96,10 +97,10 @@ type endpointSliceObject struct {
 
 // serviceRoutes holds what serviceRows needs to find the URLs of a Service.
 type serviceRoutes struct {
-	ingresses  []ingressObject
-	httpRoutes []httpRouteObject
-	gateways   []gatewayObject
-	traefik    traefikRouteSet
+	ingresses     []ingressObject
+	gatewayRoutes []gatewayRouteObject // HTTPRoutes, GRPCRoutes and TLSRoutes
+	gateways      []gatewayObject
+	traefik       traefikRouteSet
 }
 
 // KubeServices lists the Services of namespace ("" for all) with their addresses, ready
@@ -129,10 +130,12 @@ func readServices(ctx context.Context, k *kubeClient, namespace string, now time
 
 	// The rest only completes the rows: read together, each allowed to fail.
 	var (
-		endpointSlices                 []endpointSliceObject
-		routes                         serviceRoutes
-		sliceErr, ingErr, hrErr, irErr error
-		wg                             sync.WaitGroup
+		endpointSlices         []endpointSliceObject
+		routes                 serviceRoutes
+		sliceErr, ingErr       error
+		hrErr, grpcErr, tlsErr error
+		irErr                  error
+		wg                     sync.WaitGroup
 	)
 
 	wg.Go(func() {
@@ -141,10 +144,15 @@ func readServices(ctx context.Context, k *kubeClient, namespace string, now time
 	wg.Go(func() {
 		routes.ingresses, ingErr = listObjects[ingressObject](ctx, k, scopedPath("/apis/networking.k8s.io/v1", namespace, "ingresses"))
 	})
-	// The Gateway API is optional: without its CRDs, no HTTPRoute.
+	// The Gateway API is optional: without its CRDs, no routes. GRPCRoute came with v1.1;
+	// TLSRoute is the experimental channel (v1alpha2), absent on most clusters.
 	wg.Go(func() {
-		routes.httpRoutes, hrErr = listObjects[httpRouteObject](ctx, k, scopedPath("/apis/"+groupGatewayAPI+"/v1", namespace, "httproutes"))
-		hrErr = ignoreNotFound(hrErr)
+		var http, grpc, tls []gatewayRouteObject
+
+		http, hrErr = readGatewayRoutes(ctx, k, scopedPath("/apis/"+groupGatewayAPI+"/v1", namespace, "httproutes"), "HTTPRoute")
+		grpc, grpcErr = readGatewayRoutes(ctx, k, scopedPath("/apis/"+groupGatewayAPI+"/v1", namespace, "grpcroutes"), "GRPCRoute")
+		tls, tlsErr = readGatewayRoutes(ctx, k, scopedPath("/apis/"+groupGatewayAPI+"/v1alpha2", namespace, "tlsroutes"), "TLSRoute")
+		routes.gatewayRoutes = slices.Concat(http, grpc, tls)
 	})
 	// Gateways often live in their own namespace; only used for the scheme and port.
 	wg.Go(func() {
@@ -153,7 +161,7 @@ func readServices(ctx context.Context, k *kubeClient, namespace string, now time
 	wg.Go(func() { routes.traefik, irErr = readTraefikRoutes(ctx, k, namespace, false) })
 	wg.Wait()
 
-	if len(routes.httpRoutes) > 0 {
+	if len(routes.gatewayRoutes) > 0 {
 		routes.gateways = withPublicPorts(ctx, k, routes.gateways)
 	}
 
@@ -164,7 +172,7 @@ func readServices(ctx context.Context, k *kubeClient, namespace string, now time
 
 	out := kubeServices{
 		Services:      joinServices(services, counts, routes, now),
-		PartialAccess: sliceErr != nil || ingErr != nil || hrErr != nil || irErr != nil,
+		PartialAccess: sliceErr != nil || ingErr != nil || hrErr != nil || grpcErr != nil || tlsErr != nil || irErr != nil,
 	}
 
 	if anyPending(out.Services) {

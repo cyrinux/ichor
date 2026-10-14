@@ -15,7 +15,7 @@ import (
 // The network view of an Argo CD app, like the Network tab of Argo CD's own UI, with one more
 // column it cannot draw: how traffic reaches the app's pods and which nodes they run on.
 //
-//	host → Gateway → Ingress/HTTPRoute → Service → Pod → node
+//	host → Gateway → Ingress/HTTPRoute/GRPCRoute/TLSRoute → Service → Pod → node
 //
 // Built from the app's own resources (its Services, Ingresses and HTTPRoutes) plus the routes
 // elsewhere that send traffic to its Services (a shared Gateway's HTTPRoute), the pods those
@@ -50,7 +50,7 @@ type argoNetProblem struct {
 type argoNetNode struct {
 	ID        string `json:"id"`
 	Layer     int    `json:"layer"`
-	Kind      string `json:"kind"` // Host|LoadBalancer|Gateway|Ingress|HTTPRoute|Service|Pod|Node
+	Kind      string `json:"kind"` // Host|LoadBalancer|Gateway|Ingress|HTTPRoute|GRPCRoute|TLSRoute|IngressRoute|IngressRouteTCP|Service|Pod|Node
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
 	Detail    string `json:"detail"` // "ClusterIP 10.96.0.12 · 80→8080", a pod's status, an address
@@ -134,14 +134,14 @@ type netNodeObject struct {
 
 // argoNetInput is what the graph is built from, read from the API server.
 type argoNetInput struct {
-	app        argoObject
-	services   []netService
-	pods       []netPod
-	ingresses  []ingressObject
-	httpRoutes []httpRouteObject
-	gateways   []gatewayObject
-	traefik    traefikRouteSet
-	nodes      []netNodeObject
+	app           argoObject
+	services      []netService
+	pods          []netPod
+	ingresses     []ingressObject
+	gatewayRoutes []gatewayRouteObject // HTTPRoutes, GRPCRoutes and TLSRoutes
+	gateways      []gatewayObject
+	traefik       traefikRouteSet
+	nodes         []netNodeObject
 }
 
 func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string) (argoNetwork, error) {
@@ -203,15 +203,27 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 	}
 
 	var (
-		ingresses  kubeList[ingressObject]
-		httpRoutes kubeList[httpRouteObject]
-		gateways   kubeList[gatewayObject]
-		nodes      kubeList[netNodeObject]
+		ingresses kubeList[ingressObject]
+		gwRoutes  []gatewayRouteObject
+		gateways  kubeList[gatewayObject]
+		nodes     kubeList[netNodeObject]
 	)
 
 	tasks = append(tasks,
 		func() { fail(getList(ctx, k, "/apis/networking.k8s.io/v1/ingresses", &ingresses)) },
-		func() { fail(ignoreNotFound(getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/httproutes", &httpRoutes))) },
+		// The Gateway API is optional: without its CRDs, no routes. GRPCRoute came with v1.1;
+		// TLSRoute is the experimental channel (v1alpha2), absent on most clusters.
+		func() {
+			http, err := readGatewayRoutes(ctx, k, "/apis/"+groupGatewayAPI+"/v1/httproutes", "HTTPRoute")
+			fail(err)
+			grpc, err := readGatewayRoutes(ctx, k, "/apis/"+groupGatewayAPI+"/v1/grpcroutes", "GRPCRoute")
+			fail(err)
+			tls, err := readGatewayRoutes(ctx, k, "/apis/"+groupGatewayAPI+"/v1alpha2/tlsroutes", "TLSRoute")
+			fail(err)
+			mu.Lock()
+			gwRoutes = slices.Concat(http, grpc, tls)
+			mu.Unlock()
+		},
 		func() { _ = getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/gateways", &gateways) },
 		func() {
 			traefik, err := readTraefikRoutes(ctx, k, "", true)
@@ -229,8 +241,8 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 		return argoNetwork{}, errs[0]
 	}
 
-	in.ingresses, in.httpRoutes, in.gateways, in.nodes = ingresses.Items, httpRoutes.Items, gateways.Items, nodes.Items
-	if len(in.httpRoutes) > 0 {
+	in.ingresses, in.gatewayRoutes, in.gateways, in.nodes = ingresses.Items, gwRoutes, gateways.Items, nodes.Items
+	if len(in.gatewayRoutes) > 0 {
 		in.gateways = withPublicPorts(ctx, k, in.gateways)
 	}
 
@@ -369,8 +381,8 @@ func buildArgoNetwork(in argoNetInput) argoNetwork {
 	return g.out
 }
 
-// argoNetRoutes adds the Ingresses, HTTPRoutes and Traefik routes sending traffic to the app's
-// Services, their hosts, and the Gateways the HTTPRoutes attach to.
+// argoNetRoutes adds the Ingresses, Gateway API routes and Traefik routes sending traffic to
+// the app's Services, their hosts, and the Gateways the Gateway routes attach to.
 func argoNetRoutes(g *argoNetGraph, in argoNetInput, services map[serviceRef]bool, managed map[string]bool) {
 	for _, r := range ingressRoutes(in.ingresses, services) {
 		rid := g.add(argoNetNode{ID: "ing/" + r.Namespace + "/" + r.Name, Layer: argoLayerRoute, Kind: "Ingress", Namespace: r.Namespace, Name: r.Name,
@@ -393,13 +405,23 @@ func argoNetRoutes(g *argoNetGraph, in argoNetInput, services map[serviceRef]boo
 		g.link(rid, "svc/"+r.Namespace+"/"+r.Service)
 	}
 
-	for _, r := range httpRouteRoutes(in.httpRoutes, in.gateways, services) {
-		rid := g.add(argoNetNode{ID: "hr/" + r.Namespace + "/" + r.Name, Layer: argoLayerRoute, Kind: "HTTPRoute", Namespace: r.Namespace, Name: r.Name,
-			Managed: managed["HTTPRoute/"+r.Namespace+"/"+r.Name]})
+	argoNetGatewayRoutes(g, in, services, managed)
+}
+
+// argoNetGatewayRoutes adds the Gateway API routes sending traffic to the app's Services and
+// the Gateways they attach to, with a node id prefix per kind (hr, gr, tr).
+func argoNetGatewayRoutes(g *argoNetGraph, in argoNetInput, services map[serviceRef]bool, managed map[string]bool) {
+	prefixes := map[string]string{"HTTPRoute": "hr/", "GRPCRoute": "gr/", "TLSRoute": "tr/"}
+
+	for _, r := range gatewayRoutes(in.gatewayRoutes, in.gateways, services) {
+		prefix := prefixes[r.Kind]
+
+		rid := g.add(argoNetNode{ID: prefix + r.Namespace + "/" + r.Name, Layer: argoLayerRoute, Kind: r.Kind, Namespace: r.Namespace, Name: r.Name,
+			Managed: managed[r.Kind+"/"+r.Namespace+"/"+r.Name]})
 		hid := g.add(argoNetNode{ID: "host/" + r.URL, Layer: argoLayerHost, Kind: "Host", Name: hostOf(r.URL), Detail: r.URL, URL: r.URL})
 		g.link(rid, "svc/"+r.Namespace+"/"+r.Service)
 
-		parents := httpRouteGateways(in.httpRoutes, in.gateways, r.Namespace, r.Name)
+		parents := gatewayRouteParents(in.gatewayRoutes, in.gateways, r.Namespace, r.Name)
 		if len(parents) == 0 {
 			g.link(hid, rid)
 		}
@@ -413,8 +435,9 @@ func argoNetRoutes(g *argoNetGraph, in argoNetInput, services map[serviceRef]boo
 	}
 }
 
-func httpRouteGateways(routes []httpRouteObject, gateways []gatewayObject, namespace, name string) []gatewayObject {
-	i := slices.IndexFunc(routes, func(hr httpRouteObject) bool { return hr.Metadata.Namespace == namespace && hr.Metadata.Name == name })
+// gatewayRouteParents are the Gateways the route namespace/name attaches to.
+func gatewayRouteParents(routes []gatewayRouteObject, gateways []gatewayObject, namespace, name string) []gatewayObject {
+	i := slices.IndexFunc(routes, func(r gatewayRouteObject) bool { return r.Metadata.Namespace == namespace && r.Metadata.Name == name })
 	if i < 0 {
 		return nil
 	}

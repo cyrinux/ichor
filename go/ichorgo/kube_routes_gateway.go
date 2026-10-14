@@ -1,8 +1,12 @@
 package ichorgo
 
-import "slices"
+import (
+	"context"
+	"slices"
+)
 
-// Gateway API objects (gateway.networking.k8s.io/v1), the fields the app reads.
+// Gateway API objects (gateway.networking.k8s.io, HTTPRoute and GRPCRoute v1, TLSRoute
+// v1alpha2), the fields the app reads.
 
 type gatewayParentRef struct {
 	Group       *string `json:"group"`
@@ -13,7 +17,12 @@ type gatewayParentRef struct {
 	Port        int32   `json:"port"`
 }
 
-type httpRouteObject struct {
+// gatewayRouteObject is a Gateway API route: HTTPRoute (v1), GRPCRoute (v1) or TLSRoute
+// (v1alpha2, the experimental channel), the fields the app reads. Kind is set by the reader;
+// a GRPCRoute's matches name a gRPC Service and Method (no URL path), a TLSRoute's spec has
+// neither matches nor hostnames (the URL is the listener's host at its TLS port).
+type gatewayRouteObject struct {
+	Kind     string `json:"-"`
 	Metadata struct {
 		Name      string `json:"name"`
 		Namespace string `json:"namespace"`
@@ -27,6 +36,10 @@ type httpRouteObject struct {
 					Type  string `json:"type"`
 					Value string `json:"value"`
 				} `json:"path"`
+				Method *struct {
+					Service string `json:"service"`
+					Method  string `json:"method"`
+				} `json:"method"`
 			} `json:"matches"`
 			BackendRefs []struct {
 				Group     *string `json:"group"`
@@ -65,40 +78,47 @@ type gatewayObject struct {
 // routeTarget is a path of an HTTPRoute and the Service it sends it to.
 type routeTarget struct{ path, service string }
 
-// httpRouteRoutes lists a URL per hostname and path of the HTTPRoutes sending traffic to one
-// of services. The scheme and port come from the listener of the parent Gateway serving the
+// gatewayRoutes lists a URL per hostname of the Gateway API routes sending traffic to one of
+// services. The scheme and port come from the listener of the parent Gateway serving the
 // hostname (https when it is unknown); a route without hostnames uses its listeners' ones,
-// else the Gateway's addresses.
-func httpRouteRoutes(httpRoutes []httpRouteObject, gateways []gatewayObject, services map[serviceRef]bool) []kubeRoute {
-	var routes []kubeRoute
+// else the Gateway's addresses. A GRPCRoute's and a TLSRoute's URL is the host root: only an
+// HTTPRoute match narrows it to a path.
+func gatewayRoutes(routes []gatewayRouteObject, gateways []gatewayObject, services map[serviceRef]bool) []kubeRoute {
+	var out []kubeRoute
 
-	for _, hr := range httpRoutes {
-		targets := httpRouteTargets(hr, services)
+	for _, r := range routes {
+		targets := gatewayRouteTargets(r, services)
 		if len(targets) == 0 {
 			continue
 		}
 
-		listeners, addresses := routeParents(hr, gateways)
+		listeners, addresses := routeParents(r, gateways)
 
-		for _, host := range httpRouteHosts(hr, listeners, addresses) {
+		for _, host := range gatewayRouteHosts(r, listeners, addresses) {
 			scheme, port := listenerScheme(listeners, host)
+
 			for _, t := range targets {
-				routes = append(routes, kubeRoute{
-					Kind: "HTTPRoute", Namespace: hr.Metadata.Namespace, Name: hr.Metadata.Name,
-					URL: routeURL(scheme, host, port, t.path), Service: t.service,
+				path := ""
+				if r.Kind == "HTTPRoute" {
+					path = t.path
+				}
+
+				out = append(out, kubeRoute{
+					Kind: r.Kind, Namespace: r.Metadata.Namespace, Name: r.Metadata.Name,
+					URL: routeURL(scheme, host, port, path), Service: t.service,
 				})
 			}
 		}
 	}
 
-	return routes
+	return out
 }
 
-// httpRouteTargets lists the rules of hr whose backends include one of services.
-func httpRouteTargets(hr httpRouteObject, services map[serviceRef]bool) []routeTarget {
+// gatewayRouteTargets lists the rules of r whose backends include one of services.
+func gatewayRouteTargets(r gatewayRouteObject, services map[serviceRef]bool) []routeTarget {
 	var targets []routeTarget
 
-	for _, rule := range hr.Spec.Rules {
+	for _, rule := range r.Spec.Rules {
 		service := ""
 
 		for _, b := range rule.BackendRefs {
@@ -106,7 +126,7 @@ func httpRouteTargets(hr httpRouteObject, services map[serviceRef]bool) []routeT
 				continue
 			}
 
-			if services[serviceRef{orDefault(b.Namespace, hr.Metadata.Namespace), b.Name}] {
+			if services[serviceRef{orDefault(b.Namespace, r.Metadata.Namespace), b.Name}] {
 				service = b.Name
 
 				break
@@ -134,20 +154,20 @@ func httpRouteTargets(hr httpRouteObject, services map[serviceRef]bool) []routeT
 	return targets
 }
 
-// routeParents returns the listeners hr attaches to (sectionName and port narrow them), at
+// routeParents returns the listeners r attaches to (sectionName and port narrow them), at
 // their public ports when known, and the addresses of its Gateways.
-func routeParents(hr httpRouteObject, gateways []gatewayObject) ([]gatewayListener, []string) {
+func routeParents(r gatewayRouteObject, gateways []gatewayObject) ([]gatewayListener, []string) {
 	var (
 		listeners []gatewayListener
 		addresses []string
 	)
 
-	for _, ref := range hr.Spec.ParentRefs {
+	for _, ref := range r.Spec.ParentRefs {
 		if !isGatewayRef(ref) {
 			continue
 		}
 
-		ns := orDefault(ref.Namespace, hr.Metadata.Namespace)
+		ns := orDefault(ref.Namespace, r.Metadata.Namespace)
 		i := slices.IndexFunc(gateways, func(g gatewayObject) bool {
 			return g.Metadata.Namespace == ns && g.Metadata.Name == ref.Name
 		})
@@ -174,15 +194,15 @@ func routeParents(hr httpRouteObject, gateways []gatewayObject) ([]gatewayListen
 	return listeners, addresses
 }
 
-// httpRouteHosts are the route's hostnames a browser can open, else its listeners', else
+// gatewayRouteHosts are the route's hostnames a browser can open, else its listeners', else
 // the Gateway addresses.
-func httpRouteHosts(hr httpRouteObject, listeners []gatewayListener, addresses []string) []string {
+func gatewayRouteHosts(r gatewayRouteObject, listeners []gatewayListener, addresses []string) []string {
 	var listenerHosts []string
 	for _, l := range listeners {
 		listenerHosts = append(listenerHosts, l.Hostname)
 	}
 
-	for _, candidates := range [][]string{hr.Spec.Hostnames, listenerHosts, addresses} {
+	for _, candidates := range [][]string{r.Spec.Hostnames, listenerHosts, addresses} {
 		hosts := slices.DeleteFunc(slices.Clone(candidates), func(h string) bool { return !openableHost(h) })
 		if len(hosts) > 0 {
 			return slices.Compact(hosts)
@@ -227,6 +247,27 @@ func isCoreService(group, kind *string) bool {
 // isGatewayRef tells a parentRef to a Gateway, the default.
 func isGatewayRef(ref gatewayParentRef) bool {
 	return (ref.Group == nil || *ref.Group == "gateway.networking.k8s.io") && (ref.Kind == nil || *ref.Kind == "Gateway")
+}
+
+// withGatewayKind tags each route with the kind that was read, so gatewayRoutes puts it on
+// the kubeRoute and the network map on its node.
+func withGatewayKind(routes []gatewayRouteObject, kind string) []gatewayRouteObject {
+	for i := range routes {
+		routes[i].Kind = kind
+	}
+
+	return routes
+}
+
+// readGatewayRoutes lists one Gateway API route kind (tolerating a missing CRD, the
+// experimental channel in particular), each tagged with its kind.
+func readGatewayRoutes(ctx context.Context, k *kubeClient, path, kind string) ([]gatewayRouteObject, error) {
+	var list kubeList[gatewayRouteObject]
+	if err := ignoreNotFound(getList(ctx, k, path, &list)); err != nil {
+		return nil, err
+	}
+
+	return withGatewayKind(list.Items, kind), nil
 }
 
 func orDefault(s, def string) string {

@@ -117,11 +117,11 @@ func serviceAddresses(s serviceListObject) []string {
 	return addresses
 }
 
-// routesOf lists the URLs of the Ingresses, HTTPRoutes and Traefik routes sending traffic to
-// ref, the routes map's own matching (KubeAppRoutes) narrowed to this Service.
+// routesOf lists the URLs of the Ingresses, Gateway API routes and Traefik routes sending
+// traffic to ref, the routes map's own matching (KubeAppRoutes) narrowed to this Service.
 func routesOf(ref serviceRef, routes serviceRoutes) []kubeRoute {
 	only := map[serviceRef]bool{ref: true}
-	found := append(ingressRoutes(routes.ingresses, only), httpRouteRoutes(routes.httpRoutes, routes.gateways, only)...)
+	found := append(ingressRoutes(routes.ingresses, only), gatewayRoutes(routes.gatewayRoutes, routes.gateways, only)...)
 	found = append(found, traefikRoutes(routes.traefik, only)...)
 
 	return uniqueRoutes(found)

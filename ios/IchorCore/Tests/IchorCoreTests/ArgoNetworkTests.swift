@@ -136,6 +136,18 @@ final class ArgoNetworkTests: XCTestCase {
         XCTAssertFalse(ArgoNetKind.service.routesTraffic)
     }
 
+    func testDecodesGatewayRoutes() throws {
+        let net = try decode(#"""
+        {"nodes":[
+          {"id":"gr/shop/api","layer":2,"kind":"GRPCRoute","namespace":"shop","name":"api","detail":"","health":"ok","url":"","managed":true},
+          {"id":"tr/home/mosquitto","layer":2,"kind":"TLSRoute","namespace":"home","name":"mosquitto","detail":"","health":"ok","url":"","managed":false}],
+         "edges":[]}
+        """#)
+        XCTAssertEqual(net.nodes.map(\.kind), [.grpcRoute, .tlsRoute])
+        XCTAssertTrue(net.nodes.allSatisfy { $0.kind.routesTraffic })
+        XCTAssertTrue(net.nodes[1].shared)
+    }
+
     func testProblemReasons() {
         XCTAssertEqual(ArgoNetProblem(kind: .node, name: "w3", detail: "NotReady").reason, .nodeNotReady("w3"))
         XCTAssertEqual(ArgoNetProblem(kind: .node, name: "w3", detail: "SchedulingDisabled").reason, .nodeCordoned("w3"))

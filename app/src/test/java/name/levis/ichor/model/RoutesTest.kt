@@ -27,6 +27,16 @@ class RoutesTest {
     }
 
     @Test
+    fun decodesAGatewayRouteWithoutPath() {
+        val json = """{"routes":[{"kind":"GRPCRoute","namespace":"shop","name":"api",""" +
+            """"url":"https://api.shop.example","service":"web"},""" +
+            """{"kind":"TLSRoute","namespace":"home","name":"mosquitto","url":"https://mqtt.home.example","service":"mosquitto"}]}"""
+        val routes = TalosJson.decodeFromString(KubeRouteList.serializer(), json).routes
+        assertEquals(listOf("GRPCRoute", "TLSRoute"), routes.map { it.kind })
+        assertEquals(listOf("api.shop.example", "mqtt.home.example"), routes.map { it.label })
+    }
+
+    @Test
     fun routePodsOncePerPodEncodedForGo() {
         val app = InventoryApp(
             id = "web",

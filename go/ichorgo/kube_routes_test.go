@@ -173,6 +173,105 @@ func TestAppRoutesHTTPRoutePublicPort(t *testing.T) {
 	}
 }
 
+// A GRPCRoute: the URL is the host root, its method matches name no path; the scheme comes
+// from the listener.
+func TestAppRoutesGRPCRoute(t *testing.T) {
+	k := openRoutesKube(t, map[string]string{
+		"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[]}`,
+		"GET /apis/gateway.networking.k8s.io/v1/gateways": `{"items":[
+			{"metadata":{"name":"public","namespace":"gw"},"spec":{"listeners":[
+				{"name":"https","port":443,"protocol":"HTTPS","hostname":"*.shop.example"}]},
+				"status":{"addresses":[{"value":"198.51.100.7"}]}}]}`,
+		"GET /apis/gateway.networking.k8s.io/v1/grpcroutes": `{"items":[
+			{"metadata":{"name":"api","namespace":"shop"},"spec":{
+				"parentRefs":[{"name":"public","namespace":"gw"}],
+				"hostnames":["api.shop.example"],
+				"rules":[{"matches":[{"method":{"service":"echo.Example","method":"Ping"}}],"backendRefs":[{"name":"web"}]}]}},
+			{"metadata":{"name":"nogw","namespace":"shop"},"spec":{
+				"parentRefs":[{"name":"missing"}],
+				"hostnames":["nogw.example"],
+				"rules":[{"backendRefs":[{"name":"web"}]}]}}]}`,
+	})
+
+	list, err := appRoutes(context.Background(), k, []routePod{{"shop", "web-1"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := strings.Join([]string{
+		"GRPCRoute https://api.shop.example web",
+		"GRPCRoute https://nogw.example web",
+	}, "\n")
+	if got := routeURLs(list.Routes); got != want {
+		t.Fatalf("got\n%s\nwant\n%s", got, want)
+	}
+}
+
+// A TLSRoute passes TLS through to the app: the URL is the listener's host at its public
+// port (443 left out), or the Gateway's address without a listener.
+func TestAppRoutesTLSRoute(t *testing.T) {
+	k := openRoutesKube(t, map[string]string{
+		"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[]}`,
+		"GET /apis/gateway.networking.k8s.io/v1/gateways": `{"items":[
+			{"metadata":{"name":"public","namespace":"gw"},"spec":{"listeners":[
+				{"name":"tls","port":8443,"protocol":"TLS","hostname":"registry.shop.example"}]},
+				"status":{"addresses":[{"value":"198.51.100.7"}]}}]}`,
+		"GET /apis/gateway.networking.k8s.io/v1alpha2/tlsroutes": `{"items":[
+			{"metadata":{"name":"registry","namespace":"shop"},"spec":{
+				"parentRefs":[{"name":"public","namespace":"gw","sectionName":"tls"}],
+				"rules":[{"backendRefs":[{"name":"web"}]}]}},
+			{"metadata":{"name":"nogw","namespace":"shop"},"spec":{
+				"parentRefs":[{"name":"public","namespace":"gw","sectionName":"other"}],
+				"rules":[{"backendRefs":[{"name":"web"}]}]}}]}`,
+		"GET /api/v1/services": `{"items":[
+			{"metadata":{"name":"traefik","namespace":"gw"},"spec":{"type":"LoadBalancer","ports":[
+				{"name":"tls","port":443,"protocol":"TCP","targetPort":"tls"}]},
+				"status":{"loadBalancer":{"ingress":[{"ip":"198.51.100.7"}]}}}]}`,
+		"GET /apis/discovery.k8s.io/v1/namespaces/gw/endpointslices": `{"items":[
+			{"ports":[{"name":"tls","port":8443}]}]}`,
+	})
+
+	list, err := appRoutes(context.Background(), k, []routePod{{"shop", "web-1"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := strings.Join([]string{
+		"TLSRoute https://198.51.100.7 web",
+		"TLSRoute https://registry.shop.example web",
+	}, "\n")
+	if got := routeURLs(list.Routes); got != want {
+		t.Fatalf("got\n%s\nwant\n%s", got, want)
+	}
+}
+
+// A cluster on the standard channel has no tlsroutes CRD: the 404 is the normal case and the
+// HTTPRoutes and GRPCRoutes are kept.
+func TestAppRoutesWithoutExperimentalChannel(t *testing.T) {
+	k := openRoutesKube(t, map[string]string{
+		"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[]}`,
+		"GET /apis/gateway.networking.k8s.io/v1/gateways": `{"items":[
+			{"metadata":{"name":"public","namespace":"gw"},"spec":{"listeners":[
+				{"name":"https","port":443,"protocol":"HTTPS","hostname":"*.shop.example"}]},
+				"status":{"addresses":[{"value":"198.51.100.7"}]}}]}`,
+		"GET /apis/gateway.networking.k8s.io/v1/httproutes": `{"items":[
+			{"metadata":{"name":"web","namespace":"shop"},"spec":{
+				"parentRefs":[{"name":"public","namespace":"gw"}],
+				"hostnames":["www.shop.example"],
+				"rules":[{"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"backendRefs":[{"name":"web"}]}]}}]}`,
+		"GET /apis/gateway.networking.k8s.io/v1/grpcroutes": `{"items":[]}`,
+	})
+
+	list, err := appRoutes(context.Background(), k, []routePod{{"shop", "web-1"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got := routeURLs(list.Routes); got != "HTTPRoute https://www.shop.example web" {
+		t.Fatalf("got %q", got)
+	}
+}
+
 func TestAppRoutesTailscaleIngress(t *testing.T) {
 	for _, tc := range []struct {
 		name, spec, status, want string

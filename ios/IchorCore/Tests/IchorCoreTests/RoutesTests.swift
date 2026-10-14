@@ -18,6 +18,14 @@ final class RoutesTests: XCTestCase {
         XCTAssertEqual(route.label, "grafana.home.example")
     }
 
+    func testDecodesAGatewayRouteWithoutPath() throws {
+        let json = #"{"routes":[{"kind":"GRPCRoute","namespace":"shop","name":"api","url":"https://api.shop.example","service":"web"},"#
+            + #"{"kind":"TLSRoute","namespace":"home","name":"mosquitto","url":"https://mqtt.home.example","service":"mosquitto"}]}"#
+        let routes = try JSONDecoder().decode(KubeRouteList.self, from: Data(json.utf8)).routes
+        XCTAssertEqual(routes.map(\.kind), ["GRPCRoute", "TLSRoute"])
+        XCTAssertEqual(routes.map(\.label), ["api.shop.example", "mqtt.home.example"])
+    }
+
     func testRoutePodsOncePerPod() throws {
         let app = InventoryApp(id: "web", name: "Web", pods: [
             InventoryPod(namespace: "shop", pod: "web-0", node: "n1"),
