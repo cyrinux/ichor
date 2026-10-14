@@ -13,7 +13,7 @@ public enum KubeAction: String, CaseIterable, Sendable {
     case fluxReconcileHelmRepository, fluxReconcileBucket, cordonNode, drainNode
     /// create and delete on services/proxy: an Alertmanager reached through the service proxy.
     case alertmanagerSilence, alertmanagerExpire
-    case cnpgPromote, cnpgRestartPrimary, cnpgHibernate
+    case cnpgPromote, cnpgRestartPrimary, cnpgHibernate, longhornSalvage
 
     /// Asked in a namespace; the node actions are cluster-wide whatever the namespace.
     public var isNamespaced: Bool {

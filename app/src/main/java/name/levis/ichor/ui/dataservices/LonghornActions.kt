@@ -55,6 +55,15 @@ class LonghornActions(
     private val dataServices: DataServicesRepository,
     private val onChanged: () -> Unit,
 ) {
+    private val salvage = KeyedActions<LonghornSalvageResult>(scope)
+    val salvageBusy: StateFlow<Set<String>> get() = salvage.busy
+    val salvageResults: Flow<LonghornSalvageResult> get() = salvage.results
+    suspend fun salvagePreview(volume: name.levis.ichor.model.LonghornVolume) = dataServices.longhornSalvagePreview(volume.namespace, volume.name)
+    fun salvage(volume: name.levis.ichor.model.LonghornVolume, replicas: Set<String>) {
+        salvage.launch(longhornActionKey(volume.namespace, volume.name), { dataServices.longhornSalvage(volume.namespace, volume.name, replicas) }, {
+            LonghornSalvageResult(volume.label, it.exceptionOrNull()?.uiText())
+        }, onChanged)
+    }
     private val actions = KeyedActions<LonghornActionResult>(scope)
     /** Keys (longhornActionKey) of the volumes and nodes with an action in flight. */
     val busy: StateFlow<Set<String>> get() = actions.busy

@@ -4449,4 +4449,13 @@
     <string name="cnpg_restart_target">Primary to restart: %1$s</string>
     <string name="cnpg_lifecycle_requested">Cluster action requested</string>
     <string name="cnpg_lifecycle_failed">Could not update cluster: %1$s</string>
+
+    <string name="longhorn_salvage">Salvage volume</string>
+    <string name="longhorn_salvage_risk">Salvage may lose data. Choose the replicas whose data you want to recover; their timestamps do not guarantee consistency.</string>
+    <string name="longhorn_salvage_choose">Choose replicas explicitly. No replica is selected automatically.</string>
+    <string name="longhorn_salvage_unavailable">Salvage requires a detached faulted volume and available replicas.</string>
+    <string name="longhorn_salvage_replica">%1$s on %2$s · healthy: %3$s · failed: %4$s</string>
+    <string name="longhorn_salvage_requested">Salvage requested</string>
+    <string name="longhorn_salvage_failed">Could not salvage volume: %1$s</string>
+    <string name="longhorn_volume_name">Volume name</string>
 </resources>

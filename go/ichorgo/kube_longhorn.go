@@ -101,8 +101,14 @@ type lhReplicaTimes struct {
 }
 
 type lhReplicaObject struct {
+	Metadata struct {
+		Name              string `json:"name"`
+		Namespace         string `json:"namespace"`
+		DeletionTimestamp string `json:"deletionTimestamp"`
+	} `json:"metadata"`
 	Spec struct {
 		lhReplicaTimes
+		DiskID     string `json:"diskID"`
 		VolumeName string `json:"volumeName"`
 		NodeID     string `json:"nodeID"`
 	} `json:"spec"`
@@ -138,6 +144,7 @@ type lhNodeObject struct {
 	Status struct {
 		Conditions []kubeCondition `json:"conditions"`
 		DiskStatus map[string]struct {
+			DiskUUID         string          `json:"diskUUID"`
 			DiskPath         string          `json:"diskPath"`
 			Conditions       []kubeCondition `json:"conditions"`
 			StorageAvailable int64           `json:"storageAvailable"`

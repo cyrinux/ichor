@@ -1,5 +1,7 @@
 package name.levis.ichor.data
 
+import kotlinx.serialization.encodeToString
+import name.levis.ichor.model.LonghornSalvagePreview
 import name.levis.ichor.model.VolumeSnapshots
 import name.levis.ichor.model.CnpgPromotePreview
 import name.levis.ichor.model.CertDetails
@@ -12,6 +14,9 @@ import name.levis.ichorgo.Ichorgo
 
 /** Longhorn, Garage, CloudNativePG and cert-manager: their health and the actions on them. */
 class DataServicesRepository(go: GoCall) : GoRepository(go) {
+ suspend fun longhornSalvagePreview(namespace: String, name: String): LonghornSalvagePreview = go.kube { cfg, ctx, server -> TalosJson.decodeFromString(LonghornSalvagePreview.serializer(), Ichorgo.kubeLonghornSalvagePreview(cfg, ctx, server, namespace, name)) }
+ suspend fun longhornSalvage(namespace: String, name: String, replicas: Set<String>) = go.kube { cfg, ctx, server -> Ichorgo.kubeLonghornSalvage(cfg, ctx, server, namespace, name, TalosJson.encodeToString(replicas.toList())) }
+
     suspend fun volumeSnapshots(namespace: String = ""): VolumeSnapshots = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(VolumeSnapshots.serializer(), Ichorgo.kubeVolumeSnapshots(cfg, ctx, server, namespace))
     }
