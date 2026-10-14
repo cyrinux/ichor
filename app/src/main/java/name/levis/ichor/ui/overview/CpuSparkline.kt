@@ -17,11 +17,12 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.sparklineStep
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
- * Recent cluster CPU as a small filled line on a fixed 0–100 % scale, newest on the right; it
- * fills in from the right as samples arrive. Coloured like [name.levis.ichor.ui.components.UsageBar].
+ * Recent cluster CPU as a small filled line on a fixed 0–100 % scale, newest on the right; the
+ * samples span the whole width until the window is full, then it scrolls. Coloured like [name.levis.ichor.ui.components.UsageBar].
  */
 @Composable
 fun CpuSparkline(history: List<Float>, modifier: Modifier = Modifier, warnAt: Float = 0.75f) {
@@ -43,7 +44,7 @@ fun CpuSparkline(history: List<Float>, modifier: Modifier = Modifier, warnAt: Fl
 
         drawLine(track, Offset(0f, h - stroke / 2), Offset(w, h - stroke / 2), strokeWidth = stroke)
         if (history.size < 2) return@Canvas
-        val step = w / (CLUSTER_HISTORY_POINTS - 1)
+        val step = sparklineStep(history.size, CLUSTER_HISTORY_POINTS, w)
         val startX = w - step * (history.size - 1)
         val line = Path().apply {
             history.forEachIndexed { i, v -> if (i == 0) moveTo(startX, y(v)) else lineTo(startX + step * i, y(v)) }
