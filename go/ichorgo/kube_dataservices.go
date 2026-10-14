@@ -47,8 +47,8 @@ func byHealthThenKey[T any](f func(T) (health, key string)) func(a, b T) int {
 // section is a system that is not installed.
 type dataServices struct {
 	SealedSecrets *sealedSecretsStatus `json:"sealedSecrets,omitempty"`
-	Snapshots   *volumeSnapshots   `json:"snapshots,omitempty"`
-	BackupJobs  *backupJobStatus   `json:"backupJobs,omitempty"`
+	Snapshots     *volumeSnapshots     `json:"snapshots,omitempty"`
+	BackupJobs    *backupJobStatus     `json:"backupJobs,omitempty"`
 	Longhorn      *longhornStatus      `json:"longhorn,omitempty"`
 	Garage        *garageStatus        `json:"garage,omitempty"`
 	CNPG          *cnpgStatus          `json:"cnpg,omitempty"`
