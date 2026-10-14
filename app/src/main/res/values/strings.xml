@@ -4519,4 +4519,40 @@
     <string name="velero_delete_text">Velero removes this backup\'s data from its storage location, then the backup itself. It cannot be restored afterwards.</string>
     <string name="velero_delete_requested">Deletion of %1$s requested</string>
     <string name="velero_delete_errors">Deletion failed: %1$s</string>
+    <string name="velero_restore">Restore</string>
+    <string name="velero_restore_title">Restore backup %1$s?</string>
+    <string name="velero_restore_no_volumes">no volume snapshots</string>
+    <string name="velero_restore_every_namespace">Every namespace in the backup is restored.</string>
+    <string name="velero_restore_choose_namespaces">Choose the namespaces to restore</string>
+    <string name="velero_restore_target_same">empty: same name</string>
+    <string name="velero_restore_existing">Existing objects</string>
+    <string name="velero_restore_existing_leave">leave</string>
+    <string name="velero_restore_existing_update">update (overwrite)</string>
+    <string name="velero_restore_volumes">Restore volumes</string>
+    <string name="velero_restore_volumes_yes">as backed up</string>
+    <string name="velero_restore_volumes_no">no</string>
+    <string name="velero_restore_risk">Restoring creates the backup\'s objects again. Target namespaces that do not exist are created; ones that exist get the backup\'s objects merged in, overwriting them with update.</string>
+    <string name="velero_restore_reason_partially_failed">The backup completed with errors: some items may be missing</string>
+    <string name="velero_restore_reason_location">The backup\'s storage location is unavailable: its data cannot be read</string>
+    <string name="velero_restore_reason_expired">The backup has expired: its data is gone</string>
+    <string name="velero_restore_reason_running">A restore of this backup is already running</string>
+    <string name="velero_restore_reason_all_namespaces">This backup holds every namespace: restoring it restores them all</string>
+    <string name="velero_restore_started">Restore %1$s started</string>
+    <string name="velero_restore_running">restoring…</string>
+    <string name="velero_restore_validation_errors">Velero refused the restore: %1$s</string>
+    <string name="velero_restore_close">Close</string>
+    <string name="velero_restore_items_label">Items</string>
+    <string name="velero_restore_volumes_label">Volume snapshots</string>
+    <plurals name="velero_restore_items">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <plurals name="velero_restore_volumes">
+        <item quantity="one">%1$d volume snapshot</item>
+        <item quantity="other">%1$d volume snapshots</item>
+    </plurals>
+    <plurals name="velero_restore_progress">
+        <item quantity="one">%1$d of %2$d item</item>
+        <item quantity="other">%1$d of %2$d items</item>
+    </plurals>
 </resources>

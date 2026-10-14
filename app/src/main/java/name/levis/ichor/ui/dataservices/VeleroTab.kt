@@ -60,10 +60,12 @@ fun VeleroTab(status: VeleroStatus, actions: VeleroActions) {
     var expanded by rememberSaveable { mutableStateOf(setOf<String>()) }
     var askNow by remember { mutableStateOf<VeleroSchedule?>(null) }
     var askDelete by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var askRestore by remember { mutableStateOf<Pair<String, String>?>(null) }
     askNow?.let { s -> VeleroBackupNowDialog(s, onConfirm = { actions.backupNow(s); askNow = null }, onDismiss = { askNow = null }) }
     askDelete?.let { (ns, backup) ->
         VeleroDeleteBackupDialog(ns, backup, onConfirm = { actions.delete(ns, backup); askDelete = null }, onDismiss = { askDelete = null })
     }
+    askRestore?.let { (ns, backup) -> VeleroRestoreDialog(ns, backup, actions, onDismiss = { askRestore = null }) }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
@@ -75,7 +77,7 @@ fun VeleroTab(status: VeleroStatus, actions: VeleroActions) {
                 Details(s)
                 Column(Modifier.padding(start = 22.dp, top = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     VeleroBackupNowButton(s, actions, onAsk = { askNow = s })
-                    VeleroBackupsSection(s, actions, onDelete = { askDelete = s.namespace to it.name })
+                    VeleroBackupsSection(s, actions, onDelete = { askDelete = s.namespace to it.name }, onRestore = { askRestore = s.namespace to it.name })
                 }
             }
             HorizontalDivider()
@@ -83,7 +85,7 @@ fun VeleroTab(status: VeleroStatus, actions: VeleroActions) {
         if (status.adhoc.isNotEmpty()) item(key = "adhoc") {
             SectionTitle(stringResource(R.string.velero_adhoc), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         }
-        items(status.adhoc, key = { "a:${it.label}" }) { b -> AdhocRow(b, actions, onDelete = { askDelete = b.namespace to b.name }) }
+        items(status.adhoc, key = { "a:${it.label}" }) { b -> AdhocRow(b, actions, onDelete = { askDelete = b.namespace to b.name }, onRestore = { askRestore = b.namespace to b.name }) }
     }
 }
 
@@ -163,7 +165,7 @@ private fun Details(s: VeleroSchedule) {
 }
 
 @Composable
-private fun AdhocRow(b: VeleroAdhocBackup, actions: VeleroActions, onDelete: () -> Unit) {
+private fun AdhocRow(b: VeleroAdhocBackup, actions: VeleroActions, onDelete: () -> Unit, onRestore: () -> Unit) {
     val busy by actions.busy.collectAsStateWithLifecycle()
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         HealthDot(b.serviceHealth)
@@ -180,7 +182,11 @@ private fun AdhocRow(b: VeleroAdhocBackup, actions: VeleroActions, onDelete: () 
             )
         }
         if (VeleroActions.deleteKey(b.namespace, b.name) in busy) Text(stringResource(R.string.velero_deleting), style = MaterialTheme.typography.labelSmall)
-        else TextButton(onClick = onDelete) { Text(stringResource(R.string.velero_delete)) }
+        else {
+            // Only a partially failed backup can be a restore source; the others failed for good.
+            if (b.phase == "PartiallyFailed") TextButton(onClick = onRestore) { Text(stringResource(R.string.velero_restore)) }
+            TextButton(onClick = onDelete) { Text(stringResource(R.string.velero_delete)) }
+        }
     }
 }
 
