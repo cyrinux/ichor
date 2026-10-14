@@ -110,7 +110,7 @@ final class KubeAccessTests: XCTestCase {
             "deletePod", "execPod", "debugPod", "debugNode", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync",
             "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
             "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode",
-            "alertmanagerSilence", "alertmanagerExpire",
+            "alertmanagerSilence", "alertmanagerExpire", "cnpgPromote",
         ])
         XCTAssertFalse(KubeAction.cordonNode.isNamespaced)
         XCTAssertFalse(KubeAction.drainNode.isNamespaced)

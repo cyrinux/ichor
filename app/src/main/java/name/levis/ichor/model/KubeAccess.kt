@@ -28,6 +28,7 @@ enum class KubeAction(val wire: String) {
     FLUX_RECONCILE_BUCKET("fluxReconcileBucket"),
     CORDON_NODE("cordonNode"),
     DRAIN_NODE("drainNode"),
+    CNPG_PROMOTE("cnpgPromote"),
     ;
 
     /** The action asked for an object of a kind, on that kind's own resource; null for a kind the core does not ask about (offered). */

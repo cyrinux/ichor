@@ -10,6 +10,7 @@ struct CnpgList: View {
     @Environment(AppModel.self) private var model
     @State private var problemsOnly: Bool?
     @State private var query = ""
+    @State private var promotion: CnpgPromotionTarget?
     @State private var confirmBackup: CnpgCluster?
     @State private var running: Set<String> = []
     @State private var resultMessage: String?
@@ -52,7 +53,7 @@ struct CnpgList: View {
                     .foregroundStyle(.secondary)
                 }
                 ForEach(rows) { cluster in
-                    ClusterRow(cluster: cluster, busy: running.contains(cluster.id)) { confirmBackup = cluster }
+                    ClusterRow(cluster: cluster, busy: running.contains(cluster.id), onBackup: { confirmBackup = cluster }, onPromote: { promotion = CnpgPromotionTarget(cluster: cluster, instance: $0) })
                 }
             }
         }
@@ -68,7 +69,24 @@ struct CnpgList: View {
         } message: { _ in
             Text("CloudNativePG takes a full base backup with the method the cluster is set up for (barman-cloud plugin, object store or volume snapshot). It loads the instance it runs on and adds to the backup storage.")
         }
+        .sheet(item: $promotion) { target in
+            CnpgPromoteSheet(cluster: target.cluster, instance: target.instance) {
+                promotion = nil
+                Task { await promote(target.cluster, instance: target.instance) }
+            }.loadsKubeActionAccess(namespace: target.cluster.namespace)
+        }
         .messageAlert($resultMessage)
+    }
+
+    private func promote(_ cluster: CnpgCluster, instance: String) async {
+        guard let client = model.client, !running.contains(cluster.id) else { return }
+        running.insert(cluster.id)
+        defer { running.remove(cluster.id) }
+        do {
+            try await client.cnpgPromote(namespace: cluster.namespace, name: cluster.name, instance: instance)
+            resultMessage = String(localized: "Promotion to \(instance) requested")
+            await refresh()
+        } catch { resultMessage = String(localized: "Could not promote \(cluster.label): \(error.localizedDescription)") }
     }
 
     private func backup(_ cluster: CnpgCluster) async {
@@ -89,6 +107,7 @@ private struct ClusterRow: View {
     let cluster: CnpgCluster
     let busy: Bool
     let onBackup: () -> Void
+    let onPromote: (String) -> Void
 
     var body: some View {
         DisclosureGroup {
@@ -106,6 +125,7 @@ private struct ClusterRow: View {
             }
             .accessibilityElement(children: .combine)
         }
+        .loadsKubeActionAccess(namespace: cluster.namespace)
     }
 
     private var summary: String {
@@ -147,6 +167,11 @@ private struct ClusterRow: View {
                 }
             }
         }
+        ForEach(cluster.promotablePods) { pod in
+            Button { onPromote(pod.name) } label: { Text("Promote \(pod.name)") }
+                .disabled(busy).kubeGated(.cnpgPromote, in: cluster.namespace)
+        }
+        KubeDeniedNote(.cnpgPromote, in: cluster.namespace)
         LabeledContent("WAL archiving", value: archivingText)
         LabeledContent("Backups", value: backupMethod)
         LabeledContent("Last backup", value: relativeTime(cluster.lastSuccessAt))

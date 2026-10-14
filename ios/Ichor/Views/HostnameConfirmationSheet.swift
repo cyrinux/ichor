@@ -8,6 +8,7 @@ struct HostnameConfirmationSheet: View {
     let message: String
     let hostname: String
     let actionTitle: String
+    let enabled: Bool
     /// Risks the user confirms one by one (none by default).
     let acknowledgments: [String]
     /// A safer way out shown under the action (e.g. "Back up first"); it dismisses the sheet first.
@@ -19,19 +20,20 @@ struct HostnameConfirmationSheet: View {
     @State private var acknowledged: Set<String> = []
 
     // Explicit: the private @State makes the memberwise init private.
-    init(title: String, message: String, hostname: String, actionTitle: String, acknowledgments: [String] = [],
+    init(title: String, message: String, hostname: String, actionTitle: String, enabled: Bool = true, acknowledgments: [String] = [],
          alternative: (title: String, action: () -> Void)? = nil, onConfirm: @escaping () -> Void) {
         self.title = title
         self.message = message
         self.hostname = hostname
         self.actionTitle = actionTitle
+        self.enabled = enabled
         self.acknowledgments = acknowledgments
         self.alternative = alternative
         self.onConfirm = onConfirm
     }
 
     /// A blank hostname is never confirmed, least of all by an empty field.
-    private var matches: Bool { typedConfirmationMatches(typed, token: hostname) }
+    private var matches: Bool { enabled && typedConfirmationMatches(typed, token: hostname) }
 
     private var allAcknowledged: Bool { Set(acknowledgments).isSubset(of: acknowledged) }
 

@@ -4656,4 +4656,18 @@
     <string name="backup_suspended">Розклад резервного копіювання призупинено</string>
     <string name="snapshot_create">Створити знімок</string>
     <string name="snapshot_confirm">Створити знімок CSI для %1$s з типом за замовчуванням для його драйвера.</string>
+
+    <string name="cnpg_promote_title">Підвищити репліку</string>
+    <string name="cnpg_promote_instance">Підвищити %1$s</string>
+    <string name="cnpg_promote_primary">Поточний основний екземпляр: %1$s</string>
+    <string name="cnpg_promote_target">Цільовий екземпляр: %1$s</string>
+    <string name="cnpg_promote_lag">Відставання реплікації: %1$s</string>
+    <string name="cnpg_lag_unknown">Невідоме відставання реплікації</string>
+    <string name="cnpg_lag_warning">Репліка відстає від основного екземпляра. Підвищення може призвести до втрати даних.</string>
+    <string name="cnpg_lag_unknown_warning">Не вдалося перевірити відставання реплікації. Підвищення може призвести до втрати даних.</string>
+    <string name="cnpg_promote_risk">Підвищення змінює основний екземпляр і перериває з’єднання. Дані, що не досягли репліки, можуть бути втрачені.</string>
+    <string name="cnpg_promote_unavailable">Цей екземпляр неможливо підвищити в поточному стані кластера.</string>
+    <string name="cnpg_promote_requested">Запитано підвищення до %1$s</string>
+    <string name="cnpg_promote_failed">Не вдалося підвищити %1$s: %2$s</string>
+    <string name="cnpg_promote_loading">Завантаження попереднього перегляду підвищення…</string>
 </resources>

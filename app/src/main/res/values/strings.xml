@@ -4425,4 +4425,18 @@
     <string name="backup_suspended">Backup schedule suspended</string>
     <string name="snapshot_create">Create snapshot</string>
     <string name="snapshot_confirm">Create a CSI snapshot of %1$s using the default class for its driver.</string>
+
+    <string name="cnpg_promote_title">Promote replica</string>
+    <string name="cnpg_promote_instance">Promote %1$s</string>
+    <string name="cnpg_promote_primary">Current primary: %1$s</string>
+    <string name="cnpg_promote_target">Target instance: %1$s</string>
+    <string name="cnpg_promote_lag">Replication lag: %1$s</string>
+    <string name="cnpg_lag_unknown">Unknown replication lag</string>
+    <string name="cnpg_lag_warning">The replica is behind the primary. Promotion may lose data.</string>
+    <string name="cnpg_lag_unknown_warning">Replication lag could not be verified. Promotion may lose data.</string>
+    <string name="cnpg_promote_risk">Promotion switches the primary and interrupts connections. Data that has not reached the replica may be lost.</string>
+    <string name="cnpg_promote_unavailable">This instance cannot be promoted in the cluster\'s current state.</string>
+    <string name="cnpg_promote_requested">Promotion to %1$s requested</string>
+    <string name="cnpg_promote_failed">Could not promote %1$s: %2$s</string>
+    <string name="cnpg_promote_loading">Reading promotion preview…</string>
 </resources>
