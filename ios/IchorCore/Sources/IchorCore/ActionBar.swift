@@ -46,6 +46,8 @@ public enum KubernetesAction: String, BarAction {
     /// Free room per node, workloads by priority, and what losing a node costs; last, so the
     /// default icons stay.
     case capacity = "CAPACITY"
+    /// Kyverno's admission policies (the screens' `policies` are the network ones); last too.
+    case admissionPolicies = "POLICIES"
 
     public var id: String { rawValue }
     public static let barStorageKey = "kubernetes.bar"

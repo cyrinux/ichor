@@ -1,9 +1,11 @@
 package ichorgo
 
+import "slices"
+
 // demoPolicies is what the demo cluster answers: a healthy engine, four policies and a
 // namespace's worth of findings. Everything invented; nothing readable as a real cluster.
 func demoPolicies() policiesReport {
-	return policiesReport{
+	report := policiesReport{
 		Installed: true,
 		Version:   "v1",
 		Engine: kyvernoEngine{
@@ -58,4 +60,8 @@ func demoPolicies() policiesReport {
 		},
 		ReportsRead: 6,
 	}
+	// In the order a live read gives: not ready first, then Enforce, Mixed, Audit.
+	slices.SortFunc(report.Policies, kyvernoPolicyLess)
+
+	return report
 }

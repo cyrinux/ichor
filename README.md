@@ -82,6 +82,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   API server), in plain words: the pods each one selects, whether they are isolated in each
   direction, and what each rule lets in or out (pods, namespaces, CIDRs, entities, FQDNs,
   ports, HTTP/DNS rules), with each namespace's share of isolated pods.
+- **Policies (Kyverno):** every Kyverno policy with its mode (Enforce or Audit), whether it is
+  ready, how many resources pass or fail it and which ones, and whether the engine's
+  controllers and admission webhook are up. See [Policies](#policies).
 - **API server health and pressure:** the Kubernetes API server's readyz and livez checks, and
   what loads it right now: Ichor reads its `/metrics` twice a few seconds apart and shows the
   request rate, 5xx and 429 answers, which clients send the requests (API Priority and Fairness
@@ -182,6 +185,7 @@ reads those roles and explains up front when a feature needs more.
 | **App web addresses (Ingress, HTTPRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
+| **Policies (Kyverno)** | `Kubeconfig`, then the Kubernetes API (kyverno.io policies, wgpolicyk8s.io policy reports, Kyverno's Deployments and webhooks) | **`os:admin`** |
 | **Cluster checkup, events of a pod or workload** | `Kubeconfig`, then the Kubernetes API (pods, nodes, events, claims, webhooks, quotas, services, CSRs, secrets metadata…) and each kubelet's `stats/summary` through the API server proxy | **`os:admin`** |
 | **Talos rollback (`talosctl rollback`)** | `Rollback` | **`os:admin`** |
 | **Node reset (`talosctl reset`)** | `Reset` | **`os:admin`** |
@@ -496,6 +500,24 @@ and what goes if a node goes down?":
   `system-*` class. A suggestion opens the object's scale dialog; nothing is scaled from this
   screen. It is an estimate by requests: affinity, topology spread and volume node affinity are
   not modelled, and the sheet says so.
+
+### Policies
+
+**Kubernetes → Policies** shows the Kyverno admission policies of the cluster, to answer "is a
+policy blocking this rollout, and can I relax it?" in two taps:
+
+- **The engine:** each Kyverno controller ready or not, and what its webhook does while Kyverno is
+  down: `Fail` refuses every request it covers (a Kyverno outage blocks deployments), `Ignore`
+  lets them through unchecked.
+- **The policies:** not ready ones first, then those in **Enforce** mode (a request that breaks a
+  rule is refused) before those in **Audit** mode (it is let through and only reported), each
+  with its failing, warning and passing counts from the policy reports. A namespace and a search
+  narrow the list.
+- **One policy:** its rules, why it is not ready, and the newest resources it fails with
+  Kyverno's message; a Pod, Deployment or other well-known kind opens its object screen.
+
+A cluster without Kyverno says so; credentials that cannot read the policy reports still show
+the policies, with their counts at zero and the reason.
 
 ### Argo CD app icons
 

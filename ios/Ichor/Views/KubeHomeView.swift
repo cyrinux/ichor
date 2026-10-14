@@ -351,6 +351,9 @@ struct KubeHomeView: View {
             NavigationLink { KubeLiveEventsView() } label: {
                 Label("Kubernetes events", systemImage: "list.bullet.rectangle")
             }
+            NavigationLink { PoliciesView() } label: {
+                Label("Policies", systemImage: "checkmark.shield")
+            }
             NavigationLink(value: Route.metrics) {
                 Label("Metrics", systemImage: "chart.xyaxis.line")
             }

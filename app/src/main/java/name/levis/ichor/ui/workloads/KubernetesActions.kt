@@ -6,6 +6,7 @@ import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.MonitorHeart
@@ -32,6 +33,7 @@ private fun kubernetesActionIcon(action: KubernetesAction): ImageVector = when (
     KubernetesAction.JOBS -> Icons.Outlined.TaskAlt
     KubernetesAction.EVENTS -> Icons.Outlined.Timeline
     KubernetesAction.API_ADDRESS -> Icons.Outlined.Dns
+    KubernetesAction.POLICIES -> Icons.Outlined.Gavel
 }
 
 /** How the Kubernetes screen's actions look, in its bar and its editor. */
@@ -50,6 +52,7 @@ val kubernetesActionLook = ActionLook<KubernetesAction>(::kubernetesActionIcon) 
             KubernetesAction.JOBS -> R.string.kube_jobs_title
             KubernetesAction.EVENTS -> R.string.kube_events_stream_title
             KubernetesAction.API_ADDRESS -> R.string.kube_server_title
+            KubernetesAction.POLICIES -> R.string.kpol_title
         },
     )
 }
