@@ -65,3 +65,12 @@ fun clusterUsage(prev: ClusterStatsSample?, cur: ClusterStatsSample): ClusterUsa
 /** [history] with [value] appended (nothing when null), keeping the newest [max] points. */
 fun appendHistory(history: List<Float>, value: Float?, max: Int): List<Float> =
     if (value == null) history else (history + value).takeLast(max)
+
+/**
+ * Horizontal gap between two of [count] sparkline points on a [width]-wide canvas holding a
+ * [points]-sample window. Until the window is full the samples span the whole width; after that
+ * the step is fixed and the line scrolls. Drawn from `x = width - step * (count - 1)`, which is 0
+ * while the window fills, and the two steps meet at `count == points`, so nothing jumps.
+ */
+fun sparklineStep(count: Int, points: Int, width: Float): Float =
+    width / (count.coerceIn(2, points) - 1)

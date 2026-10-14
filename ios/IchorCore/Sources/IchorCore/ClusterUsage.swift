@@ -110,6 +110,14 @@ public func appendHistory(_ history: [Double], _ value: Double?, max: Int) -> [D
     return Array((history + [value]).suffix(Swift.max(max, 0)))
 }
 
+/// Horizontal gap between two of `count` sparkline points on a `width`-wide canvas holding a
+/// `points`-sample window. Until the window is full the samples span the whole width; after that
+/// the step is fixed and the line scrolls. Drawn from `x = width - step * (count - 1)`, which is 0
+/// while the window fills, and the two steps meet at `count == points`, so nothing jumps.
+public func sparklineStep(count: Int, points: Int, width: Double) -> Double {
+    width / Double(min(max(count, 2), max(points, 2)) - 1)
+}
+
 /// CPU history for the sparkline: three minutes, nine on a dense cluster (see clusterPollSeconds).
 public let clusterHistoryPoints = 36
 

@@ -1,8 +1,8 @@
 import SwiftUI
 import IchorCore
 
-/// Recent cluster CPU as a small filled line on a fixed 0–100 % scale, newest on the right; it
-/// fills in from the right as samples arrive. Coloured like UsageBar. Same as Android.
+/// Recent cluster CPU as a small filled line on a fixed 0–100 % scale, newest on the right; the
+/// samples span the whole width until the window is full, then it scrolls. Coloured like UsageBar. Same as Android.
 struct CpuSparkline: View {
     let history: [Double]
     var warnAt = 0.75
@@ -22,7 +22,7 @@ struct CpuSparkline: View {
             track.addLine(to: CGPoint(x: w, y: h - stroke / 2))
             context.stroke(track, with: .color(Color.secondary.opacity(0.3)), lineWidth: stroke)
             guard history.count >= 2 else { return }
-            let step = w / Double(clusterHistoryPoints - 1)
+            let step = sparklineStep(count: history.count, points: clusterHistoryPoints, width: w)
             let startX = w - step * Double(history.count - 1)
             var line = Path()
             for (i, v) in history.enumerated() {
