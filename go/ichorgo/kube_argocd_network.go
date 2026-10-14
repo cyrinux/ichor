@@ -134,14 +134,15 @@ type netNodeObject struct {
 
 // argoNetInput is what the graph is built from, read from the API server.
 type argoNetInput struct {
-	app        argoObject
-	services   []netService
-	pods       []netPod
-	ingresses  []ingressObject
-	httpRoutes []httpRouteObject
-	gateways   []gatewayObject
-	traefik    traefikRouteSet
-	nodes      []netNodeObject
+	app            argoObject
+	services       []netService
+	pods           []netPod
+	ingresses      []ingressObject
+	httpRoutes     []httpRouteObject
+	gateways       []gatewayObject
+	gatewayClasses []gatewayClassObject
+	traefik        traefikRouteSet
+	nodes          []netNodeObject
 }
 
 func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string) (argoNetwork, error) {
@@ -203,16 +204,20 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 	}
 
 	var (
-		ingresses  kubeList[ingressObject]
-		httpRoutes kubeList[httpRouteObject]
-		gateways   kubeList[gatewayObject]
-		nodes      kubeList[netNodeObject]
+		ingresses      kubeList[ingressObject]
+		httpRoutes     kubeList[httpRouteObject]
+		gateways       kubeList[gatewayObject]
+		gatewayClasses kubeList[gatewayClassObject]
+		nodes          kubeList[netNodeObject]
 	)
 
 	tasks = append(tasks,
 		func() { fail(getList(ctx, k, "/apis/networking.k8s.io/v1/ingresses", &ingresses)) },
 		func() { fail(ignoreNotFound(getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/httproutes", &httpRoutes))) },
 		func() { _ = getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/gateways", &gateways) },
+		// The controller name on the Gateway boxes is a nice-to-have: a restricted
+		// kubeconfig keeps the graph.
+		func() { _ = getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/gatewayclasses", &gatewayClasses) },
 		func() {
 			traefik, err := readTraefikRoutes(ctx, k, "", true)
 			fail(err)
@@ -230,6 +235,7 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 	}
 
 	in.ingresses, in.httpRoutes, in.gateways, in.nodes = ingresses.Items, httpRoutes.Items, gateways.Items, nodes.Items
+	in.gatewayClasses = gatewayClasses.Items
 	if len(in.httpRoutes) > 0 {
 		in.gateways = withPublicPorts(ctx, k, in.gateways)
 	}
@@ -406,7 +412,7 @@ func argoNetRoutes(g *argoNetGraph, in argoNetInput, services map[serviceRef]boo
 
 		for _, gw := range parents {
 			gid := g.add(argoNetNode{ID: "gw/" + gw.Metadata.Namespace + "/" + gw.Metadata.Name, Layer: argoLayerGateway, Kind: "Gateway",
-				Namespace: gw.Metadata.Namespace, Name: gw.Metadata.Name, Detail: gatewayAddress(gw), Managed: managed["Gateway/"+gw.Metadata.Namespace+"/"+gw.Metadata.Name]})
+				Namespace: gw.Metadata.Namespace, Name: gw.Metadata.Name, Detail: gatewayDetail(gw, in.gatewayClasses), Managed: managed["Gateway/"+gw.Metadata.Namespace+"/"+gw.Metadata.Name]})
 			g.link(hid, gid)
 			g.link(gid, rid)
 		}
@@ -459,6 +465,22 @@ func gatewayAddress(gw gatewayObject) string {
 	}
 
 	return ""
+}
+
+// gatewayDetail is "Traefik · 10.0.0.240": the controller serving the Gateway, then its
+// address; the address alone when the class is unknown, the controller alone when the
+// Gateway has no address yet.
+func gatewayDetail(gw gatewayObject, classes []gatewayClassObject) string {
+	controller, address := gatewayController(gw.Spec.GatewayClassName, classes), gatewayAddress(gw)
+
+	switch {
+	case controller == "":
+		return address
+	case address == "":
+		return controller
+	default:
+		return controller + " · " + address
+	}
 }
 
 // serviceDetail is "ClusterIP 10.96.0.12 · 80→8080, 443→https".

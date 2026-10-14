@@ -30,6 +30,15 @@ func netEdges(n argoNetwork) string {
 	return strings.Join(out, " ")
 }
 
+// The demo Gateway names its controller next to the address.
+func TestArgoNetworkGatewayController(t *testing.T) {
+	n := demoArgoNetwork("grafana")
+
+	if gw := netNode(t, n, "gw/traefik/homelab"); gw.Detail != "Traefik · 10.0.0.240" {
+		t.Fatalf("gateway detail %q", gw.Detail)
+	}
+}
+
 func TestArgoNetworkIngressHealthy(t *testing.T) {
 	n := demoArgoNetwork("hello-ichor")
 
@@ -114,7 +123,7 @@ func TestArgoNetworkGateway(t *testing.T) {
 	n := demoArgoNetwork("grafana")
 
 	gw := netNode(t, n, "gw/traefik/homelab")
-	if gw.Managed || gw.Detail != "10.0.0.240" || gw.Layer != argoLayerGateway {
+	if gw.Managed || gw.Detail != "Traefik · 10.0.0.240" || gw.Layer != argoLayerGateway {
 		t.Fatalf("gateway %+v", gw)
 	}
 

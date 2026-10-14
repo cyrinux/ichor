@@ -30,6 +30,7 @@
 {"id":"metallb","name":"MetalLB","cat":"networking","prefixes":["quay.io/metallb/"]},
 {"id":"kube-vip","name":"kube-vip","cat":"networking","icon":"kubernetes","prefixes":["ghcr.io/kube-vip/"]},
 {"id":"traefik","name":"Traefik","cat":"networking"},
+{"id":"kgateway","name":"kgateway","cat":"networking","icon":"","prefixes":["cr.kgateway.dev/kgateway-dev/"]},
 {"id":"ingress-nginx","name":"Ingress NGINX","cat":"networking","icon":"nginx","prefixes":["registry.k8s.io/ingress-nginx/"]},
 {"id":"nginx","name":"NGINX","cat":"web","match":["nginx","nginx-unprivileged","nginx-ingress"],"prefixes":["nginxinc/","nginx/"]},
 {"id":"haproxy","name":"HAProxy","cat":"networking","match":["haproxy","haproxy-ingress","kubernetes-ingress"]},
