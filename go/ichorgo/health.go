@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"slices"
 	"time"
 
 	"github.com/cosi-project/runtime/pkg/safe"
@@ -79,7 +80,8 @@ func runHealth(ctx context.Context, configYAML, contextName string, listener Hea
 	// The discovered cluster members, like `talosctl health` without flags, but at addresses
 	// that answer. Passing the talosconfig's node list instead would make it wait for nodes
 	// that are not (or no longer) members, and report the cluster unhealthy.
-	info := reachableClusterInfo(ctx, s.client, targetNodes(s.context))
+	targets := targetNodes(s.context)
+	info := reachableClusterInfo(ctx, s.client, targets, append(slices.Clone(targets), s.context.Endpoints...))
 
 	stream, err := s.client.ClusterHealthCheck(client.WithNode(ctx, runner), healthWaitTimeout, info)
 	if err != nil {
