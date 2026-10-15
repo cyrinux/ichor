@@ -501,6 +501,7 @@
     <string name="settings_key_strongbox">chip di sicurezza StrongBox</string>
     <string name="settings_key_tee">Trusted Execution Environment</string>
     <string name="settings_key_software">keystore software</string>
+    <string name="keystore_unavailable">Il chip sicuro del telefono non risponde. Riprova tra un momento o riavvia il telefono.</string>
     <string name="settings_import_new">Aggiungi un cluster (importa un talosconfig)</string>
     <string name="settings_delete_config">Elimina il talosconfig salvato</string>
     <string name="settings_delete_title">Eliminare il talosconfig?</string>

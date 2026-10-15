@@ -288,6 +288,10 @@ class ConfigRepository(
             StoreWrite({ persist(kubeStore, kube) }, { persist(kubeStore, previous?.kubeYaml.orEmpty()) })
                 .takeIf { previous == null || previous.kubeYaml != kube },
         )
+        // The Keystore checked first: a secure element that does not answer fails the import
+        // here, before any store was written, or its key is made in the TEE.
+        if (previous?.talosYaml != talos && talos.isNotBlank()) store.prepare()
+        if (previous?.kubeYaml != kube && kube.isNotBlank()) kubeStore.prepare()
         writeAll(writes)
         if (remember) saveActive(summary, shown)
         _config.value = StoredConfig(talos, kube, summary, shown)
