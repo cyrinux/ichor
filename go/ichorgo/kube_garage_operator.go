@@ -52,8 +52,7 @@ type garageOpCondition struct {
 type garageOpCluster struct {
 	Namespace       string              `json:"namespace"`
 	Name            string              `json:"name"`
-	Instance        string              `json:"instance"` // the garageInstance it drives, "ns/name"; "" unmatched
-	Phase           string              `json:"phase"`    // Pending..Failed, the operator's own word
+	Phase           string              `json:"phase"` // Pending..Failed, the operator's own word
 	ClusterID       string              `json:"clusterId"`
 	GarageVersion   string              `json:"garageVersion"`
 	Replicas        int                 `json:"replicas"`
@@ -80,22 +79,20 @@ type garageOpQuotaUsage struct {
 }
 
 type garageOpBucket struct {
-	Namespace        string              `json:"namespace"`
-	Name             string              `json:"name"`
-	Instance         string              `json:"instance"`
-	Cluster          string              `json:"cluster"` // spec.clusterRef.name
-	clusterNamespace string              `json:"-"`       // spec.clusterRef.namespace, "" when the same namespace
-	Phase            string              `json:"phase"`
-	BucketID         string              `json:"bucketId"`
-	Size             string              `json:"size"` // the operator's own wording
-	MaxSize          string              `json:"maxSizeQuota"`
-	Quota            *garageOpQuotaUsage `json:"quotaUsage"`
-	Website          bool                `json:"websiteEnabled"`
-	WebsiteURL       string              `json:"websiteUrl"`
-	Keys             int                 `json:"keysWithAccess"`
-	Conditions       []garageOpCondition `json:"conditions"`
-	Health           string              `json:"health"`
-	Reasons          []string            `json:"reasons"`
+	Namespace  string              `json:"namespace"`
+	Name       string              `json:"name"`
+	Cluster    string              `json:"cluster"` // spec.clusterRef.name
+	Phase      string              `json:"phase"`
+	BucketID   string              `json:"bucketId"`
+	Size       string              `json:"size"` // the operator's own wording
+	MaxSize    string              `json:"maxSizeQuota"`
+	Quota      *garageOpQuotaUsage `json:"quotaUsage"`
+	Website    bool                `json:"websiteEnabled"`
+	WebsiteURL string              `json:"websiteUrl"`
+	Keys       int                 `json:"keysWithAccess"`
+	Conditions []garageOpCondition `json:"conditions"`
+	Health     string              `json:"health"`
+	Reasons    []string            `json:"reasons"`
 }
 
 type garageOpKeyPermission struct {
@@ -106,15 +103,13 @@ type garageOpKeyPermission struct {
 }
 
 type garageOpKey struct {
-	Namespace        string `json:"namespace"`
-	Name             string `json:"name"`
-	Instance         string `json:"instance"`
-	Cluster          string `json:"cluster"`
-	clusterNamespace string `json:"-"`
-	Phase            string `json:"phase"`
-	KeyID            string `json:"keyId"` // Garage's internal key id, not the S3 access key
-	ClusterWide      bool   `json:"clusterWide"`
-	AllBuckets       *struct {
+	Namespace   string `json:"namespace"`
+	Name        string `json:"name"`
+	Cluster     string `json:"cluster"`
+	Phase       string `json:"phase"`
+	KeyID       string `json:"keyId"` // Garage's internal key id, not the S3 access key
+	ClusterWide bool   `json:"clusterWide"`
+	AllBuckets  *struct {
 		Read  bool `json:"read"`
 		Write bool `json:"write"`
 		Owner bool `json:"owner"`
@@ -132,9 +127,8 @@ const garageOpKeyPermCap = 20
 type garageOpNode struct {
 	Namespace        string   `json:"namespace"`
 	Name             string   `json:"name"`
-	Instance         string   `json:"instance"`
 	Cluster          string   `json:"cluster"`
-	clusterNamespace string   `json:"-"`
+	clusterNamespace string   `json:"-"` // spec.clusterRef.namespace, "" when the node's own
 	Phase            string   `json:"phase"`
 	NodeID           string   `json:"nodeId"`
 	Zone             string   `json:"zone"` // the effective one (spec.zone or zoneFrom)
@@ -394,21 +388,25 @@ func readGarageOperator(ctx context.Context, k *kubeClient, version string, now 
 		keys        []garageOpKeyObject
 		nodes       []garageOpNodeObject
 		deployments []garageOpDeploymentObject
-		truncated   bool
+		truncated   [5]bool // one flag per list: the lists run in parallel
 		errs        = make([]error, 5)
 		wg          sync.WaitGroup
 	)
 
-	wg.Go(func() { errs[0] = garageOpList(ctx, k, out.clustersPath(), &clusters, &truncated) })
-	wg.Go(func() { errs[1] = garageOpList(ctx, k, out.bucketsPath(), &buckets, &truncated) })
-	wg.Go(func() { errs[2] = garageOpList(ctx, k, out.keysPath(), &keys, &truncated) })
-	wg.Go(func() { errs[3] = garageOpList(ctx, k, out.nodesPath(), &nodes, &truncated) })
-	wg.Go(func() { errs[4] = garageOpList(ctx, k, "/apis/apps/v1/deployments", &deployments, &truncated) })
+	wg.Go(func() { errs[0] = garageOpList(ctx, k, out.clustersPath(), &clusters, &truncated[0], nil) })
+	wg.Go(func() { errs[1] = garageOpList(ctx, k, out.bucketsPath(), &buckets, &truncated[1], nil) })
+	wg.Go(func() { errs[2] = garageOpList(ctx, k, out.keysPath(), &keys, &truncated[2], nil) })
+	wg.Go(func() { errs[3] = garageOpList(ctx, k, out.nodesPath(), &nodes, &truncated[3], nil) })
+	// Only the operator's own Deployments are kept, page by page: the cluster's other
+	// Deployments neither count toward the cap nor push the operator out of it.
+	wg.Go(func() {
+		errs[4] = garageOpList(ctx, k, "/apis/apps/v1/deployments", &deployments, &truncated[4], isGarageOperatorDeployment(loadAppCatalog()))
+	})
 	wg.Wait()
 
 	mapped := mapGarageOperator(clusters, buckets, keys, nodes, deployments, now)
 	out.Clusters, out.Buckets, out.Keys, out.Nodes, out.Operator = mapped.Clusters, mapped.Buckets, mapped.Keys, mapped.Nodes, mapped.Operator
-	out.Truncated = truncated
+	out.Truncated = slices.Contains(truncated[:], true)
 	out.Error = sectionError(errs...)
 
 	return out
@@ -441,8 +439,9 @@ func (l *garageOperatorLayer) nodesPath() string {
 }
 
 // garageOpList lists path into out, page by page, stopping at garageOpCap items: more
-// items set truncated instead of growing the answer.
-func garageOpList[T any](ctx context.Context, k *kubeClient, path string, out *[]T, truncated *bool) error {
+// items set truncated instead of growing the answer. keep, when set, drops the items it
+// refuses before they count toward the cap.
+func garageOpList[T any](ctx context.Context, k *kubeClient, path string, out *[]T, truncated *bool, keep func(T) bool) error {
 	q := pageQuery{}
 
 	for {
@@ -457,6 +456,10 @@ func garageOpList[T any](ctx context.Context, k *kubeClient, path string, out *[
 		}
 
 		for _, item := range items {
+			if keep != nil && !keep(item) {
+				continue
+			}
+
 			if len(*out) >= garageOpCap {
 				*truncated = true
 
@@ -535,7 +538,7 @@ func mapGarageOpCluster(obj garageOpClusterObject, nodes []garageOpNode) garageO
 	// The node CRs of this cluster: a disconnected or roleless one is the cluster's problem.
 	disconnected, notInLayout := false, false
 	for _, n := range nodes {
-		if n.Namespace != c.Namespace || n.Cluster != c.Name {
+		if cmp.Or(n.clusterNamespace, n.Namespace) != c.Namespace || n.Cluster != c.Name {
 			continue
 		}
 
@@ -615,8 +618,8 @@ func mapGarageOpBucket(obj garageOpBucketObject) garageOpBucket {
 
 	b := garageOpBucket{
 		Namespace: obj.Metadata.Namespace, Name: obj.Metadata.Name,
-		Cluster: obj.Spec.ClusterRef.Name, clusterNamespace: obj.Spec.ClusterRef.Namespace,
-		Phase: st.Phase, BucketID: st.BucketID,
+		Cluster: obj.Spec.ClusterRef.Name,
+		Phase:   st.Phase, BucketID: st.BucketID,
 		Size: st.Size, Website: st.WebsiteEnabled, WebsiteURL: st.WebsiteURL,
 		Keys: len(st.Keys), Reasons: []string{}, Conditions: []garageOpCondition{},
 	}
@@ -683,8 +686,8 @@ func mapGarageOpKey(obj garageOpKeyObject) garageOpKey {
 
 	k := garageOpKey{
 		Namespace: obj.Metadata.Namespace, Name: obj.Metadata.Name,
-		Cluster: obj.Spec.ClusterRef.Name, clusterNamespace: obj.Spec.ClusterRef.Namespace,
-		Phase: st.Phase, KeyID: st.KeyID,
+		Cluster: obj.Spec.ClusterRef.Name,
+		Phase:   st.Phase, KeyID: st.KeyID,
 		ClusterWide: st.ClusterWide, Buckets: []garageOpKeyPermission{}, Reasons: []string{},
 	}
 
@@ -697,9 +700,10 @@ func mapGarageOpKey(obj garageOpKeyObject) garageOpKey {
 	}
 
 	for _, p := range obj.Spec.BucketPermissions {
-		name := p.BucketRef.Name
-		if name == "" {
-			name = cmp.Or(p.BucketID, p.GlobalAlias)
+		// A permission names its bucket by bucketRef, bucketId or globalAlias: any may be absent.
+		name := cmp.Or(p.BucketID, p.GlobalAlias)
+		if p.BucketRef != nil && p.BucketRef.Name != "" {
+			name = p.BucketRef.Name
 		}
 
 		k.Buckets = append(k.Buckets, garageOpKeyPermission{Bucket: name, Read: p.Read, Write: p.Write, Owner: p.Owner})
@@ -754,21 +758,31 @@ func mapGarageOpNode(obj garageOpNodeObject, now time.Time) garageOpNode {
 	return n
 }
 
+// isGarageOperatorDeployment reports a Deployment running an image the catalog knows as
+// garage-operator.
+func isGarageOperatorDeployment(catalog *appCatalog) func(garageOpDeploymentObject) bool {
+	return func(d garageOpDeploymentObject) bool {
+		for _, c := range d.Spec.Template.Spec.Containers {
+			if id := catalog.identify(parseImageRef(c.Image)); id.app != nil && id.app.ID == "garage-operator" {
+				return true
+			}
+		}
+
+		return false
+	}
+}
+
 // mapGarageOperatorDeployment reads the operator's own health from the Deployments whose
 // image the catalog knows as garage-operator. nil when none is running (the CRs may still
 // be served by an operator running outside Kubernetes).
 func mapGarageOperatorDeployment(deployments []garageOpDeploymentObject) *garageOperatorStatus {
-	catalog := loadAppCatalog()
+	isOperator := isGarageOperatorDeployment(loadAppCatalog())
 
 	var matched []garageOpDeploymentObject
 
 	for _, d := range deployments {
-		for _, c := range d.Spec.Template.Spec.Containers {
-			if id := catalog.identify(parseImageRef(c.Image)); id.app != nil && id.app.ID == "garage-operator" {
-				matched = append(matched, d)
-
-				break
-			}
+		if isOperator(d) {
+			matched = append(matched, d)
 		}
 	}
 
@@ -824,56 +838,5 @@ func readGarageSection(ctx context.Context, k *kubeClient, run execFunc, pods []
 		}
 	}
 
-	attachGarageOperator(out)
-
 	return out
-}
-
-// attachGarageOperator marks which garageInstance each operator CR drives: the instance of
-// the same namespace and name (the operator names its pods app.kubernetes.io/name=<cluster>),
-// else, when the namespace runs exactly one Garage, that one. Unmatched CRs keep "" and the
-// apps show them at the section root.
-func attachGarageOperator(out *garageStatus) {
-	byKey := map[string]bool{} // "ns/name" of every instance
-	alone := map[string]string{}
-
-	for _, in := range out.Instances {
-		key := in.Namespace + "/" + in.Name
-		byKey[key] = true
-
-		if _, seen := alone[in.Namespace]; seen {
-			alone[in.Namespace] = ""
-		} else {
-			alone[in.Namespace] = key
-		}
-	}
-
-	// instanceOf resolves a GarageCluster reference (its namespace defaults to the
-	// referencing resource's own) to the instance key, "" when unmatched.
-	instanceOf := func(clusterNs, clusterName, ownNs string) string {
-		if byKey[cmp.Or(clusterNs, ownNs)+"/"+clusterName] {
-			return cmp.Or(clusterNs, ownNs) + "/" + clusterName
-		}
-
-		return alone[cmp.Or(clusterNs, ownNs)]
-	}
-
-	for i := range out.Clusters {
-		out.Clusters[i].Instance = instanceOf("", out.Clusters[i].Name, out.Clusters[i].Namespace)
-	}
-
-	for i := range out.Buckets {
-		b := &out.Buckets[i]
-		b.Instance = instanceOf(b.clusterNamespace, b.Cluster, b.Namespace)
-	}
-
-	for i := range out.Keys {
-		k := &out.Keys[i]
-		k.Instance = instanceOf(k.clusterNamespace, k.Cluster, k.Namespace)
-	}
-
-	for i := range out.Nodes {
-		n := &out.Nodes[i]
-		n.Instance = instanceOf(n.clusterNamespace, n.Cluster, n.Namespace)
-	}
 }
