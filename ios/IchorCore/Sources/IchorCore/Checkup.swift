@@ -72,11 +72,12 @@ public struct CheckupReport: Decodable, Equatable, Sendable {
     }
 
     /// The findings worth a background alert, keyed "section|kind|subject" and valued by
-    /// severity: everything but the notes and the events, which only describe.
+    /// severity: everything but the notes and the events, which only describe, and the kinds the
+    /// data services already alert on (`dataServiceAlertedKinds`).
     public var alertIssues: [String: String] {
         var issues: [String: String] = [:]
         for section in sections where section.id != CheckupSectionID.events.rawValue {
-            for finding in section.findings where finding.severity != .info {
+            for finding in section.findings where finding.severity != .info && !dataServiceAlertedKinds.contains(finding.kindName) {
                 issues["\(section.id)|\(finding.kindName)|\(finding.subject)"] = finding.severity.rawValue
             }
         }
@@ -345,6 +346,11 @@ public struct CheckupSubject: Equatable, Sendable {
         subject = parts.count > 2 ? parts[2] : ""
     }
 }
+
+/// Checkup finding kinds whose problem the data services alert already raises (`dataIssuesOf`):
+/// shown on the checkup screen, never notified a second time. A SealedSecret that failed to unseal
+/// and no active sealing key alert from the Sealed Secrets section.
+public let dataServiceAlertedKinds: Set<String> = ["sealedSecretNotSynced", "sealingKeyMissing"]
 
 /// The checkup findings worth a notification, for a report where a section could not be read:
 /// that section keeps the issues `known` had for it, so they neither clear falsely nor come back

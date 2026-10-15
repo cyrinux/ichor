@@ -2287,6 +2287,36 @@
         <item quantity="one">Affichage des %1$d premiers des %2$d noms d\'hôte.</item>
         <item quantity="other">Affichage des %1$d premiers des %2$d noms d\'hôte.</item>
     </plurals>
+    <string name="sealedsecrets_empty">Aucun SealedSecret.</string>
+    <string name="sealedsecrets_no_controller">Aucun contrôleur trouvé</string>
+    <string name="sealedsecrets_ready">prêt</string>
+    <string name="sealedsecrets_not_ready">pas prêt</string>
+    <string name="sealedsecrets_replicas">Réplicas</string>
+    <string name="sealedsecrets_keys">Clés de scellement</string>
+    <string name="sealedsecrets_key_created">créée %1$s</string>
+    <string name="sealedsecrets_key_active">active</string>
+    <string name="sealedsecrets_key_compromised">compromise</string>
+    <string name="sealedsecrets_immutable">immuable</string>
+    <string name="sealedsecrets_unsealed">descellé</string>
+    <string name="sealedsecrets_reason_not_synced">échec du descellement : son Secret manque ou est périmé</string>
+    <string name="sealedsecrets_reason_unmanaged">un Secret de ce nom existe et ne lui appartient pas</string>
+    <string name="sealedsecrets_reason_stale">une version plus récente n’est pas encore observée</string>
+    <string name="sealedsecrets_reason_controller_down">le contrôleur ne tourne pas : rien n’est descellé</string>
+    <string name="sealedsecrets_reason_no_keys">aucune clé de scellement active</string>
+    <string name="sealedsecrets_reason_key_compromised">une clé de scellement est marquée compromise</string>
+    <string name="sealedsecrets_reason_key_stale">la clé de scellement la plus récente a plus de 30 jours : le renouvellement est peut-être bloqué</string>
+    <plurals name="sealedsecrets_count">
+        <item quantity="one">%1$d SealedSecret</item>
+        <item quantity="other">%1$d SealedSecrets</item>
+    </plurals>
+    <plurals name="sealedsecrets_item_keys">
+        <item quantity="one">%1$d clé</item>
+        <item quantity="other">%1$d clés</item>
+    </plurals>
+    <plurals name="sealedsecrets_truncated">
+        <item quantity="one">Affichage des %1$d premiers SealedSecrets sur %2$d.</item>
+        <item quantity="other">Affichage des %1$d premiers SealedSecrets sur %2$d.</item>
+    </plurals>
     <string name="kubegreen_empty">Aucun planning de veille.</string>
     <string name="kubegreen_state_asleep">Endormi</string>
     <string name="kubegreen_state_awake">Éveillé</string>

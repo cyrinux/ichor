@@ -2287,6 +2287,36 @@
         <item quantity="one">Mostrati i primi %1$d di %2$d nomi host.</item>
         <item quantity="other">Mostrati i primi %1$d di %2$d nomi host.</item>
     </plurals>
+    <string name="sealedsecrets_empty">Nessun SealedSecret.</string>
+    <string name="sealedsecrets_no_controller">Nessun controller trovato</string>
+    <string name="sealedsecrets_ready">pronto</string>
+    <string name="sealedsecrets_not_ready">non pronto</string>
+    <string name="sealedsecrets_replicas">Repliche</string>
+    <string name="sealedsecrets_keys">Chiavi di sigillatura</string>
+    <string name="sealedsecrets_key_created">creata %1$s</string>
+    <string name="sealedsecrets_key_active">attiva</string>
+    <string name="sealedsecrets_key_compromised">compromessa</string>
+    <string name="sealedsecrets_immutable">immutabile</string>
+    <string name="sealedsecrets_unsealed">dissigillato</string>
+    <string name="sealedsecrets_reason_not_synced">dissigillatura non riuscita: il suo Secret manca o non è aggiornato</string>
+    <string name="sealedsecrets_reason_unmanaged">esiste un Secret con questo nome che non gli appartiene</string>
+    <string name="sealedsecrets_reason_stale">una versione più recente non è ancora stata osservata</string>
+    <string name="sealedsecrets_reason_controller_down">il controller non è in esecuzione: nulla viene dissigillato</string>
+    <string name="sealedsecrets_reason_no_keys">nessuna chiave di sigillatura attiva</string>
+    <string name="sealedsecrets_reason_key_compromised">una chiave di sigillatura è segnata come compromessa</string>
+    <string name="sealedsecrets_reason_key_stale">la chiave di sigillatura più recente ha più di 30 giorni: il rinnovo potrebbe essere bloccato</string>
+    <plurals name="sealedsecrets_count">
+        <item quantity="one">%1$d SealedSecret</item>
+        <item quantity="other">%1$d SealedSecret</item>
+    </plurals>
+    <plurals name="sealedsecrets_item_keys">
+        <item quantity="one">%1$d chiave</item>
+        <item quantity="other">%1$d chiavi</item>
+    </plurals>
+    <plurals name="sealedsecrets_truncated">
+        <item quantity="one">Visualizzati i primi %1$d di %2$d SealedSecret.</item>
+        <item quantity="other">Visualizzati i primi %1$d di %2$d SealedSecret.</item>
+    </plurals>
     <string name="kubegreen_empty">Nessuna pianificazione di sospensione.</string>
     <string name="kubegreen_state_asleep">Addormentato</string>
     <string name="kubegreen_state_awake">Sveglio</string>
