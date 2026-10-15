@@ -496,6 +496,7 @@
     <string name="settings_key_strongbox">StrongBox security chip</string>
     <string name="settings_key_tee">Trusted Execution Environment</string>
     <string name="settings_key_software">software keystore</string>
+    <string name="keystore_unavailable">The phone\'s secure chip is not answering. Try again in a moment, or restart the phone.</string>
     <string name="settings_import_new">Add a cluster (import a talosconfig)</string>
     <string name="settings_delete_config">Delete stored talosconfig</string>
     <string name="settings_delete_title">Delete talosconfig?</string>

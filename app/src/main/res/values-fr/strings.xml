@@ -501,6 +501,7 @@
     <string name="settings_key_strongbox">la puce de sécurité StrongBox</string>
     <string name="settings_key_tee">le Trusted Execution Environment</string>
     <string name="settings_key_software">le keystore logiciel</string>
+    <string name="keystore_unavailable">La puce sécurisée du téléphone ne répond pas. Réessayez dans un instant ou redémarrez le téléphone.</string>
     <string name="settings_import_new">Ajouter un cluster (importer un talosconfig)</string>
     <string name="settings_delete_config">Supprimer le talosconfig enregistré</string>
     <string name="settings_delete_title">Supprimer le talosconfig&#160;?</string>

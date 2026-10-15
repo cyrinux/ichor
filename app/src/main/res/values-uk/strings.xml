@@ -548,6 +548,7 @@
     <string name="settings_key_strongbox">чип безпеки StrongBox</string>
     <string name="settings_key_tee">довірене середовище виконання (TEE)</string>
     <string name="settings_key_software">програмне сховище ключів</string>
+    <string name="keystore_unavailable">Захищений чип телефона не відповідає. Спробуйте ще раз за мить або перезапустіть телефон.</string>
     <string name="settings_import_new">Додати кластер (імпортувати talosconfig)</string>
     <string name="settings_delete_config">Видалити збережений talosconfig</string>
     <string name="settings_delete_title">Видалити talosconfig?</string>

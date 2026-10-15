@@ -494,6 +494,7 @@
     <string name="settings_key_strongbox">StrongBox-Sicherheitschip</string>
     <string name="settings_key_tee">Trusted Execution Environment</string>
     <string name="settings_key_software">Software-Schlüsselspeicher</string>
+    <string name="keystore_unavailable">Der Sicherheitschip des Telefons antwortet nicht. Versuche es gleich noch einmal oder starte das Telefon neu.</string>
     <string name="settings_import_new">Cluster hinzufügen (talosconfig importieren)</string>
     <string name="settings_delete_config">Gespeicherte talosconfig löschen</string>
     <string name="settings_delete_title">talosconfig löschen?</string>
