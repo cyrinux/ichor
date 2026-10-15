@@ -91,12 +91,12 @@ private func weekdayNames(_ weekdays: String) -> String {
     if weekdays.isEmpty || weekdays == "*" { return "–" }
     let names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-    return weekdays.split(separator: ",").map { part in
+    return weekdays.split(separator: ",").map { part -> String in
         let bounds = part.split(separator: "-").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
         switch bounds.count {
-        case 1: names[bounds[0] % 7]
-        case 2: "\(names[bounds[0] % 7]) – \(names[bounds[1] % 7])"
-        default: String(part)
+        case 1: return names[bounds[0] % 7]
+        case 2: return "\(names[bounds[0] % 7]) – \(names[bounds[1] % 7])"
+        default: return String(part)
         }
     }.joined(separator: ", ")
 }
