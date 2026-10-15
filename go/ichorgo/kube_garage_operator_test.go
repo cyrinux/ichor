@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -35,24 +36,23 @@ func TestMapGarageOperator(t *testing.T) {
 	out := mapGarageOperator(clusters, buckets, keys, nodes, deployments, fixtureNow)
 
 	type summary struct {
-		Name, Instance, Phase, Health string
-		Reasons                       []string
+		Name, Phase, Health string
+		Reasons             []string
 	}
 
 	var got []summary
 	for _, c := range out.Clusters {
-		got = append(got, summary{c.Name, c.Instance, c.Phase, c.Health, c.Reasons})
+		got = append(got, summary{c.Name, c.Phase, c.Health, c.Reasons})
 	}
 
 	want := []summary{
-		// Instance attachment happens in attachGarageOperator (see the end-to-end tests).
-		{"edge", "", "Running", healthCritical, []string{garageOpReasonAdminUnreachable}},
-		{"garage", "", "Degraded", healthWarning, []string{
+		{"edge", "Running", healthCritical, []string{garageOpReasonAdminUnreachable}},
+		{"garage", "Degraded", healthWarning, []string{
 			garageOpReasonQuorumAtRisk, garageOpReasonDegraded, garageOpReasonStorageReplicas,
 			garageOpReasonLayoutStaged, garageOpReasonTombstones, garageOpReasonNodeDisconnected,
 			garageOpReasonNodeNotInLayout,
 		}},
-		{"archive", "", "Ready", healthOK, []string{}},
+		{"archive", "Ready", healthOK, []string{}},
 	}
 
 	if fmt.Sprint(got) != fmt.Sprint(want) {
@@ -80,14 +80,14 @@ func TestMapGarageOperator(t *testing.T) {
 
 	gotB := []summary{}
 	for _, b := range out.Buckets {
-		gotB = append(gotB, summary{b.Name, b.Instance, b.Phase, b.Health, b.Reasons})
+		gotB = append(gotB, summary{b.Name, b.Phase, b.Health, b.Reasons})
 	}
 
 	wantB := []summary{
-		{"backups", "", "Ready", healthWarning, []string{garageOpReasonLifecycle}},
-		{"site", "", "Ready", healthWarning, []string{garageOpReasonWebsiteExposure}},
-		{"stuck", "", "Ready", healthWarning, []string{garageOpReasonLookupStuck}},
-		{"files", "", "Ready", healthOK, []string{}},
+		{"backups", "Ready", healthWarning, []string{garageOpReasonLifecycle}},
+		{"site", "Ready", healthWarning, []string{garageOpReasonWebsiteExposure}},
+		{"stuck", "Ready", healthWarning, []string{garageOpReasonLookupStuck}},
+		{"files", "Ready", healthOK, []string{}},
 	}
 
 	if fmt.Sprint(gotB) != fmt.Sprint(wantB) {
@@ -101,13 +101,13 @@ func TestMapGarageOperator(t *testing.T) {
 
 	gotK := []summary{}
 	for _, k := range out.Keys {
-		gotK = append(gotK, summary{k.Name, k.Instance, k.Phase, k.Health, k.Reasons})
+		gotK = append(gotK, summary{k.Name, k.Phase, k.Health, k.Reasons})
 	}
 
 	wantK := []summary{
-		{"broken", "", "Failed", healthCritical, []string{garageOpReasonKeyFailed}},
-		{"app-writer", "", "Ready", healthOK, []string{}},
-		{"backup-agent", "", "Ready", healthOK, []string{}},
+		{"broken", "Failed", healthCritical, []string{garageOpReasonKeyFailed}},
+		{"app-writer", "Ready", healthOK, []string{}},
+		{"backup-agent", "Ready", healthOK, []string{}},
 	}
 
 	if fmt.Sprint(gotK) != fmt.Sprint(wantK) {
@@ -126,13 +126,13 @@ func TestMapGarageOperator(t *testing.T) {
 
 	gotN := []summary{}
 	for _, n := range out.Nodes {
-		gotN = append(gotN, summary{n.Name, n.Instance, n.Phase, n.Health, n.Reasons})
+		gotN = append(gotN, summary{n.Name, n.Phase, n.Health, n.Reasons})
 	}
 
 	wantN := []summary{
-		{"garage-2xv9p", "", "Degraded", healthWarning, []string{garageOpReasonNodeDisconnected}},
-		{"gw-0", "", "Running", healthWarning, []string{garageOpReasonNodeNotInLayout}},
-		{"garage-4kq7z", "", "Ready", healthOK, []string{}},
+		{"garage-2xv9p", "Degraded", healthWarning, []string{garageOpReasonNodeDisconnected}},
+		{"gw-0", "Running", healthWarning, []string{garageOpReasonNodeNotInLayout}},
+		{"garage-4kq7z", "Ready", healthOK, []string{}},
 	}
 
 	if fmt.Sprint(gotN) != fmt.Sprint(wantN) {
@@ -242,8 +242,8 @@ func TestReadGarageOperatorGroupAbsent(t *testing.T) {
 }
 
 func TestReadDataServicesGarageOperator(t *testing.T) {
-	// The operator's CRDs are served without a hint: the garage section opens anyway, and
-	// its CRs attach to the instances the CLI reads.
+	// The operator's CRDs are served without a hint: the garage section opens anyway, with
+	// its CRs beside the instances the CLI reads.
 	pods := []dsPod{
 		fakePod("garage", "garage-a", "node-1", true, map[string]string{"app.kubernetes.io/name": "garage"}, "garage", "dxflrs/amd64_garage:v2.3.0"),
 		fakePod("garage-archive", "garage-archive-0", "node-2", true, map[string]string{"app.kubernetes.io/name": "garage-archive"}, "garage", "dxflrs/amd64_garage:v2.3.0"),
@@ -279,13 +279,9 @@ func TestReadDataServicesGarageOperator(t *testing.T) {
 			len(g.Clusters), len(g.Buckets), len(g.Keys), len(g.Nodes), g.Operator)
 	}
 
-	// The unmatched edge handle stays at the section root; the others attach.
-	if g.Clusters[0].Instance != "" || g.Clusters[1].Instance != "garage/garage" || g.Clusters[2].Instance != "garage-archive/garage-archive" {
-		t.Errorf("cluster instances: %q %q %q", g.Clusters[0].Instance, g.Clusters[1].Instance, g.Clusters[2].Instance)
-	}
-
-	if g.Buckets[0].Instance != "garage/garage" || g.Keys[0].Instance != "garage/garage" || g.Nodes[0].Instance != "garage/garage" {
-		t.Errorf("item instances: %q %q %q", g.Buckets[0].Instance, g.Keys[0].Instance, g.Nodes[0].Instance)
+	// The CRs keep the layer's worst-first order next to the instances.
+	if g.Clusters[0].Name != "edge" || g.Buckets[0].Cluster != "garage" || g.Keys[0].Name != "broken" {
+		t.Errorf("layer order: cluster %q, bucket of %q, key %q", g.Clusters[0].Name, g.Buckets[0].Cluster, g.Keys[0].Name)
 	}
 
 	// Hints without garage and without the operator: no section at all.
@@ -330,7 +326,7 @@ func TestGarageOpListCap(t *testing.T) {
 
 	var buckets []garageOpBucketObject
 	truncated := false
-	if err := garageOpList(context.Background(), k, "/apis/garage.rajsingh.info/v1beta1/garagebuckets", &buckets, &truncated); err != nil {
+	if err := garageOpList(context.Background(), k, "/apis/garage.rajsingh.info/v1beta1/garagebuckets", &buckets, &truncated, nil); err != nil {
 		t.Fatal(err)
 	}
 
@@ -375,7 +371,165 @@ func TestKubeGarageOperatorDemo(t *testing.T) {
 		t.Fatalf("demo garage section: %+v", g)
 	}
 
-	if g.Clusters[0].Instance == "" || g.Clusters[1].Instance == "" {
-		t.Errorf("demo cluster instances: %q %q", g.Clusters[0].Instance, g.Clusters[1].Instance)
+	if g.Operator == nil || len(g.Buckets) != 2 || len(g.Keys) != 2 || len(g.Nodes) != 1 {
+		t.Errorf("demo garage section layer: %+v", g)
+	}
+}
+
+func TestMapGarageOpKeyBucketWithoutRef(t *testing.T) {
+	// A permission may name its bucket by id or global alias instead of bucketRef: the
+	// reader must not dereference the missing ref.
+	for _, tc := range []struct{ name, perm, want string }{
+		{"bucketRef", `{"bucketRef":{"name":"files"},"read":true}`, "files"},
+		{"bucketId only", `{"bucketId":"a3f8c1","read":true}`, "a3f8c1"},
+		{"globalAlias only", `{"globalAlias":"shared-assets","read":true}`, "shared-assets"},
+		{"empty bucketRef", `{"bucketRef":{},"bucketId":"4f1d","read":true}`, "4f1d"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var obj garageOpKeyObject
+			raw := `{"metadata":{"name":"reader","namespace":"garage"},"spec":{"clusterRef":{"name":"garage"},"bucketPermissions":[` + tc.perm + `]}}`
+			if err := json.Unmarshal([]byte(raw), &obj); err != nil {
+				t.Fatal(err)
+			}
+
+			k := mapGarageOpKey(obj)
+			if len(k.Buckets) != 1 || k.Buckets[0].Bucket != tc.want || !k.Buckets[0].Read {
+				t.Errorf("permissions: %+v, want bucket %q", k.Buckets, tc.want)
+			}
+		})
+	}
+}
+
+func TestMapGarageOpClusterNodesByClusterRefNamespace(t *testing.T) {
+	// Node CRs belong to the cluster their clusterRef names, in clusterRef.namespace when
+	// set, else in their own namespace.
+	decode := func(raw string, out any) {
+		t.Helper()
+
+		if err := json.Unmarshal([]byte(raw), out); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	var cluster garageOpClusterObject
+	decode(`{"metadata":{"name":"garage","namespace":"garage"},"status":{"phase":"Ready"}}`, &cluster)
+
+	node := func(ns, refNs string) garageOpNodeObject {
+		var n garageOpNodeObject
+		decode(`{"metadata":{"name":"node-a","namespace":"`+ns+`"},"spec":{"clusterRef":{"name":"garage","namespace":"`+refNs+`"}},"status":{"connected":false,"inLayout":true}}`, &n)
+
+		return n
+	}
+
+	for _, tc := range []struct {
+		name     string
+		node     garageOpNodeObject
+		attaches bool
+	}{
+		{"same namespace", node("garage", ""), true},
+		{"other namespace, ref to the cluster's", node("storage", "garage"), true},
+		{"cluster's namespace, ref elsewhere", node("garage", "elsewhere"), false},
+		{"other namespace, no ref namespace", node("storage", ""), false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			out := mapGarageOperator([]garageOpClusterObject{cluster}, nil, nil, []garageOpNodeObject{tc.node}, nil, fixtureNow)
+
+			got := slices.Contains(out.Clusters[0].Reasons, garageOpReasonNodeDisconnected)
+			if got != tc.attaches {
+				t.Errorf("disconnected node counted for the cluster: %v, want %v (reasons %v)", got, tc.attaches, out.Clusters[0].Reasons)
+			}
+		})
+	}
+}
+
+// garageOpFakeAPI serves the operator's four kinds and the Deployments, each kind empty
+// unless overridden.
+func garageOpFakeAPI(t *testing.T, overrides map[string]string) *kubeClient {
+	t.Helper()
+
+	empty := `{"items":[]}`
+	routes := map[string]string{
+		"GET /apis/garage.rajsingh.info/v1beta2/garageclusters": empty,
+		"GET /apis/garage.rajsingh.info/v1beta1/garagebuckets":  empty,
+		"GET /apis/garage.rajsingh.info/v1beta1/garagekeys":     empty,
+		"GET /apis/garage.rajsingh.info/v1beta1/garagenodes":    empty,
+		"GET /apis/apps/v1/deployments":                         empty,
+	}
+	for route, body := range overrides {
+		routes[route] = body
+	}
+
+	f := newFakeKubeAPI(t, routes)
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return k
+}
+
+func garageOpItems(t *testing.T, n int, item func(i int) map[string]any) string {
+	t.Helper()
+
+	items := make([]map[string]any, 0, n)
+	for i := range n {
+		items = append(items, item(i))
+	}
+
+	raw, err := json.Marshal(map[string]any{"items": items})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return string(raw)
+}
+
+func TestReadGarageOperatorManyDeployments(t *testing.T) {
+	// More Deployments than garageOpCap with the operator last: its health is still read,
+	// and Deployments the section does not show do not truncate it.
+	deployment := func(ns, name, image string, ready int) map[string]any {
+		return map[string]any{
+			"metadata": map[string]any{"name": name, "namespace": ns},
+			"spec":     map[string]any{"template": map[string]any{"spec": map[string]any{"containers": []any{map[string]any{"image": image}}}}},
+			"status":   map[string]any{"replicas": 1, "readyReplicas": ready},
+		}
+	}
+
+	raw := garageOpItems(t, garageOpCap+1, func(i int) map[string]any {
+		if i == garageOpCap {
+			return deployment("garage-operator-system", "garage-operator", "ghcr.io/rajsinghtech/garage-operator:v0.6.2", 0)
+		}
+
+		return deployment("demo", fmt.Sprintf("app-%03d", i), "ghcr.io/example/other:v1.0.0", 1)
+	})
+
+	k := garageOpFakeAPI(t, map[string]string{"GET /apis/apps/v1/deployments": raw})
+
+	out := readGarageOperator(context.Background(), k, "v1beta2", fixtureNow)
+	if out.Error != "" || out.Truncated {
+		t.Fatalf("layer: error %q truncated %v", out.Error, out.Truncated)
+	}
+
+	if out.Operator == nil || out.Operator.Name != "garage-operator" || out.Operator.Health != healthCritical {
+		t.Errorf("operator: %+v", out.Operator)
+	}
+}
+
+func TestReadGarageOperatorTruncatedByOneKind(t *testing.T) {
+	// One kind over the cap truncates the layer; the kinds are listed in parallel, each
+	// with its own flag (run with -race).
+	raw := garageOpItems(t, garageOpCap+1, func(i int) map[string]any {
+		return map[string]any{
+			"metadata": map[string]any{"name": fmt.Sprintf("key-%03d", i), "namespace": "garage"},
+			"spec":     map[string]any{"clusterRef": map[string]any{"name": "garage"}},
+		}
+	})
+
+	k := garageOpFakeAPI(t, map[string]string{"GET /apis/garage.rajsingh.info/v1beta1/garagekeys": raw})
+
+	out := readGarageOperator(context.Background(), k, "v1beta2", fixtureNow)
+	if !out.Truncated || len(out.Keys) != garageOpCap {
+		t.Errorf("truncated %v, %d keys", out.Truncated, len(out.Keys))
 	}
 }
