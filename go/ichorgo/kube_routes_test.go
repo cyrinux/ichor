@@ -83,6 +83,8 @@ func TestAppRoutesIngress(t *testing.T) {
 	}
 }
 
+// An HTTPRoute match on a method (a string, where a GRPCRoute's is an object) must not
+// fail the decode: the route still yields its URL.
 func TestAppRoutesHTTPRoute(t *testing.T) {
 	k := openRoutesKube(t, map[string]string{
 		"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[]}`,
@@ -96,10 +98,10 @@ func TestAppRoutesHTTPRoute(t *testing.T) {
 			{"metadata":{"name":"web","namespace":"shop"},"spec":{
 				"parentRefs":[{"name":"public","namespace":"gw"}],
 				"hostnames":["www.shop.example","plain.example"],
-				"rules":[{"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"backendRefs":[{"name":"web","port":80}]}]}},
+				"rules":[{"matches":[{"path":{"type":"PathPrefix","value":"/"},"method":"GET"}],"backendRefs":[{"name":"web","port":80}]}]}},
 			{"metadata":{"name":"alt","namespace":"shop"},"spec":{
 				"parentRefs":[{"name":"public","namespace":"gw","sectionName":"alt"}],
-				"rules":[{"matches":[{"path":{"type":"PathPrefix","value":"/app"}}],"backendRefs":[{"name":"web"}]}]}},
+				"rules":[{"matches":[{"method":"POST"},{"path":{"type":"PathPrefix","value":"/app"}}],"backendRefs":[{"name":"web"}]}]}},
 			{"metadata":{"name":"bare","namespace":"shop"},"spec":{
 				"parentRefs":[{"name":"public","namespace":"gw","sectionName":"http"}],
 				"rules":[{"backendRefs":[{"name":"db"},{"name":"web"}]}]}},
