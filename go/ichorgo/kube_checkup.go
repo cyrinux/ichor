@@ -14,6 +14,7 @@ const (
 	checkStorage       = "storage"
 	checkUpgrade       = "upgrade"
 	checkWebhooks      = "webhooks"
+	checkPolicies      = "policies"
 	checkCapacity      = "capacity"
 	checkNodes         = "nodes"
 	checkLoadBalancers = "loadbalancers"
@@ -57,8 +58,8 @@ const (
 
 var checkupSteps = []string{
 	checkupStepAPI, checkupStepPods, checkupStepNodes, checkupStepPVCs, checkupStepVersion,
-	checkWorkloads, checkEvents, checkStorage, checkUpgrade, checkWebhooks, checkCapacity,
-	checkLoadBalancers, checkTerminating, checkCertificates, checkSecrets, checkHelm, checkMonitoring,
+	checkWorkloads, checkEvents, checkStorage, checkUpgrade, checkWebhooks, checkPolicies,
+	checkCapacity, checkLoadBalancers, checkTerminating, checkCertificates, checkSecrets, checkHelm, checkMonitoring,
 }
 
 // checkupReport is what the cluster hides behind green nodes: one section per kind of
@@ -205,7 +206,7 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 	wg.Wait()
 
 	report := checkupReport{KubeVersion: version}
-	sections := make([]checkupSection, 13)
+	sections := make([]checkupSection, 14)
 
 	// section runs one section reader as its progress step; the step fails when a section it
 	// fills could not be read at all.
@@ -222,13 +223,14 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 	section(checkStorage, func() { sections[2], report.Volumes = checkupStorage(ctx, k, in) }, 2)
 	section(checkUpgrade, func() { sections[3] = checkupUpgrade(ctx, k, version) }, 3)
 	section(checkWebhooks, func() { sections[4] = checkupWebhooks(ctx, k) }, 4)
-	section(checkCapacity, func() { sections[5], sections[6], report.Nodes = checkupCapacity(ctx, k, in, version) }, 5, 6)
-	section(checkLoadBalancers, func() { sections[7] = checkupLoadBalancers(ctx, k, in) }, 7)
-	section(checkTerminating, func() { sections[8] = checkupTerminating(ctx, k, in) }, 8)
-	section(checkCertificates, func() { sections[9] = checkupCSRs(ctx, k, in) }, 9)
-	section(checkSecrets, func() { sections[10] = checkupExternalSecrets(ctx, k, in) }, 10)
-	section(checkHelm, func() { sections[11], report.Releases = checkupHelm(ctx, k, in) }, 11)
-	section(checkMonitoring, func() { sections[12] = checkupMonitoring(ctx, k, in) }, 12)
+	section(checkPolicies, func() { sections[5] = checkupPolicies(ctx, k, in) }, 5)
+	section(checkCapacity, func() { sections[6], sections[7], report.Nodes = checkupCapacity(ctx, k, in, version) }, 6, 7)
+	section(checkLoadBalancers, func() { sections[8] = checkupLoadBalancers(ctx, k, in) }, 8)
+	section(checkTerminating, func() { sections[9] = checkupTerminating(ctx, k, in) }, 9)
+	section(checkCertificates, func() { sections[10] = checkupCSRs(ctx, k, in) }, 10)
+	section(checkSecrets, func() { sections[11] = checkupExternalSecrets(ctx, k, in) }, 11)
+	section(checkHelm, func() { sections[12], report.Releases = checkupHelm(ctx, k, in) }, 12)
+	section(checkMonitoring, func() { sections[13] = checkupMonitoring(ctx, k, in) }, 13)
 	wg.Wait()
 
 	report.Sections = sections

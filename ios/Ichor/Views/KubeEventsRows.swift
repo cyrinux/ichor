@@ -89,6 +89,12 @@ private struct KubeEventRow: View {
             if showObject {
                 Text(verbatim: "\(event.kind) \(event.name)").font(.caption2.monospaced()).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
             }
+            if let policy = event.policy {
+                Text(verbatim: policy.rule.isEmpty
+                     ? CheckupText.kubeEventsDeniedByPolicy(policy.policy)
+                     : CheckupText.kubeEventsDeniedByPolicyRule(policy.policy, policy.rule))
+                    .font(.caption.weight(.medium))
+            }
             Text(verbatim: event.message).font(.caption).lineLimit(6)
         }
         .padding(.vertical, 2)

@@ -75,6 +75,17 @@ enum CheckupText {
     static func checkupDeprecatedAPI(_ a: String) -> String { String(localized: "Still requested; Kubernetes \(a) removes it") }
     static var checkupDeprecatedAPIUnplanned: String { String(localized: "Deprecated, and still requested") }
     static func checkupWebhook(_ a: String, _ b: String) -> String { String(localized: "\(a) webhook: its Service \(b) has no ready endpoint") }
+    static var checkupSectionPolicies: String { String(localized: "Admission policies") }
+    static var checkupSectionPoliciesHint: String { String(localized: "Policies that refuse or flag workloads") }
+    static func checkupPolicyEngineDown(_ a: String) -> String { String(localized: "Policy engine \(a) is down") }
+    static func checkupPolicyEngineDownFix(_ a: String) -> String { String(localized: "Check the policy engine’s pods in namespace \(a); Policies shows its state.") }
+    static func checkupPolicyNotReady(_ a: String) -> String { String(localized: "Policy \(a) is not ready") }
+    static var checkupPolicyNotReadyFix: String { String(localized: "Switch the policy to Audit until the engine is ready; Policies shows its condition.") }
+    static func checkupPolicyBlocks(_ a: String, _ b: String) -> String { String(localized: "Policy \(a) blocks \(b)") }
+    static var checkupPolicyBlocksFix: String { String(localized: "Relax the rule or label the workload; Policies shows the policy.") }
+    static func checkupPolicyFailures(_ a: String, _ b: String) -> String { String(localized: "Policy \(a) fails on \(b) resources") }
+    static var checkupPolicyFailuresFix: String { String(localized: "Relax the rule or label the workloads: in Enforce mode they would be refused.") }
+    static var checkupOpenPolicies: String { String(localized: "Open Policies") }
     static func checkupNodeRequestsHigh(_ a: String, _ b: String) -> String { String(localized: "\(a) of its \(b) is requested") }
     static func checkupNodePodsFull(_ a: String, _ b: String) -> String { String(localized: "\(a) pods of the \(b) the kubelet accepts") }
     static func checkupNoRoomToDrain(_ a: String) -> String { String(localized: "Its pods would not fit on the other nodes: not enough free \(a)") }
@@ -138,6 +149,8 @@ enum CheckupText {
     static var kubeEventsTitle: String { String(localized: "Events") }
     static var kubeEventsEmpty: String { String(localized: "No event. Kubernetes keeps them for one hour.") }
     static func kubeEventsAgo(_ a: String) -> String { String(localized: "\(a) ago") }
+    static func kubeEventsDeniedByPolicy(_ a: String) -> String { String(localized: "Denied by policy \(a)") }
+    static func kubeEventsDeniedByPolicyRule(_ a: String, _ b: String) -> String { String(localized: "Denied by policy \(a) (rule \(b))") }
     static var monitorCheckup: String { String(localized: "Cluster checkup") }
     static var monitorCheckupDesc: String { String(localized: "Also alerts on what the checkup finds: pods that crash or cannot start, volumes nearly full, admission webhooks without a backend, load balancers without an address. Each check uses the Kubernetes API (os:admin), lists every pod and asks each kubelet for its volumes.") }
     static func monitorCheckupOk(_ a: String) -> String { String(localized: "Resolved: \(a)") }

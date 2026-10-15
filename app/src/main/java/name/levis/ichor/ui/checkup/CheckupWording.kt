@@ -9,6 +9,7 @@ import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.NotificationImportant
+import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Upgrade
@@ -38,6 +39,7 @@ fun sectionLook(id: String): SectionLook? = when (id) {
     CheckupSectionId.STORAGE -> SectionLook(Icons.Outlined.Storage, R.string.checkup_section_storage, R.string.checkup_section_storage_hint)
     CheckupSectionId.UPGRADE -> SectionLook(Icons.Outlined.Upgrade, R.string.checkup_section_upgrade, R.string.checkup_section_upgrade_hint)
     CheckupSectionId.WEBHOOKS -> SectionLook(Icons.Outlined.Webhook, R.string.checkup_section_webhooks, R.string.checkup_section_webhooks_hint)
+    CheckupSectionId.POLICIES -> SectionLook(Icons.Outlined.Policy, R.string.checkup_section_policies, R.string.checkup_section_policies_hint)
     CheckupSectionId.CAPACITY -> SectionLook(Icons.Outlined.Speed, R.string.checkup_section_capacity, R.string.checkup_section_capacity_hint)
     CheckupSectionId.NODES -> SectionLook(Icons.Outlined.Dns, R.string.checkup_section_nodes, R.string.checkup_section_nodes_hint)
     CheckupSectionId.LOAD_BALANCERS -> SectionLook(Icons.Outlined.Lan, R.string.checkup_section_loadbalancers, R.string.checkup_section_loadbalancers_hint)
@@ -100,6 +102,10 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
         CheckupKind.DEPRECATED_API ->
             if (f.extra.isEmpty()) stringResource(R.string.checkup_deprecatedAPI_unplanned) else stringResource(R.string.checkup_deprecatedAPI, f.extra)
         CheckupKind.WEBHOOK_DOWN, CheckupKind.WEBHOOK_SKIPPED -> stringResource(R.string.checkup_webhook, f.reason, f.extra)
+        CheckupKind.POLICY_ENGINE_DOWN -> stringResource(R.string.checkup_policyEngineDown, f.name)
+        CheckupKind.POLICY_NOT_READY -> stringResource(R.string.checkup_policyNotReady, f.name)
+        CheckupKind.POLICY_BLOCKS -> stringResource(R.string.checkup_policyBlocks, f.extra, f.name)
+        CheckupKind.POLICY_FAILURES -> stringResource(R.string.checkup_policyFailures, f.name, f.count.toString())
         CheckupKind.NODE_REQUESTS_HIGH -> stringResource(R.string.checkup_nodeRequestsHigh, percent(f.value), resourceName(f.extra))
         CheckupKind.NODE_PODS_FULL -> stringResource(R.string.checkup_nodePodsFull, f.count.toString(), f.limit.roundToInt().toString())
         CheckupKind.NO_ROOM_TO_DRAIN -> stringResource(R.string.checkup_noRoomToDrain, resourceName(f.extra))
@@ -156,6 +162,10 @@ fun checkupFix(kind: String): Int = when (kind) {
     CheckupKind.DEPRECATED_API -> R.string.checkup_deprecatedAPI_fix
     CheckupKind.WEBHOOK_DOWN -> R.string.checkup_webhookDown_fix
     CheckupKind.WEBHOOK_SKIPPED -> R.string.checkup_webhookSkipped_fix
+    CheckupKind.POLICY_ENGINE_DOWN -> R.string.checkup_policyEngineDown_fix
+    CheckupKind.POLICY_NOT_READY -> R.string.checkup_policyNotReady_fix
+    CheckupKind.POLICY_BLOCKS -> R.string.checkup_policyBlocks_fix
+    CheckupKind.POLICY_FAILURES -> R.string.checkup_policyFailures_fix
     CheckupKind.NODE_REQUESTS_HIGH -> R.string.checkup_nodeRequestsHigh_fix
     CheckupKind.NODE_PODS_FULL -> R.string.checkup_nodePodsFull_fix
     CheckupKind.NO_ROOM_TO_DRAIN -> R.string.checkup_noRoomToDrain_fix
@@ -190,6 +200,7 @@ fun checkupFix(kind: String): Int = when (kind) {
 private val REASON_KINDS = setOf(
     CheckupKind.POD_CRASH_LOOP, CheckupKind.POD_OOM_KILLED, CheckupKind.POD_STUCK_STARTING, CheckupKind.JOB_FAILED,
     CheckupKind.NODE_NOT_READY, CheckupKind.NODE_PRESSURE, CheckupKind.EXTERNAL_SECRET_FAILED, CheckupKind.SECRET_STORE_NOT_READY,
+    CheckupKind.POLICY_NOT_READY,
 )
 
 /** Kubernetes' own words about the finding, "" when it has none. */

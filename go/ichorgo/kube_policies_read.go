@@ -293,8 +293,10 @@ func readKyvernoEngine(deployments []kyvernoDeployObject, webhooks []webhookConf
 			// Fail is the default; any non-Ignore webhook refuses the requests when the engine is down.
 			if w.FailurePolicy != "Ignore" {
 				out.Webhook.FailurePolicy = "Fail"
+			}
 
-				break
+			if w.ClientConfig.Service != nil && out.Webhook.Service == "" {
+				out.Webhook.Service = w.ClientConfig.Service.Namespace + "/" + w.ClientConfig.Service.Name
 			}
 		}
 

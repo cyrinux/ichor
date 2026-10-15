@@ -3431,6 +3431,17 @@
     <string name="checkup_deprecatedAPI_fix">Something still calls this API version: update the manifests, charts or controllers that use it before upgrading Kubernetes. The audit analysis on the API server screen names the client.</string>
     <string name="checkup_webhookDown_fix">With failurePolicy Fail, every request it matches is refused until its pods are back: creating pods can be blocked cluster-wide. Restart its Deployment, or delete the webhook configuration if the tool is gone.</string>
     <string name="checkup_webhookSkipped_fix">With failurePolicy Ignore, requests go through without it: what it validates or injects is silently not applied.</string>
+    <string name="checkup_section_policies">Admission policies</string>
+    <string name="checkup_section_policies_hint">Policies that refuse or flag workloads</string>
+    <string name="checkup_policyEngineDown">Policy engine %1$s is down</string>
+    <string name="checkup_policyEngineDown_fix">Check the policy engine’s pods in namespace %1$s; Policies shows its state.</string>
+    <string name="checkup_policyNotReady">Policy %1$s is not ready</string>
+    <string name="checkup_policyNotReady_fix">Switch the policy to Audit until the engine is ready; Policies shows its condition.</string>
+    <string name="checkup_policyBlocks">Policy %1$s blocks %2$s</string>
+    <string name="checkup_policyBlocks_fix">Relax the rule or label the workload; Policies shows the policy.</string>
+    <string name="checkup_policyFailures">Policy %1$s fails on %2$s resources</string>
+    <string name="checkup_policyFailures_fix">Relax the rule or label the workloads: in Enforce mode they would be refused.</string>
+    <string name="checkup_open_policies">Open Policies</string>
     <string name="checkup_nodeRequestsHigh_fix">New pods will no longer fit here. Add a node, lower the requests that are larger than real usage, or move workloads.</string>
     <string name="checkup_nodePodsFull_fix">Past the limit, pods stay Pending whatever CPU and memory are free. Spread the pods, or raise maxPods in the kubelet configuration.</string>
     <string name="checkup_noRoomToDrain_fix">Draining it for an upgrade, or losing it, would leave pods Pending. Keep one node’s worth of requests free across the cluster. A rough sum: it ignores affinities.</string>
@@ -3463,6 +3474,8 @@
     <string name="kube_events_title">Events</string>
     <string name="kube_events_empty">No event. Kubernetes keeps them for one hour.</string>
     <string name="kube_events_ago">%1$s ago</string>
+    <string name="kube_events_deniedByPolicy">Denied by policy %1$s</string>
+    <string name="kube_events_deniedByPolicy_rule">Denied by policy %1$s (rule %2$s)</string>
     <string name="monitor_checkup">Cluster checkup</string>
     <string name="monitor_checkup_desc">Also alerts on what the checkup finds: pods that crash or cannot start, volumes nearly full, admission webhooks without a backend, load balancers without an address. Each check uses the Kubernetes API (os:admin), lists every pod and asks each kubelet for its volumes.</string>
     <string name="monitor_checkup_ok">Resolved: %1$s</string>

@@ -75,6 +75,8 @@ type kyvernoController struct {
 type kyvernoWebhook struct {
 	Present       bool   `json:"present"`
 	FailurePolicy string `json:"failurePolicy,omitempty"` // Fail or Ignore
+	// Service is the webhook's backend as "namespace/name", for the checkup's endpoint check.
+	Service string `json:"service,omitempty"`
 }
 
 // kyvernoPolicy is one policy row: what it enforces, whether it is ready, and what it found.
