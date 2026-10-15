@@ -53,6 +53,8 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
     out.flag("velero", services.velero?.schedules, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { s -> s.reasonList.any { it in VELERO_ALERT_REASONS } })
     // A failed backup taken by hand was seen by whoever took it: shown, not alerted.
     out.flag("velero", services.velero?.locations, { "BackupStorageLocation/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
+    // A controller that cannot run publishes nothing: critical like a down storage location.
+    out.flag("externaldns", services.externalDns?.controllers, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
     out.flag("ceph", services.ceph?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in CEPH_ALERT_REASONS } })
     // A pool alerts only when Rook reports it failed.
     out.flag("ceph", services.ceph?.pools, { "${it.kind}/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })

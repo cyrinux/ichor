@@ -1,0 +1,39 @@
+{
+  "items": [
+    {
+      "metadata": {"name": "app", "namespace": "demo",
+                   "annotations": {"external-dns.alpha.kubernetes.io/ttl": "300"}},
+      "spec": {"rules": [{"host": "app.example.com", "http": {"paths": [{"path": "/", "pathType": "Prefix", "backend": {"service": {"name": "app"}}}]}}]},
+      "status": {"loadBalancer": {"ingress": [{"ip": "203.0.113.10"}]}}
+    },
+    {
+      "metadata": {"name": "status", "namespace": "demo"},
+      "spec": {"rules": [{"host": "status.example.com", "http": {"paths": [{"path": "/", "pathType": "Prefix", "backend": {"service": {"name": "status"}}}]}}]},
+      "status": {"loadBalancer": {"ingress": []}}
+    },
+    {
+      "metadata": {"name": "legacy", "namespace": "demo"},
+      "spec": {"rules": [{"host": "*.example.net", "http": {"paths": [{"path": "/", "pathType": "Prefix", "backend": {"service": {"name": "legacy"}}}]}}]},
+      "status": {"loadBalancer": {"ingress": [{"ip": "203.0.113.50"}]}}
+    },
+    {
+      "metadata": {"name": "override", "namespace": "demo",
+                   "annotations": {"external-dns.alpha.kubernetes.io/target": "203.0.113.70"}},
+      "spec": {"rules": [{"host": "override.example.com", "http": {"paths": [{"path": "/", "pathType": "Prefix", "backend": {"service": {"name": "override"}}}]}}]},
+      "status": {"loadBalancer": {"ingress": [{"ip": "203.0.113.99"}]}}
+    },
+    {
+      "metadata": {"name": "extra", "namespace": "demo",
+                   "annotations": {"external-dns.alpha.kubernetes.io/hostname": "extra.example.com, extra2.example.com"}},
+      "spec": {"rules": []},
+      "status": {"loadBalancer": {"ingress": [{"hostname": "lb.example.com"}]}}
+    },
+    {
+      "metadata": {"name": "wild", "namespace": "demo",
+                   "annotations": {"external-dns.alpha.kubernetes.io/hostname": "wild.example.com",
+                                   "external-dns.alpha.kubernetes.io/target": "*.ext.example.com"}},
+      "spec": {"rules": []},
+      "status": {"loadBalancer": {"ingress": []}}
+    }
+  ]
+}

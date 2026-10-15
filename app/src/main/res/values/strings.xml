@@ -2257,6 +2257,33 @@
         <item quantity="one">%1$d warning</item>
         <item quantity="other">%1$d warnings</item>
     </plurals>
+    <string name="externaldns_empty">No ExternalDNS controllers or records.</string>
+    <string name="externaldns_provider">Provider</string>
+    <string name="externaldns_owner">Owner id</string>
+    <string name="externaldns_domain_filters">Domain filters</string>
+    <string name="externaldns_sources">Sources</string>
+    <string name="externaldns_interval">Interval</string>
+    <string name="externaldns_interval_value">%1$d s</string>
+    <string name="externaldns_txt">TXT prefix/suffix</string>
+    <string name="externaldns_annotation_filter">Annotation filter</string>
+    <string name="externaldns_ready">ready</string>
+    <string name="externaldns_not_ready">not ready</string>
+    <string name="externaldns_dry_run">dry-run</string>
+    <string name="externaldns_from">from %1$s</string>
+    <string name="externaldns_by">by %1$s</string>
+    <string name="externaldns_reason_not_ready">no replica ready</string>
+    <string name="externaldns_reason_dry_run">dry-run: it changes nothing</string>
+    <string name="externaldns_reason_stale">a newer version is not observed yet</string>
+    <string name="externaldns_reason_no_target">no address to point at yet</string>
+    <string name="externaldns_reason_unmanaged">outside every controller\u2019s domain filters</string>
+    <plurals name="externaldns_records">
+        <item quantity="one">%1$d hostname</item>
+        <item quantity="other">%1$d hostnames</item>
+    </plurals>
+    <plurals name="externaldns_truncated">
+        <item quantity="one">Showing the first %1$d of %2$d hostnames.</item>
+        <item quantity="other">Showing the first %1$d of %2$d hostnames.</item>
+    </plurals>
     <string name="kubegreen_empty">No sleep schedules.</string>
     <string name="kubegreen_state_asleep">Asleep</string>
     <string name="kubegreen_state_awake">Awake</string>

@@ -10,8 +10,10 @@ type ingressBackend struct {
 
 type ingressObject struct {
 	Metadata struct {
-		Name      string `json:"name"`
-		Namespace string `json:"namespace"`
+		Name string `json:"name"`
+		// Annotations carry the ExternalDNS hostname/target/ttl/controller ones.
+		Namespace   string            `json:"namespace"`
+		Annotations map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {
 		IngressClassName string          `json:"ingressClassName"`
