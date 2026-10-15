@@ -136,7 +136,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   CloudNativePG, Dragonfly, MariaDB, Percona, cert-manager, Velero, Rook Ceph, CAST AI, CSI
   VolumeSnapshots, backup CronJobs) on one tabbed screen, each with its health and what needs a
   look; kube-green's sleep schedules say which namespaces sleep on a schedule, when they wake up,
-  and whether they are asleep right now.
+  and whether they are asleep right now. When the garage-operator manages Garage, its clusters,
+  buckets (size, quota, website), keys and node declarations show next to the live Garage state.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,

@@ -22,6 +22,10 @@ type integrationSpec struct {
 	Resource string
 	// ServiceKind also finds a project without API by its Services: a promMatch kind.
 	ServiceKind string
+	// AlsoPods: with Groups set, still fall back to finding the project by its running pods
+	// (a project that runs with or without its operator, e.g. Garage's Helm chart or the
+	// garage-operator).
+	AlsoPods bool
 }
 
 // integrationSpecs lists every project the app integrates with, in the order Settings shows
@@ -36,7 +40,8 @@ var integrationSpecs = []integrationSpec{
 	{ID: "dragonfly", Name: "Dragonfly", Website: "https://www.dragonflydb.io", Groups: []string{groupDragonfly}},
 	{ID: "longhorn", Name: "Longhorn", Website: "https://longhorn.io", Groups: []string{groupLonghorn}},
 	{ID: "rook", Name: "Rook Ceph", Website: "https://rook.io", Groups: []string{groupCeph}},
-	{ID: "garage", Name: "Garage", Website: "https://garagehq.deuxfleurs.fr"},
+	// Garage: the garage-operator's CRDs when it runs, else its pods (the Helm chart).
+	{ID: "garage", Name: "Garage", Website: "https://garagehq.deuxfleurs.fr", Groups: []string{groupGarageOperator}, AlsoPods: true},
 	{ID: "velero", Name: "Velero", Website: "https://velero.io", Groups: []string{groupVelero}},
 	{ID: "kube-green", Name: "kube-green", Website: "https://kube-green.dev", Groups: []string{groupKubeGreen}},
 	{ID: "cert-manager", Name: "cert-manager", Website: "https://cert-manager.io", Groups: []string{groupCertManager, groupACME}},
@@ -175,11 +180,13 @@ func readSupportedIntegrations(ctx context.Context, k *kubeClient, hints hintSet
 	items := integrationList(func(s integrationSpec) detection {
 		if len(s.Groups) > 0 {
 			version, ok := servedGroup(s, groups)
-			if !ok || s.Resource != "" && !resourceFor[s.ID] {
-				return detection{}
+			if ok && !(s.Resource != "" && !resourceFor[s.ID]) {
+				return detection{via: detectedByAPI, version: version}
 			}
 
-			return detection{via: detectedByAPI, version: version}
+			if !s.AlsoPods {
+				return detection{}
+			}
 		}
 
 		if f, ok := pods[s.ID]; ok {
@@ -350,6 +357,8 @@ func demoSupportedIntegrations() supportedIntegrations {
 		switch {
 		case api[s.ID]:
 			return detection{via: detectedByAPI}
+		case s.ID == "garage" && ds.Garage != nil && ds.Garage.Version != "":
+			return detection{via: detectedByAPI, version: ds.Garage.Version}
 		case s.ID == "garage" && ds.Garage != nil:
 			return detection{via: detectedByPods}
 		case s.ServiceKind != "":

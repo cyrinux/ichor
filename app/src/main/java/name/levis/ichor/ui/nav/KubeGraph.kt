@@ -189,6 +189,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             onBack = { nav.popBackStack() },
             onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
             onRequestIntegration = { nav.navigate(Routes.INTEGRATIONS) },
+            onObject = { nav.navigate(KubeBrowserRoutes.obj(it)) },
         )
     }
 }

@@ -38,11 +38,18 @@ private val VELERO_ALERT_REASONS = setOf(VeleroReason.STALE, VeleroReason.PARTIA
  * ready, is a warning. A Velero schedule whose last backup failed or whose storage location is
  * unavailable is critical, a stale, partially failed or invalid one a warning. A Ceph cluster alerts
  * when critical, or on HEALTH_WARN, near-full capacity or an OSD down; a pool only when failed.
+ * The garage-operator's layer alerts like the Garage instances: a failed or degraded cluster, a
+ * failed bucket and a disconnected or roleless node declaration.
  */
 fun dataIssuesOf(services: DataServices): Map<String, String> {
     val out = sortedMapOf<String, String>()
     out.flag("longhorn", services.longhorn?.volumes, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
     out.flag("garage", services.garage?.instances, { it.label }, { it.state == GarageState.UNAVAILABLE }, { it.state == GarageState.DEGRADED || it.resyncErrors > 0 })
+    // The garage-operator's layer: a failed or degraded cluster, a failed bucket and a
+    // disconnected or roleless node declaration alert like the instances above.
+    out.flag("garage", services.garage?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
+    out.flag("garage", services.garage?.buckets, { "bucket/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
+    out.flag("garage", services.garage?.nodes, { "node/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
     out.flag("cnpg", services.cnpg?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in CNPG_ALERT_REASONS } })
     // A rolling update is planned; a replica down or two masters are not.
     out.flag("dragonfly", services.dragonfly?.instances, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { d -> d.reasonList.any { it == DragonflyReason.PODS || it == DragonflyReason.MASTERS } })

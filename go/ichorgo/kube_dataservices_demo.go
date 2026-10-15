@@ -65,6 +65,19 @@ func demoDataServices(now time.Time) dataServices {
 		},
 	}}
 
+	// The garage-operator drives both instances: a degraded cluster (a storage replica not
+	// connected) next to a ready one, buckets with a dropped lifecycle and a website, keys
+	// with cluster-wide and per-bucket grants, and one node CR that lost its connection.
+	if layer := demoGarageOperatorLayer(now); layer != nil {
+		garage.Version = layer.Version
+		garage.Clusters = layer.Clusters
+		garage.Buckets = layer.Buckets
+		garage.Keys = layer.Keys
+		garage.Nodes = layer.Nodes
+		garage.Operator = layer.Operator
+		attachGarageOperator(garage)
+	}
+
 	pods := func(name string, ready ...bool) []cnpgPod {
 		out := []cnpgPod{}
 		for i, r := range ready {
@@ -329,6 +342,84 @@ func demoCastAI(now time.Time) *castAIStatus {
 	slices.SortFunc(out.Recommendations, byHealthThenKey(func(r castAIRecommendation) (string, string) { return r.Health, r.Namespace + "/" + r.Name }))
 
 	return out
+}
+
+// demoGarageOperatorLayer is the demo cluster's garage-operator layer: a degraded cluster
+// (a storage replica not connected) next to a ready one, buckets with a dropped lifecycle
+// and a website, keys with cluster-wide and per-bucket grants, and one node CR that lost
+// its connection.
+func demoGarageOperatorLayer(now time.Time) *garageOperatorLayer {
+	ms := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
+
+	return &garageOperatorLayer{
+		Version: garageOpClusterV2,
+		Clusters: []garageOpCluster{
+			{
+				Namespace: "garage", Name: "garage", Phase: "Degraded", ClusterID: "1b7e44c9a2f03d589c2f61a0d4e8b7c3",
+				GarageVersion: "v2.3.0", Replicas: 5, ReadyReplicas: 4, StorageReplicas: 3, StorageReady: 2,
+				GatewayReplicas: 2, GatewayReady: 2, LayoutVersion: 12,
+				Tombstones: []string{}, Conditions: []garageOpCondition{
+					{Type: "NodesConnected", Status: "False", Reason: "NodesNotConnected", Message: "1 node is not connected", Time: ms(2 * time.Hour)},
+				},
+				Health: healthWarning, Reasons: []string{garageOpReasonStorageReplicas, garageOpReasonNodeDisconnected},
+			},
+			{
+				Namespace: "garage-archive", Name: "archive", Phase: "Ready", ClusterID: "6d03b8f15e9a2c47e41a7f0c93b2d865",
+				GarageVersion: "v2.3.0", Replicas: 1, ReadyReplicas: 1, StorageReplicas: 1, StorageReady: 1,
+				LayoutVersion: 1, Tombstones: []string{}, Conditions: []garageOpCondition{},
+				Health: healthOK, Reasons: []string{},
+			},
+		},
+		Buckets: []garageOpBucket{
+			{
+				Namespace: "garage", Name: "backups", Cluster: "garage", Phase: "Ready",
+				BucketID: "a3f8c2e19b4d5706a3f8c2e19b4d5706", Size: "3.0 GiB", MaxSize: "10Gi",
+				Quota: &garageOpQuotaUsage{SizeBytes: 3070230528, SizeLimit: 10 << 30, SizePercent: 28, Objects: 1204},
+				Keys:  2,
+				Conditions: []garageOpCondition{
+					{Type: "LifecycleConfigured", Status: "False", Reason: "GarageTooOld", Message: "lifecycle rules need Garage v2.3.0 or newer", Time: ms(6 * time.Hour)},
+				},
+				Health: healthWarning, Reasons: []string{garageOpReasonLifecycle},
+			},
+			{
+				Namespace: "garage", Name: "files", Cluster: "garage", Phase: "Ready",
+				BucketID: "4f1d0c2e9b7a65834f1d0c2e9b7a6583", Size: "52 MiB",
+				Quota:   &garageOpQuotaUsage{SizeBytes: 54525952, Objects: 312},
+				Website: true, WebsiteURL: "https://files.example.com", Keys: 1,
+				Conditions: []garageOpCondition{}, Health: healthOK, Reasons: []string{},
+			},
+		},
+		Keys: []garageOpKey{
+			{
+				Namespace: "garage", Name: "backup-agent", Cluster: "garage", Phase: "Ready",
+				KeyID: "e41a7f0c93b2d865", ClusterWide: true,
+				AllBuckets: &struct {
+					Read  bool `json:"read"`
+					Write bool `json:"write"`
+					Owner bool `json:"owner"`
+				}{Read: true, Write: true, Owner: true},
+				Buckets: []garageOpKeyPermission{}, BucketsTotal: 0, Health: healthOK, Reasons: []string{},
+			},
+			{
+				Namespace: "garage", Name: "app-writer", Cluster: "garage", Phase: "Ready",
+				KeyID:   "6d03b8f15e9a2c47",
+				Buckets: []garageOpKeyPermission{{Bucket: "files", Read: true, Write: true}}, BucketsTotal: 1,
+				Health: healthOK, Reasons: []string{},
+			},
+		},
+		Nodes: []garageOpNode{
+			{
+				Namespace: "garage", Name: "garage-2xv9p", Cluster: "garage", Phase: "Degraded",
+				NodeID: "9c2f61a0d4e8b7c3", Zone: "zone-3", Capacity: "500Gi",
+				Connected: false, InLayout: true, LastSeen: 2 * 24 * 3600,
+				Health: healthWarning, Reasons: []string{garageOpReasonNodeDisconnected},
+			},
+		},
+		Operator: &garageOperatorStatus{
+			Namespace: "garage-operator-system", Name: "garage-operator", Ready: 1, Desired: 1,
+			Health: healthOK, Reasons: []string{},
+		},
+	}
 }
 
 // demoGarageBlockReport is the demo cluster's blocks failing to resync: one a live object
