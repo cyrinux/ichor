@@ -96,9 +96,22 @@ final class GarageOperatorTests: XCTestCase {
         // The degraded instance, the degraded cluster, the failed handle, the bucket whose
         // lifecycle was dropped and the disconnected node declaration.
         XCTAssertEqual(issues["garage|garage/garage"], dataWarning)
-        XCTAssertEqual(issues["garage|edge/edge"], dataCritical)
+        XCTAssertEqual(issues["garage|cluster/garage/garage"], dataWarning)
+        XCTAssertEqual(issues["garage|cluster/edge/edge"], dataCritical)
+        XCTAssertNil(issues["garage|edge/edge"])
         XCTAssertEqual(issues["garage|bucket/garage/backups"], dataWarning)
         XCTAssertEqual(issues["garage|node/garage/garage-2xv9p"], dataWarning)
         XCTAssertNil(issues["garage|garage/garage-2xv9p"])
+    }
+
+    func testAnInstanceAndAClusterSharingANameKeepTheirOwnSeverity() throws {
+        let shared = try TalosJSON.decode(DataServices.self, from: #"""
+        {"garage":{"error":"",
+         "instances":[{"namespace":"s3","name":"main","status":"unavailable"}],
+         "clusters":[{"namespace":"s3","name":"main","phase":"Degraded","health":"warning","reasons":["storageReplicas"]}]}}
+        """#)
+        let issues = dataIssuesOf(shared)
+        XCTAssertEqual(issues["garage|s3/main"], dataCritical)
+        XCTAssertEqual(issues["garage|cluster/s3/main"], dataWarning)
     }
 }

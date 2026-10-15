@@ -313,12 +313,14 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
         }
     }
     // The garage-operator's layer: a failed or degraded cluster, a failed bucket and a
-    // disconnected or roleless node declaration alert like the instances above.
+    // disconnected or roleless node declaration alert like the instances above. A cluster has
+    // its own key: it usually shares its instance's name, and one must not overwrite the
+    // other's severity.
     for c in services.garage?.clusters ?? [] {
         if c.health == .critical {
-            out["garage|\(c.label)"] = dataCritical
+            out["garage|cluster/\(c.label)"] = dataCritical
         } else if c.health == .warning {
-            out["garage|\(c.label)"] = dataWarning
+            out["garage|cluster/\(c.label)"] = dataWarning
         }
     }
     for b in services.garage?.buckets ?? [] {

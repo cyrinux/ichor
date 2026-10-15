@@ -107,9 +107,26 @@ class GarageOperatorTest {
         // The degraded instance, the degraded cluster, the failed handle, the bucket whose
         // lifecycle was dropped and the disconnected node declaration.
         assertEquals(DATA_WARNING, issues["garage|garage/garage"])
-        assertEquals(DATA_CRITICAL, issues["garage|edge/edge"])
+        assertEquals(DATA_WARNING, issues["garage|cluster/garage/garage"])
+        assertEquals(DATA_CRITICAL, issues["garage|cluster/edge/edge"])
+        assertFalse(issues.containsKey("garage|edge/edge"))
         assertEquals(DATA_WARNING, issues["garage|bucket/garage/backups"])
         assertEquals(DATA_WARNING, issues["garage|node/garage/garage-2xv9p"])
         assertFalse(issues.containsKey("garage|garage/garage-2xv9p"))
+    }
+
+    @Test
+    fun anInstanceAndAClusterSharingANameKeepTheirOwnSeverity() {
+        val shared = TalosJson.decodeFromString(
+            DataServices.serializer(),
+            """
+            {"garage":{"error":"",
+             "instances":[{"namespace":"s3","name":"main","status":"unavailable"}],
+             "clusters":[{"namespace":"s3","name":"main","phase":"Degraded","health":"warning","reasons":["storageReplicas"]}]}}
+            """.trimIndent(),
+        )
+        val issues = dataIssuesOf(shared)
+        assertEquals(DATA_CRITICAL, issues["garage|s3/main"])
+        assertEquals(DATA_WARNING, issues["garage|cluster/s3/main"])
     }
 }

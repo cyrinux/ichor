@@ -48,8 +48,10 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
     out.flag("longhorn", services.longhorn?.volumes, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
     out.flag("garage", services.garage?.instances, { it.label }, { it.state == GarageState.UNAVAILABLE }, { it.state == GarageState.DEGRADED || it.resyncErrors > 0 })
     // The garage-operator's layer: a failed or degraded cluster, a failed bucket and a
-    // disconnected or roleless node declaration alert like the instances above.
-    out.flag("garage", services.garage?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
+    // disconnected or roleless node declaration alert like the instances above. A cluster
+    // has its own key: it usually shares its instance's name, and one must not overwrite
+    // the other's severity.
+    out.flag("garage", services.garage?.clusters, { "cluster/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
     out.flag("garage", services.garage?.buckets, { "bucket/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
     out.flag("garage", services.garage?.nodes, { "node/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
     out.flag("cnpg", services.cnpg?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in CNPG_ALERT_REASONS } })
