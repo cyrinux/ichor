@@ -20,9 +20,20 @@ data class KubeRoute(
     val url: String,
     /** The backend Service, in [namespace]. */
     val service: String = "",
+    /** The API group the kind is read at ("" for the core group). */
+    val group: String = "",
+    val version: String = "",
+    val resource: String = "",
 ) {
     /** The URL without its scheme, to show. */
     val label: String get() = url.substringAfter("://")
+
+    /**
+     * Where the route itself is read, so its object summary opens: null when the cluster's
+     * answer does not carry the resource (an older ichorgo).
+     */
+    val objectRef: KubeObjectRef?
+        get() = if (resource.isEmpty()) null else KubeObjectRef(group, version, resource, kind, namespace, name, editable = false)
 }
 
 /** One pod of an app, as KubeAppRoutes takes it. */

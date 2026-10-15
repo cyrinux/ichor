@@ -37,6 +37,23 @@ class RoutesTest {
     }
 
     @Test
+    fun carriesWhereTheRouteIsRead() {
+        val json = """{"routes":[{"kind":"HTTPRoute","namespace":"media","name":"jellyfin","url":"https://jellyfin.home.example",""" +
+            """"service":"jellyfin","group":"gateway.networking.k8s.io","version":"v1","resource":"httproutes"}]}"""
+        val route = TalosJson.decodeFromString(KubeRouteList.serializer(), json).routes.single()
+        assertEquals(
+            KubeObjectRef("gateway.networking.k8s.io", "v1", "httproutes", "HTTPRoute", "media", "jellyfin", editable = false),
+            route.objectRef,
+        )
+    }
+
+    @Test
+    fun aRouteWithoutItsResourceHasNoObject() {
+        val json = """{"routes":[{"kind":"Ingress","namespace":"demo","name":"hello","url":"http://hello.example"}]}"""
+        assertEquals(null, TalosJson.decodeFromString(KubeRouteList.serializer(), json).routes.single().objectRef)
+    }
+
+    @Test
     fun routePodsOncePerPodEncodedForGo() {
         val app = InventoryApp(
             id = "web",

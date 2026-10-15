@@ -147,10 +147,8 @@ func gatewayRoutes(routes []gatewayRouteObject, gateways []gatewayObject, servic
 					path = t.path
 				}
 
-				out = append(out, kubeRoute{
-					Kind: r.Kind, Namespace: r.Metadata.Namespace, Name: r.Metadata.Name,
-					URL: routeURL(scheme, host, port, path), Service: t.service,
-				})
+				out = append(out, routeRow(r.Kind, r.Metadata.Namespace, r.Metadata.Name,
+					routeURL(scheme, host, port, path), t.service))
 			}
 		}
 	}

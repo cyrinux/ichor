@@ -1870,6 +1870,7 @@
     <string name="apps_detail_routes_loading">Recherche de ses adresses…</string>
     <string name="apps_detail_routes_failed">Impossible de trouver ses adresses : %1$s</string>
     <string name="apps_detail_routes_open">Ouvrir dans le navigateur</string>
+    <string name="apps_detail_routes_object">Ouvrir le résumé de l’objet</string>
     <string name="settings_remote_icons">Télécharger les icônes d’applications manquantes</string>
     <string name="settings_remote_icons_desc">Environ 250 applications courantes ont leur icône intégrée. Activé, les icônes des autres applications reconnues sont téléchargées depuis jsDelivr (Dashboard Icons). Seul le nom public de l’icône est envoyé, jamais vos noms d’images ni les détails du cluster. Les icônes qu’une app Argo CD lie dans son annotation ichor.levis.name/icon sont aussi téléchargées.</string>
     <string name="settings_offline_cache">Garder le dernier état connu</string>

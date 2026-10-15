@@ -111,14 +111,49 @@ func objectHealth(conditions []summaryCondition, phase string, deleting bool) (s
 }
 
 // readConditions maps status.conditions, worst first then by type; entries without a type
-// are left out.
+// are left out. A Gateway API route keeps its conditions per parent under
+// status.parents[].conditions instead: those are appended, each named after its parent when
+// the route has several, so a route shows Accepted and ResolvedRefs like any other kind.
 func readConditions(status map[string]any) []summaryCondition {
 	raw, _ := status["conditions"].([]any)
+	out := readConditionList(raw, "")
+
+	parents, _ := status["parents"].([]any)
+
+	for _, item := range parents {
+		parent, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		// With one parent the name adds nothing; with several it says whose condition it is.
+		name := ""
+		if len(parents) > 1 {
+			name = stringAt(mapAt(parent, "parentRef"), "name")
+		}
+
+		conditions, _ := parent["conditions"].([]any)
+		out = append(out, readConditionList(conditions, name)...)
+	}
+
+	sortConditions(out)
+
+	return out
+}
+
+// readConditionList maps one conditions array to summaryCondition, in order; parent names the
+// parent the condition speaks for (a Gateway API route's), appended to the type it reports.
+func readConditionList(raw []any, parent string) []summaryCondition {
 	out := make([]summaryCondition, 0, len(raw))
 
 	for _, item := range raw {
 		m, ok := item.(map[string]any)
-		if !ok || stringAt(m, "type") == "" {
+		if !ok {
+			continue
+		}
+
+		typ := stringAt(m, "type")
+		if typ == "" {
 			continue
 		}
 
@@ -128,14 +163,17 @@ func readConditions(status map[string]any) []summaryCondition {
 		}
 
 		c := summaryCondition{
-			Type: stringAt(m, "type"), Status: stringAt(m, "status"), Reason: stringAt(m, "reason"), Message: message,
+			Type: typ, Status: stringAt(m, "status"), Reason: stringAt(m, "reason"), Message: message,
 			LastTransition: timeMilli(cmp.Or(stringAt(m, "lastTransitionTime"), stringAt(m, "lastUpdateTime"), stringAt(m, "lastProbeTime"))),
 		}
-		c.Tone = conditionTone(c)
+		c.Tone = conditionTone(c) // from the bare type: the name is only for the reader
+
+		if parent != "" {
+			c.Type = fmt.Sprintf("%s (%s)", typ, parent)
+		}
+
 		out = append(out, c)
 	}
-
-	sortConditions(out)
 
 	return out
 }
