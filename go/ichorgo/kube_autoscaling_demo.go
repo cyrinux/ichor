@@ -27,7 +27,7 @@ func demoAutoscaling() autoscalingReport {
 			NodeClaims:            demoNodeClaims(),
 		},
 	}
-	r.Workloads = autoscaledWorkloads(r.HPA.Items, r.KEDA.ScaledObjects, r.VPA.Items)
+	r.Workloads = autoscaledWorkloadRows(r.HPA.Items, r.KEDA.ScaledObjects, r.VPA.Items)
 	sortAutoscaling(&r)
 
 	return r

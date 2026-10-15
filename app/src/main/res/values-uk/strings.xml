@@ -3111,6 +3111,9 @@
     <string name="workloads_scale_less">На одну репліку менше</string>
     <string name="workloads_scale_more">На одну репліку більше</string>
     <string name="workloads_scale_change">%1$d → %2$d</string>
+    <string name="workloads_autoscaled_by">Автоскейлиться через %1$s</string>
+    <string name="workloads_autoscaler_note">Автоскейлер знову встановить кількість.</string>
+    <string name="workloads_autoscaled_badge">авто</string>
     <string name="workloads_scale_apply">Застосувати</string>
     <string name="workloads_scale_done">%1$s масштабовано до %2$d</string>
     <string name="workloads_scale_failed">Не вдалося масштабувати %1$s: %2$s</string>

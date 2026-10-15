@@ -88,8 +88,9 @@ func TestKubeObjectScaleJobDefaultsToOne(t *testing.T) {
 func TestKubeScaleObjectSubresource(t *testing.T) {
 	f := newFakeKubeAPI(t, map[string]string{
 		"PATCH " + rolloutScalePath: `{}`,
-		"GET /apis/autoscaling/v2/namespaces/shop/horizontalpodautoscalers": `{"items":[
-			{"metadata":{"name":"keda-hpa-web"},"spec":{"scaleTargetRef":{"kind":"Rollout","name":"web"},"maxReplicas":6}}]}`,
+		"GET /apis":                 `{"groups":[]}`,
+		"GET /apis/autoscaling/v2/horizontalpodautoscalers": `{"items":[
+			{"metadata":{"name":"keda-hpa-web","namespace":"shop"},"spec":{"scaleTargetRef":{"kind":"Rollout","name":"web"},"maxReplicas":6}}]}`,
 	})
 
 	warning, err := KubeScaleObject(kubeStoreFor(t, f), "admin@test", "", "argoproj.io", "v1alpha1", "rollouts", "Rollout", "shop", "web", 5)

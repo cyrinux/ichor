@@ -2925,6 +2925,9 @@
     <string name="workloads_scale_less">Una replica in meno</string>
     <string name="workloads_scale_more">Una replica in più</string>
     <string name="workloads_scale_change">%1$d → %2$d</string>
+    <string name="workloads_autoscaled_by">Autoscalato da %1$s</string>
+    <string name="workloads_autoscaler_note">L’autoscaler imposterà di nuovo il numero.</string>
+    <string name="workloads_autoscaled_badge">auto</string>
     <string name="workloads_scale_apply">Applica</string>
     <string name="workloads_scale_done">%1$s scalato a %2$d</string>
     <string name="workloads_scale_failed">Impossibile scalare %1$s: %2$s</string>

@@ -83,7 +83,7 @@ func buildAutoscaling(raw autoscalingRaw, now time.Time) autoscalingReport {
 	r.KEDA.ScaledJobs = mapRows(raw.scaledJobs, scaledJobRowOf)
 	r.VPA.Items = vpaRows(raw.vpas, raw.vpaRequests)
 	r.Karpenter.NodePools, r.Karpenter.NodeClaims = karpenterRows(raw.nodePools, raw.nodeClaims, now)
-	r.Workloads = autoscaledWorkloads(r.HPA.Items, r.KEDA.ScaledObjects, r.VPA.Items)
+	r.Workloads = autoscaledWorkloadRows(r.HPA.Items, r.KEDA.ScaledObjects, r.VPA.Items)
 
 	sortAutoscaling(&r)
 
@@ -386,9 +386,9 @@ func hpaState(row hpaRow, conds kubeConditions) string {
 	}
 }
 
-// autoscaledWorkloads indexes the autoscalers by the workload they drive. A KEDA-owned HPA
-// is its ScaledObject's: the index names the ScaledObject only.
-func autoscaledWorkloads(hpas []hpaRow, scaledObjects []scaledObjectRow, vpas []vpaRow) []autoscaledWorkload {
+// autoscaledWorkloadRows indexes the autoscalers by the workload they drive. A KEDA-owned
+// HPA is its ScaledObject's: the index names the ScaledObject only.
+func autoscaledWorkloadRows(hpas []hpaRow, scaledObjects []scaledObjectRow, vpas []vpaRow) []autoscaledWorkload {
 	out := make([]autoscaledWorkload, 0, len(hpas)+len(scaledObjects)+len(vpas))
 
 	for _, h := range hpas {
