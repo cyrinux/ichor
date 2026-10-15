@@ -399,8 +399,9 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
 - **Crossplane:** a managed resource or composite whose `Synced` condition failed and a package
   (Provider, Configuration, Function) not installed or not healthy are critical; a resource not
   ready after 15 minutes and a definition not established are warnings. A paused resource is
-  not a finding. It reads what the Crossplane screen reads, with the same cap on managed
-  resources; condition messages are cut to 300 characters.
+  not a finding. Since it runs at every background check, it reads at most 2,000 managed
+  resources of each kind (the Crossplane screen reads them all): past that, a problem further
+  down the list is not seen. Condition messages are cut to 300 characters.
 - **Alerts:** Settings → Alerts → Cluster checkup runs it at every background check (it lists every
   pod and asks each kubelet). A critical finding notifies at once, a warning when seen on two
   checks in a row, a cleared one once; a section that could not be read keeps what it knew.

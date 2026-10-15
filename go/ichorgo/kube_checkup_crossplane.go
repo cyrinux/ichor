@@ -16,16 +16,21 @@ const (
 	findCrossplaneDefinitionNotEstablished = "crossplaneDefinitionNotEstablished" // Reason, Message: its Established condition's
 )
 
-// xpMessageLimit bounds a condition message: cloud errors run long and may name accounts.
-const xpMessageLimit = 300
+const (
+	// xpMessageLimit bounds a condition message: cloud errors run long and may name accounts.
+	xpMessageLimit = 300
+	// xpCheckupPerKind is how many managed resources of a kind the checkup reads (four pages):
+	// it runs at every background check, on every cluster.
+	xpCheckupPerKind = 2000
+)
 
 // checkupCrossplane finds the managed resources and composites that cannot sync, the
 // packages that are unhealthy, what stays not ready past the grace, and the definitions
-// that are not established. It reads through the Crossplane reader, so the managed listing
-// is the reader's bounded one; a paused resource is not a finding (someone asked for it).
+// that are not established. It reads through the Crossplane reader, at most xpCheckupPerKind
+// managed resources of a kind; a paused resource is not a finding (someone asked for it).
 // Absent without Crossplane.
 func checkupCrossplane(ctx context.Context, k *kubeClient, in checkupInput) checkupSection {
-	status, err := readCrossplane(ctx, k, in.groups, in.now)
+	status, err := readCrossplaneWithin(ctx, k, in.groups, in.now, xpCheckupPerKind)
 	if err == nil && !status.Installed {
 		return absentSection(checkCrossplane)
 	}
