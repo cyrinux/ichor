@@ -8,6 +8,7 @@ import name.levis.ichor.model.DragonflyReason
 import name.levis.ichor.model.GarageState
 import name.levis.ichor.model.MariaDbReason
 import name.levis.ichor.model.PerconaReason
+import name.levis.ichor.model.SealedSecretsReason
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.VeleroReason
 
@@ -36,7 +37,8 @@ private val VELERO_ALERT_REASONS = setOf(VeleroReason.STALE, VeleroReason.PARTIA
  * resync) and failing Postgres backups or archiving are warnings. An expired certificate (or one not
  * ready a week before it expires) is critical; one expiring, overdue or not ready, or an issuer not
  * ready, is a warning. A Velero schedule whose last backup failed or whose storage location is
- * unavailable is critical, a stale, partially failed or invalid one a warning. A Ceph cluster alerts
+ * unavailable is critical, a stale, partially failed or invalid one a warning. A SealedSecret that failed to
+ * unseal, its controller down or no active sealing key is critical. A Ceph cluster alerts
  * when critical, or on HEALTH_WARN, near-full capacity or an OSD down; a pool only when failed.
  * The garage-operator's layer alerts like the Garage instances: a failed or degraded cluster, a
  * failed bucket and a disconnected or roleless node declaration.
@@ -62,6 +64,16 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
     out.flag("velero", services.velero?.locations, { "BackupStorageLocation/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
     // A controller that cannot run publishes nothing: critical like a down storage location.
     out.flag("externaldns", services.externalDns?.controllers, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
+    // A SealedSecret that failed to unseal leaves its workload without the Secret; a controller
+    // that cannot run or no active sealing key stops every one of them. A Secret it does not own
+    // (unmanaged) or a stale key is shown, not alerted.
+    services.sealedSecrets?.let { sealed ->
+        out.flag("sealedsecrets", sealed.items, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
+        out.flag("sealedsecrets", listOfNotNull(sealed.controller), { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
+        if (SealedSecretsReason.NO_KEYS in sealed.reasonList) {
+            out["sealedsecrets|${sealed.controller?.namespace?.let { "$it/" }.orEmpty()}sealed-secrets-key"] = DATA_CRITICAL
+        }
+    }
     out.flag("ceph", services.ceph?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in CEPH_ALERT_REASONS } })
     // A pool alerts only when Rook reports it failed.
     out.flag("ceph", services.ceph?.pools, { "${it.kind}/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })

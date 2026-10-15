@@ -1,3 +1,4 @@
 • Apps served through a Gateway API GRPCRoute or TLSRoute get their web address, Services chips and network-map box
 • Read the Kyverno policies from the kyverno.io version that serves them
 • Data services show the hostnames ExternalDNS manages and the controller's settings
+• Data services show Sealed Secrets unseal status and sealing keys
