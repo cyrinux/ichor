@@ -133,11 +133,12 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   recorded in the activity log, and the pod is deleted when the shell ends.
 - **Background:** alerts and a home-screen widget.
 - **Data services:** the storage and database operators the cluster runs (Longhorn, Garage,
-  CloudNativePG, Dragonfly, MariaDB, Percona, cert-manager, Velero, ExternalDNS, Rook Ceph, CAST
-  AI, CSI VolumeSnapshots, backup CronJobs) on one tabbed screen, each with its health and what
-  needs a look; kube-green's sleep schedules say which namespaces sleep on a schedule, when they
-  wake up, and whether they are asleep right now. ExternalDNS shows the hostnames it manages,
-  where each comes from, and the controller's settings.
+  CloudNativePG, Dragonfly, MariaDB, Percona, cert-manager, Velero, ExternalDNS, Sealed Secrets,
+  Rook Ceph, CAST AI, CSI VolumeSnapshots, backup CronJobs) on one tabbed screen, each with its
+  health and what needs a look; kube-green's sleep schedules say which namespaces sleep on a
+  schedule, when they wake up, and whether they are asleep right now. ExternalDNS shows the
+  hostnames it manages, where each comes from, and the controller's settings; Sealed Secrets shows
+  the controller, the sealing keys and whether each SealedSecret unsealed, by name only.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,
@@ -196,6 +197,7 @@ reads those roles and explains up front when a feature needs more.
 | **Velero: restore a backup with a preview and namespace mapping** | `Kubeconfig`, then the Kubernetes API (velero.io backups, restores, backupstoragelocations) | **`os:admin`** |
 | **kube-green sleep schedules** | `Kubeconfig`, then the Kubernetes API (sleepinfos.kube-green.com, optional controller Deployment in `kube-green`) | **`os:admin`** |
 | **Data services: ExternalDNS hostnames and controllers** | `Kubeconfig`, then the Kubernetes API (deployments, ingresses, services, optional dnsendpoints.externaldns.k8s.io and httproutes/gateways) | **`os:admin`** |
+| **Data services: Sealed Secrets status and sealing keys** | `Kubeconfig`, then the Kubernetes API (sealedsecrets.bitnami.com, deployments, secrets metadata with the sealing-key label) | **`os:admin`** |
 | **App web addresses (Ingress, HTTPRoute, GRPCRoute, TLSRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, grpcroutes, tlsroutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
@@ -568,6 +570,15 @@ credentials that cannot read one group show the reason in that group's header on
 The workload sheet names the autoscaler that owns the replica count — "HPA web-hpa · 3 of
 1–5", or "KEDA worker-so · paused at 0" — with a tap through to the Autoscaling screen, and
 the list marks autoscaled workloads with an "auto" badge.
+
+### Crossplane
+
+**Kubernetes → Crossplane** (the button appears when the cluster runs Crossplane) shows the
+control plane's packages (providers, configurations, functions, with their Installed and Healthy
+state and the pull error), the APIs its XRDs define (scope, claim kind, compositions), and every
+composite resource, claim and managed resource with its Ready and Synced conditions — problems
+first, with a filter and a search, and the Synced message (the cloud API's error) on the row.
+Tapping a row opens the object's summary (conditions, events, YAML); nothing is changed here.
 
 ### Argo CD app icons
 

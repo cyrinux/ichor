@@ -60,6 +60,17 @@ final class CheckupTests: XCTestCase {
         ])
     }
 
+    func testFindingsTheDataServicesAlertOnAreShownButNotAlertedTwice() throws {
+        let sealed = try TalosJSON.decode(CheckupReport.self, from: #"""
+        {"status":"critical","sections":[{"id":"secrets","status":"critical","checked":3,"findings":[
+          {"kind":"sealedSecretNotSynced","severity":"critical","namespace":"shop","name":"legacy-cert"},
+          {"kind":"sealingKeyMissing","severity":"critical","name":"sealed-secrets-key","extra":"kube-system"},
+          {"kind":"externalSecretFailed","severity":"critical","namespace":"shop","name":"db"}]}]}
+        """#)
+        XCTAssertEqual(sealed.count(.critical), 3)
+        XCTAssertEqual(sealed.alertIssues, ["secrets|externalSecretFailed|shop/db": "critical"])
+    }
+
     func testAnUnreadSectionKeepsWhatWasKnown() throws {
         let known = ["storage|volumeFull|shop/data": "critical", "workloads|podCrashLoop|shop/gone": "critical"]
         let issues = checkupIssuesWithGaps(try report(), known: known)
