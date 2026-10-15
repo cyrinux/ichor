@@ -1862,6 +1862,7 @@
     <string name="apps_detail_routes_loading">Adressen werden gesucht…</string>
     <string name="apps_detail_routes_failed">Adressen konnten nicht ermittelt werden: %1$s</string>
     <string name="apps_detail_routes_open">Im Browser öffnen</string>
+    <string name="apps_detail_routes_object">Objektübersicht öffnen</string>
     <string name="settings_remote_icons">Fehlende App-Symbole herunterladen</string>
     <string name="settings_remote_icons_desc">Etwa 250 gängige Apps haben ein mitgeliefertes Symbol. Wenn aktiviert, werden die Symbole weiterer erkannter Apps von jsDelivr (Dashboard Icons) geladen. Gesendet wird nur der öffentliche Symbolname, nie deine Image-Namen oder Cluster-Details. Auch Symbole, die eine Argo-CD-App in ihrer Annotation ichor.levis.name/icon verlinkt, werden geladen.</string>
     <string name="settings_offline_cache">Letzten bekannten Zustand behalten</string>
@@ -3637,6 +3638,16 @@
     <string name="checkup_scrapeTargetsDown_fix">Prometheus sieht nicht mehr, was diese Ziele liefern, und Alerts zu ihnen bleiben stumm. Öffne Monitoring für den Fehler jedes Ziels: ein ausgefallener Pod, ein falscher Port oder Pfad im Monitor oder eine NetworkPolicy, die Prometheus blockiert.</string>
     <string name="checkup_prometheusRuleErrors_fix">Ihre Alerts und aufgezeichneten Reihen werden nicht mehr aktualisiert. Korrigiere das PromQL in der PrometheusRule: Many-to-many-Matching und umbenannte Labels sind die üblichen Ursachen.</string>
     <string name="checkup_ruleGroupErrors_fix">Diese Gruppe stammt aus der Prometheus-Konfiguration, nicht aus einer PrometheusRule: Korrigiere den Ausdruck in ihrer Regeldatei.</string>
+    <string name="checkup_section_crossplane">Crossplane</string>
+    <string name="checkup_section_crossplane_hint">Verwaltete Ressourcen, die nicht synchronisieren, fehlerhafte Pakete, nicht etablierte Definitionen</string>
+    <string name="checkup_crossplaneSyncFailed">Kann nicht mit seinem Provider synchronisieren</string>
+    <string name="checkup_crossplaneProviderUnhealthy">Paket %1$s ist nicht gesund</string>
+    <string name="checkup_crossplaneNotReady">Seit %1$s nicht bereit</string>
+    <string name="checkup_crossplaneDefinitionNotEstablished">Definition nicht etabliert</string>
+    <string name="checkup_crossplaneSyncFailed_fix">Lesen Sie die Meldung der Bedingung Synced: Zugangsdaten, Kontingent oder eine kollidierende externe Ressource. Pausieren Sie sie, wenn sie schwankt.</string>
+    <string name="checkup_crossplaneProviderUnhealthy_fix">Keine Ressource dieses Pakets wird mehr abgeglichen. Prüfen Sie, ob sein Image geladen werden kann (Registry, Tag, Pull-Secret), dann die Logs seines Pods.</string>
+    <string name="checkup_crossplaneNotReady_fix">Der Provider hat sie noch nicht fertig erstellt, oder die externe Ressource ist nicht verfügbar. Prüfen Sie die Ereignisse des Objekts und die Ressource beim Provider.</string>
+    <string name="checkup_crossplaneDefinitionNotEstablished_fix">Ihre Composite-Art wird nicht bereitgestellt, also kann nichts dieser Art erstellt werden. Suchen Sie nach einer kollidierenden CRD oder einem ungültigen Schema.</string>
     <string name="checkup_open_monitoring">Monitoring öffnen</string>
     <string name="kube_events_title">Ereignisse</string>
     <string name="kube_events_empty">Kein Ereignis. Kubernetes bewahrt sie eine Stunde auf.</string>

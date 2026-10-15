@@ -294,6 +294,13 @@ func TestKubeObjectSummaryValidatesAndDemo(t *testing.T) {
 	if cm.Kind != "ConfigMap" || cm.Health != toneNone || len(cm.Owners) != 0 {
 		t.Errorf("config map %+v", cm)
 	}
+
+	route := decodeSummary(t, func() (string, error) {
+		return KubeObjectSummary(yaml, "", "", groupGatewayAPI, "v1", "httproutes", "media", "jellyfin")
+	})
+	if route.Kind != "HTTPRoute" || len(route.Conditions) != 2 || route.Conditions[0].Type != "Accepted" || route.Conditions[1].Type != "ResolvedRefs" {
+		t.Errorf("route %+v", route)
+	}
 }
 
 // An Application whose instance label names itself (app of apps) is not its own owner, and
@@ -315,6 +322,46 @@ func TestKubeObjectSummaryArgoApplicationNotItsOwnOwner(t *testing.T) {
 	for _, r := range f.recorded() {
 		if r.path == "/apis/argoproj.io/v1alpha1/applications" {
 			t.Error("looked the Application up")
+		}
+	}
+}
+
+// A Gateway API route keeps its conditions per parent; they are read like any other kind's,
+// each named after its parent when the route has several.
+func TestKubeObjectSummaryGatewayRouteParents(t *testing.T) {
+	f := newFakeKubeAPI(t, map[string]string{
+		"GET /apis/gateway.networking.k8s.io/v1/namespaces/shop/httproutes/web": `{
+		  "kind":"HTTPRoute","apiVersion":"gateway.networking.k8s.io/v1",
+		  "metadata":{"name":"web","namespace":"shop"},
+		  "status":{"parents":[
+		    {"parentRef":{"name":"internal"},"conditions":[
+		      {"type":"Accepted","status":"True","reason":"Accepted","lastTransitionTime":"2026-01-01T00:00:00Z"}]},
+		    {"parentRef":{"name":"public"},"conditions":[
+		      {"type":"Accepted","status":"False","reason":"NoMatchingListenerHostname","message":"no listener","lastTransitionTime":"2026-01-02T00:00:00Z"},
+		      {"type":"ResolvedRefs","status":"True","reason":"ResolvedRefs","lastTransitionTime":"2026-01-02T00:00:00Z"}]}]}}`,
+	})
+
+	s := decodeSummary(t, func() (string, error) {
+		return KubeObjectSummary(kubeStoreFor(t, f), "admin@test", "", groupGatewayAPI, "v1", "httproutes", "shop", "web")
+	})
+
+	if len(s.Conditions) != 3 {
+		t.Fatalf("conditions %+v", s.Conditions)
+	}
+
+	// Worst first: the rejected Accepted (public) leads, and the health follows it.
+	if s.Conditions[0].Type != "Accepted (public)" || s.Conditions[0].Tone != toneBad || s.Health != toneBad {
+		t.Errorf("first %+v, health %q", s.Conditions[0], s.Health)
+	}
+
+	seen := map[string]bool{}
+	for _, c := range s.Conditions {
+		seen[c.Type] = true
+	}
+
+	for _, want := range []string{"Accepted (internal)", "Accepted (public)", "ResolvedRefs (public)"} {
+		if !seen[want] {
+			t.Errorf("no %q among %+v", want, s.Conditions)
 		}
 	}
 }

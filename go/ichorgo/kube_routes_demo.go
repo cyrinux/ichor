@@ -10,14 +10,14 @@ var demoRouteTable = []struct {
 	prefix string
 	route  kubeRoute
 }{
-	{"hello-ichor", kubeRoute{Kind: "Ingress", Namespace: "demo", Name: "hello-ichor", URL: "https://hello.home.example", Service: "hello-ichor"}},
-	{"jellyfin-", kubeRoute{Kind: "HTTPRoute", Namespace: "media", Name: "jellyfin", URL: "https://jellyfin.home.example", Service: "jellyfin"}},
-	{"immich-server-", kubeRoute{Kind: "HTTPRoute", Namespace: "media", Name: "immich", URL: "https://photos.home.example", Service: "immich-server"}},
-	{"vaultwarden-", kubeRoute{Kind: "Ingress", Namespace: "default", Name: "vaultwarden", URL: "https://vault.home.example", Service: "vaultwarden"}},
-	{"paperless-", kubeRoute{Kind: "Ingress", Namespace: "default", Name: "paperless", URL: "https://paperless.home.example", Service: "paperless"}},
-	{"grafana-", kubeRoute{Kind: "IngressRoute", Namespace: "monitoring", Name: "grafana", URL: "https://grafana.home.example", Service: "grafana"}},
-	{"uptime-kuma-", kubeRoute{Kind: "HTTPRoute", Namespace: "default", Name: "uptime-kuma", URL: "http://status.home.example:8080/dashboard", Service: "uptime-kuma"}},
-	{"mosquitto-0", kubeRoute{Kind: "TLSRoute", Namespace: "home", Name: "mosquitto", URL: "https://mqtt.home.example", Service: "mosquitto"}},
+	{"hello-ichor", routeRow("Ingress", "demo", "hello-ichor", "https://hello.home.example", "hello-ichor")},
+	{"jellyfin-", routeRow("HTTPRoute", "media", "jellyfin", "https://jellyfin.home.example", "jellyfin")},
+	{"immich-server-", routeRow("HTTPRoute", "media", "immich", "https://photos.home.example", "immich-server")},
+	{"vaultwarden-", routeRow("Ingress", "default", "vaultwarden", "https://vault.home.example", "vaultwarden")},
+	{"paperless-", routeRow("Ingress", "default", "paperless", "https://paperless.home.example", "paperless")},
+	{"grafana-", routeRow("IngressRoute", "monitoring", "grafana", "https://grafana.home.example", "grafana")},
+	{"uptime-kuma-", routeRow("HTTPRoute", "default", "uptime-kuma", "http://status.home.example:8080/dashboard", "uptime-kuma")},
+	{"mosquitto-0", routeRow("TLSRoute", "home", "mosquitto", "https://mqtt.home.example", "mosquitto")},
 }
 
 // demoRoutes are the routes of the built-in demo cluster serving one of pods.

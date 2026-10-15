@@ -98,7 +98,7 @@ object KubeBrowserRoutes {
             )
         }
         composable(SERVICES) {
-            ServicesScreen(onBack = { nav.popBackStack() }, onService = links.onObject, onLoadBalancing = { nav.navigate(LOAD_BALANCING) })
+            ServicesScreen(onBack = { nav.popBackStack() }, onObject = links.onObject, onLoadBalancing = { nav.navigate(LOAD_BALANCING) })
         }
         composable(CROSSPLANE) {
             name.levis.ichor.ui.crossplane.CrossplaneScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)

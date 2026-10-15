@@ -35,6 +35,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.InventoryImage
 import name.levis.ichor.model.InventoryPod
+import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.PodState
@@ -72,6 +73,7 @@ fun AppDetailSheet(
     flux: AppFluxUi? = null,
     scan: AppScanUi? = null,
     onPodNode: (String) -> Unit,
+    onObject: (KubeObjectRef) -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -82,7 +84,7 @@ fun AppDetailSheet(
             item { Header(app) }
             item { Badges(app) }
             item { Stats(app) }
-            routes?.let { appRoutesSection(it) }
+            routes?.let { appRoutesSection(it, onObject) }
             restart?.let { appWorkloadsSection(it) }
             argo?.let { appArgoSection(it) }
             flux?.let { appFluxSection(it) }

@@ -268,7 +268,7 @@ func TestCrossplaneManagedPaginationAndCap(t *testing.T) {
 	for i := range 10 {
 		resources = append(resources, kubeBrowserResource{Group: fmt.Sprintf("g%d.example.org", i), Version: "v1", Resource: "buckets", Kind: "Bucket"})
 	}
-	out, total, counts, err := listCrossplaneManaged(context.Background(), k, resources, fixtureNow)
+	out, total, counts, _, err := listCrossplaneManaged(context.Background(), k, resources, fixtureNow, 0)
 	if err != nil || total != 5050 || len(out) != 510 || counts.OK != 5040 || counts.Critical != 10 {
 		t.Fatalf("cap: total=%d rows=%d counts=%+v err=%v", total, len(out), counts, err)
 	}
@@ -279,6 +279,17 @@ func TestCrossplaneManagedPaginationAndCap(t *testing.T) {
 		if x.Health != healthCritical {
 			t.Errorf("problem lost beyond cap: %+v", x)
 		}
+	}
+
+	// A per-kind budget stops each kind after its first page: the second is never fetched.
+	_, total, counts, cut, err := listCrossplaneManaged(context.Background(), k, resources, fixtureNow, 500)
+	if err != nil || !cut || total != 5000 || counts.Critical != 0 {
+		t.Fatalf("budget: total=%d counts=%+v cut=%v err=%v", total, counts, cut, err)
+	}
+
+	// A kind that fits its budget is not cut.
+	if _, total, _, cut, err := listCrossplaneManaged(context.Background(), k, resources[:1], fixtureNow, 600); err != nil || cut || total != 505 {
+		t.Fatalf("within budget: total=%d cut=%v err=%v", total, cut, err)
 	}
 }
 
@@ -408,7 +419,7 @@ func TestCrossplaneManagedExpiredPageResetsCounts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	rows, total, counts, err := listCrossplaneManaged(context.Background(), k, []kubeBrowserResource{{Group: "storage.example.org", Version: "v1", Resource: "buckets", Kind: "Bucket"}}, fixtureNow)
+	rows, total, counts, _, err := listCrossplaneManaged(context.Background(), k, []kubeBrowserResource{{Group: "storage.example.org", Version: "v1", Resource: "buckets", Kind: "Bucket"}}, fixtureNow, 0)
 	if err != nil || total != 2 || len(rows) != 2 || counts.OK != 2 || !expired.Load() {
 		t.Fatalf("expired list: total=%d rows=%+v counts=%+v err=%v", total, rows, counts, err)
 	}

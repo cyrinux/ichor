@@ -1868,6 +1868,7 @@
     <string name="apps_detail_routes_loading">Finding its addresses…</string>
     <string name="apps_detail_routes_failed">Could not find its addresses: %1$s</string>
     <string name="apps_detail_routes_open">Open in browser</string>
+    <string name="apps_detail_routes_object">Open object summary</string>
     <string name="settings_remote_icons">Download missing app icons</string>
     <string name="settings_remote_icons_desc">About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details. Icons an Argo CD app links in its ichor.levis.name/icon annotation are downloaded too.</string>
     <string name="settings_offline_cache">Keep last known state</string>
@@ -3643,6 +3644,16 @@
     <string name="checkup_scrapeTargetsDown_fix">Prometheus no longer sees what these targets report, and the alerts about them stay silent. Open Monitoring for each target’s error: a pod down, a wrong port or path in its monitor, or a NetworkPolicy blocking Prometheus.</string>
     <string name="checkup_prometheusRuleErrors_fix">Its alerts and recorded series stop updating. Fix the PromQL in the PrometheusRule: many-to-many matching and renamed labels are the usual causes.</string>
     <string name="checkup_ruleGroupErrors_fix">This group comes from the Prometheus configuration, not from a PrometheusRule: fix the expression in its rule file.</string>
+    <string name="checkup_section_crossplane">Crossplane</string>
+    <string name="checkup_section_crossplane_hint">Managed resources that cannot sync, unhealthy packages, definitions not established</string>
+    <string name="checkup_crossplaneSyncFailed">Cannot sync with its provider</string>
+    <string name="checkup_crossplaneProviderUnhealthy">Package %1$s is unhealthy</string>
+    <string name="checkup_crossplaneNotReady">Not ready for %1$s</string>
+    <string name="checkup_crossplaneDefinitionNotEstablished">Definition not established</string>
+    <string name="checkup_crossplaneSyncFailed_fix">Read the Synced condition’s message: credentials, quota or a conflicting external resource. Pause it if it flaps.</string>
+    <string name="checkup_crossplaneProviderUnhealthy_fix">Every resource of this package stops reconciling. Check that its image can be pulled (registry, tag, pull secret), then the logs of its pod.</string>
+    <string name="checkup_crossplaneNotReady_fix">The provider has not finished creating it, or the external resource is unavailable. Check the object’s events and the resource on the provider’s side.</string>
+    <string name="checkup_crossplaneDefinitionNotEstablished_fix">Its composite kind is not served, so nothing of that kind can be created. Look for a CRD that conflicts with it or an invalid schema.</string>
     <string name="checkup_open_monitoring">Open Monitoring</string>
     <string name="kube_events_title">Events</string>
     <string name="kube_events_empty">No event. Kubernetes keeps them for one hour.</string>

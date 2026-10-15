@@ -46,8 +46,8 @@ type garageStatus struct {
 	Error     string           `json:"error"`
 	Instances []garageInstance `json:"instances"`
 	// The garage-operator's declarative layer (garage.rajsingh.info), empty when its CRDs
-	// are not served: the CRs matched to the instances above (see attachGarageOperator) and
-	// the operator Deployment's own health.
+	// are not served: the operator's CRs, listed beside the instances above, and the
+	// operator Deployment's own health.
 	Version   string                `json:"version,omitempty"`
 	Truncated bool                  `json:"truncated,omitempty"`
 	Clusters  []garageOpCluster     `json:"clusters,omitempty"`

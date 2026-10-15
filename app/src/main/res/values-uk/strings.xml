@@ -1978,6 +1978,7 @@
     <string name="apps_detail_routes_loading">Пошук його адрес…</string>
     <string name="apps_detail_routes_failed">Не вдалося знайти його адреси: %1$s</string>
     <string name="apps_detail_routes_open">Відкрити в браузері</string>
+    <string name="apps_detail_routes_object">Відкрити огляд об’єкта</string>
     <string name="settings_remote_icons">Завантажувати відсутні значки застосунків</string>
     <string name="settings_remote_icons_desc">Близько 250 поширених застосунків мають вбудовані значки. Якщо увімкнено, значки інших розпізнаних застосунків завантажуються з jsDelivr (Dashboard Icons). Надсилається лише публічна назва значка, ніколи — назви ваших образів чи дані кластера. Також завантажуються значки, на які застосунок Argo CD посилається в анотації ichor.levis.name/icon.</string>
     <string name="settings_offline_cache">Зберігати останній відомий стан</string>
@@ -3859,6 +3860,16 @@
     <string name="checkup_scrapeTargetsDown_fix">Prometheus більше не бачить, що віддають ці цілі, і сповіщення про них мовчать. Відкрийте моніторинг, щоб побачити помилку кожної цілі: под не працює, хибний порт чи шлях у його моніторі або NetworkPolicy блокує Prometheus.</string>
     <string name="checkup_prometheusRuleErrors_fix">Його сповіщення та записані ряди більше не оновлюються. Виправте PromQL у PrometheusRule: зазвичай причина у зіставленні many-to-many або перейменованій мітці.</string>
     <string name="checkup_ruleGroupErrors_fix">Ця група походить із конфігурації Prometheus, а не з PrometheusRule: виправте вираз у її файлі правил.</string>
+    <string name="checkup_section_crossplane">Crossplane</string>
+    <string name="checkup_section_crossplane_hint">Керовані ресурси, що не синхронізуються, несправні пакети, невстановлені визначення</string>
+    <string name="checkup_crossplaneSyncFailed">Не вдається синхронізуватися з провайдером</string>
+    <string name="checkup_crossplaneProviderUnhealthy">Пакет %1$s несправний</string>
+    <string name="checkup_crossplaneNotReady">Не готовий уже %1$s</string>
+    <string name="checkup_crossplaneDefinitionNotEstablished">Визначення не встановлено</string>
+    <string name="checkup_crossplaneSyncFailed_fix">Прочитайте повідомлення умови Synced: облікові дані, квота або конфліктний зовнішній ресурс. Призупиніть його, якщо стан коливається.</string>
+    <string name="checkup_crossplaneProviderUnhealthy_fix">Жоден ресурс цього пакета більше не узгоджується. Перевірте, що його образ можна завантажити (реєстр, тег, pull secret), потім журнали його пода.</string>
+    <string name="checkup_crossplaneNotReady_fix">Провайдер ще не завершив його створення, або зовнішній ресурс недоступний. Перевірте події об’єкта та ресурс на боці провайдера.</string>
+    <string name="checkup_crossplaneDefinitionNotEstablished_fix">Її композитний тип не обслуговується, тож нічого цього типу не можна створити. Шукайте конфліктний CRD або недійсну схему.</string>
     <string name="checkup_open_monitoring">Відкрити моніторинг</string>
     <string name="kube_events_title">Події</string>
     <string name="kube_events_empty">Подій немає. Kubernetes зберігає їх одну годину.</string>

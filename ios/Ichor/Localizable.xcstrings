@@ -1,6 +1,286 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Managed resources that cannot sync, unhealthy packages, definitions not established" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ressources gérées qui ne se synchronisent pas, paquets en mauvaise santé, définitions non établies"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recursos gestionados que no se sincronizan, paquetes con problemas, definiciones no establecidas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwaltete Ressourcen, die nicht synchronisieren, fehlerhafte Pakete, nicht etablierte Definitionen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Risorse gestite che non si sincronizzano, pacchetti non sani, definizioni non stabilite"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Керовані ресурси, що не синхронізуються, несправні пакети, невстановлені визначення"
+          }
+        }
+      }
+    },
+    "Cannot sync with its provider" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne peut pas se synchroniser avec son fournisseur"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No puede sincronizarse con su proveedor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kann nicht mit seinem Provider synchronisieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non riesce a sincronizzarsi con il suo provider"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається синхронізуватися з провайдером"
+          }
+        }
+      }
+    },
+    "Package %@ is unhealthy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le paquet %@ est en mauvaise santé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El paquete %@ no está sano"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paket %@ ist nicht gesund"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il pacchetto %@ non è sano"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пакет %@ несправний"
+          }
+        }
+      }
+    },
+    "Not ready for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas prêt depuis %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No está listo desde hace %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seit %@ nicht bereit"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non pronto da %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не готовий уже %@"
+          }
+        }
+      }
+    },
+    "Read the Synced condition’s message: credentials, quota or a conflicting external resource. Pause it if it flaps." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lisez le message de la condition Synced : identifiants, quota ou ressource externe en conflit. Mettez-la en pause si elle oscille."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lea el mensaje de la condición Synced: credenciales, cuota o un recurso externo en conflicto. Póngalo en pausa si oscila."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lesen Sie die Meldung der Bedingung Synced: Zugangsdaten, Kontingent oder eine kollidierende externe Ressource. Pausieren Sie sie, wenn sie schwankt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leggi il messaggio della condizione Synced: credenziali, quota o una risorsa esterna in conflitto. Mettila in pausa se oscilla."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитайте повідомлення умови Synced: облікові дані, квота або конфліктний зовнішній ресурс. Призупиніть його, якщо стан коливається."
+          }
+        }
+      }
+    },
+    "Every resource of this package stops reconciling. Check that its image can be pulled (registry, tag, pull secret), then the logs of its pod." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plus aucune ressource de ce paquet n’est réconciliée. Vérifiez que son image peut être tirée (registre, tag, secret de pull), puis les journaux de son pod."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún recurso de este paquete se reconcilia. Compruebe que su imagen se puede descargar (registro, etiqueta, secreto de pull) y luego los registros de su pod."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Ressource dieses Pakets wird mehr abgeglichen. Prüfen Sie, ob sein Image geladen werden kann (Registry, Tag, Pull-Secret), dann die Logs seines Pods."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna risorsa di questo pacchetto viene più riconciliata. Controlla che la sua immagine si possa scaricare (registry, tag, pull secret), poi i log del suo pod."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жоден ресурс цього пакета більше не узгоджується. Перевірте, що його образ можна завантажити (реєстр, тег, pull secret), потім журнали його пода."
+          }
+        }
+      }
+    },
+    "The provider has not finished creating it, or the external resource is unavailable. Check the object’s events and the resource on the provider’s side." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fournisseur n’a pas fini de la créer, ou la ressource externe est indisponible. Vérifiez les événements de l’objet et la ressource côté fournisseur."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El proveedor no ha terminado de crearlo, o el recurso externo no está disponible. Revise los eventos del objeto y el recurso en el lado del proveedor."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Provider hat sie noch nicht fertig erstellt, oder die externe Ressource ist nicht verfügbar. Prüfen Sie die Ereignisse des Objekts und die Ressource beim Provider."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il provider non ha finito di crearla, oppure la risorsa esterna non è disponibile. Controlla gli eventi dell’oggetto e la risorsa dal lato del provider."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Провайдер ще не завершив його створення, або зовнішній ресурс недоступний. Перевірте події об’єкта та ресурс на боці провайдера."
+          }
+        }
+      }
+    },
+    "Its composite kind is not served, so nothing of that kind can be created. Look for a CRD that conflicts with it or an invalid schema." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son type composite n’est pas servi : rien de ce type ne peut être créé. Cherchez un CRD en conflit avec elle ou un schéma invalide."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su tipo compuesto no se sirve, así que no se puede crear nada de ese tipo. Busque un CRD en conflicto con ella o un esquema no válido."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihre Composite-Art wird nicht bereitgestellt, also kann nichts dieser Art erstellt werden. Suchen Sie nach einer kollidierenden CRD oder einem ungültigen Schema."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il suo tipo composito non è servito, quindi non si può creare nulla di quel tipo. Cerca una CRD in conflitto o uno schema non valido."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Її композитний тип не обслуговується, тож нічого цього типу не можна створити. Шукайте конфліктний CRD або недійсну схему."
+          }
+        }
+      }
+    },
     "Virtual machines" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -34905,6 +35185,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Відкрити в браузері"
+          }
+        }
+      }
+    },
+    "Open object summary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objektübersicht öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir el resumen del objeto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir le résumé de l’objet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri il riepilogo dell’oggetto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити підсумок об’єкта"
           }
         }
       }
@@ -128633,6 +128948,41 @@
         }
       }
     },
+    "%@ claims" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Claims"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ claims"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ claims"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ claim"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ claims"
+          }
+        }
+      }
+    },
     "%@ may be disrupted at a time · %@ now" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -137225,7 +137575,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ non è installato su questo cluster"
+            "value" : "%@ не встановлено в цьому кластері"
           }
         }
       }

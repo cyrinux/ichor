@@ -75,7 +75,6 @@ func demoDataServices(now time.Time) dataServices {
 		garage.Keys = layer.Keys
 		garage.Nodes = layer.Nodes
 		garage.Operator = layer.Operator
-		attachGarageOperator(garage)
 	}
 
 	pods := func(name string, ready ...bool) []cnpgPod {

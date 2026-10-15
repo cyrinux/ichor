@@ -132,6 +132,45 @@ func TestAppRoutesHTTPRoute(t *testing.T) {
 	}
 }
 
+// A route carries the API resource it was read at, so the apps can open its object summary.
+func TestAppRoutesCarryTheirResource(t *testing.T) {
+	k := openRoutesKube(t, map[string]string{
+		"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[
+			{"metadata":{"name":"web","namespace":"shop"},"spec":{"rules":[
+				{"host":"www.shop.example","http":{"paths":[{"path":"/","backend":{"service":{"name":"web"}}}]}}]}}]}`,
+		"GET /apis/gateway.networking.k8s.io/v1/httproutes": `{"items":[
+			{"metadata":{"name":"web","namespace":"shop"},"spec":{
+				"hostnames":["web.example"],
+				"rules":[{"backendRefs":[{"name":"web"}]}]}}]}`,
+	})
+
+	list, err := appRoutes(context.Background(), k, []routePod{{"shop", "web-1"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := map[string]resourceRef{
+		"Ingress":   {"networking.k8s.io", "v1", "ingresses"},
+		"HTTPRoute": {"gateway.networking.k8s.io", "v1", "httproutes"},
+	}
+
+	seen := map[string]bool{}
+
+	for _, r := range list.Routes {
+		seen[r.Kind] = true
+
+		if got := (resourceRef{r.Group, r.Version, r.Resource}); got != want[r.Kind] {
+			t.Errorf("%s %s: got %+v, want %+v", r.Kind, r.Name, got, want[r.Kind])
+		}
+	}
+
+	for kind := range want {
+		if !seen[kind] {
+			t.Errorf("no %s route was read", kind)
+		}
+	}
+}
+
 // A controller listening on 8443 behind a LoadBalancer Service on 443 (Traefik): the URL is
 // the public port, 443 left out; a port two Services publish differently keeps the listener's.
 func TestAppRoutesHTTPRoutePublicPort(t *testing.T) {

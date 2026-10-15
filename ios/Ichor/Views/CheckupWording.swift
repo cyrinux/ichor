@@ -34,6 +34,7 @@ extension CheckupSectionID {
         case .secrets: CheckupText.checkupSectionSecrets
         case .helm: CheckupText.checkupSectionHelm
         case .monitoring: String(localized: "Monitoring")
+        case .crossplane: CheckupText.checkupSectionCrossplane
         }
     }
 
@@ -54,6 +55,7 @@ extension CheckupSectionID {
         case .secrets: CheckupText.checkupSectionSecretsHint
         case .helm: CheckupText.checkupSectionHelmHint
         case .monitoring: PromMonitoringText.checkupSectionMonitoringHint
+        case .crossplane: CheckupText.checkupSectionCrossplaneHint
         }
     }
 
@@ -73,6 +75,7 @@ extension CheckupSectionID {
         case .secrets: "key"
         case .helm: "shippingbox"
         case .monitoring: "waveform.path.ecg"
+        case .crossplane: "cloud"
         }
     }
 }
@@ -164,6 +167,10 @@ extension CheckupFinding {
         case .scrapeTargetsDown: return PromMonitoringText.checkupScrapeTargetsDown("\(f.count)", limit)
         case .prometheusRuleErrors: return PromMonitoringText.checkupRuleErrors("\(f.count)")
         case .ruleGroupErrors: return PromMonitoringText.checkupGroupErrors("\(f.count)", f.extra)
+        case .crossplaneSyncFailed: return CheckupText.checkupCrossplaneSyncFailed
+        case .crossplaneProviderUnhealthy: return CheckupText.checkupCrossplaneProviderUnhealthy(f.extra)
+        case .crossplaneNotReady: return CheckupText.checkupCrossplaneNotReady(age.isEmpty ? "-" : age)
+        case .crossplaneDefinitionNotEstablished: return CheckupText.checkupCrossplaneDefinitionNotEstablished
         }
     }
 
@@ -220,6 +227,10 @@ extension CheckupFinding {
         case .scrapeTargetsDown: return PromMonitoringText.checkupScrapeTargetsDownFix
         case .prometheusRuleErrors: return PromMonitoringText.checkupRuleErrorsFix
         case .ruleGroupErrors: return PromMonitoringText.checkupGroupErrorsFix
+        case .crossplaneSyncFailed: return CheckupText.checkupCrossplaneSyncFailedFix
+        case .crossplaneProviderUnhealthy: return CheckupText.checkupCrossplaneProviderUnhealthyFix
+        case .crossplaneNotReady: return CheckupText.checkupCrossplaneNotReadyFix
+        case .crossplaneDefinitionNotEstablished: return CheckupText.checkupCrossplaneDefinitionNotEstablishedFix
         }
     }
 }

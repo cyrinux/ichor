@@ -61,6 +61,7 @@ import name.levis.ichor.ui.workloads.RestartResultToasts
 import name.levis.ichor.ui.workloads.RolloutStatusSheet
 import name.levis.ichor.ui.workloads.WorkloadPodsSheet
 import name.levis.ichor.model.ImageScanReport
+import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.ui.imagescan.AppScanUi
 import name.levis.ichor.ui.imagescan.ImageScanReportOpen
 import name.levis.ichor.ui.imagescan.ImageScanViewModel
@@ -71,6 +72,7 @@ import name.levis.ichor.ui.components.pageContent
  * Every app running in the cluster as a grid of icons, with search and filters; tapping one
  * opens its details. [onNode] opens a node's pods (address, hostname, role); [onArgoCD] the Argo
  * CD screen and [onArgoApp] one of its apps (namespace, name); [onFlux] the Flux screen.
+ * [onObject] a route of an app's Web access section, on its object screen.
  * [attention] opens it on the "needs attention" chip.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,6 +84,7 @@ fun AppsScreen(
     onArgoCD: () -> Unit,
     onArgoApp: (namespace: String, name: String) -> Unit,
     onFlux: () -> Unit,
+    onObject: (KubeObjectRef) -> Unit,
     vm: AppsViewModel = viewModel(factory = factory { AppsViewModel(app.talosRepository) }),
     workloadsVm: AppWorkloadsViewModel = viewModel(factory = factory { AppWorkloadsViewModel(app.kubeRepository) }),
     routesVm: AppRoutesViewModel = viewModel(factory = factory { AppRoutesViewModel(app.kubeRepository) }),
@@ -215,6 +218,7 @@ fun AppsScreen(
                         null
                     },
                     onPodNode = { addr -> nodes.openNode(addr, onNode) },
+                    onObject = onObject,
                     onDismiss = { selected = null },
                 )
                 podsOf?.let { WorkloadPodsSheet(it, onDismiss = { podsOf = null }) }
