@@ -5,7 +5,7 @@
       "spec": {
         "parentRefs": [{"name": "gw", "namespace": "gateway-system"}],
         "hostnames": ["api.example.com"],
-        "rules": [{"matches": [{"path": {"type": "PathPrefix", "value": "/"}}], "backendRefs": [{"name": "api"}]}]
+        "rules": [{"matches": [{"path": {"type": "PathPrefix", "value": "/"}, "method": "GET"}, {"method": "POST"}], "backendRefs": [{"name": "api"}]}]
       }
     }
   ]
