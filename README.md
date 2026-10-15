@@ -563,6 +563,15 @@ The workload sheet names the autoscaler that owns the replica count — "HPA web
 1–5", or "KEDA worker-so · paused at 0" — with a tap through to the Autoscaling screen, and
 the list marks autoscaled workloads with an "auto" badge.
 
+### Crossplane
+
+**Kubernetes → Crossplane** (the button appears when the cluster runs Crossplane) shows the
+control plane's packages (providers, configurations, functions, with their Installed and Healthy
+state and the pull error), the APIs its XRDs define (scope, claim kind, compositions), and every
+composite resource, claim and managed resource with its Ready and Synced conditions — problems
+first, with a filter and a search, and the Synced message (the cloud API's error) on the row.
+Tapping a row opens the object's summary (conditions, events, YAML); nothing is changed here.
+
 ### Argo CD app icons
 
 Ichor names an Argo CD app's logo from its Helm chart, its name or the images it runs. An app it
