@@ -2324,6 +2324,18 @@
         <item quantity="one">Showing the first %1$d of %2$d hostnames.</item>
         <item quantity="other">Showing the first %1$d of %2$d hostnames.</item>
     </plurals>
+    <string name="externaldns_check_names">Check names</string>
+    <string name="externaldns_check_hint">Resolves every hostname from this phone and compares it with the record\'s targets. The names go to your DNS resolver.</string>
+    <string name="externaldns_check_match">Resolves here</string>
+    <string name="externaldns_check_mismatch">Points elsewhere</string>
+    <string name="externaldns_check_missing">Not found</string>
+    <string name="externaldns_check_error">Could not check</string>
+    <string name="externaldns_check_owner_other">owned by %1$s</string>
+    <string name="externaldns_check_mismatch_hint">A name that points elsewhere may be split-horizon DNS at home, a change still propagating, or another ExternalDNS owning it.</string>
+    <plurals name="externaldns_check_summary">
+        <item quantity="one">%1$d of %2$d name points at this cluster</item>
+        <item quantity="other">%1$d of %2$d names point at this cluster</item>
+    </plurals>
     <string name="sealedsecrets_empty">No SealedSecrets.</string>
     <string name="sealedsecrets_no_controller">No controller found</string>
     <string name="sealedsecrets_ready">ready</string>
@@ -4773,6 +4785,7 @@
     <string name="velero_restore_no_volumes">no volume snapshots</string>
     <string name="velero_restore_every_namespace">Every namespace in the backup is restored.</string>
     <string name="velero_restore_choose_namespaces">Choose the namespaces to restore</string>
+    <string name="velero_restore_pick_namespace">Pick at least one namespace to restore</string>
     <string name="velero_restore_target_same">empty: same name</string>
     <string name="velero_restore_existing">Existing objects</string>
     <string name="velero_restore_existing_leave">leave</string>

@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"slices"
@@ -282,9 +283,15 @@ func mapVeleroRestores(restores []veleroRestoreObject, backup string) []veleroRe
 		return r.Spec.BackupName != backup
 	})
 
+	// Newest by creation: a Restore just created has no startTimestamp until the controller
+	// picks it up, and must not fall behind the cut while the apps follow it.
+	createdAt := func(r veleroRestoreObject) int64 {
+		return cmp.Or(unixMilli(r.Metadata.CreationTimestamp), unixMilli(r.Status.StartTimestamp))
+	}
+
 	slices.SortFunc(mine, func(a, b veleroRestoreObject) int {
 		return cmp.Or(
-			cmp.Compare(unixMilli(b.Status.StartTimestamp), unixMilli(a.Status.StartTimestamp)),
+			cmp.Compare(createdAt(b), createdAt(a)),
 			strings.Compare(b.Metadata.Name, a.Metadata.Name),
 		)
 	})
@@ -316,8 +323,10 @@ func veleroRestoreRunning(restores []veleroRestoreObject, backup string) bool {
 
 // veleroRestoreOptions is what KubeVeleroRestore takes as its optionsJSON (gomobile passes
 // strings only): which namespaces, where each goes, how existing objects are treated, and
-// whether volumes are restored.
+// whether volumes are restored. Velero reads an empty includedNamespaces as every namespace,
+// so that one is asked for explicitly: AllNamespaces, or includedNamespaces ["*"].
 type veleroRestoreOptions struct {
+	AllNamespaces           bool              `json:"allNamespaces,omitempty"`
 	IncludedNamespaces      []string          `json:"includedNamespaces"`
 	NamespaceMapping        map[string]string `json:"namespaceMapping"`
 	ExistingResourcePolicy  string            `json:"existingResourcePolicy"`
@@ -325,16 +334,30 @@ type veleroRestoreOptions struct {
 	IncludeClusterResources *bool             `json:"includeClusterResources"`
 }
 
-// validate checks the options before they reach the API: every namespace name (the ones
-// restored and the mapping's two sides) and the existing-resource policy.
+// validate checks the options before they reach the API: at least one namespace unless all
+// of them are asked for, every namespace name (the ones restored and the mapping's two sides)
+// a DNS-1123 label, and the existing-resource policy.
 func (o veleroRestoreOptions) validate() error {
-	names := slices.Clone(o.IncludedNamespaces)
+	wildcard := slices.Equal(o.IncludedNamespaces, []string{"*"})
+
+	switch {
+	case o.AllNamespaces && len(o.IncludedNamespaces) > 0:
+		return errors.New("restore either every namespace or the ones listed, not both")
+	case !o.AllNamespaces && len(o.IncludedNamespaces) == 0:
+		return errors.New("pick at least one namespace to restore")
+	}
+
+	names := []string{}
+	if !wildcard {
+		names = append(names, o.IncludedNamespaces...)
+	}
+
 	for src, dst := range o.NamespaceMapping {
 		names = append(names, src, dst)
 	}
 
 	for _, ns := range names {
-		if ns == "" || !kubeNamePattern.MatchString(ns) || strings.Contains(ns, "..") {
+		if len(ns) > 63 || !dns1123Label.MatchString(ns) {
 			return fmt.Errorf("invalid Kubernetes namespace %q", ns)
 		}
 	}
@@ -448,11 +471,12 @@ func restoreVeleroBackup(ctx context.Context, k *kubeClient, namespace, backup s
 	return created.Metadata.Name, nil
 }
 
-// veleroRestoreSpec is the Restore's spec: the backup and the options, empty ones left out.
+// veleroRestoreSpec is the Restore's spec: the backup and the options, empty ones left out
+// (no includedNamespaces is Velero's every namespace).
 func veleroRestoreSpec(backup string, options veleroRestoreOptions) map[string]any {
 	spec := map[string]any{"backupName": backup}
 
-	if len(options.IncludedNamespaces) > 0 {
+	if !options.AllNamespaces && len(options.IncludedNamespaces) > 0 {
 		spec["includedNamespaces"] = options.IncludedNamespaces
 	}
 

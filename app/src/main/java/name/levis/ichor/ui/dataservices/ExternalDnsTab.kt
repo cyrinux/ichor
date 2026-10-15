@@ -12,10 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
@@ -23,16 +26,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
+import name.levis.ichor.model.DnsCheckEntry
+import name.levis.ichor.model.DnsCheckStatus
 import name.levis.ichor.model.ExternalDnsController
 import name.levis.ichor.model.ExternalDnsReason
 import name.levis.ichor.model.ExternalDnsRecord
 import name.levis.ichor.model.ExternalDnsStatus
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.InfoRow
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -40,10 +48,13 @@ import name.levis.ichor.ui.theme.LocalStatusColors
  * ExternalDNS: every controller with its settings (provider, policy, owner id, domain
  * filters, sources, interval), then the hostnames it is asked to publish, problems first.
  * A record's row opens its source object's summary. ExternalDNS keeps no status on records:
- * nothing here says one exists at the provider.
+ * nothing here says one exists at the provider, so "Check names" resolves them from the
+ * phone and compares the answers with the targets.
  */
 @Composable
-fun ExternalDnsTab(status: ExternalDnsStatus, onObject: (KubeObjectRef) -> Unit) {
+fun ExternalDnsTab(status: ExternalDnsStatus, onObject: (KubeObjectRef) -> Unit, actions: ExternalDnsActions) {
+    val check by actions.state.collectAsStateWithLifecycle()
+    val verdicts = check?.byName.orEmpty()
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
         if (status.controllers.isEmpty() && status.records.isEmpty()) item { EmptyText(stringResource(R.string.externaldns_empty)) }
@@ -57,9 +68,44 @@ fun ExternalDnsTab(status: ExternalDnsStatus, onObject: (KubeObjectRef) -> Unit)
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             )
         }
+        if (status.records.isNotEmpty()) item(key = "dns-check") { DnsCheckHeader(status, check, actions) }
         items(status.records, key = { "${it.dnsName}/${it.sourceKind}/${it.sourceNamespace}/${it.sourceName}" }) { r ->
-            RecordRow(r, onObject)
+            RecordRow(r, onObject, verdicts[r.dnsName])
             HorizontalDivider()
+        }
+    }
+}
+
+/**
+ * The "Check names" button, what it does, and the last check's summary. The names go to the
+ * phone's DNS resolver: that is the feature, and the hint says so.
+ */
+@Composable
+private fun DnsCheckHeader(status: ExternalDnsStatus, check: DnsCheckState?, actions: ExternalDnsActions) {
+    val colors = LocalStatusColors.current
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedButton(onClick = { actions.check(status) }, enabled = check?.running != true) {
+                Text(stringResource(R.string.externaldns_check_names))
+            }
+            if (check?.running == true) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+        }
+        MutedText(stringResource(R.string.externaldns_check_hint))
+        check?.error?.let { InlineError(it.asString()) }
+        check?.result?.let { result ->
+            val pointing = result.results.count { it.verdict == DnsCheckStatus.MATCH }
+            Text(
+                pluralStringResource(R.plurals.externaldns_check_summary, result.results.size, pointing, result.results.size),
+                style = MaterialTheme.typography.bodyMedium,
+                color = when {
+                    result.results.any { it.verdict == DnsCheckStatus.MISSING } -> colors.bad
+                    pointing == result.results.size -> colors.ok
+                    else -> colors.warn
+                },
+            )
+            if (result.results.any { it.verdict == DnsCheckStatus.MISMATCH }) {
+                MutedText(stringResource(R.string.externaldns_check_mismatch_hint))
+            }
         }
     }
 }
@@ -96,7 +142,7 @@ private fun ControllerRow(c: ExternalDnsController) {
 }
 
 @Composable
-private fun RecordRow(r: ExternalDnsRecord, onObject: (KubeObjectRef) -> Unit) {
+private fun RecordRow(r: ExternalDnsRecord, onObject: (KubeObjectRef) -> Unit, verdict: DnsCheckEntry?) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(
         Modifier.fillMaxWidth().clickable {
@@ -124,6 +170,32 @@ private fun RecordRow(r: ExternalDnsRecord, onObject: (KubeObjectRef) -> Unit) {
         )
         r.reasonList.forEach { reason ->
             Text(reasonText(reason), style = MaterialTheme.typography.labelSmall, color = r.serviceHealth.color(), modifier = Modifier.padding(start = 22.dp))
+        }
+        verdict?.let { VerdictRow(it) }
+    }
+}
+
+/** What the last check found for one record, and who owns it when that is not this cluster. */
+@Composable
+private fun VerdictRow(entry: DnsCheckEntry) {
+    val colors = LocalStatusColors.current
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    Column(Modifier.padding(start = 22.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            when (entry.verdict) {
+                DnsCheckStatus.MATCH -> StatusPill(stringResource(R.string.externaldns_check_match), colors.ok)
+                DnsCheckStatus.MISMATCH -> StatusPill(stringResource(R.string.externaldns_check_mismatch), colors.warn)
+                DnsCheckStatus.MISSING -> StatusPill(stringResource(R.string.externaldns_check_missing), colors.bad)
+                DnsCheckStatus.ERROR -> StatusPill(stringResource(R.string.externaldns_check_error), muted)
+                null -> {}
+            }
+            if (entry.ownerMatch == false) StatusPill(stringResource(R.string.externaldns_check_owner_other, entry.owner), colors.warn)
+        }
+        if (entry.answers.isNotEmpty() && entry.verdict != DnsCheckStatus.ERROR) {
+            MutedText(entry.answers.joinToString(", "), maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+        if (entry.verdict == DnsCheckStatus.ERROR && entry.message.isNotEmpty()) {
+            MutedText(entry.message, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
 }

@@ -78,6 +78,9 @@ struct LonghornList: View {
             // Looked up by name: the sheet follows the volume as the status refreshes.
             if let volume = status.volumes.first(where: { $0.name == name.id }) {
                 LonghornSnapshotsSheet(volume: volume, refresh: refresh).loadsKubeActionAccess(namespace: volume.namespace)
+            } else {
+                // The volume is gone: no blank sheet.
+                Color.clear.onAppear { snapshotsFor = nil }
             }
         }
         .sheet(item: $salvageTarget) { volume in

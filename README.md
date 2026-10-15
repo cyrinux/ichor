@@ -141,10 +141,12 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   Rook Ceph, CAST AI, CSI VolumeSnapshots, backup CronJobs) on one tabbed screen, each with its
   health and what needs a look; kube-green's sleep schedules say which namespaces sleep on a
   schedule, when they wake up, and whether they are asleep right now. ExternalDNS shows the
-  hostnames it manages, where each comes from, and the controller's settings; Sealed Secrets shows
-  the controller, the sealing keys and whether each SealedSecret unsealed, by name only. When the
-  garage-operator manages Garage, its clusters, buckets (size, quota, website), keys and node
-  declarations show next to the live Garage state.
+  hostnames it manages, where each comes from, and the controller's settings; it can resolve
+  every hostname from the phone and compare it with the record's targets, so a name that points
+  elsewhere, or that no controller owns, stands out. Sealed Secrets shows the controller, the
+  sealing keys and whether each SealedSecret unsealed, by name only. When the garage-operator
+  manages Garage, its clusters, buckets (size, quota, website), keys and node declarations show
+  next to the live Garage state.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,

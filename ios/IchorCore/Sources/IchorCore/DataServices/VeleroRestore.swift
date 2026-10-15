@@ -124,7 +124,7 @@ public enum VeleroRestoreReason: String, Sendable {
 
 /// The options of a restore, serialized to JSON for the Go core (gomobile passes strings only).
 public struct VeleroRestoreOptions: Encodable, Equatable, Sendable {
-    /// Empty: every namespace of the backup.
+    /// The namespaces to restore, when not `allNamespaces`.
     public var includedNamespaces: [String]
     /// Source namespace → target namespace; a target that does not exist is created.
     public var namespaceMapping: [String: String]
@@ -133,23 +133,28 @@ public struct VeleroRestoreOptions: Encodable, Equatable, Sendable {
     /// nil: Velero's default (restore them).
     public var restorePVs: Bool?
     public var includeClusterResources: Bool?
+    /// Every namespace of the backup; the core refuses an empty `includedNamespaces` without it.
+    public var allNamespaces: Bool
 
     public init(includedNamespaces: [String] = [], namespaceMapping: [String: String] = [:],
-                existingResourcePolicy: String = "none", restorePVs: Bool? = nil, includeClusterResources: Bool? = nil) {
+                existingResourcePolicy: String = "none", restorePVs: Bool? = nil, includeClusterResources: Bool? = nil,
+                allNamespaces: Bool = false) {
         self.includedNamespaces = includedNamespaces
         self.namespaceMapping = namespaceMapping
         self.existingResourcePolicy = existingResourcePolicy
         self.restorePVs = restorePVs
         self.includeClusterResources = includeClusterResources
+        self.allNamespaces = allNamespaces
     }
 
     private enum CodingKeys: String, CodingKey {
-        case includedNamespaces, namespaceMapping, existingResourcePolicy, restorePVs, includeClusterResources
+        case allNamespaces, includedNamespaces, namespaceMapping, existingResourcePolicy, restorePVs, includeClusterResources
     }
 
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         // Empty and unset options are left out, so the core keeps Velero's defaults.
+        if allNamespaces { try c.encode(true, forKey: .allNamespaces) }
         if !includedNamespaces.isEmpty { try c.encode(includedNamespaces, forKey: .includedNamespaces) }
         if !namespaceMapping.isEmpty { try c.encode(namespaceMapping, forKey: .namespaceMapping) }
         if !existingResourcePolicy.isEmpty { try c.encode(existingResourcePolicy, forKey: .existingResourcePolicy) }

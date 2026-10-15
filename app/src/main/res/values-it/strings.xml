@@ -2326,6 +2326,18 @@
         <item quantity="one">Mostrati i primi %1$d di %2$d nomi host.</item>
         <item quantity="other">Mostrati i primi %1$d di %2$d nomi host.</item>
     </plurals>
+    <string name="externaldns_check_names">Controlla i nomi</string>
+    <string name="externaldns_check_hint">Risolve ogni nome host da questo telefono e lo confronta con i target del record. I nomi vanno al tuo resolver DNS.</string>
+    <string name="externaldns_check_match">Risolve qui</string>
+    <string name="externaldns_check_mismatch">Punta altrove</string>
+    <string name="externaldns_check_missing">Non trovato</string>
+    <string name="externaldns_check_error">Impossibile controllare</string>
+    <string name="externaldns_check_owner_other">di proprietà di %1$s</string>
+    <string name="externaldns_check_mismatch_hint">Un nome che punta altrove può essere DNS split-horizon a casa, una modifica ancora in propagazione, o un altro ExternalDNS che lo possiede.</string>
+    <plurals name="externaldns_check_summary">
+        <item quantity="one">%1$d di %2$d nome punta a questo cluster</item>
+        <item quantity="other">%1$d di %2$d nomi puntano a questo cluster</item>
+    </plurals>
     <string name="sealedsecrets_empty">Nessun SealedSecret.</string>
     <string name="sealedsecrets_no_controller">Nessun controller trovato</string>
     <string name="sealedsecrets_ready">pronto</string>
@@ -4771,6 +4783,7 @@
     <string name="velero_restore_no_volumes">nessuno snapshot di volume</string>
     <string name="velero_restore_every_namespace">Vengono ripristinati tutti i namespace del backup.</string>
     <string name="velero_restore_choose_namespaces">Scegli i namespace da ripristinare</string>
+    <string name="velero_restore_pick_namespace">Scegli almeno un namespace da ripristinare</string>
     <string name="velero_restore_target_same">vuoto: stesso nome</string>
     <string name="velero_restore_existing">Oggetti esistenti</string>
     <string name="velero_restore_existing_leave">lascia</string>

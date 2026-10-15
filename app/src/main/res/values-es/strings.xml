@@ -2326,6 +2326,18 @@
         <item quantity="one">Mostrando los primeros %1$d de %2$d nombres de host.</item>
         <item quantity="other">Mostrando los primeros %1$d de %2$d nombres de host.</item>
     </plurals>
+    <string name="externaldns_check_names">Comprobar nombres</string>
+    <string name="externaldns_check_hint">Resuelve cada nombre de host desde este teléfono y lo compara con los destinos del registro. Los nombres van a tu resolutor DNS.</string>
+    <string name="externaldns_check_match">Resuelve aquí</string>
+    <string name="externaldns_check_mismatch">Apunta a otro sitio</string>
+    <string name="externaldns_check_missing">No encontrado</string>
+    <string name="externaldns_check_error">No se pudo comprobar</string>
+    <string name="externaldns_check_owner_other">pertenece a %1$s</string>
+    <string name="externaldns_check_mismatch_hint">Un nombre que apunta a otro sitio puede ser DNS split-horizon en casa, un cambio aún propagándose, u otro ExternalDNS que lo posee.</string>
+    <plurals name="externaldns_check_summary">
+        <item quantity="one">%1$d de %2$d nombre apunta a este clúster</item>
+        <item quantity="other">%1$d de %2$d nombres apuntan a este clúster</item>
+    </plurals>
     <string name="sealedsecrets_empty">Ningún SealedSecret.</string>
     <string name="sealedsecrets_no_controller">No se encontró ningún controlador</string>
     <string name="sealedsecrets_ready">listo</string>
@@ -4770,6 +4782,7 @@
     <string name="velero_restore_no_volumes">sin instantáneas de volumen</string>
     <string name="velero_restore_every_namespace">Se restauran todos los espacios de nombres de la copia.</string>
     <string name="velero_restore_choose_namespaces">Elige los espacios de nombres a restaurar</string>
+    <string name="velero_restore_pick_namespace">Elige al menos un espacio de nombres para restaurar</string>
     <string name="velero_restore_target_same">vacío: el mismo nombre</string>
     <string name="velero_restore_existing">Objetos existentes</string>
     <string name="velero_restore_existing_leave">dejar</string>

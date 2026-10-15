@@ -7,6 +7,10 @@ import name.levis.ichor.model.VolumeSnapshots
 import name.levis.ichor.model.CnpgPromotePreview
 import name.levis.ichor.model.CertDetails
 import name.levis.ichor.model.DataServices
+import name.levis.ichor.model.DnsCheckRequest
+import name.levis.ichor.model.DnsCheckResult
+import name.levis.ichor.model.ExternalDnsController
+import name.levis.ichor.model.ExternalDnsRecord
 import name.levis.ichor.model.GarageBlockReport
 import name.levis.ichor.model.GarageInstance
 import name.levis.ichor.model.GarageRepairResult
@@ -15,6 +19,7 @@ import name.levis.ichor.model.LonghornSnapshotAction
 import name.levis.ichor.model.VeleroBackups
 import name.levis.ichor.model.VeleroRestoreOptions
 import name.levis.ichor.model.VeleroRestorePreview
+import name.levis.ichor.model.isDemo
 import name.levis.ichorgo.Ichorgo
 
 /** Longhorn, Garage, CloudNativePG and cert-manager: their health and the actions on them. */
@@ -143,5 +148,21 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
      */
     suspend fun longhornSnapshotAction(namespace: String, volume: String, snapshot: String, action: LonghornSnapshotAction) = go.kube { cfg, ctx, server ->
         Ichorgo.kubeLonghornSnapshotAction(cfg, ctx, server, namespace, volume, snapshot, action.wire)
+    }
+
+    /**
+     * Resolves the ExternalDNS [records] from this phone and compares the answers with their
+     * targets (no cluster call). [controllers] give each record's owner id and TXT prefix for
+     * the ownership check. The demo's records get canned verdicts.
+     */
+    suspend fun dnsCheck(records: List<ExternalDnsRecord>, controllers: List<ExternalDnsController>): DnsCheckResult {
+        val byName = controllers.associateBy { it.name }
+        val request = records.map { r ->
+            val c = byName[r.controller]
+            DnsCheckRequest(r.dnsName, r.recordType, r.targets, c?.ownerId.orEmpty(), c?.txtPrefix.orEmpty())
+        }
+        val json = TalosJson.encodeToString(request)
+        val out = if (go.configs.config.value?.activeSummary?.isDemo == true) Ichorgo.demoDNSCheck(json) else Ichorgo.dnsCheck(json, 0)
+        return TalosJson.decodeFromString(DnsCheckResult.serializer(), out)
     }
 }
