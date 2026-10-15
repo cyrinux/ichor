@@ -61,6 +61,7 @@ class KubeAccessTest {
                 "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
                 "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode", "cnpgPromote", "cnpgRestartPrimary", "cnpgHibernate", "longhornSalvage", "longhornAttachment",
                 "veleroBackupNow", "veleroDeleteBackup", "veleroRestore",
+                "vmStart", "vmStop", "vmRestart", "vmMigrate", "vmPause", "vmUnpause",
             ),
             KubeAction.entries.map { it.wire },
         )

@@ -36,6 +36,14 @@ enum class KubeAction(val wire: String) {
     VELERO_BACKUP_NOW("veleroBackupNow"),
     VELERO_DELETE_BACKUP("veleroDeleteBackup"),
     VELERO_RESTORE("veleroRestore"),
+
+    /** A KubeVirt virtual machine: start, stop, restart, migrate, pause and unpause. */
+    VM_START("vmStart"),
+    VM_STOP("vmStop"),
+    VM_RESTART("vmRestart"),
+    VM_MIGRATE("vmMigrate"),
+    VM_PAUSE("vmPause"),
+    VM_UNPAUSE("vmUnpause"),
     ;
 
     /** The action asked for an object of a kind, on that kind's own resource; null for a kind the core does not ask about (offered). */

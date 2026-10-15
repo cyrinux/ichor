@@ -116,6 +116,37 @@ var kubeActionChecks = map[string][]accessNeed{
 		{ssarAttributes{Verb: "create", Group: groupVelero, Resource: "restores"}, true},
 		{ssarAttributes{Verb: "get", Group: groupVelero, Resource: "backups"}, true},
 	},
+	// KubeVirt: start, stop, restart and migrate update the virtual machine's subresource;
+	// pause and unpause act on the instance's (named like the VM). Each also reads the
+	// virtual machine first, and a migration creates the VirtualMachineInstanceMigration the
+	// API server then carries out. SelfSubjectAccessReview cannot see KubeVirt's own
+	// refusals (a VM already running, a runStrategy that forbids a manual restart): they are
+	// asked before the call and answered as conflicts.
+	"vmStart": {
+		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachines", Subresource: "start"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
+	},
+	"vmStop": {
+		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachines", Subresource: "stop"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
+	},
+	"vmRestart": {
+		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachines", Subresource: "restart"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
+	},
+	"vmMigrate": {
+		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachines", Subresource: "migrate"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
+		{ssarAttributes{Verb: "create", Group: groupKubeVirt, Resource: "virtualmachineinstancemigrations"}, true},
+	},
+	"vmPause": {
+		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachineinstances", Subresource: "pause"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
+	},
+	"vmUnpause": {
+		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachineinstances", Subresource: "unpause"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
+	},
 	"createVolumeSnapshot": {
 		{ssarAttributes{Verb: "create", Group: groupSnapshot, Resource: "volumesnapshots"}, true},
 		{ssarAttributes{Verb: "get", Resource: "persistentvolumeclaims"}, true},
@@ -176,7 +207,8 @@ type accessNeed struct {
 // triggerCronJob, helmRollback, argoSync, fluxReconcile (fluxReconcileHelmRelease,
 // fluxReconcileGitRepository, fluxReconcileOCIRepository, fluxReconcileHelmRepository,
 // fluxReconcileBucket), cordonNode, drainNode, cnpgPromote, createVolumeSnapshot,
-// veleroBackupNow, veleroDeleteBackup, veleroRestore. Answers are cached a few minutes.
+// veleroBackupNow, veleroDeleteBackup, veleroRestore, vmStart, vmStop, vmRestart,
+// vmMigrate, vmPause, vmUnpause. Answers are cached a few minutes.
 // kubeServer: see KubePods.
 func KubeActionAccess(configYAML, contextName, kubeServer, namespace string) (out string, err error) {
 	defer maskResult(&out, &err)

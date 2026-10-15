@@ -15,6 +15,7 @@ public enum KubeAction: String, CaseIterable, Sendable {
     case alertmanagerSilence, alertmanagerExpire
     case cnpgPromote, cnpgRestartPrimary, cnpgHibernate, longhornSalvage, longhornAttachment
     case veleroBackupNow, veleroDeleteBackup, veleroRestore
+    case vmStart, vmStop, vmRestart, vmMigrate, vmPause, vmUnpause
 
     /// Asked in a namespace; the node actions are cluster-wide whatever the namespace.
     public var isNamespaced: Bool {

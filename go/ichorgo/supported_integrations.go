@@ -70,8 +70,9 @@ var integrationSpecs = []integrationSpec{
 	{ID: "mimir", Name: "Mimir", Website: "https://grafana.com/oss/mimir/", ServiceKind: "mimir"},
 	{ID: "victoriametrics", Name: "VictoriaMetrics", Website: "https://victoriametrics.com", ServiceKind: "victoriametrics"},
 	{ID: "sealed-secrets", Name: "Sealed Secrets", Website: "https://github.com/bitnami/sealed-secrets", Groups: []string{groupSealedSecrets}, Resource: "sealedsecrets"},
-	// KubeVirt VMs, the CDI DataVolumes that fill their disks, and Harvester, which runs both.
-	{ID: "kubevirt", Name: "KubeVirt", Website: "https://kubevirt.io", Groups: []string{groupKubeVirt, groupCDI, groupHarvester}},
+	// KubeVirt VMs, the CDI DataVolumes that fill their disks, Harvester (which runs both) and
+	// the group KubeVirt's start, stop, restart, migrate, pause and unpause live under.
+	{ID: "kubevirt", Name: "KubeVirt", Website: "https://kubevirt.io", Groups: []string{groupKubeVirt, groupCDI, groupHarvester, groupKubeVirtSub}},
 	{ID: "kubernetes-csi", Name: "CSI VolumeSnapshots", Website: "https://kubernetes.io/docs/concepts/storage/volume-snapshots/", Groups: []string{groupSnapshot}, Resource: "volumesnapshots"},
 }
 
