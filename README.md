@@ -90,8 +90,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   controllers and admission webhook are up. See [Policies](#policies).
 - **Virtual machines (KubeVirt / Harvester):** every VM with its status, node, address, guest
   OS and any disk import or live migration in flight, failing ones first; start, stop (with or
-  without the grace period), restart, pause and migrate one from its sheet. See
-  [Virtual machines](#virtual-machines).
+  without the grace period), restart, pause and migrate one from its sheet, or open its
+  serial console in the app's terminal. See [Virtual machines](#virtual-machines).
 - **API server health and pressure:** the Kubernetes API server's readyz and livez checks, and
   what loads it right now: Ichor reads its `/metrics` twice a few seconds apart and shows the
   request rate, 5xx and 429 answers, which clients send the requests (API Priority and Fairness
@@ -210,7 +210,7 @@ reads those roles and explains up front when a feature needs more.
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
 | **Policies (Kyverno)** | `Kubeconfig`, then the Kubernetes API (kyverno.io policies, wgpolicyk8s.io policy reports, Kyverno's Deployments and webhooks) | **`os:admin`** |
-| **Virtual machines: list, start/stop/restart/pause/migrate** | `Kubeconfig`, then the Kubernetes API (kubevirt.io, subresources.kubevirt.io, cdi.kubevirt.io) | **`os:admin`** |
+| **Virtual machines: list, start/stop/restart/pause/migrate, serial console** | `Kubeconfig`, then the Kubernetes API (kubevirt.io, subresources.kubevirt.io including `virtualmachineinstances/console`, cdi.kubevirt.io) | **`os:admin`** |
 | **Cluster checkup, events of a pod or workload** | `Kubeconfig`, then the Kubernetes API (pods, nodes, events, claims, webhooks, quotas, services, CSRs, secrets metadata…) and each kubelet's `stats/summary` through the API server proxy | **`os:admin`** |
 | **Talos rollback (`talosctl rollback`)** | `Rollback` | **`os:admin`** |
 | **CloudNativePG primary restart and hibernate/wake** | `Kubeconfig`, then the Kubernetes API: get clusters and pods, patch `clusters/status` for restart, patch clusters for hibernation | **`os:admin`** |
@@ -596,7 +596,14 @@ still importing its disk?" and act on it from the phone:
   for the VM's name typed; stop can skip the guest's grace period, and says when it writes
   `runStrategy: Halted` into the spec (a GitOps tool may set it back on its next sync).
 
-A cluster without KubeVirt says so. The serial console is not there yet.
+- **Its serial console:** **Console** on a running VM's sheet opens the guest's serial console
+  in the app's terminal, like `virtctl console` (get on `virtualmachineinstances/console` in
+  subresources.kubevirt.io). The guest must send its console to ttyS0 (or hvc0); one viewer at
+  a time, so opening it elsewhere (another phone, `virtctl console`) disconnects the app. On
+  Android the console keeps running when you leave the screen, like a pod's shell; on iOS it
+  ends with the screen. Each open is in the audit log (`vm-console`).
+
+A cluster without KubeVirt says so.
 
 ### Crossplane
 

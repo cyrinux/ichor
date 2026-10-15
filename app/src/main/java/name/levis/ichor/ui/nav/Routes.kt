@@ -127,6 +127,7 @@ internal object Routes {
     const val DEBUG = "debug?addr={addr}&host={host}&ctx={ctx}"
     const val POD_SHELL = "pod-shell?ctx={ctx}&ns={ns}&pod={pod}&c={c}"
     const val KUBE_NODE_DEBUG = "kube-node-debug?ctx={ctx}&node={node}&ns={ns}"
+    const val VM_CONSOLE = "vm-console?ctx={ctx}&ns={ns}&vm={vm}"
     const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}&fix={fix}&before={before}&after={after}"
     const val NETWORK = "network?addr={addr}&host={host}"
     const val HARDWARE = "hardware?addr={addr}&host={host}"
@@ -188,6 +189,10 @@ internal object Routes {
     /** `kubectl exec -it` in [container] ("" for the pod's only one) of a pod of [context]'s cluster. */
     fun podShell(context: String, namespace: String, pod: String, container: String) =
         "pod-shell?ctx=${Uri.encode(context)}&ns=${Uri.encode(namespace)}&pod=${Uri.encode(pod)}&c=${Uri.encode(container)}"
+
+    /** `virtctl console`: the serial console of the KubeVirt VM [vm] in [namespace] of [context]'s cluster. */
+    fun vmConsole(context: String, namespace: String, vm: String) =
+        "vm-console?ctx=${Uri.encode(context)}&ns=${Uri.encode(namespace)}&vm=${Uri.encode(vm)}"
     const val HEALTH = "health"
     const val SETTINGS = "settings"
 

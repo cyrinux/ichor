@@ -154,7 +154,27 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
     composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.POLICIES) { PoliciesScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
     composable(Routes.AUTOSCALING) { AutoscalingScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
-    composable(Routes.VIRTUAL_MACHINES) { VirtualMachinesScreen(onBack = { nav.popBackStack() }) }
+    composable(Routes.VIRTUAL_MACHINES) {
+        VirtualMachinesScreen(
+            onBack = { nav.popBackStack() },
+            onConsole = { vm ->
+                val active = app.configRepository.config.value?.activeContext.orEmpty()
+                nav.navigate(Routes.vmConsole(active, vm.namespace, vm.name))
+            },
+        )
+    }
+    composable(
+        Routes.VM_CONSOLE,
+        arguments = listOf("ctx", "ns", "vm").map { navArgument(it) { type = NavType.StringType; defaultValue = "" } },
+    ) { entry ->
+        val a = entry.arguments
+        val name = a?.getString("vm").orEmpty()
+        DebugShellScreen(
+            key = ShellKey(a?.getString("ctx").orEmpty(), "", a?.getString("ns").orEmpty(), vm = name),
+            hostname = name,
+            onBack = { nav.popBackStack() },
+        )
+    }
     composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = { nav.navigate(Routes.AUDIT) }) }
     composable(Routes.AUDIT) { AuditScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.CHECKUP) {

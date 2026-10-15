@@ -134,30 +134,9 @@ func (k *kubeClient) dialAttach(ctx context.Context, namespace, pod, container s
 // dialStream opens a Kubernetes stream (exec or attach) at path, with its query, over a
 // WebSocket in the channel protocol.
 func (k *kubeClient) dialStream(ctx context.Context, path string) (*websocket.Conn, error) {
-	u, err := k.endpoint(path)
+	cfg, err := k.streamConfig(ctx, path, kubeExecProtocols)
 	if err != nil {
 		return nil, err
-	}
-
-	u.Scheme = "wss"
-
-	cfg, err := websocket.NewConfig(u.String(), (&url.URL{Scheme: "https", Host: u.Host}).String())
-	if err != nil {
-		return nil, fmt.Errorf("exec URL: %w", err)
-	}
-
-	cfg.Protocol = kubeExecProtocols
-	cfg.TlsConfig = k.tls.Clone()
-	cfg.Dialer = &net.Dialer{Timeout: kubeProbeTimeout}
-	cfg.Header.Set("User-Agent", "ichor")
-
-	token, err := k.bearer(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if token != "" {
-		cfg.Header.Set("Authorization", "Bearer "+token)
 	}
 
 	ws, err := cfg.DialContext(ctx)
@@ -176,6 +155,38 @@ func (k *kubeClient) dialStream(ctx context.Context, path string) (*websocket.Co
 	}
 
 	return ws, nil
+}
+
+// streamConfig is the WebSocket configuration of the stream at path (with its query) in
+// one of protocols: the API server's TLS and the credentials' bearer token.
+func (k *kubeClient) streamConfig(ctx context.Context, path string, protocols []string) (*websocket.Config, error) {
+	u, err := k.endpoint(path)
+	if err != nil {
+		return nil, err
+	}
+
+	u.Scheme = "wss"
+
+	cfg, err := websocket.NewConfig(u.String(), (&url.URL{Scheme: "https", Host: u.Host}).String())
+	if err != nil {
+		return nil, fmt.Errorf("stream URL: %w", err)
+	}
+
+	cfg.Protocol = protocols
+	cfg.TlsConfig = k.tls.Clone()
+	cfg.Dialer = &net.Dialer{Timeout: kubeProbeTimeout}
+	cfg.Header.Set("User-Agent", "ichor")
+
+	token, err := k.bearer(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if token != "" {
+		cfg.Header.Set("Authorization", "Bearer "+token)
+	}
+
+	return cfg, nil
 }
 
 // readExecStream demultiplexes the frames until the server closes the stream.

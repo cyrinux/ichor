@@ -112,6 +112,7 @@ class DebugShellService : Service() {
         val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         val title = when {
             shell.key.kubeNode -> R.string.node_debug_auth
+            shell.key.isVM -> R.string.vm_console_on
             shell.key.isPod -> R.string.pod_shell_on
             else -> R.string.debug_notification_title
         }
@@ -152,17 +153,19 @@ private fun Intent.putShell(key: ShellKey): Intent =
     putExtra(MainActivity.EXTRA_SHELL_CONTEXT, key.context).putExtra(MainActivity.EXTRA_SHELL_NODE, key.node)
         .putExtra(MainActivity.EXTRA_SHELL_NAMESPACE, key.namespace).putExtra(MainActivity.EXTRA_SHELL_POD, key.pod)
         .putExtra(MainActivity.EXTRA_SHELL_CONTAINER, key.container).putExtra(MainActivity.EXTRA_SHELL_KUBE_NODE, key.kubeNode)
+        .putExtra(MainActivity.EXTRA_SHELL_VM, key.vm)
 
-/** The shell a notification intent names, if it names one: a node's, or a pod's. */
+/** The shell a notification intent names, if it names one: a node's, a pod's or a VM's. */
 fun Intent.shellKey(): ShellKey? {
     val context = getStringExtra(MainActivity.EXTRA_SHELL_CONTEXT) ?: return null
     val node = getStringExtra(MainActivity.EXTRA_SHELL_NODE).orEmpty()
     val namespace = getStringExtra(MainActivity.EXTRA_SHELL_NAMESPACE).orEmpty()
     val pod = getStringExtra(MainActivity.EXTRA_SHELL_POD).orEmpty()
-    if (node.isBlank() && (pod.isBlank() || namespace.isBlank())) return null
+    val vm = getStringExtra(MainActivity.EXTRA_SHELL_VM).orEmpty()
+    if (node.isBlank() && ((pod.isBlank() && vm.isBlank()) || namespace.isBlank())) return null
     return ShellKey(
         context, node, namespace, pod, getStringExtra(MainActivity.EXTRA_SHELL_CONTAINER).orEmpty(),
-        kubeNode = getBooleanExtra(MainActivity.EXTRA_SHELL_KUBE_NODE, false),
+        kubeNode = getBooleanExtra(MainActivity.EXTRA_SHELL_KUBE_NODE, false), vm = vm,
     )
 }
 

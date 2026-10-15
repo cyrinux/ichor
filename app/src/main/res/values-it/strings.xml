@@ -4842,6 +4842,13 @@
     <string name="vm_disks">Dischi</string>
     <string name="vm_migration">Migrazione</string>
     <string name="vm_migration_nodes">Da %1$s a %2$s</string>
+    <string name="vm_console">Console</string>
+    <string name="vm_console_title">Console seriale</string>
+    <string name="vm_console_on">Console seriale di %1$s</string>
+    <string name="vm_console_intro">Apre la console seriale di %1$s, come virtctl console.</string>
+    <string name="vm_console_hint">Il guest deve inviare la sua console su ttyS0 (o hvc0) perché si veda qualcosa. Un solo utente alla volta: aprirla altrove disconnette questa.</string>
+    <string name="vm_console_connect">Connetti</string>
+    <string name="vm_console_start_first">Avvia prima la VM per aprirne la console.</string>
     <string name="vm_actions">Azioni</string>
     <string name="vm_confirm_title">%1$s %2$s?</string>
     <string name="vm_stop_text">Al guest viene chiesto di spegnersi, poi l’istanza viene eliminata dopo il periodo di tolleranza. La VM conserva i suoi dischi.</string>

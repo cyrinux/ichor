@@ -4841,6 +4841,13 @@
     <string name="vm_disks">Disques</string>
     <string name="vm_migration">Migration</string>
     <string name="vm_migration_nodes">De %1$s vers %2$s</string>
+    <string name="vm_console">Console</string>
+    <string name="vm_console_title">Console série</string>
+    <string name="vm_console_on">Console série de %1$s</string>
+    <string name="vm_console_intro">Ouvre la console série de %1$s, comme virtctl console.</string>
+    <string name="vm_console_hint">L’invité doit envoyer sa console sur ttyS0 (ou hvc0) pour que quelque chose s’affiche. Un seul spectateur à la fois : l’ouvrir ailleurs déconnecte celui-ci.</string>
+    <string name="vm_console_connect">Se connecter</string>
+    <string name="vm_console_start_first">Démarrez d’abord la VM pour ouvrir sa console.</string>
     <string name="vm_actions">Actions</string>
     <string name="vm_confirm_title">%1$s %2$s ?</string>
     <string name="vm_stop_text">L’invité est prié de s’éteindre, puis l’instance est supprimée après son délai de grâce. La VM garde ses disques.</string>

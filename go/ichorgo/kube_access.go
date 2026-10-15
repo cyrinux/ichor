@@ -147,6 +147,11 @@ var kubeActionChecks = map[string][]accessNeed{
 		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachineinstances", Subresource: "unpause"}, true},
 		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
 	},
+	// virtctl console: read the instance, then open its console WebSocket (a GET).
+	"vmConsole": {
+		{ssarAttributes{Verb: "get", Group: groupKubeVirtSub, Resource: "virtualmachineinstances", Subresource: "console"}, true},
+		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachineinstances"}, true},
+	},
 	"createVolumeSnapshot": {
 		{ssarAttributes{Verb: "create", Group: groupSnapshot, Resource: "volumesnapshots"}, true},
 		{ssarAttributes{Verb: "get", Resource: "persistentvolumeclaims"}, true},
@@ -208,7 +213,7 @@ type accessNeed struct {
 // fluxReconcileGitRepository, fluxReconcileOCIRepository, fluxReconcileHelmRepository,
 // fluxReconcileBucket), cordonNode, drainNode, cnpgPromote, createVolumeSnapshot,
 // veleroBackupNow, veleroDeleteBackup, veleroRestore, vmStart, vmStop, vmRestart,
-// vmMigrate, vmPause, vmUnpause. Answers are cached a few minutes.
+// vmMigrate, vmPause, vmUnpause, vmConsole. Answers are cached a few minutes.
 // kubeServer: see KubePods.
 func KubeActionAccess(configYAML, contextName, kubeServer, namespace string) (out string, err error) {
 	defer maskResult(&out, &err)

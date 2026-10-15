@@ -4833,6 +4833,13 @@
     <string name="vm_disks">Disks</string>
     <string name="vm_migration">Migration</string>
     <string name="vm_migration_nodes">Von %1$s nach %2$s</string>
+    <string name="vm_console">Konsole</string>
+    <string name="vm_console_title">Serielle Konsole</string>
+    <string name="vm_console_on">Serielle Konsole von %1$s</string>
+    <string name="vm_console_intro">Öffnet die serielle Konsole von %1$s, wie virtctl console.</string>
+    <string name="vm_console_hint">Der Gast muss seine Konsole auf ttyS0 (oder hvc0) ausgeben, damit etwas erscheint. Nur ein Betrachter gleichzeitig: Wird sie anderswo geöffnet, wird diese getrennt.</string>
+    <string name="vm_console_connect">Verbinden</string>
+    <string name="vm_console_start_first">Starten Sie zuerst die VM, um ihre Konsole zu öffnen.</string>
     <string name="vm_actions">Aktionen</string>
     <string name="vm_confirm_title">%1$s %2$s?</string>
     <string name="vm_stop_text">Der Gast wird zum Herunterfahren aufgefordert, dann wird die Instanz nach ihrer Gnadenfrist gelöscht. Die VM behält ihre Disks.</string>

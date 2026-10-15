@@ -5095,6 +5095,13 @@
     <string name="vm_disks">Диски</string>
     <string name="vm_migration">Міграція</string>
     <string name="vm_migration_nodes">З %1$s на %2$s</string>
+    <string name="vm_console">Консоль</string>
+    <string name="vm_console_title">Послідовна консоль</string>
+    <string name="vm_console_on">Послідовна консоль %1$s</string>
+    <string name="vm_console_intro">Відкриває послідовну консоль %1$s, як virtctl console.</string>
+    <string name="vm_console_hint">Гість має виводити консоль на ttyS0 (або hvc0), щоб щось з’явилося. Лише один глядач одночасно: відкриття деінде від’єднує цей.</string>
+    <string name="vm_console_connect">Підключитися</string>
+    <string name="vm_console_start_first">Спершу запустіть VM, щоб відкрити її консоль.</string>
     <string name="vm_actions">Дії</string>
     <string name="vm_confirm_title">%1$s %2$s?</string>
     <string name="vm_stop_text">Гостьову систему просять вимкнутися, потім екземпляр видаляється після пільгового періоду. ВМ зберігає свої диски.</string>

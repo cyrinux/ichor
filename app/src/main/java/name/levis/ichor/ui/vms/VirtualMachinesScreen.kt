@@ -92,6 +92,7 @@ private const val KUBEVIRT_SITE = "https://kubevirt.io"
 @Composable
 fun VirtualMachinesScreen(
     onBack: () -> Unit,
+    onConsole: (VirtualMachine) -> Unit,
     vm: VirtualMachinesViewModel = viewModel(factory = factory { VirtualMachinesViewModel(app.vmRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -109,7 +110,7 @@ fun VirtualMachinesScreen(
     val loaded = (state as? UiState.Loaded)?.data
 
     loaded?.vms?.firstOrNull { it.key == open }?.let {
-        VirtualMachineSheet(it, busy = it.key in busy, actions = vm.actions, onDismiss = { open = null })
+        VirtualMachineSheet(it, busy = it.key in busy, actions = vm.actions, onConsole = onConsole, onDismiss = { open = null })
     }
 
     Scaffold(

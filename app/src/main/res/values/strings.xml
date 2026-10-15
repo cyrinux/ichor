@@ -4844,6 +4844,13 @@
     <string name="vm_disks">Disks</string>
     <string name="vm_migration">Migration</string>
     <string name="vm_migration_nodes">From %1$s to %2$s</string>
+    <string name="vm_console">Console</string>
+    <string name="vm_console_title">Serial console</string>
+    <string name="vm_console_on">Serial console of %1$s</string>
+    <string name="vm_console_intro">Opens the serial console of %1$s, like virtctl console.</string>
+    <string name="vm_console_hint">The guest must send its console to ttyS0 (or hvc0) for anything to show. One viewer at a time: opening it elsewhere disconnects this one.</string>
+    <string name="vm_console_connect">Connect</string>
+    <string name="vm_console_start_first">Start the VM first to open its console.</string>
     <string name="vm_actions">Actions</string>
     <string name="vm_confirm_title">%1$s %2$s?</string>
     <string name="vm_stop_text">The guest is asked to shut down, then the instance is deleted after its grace period. The VM keeps its disks.</string>
