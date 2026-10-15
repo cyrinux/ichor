@@ -107,8 +107,9 @@ type checkupFinding struct {
 // (os:admin): failing pods and Jobs, Warning events, volumes filling up, deprecated APIs
 // still in use, admission webhooks without a backend, nodes out of room, load balancers
 // without an address, objects stuck in Terminating, pending certificate requests, external
-// secrets that do not sync, Helm releases that failed, and the scrape targets down and rules
-// failing in the first Prometheus discovered, as JSON (see checkupReport).
+// secrets that do not sync, sealed secrets that do not unseal, Helm releases that failed,
+// and the scrape targets down and rules failing in the first Prometheus discovered, as JSON
+// (see checkupReport).
 // It only reads. kubeServer: see KubePods.
 func KubeCheckup(configYAML, contextName, kubeServer string) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -228,7 +229,7 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 	section(checkLoadBalancers, func() { sections[8] = checkupLoadBalancers(ctx, k, in) }, 8)
 	section(checkTerminating, func() { sections[9] = checkupTerminating(ctx, k, in) }, 9)
 	section(checkCertificates, func() { sections[10] = checkupCSRs(ctx, k, in) }, 10)
-	section(checkSecrets, func() { sections[11] = checkupExternalSecrets(ctx, k, in) }, 11)
+	section(checkSecrets, func() { sections[11] = checkupSecrets(ctx, k, in) }, 11)
 	section(checkHelm, func() { sections[12], report.Releases = checkupHelm(ctx, k, in) }, 12)
 	section(checkMonitoring, func() { sections[13] = checkupMonitoring(ctx, k, in) }, 13)
 	wg.Wait()
@@ -247,6 +248,43 @@ func listObjects[T any](ctx context.Context, k *kubeClient, path string) ([]T, e
 	err := getList(ctx, k, path, &list)
 
 	return list.Items, err
+}
+
+// checkupPart is what one reader contributes to a section several fill (see checkupSecrets):
+// served says the cluster runs what it checks, and the rest is what newSection needs. A part
+// that is not served contributes nothing, so a section is absent only when none of its
+// readers is.
+type checkupPart struct {
+	served   bool
+	checked  int
+	findings []checkupFinding
+	errs     []error
+}
+
+// sectionFromParts closes a section from the readers that fill it, absent when none of them
+// is served.
+func sectionFromParts(id string, parts ...checkupPart) checkupSection {
+	served := false
+	checked := 0
+	findings := []checkupFinding{}
+	errs := []error{}
+
+	for _, p := range parts {
+		if !p.served {
+			continue
+		}
+
+		served = true
+		checked += p.checked
+		findings = append(findings, p.findings...)
+		errs = append(errs, p.errs...)
+	}
+
+	if !served {
+		return absentSection(id)
+	}
+
+	return newSection(id, checked, findings, errs...)
 }
 
 // newSection closes a section: findings worst first (in the order given otherwise), capped,
