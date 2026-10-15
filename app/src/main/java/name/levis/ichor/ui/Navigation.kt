@@ -303,6 +303,7 @@ fun Navigation(
                 onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
                 onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
                 onCrossplane = { nav.navigate(KubeBrowserRoutes.CROSSPLANE) },
+                onTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
                 onLoadBalancing = { nav.navigate(KubeBrowserRoutes.LOAD_BALANCING) },
                 onJobs = { nav.navigate(KubeBrowserRoutes.JOBS) },
                 onKubeEvents = { nav.navigate(Routes.KUBE_EVENTS) },
