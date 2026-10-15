@@ -11,6 +11,10 @@ import android.security.keystore.StrongBoxUnavailableException
 import name.levis.ichor.security.DekHolder
 import name.levis.ichor.security.SealedFile
 import name.levis.ichor.security.SecurityKeyRequiredException
+import name.levis.ichor.ui.LocalizedException
+import name.levis.ichor.ui.UiText
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import java.io.File
 import java.security.KeyStore
 import javax.crypto.KeyGenerator
@@ -56,6 +60,39 @@ class SecureStore(
             tmp.delete()
             throw IllegalStateException("Could not persist encrypted config")
         }
+    }
+
+    /**
+     * Makes sure the Keystore key answers before a write that must not fail halfway (an import,
+     * a restored backup). A secure element can drop its connection after days of uptime and
+     * refuse every call with UNKNOWN_ERROR until its service reconnects: the key is tried with
+     * a real wrap and unwrap, again after each of [delays] (ms). A new key goes to StrongBox
+     * when the chip answers in time, else to the TEE; an existing StrongBox key cannot move,
+     * so [KeystoreUnavailableException] says the chip does not answer.
+     */
+    suspend fun prepare(delays: List<Long> = CHIP_RETRY_DELAYS) {
+        if (existingKey() != null) {
+            try {
+                retrying(delays) { probe(storedKey()) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw KeystoreUnavailableException(e)
+            }
+            return
+        }
+        val strongBox = strongBoxAvailable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+        strongBoxOrTee(
+            strongBox = if (strongBox) ({ generate(strongBox = true).also(::probe) }) else null,
+            tee = { generate(strongBox = false).also(::probe) },
+            delays = delays,
+            // A StrongBox key left half made would be picked up by the next write.
+            discard = ::deleteKey,
+        )
+    }
+
+    private fun probe(key: SecretKey) {
+        EnvelopeFormat.decrypt(EnvelopeFormat.encrypt(PROBE, key), key)
     }
 
     fun read(): ByteArray? {
@@ -112,6 +149,10 @@ class SecureStore(
     fun clear() {
         file.delete()
         // Drop the key too, so a later import gets a fresh one at the best available level.
+        deleteKey()
+    }
+
+    private fun deleteKey() {
         KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }.deleteEntry(keyAlias)
     }
 
@@ -144,6 +185,9 @@ class SecureStore(
                 return generate(strongBox = true)
             } catch (_: StrongBoxUnavailableException) {
                 // Advertised but unusable (busy or unsupported parameters): use the TEE.
+            } catch (_: java.security.ProviderException) {
+                // The chip refused (UNKNOWN_ERROR while its connection is down): use the TEE.
+                deleteKey()
             }
         }
         return generate(strongBox = false)
@@ -165,6 +209,46 @@ class SecureStore(
 
     private companion object {
         const val ANDROID_KEYSTORE = "AndroidKeyStore"
+        val PROBE = "ichor".encodeToByteArray()
+    }
+}
+
+/** How long to wait before each new try of the secure element, in ms: its service reconnects in seconds. */
+private val CHIP_RETRY_DELAYS = listOf(250L, 1000L, 3000L)
+
+/**
+ * A new key from [strongBox], tried again after each of [delays] (ms), else from [tee]; null
+ * [strongBox] (no chip) goes to [tee] at once. [discard] runs before the fallback, to drop what
+ * a failed try may have left. A failure of [tee] is thrown with the StrongBox one suppressed.
+ */
+internal suspend fun <K> strongBoxOrTee(
+    strongBox: (() -> K)?,
+    tee: () -> K,
+    delays: List<Long>,
+    pause: suspend (Long) -> Unit = { delay(it) },
+    discard: () -> Unit = {},
+): K {
+    if (strongBox == null) return tee()
+    val chipFailure = try {
+        return retrying(delays, pause, retryOn = { it !is StrongBoxUnavailableException }) { strongBox() }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        e
+    }
+    runCatching(discard)
+    return try {
+        tee()
+    } catch (e: Exception) {
+        e.addSuppressed(chipFailure)
+        throw e
+    }
+}
+
+/** The Keystore key of the stored config does not answer, even after a few tries. */
+class KeystoreUnavailableException(cause: Exception) : LocalizedException(UiText.Res(R.string.keystore_unavailable)) {
+    init {
+        initCause(cause)
     }
 }
 

@@ -1,0 +1,9 @@
+{
+  "items": [
+    {
+      "metadata": {"name": "gw", "namespace": "gateway-system"},
+      "spec": {"gatewayClassName": "kgateway", "listeners": [{"name": "http", "port": 80, "protocol": "HTTP"}]},
+      "status": {"addresses": [{"value": "203.0.113.30"}]}
+    }
+  ]
+}

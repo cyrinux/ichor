@@ -259,7 +259,7 @@ func demoDataServices(now time.Time) dataServices {
 	}
 
 	snapshots := demoVolumeSnapshots(now)
-	return dataServices{SealedSecrets: demoSealedSecrets(now), Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, KubeGreen: demoKubeGreen(now), Ceph: ceph, CastAI: demoCastAI(now)}
+	return dataServices{SealedSecrets: demoSealedSecrets(now), Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, ExternalDNS: demoExternalDNS(now), KubeGreen: demoKubeGreen(now), Ceph: ceph, CastAI: demoCastAI(now)}
 }
 
 // demoKubeGreen is the demo cluster's sleep schedules, built through the real mapping so
@@ -444,6 +444,45 @@ func demoGarageBlockReport() garageBlockReport {
 			{ID: "9c2f61a0d4e8b7c3", Hostname: "garage-2xv9p", Error: "Network error: Not connected: 9c2f61a0d4e8b7c3", Blocks: []garageBlock{}},
 		},
 	}
+}
+
+// demoExternalDNS is the demo cluster's ExternalDNS: one controller (cloudflare, sync,
+// owner id homelab, example.com only) and six records across the four source kinds, among
+// them a DNSEndpoint whose newer generation is not observed yet, an Ingress without an
+// address to point at and a name outside every domain filter.
+func demoExternalDNS(now time.Time) *externalDNSStatus {
+	controller := externalDNSController{
+		Namespace: "external-dns", Name: "external-dns", Ready: true, Replicas: 1, ReadyReplicas: 1,
+		Provider: "cloudflare", Policy: "sync", Registry: "txt", OwnerID: "homelab",
+		DomainFilters: []string{"example.com"}, Sources: []string{"ingress", "service", "gateway-httproute", "crd"},
+		IntervalSeconds: 60, Health: healthOK, Reasons: []string{},
+	}
+
+	record := func(dnsName string, targets []string, ttl int, kind, namespace, name, group, version, resource, controller string, reasons ...string) externalDNSRecord {
+		health := healthOK
+		if len(reasons) > 0 {
+			health = healthWarning
+		}
+
+		return externalDNSRecord{
+			DNSName: dnsName, RecordType: extDNSRecordType(targets), Targets: targets, TTL: ttl,
+			SourceKind: kind, SourceNamespace: namespace, SourceName: name,
+			SourceGroup: group, SourceVersion: version, SourceResource: resource,
+			Controller: controller, Health: health, Reasons: reasons,
+		}
+	}
+
+	out := &externalDNSStatus{Version: "v1alpha1", Controllers: []externalDNSController{controller}, Records: []externalDNSRecord{
+		record("app.example.com", []string{"203.0.113.10"}, 300, "Ingress", "demo", "app", "networking.k8s.io", "v1", "ingresses", "external-dns"),
+		record("shop.example.com", []string{"203.0.113.20"}, 60, "Service", "demo", "shop", "", "v1", "services", "external-dns"),
+		record("api.example.com", []string{"203.0.113.30"}, 300, "HTTPRoute", "demo", "api", groupGatewayAPI, "v1", "httproutes", "external-dns"),
+		record("db.example.com", []string{"203.0.113.40"}, 300, "DNSEndpoint", "demo", "db", groupExternalDNS, "v1alpha1", "dnsendpoints", "external-dns", extDNSReasonStale),
+		record("status.example.com", nil, 0, "Ingress", "demo", "status", "networking.k8s.io", "v1", "ingresses", "external-dns", extDNSReasonNoTarget),
+		record("*.example.org", []string{"203.0.113.50"}, 300, "Ingress", "demo", "legacy", "networking.k8s.io", "v1", "ingresses", "", extDNSReasonUnmanaged),
+	}}
+	out.RecordCount = len(out.Records)
+
+	return out
 }
 
 // demoSealedSecrets exposes names and status only, just like the live reader.

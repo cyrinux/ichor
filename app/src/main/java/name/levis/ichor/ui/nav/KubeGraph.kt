@@ -187,9 +187,9 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
         name.levis.ichor.ui.dataservices.DataServicesScreen(
             initial = kind,
             onBack = { nav.popBackStack() },
+            onObject = kubeLinks.onObject,
             onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
             onRequestIntegration = { nav.navigate(Routes.INTEGRATIONS) },
-            onObject = { nav.navigate(KubeBrowserRoutes.obj(it)) },
         )
     }
 }

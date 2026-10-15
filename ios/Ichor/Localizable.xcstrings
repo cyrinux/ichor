@@ -136172,6 +136172,822 @@
           }
         }
       }
+    },
+    "No ExternalDNS controllers or records." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun contrôleur ni enregistrement ExternalDNS."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún controlador ni registro de ExternalDNS."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає контролерів чи записів ExternalDNS."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine ExternalDNS-Controller oder Einträge."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun controller o record ExternalDNS."
+          }
+        }
+      }
+    },
+    "dry-run" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run"
+          }
+        }
+      }
+    },
+    "ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "prêt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "listo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "готовий"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bereit"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pronto"
+          }
+        }
+      }
+    },
+    "Owner id" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID de propriétaire"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID de propietario"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор власника"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Owner-ID"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID proprietario"
+          }
+        }
+      }
+    },
+    "Domain filters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtres de domaine"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtros de dominio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтри доменів"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domain-Filter"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtri di dominio"
+          }
+        }
+      }
+    },
+    "TXT prefix/suffix" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préfixe/suffixe TXT"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prefijo/sufijo TXT"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Префікс/суфікс TXT"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TXT-Präfix/-Suffix"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prefisso/suffisso TXT"
+          }
+        }
+      }
+    },
+    "Annotation filter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtre d’annotation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtro de anotación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтр анотацій"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annotation-Filter"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtro di annotazione"
+          }
+        }
+      }
+    },
+    "no replica ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aucun réplica prêt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ninguna réplica lista"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "жодна репліка не готова"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kein Replikat bereit"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nessuna replica pronta"
+          }
+        }
+      }
+    },
+    "dry-run: it changes nothing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run : il ne change rien"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run: no cambia nada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run: нічого не змінює"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dry-Run: er ändert nichts"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run: non cambia nulla"
+          }
+        }
+      }
+    },
+    "a newer version is not observed yet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "une version plus récente n’est pas encore observée"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "todavía no se ha observado una versión más reciente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "новішу версію ще не спостережено"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eine neuere Version wurde noch nicht beobachtet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "una versione più recente non è ancora stata osservata"
+          }
+        }
+      }
+    },
+    "no address to point at yet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aucune adresse à viser pour l’instant"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "todavía no hay una dirección a la que apuntar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ще немає адреси, на яку вказувати"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "noch keine Zieladresse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ancora nessun indirizzo a cui puntare"
+          }
+        }
+      }
+    },
+    "outside every controller's domain filters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hors des filtres de domaine de tous les contrôleurs"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fuera de los filtros de dominio de todos los controladores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "поза фільтрами доменів усіх контролерів"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "außerhalb der Domain-Filter aller Controller"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fuori dai filtri di dominio di tutti i controller"
+          }
+        }
+      }
+    },
+    "Showing the first %lld of %lld hostnames." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Showing the first %1$lld of %2$lld hostnames."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Affichage des %1$lld premiers des %2$lld noms d’hôte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrando los primeros %1$lld de %2$lld nombres de host."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показано перші %1$lld з %2$lld імен хостів."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die ersten %1$lld von %2$lld Hostnamen werden angezeigt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrati i primi %1$lld di %2$lld nomi host."
+          }
+        }
+      }
+    },
+    "from %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "de %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "de %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "з %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "von %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "da %@"
+          }
+        }
+      }
+    },
+    "by %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "par %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "por %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "через %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "durch %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "da %@"
+          }
+        }
+      }
+    },
+    "%lld hostnames" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld noms d’hôte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld nombres de host"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld імен хостів"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Hostnamen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld nomi host"
+          }
+        }
+      }
+    },
+    "Crossplane" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } }
+      }
+    },
+    "Definitions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Définitions" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Definiciones" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Визначення" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Definitionen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Definizioni" } }
+      }
+    },
+    "Some sections could not be read: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Certaines sections n'ont pas pu être lues : %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudieron leer algunas secciones: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Деякі розділи не вдалося прочитати: %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einige Abschnitte konnten nicht gelesen werden: %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Alcune sezioni non sono state lette: %@" } }
+      }
+    },
+    "Crossplane is installed but defines nothing yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane est installé mais ne définit encore rien." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane está instalado pero aún no define nada." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane встановлено, але він ще нічого не визначає." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane ist installiert, definiert aber noch nichts." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane è installato ma non definisce ancora nulla." } }
+      }
+    },
+    "Search kind, name or external name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rechercher un type, un nom ou un nom externe" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscar tipo, nombre o nombre externo" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Шукати вид, назву чи зовнішню назву" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nach Kind, Name oder externem Namen suchen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cerca kind, nome o nome esterno" } }
+      }
+    },
+    "Providers & packages" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Fournisseurs & paquets" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Proveedores y paquetes" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Провайдери та пакети" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Provider & Pakete" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Provider e pacchetti" } }
+      }
+    },
+    "Composite resources & claims" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ressources composées & claims" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Recursos compuestos y claims" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Складені ресурси та claims" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zusammengesetzte Ressourcen & Claims" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Risorse composite e claim" } }
+      }
+    },
+    "Managed resources" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ressources gérées" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Recursos gestionados" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Керовані ресурси" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verwaltete Ressourcen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Risorse gestite" } }
+      }
+    },
+    "%lld critical" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld critique" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld crítico" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld критичних" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld kritisch" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld critico" } }
+      }
+    },
+    "%lld warning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld avertissement" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld aviso" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld попереджень" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Warnung" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld avviso" } }
+      }
+    },
+    "%lld ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } }
+      }
+    },
+    "%lld of %lld managed resources listed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld ressources gérées listées sur %lld" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld de %lld recursos gestionados listados" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Показано %lld з %lld керованих ресурсів" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld von %lld verwalteten Ressourcen gelistet" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld di %lld risorse gestite elencate" } }
+      }
+    },
+    "Long list: healthy managed resources past the first 500 are left out; the search looks at the ones listed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Liste longue : les ressources gérées saines au-delà des 500 premières sont omises ; la recherche ne porte que sur celles listées." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Lista larga: los recursos gestionados sanos pasados de los primeros 500 se omiten; la búsqueda solo mira los listados." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Довгий список: здорові керовані ресурси після перших 500 пропущено; пошук охоплює лише показані." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lange Liste: gesunde verwaltete Ressourcen über die ersten 500 hinaus fehlen; die Suche sieht nur die gelisteten an." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Elenco lungo: le risorse gestite sane oltre le prime 500 sono omesse; la ricerca guarda solo quelle elencate." } }
+      }
+    },
+    "claim kind %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "type de claim %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "tipo de claim %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "вид claim %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Claim-Art %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "tipo di claim %@" } }
+      }
+    },
+    "%lld compositions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld compositions" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld composiciones" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld композицій" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Compositionen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld composition" } }
+      }
+    },
+    "%lld composites" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld composites" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld composites" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld composites" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Composites" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld composite" } }
+      }
+    },
+    "composition %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "composition %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "composición %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "композиція %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Composition %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "composition %@" } }
+      }
+    },
+    "%lld resources" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld ressources" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld recursos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld ресурсів" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Ressourcen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld risorse" } }
+      }
+    },
+    "claim %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "claim %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "claim %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "claim %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Claim %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "claim %@" } }
+      }
+    },
+    "composite %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "composite %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "composite %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "composite %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Composite %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "composite %@" } }
+      }
+    },
+    "provider config %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "config fournisseur %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "config del proveedor %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "конфіг провайдера %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Provider-Config %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "config provider %@" } }
+      }
+    },
+    "external name %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "nom externe %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "nombre externo %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "зовнішня назва %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "externer Name %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "nome esterno %@" } }
+      }
+    },
+    "Cannot sync" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Impossible de synchroniser" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No puede sincronizar" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не може синхронізуватися" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kann nicht synchronisieren" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impossibile sincronizzare" } }
+      }
+    },
+    "Provider unhealthy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Fournisseur en mauvais état" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Proveedor en mal estado" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Провайдер несправний" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Provider ungesund" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Provider in cattivo stato" } }
+      }
+    },
+    "Definition not established" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Définition pas établie" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Definición no establecida" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Визначення не встановлено" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Definition nicht etabliert" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Definizione non stabilita" } }
+      }
     }
   },
   "version" : "1.0"

@@ -13,6 +13,7 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let percona: PerconaStatus?
     public let certManager: CertManagerStatus?
     public let velero: VeleroStatus?
+    public let externalDns: ExternalDnsStatus?
     public let kubeGreen: KubeGreenStatus?
     public let ceph: CephStatus?
     public let snapshots: VolumeSnapshots?
@@ -21,7 +22,7 @@ public struct DataServices: Decodable, Equatable, Sendable {
 
     public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil, dragonfly: DragonflyStatus? = nil,
                 mariadb: MariaDbStatus? = nil, percona: PerconaStatus? = nil, certManager: CertManagerStatus? = nil,
-                velero: VeleroStatus? = nil, kubeGreen: KubeGreenStatus? = nil, ceph: CephStatus? = nil,
+                velero: VeleroStatus? = nil, externalDns: ExternalDnsStatus? = nil, kubeGreen: KubeGreenStatus? = nil, ceph: CephStatus? = nil,
                 castai: CastAIStatus? = nil, snapshots: VolumeSnapshots? = nil, backupJobs: BackupJobStatus? = nil) {
         self.longhorn = longhorn
         self.garage = garage
@@ -31,6 +32,7 @@ public struct DataServices: Decodable, Equatable, Sendable {
         self.percona = percona
         self.certManager = certManager
         self.velero = velero
+        self.externalDns = externalDns
         self.kubeGreen = kubeGreen
         self.ceph = ceph
         self.snapshots = snapshots
@@ -99,6 +101,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     case percona = "percona-xtradb"
     case certManager = "cert-manager"
     case velero = "velero"
+    case externalDns = "external-dns"
     case ceph = "rook"
     case snapshots = "kubernetes-csi"
     case backupJobs = "backup-cronjobs"
@@ -119,6 +122,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
         case .percona: "Percona XtraDB Cluster"
         case .certManager: "cert-manager"
         case .velero: "Velero"
+        case .externalDns: "ExternalDNS"
         case .ceph: "Rook Ceph"
         case .snapshots: "CSI VolumeSnapshots"
         case .backupJobs: "Backup CronJobs"
@@ -175,7 +179,7 @@ public extension DataServices {
     var detected: [DataServiceKind] {
         [longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil,
          dragonfly != nil ? .dragonfly : nil, mariadb != nil ? .mariadb : nil, percona != nil ? .percona : nil,
-         certManager != nil ? .certManager : nil, velero != nil ? .velero : nil,
+         certManager != nil ? .certManager : nil, velero != nil ? .velero : nil, externalDns != nil ? .externalDns : nil,
          ceph != nil ? .ceph : nil, castai != nil ? .castai : nil, snapshots != nil ? .snapshots : nil, backupJobs != nil ? .backupJobs : nil,
          kubeGreen != nil ? .kubeGreen : nil].compactMap { $0 }
     }
@@ -223,6 +227,13 @@ public extension DataServices {
             if !v.error.isEmpty && v.schedules.isEmpty && v.locations.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: v.error) }
             let healths = v.schedules.map(\.health) + v.locations.map(\.health) + v.adhoc.map(\.health)
             return ServiceSummary(total: v.schedules.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: v.error)
+        case .externalDns:
+            // The records are the items; a controller with no ready replica (or a dry-run one)
+            // needs a look as much as a record without a target or outside every domain filter.
+            guard let e = externalDns else { return nil }
+            if !e.error.isEmpty && e.controllers.isEmpty && e.records.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: e.error) }
+            let healths = e.controllers.map(\.health) + e.records.map(\.health)
+            return ServiceSummary(total: e.recordCount, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: e.error)
         case .ceph:
             guard let c = ceph else { return nil }
             if !c.error.isEmpty && c.clusters.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: c.error) }

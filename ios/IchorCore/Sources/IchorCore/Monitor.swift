@@ -393,6 +393,10 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     for l in services.velero?.locations ?? [] where l.health == .critical {
         out["velero|BackupStorageLocation/\(l.label)"] = dataCritical
     }
+    // A controller that cannot run publishes nothing: critical like a down storage location.
+    for c in services.externalDns?.controllers ?? [] where c.health == .critical {
+        out["externaldns|\(c.label)"] = dataCritical
+    }
     // A mon down or a reconcile in progress shows in Ceph's health anyway.
     let cephAlerting: Set<CephReason> = [.healthWarn, .nearFull, .osds]
     for c in services.ceph?.clusters ?? [] {
@@ -426,6 +430,7 @@ public func dataSystemTitle(_ key: String) -> String {
     case "percona": "Percona XtraDB Cluster"
     case "certmanager": "cert-manager"
     case "velero": "Velero"
+    case "externaldns": "ExternalDNS"
     case "ceph": "Rook Ceph"
     case "snapshots": "CSI VolumeSnapshots"
     case "backupjobs": "Backup CronJobs"

@@ -67,9 +67,9 @@ import name.levis.ichor.ui.components.pageContent
 fun DataServicesScreen(
     initial: DataServiceKind? = null,
     onBack: () -> Unit,
+    onObject: (KubeObjectRef) -> Unit,
     onSupportedIntegrations: () -> Unit,
     onRequestIntegration: () -> Unit,
-    onObject: (KubeObjectRef) -> Unit = {},
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val vm: DataServicesViewModel = viewModel(factory = factory { DataServicesViewModel(app.dataServicesRepository) })
@@ -134,7 +134,7 @@ fun DataServicesScreen(
                 else app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
             }
             if (data.detected.isEmpty()) NoDataServices(onSupportedIntegrations, onRequestIntegration)
-            else Systems(data, downNodes, initial, vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero, onObject)
+            else Systems(data, downNodes, initial, onObject, vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero)
         }
     }
 }
@@ -155,7 +155,7 @@ private fun NoDataServices(onSupportedIntegrations: () -> Unit, onRequestIntegra
 }
 
 @Composable
-private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions, cnpg: CnpgActions, velero: VeleroActions, onObject: (KubeObjectRef) -> Unit) {
+private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, onObject: (KubeObjectRef) -> Unit, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions, cnpg: CnpgActions, velero: VeleroActions) {
     val kinds = services.detected
     // Picked once: a system detected later, before it in the list, doesn't take its place.
     var selected by rememberSaveable { mutableStateOf(initial ?: kinds.first()) }
@@ -182,6 +182,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
                 DataServiceKind.PERCONA -> PerconaTab(services.percona!!)
                 DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!, certificates)
                 DataServiceKind.VELERO -> VeleroTab(services.velero!!, velero)
+                DataServiceKind.EXTERNAL_DNS -> ExternalDnsTab(services.externalDns!!, onObject)
                 DataServiceKind.CEPH -> CephTab(services.ceph!!)
                 DataServiceKind.SNAPSHOTS -> SnapshotsTab(services.snapshots!!)
                 DataServiceKind.BACKUP_JOBS -> BackupJobsTab(services.backupJobs!!)
