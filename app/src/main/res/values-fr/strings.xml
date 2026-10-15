@@ -2326,6 +2326,18 @@
         <item quantity="one">Affichage des %1$d premiers des %2$d noms d\'hôte.</item>
         <item quantity="other">Affichage des %1$d premiers des %2$d noms d\'hôte.</item>
     </plurals>
+    <string name="externaldns_check_names">Vérifier les noms</string>
+    <string name="externaldns_check_hint">Résout chaque nom d\'hôte depuis ce téléphone et le compare aux cibles de l\'enregistrement. Les noms partent vers votre résolveur DNS.</string>
+    <string name="externaldns_check_match">Résout ici</string>
+    <string name="externaldns_check_mismatch">Pointe ailleurs</string>
+    <string name="externaldns_check_missing">Introuvable</string>
+    <string name="externaldns_check_error">Vérification impossible</string>
+    <string name="externaldns_check_owner_other">appartient à %1$s</string>
+    <string name="externaldns_check_mismatch_hint">Un nom qui pointe ailleurs peut être du DNS split-horizon à la maison, un changement encore en propagation, ou un autre ExternalDNS qui le possède.</string>
+    <plurals name="externaldns_check_summary">
+        <item quantity="one">%1$d nom sur %2$d pointe vers ce cluster</item>
+        <item quantity="other">%1$d noms sur %2$d pointent vers ce cluster</item>
+    </plurals>
     <string name="sealedsecrets_empty">Aucun SealedSecret.</string>
     <string name="sealedsecrets_no_controller">Aucun contrôleur trouvé</string>
     <string name="sealedsecrets_ready">prêt</string>

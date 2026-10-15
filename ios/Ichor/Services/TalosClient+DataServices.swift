@@ -160,4 +160,20 @@ extension TalosClient {
             IchorgoKubeVeleroRestore(config, context, kubeServer, namespace, backup, json, error)
         }
     }
+
+    /// What the phone's own resolver answers for `records` (see DnsCheck): whether each hostname
+    /// resolves, whether an answer is one of its targets, and who the ExternalDNS TXT registry
+    /// record names. No cluster call: the records come from the app, the answers from the device.
+    /// `controllers` give each record's owner id and TXT prefix; `demo` answers locally like the
+    /// built-in cluster, never dialling.
+    static func dnsCheck(_ records: [ExternalDnsRecord], controllers: [ExternalDnsController], demo: Bool) async throws -> DnsCheckResult {
+        let owners = controllers.reduce(into: [String: ExternalDnsController]()) { $0[$1.name] = $1 }
+        let requests = records.map { record in
+            let controller = owners[record.controller]
+            return DnsCheckRequest(dnsName: record.dnsName, recordType: record.recordType, targets: record.targets,
+                                   ownerId: controller?.ownerId ?? "", txtPrefix: controller?.txtPrefix ?? "")
+        }
+        let json = try TalosJSON.encode(requests)
+        return try await Self.json { demo ? IchorgoDemoDNSCheck(json, $0) : IchorgoDNSCheck(json, 0, $0) }
+    }
 }

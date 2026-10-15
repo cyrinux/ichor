@@ -35,6 +35,9 @@ class DataServicesViewModel(private val dataServices: DataServicesRepository) : 
     /** Velero backups now and deletions; the schedule's progress shows in a fresh reading. */
     val velero = VeleroActions(viewModelScope, dataServices, onChanged = { refresh() })
 
+    /** The DNS check of the ExternalDNS records; the verdicts stay until the next check. */
+    val externalDns = ExternalDnsActions(viewModelScope, dataServices)
+
     /** Catalog ids from the inventory; "" checks everything (Garage needs a listing of every pod then). */
     private var hints = ""
     private var source: Any? = null
