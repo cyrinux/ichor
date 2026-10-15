@@ -206,14 +206,22 @@ fun CheckupReport.count(level: CheckupSeverity): Int = sections.sumOf { s -> s.f
 val CheckupRelease.inTrouble: Boolean get() = status == "failed" || status.startsWith("pending-")
 
 /**
+ * Checkup finding kinds whose problem the data services alert already raises (monitor
+ * dataIssuesOf): shown on the checkup screen, never notified a second time. A SealedSecret that
+ * failed to unseal and no active sealing key alert from the Sealed Secrets section.
+ */
+val DATA_SERVICE_ALERTED_KINDS = setOf("sealedSecretNotSynced", "sealingKeyMissing")
+
+/**
  * The findings worth a background alert, keyed "section|kind|subject" and valued by severity
- * ("critical" or "warning"): everything but the notes and the events, which only describe.
+ * ("critical" or "warning"): everything but the notes and the events, which only describe, and
+ * the kinds the data services already alert on ([DATA_SERVICE_ALERTED_KINDS]).
  */
 fun CheckupReport.alertIssues(): Map<String, String> = buildMap {
     sections.forEach { section ->
         if (section.id == CheckupSectionId.EVENTS) return@forEach
         section.findings.forEach { f ->
-            if (f.level != CheckupSeverity.INFO) put("${section.id}|${f.kind}|${f.subject}", f.severity)
+            if (f.level != CheckupSeverity.INFO && f.kind !in DATA_SERVICE_ALERTED_KINDS) put("${section.id}|${f.kind}|${f.subject}", f.severity)
         }
     }
 }

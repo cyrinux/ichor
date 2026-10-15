@@ -183,6 +183,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
                 DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!, certificates)
                 DataServiceKind.VELERO -> VeleroTab(services.velero!!, velero)
                 DataServiceKind.EXTERNAL_DNS -> ExternalDnsTab(services.externalDns!!, onObject)
+                DataServiceKind.SEALED_SECRETS -> SealedSecretsTab(services.sealedSecrets!!, onObject)
                 DataServiceKind.CEPH -> CephTab(services.ceph!!)
                 DataServiceKind.SNAPSHOTS -> SnapshotsTab(services.snapshots!!)
                 DataServiceKind.BACKUP_JOBS -> BackupJobsTab(services.backupJobs!!)
