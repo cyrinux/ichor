@@ -63,6 +63,24 @@ var dataCommands = []command{
 	{name: "vms", args: "[NAMESPACE]", run: func(e env) (string, error) {
 		return ichorgo.KubeVirtualMachines(e.cfg, e.context, e.kubeServer, flag.Arg(1))
 	}},
+	{name: "vm-action", args: "NAMESPACE NAME ACTION", run: func(e env) (string, error) {
+		// vm-action NAMESPACE NAME ACTION: start, stop, restart, migrate, pause or unpause.
+		return ichorgo.KubeVMAction(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+	}},
+	{name: "vm-stop-force", args: "NAMESPACE NAME [GRACE_SECONDS]", run: func(e env) (string, error) {
+		// vm-stop-force NAMESPACE NAME [GRACE_SECONDS]: the forced stop, 0 by default.
+		grace := 0
+		if flag.Arg(3) != "" {
+			parsed, err := strconv.Atoi(flag.Arg(3))
+			if err != nil {
+				return "", err
+			}
+
+			grace = parsed
+		}
+
+		return ichorgo.KubeVMStop(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), grace)
+	}},
 	{name: "crossplane", args: "", run: func(e env) (out string, err error) {
 		return ichorgo.KubeCrossplane(e.cfg, e.context, e.kubeServer)
 	}},
