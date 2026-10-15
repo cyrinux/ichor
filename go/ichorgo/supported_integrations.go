@@ -73,6 +73,8 @@ var integrationSpecs = []integrationSpec{
 	// KubeVirt VMs, the CDI DataVolumes that fill their disks, Harvester (which runs both) and
 	// the group KubeVirt's start, stop, restart, migrate, pause and unpause live under.
 	{ID: "kubevirt", Name: "KubeVirt", Website: "https://kubevirt.io", Groups: []string{groupKubeVirt, groupCDI, groupHarvester, groupKubeVirtSub}},
+	// The Tailscale operator's Connectors, ProxyGroups, ProxyClasses and DNSConfig.
+	{ID: "tailscale", Name: "Tailscale", Website: "https://tailscale.com/kb/1236/kubernetes-operator", Groups: []string{groupTailscale}, Resource: "connectors"},
 	{ID: "kubernetes-csi", Name: "CSI VolumeSnapshots", Website: "https://kubernetes.io/docs/concepts/storage/volume-snapshots/", Groups: []string{groupSnapshot}, Resource: "volumesnapshots"},
 }
 
