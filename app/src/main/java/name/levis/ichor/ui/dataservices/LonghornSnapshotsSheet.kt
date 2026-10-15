@@ -33,6 +33,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -131,7 +132,9 @@ fun LonghornSnapshotsSheet(volume: LonghornVolume, actions: LonghornActions, onD
     deleting?.let { s ->
         ConfirmDialog(
             title = stringResource(R.string.longhorn_snapshot_delete_title),
-            text = stringResource(R.string.longhorn_snapshot_delete_text, s.name, volume.label),
+            text = stringResource(R.string.longhorn_snapshot_delete_text, s.name, volume.label) +
+                // Whether a VolumeSnapshot keeps it could not be read.
+                if (!volume.volumeSnapshotsKnown && s.userCreated) "\n\n" + stringResource(R.string.longhorn_snapshot_delete_csi_unknown) else "",
             confirm = stringResource(R.string.longhorn_snapshot_delete),
             onConfirm = {
                 deleting = null
@@ -296,6 +299,9 @@ private fun SnapshotRow(s: LonghornSnapshot, busy: Boolean, enabled: Boolean, on
                 }
                 if (!s.ready) StatusPill(stringResource(R.string.longhorn_snapshot_not_ready), colors.warn)
             }
+            if (s.volumeSnapshot.isNotEmpty()) {
+                StatusPill(stringResource(R.string.longhorn_snapshot_csi, s.volumeSnapshot), MaterialTheme.colorScheme.primary)
+            }
             if (s.error.isNotEmpty()) Text(s.error, style = MaterialTheme.typography.labelSmall, color = colors.bad)
         }
         SnapshotMenu(s, busy, enabled, onBackup, onDelete)
@@ -320,9 +326,17 @@ private fun SnapshotMenu(s: LonghornSnapshot, busy: Boolean, enabled: Boolean, o
                     onClick = { open = false; onBackup() },
                 )
             }
+            // A VolumeSnapshot's data: deleting it here would leave that one unrestorable.
+            val kept = s.volumeSnapshot.isNotEmpty()
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.longhorn_snapshot_delete), color = LocalStatusColors.current.bad) },
-                leadingIcon = { Icon(Icons.Outlined.Delete, null, tint = LocalStatusColors.current.bad) },
+                text = {
+                    Column {
+                        Text(stringResource(R.string.longhorn_snapshot_delete), color = if (kept) Color.Unspecified else LocalStatusColors.current.bad)
+                        if (kept) MutedText(stringResource(R.string.longhorn_snapshot_delete_csi, s.volumeSnapshot))
+                    }
+                },
+                leadingIcon = { Icon(Icons.Outlined.Delete, null, tint = if (kept) LocalContentColor.current else LocalStatusColors.current.bad) },
+                enabled = !kept,
                 onClick = { open = false; onDelete() },
             )
         }

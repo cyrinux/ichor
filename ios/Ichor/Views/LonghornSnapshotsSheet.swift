@@ -114,7 +114,13 @@ struct LonghornSnapshotsSheet: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: { snapshot in
-                Text("Snapshot \(snapshot.name) of \(volume.label) is deleted and its space given back. Backups taken from it stay.")
+                let text = String(localized: "Snapshot \(snapshot.name) of \(volume.label) is deleted and its space given back. Backups taken from it stay.")
+                // Whether a VolumeSnapshot keeps it could not be read.
+                if !volume.volumeSnapshotsKnown && snapshot.userCreated {
+                    Text(verbatim: text + "\n\n" + String(localized: "Your account cannot read the VolumeSnapshots: if one was taken from this snapshot, it could no longer be restored. Check with kubectl get volumesnapshots -A first."))
+                } else {
+                    Text(verbatim: text)
+                }
             }
             .messageAlert($resultMessage)
         }
@@ -170,7 +176,9 @@ struct LonghornSnapshotsSheet: View {
         return LonghornSnapshotRow(snapshot: snapshot, busy: busy)
             .swipeActions(edge: .trailing) {
                 if canAct && !busy {
-                    Button(role: .destructive) { confirmDelete = snapshot } label: { Label("Delete", systemImage: "trash") }
+                    if snapshot.volumeSnapshot.isEmpty {
+                        Button(role: .destructive) { confirmDelete = snapshot } label: { Label("Delete", systemImage: "trash") }
+                    }
                     if !snapshot.backedUp && snapshot.ready {
                         Button { Task { await run(.backup, snapshot: snapshot.name) } } label: { Label("Back up", systemImage: "icloud.and.arrow.up") }
                             .tint(.accentColor)
@@ -182,7 +190,12 @@ struct LonghornSnapshotsSheet: View {
                     if !snapshot.backedUp && snapshot.ready {
                         Button { Task { await run(.backup, snapshot: snapshot.name) } } label: { Label("Back up", systemImage: "icloud.and.arrow.up") }
                     }
-                    Button(role: .destructive) { confirmDelete = snapshot } label: { Label("Delete", systemImage: "trash") }
+                    if snapshot.volumeSnapshot.isEmpty {
+                        Button(role: .destructive) { confirmDelete = snapshot } label: { Label("Delete", systemImage: "trash") }
+                    } else {
+                        // Its VolumeSnapshot would be left unrestorable.
+                        Text("It keeps the VolumeSnapshot \(snapshot.volumeSnapshot): delete that one instead.")
+                    }
                 }
             }
     }
@@ -292,6 +305,9 @@ private struct LonghornSnapshotRow: View {
                         StatusPill(label: String(localized: "local only"), color: .secondary)
                     }
                     if !snapshot.ready { StatusPill(label: String(localized: "not ready"), color: .statusWarn) }
+                }
+                if !snapshot.volumeSnapshot.isEmpty {
+                    StatusPill(label: String(localized: "VolumeSnapshot \(snapshot.volumeSnapshot)"), color: .accentColor)
                 }
                 if !snapshot.error.isEmpty {
                     Text(verbatim: snapshot.error).font(.caption).foregroundStyle(.statusBad)

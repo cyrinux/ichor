@@ -1,6 +1,111 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "VolumeSnapshot %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VolumeSnapshot %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VolumeSnapshot %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VolumeSnapshot %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VolumeSnapshot %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VolumeSnapshot %@"
+          }
+        }
+      }
+    },
+    "It keeps the VolumeSnapshot %@: delete that one instead." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il porte le VolumeSnapshot %@ : supprimez plutôt celui-ci."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contiene el VolumeSnapshot %@: elimina ese en su lugar."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er enthält den VolumeSnapshot %@: löschen Sie stattdessen diesen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contiene il VolumeSnapshot %@: elimina quello invece."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Він зберігає VolumeSnapshot %@: видаліть натомість його."
+          }
+        }
+      }
+    },
+    "Your account cannot read the VolumeSnapshots: if one was taken from this snapshot, it could no longer be restored. Check with kubectl get volumesnapshots -A first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre compte ne peut pas lire les VolumeSnapshots : si l’un d’eux a été pris depuis ce snapshot, il ne pourra plus être restauré. Vérifiez d’abord avec kubectl get volumesnapshots -A."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu cuenta no puede leer los VolumeSnapshots: si se tomó uno desde este snapshot, ya no podrá restaurarse. Compruébalo antes con kubectl get volumesnapshots -A."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihr Konto kann die VolumeSnapshots nicht lesen: Wurde einer aus diesem Snapshot erstellt, lässt er sich nicht mehr wiederherstellen. Prüfen Sie zuerst mit kubectl get volumesnapshots -A."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo account non può leggere i VolumeSnapshot: se uno è stato creato da questo snapshot, non potrà più essere ripristinato. Controlla prima con kubectl get volumesnapshots -A."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш обліковий запис не може читати VolumeSnapshot: якщо з цього знімка було створено VolumeSnapshot, його вже не вдасться відновити. Спершу перевірте за допомогою kubectl get volumesnapshots -A."
+          }
+        }
+      }
+    },
     "Console" : {
       "extractionState" : "manual",
       "localizations" : {
