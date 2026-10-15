@@ -196,6 +196,8 @@ fun OverviewScreen(
     onHelm: () -> Unit,
     onStorage: () -> Unit,
     onServices: () -> Unit,
+    /** Crossplane's packages, definitions and resources (from the Kubernetes home). */
+    onCrossplane: () -> Unit,
     onLoadBalancing: () -> Unit,
     onJobs: () -> Unit,
     /** The cluster's Kubernetes events, live (from the Kubernetes home). */
@@ -244,6 +246,7 @@ fun OverviewScreen(
                 onHelm = onHelm,
                 onStorage = onStorage,
                 onServices = onServices,
+                onCrossplane = onCrossplane,
                 onLoadBalancing = onLoadBalancing,
                 onJobs = onJobs,
                 onEvents = onKubeEvents,

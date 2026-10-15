@@ -2,6 +2,7 @@ package name.levis.ichor.ui.overview
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.MonitorHeart
@@ -35,6 +36,7 @@ private fun kubeHomeActionIcon(action: KubeHomeAction): ImageVector = when (acti
     KubeHomeAction.NETWORK_POLICIES -> Icons.Outlined.Policy
     KubeHomeAction.SEARCH -> Icons.Outlined.Search
     KubeHomeAction.SETTINGS -> Icons.Outlined.Settings
+    KubeHomeAction.CROSSPLANE -> Icons.Outlined.Extension
 }
 
 @Composable
@@ -51,6 +53,7 @@ fun kubeHomeActionLabel(action: KubeHomeAction): String = when (action) {
     KubeHomeAction.NETWORK_POLICIES -> stringResource(R.string.netpol_title)
     KubeHomeAction.SEARCH -> stringResource(R.string.overview_action_search)
     KubeHomeAction.SETTINGS -> stringResource(R.string.overview_action_settings)
+    KubeHomeAction.CROSSPLANE -> stringResource(R.string.crossplane_title)
 }
 
 /** How the Kubernetes home's actions look, in its bar and its editor. */
@@ -70,6 +73,7 @@ fun KubeHomeNavigation.open(action: KubeHomeAction, flux: Boolean = false): () -
     KubeHomeAction.NETWORK_POLICIES -> onNetworkPolicies
     KubeHomeAction.SEARCH -> onSearch
     KubeHomeAction.SETTINGS -> onSettings
+    KubeHomeAction.CROSSPLANE -> onCrossplane
 }
 
 /**
@@ -78,13 +82,13 @@ fun KubeHomeNavigation.open(action: KubeHomeAction, flux: Boolean = false): () -
  * GitOps is only offered once the cluster answered it runs Argo CD ([argo]) or Flux ([flux]).
  */
 @Composable
-fun KubeHomeActions(bar: KubeHomeBar, nav: KubeHomeNavigation, argo: Boolean, flux: Boolean, onCustomize: () -> Unit) {
+fun KubeHomeActions(bar: KubeHomeBar, nav: KubeHomeNavigation, argo: Boolean, flux: Boolean, crossplane: Boolean = false, onCustomize: () -> Unit) {
     ActionBarActions(
         bar = bar,
         look = kubeHomeActionLook,
         onClick = { nav.open(it, flux = !argo)() },
         customizeLabel = stringResource(R.string.kube_home_edit_title),
         onCustomize = onCustomize,
-        offered = { it != KubeHomeAction.GITOPS || argo || flux },
+        offered = { (it != KubeHomeAction.GITOPS || argo || flux) && (it != KubeHomeAction.CROSSPLANE || crossplane) },
     )
 }
