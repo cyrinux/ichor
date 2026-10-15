@@ -189,7 +189,7 @@ extension CheckupFinding {
         case .deprecatedAPI: return CheckupText.checkupDeprecatedAPIFix
         case .webhookDown: return CheckupText.checkupWebhookDownFix
         case .webhookSkipped: return CheckupText.checkupWebhookSkippedFix
-        case .policyEngineDown: return CheckupText.checkupPolicyEngineDownFix(f.extra)
+        case .policyEngineDown: return CheckupText.checkupPolicyEngineDownFix(extra)
         case .policyNotReady: return CheckupText.checkupPolicyNotReadyFix
         case .policyBlocks: return CheckupText.checkupPolicyBlocksFix
         case .policyFailures: return CheckupText.checkupPolicyFailuresFix
