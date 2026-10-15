@@ -256,6 +256,12 @@ private struct CheckupSectionBody: View {
             NavigationLink { PromMonitoringView(source: nil) } label: {
                 Label(PromMonitoringText.openFromCheckup, systemImage: "waveform.path.ecg").font(.callout)
             }
+        case .policies:
+            if !section.findings.isEmpty || !section.error.isEmpty {
+                NavigationLink { PoliciesView() } label: {
+                    Label(CheckupText.checkupOpenPolicies, systemImage: "checklist").font(.callout)
+                }
+            }
         default:
             EmptyView()
         }

@@ -54,7 +54,7 @@ func TestParseQuantity(t *testing.T) {
 func checkCheckupProgress(t *testing.T, p readProgressOut) {
 	t.Helper()
 
-	if p.Running || p.Total != 17 || p.Done != 17 || len(p.Steps) != 17 {
+	if p.Running || p.Total != 18 || p.Done != 18 || len(p.Steps) != 18 {
 		t.Fatalf("progress = %+v", p)
 	}
 
@@ -175,6 +175,7 @@ func TestReadCheckup(t *testing.T) {
 		checkStorage:       {"volumeFull:critical:data", "pvcPending:critical:scratch", "pvReleased:info:pv-1"},
 		checkUpgrade:       {"deprecatedAPI:critical:flowschemas.v1beta3.flowcontrol.apiserver.k8s.io", "deprecatedAPI:warning:things.v1beta1.example.io", "deprecatedAPI:info:componentstatuses.v1"},
 		checkWebhooks:      {"webhookDown:critical:policy", "webhookSkipped:warning:inject"},
+		checkPolicies:      {},
 		checkCapacity:      {"nodeRequestsHigh:warning:n1", "quotaNearLimit:warning:compute"},
 		checkNodes:         {"nodePressure:warning:n1", "nodeCordoned:warning:n2", "nodeVersionSkew:warning:n2"},
 		checkLoadBalancers: {"lbPending:critical:public", "lbPoolExhausted:critical:pool"},
@@ -262,7 +263,7 @@ func TestReadCheckupEmptyCluster(t *testing.T) {
 
 	for _, s := range r.Sections {
 		want := healthOK
-		if s.ID == checkLoadBalancers || s.ID == checkSecrets || s.ID == checkHelm || s.ID == checkMonitoring {
+		if s.ID == checkLoadBalancers || s.ID == checkPolicies || s.ID == checkSecrets || s.ID == checkHelm || s.ID == checkMonitoring {
 			want = checkAbsent
 		}
 
@@ -440,7 +441,7 @@ func TestKubeCheckupDemo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if r.Status != healthCritical || len(r.Sections) != 13 || len(r.Nodes) != 5 || len(r.Volumes) == 0 || len(r.Releases) == 0 {
+	if r.Status != healthCritical || len(r.Sections) != 14 || len(r.Nodes) != 5 || len(r.Volumes) == 0 || len(r.Releases) == 0 {
 		t.Fatalf("%+v", r)
 	}
 

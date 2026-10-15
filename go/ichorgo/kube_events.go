@@ -37,6 +37,17 @@ type kubeEvent struct {
 	First     int64  `json:"first"`
 	Last      int64  `json:"last"`
 	Source    string `json:"source"`
+	// Policy is set on a FailedCreate event an admission policy caused: the apps show the
+	// policy's name without re-parsing the message.
+	Policy *eventPolicy `json:"policy,omitempty"`
+}
+
+// eventPolicy is the admission policy one denial event names (policy_denial.go).
+type eventPolicy struct {
+	Source  string `json:"source"` // kyverno, gatekeeper, "" when unknown
+	Policy  string `json:"policy"`
+	Rule    string `json:"rule,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 type kubeEventList struct {
@@ -102,11 +113,22 @@ func mapEvent(e eventObject) kubeEvent {
 		message = strings.ToValidUTF8(message[:eventMessageLimit], "") + "…"
 	}
 
+	var policy *eventPolicy
+	if e.Reason == "FailedCreate" {
+		if denials := parsePolicyDenials(message); len(denials) > 0 {
+			policy = &eventPolicy{
+				Source: denials[0].Source, Policy: denials[0].Policy,
+				Rule: denials[0].Rule, Message: denials[0].Message,
+			}
+		}
+	}
+
 	return kubeEvent{
 		Type: e.Type, Reason: e.Reason, Message: message,
 		Kind: e.InvolvedObject.Kind, Namespace: e.InvolvedObject.Namespace, Name: e.InvolvedObject.Name,
 		Count: count, First: milli(first), Last: milli(last),
 		Source: cmp.Or(e.Source.Component, e.ReportingComponent),
+		Policy: policy,
 	}
 }
 

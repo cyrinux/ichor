@@ -25,6 +25,7 @@ extension CheckupSectionID {
         case .storage: CheckupText.checkupSectionStorage
         case .upgrade: CheckupText.checkupSectionUpgrade
         case .webhooks: CheckupText.checkupSectionWebhooks
+        case .policies: CheckupText.checkupSectionPolicies
         case .capacity: CheckupText.checkupSectionCapacity
         case .nodes: CheckupText.checkupSectionNodes
         case .loadbalancers: CheckupText.checkupSectionLoadbalancers
@@ -44,6 +45,7 @@ extension CheckupSectionID {
         case .storage: CheckupText.checkupSectionStorageHint
         case .upgrade: CheckupText.checkupSectionUpgradeHint
         case .webhooks: CheckupText.checkupSectionWebhooksHint
+        case .policies: CheckupText.checkupSectionPoliciesHint
         case .capacity: CheckupText.checkupSectionCapacityHint
         case .nodes: CheckupText.checkupSectionNodesHint
         case .loadbalancers: CheckupText.checkupSectionLoadbalancersHint
@@ -62,6 +64,7 @@ extension CheckupSectionID {
         case .storage: "externaldrive"
         case .upgrade: "arrow.up.circle"
         case .webhooks: "arrow.triangle.branch"
+        case .policies: "checklist"
         case .capacity: "gauge.with.dots.needle.67percent"
         case .nodes: "server.rack"
         case .loadbalancers: "network"
@@ -130,6 +133,10 @@ extension CheckupFinding {
         case .deprecatedAPI:
             return f.extra.isEmpty ? CheckupText.checkupDeprecatedAPIUnplanned : CheckupText.checkupDeprecatedAPI(f.extra)
         case .webhookDown, .webhookSkipped: return CheckupText.checkupWebhook(f.reason, f.extra)
+        case .policyEngineDown: return CheckupText.checkupPolicyEngineDown(f.name)
+        case .policyNotReady: return CheckupText.checkupPolicyNotReady(f.name)
+        case .policyBlocks: return CheckupText.checkupPolicyBlocks(f.extra, f.name)
+        case .policyFailures: return CheckupText.checkupPolicyFailures(f.name, "\(f.count)")
         case .nodeRequestsHigh: return CheckupText.checkupNodeRequestsHigh(checkupPercent(f.value), checkupResource(f.extra))
         case .nodePodsFull: return CheckupText.checkupNodePodsFull("\(f.count)", limit)
         case .noRoomToDrain: return CheckupText.checkupNoRoomToDrain(checkupResource(f.extra))
@@ -182,6 +189,10 @@ extension CheckupFinding {
         case .deprecatedAPI: return CheckupText.checkupDeprecatedAPIFix
         case .webhookDown: return CheckupText.checkupWebhookDownFix
         case .webhookSkipped: return CheckupText.checkupWebhookSkippedFix
+        case .policyEngineDown: return CheckupText.checkupPolicyEngineDownFix(extra)
+        case .policyNotReady: return CheckupText.checkupPolicyNotReadyFix
+        case .policyBlocks: return CheckupText.checkupPolicyBlocksFix
+        case .policyFailures: return CheckupText.checkupPolicyFailuresFix
         case .nodeRequestsHigh: return CheckupText.checkupNodeRequestsHighFix
         case .nodePodsFull: return CheckupText.checkupNodePodsFullFix
         case .noRoomToDrain: return CheckupText.checkupNoRoomToDrainFix

@@ -59,6 +59,10 @@ func demoCheckup(now time.Time) checkupReport {
 		newSection(checkWebhooks, 3, []checkupFinding{
 			{Kind: findWebhookDown, Severity: sevCritical, Name: "policy-validator", Extra: "policy/validator", Reason: "Validating", Count: 2},
 		}),
+		newSection(checkPolicies, 5, []checkupFinding{
+			{Kind: findPolicyBlocks, Severity: sevCritical, Namespace: "shop", Name: "checkout", Extra: "require-labels", Reason: "autogen-check-for-labels", Message: "validation error: Deployment labels are missing: app, version", Count: 6, Since: ago(25 * time.Minute)},
+			{Kind: findPolicyFailures, Severity: sevWarning, Namespace: "", Name: "require-labels", Count: 7, Extra: "shop", Message: "would be refused in Enforce mode"},
+		}),
 		newSection(checkCapacity, 6, []checkupFinding{
 			{Kind: findNodeRequestsHigh, Severity: sevWarning, Name: "demo-worker-1", Extra: "cpu", Value: 92.5},
 			{Kind: findNodeRequestsHigh, Severity: sevWarning, Name: "demo-worker-2", Extra: "memory", Value: 91.3},

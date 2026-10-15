@@ -1,6 +1,461 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Admission policies" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Admission-Policies"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Políticas de admisión"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Politiques d’admission"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Politiche di ammissione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Політики допуску"
+          }
+        }
+      }
+    },
+    "Policies that refuse or flag workloads" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Policies, die Workloads ablehnen oder markieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Políticas que rechazan o marcan workloads"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Politiques qui refusent ou signalent des workloads"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Politiche che rifiutano o segnalano workloads"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Політики, що відхиляють або позначають workloads"
+          }
+        }
+      }
+    },
+    "Policy engine %1$@ is down" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Policy-Engine %1$@ ist ausgefallen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El motor de políticas %1$@ está caído"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le moteur de politiques %1$@ est en panne"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il motore di politiche %1$@ è fermo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рушій политик %1$@ не працює"
+          }
+        }
+      }
+    },
+    "Check the policy engine’s pods in namespace %1$@; Policies shows its state." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfen Sie die Pods der Policy-Engine im Namespace %1$@; Policies zeigt ihren Zustand."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compruebe los pods del motor de políticas en el namespace %1$@; Policies muestra su estado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifiez les pods du moteur de politiques dans l’espace de noms %1$@ ; Policies montre son état."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlla i pod del motore di politiche nel namespace %1$@; Policies ne mostra lo stato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірте поди рушія политик у просторі імен %1$@; Policies показує його стан."
+          }
+        }
+      }
+    },
+    "Policy %1$@ is not ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Policy %1$@ ist nicht bereit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La política %1$@ no está lista"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La politique %1$@ n’est pas prête"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La politica %1$@ non è pronta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Політика %1$@ не готова"
+          }
+        }
+      }
+    },
+    "Switch the policy to Audit until the engine is ready; Policies shows its condition." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stellen Sie die Policy auf Audit, bis die Engine bereit ist; Policies zeigt ihre Condition."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambie la política a Audit hasta que el motor esté listo; Policies muestra su condición."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passez la politique en Audit jusqu’à ce que le moteur soit prêt ; Policies montre sa condition."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passa la politica ad Audit finché il motore non è pronto; Policies ne mostra la condizione."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемкніть політику на Audit, доки рушій не стане готовим; Policies показує її умову."
+          }
+        }
+      }
+    },
+    "Policy %1$@ blocks %2$@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Policy %1$@ blockiert %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La política %1$@ bloquea %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La politique %1$@ bloque %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La politica %1$@ blocca %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Політика %1$@ блокує %2$@"
+          }
+        }
+      }
+    },
+    "Relax the rule or label the workload; Policies shows the policy." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lockern Sie die Regel oder labeln Sie den Workload; Policies zeigt die Policy."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relaje la regla o etiquete el workload; Policies muestra la política."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assouplissez la règle ou étiquetez le workload ; Policies montre la politique."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allenta la regola o etichetta il workload; Policies mostra la politica."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пом'якшіть правило або додайте мітку workload; Policies показує політику."
+          }
+        }
+      }
+    },
+    "Policy %1$@ fails on %2$@ resources" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Policy %1$@ scheitert an %2$@ Ressourcen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La política %1$@ falla en %2$@ recursos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La politique %1$@ échoue sur %2$@ ressources"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La politica %1$@ fallisce su %2$@ risorse"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Політика %1$@ дає збій на %2$@ ресурсах"
+          }
+        }
+      }
+    },
+    "Relax the rule or label the workloads: in Enforce mode they would be refused." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lockern Sie die Regel oder labeln Sie die Workloads: im Enforce-Modus würden sie abgelehnt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relaje la regla o etiquete los workloads: en modo Enforce serían rechazados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assouplissez la règle ou étiquetez les workloads : en mode Enforce ils seraient refusés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allenta la regola o etichetta i workloads: in modalità Enforce verrebbero rifiutati."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пом'якшіть правило або додайте мітки workloads: у режимі Enforce їх було б відхилено."
+          }
+        }
+      }
+    },
+    "Open Policies" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Policies öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Policies"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir Policies"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri Policies"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити Policies"
+          }
+        }
+      }
+    },
+    "Denied by policy %1$@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von Policy %1$@ abgelehnt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechazado por la política %1$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refusé par la politique %1$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Negato dalla politica %1$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відхилено політикою %1$@"
+          }
+        }
+      }
+    },
+    "Denied by policy %1$@ (rule %2$@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von Policy %1$@ abgelehnt (Regel %2$@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechazado por la política %1$@ (regla %2$@)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refusé par la politique %1$@ (règle %2$@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Negato dalla politica %1$@ (regola %2$@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відхилено політикою %1$@ (правило %2$@)"
+          }
+        }
+      }
+    },
     "Policies" : {
       "extractionState" : "manual",
       "localizations" : {

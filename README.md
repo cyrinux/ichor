@@ -108,6 +108,7 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   the Warning events of the last hour, volumes nearly full (the kubelets' own figures, no
   Prometheus needed), claims not bound or lost, deprecated API versions something still calls
   before the next Kubernetes upgrade, admission webhooks whose Service has no ready endpoint,
+  admission policies: an engine that is down, a policy that is not ready, a workload whose pods a policy denies,
   what pods request against what each node offers (and whether one node's pods would still fit
   elsewhere), quotas at their limit, nodes left cordoned or under pressure, LoadBalancer Services
   without an address (and why), empty MetalLB or Cilium pools, MetalLB pools nothing advertises,

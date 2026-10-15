@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
@@ -87,6 +88,14 @@ private fun EventRow(e: KubeEvent, now: Long, showObject: Boolean) {
         }
         if (showObject) {
             Text("${e.kind} ${e.name}", style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        e.policy?.let { p ->
+            Text(
+                if (p.rule.isEmpty()) stringResource(R.string.kube_events_deniedByPolicy, p.policy)
+                else stringResource(R.string.kube_events_deniedByPolicy_rule, p.policy, p.rule),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium,
+            )
         }
         Text(e.message, style = MaterialTheme.typography.bodySmall, maxLines = 6, overflow = TextOverflow.Ellipsis)
     }

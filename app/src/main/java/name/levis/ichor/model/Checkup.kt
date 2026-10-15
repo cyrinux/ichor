@@ -11,6 +11,7 @@ object CheckupSectionId {
     const val STORAGE = "storage"
     const val UPGRADE = "upgrade"
     const val WEBHOOKS = "webhooks"
+    const val POLICIES = "policies"
     const val CAPACITY = "capacity"
     const val NODES = "nodes"
     const val LOAD_BALANCERS = "loadbalancers"
@@ -41,6 +42,14 @@ object CheckupKind {
     const val DEPRECATED_API = "deprecatedAPI"
     const val WEBHOOK_DOWN = "webhookDown"
     const val WEBHOOK_SKIPPED = "webhookSkipped"
+    /** The admission-policy engine cannot admit (name: controller or webhook, extra: namespace). */
+    const val POLICY_ENGINE_DOWN = "policyEngineDown"
+    /** A policy whose Ready condition is False (reason/message: the condition's). */
+    const val POLICY_NOT_READY = "policyNotReady"
+    /** A workload whose pods a policy denies (extra: the policy, reason: the rule). */
+    const val POLICY_BLOCKS = "policyBlocks"
+    /** An Audit policy whose background scans keep failing (count: the fails, extra: namespace). */
+    const val POLICY_FAILURES = "policyFailures"
     const val NODE_REQUESTS_HIGH = "nodeRequestsHigh"
     const val NODE_PODS_FULL = "nodePodsFull"
     const val NO_ROOM_TO_DRAIN = "noRoomToDrain"
@@ -222,6 +231,17 @@ data class KubeEvent(
     val first: Long = 0,
     val last: Long = 0,
     val source: String = "",
+    /** The admission policy that caused a FailedCreate denial, when one did. */
+    val policy: EventPolicy? = null,
+)
+
+/** The admission policy one denial event names (Go policy_denial.go). */
+@Serializable
+data class EventPolicy(
+    val source: String = "",
+    val policy: String = "",
+    val rule: String = "",
+    val message: String = "",
 )
 
 @Serializable

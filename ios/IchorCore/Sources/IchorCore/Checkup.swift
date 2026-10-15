@@ -18,7 +18,7 @@ public enum CheckupSeverity: String, Sendable, WireEnum {
 
 /// The sections of a checkup, as Go names them.
 public enum CheckupSectionID: String, Sendable {
-    case workloads, events, storage, upgrade, webhooks, capacity, nodes, loadbalancers, terminating, certificates, secrets, helm, monitoring
+    case workloads, events, storage, upgrade, webhooks, policies, capacity, nodes, loadbalancers, terminating, certificates, secrets, helm, monitoring
 }
 
 /// What a finding is about, as Go names it.
@@ -27,6 +27,9 @@ public enum CheckupKind: String, Sendable {
     case event
     case volumeFull, volumeInodes, pvcPending, pvcLost, pvFailed, pvReleased
     case deprecatedAPI, webhookDown, webhookSkipped
+    /// The admission-policy engine cannot admit, a policy not ready, a workload a policy
+    /// denies, an Audit policy whose background scans keep failing.
+    case policyEngineDown, policyNotReady, policyBlocks, policyFailures
     case nodeRequestsHigh, nodePodsFull, noRoomToDrain, quotaNearLimit
     case nodeNotReady, nodePressure, nodeCordoned, nodeVersionSkew
     case lbPending, lbPoolExhausted, lbPoolConflict, lbPoolUnadvertised, lbConfigError, lbBGPPeerDown
@@ -275,6 +278,8 @@ public struct KubeEvent: Decodable, Equatable, Sendable {
     public let first: Int64
     public let last: Int64
     public let source: String
+    /// The admission policy that caused a FailedCreate denial, when one did.
+    public let policy: EventPolicy?
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -288,11 +293,30 @@ public struct KubeEvent: Decodable, Equatable, Sendable {
         first = try c.field(.first, 0)
         last = try c.field(.last, 0)
         source = try c.field(.source, "")
+        policy = try c.decodeIfPresent(EventPolicy.self, forKey: .policy)
     }
 
-    private enum CodingKeys: String, CodingKey { case type, reason, message, kind, namespace, name, count, first, last, source }
+    private enum CodingKeys: String, CodingKey { case type, reason, message, kind, namespace, name, count, first, last, source, policy }
 
     public var isWarning: Bool { type != "Normal" }
+}
+
+/// The admission policy one denial event names (Go policy_denial.go).
+public struct EventPolicy: Decodable, Equatable, Sendable {
+    public let source: String
+    public let policy: String
+    public let rule: String
+    public let message: String
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        source = try c.field(.source, "")
+        policy = try c.field(.policy, "")
+        rule = try c.field(.rule, "")
+        message = try c.field(.message, "")
+    }
+
+    private enum CodingKeys: String, CodingKey { case source, policy, rule, message }
 }
 
 public struct KubeEventList: Decodable, Equatable, Sendable {
