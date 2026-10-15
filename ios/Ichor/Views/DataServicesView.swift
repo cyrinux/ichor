@@ -51,6 +51,7 @@ struct DataServicesView: View {
                     case .snapshots: SnapshotsList(status: services.snapshots!)
                     case .backupJobs: BackupJobsList(status: services.backupJobs!)
                     case .castai: CastAIList(status: services.castai!, refresh: load)
+                    case .kubeGreen: KubeGreenList(status: services.kubeGreen!, refresh: load)
                     }
                 }
                 .safeAreaInset(edge: .top) {

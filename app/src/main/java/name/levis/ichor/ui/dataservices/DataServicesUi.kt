@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Hub
@@ -75,6 +76,7 @@ private val DataServiceKind.fallbackIcon: ImageVector
         DataServiceKind.CEPH -> Icons.Outlined.Storage
         DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> Icons.Outlined.SettingsBackupRestore
         DataServiceKind.CASTAI -> Icons.Outlined.Tune
+        DataServiceKind.KUBE_GREEN -> Icons.Outlined.Bedtime
     }
 
 /** Hostnames of the nodes Talos reports not ready or unreachable: candidates for a likely cause. */
@@ -165,6 +167,7 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
             }
             pluralStringResource(R.plurals.garage_clusters, summary.total, summary.total)
         }
+        DataServiceKind.KUBE_GREEN -> pluralStringResource(R.plurals.kubegreen_schedules, summary.total, summary.total)
     }
     return listOfNotNull(head, attention).joinToString(" · ")
 }

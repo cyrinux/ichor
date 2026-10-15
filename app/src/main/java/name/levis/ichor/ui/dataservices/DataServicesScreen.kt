@@ -184,6 +184,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
                 DataServiceKind.SNAPSHOTS -> SnapshotsTab(services.snapshots!!)
                 DataServiceKind.BACKUP_JOBS -> BackupJobsTab(services.backupJobs!!)
                 DataServiceKind.CASTAI -> CastAITab(services.castai!!)
+                DataServiceKind.KUBE_GREEN -> KubeGreenTab(services.kubeGreen!!)
             }
         }
     }

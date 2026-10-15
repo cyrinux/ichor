@@ -2259,6 +2259,33 @@
         <item quantity="one">%1$d advertencia</item>
         <item quantity="other">%1$d advertencias</item>
     </plurals>
+    <string name="kubegreen_empty">No hay programaciones de suspensión.</string>
+    <string name="kubegreen_state_asleep">Dormido</string>
+    <string name="kubegreen_state_awake">Despierto</string>
+    <string name="kubegreen_wakes">despierta %1$s</string>
+    <string name="kubegreen_sleeps">se duerme %1$s</string>
+    <string name="kubegreen_until_changed">hasta que se cambie a mano</string>
+    <string name="kubegreen_reason_no_wake_up">sin hora de despertar</string>
+    <string name="kubegreen_reason_invalid_schedule">programación inválida</string>
+    <string name="kubegreen_reason_overdue">el controlador perdió su última ejecución</string>
+    <string name="kubegreen_reason_never_ran">nunca se ha ejecutado</string>
+    <string name="kubegreen_weekdays">Días</string>
+    <string name="kubegreen_schedule">Horas</string>
+    <string name="kubegreen_time_zone">Zona horaria</string>
+    <string name="kubegreen_suspends">Suspende</string>
+    <string name="kubegreen_deployments">Deployments</string>
+    <string name="kubegreen_statefulsets">StatefulSets</string>
+    <string name="kubegreen_cronjobs">CronJobs</string>
+    <string name="kubegreen_nothing">nada</string>
+    <string name="kubegreen_scope">Alcance</string>
+    <string name="kubegreen_excluded">%1$d excluidos</string>
+    <string name="kubegreen_included">%1$d incluidos</string>
+    <string name="kubegreen_patches">%1$d parches</string>
+    <string name="kubegreen_last_run">Última ejecución</string>
+    <plurals name="kubegreen_schedules">
+        <item quantity="one">%1$d programación de suspensión</item>
+        <item quantity="other">%1$d programaciones de suspensión</item>
+    </plurals>
     <string name="ceph_empty">Sin clústeres de Ceph.</string>
     <string name="ceph_external">externo</string>
     <string name="ceph_osds">OSD %1$d/%2$d activos</string>
