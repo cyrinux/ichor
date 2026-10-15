@@ -128948,6 +128948,41 @@
         }
       }
     },
+    "%@ claims" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Claims"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ claims"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ claims"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ claim"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ claims"
+          }
+        }
+      }
+    },
     "%@ may be disrupted at a time · %@ now" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -137540,7 +137575,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ non è installato su questo cluster"
+            "value" : "%@ не встановлено в цьому кластері"
           }
         }
       }
