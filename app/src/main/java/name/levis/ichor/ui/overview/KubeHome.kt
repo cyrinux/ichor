@@ -100,6 +100,8 @@ class KubeHomeNavigation(
     val onPolicies: () -> Unit,
     /** What scales the cluster: HPAs, KEDA, VPA and Karpenter. */
     val onAutoscaling: () -> Unit,
+    /** KubeVirt (and Harvester) virtual machines. */
+    val onVirtualMachines: () -> Unit,
     val onArgoCD: () -> Unit,
     val onFlux: () -> Unit,
     /** The Data services screen, on one system's tab (null: the first). */

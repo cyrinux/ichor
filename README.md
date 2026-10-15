@@ -88,6 +88,10 @@ sit alongside your real clusters and be removed from **Manage clusters**.
 - **Policies (Kyverno):** every Kyverno policy with its mode (Enforce or Audit), whether it is
   ready, how many resources pass or fail it and which ones, and whether the engine's
   controllers and admission webhook are up. See [Policies](#policies).
+- **Virtual machines (KubeVirt / Harvester):** every VM with its status, node, address, guest
+  OS and any disk import or live migration in flight, failing ones first; start, stop (with or
+  without the grace period), restart, pause and migrate one from its sheet. See
+  [Virtual machines](#virtual-machines).
 - **API server health and pressure:** the Kubernetes API server's readyz and livez checks, and
   what loads it right now: Ichor reads its `/metrics` twice a few seconds apart and shows the
   request rate, 5xx and 429 answers, which clients send the requests (API Priority and Fairness
@@ -204,6 +208,7 @@ reads those roles and explains up front when a feature needs more.
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
 | **Policies (Kyverno)** | `Kubeconfig`, then the Kubernetes API (kyverno.io policies, wgpolicyk8s.io policy reports, Kyverno's Deployments and webhooks) | **`os:admin`** |
+| **Virtual machines: list, start/stop/restart/pause/migrate** | `Kubeconfig`, then the Kubernetes API (kubevirt.io, subresources.kubevirt.io, cdi.kubevirt.io) | **`os:admin`** |
 | **Cluster checkup, events of a pod or workload** | `Kubeconfig`, then the Kubernetes API (pods, nodes, events, claims, webhooks, quotas, services, CSRs, secrets metadata…) and each kubelet's `stats/summary` through the API server proxy | **`os:admin`** |
 | **Talos rollback (`talosctl rollback`)** | `Rollback` | **`os:admin`** |
 | **CloudNativePG primary restart and hibernate/wake** | `Kubeconfig`, then the Kubernetes API: get clusters and pods, patch `clusters/status` for restart, patch clusters for hibernation | **`os:admin`** |
@@ -566,6 +571,24 @@ credentials that cannot read one group show the reason in that group's header on
 The workload sheet names the autoscaler that owns the replica count — "HPA web-hpa · 3 of
 1–5", or "KEDA worker-so · paused at 0" — with a tap through to the Autoscaling screen, and
 the list marks autoscaled workloads with an "auto" badge.
+
+### Virtual machines
+
+**Kubernetes → Virtual machines** shows the KubeVirt virtual machines of the cluster ("Harvester"
+in the title on a Harvester cluster), to answer "which VM is down, where does it run, is it
+still importing its disk?" and act on it from the phone:
+
+- **The list:** counts by state (running, stopped, failing, migrating, importing), then each VM
+  failing first with KubeVirt's status, its node, first address and guest OS, and a line for a
+  disk import ("Importing win11-root 62.00%") or a live migration ("Migrating worker-2 →
+  worker-3"). It follows a VM on its way (starting, stopping, migrating) every few seconds.
+- **A VM's sheet:** run strategy, resources, addresses, conditions, disks and the latest
+  migration, then **Start**, **Stop**, **Restart**, **Pause** / **Unpause** and **Migrate**,
+  each enabled only when the VM's state allows it and the credentials may. Stop and restart ask
+  for the VM's name typed; stop can skip the guest's grace period, and says when it writes
+  `runStrategy: Halted` into the spec (a GitOps tool may set it back on its next sync).
+
+A cluster without KubeVirt says so. The serial console is not there yet.
 
 ### Crossplane
 

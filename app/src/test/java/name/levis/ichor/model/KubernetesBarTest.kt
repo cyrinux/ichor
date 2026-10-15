@@ -14,6 +14,7 @@ import name.levis.ichor.model.KubernetesAction.RESOURCES
 import name.levis.ichor.model.KubernetesAction.SERVICES
 import name.levis.ichor.model.KubernetesAction.SHARE
 import name.levis.ichor.model.KubernetesAction.STORAGE
+import name.levis.ichor.model.KubernetesAction.VIRTUAL_MACHINES
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -25,14 +26,14 @@ class KubernetesBarTest {
     fun defaultKeepsThreeIconsSoTheTitleFits() {
         val bar = KubernetesAction.bar.default
         assertEquals(listOf(CHECKUP, NETWORK_POLICIES, SHARE), bar.icons)
-        assertEquals(listOf(API_HEALTH, FLOWS, RESOURCES, HELM, STORAGE, SERVICES, JOBS, EVENTS, API_ADDRESS, POLICIES, AUTOSCALING), bar.menu)
+        assertEquals(listOf(API_HEALTH, FLOWS, RESOURCES, HELM, STORAGE, SERVICES, JOBS, EVENTS, API_ADDRESS, POLICIES, AUTOSCALING, VIRTUAL_MACHINES), bar.menu)
         assertTrue(bar.isDefault)
     }
 
     @Test
     fun keptApartFromTheOverviewsBar() {
         val bar = KubernetesAction.bar.default.toBar(FLOWS).toMenu(CHECKUP)
-        assertEquals("NETWORK_POLICIES,SHARE,FLOWS|CHECKUP,API_HEALTH,RESOURCES,HELM,STORAGE,SERVICES,JOBS,EVENTS,API_ADDRESS,POLICIES,AUTOSCALING", bar.encode())
+        assertEquals("NETWORK_POLICIES,SHARE,FLOWS|CHECKUP,API_HEALTH,RESOURCES,HELM,STORAGE,SERVICES,JOBS,EVENTS,API_ADDRESS,POLICIES,AUTOSCALING,VIRTUAL_MACHINES", bar.encode())
         assertEquals(bar, KubernetesAction.bar.parse(bar.encode()))
         assertFalse(bar.isDefault)
         // Another screen's names are unknown here: none of them is taken.

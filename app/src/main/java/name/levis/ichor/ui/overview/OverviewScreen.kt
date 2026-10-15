@@ -192,6 +192,8 @@ fun OverviewScreen(
     onPolicies: () -> Unit,
     /** What scales the cluster (from the Kubernetes home). */
     onAutoscaling: () -> Unit,
+    /** KubeVirt virtual machines (from the Kubernetes home). */
+    onVirtualMachines: () -> Unit,
     onResources: () -> Unit,
     onHelm: () -> Unit,
     onStorage: () -> Unit,
@@ -234,6 +236,7 @@ fun OverviewScreen(
                 onNetworkPolicies = onNetworkPolicies,
                 onPolicies = onPolicies,
                 onAutoscaling = onAutoscaling,
+                onVirtualMachines = onVirtualMachines,
                 onArgoCD = onArgoCD,
                 onFlux = onFlux,
                 onDataServices = onDataServices,

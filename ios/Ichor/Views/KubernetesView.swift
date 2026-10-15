@@ -30,6 +30,8 @@ struct KubernetesView: View {
         case admissionPolicies
         /// What scales the cluster: HPAs, KEDA, VPA, Karpenter.
         case autoscaling
+        /// KubeVirt (and Harvester) virtual machines.
+        case virtualMachines
     }
 
     @Environment(AppModel.self) private var model
@@ -133,6 +135,7 @@ struct KubernetesView: View {
         case .events: netScreen = .events
         case .admissionPolicies: netScreen = .admissionPolicies
         case .autoscaling: netScreen = .autoscaling
+        case .virtualMachines: netScreen = .virtualMachines
         case .apiAddress:
             serverInput = model.client?.kubeServer ?? ""
             editingServer = true
@@ -197,6 +200,7 @@ struct KubernetesView: View {
             case .events: KubeLiveEventsView()
             case .admissionPolicies: PoliciesView()
             case .autoscaling: AutoscalingView()
+            case .virtualMachines: VirtualMachinesView()
             }
         }
         .task(id: model.client?.kubeServer) {
@@ -490,6 +494,7 @@ extension KubernetesAction: BarActionLook {
         case .capacity: "gauge.with.dots.needle.33percent"
         case .admissionPolicies: "checkmark.shield"
         case .autoscaling: "arrow.up.and.down"
+        case .virtualMachines: "desktopcomputer"
         }
     }
 
@@ -507,6 +512,7 @@ extension KubernetesAction: BarActionLook {
         case .capacity: Text(verbatim: CapacityText.capacityTitle)
         case .admissionPolicies: Text("Policies")
         case .autoscaling: Text("Autoscaling")
+        case .virtualMachines: Text("Virtual machines")
         }
     }
 }

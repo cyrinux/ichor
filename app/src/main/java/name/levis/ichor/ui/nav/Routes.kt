@@ -87,6 +87,8 @@ internal object Routes {
     const val POLICIES = "policies"
     /** What scales the cluster: HPAs, KEDA, VPA and Karpenter. */
     const val AUTOSCALING = "autoscaling"
+    /** KubeVirt (and Harvester) virtual machines and their actions. */
+    const val VIRTUAL_MACHINES = "vms"
 
     /** The cluster's Kubernetes events, live. */
     const val KUBE_EVENTS = "kube-events"
