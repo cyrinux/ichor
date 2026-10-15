@@ -79,7 +79,8 @@ var kubeActionChecks = map[string][]accessNeed{
 		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "nodes"}, true},
 	},
 	"longhornSnapshot": {
-		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy"}, true},
+		// Named: a role may open the proxy to some services only.
+		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy", Name: lhManagerService}, true},
 		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
 	},
 	"longhornSalvage": {

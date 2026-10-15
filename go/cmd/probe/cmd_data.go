@@ -157,6 +157,10 @@ var dataCommands = []command{
 
 		return out, err
 	}},
+	{name: "longhorn-snapshot", args: "NAMESPACE VOLUME ACTION [SNAPSHOT]", run: func(e env) (string, error) {
+		// longhorn-snapshot NAMESPACE VOLUME take|backup|delete [SNAPSHOT]; take needs none.
+		return "requested", ichorgo.KubeLonghornSnapshotAction(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(4), flag.Arg(3))
+	}},
 	{name: "longhorn-action", args: "NAMESPACE NAME ACTION [VALUE]", run: func(e env) (out string, err error) {
 		// longhorn-action NAMESPACE NAME ACTION [VALUE], e.g. "longhorn-system pvc-1 backup"
 		// or "longhorn-system worker-1 evict"; VALUE is the replica count of "replicas".
