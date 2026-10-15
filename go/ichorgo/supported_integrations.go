@@ -22,8 +22,9 @@ type integrationSpec struct {
 	Resource string
 	// ServiceKind also finds a project without API by its Services: a promMatch kind.
 	ServiceKind string
-	// PodsFallback also finds a project whose API group is optional by its running pods
-	// (ExternalDNS: most installs publish only Ingress and Service hosts, no CRD).
+	// PodsFallback also finds a project whose API group is optional by its running pods:
+	// ExternalDNS (most installs publish only Ingress and Service hosts, no CRD) and Garage
+	// (the garage-operator's CRDs when it runs, else its Helm-chart pods).
 	PodsFallback bool
 }
 
@@ -39,7 +40,8 @@ var integrationSpecs = []integrationSpec{
 	{ID: "dragonfly", Name: "Dragonfly", Website: "https://www.dragonflydb.io", Groups: []string{groupDragonfly}},
 	{ID: "longhorn", Name: "Longhorn", Website: "https://longhorn.io", Groups: []string{groupLonghorn}},
 	{ID: "rook", Name: "Rook Ceph", Website: "https://rook.io", Groups: []string{groupCeph}},
-	{ID: "garage", Name: "Garage", Website: "https://garagehq.deuxfleurs.fr"},
+	// Garage: the garage-operator's CRDs when it runs, else its pods (the Helm chart).
+	{ID: "garage", Name: "Garage", Website: "https://garagehq.deuxfleurs.fr", Groups: []string{groupGarageOperator}, PodsFallback: true},
 	{ID: "velero", Name: "Velero", Website: "https://velero.io", Groups: []string{groupVelero}},
 	{ID: "kube-green", Name: "kube-green", Website: "https://kube-green.dev", Groups: []string{groupKubeGreen}},
 	{ID: "cert-manager", Name: "cert-manager", Website: "https://cert-manager.io", Groups: []string{groupCertManager, groupACME}},
@@ -365,6 +367,8 @@ func demoSupportedIntegrations() supportedIntegrations {
 		switch {
 		case api[s.ID]:
 			return detection{via: detectedByAPI}
+		case s.ID == "garage" && ds.Garage != nil && ds.Garage.Version != "":
+			return detection{via: detectedByAPI, version: ds.Garage.Version}
 		case s.ID == "garage" && ds.Garage != nil:
 			return detection{via: detectedByPods}
 		case s.ServiceKind != "":

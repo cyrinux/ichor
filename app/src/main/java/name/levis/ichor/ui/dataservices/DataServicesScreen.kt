@@ -175,7 +175,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
         SwipeTabPager(kinds, tab, onSelect = { selected = it }) { page ->
             when (page) {
                 DataServiceKind.LONGHORN -> LonghornTab(services.longhorn!!, longhorn, garageDetected = services.garage != null, onGarage = { selected = DataServiceKind.GARAGE })
-                DataServiceKind.GARAGE -> GarageTab(services.garage!!, garage)
+                DataServiceKind.GARAGE -> GarageTab(services.garage!!, garage, onObject)
                 DataServiceKind.CNPG -> CnpgTab(services.cnpg!!, cnpg)
                 DataServiceKind.DRAGONFLY -> DragonflyTab(services.dragonfly!!)
                 DataServiceKind.MARIADB -> MariaDbTab(services.mariadb!!)

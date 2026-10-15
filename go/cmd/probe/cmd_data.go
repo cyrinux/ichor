@@ -113,6 +113,12 @@ var dataCommands = []command{
 
 		return out, err
 	}},
+	{name: "garage-operator", args: "", run: func(e env) (out string, err error) {
+		// garage-operator: the garage-operator's clusters, buckets, keys and nodes (read-only).
+		out, err = ichorgo.KubeGarageOperator(e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
 	{name: "garage-repair", args: "NAMESPACE POD", run: func(e env) (out string, err error) {
 		// garage-repair NAMESPACE POD: metadata repairs if needed, retry of unreferenced blocks.
 		out, err = ichorgo.KubeGarageRepairBlocks(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
