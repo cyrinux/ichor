@@ -35,6 +35,10 @@ enum class KubeAction(val wire: String) {
     LONGHORN_ATTACHMENT("longhornAttachment"),
     /** Take, back up or delete a Longhorn snapshot. */
     LONGHORN_SNAPSHOT("longhornSnapshot"),
+    /** A Longhorn volume's replica count. */
+    LONGHORN_REPLICAS("longhornReplicas"),
+    /** A Longhorn node's scheduling and eviction. */
+    LONGHORN_NODE("longhornNode"),
     VELERO_BACKUP_NOW("veleroBackupNow"),
     VELERO_DELETE_BACKUP("veleroDeleteBackup"),
     VELERO_RESTORE("veleroRestore"),

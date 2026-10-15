@@ -119,9 +119,11 @@ struct LonghornList: View {
                     .disabled(busy).kubeGated(.longhornSalvage, in: volume.namespace)
                 KubeDeniedNote(.longhornSalvage, in: volume.namespace)
             }
-        }.loadsKubeActionAccess(namespace: volume.namespace)
-            .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, onAction: act) }
-            .contextMenu { LonghornActionButtons(actions: actions, inMenu: true, onAction: act) }
+        }
+            .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, namespace: volume.namespace, onAction: act) }
+            .contextMenu { LonghornActionButtons(actions: actions, namespace: volume.namespace, inMenu: true, onAction: act) }
+            // Last: the buttons above read the access it loads.
+            .loadsKubeActionAccess(namespace: volume.namespace)
     }
 
     private func nodeRow(_ node: LonghornNode) -> some View {
@@ -131,8 +133,9 @@ struct LonghornList: View {
             if action == .evict { confirmEvict = node } else { Task { await run(LonghornRequest(node: node, action: action)) } }
         }
         return LonghornNodeRow(node: node, busy: busy)
-            .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, onAction: act) }
-            .contextMenu { LonghornActionButtons(actions: actions, inMenu: true, onAction: act) }
+            .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, namespace: node.namespace, onAction: act) }
+            .contextMenu { LonghornActionButtons(actions: actions, namespace: node.namespace, inMenu: true, onAction: act) }
+            .loadsKubeActionAccess(namespace: node.namespace)
     }
 
     private func salvage(_ volume: LonghornVolume, names: Set<String>) async {

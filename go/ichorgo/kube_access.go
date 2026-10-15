@@ -78,10 +78,20 @@ var kubeActionChecks = map[string][]accessNeed{
 		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
 		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "nodes"}, true},
 	},
+	// Longhorn's API on a volume: snapshots, backups (the row's "Back up now" too) and trim.
 	"longhornSnapshot": {
 		// Named: a role may open the proxy to some services only.
 		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy", Name: lhManagerService}, true},
 		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
+	},
+	"longhornReplicas": {
+		{ssarAttributes{Verb: "patch", Group: groupLonghorn, Resource: "volumes"}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
+	},
+	// Scheduling and eviction: Longhorn's node objects live in its own namespace.
+	"longhornNode": {
+		{ssarAttributes{Verb: "patch", Group: groupLonghorn, Resource: "nodes"}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "nodes"}, true},
 	},
 	"longhornSalvage": {
 		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy"}, true},

@@ -39,7 +39,10 @@ import name.levis.ichor.model.LonghornAction
 import name.levis.ichor.model.LonghornSnapshotAction
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.model.kubeAction
 import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeActionAccess
 import name.levis.ichor.ui.components.ResultToasts
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -138,9 +141,12 @@ fun LonghornResultToasts(results: Flow<LonghornActionResult>) = ResultToasts(res
     text to (r.error != null)
 }
 
-/** The ⋮ menu of a volume or node row, a spinner while one of its actions runs. */
+/**
+ * The ⋮ menu of a volume or node row, a spinner while one of its actions runs. An action the
+ * account may not run in [namespace] (Longhorn's own) is disabled, with the reason under it.
+ */
 @Composable
-internal fun LonghornActionMenu(actions: List<LonghornAction>, busy: Boolean, onAction: (LonghornAction) -> Unit) {
+internal fun LonghornActionMenu(actions: List<LonghornAction>, namespace: String, busy: Boolean, onAction: (LonghornAction) -> Unit) {
     if (busy) {
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -148,13 +154,21 @@ internal fun LonghornActionMenu(actions: List<LonghornAction>, busy: Boolean, on
         return
     }
     var open by remember { mutableStateOf(false) }
+    val access = rememberKubeActionAccess(namespace)
     // The Box anchors the menu to the button, not to the row's start edge.
     Box {
         TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { open = true })
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             actions.forEach { action ->
+                val denial = access?.denial(action.kubeAction)
                 DropdownMenuItem(
-                    text = { Text(stringResource(action.menuLabel)) },
+                    text = {
+                        Column {
+                            Text(stringResource(action.menuLabel))
+                            KubeDenialNote(denial)
+                        }
+                    },
+                    enabled = denial == null,
                     onClick = {
                         open = false
                         onAction(action)
