@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.model.Crossplane
 import name.levis.ichor.model.KubeJobs
 import name.levis.ichor.model.KubeLoadBalancing
 import name.levis.ichor.model.KubeServices
@@ -178,6 +179,11 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     /** The Services of [namespace] (null for every one), with addresses, ready endpoints and routes. */
     suspend fun services(namespace: String?): KubeServices = kubeCall { cfg, ctx, server ->
         TalosJson.decodeFromString(KubeServices.serializer(), Ichorgo.kubeServices(cfg, ctx, server, namespace.orEmpty()))
+    }
+
+    /** Crossplane's packages, definitions, composite resources, claims and managed resources. */
+    suspend fun crossplane(): Crossplane = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(Crossplane.serializer(), Ichorgo.kubeCrossplane(cfg, ctx, server))
     }
 
     /** The load balancer controllers, their pools, advertisements and BGP peers, and why a Service has no address. */

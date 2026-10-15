@@ -142,6 +142,11 @@ extension TalosClient {
         return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeServices(config, context, kubeServer, ns, $0) }
     }
 
+    /// Crossplane's packages, definitions, composite resources, claims and managed resources.
+    func crossplane() async throws -> Crossplane {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeCrossplane(config, context, kubeServer, $0) }
+    }
+
     /// The load balancer controllers, their pools, advertisements and BGP peers, and why a Service has no address.
     func loadBalancing() async throws -> KubeLoadBalancing {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeLoadBalancing(config, context, kubeServer, $0) }

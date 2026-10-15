@@ -1,6 +1,607 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "No SealedSecrets." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun SealedSecret."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún SealedSecret."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає SealedSecret."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine SealedSecrets."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun SealedSecret."
+          }
+        }
+      }
+    },
+    "No controller found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun contrôleur trouvé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontró ningún controlador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контролер не знайдено"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Controller gefunden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun controller trovato"
+          }
+        }
+      }
+    },
+    "Sealing keys" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clés de scellement"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claves de sellado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключі запечатування"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versiegelungsschlüssel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiavi di sigillatura"
+          }
+        }
+      }
+    },
+    "created %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "créée %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "creada %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "створено %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "erstellt %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "creata %@"
+          }
+        }
+      }
+    },
+    "active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "active"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "activa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "активний"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aktiv"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "attiva"
+          }
+        }
+      }
+    },
+    "compromised" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "compromise"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "comprometida"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "скомпрометований"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kompromittiert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "compromessa"
+          }
+        }
+      }
+    },
+    "immutable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "immuable"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "inmutable"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "незмінний"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unveränderlich"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "immutabile"
+          }
+        }
+      }
+    },
+    "unsealed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "descellé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "desellado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "розпечатано"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "entsiegelt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dissigillato"
+          }
+        }
+      }
+    },
+    "failed to unseal: its Secret is missing or outdated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "échec du descellement : son Secret manque ou est périmé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no se pudo desellar: su Secret falta o está desactualizado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не вдалося розпечатати: його Secret відсутній або застарів"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsiegeln fehlgeschlagen: sein Secret fehlt oder ist veraltet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dissigillatura non riuscita: il suo Secret manca o non è aggiornato"
+          }
+        }
+      }
+    },
+    "a Secret with this name exists that it does not own" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "un Secret de ce nom existe et ne lui appartient pas"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "existe un Secret con este nombre que no le pertenece"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "існує Secret із цією назвою, що йому не належить"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ein Secret mit diesem Namen existiert, das ihm nicht gehört"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "esiste un Secret con questo nome che non gli appartiene"
+          }
+        }
+      }
+    },
+    "the controller is not running: nothing gets unsealed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "le contrôleur ne tourne pas : rien n’est descellé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "el controlador no se está ejecutando: no se desella nada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "контролер не працює: нічого не розпечатується"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "der Controller läuft nicht: nichts wird entsiegelt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "il controller non è in esecuzione: nulla viene dissigillato"
+          }
+        }
+      }
+    },
+    "no active sealing key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aucune clé de scellement active"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ninguna clave de sellado activa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "немає активного ключа запечатування"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kein aktiver Versiegelungsschlüssel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nessuna chiave di sigillatura attiva"
+          }
+        }
+      }
+    },
+    "a sealing key is marked compromised" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "une clé de scellement est marquée compromise"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "una clave de sellado está marcada como comprometida"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ключ запечатування позначено як скомпрометований"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ein Versiegelungsschlüssel ist als kompromittiert markiert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "una chiave di sigillatura è segnata come compromessa"
+          }
+        }
+      }
+    },
+    "the newest sealing key is over 30 days old: key renewal may be stuck" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la clé de scellement la plus récente a plus de 30 jours : le renouvellement est peut-être bloqué"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la clave de sellado más reciente tiene más de 30 días: la renovación puede estar bloqueada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "найновішому ключу запечатування понад 30 днів: оновлення ключів, можливо, зависло"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "der neueste Versiegelungsschlüssel ist über 30 Tage alt: die Erneuerung hängt vielleicht"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la chiave di sigillatura più recente ha più di 30 giorni: il rinnovo potrebbe essere bloccato"
+          }
+        }
+      }
+    },
+    "%lld SealedSecrets" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld SealedSecrets"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld SealedSecrets"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld SealedSecret"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld SealedSecrets"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld SealedSecret"
+          }
+        }
+      }
+    },
+    "%lld keys" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld clés"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld claves"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld ключів"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Schlüssel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld chiavi"
+          }
+        }
+      }
+    },
+    "Showing the first %lld of %lld SealedSecrets." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Showing the first %1$lld of %2$lld SealedSecrets."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Affichage des %1$lld premiers SealedSecrets sur %2$lld."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se muestran los primeros %1$lld de %2$lld SealedSecrets."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показано перші %1$lld з %2$lld SealedSecret."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die ersten %1$lld von %2$lld SealedSecrets."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visualizzati i primi %1$lld di %2$lld SealedSecret."
+          }
+        }
+      }
+    },
     "Admission policies" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -135794,605 +136395,254 @@
         }
       }
     },
-    "No SealedSecrets." : {
+    "Crossplane" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucun SealedSecret."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ningún SealedSecret."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Немає SealedSecret."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine SealedSecrets."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nessun SealedSecret."
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } }
       }
     },
-    "No controller found" : {
+    "Definitions" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucun contrôleur trouvé"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No se encontró ningún controlador"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Контролер не знайдено"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kein Controller gefunden"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nessun controller trovato"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Définitions" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Definiciones" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Визначення" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Definitionen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Definizioni" } }
       }
     },
-    "Sealing keys" : {
+    "Some sections could not be read: %@" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clés de scellement"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claves de sellado"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ключі запечатування"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Versiegelungsschlüssel"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chiavi di sigillatura"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Certaines sections n'ont pas pu être lues : %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudieron leer algunas secciones: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Деякі розділи не вдалося прочитати: %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einige Abschnitte konnten nicht gelesen werden: %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Alcune sezioni non sono state lette: %@" } }
       }
     },
-    "created %@" : {
+    "Crossplane is installed but defines nothing yet." : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "créée %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "creada %@"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "створено %@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "erstellt %@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "creata %@"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane est installé mais ne définit encore rien." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane está instalado pero aún no define nada." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane встановлено, але він ще нічого не визначає." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane ist installiert, definiert aber noch nichts." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane è installato ma non definisce ancora nulla." } }
       }
     },
-    "active" : {
+    "Search kind, name or external name" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "active"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "activa"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "активний"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "aktiv"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "attiva"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rechercher un type, un nom ou un nom externe" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscar tipo, nombre o nombre externo" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Шукати вид, назву чи зовнішню назву" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nach Kind, Name oder externem Namen suchen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cerca kind, nome o nome esterno" } }
       }
     },
-    "compromised" : {
+    "Providers & packages" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "compromise"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "comprometida"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "скомпрометований"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kompromittiert"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "compromessa"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Fournisseurs & paquets" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Proveedores y paquetes" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Провайдери та пакети" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Provider & Pakete" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Provider e pacchetti" } }
       }
     },
-    "immutable" : {
+    "Composite resources & claims" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "immuable"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "inmutable"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "незмінний"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "unveränderlich"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "immutabile"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ressources composées & claims" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Recursos compuestos y claims" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Складені ресурси та claims" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zusammengesetzte Ressourcen & Claims" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Risorse composite e claim" } }
       }
     },
-    "unsealed" : {
+    "Managed resources" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "descellé"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "desellado"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "розпечатано"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "entsiegelt"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "dissigillato"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ressources gérées" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Recursos gestionados" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Керовані ресурси" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verwaltete Ressourcen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Risorse gestite" } }
       }
     },
-    "failed to unseal: its Secret is missing or outdated" : {
+    "%lld critical" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "échec du descellement : son Secret manque ou est périmé"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "no se pudo desellar: su Secret falta o está desactualizado"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "не вдалося розпечатати: його Secret відсутній або застарів"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entsiegeln fehlgeschlagen: sein Secret fehlt oder ist veraltet"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "dissigillatura non riuscita: il suo Secret manca o non è aggiornato"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld critique" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld crítico" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld критичних" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld kritisch" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld critico" } }
       }
     },
-    "a Secret with this name exists that it does not own" : {
+    "%lld warning" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "un Secret de ce nom existe et ne lui appartient pas"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "existe un Secret con este nombre que no le pertenece"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "існує Secret із цією назвою, що йому не належить"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ein Secret mit diesem Namen existiert, das ihm nicht gehört"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "esiste un Secret con questo nome che non gli appartiene"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld avertissement" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld aviso" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld попереджень" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Warnung" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld avviso" } }
       }
     },
-    "the controller is not running: nothing gets unsealed" : {
+    "%lld ok" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "le contrôleur ne tourne pas : rien n’est descellé"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "el controlador no se está ejecutando: no se desella nada"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "контролер не працює: нічого не розпечатується"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "der Controller läuft nicht: nichts wird entsiegelt"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "il controller non è in esecuzione: nulla viene dissigillato"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } }
       }
     },
-    "no active sealing key" : {
+    "%lld of %lld managed resources listed" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "aucune clé de scellement active"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ninguna clave de sellado activa"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "немає активного ключа запечатування"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kein aktiver Versiegelungsschlüssel"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "nessuna chiave di sigillatura attiva"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld ressources gérées listées sur %lld" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld de %lld recursos gestionados listados" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Показано %lld з %lld керованих ресурсів" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld von %lld verwalteten Ressourcen gelistet" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld di %lld risorse gestite elencate" } }
       }
     },
-    "a sealing key is marked compromised" : {
+    "Long list: healthy managed resources past the first 500 are left out; the search looks at the ones listed." : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "une clé de scellement est marquée compromise"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "una clave de sellado está marcada como comprometida"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ключ запечатування позначено як скомпрометований"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ein Versiegelungsschlüssel ist als kompromittiert markiert"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "una chiave di sigillatura è segnata come compromessa"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Liste longue : les ressources gérées saines au-delà des 500 premières sont omises ; la recherche ne porte que sur celles listées." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Lista larga: los recursos gestionados sanos pasados de los primeros 500 se omiten; la búsqueda solo mira los listados." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Довгий список: здорові керовані ресурси після перших 500 пропущено; пошук охоплює лише показані." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lange Liste: gesunde verwaltete Ressourcen über die ersten 500 hinaus fehlen; die Suche sieht nur die gelisteten an." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Elenco lungo: le risorse gestite sane oltre le prime 500 sono omesse; la ricerca guarda solo quelle elencate." } }
       }
     },
-    "the newest sealing key is over 30 days old: key renewal may be stuck" : {
+    "claim kind %@" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "la clé de scellement la plus récente a plus de 30 jours : le renouvellement est peut-être bloqué"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "la clave de sellado más reciente tiene más de 30 días: la renovación puede estar bloqueada"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "найновішому ключу запечатування понад 30 днів: оновлення ключів, можливо, зависло"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "der neueste Versiegelungsschlüssel ist über 30 Tage alt: die Erneuerung hängt vielleicht"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "la chiave di sigillatura più recente ha più di 30 giorni: il rinnovo potrebbe essere bloccato"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "type de claim %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "tipo de claim %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "вид claim %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Claim-Art %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "tipo di claim %@" } }
       }
     },
-    "%lld SealedSecrets" : {
+    "%lld compositions" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld SealedSecrets"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld SealedSecrets"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld SealedSecret"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld SealedSecrets"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld SealedSecret"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld compositions" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld composiciones" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld композицій" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Compositionen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld composition" } }
       }
     },
-    "%lld keys" : {
+    "%lld composites" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld clés"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld claves"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld ключів"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld Schlüssel"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld chiavi"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld composites" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld composites" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld composites" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Composites" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld composite" } }
       }
     },
-    "Showing the first %lld of %lld SealedSecrets." : {
+    "composition %@" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Showing the first %1$lld of %2$lld SealedSecrets."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Affichage des %1$lld premiers SealedSecrets sur %2$lld."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Se muestran los primeros %1$lld de %2$lld SealedSecrets."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Показано перші %1$lld з %2$lld SealedSecret."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die ersten %1$lld von %2$lld SealedSecrets."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Visualizzati i primi %1$lld di %2$lld SealedSecret."
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "composition %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "composición %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "композиція %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Composition %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "composition %@" } }
+      }
+    },
+    "%lld resources" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld ressources" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld recursos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld ресурсів" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Ressourcen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld risorse" } }
+      }
+    },
+    "claim %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "claim %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "claim %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "claim %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Claim %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "claim %@" } }
+      }
+    },
+    "composite %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "composite %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "composite %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "composite %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Composite %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "composite %@" } }
+      }
+    },
+    "provider config %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "config fournisseur %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "config del proveedor %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "конфіг провайдера %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Provider-Config %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "config provider %@" } }
+      }
+    },
+    "external name %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "nom externe %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "nombre externo %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "зовнішня назва %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "externer Name %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "nome esterno %@" } }
+      }
+    },
+    "Cannot sync" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Impossible de synchroniser" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No puede sincronizar" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не може синхронізуватися" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kann nicht synchronisieren" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impossibile sincronizzare" } }
+      }
+    },
+    "Provider unhealthy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Fournisseur en mauvais état" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Proveedor en mal estado" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Провайдер несправний" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Provider ungesund" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Provider in cattivo stato" } }
+      }
+    },
+    "Definition not established" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Définition pas établie" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Definición no establecida" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Визначення не встановлено" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Definition nicht etabliert" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Definizione non stabilita" } }
       }
     }
   },
