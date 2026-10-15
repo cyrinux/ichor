@@ -247,6 +247,7 @@ internal fun KubeToolsCard(nav: KubeHomeNavigation, crossplane: Boolean = false)
                 OutlinedButton(onClick = nav.onNetworkPolicies) { Text(stringResource(R.string.netpol_title)) }
                 OutlinedButton(onClick = nav.onPolicies) { Text(stringResource(R.string.kpol_title)) }
                 OutlinedButton(onClick = nav.onAutoscaling) { Text(stringResource(R.string.autoscaling_title)) }
+                OutlinedButton(onClick = nav.onVirtualMachines) { Text(stringResource(R.string.vm_title)) }
                 OutlinedButton(onClick = nav.onLoadBalancing) { Text(stringResource(R.string.lb_title)) }
                 // Only when the cluster runs Crossplane: the read answers "not installed" quickly.
                 if (crossplane) OutlinedButton(onClick = nav.onCrossplane) { Text(stringResource(R.string.crossplane_title)) }

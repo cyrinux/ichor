@@ -35,7 +35,9 @@ enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOW
     /** Kyverno's admission policies; last, so the saved and default bars keep their icons. */
     POLICIES,
     /** What scales the cluster: HPAs, KEDA, VPA, Karpenter; last, so the saved bars keep theirs. */
-    AUTOSCALING;
+    AUTOSCALING,
+    /** KubeVirt (and Harvester) virtual machines; last, so the saved bars keep theirs. */
+    VIRTUAL_MACHINES;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 3)

@@ -16,6 +16,7 @@ import name.levis.ichor.data.CaptureRepository
 import name.levis.ichor.data.CiliumRepository
 import name.levis.ichor.data.AutoscalingRepository
 import name.levis.ichor.data.PolicyRepository
+import name.levis.ichor.data.VirtualMachineRepository
 import name.levis.ichor.data.NetPerfHistory
 import name.levis.ichor.data.ImageScanRepository
 import name.levis.ichor.data.NetPerfRepository
@@ -184,6 +185,8 @@ class TalosApp : Application() {
     }
     val ciliumRepository by lazy { CiliumRepository(configRepository, kubeServers) }
     val policyRepository by lazy { PolicyRepository(configRepository, kubeServers) }
+    /** KubeVirt virtual machines and their start/stop/restart/pause/migrate actions. */
+    val vmRepository by lazy { VirtualMachineRepository(goCall) }
     val autoscalingRepository by lazy { AutoscalingRepository(configRepository, kubeServers) }
     /** Any kind as YAML, Helm releases, followed pod logs and port-forwards (Kubernetes API only). */
     val kubeBrowser by lazy { KubeBrowserRepository(configRepository, kubeServers) }

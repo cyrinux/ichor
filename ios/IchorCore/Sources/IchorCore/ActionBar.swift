@@ -50,6 +50,8 @@ public enum KubernetesAction: String, BarAction {
     case admissionPolicies = "POLICIES"
     /// What scales the cluster: HPAs, KEDA, VPA, Karpenter; last, so the saved bars keep theirs.
     case autoscaling = "AUTOSCALING"
+    /// KubeVirt (and Harvester) virtual machines; last, so the saved bars keep theirs.
+    case virtualMachines = "VIRTUAL_MACHINES"
 
     public var id: String { rawValue }
     public static let barStorageKey = "kubernetes.bar"
