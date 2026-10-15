@@ -2401,6 +2401,35 @@
         <item quantity="many">%1$d попереджень</item>
         <item quantity="other">%1$d попередження</item>
     </plurals>
+    <string name="kubegreen_empty">Немає розкладів сну.</string>
+    <string name="kubegreen_state_asleep">Спить</string>
+    <string name="kubegreen_state_awake">Прокинувся</string>
+    <string name="kubegreen_wakes">прокидається %1$s</string>
+    <string name="kubegreen_sleeps">засинає %1$s</string>
+    <string name="kubegreen_until_changed">доки не змінено вручну</string>
+    <string name="kubegreen_reason_no_wake_up">немає часу пробудження</string>
+    <string name="kubegreen_reason_invalid_schedule">некоректний розклад</string>
+    <string name="kubegreen_reason_overdue">контролер пропустив останній запуск</string>
+    <string name="kubegreen_reason_never_ran">ще не запускався</string>
+    <string name="kubegreen_weekdays">Дні</string>
+    <string name="kubegreen_schedule">Години</string>
+    <string name="kubegreen_time_zone">Часовий пояс</string>
+    <string name="kubegreen_suspends">Призупиняє</string>
+    <string name="kubegreen_deployments">Deployments</string>
+    <string name="kubegreen_statefulsets">StatefulSets</string>
+    <string name="kubegreen_cronjobs">CronJobs</string>
+    <string name="kubegreen_nothing">нічого</string>
+    <string name="kubegreen_scope">Охоплення</string>
+    <string name="kubegreen_excluded">%1$d виключено</string>
+    <string name="kubegreen_included">%1$d включено</string>
+    <string name="kubegreen_patches">%1$d патчів</string>
+    <string name="kubegreen_last_run">Останній запуск</string>
+    <plurals name="kubegreen_schedules">
+        <item quantity="one">%1$d розклад сну</item>
+        <item quantity="few">%1$d розклади сну</item>
+        <item quantity="many">%1$d розкладів сну</item>
+        <item quantity="other">%1$d розкладів сну</item>
+    </plurals>
     <string name="ceph_empty">Немає кластерів Ceph.</string>
     <string name="ceph_external">зовнішній</string>
     <string name="ceph_osds">OSD %1$d/%2$d працюють</string>

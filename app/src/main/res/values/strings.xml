@@ -2257,6 +2257,33 @@
         <item quantity="one">%1$d warning</item>
         <item quantity="other">%1$d warnings</item>
     </plurals>
+    <string name="kubegreen_empty">No sleep schedules.</string>
+    <string name="kubegreen_state_asleep">Asleep</string>
+    <string name="kubegreen_state_awake">Awake</string>
+    <string name="kubegreen_wakes">wakes up %1$s</string>
+    <string name="kubegreen_sleeps">sleeps %1$s</string>
+    <string name="kubegreen_until_changed">until changed by hand</string>
+    <string name="kubegreen_reason_no_wake_up">no wake-up time</string>
+    <string name="kubegreen_reason_invalid_schedule">invalid schedule</string>
+    <string name="kubegreen_reason_overdue">controller missed its last run</string>
+    <string name="kubegreen_reason_never_ran">never ran yet</string>
+    <string name="kubegreen_weekdays">Weekdays</string>
+    <string name="kubegreen_schedule">Times</string>
+    <string name="kubegreen_time_zone">Time zone</string>
+    <string name="kubegreen_suspends">Suspends</string>
+    <string name="kubegreen_deployments">Deployments</string>
+    <string name="kubegreen_statefulsets">StatefulSets</string>
+    <string name="kubegreen_cronjobs">CronJobs</string>
+    <string name="kubegreen_nothing">nothing</string>
+    <string name="kubegreen_scope">Scope</string>
+    <string name="kubegreen_excluded">%1$d excluded</string>
+    <string name="kubegreen_included">%1$d included</string>
+    <string name="kubegreen_patches">%1$d patches</string>
+    <string name="kubegreen_last_run">Last run</string>
+    <plurals name="kubegreen_schedules">
+        <item quantity="one">%1$d sleep schedule</item>
+        <item quantity="other">%1$d sleep schedules</item>
+    </plurals>
     <string name="ceph_empty">No Ceph clusters.</string>
     <string name="ceph_external">external</string>
     <string name="ceph_osds">OSDs %1$d/%2$d up</string>

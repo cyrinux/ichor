@@ -57,6 +57,7 @@ type dataServices struct {
 	Percona       *perconaStatus       `json:"percona,omitempty"`
 	CertManager   *certManagerStatus   `json:"certManager,omitempty"`
 	Velero        *veleroStatus        `json:"velero,omitempty"`
+	KubeGreen     *kubeGreenStatus     `json:"kubeGreen,omitempty"`
 	Ceph          *cephStatus          `json:"ceph,omitempty"`
 	CastAI        *castAIStatus        `json:"castai,omitempty"`
 }
@@ -173,6 +174,10 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 
 	if _, ok := groups[groupVelero]; ok {
 		wg.Go(func() { out.Velero = readVelero(ctx, k, now) })
+	}
+
+	if _, ok := groups[groupKubeGreen]; ok {
+		wg.Go(func() { out.KubeGreen = readKubeGreen(ctx, k, now) })
 	}
 
 	if v, ok := groups[groupCeph]; ok {

@@ -13,6 +13,7 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let percona: PerconaStatus?
     public let certManager: CertManagerStatus?
     public let velero: VeleroStatus?
+    public let kubeGreen: KubeGreenStatus?
     public let ceph: CephStatus?
     public let snapshots: VolumeSnapshots?
     public let backupJobs: BackupJobStatus?
@@ -20,7 +21,8 @@ public struct DataServices: Decodable, Equatable, Sendable {
 
     public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil, dragonfly: DragonflyStatus? = nil,
                 mariadb: MariaDbStatus? = nil, percona: PerconaStatus? = nil, certManager: CertManagerStatus? = nil,
-                velero: VeleroStatus? = nil, ceph: CephStatus? = nil, castai: CastAIStatus? = nil, snapshots: VolumeSnapshots? = nil, backupJobs: BackupJobStatus? = nil) {
+                velero: VeleroStatus? = nil, kubeGreen: KubeGreenStatus? = nil, ceph: CephStatus? = nil,
+                castai: CastAIStatus? = nil, snapshots: VolumeSnapshots? = nil, backupJobs: BackupJobStatus? = nil) {
         self.longhorn = longhorn
         self.garage = garage
         self.cnpg = cnpg
@@ -29,6 +31,7 @@ public struct DataServices: Decodable, Equatable, Sendable {
         self.percona = percona
         self.certManager = certManager
         self.velero = velero
+        self.kubeGreen = kubeGreen
         self.ceph = ceph
         self.snapshots = snapshots
         self.backupJobs = backupJobs
@@ -100,6 +103,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     case snapshots = "kubernetes-csi"
     case backupJobs = "backup-cronjobs"
     case castai = "castai"
+    case kubeGreen = "kube-green"
 
     public var id: String { rawValue }
     public var catalogID: String { rawValue }
@@ -119,6 +123,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
         case .snapshots: "CSI VolumeSnapshots"
         case .backupJobs: "Backup CronJobs"
         case .castai: "CAST AI"
+        case .kubeGreen: "kube-green"
         }
     }
 
@@ -171,7 +176,8 @@ public extension DataServices {
         [longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil,
          dragonfly != nil ? .dragonfly : nil, mariadb != nil ? .mariadb : nil, percona != nil ? .percona : nil,
          certManager != nil ? .certManager : nil, velero != nil ? .velero : nil,
-         ceph != nil ? .ceph : nil, castai != nil ? .castai : nil, snapshots != nil ? .snapshots : nil, backupJobs != nil ? .backupJobs : nil].compactMap { $0 }
+         ceph != nil ? .ceph : nil, castai != nil ? .castai : nil, snapshots != nil ? .snapshots : nil, backupJobs != nil ? .backupJobs : nil,
+         kubeGreen != nil ? .kubeGreen : nil].compactMap { $0 }
     }
 
     func summary(_ kind: DataServiceKind) -> ServiceSummary? {
@@ -227,6 +233,8 @@ public extension DataServices {
         case .backupJobs: return backupJobs?.summary
         case .castai:
             return castai?.summary
+        case .kubeGreen:
+            return kubeGreen?.summary
         }
     }
 

@@ -38,6 +38,7 @@ var integrationSpecs = []integrationSpec{
 	{ID: "rook", Name: "Rook Ceph", Website: "https://rook.io", Groups: []string{groupCeph}},
 	{ID: "garage", Name: "Garage", Website: "https://garagehq.deuxfleurs.fr"},
 	{ID: "velero", Name: "Velero", Website: "https://velero.io", Groups: []string{groupVelero}},
+	{ID: "kube-green", Name: "kube-green", Website: "https://kube-green.dev", Groups: []string{groupKubeGreen}},
 	{ID: "cert-manager", Name: "cert-manager", Website: "https://cert-manager.io", Groups: []string{groupCertManager, groupACME}},
 	{ID: "castai", Name: "CAST AI", Website: "https://cast.ai", Groups: []string{groupCastAI}},
 	{ID: "cilium", Name: "Cilium", Website: "https://cilium.io", Groups: []string{groupCilium}},

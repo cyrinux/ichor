@@ -2259,6 +2259,34 @@
         <item quantity="one">%1$d avviso</item>
         <item quantity="other">%1$d avvisi</item>
     </plurals>
+    <string name="kubegreen_empty">Nessuna pianificazione di sospensione.</string>
+    <string name="kubegreen_state_asleep">Addormentato</string>
+    <string name="kubegreen_state_awake">Sveglio</string>
+    <string name="kubegreen_wakes">si sveglia %1$s</string>
+    <string name="kubegreen_sleeps">si addormenta %1$s</string>
+    <string name="kubegreen_until_changed">finché non viene modificato a mano</string>
+    <string name="kubegreen_reason_no_wake_up">nessun orario di risveglio</string>
+    <string name="kubegreen_reason_invalid_schedule">pianificazione non valida</string>
+    <string name="kubegreen_reason_overdue">il controller ha perso la sua ultima esecuzione</string>
+    <string name="kubegreen_reason_never_ran">mai eseguito</string>
+    <string name="kubegreen_weekdays">Giorni</string>
+    <string name="kubegreen_schedule">Orari</string>
+    <string name="kubegreen_time_zone">Fuso orario</string>
+    <string name="kubegreen_suspends">Sospende</string>
+    <string name="kubegreen_deployments">Deployment</string>
+    <string name="kubegreen_statefulsets">StatefulSet</string>
+    <string name="kubegreen_cronjobs">CronJob</string>
+    <string name="kubegreen_nothing">niente</string>
+    <string name="kubegreen_scope">Ambito</string>
+    <string name="kubegreen_excluded">%1$d esclusi</string>
+    <string name="kubegreen_included">%1$d inclusi</string>
+    <string name="kubegreen_patches">%1$d patch</string>
+    <string name="kubegreen_last_run">Ultima esecuzione</string>
+    <plurals name="kubegreen_schedules">
+        <item quantity="one">%1$d pianificazione di sospensione</item>
+        <item quantity="many">%1$d pianificazioni di sospensione</item>
+        <item quantity="other">%1$d pianificazioni di sospensione</item>
+    </plurals>
     <string name="ceph_empty">Nessun cluster Ceph.</string>
     <string name="ceph_external">esterno</string>
     <string name="ceph_osds">OSD %1$d/%2$d attivi</string>
