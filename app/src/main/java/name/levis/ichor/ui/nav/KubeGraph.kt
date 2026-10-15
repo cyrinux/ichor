@@ -111,6 +111,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             onArgoCD = { nav.navigate(Routes.ARGO_CD) },
             onArgoApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
             onFlux = { nav.navigate(Routes.FLUX) },
+            onObject = kubeLinks.onObject,
         )
     }
     composable(

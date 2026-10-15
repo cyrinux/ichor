@@ -9,13 +9,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -82,13 +86,14 @@ class ServicesViewModel(private val browser: KubeBrowserRepository) : LoadingVie
 /**
  * The Services of the namespace the Kubernetes screens list, problems first: load balancers
  * without an address (with a hint on the pool to check), then Services with no ready
- * endpoint. A tap opens the Service's summary ([onService]); a route opens its URL.
+ * endpoint. A tap opens the Service's summary ([onObject]); a route opens its URL, and its
+ * object summary behind the info button beside it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServicesScreen(
     onBack: () -> Unit,
-    onService: (KubeObjectRef) -> Unit,
+    onObject: (KubeObjectRef) -> Unit,
     onLoadBalancing: () -> Unit,
     vm: ServicesViewModel = viewModel(factory = factory { ServicesViewModel(app.kubeBrowser) }),
 ) {
@@ -137,7 +142,8 @@ fun ServicesScreen(
                                 ServiceRowItem(
                                     svc,
                                     showNamespace = control.scope.namespace == null,
-                                    onClick = { onService(KubeObjectRef.service(svc.namespace, svc.name)) },
+                                    onClick = { onObject(KubeObjectRef.service(svc.namespace, svc.name)) },
+                                    onObject = onObject,
                                 )
                                 HorizontalDivider()
                             }
@@ -160,7 +166,7 @@ private fun lbHint(controller: String): Int = when (LbController.of(controller))
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ServiceRowItem(svc: ServiceRow, showNamespace: Boolean, onClick: () -> Unit) {
+private fun ServiceRowItem(svc: ServiceRow, showNamespace: Boolean, onClick: () -> Unit, onObject: (KubeObjectRef) -> Unit) {
     val uriHandler = LocalUriHandler.current
     Column(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
@@ -197,12 +203,24 @@ private fun ServiceRowItem(svc: ServiceRow, showNamespace: Boolean, onClick: () 
         }
         svc.readyText?.let { MutedText(stringResource(R.string.kube_services_ready, it)) }
         if (svc.routes.isNotEmpty()) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 svc.routes.forEach { route ->
-                    AssistChip(
-                        onClick = { runCatching { uriHandler.openUri(route.url) } },
-                        label = { Text(route.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AssistChip(
+                            onClick = { runCatching { uriHandler.openUri(route.url) } },
+                            label = { Text(route.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                        )
+                        route.objectRef?.let { ref ->
+                            IconButton(onClick = { onObject(ref) }, modifier = Modifier.size(32.dp)) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    contentDescription = stringResource(R.string.apps_detail_routes_object),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

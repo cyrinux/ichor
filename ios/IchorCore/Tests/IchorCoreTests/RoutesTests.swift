@@ -26,6 +26,20 @@ final class RoutesTests: XCTestCase {
         XCTAssertEqual(routes.map(\.label), ["api.shop.example", "mqtt.home.example"])
     }
 
+    func testCarriesWhereTheRouteIsRead() throws {
+        let json = #"{"routes":[{"kind":"HTTPRoute","namespace":"media","name":"jellyfin","url":"https://jellyfin.home.example","#
+            + #""service":"jellyfin","group":"gateway.networking.k8s.io","version":"v1","resource":"httproutes"}]}"#
+        let route = try XCTUnwrap(try JSONDecoder().decode(KubeRouteList.self, from: Data(json.utf8)).routes.first)
+        XCTAssertEqual(route.apiResource,
+                       KubeAPIResource(group: "gateway.networking.k8s.io", version: "v1", resource: "httproutes", kind: "HTTPRoute"))
+    }
+
+    func testARouteWithoutItsResourceHasNoObject() throws {
+        let json = #"{"routes":[{"kind":"Ingress","namespace":"demo","name":"hello","url":"http://hello.example"}]}"#
+        let route = try XCTUnwrap(try JSONDecoder().decode(KubeRouteList.self, from: Data(json.utf8)).routes.first)
+        XCTAssertNil(route.apiResource)
+    }
+
     func testRoutePodsOncePerPod() throws {
         let app = InventoryApp(id: "web", name: "Web", pods: [
             InventoryPod(namespace: "shop", pod: "web-0", node: "n1"),

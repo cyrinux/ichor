@@ -4,9 +4,11 @@ import IchorCore
 /// The Services of the Kubernetes screens' namespace scope, problems first: load balancers
 /// without an address (with a hint on the pool to check), then Services with no ready
 /// endpoint. Each shows its type, cluster IP and ports, address, ready endpoints and the
-/// URLs of the routes exposing it. A Service opens its summary; a route opens its URL.
+/// URLs of the routes exposing it. A Service opens its summary; a route opens its URL, and its
+/// own summary behind the info button beside it.
 struct KubeServicesView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openURL) private var openURL
     @State private var scope = KubeBrowserScope()
     @State private var state: LoadState<KubeServices> = .loading
     @State private var query = ""
@@ -72,11 +74,15 @@ struct KubeServicesView: View {
                     ServiceRowView(service: service, showNamespace: showNamespace)
                 }
                 ForEach(service.routes) { route in
-                    if let url = URL(string: route.url) {
-                        Link(destination: url) {
-                            Label { Text(verbatim: route.label) } icon: { Image(systemName: "arrow.up.right.square") }
-                                .font(.footnote)
+                    HStack(spacing: 4) {
+                        if let url = URL(string: route.url) {
+                            Button { openURL(url) } label: {
+                                Label { Text(verbatim: route.label) } icon: { Image(systemName: "arrow.up.right.square") }
+                                    .font(.footnote)
+                            }
+                            .buttonStyle(.plain)
                         }
+                        RouteSummaryLink(route: route)
                     }
                 }
             }

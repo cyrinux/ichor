@@ -60,6 +60,12 @@ func demoObjectSummary(ref resourceRef, namespace, name string, now time.Time) k
 		}
 	case "applications":
 		s.Conditions = []summaryCondition{cond("Synced", "True", "Succeeded", "", 2*time.Hour), cond("Healthy", "True", "", "", 2*time.Hour)}
+	case "ingresses", "httproutes", "grpcroutes", "tlsroutes", "ingressroutes", "ingressroutetcps":
+		// A route the demo cluster serves: accepted by its Gateway and resolving its backends.
+		s.Conditions = []summaryCondition{
+			cond("Accepted", "True", "Accepted", "Route is accepted by its parent.", 26*time.Hour),
+			cond("ResolvedRefs", "True", "ResolvedRefs", "All references resolved.", 26*time.Hour),
+		}
 	}
 
 	sortConditions(s.Conditions)
@@ -122,6 +128,13 @@ func demoKind(ref resourceRef) string {
 	for _, r := range demoAPIResources().Resources {
 		if r.Group == ref.group && r.Resource == ref.resource {
 			return r.Kind
+		}
+	}
+
+	// The demo serves routes too, whose kinds the browser's resource list does not carry.
+	for kind, rr := range routeAPIRefs {
+		if rr.group == ref.group && rr.resource == ref.resource {
+			return kind
 		}
 	}
 

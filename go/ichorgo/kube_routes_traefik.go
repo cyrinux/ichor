@@ -170,8 +170,8 @@ func traefikRoutes(set traefikRouteSet, services map[serviceRef]bool) []kubeRout
 			hosts, path := traefikMatch(r.Match)
 			for _, service := range traefikTargets(r.Services, ns, services) {
 				for _, host := range hosts {
-					routes = append(routes, kubeRoute{Kind: "IngressRoute", Namespace: ns, Name: ir.Metadata.Name,
-						URL: routeURL(scheme, host, port, path), Service: service})
+					routes = append(routes, routeRow("IngressRoute", ns, ir.Metadata.Name,
+						routeURL(scheme, host, port, path), service))
 				}
 			}
 		}
@@ -189,8 +189,8 @@ func traefikRoutes(set traefikRouteSet, services map[serviceRef]bool) []kubeRout
 			hosts, _ := traefikMatch(r.Match)
 			for _, service := range traefikTargets(r.Services, ns, services) {
 				for _, host := range hosts {
-					routes = append(routes, kubeRoute{Kind: "IngressRouteTCP", Namespace: ns, Name: ir.Metadata.Name,
-						URL: routeURL("https", host, 0, ""), Service: service})
+					routes = append(routes, routeRow("IngressRouteTCP", ns, ir.Metadata.Name,
+						routeURL("https", host, 0, ""), service))
 				}
 			}
 		}
