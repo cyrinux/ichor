@@ -15,6 +15,16 @@ enum class LonghornAction(val wire: String) {
     CANCEL_EVICTION("cancelEviction"),
 }
 
+/** What KubeLonghornSnapshotAction runs on a volume's snapshot. */
+enum class LonghornSnapshotAction(val wire: String) {
+    /** A new snapshot of the volume. */
+    TAKE("take"),
+    /** Back the snapshot up to the volume's target. */
+    BACKUP("backup"),
+    /** Delete the snapshot and give its space back. */
+    DELETE("delete"),
+}
+
 /** Longhorn refuses more replicas than this. */
 const val LONGHORN_MAX_REPLICAS = 20
 

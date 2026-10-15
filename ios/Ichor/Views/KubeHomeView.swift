@@ -100,6 +100,8 @@ struct KubeHomeView: View {
     @State private var dataServices: LoadState<DataServices>?
     /// Crossplane: nil until the cluster says it runs it (the read answers "not installed" fast).
     @State private var crossplane: LoadState<Crossplane>?
+    /// Tailscale: nil until the cluster says it runs the operator (the read answers fast).
+    @State private var tailscale: LoadState<Tailscale>?
     /// The Alertmanager's alerts: nil until one is found (none hides the section).
     @State private var alerts: LoadState<AMAlerts>?
     /// Who the API server takes the credentials for; nil until known (or when it cannot say).
@@ -224,6 +226,7 @@ struct KubeHomeView: View {
             flux = nil
             dataServices = nil
             crossplane = nil
+            tailscale = nil
             alerts = nil
             whoAmI = nil
         }
@@ -351,6 +354,12 @@ struct KubeHomeView: View {
                     Label("Crossplane", systemImage: "square.stack.3d.up")
                 }
             }
+            // Only when the cluster runs the Tailscale operator, the same way.
+            if tailscale != nil {
+                NavigationLink { TailscaleView() } label: {
+                    Label("Tailscale", systemImage: "network.badge.shield.half.filled")
+                }
+            }
             NavigationLink { KubeLoadBalancingView() } label: {
                 Label(LoadBalancingText.title, systemImage: "point.3.connected.trianglepath.dotted")
             }
@@ -475,6 +484,10 @@ struct KubeHomeView: View {
         let crossplaneNext = await loadCrossplane(with: client)
         guard id == loadID else { return }
         crossplane = crossplaneNext.map { (crossplane ?? .loading).refreshed(with: $0) }
+        // Tailscale: nil when the cluster does not run the operator.
+        let tailscaleNext = await loadTailscale(with: client)
+        guard id == loadID else { return }
+        tailscale = tailscaleNext.map { (tailscale ?? .loading).refreshed(with: $0) }
         let alertsNext = await loadAlerts(with: client)
         guard id == loadID else { return }
         alerts = alertsNext.map { (alerts ?? .loading).refreshed(with: $0) }
@@ -522,6 +535,14 @@ struct KubeHomeView: View {
     private func loadCrossplane(with client: TalosClient) async -> LoadState<Crossplane>? {
         let loaded: LoadState<Crossplane> = await .from { try await client.crossplane() }
         if case .loaded(let crossplane, _, _) = loaded, !crossplane.installed { return nil }
+        return loaded
+    }
+
+    /// Tailscale, nil when the cluster does not run the operator: the read answers that quickly
+    /// when tailscale.com is not served.
+    private func loadTailscale(with client: TalosClient) async -> LoadState<Tailscale>? {
+        let loaded: LoadState<Tailscale> = await .from { try await client.tailscale() }
+        if case .loaded(let tailscale, _, _) = loaded, !tailscale.installed { return nil }
         return loaded
     }
 }

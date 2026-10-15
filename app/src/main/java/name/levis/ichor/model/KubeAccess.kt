@@ -33,6 +33,8 @@ enum class KubeAction(val wire: String) {
     CNPG_HIBERNATE("cnpgHibernate"),
     LONGHORN_SALVAGE("longhornSalvage"),
     LONGHORN_ATTACHMENT("longhornAttachment"),
+    /** Take, back up or delete a Longhorn snapshot. */
+    LONGHORN_SNAPSHOT("longhornSnapshot"),
     VELERO_BACKUP_NOW("veleroBackupNow"),
     VELERO_DELETE_BACKUP("veleroDeleteBackup"),
     VELERO_RESTORE("veleroRestore"),

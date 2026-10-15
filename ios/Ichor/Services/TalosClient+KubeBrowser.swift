@@ -147,6 +147,11 @@ extension TalosClient {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeCrossplane(config, context, kubeServer, $0) }
     }
 
+    /// The Tailscale operator's connectors, proxy groups, proxy classes and DNS config, problems first.
+    func tailscale() async throws -> Tailscale {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeTailscale(config, context, kubeServer, $0) }
+    }
+
     /// The load balancer controllers, their pools, advertisements and BGP peers, and why a Service has no address.
     func loadBalancing() async throws -> KubeLoadBalancing {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeLoadBalancing(config, context, kubeServer, $0) }

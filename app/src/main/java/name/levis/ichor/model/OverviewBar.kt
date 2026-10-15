@@ -20,7 +20,7 @@ typealias OverviewBar = ActionBar<OverviewAction>
  * Kubernetes screens that work with its credentials alone, no Talos one. GitOps (Argo CD, else
  * Flux) is one tap away when the cluster has it.
  */
-enum class KubeHomeAction { WORKLOADS, RESOURCES, GITOPS, METRICS, ALERTS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SEARCH, SETTINGS, CROSSPLANE;
+enum class KubeHomeAction { WORKLOADS, RESOURCES, GITOPS, METRICS, ALERTS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SEARCH, SETTINGS, CROSSPLANE, TAILSCALE;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 4)

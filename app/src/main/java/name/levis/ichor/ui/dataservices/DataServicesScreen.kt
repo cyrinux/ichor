@@ -87,6 +87,7 @@ fun DataServicesScreen(
     LonghornResultToasts(vm.longhorn.results)
     LonghornSalvageToasts(vm.longhorn.salvageResults)
     LonghornAttachmentToasts(vm.longhorn.attachmentResults)
+    LonghornSnapshotToasts(vm.longhorn.snapshotResults)
     CertificateRenewToasts(vm.certificates.results)
     CnpgBackupToasts(vm.cnpg.results)
     CnpgPromoteToasts(vm.cnpg.promoteResults)

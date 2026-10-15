@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type longhornStatus struct {
@@ -41,6 +42,12 @@ type longhornVolume struct {
 	RestoreProgress  int    `json:"restoreProgress"`
 	ScheduleError    string `json:"scheduleError"`    // why a replica cannot be placed, "" when it can
 	TooManySnapshots bool   `json:"tooManySnapshots"` // near Longhorn's snapshot limit
+	// Longhorn's own snapshots and backups (kube_longhorn_snapshots.go).
+	Snapshots         []longhornSnapshot `json:"snapshots"`         // live ones, newest first
+	SnapshotsRemoving int                `json:"snapshotsRemoving"` // deleted, waiting to be purged
+	Backups           []longhornBackup   `json:"backups"`           // newest first, at most lhBackupsPerVolume
+	BackupCount       int                `json:"backupCount"`
+	BackupStale       bool               `json:"backupStale"` // last backup older than lhBackupStaleAfter
 }
 
 type longhornNode struct {
@@ -200,6 +207,8 @@ func readLonghorn(ctx context.Context, k *kubeClient, version string) *longhornS
 		nodes    kubeList[lhNodeObject]
 		targets  kubeList[lhBackupTargetObject]
 		engines  kubeList[lhEngineObject]
+		snaps    kubeList[lhSnapshotObject]
+		backups  kubeList[lhBackupObject]
 		errs     = make([]error, 3)
 		wg       sync.WaitGroup
 	)
@@ -211,10 +220,14 @@ func readLonghorn(ctx context.Context, k *kubeClient, version string) *longhornS
 	wg.Go(func() { _ = getList(ctx, k, base+"backuptargets", &targets) })
 	// Engines only add progress: without them the volumes still read right.
 	wg.Go(func() { _ = getList(ctx, k, base+"engines", &engines) })
+	// Snapshots and backups too: a volume without them is still described.
+	wg.Go(func() { _ = getList(ctx, k, base+"snapshots", &snaps) })
+	wg.Go(func() { _ = getList(ctx, k, base+"backups", &backups) })
 	wg.Wait()
 
 	out := mapLonghorn(version, volumes.Items, replicas.Items, nodes.Items, targets.Items, sectionError(errs...))
 	addLonghornProgress(out.Volumes, engines.Items)
+	addLonghornSnapshots(out.Volumes, snaps.Items, backups.Items, time.Now())
 
 	return out
 }
@@ -270,6 +283,7 @@ func mapLonghornVolume(v lhVolumeObject, replicas []lhReplicaObject) longhornVol
 		State: st.State, Robustness: st.Robustness, Node: st.CurrentNodeID,
 		ReplicasDesired: v.Spec.NumberOfReplicas, ActualSize: st.ActualSize,
 		LastBackupAt: unixMilli(st.LastBackupAt), ReplicaNodes: []string{},
+		Snapshots: []longhornSnapshot{}, Backups: []longhornBackup{},
 	}
 
 	out.Size, _ = strconv.ParseInt(v.Spec.Size, 10, 64)
