@@ -492,6 +492,7 @@ func demoSealedSecrets(now time.Time) *sealedSecretsStatus {
 		Keys: []sealingKey{
 			{Namespace: "kube-system", Name: "sealed-secrets-key-new", State: "active", CreatedAt: now.Add(-7 * 24 * time.Hour).UnixMilli(), Age: int64(7 * 24 * time.Hour / time.Millisecond)},
 			{Namespace: "kube-system", Name: "sealed-secrets-key-old", State: "active", CreatedAt: now.Add(-21 * 24 * time.Hour).UnixMilli(), Age: int64(21 * 24 * time.Hour / time.Millisecond)},
+			{Namespace: "kube-system", Name: "sealed-secrets-key-rotated", State: sealedKeyCompromised, CreatedAt: now.Add(-30 * 24 * time.Hour).UnixMilli(), Age: int64(30 * 24 * time.Hour / time.Millisecond)},
 		}, Items: []sealedSecret{
 			{Namespace: "shop", Name: "legacy-cert", Keys: []string{"tls.crt", "tls.key"}, KeyCount: 2, Type: "kubernetes.io/tls", Scope: "strict", Reason: "UnsealFailed", Message: "failed to decrypt: no key could decrypt secret", LastTransitionTime: now.Add(-time.Hour).UnixMilli(), ObservedGeneration: 1, Stale: true, Age: now.Add(-24 * time.Hour).UnixMilli(), Health: healthCritical, Reasons: []string{sealedReasonNotSynced, sealedReasonStale}},
 			{Namespace: "shop", Name: "api-token", Keys: []string{"token"}, KeyCount: 1, Type: "Opaque", Scope: "namespace-wide", Synced: true, ObservedGeneration: 1, Age: now.Add(-24 * time.Hour).UnixMilli(), Health: healthOK, Reasons: []string{}},
