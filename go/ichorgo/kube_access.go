@@ -123,8 +123,8 @@ var kubeActionChecks = map[string][]accessNeed{
 	},
 	// KubeVirt: start, stop, restart and migrate update the virtual machine's subresource;
 	// pause and unpause act on the instance's (named like the VM). Each also reads the
-	// virtual machine first, and a migration creates the VirtualMachineInstanceMigration the
-	// API server then carries out. SelfSubjectAccessReview cannot see KubeVirt's own
+	// virtual machine first, and a migration lists the VirtualMachineInstanceMigrations in flight,
+	// then creates the one the API server carries out. SelfSubjectAccessReview cannot see KubeVirt's own
 	// refusals (a VM already running, a runStrategy that forbids a manual restart): they are
 	// asked before the call and answered as conflicts.
 	"vmStart": {
@@ -143,6 +143,7 @@ var kubeActionChecks = map[string][]accessNeed{
 		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachines", Subresource: "migrate"}, true},
 		{ssarAttributes{Verb: "get", Group: groupKubeVirt, Resource: "virtualmachines"}, true},
 		{ssarAttributes{Verb: "create", Group: groupKubeVirt, Resource: "virtualmachineinstancemigrations"}, true},
+		{ssarAttributes{Verb: "list", Group: groupKubeVirt, Resource: "virtualmachineinstancemigrations"}, true},
 	},
 	"vmPause": {
 		{ssarAttributes{Verb: "update", Group: groupKubeVirtSub, Resource: "virtualmachineinstances", Subresource: "pause"}, true},

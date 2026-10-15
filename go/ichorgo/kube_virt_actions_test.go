@@ -132,6 +132,7 @@ func TestVMActionRefusals(t *testing.T) {
 		{"start a running one", vmActionStart, `{"runStrategy":"Always"}`, "Running", errVMRunning},
 		{"start a provisioning one", vmActionStart, `{"runStrategy":"Always"}`, "Provisioning", errVMStarting},
 		{"stop a stopped one", vmActionStop, `{"running":false}`, "Stopped", errVMStopped},
+		{"stop a stopping one", vmActionStop, `{"running":false}`, "Stopping", errVMStopped},
 		{"restart a halted one", vmActionRestart, `{"runStrategy":"Halted"}`, "Stopped", errVMHalted},
 		{"restart a stopped one", vmActionRestart, `{"runStrategy":"RerunOnFailure"}`, "ErrImagePull", errVMNotRunning},
 		{"restart a crashlooping one", vmActionRestart, `{"runStrategy":"Always"}`, "CrashLoopBackOff", errVMNotRunning},
@@ -337,6 +338,43 @@ func TestKubeVMStopForce(t *testing.T) {
 	}
 }
 
+// TestVMStopForceOnStopping: a forced stop is what kills a VM stuck in Stopping, so it goes
+// through there; a VM already stopped is still refused.
+func TestVMStopForceOnStopping(t *testing.T) {
+	stopPath := vmActionSubPath + "virtualmachines/" + vmActionName + "/stop"
+
+	for _, tc := range []struct {
+		status string
+		want   error
+	}{
+		{"Stopping", nil},
+		{"Stopped", errVMStopped},
+	} {
+		f, k := vmActionClient(t, map[string]string{
+			"GET " + vmActionVMPath: vmActionVM(`{"running":false}`, tc.status),
+			"PUT " + stopPath:       `{}`,
+		})
+
+		grace := 0
+
+		_, err := runVMAction(context.Background(), k, vmActionNamespace, vmActionName, vmActionStop, &grace)
+		if !errors.Is(err, tc.want) {
+			t.Errorf("%s: %v, want %v", tc.status, err, tc.want)
+		}
+
+		put := slices.ContainsFunc(f.recorded(), func(r fakeKubeRequest) bool { return r.method == http.MethodPut })
+		if put != (tc.want == nil) {
+			t.Errorf("%s: put %v", tc.status, put)
+		}
+
+		if tc.want == nil {
+			if req := methodRequest(t, f, http.MethodPut); req.path != stopPath || req.body != `{"gracePeriod":0}` {
+				t.Errorf("%s: put %s %q", tc.status, req.path, req.body)
+			}
+		}
+	}
+}
+
 // TestVMActionAccessChecks: every verb asks for its own subresource, on the group that
 // serves it.
 func TestVMActionAccessChecks(t *testing.T) {
@@ -361,9 +399,18 @@ func TestVMActionAccessChecks(t *testing.T) {
 		}
 	}
 
-	// A migration is created, and every verb reads its virtual machine.
-	if needs := kubeActionChecks["vmMigrate"]; len(needs) != 3 || needs[2].attrs.Resource != "virtualmachineinstancemigrations" {
-		t.Errorf("vmMigrate needs %+v", needs)
+	// A migration is created after the ones in flight are listed, and every verb reads its
+	// virtual machine.
+	migrations := map[string]bool{}
+
+	for _, n := range kubeActionChecks["vmMigrate"] {
+		if n.attrs.Group == groupKubeVirt && n.attrs.Resource == "virtualmachineinstancemigrations" && n.namespaced {
+			migrations[n.attrs.Verb] = true
+		}
+	}
+
+	if !migrations["create"] || !migrations["list"] {
+		t.Errorf("vmMigrate needs %+v", kubeActionChecks["vmMigrate"])
 	}
 
 	for name := range want {

@@ -172,7 +172,7 @@ func runVMAction(ctx context.Context, k *kubeClient, namespace, name, action str
 		started, migrating = before, vmMigrationInFlight(before, namespace, name)
 	}
 
-	if err := vmRefusal(action, vm.Status.PrintableStatus, vmRunStrategy(vm), migrating); err != nil {
+	if err := vmRefusal(action, vm.Status.PrintableStatus, vmRunStrategy(vm), migrating, grace != nil); err != nil {
 		return "", err
 	}
 
@@ -213,8 +213,9 @@ func runVMAction(ctx context.Context, k *kubeClient, namespace, name, action str
 }
 
 // vmRefusal is what refuses action on a VM in status with runStrategy, migrating telling
-// whether a migration of its instance is in flight; nil when the request may go ahead.
-func vmRefusal(action, status, runStrategy string, migrating bool) error {
+// whether a migration of its instance is in flight and forced whether a stop carries a grace
+// period; nil when the request may go ahead.
+func vmRefusal(action, status, runStrategy string, migrating, forced bool) error {
 	switch action {
 	case vmActionStart:
 		if status == "Running" {
@@ -225,7 +226,8 @@ func vmRefusal(action, status, runStrategy string, migrating bool) error {
 			return errVMStarting
 		}
 	case vmActionStop:
-		if status == "Stopped" || status == "Stopping" {
+		// A forced stop is what kills a VM stuck in Stopping.
+		if status == "Stopped" || (status == "Stopping" && !forced) {
 			return errVMStopped
 		}
 	case vmActionRestart:
