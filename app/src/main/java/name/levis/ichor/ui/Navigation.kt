@@ -297,6 +297,7 @@ fun Navigation(
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
                 onPolicies = { nav.navigate(Routes.POLICIES) },
                 onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
+                onVirtualMachines = { nav.navigate(Routes.VIRTUAL_MACHINES) },
                 onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
                 onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
                 onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },

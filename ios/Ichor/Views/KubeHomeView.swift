@@ -366,6 +366,9 @@ struct KubeHomeView: View {
             NavigationLink { AutoscalingView() } label: {
                 Label("Autoscaling", systemImage: "arrow.up.and.down")
             }
+            NavigationLink { VirtualMachinesView() } label: {
+                Label("Virtual machines", systemImage: "desktopcomputer")
+            }
             NavigationLink(value: Route.metrics) {
                 Label("Metrics", systemImage: "chart.xyaxis.line")
             }

@@ -19,11 +19,35 @@ import (
 // Ingress, of a Gateway API HTTPRoute, GRPCRoute or TLSRoute, or of a Traefik
 // IngressRoute(TCP) whose backend is a Service selecting its pods.
 type kubeRoute struct {
-	Kind      string `json:"kind"` // Ingress, HTTPRoute, GRPCRoute, TLSRoute, IngressRoute or IngressRouteTCP
+	Kind      string `json:"kind"`    // Ingress, HTTPRoute, GRPCRoute, TLSRoute, IngressRoute or IngressRouteTCP
+	Group     string `json:"group"`   // the API group the kind is read at, so its object summary opens
+	Version   string `json:"version"` // and the version: gateway.networking.k8s.io/v1alpha2 for a TLSRoute
+	Resource  string `json:"resource"`
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
 	URL       string `json:"url"`
 	Service   string `json:"service"` // the backend Service, in Namespace
+}
+
+// routeAPIRefs is where each route kind is read, so the apps can ask KubeObjectSummary for
+// it: the URL of a route says nothing about the resource behind it.
+var routeAPIRefs = map[string]resourceRef{
+	"Ingress":         {"networking.k8s.io", "v1", "ingresses"},
+	"HTTPRoute":       {groupGatewayAPI, "v1", "httproutes"},
+	"GRPCRoute":       {groupGatewayAPI, "v1", "grpcroutes"},
+	"TLSRoute":        {groupGatewayAPI, "v1alpha2", "tlsroutes"},
+	"IngressRoute":    {groupTraefik, "v1alpha1", "ingressroutes"},
+	"IngressRouteTCP": {groupTraefik, "v1alpha1", "ingressroutetcps"},
+}
+
+// routeRow builds a route, carrying the API resource its kind is read at.
+func routeRow(kind, namespace, name, url, service string) kubeRoute {
+	ref := routeAPIRefs[kind]
+
+	return kubeRoute{
+		Kind: kind, Group: ref.group, Version: ref.version, Resource: ref.resource,
+		Namespace: namespace, Name: name, URL: url, Service: service,
+	}
 }
 
 type kubeRouteList struct {

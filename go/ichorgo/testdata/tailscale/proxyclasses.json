@@ -1,0 +1,4 @@
+{"kind":"ProxyClassList","apiVersion":"tailscale.com/v1alpha1","metadata":{},"items":[
+ {"metadata":{"name":"prod","generation":1},"status":{"conditions":[{"type":"ProxyClassReady","status":"True","reason":"ProxyClassValid","observedGeneration":1}]}},
+ {"metadata":{"name":"metrics","generation":1},"status":{"conditions":[{"type":"ProxyClassReady","status":"False","reason":"ProxyClassInvalid","message":"ServiceMonitor CRD not installed","observedGeneration":1}]}}
+]}

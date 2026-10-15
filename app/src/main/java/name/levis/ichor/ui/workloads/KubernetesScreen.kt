@@ -82,6 +82,7 @@ fun KubernetesScreen(
     onEvents: () -> Unit,
     onPolicies: () -> Unit,
     onAutoscaling: () -> Unit,
+    onVirtualMachines: () -> Unit,
     focus: KubeFocus = KubeFocus(0),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(focus.tab) }
@@ -160,6 +161,7 @@ fun KubernetesScreen(
                                 KubernetesAction.API_ADDRESS -> editing = true
                                 KubernetesAction.POLICIES -> onPolicies()
                                 KubernetesAction.AUTOSCALING -> onAutoscaling()
+                                KubernetesAction.VIRTUAL_MACHINES -> onVirtualMachines()
                             }
                         },
                         customizeLabel = stringResource(R.string.bar_edit_title),

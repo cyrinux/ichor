@@ -38,29 +38,61 @@ struct AppRoutesSection: View {
     }
 }
 
-/// The URL, "Ingress · namespace/name", and an open icon; the whole row opens it.
+/// The URL, "Ingress · namespace/name", an open icon and an info button; the row opens the
+/// URL, the info button the route's own summary (its Accepted and ResolvedRefs conditions).
 private struct AppRouteLine: View {
     let route: KubeRoute
 
+    @Environment(\.openURL) private var openURL
+
     var body: some View {
-        if let url = URL(string: route.url) {
-            Link(destination: url) {
-                HStack(spacing: 10) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: route.label)
-                            .font(.callout.monospaced())
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                        Text(verbatim: "\(route.kind) · \(route.namespace)/\(route.name)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                    Spacer(minLength: 8)
-                    Image(systemName: "arrow.up.right.square")
-                        .accessibilityLabel(Text("Open in browser"))
-                }
+        HStack(spacing: 4) {
+            if let url = URL(string: route.url) {
+                Button { openURL(url) } label: { labels }
+                    .buttonStyle(.plain)
+            } else {
+                labels
             }
+            RouteSummaryLink(route: route)
+        }
+    }
+
+    private var labels: some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: route.label)
+                    .font(.callout.monospaced())
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Text(verbatim: "\(route.kind) · \(route.namespace)/\(route.name)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+            Image(systemName: "arrow.up.right.square")
+                .accessibilityLabel(Text("Open in browser"))
+        }
+    }
+}
+
+/// An (i) opening the route's own summary, where it was read. Nothing when the route carries
+/// no resource (an older answer).
+struct RouteSummaryLink: View {
+    let route: KubeRoute
+
+    var body: some View {
+        if let resource = route.apiResource {
+            NavigationLink {
+                KubeObjectView(resource: resource, namespace: route.namespace, name: route.name)
+            } label: {
+                Image(systemName: "info.circle")
+                    .foregroundStyle(.secondary)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(Text("Open object summary"))
         }
     }
 }

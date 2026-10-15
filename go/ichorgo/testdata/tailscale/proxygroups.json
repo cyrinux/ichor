@@ -1,0 +1,16 @@
+{"kind":"ProxyGroupList","apiVersion":"tailscale.com/v1alpha1","metadata":{},"items":[
+ {"metadata":{"name":"ingress-proxies","generation":1},
+  "spec":{"type":"ingress","replicas":3,"proxyClass":"prod","tags":["tag:k8s"]},
+  "status":{"conditions":[{"type":"ProxyGroupReady","status":"True","reason":"ProxyGroupReady","observedGeneration":1},{"type":"ProxyGroupAvailable","status":"True","observedGeneration":1}],
+   "devices":[{"hostname":"ingress-proxies-0","tailnetIPs":["100.64.0.31"]}]}},
+ {"metadata":{"name":"egress-proxies","generation":1},
+  "spec":{"type":"egress"},
+  "status":{"conditions":[{"type":"ProxyGroupReady","status":"False","reason":"ProxyGroupCreating","message":"1/2 ProxyGroup pods running","observedGeneration":1},{"type":"ProxyGroupAvailable","status":"True","observedGeneration":1}]}},
+ {"metadata":{"name":"api-proxies","generation":1},
+  "spec":{"type":"kube-apiserver","replicas":2},
+  "status":{"conditions":[{"type":"ProxyGroupReady","status":"False","reason":"ProxyGroupCreating","message":"0/2 ProxyGroup pods running","observedGeneration":1},{"type":"ProxyGroupAvailable","status":"False","observedGeneration":1}],
+   "url":"https://api-proxies.example.ts.net"}},
+ {"metadata":{"name":"old-proxies","generation":1},
+  "spec":{"type":"egress","replicas":1},
+  "status":{"conditions":[{"type":"ProxyGroupReady","status":"False","reason":"ProxyGroupCreating","observedGeneration":1}]}}
+]}

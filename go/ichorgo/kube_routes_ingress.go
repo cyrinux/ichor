@@ -56,7 +56,7 @@ func ingressRoutes(ingresses []ingressObject, services map[serviceRef]bool) []ku
 			}
 
 			url := routeURL(ingressScheme(ing, host), host, 0, path)
-			routes = append(routes, kubeRoute{Kind: "Ingress", Namespace: ns, Name: ing.Metadata.Name, URL: url, Service: service})
+			routes = append(routes, routeRow("Ingress", ns, ing.Metadata.Name, url, service))
 		}
 
 		for _, rule := range ing.Spec.Rules {
