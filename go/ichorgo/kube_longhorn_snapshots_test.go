@@ -47,7 +47,7 @@ func TestAddLonghornSnapshots(t *testing.T) {
 		{Name: "vol-b", LastBackupAt: unixMilli("2026-10-14T00:00:00Z")},
 		{Name: "vol-c"},
 	}
-	addLonghornSnapshots(vols, snaps.Items, backups.Items, now)
+	addLonghornSnapshots(vols, snaps.Items, backups.Items, map[string]string{"vol-a/0b7e-system": "db/nightly"}, now)
 
 	a, b, c := vols[0], vols[1], vols[2]
 
@@ -61,6 +61,10 @@ func TestAddLonghornSnapshots(t *testing.T) {
 
 	if a.Snapshots[0].BackedUp {
 		t.Errorf("a failed backup does not cover its snapshot: %+v", a.Snapshots[0])
+	}
+
+	if a.Snapshots[0].VolumeSnapshot != "db/nightly" || a.Snapshots[1].VolumeSnapshot != "" || !a.VolumeSnapshotsKnown {
+		t.Errorf("the VolumeSnapshot kept: %+v", a.Snapshots)
 	}
 
 	if a.SnapshotsRemoving != 1 || a.BackupCount != 3 || !a.BackupStale {
@@ -92,7 +96,11 @@ func TestAddLonghornSnapshotsKeepsTheNewestBackups(t *testing.T) {
 	}
 
 	vols := []longhornVolume{{Name: "vol-a"}}
-	addLonghornSnapshots(vols, nil, backups, time.Now())
+	addLonghornSnapshots(vols, nil, backups, nil, time.Now())
+
+	if vols[0].VolumeSnapshotsKnown {
+		t.Fatal("no contents read: not known")
+	}
 
 	if len(vols[0].Backups) != lhBackupsPerVolume || vols[0].BackupCount != lhBackupsPerVolume+5 {
 		t.Fatalf("kept %d of %d", len(vols[0].Backups), vols[0].BackupCount)
@@ -157,5 +165,65 @@ func TestKubeLonghornSnapshotActionValidates(t *testing.T) {
 		if err == nil || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%+v: got %v", c, err)
 		}
+	}
+}
+
+func TestLonghornCSIRefs(t *testing.T) {
+	var contents kubeList[csiSnapshotContentObject]
+
+	err := json.Unmarshal([]byte(`{"items":[
+ {"spec":{"driver":"driver.longhorn.io","volumeSnapshotRef":{"namespace":"db","name":"nightly"}},"status":{"snapshotHandle":"snap://pvc-1/snapshot-a"}},
+ {"spec":{"driver":"driver.longhorn.io","volumeSnapshotRef":{"namespace":"db","name":"offsite"}},"status":{"snapshotHandle":"bak://pvc-1/backup-b"}},
+ {"spec":{"driver":"driver.longhorn.io","volumeSnapshotRef":{"namespace":"web","name":"imported"},"source":{"snapshotHandle":"snap://pvc-2/snapshot-c"}}},
+ {"spec":{"driver":"ebs.csi.aws.com","volumeSnapshotRef":{"namespace":"x","name":"y"}},"status":{"snapshotHandle":"snap://pvc-1/snapshot-d"}}]}`), &contents)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := longhornCSIRefs(contents.Items)
+	want := map[string]string{"pvc-1/snapshot-a": "db/nightly", "pvc-2/snapshot-c": "web/imported"}
+
+	if len(got) != len(want) || got["pvc-1/snapshot-a"] != want["pvc-1/snapshot-a"] || got["pvc-2/snapshot-c"] != want["pvc-2/snapshot-c"] {
+		t.Fatalf("got %v", got)
+	}
+
+	// A Longhorn handle of an unknown shape: what is kept is unknown, not "nothing".
+	var odd csiSnapshotContentObject
+	odd.Spec.Driver = lhCSIDriver
+	odd.Status.SnapshotHandle = "pvc-1/snapshot-z"
+
+	if refs := longhornCSIRefs(append(contents.Items, odd)); refs != nil {
+		t.Fatalf("an unknown handle must make it unknown: %v", refs)
+	}
+}
+
+func TestLonghornSnapshotDeleteRefusesOneAVolumeSnapshotKeeps(t *testing.T) {
+	f := newFakeKubeAPI(t, map[string]string{
+		"GET /apis":           `{"groups":[{"name":"longhorn.io","preferredVersion":{"version":"v1beta2"}}]}`,
+		"GET " + lhVolumePath: `{"metadata":{"resourceVersion":"41"},"status":{"state":"attached"}}`,
+		"GET " + csiContentsPath: `{"items":[{"spec":{"driver":"driver.longhorn.io","volumeSnapshotRef":{"namespace":"db","name":"nightly"}},
+		  "status":{"snapshotHandle":"snap://pvc-1/snap-1"}}]}`,
+		"POST " + lhProxyPath: `{}`,
+	})
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = longhornSnapshotAction(context.Background(), k, "storage", "pvc-1", "snap-1", lhSnapshotDelete)
+	if err == nil || !strings.Contains(err.Error(), "db/nightly") {
+		t.Fatalf("got %v", err)
+	}
+
+	for _, r := range f.recorded() {
+		if r.method == "POST" {
+			t.Fatalf("nothing may be sent: %+v", r)
+		}
+	}
+
+	// Another snapshot of the volume goes.
+	if err := longhornSnapshotAction(context.Background(), k, "storage", "pvc-1", "snap-2", lhSnapshotDelete); err != nil {
+		t.Fatal(err)
 	}
 }

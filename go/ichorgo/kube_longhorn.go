@@ -48,6 +48,8 @@ type longhornVolume struct {
 	Backups           []longhornBackup   `json:"backups"`           // newest first, at most lhBackupsPerVolume
 	BackupCount       int                `json:"backupCount"`
 	BackupStale       bool               `json:"backupStale"` // last backup older than lhBackupStaleAfter
+	// The VolumeSnapshotContents were read: a snapshot without volumeSnapshot keeps none.
+	VolumeSnapshotsKnown bool `json:"volumeSnapshotsKnown"`
 }
 
 type longhornNode struct {
@@ -209,6 +211,7 @@ func readLonghorn(ctx context.Context, k *kubeClient, version string) *longhornS
 		engines  kubeList[lhEngineObject]
 		snaps    kubeList[lhSnapshotObject]
 		backups  kubeList[lhBackupObject]
+		csi      map[string]string
 		errs     = make([]error, 3)
 		wg       sync.WaitGroup
 	)
@@ -223,11 +226,12 @@ func readLonghorn(ctx context.Context, k *kubeClient, version string) *longhornS
 	// Snapshots and backups too: a volume without them is still described.
 	wg.Go(func() { _ = getList(ctx, k, base+"snapshots", &snaps) })
 	wg.Go(func() { _ = getList(ctx, k, base+"backups", &backups) })
+	wg.Go(func() { csi = readLonghornCSIRefs(ctx, k) })
 	wg.Wait()
 
 	out := mapLonghorn(version, volumes.Items, replicas.Items, nodes.Items, targets.Items, sectionError(errs...))
 	addLonghornProgress(out.Volumes, engines.Items)
-	addLonghornSnapshots(out.Volumes, snaps.Items, backups.Items, time.Now())
+	addLonghornSnapshots(out.Volumes, snaps.Items, backups.Items, csi, time.Now())
 
 	return out
 }

@@ -28,7 +28,10 @@ type longhornSnapshot struct {
 	Ready       bool   `json:"ready"`
 	UserCreated bool   `json:"userCreated"` // asked for (by a user, a job, a CSI snapshot), not taken by Longhorn itself
 	BackedUp    bool   `json:"backedUp"`    // a completed backup was taken from it
-	Error       string `json:"error"`
+	// The CSI VolumeSnapshot ("namespace/name") it keeps, "" for none or when not known
+	// (see the volume's volumeSnapshotsKnown). Delete that one, not this.
+	VolumeSnapshot string `json:"volumeSnapshot"`
+	Error          string `json:"error"`
 }
 
 type longhornBackup struct {
@@ -85,7 +88,8 @@ func (b lhBackupObject) volume() string {
 
 // addLonghornSnapshots gives each volume its live snapshots and its backups, newest first.
 // Snapshots marked removed wait for Longhorn to purge them: counted, not listed.
-func addLonghornSnapshots(volumes []longhornVolume, snapshots []lhSnapshotObject, backups []lhBackupObject, now time.Time) {
+// csi (longhornCSIRefs) names the VolumeSnapshots they keep, nil when not known.
+func addLonghornSnapshots(volumes []longhornVolume, snapshots []lhSnapshotObject, backups []lhBackupObject, csi map[string]string, now time.Time) {
 	backed := map[string]bool{} // volume/snapshot with a completed backup
 	byVolume := map[string][]longhornBackup{}
 
@@ -115,7 +119,7 @@ func addLonghornSnapshots(volumes []longhornVolume, snapshots []lhSnapshotObject
 		snaps[vol] = append(snaps[vol], longhornSnapshot{
 			Name: s.Metadata.Name, CreatedAt: unixMilli(s.Status.CreationTime), Size: s.Status.Size,
 			Ready: s.Status.ReadyToUse, UserCreated: s.Status.UserCreated, Error: s.Status.Error,
-			BackedUp: backed[vol+"/"+s.Metadata.Name],
+			BackedUp: backed[vol+"/"+s.Metadata.Name], VolumeSnapshot: csi[vol+"/"+s.Metadata.Name],
 		})
 	}
 
@@ -136,6 +140,7 @@ func addLonghornSnapshots(volumes []longhornVolume, snapshots []lhSnapshotObject
 		v.Backups = append([]longhornBackup{}, list[:min(len(list), lhBackupsPerVolume)]...)
 
 		v.BackupStale = v.LastBackupAt > 0 && now.Sub(time.UnixMilli(v.LastBackupAt)) > lhBackupStaleAfter
+		v.VolumeSnapshotsKnown = csi != nil
 	}
 }
 
@@ -195,6 +200,11 @@ func longhornSnapshotAction(ctx context.Context, k *kubeClient, namespace, volum
 	case lhSnapshotBackup:
 		return longhornManagerAction(ctx, k, namespace, volume, "snapshotBackup", map[string]any{"name": snapshot})
 	default:
+		// Unreadable contents do not block: the sheet then warns before the delete.
+		if ref, ok := readLonghornCSIRefs(ctx, k)[volume+"/"+snapshot]; ok {
+			return errLonghornCSISnapshot(snapshot, ref)
+		}
+
 		if err := longhornManagerAction(ctx, k, namespace, volume, "snapshotDelete", map[string]any{"name": snapshot}); err != nil {
 			return err
 		}

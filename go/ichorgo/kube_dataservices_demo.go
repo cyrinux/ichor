@@ -522,6 +522,7 @@ func addDemoLonghornSnapshots(volumes []longhornVolume, ms func(time.Duration) i
 	for i := range volumes {
 		v := &volumes[i]
 		v.Snapshots, v.Backups = []longhornSnapshot{}, []longhornBackup{}
+		v.VolumeSnapshotsKnown = true
 
 		switch v.PVCName {
 		case "postgres-data":
@@ -531,6 +532,7 @@ func addDemoLonghornSnapshots(volumes []longhornVolume, ms func(time.Duration) i
 				snap("a3f0c5e1-system", 3*day, 12, false, false),
 				snap("snapshot-0e8d7b54", 7*day+20*time.Hour, 640, true, true),
 			}
+			v.Snapshots[1].VolumeSnapshot = "demo/postgres-nightly"
 			v.Backups = []longhornBackup{
 				backup("backup-3b7f2e91", "snapshot-7c1e0d2a", "Completed", 20*time.Hour, 2950),
 				backup("backup-9a04c6d8", "snapshot-41b9f6c3", "Completed", day+20*time.Hour, 2870),

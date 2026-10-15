@@ -64,6 +64,8 @@ public struct LonghornVolume: Decodable, Equatable, Identifiable, Sendable {
     public let backupCount: Int
     /// The last backup is more than a week old.
     public let backupStale: Bool
+    /// The VolumeSnapshotContents were read: a snapshot without volumeSnapshot keeps none.
+    public let volumeSnapshotsKnown: Bool
 
     public var id: String { name }
 
@@ -104,13 +106,14 @@ public struct LonghornVolume: Decodable, Equatable, Identifiable, Sendable {
         backups = try c.field(.backups, [])
         backupCount = try c.field(.backupCount, 0)
         backupStale = try c.field(.backupStale, false)
+        volumeSnapshotsKnown = try c.field(.volumeSnapshotsKnown, false)
     }
 
     private enum CodingKeys: String, CodingKey {
         case name, namespace, pvcNamespace, pvcName, state, robustness, health, replicasDesired, replicasHealthy
         case rebuilding, replicaNodes, node, size, actualSize, lastBackupAt
         case rebuildProgress, backingUp, backupProgress, restoring, restoreProgress, scheduleError, tooManySnapshots
-        case snapshots, snapshotsRemoving, backups, backupCount, backupStale
+        case snapshots, snapshotsRemoving, backups, backupCount, backupStale, volumeSnapshotsKnown
     }
 }
 
@@ -126,6 +129,8 @@ public struct LonghornSnapshot: Decodable, Equatable, Identifiable, Sendable {
     public let userCreated: Bool
     /// A completed backup was taken from it.
     public let backedUp: Bool
+    /// The CSI VolumeSnapshot ("namespace/name") it keeps: delete that one, not this.
+    public let volumeSnapshot: String
     public let error: String
 
     public var id: String { name }
@@ -138,10 +143,11 @@ public struct LonghornSnapshot: Decodable, Equatable, Identifiable, Sendable {
         ready = try c.field(.ready, false)
         userCreated = try c.field(.userCreated, false)
         backedUp = try c.field(.backedUp, false)
+        volumeSnapshot = try c.field(.volumeSnapshot, "")
         error = try c.field(.error, "")
     }
 
-    private enum CodingKeys: String, CodingKey { case name, createdAt, size, ready, userCreated, backedUp, error }
+    private enum CodingKeys: String, CodingKey { case name, createdAt, size, ready, userCreated, backedUp, volumeSnapshot, error }
 }
 
 /// A Longhorn backup of a volume (backups.longhorn.io).

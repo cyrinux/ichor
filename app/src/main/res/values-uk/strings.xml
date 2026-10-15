@@ -5167,4 +5167,7 @@
     <string name="tailscale_used_by">використовують %1$d</string>
     <string name="tailscale_nameserver">сервер імен %1$s</string>
     <string name="tailscale_some_running">частина проксі працює</string>
+    <string name="longhorn_snapshot_csi">VolumeSnapshot %1$s</string>
+    <string name="longhorn_snapshot_delete_csi">Він зберігає VolumeSnapshot %1$s: видаліть натомість його.</string>
+    <string name="longhorn_snapshot_delete_csi_unknown">Ваш обліковий запис не може читати VolumeSnapshot: якщо з цього знімка було створено VolumeSnapshot, його вже не вдасться відновити. Спершу перевірте за допомогою kubectl get volumesnapshots -A.</string>
 </resources>

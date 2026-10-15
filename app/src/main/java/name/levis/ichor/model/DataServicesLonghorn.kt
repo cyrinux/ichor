@@ -56,6 +56,8 @@ data class LonghornVolume(
     val backupCount: Int = 0,
     /** The last backup is more than a week old. */
     val backupStale: Boolean = false,
+    /** The VolumeSnapshotContents were read: a snapshot without [LonghornSnapshot.volumeSnapshot] keeps none. */
+    val volumeSnapshotsKnown: Boolean = false,
 ) {
     val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
 
@@ -77,6 +79,8 @@ data class LonghornSnapshot(
     val userCreated: Boolean = false,
     /** A completed backup was taken from it. */
     val backedUp: Boolean = false,
+    /** The CSI VolumeSnapshot ("namespace/name") it keeps: delete that one, not this. */
+    val volumeSnapshot: String = "",
     val error: String = "",
 )
 
