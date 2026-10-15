@@ -3,7 +3,8 @@ import IchorCore
 
 /// One VM: its status, resources, addresses, conditions, disks and migration, then the actions
 /// its state allows, each also gated by what the credentials may do. Stop and restart ask for the
-/// VM's name typed (VmStopSheet); migrate names the node it leaves.
+/// VM's name typed (VmStopSheet); migrate names the node it leaves. Console opens its serial
+/// console (VMConsoleView).
 struct VirtualMachineSheet: View {
     let vm: VirtualMachine
     let busy: Bool
@@ -48,6 +49,17 @@ struct VirtualMachineSheet: View {
                 }
                 VmActionsSection(vm: vm, busy: busy) { action, force in
                     if action == .stop || action == .restart { typed = VmStopTarget(action: action, force: force) } else { plain = action }
+                }
+                // Only a running instance has a console.
+                Section("Serial console") {
+                    NavigationLink("Console") { VMConsoleView(namespace: vm.namespace, name: vm.name) }
+                        .disabled(vm.phase != "Running")
+                        .kubeGated(.vmConsole, in: vm.namespace)
+                    if vm.phase != "Running" {
+                        Text("Start the VM first to open its console.").font(.caption).foregroundStyle(.secondary)
+                    } else {
+                        KubeDeniedNote(.vmConsole, in: vm.namespace)
+                    }
                 }
             }
             .themedBackground()

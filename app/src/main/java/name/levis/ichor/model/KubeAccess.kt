@@ -35,6 +35,10 @@ enum class KubeAction(val wire: String) {
     LONGHORN_ATTACHMENT("longhornAttachment"),
     /** Take, back up or delete a Longhorn snapshot. */
     LONGHORN_SNAPSHOT("longhornSnapshot"),
+    /** A Longhorn volume's replica count. */
+    LONGHORN_REPLICAS("longhornReplicas"),
+    /** A Longhorn node's scheduling and eviction. */
+    LONGHORN_NODE("longhornNode"),
     VELERO_BACKUP_NOW("veleroBackupNow"),
     VELERO_DELETE_BACKUP("veleroDeleteBackup"),
     VELERO_RESTORE("veleroRestore"),
@@ -46,6 +50,9 @@ enum class KubeAction(val wire: String) {
     VM_MIGRATE("vmMigrate"),
     VM_PAUSE("vmPause"),
     VM_UNPAUSE("vmUnpause"),
+
+    /** Its serial console, like `virtctl console`. */
+    VM_CONSOLE("vmConsole"),
     ;
 
     /** The action asked for an object of a kind, on that kind's own resource; null for a kind the core does not ask about (offered). */

@@ -102,13 +102,18 @@ fun DebugShellScreen(
                             stringResource(
                                 when {
                                     key.kubeNode -> R.string.node_debug_title
+                                    key.isVM -> R.string.vm_console_title
                                     key.isPod -> R.string.pod_shell_title
                                     else -> R.string.debug_title
                                 },
                             ),
                         )
                         Text(
-                            if (key.isPod) listOf(key.namespace, hostname, key.container).filter { it.isNotEmpty() }.joinToString(" / ") else hostname,
+                            when {
+                                key.isPod -> listOf(key.namespace, hostname, key.container).filter { it.isNotEmpty() }.joinToString(" / ")
+                                key.isVM -> "${key.namespace}/${key.vm}"
+                                else -> hostname
+                            },
                             style = MaterialTheme.typography.labelMedium,
                         )
                     }
@@ -127,6 +132,7 @@ fun DebugShellScreen(
             when (val s = state) {
                 ShellState.Setup -> when {
                     key.kubeNode -> KubeNodeSetupForm(hostname, key.namespace, onStart = vm::start)
+                    key.isVM -> VmConsoleSetupForm(key.vm, key.namespace, onStart = vm::start)
                     key.isPod -> PodSetupForm(hostname, key.namespace, onStart = vm::start)
                     else -> SetupForm(hostname, onStart = vm::start)
                 }
@@ -143,7 +149,7 @@ fun DebugShellScreen(
                         ExtraKeys(
                             onKey = vm::send,
                             // The snippets are node diagnostics, for netshoot: not for any pod's image.
-                            onSnippets = if (key.isPod || key.kubeNode || vm.snippets.isEmpty()) null else ({ showSnippets = true }),
+                            onSnippets = if (key.isPod || key.kubeNode || key.isVM || vm.snippets.isEmpty()) null else ({ showSnippets = true }),
                         )
                     }
                 }
@@ -303,6 +309,37 @@ private fun KubeNodeSetupForm(node: String, namespace: String, onStart: (String,
     }
 }
 
+/**
+ * `virtctl console`: nothing to ask but the go-ahead. The hint says what the guest must do for
+ * the console to show anything.
+ */
+@Composable
+private fun VmConsoleSetupForm(vmName: String, namespace: String, onStart: (String, String) -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var error by remember { mutableStateOf<String?>(null) }
+    val appLock = (context.applicationContext as TalosApp).appLock
+    val denial = rememberKubeDenial(KubeAction.VM_CONSOLE, namespace)
+
+    fun start() {
+        // The console may sit at a logged-in shell: with the app lock on, it asks like a pod's.
+        authenticated(context, appLock.enabled.value, scope, context.getString(R.string.vm_console_on, vmName), onError = { error = it }) {
+            onStart("", "")
+        }
+    }
+
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(stringResource(R.string.vm_console_intro, "$namespace/$vmName"), style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.vm_console_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        KubeDenialNote(denial)
+        error?.let { Text(it, color = LocalStatusColors.current.bad) }
+        Button(onClick = ::start, enabled = denial == null, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.vm_console_connect)) }
+    }
+}
+
 /** Runs [onAllowed] at once, or with the app lock on after a fresh fingerprint/PIN ([reason]). */
 private fun authenticated(
     context: Context,
@@ -329,7 +366,7 @@ private fun authenticated(
 private fun StatusLine(state: ShellState, onRestart: () -> Unit) {
     val text = when (state) {
         is ShellState.Starting -> state.status.asString()
-        is ShellState.Exited -> if (state.code >= 0) stringResource(R.string.debug_exited, state.code.toInt()) else state.message
+        is ShellState.Exited -> if (state.code >= 0 && state.message.isEmpty()) stringResource(R.string.debug_exited, state.code.toInt()) else state.message
         else -> null
     } ?: return
     Row(

@@ -11,14 +11,15 @@ import (
 )
 
 // Exported functions whose result is a credential or file the user saves: only their errors
-// are masked. The shells' terminal stream (debug and pod) is not masked at all, nor its snippets
+// are masked. The shells' terminal stream (debug, pod and VM console) is not masked at all, nor its snippets
 // (fixed commands whose well-known addresses masking would break), nor the GitHub links of
 // integration requests (opened, not shown; built from already masked results), nor share
 // links (built from the masked names on screen).
 var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "JoinNodeConfigSealed", "BuildTalosconfig", "ReplaceContextCredentials", "MergeConfig", "RemoveContext", "MergeKubeconfig", "RemoveKubeContext", "ExportKubeContext", "MergeTalosconfig", "DecodeImportText", "QRCodeText", "KubeAuthForBackup", "DiscoverClusters", "AddContextNodes", "SetContextEndpoints", "AddContextEndpoint", "DemoConfig", "DemoKubeconfig", "DecryptBackup", "NormalizeKubeServer", "NormalizePromSource", "DebugSnippets", "IntegrationIssueURL", "IntegrationSearchURL", "BuildShareLink", "SearchSnapshots", "DemoSearchEntries", "DiscoverOmniClusters", "SetOmniServiceAccount"}
 
-// The shells wrap their listener in newDebugSession: status and exit masked, not the terminal.
-var unmaskedListeners = []string{"StartDebugShell", "StartNodeDebug", "StartPodDebug", "StartPodShell"}
+// The shells (and the VM console) wrap their listener in newDebugSession: status and exit
+// masked, not the terminal.
+var unmaskedListeners = []string{"StartDebugShell", "StartNodeDebug", "StartPodDebug", "StartPodShell", "StartVMConsole"}
 
 // TestExportedFuncsUsePrivacyHooks checks every exported function of the package: masked
 // context names and nodes coming from the app are unmasked on entry, and results, errors

@@ -202,7 +202,7 @@ private fun VolumeRow(v: LonghornVolume, busy: Boolean, onAttachment: (Boolean) 
                 Text(stringResource(R.string.longhorn_too_many_snapshots), style = MaterialTheme.typography.labelSmall, color = colors.warn)
             }
         }
-        LonghornActionMenu(v.actions, busy, onAction)
+        LonghornActionMenu(v.actions, v.namespace, busy, onAction)
     }
 }
 
@@ -270,7 +270,7 @@ private fun NodeRow(node: LonghornNode, busy: Boolean, onAction: (LonghornAction
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            LonghornActionMenu(node.actions, busy, onAction)
+            LonghornActionMenu(node.actions, node.namespace, busy, onAction)
         }
         node.disks.forEach { d ->
             if (d.maximum > 0) {
