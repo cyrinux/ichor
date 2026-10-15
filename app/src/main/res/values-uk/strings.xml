@@ -2401,6 +2401,37 @@
         <item quantity="many">%1$d попереджень</item>
         <item quantity="other">%1$d попередження</item>
     </plurals>
+    <string name="externaldns_empty">Немає контролерів чи записів ExternalDNS.</string>
+    <string name="externaldns_provider">Провайдер</string>
+    <string name="externaldns_owner">Ідентифікатор власника</string>
+    <string name="externaldns_domain_filters">Фільтри доменів</string>
+    <string name="externaldns_sources">Джерела</string>
+    <string name="externaldns_interval">Інтервал</string>
+    <string name="externaldns_interval_value">%1$d с</string>
+    <string name="externaldns_txt">Префікс/суфікс TXT</string>
+    <string name="externaldns_annotation_filter">Фільтр анотацій</string>
+    <string name="externaldns_ready">готовий</string>
+    <string name="externaldns_not_ready">не готовий</string>
+    <string name="externaldns_dry_run">dry-run</string>
+    <string name="externaldns_from">з %1$s</string>
+    <string name="externaldns_by">через %1$s</string>
+    <string name="externaldns_reason_not_ready">жодна репліка не готова</string>
+    <string name="externaldns_reason_dry_run">dry-run: нічого не змінює</string>
+    <string name="externaldns_reason_stale">новішу версію ще не спостережено</string>
+    <string name="externaldns_reason_no_target">ще немає адреси, на яку вказувати</string>
+    <string name="externaldns_reason_unmanaged">поза фільтрами доменів усіх контролерів</string>
+    <plurals name="externaldns_records">
+        <item quantity="one">%1$d ім\'я хоста</item>
+        <item quantity="few">%1$d імені хоста</item>
+        <item quantity="many">%1$d імен хостів</item>
+        <item quantity="other">%1$d імені хоста</item>
+    </plurals>
+    <plurals name="externaldns_truncated">
+        <item quantity="one">Показано перші %1$d з %2$d імен хостів.</item>
+        <item quantity="few">Показано перші %1$d з %2$d імен хостів.</item>
+        <item quantity="many">Показано перші %1$d з %2$d імен хостів.</item>
+        <item quantity="other">Показано перші %1$d з %2$d імен хостів.</item>
+    </plurals>
     <string name="kubegreen_empty">Немає розкладів сну.</string>
     <string name="kubegreen_state_asleep">Спить</string>
     <string name="kubegreen_state_awake">Прокинувся</string>

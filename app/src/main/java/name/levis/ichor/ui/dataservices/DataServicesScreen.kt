@@ -42,6 +42,7 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.DataServices
+import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.detected
 import name.levis.ichor.model.likelyCauses
 import name.levis.ichor.model.notReadyNames
@@ -66,6 +67,7 @@ import name.levis.ichor.ui.components.pageContent
 fun DataServicesScreen(
     initial: DataServiceKind? = null,
     onBack: () -> Unit,
+    onObject: (KubeObjectRef) -> Unit,
     onSupportedIntegrations: () -> Unit,
     onRequestIntegration: () -> Unit,
 ) {
@@ -132,7 +134,7 @@ fun DataServicesScreen(
                 else app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
             }
             if (data.detected.isEmpty()) NoDataServices(onSupportedIntegrations, onRequestIntegration)
-            else Systems(data, downNodes, initial, vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero)
+            else Systems(data, downNodes, initial, onObject, vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero)
         }
     }
 }
@@ -153,7 +155,7 @@ private fun NoDataServices(onSupportedIntegrations: () -> Unit, onRequestIntegra
 }
 
 @Composable
-private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions, cnpg: CnpgActions, velero: VeleroActions) {
+private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, onObject: (KubeObjectRef) -> Unit, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions, cnpg: CnpgActions, velero: VeleroActions) {
     val kinds = services.detected
     // Picked once: a system detected later, before it in the list, doesn't take its place.
     var selected by rememberSaveable { mutableStateOf(initial ?: kinds.first()) }
@@ -180,6 +182,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
                 DataServiceKind.PERCONA -> PerconaTab(services.percona!!)
                 DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!, certificates)
                 DataServiceKind.VELERO -> VeleroTab(services.velero!!, velero)
+                DataServiceKind.EXTERNAL_DNS -> ExternalDnsTab(services.externalDns!!, onObject)
                 DataServiceKind.CEPH -> CephTab(services.ceph!!)
                 DataServiceKind.SNAPSHOTS -> SnapshotsTab(services.snapshots!!)
                 DataServiceKind.BACKUP_JOBS -> BackupJobsTab(services.backupJobs!!)

@@ -33,9 +33,11 @@ const (
 
 // checkMeta is the metadata the checkup reads of an object.
 type checkMeta struct {
-	Name              string            `json:"name"`
+	Name string `json:"name"`
+	// Annotations: the ExternalDNS reader reads them off Services.
 	Namespace         string            `json:"namespace"`
 	Labels            map[string]string `json:"labels"`
+	Annotations       map[string]string `json:"annotations"`
 	CreationTimestamp time.Time         `json:"creationTimestamp"`
 	DeletionTimestamp *time.Time        `json:"deletionTimestamp"`
 	Finalizers        []string          `json:"finalizers"`

@@ -80,6 +80,21 @@ var dataCommands = []command{
 		}
 		return "null", nil
 	}},
+	{name: "external-dns", run: func(e env) (out string, err error) {
+		// external-dns: the ExternalDNS section of Data services (read-only).
+		raw, err := ichorgo.KubeDataServices(e.cfg, e.context, e.kubeServer, "external-dns")
+		if err != nil {
+			return "", err
+		}
+		var report map[string]json.RawMessage
+		if err := json.Unmarshal([]byte(raw), &report); err != nil {
+			return "", err
+		}
+		if section, ok := report["externalDns"]; ok {
+			return string(section), nil
+		}
+		return "null", nil
+	}},
 	{name: "volume-snapshots", args: "[NAMESPACE]", run: func(e env) (string, error) {
 		return ichorgo.KubeVolumeSnapshots(e.cfg, e.context, e.kubeServer, flag.Arg(1))
 	}},

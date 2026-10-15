@@ -2259,6 +2259,33 @@
         <item quantity="one">%1$d avertissement</item>
         <item quantity="other">%1$d avertissements</item>
     </plurals>
+    <string name="externaldns_empty">Aucun contrôleur ni enregistrement ExternalDNS.</string>
+    <string name="externaldns_provider">Fournisseur</string>
+    <string name="externaldns_owner">ID de propriétaire</string>
+    <string name="externaldns_domain_filters">Filtres de domaine</string>
+    <string name="externaldns_sources">Sources</string>
+    <string name="externaldns_interval">Intervalle</string>
+    <string name="externaldns_interval_value">%1$d s</string>
+    <string name="externaldns_txt">Préfixe/suffixe TXT</string>
+    <string name="externaldns_annotation_filter">Filtre d\'annotation</string>
+    <string name="externaldns_ready">prêt</string>
+    <string name="externaldns_not_ready">pas prêt</string>
+    <string name="externaldns_dry_run">dry-run</string>
+    <string name="externaldns_from">de %1$s</string>
+    <string name="externaldns_by">par %1$s</string>
+    <string name="externaldns_reason_not_ready">aucun réplica prêt</string>
+    <string name="externaldns_reason_dry_run">dry-run : il ne change rien</string>
+    <string name="externaldns_reason_stale">une version plus récente n\'est pas encore observée</string>
+    <string name="externaldns_reason_no_target">aucune adresse à viser pour l\'instant</string>
+    <string name="externaldns_reason_unmanaged">hors des filtres de domaine de tous les contrôleurs</string>
+    <plurals name="externaldns_records">
+        <item quantity="one">%1$d nom d\'hôte</item>
+        <item quantity="other">%1$d noms d\'hôte</item>
+    </plurals>
+    <plurals name="externaldns_truncated">
+        <item quantity="one">Affichage des %1$d premiers des %2$d noms d\'hôte.</item>
+        <item quantity="other">Affichage des %1$d premiers des %2$d noms d\'hôte.</item>
+    </plurals>
     <string name="kubegreen_empty">Aucun planning de veille.</string>
     <string name="kubegreen_state_asleep">Endormi</string>
     <string name="kubegreen_state_awake">Éveillé</string>

@@ -25,8 +25,10 @@ type gatewayParentRef struct {
 type gatewayRouteObject struct {
 	Kind     string `json:"-"`
 	Metadata struct {
-		Name      string `json:"name"`
-		Namespace string `json:"namespace"`
+		Name string `json:"name"`
+		// Annotations: the ExternalDNS reader reads the controller and ttl ones.
+		Namespace   string            `json:"namespace"`
+		Annotations map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {
 		ParentRefs []gatewayParentRef `json:"parentRefs"`
