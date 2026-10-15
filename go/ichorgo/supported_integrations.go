@@ -20,6 +20,9 @@ type integrationSpec struct {
 	// Resource of Groups[0] that must be served too, when the group is shared with other
 	// projects ("" when the group is enough).
 	Resource string
+	// FallbackVersion of Groups[0] also asked for Resource when the preferred version does not
+	// serve it: Kyverno 1.15 prefers v2 while its policies stay under v1.
+	FallbackVersion string
 	// ServiceKind also finds a project without API by its Services: a promMatch kind.
 	ServiceKind string
 	// PodsFallback also finds a project whose API group is optional by its running pods:
@@ -54,7 +57,7 @@ var integrationSpecs = []integrationSpec{
 	{ID: "crossplane", Name: "Crossplane", Website: "https://www.crossplane.io", Groups: []string{groupCrossplanePkg, groupCrossplaneAPIExt}, AnyGroup: true},
 	{ID: "external-secrets", Name: "External Secrets Operator", Website: "https://external-secrets.io", Groups: []string{groupExternalSecrets}},
 	// Kyverno is read through its policies and the (standard) policy reports it writes.
-	{ID: "kyverno", Name: "Kyverno", Website: "https://kyverno.io", Groups: []string{groupKyverno, groupPolicyReport}, Resource: "clusterpolicies"},
+	{ID: "kyverno", Name: "Kyverno", Website: "https://kyverno.io", Groups: []string{groupKyverno, groupPolicyReport}, Resource: "clusterpolicies", FallbackVersion: kyvernoPoliciesVersion},
 	// The autoscalers: KEDA's ScaledObjects, the VPA's recommendations and Karpenter's pools.
 	{ID: "keda", Name: "KEDA", Website: "https://keda.sh", Groups: []string{groupKEDA}, Resource: "scaledobjects"},
 	{ID: "vpa", Name: "Vertical Pod Autoscaler", Website: "https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler", Groups: []string{groupVPA}, Resource: "verticalpodautoscalers"},
@@ -172,6 +175,9 @@ func readSupportedIntegrations(ctx context.Context, k *kubeClient, hints hintSet
 		if version, ok := groups[firstGroup(s)]; ok && s.Resource != "" {
 			wg.Go(func() {
 				served := servesResource(ctx, k, s.Groups[0], version, s.Resource)
+				if !served && s.FallbackVersion != "" && s.FallbackVersion != version {
+					served = servesResource(ctx, k, s.Groups[0], s.FallbackVersion, s.Resource)
+				}
 
 				mu.Lock()
 				resourceFor[s.ID] = served
