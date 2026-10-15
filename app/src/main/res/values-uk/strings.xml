@@ -5030,6 +5030,7 @@
     <string name="velero_restore_no_volumes">без знімків томів</string>
     <string name="velero_restore_every_namespace">Відновлюються всі простори імен із резервної копії.</string>
     <string name="velero_restore_choose_namespaces">Виберіть простори імен для відновлення</string>
+    <string name="velero_restore_pick_namespace">Виберіть принаймні один простір імен для відновлення</string>
     <string name="velero_restore_target_same">порожньо: та сама назва</string>
     <string name="velero_restore_existing">Наявні об\'єкти</string>
     <string name="velero_restore_existing_leave">залишити</string>

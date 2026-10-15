@@ -4782,6 +4782,7 @@
     <string name="velero_restore_no_volumes">aucun instantané de volume</string>
     <string name="velero_restore_every_namespace">Tous les espaces de noms de la sauvegarde sont restaurés.</string>
     <string name="velero_restore_choose_namespaces">Choisissez les espaces de noms à restaurer</string>
+    <string name="velero_restore_pick_namespace">Choisissez au moins un espace de noms à restaurer</string>
     <string name="velero_restore_target_same">vide : le même nom</string>
     <string name="velero_restore_existing">Objets existants</string>
     <string name="velero_restore_existing_leave">conserver</string>

@@ -195,7 +195,7 @@ func TestVeleroRestore(t *testing.T) {
 func TestVeleroRestoreOmittedEmpties(t *testing.T) {
 	f, k := veleroRestoreAPI(t, veleroRestoreBackupJSON, veleroRestoreLocationsJSON, `{"items":[]}`)
 
-	if _, err := restoreVeleroBackup(context.Background(), k, "velero", "apps-daily-20261002020000", veleroRestoreOptions{}, time.Now()); err != nil {
+	if _, err := restoreVeleroBackup(context.Background(), k, "velero", "apps-daily-20261002020000", veleroRestoreOptions{AllNamespaces: true}, time.Now()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -268,13 +268,104 @@ func TestVeleroRestoreOptionsValidation(t *testing.T) {
 	}
 }
 
+// TestVeleroRestoreOptionsNamespaces: Velero reads an empty includedNamespaces as every
+// namespace, so restoring all of them must be asked for; names are DNS-1123 labels.
+func TestVeleroRestoreOptionsNamespaces(t *testing.T) {
+	long := strings.Repeat("a", 64)
+
+	for _, tc := range []struct {
+		name    string
+		options veleroRestoreOptions
+		ok      bool
+	}{
+		{"nothing picked", veleroRestoreOptions{}, false},
+		{"empty list", veleroRestoreOptions{IncludedNamespaces: []string{}}, false},
+		{"all namespaces flag", veleroRestoreOptions{AllNamespaces: true}, true},
+		{"wildcard", veleroRestoreOptions{IncludedNamespaces: []string{"*"}}, true},
+		{"one namespace", veleroRestoreOptions{IncludedNamespaces: []string{"demo"}}, true},
+		{"mapped namespace", veleroRestoreOptions{IncludedNamespaces: []string{"demo"}, NamespaceMapping: map[string]string{"demo": "demo-restored"}}, true},
+		{"flag and names", veleroRestoreOptions{AllNamespaces: true, IncludedNamespaces: []string{"demo"}}, false},
+		{"wildcard and names", veleroRestoreOptions{IncludedNamespaces: []string{"*", "demo"}}, false},
+		{"upper case", veleroRestoreOptions{IncludedNamespaces: []string{"Demo"}}, false},
+		{"dot", veleroRestoreOptions{IncludedNamespaces: []string{"demo.restored"}}, false},
+		{"64 characters", veleroRestoreOptions{IncludedNamespaces: []string{long}}, false},
+		{"63 characters", veleroRestoreOptions{IncludedNamespaces: []string{long[:63]}}, true},
+		{"dotted mapping target", veleroRestoreOptions{IncludedNamespaces: []string{"demo"}, NamespaceMapping: map[string]string{"demo": "demo.restored"}}, false},
+		{"wildcard mapping", veleroRestoreOptions{AllNamespaces: true, NamespaceMapping: map[string]string{"*": "demo"}}, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := tc.options.validate(); (err == nil) != tc.ok {
+				t.Errorf("validate() = %v, want ok %v", err, tc.ok)
+			}
+		})
+	}
+
+	// Through the entry point: nothing picked is refused before anything is read.
+	if _, err := KubeVeleroRestore("", "", "", "velero", "apps-daily-20261002020000", `{"includedNamespaces":[]}`); err == nil || !strings.Contains(err.Error(), "namespace") {
+		t.Errorf("empty pick: %v", err)
+	}
+}
+
+// TestVeleroRestoreAllNamespacesSpec: restoring every namespace leaves includedNamespaces out
+// of the Restore, which is how Velero spells "all".
+func TestVeleroRestoreAllNamespacesSpec(t *testing.T) {
+	for _, options := range []veleroRestoreOptions{{AllNamespaces: true}, {IncludedNamespaces: []string{"*"}}} {
+		spec := veleroRestoreSpec("apps-daily-20261002020000", options)
+		if ns, ok := spec["includedNamespaces"]; ok && !slices.Equal(ns.([]string), []string{"*"}) {
+			t.Errorf("%+v: includedNamespaces %v", options, ns)
+		}
+	}
+
+	if _, ok := veleroRestoreSpec("b", veleroRestoreOptions{AllNamespaces: true})["includedNamespaces"]; ok {
+		t.Error("all namespaces flag sent includedNamespaces")
+	}
+}
+
+// TestMapVeleroRestoresNewestByCreation: a Restore just created has no startTimestamp yet; it
+// is still the newest, ahead of the veleroBackupsMax cut, so the apps follow it.
+func TestMapVeleroRestoresNewestByCreation(t *testing.T) {
+	restore := func(name, created, started string) veleroRestoreObject {
+		var r veleroRestoreObject
+		r.Metadata.Name, r.Metadata.CreationTimestamp = name, created
+		r.Spec.BackupName = "nightly"
+		r.Status.StartTimestamp = started
+		r.Status.Phase = "Completed"
+
+		return r
+	}
+
+	var restores []veleroRestoreObject
+	for i := range veleroBackupsMax {
+		at := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC).Add(time.Duration(i) * time.Hour).Format(time.RFC3339)
+		restores = append(restores, restore("nightly-old-"+at, at, at))
+	}
+
+	fresh := restore("nightly-20261004120000", "2026-10-04T12:00:00Z", "")
+	fresh.Status.Phase = ""
+	restores = append(restores, fresh)
+
+	// No creationTimestamp: the start time still orders it.
+	legacy := restore("nightly-legacy", "", "2026-10-01T09:00:00Z")
+	restores = append(restores, legacy)
+
+	got := mapVeleroRestores(restores, "nightly")
+	if len(got) != veleroBackupsMax || got[0].Name != "nightly-20261004120000" || got[1].Name != "nightly-legacy" {
+		names := make([]string, 0, 3)
+		for _, r := range got[:min(3, len(got))] {
+			names = append(names, r.Name)
+		}
+
+		t.Errorf("%d restores, first %v", len(got), names)
+	}
+}
+
 func TestVeleroRestoreDemoAndValidation(t *testing.T) {
 	cfg, err := DemoKubeconfig()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := KubeVeleroRestore(cfg, demoKubeContext, "", "velero", "apps-daily-20261002020000", ""); !errors.Is(err, errDemoUnavailable) {
+	if _, err := KubeVeleroRestore(cfg, demoKubeContext, "", "velero", "apps-daily-20261002020000", `{"includedNamespaces":["demo"]}`); !errors.Is(err, errDemoUnavailable) {
 		t.Errorf("demo restore: %v", err)
 	}
 
