@@ -200,6 +200,8 @@ fun OverviewScreen(
     onServices: () -> Unit,
     /** Crossplane's packages, definitions and resources (from the Kubernetes home). */
     onCrossplane: () -> Unit,
+    /** The Tailscale operator's connectors and proxies (from the Kubernetes home). */
+    onTailscale: () -> Unit,
     onLoadBalancing: () -> Unit,
     onJobs: () -> Unit,
     /** The cluster's Kubernetes events, live (from the Kubernetes home). */
@@ -250,6 +252,7 @@ fun OverviewScreen(
                 onStorage = onStorage,
                 onServices = onServices,
                 onCrossplane = onCrossplane,
+                onTailscale = onTailscale,
                 onLoadBalancing = onLoadBalancing,
                 onJobs = onJobs,
                 onEvents = onKubeEvents,

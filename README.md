@@ -607,6 +607,14 @@ composite resource, claim and managed resource with its Ready and Synced conditi
 first, with a filter and a search, and the Synced message (the cloud API's error) on the row.
 Tapping a row opens the object's summary (conditions, events, YAML); nothing is changed here.
 
+### Tailscale
+
+**Kubernetes → Tailscale** (the button appears when the cluster runs the Tailscale operator)
+shows the operator, every connector (subnet routes, exit node, app connector, tailnet IPs and
+devices), proxy group (type, devices, the kube-apiserver URL), proxy class (and who uses it) and
+the tailnet nameserver — problems first, with the operator's reason. Tapping a row opens the
+object's summary; nothing is changed here (os:admin).
+
 ### Argo CD app icons
 
 Ichor names an Argo CD app's logo from its Helm chart, its name or the images it runs. An app it

@@ -140414,6 +140414,196 @@
           }
         }
       }
+    },
+    "Tailscale" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tailscale" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tailscale" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Tailscale" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tailscale" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tailscale" } }
+      }
+    },
+    "The Tailscale operator is installed but runs no connector or proxy yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'opérateur Tailscale est installé mais ne fait encore tourner aucun connecteur ni proxy." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El operador de Tailscale está instalado pero aún no ejecuta ningún conector ni proxy." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оператор Tailscale встановлено, але він ще не запускає жодного конектора чи проксі." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Tailscale-Operator ist installiert, betreibt aber noch keinen Connector oder Proxy." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'operatore Tailscale è installato ma non esegue ancora alcun connettore o proxy." } }
+      }
+    },
+    "Long list: only the first 200 objects of each kind are listed, problems first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Longue liste : seuls les 200 premiers objets de chaque type sont listés, problèmes en tête." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Lista larga: solo se listan los primeros 200 objetos de cada tipo, problemas primero." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Довгий список: показано лише перші 200 об'єктів кожного виду, спершу проблеми." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lange Liste: nur die ersten 200 Objekte jeder Art werden gelistet, Probleme zuerst." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Elenco lungo: sono elencati solo i primi 200 oggetti per tipo, prima i problemi." } }
+      }
+    },
+    "Operator %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Opérateur %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Operador %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оператор %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Operator %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Operatore %@" } }
+      }
+    },
+    "%@ ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ prêts" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ listos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ готові" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ bereit" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ pronti" } }
+      }
+    },
+    "No operator Deployment found: nothing here is reconciled." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucun Deployment d'opérateur trouvé : rien ici n'est réconcilié." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se encontró el Deployment del operador: nada de esto se reconcilia." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Deployment оператора не знайдено: ніщо тут не узгоджується." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Operator-Deployment gefunden: hier wird nichts abgeglichen." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun Deployment dell'operatore trovato: nulla qui viene riconciliato." } }
+      }
+    },
+    "API %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "API %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "API %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "API %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "API %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "API %@" } }
+      }
+    },
+    "Connectors" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Connecteurs" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conectores" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Конектори" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Connectors" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Connettori" } }
+      }
+    },
+    "Proxy groups" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Groupes de proxys" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Grupos de proxies" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Групи проксі" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Proxy-Gruppen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Gruppi di proxy" } }
+      }
+    },
+    "Proxy classes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Classes de proxy" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Clases de proxy" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Класи проксі" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Proxy-Klassen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Classi di proxy" } }
+      }
+    },
+    "subnet router %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "routeur de sous-réseau %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "router de subred %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "маршрутизатор підмережі %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Subnetz-Router %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "router di subnet %@" } }
+      }
+    },
+    "exit node" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "nœud de sortie" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "nodo de salida" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "вихідний вузол" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Exit-Node" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "nodo di uscita" } }
+      }
+    },
+    "app connector" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "connecteur d'app" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "conector de apps" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "конектор застосунків" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "App-Connector" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "connettore di app" } }
+      }
+    },
+    "%lld devices" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld appareils" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld dispositivos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld пристроїв" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Geräte" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld dispositivi" } }
+      }
+    },
+    "%lld replicas" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld réplicas" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld réplicas" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld реплік" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Replikas" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld repliche" } }
+      }
+    },
+    "proxy class %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "classe de proxy %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "clase de proxy %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "клас проксі %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Proxy-Klasse %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "classe di proxy %@" } }
+      }
+    },
+    "used by %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "utilisée par %lld" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "usada por %lld" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "використовують %lld" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "verwendet von %lld" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "usata da %lld" } }
+      }
+    },
+    "nameserver %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "serveur de noms %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "servidor de nombres %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "сервер імен %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nameserver %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "nameserver %@" } }
+      }
+    },
+    "some proxies running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "certains proxys tournent" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "algunos proxies en marcha" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "частина проксі працює" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "einige Proxys laufen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "alcuni proxy attivi" } }
+      }
     }
   },
   "version" : "1.0"
