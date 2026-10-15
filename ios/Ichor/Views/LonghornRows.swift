@@ -57,7 +57,6 @@ struct LonghornVolumeRow: View {
             parts.append(volume.replicaNodes.joined(separator: ", "))
         }
         parts.append("\(formatBytes(volume.actualSize)) / \(formatBytes(volume.size))")
-        parts.append(volume.lastBackupAt > 0 ? String(localized: "backup \(relativeTime(volume.lastBackupAt))") : String(localized: "never backed up"))
         return parts.joined(separator: " · ")
     }
 }

@@ -16,7 +16,7 @@ struct SnapshotsList: View {
                         if !s.error.isEmpty { ErrorLine(error: s.error) }
                     }
                 }
-                if status.snapshots.isEmpty && status.error.isEmpty { Text("No volume snapshots.") }
+                if status.snapshots.isEmpty && status.error.isEmpty { Text("No CSI VolumeSnapshots. Longhorn’s own snapshots are under each Longhorn volume.") }
             }
             Section {
                 ForEach(status.claims.filter(\.watched)) { c in

@@ -40,6 +40,7 @@ func demoDataServices(now time.Time) dataServices {
 		},
 		BackupTargets: []longhornBackupTarget{{Name: "default", URL: "s3://longhorn-backups@garage/", Available: true}},
 	}
+	addDemoLonghornSnapshots(longhorn.Volumes, ms)
 
 	garage := &garageStatus{Instances: []garageInstance{
 		{
@@ -498,4 +499,57 @@ func demoSealedSecrets(now time.Time) *sealedSecretsStatus {
 			{Namespace: "shop", Name: "database-credentials", Keys: []string{"database", "password", "username"}, KeyCount: 3, Type: "Opaque", Immutable: true, Scope: "strict", Synced: true, ObservedGeneration: 1, Age: now.Add(-24 * time.Hour).UnixMilli(), Health: healthOK, Reasons: []string{}},
 		}}
 	return out
+}
+
+// addDemoLonghornSnapshots: postgres-data well covered, uploads with a failed last backup,
+// search-data a stale one, scratch none at all.
+func addDemoLonghornSnapshots(volumes []longhornVolume, ms func(time.Duration) int64) {
+	const mib = int64(1) << 20
+
+	snap := func(name string, age time.Duration, size int64, user, backed bool) longhornSnapshot {
+		return longhornSnapshot{Name: name, CreatedAt: ms(age), Size: size * mib, Ready: true, UserCreated: user, BackedUp: backed}
+	}
+	backup := func(name, snapshot, state string, age time.Duration, size int64) longhornBackup {
+		b := longhornBackup{Name: name, Snapshot: snapshot, State: state, Progress: 100, CreatedAt: ms(age), Size: size * mib}
+		if state == "Error" {
+			b.Progress, b.Error = 37, "failed to upload block: connection reset by peer"
+		}
+
+		return b
+	}
+	day := 24 * time.Hour
+
+	for i := range volumes {
+		v := &volumes[i]
+		v.Snapshots, v.Backups = []longhornSnapshot{}, []longhornBackup{}
+
+		switch v.PVCName {
+		case "postgres-data":
+			v.Snapshots = []longhornSnapshot{
+				snap("snapshot-7c1e0d2a", 20*time.Hour, 182, true, true),
+				snap("snapshot-41b9f6c3", day+20*time.Hour, 96, true, true),
+				snap("a3f0c5e1-system", 3*day, 12, false, false),
+				snap("snapshot-0e8d7b54", 7*day+20*time.Hour, 640, true, true),
+			}
+			v.Backups = []longhornBackup{
+				backup("backup-3b7f2e91", "snapshot-7c1e0d2a", "Completed", 20*time.Hour, 2950),
+				backup("backup-9a04c6d8", "snapshot-41b9f6c3", "Completed", day+20*time.Hour, 2870),
+				backup("backup-1d5e8f30", "snapshot-0e8d7b54", "Completed", 7*day+20*time.Hour, 2790),
+			}
+			v.BackupCount = 14
+		case "uploads":
+			v.Snapshots = []longhornSnapshot{snap("snapshot-c4d1a9e7", 2*time.Hour, 410, true, false), snap("snapshot-5f2b8e10", 20*time.Hour, 1220, true, true)}
+			v.SnapshotsRemoving = 1
+			v.Backups = []longhornBackup{
+				backup("backup-e71c4b02", "snapshot-c4d1a9e7", "Error", 2*time.Hour, 0),
+				backup("backup-2c9d0a6f", "snapshot-5f2b8e10", "Completed", 20*time.Hour, 6800),
+			}
+			v.BackupCount = 2
+		case "search-data":
+			v.Snapshots = []longhornSnapshot{snap("snapshot-8e3a1f47", 9*day, 3100, true, true)}
+			v.Backups = []longhornBackup{backup("backup-6b2e9c15", "snapshot-8e3a1f47", "Completed", 9*day, 11800)}
+			v.BackupCount = 1
+			v.BackupStale = true
+		}
+	}
 }
