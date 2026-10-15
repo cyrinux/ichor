@@ -3,3 +3,4 @@
 • Data services show the hostnames ExternalDNS manages and the controller's settings
 • Data services show Sealed Secrets unseal status and sealing keys
 • Kubernetes → Virtual machines: KubeVirt and Harvester VMs with their state, and start, stop, restart, pause or migrate one
+• The checkup names Crossplane resources that cannot sync and providers that are unhealthy

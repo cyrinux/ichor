@@ -3,6 +3,7 @@ package name.levis.ichor.ui.checkup
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Anchor
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Key
@@ -48,6 +49,7 @@ fun sectionLook(id: String): SectionLook? = when (id) {
     CheckupSectionId.SECRETS -> SectionLook(Icons.Outlined.Key, R.string.checkup_section_secrets, R.string.checkup_section_secrets_hint)
     CheckupSectionId.HELM -> SectionLook(Icons.Outlined.Anchor, R.string.checkup_section_helm, R.string.checkup_section_helm_hint)
     CheckupSectionId.MONITORING -> SectionLook(Icons.Outlined.MonitorHeart, R.string.checkup_section_monitoring, R.string.checkup_section_monitoring_hint)
+    CheckupSectionId.CROSSPLANE -> SectionLook(Icons.Outlined.Cloud, R.string.checkup_section_crossplane, R.string.checkup_section_crossplane_hint)
     else -> null
 }
 
@@ -138,6 +140,10 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
                 stringResource(R.string.checkup_scrapeTargetsDown, f.count.toString(), f.limit.roundToInt().toString(), percent(f.value), f.extra)
             }
         CheckupKind.PROMETHEUS_RULE_ERRORS, CheckupKind.RULE_GROUP_ERRORS -> stringResource(R.string.checkup_ruleErrors, f.count.toString(), f.reason)
+        CheckupKind.CROSSPLANE_SYNC_FAILED -> stringResource(R.string.checkup_crossplaneSyncFailed)
+        CheckupKind.CROSSPLANE_PROVIDER_UNHEALTHY -> stringResource(R.string.checkup_crossplaneProviderUnhealthy, f.extra)
+        CheckupKind.CROSSPLANE_NOT_READY -> stringResource(R.string.checkup_crossplaneNotReady, age.ifEmpty { "-" })
+        CheckupKind.CROSSPLANE_DEFINITION_NOT_ESTABLISHED -> stringResource(R.string.checkup_crossplaneDefinitionNotEstablished)
         else -> f.kind
     }
 }
@@ -193,6 +199,10 @@ fun checkupFix(kind: String): Int = when (kind) {
     CheckupKind.SCRAPE_TARGETS_DOWN -> R.string.checkup_scrapeTargetsDown_fix
     CheckupKind.PROMETHEUS_RULE_ERRORS -> R.string.checkup_prometheusRuleErrors_fix
     CheckupKind.RULE_GROUP_ERRORS -> R.string.checkup_ruleGroupErrors_fix
+    CheckupKind.CROSSPLANE_SYNC_FAILED -> R.string.checkup_crossplaneSyncFailed_fix
+    CheckupKind.CROSSPLANE_PROVIDER_UNHEALTHY -> R.string.checkup_crossplaneProviderUnhealthy_fix
+    CheckupKind.CROSSPLANE_NOT_READY -> R.string.checkup_crossplaneNotReady_fix
+    CheckupKind.CROSSPLANE_DEFINITION_NOT_ESTABLISHED -> R.string.checkup_crossplaneDefinitionNotEstablished_fix
     else -> 0
 }
 
@@ -200,7 +210,8 @@ fun checkupFix(kind: String): Int = when (kind) {
 private val REASON_KINDS = setOf(
     CheckupKind.POD_CRASH_LOOP, CheckupKind.POD_OOM_KILLED, CheckupKind.POD_STUCK_STARTING, CheckupKind.JOB_FAILED,
     CheckupKind.NODE_NOT_READY, CheckupKind.NODE_PRESSURE, CheckupKind.EXTERNAL_SECRET_FAILED, CheckupKind.SECRET_STORE_NOT_READY,
-    CheckupKind.POLICY_NOT_READY,
+    CheckupKind.POLICY_NOT_READY, CheckupKind.CROSSPLANE_SYNC_FAILED, CheckupKind.CROSSPLANE_PROVIDER_UNHEALTHY,
+    CheckupKind.CROSSPLANE_NOT_READY, CheckupKind.CROSSPLANE_DEFINITION_NOT_ESTABLISHED,
 )
 
 /** Kubernetes' own words about the finding, "" when it has none. */

@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -166,11 +167,18 @@ func (a *xpManagedRows) merge(b xpManagedRows) {
 	a.healthy = append(a.healthy, b.healthy...)
 }
 
-func listCrossplaneManaged(ctx context.Context, k *kubeClient, resources []kubeBrowserResource, now time.Time) ([]xpObject, int, xpCounts, error) {
+// errXPKindRead stops a kind's listing once it has read its budget.
+var errXPKindRead = errors.New("crossplane: kind budget read")
+
+// listCrossplaneManaged lists the managed resources of every kind; perKind > 0 stops a kind
+// after the page that reaches it (cut then says so), so the checkup does not download every
+// managed resource of a large cluster on each background check.
+func listCrossplaneManaged(ctx context.Context, k *kubeClient, resources []kubeBrowserResource, now time.Time, perKind int) ([]xpObject, int, xpCounts, bool, error) {
 	// At most eight kinds are held locally at once. A list restart resets that kind's counts,
 	// avoiding double-counting after an expired continuation token.
 	var total xpManagedRows
 	var mu sync.Mutex
+	var cut atomic.Bool
 	var wg sync.WaitGroup
 	errs := make([]error, len(resources))
 	jobs := make(chan int)
@@ -190,8 +198,15 @@ func listCrossplaneManaged(ctx context.Context, k *kubeClient, resources []kubeB
 						rows = append(rows, mapCrossplaneObject(o, ref, now))
 					}
 					local.add(rows)
+					if perKind > 0 && local.total >= perKind && page.continueToken != "" {
+						return errXPKindRead
+					}
 					return nil
 				})
+				if errors.Is(err, errXPKindRead) {
+					cut.Store(true)
+					err = nil
+				}
 				if err != nil {
 					errs[i] = fmt.Errorf("%s: %v", ref.path(), kubeError(err))
 				}
@@ -210,5 +225,5 @@ func listCrossplaneManaged(ctx context.Context, k *kubeClient, resources []kubeB
 	total.compact()
 	rows := append([]xpObject{}, total.problems...)
 	rows = append(rows, total.healthy...)
-	return rows, total.total, total.counts, errors.Join(errs...)
+	return rows, total.total, total.counts, cut.Load(), errors.Join(errs...)
 }

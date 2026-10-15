@@ -117,8 +117,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   elsewhere), quotas at their limit, nodes left cordoned or under pressure, LoadBalancer Services
   without an address (and why), empty MetalLB or Cilium pools, MetalLB pools nothing advertises,
   a refused MetalLB configuration and BGP sessions down, namespaces, pods and claims stuck in Terminating,
-  certificate requests nobody approved, External Secrets that do not sync and Helm releases
-  failed or stuck. Every finding says what to change. Read-only; the critical ones can also
+  certificate requests nobody approved, External Secrets that do not sync, Helm releases
+  failed or stuck, and Crossplane: managed resources that cannot sync, unhealthy providers. Every finding says what to change. Read-only; the critical ones can also
   notify in the background (Settings → Alerts). A pod's log sheet and a workload's sheet show
   the object's Kubernetes events, like the end of `kubectl describe`. See
   [Cluster checkup](#cluster-checkup).
@@ -405,6 +405,12 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   button; only such a namespace can be deleted from there.
 - **Room to drain:** a rough sum of requests over the schedulable nodes, without affinities: a
   note, never an alert.
+- **Crossplane:** a managed resource or composite whose `Synced` condition failed and a package
+  (Provider, Configuration, Function) not installed or not healthy are critical; a resource not
+  ready after 15 minutes and a definition not established are warnings. A paused resource is
+  not a finding. Since it runs at every background check, it reads at most 2,000 managed
+  resources of each kind (the Crossplane screen reads them all): past that, a problem further
+  down the list is not seen. Condition messages are cut to 300 characters.
 - **Alerts:** Settings → Alerts → Cluster checkup runs it at every background check (it lists every
   pod and asks each kubelet). A critical finding notifies at once, a warning when seen on two
   checks in a row, a cleared one once; a section that could not be read keeps what it knew.

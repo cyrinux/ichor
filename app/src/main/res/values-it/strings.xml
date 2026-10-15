@@ -3635,6 +3635,16 @@
     <string name="checkup_scrapeTargetsDown_fix">Prometheus non vede più ciò che questi target espongono, e gli alert che li riguardano restano muti. Apri Monitoraggio per l’errore di ogni target: un pod fermo, una porta o un percorso errati nel suo monitor, o una NetworkPolicy che blocca Prometheus.</string>
     <string name="checkup_prometheusRuleErrors_fix">I suoi alert e le serie registrate non si aggiornano più. Correggi il PromQL nella PrometheusRule: il matching many-to-many e le etichette rinominate sono le cause tipiche.</string>
     <string name="checkup_ruleGroupErrors_fix">Questo gruppo viene dalla configurazione di Prometheus, non da una PrometheusRule: correggi l’espressione nel suo file di regole.</string>
+    <string name="checkup_section_crossplane">Crossplane</string>
+    <string name="checkup_section_crossplane_hint">Risorse gestite che non si sincronizzano, pacchetti non sani, definizioni non stabilite</string>
+    <string name="checkup_crossplaneSyncFailed">Non riesce a sincronizzarsi con il suo provider</string>
+    <string name="checkup_crossplaneProviderUnhealthy">Il pacchetto %1$s non è sano</string>
+    <string name="checkup_crossplaneNotReady">Non pronto da %1$s</string>
+    <string name="checkup_crossplaneDefinitionNotEstablished">Definizione non stabilita</string>
+    <string name="checkup_crossplaneSyncFailed_fix">Leggi il messaggio della condizione Synced: credenziali, quota o una risorsa esterna in conflitto. Mettila in pausa se oscilla.</string>
+    <string name="checkup_crossplaneProviderUnhealthy_fix">Nessuna risorsa di questo pacchetto viene più riconciliata. Controlla che la sua immagine si possa scaricare (registry, tag, pull secret), poi i log del suo pod.</string>
+    <string name="checkup_crossplaneNotReady_fix">Il provider non ha finito di crearla, oppure la risorsa esterna non è disponibile. Controlla gli eventi dell’oggetto e la risorsa dal lato del provider.</string>
+    <string name="checkup_crossplaneDefinitionNotEstablished_fix">Il suo tipo composito non è servito, quindi non si può creare nulla di quel tipo. Cerca una CRD in conflitto o uno schema non valido.</string>
     <string name="checkup_open_monitoring">Apri Monitoraggio</string>
     <string name="kube_events_title">Eventi</string>
     <string name="kube_events_empty">Nessun evento. Kubernetes li conserva per un’ora.</string>

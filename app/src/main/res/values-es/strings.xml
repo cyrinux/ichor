@@ -3634,6 +3634,16 @@
     <string name="checkup_scrapeTargetsDown_fix">Prometheus ya no ve lo que exponen estos objetivos, y sus alertas quedan mudas. Abre Monitorización para ver el error de cada objetivo: un pod caído, un puerto o una ruta incorrectos en su monitor, o una NetworkPolicy que bloquea a Prometheus.</string>
     <string name="checkup_prometheusRuleErrors_fix">Sus alertas y series registradas dejan de actualizarse. Corrige el PromQL en la PrometheusRule: el emparejamiento many-to-many y las etiquetas renombradas son las causas habituales.</string>
     <string name="checkup_ruleGroupErrors_fix">Este grupo viene de la configuración de Prometheus, no de una PrometheusRule: corrige la expresión en su archivo de reglas.</string>
+    <string name="checkup_section_crossplane">Crossplane</string>
+    <string name="checkup_section_crossplane_hint">Recursos gestionados que no se sincronizan, paquetes con problemas, definiciones no establecidas</string>
+    <string name="checkup_crossplaneSyncFailed">No puede sincronizarse con su proveedor</string>
+    <string name="checkup_crossplaneProviderUnhealthy">El paquete %1$s no está sano</string>
+    <string name="checkup_crossplaneNotReady">No está listo desde hace %1$s</string>
+    <string name="checkup_crossplaneDefinitionNotEstablished">Definición no establecida</string>
+    <string name="checkup_crossplaneSyncFailed_fix">Lea el mensaje de la condición Synced: credenciales, cuota o un recurso externo en conflicto. Póngalo en pausa si oscila.</string>
+    <string name="checkup_crossplaneProviderUnhealthy_fix">Ningún recurso de este paquete se reconcilia. Compruebe que su imagen se puede descargar (registro, etiqueta, secreto de pull) y luego los registros de su pod.</string>
+    <string name="checkup_crossplaneNotReady_fix">El proveedor no ha terminado de crearlo, o el recurso externo no está disponible. Revise los eventos del objeto y el recurso en el lado del proveedor.</string>
+    <string name="checkup_crossplaneDefinitionNotEstablished_fix">Su tipo compuesto no se sirve, así que no se puede crear nada de ese tipo. Busque un CRD en conflicto con ella o un esquema no válido.</string>
     <string name="checkup_open_monitoring">Abrir Monitorización</string>
     <string name="kube_events_title">Eventos</string>
     <string name="kube_events_empty">Sin eventos. Kubernetes los conserva una hora.</string>

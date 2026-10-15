@@ -162,6 +162,12 @@ func emptyCrossplane() crossplaneStatus {
 }
 
 func readCrossplane(ctx context.Context, k *kubeClient, groups map[string]string, now time.Time) (crossplaneStatus, error) {
+	return readCrossplaneWithin(ctx, k, groups, now, 0)
+}
+
+// readCrossplaneWithin reads at most perKind managed resources of each kind (0: all of them);
+// a kind cut short leaves Truncated set and ManagedTotal counting only what was read.
+func readCrossplaneWithin(ctx context.Context, k *kubeClient, groups map[string]string, now time.Time, perKind int) (crossplaneStatus, error) {
 	out := emptyCrossplane()
 	if _, pkg := groups[groupCrossplanePkg]; !pkg {
 		if _, ext := groups[groupCrossplaneAPIExt]; !ext {
@@ -185,11 +191,12 @@ func readCrossplane(ctx context.Context, k *kubeClient, groups map[string]string
 	wg.Go(func() { resources, discoveryErr = discoverCrossplaneManaged(ctx, k, groups) })
 	wg.Wait()
 	var managedErr error
+	var cut bool
 	wg.Go(func() {
-		out.Managed, out.ManagedTotal, out.Counts, managedErr = listCrossplaneManaged(ctx, k, resources, now)
+		out.Managed, out.ManagedTotal, out.Counts, cut, managedErr = listCrossplaneManaged(ctx, k, resources, now, perKind)
 	})
 	wg.Wait()
-	out.Truncated = out.ManagedTotal > len(out.Managed)
+	out.Truncated = cut || out.ManagedTotal > len(out.Managed)
 	for _, p := range out.Packages {
 		out.Counts.add(p.Health)
 	}
