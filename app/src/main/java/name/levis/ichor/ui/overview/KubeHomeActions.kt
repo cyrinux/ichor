@@ -11,6 +11,7 @@ import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.VpnLock
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Widgets
@@ -37,6 +38,7 @@ private fun kubeHomeActionIcon(action: KubeHomeAction): ImageVector = when (acti
     KubeHomeAction.SEARCH -> Icons.Outlined.Search
     KubeHomeAction.SETTINGS -> Icons.Outlined.Settings
     KubeHomeAction.CROSSPLANE -> Icons.Outlined.Extension
+    KubeHomeAction.TAILSCALE -> Icons.Outlined.VpnLock
 }
 
 @Composable
@@ -54,6 +56,7 @@ fun kubeHomeActionLabel(action: KubeHomeAction): String = when (action) {
     KubeHomeAction.SEARCH -> stringResource(R.string.overview_action_search)
     KubeHomeAction.SETTINGS -> stringResource(R.string.overview_action_settings)
     KubeHomeAction.CROSSPLANE -> stringResource(R.string.crossplane_title)
+    KubeHomeAction.TAILSCALE -> stringResource(R.string.tailscale_title)
 }
 
 /** How the Kubernetes home's actions look, in its bar and its editor. */
@@ -74,6 +77,7 @@ fun KubeHomeNavigation.open(action: KubeHomeAction, flux: Boolean = false): () -
     KubeHomeAction.SEARCH -> onSearch
     KubeHomeAction.SETTINGS -> onSettings
     KubeHomeAction.CROSSPLANE -> onCrossplane
+    KubeHomeAction.TAILSCALE -> onTailscale
 }
 
 /**
@@ -82,13 +86,15 @@ fun KubeHomeNavigation.open(action: KubeHomeAction, flux: Boolean = false): () -
  * GitOps is only offered once the cluster answered it runs Argo CD ([argo]) or Flux ([flux]).
  */
 @Composable
-fun KubeHomeActions(bar: KubeHomeBar, nav: KubeHomeNavigation, argo: Boolean, flux: Boolean, crossplane: Boolean = false, onCustomize: () -> Unit) {
+fun KubeHomeActions(bar: KubeHomeBar, nav: KubeHomeNavigation, argo: Boolean, flux: Boolean, crossplane: Boolean = false, tailscale: Boolean = false, onCustomize: () -> Unit) {
     ActionBarActions(
         bar = bar,
         look = kubeHomeActionLook,
         onClick = { nav.open(it, flux = !argo)() },
         customizeLabel = stringResource(R.string.kube_home_edit_title),
         onCustomize = onCustomize,
-        offered = { (it != KubeHomeAction.GITOPS || argo || flux) && (it != KubeHomeAction.CROSSPLANE || crossplane) },
+        offered = { (it != KubeHomeAction.GITOPS || argo || flux) && (it != KubeHomeAction.CROSSPLANE || crossplane) &&
+            (it != KubeHomeAction.TAILSCALE || tailscale)
+        },
     )
 }

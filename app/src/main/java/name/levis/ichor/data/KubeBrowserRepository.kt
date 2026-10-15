@@ -4,6 +4,7 @@ import name.levis.ichor.model.Crossplane
 import name.levis.ichor.model.KubeJobs
 import name.levis.ichor.model.KubeLoadBalancing
 import name.levis.ichor.model.KubeServices
+import name.levis.ichor.model.Tailscale
 import name.levis.ichor.model.KubeStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -184,6 +185,11 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     /** Crossplane's packages, definitions, composite resources, claims and managed resources. */
     suspend fun crossplane(): Crossplane = kubeCall { cfg, ctx, server ->
         TalosJson.decodeFromString(Crossplane.serializer(), Ichorgo.kubeCrossplane(cfg, ctx, server))
+    }
+
+    /** The Tailscale operator's connectors, proxy groups, proxy classes and DNS config, problems first. */
+    suspend fun tailscale(): Tailscale = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(Tailscale.serializer(), Ichorgo.kubeTailscale(cfg, ctx, server))
     }
 
     /** The load balancer controllers, their pools, advertisements and BGP peers, and why a Service has no address. */
