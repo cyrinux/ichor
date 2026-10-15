@@ -52,10 +52,10 @@ private struct SleepInfoRow: View {
         var parts: [String] = [state]
         if info.asleep {
             parts.append(info.nextWakeUpAt > 0
-                ? String(localized: "wakes up \(Date(epochMillis: info.nextWakeUpAt).formatted(date: .abbreviated, time: .short))")
+                ? String(localized: "wakes up \(Date(epochMillis: info.nextWakeUpAt).formatted(date: .abbreviated, time: .shortened))")
                 : String(localized: "until changed by hand"))
         } else if info.nextSleepAt > 0 {
-            parts.append(String(localized: "sleeps \(Date(epochMillis: info.nextSleepAt).formatted(date: .abbreviated, time: .short))"))
+            parts.append(String(localized: "sleeps \(Date(epochMillis: info.nextSleepAt).formatted(date: .abbreviated, time: .shortened))"))
         }
         parts += info.reasons.map(reasonText)
         return parts.joined(separator: " · ")
