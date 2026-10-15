@@ -59,5 +59,10 @@ class VeleroRestoreTest {
         )
         // Nulls and empties are left out, so the core keeps Velero's defaults.
         assertEquals("{}", TalosJson.encodeToString(VeleroRestoreOptions.serializer(), VeleroRestoreOptions()))
+        // Every namespace is asked for explicitly: the core refuses an empty pick otherwise.
+        assertEquals(
+            """{"allNamespaces":true}""",
+            TalosJson.encodeToString(VeleroRestoreOptions.serializer(), VeleroRestoreOptions(allNamespaces = true)),
+        )
     }
 }

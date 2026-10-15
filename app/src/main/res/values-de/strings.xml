@@ -4762,6 +4762,7 @@
     <string name="velero_restore_no_volumes">keine Volume-Snapshots</string>
     <string name="velero_restore_every_namespace">Jeder Namespace des Backups wird wiederhergestellt.</string>
     <string name="velero_restore_choose_namespaces">Wiederherzustellende Namespaces wählen</string>
+    <string name="velero_restore_pick_namespace">Mindestens einen Namespace zum Wiederherstellen wählen</string>
     <string name="velero_restore_target_same">leer: gleicher Name</string>
     <string name="velero_restore_existing">Vorhandene Objekte</string>
     <string name="velero_restore_existing_leave">belassen</string>

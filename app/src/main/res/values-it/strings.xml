@@ -4771,6 +4771,7 @@
     <string name="velero_restore_no_volumes">nessuno snapshot di volume</string>
     <string name="velero_restore_every_namespace">Vengono ripristinati tutti i namespace del backup.</string>
     <string name="velero_restore_choose_namespaces">Scegli i namespace da ripristinare</string>
+    <string name="velero_restore_pick_namespace">Scegli almeno un namespace da ripristinare</string>
     <string name="velero_restore_target_same">vuoto: stesso nome</string>
     <string name="velero_restore_existing">Oggetti esistenti</string>
     <string name="velero_restore_existing_leave">lascia</string>

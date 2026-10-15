@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Restoring creates the backup's objects again. Target namespaces that do not exist are created; ones that exist get the backup's objects merged in, overwriting them with update." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La restauration recrée les objets de la sauvegarde. Les espaces de noms qui n'existent pas sont créés ; ceux qui existent reçoivent les objets de la sauvegarde, qui les écrasent avec la mise à jour."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al restaurar se vuelven a crear los objetos de la copia. Los espacios de nombres que no existen se crean; los que existen reciben los objetos de la copia, y con actualizar se sobrescriben."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim Wiederherstellen werden die Objekte des Backups neu angelegt. Namespaces, die es nicht gibt, werden erstellt; bestehende erhalten die Objekte des Backups, mit Aktualisieren werden sie überschrieben."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il ripristino ricrea gli oggetti del backup. I namespace che non esistono vengono creati; quelli esistenti ricevono gli oggetti del backup, che con l'aggiornamento li sovrascrivono."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновлення знову створює об'єкти резервної копії. Простори імен, яких не існує, буде створено; наявні отримують об'єкти копії, і з оновленням їх перезаписано."
+          }
+        }
+      }
+    },
+    "Pick at least one namespace to restore" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez au moins un espace de noms à restaurer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige al menos un espacio de nombres para restaurar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mindestens einen Namespace zum Wiederherstellen wählen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli almeno un namespace da ripristinare"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть принаймні один простір імен для відновлення"
+          }
+        }
+      }
+    },
     "Managed resources that cannot sync, unhealthy packages, definitions not established" : {
       "extractionState" : "manual",
       "localizations" : {

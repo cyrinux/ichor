@@ -4770,6 +4770,7 @@
     <string name="velero_restore_no_volumes">sin instantáneas de volumen</string>
     <string name="velero_restore_every_namespace">Se restauran todos los espacios de nombres de la copia.</string>
     <string name="velero_restore_choose_namespaces">Elige los espacios de nombres a restaurar</string>
+    <string name="velero_restore_pick_namespace">Elige al menos un espacio de nombres para restaurar</string>
     <string name="velero_restore_target_same">vacío: el mismo nombre</string>
     <string name="velero_restore_existing">Objetos existentes</string>
     <string name="velero_restore_existing_leave">dejar</string>

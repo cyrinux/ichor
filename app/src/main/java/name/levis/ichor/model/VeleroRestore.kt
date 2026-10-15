@@ -78,7 +78,9 @@ enum class VeleroRestoreReason(val wire: String) {
 /** The options of a restore, serialized to JSON for the Go core (gomobile passes strings only). */
 @Serializable
 data class VeleroRestoreOptions(
-    /** Empty: every namespace of the backup. */
+    /** Every namespace of the backup; the core refuses an empty [includedNamespaces] without it. */
+    val allNamespaces: Boolean = false,
+    /** The namespaces to restore, when not [allNamespaces]. */
     val includedNamespaces: List<String> = emptyList(),
     /** Source namespace → target namespace; a target that does not exist is created. */
     val namespaceMapping: Map<String, String> = emptyMap(),

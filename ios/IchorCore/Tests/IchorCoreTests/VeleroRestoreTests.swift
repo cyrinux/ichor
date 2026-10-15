@@ -52,5 +52,10 @@ final class VeleroRestoreTests: XCTestCase {
         XCTAssertTrue(full.contains(#""namespaceMapping":{"demo":"demo-restored"}"#), full)
         XCTAssertTrue(full.contains(#""restorePVs":false"#), full)
         XCTAssertFalse(full.contains("includeClusterResources"), full)
+        XCTAssertFalse(full.contains("allNamespaces"), full)
+        // Every namespace is asked for explicitly: the core refuses an empty pick otherwise.
+        let all = String(decoding: try JSONEncoder().encode(VeleroRestoreOptions(allNamespaces: true)), as: UTF8.self)
+        XCTAssertTrue(all.contains(#""allNamespaces":true"#), all)
+        XCTAssertFalse(all.contains("includedNamespaces"), all)
     }
 }

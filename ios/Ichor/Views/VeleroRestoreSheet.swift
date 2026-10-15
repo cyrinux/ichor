@@ -35,12 +35,15 @@ struct VeleroRestoreSheet: View {
         let included = preview?.includedNamespaces ?? []
         return included.isEmpty || included.contains("*")
     }
+    /// Velero reads no namespace as every namespace: nothing ticked cannot be confirmed.
+    private var nothingPicked: Bool { !allNamespaces && selected.isEmpty }
     private var options: VeleroRestoreOptions {
         VeleroRestoreOptions(
             includedNamespaces: allNamespaces ? [] : Array(selected),
             namespaceMapping: targets.filter { selected.contains($0.key) && !$0.value.isEmpty && $0.value != $0.key },
             existingResourcePolicy: updateExisting ? "update" : "none",
             restorePVs: restoreVolumes ? nil : false,
+            allNamespaces: allNamespaces,
         )
     }
     private var restore: VeleroRestoreDetail? {
@@ -112,10 +115,9 @@ struct VeleroRestoreSheet: View {
             Section {
                 if !p.error.isEmpty { ErrorLine(error: p.error) }
                 holds(p)
-                if !p.canRestore {
-                    ForEach(p.reasons, id: \.self) { reason in
-                        Text(restoreReasonText(reason)).foregroundStyle(.red)
-                    }
+                // Blocking reasons in red; the others (a partly failed backup) still warn.
+                ForEach(p.reasons, id: \.self) { reason in
+                    Text(restoreReasonText(reason)).foregroundStyle(p.canRestore ? Color.statusWarn : Color.red)
                 }
             }
             if p.canRestore {
@@ -139,6 +141,9 @@ struct VeleroRestoreSheet: View {
                                 }
                             }
                         }
+                        if nothingPicked {
+                            Text("Pick at least one namespace to restore").font(.caption).foregroundStyle(.red)
+                        }
                     }
                 }
                 Section {
@@ -156,7 +161,7 @@ struct VeleroRestoreSheet: View {
         Section("Type \(target.name) to confirm") {
             TextField("Backup name", text: $typed).autocorrectionDisabled().textInputAutocapitalization(.never)
             Button(role: .destructive) { Task { await launch() } } label: { Text("Restore") }
-                .disabled(preview?.canRestore != true || !typedConfirmationMatches(typed, token: target.name) || denial != nil)
+                .disabled(preview?.canRestore != true || nothingPicked || !typedConfirmationMatches(typed, token: target.name) || denial != nil)
             KubeDeniedNote(.veleroRestore, in: target.namespace)
         }
     }
@@ -178,7 +183,8 @@ struct VeleroRestoreSheet: View {
                 LabeledContent("Restore", value: restore.name)
                 LabeledContent("Phase", value: [restore.phase, veleroRestoreCountsText(errors: restore.errors, warnings: restore.warnings)].compactMap { $0 }.joined(separator: " · "))
                 if restore.totalItems > 0 {
-                    LabeledContent("Progress", value: String(localized: "\(restore.itemsRestored) of \(restore.totalItems) items"))
+                    // String arguments: the catalog's key is "%@ of %@ items".
+                    LabeledContent("Progress", value: String(localized: "\(String(restore.itemsRestored)) of \(String(restore.totalItems)) items"))
                 }
                 ForEach(restore.validationErrors, id: \.self) { Text(verbatim: $0).font(.caption).foregroundStyle(.red) }
                 if !restore.failureReason.isEmpty { Text(verbatim: restore.failureReason).font(.caption).foregroundStyle(.red) }
