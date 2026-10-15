@@ -113,6 +113,7 @@ fun WorkloadsTab(
     query: String,
     onQuery: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onAutoscaling: () -> Unit = {},
     vm: WorkloadsViewModel = viewModel(factory = factory { WorkloadsViewModel(app.kubeRepository, app.gitOpsRepository) { isMeteredNetwork(app) } }),
     focusKey: String? = null,
     onFocused: () -> Unit = {},
@@ -147,6 +148,7 @@ fun WorkloadsTab(
             onRestart = { confirm = w },
             onRollback = { rollback = w to it },
             onDismiss = { opened = null },
+            onAutoscaling = { opened = null; onAutoscaling() },
             onPods = w.podSelection?.let { selection ->
                 {
                     // One sheet at a time: the pods replace the workload's.
@@ -206,6 +208,8 @@ fun WorkloadsTab(
                             restarting = w.key in restarting,
                             onRestart = { confirm = w },
                             onOpen = { opened = w.key },
+                            autoscaled = w.autoscaler != null,
+                            autoscalerStateOk = w.autoscaler?.stateOk ?: true,
                         )
                         HorizontalDivider()
                     }
@@ -217,7 +221,7 @@ fun WorkloadsTab(
 }
 
 @Composable
-private fun WorkloadRow(workload: KubeWorkload, showNamespace: Boolean, restarting: Boolean, onRestart: () -> Unit, onOpen: () -> Unit) {
+private fun WorkloadRow(workload: KubeWorkload, showNamespace: Boolean, restarting: Boolean, onRestart: () -> Unit, onOpen: () -> Unit, autoscaled: Boolean = false, autoscalerStateOk: Boolean = true) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth().clickable(onClick = onOpen).padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
@@ -239,6 +243,13 @@ private fun WorkloadRow(workload: KubeWorkload, showNamespace: Boolean, restarti
                     style = MaterialTheme.typography.labelSmall,
                     color = workload.workloadState.color(),
                 )
+                if (autoscaled) {
+                    Text(
+                        stringResource(R.string.workloads_autoscaled_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (autoscalerStateOk) muted else MaterialTheme.colorScheme.error,
+                    )
+                }
                 if (workload.restartedAt > 0) {
                     val ago = timeAgo(workload.restartedAt)
                     Text(stringResource(R.string.workloads_restarted_ago, ago), style = MaterialTheme.typography.labelSmall, color = muted)

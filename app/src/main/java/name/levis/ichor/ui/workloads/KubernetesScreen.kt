@@ -190,7 +190,7 @@ fun KubernetesScreen(
             }
             SwipeTabPager(KUBE_TABS, tab, onSelect = { tab = it }) { page ->
                 when (page) {
-                    0 -> WorkloadsTab(scope, query, onQuery = { query = it }, vm = workloads, focusKey = focusKey(page), onFocused = onFocused)
+                    0 -> WorkloadsTab(scope, query, onQuery = { query = it }, vm = workloads, focusKey = focusKey(page), onFocused = onFocused, onAutoscaling = onAutoscaling)
                     1 -> PodsTab(
                         scope,
                         query,

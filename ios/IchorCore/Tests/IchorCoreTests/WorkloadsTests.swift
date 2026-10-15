@@ -59,3 +59,4 @@ final class WorkloadsTests: XCTestCase {
         XCTAssertFalse(ContextSummary(name: "x", roles: ["os:operator"]).allows(.workloads))
     }
 }
+

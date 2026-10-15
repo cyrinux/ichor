@@ -42,6 +42,8 @@ data class KubeWorkload(
     /** Unix millis. */
     val created: Long = 0,
     val images: List<String> = emptyList(),
+    /** What drives the replica count (an HPA, or the KEDA ScaledObject behind one); null when nothing does. */
+    val autoscaler: WorkloadAutoscaler? = null,
 ) {
     val key: String get() = "$kind/$namespace/$name"
 
@@ -49,6 +51,31 @@ data class KubeWorkload(
 
     /** kubectl refuses to restart a paused Deployment, and so does the Go core. */
     val canRestart: Boolean get() = workloadState != WorkloadState.PAUSED
+}
+
+/** What drives a workload's replica count: the same fields as the Go core's chip. */
+@Serializable
+data class WorkloadAutoscaler(
+    /** hpa or keda. */
+    val by: String = "",
+    /** The HPA's name, or the ScaledObject's when KEDA owns it. */
+    val name: String = "",
+    val min: Int = 0,
+    val max: Int = 0,
+    val current: Int = 0,
+    val desired: Int = 0,
+    val paused: Boolean = false,
+    /** ok, atMax, limited, paused, notReady or fallback. */
+    val state: String = "",
+) {
+    val stateOk: Boolean get() = state == "ok"
+
+    /** "HPA web-hpa · 3 of 1–5", or "KEDA worker-so · paused at 0" while it is paused. */
+    fun label(): String {
+        val who = if (by == "keda") "KEDA" else "HPA"
+        val what = if (paused) "paused at $current" else "$current of $min–$max"
+        return "$who $name · $what"
+    }
 }
 
 /** One workload's rollout with its pods, old and new (KubeRolloutStatus), polled while it rolls out. */

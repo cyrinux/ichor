@@ -433,6 +433,16 @@ private struct WorkloadRow: View {
                 .font(.caption)
                 .foregroundStyle(stateColor)
                 .monospacedDigit()
+                if workload.autoscaler != nil {
+                    Text("auto")
+                        .font(.caption2.weight(.bold))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .foregroundStyle(workload.autoscaler?.stateOk == true ? Color.secondary : Color.statusWarn)
+                        .background((workload.autoscaler?.stateOk == true ? Color.secondary : Color.statusWarn).opacity(0.15),
+                                    in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+                        .accessibilityLabel(Text("Autoscaled"))
+                }
                 if workload.restartedAt > 0 {
                     Text("restarted \(relativeTime(workload.restartedAt))")
                         .font(.caption)

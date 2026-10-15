@@ -2923,6 +2923,9 @@
     <string name="workloads_scale_less">One replica less</string>
     <string name="workloads_scale_more">One replica more</string>
     <string name="workloads_scale_change">%1$d → %2$d</string>
+    <string name="workloads_autoscaled_by">Autoscaled by %1$s</string>
+    <string name="workloads_autoscaler_note">The autoscaler will set the count again.</string>
+    <string name="workloads_autoscaled_badge">auto</string>
     <string name="workloads_scale_apply">Apply</string>
     <string name="workloads_scale_done">%1$s scaled to %2$d</string>
     <string name="workloads_scale_failed">Could not scale %1$s: %2$s</string>

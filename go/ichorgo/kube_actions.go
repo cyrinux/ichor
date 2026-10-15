@@ -74,24 +74,22 @@ func KubeScale(configYAML, contextName, kubeServer, kind, namespace, name string
 // autoscalerWarning names the HorizontalPodAutoscaler that targets the workload, "" when
 // none (or when they cannot be read: the scale itself succeeded).
 func autoscalerWarning(ctx context.Context, k *kubeClient, kind, namespace, name string) string {
-	var hpas kubeList[hpaObject]
-	if getList(ctx, k, scopedPath("/apis/autoscaling/v2", namespace, "horizontalpodautoscalers"), &hpas) != nil {
+	index, err := autoscaledWorkloads(ctx, k)
+	if err != nil {
 		return ""
 	}
 
-	for _, h := range hpas.Items {
-		if h.Spec.ScaleTargetRef.Kind == kind && h.Spec.ScaleTargetRef.Name == name {
-			lowest := int32(1)
-			if h.Spec.MinReplicas != nil {
-				lowest = *h.Spec.MinReplicas
-			}
-
-			return fmt.Sprintf("HorizontalPodAutoscaler %s manages the replicas (%d to %d): it will change them again",
-				h.Metadata.Name, lowest, h.Spec.MaxReplicas)
-		}
+	a, ok := index[kind+"/"+namespace+"/"+name]
+	if !ok {
+		return ""
 	}
 
-	return ""
+	what := "HorizontalPodAutoscaler"
+	if a.By == autoscaledByKEDA {
+		what = "ScaledObject"
+	}
+
+	return fmt.Sprintf("%s %s manages the replicas (%d to %d): it will change them again", what, a.Name, a.Min, a.Max)
 }
 
 // KubeSuspendCronJob suspends (no new runs) or resumes a CronJob, like `kubectl patch

@@ -52,8 +52,9 @@ func lastActionRequest(f *fakeKubeAPI, method string) fakeKubeRequest {
 func TestScaleAndAutoscalerWarning(t *testing.T) {
 	f, k := actionsKube(t, map[string]string{
 		"PATCH /apis/apps/v1/namespaces/shop/deployments/web/scale": `{}`,
-		"GET /apis/autoscaling/v2/namespaces/shop/horizontalpodautoscalers": `{"items":[
-			{"metadata":{"name":"web-hpa"},"spec":{"scaleTargetRef":{"kind":"Deployment","name":"web"},"minReplicas":2,"maxReplicas":8}}]}`,
+		"GET /apis": `{"groups":[]}`,
+		"GET /apis/autoscaling/v2/horizontalpodautoscalers": `{"items":[
+			{"metadata":{"name":"web-hpa","namespace":"shop"},"spec":{"scaleTargetRef":{"kind":"Deployment","name":"web"},"minReplicas":2,"maxReplicas":8}}]}`,
 	})
 
 	err := k.patch(context.Background(), appsPath(workloadKinds[0], "shop", "web")+"/scale", "application/merge-patch+json",

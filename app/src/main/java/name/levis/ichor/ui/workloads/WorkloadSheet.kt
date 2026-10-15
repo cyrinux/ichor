@@ -13,7 +13,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.RestartAlt
+import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.ViewInAr
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -40,6 +42,8 @@ import androidx.compose.ui.Modifier
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -50,6 +54,7 @@ import name.levis.ichor.model.KubePermission
 import name.levis.ichor.model.KubeRevision
 import name.levis.ichor.ui.argocd.ArgoRevertDialog
 import name.levis.ichor.model.KubeWorkload
+import name.levis.ichor.model.WorkloadAutoscaler
 import name.levis.ichor.model.MAX_SCALE_REPLICAS
 import name.levis.ichor.model.canScale
 import name.levis.ichor.model.clampReplicas
@@ -84,6 +89,8 @@ fun WorkloadSheet(
     onDismiss: () -> Unit,
     /** Opens the list of its pods; null for a kind whose pods cannot be listed. */
     onPods: (() -> Unit)? = null,
+    /** Opens the Autoscaling screen; null where the screen is not wired. */
+    onAutoscaling: (() -> Unit)? = null,
 ) {
     val busy by actions.busy.collectAsStateWithLifecycle()
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
@@ -118,7 +125,7 @@ fun WorkloadSheet(
             KubeDenialNote(restartDenial)
             if (workload.canScale) {
                 HorizontalDivider()
-                ScaleSection(workload, actions, workload.key in busy, access?.denial(KubeAction.scale(workload.kind)))
+                ScaleSection(workload, actions, workload.key in busy, access?.denial(KubeAction.scale(workload.kind)), onAutoscaling)
             }
             if (workload.hasHistory) {
                 HorizontalDivider()
@@ -132,7 +139,7 @@ fun WorkloadSheet(
 }
 
 @Composable
-private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy: Boolean, denial: KubePermission?) {
+private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy: Boolean, denial: KubePermission?, onAutoscaling: (() -> Unit)? = null) {
     val colors = LocalStatusColors.current
     val outcome by actions.lastScale.collectAsStateWithLifecycle()
     // Starts again from the live count once a refresh brings it.
@@ -159,6 +166,10 @@ private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy:
     }
 
     SectionTitle(stringResource(R.string.workloads_scale))
+    workload.autoscaler?.let { autoscaler ->
+        AutoscalerChip(autoscaler, onAutoscaling)
+        Text(stringResource(R.string.workloads_autoscaler_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
     Row(verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = { target = clampReplicas(target - 1) }, enabled = target > 0 && !busy) {
             Icon(Icons.Outlined.Remove, stringResource(R.string.workloads_scale_less))
@@ -266,4 +277,24 @@ private fun RevisionRow(revision: KubeRevision, enabled: Boolean, onRollback: ()
             TextButton(onClick = onRollback, enabled = enabled) { Text(stringResource(R.string.workloads_rollback)) }
         }
     }
+}
+
+/** "Autoscaled by HPA web-hpa · 3 of 1–5", in the state's colour; a tap opens the Autoscaling screen. */
+@Composable
+private fun AutoscalerChip(autoscaler: WorkloadAutoscaler, onAutoscaling: (() -> Unit)?) {
+    val colors = LocalStatusColors.current
+    val label = stringResource(R.string.workloads_autoscaled_by, autoscaler.label())
+    AssistChip(
+        onClick = { onAutoscaling?.invoke() },
+        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+        leadingIcon = {
+            Icon(
+                Icons.Outlined.Speed,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = if (autoscaler.stateOk) MaterialTheme.colorScheme.onSurfaceVariant else colors.warn
+            )
+        },
+        modifier = Modifier.semantics { contentDescription = label },
+    )
 }

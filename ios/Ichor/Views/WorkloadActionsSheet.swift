@@ -115,6 +115,22 @@ struct WorkloadActionsSheet: View {
 
     private var scaleSection: some View {
         Section {
+            if let autoscaler = workload.autoscaler {
+                NavigationLink {
+                    AutoscalingView()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.up.and.down")
+                            .foregroundStyle(autoscaler.stateOk ? Color.secondary : Color.statusWarn)
+                        Text(verbatim: autoscaler.label)
+                            .font(.callout.monospaced())
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(Text("Autoscaled by") + Text(verbatim: " " + autoscaler.label))
+                }
+            }
             Stepper(value: $replicas, in: 0...kubeMaxScaleReplicas) {
                 LabeledContent("Replicas") {
                     Text(replicas == current ? "\(replicas)" : "\(current) → \(replicas)").monospacedDigit()
@@ -136,7 +152,9 @@ struct WorkloadActionsSheet: View {
         } header: {
             Text("Scale")
         } footer: {
-            Text("A HorizontalPodAutoscaler that manages it sets its own count again.")
+            if workload.autoscaler == nil {
+                Text("A HorizontalPodAutoscaler that manages it sets its own count again.")
+            }
         }
     }
 

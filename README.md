@@ -547,6 +547,10 @@ limit?" in two taps:
 A group the cluster does not run (KEDA, VPA, Karpenter) collapses to one "not installed" line;
 credentials that cannot read one group show the reason in that group's header only.
 
+The workload sheet names the autoscaler that owns the replica count — "HPA web-hpa · 3 of
+1–5", or "KEDA worker-so · paused at 0" — with a tap through to the Autoscaling screen, and
+the list marks autoscaled workloads with an "auto" badge.
+
 ### Argo CD app icons
 
 Ichor names an Argo CD app's logo from its Helm chart, its name or the images it runs. An app it
