@@ -2285,6 +2285,36 @@
         <item quantity="one">Showing the first %1$d of %2$d hostnames.</item>
         <item quantity="other">Showing the first %1$d of %2$d hostnames.</item>
     </plurals>
+    <string name="sealedsecrets_empty">No SealedSecrets.</string>
+    <string name="sealedsecrets_no_controller">No controller found</string>
+    <string name="sealedsecrets_ready">ready</string>
+    <string name="sealedsecrets_not_ready">not ready</string>
+    <string name="sealedsecrets_replicas">Replicas</string>
+    <string name="sealedsecrets_keys">Sealing keys</string>
+    <string name="sealedsecrets_key_created">created %1$s</string>
+    <string name="sealedsecrets_key_active">active</string>
+    <string name="sealedsecrets_key_compromised">compromised</string>
+    <string name="sealedsecrets_immutable">immutable</string>
+    <string name="sealedsecrets_unsealed">unsealed</string>
+    <string name="sealedsecrets_reason_not_synced">failed to unseal: its Secret is missing or outdated</string>
+    <string name="sealedsecrets_reason_unmanaged">a Secret with this name exists that it does not own</string>
+    <string name="sealedsecrets_reason_stale">a newer version is not observed yet</string>
+    <string name="sealedsecrets_reason_controller_down">the controller is not running: nothing gets unsealed</string>
+    <string name="sealedsecrets_reason_no_keys">no active sealing key</string>
+    <string name="sealedsecrets_reason_key_compromised">a sealing key is marked compromised</string>
+    <string name="sealedsecrets_reason_key_stale">the newest sealing key is over 30 days old: key renewal may be stuck</string>
+    <plurals name="sealedsecrets_count">
+        <item quantity="one">%1$d SealedSecret</item>
+        <item quantity="other">%1$d SealedSecrets</item>
+    </plurals>
+    <plurals name="sealedsecrets_item_keys">
+        <item quantity="one">%1$d key</item>
+        <item quantity="other">%1$d keys</item>
+    </plurals>
+    <plurals name="sealedsecrets_truncated">
+        <item quantity="one">Showing the first %1$d of %2$d SealedSecrets.</item>
+        <item quantity="other">Showing the first %1$d of %2$d SealedSecrets.</item>
+    </plurals>
     <string name="kubegreen_empty">No sleep schedules.</string>
     <string name="kubegreen_state_asleep">Asleep</string>
     <string name="kubegreen_state_awake">Awake</string>
