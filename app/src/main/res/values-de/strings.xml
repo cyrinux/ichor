@@ -2317,6 +2317,18 @@
         <item quantity="one">Die ersten %1$d von %2$d Hostnamen werden angezeigt.</item>
         <item quantity="other">Die ersten %1$d von %2$d Hostnamen werden angezeigt.</item>
     </plurals>
+    <string name="externaldns_check_names">Namen prüfen</string>
+    <string name="externaldns_check_hint">Löst jeden Hostnamen von diesem Telefon aus auf und vergleicht ihn mit den Zielen des Eintrags. Die Namen gehen an deinen DNS-Resolver.</string>
+    <string name="externaldns_check_match">Löst hier auf</string>
+    <string name="externaldns_check_mismatch">Zeigt woandershin</string>
+    <string name="externaldns_check_missing">Nicht gefunden</string>
+    <string name="externaldns_check_error">Konnte nicht geprüft werden</string>
+    <string name="externaldns_check_owner_other">gehört %1$s</string>
+    <string name="externaldns_check_mismatch_hint">Ein Name, der woandershin zeigt, kann Split-Horizon-DNS zu Hause sein, eine noch laufende Änderung oder ein anderer ExternalDNS, dem er gehört.</string>
+    <plurals name="externaldns_check_summary">
+        <item quantity="one">%1$d von %2$d Namen zeigt auf diesen Cluster</item>
+        <item quantity="other">%1$d von %2$d Namen zeigen auf diesen Cluster</item>
+    </plurals>
     <string name="sealedsecrets_empty">Keine SealedSecrets.</string>
     <string name="sealedsecrets_no_controller">Kein Controller gefunden</string>
     <string name="sealedsecrets_ready">bereit</string>

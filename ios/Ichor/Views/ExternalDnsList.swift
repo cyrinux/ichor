@@ -4,10 +4,16 @@ import IchorCore
 /// ExternalDNS: every controller with its settings (provider, policy, owner id, domain filters,
 /// sources, interval), then the hostnames it is asked to publish, problems first. A record's row
 /// opens its source object's summary. ExternalDNS keeps no status on records: nothing here says
-/// one exists at the provider.
+/// one exists at the provider, so "Check names" resolves them from the phone and compares the
+/// answers with the targets.
 struct ExternalDnsList: View {
     let status: ExternalDnsStatus
     let refresh: () async -> Void
+
+    @Environment(AppModel.self) private var model
+    @State private var running = false
+    @State private var result: DnsCheckResult?
+    @State private var errorMessage: String?
 
     var body: some View {
         List {
@@ -26,14 +32,79 @@ struct ExternalDnsList: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
+            if !status.records.isEmpty { checkSection }
             Section {
                 ForEach(status.records) { record in
-                    RecordRow(record: record)
+                    RecordRow(record: record, verdict: verdicts[record.dnsName])
                 }
             }
         }
         .refreshable { await refresh() }
         .themedBackground()
+    }
+
+    /// The last check's verdicts by hostname, for the record rows.
+    private var verdicts: [String: DnsCheckEntry] {
+        Dictionary(result?.results.map { ($0.dnsName, $0) } ?? [], uniquingKeysWith: { _, newest in newest })
+    }
+
+    /// The "Check names" button, what it does, and the last check's summary. The names go to the
+    /// phone's DNS resolver: that is the feature, and the hint says so. Nothing runs without the
+    /// tap; the verdicts stay on screen until the next check.
+    private var checkSection: some View {
+        Section {
+            HStack(spacing: 12) {
+                Button { Task { await check() } } label: {
+                    Text(String(localized: "Check names"))
+                }
+                .disabled(running)
+                if running { ProgressView() }
+            }
+            Text(String(localized: "Resolves every hostname from this phone and compares it with the record's targets. The names go to your DNS resolver."))
+                .font(.caption).foregroundStyle(.secondary)
+            if let errorMessage {
+                Text(verbatim: errorMessage).font(.caption).foregroundStyle(.statusBad)
+            }
+            if let result {
+                Text(verbatim: summary(result))
+                    .font(.subheadline)
+                    .foregroundStyle(summaryColor(result))
+                if result.results.contains(where: { $0.verdict == .mismatch }) {
+                    Text(String(localized: "A name that points elsewhere may be split-horizon DNS at home, a change still propagating, or another ExternalDNS owning it."))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    /// "3 of 5 names point at this cluster": every answer among the records' targets, of all of them.
+    private func summary(_ result: DnsCheckResult) -> String {
+        let pointing = result.results.filter { $0.verdict == .match }.count
+        let total = result.results.count
+        return pointing == 1
+            ? String(localized: "\(pointing) of \(total) name points at this cluster")
+            : String(localized: "\(pointing) of \(total) names point at this cluster")
+    }
+
+    /// Red when a name is gone (nothing publishes it), green when every one of them resolves here,
+    /// amber otherwise: split-horizon DNS or propagation still worth a look.
+    private func summaryColor(_ result: DnsCheckResult) -> Color {
+        if result.results.contains(where: { $0.verdict == .missing }) { return .red }
+        let pointing = result.results.filter { $0.verdict == .match }.count
+        return pointing == result.results.count ? .green : attentionColor
+    }
+
+    private func check() async {
+        guard !running else { return }
+        running = true
+        defer { running = false }
+        do {
+            result = try await TalosClient.dnsCheck(status.records, controllers: status.controllers,
+                                                    demo: model.activeSummary?.demo == true)
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }
 
@@ -89,6 +160,8 @@ private struct ControllerRow: View {
 
 private struct RecordRow: View {
     let record: ExternalDnsRecord
+    /// What the last check found for this hostname, nil before it runs.
+    let verdict: DnsCheckEntry?
     @Environment(AppModel.self) private var model
 
     var body: some View {
@@ -113,6 +186,7 @@ private struct RecordRow: View {
                 ForEach(record.reasons, id: \.self) { reason in
                     Text(verbatim: reasonText(reason)).font(.caption).foregroundStyle(record.health.color)
                 }
+                if let verdict { VerdictRow(entry: verdict) }
             }
         }
     }
@@ -130,6 +204,40 @@ private struct RecordRow: View {
         case .stale: String(localized: "a newer version is not observed yet")
         case .noTarget: String(localized: "no address to point at yet")
         case .unmanaged: String(localized: "outside every controller's domain filters")
+        }
+    }
+}
+
+/// What the last check found for one record, and who owns it when that is not this cluster.
+private struct VerdictRow: View {
+    let entry: DnsCheckEntry
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                switch entry.verdict {
+                case .match:
+                    StatusPill(label: String(localized: "Resolves here"), color: .green)
+                case .mismatch:
+                    StatusPill(label: String(localized: "Points elsewhere"), color: attentionColor)
+                case .missing:
+                    StatusPill(label: String(localized: "Not found"), color: .red)
+                case .error:
+                    StatusPill(label: String(localized: "Could not check"), color: .secondary)
+                case nil:
+                    EmptyView()
+                }
+                if entry.ownerMatch == false {
+                    StatusPill(label: String(localized: "owned by \(entry.owner)"), color: attentionColor)
+                }
+            }
+            if !entry.answers.isEmpty, entry.verdict != .error {
+                Text(verbatim: entry.answers.joined(separator: ", "))
+                    .font(.caption).foregroundStyle(.secondary).lineLimit(2)
+            }
+            if entry.verdict == .error, !entry.message.isEmpty {
+                Text(verbatim: entry.message).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+            }
         }
     }
 }
