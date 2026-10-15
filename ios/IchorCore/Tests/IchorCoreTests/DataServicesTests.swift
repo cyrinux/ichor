@@ -147,6 +147,8 @@ final class DataServicesTests: XCTestCase {
         XCTAssertEqual(node.actions, [.schedulingOff, .evict])
         XCTAssertEqual(LonghornAction.cancelEviction.rawValue, "cancelEviction")
         XCTAssertEqual(LonghornAction.schedulingOff.rawValue, "schedulingOff")
+        XCTAssertEqual(LonghornAction.allCases.map(\.kubeAction),
+                       [.longhornSnapshot, .longhornSnapshot, .longhornReplicas, .longhornNode, .longhornNode, .longhornNode, .longhornNode])
     }
 
     func testLonghornSnapshotsAndBackups() throws {

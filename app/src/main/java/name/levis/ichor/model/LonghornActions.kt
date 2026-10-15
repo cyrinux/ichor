@@ -25,6 +25,14 @@ enum class LonghornSnapshotAction(val wire: String) {
     DELETE("delete"),
 }
 
+/** The permission check [this] needs: Longhorn's API, the volume object or the node object. */
+val LonghornAction.kubeAction: KubeAction
+    get() = when (this) {
+        LonghornAction.BACKUP, LonghornAction.TRIM -> KubeAction.LONGHORN_SNAPSHOT
+        LonghornAction.REPLICAS -> KubeAction.LONGHORN_REPLICAS
+        LonghornAction.SCHEDULING_ON, LonghornAction.SCHEDULING_OFF, LonghornAction.EVICT, LonghornAction.CANCEL_EVICTION -> KubeAction.LONGHORN_NODE
+    }
+
 /** Longhorn refuses more replicas than this. */
 const val LONGHORN_MAX_REPLICAS = 20
 

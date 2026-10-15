@@ -14,6 +14,7 @@ public enum KubeAction: String, CaseIterable, Sendable {
     /// create and delete on services/proxy: an Alertmanager reached through the service proxy.
     case alertmanagerSilence, alertmanagerExpire
     case cnpgPromote, cnpgRestartPrimary, cnpgHibernate, longhornSalvage, longhornAttachment, longhornSnapshot
+    case longhornReplicas, longhornNode
     case veleroBackupNow, veleroDeleteBackup, veleroRestore
     case vmStart, vmStop, vmRestart, vmMigrate, vmPause, vmUnpause
     /// A VM's serial console, like `virtctl console`.
