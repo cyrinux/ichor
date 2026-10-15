@@ -46,6 +46,9 @@ enum class KubeAction(val wire: String) {
     VM_MIGRATE("vmMigrate"),
     VM_PAUSE("vmPause"),
     VM_UNPAUSE("vmUnpause"),
+
+    /** Its serial console, like `virtctl console`. */
+    VM_CONSOLE("vmConsole"),
     ;
 
     /** The action asked for an object of a kind, on that kind's own resource; null for a kind the core does not ask about (offered). */

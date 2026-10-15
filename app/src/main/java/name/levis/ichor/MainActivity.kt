@@ -174,6 +174,7 @@ class MainActivity : FragmentActivity() {
         const val EXTRA_SHELL_POD = "name.levis.ichor.SHELL_POD"
         const val EXTRA_SHELL_CONTAINER = "name.levis.ichor.SHELL_CONTAINER"
         const val EXTRA_SHELL_KUBE_NODE = "name.levis.ichor.SHELL_KUBE_NODE"
+        const val EXTRA_SHELL_VM = "name.levis.ichor.SHELL_VM"
     }
 }
 
@@ -189,7 +190,7 @@ private class LaunchTargets(
 private fun Intent.debugShell(): LiveShell? {
     if (action != DebugShellService.ACTION_OPEN) return null
     val key = shellKey() ?: return null
-    return LiveShell(key, getStringExtra(MainActivity.EXTRA_SHELL_HOST)?.takeIf { it.isNotBlank() } ?: key.node.ifEmpty { key.pod })
+    return LiveShell(key, getStringExtra(MainActivity.EXTRA_SHELL_HOST)?.takeIf { it.isNotBlank() } ?: key.node.ifEmpty { key.pod.ifEmpty { key.vm } })
 }
 
 /**

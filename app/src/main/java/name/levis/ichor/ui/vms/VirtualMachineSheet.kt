@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.KubeAction
 import name.levis.ichor.model.VirtualMachine
 import name.levis.ichor.model.VmAction
 import name.levis.ichor.ui.components.ConfirmDialog
@@ -41,11 +42,11 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 /**
  * One VM: its status, resources, addresses, conditions, disks and migration, then the actions
  * its state allows, each also gated by what the credentials may do. Stop and restart ask for the
- * VM's name typed; migrate names the node it leaves.
+ * VM's name typed; migrate names the node it leaves. [onConsole] opens its serial console.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VirtualMachineSheet(vm: VirtualMachine, busy: Boolean, actions: VmActions, onDismiss: () -> Unit) {
+fun VirtualMachineSheet(vm: VirtualMachine, busy: Boolean, actions: VmActions, onConsole: (VirtualMachine) -> Unit, onDismiss: () -> Unit) {
     var confirming by remember(vm.key) { mutableStateOf<VmAction?>(null) }
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -60,6 +61,7 @@ fun VirtualMachineSheet(vm: VirtualMachine, busy: Boolean, actions: VmActions, o
             vmProgressText(vm.progress)?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = LocalStatusColors.current.warn) }
             Details(vm)
             ActionRow(vm, busy, onAction = { confirming = it })
+            ConsoleRow(vm, onConsole = { onConsole(vm) })
         }
     }
     confirming?.let { action ->
@@ -120,6 +122,16 @@ private fun ActionRow(vm: VirtualMachine, busy: Boolean, onAction: (VmAction) ->
     // Why an action the state allows is still off: the credentials.
     shown.firstNotNullOfOrNull { a -> denials[a].takeIf { vm.allows(a) } }?.let { KubeDenialNote(it) }
     if (busy) MutedText(stringResource(R.string.vm_action_running))
+}
+
+/** The serial console: only a running instance has one; the credentials need its subresource. */
+@Composable
+private fun ConsoleRow(vm: VirtualMachine, onConsole: () -> Unit) {
+    val denial = rememberKubeDenial(KubeAction.VM_CONSOLE, vm.namespace)
+    val running = vm.phase == "Running"
+    SectionTitle(stringResource(R.string.vm_console_title), Modifier.padding(top = 8.dp))
+    OutlinedButton(onClick = onConsole, enabled = running && denial == null) { Text(stringResource(R.string.vm_console)) }
+    if (!running) MutedText(stringResource(R.string.vm_console_start_first)) else KubeDenialNote(denial)
 }
 
 /**

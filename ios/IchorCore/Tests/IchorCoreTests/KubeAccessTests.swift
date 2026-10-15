@@ -112,7 +112,7 @@ final class KubeAccessTests: XCTestCase {
             "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode",
             "alertmanagerSilence", "alertmanagerExpire", "cnpgPromote", "cnpgRestartPrimary", "cnpgHibernate", "longhornSalvage", "longhornAttachment", "longhornSnapshot",
             "veleroBackupNow", "veleroDeleteBackup", "veleroRestore",
-            "vmStart", "vmStop", "vmRestart", "vmMigrate", "vmPause", "vmUnpause",
+            "vmStart", "vmStop", "vmRestart", "vmMigrate", "vmPause", "vmUnpause", "vmConsole",
         ])
         XCTAssertFalse(KubeAction.cordonNode.isNamespaced)
         XCTAssertFalse(KubeAction.drainNode.isNamespaced)
