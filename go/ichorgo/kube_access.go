@@ -78,6 +78,10 @@ var kubeActionChecks = map[string][]accessNeed{
 		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
 		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "nodes"}, true},
 	},
+	"longhornSnapshot": {
+		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy"}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
+	},
 	"longhornSalvage": {
 		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy"}, true},
 		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},

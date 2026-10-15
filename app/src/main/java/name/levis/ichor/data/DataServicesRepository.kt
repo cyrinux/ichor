@@ -11,6 +11,7 @@ import name.levis.ichor.model.GarageBlockReport
 import name.levis.ichor.model.GarageInstance
 import name.levis.ichor.model.GarageRepairResult
 import name.levis.ichor.model.LonghornAction
+import name.levis.ichor.model.LonghornSnapshotAction
 import name.levis.ichor.model.VeleroBackups
 import name.levis.ichor.model.VeleroRestoreOptions
 import name.levis.ichor.model.VeleroRestorePreview
@@ -134,5 +135,13 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
      */
     suspend fun longhornAction(namespace: String, name: String, action: LonghornAction, value: Int = 0) = go.kube { cfg, ctx, server ->
         Ichorgo.kubeLonghornAction(cfg, ctx, server, namespace, name, action.wire, value.toLong())
+    }
+
+    /**
+     * Runs [action] on [snapshot] ("" to take one) of the Longhorn volume [namespace]/[volume]
+     * (os:admin). Throws when refused, a detached volume included.
+     */
+    suspend fun longhornSnapshotAction(namespace: String, volume: String, snapshot: String, action: LonghornSnapshotAction) = go.kube { cfg, ctx, server ->
+        Ichorgo.kubeLonghornSnapshotAction(cfg, ctx, server, namespace, volume, snapshot, action.wire)
     }
 }

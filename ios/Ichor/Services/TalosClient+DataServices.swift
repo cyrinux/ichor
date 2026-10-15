@@ -95,6 +95,14 @@ extension TalosClient {
         }
     }
 
+    /// Runs action on snapshot ("" to take one) of the Longhorn volume namespace/volume (os:admin).
+    /// Throws when refused, a detached volume included.
+    func longhornSnapshotAction(namespace: String, volume: String, snapshot: String, action: LonghornSnapshotAction) async throws {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeLonghornSnapshotAction(config, context, kubeServer, namespace, volume, snapshot, action.rawValue, error)
+        }
+    }
+
     /// What explains the state of the cert-manager certificate namespace/name (os:admin): its
     /// requests, ACME orders and challenges, their events and controller log lines.
     func certificateDetails(namespace: String, name: String) async throws -> CertDetails {

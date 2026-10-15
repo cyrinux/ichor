@@ -47,6 +47,15 @@ data class LonghornVolume(
     val scheduleError: String = "",
     /** Close to Longhorn's snapshot limit. */
     val tooManySnapshots: Boolean = false,
+    /** Longhorn's own snapshots still in use, newest first. */
+    val snapshots: List<LonghornSnapshot> = emptyList(),
+    /** Deleted snapshots Longhorn has yet to purge. */
+    val snapshotsRemoving: Int = 0,
+    /** Newest backups first, at most 20: [backupCount] has them all. */
+    val backups: List<LonghornBackup> = emptyList(),
+    val backupCount: Int = 0,
+    /** The last backup is more than a week old. */
+    val backupStale: Boolean = false,
 ) {
     val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
 
@@ -54,6 +63,37 @@ data class LonghornVolume(
 
     /** The claim it backs ("namespace/name"), or the volume's own name when unbound. */
     val label: String get() = if (pvcName.isNotEmpty()) "$pvcNamespace/$pvcName" else name
+}
+
+@Serializable
+data class LonghornSnapshot(
+    val name: String,
+    /** Unix millis, 0 when Longhorn has none (the base of a restored volume). */
+    val createdAt: Long = 0,
+    /** Data it holds on top of its parent. */
+    val size: Long = 0,
+    val ready: Boolean = false,
+    /** Asked for (by someone, a job, a CSI snapshot), not taken by Longhorn itself. */
+    val userCreated: Boolean = false,
+    /** A completed backup was taken from it. */
+    val backedUp: Boolean = false,
+    val error: String = "",
+)
+
+@Serializable
+data class LonghornBackup(
+    val name: String,
+    val snapshot: String = "",
+    /** Completed, InProgress, Pending, Error or Unknown. */
+    val state: String = "",
+    val progress: Int = 0,
+    /** Unix millis. */
+    val createdAt: Long = 0,
+    val size: Long = 0,
+    val error: String = "",
+) {
+    val completed: Boolean get() = state == "Completed"
+    val failed: Boolean get() = state == "Error" || error.isNotEmpty()
 }
 
 @Serializable
