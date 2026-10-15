@@ -133,6 +133,9 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 		listedAll = podsErr == nil
 	}
 
+	// The garage-operator's CRDs mean Garage is managed here, hinted or not.
+	_, garageOperatorServed := groups[groupGarageOperator]
+
 	var wg sync.WaitGroup
 
 	if _, ok := groups[groupSnapshot]; ok {
@@ -211,8 +214,10 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 		wg.Go(func() { out.CastAI = readCastAI(ctx, k) })
 	}
 
-	if hints.wants("garage") {
-		wg.Go(func() { out.Garage = readGarage(ctx, k, run, pods, podsErr, hints["garage"]) })
+	if hints.wants("garage") || garageOperatorServed {
+		wg.Go(func() {
+			out.Garage = readGarageSection(ctx, k, run, pods, podsErr, hints["garage"], groups[groupGarageOperator])
+		})
 	}
 
 	wg.Wait()

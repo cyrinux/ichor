@@ -42,12 +42,18 @@ type externalSecretObject struct {
 	} `json:"status"`
 }
 
+// checkupSecrets is the secrets section: the secrets the cluster fails to deliver, from
+// External Secrets and from Sealed Secrets, each reader keeping its own call path.
+func checkupSecrets(ctx context.Context, k *kubeClient, in checkupInput) checkupSection {
+	return sectionFromParts(checkSecrets, checkupExternalSecrets(ctx, k, in), checkupSealedSecrets(ctx, k, in))
+}
+
 // checkupExternalSecrets finds the ExternalSecrets that do not sync and the stores that
-// are not ready. Absent without the operator.
-func checkupExternalSecrets(ctx context.Context, k *kubeClient, in checkupInput) checkupSection {
+// are not ready. Not served without the operator.
+func checkupExternalSecrets(ctx context.Context, k *kubeClient, in checkupInput) checkupPart {
 	version, ok := in.groups[groupExternalSecrets]
 	if !ok {
-		return absentSection(checkSecrets)
+		return checkupPart{}
 	}
 
 	base := "/apis/" + groupExternalSecrets + "/" + version + "/"
@@ -67,8 +73,10 @@ func checkupExternalSecrets(ctx context.Context, k *kubeClient, in checkupInput)
 		}
 	}
 
-	return newSection(checkSecrets, len(secrets)+len(stores)+len(clusterStores), findings,
-		ignoreNotFound(err), ignoreNotFound(storeErr), ignoreNotFound(clusterErr))
+	return checkupPart{
+		served: true, checked: len(secrets) + len(stores) + len(clusterStores), findings: findings,
+		errs: []error{ignoreNotFound(err), ignoreNotFound(storeErr), ignoreNotFound(clusterErr)},
+	}
 }
 
 // storeFindings are the stores that cannot reach their backend: every secret of theirs

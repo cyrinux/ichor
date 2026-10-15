@@ -113,7 +113,7 @@ func TestReadDataServicesSealedSecrets(t *testing.T) {
 
 func TestSealedSecretsDemo(t *testing.T) {
 	got := demoDataServices(fixtureNow).SealedSecrets
-	if got == nil || len(got.Items) != 3 || len(got.Keys) != 2 || got.Controller == nil || !got.Controller.Ready {
+	if got == nil || len(got.Items) != 3 || len(got.Keys) != 3 || got.Controller == nil || !got.Controller.Ready {
 		t.Fatalf("demo: %+v", got)
 	}
 	if got.Items[0].Health != healthCritical || !got.Items[0].Stale || got.Items[0].Reason != "UnsealFailed" {

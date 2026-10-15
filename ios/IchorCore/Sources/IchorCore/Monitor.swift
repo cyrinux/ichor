@@ -312,6 +312,29 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
             out["garage|\(g.label)"] = dataWarning
         }
     }
+    // The garage-operator's layer: a failed or degraded cluster, a failed bucket and a
+    // disconnected or roleless node declaration alert like the instances above.
+    for c in services.garage?.clusters ?? [] {
+        if c.health == .critical {
+            out["garage|\(c.label)"] = dataCritical
+        } else if c.health == .warning {
+            out["garage|\(c.label)"] = dataWarning
+        }
+    }
+    for b in services.garage?.buckets ?? [] {
+        if b.health == .critical {
+            out["garage|bucket/\(b.label)"] = dataCritical
+        } else if b.health == .warning {
+            out["garage|bucket/\(b.label)"] = dataWarning
+        }
+    }
+    for n in services.garage?.nodes ?? [] {
+        if n.health == .critical {
+            out["garage|node/\(n.label)"] = dataCritical
+        } else if n.health == .warning {
+            out["garage|node/\(n.label)"] = dataWarning
+        }
+    }
     let alerting: Set<CnpgReason> = [.archiving, .backupFailed, .backupStale]
     for c in services.cnpg?.clusters ?? [] {
         if c.health == .critical {
