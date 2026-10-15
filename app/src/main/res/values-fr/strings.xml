@@ -3530,6 +3530,16 @@
     <string name="checkup_scrapeTargetsDown_fix">Prometheus ne voit plus ce que ces cibles exposent, et les alertes qui les concernent restent muettes. Ouvrez la supervision pour l’erreur de chaque cible : un pod arrêté, un port ou un chemin erroné dans son moniteur, ou une NetworkPolicy qui bloque Prometheus.</string>
     <string name="checkup_prometheusRuleErrors_fix">Ses alertes et ses séries enregistrées ne se mettent plus à jour. Corrigez le PromQL dans la PrometheusRule : une correspondance many-to-many ou un label renommé en sont les causes habituelles.</string>
     <string name="checkup_ruleGroupErrors_fix">Ce groupe vient de la configuration de Prometheus, pas d’une PrometheusRule : corrigez l’expression dans son fichier de règles.</string>
+    <string name="checkup_section_crossplane">Crossplane</string>
+    <string name="checkup_section_crossplane_hint">Ressources gérées qui ne se synchronisent pas, paquets en mauvaise santé, définitions non établies</string>
+    <string name="checkup_crossplaneSyncFailed">Ne peut pas se synchroniser avec son fournisseur</string>
+    <string name="checkup_crossplaneProviderUnhealthy">Le paquet %1$s est en mauvaise santé</string>
+    <string name="checkup_crossplaneNotReady">Pas prêt depuis %1$s</string>
+    <string name="checkup_crossplaneDefinitionNotEstablished">Définition non établie</string>
+    <string name="checkup_crossplaneSyncFailed_fix">Lisez le message de la condition Synced : identifiants, quota ou ressource externe en conflit. Mettez-la en pause si elle oscille.</string>
+    <string name="checkup_crossplaneProviderUnhealthy_fix">Plus aucune ressource de ce paquet n’est réconciliée. Vérifiez que son image peut être tirée (registre, tag, secret de pull), puis les journaux de son pod.</string>
+    <string name="checkup_crossplaneNotReady_fix">Le fournisseur n’a pas fini de la créer, ou la ressource externe est indisponible. Vérifiez les événements de l’objet et la ressource côté fournisseur.</string>
+    <string name="checkup_crossplaneDefinitionNotEstablished_fix">Son type composite n’est pas servi : rien de ce type ne peut être créé. Cherchez un CRD en conflit avec elle ou un schéma invalide.</string>
     <string name="checkup_open_monitoring">Ouvrir la supervision</string>
     <string name="kube_events_title">Événements</string>
     <string name="kube_events_empty">Aucun événement. Kubernetes les garde une heure.</string>

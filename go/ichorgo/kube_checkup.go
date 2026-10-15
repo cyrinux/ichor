@@ -23,6 +23,7 @@ const (
 	checkSecrets       = "secrets"
 	checkHelm          = "helm"
 	checkMonitoring    = "monitoring"
+	checkCrossplane    = "crossplane"
 )
 
 // A section's status beyond the health values: the cluster does not run what it checks, or
@@ -60,6 +61,7 @@ var checkupSteps = []string{
 	checkupStepAPI, checkupStepPods, checkupStepNodes, checkupStepPVCs, checkupStepVersion,
 	checkWorkloads, checkEvents, checkStorage, checkUpgrade, checkWebhooks, checkPolicies,
 	checkCapacity, checkLoadBalancers, checkTerminating, checkCertificates, checkSecrets, checkHelm, checkMonitoring,
+	checkCrossplane,
 }
 
 // checkupReport is what the cluster hides behind green nodes: one section per kind of
@@ -107,8 +109,9 @@ type checkupFinding struct {
 // (os:admin): failing pods and Jobs, Warning events, volumes filling up, deprecated APIs
 // still in use, admission webhooks without a backend, nodes out of room, load balancers
 // without an address, objects stuck in Terminating, pending certificate requests, external
-// secrets that do not sync, Helm releases that failed, and the scrape targets down and rules
-// failing in the first Prometheus discovered, as JSON (see checkupReport).
+// secrets that do not sync, Helm releases that failed, the scrape targets down and rules
+// failing in the first Prometheus discovered, and Crossplane resources that cannot sync, as
+// JSON (see checkupReport).
 // It only reads. kubeServer: see KubePods.
 func KubeCheckup(configYAML, contextName, kubeServer string) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -206,7 +209,7 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 	wg.Wait()
 
 	report := checkupReport{KubeVersion: version}
-	sections := make([]checkupSection, 14)
+	sections := make([]checkupSection, 15)
 
 	// section runs one section reader as its progress step; the step fails when a section it
 	// fills could not be read at all.
@@ -231,6 +234,7 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 	section(checkSecrets, func() { sections[11] = checkupExternalSecrets(ctx, k, in) }, 11)
 	section(checkHelm, func() { sections[12], report.Releases = checkupHelm(ctx, k, in) }, 12)
 	section(checkMonitoring, func() { sections[13] = checkupMonitoring(ctx, k, in) }, 13)
+	section(checkCrossplane, func() { sections[14] = checkupCrossplane(ctx, k, in) }, 14)
 	wg.Wait()
 
 	report.Sections = sections

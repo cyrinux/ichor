@@ -103,4 +103,23 @@ final class CheckupTests: XCTestCase {
         XCTAssertEqual(list.events.map(\.isWarning), [true, false])
         XCTAssertEqual(list.events[1].count, 1)
     }
+
+    // The demo checkup's Crossplane section (go/ichorgo/kube_checkup_demo.go).
+    func testCrossplaneSectionDecodesAndAlerts() throws {
+        let r = try TalosJSON.decode(CheckupReport.self, from: #"""
+        {"status":"critical","sections":[{"id":"crossplane","status":"critical","checked":12,"findings":[
+          {"kind":"crossplaneSyncFailed","severity":"critical","namespace":"apps","name":"Database/app-db-primary","reason":"ReconcileError","message":"quota exceeded","extra":"default"},
+          {"kind":"crossplaneProviderUnhealthy","severity":"critical","name":"Provider/provider-storage","reason":"UnhealthyPackageRevision","message":"cannot pull package","extra":"xpkg.example.org/demo/provider-storage:v1.4.0"},
+          {"kind":"crossplaneNotReady","severity":"warning","name":"Bucket/assets-bucket","reason":"Creating","extra":"default","count":42,"since":1}]}]}
+        """#)
+        let section = try XCTUnwrap(r.shownSections.first)
+        XCTAssertEqual(section.section, .crossplane)
+        XCTAssertEqual(section.findings.compactMap(\.kind), [.crossplaneSyncFailed, .crossplaneProviderUnhealthy, .crossplaneNotReady])
+        XCTAssertEqual(section.findings[0].detail, "ReconcileError: quota exceeded")
+        XCTAssertEqual(r.alertIssues, [
+            "crossplane|crossplaneSyncFailed|apps/Database/app-db-primary": "critical",
+            "crossplane|crossplaneProviderUnhealthy|Provider/provider-storage": "critical",
+            "crossplane|crossplaneNotReady|Bucket/assets-bucket": "warning",
+        ])
+    }
 }
