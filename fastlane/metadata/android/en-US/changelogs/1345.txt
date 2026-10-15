@@ -1,0 +1,2 @@
+• Apps served through a Gateway API GRPCRoute or TLSRoute get their web address, Services chips and network-map box
+• Read the Kyverno policies from the kyverno.io version that serves them
