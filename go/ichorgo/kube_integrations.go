@@ -261,11 +261,11 @@ func integrationGroupsText(groups []integrationGroup) string {
 func demoIntegrations() integrationReport {
 	report := integrationReport{
 		Families: []integrationFamily{
-			{ID: "tailscale.com", Groups: []integrationGroup{
-				{Name: "tailscale.com", Version: "v1alpha1", Kinds: []string{"Connector", "ProxyClass"}},
+			{ID: "cluster.x-k8s.io", Groups: []integrationGroup{
+				{Name: "cluster.x-k8s.io", Version: "v1beta2", Kinds: []string{"Cluster", "Machine", "MachineDeployment"}},
 			}},
 		},
-		Supported: []string{groupKEDA, groupCrossplanePkg, groupCrossplaneAPIExt, groupArgo, groupCertManager, groupKyverno, groupLonghorn, groupMetalLB, groupMonitoring, groupCNPG, groupTraefik, groupPolicyReport, groupKubeVirt},
+		Supported: []string{groupKEDA, groupCrossplanePkg, groupCrossplaneAPIExt, groupArgo, groupCertManager, groupKyverno, groupLonghorn, groupMetalLB, groupMonitoring, groupCNPG, groupTraefik, groupPolicyReport, groupKubeVirt, groupTailscale},
 	}
 	slices.Sort(report.Supported)
 	return report

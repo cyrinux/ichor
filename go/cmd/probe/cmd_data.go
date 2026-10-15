@@ -81,6 +81,9 @@ var dataCommands = []command{
 
 		return ichorgo.KubeVMStop(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), grace)
 	}},
+	{name: "tailscale", args: "", run: func(e env) (string, error) {
+		return ichorgo.KubeTailscale(e.cfg, e.context, e.kubeServer)
+	}},
 	{name: "crossplane", args: "", run: func(e env) (out string, err error) {
 		return ichorgo.KubeCrossplane(e.cfg, e.context, e.kubeServer)
 	}},

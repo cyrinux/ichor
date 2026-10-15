@@ -1,0 +1,21 @@
+{"kind":"ConnectorList","apiVersion":"tailscale.com/v1alpha1","metadata":{},"items":[
+ {"metadata":{"name":"office-router","generation":1},
+  "spec":{"hostname":"office-router","tags":["tag:k8s","tag:office"],"proxyClass":"prod","replicas":2,"subnetRouter":{"advertiseRoutes":["10.0.0.0/24","10.0.1.0/24"]}},
+  "status":{"conditions":[{"type":"ConnectorReady","status":"True","reason":"ConnectorCreated","message":"Connector created","observedGeneration":1}],
+   "subnetRoutes":"10.0.0.0/24,10.0.1.0/24","tailnetIPs":["100.64.0.11","fd7a:115c:a1e0::b"],"hostname":"office-router",
+   "devices":[{"hostname":"office-router-0","tailnetIPs":["100.64.0.11"],"staticEndpoints":["198.51.100.7:41641"]},{"hostname":"office-router-1","tailnetIPs":["100.64.0.12"]}]}},
+ {"metadata":{"name":"exit-eu","generation":2},
+  "spec":{"hostname":"exit-eu-spec","exitNode":true},
+  "status":{"conditions":[{"type":"ConnectorReady","status":"True","reason":"ConnectorCreated","observedGeneration":2}],"isExitNode":true,"tailnetIPs":["100.64.0.21"]}},
+ {"metadata":{"name":"saas-connector","generation":1},
+  "spec":{"appConnector":{"routes":["203.0.113.0/24"]}},
+  "status":{"conditions":[{"type":"ConnectorReady","status":"False","reason":"ConnectorCreationFailed","message":"error provisioning StatefulSet","observedGeneration":1}],"isAppConnector":true}},
+ {"metadata":{"name":"lab-router","generation":1},
+  "spec":{"proxyClass":"ghost","subnetRouter":{"advertiseRoutes":["192.168.10.0/24"]}}},
+ {"metadata":{"name":"edge-router","generation":1},
+  "spec":{"proxyClass":"missing-class","subnetRouter":{"advertiseRoutes":["172.16.0.0/16"]}},
+  "status":{"conditions":[{"type":"ConnectorReady","status":"True","reason":"ConnectorCreated","observedGeneration":1}],"subnetRoutes":"172.16.0.0/16"}},
+ {"metadata":{"name":"stale-router","generation":3},
+  "spec":{"subnetRouter":{"advertiseRoutes":["10.9.0.0/16"]}},
+  "status":{"conditions":[{"type":"ConnectorReady","status":"True","reason":"ConnectorCreated","message":"old spec","observedGeneration":2}]}}
+]}
