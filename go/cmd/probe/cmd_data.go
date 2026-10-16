@@ -87,6 +87,17 @@ var dataCommands = []command{
 	{name: "cluster-api", args: "", run: func(e env) (string, error) {
 		return ichorgo.KubeClusterAPI(e.cfg, e.context, e.kubeServer)
 	}},
+	// The Git forge client reads with the token in HOSTJSON ({"kind":"auto","baseURL":"https://github.com","token":"…"});
+	// no cluster is used.
+	{name: "git-check", args: "HOSTJSON", run: func(env) (string, error) {
+		return ichorgo.GitForgeCheck(flag.Arg(1))
+	}},
+	{name: "git-tree", args: "HOSTJSON REPO REF DIR", run: func(env) (string, error) {
+		return ichorgo.GitForgeTree(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
+	}},
+	{name: "git-file", args: "HOSTJSON REPO REF PATH", run: func(env) (string, error) {
+		return ichorgo.GitForgeFile(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
+	}},
 	{name: "crossplane", args: "", run: func(e env) (out string, err error) {
 		return ichorgo.KubeCrossplane(e.cfg, e.context, e.kubeServer)
 	}},
