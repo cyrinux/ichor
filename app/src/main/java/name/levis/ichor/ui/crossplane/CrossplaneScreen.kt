@@ -22,18 +22,22 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.model.Crossplane
 import name.levis.ichor.model.CrossplaneFilter
+import name.levis.ichor.model.CrossplaneAction
 import name.levis.ichor.model.CrossplaneObject
+import name.levis.ichor.model.actionKey
 import name.levis.ichor.model.CrossplanePackage
 import name.levis.ichor.model.CrossplaneDefinition
 import name.levis.ichor.model.KubeObjectRef
@@ -58,12 +62,18 @@ import name.levis.ichor.ui.factory
 /** One read of the cluster's Crossplane control plane: packages, definitions, resources. */
 class CrossplaneViewModel(private val browser: KubeBrowserRepository) : LoadingViewModel<Crossplane>() {
     override suspend fun fetch() = browser.crossplane()
+
+    /** Pause, resume and reconcile requests; a paused object shows so in a fresh reading. */
+    val actions = CrossplaneActions(viewModelScope, browser, onChanged = { refresh() })
 }
+
+/** The action picked on an object, waiting for its confirmation (the object itself: labels repeat across kinds). */
+private data class PendingAction(val obj: CrossplaneObject, val action: CrossplaneAction)
 
 /**
  * Crossplane (os:admin): its packages, the APIs its XRDs define, and every composite, claim and
  * managed resource with its Ready and Synced state, problems first. A tap opens the object's
- * summary ([onObject]); nothing is changed here.
+ * summary ([onObject]); a composite or managed resource's menu pauses, resumes or reconciles it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,6 +85,9 @@ fun CrossplaneScreen(
     val state by vm.state.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf(CrossplaneFilter.ALL) }
+    var pending by remember { mutableStateOf<PendingAction?>(null) }
+    val busy by vm.actions.busy.collectAsStateWithLifecycle()
+    CrossplaneActionToasts(vm.actions.results)
 
     Scaffold(
         topBar = {
@@ -89,7 +102,13 @@ fun CrossplaneScreen(
         when (val s = state) {
             is UiState.Failed -> ErrorBox(s.message, { vm.refresh() }, rest)
             is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = { vm.refresh() }, modifier = rest) {
-                CrossplaneList(s.data, filter, { filter = it }, query, { query = it }, onObject)
+                CrossplaneList(s.data, filter, { filter = it }, query, { query = it }, onObject, busy) { o, action -> pending = PendingAction(o, action) }
+                pending?.let { p ->
+                    CrossplaneConfirm(p.obj, p.action, composite = p.obj in s.data.composites, onConfirm = {
+                        pending = null
+                        vm.actions.run(p.obj, p.action)
+                    }, onDismiss = { pending = null })
+                }
             }
             else -> LoadingBox(rest)
         }
@@ -105,7 +124,13 @@ private fun CrossplaneList(
     query: String,
     onQuery: (String) -> Unit,
     onObject: (KubeObjectRef) -> Unit,
+    busy: Set<String>,
+    onAction: (CrossplaneObject, CrossplaneAction) -> Unit,
 ) {
+    // A claim is changed through its composite: no actions on it.
+    val menu: (CrossplaneObject) -> (@Composable () -> Unit)? = { o ->
+        if (o in xp.claims) null else ({ CrossplaneActionsMenu(o, busy = o.actionKey in busy) { onAction(o, it) } })
+    }
     if (xp.error.isNotEmpty()) {
         MutedText(stringResource(R.string.crossplane_partial, xp.error), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
     }
@@ -131,7 +156,7 @@ private fun CrossplaneList(
         if (problems.isNotEmpty()) {
             item(key = "problems-title") { SectionTitle(stringResource(R.string.crossplane_problems), Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
             items(problems.size, key = { "problem:$it" }) { i ->
-                ObjectRow(problems[i], showKind = true, onClick = { onObject(problems[i].ref()) })
+                ObjectRow(problems[i], showKind = true, onClick = { onObject(problems[i].ref()) }, actions = menu(problems[i]))
                 HorizontalDivider()
             }
         }
@@ -148,12 +173,12 @@ private fun CrossplaneList(
         val managed = xp.managed.filtered(filter, query)
         if (composites.isNotEmpty() || claims.isNotEmpty()) {
             item(key = "composites-title") { SectionTitle(stringResource(R.string.crossplane_composites), Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
-            items(composites.size, key = { "xr:$it" }) { i -> ObjectRow(composites[i], showKind = true, onClick = { onObject(composites[i].ref()) }); HorizontalDivider() }
+            items(composites.size, key = { "xr:$it" }) { i -> ObjectRow(composites[i], showKind = true, onClick = { onObject(composites[i].ref()) }, actions = menu(composites[i])); HorizontalDivider() }
             items(claims.size, key = { "claim:$it" }) { i -> ObjectRow(claims[i], showKind = true, onClick = { onObject(claims[i].ref()) }); HorizontalDivider() }
         }
         if (managed.isNotEmpty()) {
             item(key = "managed-title") { SectionTitle(stringResource(R.string.crossplane_managed), Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
-            items(managed.size, key = { "mr:$it" }) { i -> ObjectRow(managed[i], showKind = true, onClick = { onObject(managed[i].ref()) }); HorizontalDivider() }
+            items(managed.size, key = { "mr:$it" }) { i -> ObjectRow(managed[i], showKind = true, onClick = { onObject(managed[i].ref()) }, actions = menu(managed[i])); HorizontalDivider() }
         }
         if (composites.isEmpty() && claims.isEmpty() && managed.isEmpty() && xp.packages.isEmpty() && xp.definitions.isEmpty()) {
             item(key = "no-match") { EmptyText(emptyOrNoMatch(query, R.string.crossplane_empty, R.string.crossplane_no_match)) }

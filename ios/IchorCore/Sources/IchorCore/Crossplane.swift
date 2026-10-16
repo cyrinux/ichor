@@ -273,3 +273,13 @@ public extension Array where Element == CrossplaneObject {
         }
     }
 }
+
+/// What the app may do to a composite or managed resource: one annotation each, reversible.
+public enum CrossplaneAction: String, CaseIterable, Sendable {
+    case pause, resume, reconcile
+}
+
+public extension CrossplaneObject {
+    /// Pause or Resume, whichever applies, then Reconcile now.
+    var actions: [CrossplaneAction] { [paused ? .resume : .pause, .reconcile] }
+}

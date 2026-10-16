@@ -64,4 +64,12 @@ final class CrossplaneTests: XCTestCase {
         XCTAssertEqual(xp.managed.filtered(.warning, "").map(\.ref.name), ["resource-5"])
         XCTAssertEqual(xp.managed.filtered(.all, "external-1").map(\.ref.name), ["resource-1"])
     }
+
+    func testActionsFollowThePausedState() throws {
+        let running = try JSONDecoder().decode(CrossplaneObject.self, from: Data(#"{"name":"a","paused":false}"#.utf8))
+        let paused = try JSONDecoder().decode(CrossplaneObject.self, from: Data(#"{"name":"a","paused":true}"#.utf8))
+        XCTAssertEqual(running.actions, [.pause, .reconcile])
+        XCTAssertEqual(paused.actions, [.resume, .reconcile])
+        XCTAssertEqual(CrossplaneAction.reconcile.rawValue, "reconcile")
+    }
 }

@@ -174,3 +174,17 @@ fun List<CrossplaneObject>.filtered(filter: CrossplaneFilter, query: String): Li
 }
 
 enum class CrossplaneFilter { ALL, CRITICAL, WARNING }
+
+/** What the app may do to a composite or managed resource: one annotation each, reversible. */
+enum class CrossplaneAction(val wire: String) {
+    PAUSE("pause"),
+    RESUME("resume"),
+    RECONCILE("reconcile"),
+}
+
+/** Unique in a reading: the label is not (a Bucket and a BucketPolicy may share a name). */
+val CrossplaneObject.actionKey: String get() = "$group/$resource/$namespace/$name"
+
+/** Pause or Resume, whichever applies, then Reconcile now. */
+fun CrossplaneObject.actions(): List<CrossplaneAction> =
+    listOf(if (paused) CrossplaneAction.RESUME else CrossplaneAction.PAUSE, CrossplaneAction.RECONCILE)

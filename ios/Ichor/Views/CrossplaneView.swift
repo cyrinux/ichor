@@ -9,6 +9,8 @@ struct CrossplaneView: View {
     @State private var state: LoadState<Crossplane> = .loading
     @State private var query = ""
     @State private var filter: CrossplaneFilter = .all
+    @State private var pending: PendingCrossplaneAction?
+    @State private var actionError: String?
 
     var body: some View {
         LoadStateView(state: state, retry: load) { xp in
@@ -24,6 +26,30 @@ struct CrossplaneView: View {
         guard let client = model.client else { return }
         let loaded: LoadState<Crossplane> = await .from { try await client.crossplane() }
         state = state.refreshed(with: loaded)
+    }
+
+    /// Asks whether the credentials may patch the object, then shows the confirmation.
+    private func pick(_ object: CrossplaneObject, _ action: CrossplaneAction, composite: Bool) {
+        Task {
+            var denial: KubeAccess?
+            if let client = model.client,
+               let access = try? await client.kubeCan(verb: "patch", group: object.ref.group, resource: object.ref.resource,
+                                                      namespace: object.ref.namespace, name: object.ref.name),
+               access.isDenied {
+                denial = access
+            }
+            pending = PendingCrossplaneAction(object: object, action: action, composite: composite, denial: denial)
+        }
+    }
+
+    private func run(_ p: PendingCrossplaneAction) async {
+        guard let client = model.client else { return }
+        do {
+            try await client.crossplaneAction(ref: p.object.ref, action: p.action)
+            await load()
+        } catch {
+            actionError = String(localized: "\(p.actionTitle) on \(p.object.label) failed: \(error.localizedDescription)")
+        }
     }
 
     @ViewBuilder
@@ -52,7 +78,9 @@ struct CrossplaneView: View {
                 let problems = xp.problems
                 if !problems.isEmpty {
                     Section("Problems") {
-                        ForEach(problems) { ObjectRow(object: $0) }
+                        ForEach(problems) { o in
+                            ObjectRow(object: o, onPick: xp.claims.contains(o) ? nil : { pick(o, $0, composite: xp.composites.contains(o)) })
+                        }
                     }
                 }
                 if !xp.packages.isEmpty {
@@ -70,18 +98,32 @@ struct CrossplaneView: View {
                 let managed = xp.managed.filtered(filter, query)
                 if !composites.isEmpty || !claims.isEmpty {
                     Section("Composite resources & claims") {
-                        ForEach(composites) { ObjectRow(object: $0) }
+                        ForEach(composites) { o in ObjectRow(object: o) { pick(o, $0, composite: true) } }
+                        // A claim is changed through its composite: no actions on it.
                         ForEach(claims) { ObjectRow(object: $0) }
                     }
                 }
                 if !managed.isEmpty {
                     Section("Managed resources") {
-                        ForEach(managed) { ObjectRow(object: $0) }
+                        ForEach(managed) { o in ObjectRow(object: o) { pick(o, $0, composite: false) } }
                     }
                 }
             }
         }
         .themedBackground()
+        .confirmationDialog(pending?.title ?? "", isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }),
+                            titleVisibility: .visible, presenting: pending) { p in
+            if p.denial == nil {
+                Button(p.actionTitle) { Task { await run(p) } }
+            }
+        } message: { p in
+            Text(verbatim: p.message)
+        }
+        .alert(String(localized: "Crossplane"), isPresented: Binding(get: { actionError != nil }, set: { if !$0 { actionError = nil } })) {
+            Button("OK") { actionError = nil }
+        } message: {
+            Text(verbatim: actionError ?? "")
+        }
     }
 
     @ViewBuilder
@@ -171,8 +213,50 @@ private struct DefinitionRow: View {
     }
 }
 
+/// An action picked on an object, with whether the credentials may run it, to confirm.
+private struct PendingCrossplaneAction {
+    let object: CrossplaneObject
+    let action: CrossplaneAction
+    let composite: Bool
+    let denial: KubeAccess?
+
+    var actionTitle: String { crossplaneActionTitle(action) }
+
+    var title: String {
+        switch action {
+        case .pause: String(localized: "Pause \(object.label)?")
+        case .resume: String(localized: "Resume \(object.label)?")
+        case .reconcile: String(localized: "Reconcile \(object.label) now?")
+        }
+    }
+
+    /// What it does; a pause also says it blocks deletion and, on a composite, not its parts.
+    var message: String {
+        var parts: [String]
+        switch action {
+        case .pause:
+            parts = [String(localized: "Crossplane stops reconciling it until it is resumed: no more calls to the provider’s API. A paused resource cannot be deleted.")]
+            if composite { parts.append(String(localized: "Its composed resources keep reconciling: each has its own pause.")) }
+        case .resume: parts = [String(localized: "Crossplane reconciles it again, calling the provider’s API as before.")]
+        case .reconcile: parts = [String(localized: "Crossplane reconciles it now instead of at its next poll.")]
+        }
+        if let denial { parts.append(denial.deniedText) }
+        return parts.joined(separator: "\n\n")
+    }
+}
+
+private func crossplaneActionTitle(_ action: CrossplaneAction) -> String {
+    switch action {
+    case .pause: String(localized: "Pause")
+    case .resume: String(localized: "Resume")
+    case .reconcile: String(localized: "Reconcile now")
+    }
+}
+
 private struct ObjectRow: View {
     let object: CrossplaneObject
+    /// Pause, resume or reconcile: nil on a claim (changed through its composite).
+    var onPick: ((CrossplaneAction) -> Void)?
 
     var body: some View {
         RowShell(
@@ -194,6 +278,21 @@ private struct ObjectRow: View {
             namespace: object.ref.namespace,
             name: object.ref.name,
         )
+        .contextMenu {
+            if let onPick {
+                ForEach(object.actions, id: \.self) { action in
+                    Button(crossplaneActionTitle(action)) { onPick(action) }
+                }
+            }
+        }
+        .swipeActions(edge: .trailing) {
+            if let onPick {
+                ForEach(object.actions, id: \.self) { action in
+                    Button(crossplaneActionTitle(action)) { onPick(action) }
+                        .tint(action == .pause ? .orange : .blue)
+                }
+            }
+        }
     }
 }
 

@@ -262,6 +262,16 @@ var dataCommands = []command{
 		// Mutates the cluster.
 		return "updated", ichorgo.KubeGreenSetSchedule(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6))
 	}},
+	{name: "crossplane-action", args: "GROUP VERSION RESOURCE NAMESPACE|- NAME pause|resume|reconcile", run: func(e env) (string, error) {
+		// crossplane-action: pause, resume or reconcile now a Crossplane managed or composite
+		// resource (NAMESPACE "-" for a cluster-scoped one). Mutates the cluster.
+		namespace := flag.Arg(4)
+		if namespace == "-" {
+			namespace = ""
+		}
+
+		return flag.Arg(6) + " requested", ichorgo.KubeCrossplaneAction(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), namespace, flag.Arg(5), flag.Arg(6))
+	}},
 	{name: "kube-policies", args: "", run: func(e env) (out string, err error) {
 		// kube-policies: Kyverno policies with their PolicyReport findings and Gatekeeper
 		// constraints with their audit violations (read-only).

@@ -187,6 +187,13 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
         TalosJson.decodeFromString(Crossplane.serializer(), Ichorgo.kubeCrossplane(cfg, ctx, server))
     }
 
+    /** Pauses, resumes or asks to reconcile now the Crossplane object [ref] (os:admin). Throws when refused. */
+    suspend fun crossplaneAction(ref: KubeObjectRef, action: name.levis.ichor.model.CrossplaneAction) {
+        kubeCall { cfg, ctx, server ->
+            Ichorgo.kubeCrossplaneAction(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, action.wire)
+        }
+    }
+
     /** The Tailscale operator's connectors, proxy groups, proxy classes and DNS config, problems first. */
     suspend fun tailscale(): Tailscale = kubeCall { cfg, ctx, server ->
         TalosJson.decodeFromString(Tailscale.serializer(), Ichorgo.kubeTailscale(cfg, ctx, server))

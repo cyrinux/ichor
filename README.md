@@ -636,7 +636,23 @@ control plane's packages (providers, configurations, functions, with their Insta
 state and the pull error), the APIs its XRDs define (scope, claim kind, compositions), and every
 composite resource, claim and managed resource with its Ready and Synced conditions — problems
 first, with a filter and a search, and the Synced message (the cloud API's error) on the row.
-Tapping a row opens the object's summary (conditions, events, YAML); nothing is changed here.
+Tapping a row opens the object's summary (conditions, events, YAML).
+
+A composite or managed resource's menu (Android) or swipe and long-press actions (iOS) offer
+three reversible actions, each a plain confirmation and an entry in the activity log:
+
+- **Pause** (`crossplane.io/paused: "true"`): the provider stops calling the cloud API while a
+  `ReconcileError` is looked into. A paused resource cannot be deleted, and pausing a composite
+  leaves its composed resources reconciling.
+- **Resume** removes the annotation.
+- **Reconcile now** (`crossplane.io/reconcile-requested-at`) reconciles it at once instead of at
+  the next poll. Providers built on crossplane-runtime 2.3+ (and Crossplane 2.3+ for composites)
+  handle the annotation and record it in `status.lastHandledReconcileAt`; older ones do not read
+  it, but the annotation changing is still an update their watch reacts to, so the request queues
+  a reconcile there too, without that status line. The app says "requested", not "done".
+
+The actions are off, with the reason, for credentials that may not patch the object (`os:admin`).
+A claim is changed through its composite; deleting stays with the object screen's delete.
 
 ### Tailscale
 

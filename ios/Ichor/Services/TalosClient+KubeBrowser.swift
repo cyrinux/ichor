@@ -143,6 +143,13 @@ extension TalosClient {
     }
 
     /// Crossplane's packages, definitions, composite resources, claims and managed resources.
+    /// Pauses, resumes or asks to reconcile now the Crossplane object `ref` (os:admin).
+    func crossplaneAction(ref: CrossplaneRef, action: CrossplaneAction) async throws {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeCrossplaneAction(config, context, kubeServer, ref.group, ref.version, ref.resource, ref.namespace, ref.name, action.rawValue, error)
+        }
+    }
+
     func crossplane() async throws -> Crossplane {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeCrossplane(config, context, kubeServer, $0) }
     }
