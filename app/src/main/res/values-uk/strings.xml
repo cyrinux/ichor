@@ -3882,6 +3882,12 @@
     <string name="checkup_csrDenied_fix">Схвалювач їх відхилив: його повідомлення пояснює чому.</string>
     <string name="checkup_externalSecretFailed_fix">Secret зберігає останнє значення або не існує. Перевірте облікові дані сховища й чи існує віддалений ключ.</string>
     <string name="checkup_secretStoreNotReady_fix">Усі ExternalSecret, що ним користуються, перестають синхронізуватися. Перевірте його облікові дані, адресу та стан провайдера.</string>
+    <string name="checkup_sealedSecretNotSynced">Не вдалося розпечатати</string>
+    <string name="checkup_sealingKeyMissing">Немає ключа печатки в %1$s: нічого не розпечатати</string>
+    <string name="checkup_sealingKeyCompromised">Ключ %1$s позначено скомпрометованим</string>
+    <string name="checkup_sealedSecretNotSynced_fix">Контролер не зміг розшифрувати його в Secret: його запечатано для іншого кластера, імені чи namespace або ключем, якого контролер більше не має. Запечатайте його знову за допомогою kubeseal і сертифіката цього кластера.</string>
+    <string name="checkup_sealingKeyMissing_fix">Контролер не має ключа для розшифрування. Відновіть резервну копію ключа (Secret з міткою sealedsecrets.bitnami.com/sealed-secrets-key) у його namespace, потім перезапустіть контролер.</string>
+    <string name="checkup_sealingKeyCompromised_fix">Контролер більше не запечатує ним, але запечатане ним досі можна прочитати. Запечатайте ці SealedSecrets знову за допомогою kubeseal, потім видаліть ключ.</string>
     <string name="checkup_helmFailed_fix">Запустіть helm history, щоб побачити причину, потім helm rollback або нове оновлення.</string>
     <string name="checkup_helmPending_fix">Операцію Helm перервали, і лишилося її блокування: helm rollback до останньої розгорнутої ревізії його знімає.</string>
     <string name="checkup_section_monitoring">Моніторинг</string>

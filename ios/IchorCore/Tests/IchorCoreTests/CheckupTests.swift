@@ -168,4 +168,17 @@ final class CheckupTests: XCTestCase {
             "clusterapi|sideroServerUnaccepted|": "warning",
         ])
     }
+
+    // The demo checkup's Sealed Secrets findings (go/ichorgo/kube_checkup_demo.go).
+    func testSealedSecretsKindsDecodeWithTheirReason() throws {
+        let r = try TalosJSON.decode(CheckupReport.self, from: #"""
+        {"status":"critical","sections":[{"id":"secrets","status":"critical","checked":11,"findings":[
+          {"kind":"sealedSecretNotSynced","severity":"critical","namespace":"shop","name":"legacy-cert","reason":"UnsealFailed","message":"failed to decrypt: no key could decrypt secret"},
+          {"kind":"sealingKeyCompromised","severity":"warning","namespace":"kube-system","name":"sealed-secrets-key-rotated","reason":"keyCompromised"}]}]}
+        """#)
+        let section = try XCTUnwrap(r.shownSections.first)
+        XCTAssertEqual(section.findings.compactMap(\.kind), [.sealedSecretNotSynced, .sealingKeyCompromised])
+        XCTAssertEqual(section.findings[0].detail, "UnsealFailed: failed to decrypt: no key could decrypt secret")
+        XCTAssertEqual(dataServiceAlertedKinds, ["sealedSecretNotSynced", "sealingKeyMissing"])
+    }
 }
