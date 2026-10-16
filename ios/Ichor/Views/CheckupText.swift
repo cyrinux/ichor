@@ -144,6 +144,16 @@ enum CheckupText {
     static var checkupCsrDeniedFix: String { String(localized: "The approver refused them: its message says why.") }
     static var checkupExternalSecretFailedFix: String { String(localized: "The Secret keeps its last value, or does not exist. Check the store’s credentials and that the remote key exists.") }
     static var checkupSecretStoreNotReadyFix: String { String(localized: "Every ExternalSecret using it stops syncing. Check its credentials, its address and the provider’s status.") }
+    static var checkupSectionCrossplane: String { String(localized: "Crossplane") }
+    static var checkupSectionCrossplaneHint: String { String(localized: "Managed resources that cannot sync, unhealthy packages, definitions not established") }
+    static var checkupCrossplaneSyncFailed: String { String(localized: "Cannot sync with its provider") }
+    static func checkupCrossplaneProviderUnhealthy(_ a: String) -> String { String(localized: "Package \(a) is unhealthy") }
+    static func checkupCrossplaneNotReady(_ a: String) -> String { String(localized: "Not ready for \(a)") }
+    static var checkupCrossplaneDefinitionNotEstablished: String { String(localized: "Definition not established") }
+    static var checkupCrossplaneSyncFailedFix: String { String(localized: "Read the Synced condition’s message: credentials, quota or a conflicting external resource. Pause it if it flaps.") }
+    static var checkupCrossplaneProviderUnhealthyFix: String { String(localized: "Every resource of this package stops reconciling. Check that its image can be pulled (registry, tag, pull secret), then the logs of its pod.") }
+    static var checkupCrossplaneNotReadyFix: String { String(localized: "The provider has not finished creating it, or the external resource is unavailable. Check the object’s events and the resource on the provider’s side.") }
+    static var checkupCrossplaneDefinitionNotEstablishedFix: String { String(localized: "Its composite kind is not served, so nothing of that kind can be created. Look for a CRD that conflicts with it or an invalid schema.") }
     static var checkupHelmFailedFix: String { String(localized: "Run helm history to see why, then helm rollback or a new upgrade.") }
     static var checkupHelmPendingFix: String { String(localized: "A Helm operation was interrupted and left its lock: helm rollback to the last deployed revision releases it.") }
     static var kubeEventsTitle: String { String(localized: "Events") }

@@ -312,6 +312,31 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
             out["garage|\(g.label)"] = dataWarning
         }
     }
+    // The garage-operator's layer: a failed or degraded cluster, a failed bucket and a
+    // disconnected or roleless node declaration alert like the instances above. A cluster has
+    // its own key: it usually shares its instance's name, and one must not overwrite the
+    // other's severity.
+    for c in services.garage?.clusters ?? [] {
+        if c.health == .critical {
+            out["garage|cluster/\(c.label)"] = dataCritical
+        } else if c.health == .warning {
+            out["garage|cluster/\(c.label)"] = dataWarning
+        }
+    }
+    for b in services.garage?.buckets ?? [] {
+        if b.health == .critical {
+            out["garage|bucket/\(b.label)"] = dataCritical
+        } else if b.health == .warning {
+            out["garage|bucket/\(b.label)"] = dataWarning
+        }
+    }
+    for n in services.garage?.nodes ?? [] {
+        if n.health == .critical {
+            out["garage|node/\(n.label)"] = dataCritical
+        } else if n.health == .warning {
+            out["garage|node/\(n.label)"] = dataWarning
+        }
+    }
     let alerting: Set<CnpgReason> = [.archiving, .backupFailed, .backupStale]
     for c in services.cnpg?.clusters ?? [] {
         if c.health == .critical {
@@ -370,6 +395,20 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     for l in services.velero?.locations ?? [] where l.health == .critical {
         out["velero|BackupStorageLocation/\(l.label)"] = dataCritical
     }
+    // A controller that cannot run publishes nothing: critical like a down storage location.
+    for c in services.externalDns?.controllers ?? [] where c.health == .critical {
+        out["externaldns|\(c.label)"] = dataCritical
+    }
+    // A SealedSecret that failed to unseal leaves its workload without the Secret; a controller
+    // that cannot run or no active sealing key stops every one of them. A Secret it does not own
+    // (unmanaged) or a stale key is shown, not alerted.
+    if let sealed = services.sealedSecrets {
+        for s in sealed.items where s.health == .critical { out["sealedsecrets|\(s.label)"] = dataCritical }
+        if let c = sealed.controller, c.health == .critical { out["sealedsecrets|\(c.label)"] = dataCritical }
+        if sealed.reasons.contains(.noKeys) {
+            out["sealedsecrets|\(sealed.controller.map { "\($0.namespace)/" } ?? "")sealed-secrets-key"] = dataCritical
+        }
+    }
     // A mon down or a reconcile in progress shows in Ceph's health anyway.
     let cephAlerting: Set<CephReason> = [.healthWarn, .nearFull, .osds]
     for c in services.ceph?.clusters ?? [] {
@@ -403,6 +442,8 @@ public func dataSystemTitle(_ key: String) -> String {
     case "percona": "Percona XtraDB Cluster"
     case "certmanager": "cert-manager"
     case "velero": "Velero"
+    case "externaldns": "ExternalDNS"
+    case "sealedsecrets": "Sealed Secrets"
     case "ceph": "Rook Ceph"
     case "snapshots": "CSI VolumeSnapshots"
     case "backupjobs": "Backup CronJobs"

@@ -192,10 +192,16 @@ fun OverviewScreen(
     onPolicies: () -> Unit,
     /** What scales the cluster (from the Kubernetes home). */
     onAutoscaling: () -> Unit,
+    /** KubeVirt virtual machines (from the Kubernetes home). */
+    onVirtualMachines: () -> Unit,
     onResources: () -> Unit,
     onHelm: () -> Unit,
     onStorage: () -> Unit,
     onServices: () -> Unit,
+    /** Crossplane's packages, definitions and resources (from the Kubernetes home). */
+    onCrossplane: () -> Unit,
+    /** The Tailscale operator's connectors and proxies (from the Kubernetes home). */
+    onTailscale: () -> Unit,
     onLoadBalancing: () -> Unit,
     onJobs: () -> Unit,
     /** The cluster's Kubernetes events, live (from the Kubernetes home). */
@@ -232,6 +238,7 @@ fun OverviewScreen(
                 onNetworkPolicies = onNetworkPolicies,
                 onPolicies = onPolicies,
                 onAutoscaling = onAutoscaling,
+                onVirtualMachines = onVirtualMachines,
                 onArgoCD = onArgoCD,
                 onFlux = onFlux,
                 onDataServices = onDataServices,
@@ -244,6 +251,8 @@ fun OverviewScreen(
                 onHelm = onHelm,
                 onStorage = onStorage,
                 onServices = onServices,
+                onCrossplane = onCrossplane,
+                onTailscale = onTailscale,
                 onLoadBalancing = onLoadBalancing,
                 onJobs = onJobs,
                 onEvents = onKubeEvents,

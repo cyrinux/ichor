@@ -4,26 +4,26 @@ import IchorCore
 /// The Autoscaling screen's texts with arguments: passed as Strings, so each key is the `%@`
 /// one the catalog holds (an Int would look up `%lld`).
 enum AutoscaleText {
-    static func desired(_ a: String) -> String { String(localized: "wants %@ replicas") }
-    static func lastScaled(_ a: String) -> String { String(localized: "last scaled %@") }
-    static func managedBy(_ a: String, _ b: String) -> String { String(localized: "managed by %1$@ (%2$@)") }
-    static func metricValues(_ a: String, _ b: String) -> String { String(localized: "%1$@ of %2$@") }
-    static func pausedAt(_ a: String) -> String { String(localized: "paused at %@ replicas") }
-    static func fallbackReplicas(_ a: String) -> String { String(localized: "falling back to %@ replicas") }
-    static func cpuChange(_ a: String) -> String { String(localized: "CPU: %@") }
-    static func memoryChange(_ a: String) -> String { String(localized: "Memory: %@") }
-    static func bounds(_ a: String, _ b: String, _ c: String, _ d: String) -> String { String(localized: "bounds %1$@–%2$@ CPU, %3$@–%4$@ memory") }
-    static func poolUsage(_ a: String, _ b: String) -> String { String(localized: "cpu %1$@ of %2$@") }
-    static func memoryUsage(_ a: String, _ b: String) -> String { String(localized: "memory %1$@ of %2$@") }
-    static func poolNodes(_ a: String) -> String { String(localized: "%@ nodes") }
-    static func poolClaims(_ a: String) -> String { String(localized: "%@ claims") }
-    static func capacityTypes(_ a: String) -> String { String(localized: "Capacity types: %@") }
-    static func consolidateAfter(_ a: String) -> String { String(localized: "consolidate after %@") }
-    static func budgetNodes(_ a: String) -> String { String(localized: "%@ nodes") }
-    static func notInstalled(_ a: String) -> String { String(localized: "%@ is not installed on this cluster") }
-    static func groupError(_ a: String) -> String { String(localized: "This group could not be read: %@") }
-    static func openWorkload(_ a: String) -> String { String(localized: "Open %@") }
-    static func condition(_ a: String, _ b: String) -> String { String(localized: "%1$@: %2$@") }
+    static func desired(_ a: String) -> String { String(format: String(localized: "wants %@ replicas"), a) }
+    static func lastScaled(_ a: String) -> String { String(format: String(localized: "last scaled %@"), a) }
+    static func managedBy(_ a: String, _ b: String) -> String { String(format: String(localized: "managed by %1$@ (%2$@)"), a, b) }
+    static func metricValues(_ a: String, _ b: String) -> String { String(format: String(localized: "%1$@ of %2$@"), a, b) }
+    static func pausedAt(_ a: String) -> String { String(format: String(localized: "paused at %@ replicas"), a) }
+    static func fallbackReplicas(_ a: String) -> String { String(format: String(localized: "falling back to %@ replicas"), a) }
+    static func cpuChange(_ a: String) -> String { String(format: String(localized: "CPU: %@"), a) }
+    static func memoryChange(_ a: String) -> String { String(format: String(localized: "Memory: %@"), a) }
+    static func bounds(_ a: String, _ b: String, _ c: String, _ d: String) -> String { String(format: String(localized: "bounds %1$@–%2$@ CPU, %3$@–%4$@ memory"), a, b, c, d) }
+    static func poolUsage(_ a: String, _ b: String) -> String { String(format: String(localized: "cpu %1$@ of %2$@"), a, b) }
+    static func memoryUsage(_ a: String, _ b: String) -> String { String(format: String(localized: "memory %1$@ of %2$@"), a, b) }
+    static func poolNodes(_ a: String) -> String { String(format: String(localized: "%@ nodes"), a) }
+    static func poolClaims(_ a: String) -> String { String(format: String(localized: "%@ claims"), a) }
+    static func capacityTypes(_ a: String) -> String { String(format: String(localized: "Capacity types: %@"), a) }
+    static func consolidateAfter(_ a: String) -> String { String(format: String(localized: "consolidate after %@"), a) }
+    static func budgetNodes(_ a: String) -> String { String(format: String(localized: "%@ nodes"), a) }
+    static func notInstalled(_ a: String) -> String { String(format: String(localized: "%@ is not installed on this cluster"), a) }
+    static func groupError(_ a: String) -> String { String(format: String(localized: "This group could not be read: %@"), a) }
+    static func openWorkload(_ a: String) -> String { String(format: String(localized: "Open %@"), a) }
+    static func condition(_ a: String, _ b: String) -> String { String(format: String(localized: "%1$@: %2$@"), a, b) }
 }
 
 extension AutoscaleState {

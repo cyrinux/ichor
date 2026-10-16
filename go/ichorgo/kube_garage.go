@@ -45,6 +45,16 @@ const garageTranquilityVar = "resync-tranquility"
 type garageStatus struct {
 	Error     string           `json:"error"`
 	Instances []garageInstance `json:"instances"`
+	// The garage-operator's declarative layer (garage.rajsingh.info), empty when its CRDs
+	// are not served: the operator's CRs, listed beside the instances above, and the
+	// operator Deployment's own health.
+	Version   string                `json:"version,omitempty"`
+	Truncated bool                  `json:"truncated,omitempty"`
+	Clusters  []garageOpCluster     `json:"clusters,omitempty"`
+	Buckets   []garageOpBucket      `json:"buckets,omitempty"`
+	Keys      []garageOpKey         `json:"keys,omitempty"`
+	Nodes     []garageOpNode        `json:"nodes,omitempty"`
+	Operator  *garageOperatorStatus `json:"operator,omitempty"`
 }
 
 type garageInstance struct {

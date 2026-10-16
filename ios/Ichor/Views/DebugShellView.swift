@@ -185,7 +185,7 @@ final class DebugShell {
     var statusLine: String? {
         switch state {
         case .starting(let status): status
-        case .exited(let code, let message): code >= 0 ? String(localized: "Exited with code \(code)") : message
+        case .exited(let code, let message): code >= 0 && message.isEmpty ? String(localized: "Exited with code \(code)") : message
         default: nil
         }
     }

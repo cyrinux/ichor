@@ -1,6 +1,3707 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Asleep: kube-green has this namespace asleep (SleepInfo %@), %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asleep: kube-green has this namespace asleep (SleepInfo %1$@), %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlafend: kube-green hat diesen Namespace schlafen gelegt (SleepInfo %1$@), %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dormido: kube-green ha puesto este namespace a dormir (SleepInfo %1$@), %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endormi : kube-green a mis ce namespace en veille (SleepInfo %1$@), %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Addormentato: kube-green ha messo in sospensione questo namespace (SleepInfo %1$@), %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спить: kube-green приспав цей namespace (SleepInfo %1$@), %2$@"
+          }
+        }
+      }
+    },
+    "Asleep: kube-green may have this namespace asleep (SleepInfo %@), %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asleep: kube-green may have this namespace asleep (SleepInfo %1$@), %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlafend: kube-green hat diesen Namespace möglicherweise schlafen gelegt (SleepInfo %1$@), %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dormido: puede que kube-green haya puesto este namespace a dormir (SleepInfo %1$@), %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endormi : kube-green a peut-être mis ce namespace en veille (SleepInfo %1$@), %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Addormentato: kube-green potrebbe aver messo in sospensione questo namespace (SleepInfo %1$@), %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спить: можливо, kube-green приспав цей namespace (SleepInfo %1$@), %2$@"
+          }
+        }
+      }
+    },
+    "Suspended by kube-green, %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspended by kube-green, %1$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von kube-green angehalten, %1$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspendido por kube-green, %1$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspendu par kube-green, %1$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sospeso da kube-green, %1$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Призупинено kube-green, %1$@"
+          }
+        }
+      }
+    },
+    "kube-green has this namespace asleep: this change is undone at the next wake-up, %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green has this namespace asleep: this change is undone at the next wake-up, %1$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green hat diesen Namespace schlafen gelegt: diese Änderung wird beim nächsten Aufwachen rückgängig gemacht, %1$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green ha puesto este namespace a dormir: este cambio se deshará en el próximo despertar, %1$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green a mis ce namespace en veille : cette modification sera annulée au prochain réveil, %1$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green ha messo in sospensione questo namespace: questa modifica verrà annullata al prossimo risveglio, %1$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green приспав цей namespace: цю зміну буде скасовано під час наступного пробудження, %1$@"
+          }
+        }
+      }
+    },
+    "kube-green has this namespace asleep: this change is undone when the namespace wakes up, with no wake-up scheduled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green hat diesen Namespace schlafen gelegt: diese Änderung wird rückgängig gemacht, wenn der Namespace aufwacht, ohne geplantes Aufwachen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green ha puesto este namespace a dormir: este cambio se deshará cuando despierte el namespace, sin ningún despertar programado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green a mis ce namespace en veille : cette modification sera annulée au réveil du namespace, aucun réveil n'étant planifié"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green ha messo in sospensione questo namespace: questa modifica verrà annullata quando il namespace si risveglia, senza alcun risveglio pianificato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green приспав цей namespace: цю зміну буде скасовано, коли namespace прокинеться, а пробудження не заплановано"
+          }
+        }
+      }
+    },
+    "kube-green sleeps this namespace at %@: a change made now is undone at the next sleep" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green sleeps this namespace at %1$@: a change made now is undone at the next sleep"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green legt diesen Namespace um %1$@ schlafen: eine jetzt gemachte Änderung wird beim nächsten Schlaf rückgängig gemacht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green duerme este namespace a las %1$@: un cambio hecho ahora se deshará en el próximo sueño"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green endort ce namespace à %1$@ : une modification faite maintenant sera annulée au prochain endormissement"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green sospende questo namespace alle %1$@: una modifica fatta ora verrà annullata alla prossima sospensione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green приспить цей namespace о %1$@: зміну, зроблену зараз, буде скасовано під час наступного сну"
+          }
+        }
+      }
+    },
+    "resumes %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "resumes %1$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "läuft %1$@ wieder an"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "se reanuda %1$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "reprend %1$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "riprende %1$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "відновлюється %1$@"
+          }
+        }
+      }
+    },
+    "VolumeSnapshot %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VolumeSnapshot %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VolumeSnapshot %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VolumeSnapshot %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VolumeSnapshot %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VolumeSnapshot %@"
+          }
+        }
+      }
+    },
+    "It keeps the VolumeSnapshot %@: delete that one instead." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il porte le VolumeSnapshot %@ : supprimez plutôt celui-ci."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contiene el VolumeSnapshot %@: elimina ese en su lugar."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er enthält den VolumeSnapshot %@: löschen Sie stattdessen diesen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contiene il VolumeSnapshot %@: elimina quello invece."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Він зберігає VolumeSnapshot %@: видаліть натомість його."
+          }
+        }
+      }
+    },
+    "Your account cannot read the VolumeSnapshots: if one was taken from this snapshot, it could no longer be restored. Check with kubectl get volumesnapshots -A first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre compte ne peut pas lire les VolumeSnapshots : si l’un d’eux a été pris depuis ce snapshot, il ne pourra plus être restauré. Vérifiez d’abord avec kubectl get volumesnapshots -A."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu cuenta no puede leer los VolumeSnapshots: si se tomó uno desde este snapshot, ya no podrá restaurarse. Compruébalo antes con kubectl get volumesnapshots -A."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihr Konto kann die VolumeSnapshots nicht lesen: Wurde einer aus diesem Snapshot erstellt, lässt er sich nicht mehr wiederherstellen. Prüfen Sie zuerst mit kubectl get volumesnapshots -A."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo account non può leggere i VolumeSnapshot: se uno è stato creato da questo snapshot, non potrà più essere ripristinato. Controlla prima con kubectl get volumesnapshots -A."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш обліковий запис не може читати VolumeSnapshot: якщо з цього знімка було створено VolumeSnapshot, його вже не вдасться відновити. Спершу перевірте за допомогою kubectl get volumesnapshots -A."
+          }
+        }
+      }
+    },
+    "Console" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Console"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consola"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konsole"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Console"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Консоль"
+          }
+        }
+      }
+    },
+    "Serial console" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Console série"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consola serie"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serielle Konsole"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Console seriale"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Послідовна консоль"
+          }
+        }
+      }
+    },
+    "Serial console of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Console série de %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consola serie de %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serielle Konsole von %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Console seriale di %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Послідовна консоль %@"
+          }
+        }
+      }
+    },
+    "Opens the serial console of %@, like virtctl console." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre la console série de %@, comme virtctl console."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre la consola serie de %@, como virtctl console."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet die serielle Konsole von %@, wie virtctl console."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apre la console seriale di %@, come virtctl console."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває послідовну консоль %@, як virtctl console."
+          }
+        }
+      }
+    },
+    "The guest must send its console to ttyS0 (or hvc0) for anything to show. One viewer at a time: opening it elsewhere disconnects this one." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’invité doit envoyer sa console sur ttyS0 (ou hvc0) pour que quelque chose s’affiche. Un seul spectateur à la fois : l’ouvrir ailleurs déconnecte celui-ci."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El invitado debe enviar su consola a ttyS0 (o hvc0) para que se muestre algo. Un solo espectador a la vez: abrirla en otro lugar desconecta esta."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Gast muss seine Konsole auf ttyS0 (oder hvc0) ausgeben, damit etwas erscheint. Nur ein Betrachter gleichzeitig: Wird sie anderswo geöffnet, wird diese getrennt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il guest deve inviare la sua console su ttyS0 (o hvc0) perché si veda qualcosa. Un solo utente alla volta: aprirla altrove disconnette questa."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гість має виводити консоль на ttyS0 (або hvc0), щоб щось з’явилося. Лише один глядач одночасно: відкриття деінде від’єднує цей."
+          }
+        }
+      }
+    },
+    "Connect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se connecter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conectar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connetti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підключитися"
+          }
+        }
+      }
+    },
+    "Start the VM first to open its console." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrez d’abord la VM pour ouvrir sa console."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicie primero la VM para abrir su consola."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starten Sie zuerst die VM, um ihre Konsole zu öffnen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvia prima la VM per aprirne la console."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спершу запустіть VM, щоб відкрити її консоль."
+          }
+        }
+      }
+    },
+    "Reconnect" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se reconnecter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconectar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut verbinden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riconnetti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перепідключитися"
+          }
+        }
+      }
+    },
+    "Snapshots & backups" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshots et sauvegardes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshots y copias"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshots und Backups"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot e backup"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімки та резервні копії"
+          }
+        }
+      }
+    },
+    "Snapshots" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshots"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshots"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshots"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімки"
+          }
+        }
+      }
+    },
+    "Never" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jamais"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nunca"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mai"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ніколи"
+          }
+        }
+      }
+    },
+    "%@ being removed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ en suppression"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ eliminándose"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ werden entfernt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ in rimozione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ видаляються"
+          }
+        }
+      }
+    },
+    "newest %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dernier %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "el último %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "neuester %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "il più recente %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "найновіший %@"
+          }
+        }
+      }
+    },
+    "over a week old" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "plus d’une semaine"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hace más de una semana"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "älter als eine Woche"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "più di una settimana fa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "понад тиждень тому"
+          }
+        }
+      }
+    },
+    "the last one failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la dernière a échoué"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la última falló"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "das letzte schlug fehl"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "l’ultimo è fallito"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "остання не вдалася"
+          }
+        }
+      }
+    },
+    "Take snapshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prendre un snapshot"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crear snapshot"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot erstellen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea snapshot"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зробити знімок"
+          }
+        }
+      }
+    },
+    "Attach the volume to take a snapshot or back it up." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attachez le volume pour prendre un snapshot ou le sauvegarder."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conecta el volumen para crear un snapshot o hacer una copia."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hängen Sie das Volume an, um einen Snapshot oder ein Backup zu erstellen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collega il volume per creare uno snapshot o un backup."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Під’єднайте том, щоб зробити знімок або резервну копію."
+          }
+        }
+      }
+    },
+    "No snapshots yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun snapshot pour l’instant."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no hay snapshots."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch keine Snapshots."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuno snapshot per ora."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімків ще немає."
+          }
+        }
+      }
+    },
+    "No backups of this volume." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune sauvegarde de ce volume."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay copias de este volumen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Backups dieses Volumes."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun backup di questo volume."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає резервних копій цього тому."
+          }
+        }
+      }
+    },
+    "backed up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sauvegardé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "con copia"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gesichert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "salvato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "збережено"
+          }
+        }
+      }
+    },
+    "local only" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "local seulement"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "solo local"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nur lokal"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "solo locale"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "лише локально"
+          }
+        }
+      }
+    },
+    "taken by Longhorn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pris par Longhorn"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "creado por Longhorn"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "von Longhorn erstellt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "creato da Longhorn"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "зроблено Longhorn"
+          }
+        }
+      }
+    },
+    "Back up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarder"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hacer copia"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sichern"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegui backup"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створити копію"
+          }
+        }
+      }
+    },
+    "Delete this snapshot?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer ce snapshot ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar este snapshot?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesen Snapshot löschen?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminare questo snapshot?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити цей знімок?"
+          }
+        }
+      }
+    },
+    "Snapshot %@ of %@ is deleted and its space given back. Backups taken from it stay." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot %1$@ of %2$@ is deleted and its space given back. Backups taken from it stay."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le snapshot %1$@ de %2$@ est supprimé et son espace libéré. Les sauvegardes faites à partir de lui restent."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El snapshot %1$@ de %2$@ se elimina y su espacio se libera. Las copias hechas a partir de él se conservan."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot %1$@ von %2$@ wird gelöscht und sein Speicher freigegeben. Daraus erstellte Backups bleiben erhalten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo snapshot %1$@ di %2$@ viene eliminato e il suo spazio liberato. I backup creati da esso restano."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімок %1$@ тому %2$@ буде видалено, а його місце звільнено. Резервні копії з нього залишаться."
+          }
+        }
+      }
+    },
+    "The %@ newest of %@ backups" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The %1$@ newest of %2$@ backups"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les %1$@ plus récentes des %2$@ sauvegardes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las %1$@ más recientes de %2$@ copias"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die %1$@ neuesten von %2$@ Backups"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I %1$@ più recenti di %2$@ backup"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ найновіших із %2$@ резервних копій"
+          }
+        }
+      }
+    },
+    "Snapshot of %@ taken" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot de %@ pris"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot de %@ creado"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot von %@ erstellt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot di %@ creato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімок %@ зроблено"
+          }
+        }
+      }
+    },
+    "Snapshot of %@ deleted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot de %@ supprimé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot de %@ eliminado"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot von %@ gelöscht"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot di %@ eliminato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімок %@ видалено"
+          }
+        }
+      }
+    },
+    "completed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "terminée"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "completada"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "abgeschlossen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "completato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "завершено"
+          }
+        }
+      }
+    },
+    "No CSI VolumeSnapshots. Longhorn’s own snapshots are under each Longhorn volume." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun VolumeSnapshot CSI. Les snapshots propres à Longhorn sont sous chaque volume Longhorn."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay VolumeSnapshots CSI. Los snapshots propios de Longhorn están en cada volumen de Longhorn."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine CSI-VolumeSnapshots. Longhorns eigene Snapshots stehen bei jedem Longhorn-Volume."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun VolumeSnapshot CSI. Gli snapshot propri di Longhorn sono sotto ogni volume Longhorn."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає CSI VolumeSnapshot. Власні знімки Longhorn — у кожному томі Longhorn."
+          }
+        }
+      }
+    },
+    "Restoring creates the backup's objects again. Target namespaces that do not exist are created; ones that exist get the backup's objects merged in, overwriting them with update." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La restauration recrée les objets de la sauvegarde. Les espaces de noms qui n'existent pas sont créés ; ceux qui existent reçoivent les objets de la sauvegarde, qui les écrasent avec la mise à jour."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al restaurar se vuelven a crear los objetos de la copia. Los espacios de nombres que no existen se crean; los que existen reciben los objetos de la copia, y con actualizar se sobrescriben."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim Wiederherstellen werden die Objekte des Backups neu angelegt. Namespaces, die es nicht gibt, werden erstellt; bestehende erhalten die Objekte des Backups, mit Aktualisieren werden sie überschrieben."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il ripristino ricrea gli oggetti del backup. I namespace che non esistono vengono creati; quelli esistenti ricevono gli oggetti del backup, che con l'aggiornamento li sovrascrivono."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновлення знову створює об'єкти резервної копії. Простори імен, яких не існує, буде створено; наявні отримують об'єкти копії, і з оновленням їх перезаписано."
+          }
+        }
+      }
+    },
+    "Pick at least one namespace to restore" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez au moins un espace de noms à restaurer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige al menos un espacio de nombres para restaurar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mindestens einen Namespace zum Wiederherstellen wählen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli almeno un namespace da ripristinare"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть принаймні один простір імен для відновлення"
+          }
+        }
+      }
+    },
+    "Managed resources that cannot sync, unhealthy packages, definitions not established" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ressources gérées qui ne se synchronisent pas, paquets en mauvaise santé, définitions non établies"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recursos gestionados que no se sincronizan, paquetes con problemas, definiciones no establecidas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwaltete Ressourcen, die nicht synchronisieren, fehlerhafte Pakete, nicht etablierte Definitionen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Risorse gestite che non si sincronizzano, pacchetti non sani, definizioni non stabilite"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Керовані ресурси, що не синхронізуються, несправні пакети, невстановлені визначення"
+          }
+        }
+      }
+    },
+    "Cannot sync with its provider" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne peut pas se synchroniser avec son fournisseur"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No puede sincronizarse con su proveedor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kann nicht mit seinem Provider synchronisieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non riesce a sincronizzarsi con il suo provider"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається синхронізуватися з провайдером"
+          }
+        }
+      }
+    },
+    "Package %@ is unhealthy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le paquet %@ est en mauvaise santé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El paquete %@ no está sano"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paket %@ ist nicht gesund"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il pacchetto %@ non è sano"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пакет %@ несправний"
+          }
+        }
+      }
+    },
+    "Not ready for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas prêt depuis %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No está listo desde hace %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seit %@ nicht bereit"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non pronto da %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не готовий уже %@"
+          }
+        }
+      }
+    },
+    "Read the Synced condition’s message: credentials, quota or a conflicting external resource. Pause it if it flaps." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lisez le message de la condition Synced : identifiants, quota ou ressource externe en conflit. Mettez-la en pause si elle oscille."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lea el mensaje de la condición Synced: credenciales, cuota o un recurso externo en conflicto. Póngalo en pausa si oscila."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lesen Sie die Meldung der Bedingung Synced: Zugangsdaten, Kontingent oder eine kollidierende externe Ressource. Pausieren Sie sie, wenn sie schwankt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leggi il messaggio della condizione Synced: credenziali, quota o una risorsa esterna in conflitto. Mettila in pausa se oscilla."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитайте повідомлення умови Synced: облікові дані, квота або конфліктний зовнішній ресурс. Призупиніть його, якщо стан коливається."
+          }
+        }
+      }
+    },
+    "Every resource of this package stops reconciling. Check that its image can be pulled (registry, tag, pull secret), then the logs of its pod." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plus aucune ressource de ce paquet n’est réconciliée. Vérifiez que son image peut être tirée (registre, tag, secret de pull), puis les journaux de son pod."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún recurso de este paquete se reconcilia. Compruebe que su imagen se puede descargar (registro, etiqueta, secreto de pull) y luego los registros de su pod."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Ressource dieses Pakets wird mehr abgeglichen. Prüfen Sie, ob sein Image geladen werden kann (Registry, Tag, Pull-Secret), dann die Logs seines Pods."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna risorsa di questo pacchetto viene più riconciliata. Controlla che la sua immagine si possa scaricare (registry, tag, pull secret), poi i log del suo pod."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жоден ресурс цього пакета більше не узгоджується. Перевірте, що його образ можна завантажити (реєстр, тег, pull secret), потім журнали його пода."
+          }
+        }
+      }
+    },
+    "The provider has not finished creating it, or the external resource is unavailable. Check the object’s events and the resource on the provider’s side." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fournisseur n’a pas fini de la créer, ou la ressource externe est indisponible. Vérifiez les événements de l’objet et la ressource côté fournisseur."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El proveedor no ha terminado de crearlo, o el recurso externo no está disponible. Revise los eventos del objeto y el recurso en el lado del proveedor."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Provider hat sie noch nicht fertig erstellt, oder die externe Ressource ist nicht verfügbar. Prüfen Sie die Ereignisse des Objekts und die Ressource beim Provider."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il provider non ha finito di crearla, oppure la risorsa esterna non è disponibile. Controlla gli eventi dell’oggetto e la risorsa dal lato del provider."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Провайдер ще не завершив його створення, або зовнішній ресурс недоступний. Перевірте події об’єкта та ресурс на боці провайдера."
+          }
+        }
+      }
+    },
+    "Its composite kind is not served, so nothing of that kind can be created. Look for a CRD that conflicts with it or an invalid schema." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son type composite n’est pas servi : rien de ce type ne peut être créé. Cherchez un CRD en conflit avec elle ou un schéma invalide."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su tipo compuesto no se sirve, así que no se puede crear nada de ese tipo. Busque un CRD en conflicto con ella o un esquema no válido."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihre Composite-Art wird nicht bereitgestellt, also kann nichts dieser Art erstellt werden. Suchen Sie nach einer kollidierenden CRD oder einem ungültigen Schema."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il suo tipo composito non è servito, quindi non si può creare nulla di quel tipo. Cerca una CRD in conflitto o uno schema non valido."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Її композитний тип не обслуговується, тож нічого цього типу не можна створити. Шукайте конфліктний CRD або недійсну схему."
+          }
+        }
+      }
+    },
+    "Virtual machines" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Machines virtuelles"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máquinas virtuales"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Віртуальні машини"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Virtuelle Maschinen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Macchine virtuali"
+          }
+        }
+      }
+    },
+    "Virtual machines (Harvester)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Machines virtuelles (Harvester)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máquinas virtuales (Harvester)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Віртуальні машини (Harvester)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Virtuelle Maschinen (Harvester)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Macchine virtuali (Harvester)"
+          }
+        }
+      }
+    },
+    "KubeVirt is not installed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt n’est pas installé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt no está instalado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt не встановлено"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt ist nicht installiert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt non è installato"
+          }
+        }
+      }
+    },
+    "KubeVirt runs virtual machines as Kubernetes objects. With it (or Harvester), this screen lists them and starts, stops, restarts, pauses or migrates them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt fait tourner des machines virtuelles comme objets Kubernetes. Avec lui (ou Harvester), cet écran les liste et les démarre, arrête, redémarre, met en pause ou migre."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt ejecuta máquinas virtuales como objetos de Kubernetes. Con él (o Harvester), esta pantalla las lista y las inicia, detiene, reinicia, pausa o migra."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt запускає віртуальні машини як об’єкти Kubernetes. З ним (або Harvester) цей екран показує їх і запускає, зупиняє, перезапускає, призупиняє або мігрує."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt betreibt virtuelle Maschinen als Kubernetes-Objekte. Damit (oder mit Harvester) listet dieser Bildschirm sie auf und startet, stoppt, startet neu, pausiert oder migriert sie."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt esegue macchine virtuali come oggetti Kubernetes. Con esso (o Harvester), questa schermata le elenca e le avvia, arresta, riavvia, mette in pausa o migra."
+          }
+        }
+      }
+    },
+    "Could not read everything: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture incomplète : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo leer todo: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося прочитати все: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht alles lesbar: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile leggere tutto: %@"
+          }
+        }
+      }
+    },
+    "No virtual machines." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune machine virtuelle."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ninguna máquina virtual."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає віртуальних машин."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine virtuellen Maschinen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna macchina virtuale."
+          }
+        }
+      }
+    },
+    "%lld stopped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld arrêtées"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld detenidas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld зупинено"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld gestoppt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld arrestate"
+          }
+        }
+      }
+    },
+    "%lld migrating" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld en migration"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld migrando"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld мігрують"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld migrieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld in migrazione"
+          }
+        }
+      }
+    },
+    "%lld importing a disk" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld importent un disque"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld importando un disco"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld імпортують диск"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld importieren eine Disk"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld importano un disco"
+          }
+        }
+      }
+    },
+    "Action running…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Action en cours…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acción en curso…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дія виконується…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktion läuft…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Azione in corso…"
+          }
+        }
+      }
+    },
+    "Status: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "État : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стан: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stato: %@"
+          }
+        }
+      }
+    },
+    "Importing %@ %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importing %1$@ %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import de %1$@ %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importando %1$@ %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імпорт %1$@ %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importiere %1$@ %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importazione di %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Migrating %@ → %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrating %1$@ → %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migration %1$@ → %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrando %1$@ → %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Міграція %1$@ → %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migration %1$@ → %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrazione %1$@ → %2$@"
+          }
+        }
+      }
+    },
+    "Run strategy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stratégie d’exécution"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estrategia de ejecución"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стратегія запуску"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run-Strategie"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strategia di esecuzione"
+          }
+        }
+      }
+    },
+    "Pending change" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changement en attente"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambio pendiente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очікувана зміна"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausstehende Änderung"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifica in sospeso"
+          }
+        }
+      }
+    },
+    "%lld vCPU" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld vCPU"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld vCPU"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld vCPU"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld vCPU"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld vCPU"
+          }
+        }
+      }
+    },
+    "Guest OS" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OS invité"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SO invitado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гостьова ОС"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gast-OS"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SO guest"
+          }
+        }
+      }
+    },
+    "Instance phase" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phase de l’instance"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fase de la instancia"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фаза екземпляра"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instanzphase"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fase dell’istanza"
+          }
+        }
+      }
+    },
+    "Launcher image" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image du lanceur"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagen del lanzador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Образ запускача"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Launcher-Image"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Immagine del launcher"
+          }
+        }
+      }
+    },
+    "Migration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migration"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migración"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Міграція"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migration"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrazione"
+          }
+        }
+      }
+    },
+    "From %@ to %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From %1$@ to %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De %1$@ vers %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De %1$@ a %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З %1$@ на %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von %1$@ nach %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da %1$@ a %2$@"
+          }
+        }
+      }
+    },
+    "Actions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actions"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acciones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дії"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktionen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Azioni"
+          }
+        }
+      }
+    },
+    "%@ %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿%1$@ %2$@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@?"
+          }
+        }
+      }
+    },
+    "The guest is asked to shut down, then the instance is deleted after its grace period. The VM keeps its disks." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’invité est prié de s’éteindre, puis l’instance est supprimée après son délai de grâce. La VM garde ses disques."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se pide al invitado que se apague y la instancia se elimina tras su periodo de gracia. La VM conserva sus discos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гостьову систему просять вимкнутися, потім екземпляр видаляється після пільгового періоду. ВМ зберігає свої диски."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Gast wird zum Herunterfahren aufgefordert, dann wird die Instanz nach ihrer Gnadenfrist gelöscht. Die VM behält ihre Disks."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al guest viene chiesto di spegnersi, poi l’istanza viene eliminata dopo il periodo di tolleranza. La VM conserva i suoi dischi."
+          }
+        }
+      }
+    },
+    "The instance is deleted and started again: the guest reboots and loses what is only in memory." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’instance est supprimée puis relancée : l’invité redémarre et perd ce qui n’est qu’en mémoire."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La instancia se elimina y se vuelve a iniciar: el invitado se reinicia y pierde lo que solo está en memoria."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Екземпляр видаляється й запускається знову: гостьова система перезавантажується й втрачає те, що є лише в пам’яті."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Instanz wird gelöscht und neu gestartet: der Gast bootet neu und verliert, was nur im Speicher liegt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’istanza viene eliminata e riavviata: il guest si riavvia e perde ciò che è solo in memoria."
+          }
+        }
+      }
+    },
+    "Its run strategy is Always: stopping sets it to Halted in the VM’s spec. A GitOps tool may set it back on its next sync." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sa stratégie d’exécution est Always : l’arrêt la passe à Halted dans la spec de la VM. Un outil GitOps peut la rétablir à sa prochaine synchronisation."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su estrategia de ejecución es Always: detenerla la cambia a Halted en la spec de la VM. Una herramienta GitOps puede revertirlo en su próxima sincronización."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Її стратегія запуску Always: зупинка змінює її на Halted у spec ВМ. Інструмент GitOps може повернути її під час наступної синхронізації."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihre Run-Strategie ist Always: Stoppen setzt sie in der Spec der VM auf Halted. Ein GitOps-Tool kann das beim nächsten Sync zurücksetzen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sua strategia di esecuzione è Always: l’arresto la imposta su Halted nella spec della VM. Uno strumento GitOps può ripristinarla alla prossima sincronizzazione."
+          }
+        }
+      }
+    },
+    "Force: no grace period" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forcer : sans délai de grâce"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forzar: sin periodo de gracia"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Примусово: без пільгового періоду"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erzwingen: ohne Gnadenfrist"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forza: senza periodo di tolleranza"
+          }
+        }
+      }
+    },
+    "Live-migrates the running VM off %@ to a node the scheduler picks. The guest keeps running." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migre à chaud la VM depuis %@ vers un nœud choisi par l’ordonnanceur. L’invité continue de tourner."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migra en caliente la VM desde %@ a un nodo que elige el planificador. El invitado sigue en ejecución."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Живо мігрує ВМ з %@ на вузол, який обере планувальник. Гостьова система продовжує працювати."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migriert die laufende VM live von %@ auf einen vom Scheduler gewählten Node. Der Gast läuft weiter."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migra a caldo la VM da %@ a un nodo scelto dallo scheduler. Il guest continua a funzionare."
+          }
+        }
+      }
+    },
+    "The guest’s CPUs are frozen until it is unpaused; its memory stays." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les CPU de l’invité sont gelés jusqu’à la reprise ; sa mémoire est conservée."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las CPU del invitado se congelan hasta reanudarlo; su memoria se conserva."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Процесори гостьової системи заморожено до відновлення; її пам’ять зберігається."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die CPUs des Gastes werden bis zum Fortsetzen eingefroren; sein Speicher bleibt erhalten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le CPU del guest restano bloccate fino alla ripresa; la sua memoria resta."
+          }
+        }
+      }
+    },
+    "KubeVirt applies it in a few seconds; the list follows the new status." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt l’applique en quelques secondes ; la liste suit le nouvel état."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt lo aplica en unos segundos; la lista sigue el nuevo estado."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt застосує це за кілька секунд; список покаже новий стан."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt wendet es in wenigen Sekunden an; die Liste folgt dem neuen Status."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KubeVirt lo applica in pochi secondi; l’elenco segue il nuovo stato."
+          }
+        }
+      }
+    },
+    "Migrate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мігрувати"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migra"
+          }
+        }
+      }
+    },
+    "Unpause" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reanudar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновити"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fortsetzen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riprendi"
+          }
+        }
+      }
+    },
+    "%@ failed on %@: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ failed on %2$@: %3$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ a échoué sur %2$@ : %3$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ falló en %2$@: %3$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ не вдалося для %2$@: %3$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ fehlgeschlagen für %2$@: %3$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ non riuscito su %2$@: %3$@"
+          }
+        }
+      }
+    },
+    "%@ requested for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ requested for %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ demandé pour %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ solicitado para %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ запитано для %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ angefordert für %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ richiesto per %2$@"
+          }
+        }
+      }
+    },
+    "Forced stop requested for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêt forcé demandé pour %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detención forzada solicitada para %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Примусову зупинку запитано для %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erzwungener Stopp angefordert für %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arresto forzato richiesto per %@"
+          }
+        }
+      }
+    },
+    "Migration of %@ started: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migration of %1$@ started: %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migration de %1$@ lancée : %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migración de %1$@ iniciada: %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Міграцію %1$@ розпочато: %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migration von %1$@ gestartet: %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrazione di %1$@ avviata: %2$@"
+          }
+        }
+      }
+    },
+    "No SealedSecrets." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun SealedSecret."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún SealedSecret."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає SealedSecret."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine SealedSecrets."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun SealedSecret."
+          }
+        }
+      }
+    },
+    "No controller found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun contrôleur trouvé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontró ningún controlador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контролер не знайдено"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Controller gefunden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun controller trovato"
+          }
+        }
+      }
+    },
+    "Sealing keys" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clés de scellement"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claves de sellado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключі запечатування"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versiegelungsschlüssel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiavi di sigillatura"
+          }
+        }
+      }
+    },
+    "created %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "créée %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "creada %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "створено %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "erstellt %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "creata %@"
+          }
+        }
+      }
+    },
+    "active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "active"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "activa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "активний"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aktiv"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "attiva"
+          }
+        }
+      }
+    },
+    "compromised" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "compromise"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "comprometida"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "скомпрометований"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kompromittiert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "compromessa"
+          }
+        }
+      }
+    },
+    "immutable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "immuable"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "inmutable"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "незмінний"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unveränderlich"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "immutabile"
+          }
+        }
+      }
+    },
+    "unsealed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "descellé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "desellado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "розпечатано"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "entsiegelt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dissigillato"
+          }
+        }
+      }
+    },
+    "failed to unseal: its Secret is missing or outdated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "échec du descellement : son Secret manque ou est périmé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no se pudo desellar: su Secret falta o está desactualizado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не вдалося розпечатати: його Secret відсутній або застарів"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsiegeln fehlgeschlagen: sein Secret fehlt oder ist veraltet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dissigillatura non riuscita: il suo Secret manca o non è aggiornato"
+          }
+        }
+      }
+    },
+    "a Secret with this name exists that it does not own" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "un Secret de ce nom existe et ne lui appartient pas"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "existe un Secret con este nombre que no le pertenece"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "існує Secret із цією назвою, що йому не належить"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ein Secret mit diesem Namen existiert, das ihm nicht gehört"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "esiste un Secret con questo nome che non gli appartiene"
+          }
+        }
+      }
+    },
+    "the controller is not running: nothing gets unsealed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "le contrôleur ne tourne pas : rien n’est descellé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "el controlador no se está ejecutando: no se desella nada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "контролер не працює: нічого не розпечатується"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "der Controller läuft nicht: nichts wird entsiegelt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "il controller non è in esecuzione: nulla viene dissigillato"
+          }
+        }
+      }
+    },
+    "no active sealing key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aucune clé de scellement active"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ninguna clave de sellado activa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "немає активного ключа запечатування"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kein aktiver Versiegelungsschlüssel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nessuna chiave di sigillatura attiva"
+          }
+        }
+      }
+    },
+    "a sealing key is marked compromised" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "une clé de scellement est marquée compromise"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "una clave de sellado está marcada como comprometida"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ключ запечатування позначено як скомпрометований"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ein Versiegelungsschlüssel ist als kompromittiert markiert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "una chiave di sigillatura è segnata come compromessa"
+          }
+        }
+      }
+    },
+    "the newest sealing key is over 30 days old: key renewal may be stuck" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la clé de scellement la plus récente a plus de 30 jours : le renouvellement est peut-être bloqué"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la clave de sellado más reciente tiene más de 30 días: la renovación puede estar bloqueada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "найновішому ключу запечатування понад 30 днів: оновлення ключів, можливо, зависло"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "der neueste Versiegelungsschlüssel ist über 30 Tage alt: die Erneuerung hängt vielleicht"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la chiave di sigillatura più recente ha più di 30 giorni: il rinnovo potrebbe essere bloccato"
+          }
+        }
+      }
+    },
+    "%lld SealedSecrets" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld SealedSecrets"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld SealedSecrets"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld SealedSecret"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld SealedSecrets"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld SealedSecret"
+          }
+        }
+      }
+    },
+    "%lld keys" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld clés"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld claves"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld ключів"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Schlüssel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld chiavi"
+          }
+        }
+      }
+    },
+    "Showing the first %lld of %lld SealedSecrets." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Showing the first %1$lld of %2$lld SealedSecrets."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Affichage des %1$lld premiers SealedSecrets sur %2$lld."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se muestran los primeros %1$lld de %2$lld SealedSecrets."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показано перші %1$lld з %2$lld SealedSecret."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die ersten %1$lld von %2$lld SealedSecrets."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visualizzati i primi %1$lld di %2$lld SealedSecret."
+          }
+        }
+      }
+    },
     "Admission policies" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17526,6 +21227,951 @@
         }
       }
     },
+    "Garage operator" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garage-Operator"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operador de Garage"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opérateur Garage"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operatore Garage"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оператор Garage"
+          }
+        }
+      }
+    },
+    "Storage %lld/%lld · gateways %lld/%lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speicher %lld/%lld · Gateways %lld/%lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Almacenamiento %lld/%lld · pasarelas %lld/%lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stockage %lld/%lld · passerelles %lld/%lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archiviazione %lld/%lld · gateway %lld/%lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сховище %lld/%lld · шлюзи %lld/%lld"
+          }
+        }
+      }
+    },
+    "Layout v%lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layout v%lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layout v%lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layout v%lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layout v%lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layout v%lld"
+          }
+        }
+      }
+    },
+    "%@ of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ von %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ de %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sur %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ di %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ з %@"
+          }
+        }
+      }
+    },
+    "%@ objects" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Objekte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ objetos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ objets"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ oggetti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ об'єктів"
+          }
+        }
+      }
+    },
+    "%lld keys with access" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Schlüssel mit Zugriff"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld claves con acceso"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld clés avec accès"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld chiavi con accesso"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключів з доступом: %lld"
+          }
+        }
+      }
+    },
+    "All buckets:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Buckets:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los cubos:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les seaux :"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutti i bucket:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі кошики:"
+          }
+        }
+      }
+    },
+    "owner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigentümer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "propietario"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "propriétaire"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "proprietario"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "власник"
+          }
+        }
+      }
+    },
+    "gateway" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gateway"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pasarela"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "passerelle"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gateway"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "шлюз"
+          }
+        }
+      }
+    },
+    "zone %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zone %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zona %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zone %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zona %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "зона %@"
+          }
+        }
+      }
+    },
+    "not connected, last seen %@ ago" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nicht verbunden, zuletzt gesehen vor %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sin conexión, visto hace %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "non connecté, vu il y a %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "non connesso, visto %@ fa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не з'єднаний, востаннє бачили %@ тому"
+          }
+        }
+      }
+    },
+    "not in layout" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nicht im Layout"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fuera del layout"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pas dans le layout"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "non nel layout"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "не в layout"
+          }
+        }
+      }
+    },
+    "Some entries are not shown: the cluster has more of a kind than the app lists." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einige Einträge werden nicht angezeigt: Der Cluster hat mehr Einträge pro Art, als die App auflistet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algunas entradas no se muestran: el clúster tiene más de un tipo de las que la app lista."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certaines entrées ne sont pas affichées : le cluster en a plus que l'app n'en liste par type."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alcune voci non sono mostrate: il cluster ne ha più di quante l'app ne elenca per tipo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Деякі записи не показано: кластер має більше записів кожного типу, ніж список у застосунку."
+          }
+        }
+      }
+    },
+    "the operator reports it failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "der Operator meldet einen Fehler"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "el operador informa de un fallo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "l'opérateur signale un échec"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "l'operatore segnala un errore"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "оператор повідомляє про збій"
+          }
+        }
+      }
+    },
+    "the external cluster's admin API cannot be reached" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "die Admin-API des externen Clusters ist nicht erreichbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la API de administración del clúster externo no responde"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "l'API admin du cluster externe est injoignable"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "l'API admin del cluster esterno non è raggiungibile"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API адміністрування зовнішнього кластера недосяжна"
+          }
+        }
+      }
+    },
+    "the operator is not ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "der Operator ist nicht bereit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "el operador no está listo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "l'opérateur n'est pas prêt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "l'operatore non è pronto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "оператор не готовий"
+          }
+        }
+      }
+    },
+    "storage replicas missing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speicher-Replikas fehlen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "faltan réplicas de almacenamiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "répliques de stockage manquantes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "repliche di archiviazione mancanti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "бракує реплік сховища"
+          }
+        }
+      }
+    },
+    "partitions without write quorum" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partitionen ohne Schreibquorum"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "particiones sin quórum de escritura"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "partitions sans quorum d'écriture"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "partizioni senza quorum di scrittura"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "партиції без кворуму запису"
+          }
+        }
+      }
+    },
+    "a layout change waits to be applied" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eine Layout-Änderung wartet auf Anwendung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "un cambio de layout espera a aplicarse"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "un changement de layout attend d'être appliqué"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "una modifica del layout attende di essere applicata"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "зміна layout чекає на застосування"
+          }
+        }
+      }
+    },
+    "stale gateway entries to clean up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "veraltete Gateway-Einträge zu bereinigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "entradas de pasarela obsoletas por limpiar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "entrées de passerelle obsolètes à nettoyer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "voci gateway obsolete da ripulire"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "застарілі записи шлюзів до очищення"
+          }
+        }
+      }
+    },
+    "a declared node is not connected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ein deklarierter Knoten ist nicht verbunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "un nodo declarado no está conectado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "un nœud déclaré n'est pas connecté"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "un nodo dichiarato non è connesso"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "оголошений вузол не з'єднаний"
+          }
+        }
+      }
+    },
+    "a declared node has no layout role" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ein deklarierter Knoten hat keine Layout-Rolle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "un nodo declarado no tiene rol en el layout"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "un nœud déclaré n'a pas de rôle dans le layout"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "un nodo dichiarato non ha un ruolo nel layout"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "оголошений вузол не має ролі в layout"
+          }
+        }
+      }
+    },
+    "lifecycle rules were dropped (Garage too old)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lebenszyklus-Regeln verworfen (Garage zu alt)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "reglas de ciclo de vida descartadas (Garage demasiado antiguo)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "règles de cycle de vie abandonnées (Garage trop ancien)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "regole di ciclo di vita scartate (Garage troppo vecchio)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "правила життєвого циклу відкинуто (Garage занадто старий)"
+          }
+        }
+      }
+    },
+    "lookups keep timing out" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abfragen laufen ständig in den Timeout"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "las consultas agotan el tiempo una y otra vez"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "les recherches expirent sans cesse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "le ricerche vanno continuamente in timeout"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "запити постійно перериваються за таймаутом"
+          }
+        }
+      }
+    },
+    "Garage cannot read its metadata" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garage kann seine Metadaten nicht lesen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garage no puede leer sus metadatos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garage ne peut pas lire ses métadonnées"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garage non riesce a leggere i suoi metadati"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garage не може прочитати свої метадані"
+          }
+        }
+      }
+    },
+    "deletion is held to protect the content" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschung angehalten, um den Inhalt zu schützen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "borrado retenido para proteger el contenido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "suppression retenue pour protéger le contenu"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eliminazione trattenuta per proteggere il contenuto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "видалення затримано для захисту вмісту"
+          }
+        }
+      }
+    },
+    "the website route is not ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "die Website-Route ist nicht bereit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la ruta del sitio web no está lista"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la route du site web n'est pas prête"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la route del sito web non è pronta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "маршрут сайту не готовий"
+          }
+        }
+      }
+    },
     "not connected" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -32057,6 +36703,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Відкрити в браузері"
+          }
+        }
+      }
+    },
+    "Open object summary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objektübersicht öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir el resumen del objeto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir le résumé de l’objet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri il riepilogo dell’oggetto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити підсумок об’єкта"
           }
         }
       }
@@ -125785,6 +130466,41 @@
         }
       }
     },
+    "%@ claims" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Claims"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ claims"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ claims"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ claim"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ claims"
+          }
+        }
+      }
+    },
     "%@ may be disrupted at a time · %@ now" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -131632,47 +136348,6 @@
         }
       }
     },
-    "No volume snapshots." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No volume snapshots."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucun instantané de volume."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No hay instantáneas de volumen."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Немає знімків томів."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Volume-Snapshots."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nessuno snapshot dei volumi."
-          }
-        }
-      }
-    },
     "Last successful backup: %@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -134377,7 +139052,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ non è installato su questo cluster"
+            "value" : "%@ не встановлено в цьому кластері"
           }
         }
       }
@@ -135228,285 +139903,1372 @@
         }
       }
     },
-    "Asleep: kube-green has this namespace asleep (SleepInfo %@), %@" : {
+    "No ExternalDNS controllers or records." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun contrôleur ni enregistrement ExternalDNS."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún controlador ni registro de ExternalDNS."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає контролерів чи записів ExternalDNS."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine ExternalDNS-Controller oder Einträge."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun controller o record ExternalDNS."
+          }
+        }
+      }
+    },
+    "dry-run" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run"
+          }
+        }
+      }
+    },
+    "ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "prêt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "listo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "готовий"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bereit"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pronto"
+          }
+        }
+      }
+    },
+    "Owner id" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID de propriétaire"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID de propietario"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор власника"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Owner-ID"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID proprietario"
+          }
+        }
+      }
+    },
+    "Domain filters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtres de domaine"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtros de dominio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтри доменів"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domain-Filter"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtri di dominio"
+          }
+        }
+      }
+    },
+    "TXT prefix/suffix" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préfixe/suffixe TXT"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prefijo/sufijo TXT"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Префікс/суфікс TXT"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TXT-Präfix/-Suffix"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prefisso/suffisso TXT"
+          }
+        }
+      }
+    },
+    "Annotation filter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtre d’annotation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtro de anotación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтр анотацій"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annotation-Filter"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtro di annotazione"
+          }
+        }
+      }
+    },
+    "no replica ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aucun réplica prêt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ninguna réplica lista"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "жодна репліка не готова"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kein Replikat bereit"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nessuna replica pronta"
+          }
+        }
+      }
+    },
+    "dry-run: it changes nothing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run : il ne change rien"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run: no cambia nada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run: нічого не змінює"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dry-Run: er ändert nichts"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dry-run: non cambia nulla"
+          }
+        }
+      }
+    },
+    "a newer version is not observed yet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "une version plus récente n’est pas encore observée"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "todavía no se ha observado una versión más reciente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "новішу версію ще не спостережено"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eine neuere Version wurde noch nicht beobachtet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "una versione più recente non è ancora stata osservata"
+          }
+        }
+      }
+    },
+    "no address to point at yet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aucune adresse à viser pour l’instant"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "todavía no hay una dirección a la que apuntar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ще немає адреси, на яку вказувати"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "noch keine Zieladresse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ancora nessun indirizzo a cui puntare"
+          }
+        }
+      }
+    },
+    "outside every controller's domain filters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hors des filtres de domaine de tous les contrôleurs"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fuera de los filtros de dominio de todos los controladores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "поза фільтрами доменів усіх контролерів"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "außerhalb der Domain-Filter aller Controller"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fuori dai filtri di dominio di tutti i controller"
+          }
+        }
+      }
+    },
+    "Showing the first %lld of %lld hostnames." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Asleep: kube-green has this namespace asleep (SleepInfo %1$@), %2$@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schlafend: kube-green hat diesen Namespace schlafen gelegt (SleepInfo %1$@), %2$@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dormido: kube-green ha puesto este namespace a dormir (SleepInfo %1$@), %2$@"
+            "value" : "Showing the first %1$lld of %2$lld hostnames."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Endormi : kube-green a mis ce namespace en veille (SleepInfo %1$@), %2$@"
+            "value" : "Affichage des %1$lld premiers des %2$lld noms d’hôte."
           }
         },
-        "it" : {
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Addormentato: kube-green ha messo in sospensione questo namespace (SleepInfo %1$@), %2$@"
+            "value" : "Mostrando los primeros %1$lld de %2$lld nombres de host."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Спить: kube-green приспав цей namespace (SleepInfo %1$@), %2$@"
+            "value" : "Показано перші %1$lld з %2$lld імен хостів."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die ersten %1$lld von %2$lld Hostnamen werden angezeigt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrati i primi %1$lld di %2$lld nomi host."
           }
         }
       }
     },
-    "Asleep: kube-green may have this namespace asleep (SleepInfo %@), %@" : {
+    "from %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "de %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "de %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "з %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "von %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "da %@"
+          }
+        }
+      }
+    },
+    "by %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "par %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "por %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "через %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "durch %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "da %@"
+          }
+        }
+      }
+    },
+    "%lld hostnames" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld noms d’hôte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld nombres de host"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld імен хостів"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Hostnamen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld nomi host"
+          }
+        }
+      }
+    },
+    "Crossplane" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane" } }
+      }
+    },
+    "Definitions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Définitions" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Definiciones" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Визначення" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Definitionen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Definizioni" } }
+      }
+    },
+    "Some sections could not be read: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Certaines sections n'ont pas pu être lues : %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudieron leer algunas secciones: %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Деякі розділи не вдалося прочитати: %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einige Abschnitte konnten nicht gelesen werden: %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Alcune sezioni non sono state lette: %@" } }
+      }
+    },
+    "Crossplane is installed but defines nothing yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane est installé mais ne définit encore rien." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane está instalado pero aún no define nada." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane встановлено, але він ще нічого не визначає." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane ist installiert, definiert aber noch nichts." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Crossplane è installato ma non definisce ancora nulla." } }
+      }
+    },
+    "Search kind, name or external name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rechercher un type, un nom ou un nom externe" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscar tipo, nombre o nombre externo" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Шукати вид, назву чи зовнішню назву" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nach Kind, Name oder externem Namen suchen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cerca kind, nome o nome esterno" } }
+      }
+    },
+    "Providers & packages" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Fournisseurs & paquets" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Proveedores y paquetes" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Провайдери та пакети" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Provider & Pakete" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Provider e pacchetti" } }
+      }
+    },
+    "Composite resources & claims" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ressources composées & claims" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Recursos compuestos y claims" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Складені ресурси та claims" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zusammengesetzte Ressourcen & Claims" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Risorse composite e claim" } }
+      }
+    },
+    "Managed resources" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ressources gérées" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Recursos gestionados" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Керовані ресурси" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verwaltete Ressourcen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Risorse gestite" } }
+      }
+    },
+    "%lld critical" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld critique" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld crítico" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld критичних" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld kritisch" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld critico" } }
+      }
+    },
+    "%lld warning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld avertissement" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld aviso" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld попереджень" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Warnung" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld avviso" } }
+      }
+    },
+    "%lld ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld ok" } }
+      }
+    },
+    "%lld of %lld managed resources listed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld ressources gérées listées sur %lld" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld de %lld recursos gestionados listados" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Показано %lld з %lld керованих ресурсів" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld von %lld verwalteten Ressourcen gelistet" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld di %lld risorse gestite elencate" } }
+      }
+    },
+    "Long list: healthy managed resources past the first 500 are left out; the search looks at the ones listed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Liste longue : les ressources gérées saines au-delà des 500 premières sont omises ; la recherche ne porte que sur celles listées." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Lista larga: los recursos gestionados sanos pasados de los primeros 500 se omiten; la búsqueda solo mira los listados." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Довгий список: здорові керовані ресурси після перших 500 пропущено; пошук охоплює лише показані." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lange Liste: gesunde verwaltete Ressourcen über die ersten 500 hinaus fehlen; die Suche sieht nur die gelisteten an." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Elenco lungo: le risorse gestite sane oltre le prime 500 sono omesse; la ricerca guarda solo quelle elencate." } }
+      }
+    },
+    "claim kind %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "type de claim %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "tipo de claim %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "вид claim %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Claim-Art %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "tipo di claim %@" } }
+      }
+    },
+    "%lld compositions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld compositions" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld composiciones" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld композицій" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Compositionen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld composition" } }
+      }
+    },
+    "%lld composites" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld composites" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld composites" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld composites" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Composites" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld composite" } }
+      }
+    },
+    "composition %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "composition %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "composición %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "композиція %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Composition %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "composition %@" } }
+      }
+    },
+    "%lld resources" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld ressources" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld recursos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld ресурсів" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Ressourcen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld risorse" } }
+      }
+    },
+    "claim %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "claim %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "claim %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "claim %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Claim %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "claim %@" } }
+      }
+    },
+    "composite %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "composite %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "composite %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "composite %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Composite %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "composite %@" } }
+      }
+    },
+    "provider config %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "config fournisseur %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "config del proveedor %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "конфіг провайдера %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Provider-Config %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "config provider %@" } }
+      }
+    },
+    "external name %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "nom externe %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "nombre externo %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "зовнішня назва %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "externer Name %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "nome esterno %@" } }
+      }
+    },
+    "Cannot sync" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Impossible de synchroniser" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No puede sincronizar" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не може синхронізуватися" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kann nicht synchronisieren" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impossibile sincronizzare" } }
+      }
+    },
+    "Provider unhealthy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Fournisseur en mauvais état" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Proveedor en mal estado" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Провайдер несправний" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Provider ungesund" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Provider in cattivo stato" } }
+      }
+    },
+    "Definition not established" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Définition pas établie" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Definición no establecida" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Визначення не встановлено" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Definition nicht etabliert" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Definizione non stabilita" } }
+      }
+    },
+    "Check names" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namen prüfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobar nombres"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifier les noms"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlla i nomi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірити імена"
+          }
+        }
+      }
+    },
+    "Resolves every hostname from this phone and compares it with the record's targets. The names go to your DNS resolver." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löst jeden Hostnamen von diesem Telefon aus auf und vergleicht ihn mit den Zielen des Eintrags. Die Namen gehen an deinen DNS-Resolver."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resuelve cada nombre de host desde este teléfono y lo compara con los destinos del registro. Los nombres van a tu resolutor DNS."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Résout chaque nom d’hôte depuis ce téléphone et le compare aux cibles de l’enregistrement. Les noms partent vers votre résolveur DNS."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Risolve ogni nome host da questo telefono e lo confronta con i target del record. I nomi vanno al tuo resolver DNS."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розпізнає кожне ім’я хоста з цього телефону та порівнює його з цілями запису. Імена надсилаються до вашого DNS-резолвера."
+          }
+        }
+      }
+    },
+    "Resolves here" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löst hier auf"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resuelve aquí"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Résout ici"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Risolve qui"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розпізнається тут"
+          }
+        }
+      }
+    },
+    "Points elsewhere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt woandershin"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apunta a otro sitio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pointe ailleurs"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Punta altrove"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вказує в інше місце"
+          }
+        }
+      }
+    },
+    "Not found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht gefunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No encontrado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introuvable"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non trovato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не знайдено"
+          }
+        }
+      }
+    },
+    "Could not check" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konnte nicht geprüft werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo comprobar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérification impossible"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile controllare"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося перевірити"
+          }
+        }
+      }
+    },
+    "owned by %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gehört %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pertenece a %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "appartient à %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "di proprietà di %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "належить %@"
+          }
+        }
+      }
+    },
+    "A name that points elsewhere may be split-horizon DNS at home, a change still propagating, or another ExternalDNS owning it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Name, der woandershin zeigt, kann Split-Horizon-DNS zu Hause sein, eine noch laufende Änderung oder ein anderer ExternalDNS, dem er gehört."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un nombre que apunta a otro sitio puede ser DNS split-horizon en casa, un cambio aún propagándose, u otro ExternalDNS que lo posee."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un nom qui pointe ailleurs peut être du DNS split-horizon à la maison, un changement encore en propagation, ou un autre ExternalDNS qui le possède."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un nome che punta altrove può essere DNS split-horizon a casa, una modifica ancora in propagazione, o un altro ExternalDNS che lo possiede."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ім’я, що вказує в інше місце, може бути split-horizon DNS вдома, зміною, що ще поширюється, або іншим ExternalDNS, який ним володіє."
+          }
+        }
+      }
+    },
+    "%lld of %lld name points at this cluster" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Asleep: kube-green may have this namespace asleep (SleepInfo %1$@), %2$@"
+            "value" : "%1$lld of %2$lld name points at this cluster"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Schlafend: kube-green hat diesen Namespace möglicherweise schlafen gelegt (SleepInfo %1$@), %2$@"
+            "value" : "%1$lld von %2$lld Namen zeigt auf diesen Cluster"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dormido: puede que kube-green haya puesto este namespace a dormir (SleepInfo %1$@), %2$@"
+            "value" : "%1$lld de %2$lld nombre apunta a este clúster"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Endormi : kube-green a peut-être mis ce namespace en veille (SleepInfo %1$@), %2$@"
+            "value" : "%1$lld nom sur %2$lld pointe vers ce cluster"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Addormentato: kube-green potrebbe aver messo in sospensione questo namespace (SleepInfo %1$@), %2$@"
+            "value" : "%1$lld di %2$lld nome punta a questo cluster"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Спить: можливо, kube-green приспав цей namespace (SleepInfo %1$@), %2$@"
+            "value" : "%1$lld з %2$lld імені вказує на цей кластер"
           }
         }
       }
     },
-    "resumes %@" : {
+    "%lld of %lld names point at this cluster" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "resumes %1$@"
+            "value" : "%1$lld of %2$lld names point at this cluster"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "läuft %1$@ wieder an"
+            "value" : "%1$lld von %2$lld Namen zeigen auf diesen Cluster"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "se reanuda %1$@"
+            "value" : "%1$lld de %2$lld nombres apuntan a este clúster"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "reprend %1$@"
+            "value" : "%1$lld noms sur %2$lld pointent vers ce cluster"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "riprende %1$@"
+            "value" : "%1$lld di %2$lld nomi puntano a questo cluster"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "відновлюється %1$@"
+            "value" : "%1$lld з %2$lld імен вказують на цей кластер"
           }
         }
       }
     },
-    "Suspended by kube-green, %@" : {
+    "Tailscale" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suspended by kube-green, %1$@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Von kube-green angehalten, %1$@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suspendido por kube-green, %1$@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suspendu par kube-green, %1$@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sospeso da kube-green, %1$@"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Призупинено kube-green, %1$@"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tailscale" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tailscale" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Tailscale" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tailscale" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tailscale" } }
       }
     },
-    "kube-green has this namespace asleep: this change is undone at the next wake-up, %@" : {
+    "The Tailscale operator is installed but runs no connector or proxy yet." : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green has this namespace asleep: this change is undone at the next wake-up, %1$@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green hat diesen Namespace schlafen gelegt: diese Änderung wird beim nächsten Aufwachen rückgängig gemacht, %1$@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green ha puesto este namespace a dormir: este cambio se deshará en el próximo despertar, %1$@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green a mis ce namespace en veille : cette modification sera annulée au prochain réveil, %1$@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green ha messo in sospensione questo namespace: questa modifica verrà annullata al prossimo risveglio, %1$@"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green приспав цей namespace: цю зміну буде скасовано під час наступного пробудження, %1$@"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "L'opérateur Tailscale est installé mais ne fait encore tourner aucun connecteur ni proxy." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El operador de Tailscale está instalado pero aún no ejecuta ningún conector ni proxy." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оператор Tailscale встановлено, але він ще не запускає жодного конектора чи проксі." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Der Tailscale-Operator ist installiert, betreibt aber noch keinen Connector oder Proxy." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'operatore Tailscale è installato ma non esegue ancora alcun connettore o proxy." } }
       }
     },
-    "kube-green has this namespace asleep: this change is undone when the namespace wakes up, with no wake-up scheduled" : {
+    "Long list: only the first 200 objects of each kind are listed, problems first." : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green hat diesen Namespace schlafen gelegt: diese Änderung wird rückgängig gemacht, wenn der Namespace aufwacht, ohne geplantes Aufwachen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green ha puesto este namespace a dormir: este cambio se deshará cuando despierte el namespace, sin ningún despertar programado"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green a mis ce namespace en veille : cette modification sera annulée au réveil du namespace, aucun réveil n'étant planifié"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green ha messo in sospensione questo namespace: questa modifica verrà annullata quando il namespace si risveglia, senza alcun risveglio pianificato"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green приспав цей namespace: цю зміну буде скасовано, коли namespace прокинеться, а пробудження не заплановано"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Longue liste : seuls les 200 premiers objets de chaque type sont listés, problèmes en tête." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Lista larga: solo se listan los primeros 200 objetos de cada tipo, problemas primero." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Довгий список: показано лише перші 200 об'єктів кожного виду, спершу проблеми." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lange Liste: nur die ersten 200 Objekte jeder Art werden gelistet, Probleme zuerst." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Elenco lungo: sono elencati solo i primi 200 oggetti per tipo, prima i problemi." } }
       }
     },
-    "kube-green sleeps this namespace at %@: a change made now is undone at the next sleep" : {
+    "Operator %@" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green sleeps this namespace at %1$@: a change made now is undone at the next sleep"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green legt diesen Namespace um %1$@ schlafen: eine jetzt gemachte Änderung wird beim nächsten Schlaf rückgängig gemacht"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green duerme este namespace a las %1$@: un cambio hecho ahora se deshará en el próximo sueño"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green endort ce namespace à %1$@ : une modification faite maintenant sera annulée au prochain endormissement"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green sospende questo namespace alle %1$@: una modifica fatta ora verrà annullata alla prossima sospensione"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kube-green приспить цей namespace о %1$@: зміну, зроблену зараз, буде скасовано під час наступного сну"
-          }
-        }
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Opérateur %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Operador %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Оператор %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Operator %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Operatore %@" } }
+      }
+    },
+    "%@ ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%@ prêts" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@ listos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%@ готові" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@ bereit" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@ pronti" } }
+      }
+    },
+    "No operator Deployment found: nothing here is reconciled." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucun Deployment d'opérateur trouvé : rien ici n'est réconcilié." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se encontró el Deployment del operador: nada de esto se reconcilia." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Deployment оператора не знайдено: ніщо тут не узгоджується." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Operator-Deployment gefunden: hier wird nichts abgeglichen." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun Deployment dell'operatore trovato: nulla qui viene riconciliato." } }
+      }
+    },
+    "API %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "API %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "API %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "API %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "API %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "API %@" } }
+      }
+    },
+    "Connectors" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Connecteurs" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Conectores" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Конектори" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Connectors" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Connettori" } }
+      }
+    },
+    "Proxy groups" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Groupes de proxys" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Grupos de proxies" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Групи проксі" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Proxy-Gruppen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Gruppi di proxy" } }
+      }
+    },
+    "Proxy classes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Classes de proxy" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Clases de proxy" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Класи проксі" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Proxy-Klassen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Classi di proxy" } }
+      }
+    },
+    "subnet router %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "routeur de sous-réseau %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "router de subred %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "маршрутизатор підмережі %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Subnetz-Router %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "router di subnet %@" } }
+      }
+    },
+    "exit node" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "nœud de sortie" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "nodo de salida" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "вихідний вузол" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Exit-Node" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "nodo di uscita" } }
+      }
+    },
+    "app connector" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "connecteur d'app" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "conector de apps" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "конектор застосунків" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "App-Connector" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "connettore di app" } }
+      }
+    },
+    "%lld devices" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld appareils" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld dispositivos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld пристроїв" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Geräte" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld dispositivi" } }
+      }
+    },
+    "%lld replicas" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld réplicas" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld réplicas" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "%lld реплік" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Replikas" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld repliche" } }
+      }
+    },
+    "proxy class %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "classe de proxy %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "clase de proxy %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "клас проксі %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Proxy-Klasse %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "classe di proxy %@" } }
+      }
+    },
+    "used by %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "utilisée par %lld" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "usada por %lld" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "використовують %lld" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "verwendet von %lld" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "usata da %lld" } }
+      }
+    },
+    "nameserver %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "serveur de noms %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "servidor de nombres %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "сервер імен %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nameserver %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "nameserver %@" } }
+      }
+    },
+    "some proxies running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "certains proxys tournent" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "algunos proxies en marcha" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "частина проксі працює" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "einige Proxys laufen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "alcuni proxy attivi" } }
       }
     }
   },

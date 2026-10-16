@@ -20,8 +20,15 @@ type integrationSpec struct {
 	// Resource of Groups[0] that must be served too, when the group is shared with other
 	// projects ("" when the group is enough).
 	Resource string
+	// FallbackVersion of Groups[0] also asked for Resource when the preferred version does not
+	// serve it: Kyverno 1.15 prefers v2 while its policies stay under v1.
+	FallbackVersion string
 	// ServiceKind also finds a project without API by its Services: a promMatch kind.
 	ServiceKind string
+	// PodsFallback also finds a project whose API group is optional by its running pods:
+	// ExternalDNS (most installs publish only Ingress and Service hosts, no CRD) and Garage
+	// (the garage-operator's CRDs when it runs, else its Helm-chart pods).
+	PodsFallback bool
 }
 
 // integrationSpecs lists every project the app integrates with, in the order Settings shows
@@ -36,7 +43,8 @@ var integrationSpecs = []integrationSpec{
 	{ID: "dragonfly", Name: "Dragonfly", Website: "https://www.dragonflydb.io", Groups: []string{groupDragonfly}},
 	{ID: "longhorn", Name: "Longhorn", Website: "https://longhorn.io", Groups: []string{groupLonghorn}},
 	{ID: "rook", Name: "Rook Ceph", Website: "https://rook.io", Groups: []string{groupCeph}},
-	{ID: "garage", Name: "Garage", Website: "https://garagehq.deuxfleurs.fr"},
+	// Garage: the garage-operator's CRDs when it runs, else its pods (the Helm chart).
+	{ID: "garage", Name: "Garage", Website: "https://garagehq.deuxfleurs.fr", Groups: []string{groupGarageOperator}, PodsFallback: true},
 	{ID: "velero", Name: "Velero", Website: "https://velero.io", Groups: []string{groupVelero}},
 	{ID: "kube-green", Name: "kube-green", Website: "https://kube-green.dev", Groups: []string{groupKubeGreen}},
 	{ID: "cert-manager", Name: "cert-manager", Website: "https://cert-manager.io", Groups: []string{groupCertManager, groupACME}},
@@ -49,7 +57,7 @@ var integrationSpecs = []integrationSpec{
 	{ID: "crossplane", Name: "Crossplane", Website: "https://www.crossplane.io", Groups: []string{groupCrossplanePkg, groupCrossplaneAPIExt}, AnyGroup: true},
 	{ID: "external-secrets", Name: "External Secrets Operator", Website: "https://external-secrets.io", Groups: []string{groupExternalSecrets}},
 	// Kyverno is read through its policies and the (standard) policy reports it writes.
-	{ID: "kyverno", Name: "Kyverno", Website: "https://kyverno.io", Groups: []string{groupKyverno, groupPolicyReport}, Resource: "clusterpolicies"},
+	{ID: "kyverno", Name: "Kyverno", Website: "https://kyverno.io", Groups: []string{groupKyverno, groupPolicyReport}, Resource: "clusterpolicies", FallbackVersion: kyvernoPoliciesVersion},
 	// The autoscalers: KEDA's ScaledObjects, the VPA's recommendations and Karpenter's pools.
 	{ID: "keda", Name: "KEDA", Website: "https://keda.sh", Groups: []string{groupKEDA}, Resource: "scaledobjects"},
 	{ID: "vpa", Name: "Vertical Pod Autoscaler", Website: "https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler", Groups: []string{groupVPA}, Resource: "verticalpodautoscalers"},
@@ -57,14 +65,19 @@ var integrationSpecs = []integrationSpec{
 	{ID: "gateway-api", Name: "Gateway API", Website: "https://gateway-api.sigs.k8s.io", Groups: []string{groupGatewayAPI}},
 	{ID: "kgateway", Name: "kgateway", Website: "https://kgateway.dev", Groups: []string{groupKgateway}},
 	{ID: "traefik", Name: "Traefik", Website: "https://traefik.io", Groups: []string{groupTraefik}},
+	// ExternalDNS's DNSEndpoint CRD is optional: its pods count when the group is not served.
+	{ID: "external-dns", Name: "ExternalDNS", Website: "https://kubernetes-sigs.github.io/external-dns/latest/", Groups: []string{groupExternalDNS}, PodsFallback: true},
 	{ID: "prometheus-operator", Name: "Prometheus Operator", Website: "https://prometheus-operator.dev", Groups: []string{groupMonitoring}},
 	{ID: "prometheus", Name: "Prometheus", Website: "https://prometheus.io", ServiceKind: "prometheus"},
 	{ID: "thanos", Name: "Thanos", Website: "https://thanos.io", ServiceKind: "thanos"},
 	{ID: "mimir", Name: "Mimir", Website: "https://grafana.com/oss/mimir/", ServiceKind: "mimir"},
 	{ID: "victoriametrics", Name: "VictoriaMetrics", Website: "https://victoriametrics.com", ServiceKind: "victoriametrics"},
 	{ID: "sealed-secrets", Name: "Sealed Secrets", Website: "https://github.com/bitnami/sealed-secrets", Groups: []string{groupSealedSecrets}, Resource: "sealedsecrets"},
-	// KubeVirt VMs, the CDI DataVolumes that fill their disks, and Harvester, which runs both.
-	{ID: "kubevirt", Name: "KubeVirt", Website: "https://kubevirt.io", Groups: []string{groupKubeVirt, groupCDI, groupHarvester}},
+	// KubeVirt VMs, the CDI DataVolumes that fill their disks, Harvester (which runs both) and
+	// the group KubeVirt's start, stop, restart, migrate, pause and unpause live under.
+	{ID: "kubevirt", Name: "KubeVirt", Website: "https://kubevirt.io", Groups: []string{groupKubeVirt, groupCDI, groupHarvester, groupKubeVirtSub}},
+	// The Tailscale operator's Connectors, ProxyGroups, ProxyClasses and DNSConfig.
+	{ID: "tailscale", Name: "Tailscale", Website: "https://tailscale.com/kb/1236/kubernetes-operator", Groups: []string{groupTailscale}, Resource: "connectors"},
 	{ID: "kubernetes-csi", Name: "CSI VolumeSnapshots", Website: "https://kubernetes.io/docs/concepts/storage/volume-snapshots/", Groups: []string{groupSnapshot}, Resource: "volumesnapshots"},
 }
 
@@ -162,6 +175,9 @@ func readSupportedIntegrations(ctx context.Context, k *kubeClient, hints hintSet
 		if version, ok := groups[firstGroup(s)]; ok && s.Resource != "" {
 			wg.Go(func() {
 				served := servesResource(ctx, k, s.Groups[0], version, s.Resource)
+				if !served && s.FallbackVersion != "" && s.FallbackVersion != version {
+					served = servesResource(ctx, k, s.Groups[0], s.FallbackVersion, s.Resource)
+				}
 
 				mu.Lock()
 				resourceFor[s.ID] = served
@@ -174,12 +190,21 @@ func readSupportedIntegrations(ctx context.Context, k *kubeClient, hints hintSet
 
 	items := integrationList(func(s integrationSpec) detection {
 		if len(s.Groups) > 0 {
-			version, ok := servedGroup(s, groups)
-			if !ok || s.Resource != "" && !resourceFor[s.ID] {
-				return detection{}
+			if version, ok := servedGroup(s, groups); ok && (s.Resource == "" || resourceFor[s.ID]) {
+				return detection{via: detectedByAPI, version: version}
 			}
 
-			return detection{via: detectedByAPI, version: version}
+			if s.PodsFallback {
+				if f, ok := pods[s.ID]; ok {
+					return f
+				}
+
+				if podsErr != nil && hints[s.ID] {
+					return detection{via: detectedByInventory}
+				}
+			}
+
+			return detection{}
 		}
 
 		if f, ok := pods[s.ID]; ok {
@@ -330,6 +355,7 @@ func demoSupportedIntegrations() supportedIntegrations {
 		"longhorn":            ds.Longhorn != nil,
 		"rook":                ds.Ceph != nil,
 		"velero":              ds.Velero != nil,
+		"external-dns":        ds.ExternalDNS != nil,
 		"cert-manager":        ds.CertManager != nil,
 		"sealed-secrets":      ds.SealedSecrets != nil,
 		"castai":              ds.CastAI != nil,
@@ -350,6 +376,8 @@ func demoSupportedIntegrations() supportedIntegrations {
 		switch {
 		case api[s.ID]:
 			return detection{via: detectedByAPI}
+		case s.ID == "garage" && ds.Garage != nil && ds.Garage.Version != "":
+			return detection{via: detectedByAPI, version: ds.Garage.Version}
 		case s.ID == "garage" && ds.Garage != nil:
 			return detection{via: detectedByPods}
 		case s.ServiceKind != "":

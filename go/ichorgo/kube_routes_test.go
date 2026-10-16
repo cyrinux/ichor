@@ -83,6 +83,8 @@ func TestAppRoutesIngress(t *testing.T) {
 	}
 }
 
+// An HTTPRoute match on a method (a string, where a GRPCRoute's is an object) must not
+// fail the decode: the route still yields its URL.
 func TestAppRoutesHTTPRoute(t *testing.T) {
 	k := openRoutesKube(t, map[string]string{
 		"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[]}`,
@@ -96,10 +98,10 @@ func TestAppRoutesHTTPRoute(t *testing.T) {
 			{"metadata":{"name":"web","namespace":"shop"},"spec":{
 				"parentRefs":[{"name":"public","namespace":"gw"}],
 				"hostnames":["www.shop.example","plain.example"],
-				"rules":[{"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"backendRefs":[{"name":"web","port":80}]}]}},
+				"rules":[{"matches":[{"path":{"type":"PathPrefix","value":"/"},"method":"GET"}],"backendRefs":[{"name":"web","port":80}]}]}},
 			{"metadata":{"name":"alt","namespace":"shop"},"spec":{
 				"parentRefs":[{"name":"public","namespace":"gw","sectionName":"alt"}],
-				"rules":[{"matches":[{"path":{"type":"PathPrefix","value":"/app"}}],"backendRefs":[{"name":"web"}]}]}},
+				"rules":[{"matches":[{"method":"POST"},{"path":{"type":"PathPrefix","value":"/app"}}],"backendRefs":[{"name":"web"}]}]}},
 			{"metadata":{"name":"bare","namespace":"shop"},"spec":{
 				"parentRefs":[{"name":"public","namespace":"gw","sectionName":"http"}],
 				"rules":[{"backendRefs":[{"name":"db"},{"name":"web"}]}]}},
@@ -129,6 +131,45 @@ func TestAppRoutesHTTPRoute(t *testing.T) {
 	}, "\n")
 	if got := routeURLs(list.Routes); got != want {
 		t.Fatalf("got\n%s\nwant\n%s", got, want)
+	}
+}
+
+// A route carries the API resource it was read at, so the apps can open its object summary.
+func TestAppRoutesCarryTheirResource(t *testing.T) {
+	k := openRoutesKube(t, map[string]string{
+		"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[
+			{"metadata":{"name":"web","namespace":"shop"},"spec":{"rules":[
+				{"host":"www.shop.example","http":{"paths":[{"path":"/","backend":{"service":{"name":"web"}}}]}}]}}]}`,
+		"GET /apis/gateway.networking.k8s.io/v1/httproutes": `{"items":[
+			{"metadata":{"name":"web","namespace":"shop"},"spec":{
+				"hostnames":["web.example"],
+				"rules":[{"backendRefs":[{"name":"web"}]}]}}]}`,
+	})
+
+	list, err := appRoutes(context.Background(), k, []routePod{{"shop", "web-1"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := map[string]resourceRef{
+		"Ingress":   {"networking.k8s.io", "v1", "ingresses"},
+		"HTTPRoute": {"gateway.networking.k8s.io", "v1", "httproutes"},
+	}
+
+	seen := map[string]bool{}
+
+	for _, r := range list.Routes {
+		seen[r.Kind] = true
+
+		if got := (resourceRef{r.Group, r.Version, r.Resource}); got != want[r.Kind] {
+			t.Errorf("%s %s: got %+v, want %+v", r.Kind, r.Name, got, want[r.Kind])
+		}
+	}
+
+	for kind := range want {
+		if !seen[kind] {
+			t.Errorf("no %s route was read", kind)
+		}
 	}
 }
 

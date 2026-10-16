@@ -20,6 +20,27 @@ public enum LonghornAction: String, CaseIterable, Sendable {
     case cancelEviction
 }
 
+/// What KubeLonghornSnapshotAction runs on a volume's snapshot; the raw value is the core's name.
+public enum LonghornSnapshotAction: String, CaseIterable, Sendable {
+    /// A new snapshot of the volume.
+    case take
+    /// Back the snapshot up to the volume's target.
+    case backup
+    /// Delete the snapshot and give its space back.
+    case delete
+}
+
+extension LonghornAction {
+    /// The permission check it needs: Longhorn's API, the volume object or the node object.
+    public var kubeAction: KubeAction {
+        switch self {
+        case .backup, .trim: .longhornSnapshot
+        case .replicas: .longhornReplicas
+        case .schedulingOn, .schedulingOff, .evict, .cancelEviction: .longhornNode
+        }
+    }
+}
+
 /// The replica counts Longhorn accepts.
 public enum LonghornReplicas {
     public static let min = 1

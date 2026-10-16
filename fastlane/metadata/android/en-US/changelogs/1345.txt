@@ -1,2 +1,7 @@
 • Apps served through a Gateway API GRPCRoute or TLSRoute get their web address, Services chips and network-map box
 • Read the Kyverno policies from the kyverno.io version that serves them
+• Data services show the hostnames ExternalDNS manages and the controller's settings
+• Data services show Sealed Secrets unseal status and sealing keys
+• Kubernetes → Virtual machines: KubeVirt and Harvester VMs with their state, and start, stop, restart, pause or migrate one
+• Data services can check every ExternalDNS hostname against what the record says
+• The checkup names Crossplane resources that cannot sync and providers that are unhealthy

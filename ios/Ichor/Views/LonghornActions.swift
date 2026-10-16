@@ -74,8 +74,10 @@ struct LonghornActionLabel: View {
 
 /// The actions of a row, for its context menu and swipe actions. Eviction shows as destructive in
 /// the menu only: a destructive swipe action makes the row slide away as if deleted.
+/// An action the account may not run in namespace (Longhorn's own) is disabled.
 struct LonghornActionButtons: View {
     let actions: [LonghornAction]
+    let namespace: String
     var inMenu = false
     let onAction: (LonghornAction) -> Void
 
@@ -83,6 +85,7 @@ struct LonghornActionButtons: View {
         ForEach(actions, id: \.self) { action in
             Button(role: inMenu && action == .evict ? .destructive : nil) { onAction(action) } label: { LonghornActionLabel(action: action) }
                 .tint(color(for: action))
+                .kubeGated(action.kubeAction, in: namespace)
         }
     }
 

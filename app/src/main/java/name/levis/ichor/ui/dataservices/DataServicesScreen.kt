@@ -42,6 +42,7 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.DataServices
+import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.detected
 import name.levis.ichor.model.likelyCauses
 import name.levis.ichor.model.notReadyNames
@@ -66,6 +67,7 @@ import name.levis.ichor.ui.components.pageContent
 fun DataServicesScreen(
     initial: DataServiceKind? = null,
     onBack: () -> Unit,
+    onObject: (KubeObjectRef) -> Unit,
     onSupportedIntegrations: () -> Unit,
     onRequestIntegration: () -> Unit,
 ) {
@@ -85,6 +87,7 @@ fun DataServicesScreen(
     LonghornResultToasts(vm.longhorn.results)
     LonghornSalvageToasts(vm.longhorn.salvageResults)
     LonghornAttachmentToasts(vm.longhorn.attachmentResults)
+    LonghornSnapshotToasts(vm.longhorn.snapshotResults)
     CertificateRenewToasts(vm.certificates.results)
     CnpgBackupToasts(vm.cnpg.results)
     CnpgPromoteToasts(vm.cnpg.promoteResults)
@@ -132,7 +135,7 @@ fun DataServicesScreen(
                 else app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
             }
             if (data.detected.isEmpty()) NoDataServices(onSupportedIntegrations, onRequestIntegration)
-            else Systems(data, downNodes, initial, vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero)
+            else Systems(data, downNodes, initial, onObject, vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero, vm.externalDns)
         }
     }
 }
@@ -153,7 +156,7 @@ private fun NoDataServices(onSupportedIntegrations: () -> Unit, onRequestIntegra
 }
 
 @Composable
-private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions, cnpg: CnpgActions, velero: VeleroActions) {
+private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, onObject: (KubeObjectRef) -> Unit, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions, cnpg: CnpgActions, velero: VeleroActions, externalDns: ExternalDnsActions) {
     val kinds = services.detected
     // Picked once: a system detected later, before it in the list, doesn't take its place.
     var selected by rememberSaveable { mutableStateOf(initial ?: kinds.first()) }
@@ -173,13 +176,15 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
         SwipeTabPager(kinds, tab, onSelect = { selected = it }) { page ->
             when (page) {
                 DataServiceKind.LONGHORN -> LonghornTab(services.longhorn!!, longhorn, garageDetected = services.garage != null, onGarage = { selected = DataServiceKind.GARAGE })
-                DataServiceKind.GARAGE -> GarageTab(services.garage!!, garage)
+                DataServiceKind.GARAGE -> GarageTab(services.garage!!, garage, onObject)
                 DataServiceKind.CNPG -> CnpgTab(services.cnpg!!, cnpg)
                 DataServiceKind.DRAGONFLY -> DragonflyTab(services.dragonfly!!)
                 DataServiceKind.MARIADB -> MariaDbTab(services.mariadb!!)
                 DataServiceKind.PERCONA -> PerconaTab(services.percona!!)
                 DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!, certificates)
                 DataServiceKind.VELERO -> VeleroTab(services.velero!!, velero)
+                DataServiceKind.EXTERNAL_DNS -> ExternalDnsTab(services.externalDns!!, onObject, externalDns)
+                DataServiceKind.SEALED_SECRETS -> SealedSecretsTab(services.sealedSecrets!!, onObject)
                 DataServiceKind.CEPH -> CephTab(services.ceph!!)
                 DataServiceKind.SNAPSHOTS -> SnapshotsTab(services.snapshots!!)
                 DataServiceKind.BACKUP_JOBS -> BackupJobsTab(services.backupJobs!!)

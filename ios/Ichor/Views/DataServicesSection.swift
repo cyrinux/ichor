@@ -64,6 +64,8 @@ func dataServiceSummary(_ kind: DataServiceKind, _ services: DataServices) -> St
     case .percona: head = String(localized: "\(summary.total) Percona clusters")
     case .certManager: head = String(localized: "\(summary.total) certificates")
     case .velero: head = String(localized: "\(summary.total) Velero schedules")
+    case .externalDns: head = String(localized: "\(summary.total) hostnames")
+    case .sealedSecrets: head = String(localized: "\(summary.total) SealedSecrets")
     case .ceph: head = String(localized: "\(summary.total) Ceph clusters")
     case .snapshots, .backupJobs: head = String(localized: "\(summary.total) backup items")
     case .castai:
@@ -202,6 +204,8 @@ struct KindIcon: View {
         case .percona: "point.3.connected.trianglepath.dotted"
         case .certManager: "checkmark.seal"
         case .velero: "clock.arrow.circlepath"
+        case .externalDns: "globe"
+        case .sealedSecrets: "lock"
         case .ceph: "internaldrive"
         case .snapshots, .backupJobs: "clock.arrow.circlepath"
         case .castai: "slider.horizontal.3"

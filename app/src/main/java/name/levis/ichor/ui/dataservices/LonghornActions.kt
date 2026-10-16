@@ -36,9 +36,13 @@ import name.levis.ichor.R
 import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.model.longhornActionKey
 import name.levis.ichor.model.LonghornAction
+import name.levis.ichor.model.LonghornSnapshotAction
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.model.kubeAction
 import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeActionAccess
 import name.levis.ichor.ui.components.ResultToasts
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -78,6 +82,16 @@ class LonghornActions(
             LonghornSalvageResult(volume.label, it.exceptionOrNull()?.uiText())
         }, onChanged)
     }
+    private val snapshot = KeyedActions<LonghornSnapshotResult>(scope)
+    /** Keys (longhornSnapshotKey) of the snapshots, or volumes taking one, with an action in flight. */
+    val snapshotBusy: StateFlow<Set<String>> get() = snapshot.busy
+    val snapshotResults: Flow<LonghornSnapshotResult> get() = snapshot.results
+    /** Runs [action] on [snapshotName] of [volume], "" for [LonghornSnapshotAction.TAKE]. */
+    fun snapshot(volume: name.levis.ichor.model.LonghornVolume, snapshotName: String, action: LonghornSnapshotAction) {
+        snapshot.launch(longhornSnapshotKey(volume, snapshotName), { dataServices.longhornSnapshotAction(volume.namespace, volume.name, snapshotName, action) }, {
+            LonghornSnapshotResult(action, volume.label, it.exceptionOrNull()?.uiText())
+        }, onChanged)
+    }
     private val actions = KeyedActions<LonghornActionResult>(scope)
     /** Keys (longhornActionKey) of the volumes and nodes with an action in flight. */
     val busy: StateFlow<Set<String>> get() = actions.busy
@@ -90,6 +104,25 @@ class LonghornActions(
             LonghornActionResult(action, label, value, it.exceptionOrNull()?.uiText())
         }, onChanged)
     }
+}
+
+/** Outcome of a snapshot action on the volume [label], shown once. */
+data class LonghornSnapshotResult(val action: LonghornSnapshotAction, val label: String, val error: UiText?)
+
+/** Busy key of [snapshotName] of [volume]; "" is the volume taking a new one. */
+fun longhornSnapshotKey(volume: name.levis.ichor.model.LonghornVolume, snapshotName: String) =
+    longhornActionKey(volume.namespace, volume.name) + "@" + snapshotName
+
+/** A toast for each snapshot outcome of [results]. */
+@Composable
+fun LonghornSnapshotToasts(results: Flow<LonghornSnapshotResult>) = ResultToasts(results) { context, r ->
+    val text = r.error?.resolve(context)?.let { context.getString(R.string.longhorn_action_failed, r.label, it) }
+        ?: when (r.action) {
+            LonghornSnapshotAction.TAKE -> context.getString(R.string.longhorn_snapshot_taken, r.label)
+            LonghornSnapshotAction.BACKUP -> context.getString(R.string.longhorn_backup_started, r.label)
+            LonghornSnapshotAction.DELETE -> context.getString(R.string.longhorn_snapshot_deleted, r.label)
+        }
+    text to (r.error != null)
 }
 
 /** A toast for each outcome of [results]. */
@@ -108,9 +141,12 @@ fun LonghornResultToasts(results: Flow<LonghornActionResult>) = ResultToasts(res
     text to (r.error != null)
 }
 
-/** The ⋮ menu of a volume or node row, a spinner while one of its actions runs. */
+/**
+ * The ⋮ menu of a volume or node row, a spinner while one of its actions runs. An action the
+ * account may not run in [namespace] (Longhorn's own) is disabled, with the reason under it.
+ */
 @Composable
-internal fun LonghornActionMenu(actions: List<LonghornAction>, busy: Boolean, onAction: (LonghornAction) -> Unit) {
+internal fun LonghornActionMenu(actions: List<LonghornAction>, namespace: String, busy: Boolean, onAction: (LonghornAction) -> Unit) {
     if (busy) {
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -118,13 +154,21 @@ internal fun LonghornActionMenu(actions: List<LonghornAction>, busy: Boolean, on
         return
     }
     var open by remember { mutableStateOf(false) }
+    val access = rememberKubeActionAccess(namespace)
     // The Box anchors the menu to the button, not to the row's start edge.
     Box {
         TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { open = true })
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             actions.forEach { action ->
+                val denial = access?.denial(action.kubeAction)
                 DropdownMenuItem(
-                    text = { Text(stringResource(action.menuLabel)) },
+                    text = {
+                        Column {
+                            Text(stringResource(action.menuLabel))
+                            KubeDenialNote(denial)
+                        }
+                    },
+                    enabled = denial == null,
                     onClick = {
                         open = false
                         onAction(action)

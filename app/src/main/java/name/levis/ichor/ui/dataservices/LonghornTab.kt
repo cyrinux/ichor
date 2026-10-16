@@ -55,7 +55,6 @@ import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.UsageBar
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
-import name.levis.ichor.util.timeAgo
 
 /** Longhorn volumes (problems first), the backup targets and each node's disks. */
 @Composable
@@ -73,6 +72,12 @@ fun LonghornTab(status: LonghornStatus, actions: LonghornActions, garageDetected
     val salvageBusy by actions.salvageBusy.collectAsStateWithLifecycle()
     var salvageTarget by remember { mutableStateOf<LonghornVolume?>(null) }
     salvageTarget?.let { v -> LonghornSalvageDialog(v, actions, onDismiss = { salvageTarget = null }, onConfirm = { replicas -> actions.salvage(v, replicas); salvageTarget = null }) }
+
+    // By name: the sheet follows the volume as the status refreshes.
+    var snapshotsOf by rememberSaveable { mutableStateOf<String?>(null) }
+    snapshotsOf?.let { name ->
+        status.volumes.firstOrNull { it.name == name }?.let { v -> LonghornSnapshotsSheet(v, actions, onDismiss = { snapshotsOf = null }) }
+    }
 
     var replicasOf by remember { mutableStateOf<LonghornVolume?>(null) }
     var evicting by remember { mutableStateOf<LonghornNode?>(null) }
@@ -137,7 +142,10 @@ fun LonghornTab(status: LonghornStatus, actions: LonghornActions, garageDetected
             )
         }
         items(rows, key = { "v:${it.name}" }) { v ->
-            VolumeRow(v, v.key in busy || v.key in salvageBusy || v.key in attachmentBusy, onAttachment = { attachmentTarget = v to it }, onSalvage = { salvageTarget = v }, onAction = { onVolume(v, it) })
+            VolumeRow(
+                v, v.key in busy || v.key in salvageBusy || v.key in attachmentBusy,
+                onAttachment = { attachmentTarget = v to it }, onSalvage = { salvageTarget = v }, onSnapshots = { snapshotsOf = v.name }, onAction = { onVolume(v, it) },
+            )
             HorizontalDivider()
         }
         if (status.nodes.isNotEmpty()) item(key = "nodes") {
@@ -151,7 +159,7 @@ private val LonghornVolume.key get() = longhornActionKey(namespace, name)
 private val LonghornNode.key get() = longhornActionKey(namespace, "node/$name")
 
 @Composable
-private fun VolumeRow(v: LonghornVolume, busy: Boolean, onAttachment: (Boolean) -> Unit, onSalvage: () -> Unit, onAction: (LonghornAction) -> Unit) {
+private fun VolumeRow(v: LonghornVolume, busy: Boolean, onAttachment: (Boolean) -> Unit, onSalvage: () -> Unit, onSnapshots: () -> Unit, onAction: (LonghornAction) -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val colors = LocalStatusColors.current
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -174,17 +182,13 @@ private fun VolumeRow(v: LonghornVolume, busy: Boolean, onAttachment: (Boolean) 
                     v.node.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.data_services_on_node, it) }
                         ?: v.replicaNodes.takeIf { it.isNotEmpty() }?.joinToString(", "),
                     formatBytes(v.actualSize) + " / " + formatBytes(v.size),
-                    if (v.lastBackupAt > 0) {
-                        stringResource(R.string.longhorn_backup_ago, timeAgo(v.lastBackupAt))
-                    } else {
-                        stringResource(R.string.longhorn_no_backup)
-                    },
                 ).joinToString(" · "),
                 style = MaterialTheme.typography.labelSmall,
                 color = muted,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            LonghornProtectionLine(v, onSnapshots)
             LonghornAttachmentButton(v, busy, onAttachment)
             LonghornSalvageButton(v, busy, onSalvage)
             // 0 is also what an unread engine gives: the status line already counts the rebuilds.
@@ -198,7 +202,7 @@ private fun VolumeRow(v: LonghornVolume, busy: Boolean, onAttachment: (Boolean) 
                 Text(stringResource(R.string.longhorn_too_many_snapshots), style = MaterialTheme.typography.labelSmall, color = colors.warn)
             }
         }
-        LonghornActionMenu(v.actions, busy, onAction)
+        LonghornActionMenu(v.actions, v.namespace, busy, onAction)
     }
 }
 
@@ -266,7 +270,7 @@ private fun NodeRow(node: LonghornNode, busy: Boolean, onAction: (LonghornAction
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            LonghornActionMenu(node.actions, busy, onAction)
+            LonghornActionMenu(node.actions, node.namespace, busy, onAction)
         }
         node.disks.forEach { d ->
             if (d.maximum > 0) {

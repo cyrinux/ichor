@@ -20,6 +20,7 @@ object CheckupSectionId {
     const val SECRETS = "secrets"
     const val HELM = "helm"
     const val MONITORING = "monitoring"
+    const val CROSSPLANE = "crossplane"
 }
 
 /** What a finding is about ([CheckupFinding.kind]); CheckupWording words each one. */
@@ -82,6 +83,14 @@ object CheckupKind {
     const val PROMETHEUS_RULE_ERRORS = "prometheusRuleErrors"
     /** Failing rules of a group no PrometheusRule writes (the Prometheus configuration's). */
     const val RULE_GROUP_ERRORS = "ruleGroupErrors"
+    /** A Crossplane managed resource or composite with Synced=False (name: "Kind/name", extra: its provider config or composition). */
+    const val CROSSPLANE_SYNC_FAILED = "crossplaneSyncFailed"
+    /** A Crossplane package not installed or not healthy (name: "Kind/name", extra: the package). */
+    const val CROSSPLANE_PROVIDER_UNHEALTHY = "crossplaneProviderUnhealthy"
+    /** A Crossplane resource not ready past the grace (since: when, count: the minutes). */
+    const val CROSSPLANE_NOT_READY = "crossplaneNotReady"
+    /** A Crossplane definition (XRD) whose Established condition is not True. */
+    const val CROSSPLANE_DEFINITION_NOT_ESTABLISHED = "crossplaneDefinitionNotEstablished"
 }
 
 /** A section's or the whole checkup's state, worst first. */
@@ -206,14 +215,22 @@ fun CheckupReport.count(level: CheckupSeverity): Int = sections.sumOf { s -> s.f
 val CheckupRelease.inTrouble: Boolean get() = status == "failed" || status.startsWith("pending-")
 
 /**
+ * Checkup finding kinds whose problem the data services alert already raises (monitor
+ * dataIssuesOf): shown on the checkup screen, never notified a second time. A SealedSecret that
+ * failed to unseal and no active sealing key alert from the Sealed Secrets section.
+ */
+val DATA_SERVICE_ALERTED_KINDS = setOf("sealedSecretNotSynced", "sealingKeyMissing")
+
+/**
  * The findings worth a background alert, keyed "section|kind|subject" and valued by severity
- * ("critical" or "warning"): everything but the notes and the events, which only describe.
+ * ("critical" or "warning"): everything but the notes and the events, which only describe, and
+ * the kinds the data services already alert on ([DATA_SERVICE_ALERTED_KINDS]).
  */
 fun CheckupReport.alertIssues(): Map<String, String> = buildMap {
     sections.forEach { section ->
         if (section.id == CheckupSectionId.EVENTS) return@forEach
         section.findings.forEach { f ->
-            if (f.level != CheckupSeverity.INFO) put("${section.id}|${f.kind}|${f.subject}", f.severity)
+            if (f.level != CheckupSeverity.INFO && f.kind !in DATA_SERVICE_ALERTED_KINDS) put("${section.id}|${f.kind}|${f.subject}", f.severity)
         }
     }
 }

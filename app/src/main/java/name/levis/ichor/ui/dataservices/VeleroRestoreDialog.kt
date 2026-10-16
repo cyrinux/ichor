@@ -109,7 +109,10 @@ fun VeleroRestoreDialog(namespace: String, backup: String, actions: VeleroAction
     }
 
     val allNamespaces = p?.includedNamespaces?.let { it.isEmpty() || "*" in it } ?: false
+    // Velero reads no namespace as every namespace: nothing ticked cannot be confirmed.
+    val nothingPicked = !allNamespaces && selected.isEmpty()
     val options = VeleroRestoreOptions(
+        allNamespaces = allNamespaces,
         includedNamespaces = if (allNamespaces) emptyList() else selected.toList(),
         namespaceMapping = targets.mapNotNull { (src, dst) ->
             if (src in selected && dst.isNotBlank() && dst != src) src to dst else null
@@ -122,7 +125,7 @@ fun VeleroRestoreDialog(namespace: String, backup: String, actions: VeleroAction
         title = stringResource(R.string.velero_restore_title, backup),
         hostname = backup,
         confirmLabel = stringResource(R.string.velero_restore),
-        enabled = p?.canRestore == true && denial == null,
+        enabled = p?.canRestore == true && denial == null && !nothingPicked,
         onConfirm = {
             scope.launch {
                 try {
@@ -141,15 +144,17 @@ fun VeleroRestoreDialog(namespace: String, backup: String, actions: VeleroAction
         if (p == null && loadError == null) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
         p?.let {
             VeleroRestoreHolds(it)
-            if (!it.canRestore) {
-                it.reasons.forEach { reason -> Text(reasonText(reason), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
-            } else {
+            // Blocking reasons in red; the others (a partly failed backup) still warn.
+            val reasonColor = if (it.canRestore) LocalStatusColors.current.warn else MaterialTheme.colorScheme.error
+            it.reasons.forEach { reason -> Text(reasonText(reason), style = MaterialTheme.typography.bodySmall, color = reasonColor) }
+            if (it.canRestore) {
                 VeleroRestoreChoices(it, allNamespaces, selected, targets, updateExisting, restoreVolumes,
                     onSelect = { ns, on -> selected = if (on) selected + ns else selected - ns },
                     onTarget = { ns, target -> targets = targets + (ns to target) },
                     onUpdateExisting = { updateExisting = it },
                     onRestoreVolumes = { restoreVolumes = it },
                 )
+                if (nothingPicked) Text(stringResource(R.string.velero_restore_pick_namespace), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             }
             if (it.error.isNotEmpty()) InlineError(stringResource(R.string.data_services_unreadable, it.error))
         }

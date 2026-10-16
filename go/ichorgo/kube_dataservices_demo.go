@@ -40,6 +40,7 @@ func demoDataServices(now time.Time) dataServices {
 		},
 		BackupTargets: []longhornBackupTarget{{Name: "default", URL: "s3://longhorn-backups@garage/", Available: true}},
 	}
+	addDemoLonghornSnapshots(longhorn.Volumes, ms)
 
 	garage := &garageStatus{Instances: []garageInstance{
 		{
@@ -64,6 +65,18 @@ func demoDataServices(now time.Time) dataServices {
 				DataAvail: 1400 * gib, DataTotal: 2000 * gib, TableSyncQueue: 12, Tranquility: 2}},
 		},
 	}}
+
+	// The garage-operator drives both instances: a degraded cluster (a storage replica not
+	// connected) next to a ready one, buckets with a dropped lifecycle and a website, keys
+	// with cluster-wide and per-bucket grants, and one node CR that lost its connection.
+	if layer := demoGarageOperatorLayer(now); layer != nil {
+		garage.Version = layer.Version
+		garage.Clusters = layer.Clusters
+		garage.Buckets = layer.Buckets
+		garage.Keys = layer.Keys
+		garage.Nodes = layer.Nodes
+		garage.Operator = layer.Operator
+	}
 
 	pods := func(name string, ready ...bool) []cnpgPod {
 		out := []cnpgPod{}
@@ -246,7 +259,7 @@ func demoDataServices(now time.Time) dataServices {
 	}
 
 	snapshots := demoVolumeSnapshots(now)
-	return dataServices{SealedSecrets: demoSealedSecrets(now), Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, KubeGreen: demoKubeGreen(now), Ceph: ceph, CastAI: demoCastAI(now)}
+	return dataServices{SealedSecrets: demoSealedSecrets(now), Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, ExternalDNS: demoExternalDNS(now), KubeGreen: demoKubeGreen(now), Ceph: ceph, CastAI: demoCastAI(now)}
 }
 
 // demoKubeGreen is the demo cluster's sleep schedules, built through the real mapping so
@@ -355,6 +368,84 @@ func demoCastAI(now time.Time) *castAIStatus {
 	return out
 }
 
+// demoGarageOperatorLayer is the demo cluster's garage-operator layer: a degraded cluster
+// (a storage replica not connected) next to a ready one, buckets with a dropped lifecycle
+// and a website, keys with cluster-wide and per-bucket grants, and one node CR that lost
+// its connection.
+func demoGarageOperatorLayer(now time.Time) *garageOperatorLayer {
+	ms := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
+
+	return &garageOperatorLayer{
+		Version: garageOpClusterV2,
+		Clusters: []garageOpCluster{
+			{
+				Namespace: "garage", Name: "garage", Phase: "Degraded", ClusterID: "1b7e44c9a2f03d589c2f61a0d4e8b7c3",
+				GarageVersion: "v2.3.0", Replicas: 5, ReadyReplicas: 4, StorageReplicas: 3, StorageReady: 2,
+				GatewayReplicas: 2, GatewayReady: 2, LayoutVersion: 12,
+				Tombstones: []string{}, Conditions: []garageOpCondition{
+					{Type: "NodesConnected", Status: "False", Reason: "NodesNotConnected", Message: "1 node is not connected", Time: ms(2 * time.Hour)},
+				},
+				Health: healthWarning, Reasons: []string{garageOpReasonStorageReplicas, garageOpReasonNodeDisconnected},
+			},
+			{
+				Namespace: "garage-archive", Name: "archive", Phase: "Ready", ClusterID: "6d03b8f15e9a2c47e41a7f0c93b2d865",
+				GarageVersion: "v2.3.0", Replicas: 1, ReadyReplicas: 1, StorageReplicas: 1, StorageReady: 1,
+				LayoutVersion: 1, Tombstones: []string{}, Conditions: []garageOpCondition{},
+				Health: healthOK, Reasons: []string{},
+			},
+		},
+		Buckets: []garageOpBucket{
+			{
+				Namespace: "garage", Name: "backups", Cluster: "garage", Phase: "Ready",
+				BucketID: "a3f8c2e19b4d5706a3f8c2e19b4d5706", Size: "3.0 GiB", MaxSize: "10Gi",
+				Quota: &garageOpQuotaUsage{SizeBytes: 3070230528, SizeLimit: 10 << 30, SizePercent: 28, Objects: 1204},
+				Keys:  2,
+				Conditions: []garageOpCondition{
+					{Type: "LifecycleConfigured", Status: "False", Reason: "GarageTooOld", Message: "lifecycle rules need Garage v2.3.0 or newer", Time: ms(6 * time.Hour)},
+				},
+				Health: healthWarning, Reasons: []string{garageOpReasonLifecycle},
+			},
+			{
+				Namespace: "garage", Name: "files", Cluster: "garage", Phase: "Ready",
+				BucketID: "4f1d0c2e9b7a65834f1d0c2e9b7a6583", Size: "52 MiB",
+				Quota:   &garageOpQuotaUsage{SizeBytes: 54525952, Objects: 312},
+				Website: true, WebsiteURL: "https://files.example.com", Keys: 1,
+				Conditions: []garageOpCondition{}, Health: healthOK, Reasons: []string{},
+			},
+		},
+		Keys: []garageOpKey{
+			{
+				Namespace: "garage", Name: "backup-agent", Cluster: "garage", Phase: "Ready",
+				KeyID: "e41a7f0c93b2d865", ClusterWide: true,
+				AllBuckets: &struct {
+					Read  bool `json:"read"`
+					Write bool `json:"write"`
+					Owner bool `json:"owner"`
+				}{Read: true, Write: true, Owner: true},
+				Buckets: []garageOpKeyPermission{}, BucketsTotal: 0, Health: healthOK, Reasons: []string{},
+			},
+			{
+				Namespace: "garage", Name: "app-writer", Cluster: "garage", Phase: "Ready",
+				KeyID:   "6d03b8f15e9a2c47",
+				Buckets: []garageOpKeyPermission{{Bucket: "files", Read: true, Write: true}}, BucketsTotal: 1,
+				Health: healthOK, Reasons: []string{},
+			},
+		},
+		Nodes: []garageOpNode{
+			{
+				Namespace: "garage", Name: "garage-2xv9p", Cluster: "garage", Phase: "Degraded",
+				NodeID: "9c2f61a0d4e8b7c3", Zone: "zone-3", Capacity: "500Gi",
+				Connected: false, InLayout: true, LastSeen: 2 * 24 * 3600,
+				Health: healthWarning, Reasons: []string{garageOpReasonNodeDisconnected},
+			},
+		},
+		Operator: &garageOperatorStatus{
+			Namespace: "garage-operator-system", Name: "garage-operator", Ready: 1, Desired: 1,
+			Health: healthOK, Reasons: []string{},
+		},
+	}
+}
+
 // demoGarageBlockReport is the demo cluster's blocks failing to resync: one a live object
 // references, one kept by a stale reference, one deleted data awaiting cleanup.
 func demoGarageBlockReport() garageBlockReport {
@@ -379,6 +470,45 @@ func demoGarageBlockReport() garageBlockReport {
 	}
 }
 
+// demoExternalDNS is the demo cluster's ExternalDNS: one controller (cloudflare, sync,
+// owner id homelab, example.com only) and six records across the four source kinds, among
+// them a DNSEndpoint whose newer generation is not observed yet, an Ingress without an
+// address to point at and a name outside every domain filter.
+func demoExternalDNS(now time.Time) *externalDNSStatus {
+	controller := externalDNSController{
+		Namespace: "external-dns", Name: "external-dns", Ready: true, Replicas: 1, ReadyReplicas: 1,
+		Provider: "cloudflare", Policy: "sync", Registry: "txt", OwnerID: "homelab",
+		DomainFilters: []string{"example.com"}, Sources: []string{"ingress", "service", "gateway-httproute", "crd"},
+		IntervalSeconds: 60, Health: healthOK, Reasons: []string{},
+	}
+
+	record := func(dnsName string, targets []string, ttl int, kind, namespace, name, group, version, resource, controller string, reasons ...string) externalDNSRecord {
+		health := healthOK
+		if len(reasons) > 0 {
+			health = healthWarning
+		}
+
+		return externalDNSRecord{
+			DNSName: dnsName, RecordType: extDNSRecordType(targets), Targets: targets, TTL: ttl,
+			SourceKind: kind, SourceNamespace: namespace, SourceName: name,
+			SourceGroup: group, SourceVersion: version, SourceResource: resource,
+			Controller: controller, Health: health, Reasons: reasons,
+		}
+	}
+
+	out := &externalDNSStatus{Version: "v1alpha1", Controllers: []externalDNSController{controller}, Records: []externalDNSRecord{
+		record("app.example.com", []string{"203.0.113.10"}, 300, "Ingress", "demo", "app", "networking.k8s.io", "v1", "ingresses", "external-dns"),
+		record("shop.example.com", []string{"203.0.113.20"}, 60, "Service", "demo", "shop", "", "v1", "services", "external-dns"),
+		record("api.example.com", []string{"203.0.113.30"}, 300, "HTTPRoute", "demo", "api", groupGatewayAPI, "v1", "httproutes", "external-dns"),
+		record("db.example.com", []string{"203.0.113.40"}, 300, "DNSEndpoint", "demo", "db", groupExternalDNS, "v1alpha1", "dnsendpoints", "external-dns", extDNSReasonStale),
+		record("status.example.com", nil, 0, "Ingress", "demo", "status", "networking.k8s.io", "v1", "ingresses", "external-dns", extDNSReasonNoTarget),
+		record("*.example.org", []string{"203.0.113.50"}, 300, "Ingress", "demo", "legacy", "networking.k8s.io", "v1", "ingresses", "", extDNSReasonUnmanaged),
+	}}
+	out.RecordCount = len(out.Records)
+
+	return out
+}
+
 // demoSealedSecrets exposes names and status only, just like the live reader.
 func demoSealedSecrets(now time.Time) *sealedSecretsStatus {
 	out := &sealedSecretsStatus{Version: sealedSecretsVersion, Health: healthCritical, Reasons: []string{}, SecretCount: 3,
@@ -386,10 +516,66 @@ func demoSealedSecrets(now time.Time) *sealedSecretsStatus {
 		Keys: []sealingKey{
 			{Namespace: "kube-system", Name: "sealed-secrets-key-new", State: "active", CreatedAt: now.Add(-7 * 24 * time.Hour).UnixMilli(), Age: int64(7 * 24 * time.Hour / time.Millisecond)},
 			{Namespace: "kube-system", Name: "sealed-secrets-key-old", State: "active", CreatedAt: now.Add(-21 * 24 * time.Hour).UnixMilli(), Age: int64(21 * 24 * time.Hour / time.Millisecond)},
+			{Namespace: "kube-system", Name: "sealed-secrets-key-rotated", State: sealedKeyCompromised, CreatedAt: now.Add(-30 * 24 * time.Hour).UnixMilli(), Age: int64(30 * 24 * time.Hour / time.Millisecond)},
 		}, Items: []sealedSecret{
 			{Namespace: "shop", Name: "legacy-cert", Keys: []string{"tls.crt", "tls.key"}, KeyCount: 2, Type: "kubernetes.io/tls", Scope: "strict", Reason: "UnsealFailed", Message: "failed to decrypt: no key could decrypt secret", LastTransitionTime: now.Add(-time.Hour).UnixMilli(), ObservedGeneration: 1, Stale: true, Age: now.Add(-24 * time.Hour).UnixMilli(), Health: healthCritical, Reasons: []string{sealedReasonNotSynced, sealedReasonStale}},
 			{Namespace: "shop", Name: "api-token", Keys: []string{"token"}, KeyCount: 1, Type: "Opaque", Scope: "namespace-wide", Synced: true, ObservedGeneration: 1, Age: now.Add(-24 * time.Hour).UnixMilli(), Health: healthOK, Reasons: []string{}},
 			{Namespace: "shop", Name: "database-credentials", Keys: []string{"database", "password", "username"}, KeyCount: 3, Type: "Opaque", Immutable: true, Scope: "strict", Synced: true, ObservedGeneration: 1, Age: now.Add(-24 * time.Hour).UnixMilli(), Health: healthOK, Reasons: []string{}},
 		}}
 	return out
+}
+
+// addDemoLonghornSnapshots: postgres-data well covered, uploads with a failed last backup,
+// search-data a stale one, scratch none at all.
+func addDemoLonghornSnapshots(volumes []longhornVolume, ms func(time.Duration) int64) {
+	const mib = int64(1) << 20
+
+	snap := func(name string, age time.Duration, size int64, user, backed bool) longhornSnapshot {
+		return longhornSnapshot{Name: name, CreatedAt: ms(age), Size: size * mib, Ready: true, UserCreated: user, BackedUp: backed}
+	}
+	backup := func(name, snapshot, state string, age time.Duration, size int64) longhornBackup {
+		b := longhornBackup{Name: name, Snapshot: snapshot, State: state, Progress: 100, CreatedAt: ms(age), Size: size * mib}
+		if state == "Error" {
+			b.Progress, b.Error = 37, "failed to upload block: connection reset by peer"
+		}
+
+		return b
+	}
+	day := 24 * time.Hour
+
+	for i := range volumes {
+		v := &volumes[i]
+		v.Snapshots, v.Backups = []longhornSnapshot{}, []longhornBackup{}
+		v.VolumeSnapshotsKnown = true
+
+		switch v.PVCName {
+		case "postgres-data":
+			v.Snapshots = []longhornSnapshot{
+				snap("snapshot-7c1e0d2a", 20*time.Hour, 182, true, true),
+				snap("snapshot-41b9f6c3", day+20*time.Hour, 96, true, true),
+				snap("a3f0c5e1-system", 3*day, 12, false, false),
+				snap("snapshot-0e8d7b54", 7*day+20*time.Hour, 640, true, true),
+			}
+			v.Snapshots[1].VolumeSnapshot = "demo/postgres-nightly"
+			v.Backups = []longhornBackup{
+				backup("backup-3b7f2e91", "snapshot-7c1e0d2a", "Completed", 20*time.Hour, 2950),
+				backup("backup-9a04c6d8", "snapshot-41b9f6c3", "Completed", day+20*time.Hour, 2870),
+				backup("backup-1d5e8f30", "snapshot-0e8d7b54", "Completed", 7*day+20*time.Hour, 2790),
+			}
+			v.BackupCount = 14
+		case "uploads":
+			v.Snapshots = []longhornSnapshot{snap("snapshot-c4d1a9e7", 2*time.Hour, 410, true, false), snap("snapshot-5f2b8e10", 20*time.Hour, 1220, true, true)}
+			v.SnapshotsRemoving = 1
+			v.Backups = []longhornBackup{
+				backup("backup-e71c4b02", "snapshot-c4d1a9e7", "Error", 2*time.Hour, 0),
+				backup("backup-2c9d0a6f", "snapshot-5f2b8e10", "Completed", 20*time.Hour, 6800),
+			}
+			v.BackupCount = 2
+		case "search-data":
+			v.Snapshots = []longhornSnapshot{snap("snapshot-8e3a1f47", 9*day, 3100, true, true)}
+			v.Backups = []longhornBackup{backup("backup-6b2e9c15", "snapshot-8e3a1f47", "Completed", 9*day, 11800)}
+			v.BackupCount = 1
+			v.BackupStale = true
+		}
+	}
 }

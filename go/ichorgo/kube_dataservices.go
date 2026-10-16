@@ -57,6 +57,7 @@ type dataServices struct {
 	Percona       *perconaStatus       `json:"percona,omitempty"`
 	CertManager   *certManagerStatus   `json:"certManager,omitempty"`
 	Velero        *veleroStatus        `json:"velero,omitempty"`
+	ExternalDNS   *externalDNSStatus   `json:"externalDns,omitempty"`
 	KubeGreen     *kubeGreenStatus     `json:"kubeGreen,omitempty"`
 	Ceph          *cephStatus          `json:"ceph,omitempty"`
 	CastAI        *castAIStatus        `json:"castai,omitempty"`
@@ -125,10 +126,15 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 		listedAll bool
 	)
 
-	if hints.wants("garage") {
+	// One listing of every pod stands in for several: Garage's instances and, when the
+	// DNSEndpoint CRD is not served, the ExternalDNS controllers (found by their pods).
+	if hints.wants("garage") || hints.wants("external-dns") {
 		pods, podsErr = listDSPods(ctx, k, "")
 		listedAll = podsErr == nil
 	}
+
+	// The garage-operator's CRDs mean Garage is managed here, hinted or not.
+	_, garageOperatorServed := groups[groupGarageOperator]
 
 	var wg sync.WaitGroup
 
@@ -176,6 +182,26 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 		wg.Go(func() { out.Velero = readVelero(ctx, k, now) })
 	}
 
+	// ExternalDNS runs with or without its CRD: by the API group when served, else by its
+	// running pods (only known when they could be listed).
+	extDNSVersion, extDNSByPods := "", false
+	if v, ok := groups[groupExternalDNS]; ok {
+		extDNSVersion = v
+	} else if listedAll {
+		catalog := loadAppCatalog()
+		for _, p := range pods {
+			for _, c := range p.Spec.Containers {
+				if id := catalog.identify(parseImageRef(c.Image)); id.app != nil && id.app.ID == "external-dns" {
+					extDNSByPods = true
+				}
+			}
+		}
+	}
+
+	if extDNSVersion != "" || extDNSByPods {
+		wg.Go(func() { out.ExternalDNS = readExternalDNS(ctx, k, extDNSVersion, pods, podsErr, now) })
+	}
+
 	if _, ok := groups[groupKubeGreen]; ok {
 		wg.Go(func() { out.KubeGreen = readKubeGreen(ctx, k, now) })
 	}
@@ -188,8 +214,10 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 		wg.Go(func() { out.CastAI = readCastAI(ctx, k) })
 	}
 
-	if hints.wants("garage") {
-		wg.Go(func() { out.Garage = readGarage(ctx, k, run, pods, podsErr, hints["garage"]) })
+	if hints.wants("garage") || garageOperatorServed {
+		wg.Go(func() {
+			out.Garage = readGarageSection(ctx, k, run, pods, podsErr, hints["garage"], groups[groupGarageOperator])
+		})
 	}
 
 	wg.Wait()

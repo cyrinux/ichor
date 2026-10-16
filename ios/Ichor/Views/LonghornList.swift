@@ -13,6 +13,7 @@ struct LonghornList: View {
     @State private var query = ""
     @State private var attachmentTarget: LonghornAttachmentTarget?
     @State private var salvageTarget: LonghornVolume?
+    @State private var snapshotsFor: LonghornVolumeName?
     @State private var replicasFor: LonghornVolume?
     @State private var confirmEvict: LonghornNode?
     @State private var running: Set<String> = []
@@ -73,6 +74,15 @@ struct LonghornList: View {
         } message: { node in
             Text("Longhorn copies every replica on \(node.name) to other nodes, then removes them. Scheduling stays off until you turn it back on.")
         }
+        .sheet(item: $snapshotsFor) { name in
+            // Looked up by name: the sheet follows the volume as the status refreshes.
+            if let volume = status.volumes.first(where: { $0.name == name.id }) {
+                LonghornSnapshotsSheet(volume: volume, refresh: refresh).loadsKubeActionAccess(namespace: volume.namespace)
+            } else {
+                // The volume is gone: no blank sheet.
+                Color.clear.onAppear { snapshotsFor = nil }
+            }
+        }
         .sheet(item: $salvageTarget) { volume in
             LonghornSalvageSheet(volume: volume) { names in
                 salvageTarget = nil
@@ -96,6 +106,8 @@ struct LonghornList: View {
         }
         return VStack(alignment: .leading) {
             LonghornVolumeRow(volume: volume, busy: busy)
+            LonghornProtectionLine(volume: volume) { snapshotsFor = LonghornVolumeName(id: volume.name) }
+                .padding(.leading, 26)
             if volume.state == "attached" || (volume.state == "detached" && volume.robustness != "faulted") {
                 Button { attachmentTarget = LonghornAttachmentTarget(volume: volume, attach: volume.state == "detached") } label: {
                     if volume.state == "detached" { Text("Attach volume") } else { Text("Detach volume") }
@@ -107,9 +119,11 @@ struct LonghornList: View {
                     .disabled(busy).kubeGated(.longhornSalvage, in: volume.namespace)
                 KubeDeniedNote(.longhornSalvage, in: volume.namespace)
             }
-        }.loadsKubeActionAccess(namespace: volume.namespace)
-            .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, onAction: act) }
-            .contextMenu { LonghornActionButtons(actions: actions, inMenu: true, onAction: act) }
+        }
+            .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, namespace: volume.namespace, onAction: act) }
+            .contextMenu { LonghornActionButtons(actions: actions, namespace: volume.namespace, inMenu: true, onAction: act) }
+            // Last: the buttons above read the access it loads.
+            .loadsKubeActionAccess(namespace: volume.namespace)
     }
 
     private func nodeRow(_ node: LonghornNode) -> some View {
@@ -119,8 +133,9 @@ struct LonghornList: View {
             if action == .evict { confirmEvict = node } else { Task { await run(LonghornRequest(node: node, action: action)) } }
         }
         return LonghornNodeRow(node: node, busy: busy)
-            .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, onAction: act) }
-            .contextMenu { LonghornActionButtons(actions: actions, inMenu: true, onAction: act) }
+            .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, namespace: node.namespace, onAction: act) }
+            .contextMenu { LonghornActionButtons(actions: actions, namespace: node.namespace, inMenu: true, onAction: act) }
+            .loadsKubeActionAccess(namespace: node.namespace)
     }
 
     private func salvage(_ volume: LonghornVolume, names: Set<String>) async {
@@ -160,4 +175,9 @@ struct LonghornList: View {
             resultMessage = String(localized: "Could not change \(request.label): \(error.localizedDescription)")
         }
     }
+}
+
+/// The volume the snapshots sheet shows, by name.
+private struct LonghornVolumeName: Identifiable {
+    let id: String
 }

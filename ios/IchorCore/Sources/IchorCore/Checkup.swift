@@ -18,7 +18,7 @@ public enum CheckupSeverity: String, Sendable, WireEnum {
 
 /// The sections of a checkup, as Go names them.
 public enum CheckupSectionID: String, Sendable {
-    case workloads, events, storage, upgrade, webhooks, policies, capacity, nodes, loadbalancers, terminating, certificates, secrets, helm, monitoring
+    case workloads, events, storage, upgrade, webhooks, policies, capacity, nodes, loadbalancers, terminating, certificates, secrets, helm, monitoring, crossplane
 }
 
 /// What a finding is about, as Go names it.
@@ -40,6 +40,9 @@ public enum CheckupKind: String, Sendable {
     case externalSecretFailed, secretStoreNotReady
     case helmFailed, helmPending
     case scrapeTargetsDown, prometheusRuleErrors, ruleGroupErrors
+    /// A Crossplane resource that cannot sync, a package not healthy, a resource not ready past
+    /// the grace, a definition not established. Name: "Kind/name".
+    case crossplaneSyncFailed, crossplaneProviderUnhealthy, crossplaneNotReady, crossplaneDefinitionNotEstablished
 }
 
 /// What the cluster hides behind green nodes: one section per kind of trouble.
@@ -72,11 +75,12 @@ public struct CheckupReport: Decodable, Equatable, Sendable {
     }
 
     /// The findings worth a background alert, keyed "section|kind|subject" and valued by
-    /// severity: everything but the notes and the events, which only describe.
+    /// severity: everything but the notes and the events, which only describe, and the kinds the
+    /// data services already alert on (`dataServiceAlertedKinds`).
     public var alertIssues: [String: String] {
         var issues: [String: String] = [:]
         for section in sections where section.id != CheckupSectionID.events.rawValue {
-            for finding in section.findings where finding.severity != .info {
+            for finding in section.findings where finding.severity != .info && !dataServiceAlertedKinds.contains(finding.kindName) {
                 issues["\(section.id)|\(finding.kindName)|\(finding.subject)"] = finding.severity.rawValue
             }
         }
@@ -155,7 +159,9 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
     /// more than the title does, then the message.
     public var detail: String {
         let reasonKinds: Set<CheckupKind> = [.podCrashLoop, .podOOMKilled, .podStuckStarting, .jobFailed, .nodeNotReady, .nodePressure,
-                                             .externalSecretFailed, .secretStoreNotReady, .prometheusRuleErrors, .ruleGroupErrors]
+                                             .externalSecretFailed, .secretStoreNotReady, .prometheusRuleErrors, .ruleGroupErrors,
+                                             .crossplaneSyncFailed, .crossplaneProviderUnhealthy, .crossplaneNotReady,
+                                             .crossplaneDefinitionNotEstablished]
         let shownReason = kind.map(reasonKinds.contains) == true ? reason : ""
         return [shownReason, message].filter { !$0.isEmpty }.joined(separator: ": ")
     }
@@ -345,6 +351,11 @@ public struct CheckupSubject: Equatable, Sendable {
         subject = parts.count > 2 ? parts[2] : ""
     }
 }
+
+/// Checkup finding kinds whose problem the data services alert already raises (`dataIssuesOf`):
+/// shown on the checkup screen, never notified a second time. A SealedSecret that failed to unseal
+/// and no active sealing key alert from the Sealed Secrets section.
+public let dataServiceAlertedKinds: Set<String> = ["sealedSecretNotSynced", "sealingKeyMissing"]
 
 /// The checkup findings worth a notification, for a report where a section could not be read:
 /// that section keeps the issues `known` had for it, so they neither clear falsely nor come back

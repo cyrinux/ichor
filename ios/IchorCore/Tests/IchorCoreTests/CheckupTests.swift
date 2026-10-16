@@ -60,6 +60,17 @@ final class CheckupTests: XCTestCase {
         ])
     }
 
+    func testFindingsTheDataServicesAlertOnAreShownButNotAlertedTwice() throws {
+        let sealed = try TalosJSON.decode(CheckupReport.self, from: #"""
+        {"status":"critical","sections":[{"id":"secrets","status":"critical","checked":3,"findings":[
+          {"kind":"sealedSecretNotSynced","severity":"critical","namespace":"shop","name":"legacy-cert"},
+          {"kind":"sealingKeyMissing","severity":"critical","name":"sealed-secrets-key","extra":"kube-system"},
+          {"kind":"externalSecretFailed","severity":"critical","namespace":"shop","name":"db"}]}]}
+        """#)
+        XCTAssertEqual(sealed.count(.critical), 3)
+        XCTAssertEqual(sealed.alertIssues, ["secrets|externalSecretFailed|shop/db": "critical"])
+    }
+
     func testAnUnreadSectionKeepsWhatWasKnown() throws {
         let known = ["storage|volumeFull|shop/data": "critical", "workloads|podCrashLoop|shop/gone": "critical"]
         let issues = checkupIssuesWithGaps(try report(), known: known)
@@ -102,5 +113,24 @@ final class CheckupTests: XCTestCase {
         let list = try TalosJSON.decode(KubeEventList.self, from: #"{"events":[{"type":"Warning","reason":"BackOff","message":"m","kind":"Pod","name":"p","count":4,"last":5},{"type":"Normal","reason":"Pulled"}]}"#)
         XCTAssertEqual(list.events.map(\.isWarning), [true, false])
         XCTAssertEqual(list.events[1].count, 1)
+    }
+
+    // The demo checkup's Crossplane section (go/ichorgo/kube_checkup_demo.go).
+    func testCrossplaneSectionDecodesAndAlerts() throws {
+        let r = try TalosJSON.decode(CheckupReport.self, from: #"""
+        {"status":"critical","sections":[{"id":"crossplane","status":"critical","checked":12,"findings":[
+          {"kind":"crossplaneSyncFailed","severity":"critical","namespace":"apps","name":"Database/app-db-primary","reason":"ReconcileError","message":"quota exceeded","extra":"default"},
+          {"kind":"crossplaneProviderUnhealthy","severity":"critical","name":"Provider/provider-storage","reason":"UnhealthyPackageRevision","message":"cannot pull package","extra":"xpkg.example.org/demo/provider-storage:v1.4.0"},
+          {"kind":"crossplaneNotReady","severity":"warning","name":"Bucket/assets-bucket","reason":"Creating","extra":"default","count":42,"since":1}]}]}
+        """#)
+        let section = try XCTUnwrap(r.shownSections.first)
+        XCTAssertEqual(section.section, .crossplane)
+        XCTAssertEqual(section.findings.compactMap(\.kind), [.crossplaneSyncFailed, .crossplaneProviderUnhealthy, .crossplaneNotReady])
+        XCTAssertEqual(section.findings[0].detail, "ReconcileError: quota exceeded")
+        XCTAssertEqual(r.alertIssues, [
+            "crossplane|crossplaneSyncFailed|apps/Database/app-db-primary": "critical",
+            "crossplane|crossplaneProviderUnhealthy|Provider/provider-storage": "critical",
+            "crossplane|crossplaneNotReady|Bucket/assets-bucket": "warning",
+        ])
     }
 }

@@ -147,6 +147,35 @@ final class DataServicesTests: XCTestCase {
         XCTAssertEqual(node.actions, [.schedulingOff, .evict])
         XCTAssertEqual(LonghornAction.cancelEviction.rawValue, "cancelEviction")
         XCTAssertEqual(LonghornAction.schedulingOff.rawValue, "schedulingOff")
+        XCTAssertEqual(LonghornAction.allCases.map(\.kubeAction),
+                       [.longhornSnapshot, .longhornSnapshot, .longhornReplicas, .longhornNode, .longhornNode, .longhornNode, .longhornNode])
+    }
+
+    func testLonghornSnapshotsAndBackups() throws {
+        let v = try TalosJSON.decode(LonghornVolume.self, from: #"""
+        {"name":"v","state":"attached","snapshotsRemoving":2,"backupCount":31,"backupStale":true,
+         "snapshots":[{"name":"snapshot-1","createdAt":1700000000000,"size":1024,"ready":true,"userCreated":true,"backedUp":true,"volumeSnapshot":"db/nightly"}],"volumeSnapshotsKnown":true,
+         "backups":[{"name":"backup-2","snapshot":"snapshot-0","state":"Error","error":"target unreachable"},
+                    {"name":"backup-1","snapshot":"snapshot-1","state":"Completed","size":4096}]}
+        """#)
+        XCTAssertTrue(v.attached)
+        XCTAssertEqual(v.snapshots.map(\.name), ["snapshot-1"])
+        XCTAssertTrue(v.snapshots[0].backedUp && v.snapshots[0].userCreated)
+        XCTAssertEqual(v.snapshots[0].volumeSnapshot, "db/nightly")
+        XCTAssertTrue(v.volumeSnapshotsKnown)
+        XCTAssertEqual(v.snapshotsRemoving, 2)
+        XCTAssertEqual(v.backupCount, 31)
+        XCTAssertTrue(v.backupStale)
+        XCTAssertTrue(v.latestBackupFailed)
+        XCTAssertTrue(v.backups[1].completed && !v.backups[1].failed)
+        XCTAssertEqual(v.backups[1].size, 4096)
+
+        let bare = try TalosJSON.decode(LonghornVolume.self, from: #"{"name":"v"}"#)
+        XCTAssertEqual(bare.snapshots, [])
+        XCTAssertEqual(bare.backups, [])
+        XCTAssertFalse(bare.latestBackupFailed)
+        XCTAssertFalse(bare.volumeSnapshotsKnown)
+        XCTAssertEqual(LonghornSnapshotAction.allCases.map(\.rawValue), ["take", "backup", "delete"])
     }
 
     func testReplicaBounds() throws {

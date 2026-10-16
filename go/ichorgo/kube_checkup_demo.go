@@ -84,11 +84,18 @@ func demoCheckup(now time.Time) checkupReport {
 		newSection(checkCertificates, 14, []checkupFinding{
 			{Kind: findCSRPending, Severity: sevWarning, Name: "system:node:demo-worker-1", Extra: "kubernetes.io/kubelet-serving", Count: 12, Since: ago(3 * time.Hour)},
 		}),
-		newSection(checkSecrets, 9, []checkupFinding{
+		newSection(checkSecrets, 11, []checkupFinding{
 			{Kind: findExternalSecretFailed, Severity: sevWarning, Namespace: "demo", Name: "database-credentials", Extra: "vault", Reason: "SecretSyncedError", Message: "could not get secret data from provider: permission denied"},
+			{Kind: findSealedSecretNotSynced, Severity: sevCritical, Namespace: "shop", Name: "legacy-cert", Reason: "UnsealFailed", Message: "failed to decrypt: no key could decrypt secret"},
+			{Kind: findSealingKeyCompromised, Severity: sevWarning, Namespace: "kube-system", Name: "sealed-secrets-key-rotated", Reason: sealedReasonKeyCompromised},
 		}),
 		newSection(checkHelm, len(releases), helmFindings(releases, now)),
 		demoCheckupMonitoring(now),
+		newSection(checkCrossplane, 12, []checkupFinding{
+			{Kind: findCrossplaneSyncFailed, Severity: sevCritical, Namespace: "apps", Name: "Database/app-db-primary", Extra: "default", Reason: "ReconcileError", Message: "cannot create database instance: quota exceeded for instances in this region"},
+			{Kind: findCrossplaneProviderUnhealthy, Severity: sevCritical, Name: "Provider/provider-storage", Extra: "xpkg.example.org/demo/provider-storage:v1.4.0", Reason: "UnhealthyPackageRevision", Message: "cannot pull package: manifest unknown"},
+			{Kind: findCrossplaneNotReady, Severity: sevWarning, Name: "Bucket/assets-bucket", Extra: "default", Reason: "Creating", Count: 42, Since: ago(42 * time.Minute)},
+		}),
 	}
 
 	return checkupReport{Status: checkupVerdict(sections), KubeVersion: "v1.34.1", Sections: sections, Nodes: nodes, Volumes: volumes, Releases: releases}

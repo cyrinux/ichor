@@ -123,7 +123,10 @@ fun Navigation(
         val active = app.configRepository.config.value?.activeContext.orEmpty()
         val key = shell.key
         val args = top?.arguments
-        val showing = if (key.kubeNode) {
+        val showing = if (key.isVM) {
+            top?.destination?.route == Routes.VM_CONSOLE && args?.getString("ctx") == key.context &&
+                args.getString("ns") == key.namespace && args.getString("vm") == key.vm
+        } else if (key.kubeNode) {
             top?.destination?.route == Routes.KUBE_NODE_DEBUG && args?.getString("ctx") == key.context && args.getString("node") == key.node
         } else if (key.isPod) {
             top?.destination?.route == Routes.POD_SHELL && args?.getString("ctx") == key.context &&
@@ -134,6 +137,7 @@ fun Navigation(
         }
         val route = when {
             key.kubeNode -> Routes.kubeNodeDebug(key.context, key.node, key.namespace)
+            key.isVM -> Routes.vmConsole(key.context, key.namespace, key.vm)
             key.isPod -> Routes.podShell(key.context, key.namespace, key.pod, key.container)
             else -> Routes.debug(key.node, shell.hostname, key.context)
         }
@@ -297,10 +301,13 @@ fun Navigation(
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
                 onPolicies = { nav.navigate(Routes.POLICIES) },
                 onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
+                onVirtualMachines = { nav.navigate(Routes.VIRTUAL_MACHINES) },
                 onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
                 onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
                 onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
                 onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
+                onCrossplane = { nav.navigate(KubeBrowserRoutes.CROSSPLANE) },
+                onTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
                 onLoadBalancing = { nav.navigate(KubeBrowserRoutes.LOAD_BALANCING) },
                 onJobs = { nav.navigate(KubeBrowserRoutes.JOBS) },
                 onKubeEvents = { nav.navigate(Routes.KUBE_EVENTS) },

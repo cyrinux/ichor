@@ -11,6 +11,11 @@ const (
 	groupKubeVirt  = "kubevirt.io"
 	groupCDI       = "cdi.kubevirt.io"
 	groupHarvester = "harvesterhci.io"
+	// groupKubeVirtSub is KubeVirt's virtual-machine subresources (start, stop, restart,
+	// migrate, pause, unpause), in their own aggregated group: a review that asks the wrong
+	// group answers "allowed" while the call itself is refused with a 403. Older clusters
+	// (< 0.59) serve it as v1alpha3, hence the version negotiation in kube_virt_actions.go.
+	groupKubeVirtSub = "subresources.kubevirt.io"
 )
 
 // What the counts and the order of the list group a VM's printable status into.

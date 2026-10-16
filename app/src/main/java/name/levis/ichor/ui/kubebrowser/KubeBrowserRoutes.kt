@@ -23,6 +23,8 @@ object KubeBrowserRoutes {
     const val APPLY = "kube-apply"
     const val STORAGE = "kube-storage"
     const val SERVICES = "kube-services"
+    const val CROSSPLANE = "kube-crossplane"
+    const val TAILSCALE = "kube-tailscale"
     const val LOAD_BALANCING = "kube-load-balancing"
     const val JOBS = "kube-jobs"
     private const val HELM_RELEASE = "kube-helm-release?ns={ns}&name={name}"
@@ -97,7 +99,13 @@ object KubeBrowserRoutes {
             )
         }
         composable(SERVICES) {
-            ServicesScreen(onBack = { nav.popBackStack() }, onService = links.onObject, onLoadBalancing = { nav.navigate(LOAD_BALANCING) })
+            ServicesScreen(onBack = { nav.popBackStack() }, onObject = links.onObject, onLoadBalancing = { nav.navigate(LOAD_BALANCING) })
+        }
+        composable(CROSSPLANE) {
+            name.levis.ichor.ui.crossplane.CrossplaneScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)
+        }
+        composable(TAILSCALE) {
+            name.levis.ichor.ui.tailscale.TailscaleScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)
         }
         composable(LOAD_BALANCING) {
             name.levis.ichor.ui.loadbalancing.LoadBalancingScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)

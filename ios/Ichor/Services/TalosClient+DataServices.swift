@@ -104,6 +104,14 @@ extension TalosClient {
         }
     }
 
+    /// Runs action on snapshot ("" to take one) of the Longhorn volume namespace/volume (os:admin).
+    /// Throws when refused, a detached volume included.
+    func longhornSnapshotAction(namespace: String, volume: String, snapshot: String, action: LonghornSnapshotAction) async throws {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeLonghornSnapshotAction(config, context, kubeServer, namespace, volume, snapshot, action.rawValue, error)
+        }
+    }
+
     /// What explains the state of the cert-manager certificate namespace/name (os:admin): its
     /// requests, ACME orders and challenges, their events and controller log lines.
     func certificateDetails(namespace: String, name: String) async throws -> CertDetails {
@@ -168,5 +176,21 @@ extension TalosClient {
         return try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
             IchorgoKubeVeleroRestore(config, context, kubeServer, namespace, backup, json, error)
         }
+    }
+
+    /// What the phone's own resolver answers for `records` (see DnsCheck): whether each hostname
+    /// resolves, whether an answer is one of its targets, and who the ExternalDNS TXT registry
+    /// record names. No cluster call: the records come from the app, the answers from the device.
+    /// `controllers` give each record's owner id and TXT prefix; `demo` answers locally like the
+    /// built-in cluster, never dialling.
+    static func dnsCheck(_ records: [ExternalDnsRecord], controllers: [ExternalDnsController], demo: Bool) async throws -> DnsCheckResult {
+        let owners = controllers.reduce(into: [String: ExternalDnsController]()) { $0[$1.name] = $1 }
+        let requests = records.map { record in
+            let controller = owners[record.controller]
+            return DnsCheckRequest(dnsName: record.dnsName, recordType: record.recordType, targets: record.targets,
+                                   ownerId: controller?.ownerId ?? "", txtPrefix: controller?.txtPrefix ?? "")
+        }
+        let json = try TalosJSON.encode(requests)
+        return try await Self.json { demo ? IchorgoDemoDNSCheck(json, $0) : IchorgoDNSCheck(json, 0, $0) }
     }
 }

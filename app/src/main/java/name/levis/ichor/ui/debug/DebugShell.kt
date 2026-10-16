@@ -27,7 +27,8 @@ val ShellState.isLive: Boolean get() = this is ShellState.Starting || this is Sh
 /**
  * One shell per node of a cluster (its talosconfig context), or per container of a pod
  * ([pod] set, [node] empty, `kubectl exec -it`), or per Kubernetes node of a cluster without
- * Talos ([kubeNode], a privileged pod in [namespace]): reopening it finds it again.
+ * Talos ([kubeNode], a privileged pod in [namespace]), or per KubeVirt virtual machine ([vm] in
+ * [namespace], its serial console like `virtctl console`): reopening it finds it again.
  */
 data class ShellKey(
     val context: String,
@@ -36,8 +37,10 @@ data class ShellKey(
     val pod: String = "",
     val container: String = "",
     val kubeNode: Boolean = false,
+    val vm: String = "",
 ) {
     val isPod: Boolean get() = pod.isNotEmpty()
+    val isVM: Boolean get() = vm.isNotEmpty()
 
     /** The id of its notification; never 0, which Android refuses for a foreground service. */
     val notificationId: Int get() = (hashCode() and Int.MAX_VALUE).coerceAtLeast(1)
@@ -107,7 +110,11 @@ class DebugShell internal constructor(
                 if (current == generation) setState(ShellState.Exited(code, errMessage))
             }
         }
-        session = if (key.kubeNode) {
+        session = if (key.isVM) {
+            // The VM's serial console: raw bytes, no command, no image.
+            val target = kubeServers.targetFor(stored.copy(activeContext = key.context))
+            Ichorgo.startVMConsole(target.yaml, target.context, target.server, key.namespace, key.vm, listener)
+        } else if (key.kubeNode) {
             // A root shell on the node through a privileged pod (`kubectl debug node/`).
             val target = kubeServers.targetFor(stored.copy(activeContext = key.context))
             Ichorgo.startNodeDebug(target.yaml, target.context, target.server, key.node, key.namespace, image, cols, rows, listener)

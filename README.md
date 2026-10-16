@@ -88,6 +88,10 @@ sit alongside your real clusters and be removed from **Manage clusters**.
 - **Policies (Kyverno):** every Kyverno policy with its mode (Enforce or Audit), whether it is
   ready, how many resources pass or fail it and which ones, and whether the engine's
   controllers and admission webhook are up. See [Policies](#policies).
+- **Virtual machines (KubeVirt / Harvester):** every VM with its status, node, address, guest
+  OS and any disk import or live migration in flight, failing ones first; start, stop (with or
+  without the grace period), restart, pause and migrate one from its sheet, or open its
+  serial console in the app's terminal. See [Virtual machines](#virtual-machines).
 - **API server health and pressure:** the Kubernetes API server's readyz and livez checks, and
   what loads it right now: Ichor reads its `/metrics` twice a few seconds apart and shows the
   request rate, 5xx and 429 answers, which clients send the requests (API Priority and Fairness
@@ -113,8 +117,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   elsewhere), quotas at their limit, nodes left cordoned or under pressure, LoadBalancer Services
   without an address (and why), empty MetalLB or Cilium pools, MetalLB pools nothing advertises,
   a refused MetalLB configuration and BGP sessions down, namespaces, pods and claims stuck in Terminating,
-  certificate requests nobody approved, External Secrets that do not sync and Helm releases
-  failed or stuck. Every finding says what to change. Read-only; the critical ones can also
+  certificate requests nobody approved, External Secrets that do not sync, Helm releases
+  failed or stuck, and Crossplane: managed resources that cannot sync, unhealthy providers. Every finding says what to change. Read-only; the critical ones can also
   notify in the background (Settings → Alerts). A pod's log sheet and a workload's sheet show
   the object's Kubernetes events, like the end of `kubectl describe`. See
   [Cluster checkup](#cluster-checkup).
@@ -133,10 +137,16 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   recorded in the activity log, and the pod is deleted when the shell ends.
 - **Background:** alerts and a home-screen widget.
 - **Data services:** the storage and database operators the cluster runs (Longhorn, Garage,
-  CloudNativePG, Dragonfly, MariaDB, Percona, cert-manager, Velero, Rook Ceph, CAST AI, CSI
-  VolumeSnapshots, backup CronJobs) on one tabbed screen, each with its health and what needs a
-  look; kube-green's sleep schedules say which namespaces sleep on a schedule, when they wake up,
-  and whether they are asleep right now.
+  CloudNativePG, Dragonfly, MariaDB, Percona, cert-manager, Velero, ExternalDNS, Sealed Secrets,
+  Rook Ceph, CAST AI, CSI VolumeSnapshots, backup CronJobs) on one tabbed screen, each with its
+  health and what needs a look; kube-green's sleep schedules say which namespaces sleep on a
+  schedule, when they wake up, and whether they are asleep right now. ExternalDNS shows the
+  hostnames it manages, where each comes from, and the controller's settings; it can resolve
+  every hostname from the phone and compare it with the record's targets, so a name that points
+  elsewhere, or that no controller owns, stands out. Sealed Secrets shows the controller, the
+  sealing keys and whether each SealedSecret unsealed, by name only. When the garage-operator
+  manages Garage, its clusters, buckets (size, quota, website), keys and node declarations show
+  next to the live Garage state.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,
@@ -194,10 +204,13 @@ reads those roles and explains up front when a feature needs more.
 | **Velero: run a schedule now, delete a backup** | `Kubeconfig`, then the Kubernetes API (velero.io schedules, backups, deletebackuprequests) | **`os:admin`** |
 | **Velero: restore a backup with a preview and namespace mapping** | `Kubeconfig`, then the Kubernetes API (velero.io backups, restores, backupstoragelocations) | **`os:admin`** |
 | **kube-green sleep schedules** | `Kubeconfig`, then the Kubernetes API (sleepinfos.kube-green.com, cluster-wide and one namespace's own when a workload or CronJob sheet opens; optional controller Deployment in `kube-green`) | **`os:admin`** |
+| **Data services: ExternalDNS hostnames and controllers** | `Kubeconfig`, then the Kubernetes API (deployments, ingresses, services, optional dnsendpoints.externaldns.k8s.io and httproutes/gateways) | **`os:admin`** |
+| **Data services: Sealed Secrets status and sealing keys** | `Kubeconfig`, then the Kubernetes API (sealedsecrets.bitnami.com, deployments, secrets metadata with the sealing-key label) | **`os:admin`** |
 | **App web addresses (Ingress, HTTPRoute, GRPCRoute, TLSRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, grpcroutes, tlsroutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
 | **Policies (Kyverno)** | `Kubeconfig`, then the Kubernetes API (kyverno.io policies, wgpolicyk8s.io policy reports, Kyverno's Deployments and webhooks) | **`os:admin`** |
+| **Virtual machines: list, start/stop/restart/pause/migrate, serial console** | `Kubeconfig`, then the Kubernetes API (kubevirt.io, subresources.kubevirt.io including `virtualmachineinstances/console`, cdi.kubevirt.io) | **`os:admin`** |
 | **Cluster checkup, events of a pod or workload** | `Kubeconfig`, then the Kubernetes API (pods, nodes, events, claims, webhooks, quotas, services, CSRs, secrets metadata…) and each kubelet's `stats/summary` through the API server proxy | **`os:admin`** |
 | **Talos rollback (`talosctl rollback`)** | `Rollback` | **`os:admin`** |
 | **CloudNativePG primary restart and hibernate/wake** | `Kubeconfig`, then the Kubernetes API: get clusters and pods, patch `clusters/status` for restart, patch clusters for hibernation | **`os:admin`** |
@@ -399,6 +412,12 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   button; only such a namespace can be deleted from there.
 - **Room to drain:** a rough sum of requests over the schedulable nodes, without affinities: a
   note, never an alert.
+- **Crossplane:** a managed resource or composite whose `Synced` condition failed and a package
+  (Provider, Configuration, Function) not installed or not healthy are critical; a resource not
+  ready after 15 minutes and a definition not established are warnings. A paused resource is
+  not a finding. Since it runs at every background check, it reads at most 2,000 managed
+  resources of each kind (the Crossplane screen reads them all): past that, a problem further
+  down the list is not seen. Condition messages are cut to 300 characters.
 - **Alerts:** Settings → Alerts → Cluster checkup runs it at every background check (it lists every
   pod and asks each kubelet). A critical finding notifies at once, a warning when seen on two
   checks in a row, a cleared one once; a section that could not be read keeps what it knew.
@@ -565,6 +584,48 @@ credentials that cannot read one group show the reason in that group's header on
 The workload sheet names the autoscaler that owns the replica count — "HPA web-hpa · 3 of
 1–5", or "KEDA worker-so · paused at 0" — with a tap through to the Autoscaling screen, and
 the list marks autoscaled workloads with an "auto" badge.
+
+### Virtual machines
+
+**Kubernetes → Virtual machines** shows the KubeVirt virtual machines of the cluster ("Harvester"
+in the title on a Harvester cluster), to answer "which VM is down, where does it run, is it
+still importing its disk?" and act on it from the phone:
+
+- **The list:** counts by state (running, stopped, failing, migrating, importing), then each VM
+  failing first with KubeVirt's status, its node, first address and guest OS, and a line for a
+  disk import ("Importing win11-root 62.00%") or a live migration ("Migrating worker-2 →
+  worker-3"). It follows a VM on its way (starting, stopping, migrating) every few seconds.
+- **A VM's sheet:** run strategy, resources, addresses, conditions, disks and the latest
+  migration, then **Start**, **Stop**, **Restart**, **Pause** / **Unpause** and **Migrate**,
+  each enabled only when the VM's state allows it and the credentials may. Stop and restart ask
+  for the VM's name typed; stop can skip the guest's grace period, and says when it writes
+  `runStrategy: Halted` into the spec (a GitOps tool may set it back on its next sync).
+
+- **Its serial console:** **Console** on a running VM's sheet opens the guest's serial console
+  in the app's terminal, like `virtctl console` (get on `virtualmachineinstances/console` in
+  subresources.kubevirt.io). The guest must send its console to ttyS0 (or hvc0); one viewer at
+  a time, so opening it elsewhere (another phone, `virtctl console`) disconnects the app. On
+  Android the console keeps running when you leave the screen, like a pod's shell; on iOS it
+  ends with the screen. Each open is in the audit log (`vm-console`).
+
+A cluster without KubeVirt says so.
+
+### Crossplane
+
+**Kubernetes → Crossplane** (the button appears when the cluster runs Crossplane) shows the
+control plane's packages (providers, configurations, functions, with their Installed and Healthy
+state and the pull error), the APIs its XRDs define (scope, claim kind, compositions), and every
+composite resource, claim and managed resource with its Ready and Synced conditions — problems
+first, with a filter and a search, and the Synced message (the cloud API's error) on the row.
+Tapping a row opens the object's summary (conditions, events, YAML); nothing is changed here.
+
+### Tailscale
+
+**Kubernetes → Tailscale** (the button appears when the cluster runs the Tailscale operator)
+shows the operator, every connector (subnet routes, exit node, app connector, tailnet IPs and
+devices), proxy group (type, devices, the kube-apiserver URL), proxy class (and who uses it) and
+the tailnet nameserver — problems first, with the operator's reason. Tapping a row opens the
+object's summary; nothing is changed here (os:admin).
 
 ### Argo CD app icons
 

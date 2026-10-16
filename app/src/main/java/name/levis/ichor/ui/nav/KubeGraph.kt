@@ -39,6 +39,7 @@ import name.levis.ichor.ui.metrics.METRICS_TAB_MONITORING
 import name.levis.ichor.ui.netpol.NetworkPoliciesScreen
 import name.levis.ichor.ui.overview.KubeHomeViewModel
 import name.levis.ichor.ui.autoscaling.AutoscalingScreen
+import name.levis.ichor.ui.vms.VirtualMachinesScreen
 import name.levis.ichor.ui.policies.PoliciesScreen
 
 /** The Kubernetes screens: nodes, workloads, events, apps, metrics, the checkup, flows, data services, pod shells. */
@@ -111,6 +112,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             onArgoCD = { nav.navigate(Routes.ARGO_CD) },
             onArgoApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
             onFlux = { nav.navigate(Routes.FLUX) },
+            onObject = kubeLinks.onObject,
         )
     }
     composable(
@@ -144,6 +146,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
                 onEvents = { nav.navigate(Routes.KUBE_EVENTS) },
                 onPolicies = { nav.navigate(Routes.POLICIES) },
                 onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
+                onVirtualMachines = { nav.navigate(Routes.VIRTUAL_MACHINES) },
             )
         }
     }
@@ -151,6 +154,27 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
     composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.POLICIES) { PoliciesScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
     composable(Routes.AUTOSCALING) { AutoscalingScreen(onBack = { nav.popBackStack() }, onObject = kubeLinks.onObject) }
+    composable(Routes.VIRTUAL_MACHINES) {
+        VirtualMachinesScreen(
+            onBack = { nav.popBackStack() },
+            onConsole = { vm ->
+                val active = app.configRepository.config.value?.activeContext.orEmpty()
+                nav.navigate(Routes.vmConsole(active, vm.namespace, vm.name))
+            },
+        )
+    }
+    composable(
+        Routes.VM_CONSOLE,
+        arguments = listOf("ctx", "ns", "vm").map { navArgument(it) { type = NavType.StringType; defaultValue = "" } },
+    ) { entry ->
+        val a = entry.arguments
+        val name = a?.getString("vm").orEmpty()
+        DebugShellScreen(
+            key = ShellKey(a?.getString("ctx").orEmpty(), "", a?.getString("ns").orEmpty(), vm = name),
+            hostname = name,
+            onBack = { nav.popBackStack() },
+        )
+    }
     composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = { nav.navigate(Routes.AUDIT) }) }
     composable(Routes.AUDIT) { AuditScreen(onBack = { nav.popBackStack() }) }
     composable(Routes.CHECKUP) {
@@ -187,6 +211,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
         name.levis.ichor.ui.dataservices.DataServicesScreen(
             initial = kind,
             onBack = { nav.popBackStack() },
+            onObject = kubeLinks.onObject,
             onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
             onRequestIntegration = { nav.navigate(Routes.INTEGRATIONS) },
         )

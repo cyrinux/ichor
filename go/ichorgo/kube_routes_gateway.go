@@ -21,12 +21,18 @@ type gatewayParentRef struct {
 // gatewayRouteObject is a Gateway API route: HTTPRoute (v1), GRPCRoute (v1) or TLSRoute
 // (v1alpha2, the experimental channel), the fields the app reads. Kind is set by the reader;
 // a GRPCRoute's matches name a gRPC Service and Method (no URL path), a TLSRoute's spec has
-// neither matches nor hostnames (the URL is the listener's host at its TLS port).
+// no matches (the URL is the listener's host at its TLS port).
+//
+// One struct decodes the three kinds, so it keeps only fields they agree on: a match's
+// `method` is a string on an HTTPRoute (GET) but an object on a GRPCRoute ({service,
+// method}), and is left undecoded, or any HTTPRoute with a method match fails the whole list.
 type gatewayRouteObject struct {
 	Kind     string `json:"-"`
 	Metadata struct {
-		Name      string `json:"name"`
-		Namespace string `json:"namespace"`
+		Name string `json:"name"`
+		// Annotations: the ExternalDNS reader reads the controller and ttl ones.
+		Namespace   string            `json:"namespace"`
+		Annotations map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {
 		ParentRefs []gatewayParentRef `json:"parentRefs"`
@@ -37,10 +43,6 @@ type gatewayRouteObject struct {
 					Type  string `json:"type"`
 					Value string `json:"value"`
 				} `json:"path"`
-				Method *struct {
-					Service string `json:"service"`
-					Method  string `json:"method"`
-				} `json:"method"`
 			} `json:"matches"`
 			BackendRefs []struct {
 				Group     *string `json:"group"`
@@ -145,10 +147,8 @@ func gatewayRoutes(routes []gatewayRouteObject, gateways []gatewayObject, servic
 					path = t.path
 				}
 
-				out = append(out, kubeRoute{
-					Kind: r.Kind, Namespace: r.Metadata.Namespace, Name: r.Metadata.Name,
-					URL: routeURL(scheme, host, port, path), Service: t.service,
-				})
+				out = append(out, routeRow(r.Kind, r.Metadata.Namespace, r.Metadata.Name,
+					routeURL(scheme, host, port, path), t.service))
 			}
 		}
 	}

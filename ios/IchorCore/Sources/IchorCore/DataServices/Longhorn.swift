@@ -55,8 +55,24 @@ public struct LonghornVolume: Decodable, Equatable, Identifiable, Sendable {
     public let scheduleError: String
     /// Close to Longhorn's snapshot limit.
     public let tooManySnapshots: Bool
+    /// Longhorn's own snapshots still in use, newest first.
+    public let snapshots: [LonghornSnapshot]
+    /// Deleted snapshots Longhorn has yet to purge.
+    public let snapshotsRemoving: Int
+    /// Newest backups first, at most 20: backupCount has them all.
+    public let backups: [LonghornBackup]
+    public let backupCount: Int
+    /// The last backup is more than a week old.
+    public let backupStale: Bool
+    /// The VolumeSnapshotContents were read: a snapshot without volumeSnapshot keeps none.
+    public let volumeSnapshotsKnown: Bool
 
     public var id: String { name }
+
+    public var attached: Bool { state == "attached" }
+
+    /// The newest backup failed.
+    public var latestBackupFailed: Bool { backups.first?.failed ?? false }
 
     /// The claim it backs ("namespace/name"), or the volume's own name when unbound.
     public var label: String { pvcName.isEmpty ? name : "\(pvcNamespace)/\(pvcName)" }
@@ -85,13 +101,83 @@ public struct LonghornVolume: Decodable, Equatable, Identifiable, Sendable {
         restoreProgress = try c.field(.restoreProgress, 0)
         scheduleError = try c.field(.scheduleError, "")
         tooManySnapshots = try c.field(.tooManySnapshots, false)
+        snapshots = try c.field(.snapshots, [])
+        snapshotsRemoving = try c.field(.snapshotsRemoving, 0)
+        backups = try c.field(.backups, [])
+        backupCount = try c.field(.backupCount, 0)
+        backupStale = try c.field(.backupStale, false)
+        volumeSnapshotsKnown = try c.field(.volumeSnapshotsKnown, false)
     }
 
     private enum CodingKeys: String, CodingKey {
         case name, namespace, pvcNamespace, pvcName, state, robustness, health, replicasDesired, replicasHealthy
         case rebuilding, replicaNodes, node, size, actualSize, lastBackupAt
         case rebuildProgress, backingUp, backupProgress, restoring, restoreProgress, scheduleError, tooManySnapshots
+        case snapshots, snapshotsRemoving, backups, backupCount, backupStale, volumeSnapshotsKnown
     }
+}
+
+/// A Longhorn snapshot of a volume (snapshots.longhorn.io), not a CSI VolumeSnapshot.
+public struct LonghornSnapshot: Decodable, Equatable, Identifiable, Sendable {
+    public let name: String
+    /// Unix ms, 0 when Longhorn has none (the base of a restored volume).
+    public let createdAt: Int64
+    /// Data it holds on top of its parent.
+    public let size: Int64
+    public let ready: Bool
+    /// Asked for (by someone, a job, a CSI snapshot), not taken by Longhorn itself.
+    public let userCreated: Bool
+    /// A completed backup was taken from it.
+    public let backedUp: Bool
+    /// The CSI VolumeSnapshot ("namespace/name") it keeps: delete that one, not this.
+    public let volumeSnapshot: String
+    public let error: String
+
+    public var id: String { name }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decode(String.self, forKey: .name)
+        createdAt = try c.field(.createdAt, 0)
+        size = try c.field(.size, 0)
+        ready = try c.field(.ready, false)
+        userCreated = try c.field(.userCreated, false)
+        backedUp = try c.field(.backedUp, false)
+        volumeSnapshot = try c.field(.volumeSnapshot, "")
+        error = try c.field(.error, "")
+    }
+
+    private enum CodingKeys: String, CodingKey { case name, createdAt, size, ready, userCreated, backedUp, volumeSnapshot, error }
+}
+
+/// A Longhorn backup of a volume (backups.longhorn.io).
+public struct LonghornBackup: Decodable, Equatable, Identifiable, Sendable {
+    public let name: String
+    public let snapshot: String
+    /// Completed, InProgress, Pending, Error or Unknown.
+    public let state: String
+    public let progress: Int
+    /// Unix ms.
+    public let createdAt: Int64
+    public let size: Int64
+    public let error: String
+
+    public var id: String { name }
+    public var completed: Bool { state == "Completed" }
+    public var failed: Bool { state == "Error" || !error.isEmpty }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decode(String.self, forKey: .name)
+        snapshot = try c.field(.snapshot, "")
+        state = try c.field(.state, "")
+        progress = try c.field(.progress, 0)
+        createdAt = try c.field(.createdAt, 0)
+        size = try c.field(.size, 0)
+        error = try c.field(.error, "")
+    }
+
+    private enum CodingKeys: String, CodingKey { case name, snapshot, state, progress, createdAt, size, error }
 }
 
 public struct LonghornNode: Decodable, Equatable, Identifiable, Sendable {
