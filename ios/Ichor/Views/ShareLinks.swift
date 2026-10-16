@@ -37,8 +37,10 @@ extension ShareTarget {
             else { return nil }
             if target == .storage { return .storage(node: node.node, hostname: node.hostname) }
             if target == .hardware { return .hardware(node: node.node, hostname: node.hostname) }
-            return .nodeTab(NodeRef(address: node.node, hostname: node.hostname, role: node.role),
-                            tab: NodeDetailView.Tab.allCases.first { $0.rawValue.lowercased() == tab } ?? .services)
+            let ref = NodeRef(address: node.node, hostname: node.hostname, role: node.role)
+            // A link that names a tab opens the tabs on it; one without (or an unknown one) the hub.
+            guard let shown = NodeTabsView.Tab.allCases.first(where: { $0.rawValue.lowercased() == tab }) else { return .node(ref) }
+            return .nodeTab(ref, tab: shown)
         }
         return switch target {
         case .cluster: nil
