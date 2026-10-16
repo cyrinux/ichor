@@ -259,6 +259,15 @@ var dataCommands = []command{
 		// flux-action ... reconcile: prints the progress to stderr until it is handled.
 		return fluxFollowRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3)), nil
 	}},
+	{name: "gitops-source", args: "TOOL KIND NAMESPACE NAME", run: func(e env) (string, error) {
+		return ichorgo.GitOpsSource(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
+	}},
+	{name: "flux-tree", args: "KIND NAMESPACE NAME DIR", run: func(e env) (string, error) {
+		return ichorgo.FluxSourceTree(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
+	}},
+	{name: "flux-file", args: "KIND NAMESPACE NAME PATH", run: func(e env) (string, error) {
+		return ichorgo.FluxSourceFile(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
+	}},
 	{name: "flux-diff", args: "KIND NAMESPACE NAME", run: func(e env) (out string, err error) {
 		// flux-diff KIND NAMESPACE NAME, e.g. "Kustomization flux-system apps"
 		out, err = ichorgo.KubeFluxDiff(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
