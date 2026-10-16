@@ -76,8 +76,12 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   release's Helm history, and their Git, OCI and Helm sources; reconcile (with its source
   first if wanted), suspend or resume any of them, and force or reset a HelmRelease that gave up.
   The detail shows a HelmRelease's drift as Flux reports it (with **Correct drift**), the
-  dependsOn chain as a tree with what waits on it, and the object's events. Like Argo CD, Ichor writes the annotations and `spec.suspend` the `flux` CLI does, with the
-  admin kubeconfig: nothing to install in the cluster.
+  dependsOn chain as a tree with what waits on it, and the object's events. Like Argo CD,
+  Ichor writes the annotations and `spec.suspend` the `flux` CLI does, with the admin
+  kubeconfig: nothing to install in the cluster.
+- **Argo Rollouts:** see each canary or blue-green rollout at its step, with its weight, pause
+  reason and analysis, and promote (one step or fully), abort, retry or pause it with the same
+  patches as the `kubectl argo rollouts` plugin.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome. Optionally
   (Settings → Privacy, off by default) each Kubernetes object the app changes also gets a

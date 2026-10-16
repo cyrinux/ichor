@@ -197,6 +197,8 @@ fun OverviewScreen(
     onAutoscaling: () -> Unit,
     /** KubeVirt virtual machines (from the Kubernetes home). */
     onVirtualMachines: () -> Unit,
+    /** Argo Rollouts (from the Kubernetes home). */
+    onArgoRollouts: () -> Unit,
     onResources: () -> Unit,
     onHelm: () -> Unit,
     onStorage: () -> Unit,
@@ -246,6 +248,7 @@ fun OverviewScreen(
                 onPolicies = onPolicies,
                 onAutoscaling = onAutoscaling,
                 onVirtualMachines = onVirtualMachines,
+                onArgoRollouts = onArgoRollouts,
                 onArgoCD = onArgoCD,
                 onFlux = onFlux,
                 onDataServices = onDataServices,

@@ -113,6 +113,7 @@ final class KubeAccessTests: XCTestCase {
             "alertmanagerSilence", "alertmanagerExpire", "cnpgPromote", "cnpgRestartPrimary", "cnpgHibernate", "longhornSalvage", "longhornAttachment", "longhornSnapshot", "longhornReplicas", "longhornNode",
             "veleroBackupNow", "veleroDeleteBackup", "veleroRestore",
             "vmStart", "vmStop", "vmRestart", "vmMigrate", "vmPause", "vmUnpause", "vmConsole", "autoscale", "autoscaleKeda",
+            "argoRollout",
         ])
         XCTAssertFalse(KubeAction.cordonNode.isNamespaced)
         XCTAssertFalse(KubeAction.drainNode.isNamespaced)

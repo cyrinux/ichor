@@ -104,6 +104,8 @@ struct KubeHomeView: View {
     @State private var tailscale: LoadState<Tailscale>?
     /// Cluster API or Sidero Metal: nil until the cluster says it runs one (the read answers fast).
     @State private var clusterLifecycle: LoadState<ClusterLifecycle>?
+    /// Argo Rollouts: nil until the cluster says it serves Rollouts (the read answers fast).
+    @State private var argoRollouts: LoadState<ArgoRolloutsStatus>?
     /// The Alertmanager's alerts: nil until one is found (none hides the section).
     @State private var alerts: LoadState<AMAlerts>?
     /// Who the API server takes the credentials for; nil until known (or when it cannot say).
@@ -232,6 +234,7 @@ struct KubeHomeView: View {
             crossplane = nil
             tailscale = nil
             clusterLifecycle = nil
+            argoRollouts = nil
             alerts = nil
             whoAmI = nil
         }
@@ -392,6 +395,12 @@ struct KubeHomeView: View {
             NavigationLink { VirtualMachinesView() } label: {
                 Label("Virtual machines", systemImage: "desktopcomputer")
             }
+            // Only when the cluster serves Argo Rollouts, like Crossplane above.
+            if argoRollouts != nil {
+                NavigationLink { ArgoRolloutsView() } label: {
+                    Label("Argo Rollouts", systemImage: "arrow.triangle.branch")
+                }
+            }
             NavigationLink(value: Route.metrics) {
                 Label("Metrics", systemImage: "chart.xyaxis.line")
             }
@@ -506,6 +515,10 @@ struct KubeHomeView: View {
         let lifecycleNext = await loadClusterLifecycle(with: client)
         guard id == loadID else { return }
         clusterLifecycle = lifecycleNext.map { (clusterLifecycle ?? .loading).refreshed(with: $0) }
+        // Argo Rollouts: nil when the cluster does not serve Rollouts.
+        let rolloutsNext = await loadArgoRollouts(with: client)
+        guard id == loadID else { return }
+        argoRollouts = rolloutsNext.map { (argoRollouts ?? .loading).refreshed(with: $0) }
         let alertsNext = await loadAlerts(with: client)
         guard id == loadID else { return }
         alerts = alertsNext.map { (alerts ?? .loading).refreshed(with: $0) }
@@ -561,6 +574,14 @@ struct KubeHomeView: View {
     private func loadTailscale(with client: TalosClient) async -> LoadState<Tailscale>? {
         let loaded: LoadState<Tailscale> = await .from { try await client.tailscale() }
         if case .loaded(let tailscale, _, _) = loaded, !tailscale.installed { return nil }
+        return loaded
+    }
+
+    /// Argo Rollouts, nil when the cluster does not serve Rollouts: the read answers that quickly
+    /// when the API group or the kind is absent.
+    private func loadArgoRollouts(with client: TalosClient) async -> LoadState<ArgoRolloutsStatus>? {
+        let loaded: LoadState<ArgoRolloutsStatus> = await .from { try await client.argoRollouts() }
+        if case .loaded(let status, _, _) = loaded, !status.installed { return nil }
         return loaded
     }
 

@@ -59,6 +59,9 @@ enum class KubeAction(val wire: String) {
 
     /** Pause or resume a KEDA ScaledObject. */
     AUTOSCALE_KEDA("autoscaleKeda"),
+
+    /** An Argo Rollout: promote, promote fully, abort, retry or pause (the object and its status). */
+    ARGO_ROLLOUT("argoRollout"),
     ;
 
     /** The action asked for an object of a kind, on that kind's own resource; null for a kind the core does not ask about (offered). */

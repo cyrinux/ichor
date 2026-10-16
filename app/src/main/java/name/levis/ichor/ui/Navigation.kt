@@ -318,6 +318,7 @@ fun Navigation(
                 onPolicies = { nav.navigate(Routes.POLICIES) },
                 onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
                 onVirtualMachines = { nav.navigate(Routes.VIRTUAL_MACHINES) },
+                onArgoRollouts = { nav.navigate(Routes.ARGO_ROLLOUTS) },
                 onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
                 onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
                 onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
