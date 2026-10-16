@@ -123,6 +123,8 @@ func checkSATemplate(t *testing.T, tmpl serviceAccountTemplate) {
 		}
 	}
 
+	checkSAClusterWideReadOnly(t, objects)
+
 	if bindings == 0 || strings.Contains(tmpl.YAML, "cluster-admin") {
 		t.Errorf("%d bindings, or cluster-admin", bindings)
 	}
@@ -141,12 +143,41 @@ func checkSABinding(t *testing.T, obj saTestObject, name, namespace string) {
 		t.Errorf("%s: roleRef %+v", obj.Metadata.Name, ref)
 	}
 
-	if obj.Kind == "RoleBinding" && obj.Metadata.Namespace != namespace {
-		t.Errorf("%s: RoleBinding outside %s", obj.Metadata.Name, namespace)
+	if obj.Kind == "RoleBinding" && obj.Metadata.Namespace == "" {
+		t.Errorf("%s: RoleBinding without a namespace", obj.Metadata.Name)
 	}
 
 	if len(obj.Subjects) != 1 || obj.Subjects[0].Kind != "ServiceAccount" ||
 		obj.Subjects[0].Name != name || obj.Subjects[0].Namespace != namespace {
 		t.Errorf("%s: subjects %+v", obj.Metadata.Name, obj.Subjects)
+	}
+}
+
+// checkSAClusterWideReadOnly fails when a ClusterRoleBinding grants a write verb: RBAC
+// cannot narrow a patch to one field, so write access stays in a namespace's RoleBinding.
+func checkSAClusterWideReadOnly(t *testing.T, objects []saTestObject) {
+	t.Helper()
+
+	read := map[string]bool{"get": true, "list": true, "watch": true}
+	writers := map[string]bool{"admin": true, "edit": true}
+
+	for _, obj := range objects {
+		if obj.Kind != "ClusterRole" {
+			continue
+		}
+
+		for _, rule := range obj.Rules {
+			for _, verb := range rule.Verbs {
+				if !read[verb] {
+					writers[obj.Metadata.Name] = true
+				}
+			}
+		}
+	}
+
+	for _, obj := range objects {
+		if obj.Kind == "ClusterRoleBinding" && obj.RoleRef != nil && writers[obj.RoleRef.Name] {
+			t.Errorf("%s grants %s cluster-wide: write access belongs in a RoleBinding", obj.Metadata.Name, obj.RoleRef.Name)
+		}
 	}
 }

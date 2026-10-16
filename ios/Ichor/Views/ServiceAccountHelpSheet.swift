@@ -71,7 +71,7 @@ struct ServiceAccountHelpView: View {
         case .read:
             String(localized: "The built-in view role in every namespace, plus nodes: workloads, events, logs and metrics, no Secrets. Recommended for a phone.")
         case .operate:
-            String(localized: "Read-only, plus restarting Deployments, StatefulSets and DaemonSets and scaling Deployments and StatefulSets.")
+            String(localized: "Read-only everywhere, plus restarting and scaling Deployments, StatefulSets and DaemonSets in one namespace (my-apps in the YAML: change it). A restart needs the right to edit the workload and RBAC cannot narrow that: this token can change those workloads entirely, their image too. Bind it only where you would let this phone deploy.")
         case .namespace:
             String(localized: "Everything inside the ichor namespace (the built-in admin role there), nothing outside it: no nodes, no other namespace.")
         }

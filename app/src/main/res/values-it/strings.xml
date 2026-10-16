@@ -5083,7 +5083,7 @@
     <string name="sa_help_template_read">Sola lettura</string>
     <string name="sa_help_template_read_desc">Il ruolo integrato view in ogni namespace, più i nodi: workload, eventi, log e metriche, nessun Secret. Consigliato per un telefono.</string>
     <string name="sa_help_template_operate">Lettura + riavvio</string>
-    <string name="sa_help_template_operate_desc">Sola lettura, più il riavvio di Deployment, StatefulSet e DaemonSet e la scalatura di Deployment e StatefulSet.</string>
+    <string name="sa_help_template_operate_desc">Sola lettura ovunque, più il riavvio e la scalatura di Deployment, StatefulSet e DaemonSet in un solo namespace (my-apps nello YAML: cambialo). Un riavvio richiede il diritto di modificare il carico di lavoro e RBAC non può restringerlo: questo token può cambiare del tutto quei carichi, anche l’immagine. Collegalo solo dove lasceresti che questo telefono faccia deploy.</string>
     <string name="sa_help_template_namespace">Un namespace</string>
     <string name="sa_help_template_namespace_desc">Tutto nel namespace ichor (il ruolo integrato admin), niente al di fuori: né nodi né altri namespace.</string>
     <string name="sa_help_step_apply">1. Salvalo come ichor-phone.yaml (per un altro namespace, sostituisci ichor ovunque), poi applicalo:</string>

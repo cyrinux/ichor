@@ -5074,7 +5074,7 @@
     <string name="sa_help_template_read">Nur Lesen</string>
     <string name="sa_help_template_read_desc">Die eingebaute Rolle view in jedem Namespace, dazu die Nodes: Workloads, Events, Logs und Metriken, keine Secrets. Empfohlen für ein Telefon.</string>
     <string name="sa_help_template_operate">Lesen + Neustart</string>
-    <string name="sa_help_template_operate_desc">Nur Lesen, dazu Neustart von Deployments, StatefulSets und DaemonSets und Skalieren von Deployments und StatefulSets.</string>
+    <string name="sa_help_template_operate_desc">Überall nur Lesen, dazu Neustart und Skalieren von Deployments, StatefulSets und DaemonSets in einem einzigen Namespace (my-apps im YAML: anpassen). Ein Neustart braucht das Recht, die Workload zu ändern, und RBAC kann das nicht eingrenzen: Dieses Token kann diese Workloads vollständig ändern, auch ihr Image. Binden Sie es nur dort, wo dieses Telefon deployen dürfte.</string>
     <string name="sa_help_template_namespace">Ein Namespace</string>
     <string name="sa_help_template_namespace_desc">Alles im Namespace ichor (die eingebaute Rolle admin), nichts außerhalb: keine Nodes, keine anderen Namespaces.</string>
     <string name="sa_help_step_apply">1. Speichere es als ichor-phone.yaml (für einen anderen Namespace ersetze ichor überall) und wende es an:</string>

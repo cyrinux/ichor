@@ -5086,7 +5086,7 @@
     <string name="sa_help_template_read">Read-only</string>
     <string name="sa_help_template_read_desc">The built-in view role in every namespace, plus nodes: workloads, events, logs and metrics, no Secrets. Recommended for a phone.</string>
     <string name="sa_help_template_operate">Read + restart</string>
-    <string name="sa_help_template_operate_desc">Read-only, plus restarting Deployments, StatefulSets and DaemonSets and scaling Deployments and StatefulSets.</string>
+    <string name="sa_help_template_operate_desc">Read-only everywhere, plus restarting and scaling Deployments, StatefulSets and DaemonSets in one namespace (my-apps in the YAML: change it). A restart needs the right to edit the workload and RBAC cannot narrow that: this token can change those workloads entirely, their image too. Bind it only where you would let this phone deploy.</string>
     <string name="sa_help_template_namespace">One namespace</string>
     <string name="sa_help_template_namespace_desc">Everything inside the ichor namespace (the built-in admin role there), nothing outside it: no nodes, no other namespace.</string>
     <string name="sa_help_step_apply">1. Save it as ichor-phone.yaml (for another namespace, replace ichor everywhere), then apply it:</string>

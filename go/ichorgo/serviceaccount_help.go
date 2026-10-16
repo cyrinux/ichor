@@ -81,24 +81,29 @@ subjects:
     namespace: ichor
 `
 
-// A restart patches the pod template's annotation; a scale writes the scale subresource.
-const saOperateYAML = saAccountYAML + saViewBindingYAML + `---
+// Reads like saReadYAML everywhere; restarts and scales only in my-apps. A restart has to
+// patch the workload and RBAC cannot narrow a patch to one field: whoever holds the token
+// can change anything in those workloads, their image too. So the write part is bound with
+// a RoleBinding, one namespace at a time, never cluster-wide.
+const saOperateYAML = saReadYAML + `---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: ichor-phone-operate
 rules:
-` + saNodesRules + `  - apiGroups: ["apps"]
+  - apiGroups: ["apps"]
     resources: ["deployments", "statefulsets", "daemonsets"]
     verbs: ["patch"]
   - apiGroups: ["apps"]
     resources: ["deployments/scale", "statefulsets/scale"]
     verbs: ["get", "update", "patch"]
 ---
+# The namespace whose workloads the phone may restart and scale; one RoleBinding per namespace.
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: ichor-phone-operate
+  namespace: my-apps
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
