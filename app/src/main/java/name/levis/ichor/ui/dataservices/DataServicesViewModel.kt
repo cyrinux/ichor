@@ -7,6 +7,7 @@ import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.Inventory
+import name.levis.ichor.model.ReadProgress
 import name.levis.ichor.model.dataServiceHints
 import name.levis.ichor.ui.LoadingViewModel
 
@@ -19,6 +20,7 @@ class DataServicesViewModel(private val dataServices: DataServicesRepository) : 
     override fun cached(): TalosRepository.Timed<DataServices>? = dataServices.cached(DATA_SERVICES)
     override val restores get() = dataServices.restores
     override suspend fun fetch() = dataServices.dataServices(hints)
+    override val progressReader: suspend () -> ReadProgress = { dataServices.readProgress(DATA_SERVICES_PROGRESS_OP) }
 
     /** Garage maintenance; a change shows in a fresh reading (tranquility, repairs running). */
     val garage = GarageActions(viewModelScope, dataServices, onChanged = { refresh() })

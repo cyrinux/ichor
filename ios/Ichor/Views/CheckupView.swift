@@ -87,28 +87,16 @@ struct CheckupView: View {
         guard let client = model.client else { return }
         // A checkup on a large cluster takes a while: its steps show while nothing else does.
         let waiting: Bool = { if case .loading = state { return true } else { return false } }()
-        let poll: Task<Void, Never>? = waiting ? Task { await pollProgress(client) } : nil
-        let loaded: LoadState<CheckupReport> = await withTaskCancellationHandler {
+        let loaded: LoadState<CheckupReport> = await client.withReadProgress(
+            TalosClient.checkupProgressOp, watching: waiting, update: { progress = $0 }
+        ) {
             await .from { try await client.checkup() }
-        } onCancel: {
-            poll?.cancel()
         }
-        poll?.cancel()
         progress = nil
         if case .loaded(let report, _, _) = loaded, !chosen {
             open = Set(report.shownSections.filter { $0.status == .critical || $0.status == .warning }.map(\.id))
         }
         state = state.refreshed(with: loaded)
-    }
-
-    /// Shows how far the checkup got until cancelled; a progress not running yet is skipped.
-    private func pollProgress(_ client: TalosClient) async {
-        while !Task.isCancelled {
-            try? await Task.sleep(for: .milliseconds(250))
-            let read = await client.readProgress(TalosClient.checkupProgressOp)
-            guard !Task.isCancelled else { return }
-            if let read, read.running { progress = read }
-        }
     }
 
     /// A checkup step by name: the shared reads first ("nodes" is the node list here, not the

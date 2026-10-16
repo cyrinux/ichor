@@ -4808,6 +4808,16 @@
     <string name="read_progress_step_nodes">Вузли</string>
     <string name="read_progress_step_pvcs">Запити томів</string>
     <string name="read_progress_step_version">Версія Kubernetes</string>
+    <string name="read_progress_step_kinds">Типи кожної групи API</string>
+    <string name="read_progress_step_policies">Мережеві політики</string>
+    <string name="read_progress_step_namespaces">Простори імен</string>
+    <string name="read_progress_step_readyz">Перевірки готовності (readyz)</string>
+    <string name="read_progress_step_livez">Перевірки життєздатності (livez)</string>
+    <string name="read_progress_step_queued">Запити в черзі</string>
+    <string name="read_progress_step_scrape1">Перша вибірка метрик</string>
+    <string name="read_progress_step_wait">Очікування %1$s с до другої вибірки</string>
+    <string name="read_progress_step_wait_idle">Очікування другої вибірки</string>
+    <string name="read_progress_step_scrape2">Друга вибірка метрик</string>
     <string name="capacity_title">Ємність</string>
     <string name="capacity_intro">Вільне місце рахує requests щодо allocatable, як планувальник; використання надходить із metrics-server.</string>
     <string name="capacity_free_cpu">%1$s CPU вільно з %2$s</string>

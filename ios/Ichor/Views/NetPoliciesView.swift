@@ -7,12 +7,14 @@ import IchorCore
 struct NetPoliciesView: View {
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<NetPolicyReport> = .loading
+    /// How far the first read got, while there is nothing else to show.
+    @State private var progress: ReadProgress?
     @State private var namespace: String?
     @State private var query = ""
     @State private var selected: NetPolicy?
 
     var body: some View {
-        LoadStateView(state: state, retry: load) { report in
+        LoadStateView(state: state, retry: load, progress: progress, stepLabel: Self.stepLabel) { report in
             let namespaces = report.policyNamespaces
             let chosen = namespace.flatMap { namespaces.contains($0) ? $0 : nil }
             let sections = report.sections(namespace: chosen, query: query)
@@ -60,7 +62,24 @@ struct NetPoliciesView: View {
 
     private func load() async {
         guard let client = model.client else { return }
-        state = state.refreshed(with: await .from { try await client.networkPolicies() })
+        let waiting: Bool = { if case .loading = state { return true } else { return false } }()
+        let loaded: LoadState<NetPolicyReport> = await client.withReadProgress(
+            TalosClient.netPolicyProgressOp, watching: waiting, update: { progress = $0 }
+        ) {
+            await .from { try await client.networkPolicies() }
+        }
+        progress = nil
+        state = state.refreshed(with: loaded)
+    }
+
+    /// A read step by name; an unknown one by its id.
+    private static func stepLabel(_ id: String) -> String {
+        switch id {
+        case "policies": String(localized: "Network policies")
+        case "pods": String(localized: "Reading pods")
+        case "namespaces": String(localized: "Namespaces")
+        default: id
+        }
     }
 }
 

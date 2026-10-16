@@ -1,6 +1,88 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Reading resource kinds" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ressourcentypen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Resource kinds" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tipos de recursos" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Types de ressources" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tipi di risorse" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Типи ресурсів" } }
+      }
+    },
+    "Readiness checks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bereitschaftsprüfungen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Comprobaciones de disponibilidad" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Contrôles de disponibilité" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Controlli di prontezza" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Перевірки готовності" } }
+      }
+    },
+    "Liveness checks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lebendigkeitsprüfungen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Comprobaciones de actividad" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Contrôles de vivacité" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Controlli di vitalità" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Перевірки життєздатності" } }
+      }
+    },
+    "Queued requests" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wartende Anfragen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Solicitudes en cola" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Requêtes en file d’attente" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Richieste in coda" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Запити в черзі" } }
+      }
+    },
+    "First metrics sample" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erste Metrik-Stichprobe" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Primera muestra de métricas" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Premier relevé des métriques" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Primo campione di metriche" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Перша вибірка метрик" } }
+      }
+    },
+    "Second metrics sample" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zweite Metrik-Stichprobe" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Segunda muestra de métricas" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Second relevé des métriques" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Secondo campione di metriche" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Друга вибірка метрик" } }
+      }
+    },
+    "Waiting for the second sample" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Warten auf die zweite Stichprobe" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esperando la segunda muestra" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Attente du second relevé" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "In attesa del secondo campione" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Очікування другої вибірки" } }
+      }
+    },
+    "Waiting %@ s for the second sample" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zweite Stichprobe in %@ s" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting %@ s for the second sample" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Segunda muestra en %@ s" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Second relevé dans %@ s" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Secondo campione tra %@ s" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Друга вибірка через %@ с" } }
+      }
+    },
     "Workload clusters, machines and bare-metal servers that are stuck, failed or off" : {
       "extractionState" : "manual",
       "localizations" : {

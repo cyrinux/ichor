@@ -4552,6 +4552,16 @@
     <string name="read_progress_step_nodes">Knoten</string>
     <string name="read_progress_step_pvcs">Volume-Anforderungen</string>
     <string name="read_progress_step_version">Kubernetes-Version</string>
+    <string name="read_progress_step_kinds">Typen jeder API-Gruppe</string>
+    <string name="read_progress_step_policies">Netzwerkrichtlinien</string>
+    <string name="read_progress_step_namespaces">Namespaces</string>
+    <string name="read_progress_step_readyz">Bereitschaftsprüfungen (readyz)</string>
+    <string name="read_progress_step_livez">Lebendigkeitsprüfungen (livez)</string>
+    <string name="read_progress_step_queued">Wartende Anfragen</string>
+    <string name="read_progress_step_scrape1">Erste Metrik-Stichprobe</string>
+    <string name="read_progress_step_wait">Noch %1$s s bis zur zweiten Stichprobe</string>
+    <string name="read_progress_step_wait_idle">Warten auf die zweite Stichprobe</string>
+    <string name="read_progress_step_scrape2">Zweite Metrik-Stichprobe</string>
     <string name="capacity_title">Kapazität</string>
     <string name="capacity_intro">Freier Platz zählt Requests gegen Allocatable, wie der Scheduler; die Nutzung kommt von metrics-server.</string>
     <string name="capacity_free_cpu">%1$s CPU frei von %2$s</string>

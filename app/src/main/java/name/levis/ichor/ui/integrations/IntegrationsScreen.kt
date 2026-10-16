@@ -58,6 +58,7 @@ fun IntegrationsScreen(onBack: () -> Unit) {
     val vm: IntegrationsViewModel = viewModel(factory = factory { IntegrationsViewModel(app.kubeRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
     val picked by vm.picked.collectAsStateWithLifecycle()
+    val progress by vm.readProgress.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val generation by app.configRepository.generation.collectAsStateWithLifecycle()
 
@@ -73,9 +74,17 @@ fun IntegrationsScreen(onBack: () -> Unit) {
         },
     ) { padding ->
         Column(Modifier.pageContent(padding).fillMaxSize()) {
-            Loaded(state, vm::refresh) { report -> Report(report, picked, vm) }
+            Loaded(state, vm::refresh, progress = progress, stepLabel = { integrationsStepLabel(it) }) { report -> Report(report, picked, vm) }
         }
     }
+}
+
+/** An integrations progress step by name: the API groups, then their discovery documents. */
+@Composable
+private fun integrationsStepLabel(id: String): String = when (id) {
+    "api" -> stringResource(R.string.read_progress_step_api)
+    "kinds" -> stringResource(R.string.read_progress_step_kinds)
+    else -> id
 }
 
 @Composable

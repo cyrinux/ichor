@@ -4561,6 +4561,16 @@
     <string name="read_progress_step_nodes">Nodi</string>
     <string name="read_progress_step_pvcs">Richieste di volume</string>
     <string name="read_progress_step_version">Versione di Kubernetes</string>
+    <string name="read_progress_step_kinds">Tipi di ogni gruppo API</string>
+    <string name="read_progress_step_policies">Policy di rete</string>
+    <string name="read_progress_step_namespaces">Namespace</string>
+    <string name="read_progress_step_readyz">Controlli di disponibilità (readyz)</string>
+    <string name="read_progress_step_livez">Controlli di attività (livez)</string>
+    <string name="read_progress_step_queued">Richieste in coda</string>
+    <string name="read_progress_step_scrape1">Primo campione delle metriche</string>
+    <string name="read_progress_step_wait">Attesa di %1$s s per il secondo campione</string>
+    <string name="read_progress_step_wait_idle">Attesa del secondo campione</string>
+    <string name="read_progress_step_scrape2">Secondo campione delle metriche</string>
     <string name="capacity_title">Capacità</string>
     <string name="capacity_intro">Lo spazio libero conta le request rispetto all\'allocabile, come lo scheduler; l\'uso viene da metrics-server.</string>
     <string name="capacity_free_cpu">%1$s CPU libere su %2$s</string>
