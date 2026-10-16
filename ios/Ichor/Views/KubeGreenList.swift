@@ -2,11 +2,12 @@ import SwiftUI
 import IchorCore
 
 /// kube-green's sleep schedules, problems first: one row per SleepInfo with whether its
-/// namespace is asleep now and when it wakes up (or sleeps again), opening to the details.
-/// Read only: the schedule is changed on the cluster, not here.
+/// namespace is asleep now and when it wakes up (or sleeps again), opening to the details and
+/// "Edit schedule".
 struct KubeGreenList: View {
     let status: KubeGreenStatus
     let refresh: () async -> Void
+    @State private var editing: KubeGreenSleepInfo?
 
     var body: some View {
         List {
@@ -16,17 +17,19 @@ struct KubeGreenList: View {
                     Text("No sleep schedules.").foregroundStyle(.secondary)
                 }
                 ForEach(status.sleepInfos) { info in
-                    SleepInfoRow(info: info)
+                    SleepInfoRow(info: info) { editing = info }
                 }
             }
         }
         .refreshable { await refresh() }
         .themedBackground()
+        .sheet(item: $editing) { KubeGreenScheduleSheet(info: $0, onSaved: refresh) }
     }
 }
 
 private struct SleepInfoRow: View {
     let info: KubeGreenSleepInfo
+    let onEdit: () -> Void
 
     var body: some View {
         DisclosureGroup {
@@ -83,6 +86,27 @@ private struct SleepInfoRow: View {
                      info.patchCount > 0 ? String(localized: "\(info.patchCount) patches") : nil].compactMap { $0 }
         if !scope.isEmpty { LabeledContent("Scope", value: scope.joined(separator: ", ")) }
         if info.lastScheduleAt > 0 { LabeledContent("Last run", value: relativeTime(info.lastScheduleAt)) }
+        KubeGreenEditButton(info: info, onEdit: onEdit)
+    }
+}
+
+/// "Edit schedule", off with the reason when the credentials may not patch the SleepInfo.
+private struct KubeGreenEditButton: View {
+    let info: KubeGreenSleepInfo
+    let onEdit: () -> Void
+    @Environment(AppModel.self) private var model
+    @State private var denial: KubeAccess?
+
+    var body: some View {
+        Button("Edit schedule", action: onEdit)
+            .disabled(denial != nil)
+            .task(id: info.id) {
+                guard let client = model.client,
+                      let access = try? await client.kubeCan(verb: "patch", group: "kube-green.com", resource: "sleepinfos",
+                                                             namespace: info.namespace, name: info.name) else { return }
+                denial = access.isDenied ? access : nil
+            }
+        if let denial { KubeDeniedLine(text: denial.deniedText) }
     }
 }
 

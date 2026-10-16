@@ -140,7 +140,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   CloudNativePG, Dragonfly, MariaDB, Percona, cert-manager, Velero, ExternalDNS, Sealed Secrets,
   Rook Ceph, CAST AI, CSI VolumeSnapshots, backup CronJobs) on one tabbed screen, each with its
   health and what needs a look; kube-green's sleep schedules say which namespaces sleep on a
-  schedule, when they wake up, and whether they are asleep right now. ExternalDNS shows the
+  schedule, when they wake up, and whether they are asleep right now, and a schedule can be moved
+  from the phone (days, sleep and wake-up times, time zone). ExternalDNS shows the
   hostnames it manages, where each comes from, and the controller's settings; it can resolve
   every hostname from the phone and compare it with the record's targets, so a name that points
   elsewhere, or that no controller owns, stands out. Sealed Secrets shows the controller, the
@@ -204,6 +205,7 @@ reads those roles and explains up front when a feature needs more.
 | **Velero: run a schedule now, delete a backup** | `Kubeconfig`, then the Kubernetes API (velero.io schedules, backups, deletebackuprequests) | **`os:admin`** |
 | **Velero: restore a backup with a preview and namespace mapping** | `Kubeconfig`, then the Kubernetes API (velero.io backups, restores, backupstoragelocations) | **`os:admin`** |
 | **kube-green sleep schedules** | `Kubeconfig`, then the Kubernetes API (sleepinfos.kube-green.com, cluster-wide and one namespace's own when a workload or CronJob sheet opens; optional controller Deployment in `kube-green`) | **`os:admin`** |
+| **Edit a kube-green schedule** | `Kubeconfig`, then the Kubernetes API (merge patch of sleepinfos.kube-green.com: `patch` in its namespace; the button is off with the reason without it) | **`os:admin`** |
 | **Data services: ExternalDNS hostnames and controllers** | `Kubeconfig`, then the Kubernetes API (deployments, ingresses, services, optional dnsendpoints.externaldns.k8s.io and httproutes/gateways) | **`os:admin`** |
 | **Data services: Sealed Secrets status and sealing keys** | `Kubeconfig`, then the Kubernetes API (sealedsecrets.bitnami.com, deployments, secrets metadata with the sealing-key label) | **`os:admin`** |
 | **App web addresses (Ingress, HTTPRoute, GRPCRoute, TLSRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, grpcroutes, tlsroutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
@@ -345,6 +347,13 @@ When kube-green has the namespace asleep, a workload sheet says so on the row (w
 time) and warns before scaling a workload or resuming a CronJob, since kube-green restores the
 replicas it saved at the next wake-up and re-suspends the CronJob at the next sleep; a cluster
 without kube-green shows nothing new.
+
+**Data services → kube-green → a schedule → Edit schedule** moves it: the days, the sleep and
+wake-up times ("HH:mm", cron syntax kept) and the time zone the times are in, written with them
+so a time is never saved without its zone. "No wake-up" (sleep until changed by hand) is an
+explicit switch, off by default. Values are checked on the phone before anything is sent; an
+Argo CD app that self-heals the SleepInfo is named, since it would put the old schedule back.
+kube-green has no "sleep now" or "wake up now": the schedule is the only thing changed.
 
 Tune how a CronJob looks with these optional keys, as labels or annotations (an annotation wins;
 the title and description hold spaces, so they must be annotations):

@@ -2,6 +2,7 @@ package name.levis.ichor.model
 
 import name.levis.ichor.data.TalosJson
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -84,5 +85,35 @@ class KubeGreenTest {
         assertEquals(null, far.warnBeforeChange(now = 1))
         // No schedule at all.
         assertEquals(null, KubeGreenNamespace(installed = true).warnBeforeChange(now = 1))
+    }
+
+    @Test
+    fun scheduleEditorReadsAndWritesWeekdays() {
+        assertEquals((0..6).toSet(), kubeGreenDays("*"))
+        assertEquals((1..5).toSet(), kubeGreenDays("1-5"))
+        assertEquals(setOf(0, 6), kubeGreenDays("0,6"))
+        assertEquals(setOf(0, 5, 6), kubeGreenDays("5-7"))
+        // Steps and names are edited as text.
+        assertEquals(null, kubeGreenDays("*/2"))
+        assertEquals(null, kubeGreenDays("MON"))
+
+        assertEquals("*", kubeGreenWeekdays((0..6).toSet()))
+        assertEquals("1-5", kubeGreenWeekdays((1..5).toSet()))
+        assertEquals("0,6", kubeGreenWeekdays(setOf(6, 0)))
+        assertEquals("1,3-4", kubeGreenWeekdays(setOf(1, 3, 4)))
+    }
+
+    @Test
+    fun scheduleEditorRefusesWhatTheCoreRefuses() {
+        assertTrue(kubeGreenTimeValid("20:00"))
+        assertTrue(kubeGreenTimeValid("*/2:30"))
+        assertFalse(kubeGreenTimeValid("25:00"))
+        assertFalse(kubeGreenTimeValid("20:61"))
+        assertFalse(kubeGreenTimeValid("20h"))
+        assertTrue(kubeGreenWeekdaysValid("1-5"))
+        assertFalse(kubeGreenWeekdaysValid("mon-fri"))
+        assertTrue(kubeGreenZoneValid("Europe/Paris"))
+        assertTrue(kubeGreenZoneValid(""))
+        assertFalse(kubeGreenZoneValid("Mars/Olympus"))
     }
 }
