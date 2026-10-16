@@ -4,83 +4,503 @@
     "Reading resource kinds" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ressourcentypen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Resource kinds" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tipos de recursos" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Types de ressources" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tipi di risorse" } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Типи ресурсів" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ressourcentypen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resource kinds"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipos de recursos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Types de ressources"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipi di risorse"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Типи ресурсів"
+          }
+        }
       }
     },
     "Readiness checks" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bereitschaftsprüfungen" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Comprobaciones de disponibilidad" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Contrôles de disponibilité" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Controlli di prontezza" } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Перевірки готовності" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereitschaftsprüfungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobaciones de disponibilidad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contrôles de disponibilité"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlli di prontezza"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірки готовності"
+          }
+        }
       }
     },
     "Liveness checks" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lebendigkeitsprüfungen" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Comprobaciones de actividad" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Contrôles de vivacité" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Controlli di vitalità" } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Перевірки життєздатності" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lebendigkeitsprüfungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobaciones de actividad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contrôles de vivacité"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlli di vitalità"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірки життєздатності"
+          }
+        }
       }
     },
     "Queued requests" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wartende Anfragen" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Solicitudes en cola" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Requêtes en file d’attente" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Richieste in coda" } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Запити в черзі" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartende Anfragen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitudes en cola"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requêtes en file d’attente"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richieste in coda"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запити в черзі"
+          }
+        }
       }
     },
     "First metrics sample" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erste Metrik-Stichprobe" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Primera muestra de métricas" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Premier relevé des métriques" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Primo campione di metriche" } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Перша вибірка метрик" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erste Metrik-Stichprobe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primera muestra de métricas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Premier relevé des métriques"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primo campione di metriche"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перша вибірка метрик"
+          }
+        }
       }
     },
     "Second metrics sample" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zweite Metrik-Stichprobe" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Segunda muestra de métricas" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Second relevé des métriques" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Secondo campione di metriche" } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Друга вибірка метрик" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zweite Metrik-Stichprobe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segunda muestra de métricas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Second relevé des métriques"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secondo campione di metriche"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друга вибірка метрик"
+          }
+        }
       }
     },
     "Waiting for the second sample" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Warten auf die zweite Stichprobe" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esperando la segunda muestra" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Attente du second relevé" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "In attesa del secondo campione" } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Очікування другої вибірки" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten auf die zweite Stichprobe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando la segunda muestra"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attente du second relevé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa del secondo campione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очікування другої вибірки"
+          }
+        }
       }
     },
     "Waiting %@ s for the second sample" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zweite Stichprobe in %@ s" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting %@ s for the second sample" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Segunda muestra en %@ s" } },
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Second relevé dans %@ s" } },
-        "it" : { "stringUnit" : { "state" : "translated", "value" : "Secondo campione tra %@ s" } },
-        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Друга вибірка через %@ с" } }
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zweite Stichprobe in %@ s"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting %@ s for the second sample"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segunda muestra en %@ s"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Second relevé dans %@ s"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secondo campione tra %@ s"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друга вибірка через %@ с"
+          }
+        }
+      }
+    },
+    "Could not be unsealed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konnte nicht entsiegelt werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo desellar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N’a pas pu être descellé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile da dissigillare"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося розпечатати"
+          }
+        }
+      }
+    },
+    "No sealing key in %@: nothing can be unsealed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Siegelschlüssel in %@: nichts kann entsiegelt werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ninguna clave de sellado en %@: no se puede desellar nada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune clé de scellement dans %@ : rien ne peut être descellé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna chiave di sigillo in %@: nulla può essere dissigillato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає ключа печатки в %@: нічого не розпечатати"
+          }
+        }
+      }
+    },
+    "Key %@ marked compromised" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel %@ als kompromittiert markiert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clave %@ marcada como comprometida"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clé %@ marquée compromise"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiave %@ segnata come compromessa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключ %@ позначено скомпрометованим"
+          }
+        }
+      }
+    },
+    "The controller could not decrypt it into a Secret: it was sealed for another cluster, name or namespace, or with a key the controller no longer has. Seal it again with kubeseal against this cluster’s certificate." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Controller konnte es nicht zu einem Secret entschlüsseln: es wurde für einen anderen Cluster, Namen oder Namespace versiegelt oder mit einem Schlüssel, den der Controller nicht mehr hat. Versiegeln Sie es erneut mit kubeseal und dem Zertifikat dieses Clusters."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El controlador no pudo descifrarlo en un Secret: se selló para otro clúster, nombre o namespace, o con una clave que el controlador ya no tiene. Séllalo de nuevo con kubeseal y el certificado de este clúster."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le contrôleur n’a pas pu le déchiffrer en Secret : il a été scellé pour un autre cluster, nom ou namespace, ou avec une clé que le contrôleur n’a plus. Scellez-le de nouveau avec kubeseal et le certificat de ce cluster."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il controller non è riuscito a decifrarlo in un Secret: è stato sigillato per un altro cluster, nome o namespace, o con una chiave che il controller non ha più. Sigillalo di nuovo con kubeseal e il certificato di questo cluster."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контролер не зміг розшифрувати його в Secret: його запечатано для іншого кластера, імені чи namespace або ключем, якого контролер більше не має. Запечатайте його знову за допомогою kubeseal і сертифіката цього кластера."
+          }
+        }
+      }
+    },
+    "The controller has no key to decrypt with. Restore the key backup (a Secret labelled sealedsecrets.bitnami.com/sealed-secrets-key) into its namespace, then restart the controller." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Controller hat keinen Schlüssel zum Entschlüsseln. Stellen Sie die Schlüsselsicherung (ein Secret mit dem Label sealedsecrets.bitnami.com/sealed-secrets-key) in seinem Namespace wieder her und starten Sie den Controller neu."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El controlador no tiene ninguna clave para descifrar. Restaura la copia de la clave (un Secret con la etiqueta sealedsecrets.bitnami.com/sealed-secrets-key) en su namespace y reinicia el controlador."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le contrôleur n’a aucune clé pour déchiffrer. Restaurez la sauvegarde de la clé (un Secret avec le label sealedsecrets.bitnami.com/sealed-secrets-key) dans son namespace, puis redémarrez le contrôleur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il controller non ha alcuna chiave per decifrare. Ripristina il backup della chiave (un Secret con l’etichetta sealedsecrets.bitnami.com/sealed-secrets-key) nel suo namespace, poi riavvia il controller."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контролер не має ключа для розшифрування. Відновіть резервну копію ключа (Secret з міткою sealedsecrets.bitnami.com/sealed-secrets-key) у його namespace, потім перезапустіть контролер."
+          }
+        }
+      }
+    },
+    "The controller no longer seals with it, but what it sealed can still be read with it. Seal those SealedSecrets again with kubeseal, then delete the key." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Controller versiegelt nicht mehr damit, aber was damit versiegelt wurde, ist damit noch lesbar. Versiegeln Sie diese SealedSecrets erneut mit kubeseal und löschen Sie dann den Schlüssel."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El controlador ya no sella con ella, pero lo que selló aún se puede leer con ella. Vuelve a sellar esos SealedSecrets con kubeseal y luego borra la clave."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le contrôleur ne scelle plus avec elle, mais ce qu’elle a scellé reste lisible avec elle. Scellez de nouveau ces SealedSecrets avec kubeseal, puis supprimez la clé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il controller non sigilla più con essa, ma ciò che ha sigillato è ancora leggibile con essa. Sigilla di nuovo quei SealedSecret con kubeseal, poi elimina la chiave."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контролер більше не запечатує ним, але запечатане ним досі можна прочитати. Запечатайте ці SealedSecrets знову за допомогою kubeseal, потім видаліть ключ."
+          }
+        }
       }
     },
     "Workload clusters, machines and bare-metal servers that are stuck, failed or off" : {

@@ -3667,6 +3667,12 @@
     <string name="checkup_csrDenied_fix">The approver refused them: its message says why.</string>
     <string name="checkup_externalSecretFailed_fix">The Secret keeps its last value, or does not exist. Check the store’s credentials and that the remote key exists.</string>
     <string name="checkup_secretStoreNotReady_fix">Every ExternalSecret using it stops syncing. Check its credentials, its address and the provider’s status.</string>
+    <string name="checkup_sealedSecretNotSynced">Could not be unsealed</string>
+    <string name="checkup_sealingKeyMissing">No sealing key in %1$s: nothing can be unsealed</string>
+    <string name="checkup_sealingKeyCompromised">Key %1$s marked compromised</string>
+    <string name="checkup_sealedSecretNotSynced_fix">The controller could not decrypt it into a Secret: it was sealed for another cluster, name or namespace, or with a key the controller no longer has. Seal it again with kubeseal against this cluster’s certificate.</string>
+    <string name="checkup_sealingKeyMissing_fix">The controller has no key to decrypt with. Restore the key backup (a Secret labelled sealedsecrets.bitnami.com/sealed-secrets-key) into its namespace, then restart the controller.</string>
+    <string name="checkup_sealingKeyCompromised_fix">The controller no longer seals with it, but what it sealed can still be read with it. Seal those SealedSecrets again with kubeseal, then delete the key.</string>
     <string name="checkup_helmFailed_fix">Run helm history to see why, then helm rollback or a new upgrade.</string>
     <string name="checkup_helmPending_fix">A Helm operation was interrupted and left its lock: helm rollback to the last deployed revision releases it.</string>
     <string name="checkup_section_monitoring">Monitoring</string>

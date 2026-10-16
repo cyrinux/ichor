@@ -53,6 +53,9 @@ public enum CheckupKind: String, Sendable {
     /// count: that many more).
     case capiClusterFailed, capiClusterProvisioning, capiMachineFailed, capiMachineStuck, capiWorkersShort
     case sideroServerOff, sideroServerUnaccepted
+    /// A SealedSecret the controller could not decrypt, the controller without a key (extra: its
+    /// namespace), a sealing key kept out of use (namespace, name: the key's Secret).
+    case sealedSecretNotSynced, sealingKeyMissing, sealingKeyCompromised
 }
 
 /// What the cluster hides behind green nodes: one section per kind of trouble.
@@ -173,7 +176,7 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
                                              .crossplaneSyncFailed, .crossplaneProviderUnhealthy, .crossplaneNotReady,
                                              .crossplaneDefinitionNotEstablished, .tailscaleConnectorNotReady,
                                              .tailscaleProxyGroupDown, .tailscaleProxyClassNotReady, .capiClusterFailed,
-                                             .capiClusterProvisioning, .capiMachineFailed, .capiMachineStuck]
+                                             .capiClusterProvisioning, .capiMachineFailed, .capiMachineStuck, .sealedSecretNotSynced]
         let shownReason = kind.map(reasonKinds.contains) == true ? reason : ""
         return [shownReason, message].filter { !$0.isEmpty }.joined(separator: ": ")
     }
@@ -367,7 +370,7 @@ public struct CheckupSubject: Equatable, Sendable {
 /// Checkup finding kinds whose problem the data services alert already raises (`dataIssuesOf`):
 /// shown on the checkup screen, never notified a second time. A SealedSecret that failed to unseal
 /// and no active sealing key alert from the Sealed Secrets section.
-public let dataServiceAlertedKinds: Set<String> = ["sealedSecretNotSynced", "sealingKeyMissing"]
+public let dataServiceAlertedKinds: Set<String> = [CheckupKind.sealedSecretNotSynced.rawValue, CheckupKind.sealingKeyMissing.rawValue]
 
 /// The checkup findings worth a notification, for a report where a section could not be read:
 /// that section keeps the issues `known` had for it, so they neither clear falsely nor come back
