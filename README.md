@@ -84,6 +84,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   Kubernetes Event, reason `IchorAction`, so the cluster's own history shows what the phone
   did (`kubectl get events`, the Argo CD timeline); node reboots and Talos changes have no
   object to attach it to and send nothing.
+- **Incident summary:** overview menu → Share incident summary… turns the last 6 h, 24 h or 7 days
+  of the cluster's history on this phone and the actions taken from it into a Markdown page
+  (what is wrong now, timeline, actions, polling gaps), names hidden by default, to share or copy.
 - **Network policies:** every NetworkPolicy and, with Cilium, CiliumNetworkPolicy and
   CiliumClusterwideNetworkPolicy, with Calico its NetworkPolicy and GlobalNetworkPolicy
   (selectors in Calico's own language, Allow/Deny/Pass/Log rules, read from its CRDs or its

@@ -4394,6 +4394,15 @@
     <string name="history_since_title">Seit du zuletzt geschaut hast</string>
     <string name="history_since_more">+%1$d weitere</string>
     <string name="history_since_dismiss">Verstanden</string>
+    <string name="incident_summary_menu">Vorfallzusammenfassung teilen…</string>
+    <string name="incident_summary_title">Vorfallzusammenfassung</string>
+    <string name="incident_window_6h">Letzte 6 Stunden</string>
+    <string name="incident_window_24h">Letzte 24 Stunden</string>
+    <string name="incident_window_7d">Letzte 7 Tage</string>
+    <string name="incident_hide_names">Namen ausblenden</string>
+    <string name="incident_share">Teilen</string>
+    <string name="incident_copy">Kopieren</string>
+    <string name="incident_empty">Auf diesem Telefon ist noch kein Verlauf gespeichert: Die Hintergrundprüfung fügt bei jedem Lauf einen Eintrag hinzu.</string>
     <string name="history_since_down">%1$s ist noch ausgefallen (%2$s)</string>
     <string name="history_since_alert_open">Neuer Alarm, noch offen: %1$s</string>
     <string name="history_since_recovered">%1$s war %3$s lang ausgefallen (%2$s), jetzt wieder da</string>

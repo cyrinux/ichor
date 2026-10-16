@@ -4404,6 +4404,15 @@
     <string name="history_since_title">Since you last looked</string>
     <string name="history_since_more">+%1$d more</string>
     <string name="history_since_dismiss">Got it</string>
+    <string name="incident_summary_menu">Share incident summary…</string>
+    <string name="incident_summary_title">Incident summary</string>
+    <string name="incident_window_6h">Last 6 hours</string>
+    <string name="incident_window_24h">Last 24 hours</string>
+    <string name="incident_window_7d">Last 7 days</string>
+    <string name="incident_hide_names">Hide names</string>
+    <string name="incident_share">Share</string>
+    <string name="incident_copy">Copy</string>
+    <string name="incident_empty">No history recorded on this phone yet: the background check adds one entry per run.</string>
     <string name="history_since_down">%1$s is still down (%2$s)</string>
     <string name="history_since_alert_open">New alert, still open: %1$s</string>
     <string name="history_since_recovered">%1$s was down (%2$s) for %3$s, back now</string>

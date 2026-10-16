@@ -4402,6 +4402,15 @@
     <string name="history_since_title">Desde tu última visita</string>
     <string name="history_since_more">+%1$d más</string>
     <string name="history_since_dismiss">Entendido</string>
+    <string name="incident_summary_menu">Compartir resumen del incidente…</string>
+    <string name="incident_summary_title">Resumen del incidente</string>
+    <string name="incident_window_6h">Últimas 6 horas</string>
+    <string name="incident_window_24h">Últimas 24 horas</string>
+    <string name="incident_window_7d">Últimos 7 días</string>
+    <string name="incident_hide_names">Ocultar nombres</string>
+    <string name="incident_share">Compartir</string>
+    <string name="incident_copy">Copiar</string>
+    <string name="incident_empty">Aún no hay historial en este teléfono: la comprobación en segundo plano añade una entrada en cada ejecución.</string>
     <string name="history_since_down">%1$s sigue caído (%2$s)</string>
     <string name="history_since_alert_open">Nueva alerta, aún abierta: %1$s</string>
     <string name="history_since_recovered">%1$s estuvo caído (%2$s) durante %3$s, ya volvió</string>
