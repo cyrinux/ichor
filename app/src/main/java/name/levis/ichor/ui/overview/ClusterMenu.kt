@@ -2,6 +2,7 @@ package name.levis.ichor.ui.overview
 
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkMenuItem
+import name.levis.ichor.ui.share.AddToHomeMenuItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
@@ -137,6 +138,8 @@ fun ClusterMenu(
                 )
             }
             ShareLinkMenuItem(ShareTarget.screen(ShareTarget.CLUSTER), onClick = onDismiss)
+            // No label: the cluster names the shortcut.
+            AddToHomeMenuItem(ShareTarget.screen(ShareTarget.CLUSTER), label = "", onClick = onDismiss)
         }
     }
 }

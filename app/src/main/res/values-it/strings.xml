@@ -457,6 +457,8 @@
     <string name="shortcut_cluster_removed">Questo cluster è stato rimosso</string>
     <string name="shortcut_search_short">Cerca</string>
     <string name="shortcut_search_long">Cerca nei cluster</string>
+    <string name="shortcut_add_home">Aggiungi alla schermata Home</string>
+    <string name="shortcut_pin_unsupported">Questo launcher non può aggiungere scorciatoie alla schermata Home</string>
 
     <!-- Settings -->
     <string name="settings_title">Impostazioni</string>

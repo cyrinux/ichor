@@ -457,6 +457,8 @@
     <string name="shortcut_cluster_removed">Ce cluster a été supprimé</string>
     <string name="shortcut_search_short">Rechercher</string>
     <string name="shortcut_search_long">Rechercher dans les clusters</string>
+    <string name="shortcut_add_home">Ajouter à l\'écran d\'accueil</string>
+    <string name="shortcut_pin_unsupported">Ce lanceur ne peut pas ajouter de raccourcis à l\'écran d\'accueil</string>
 
     <!-- Settings -->
     <string name="settings_title">Paramètres</string>

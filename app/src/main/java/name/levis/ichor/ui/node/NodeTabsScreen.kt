@@ -63,6 +63,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.history.NodeUptime
 import name.levis.ichor.ui.live.LiveStatsTab
 import name.levis.ichor.ui.share.PinButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.ui.share.rememberShareLink
 import name.levis.ichor.ui.workloads.SelectedPodsList
 
@@ -223,6 +224,7 @@ fun NodeTabsScreen(
                     TooltipIconButton(Icons.Outlined.Share, stringResource(R.string.share_link), onClick = {
                         share(ShareTarget.node(node, hostname, tab))
                     })
+                    AddToHomeButton(ShareTarget.node(node, hostname, tab), hostname)
                 },
             )
         },

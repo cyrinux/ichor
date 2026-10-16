@@ -59,6 +59,8 @@ import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.components.rememberKubeCanDenial
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.metrics.SourceDialog
+import name.levis.ichor.ui.share.AddToHomeButton
+import name.levis.ichor.model.ShareTarget
 
 /**
  * The alerts of the cluster's Alertmanager (found in the cluster through the service proxy,
@@ -111,6 +113,7 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint
                 title = { Text(stringResource(R.string.alerts_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    AddToHomeButton(ShareTarget.screen(ShareTarget.ALERTS), stringResource(R.string.alerts_title))
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = vm::refresh)
                     TooltipIconButton(Icons.Outlined.Tune, stringResource(R.string.alerts_source), onClick = { sourceOpen = true })
                 },

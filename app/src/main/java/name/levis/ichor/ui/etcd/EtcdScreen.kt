@@ -3,6 +3,7 @@ package name.levis.ichor.ui.etcd
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.share.ShareLinkButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -258,7 +259,10 @@ fun EtcdScreen(
             TopAppBar(
                 title = { Text("etcd") },
                 navigationIcon = { BackButton(onBack) },
-                actions = { ShareLinkButton(ShareTarget.screen(ShareTarget.ETCD)) },
+                actions = {
+                    ShareLinkButton(ShareTarget.screen(ShareTarget.ETCD))
+                    AddToHomeButton(ShareTarget.screen(ShareTarget.ETCD), "etcd")
+                },
             )
         },
     ) { padding ->
