@@ -74,6 +74,7 @@ fun DataServicesScreen(
     val app = LocalContext.current.applicationContext as TalosApp
     val vm: DataServicesViewModel = viewModel(factory = factory { DataServicesViewModel(app.dataServicesRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
+    val progress by vm.readProgress.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val generation by app.configRepository.generation.collectAsStateWithLifecycle()
     val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
@@ -127,7 +128,7 @@ fun DataServicesScreen(
         },
     ) { padding ->
         val modifier = Modifier.pageContent(padding)
-        Loaded(state, vm::refresh, modifier, freshness = true) { data ->
+        Loaded(state, vm::refresh, modifier, freshness = true, progress = progress, stepLabel = { dataServicesStepLabel(it) }) { data ->
             // The nodes that are not ready, as the home last saw them: the Talos overview's, or
             // the Kubernetes home's on a cluster added from a kubeconfig.
             val kube = config?.activeIsKube == true

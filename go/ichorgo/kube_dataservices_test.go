@@ -522,10 +522,16 @@ func TestReadDataServicesSectionErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, err := readDataServices(context.Background(), k, nil, parseHints(""), fixtureNow)
+	ctx := withReadProgressStart(context.Background(), "test-dataservices", "")
+
+	res, err := readDataServices(ctx, k, nil, parseHints(""), fixtureNow)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// The steps are what was detected, the failed section's step failed.
+	checkFinishedProgress(t, "test-dataservices",
+		[]string{dsStepAPI, dsStepPods, dsStepBackups, dsStepLonghorn, dsStepExternalDNS, dsStepGarage}, dsStepLonghorn)
 
 	if res.Longhorn == nil || !strings.Contains(res.Longhorn.Error, "not found") || res.Garage != nil {
 		t.Fatalf("section error: %+v", res.Longhorn)

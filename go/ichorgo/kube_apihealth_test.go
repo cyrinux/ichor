@@ -242,10 +242,16 @@ func TestReadAPIHealth(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r, err := readAPIHealthOver(context.Background(), k, 10*time.Millisecond)
+	progress := startReadProgress("test-apihealth", "", apiHealthSteps...)
+
+	r, err := readAPIHealthOver(withReadProgress(context.Background(), progress), k, 10*time.Millisecond)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	progress.finish()
+	// readyz answers 500 with its checks: read, not failed.
+	checkFinishedProgress(t, "test-apihealth", apiHealthSteps)
 
 	if r.Status != apiStatusUnhealthy || r.Ready.OK || !r.Live.OK || len(r.Ready.Checks) != 2 || r.Version != "v1.34.1" {
 		t.Fatalf("probes %+v", r)
