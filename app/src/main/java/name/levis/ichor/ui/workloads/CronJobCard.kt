@@ -52,6 +52,7 @@ import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.rememberKubeActionAccess
 import name.levis.ichor.model.JobRunState
 import name.levis.ichor.model.KubeCronJob
+import name.levis.ichor.model.KubeGreenNamespace
 import name.levis.ichor.model.KubeJobRun
 import name.levis.ichor.ui.apps.AppIconTile
 import name.levis.ichor.ui.components.StatusPill
@@ -66,6 +67,8 @@ import name.levis.ichor.util.timeAgo
 @Composable
 internal fun CronJobCard(
     cronJob: KubeCronJob,
+    /** What kube-green has done to the namespace, when the scope is one; null otherwise. */
+    kubeGreen: KubeGreenNamespace?,
     showNamespace: Boolean,
     expanded: Boolean,
     triggering: Boolean,
@@ -87,6 +90,7 @@ internal fun CronJobCard(
                 Text(cronJob.description, style = MaterialTheme.typography.bodySmall, color = muted)
             }
             CronJobTiming(cronJob)
+            KubeGreenCronJobNote(kubeGreen, cronJob.suspended)
             val access = rememberKubeActionAccess(cronJob.namespace)
             val suspendDenial = access?.denial(KubeAction.SUSPEND_CRON_JOB)
             val runDenial = access?.denial(KubeAction.TRIGGER_CRON_JOB)

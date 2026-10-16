@@ -45,4 +45,44 @@ class KubeGreenTest {
         // 4 schedules, the two warnings need a look.
         assertEquals(ServiceSummary(total = 4, attention = 2, health = ServiceHealth.WARNING), services.summary(DataServiceKind.KUBE_GREEN))
     }
+
+    // What a workload or CronJob row reads: one namespace, asleep.
+    private val namespace = TalosJson.decodeFromString(
+        KubeGreenNamespace.serializer(),
+        """
+        {"installed":true,"asleep":true,
+         "sleepInfos":[
+          {"namespace":"staging","name":"nights","suspendDeployments":true,"suspendStatefulSets":true,"suspendCronJobs":true,
+           "nextSleepAt":2000,"nextWakeUpAt":3000,"asleep":true},
+          {"namespace":"staging","name":"weekend","suspendCronJobs":true,"nextSleepAt":9000,"asleep":false}],
+         "sleepsDeployments":true,"sleepsStatefulSets":true,"sleepsCronJobs":true,
+         "nextWakeUpAt":3000,"nextSleepAt":2000,"filtered":false}
+        """.trimIndent(),
+    )
+
+    @Test
+    fun namespaceSaysWhatItSleeps() {
+        assertTrue(namespace.installed)
+        assertTrue(namespace.asleep)
+        assertEquals("staging/nights", namespace.asleepInfo?.name?.let { "staging/$it" })
+        assertTrue(namespace.sleeps("Deployment"))
+        assertTrue(namespace.sleeps("StatefulSet"))
+        assertTrue(namespace.sleeps("CronJob"))
+        // A kind kube-green never suspends.
+        assertEquals(false, namespace.sleeps("DaemonSet"))
+    }
+
+    @Test
+    fun warnsBeforeAChangeItWouldUndo() {
+        // Asleep now: warn whatever the clock says.
+        assertEquals(KubeGreenWarn.ASLEEP, namespace.warnBeforeChange(now = 1))
+        // Awake but sleeping within a day.
+        val soon = namespace.copy(asleep = false, nextSleepAt = 5_000)
+        assertEquals(KubeGreenWarn.SLEEPS_SOON, soon.warnBeforeChange(now = 1))
+        // Awake and sleeping only much later: nothing to say.
+        val far = namespace.copy(asleep = false, nextSleepAt = 500_000_000)
+        assertEquals(null, far.warnBeforeChange(now = 1))
+        // No schedule at all.
+        assertEquals(null, KubeGreenNamespace(installed = true).warnBeforeChange(now = 1))
+    }
 }

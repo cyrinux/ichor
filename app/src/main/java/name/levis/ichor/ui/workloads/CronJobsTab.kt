@@ -141,6 +141,8 @@ fun CronJobsTab(
     val triggering by vm.triggering.collectAsStateWithLifecycle()
     val suspending by vm.suspending.collectAsStateWithLifecycle()
     LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setScope(control.scope) }
+    // kube-green may have the scope's namespace asleep: a CronJob it suspends says so.
+    val kubeGreen = rememberKubeGreenNamespace(control.scope.namespace.orEmpty())
     var confirm by remember { mutableStateOf<KubeCronJob?>(null) }
     var confirmSuspend by remember { mutableStateOf<KubeCronJob?>(null) }
     var expanded by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -159,7 +161,11 @@ fun CronJobsTab(
     confirmSuspend?.let { c ->
         val suspend = !c.suspended
         val title = stringResource(if (suspend) R.string.cronjobs_suspend_title else R.string.cronjobs_resume_title, c.displayName)
-        val text = stringResource(if (suspend) R.string.cronjobs_suspend_text else R.string.cronjobs_resume_text, c.namespace)
+        // kube-green re-suspends a resumed CronJob at the next sleep: warn before the tap.
+        val text = listOfNotNull(
+            stringResource(if (suspend) R.string.cronjobs_suspend_text else R.string.cronjobs_resume_text, c.namespace),
+            kubeGreenChangeWarning(kubeGreen),
+        ).joinToString("\n\n")
         val confirmLabel = stringResource(if (suspend) R.string.cronjobs_suspend else R.string.cronjobs_resume)
         // Argo CD self-heal would put spec.suspend back: offer to freeze its app first.
         val healer = remember(c.key) { vm.argoHealer(c) }
@@ -226,6 +232,7 @@ fun CronJobsTab(
                     items(rows, key = { it.key }) { c ->
                         CronJobCard(
                             cronJob = c,
+                            kubeGreen = kubeGreen,
                             showNamespace = selected == null,
                             expanded = c.key in expanded,
                             triggering = c.key in triggering,

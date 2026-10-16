@@ -2286,6 +2286,13 @@
         <item quantity="one">%1$d planning de veille</item>
         <item quantity="other">%1$d plannings de veille</item>
     </plurals>
+    <string name="kubegreen_resumes">reprend %1$s</string>
+    <string name="kubegreen_asleep_note">Endormi : kube-green a mis ce namespace en veille (SleepInfo %1$s), %2$s</string>
+    <string name="kubegreen_asleep_note_maybe">Endormi : kube-green a peut-être mis ce namespace en veille (SleepInfo %1$s), %2$s</string>
+    <string name="kubegreen_cronjob_suspended">Suspendu par kube-green, %1$s</string>
+    <string name="kubegreen_warn_asleep">kube-green a mis ce namespace en veille : cette modification sera annulée au prochain réveil, %1$s</string>
+    <string name="kubegreen_warn_asleep_until">kube-green a mis ce namespace en veille : cette modification sera annulée au réveil du namespace, aucun réveil n\'étant planifié</string>
+    <string name="kubegreen_warn_soon">kube-green endort ce namespace à %1$s : une modification faite maintenant sera annulée au prochain endormissement</string>
     <string name="ceph_empty">Aucun cluster Ceph.</string>
     <string name="ceph_external">externe</string>
     <string name="ceph_osds">OSD %1$d/%2$d actifs</string>

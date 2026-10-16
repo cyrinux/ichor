@@ -2286,6 +2286,13 @@
         <item quantity="one">%1$d programación de suspensión</item>
         <item quantity="other">%1$d programaciones de suspensión</item>
     </plurals>
+    <string name="kubegreen_resumes">se reanuda %1$s</string>
+    <string name="kubegreen_asleep_note">Dormido: kube-green ha puesto este namespace a dormir (SleepInfo %1$s), %2$s</string>
+    <string name="kubegreen_asleep_note_maybe">Dormido: puede que kube-green haya puesto este namespace a dormir (SleepInfo %1$s), %2$s</string>
+    <string name="kubegreen_cronjob_suspended">Suspendido por kube-green, %1$s</string>
+    <string name="kubegreen_warn_asleep">kube-green ha puesto este namespace a dormir: este cambio se deshará en el próximo despertar, %1$s</string>
+    <string name="kubegreen_warn_asleep_until">kube-green ha puesto este namespace a dormir: este cambio se deshará cuando despierte el namespace, sin ningún despertar programado</string>
+    <string name="kubegreen_warn_soon">kube-green duerme este namespace a las %1$s: un cambio hecho ahora se deshará en el próximo sueño</string>
     <string name="ceph_empty">Sin clústeres de Ceph.</string>
     <string name="ceph_external">externo</string>
     <string name="ceph_osds">OSD %1$d/%2$d activos</string>

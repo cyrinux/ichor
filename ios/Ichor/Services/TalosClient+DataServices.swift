@@ -57,6 +57,15 @@ extension TalosClient {
             IchorgoKubeCreateVolumeSnapshot(config, context, kubeServer, namespace, pvc, error)
         }
     }
+    /// What kube-green has done to one namespace, read when a workload or CronJob row is opened so
+    /// it can say the namespace is asleep before a scale, a restart or a resume (os:admin). A
+    /// cluster without kube-green, or a refused list, answers installed:false rather than failing.
+    func kubeGreenNamespace(_ namespace: String) async throws -> KubeGreenNamespace {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeGreenNamespace(config, context, kubeServer, namespace, $0)
+        }
+    }
+
     /// Health of Longhorn, Garage and CloudNativePG (os:admin). hints: their catalog ids seen in the
     /// inventory (see dataServiceHints); "" checks everything.
     func dataServices(hints: String) async throws -> DataServices {

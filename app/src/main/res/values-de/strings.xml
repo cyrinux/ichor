@@ -2278,6 +2278,13 @@
         <item quantity="one">%1$d Schlafplan</item>
         <item quantity="other">%1$d Schlafpläne</item>
     </plurals>
+    <string name="kubegreen_resumes">läuft %1$s wieder an</string>
+    <string name="kubegreen_asleep_note">Schlafend: kube-green hat diesen Namespace schlafen gelegt (SleepInfo %1$s), %2$s</string>
+    <string name="kubegreen_asleep_note_maybe">Schlafend: kube-green hat diesen Namespace möglicherweise schlafen gelegt (SleepInfo %1$s), %2$s</string>
+    <string name="kubegreen_cronjob_suspended">Von kube-green angehalten, %1$s</string>
+    <string name="kubegreen_warn_asleep">kube-green hat diesen Namespace schlafen gelegt: diese Änderung wird beim nächsten Aufwachen rückgängig gemacht, %1$s</string>
+    <string name="kubegreen_warn_asleep_until">kube-green hat diesen Namespace schlafen gelegt: diese Änderung wird rückgängig gemacht, wenn der Namespace aufwacht, ohne geplantes Aufwachen</string>
+    <string name="kubegreen_warn_soon">kube-green legt diesen Namespace um %1$s schlafen: eine jetzt gemachte Änderung wird beim nächsten Schlaf rückgängig gemacht</string>
     <string name="ceph_empty">Keine Ceph-Cluster.</string>
     <string name="ceph_external">extern</string>
     <string name="ceph_osds">OSDs %1$d/%2$d aktiv</string>

@@ -25,6 +25,9 @@ struct WorkloadActionsSheet: View {
     /// Argo CD self-heal would put the count back: asked first, offering to freeze the app.
     @State private var askArgo = false
     @State private var freezeFirst = false
+    /// kube-green has this namespace asleep (or sleeps it soon): said in the sheet, and warned
+    /// again before a scale it would undo.
+    @State private var kubeGreen: KubeGreenNamespace?
 
     init(workload: KubeWorkload, changed: @escaping () async -> Void) {
         self.workload = workload
@@ -41,6 +44,9 @@ struct WorkloadActionsSheet: View {
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                     Text("\(workload.ready)/\(workload.desired) ready").monospacedDigit()
+                    if let kubeGreen {
+                        KubeGreenAsleepLabel(status: kubeGreen, kind: workload.kind)
+                    }
                     if let selection = workload.podSelection {
                         NavigationLink {
                             WorkloadPodsView(workload: workload, selection: selection)
@@ -67,7 +73,10 @@ struct WorkloadActionsSheet: View {
                     ShareLinkButton(target: .workload(kind: workload.kind, namespace: workload.namespace, name: workload.name))
                 }
             }
-            .task { if workload.hasHistory { await loadRevisions() } }
+            .task {
+                if workload.hasHistory { await loadRevisions() }
+                await loadKubeGreen()
+            }
             .confirmationDialog(String(localized: "Argo CD will revert this"), isPresented: $askArgo, titleVisibility: .visible,
                                 presenting: argoOwner) { owner in
                 Button(String(localized: "Freeze \(owner.app.name) 1 h, then scale")) { freezeFirst = true; confirmAfterArgo() }
@@ -81,12 +90,16 @@ struct WorkloadActionsSheet: View {
                 Button("Scale") { Task { await scale() } }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("From \(current) to \(replicas) replicas in \(workload.namespace), like kubectl scale.")
+                Text(verbatim: [String(localized: "From \(current) to \(replicas) replicas in \(workload.namespace), like kubectl scale."), kubeGreenWarning]
+                    .compactMap { $0 }
+                    .joined(separator: "\n\n"))
             }
             .sheet(isPresented: $confirmScaleToZero) {
                 HostnameConfirmationSheet(
                     title: String(localized: "Scale \(workload.name) to 0?"),
-                    message: String(localized: "Every pod of \(workload.name) stops: what it serves is down until it is scaled up again."),
+                    message: [String(localized: "Every pod of \(workload.name) stops: what it serves is down until it is scaled up again."), kubeGreenWarning]
+                        .compactMap { $0 }
+                        .joined(separator: "\n\n"),
                     hostname: workload.name,
                     actionTitle: String(localized: "Scale to 0")
                 ) {
@@ -152,8 +165,13 @@ struct WorkloadActionsSheet: View {
         } header: {
             Text("Scale")
         } footer: {
-            if workload.autoscaler == nil {
-                Text("A HorizontalPodAutoscaler that manages it sets its own count again.")
+            VStack(alignment: .leading, spacing: 4) {
+                if replicas != current, let kubeGreenWarning {
+                    Text(verbatim: kubeGreenWarning).foregroundStyle(Color.statusWarn)
+                }
+                if workload.autoscaler == nil {
+                    Text("A HorizontalPodAutoscaler that manages it sets its own count again.")
+                }
             }
         }
     }
@@ -181,6 +199,14 @@ struct WorkloadActionsSheet: View {
         guard let client = model.client else { return }
         revisions = revisions.refreshed(with: await .from { try await client.deploymentRevisions(workload) })
     }
+
+    private func loadKubeGreen() async {
+        guard let client = model.client else { return }
+        kubeGreen = await KubeGreenStore.shared.load(namespace: workload.namespace, key: model.kubeGreenKey, with: client)
+    }
+
+    /// The warning to show before a scale kube-green would undo; nil when it will not touch it.
+    private var kubeGreenWarning: String? { kubeGreenChangeWarning(kubeGreen) }
 
     /// The Argo CD app that would revert a scale (self-heal on, not frozen) with its project, from
     /// the Argo CD status already loaded; nil when none or not loaded.

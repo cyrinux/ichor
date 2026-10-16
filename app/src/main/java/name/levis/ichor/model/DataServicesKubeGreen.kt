@@ -47,6 +47,56 @@ data class KubeGreenSleepInfo(
     val reasonList: List<KubeGreenReason> get() = reasons.mapNotNull(KubeGreenReason::from)
 }
 
+/**
+ * What kube-green has done to one namespace, read when a workload or CronJob row is opened so
+ * it can say the namespace is asleep before a scale, a restart or a resume. Mirrors the JSON of
+ * `go/ichorgo/kube_kubegreen_namespace.go`; never cached on disk.
+ */
+@Serializable
+data class KubeGreenNamespace(
+    /** False when kube-green is not installed, or the list was refused: nothing to say. */
+    val installed: Boolean = false,
+    val asleep: Boolean = false,
+    val sleepInfos: List<KubeGreenSleepInfo> = emptyList(),
+    val sleepsDeployments: Boolean = false,
+    val sleepsStatefulSets: Boolean = false,
+    val sleepsCronJobs: Boolean = false,
+    /** Unix ms, 0 when none. */
+    val nextWakeUpAt: Long = 0,
+    /** Unix ms, 0 when none. */
+    val nextSleepAt: Long = 0,
+    /** A SleepInfo has excludeRef or includeRef: which objects it touches cannot be told, say "may be". */
+    val filtered: Boolean = false,
+) {
+    /** The SleepInfo that has the namespace asleep now; null when none does. */
+    val asleepInfo: KubeGreenSleepInfo? get() = sleepInfos.firstOrNull { it.asleep }
+
+    /** Whether kube-green sleeps the [kind] this row is ("Deployment", "StatefulSet", "CronJob"). */
+    fun sleeps(kind: String): Boolean = when (kind) {
+        "Deployment" -> sleepsDeployments
+        "StatefulSet" -> sleepsStatefulSets
+        "CronJob" -> sleepsCronJobs
+        else -> false
+    }
+
+    /**
+     * Whether a change made now is undone by kube-green: [KubeGreenWarn.ASLEEP] while it sleeps
+     * the namespace, [KubeGreenWarn.SLEEPS_SOON] when it sleeps it within a day, else null (it
+     * will not touch the change, or only much later).
+     */
+    fun warnBeforeChange(now: Long = System.currentTimeMillis()): KubeGreenWarn? = when {
+        asleep -> KubeGreenWarn.ASLEEP
+        nextSleepAt in 1L..(now + KUBE_GREEN_SOON_MILLIS) -> KubeGreenWarn.SLEEPS_SOON
+        else -> null
+    }
+}
+
+/** Why kube-green would undo a change made by hand: the namespace is asleep, or sleeps soon. */
+enum class KubeGreenWarn { ASLEEP, SLEEPS_SOON }
+
+/** A day, the window in which the Go core also warns: see `kubeGreenWarningText`. */
+private const val KUBE_GREEN_SOON_MILLIS = 24 * 60 * 60 * 1000L
+
 /** Why a SleepInfo is not ok, as the Go core names it. */
 enum class KubeGreenReason(val wire: String) {
     NO_WAKE_UP("noWakeUp"),

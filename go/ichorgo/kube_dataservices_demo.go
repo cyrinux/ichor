@@ -294,6 +294,30 @@ func demoKubeGreen(now time.Time) *kubeGreenStatus {
 	return out
 }
 
+// demoKubeGreenNamespace is the demo cluster's kube-green state for one namespace: staging is
+// asleep whenever the demo runs (a sleep at 00:00, waking at 23:59 Rome), the others are not, so
+// the asleep line and the CronJob warning always have something to show.
+func demoKubeGreenNamespace(namespace string, now time.Time) kubeGreenNamespace {
+	if namespace != "staging" {
+		return kubeGreenNamespace{Installed: true, SleepInfos: []kubeGreenSleepInfo{}}
+	}
+
+	var o sleepInfoObject
+	o.Metadata.Namespace, o.Metadata.Name = "staging", "nights"
+	o.Spec.Weekdays, o.Spec.SleepTime, o.Spec.WakeUpTime, o.Spec.TimeZone = "*", "00:00", "23:59", "Europe/Rome"
+	o.Spec.SuspendCronJobs = true
+	o.Status.Operation = "SLEEP"
+
+	loc, _ := time.LoadLocation("Europe/Rome")
+	if sleep, err := kubeGreenCron("00:00", "*"); err == nil {
+		o.Status.LastScheduleTime = kubeGreenPrevRun(sleep, true, now.In(loc)).Format(time.RFC3339)
+	} else {
+		o.Status.LastScheduleTime = now.In(loc).Format(time.RFC3339)
+	}
+
+	return mapKubeGreenNamespace([]sleepInfoObject{o}, now)
+}
+
 // demoCastAI is the demo cluster's CAST AI recommendations: the Workload Autoscaler right-sizing
 // the demo workloads, one it cannot apply and one it is told not to; and its node consolidations.
 func demoCastAI(now time.Time) *castAIStatus {
