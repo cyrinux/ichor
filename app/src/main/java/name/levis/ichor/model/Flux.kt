@@ -60,7 +60,7 @@ data class FluxApp(
     val revision: String = "",
     /** The last revision tried, which differs from [revision] while it fails. */
     val attemptedRevision: String = "",
-    /** "namespace/name". */
+    /** The apps it waits for, "namespace/name", of its own kind. */
     val dependsOn: List<String> = emptyList(),
     /** A release's install and upgrade failures in a row. */
     val failures: Int = 0,
@@ -73,6 +73,14 @@ data class FluxApp(
     val unhealthyPods: List<KubePod> = emptyList(),
     /** When Ready last changed, unix millis. */
     val reconciledAt: Long = 0,
+    /** A HelmRelease's drift detection: warn, enabled, disabled; "" when unset. */
+    val driftMode: String = "",
+    /** The helm-controller found the cluster's objects no longer match the release. */
+    val drifted: Boolean = false,
+    /** What changed, as the helm-controller says it. */
+    val driftMessage: String = "",
+    /** When it found it, unix millis. */
+    val driftAt: Long = 0,
 ) {
     /** Unique: a Kustomization and a HelmRelease may share a namespace and a name. */
     val key: String get() = fluxKey(kind, namespace, name)
@@ -89,6 +97,12 @@ data class FluxApp(
 
     /** Force and reset are a HelmRelease's only. */
     val canForce: Boolean get() = isHelmRelease && !suspended
+
+    /** The helm-controller compares the release with the cluster: its drift is worth a line. */
+    val driftWatched: Boolean get() = driftMode == FLUX_DRIFT_WARN || driftMode == FLUX_DRIFT_ENABLED
+
+    /** Drift found and a forced upgrade allowed: it puts the release back now. */
+    val canCorrectDrift: Boolean get() = drifted && canForce
 
     /** The revision tried last differs from the applied one: an upgrade is failing or under way. */
     val revisionDiffers: Boolean get() = attemptedRevision.isNotEmpty() && attemptedRevision != revision
@@ -209,6 +223,51 @@ enum class FluxAction(val wire: String) {
     FORCE("force"),
     /** HelmRelease only: forgets the failure counts of a release that gave up. */
     RESET("reset"),
+}
+
+/** spec.driftDetection.mode: drift is only reported, or corrected at each reconcile. */
+const val FLUX_DRIFT_WARN = "warn"
+const val FLUX_DRIFT_ENABLED = "enabled"
+
+/** How deep a dependsOn chain is drawn. */
+const val FLUX_DEPENDS_MAX_DEPTH = 6
+
+/** One link of a dependsOn chain: [app] when it is listed (null: missing), [depth] 1 for a direct one. */
+data class FluxDependencyNode(val key: String, val app: FluxApp?, val depth: Int)
+
+/**
+ * What an app waits for, transitively, in tree order (a link, then what that link waits for,
+ * indented by [FluxDependencyNode.depth]), and the apps that wait for it.
+ */
+data class FluxDependencyTree(val upstream: List<FluxDependencyNode>, val dependents: List<FluxApp>) {
+    val isEmpty: Boolean get() = upstream.isEmpty() && dependents.isEmpty()
+}
+
+/**
+ * [app]'s dependsOn chain among the apps of its own kind (a key names no kind), depth-first,
+ * at most [FLUX_DEPENDS_MAX_DEPTH] deep; a link already shown (a cycle, or two paths to it) is
+ * not shown again.
+ */
+fun FluxStatus.dependencyTree(app: FluxApp): FluxDependencyTree {
+    val sameKind = apps.filter { it.kind == app.kind }
+    val byKey = sameKind.associateBy { "${it.namespace}/${it.name}" }
+    val self = "${app.namespace}/${app.name}"
+    val seen = mutableSetOf(self)
+    val upstream = mutableListOf<FluxDependencyNode>()
+
+    fun walk(keys: List<String>, depth: Int) {
+        if (depth > FLUX_DEPENDS_MAX_DEPTH) return
+        for (key in keys) {
+            if (!seen.add(key)) continue
+            val target = byKey[key]
+            upstream += FluxDependencyNode(key, target, depth)
+            target?.let { walk(it.dependsOn, depth + 1) }
+        }
+    }
+
+    walk(app.dependsOn, 1)
+    val dependents = sameKind.filter { self in it.dependsOn }.sortedBy { "${it.namespace}/${it.name}" }
+    return FluxDependencyTree(upstream, dependents)
 }
 
 const val FLUX_KUSTOMIZATION = "Kustomization"

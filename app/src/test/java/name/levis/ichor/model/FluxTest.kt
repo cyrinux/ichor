@@ -148,4 +148,63 @@ class FluxTest {
         assertTrue(Inventory(apps = listOf(InventoryApp(id = FLUX_CATALOG_ID, name = "Flux"))).hasFlux)
         assertFalse(Inventory(apps = listOf(InventoryApp(id = "miniflux", name = "Miniflux"))).hasFlux)
     }
+
+    private fun ks(name: String, vararg deps: String, ready: String = "True") =
+        FluxApp(kind = FLUX_KUSTOMIZATION, namespace = "flux-system", name = name, level = if (ready == "True") "ok" else "warning", ready = ready, dependsOn = deps.toList())
+
+    @Test
+    fun dependencyTreeFollowsTheChainOfTheSameKind() {
+        val status = FluxStatus(
+            apps = listOf(
+                ks("apps", "flux-system/infra-configs", ready = "False"),
+                ks("infra-configs", "flux-system/infra-controllers"),
+                ks("infra-controllers"),
+                ks("monitoring", "flux-system/infra-configs"),
+                // A HelmRelease named like a Kustomization is not a link of its chain.
+                FluxApp(kind = FLUX_HELM_RELEASE, namespace = "flux-system", name = "infra-controllers", dependsOn = listOf("flux-system/infra-configs")),
+            ),
+        )
+        val apps = status.apps.first { it.name == "apps" }
+        val tree = status.dependencyTree(apps)
+        assertEquals(listOf("flux-system/infra-configs" to 1, "flux-system/infra-controllers" to 2), tree.upstream.map { it.key to it.depth })
+        assertTrue(tree.upstream.all { it.app?.kind == FLUX_KUSTOMIZATION })
+        assertTrue(tree.dependents.isEmpty())
+
+        val configs = status.dependencyTree(status.apps.first { it.name == "infra-configs" })
+        assertEquals(listOf("apps", "monitoring"), configs.dependents.map { it.name })
+        assertFalse(configs.isEmpty)
+        assertTrue(status.dependencyTree(ks("alone")).isEmpty)
+    }
+
+    @Test
+    fun dependencyTreeSurvivesCyclesAndMissingLinks() {
+        val status = FluxStatus(apps = listOf(ks("a", "flux-system/b"), ks("b", "flux-system/a", "flux-system/gone")))
+        val tree = status.dependencyTree(status.apps[0])
+        assertEquals(listOf("flux-system/b", "flux-system/gone"), tree.upstream.map { it.key })
+        assertNull(tree.upstream[1].app)
+
+        // A chain deeper than the cap stops there.
+        val chain = (0..9).map { i -> ks("k$i", *if (i < 9) arrayOf("flux-system/k${i + 1}") else emptyArray()) }
+        assertEquals(FLUX_DEPENDS_MAX_DEPTH, FluxStatus(apps = chain).dependencyTree(chain[0]).upstream.size)
+    }
+
+    @Test
+    fun driftOfAHelmRelease() {
+        val drifted = TalosJson.decodeFromString(
+            FluxApp.serializer(),
+            """{"kind":"HelmRelease","namespace":"demo","name":"podinfo","driftMode":"enabled","drifted":true,"driftMessage":"Deployment/demo/podinfo changed","driftAt":5}""",
+        )
+        assertTrue(drifted.driftWatched)
+        assertTrue(drifted.canCorrectDrift)
+        assertFalse(drifted.copy(suspended = true).canCorrectDrift)
+
+        val warn = drifted.copy(driftMode = FLUX_DRIFT_WARN, drifted = false)
+        assertTrue(warn.driftWatched)
+        assertFalse(warn.canCorrectDrift)
+
+        // No driftDetection (older answers too): no line, nothing to correct.
+        val plain = TalosJson.decodeFromString(FluxApp.serializer(), """{"kind":"HelmRelease","name":"redis"}""")
+        assertFalse(plain.driftWatched)
+        assertFalse(plain.copy(driftMode = "disabled").driftWatched)
+    }
 }

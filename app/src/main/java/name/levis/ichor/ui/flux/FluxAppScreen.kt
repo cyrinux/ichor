@@ -42,6 +42,8 @@ import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.FluxApp
 import name.levis.ichor.model.FluxAction
+import name.levis.ichor.model.FluxDependencyTree
+import name.levis.ichor.model.dependencyTree
 import name.levis.ichor.model.FluxResource
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.NodeOverview
@@ -53,6 +55,7 @@ import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.workloads.KubeEventsList
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
 import name.levis.ichor.ui.workloads.RolloutStatusSheet
@@ -75,6 +78,8 @@ fun FluxAppScreen(
     onBack: () -> Unit,
     onNode: ((NodeOverview, Int) -> Unit)? = null,
     onDiff: (() -> Unit)? = null,
+    /** Opens another Kustomization or HelmRelease (a link of the dependsOn tree). */
+    onApp: ((FluxApp) -> Unit)? = null,
     initialReconcile: Boolean = false,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
@@ -113,7 +118,8 @@ fun FluxAppScreen(
                 EmptyText(stringResource(R.string.flux_app_gone, name))
             } else {
                 val overview = remember(data) { talos.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value }
-                AppDetail(app, app.key in busy, vm, overview, onNode, onDiff, initialReconcile)
+                val tree = remember(data, app) { data.dependencyTree(app) }
+                AppDetail(app, tree, app.key in busy, vm, overview, onNode, onDiff, onApp, initialReconcile)
             }
         }
     }
@@ -122,11 +128,13 @@ fun FluxAppScreen(
 @Composable
 private fun AppDetail(
     app: FluxApp,
+    tree: FluxDependencyTree,
     busy: Boolean,
     vm: FluxViewModel,
     overview: ClusterOverview?,
     onNode: ((NodeOverview, Int) -> Unit)?,
     onDiff: (() -> Unit)?,
+    onApp: ((FluxApp) -> Unit)?,
     initialReconcile: Boolean,
 ) {
     var confirm by remember { mutableStateOf<FluxConfirm?>(null) }
@@ -167,9 +175,20 @@ private fun AppDetail(
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item(key = "hero") { FluxAppHero(app) }
         item(key = "actions") {
-            FluxActionButtons(app, busy, onDiff) { action ->
+            FluxActionButtons(
+                app,
+                busy,
+                onDiff,
+                onCorrectDrift = {
+                    confirm = FluxConfirm(FluxAction.FORCE, app.kind, app.namespace, app.name, owner = app.ownerKey, correctDrift = true)
+                },
+            ) { action ->
                 confirm = FluxConfirm(action, app.kind, app.namespace, app.name, owner = app.ownerKey)
             }
+        }
+        // What it waits for comes before its conditions: the link that is not Ready explains them.
+        if (!tree.isEmpty) {
+            item(key = "depends") { FluxDependsOnTree(tree) { other -> onApp?.invoke(other) } }
         }
         if (app.conditions.isNotEmpty()) {
             item(key = "conditions-title") { SectionTitle(stringResource(R.string.flux_conditions)) }
@@ -187,6 +206,8 @@ private fun AppDetail(
         }
         resources(app) { restart = vm.workloadFor(it) }
         history(app)
+        item(key = "events-title") { SectionTitle(stringResource(R.string.kube_events_title)) }
+        item(key = "events") { KubeEventsList(app.namespace, app.kind, app.name) }
     }
 }
 

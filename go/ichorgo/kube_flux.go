@@ -84,15 +84,24 @@ type fluxApp struct {
 	Prune           bool   `json:"prune"`
 	// Revision is what is applied (a Git revision, or the chart version of a release);
 	// AttemptedRevision the last one tried, which differs while it fails.
-	Revision          string          `json:"revision"`
-	AttemptedRevision string          `json:"attemptedRevision"`
-	DependsOn         []string        `json:"dependsOn"` // "namespace/name"
-	Failures          int             `json:"failures"`  // a release's install and upgrade failures in a row
-	Conditions        []fluxCondition `json:"conditions"`
-	Resources         []fluxResource  `json:"resources"` // a Kustomization's inventory
-	History           []fluxHistory   `json:"history"`   // a HelmRelease's releases, newest first
-	UnhealthyPods     []kubePod       `json:"unhealthyPods"`
-	ReconciledAt      int64           `json:"reconciledAt"` // when Ready last changed
+	Revision          string `json:"revision"`
+	AttemptedRevision string `json:"attemptedRevision"`
+	// DependsOn are the apps this one waits for, "namespace/name", of its own kind (a
+	// Kustomization depends on Kustomizations, a HelmRelease on HelmReleases).
+	DependsOn     []string        `json:"dependsOn"`
+	Failures      int             `json:"failures"` // a release's install and upgrade failures in a row
+	Conditions    []fluxCondition `json:"conditions"`
+	Resources     []fluxResource  `json:"resources"` // a Kustomization's inventory
+	History       []fluxHistory   `json:"history"`   // a HelmRelease's releases, newest first
+	UnhealthyPods []kubePod       `json:"unhealthyPods"`
+	ReconciledAt  int64           `json:"reconciledAt"` // when Ready last changed
+	// A HelmRelease's drift detection (spec.driftDetection.mode: warn|enabled|disabled, ""
+	// when unset) and what the helm-controller last found (its Drifted condition): the
+	// cluster's objects no longer match the release. A warning, not a health change.
+	DriftMode    string `json:"driftMode,omitempty"`
+	Drifted      bool   `json:"drifted,omitempty"`
+	DriftMessage string `json:"driftMessage,omitempty"`
+	DriftAt      int64  `json:"driftAt,omitempty"`
 
 	namespaces []string // where its workloads run, to find its unhealthy pods
 }

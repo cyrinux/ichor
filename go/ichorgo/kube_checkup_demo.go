@@ -132,7 +132,7 @@ func demoCheckupNode(name, role string, cores, memory, cpuRequests, memoryReques
 }
 
 // demoEvents are the demo cluster's events for an object: the crash-looping worker tells
-// its story, anything else is quiet.
+// its story, the drifted podinfo release its drift, anything else is quiet.
 func demoEvents(namespace, kind, name string, now time.Time) kubeEventList {
 	ago := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
 
@@ -143,6 +143,8 @@ func demoEvents(namespace, kind, name string, now time.Time) kubeEventList {
 		{Type: "Normal", Reason: "Pulled", Message: `Container image "busybox:1.37" already present on machine`, Kind: "Pod", Namespace: "demo", Name: pod, Count: 15, First: ago(72 * time.Hour), Last: ago(6 * time.Minute), Source: "kubelet"},
 		{Type: "Normal", Reason: "Created", Message: "Created container: worker", Kind: "Pod", Namespace: "demo", Name: pod, Count: 15, First: ago(72 * time.Hour), Last: ago(6 * time.Minute), Source: "kubelet"},
 		{Type: "Normal", Reason: "ScalingReplicaSet", Message: "Scaled up replica set worker-6f4b8 from 0 to 2", Kind: "Deployment", Namespace: "demo", Name: "worker", Count: 1, First: ago(72 * time.Hour), Last: ago(72 * time.Hour), Source: "deployment-controller"},
+		// The drifted HelmRelease of demoFlux.
+		{Type: "Warning", Reason: "DriftDetected", Message: demoFluxDriftMessage, Kind: "HelmRelease", Namespace: "demo", Name: "podinfo", Count: 1, First: ago(18 * time.Minute), Last: ago(18 * time.Minute), Source: "helm-controller"},
 	}
 
 	events := []kubeEvent{}

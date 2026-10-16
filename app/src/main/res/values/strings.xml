@@ -3267,6 +3267,13 @@
     <string name="flux_interval">Interval</string>
     <string name="flux_applied_by">Applied by</string>
     <string name="flux_depends_on">Depends on</string>
+    <string name="flux_drift_none">Drift: none</string>
+    <string name="flux_drift_detected">Drift detected · %1$s</string>
+    <string name="flux_drift_warn_hint">Flux only reports drift for this release; correcting it runs a forced upgrade.</string>
+    <string name="flux_action_correct_drift">Correct drift</string>
+    <string name="flux_action_correct_drift_confirm">The helm-controller found objects that no longer match the release. A forced upgrade applies the release again now and puts them back.</string>
+    <string name="flux_needed_by">Needed by (%1$s)</string>
+    <string name="flux_depends_on_missing">Not found in this cluster</string>
     <string name="flux_failures">Failures</string>
     <string name="flux_conditions">Conditions</string>
     <string name="flux_inventory">Inventory (%1$d)</string>

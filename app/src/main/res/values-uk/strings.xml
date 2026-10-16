@@ -3467,6 +3467,13 @@
     <string name="flux_interval">Інтервал</string>
     <string name="flux_applied_by">Застосовує</string>
     <string name="flux_depends_on">Залежить від</string>
+    <string name="flux_drift_none">Дрейф: немає</string>
+    <string name="flux_drift_detected">Виявлено дрейф · %1$s</string>
+    <string name="flux_drift_warn_hint">Flux лише повідомляє про дрейф цього релізу; виправлення запускає примусове оновлення.</string>
+    <string name="flux_action_correct_drift">Виправити дрейф</string>
+    <string name="flux_action_correct_drift_confirm">helm-controller знайшов об\'єкти, які більше не відповідають релізу. Примусове оновлення знову застосовує реліз зараз і повертає їх.</string>
+    <string name="flux_needed_by">Потрібен для (%1$s)</string>
+    <string name="flux_depends_on_missing">Не знайдено в цьому кластері</string>
     <string name="flux_failures">Збої</string>
     <string name="flux_conditions">Умови</string>
     <string name="flux_inventory">Інвентар (%1$d)</string>

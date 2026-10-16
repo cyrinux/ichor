@@ -3267,6 +3267,13 @@
     <string name="flux_interval">Intervalo</string>
     <string name="flux_applied_by">Aplicada por</string>
     <string name="flux_depends_on">Depende de</string>
+    <string name="flux_drift_none">Deriva: ninguna</string>
+    <string name="flux_drift_detected">Deriva detectada · %1$s</string>
+    <string name="flux_drift_warn_hint">Flux solo informa de la deriva de esta release; corregirla ejecuta una actualización forzada.</string>
+    <string name="flux_action_correct_drift">Corregir la deriva</string>
+    <string name="flux_action_correct_drift_confirm">El helm-controller encontró objetos que ya no coinciden con la release. Una actualización forzada vuelve a aplicar la release ahora y los restaura.</string>
+    <string name="flux_needed_by">Requerido por (%1$s)</string>
+    <string name="flux_depends_on_missing">No encontrado en este clúster</string>
     <string name="flux_failures">Fallos</string>
     <string name="flux_conditions">Condiciones</string>
     <string name="flux_inventory">Inventario (%1$d)</string>

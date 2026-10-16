@@ -75,7 +75,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   readiness, applied and attempted revision, source, what a Kustomization applied and a
   release's Helm history, and their Git, OCI and Helm sources; reconcile (with its source
   first if wanted), suspend or resume any of them, and force or reset a HelmRelease that gave up.
-  Like Argo CD, Ichor writes the annotations and `spec.suspend` the `flux` CLI does, with the
+  The detail shows a HelmRelease's drift as Flux reports it (with **Correct drift**), the
+  dependsOn chain as a tree with what waits on it, and the object's events. Like Argo CD, Ichor writes the annotations and `spec.suspend` the `flux` CLI does, with the
   admin kubeconfig: nothing to install in the cluster.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome. Optionally
