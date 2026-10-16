@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Upgrade
 import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material.icons.outlined.VpnLock
+import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.Webhook
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.runtime.Composable
@@ -52,6 +53,7 @@ fun sectionLook(id: String): SectionLook? = when (id) {
     CheckupSectionId.MONITORING -> SectionLook(Icons.Outlined.MonitorHeart, R.string.checkup_section_monitoring, R.string.checkup_section_monitoring_hint)
     CheckupSectionId.CROSSPLANE -> SectionLook(Icons.Outlined.Cloud, R.string.checkup_section_crossplane, R.string.checkup_section_crossplane_hint)
     CheckupSectionId.TAILSCALE -> SectionLook(Icons.Outlined.VpnLock, R.string.checkup_section_tailscale, R.string.checkup_section_tailscale_hint)
+    CheckupSectionId.CLUSTER_API -> SectionLook(Icons.Outlined.AccountTree, R.string.cluster_lifecycle_title, R.string.checkup_section_clusterapi_hint)
     else -> null
 }
 
@@ -156,6 +158,16 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
         CheckupKind.TAILSCALE_PROXY_GROUP_DOWN ->
             if (f.extra.isEmpty()) stringResource(R.string.checkup_tailscaleProxyGroupDown_plain) else stringResource(R.string.checkup_tailscaleProxyGroupDown, f.extra)
         CheckupKind.TAILSCALE_PROXY_CLASS_NOT_READY -> stringResource(R.string.checkup_tailscaleProxyClassNotReady, f.count.toString())
+        CheckupKind.CAPI_CLUSTER_FAILED -> stringResource(R.string.checkup_capiClusterFailed)
+        CheckupKind.CAPI_CLUSTER_PROVISIONING -> stringResource(R.string.checkup_capiClusterProvisioning, age.ifEmpty { "-" })
+        CheckupKind.CAPI_MACHINE_FAILED -> stringResource(R.string.checkup_capiMachineFailed, f.extra.ifEmpty { "-" })
+        CheckupKind.CAPI_MACHINE_STUCK -> stringResource(R.string.checkup_capiMachineStuck, f.extra.substringAfterLast('/'), age.ifEmpty { "-" })
+        CheckupKind.CAPI_WORKERS_SHORT ->
+            stringResource(R.string.checkup_capiWorkersShort, f.value.roundToInt().toString(), f.limit.roundToInt().toString())
+        CheckupKind.SIDERO_SERVER_OFF -> stringResource(R.string.checkup_sideroServerOff)
+        CheckupKind.SIDERO_SERVER_UNACCEPTED ->
+            if (f.name.isEmpty()) stringResource(R.string.checkup_sideroServerUnaccepted_more, f.count.toString())
+            else stringResource(R.string.checkup_sideroServerUnaccepted)
         else -> f.kind
     }
 }
@@ -219,6 +231,13 @@ fun checkupFix(kind: String): Int = when (kind) {
     CheckupKind.TAILSCALE_CONNECTOR_NOT_READY -> R.string.checkup_tailscaleConnectorNotReady_fix
     CheckupKind.TAILSCALE_PROXY_GROUP_DOWN -> R.string.checkup_tailscaleProxyGroupDown_fix
     CheckupKind.TAILSCALE_PROXY_CLASS_NOT_READY -> R.string.checkup_tailscaleProxyClassNotReady_fix
+    CheckupKind.CAPI_CLUSTER_FAILED -> R.string.checkup_capiClusterFailed_fix
+    CheckupKind.CAPI_CLUSTER_PROVISIONING -> R.string.checkup_capiClusterProvisioning_fix
+    CheckupKind.CAPI_MACHINE_FAILED -> R.string.checkup_capiMachineFailed_fix
+    CheckupKind.CAPI_MACHINE_STUCK -> R.string.checkup_capiMachineStuck_fix
+    CheckupKind.CAPI_WORKERS_SHORT -> R.string.checkup_capiWorkersShort_fix
+    CheckupKind.SIDERO_SERVER_OFF -> R.string.checkup_sideroServerOff_fix
+    CheckupKind.SIDERO_SERVER_UNACCEPTED -> R.string.checkup_sideroServerUnaccepted_fix
     else -> 0
 }
 
@@ -233,6 +252,7 @@ private val REASON_KINDS = setOf(
     CheckupKind.POLICY_NOT_READY, CheckupKind.CROSSPLANE_SYNC_FAILED, CheckupKind.CROSSPLANE_PROVIDER_UNHEALTHY,
     CheckupKind.CROSSPLANE_NOT_READY, CheckupKind.CROSSPLANE_DEFINITION_NOT_ESTABLISHED,
     CheckupKind.TAILSCALE_CONNECTOR_NOT_READY, CheckupKind.TAILSCALE_PROXY_GROUP_DOWN, CheckupKind.TAILSCALE_PROXY_CLASS_NOT_READY,
+    CheckupKind.CAPI_CLUSTER_FAILED, CheckupKind.CAPI_CLUSTER_PROVISIONING, CheckupKind.CAPI_MACHINE_FAILED, CheckupKind.CAPI_MACHINE_STUCK,
 )
 
 /** Kubernetes' own words about the finding, "" when it has none. */

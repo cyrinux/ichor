@@ -36,6 +36,7 @@ extension CheckupSectionID {
         case .monitoring: String(localized: "Monitoring")
         case .crossplane: CheckupText.checkupSectionCrossplane
         case .tailscale: CheckupText.checkupSectionTailscale
+        case .clusterapi: CheckupText.checkupSectionClusterAPI
         }
     }
 
@@ -58,6 +59,7 @@ extension CheckupSectionID {
         case .monitoring: PromMonitoringText.checkupSectionMonitoringHint
         case .crossplane: CheckupText.checkupSectionCrossplaneHint
         case .tailscale: CheckupText.checkupSectionTailscaleHint
+        case .clusterapi: CheckupText.checkupSectionClusterAPIHint
         }
     }
 
@@ -79,6 +81,7 @@ extension CheckupSectionID {
         case .monitoring: "waveform.path.ecg"
         case .crossplane: "cloud"
         case .tailscale: "network.badge.shield.half.filled"
+        case .clusterapi: "server.rack"
         }
     }
 }
@@ -184,6 +187,16 @@ extension CheckupFinding {
         case .tailscaleProxyGroupDown:
             return f.extra.isEmpty ? CheckupText.checkupTailscaleProxyGroupDownPlain : CheckupText.checkupTailscaleProxyGroupDown(f.extra)
         case .tailscaleProxyClassNotReady: return CheckupText.checkupTailscaleProxyClassNotReady("\(f.count)")
+        case .capiClusterFailed: return CheckupText.checkupCapiClusterFailed
+        case .capiClusterProvisioning: return CheckupText.checkupCapiClusterProvisioning(age.isEmpty ? "-" : age)
+        case .capiMachineFailed: return CheckupText.checkupCapiMachineFailed(f.extra.isEmpty ? "-" : f.extra)
+        case .capiMachineStuck:
+            let phase = f.extra.split(separator: "/").last.map(String.init) ?? f.extra
+            return CheckupText.checkupCapiMachineStuck(phase, age.isEmpty ? "-" : age)
+        case .capiWorkersShort: return CheckupText.checkupCapiWorkersShort(String(Int(f.value.rounded())), String(Int(f.limit.rounded())))
+        case .sideroServerOff: return CheckupText.checkupSideroServerOff
+        case .sideroServerUnaccepted:
+            return f.name.isEmpty ? CheckupText.checkupSideroServerUnacceptedMore("\(f.count)") : CheckupText.checkupSideroServerUnaccepted
         }
     }
 
@@ -248,6 +261,13 @@ extension CheckupFinding {
         case .tailscaleConnectorNotReady: return CheckupText.checkupTailscaleConnectorNotReadyFix
         case .tailscaleProxyGroupDown: return CheckupText.checkupTailscaleProxyGroupDownFix
         case .tailscaleProxyClassNotReady: return CheckupText.checkupTailscaleProxyClassNotReadyFix
+        case .capiClusterFailed: return CheckupText.checkupCapiClusterFailedFix
+        case .capiClusterProvisioning: return CheckupText.checkupCapiClusterProvisioningFix
+        case .capiMachineFailed: return CheckupText.checkupCapiMachineFailedFix
+        case .capiMachineStuck: return CheckupText.checkupCapiMachineStuckFix
+        case .capiWorkersShort: return CheckupText.checkupCapiWorkersShortFix
+        case .sideroServerOff: return CheckupText.checkupSideroServerOffFix
+        case .sideroServerUnaccepted: return CheckupText.checkupSideroServerUnacceptedFix
         }
     }
 }

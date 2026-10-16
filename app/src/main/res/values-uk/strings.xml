@@ -3909,6 +3909,23 @@
     <string name="checkup_tailscaleConnectorNotReady">Конектор не готовий (%1$s)</string>
     <string name="checkup_tailscaleConnectorNotReady_plain">Конектор не готовий</string>
     <string name="checkup_tailscaleProxyClassMissing">Вказує ProxyClass, якого не існує</string>
+    <string name="checkup_section_clusterapi_hint">Кластери, машини й bare-metal сервери, що застрягли, збійні чи вимкнені</string>
+    <string name="checkup_open_cluster_lifecycle">Відкрити життєвий цикл кластерів</string>
+    <string name="checkup_capiClusterFailed">Кластер збійний</string>
+    <string name="checkup_capiClusterProvisioning">Не підготовлено за %1$s</string>
+    <string name="checkup_capiMachineFailed">Машина %1$s збійна</string>
+    <string name="checkup_capiMachineStuck">Застрягла в %1$s вже %2$s</string>
+    <string name="checkup_capiWorkersShort">Доступно %1$s з %2$s робочих вузлів</string>
+    <string name="checkup_sideroServerOff">Використовується, але вимкнений</string>
+    <string name="checkup_sideroServerUnaccepted">Очікує прийняття</string>
+    <string name="checkup_sideroServerUnaccepted_more">Ще %1$s серверів очікують прийняття</string>
+    <string name="checkup_capiClusterFailed_fix">Прочитайте збій, потім Machines та інфраструктуру під ним: clusterctl describe cluster &lt;name> -n &lt;namespace>.</string>
+    <string name="checkup_capiClusterProvisioning_fix">Щось під ним так і не стало готовим: clusterctl describe cluster &lt;name> -n &lt;namespace> показує, яка частина чекає (інфраструктура, площина керування чи Machine).</string>
+    <string name="checkup_capiMachineFailed_fix">Її інфраструктуру не вдалося підготувати. Прочитайте kubectl describe machine -n &lt;namespace> &lt;name>, потім видаліть її, щоб MachineSet або площина керування створили нову.</string>
+    <string name="checkup_capiMachineStuck_fix">Її інфраструктура чи bootstrap так і не завершилися (немає вільного сервера, PXE не відповів, немає bootstrap Secret): kubectl describe machine -n &lt;namespace> &lt;name>.</string>
+    <string name="checkup_capiWorkersShort_fix">Деякі її Machines недоступні: kubectl get machines -n &lt;namespace> -l cluster.x-k8s.io/deployment-name=&lt;name>, потім вільні для них сервери.</string>
+    <string name="checkup_sideroServerOff_fix">Вузол робочого кластера не працює. Увімкніть його через BMC або перевірте облікові дані BMC, які використовує Sidero: kubectl describe server &lt;name>.</string>
+    <string name="checkup_sideroServerUnaccepted_fix">Sidero не використовує його, доки його не прийнято: kubectl patch server &lt;name> --type merge -p \'{\"spec\":{\"accepted\":true}}\'.</string>
     <string name="checkup_tailscaleProxyGroupDown">Група проксі %1$s не готова</string>
     <string name="checkup_tailscaleProxyGroupDown_plain">Група проксі не готова</string>
     <string name="checkup_tailscaleProxyClassNotReady">ProxyClass не готовий, використовується %1$s</string>

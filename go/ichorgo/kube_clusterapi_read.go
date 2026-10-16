@@ -183,9 +183,16 @@ func readClusterAPI(ctx context.Context, k *kubeClient, now time.Time) (capiRepo
 		return capiReport{}, err
 	}
 
+	return readClusterAPIWithin(ctx, k, groups, now), nil
+}
+
+// readClusterAPIWithin reads Cluster API and Sidero Metal through the API groups already read
+// (the checkup's): not installed when neither is served. A list that fails is the report's
+// Error.
+func readClusterAPIWithin(ctx context.Context, k *kubeClient, groups map[string]string, now time.Time) capiReport {
 	raw := capiRaw{version: groups[groupClusterAPI], sidero: groups[groupSidero] != ""}
 	if raw.version == "" && !raw.sidero {
-		return emptyClusterAPI(), nil
+		return emptyClusterAPI()
 	}
 
 	var wg sync.WaitGroup
@@ -245,7 +252,7 @@ func readClusterAPI(ctx context.Context, k *kubeClient, now time.Time) (capiRepo
 
 	wg.Wait()
 
-	return buildClusterAPI(raw, now), nil
+	return buildClusterAPI(raw, now)
 }
 
 func emptyClusterAPI() capiReport {
@@ -315,6 +322,7 @@ func capiClusterRow(c capiClusterObject, controlPlanes map[string]capiTalosContr
 		Conditions:          capiProblemConditions(s.Conditions, true),
 		FailureReason:       cmp.Or(s.FailureReason, failureReason),
 		FailureMessage:      cmp.Or(s.FailureMessage, failureMessage),
+		CreatedAt:           unixMilli(c.Metadata.CreationTimestamp),
 	}
 
 	if ep := c.Spec.ControlPlaneEndpoint; ep.Host != "" {
@@ -444,7 +452,8 @@ func capiMachineRow(m capiMachineObject, now time.Time) capiMachine {
 		}
 	}
 
-	row.Stuck = capiMachineStuck(row.Phase, row.CreatedAt, unixMilli(m.Metadata.DeletionTimestamp), now)
+	row.DeletedAt = unixMilli(m.Metadata.DeletionTimestamp)
+	row.Stuck = capiMachineStuck(row.Phase, row.CreatedAt, row.DeletedAt, now)
 
 	return row
 }

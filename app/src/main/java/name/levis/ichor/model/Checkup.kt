@@ -22,6 +22,7 @@ object CheckupSectionId {
     const val MONITORING = "monitoring"
     const val CROSSPLANE = "crossplane"
     const val TAILSCALE = "tailscale"
+    const val CLUSTER_API = "clusterapi"
 }
 
 /** What a finding is about ([CheckupFinding.kind]); CheckupWording words each one. */
@@ -100,6 +101,20 @@ object CheckupKind {
     const val TAILSCALE_PROXY_GROUP_DOWN = "tailscaleProxyGroupDown"
     /** A Tailscale ProxyClass not ready that Connectors or ProxyGroups name (count: how many). */
     const val TAILSCALE_PROXY_CLASS_NOT_READY = "tailscaleProxyClassNotReady"
+    /** A Cluster API workload cluster that failed (reason, message: its failure or first condition). */
+    const val CAPI_CLUSTER_FAILED = "capiClusterFailed"
+    /** A workload cluster Pending or Provisioning past an hour (since: its creation; extra: its phase). */
+    const val CAPI_CLUSTER_PROVISIONING = "capiClusterProvisioning"
+    /** A Machine that failed (extra: its cluster). */
+    const val CAPI_MACHINE_FAILED = "capiMachineFailed"
+    /** A Machine stuck in a transient phase (extra: "cluster/phase"; since: when it entered it). */
+    const val CAPI_MACHINE_STUCK = "capiMachineStuck"
+    /** A MachineDeployment short of available replicas (value: available, limit: desired; extra: its cluster). */
+    const val CAPI_WORKERS_SHORT = "capiWorkersShort"
+    /** A Sidero server in use but powered off (extra: its hostname). */
+    const val SIDERO_SERVER_OFF = "sideroServerOff"
+    /** A Sidero server not accepted (extra: its hostname); name "" with count: that many more. */
+    const val SIDERO_SERVER_UNACCEPTED = "sideroServerUnaccepted"
 }
 
 /** A section's or the whole checkup's state, worst first. */

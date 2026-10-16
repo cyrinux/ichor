@@ -268,6 +268,12 @@ private struct CheckupSectionBody: View {
                     Label(CheckupText.checkupOpenTailscale, systemImage: "network.badge.shield.half.filled").font(.callout)
                 }
             }
+        case .clusterapi:
+            if !section.findings.isEmpty || !section.error.isEmpty {
+                NavigationLink { ClusterLifecycleView() } label: {
+                    Label(CheckupText.checkupOpenClusterLifecycle, systemImage: "server.rack").font(.callout)
+                }
+            }
         default:
             EmptyView()
         }

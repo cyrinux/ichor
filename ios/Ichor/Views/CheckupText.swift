@@ -161,6 +161,24 @@ enum CheckupText {
     static func checkupTailscaleConnectorNotReady(_ a: String) -> String { String(localized: "Connector not ready (\(a))") }
     static var checkupTailscaleConnectorNotReadyPlain: String { String(localized: "Connector not ready") }
     static var checkupTailscaleProxyClassMissing: String { String(localized: "Names a ProxyClass that does not exist") }
+    static var checkupSectionClusterAPI: String { String(localized: "Cluster lifecycle") }
+    static var checkupSectionClusterAPIHint: String { String(localized: "Workload clusters, machines and bare-metal servers that are stuck, failed or off") }
+    static var checkupOpenClusterLifecycle: String { String(localized: "Open Cluster lifecycle") }
+    static var checkupCapiClusterFailed: String { String(localized: "Cluster failed") }
+    static func checkupCapiClusterProvisioning(_ a: String) -> String { String(localized: "Not provisioned after \(a)") }
+    static func checkupCapiMachineFailed(_ a: String) -> String { String(localized: "Machine of \(a) failed") }
+    static func checkupCapiMachineStuck(_ a: String, _ b: String) -> String { String(localized: "Stuck in \(a) for \(b)") }
+    static func checkupCapiWorkersShort(_ a: String, _ b: String) -> String { String(localized: "\(a) of \(b) workers available") }
+    static var checkupSideroServerOff: String { String(localized: "In use but powered off") }
+    static var checkupSideroServerUnaccepted: String { String(localized: "Waiting to be accepted") }
+    static func checkupSideroServerUnacceptedMore(_ a: String) -> String { String(localized: "\(a) more servers waiting to be accepted") }
+    static var checkupCapiClusterFailedFix: String { String(localized: "Read its failure, then the Machines and infrastructure under it: clusterctl describe cluster <name> -n <namespace>.") }
+    static var checkupCapiClusterProvisioningFix: String { String(localized: "Something under it never became ready: clusterctl describe cluster <name> -n <namespace> shows which part waits (infrastructure, control plane or a Machine).") }
+    static var checkupCapiMachineFailedFix: String { String(localized: "Its infrastructure could not be provisioned. Read kubectl describe machine -n <namespace> <name>, then delete it so its MachineSet or control plane makes a new one.") }
+    static var checkupCapiMachineStuckFix: String { String(localized: "Its infrastructure or bootstrap never finished (no free server, PXE never answered, no bootstrap Secret): kubectl describe machine -n <namespace> <name>.") }
+    static var checkupCapiWorkersShortFix: String { String(localized: "Some of its Machines are not available: kubectl get machines -n <namespace> -l cluster.x-k8s.io/deployment-name=<name>, then the servers free for them.") }
+    static var checkupSideroServerOffFix: String { String(localized: "A workload cluster node is down. Power it on from its BMC, or check the BMC credentials Sidero uses: kubectl describe server <name>.") }
+    static var checkupSideroServerUnacceptedFix: String { String(localized: "Sidero does not use it until it is accepted: kubectl patch server <name> --type merge -p '{\"spec\":{\"accepted\":true}}'.") }
     static func checkupTailscaleProxyGroupDown(_ a: String) -> String { String(localized: "\(a) proxy group not ready") }
     static var checkupTailscaleProxyGroupDownPlain: String { String(localized: "Proxy group not ready") }
     static func checkupTailscaleProxyClassNotReady(_ a: String) -> String { String(localized: "ProxyClass not ready, used by \(a)") }

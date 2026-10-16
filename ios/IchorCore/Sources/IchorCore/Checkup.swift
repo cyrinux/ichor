@@ -18,7 +18,7 @@ public enum CheckupSeverity: String, Sendable, WireEnum {
 
 /// The sections of a checkup, as Go names them.
 public enum CheckupSectionID: String, Sendable {
-    case workloads, events, storage, upgrade, webhooks, policies, capacity, nodes, loadbalancers, terminating, certificates, secrets, helm, monitoring, crossplane, tailscale
+    case workloads, events, storage, upgrade, webhooks, policies, capacity, nodes, loadbalancers, terminating, certificates, secrets, helm, monitoring, crossplane, tailscale, clusterapi
 }
 
 /// What a finding is about, as Go names it.
@@ -47,6 +47,12 @@ public enum CheckupKind: String, Sendable {
     /// roles), a ProxyGroup with proxies down (extra: its type), a ProxyClass in use not ready
     /// (count: its users).
     case tailscaleOperatorDown, tailscaleConnectorNotReady, tailscaleProxyGroupDown, tailscaleProxyClassNotReady
+    /// On a management cluster: a workload cluster failed or still provisioning past an hour, a
+    /// Machine failed or stuck (extra: "cluster/phase"), a MachineDeployment short of available
+    /// replicas (value of limit), a Sidero server in use but off, one not accepted (name "" and
+    /// count: that many more).
+    case capiClusterFailed, capiClusterProvisioning, capiMachineFailed, capiMachineStuck, capiWorkersShort
+    case sideroServerOff, sideroServerUnaccepted
 }
 
 /// What the cluster hides behind green nodes: one section per kind of trouble.
@@ -166,7 +172,8 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
                                              .externalSecretFailed, .secretStoreNotReady, .prometheusRuleErrors, .ruleGroupErrors,
                                              .crossplaneSyncFailed, .crossplaneProviderUnhealthy, .crossplaneNotReady,
                                              .crossplaneDefinitionNotEstablished, .tailscaleConnectorNotReady,
-                                             .tailscaleProxyGroupDown, .tailscaleProxyClassNotReady]
+                                             .tailscaleProxyGroupDown, .tailscaleProxyClassNotReady, .capiClusterFailed,
+                                             .capiClusterProvisioning, .capiMachineFailed, .capiMachineStuck]
         let shownReason = kind.map(reasonKinds.contains) == true ? reason : ""
         return [shownReason, message].filter { !$0.isEmpty }.joined(separator: ": ")
     }

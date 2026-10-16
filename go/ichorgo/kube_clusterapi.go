@@ -145,6 +145,7 @@ type capiCluster struct {
 	Conditions     []capiCondition `json:"conditions"`
 	FailureReason  string          `json:"failureReason"`
 	FailureMessage string          `json:"failureMessage"`
+	CreatedAt      int64           `json:"createdAt"` // unix ms
 	Health         string          `json:"health"`
 	Reasons        []string        `json:"reasons"`
 }
@@ -172,6 +173,7 @@ type capiMachine struct {
 	InfrastructureReady bool   `json:"infrastructureReady"`
 	LastUpdated         int64  `json:"lastUpdated"` // unix ms, 0 when never
 	CreatedAt           int64  `json:"createdAt"`   // unix ms
+	DeletedAt           int64  `json:"deletedAt"`   // unix ms, 0 when not being deleted
 	Stuck               bool   `json:"stuck"`       // not moving for over capiStuckAfter
 	FailureReason       string `json:"failureReason"`
 	FailureMessage      string `json:"failureMessage"`
