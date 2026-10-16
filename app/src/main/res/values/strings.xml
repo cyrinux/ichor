@@ -4771,6 +4771,13 @@
     <string name="kpol_mode_mixed">Some rules refuse a request that breaks them, others only report it</string>
     <string name="kpol_category">Category</string>
     <string name="kpol_severity">Severity</string>
+    <string name="kpol_switch_audit">Switch to Audit</string>
+    <string name="kpol_switch_enforce">Switch to Enforce</string>
+    <string name="kpol_switch_audit_body">Pods that break this policy will be admitted and only reported until you switch it back.</string>
+    <string name="kpol_switch_enforce_body">Requests that break this policy will be refused again.</string>
+    <string name="kpol_switch_gitops">%1$s applies this policy: its next sync puts the previous mode back.</string>
+    <string name="kpol_switched">%1$s is now in %2$s mode</string>
+    <string name="kpol_switch_failed">Could not switch %1$s: %2$s</string>
     <string name="kpol_engine_gatekeeper">Gatekeeper engine</string>
     <string name="kpol_webhook_fail_gatekeeper">Fail: requests are refused while Gatekeeper is down</string>
     <string name="kpol_webhook_ignore_gatekeeper">Ignore: policies are skipped while Gatekeeper is down</string>

@@ -1,8 +1,10 @@
 package ichorgo
 
 import (
+	"bytes"
 	"cmp"
 	"context"
+	"encoding/json"
 	"net/url"
 	"slices"
 	"strings"
@@ -14,6 +16,7 @@ type kyvernoPolicyObject struct {
 	Metadata struct {
 		Name        string            `json:"name"`
 		Namespace   string            `json:"namespace"`
+		Labels      map[string]string `json:"labels"`
 		Annotations map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {
@@ -28,9 +31,10 @@ type kyvernoPolicyObject struct {
 			Validate *struct {
 				FailureAction string `json:"failureAction"`
 			} `json:"validate"`
-			Mutate       *struct{} `json:"mutate"`
-			Generate     *struct{} `json:"generate"`
-			VerifyImages *struct{} `json:"verifyImages"`
+			Mutate   *struct{} `json:"mutate"`
+			Generate *struct{} `json:"generate"`
+			// VerifyImages is a list of image checks, each with its own failureAction.
+			VerifyImages verifyImagesRule `json:"verifyImages"`
 		} `json:"rules"`
 	} `json:"spec"`
 	Status struct {
@@ -237,12 +241,16 @@ func kyvernoPolicyOf(o kyvernoPolicyObject) policyRow {
 			row.Rules.Mutate++
 		case r.Generate != nil:
 			row.Rules.Generate++
-		case r.VerifyImages != nil:
+		case r.VerifyImages.present:
 			row.Rules.VerifyImages++
+			for _, check := range r.VerifyImages.checks {
+				actions[ruleAction(o.Spec.ValidationFailureAction, check.FailureAction)] = true
+			}
 		}
 	}
 
 	row.Action = policyActionOf(actions, o.Spec.ValidationFailureAction)
+	row.ManagedBy = gitopsManager(o.Metadata.Labels, o.Metadata.Annotations)
 
 	cond := o.Status.Conditions.get("Ready")
 	row.Ready = cond.Status == "True"
@@ -252,6 +260,41 @@ func kyvernoPolicyOf(o kyvernoPolicyObject) policyRow {
 	row.ReadyReason, row.ReadyMessage = cond.Reason, cond.Message
 
 	return row
+}
+
+// verifyImagesRule is a rule's verifyImages block: a list of image checks in Kyverno's CRD,
+// each with its own failureAction (an object, from older writes, has none).
+type verifyImagesRule struct {
+	present bool
+	checks  []struct {
+		FailureAction string `json:"failureAction"`
+	}
+}
+
+func (v *verifyImagesRule) UnmarshalJSON(data []byte) error {
+	data = bytes.TrimSpace(data)
+	if len(data) == 0 || bytes.Equal(data, []byte("null")) {
+		return nil
+	}
+
+	v.present = true
+	if data[0] != '[' {
+		return nil
+	}
+
+	return json.Unmarshal(data, &v.checks)
+}
+
+// gitopsManager is the GitOps tool that applies an object (argocd or flux), "" for none or
+// Helm alone: those two revert a change made by hand on their next sync.
+func gitopsManager(labels, annotations map[string]string) string {
+	for _, m := range managers(kubeObjectSummary{Labels: labels, Annotations: annotations}) {
+		if m.Via == ownerViaArgo || m.Via == ownerViaFlux {
+			return m.Via
+		}
+	}
+
+	return ""
 }
 
 // ruleAction is one validate rule's action: the rule-level failureAction, else the

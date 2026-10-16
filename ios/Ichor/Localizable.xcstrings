@@ -1,6 +1,222 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Switch to Audit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Audit umstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar a Audit"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer en Audit"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passa ad Audit"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевести в Audit"
+          }
+        }
+      }
+    },
+    "Switch to Enforce" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Enforce umstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar a Enforce"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer en Enforce"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passa ad Enforce"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевести в Enforce"
+          }
+        }
+      }
+    },
+    "Pods that break this policy will be admitted and only reported until you switch it back." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pods, die gegen diese Richtlinie verstoßen, werden zugelassen und nur gemeldet, bis Sie sie zurückstellen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los pods que incumplan esta política se admitirán y solo se informarán hasta que la vuelvas a cambiar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les pods qui enfreignent cette politique seront admis et seulement signalés jusqu’à ce que vous la rebasculiez."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I pod che violano questa policy saranno ammessi e solo segnalati finché non la riporti indietro."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поди, що порушують цю політику, допускатимуться й лише фіксуватимуться, доки ви не повернете її назад."
+          }
+        }
+      }
+    },
+    "Requests that break this policy will be refused again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anfragen, die gegen diese Richtlinie verstoßen, werden wieder abgelehnt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las solicitudes que incumplan esta política se volverán a rechazar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les requêtes qui enfreignent cette politique seront de nouveau refusées."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le richieste che violano questa policy saranno di nuovo rifiutate."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запити, що порушують цю політику, знову відхилятимуться."
+          }
+        }
+      }
+    },
+    "%@ applies this policy: its next sync puts the previous mode back." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ wendet diese Richtlinie an: die nächste Synchronisierung stellt den vorherigen Modus wieder her."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ aplica esta política: su próxima sincronización restaurará el modo anterior."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ applique cette politique : sa prochaine synchronisation remettra le mode précédent."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ applica questa policy: la prossima sincronizzazione ripristinerà la modalità precedente."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ застосовує цю політику: наступна синхронізація поверне попередній режим."
+          }
+        }
+      }
+    },
+    "Could not switch %@: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not switch %1$@: %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ konnte nicht umgestellt werden: %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo cambiar %1$@: %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de basculer %1$@ : %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile cambiare %1$@: %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося перемкнути %1$@: %2$@"
+          }
+        }
+      }
+    },
     "Gatekeeper engine" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -18,6 +18,9 @@ const val POLICY_ACTION_WARN = "Warn"
 const val POLICY_ENGINE_KYVERNO = "kyverno"
 const val POLICY_ENGINE_GATEKEEPER = "gatekeeper"
 
+/** The API group the switch patches: Kyverno's policies. */
+const val KYVERNO_GROUP = "kyverno.io"
+
 /** What the webhook does to requests while the engine is down. */
 const val WEBHOOK_FAIL = "Fail"
 const val WEBHOOK_IGNORE = "Ignore"
@@ -100,6 +103,8 @@ data class KyvernoPolicy(
     val failingCapped: Boolean = false,
     /** When Gatekeeper's audit last wrote the violations, unix seconds; 0 for Kyverno. */
     val auditAt: Long = 0,
+    /** "argocd" or "flux" when a GitOps tool applies it: a change from the phone is reverted on its next sync. */
+    val managedBy: String = "",
     /** The same counts per namespace: a ClusterPolicy's results spread over every namespace. */
     val byNamespace: List<PolicyNamespaceTotals> = emptyList(),
 ) {
@@ -107,6 +112,27 @@ data class KyvernoPolicy(
     val key: String get() = "$engine/$kind/$namespace/$name"
     val clusterWide: Boolean get() = namespace.isEmpty()
     val isGatekeeper: Boolean get() = engine == POLICY_ENGINE_GATEKEEPER
+
+    /** The modes a Kyverno policy can be switched to from here: the other one, or both when Mixed. */
+    val switchTargets: List<String>
+        get() = when {
+            isGatekeeper -> emptyList()
+            action == POLICY_ACTION_ENFORCE -> listOf(POLICY_ACTION_AUDIT)
+            action == POLICY_ACTION_AUDIT -> listOf(POLICY_ACTION_ENFORCE)
+            action == POLICY_ACTION_MIXED -> listOf(POLICY_ACTION_AUDIT, POLICY_ACTION_ENFORCE)
+            else -> emptyList()
+        }
+
+    /** The resource the switch patches, as KubeCan takes it. */
+    val kyvernoResource: String get() = if (clusterWide) "clusterpolicies" else "policies"
+
+    /** The GitOps tool that would revert a switch, by its own name; null when none applies the policy. */
+    val gitopsTool: String?
+        get() = when (managedBy) {
+            "argocd" -> "Argo CD"
+            "flux" -> "Flux"
+            else -> null
+        }
 
     /** Its counts in [namespace], or across the cluster for null. */
     fun counts(namespace: String?): PolicyResultCounts {

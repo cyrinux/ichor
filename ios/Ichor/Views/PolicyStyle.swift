@@ -14,6 +14,8 @@ enum PolicyText {
     static func passCount(_ a: String) -> String { String(localized: "\(a) passing") }
     static func ruleOf(_ a: String) -> String { String(localized: "Rule \(a)") }
     static func failingShown(_ a: String, _ b: String) -> String { String(localized: "The latest \(a) of \(b)") }
+    static func switchGitOps(_ a: String) -> String { String(localized: "\(a) applies this policy: its next sync puts the previous mode back.") }
+    static func switchFailed(_ a: String, _ b: String) -> String { String(localized: "Could not switch \(a): \(b)") }
     static func failingCapped(_ a: String, _ b: String) -> String { String(localized: "Gatekeeper keeps the first \(a) of \(b) violations") }
 }
 

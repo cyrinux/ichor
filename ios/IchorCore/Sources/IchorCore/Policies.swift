@@ -233,12 +233,37 @@ public struct KyvernoPolicy: Decodable, Equatable, Identifiable, Sendable {
     public let failingCapped: Bool
     /// When Gatekeeper's audit last wrote the violations, unix seconds; 0 for Kyverno.
     public let auditAt: Int64
+    /// "argocd" or "flux" when a GitOps tool applies it: a change from the phone is reverted on its next sync.
+    public let managedBy: String
     /// The same counts per namespace: a ClusterPolicy's results spread over every namespace.
     public let byNamespace: [PolicyNamespaceTotals]
 
     /// Unique in a report: a Gatekeeper constraint's name is unique per kind only.
     public var id: String { "\(engine.rawValue)/\(kind)/\(namespace)/\(name)" }
     public var clusterWide: Bool { namespace.isEmpty }
+
+    /// The modes a Kyverno policy can be switched to from here: the other one, or both when Mixed.
+    public var switchTargets: [PolicyAction] {
+        guard engine == .kyverno else { return [] }
+        switch action {
+        case .enforce: return [.audit]
+        case .audit: return [.enforce]
+        case .mixed: return [.audit, .enforce]
+        case .warn, .unknown: return []
+        }
+    }
+
+    /// The resource the switch patches, as kubeCan takes it.
+    public var kyvernoResource: String { clusterWide ? "clusterpolicies" : "policies" }
+
+    /// The GitOps tool that would revert a switch, by its own name; nil when none applies the policy.
+    public var gitopsTool: String? {
+        switch managedBy {
+        case "argocd": "Argo CD"
+        case "flux": "Flux"
+        default: nil
+        }
+    }
 
     /// Its counts in `namespace`, or across the cluster for nil.
     public func counts(namespace: String?) -> PolicyResultCounts {
@@ -256,7 +281,7 @@ public struct KyvernoPolicy: Decodable, Equatable, Identifiable, Sendable {
                 background: Bool = false, ready: Bool = true, readyReason: String = "", readyMessage: String = "", category: String = "",
                 severity: String = "", description: String = "", rules: PolicyRules = PolicyRules(), ruleNames: [String] = [],
                 pass: Int = 0, fail: Int = 0, warn: Int = 0, errors: Int = 0, skip: Int = 0, failing: [PolicyFailure] = [],
-                failingCapped: Bool = false, auditAt: Int64 = 0, byNamespace: [PolicyNamespaceTotals] = []) {
+                failingCapped: Bool = false, auditAt: Int64 = 0, managedBy: String = "", byNamespace: [PolicyNamespaceTotals] = []) {
         self.namespace = namespace
         self.name = name
         self.engine = engine
@@ -279,6 +304,7 @@ public struct KyvernoPolicy: Decodable, Equatable, Identifiable, Sendable {
         self.failing = failing
         self.failingCapped = failingCapped
         self.auditAt = auditAt
+        self.managedBy = managedBy
         self.byNamespace = byNamespace
     }
 
@@ -306,14 +332,35 @@ public struct KyvernoPolicy: Decodable, Equatable, Identifiable, Sendable {
         failing = try c.field(.failing, [])
         failingCapped = try c.field(.failingCapped, false)
         auditAt = try c.field(.auditAt, 0)
+        managedBy = try c.field(.managedBy, "")
         byNamespace = try c.field(.byNamespace, [])
     }
 
     private enum CodingKeys: String, CodingKey {
         case namespace, name, engine, kind, action, background, ready, readyReason, readyMessage, category, severity, description
-        case rules, ruleNames, pass, fail, warn, skip, failing, failingCapped, auditAt, byNamespace
+        case rules, ruleNames, pass, fail, warn, skip, failing, failingCapped, auditAt, managedBy, byNamespace
         case errors = "error"
     }
+}
+
+/// What switching a Kyverno policy's mode answers: the policy as read after the patch.
+public struct PolicyActionResult: Decodable, Equatable, Sendable {
+    public let namespace: String
+    public let name: String
+    public let action: PolicyAction
+    public let ready: Bool
+    public let rulesPatched: Int
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
+        action = try c.wire(.action)
+        ready = try c.field(.ready, false)
+        rulesPatched = try c.field(.rulesPatched, 0)
+    }
+
+    private enum CodingKeys: String, CodingKey { case namespace, name, action, ready, rulesPatched }
 }
 
 /// A policy's failing, warning and passing results, over the cluster or in one namespace.

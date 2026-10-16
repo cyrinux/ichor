@@ -443,6 +443,23 @@ final class PoliciesTests: XCTestCase {
         XCTAssertEqual(Set(twins.map(\.id)).count, 3)
     }
 
+    func testAKyvernoPolicySwitchesToTheOtherModeAndSaysWhoWouldRevertIt() throws {
+        XCTAssertEqual(KyvernoPolicy(name: "a", action: .enforce).switchTargets, [.audit])
+        XCTAssertEqual(KyvernoPolicy(name: "a", action: .audit).switchTargets, [.enforce])
+        XCTAssertEqual(KyvernoPolicy(name: "a", action: .mixed).switchTargets, [.audit, .enforce])
+        // A Gatekeeper constraint is not switched from here.
+        XCTAssertTrue(KyvernoPolicy(name: "c", engine: .gatekeeper, action: .enforce).switchTargets.isEmpty)
+
+        XCTAssertEqual(KyvernoPolicy(name: "a").kyvernoResource, "clusterpolicies")
+        XCTAssertEqual(KyvernoPolicy(namespace: "shop", name: "a").kyvernoResource, "policies")
+        XCTAssertEqual(KyvernoPolicy(name: "a", managedBy: "argocd").gitopsTool, "Argo CD")
+        XCTAssertNil(KyvernoPolicy(name: "a").gitopsTool)
+
+        let result = try JSONDecoder().decode(PolicyActionResult.self, from: Data(#"{"namespace":"","name":"a","action":"Audit","ready":true,"rulesPatched":2}"#.utf8))
+        XCTAssertEqual(result.action, .audit)
+        XCTAssertEqual(result.rulesPatched, 2)
+    }
+
     func testWarnAndCappedViolationsDecode() throws {
         let report = try decode(#"{"installed":true,"gatekeeper":true,"policies":[{"name":"w","engine":"gatekeeper","action":"Warn","fail":40,"failingCapped":true,"failing":[{"kind":"Pod","name":"p"}]}]}"#)
         let w = try XCTUnwrap(report.policies.first)

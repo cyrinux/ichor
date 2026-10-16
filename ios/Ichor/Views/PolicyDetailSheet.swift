@@ -5,13 +5,30 @@ import IchorCore
 /// then the resources it fails, each of a kind the browser knows opening its object screen.
 struct PolicyDetailSheet: View {
     let policy: KyvernoPolicy
+    /// The policy changed (its mode was switched): read the list again.
+    var onChanged: () -> Void = {}
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppModel.self) private var model
+    @State private var denial: KubeAccess?
+    @State private var confirmAudit = false
+    @State private var confirmEnforce = false
+    @State private var switching = false
+    @State private var switchError: String?
+
+    // Explicit: the private @State makes the memberwise init private.
+    init(policy: KyvernoPolicy, onChanged: @escaping () -> Void = {}) {
+        self.policy = policy
+        self.onChanged = onChanged
+    }
 
     var body: some View {
         NavigationStack {
             List {
                 Section { header }
+                if !policy.switchTargets.isEmpty {
+                    switchSection
+                }
                 if !policy.ready {
                     Section {
                         HStack(spacing: 6) {
@@ -45,6 +62,65 @@ struct PolicyDetailSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .task(id: policy.id) { await askAccess() }
+        .sheet(isPresented: $confirmAudit) {
+            HostnameConfirmationSheet(
+                title: String(localized: "Switch to Audit"),
+                message: switchMessage(String(localized: "Pods that break this policy will be admitted and only reported until you switch it back.")),
+                hostname: policy.name,
+                actionTitle: String(localized: "Switch to Audit")
+            ) {
+                confirmAudit = false
+                Task { await switchTo(.audit) }
+            }
+        }
+        .confirmationDialog(String(localized: "Switch to Enforce"), isPresented: $confirmEnforce, titleVisibility: .visible) {
+            Button("Switch to Enforce") { Task { await switchTo(.enforce) } }
+        } message: {
+            Text(verbatim: switchMessage(String(localized: "Requests that break this policy will be refused again.")))
+        }
+    }
+
+    /// The Audit/Enforce switch, disabled with the reason when the credentials may not patch it.
+    private var switchSection: some View {
+        Section {
+            ForEach(policy.switchTargets, id: \.self) { target in
+                Button {
+                    if target == .audit { confirmAudit = true } else { confirmEnforce = true }
+                } label: {
+                    if target == .audit { Text("Switch to Audit") } else { Text("Switch to Enforce") }
+                }
+                .disabled(switching || denial != nil)
+            }
+            if let denial { KubeDeniedLine(text: denial.deniedText) }
+            if let switchError { ErrorOrNoticeText(message: switchError) }
+        }
+    }
+
+    /// The confirmation's body, with the GitOps warning when a tool would revert the switch.
+    private func switchMessage(_ body: String) -> String {
+        [body, policy.gitopsTool.map(PolicyText.switchGitOps) ?? ""].filter { !$0.isEmpty }.joined(separator: "\n\n")
+    }
+
+    private func askAccess() async {
+        guard let client = model.client,
+              let access = try? await client.kubeCan(verb: "patch", group: "kyverno.io", resource: policy.kyvernoResource,
+                                                     namespace: policy.namespace, name: policy.name) else { return }
+        denial = access.isDenied ? access : nil
+    }
+
+    private func switchTo(_ action: PolicyAction) async {
+        guard let client = model.client else { return }
+        switching = true
+        switchError = nil
+        defer { switching = false }
+        do {
+            try await client.setPolicyAction(namespace: policy.namespace, name: policy.name, action: action)
+            onChanged()
+            dismiss()
+        } catch {
+            switchError = PolicyText.switchFailed(policy.name, error.localizedDescription)
+        }
     }
 
     private var header: some View {
