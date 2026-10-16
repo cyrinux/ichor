@@ -335,3 +335,67 @@ func TestKubeLoadBalancingDemo(t *testing.T) {
 		t.Errorf("demo %+v %+v", first, lb.Pools[0])
 	}
 }
+
+// Speakers whose metrics are behind their own token: Prometheus, which scrapes them, says
+// which session is down, on which node (by pod label, else by the instance's address).
+func TestBGPSessionsFromPrometheus(t *testing.T) {
+	const query = "/api/v1/namespaces/monitoring/services/prometheus-operated:9090/proxy/api/v1/query"
+
+	f := newFakeKubeAPI(t, map[string]string{
+		"GET /api/v1/services": `{"items":[{"metadata":{"name":"prometheus-operated","namespace":"monitoring"},"spec":{"ports":[{"name":"web","port":9090}]}}]}`,
+		"GET " + query: `{"status":"success","data":{"resultType":"vector","result":[
+			{"metric":{"peer":"192.0.2.1","pod":"metallb-frr-k8s-x1","instance":"198.51.100.11:9141"},"value":[1792137600,"0"]},
+			{"metric":{"peer":"192.0.2.1:179","instance":"198.51.100.12:7472"},"value":[1792137600,"1"]},
+			{"metric":{"peer":"192.0.2.9","instance":"198.51.100.99:7472"},"value":[1792137600,"1"]}]}}`,
+	})
+	pods := []lbPod{
+		{Namespace: "metallb-system", Name: "metallb-frr-k8s-x1", Node: "n1", App: lbControllerMetalLB},
+		{Namespace: "metallb-system", Name: "metallb-speaker-b2", Node: "n2", App: lbControllerMetalLB, IPs: []string{"198.51.100.12"}},
+	}
+
+	sessions := readBGPSessions(context.Background(), openFakeKube(t, f), pods)
+
+	want := []lbBGPSession{{Node: "n1", Up: false}, {Node: "n2", Up: true}}
+	if got := sessions.of("192.0.2.1"); !reflect.DeepEqual(got, want) {
+		t.Errorf("sessions %+v, want %+v", got, want)
+	}
+
+	// A target no pod matches keeps its address as the node: shown, not dropped.
+	if got := sessions.of("192.0.2.9"); !reflect.DeepEqual(got, []lbBGPSession{{Node: "198.51.100.99", Up: true}}) {
+		t.Errorf("unmatched %+v", got)
+	}
+
+	if q := lastRequest(f); !strings.Contains(q.query, "metallb_bgp_session_up") || !strings.Contains(q.query, "frrk8s_bgp_session_up") {
+		t.Errorf("query %q", q.query)
+	}
+}
+
+// No speaker answered and no Prometheus (or no such series): the sessions stay unknown.
+func TestBGPSessionsUnknownWithoutPrometheus(t *testing.T) {
+	pods := []lbPod{{Namespace: "metallb-system", Name: "metallb-speaker-a1", Node: "n1", App: lbControllerMetalLB}}
+
+	none := newFakeKubeAPI(t, map[string]string{"GET /api/v1/services": `{"items":[]}`})
+	if s := readBGPSessions(context.Background(), openFakeKube(t, none), pods); s != nil {
+		t.Errorf("no Prometheus: %+v", s)
+	}
+
+	empty := newFakeKubeAPI(t, map[string]string{
+		"GET /api/v1/services": `{"items":[{"metadata":{"name":"prometheus-operated","namespace":"monitoring"},"spec":{"ports":[{"name":"web","port":9090}]}}]}`,
+		"GET /api/v1/namespaces/monitoring/services/prometheus-operated:9090/proxy/api/v1/query": `{"status":"success","data":{"resultType":"vector","result":[]}}`,
+	})
+	if s := readBGPSessions(context.Background(), openFakeKube(t, empty), pods); s != nil {
+		t.Errorf("no series: %+v", s)
+	}
+
+	// kube-vip alone: Prometheus is not even asked.
+	kv := newFakeKubeAPI(t, map[string]string{})
+	if s := readBGPSessions(context.Background(), openFakeKube(t, kv), []lbPod{{Name: "kube-vip-n1", Node: "n1", App: "kube-vip"}}); s != nil {
+		t.Errorf("kube-vip: %+v", s)
+	}
+
+	for _, r := range kv.recorded() {
+		if r.path == "/api/v1/services" {
+			t.Error("kube-vip alone: Prometheus discovery ran")
+		}
+	}
+}
