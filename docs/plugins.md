@@ -2,8 +2,98 @@
 
 A plugin declares a Kubernetes integration (which CRDs it reads, the cards it shows, the
 data it derives) in one YAML file. The Go core compiles and evaluates it; the apps only
-draw the result. This page is the reference; the file format itself is documented with the
-plugin loader.
+draw the result. This page is the reference. The format's Go types are in
+`go/plugin/schema.go`, and `go/plugin/schema/plugin.schema.json` is generated from them
+(`cd go && go generate ./plugin`). Point an editor at it with a first line such as
+`# yaml-language-server: $schema=../schema/plugin.schema.json`.
+
+Built-in plugins live in `go/plugin/builtin/`, one file per integration. The test suite
+loads, validates and compiles every one of them.
+
+## File format
+
+A complete example is `go/plugin/testdata/plugins/valid.yaml` (kube-green).
+
+Loading is strict:
+* an unknown key is an error at its line;
+* a `schemaVersion` other than `ichor.dev/plugin/v1alpha1` is refused before anything else;
+* these are refused, because the apps receive everything as JSON:
+  * a file over 1 MiB, or with more than 20,000 `[` and `{`;
+  * nesting deeper than 64 levels, and alias bombs;
+  * keys that are not text (quote `"1": …`), merge keys (`<<`);
+  * empty list items, and `.nan` or `.inf`.
+
+| Key | Required | Type | Notes |
+| -- | -- | -- | -- |
+| `schemaVersion` | yes | string | `ichor.dev/plugin/v1alpha1` |
+| `id` | yes | string | `[a-z0-9-]+`, unique across built-in and user plugins |
+| `name` | yes | string | the product name, never translated |
+| `website`, `icon`, `catalogId` | no | string | `icon` and `catalogId` are app catalog ids |
+| `category` | no | string | `data-services` (default), `networking`, `gitops`, `policies`, `workloads`, `compute`, `security` |
+| `screen` | no | string | `native:<route>` opens a native screen from the hub tile |
+| `detect[]` | yes | list | each sets exactly one of `group` (with an optional `resource`, for a shared group), `pods` (a catalog id) or `service`; any match activates the plugin |
+| `resources.<key>` | yes (≥ 1) | map | `group` (`""` for core), `version` (or `preferred`), `resource`, `kind`, `scope` (`Namespaced` or `Cluster`), `list{labelSelector, fieldSelector, limit}`, `watch`, `reveal`, `source: native:<id>`. The key (letters and digits) names the resource everywhere else |
+| `fields.<resource>.<name>` | no | expression | evaluated per object in file order; a field sees the earlier ones as `fields.<name>`, `conditions`, `now`, and the resources by key for `join(<resource>, <predicate>)`, whose predicate sees `left` (the object) |
+| `health.<resource>[]` | no | rules | `{when, health, reason, message}`. The first rule whose `when` holds wins, and an object no rule matches is `ok`. `health` is `ok`, `idle`, `info`, `warning`, `critical` or `unknown`; `message` is a template |
+| `dataServices.<name>` | no | map | see "Data services" below |
+| `cards.summary` | yes | card | `title` (an expression, or `{count, one, other}` with `%d`), `health`, `badges[]`. It sees `dataServices` and `now` only |
+| `cards.<name>` | no | card | `from` (a resource or `dataServices.<name>`), `sort[]` (expressions, each optionally followed by `asc` or `desc`), `empty`, `row{title, subtitle, status{tone, text}, trailing{text}, detail[]}` |
+| `actions.<id>` | no | map | `label`, `on` (a resource), `verb`, `body`, `subresource` (with `verb: subresource`), `rbac{verbs, group, resource}` (required), `confirm`, `audit` (required), `enabledWhen`, `disabledReason`, `params[]`. `verb` is `mergePatch`, `jsonPatch`, `subresource`, `delete`, `annotate` or `create`; `confirm` is `none`, `plain` or `typedName`; each param is `{name, label, type, values[], default}` with `type` one of `string`, `int`, `bool` or `enum` |
+| `findings[]` | no | list | `{id, from, when, severity, title, detail, opens}`. `severity` is `info`, `warning` or `critical`; `opens` names a card |
+| `samples.<resource>[]` | yes, for every resource | list | demo objects in the API's shape. The demo context and the tests render them; invent names such as `demo-shop` |
+| `i18n.<locale>` | no | map | English label → translation; a missing label stays English |
+
+### Which names an expression sees
+
+| Where | Names | Also |
+| -- | -- | -- |
+| `fields` | `$`, `fields` (earlier ones), `conditions`, `now`, `left` | resource keys (`join`) |
+| `health[].when`, `message` | `$`, `fields`, `conditions`, `now` | `when` must be a bool |
+| `dataServices` `aggregate`, `health` | `fields`, `health`, `conditions`, `now`, `dataServices` (earlier ones) | resource keys; `count`, `sum`, `min`, `max`, `worst` |
+| `dataServices` `groupBy`, `where`, `select` | `$`, `fields`, `health`, `conditions`, `now`, `dataServices` | |
+| `cards.summary` | `dataServices`, `now` | |
+| list card rows, sort, details | `$`, `fields`, `health`, `conditions`, `now`, `dataServices` | a row of a data service sees `$` (the group or projection) |
+| `actions` `enabledWhen`, `disabledReason` | as a row of `on` | `enabledWhen` must be a bool |
+| `actions` `body` strings (templates) | `fields`, `params`, `now` | `name`, `namespace` |
+| `findings` `when` | as a row of `from` | must be a bool |
+| `findings` `title`, `detail` (templates) | as a row of `from` | `name`, `namespace`, `message`, `reason` |
+
+### Data services
+
+A data service is one of three forms:
+* `aggregate` alone, over resources: `count(res)`, `count(res, pred)`, `sum(res, expr)`, `min`, `max`, and `worst(res.health)`, with `health` for the data service's own health;
+* `from` + `groupBy` + `aggregate`: one element per group, where `count()`, `count(pred)` and `sum(expr)` run over the group's objects and `$.key` is the group's key;
+* `from` + `where` + `select`: one element per kept object, with the selected names.
+
+### Row details
+
+Each entry of `detail[]` is a section with a `type`, and only that type's keys:
+
+| type | Keys |
+| -- | -- |
+| `keyValues` | `items[{label, value, tone, mono}]` |
+| `badges` | `items[{label, value or on, tone, hideWhenZero}]` |
+| `gauge` | `label`, `value`, `max`, `unit`, `tone`, `text` |
+| `conditions` | none: the object's `status.conditions` |
+| `relations` | `items[{label, ref, text}]`, where `ref` is an object (for example a field set by `join`) |
+| `table` | `from` (a resource or `dataServices.<name>`), `columns[{label, value}]` |
+| `text` | `text` (a template), `tone`, `mono` |
+| `actions` | `items` lists action ids, whose `on` must be the card's resource |
+
+A `tone` is a tone word (`ok`, `idle`, `info`, `warning`, `critical`, `unknown`) or an
+expression that gives one, such as `health`.
+
+### Writing expressions in YAML
+
+An expression is a YAML scalar, so YAML reads it first:
+* Quote an expression that contains `: ` (a conditional `a ? b : c`), or that starts with `[`,
+  `{`, `"`, `'`, `!`, `&`, `*`, `|`, `>`, `%`, `@` or `#`. Use single quotes so the expression
+  keeps its double-quoted strings: `text: 'fields.asleep ? "Asleep" : "Awake"'`.
+* A string constant needs its own quotes inside the YAML ones: `title: '"Widgets"'`.
+* A long expression can use a block scalar (`|`).
+
+Problems are reported as `file:line`, and with the column when the expression sits on one
+line.
 
 ## Expressions
 

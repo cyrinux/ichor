@@ -29,6 +29,8 @@ type Env struct {
 	DataServices map[string]Value // dataServices.<name>
 	Params       map[string]Value // params.<name>: an action's inputs
 	Now          time.Time        // now (unix ms) and the reference of age, relativeTime, cronNext; zero is the wall clock
+	Vars         map[string]Value // extra root names (Scope.Vars); the roots above take precedence
+	Funcs        map[string]Func  // functions defined only here (Scope.Funcs), before the library
 }
 
 // Node is a parsed expression. It is an interface so that another backend (CEL) could

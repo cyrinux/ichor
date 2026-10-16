@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"slices"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -80,7 +79,7 @@ func KubeDataServices(configYAML, contextName, kubeServer, hints string) (out st
 
 	demo := func() dataServices { return demoDataServices(time.Now()) }
 
-	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demo, func(ctx context.Context, k *kubeClient) (dataServices, error) {
+	return kubeReadProgressJSON(kubeTarget{configYAML, contextName, kubeServer}, dsProgressOp, nil, dsDemoSteps, demo, func(ctx context.Context, k *kubeClient) (dataServices, error) {
 		return readDataServices(ctx, k, k.exec, parseHints(hints), time.Now())
 	})
 }
@@ -109,121 +108,6 @@ const (
 	groupCNPG       = "postgresql.cnpg.io"
 	groupBarmanPlug = "barmancloud.cnpg.io"
 )
-
-// readDataServices detects what is installed and reads each system in parallel. It fails
-// only when nothing could be asked (the API groups); a system that fails on its own carries
-// its error in its section.
-func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hintSet, now time.Time) (dataServices, error) {
-	groups, err := readAPIGroups(ctx, k)
-	if err != nil {
-		return dataServices{}, err
-	}
-
-	var (
-		out       dataServices
-		pods      []dsPod
-		podsErr   error
-		listedAll bool
-	)
-
-	// One listing of every pod stands in for several: Garage's instances and, when the
-	// DNSEndpoint CRD is not served, the ExternalDNS controllers (found by their pods).
-	if hints.wants("garage") || hints.wants("external-dns") {
-		pods, podsErr = listDSPods(ctx, k, "")
-		listedAll = podsErr == nil
-	}
-
-	// The garage-operator's CRDs mean Garage is managed here, hinted or not.
-	_, garageOperatorServed := groups[groupGarageOperator]
-
-	var wg sync.WaitGroup
-
-	if _, ok := groups[groupSnapshot]; ok {
-		wg.Go(func() { r := readVolumeSnapshots(ctx, k, "", now); out.Snapshots = &r })
-	}
-	wg.Go(func() { out.BackupJobs = readBackupJobs(ctx, k, now) })
-
-	if v, ok := groups[groupLonghorn]; ok {
-		wg.Go(func() { out.Longhorn = readLonghorn(ctx, k, v) })
-	}
-
-	if v, ok := groups[groupCNPG]; ok {
-		wg.Go(func() {
-			cnpgPods, err := pods, error(nil)
-			if !listedAll {
-				cnpgPods, err = listDSPods(ctx, k, "cnpg.io/cluster")
-			}
-
-			out.CNPG = readCNPG(ctx, k, cnpgSources{version: v, pluginVersion: groups[groupBarmanPlug], pods: cnpgPods, podsErr: err}, now)
-		})
-	}
-
-	if v, ok := groups[groupDragonfly]; ok {
-		wg.Go(func() { out.Dragonfly = readDragonfly(ctx, k, v) })
-	}
-
-	if v, ok := groups[groupMariaDB]; ok {
-		wg.Go(func() { out.MariaDB = readMariaDB(ctx, k, v, now) })
-	}
-
-	if v, ok := groups[groupPercona]; ok {
-		wg.Go(func() { out.Percona = readPercona(ctx, k, v, now) })
-	}
-
-	if v, ok := groups[groupCertManager]; ok {
-		wg.Go(func() { out.CertManager = readCertManager(ctx, k, v, now) })
-	}
-
-	if _, ok := groups[groupSealedSecrets]; ok {
-		wg.Go(func() { out.SealedSecrets = readSealedSecrets(ctx, k, now) })
-	}
-
-	if _, ok := groups[groupVelero]; ok {
-		wg.Go(func() { out.Velero = readVelero(ctx, k, now) })
-	}
-
-	// ExternalDNS runs with or without its CRD: by the API group when served, else by its
-	// running pods (only known when they could be listed).
-	extDNSVersion, extDNSByPods := "", false
-	if v, ok := groups[groupExternalDNS]; ok {
-		extDNSVersion = v
-	} else if listedAll {
-		catalog := loadAppCatalog()
-		for _, p := range pods {
-			for _, c := range p.Spec.Containers {
-				if id := catalog.identify(parseImageRef(c.Image)); id.app != nil && id.app.ID == "external-dns" {
-					extDNSByPods = true
-				}
-			}
-		}
-	}
-
-	if extDNSVersion != "" || extDNSByPods {
-		wg.Go(func() { out.ExternalDNS = readExternalDNS(ctx, k, extDNSVersion, pods, podsErr, now) })
-	}
-
-	if _, ok := groups[groupKubeGreen]; ok {
-		wg.Go(func() { out.KubeGreen = readKubeGreen(ctx, k, now) })
-	}
-
-	if v, ok := groups[groupCeph]; ok {
-		wg.Go(func() { out.Ceph = readCeph(ctx, k, v) })
-	}
-
-	if _, ok := groups[groupCastAI]; ok {
-		wg.Go(func() { out.CastAI = readCastAI(ctx, k) })
-	}
-
-	if hints.wants("garage") || garageOperatorServed {
-		wg.Go(func() {
-			out.Garage = readGarageSection(ctx, k, run, pods, podsErr, hints["garage"], groups[groupGarageOperator])
-		})
-	}
-
-	wg.Wait()
-
-	return out, nil
-}
 
 // readAPIGroups lists the API groups the server serves, with their preferred versions.
 func readAPIGroups(ctx context.Context, k *kubeClient) (map[string]string, error) {

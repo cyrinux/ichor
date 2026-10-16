@@ -38,6 +38,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.data.CiliumRepository
+import name.levis.ichor.data.KubeRepository
+import name.levis.ichor.model.ReadProgress
 import name.levis.ichor.model.NetPolicy
 import name.levis.ichor.model.NetPolicyNamespace
 import name.levis.ichor.model.NetPolicyReport
@@ -60,8 +62,21 @@ import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.pageContent
 
-class NetPoliciesViewModel(private val cilium: CiliumRepository) : LoadingViewModel<NetPolicyReport>() {
+/** The ReadProgress op of the network policies read (Go KubeNetworkPolicies). */
+const val NETPOL_PROGRESS_OP = "netpol"
+
+class NetPoliciesViewModel(private val cilium: CiliumRepository, private val kube: KubeRepository) : LoadingViewModel<NetPolicyReport>() {
     override suspend fun fetch() = cilium.policies()
+    override val progressReader: suspend () -> ReadProgress = { kube.readProgress(NETPOL_PROGRESS_OP) }
+}
+
+/** A network policies progress step by name: the policies of every CNI, the running pods, the namespaces. */
+@Composable
+private fun netpolStepLabel(id: String): String = when (id) {
+    "policies" -> stringResource(R.string.read_progress_step_policies)
+    "pods" -> stringResource(R.string.read_progress_step_pods)
+    "namespaces" -> stringResource(R.string.read_progress_step_namespaces)
+    else -> id
 }
 
 /**
@@ -74,9 +89,10 @@ class NetPoliciesViewModel(private val cilium: CiliumRepository) : LoadingViewMo
 @Composable
 fun NetworkPoliciesScreen(
     onBack: () -> Unit,
-    vm: NetPoliciesViewModel = viewModel(factory = factory { NetPoliciesViewModel(app.ciliumRepository) }),
+    vm: NetPoliciesViewModel = viewModel(factory = factory { NetPoliciesViewModel(app.ciliumRepository, app.kubeRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val progress by vm.readProgress.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var namespace by rememberSaveable { mutableStateOf<String?>(null) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -105,7 +121,7 @@ fun NetworkPoliciesScreen(
         },
     ) { padding ->
         val modifier = Modifier.pageContent(padding)
-        Loaded(state, vm::refresh, modifier) { data ->
+        Loaded(state, vm::refresh, modifier, progress = progress, stepLabel = { netpolStepLabel(it) }) { data ->
             PolicyList(data, namespace, query, onNamespace = { namespace = it }, onQuery = { query = it }, onOpen = { open = it.key })
             
         }

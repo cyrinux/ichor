@@ -30,6 +30,8 @@ import name.levis.ichor.R
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.ApiCount
 import name.levis.ichor.model.ApiHealthReport
+import name.levis.ichor.model.ReadProgress
+import name.levis.ichor.model.ReadStep
 import name.levis.ichor.model.formatMs
 import name.levis.ichor.model.formatRate
 import name.levis.ichor.ui.LoadingViewModel
@@ -49,6 +51,33 @@ import name.levis.ichor.ui.components.pageContent
 /** Reading it scrapes /metrics twice a few seconds apart: loaded on demand, never polled. */
 class ApiHealthViewModel(private val kube: KubeRepository) : LoadingViewModel<ApiHealthReport>() {
     override suspend fun fetch() = kube.apiHealth()
+    override val progressReader: suspend () -> ReadProgress = { kube.readProgress(APIHEALTH_PROGRESS_OP) }
+}
+
+/** The ReadProgress op of the API health read (Go KubeAPIHealth). */
+const val APIHEALTH_PROGRESS_OP = "apihealth"
+
+/**
+ * An API health progress step by name. The wait between the two /metrics samples counts its
+ * seconds (count of total): it says how many are left while it runs.
+ */
+@Composable
+private fun apiHealthStepLabel(id: String, progress: ReadProgress?): String = when (id) {
+    "readyz" -> stringResource(R.string.read_progress_step_readyz)
+    "livez" -> stringResource(R.string.read_progress_step_livez)
+    "version" -> stringResource(R.string.read_progress_step_version)
+    "queued" -> stringResource(R.string.read_progress_step_queued)
+    "scrape1" -> stringResource(R.string.read_progress_step_scrape1)
+    "scrape2" -> stringResource(R.string.read_progress_step_scrape2)
+    "wait" -> {
+        val step = progress?.steps?.firstOrNull { it.id == id }
+        if (step != null && step.state == ReadStep.RUNNING && step.total > 0) {
+            stringResource(R.string.read_progress_step_wait, (step.total - step.count).coerceAtLeast(0).toString())
+        } else {
+            stringResource(R.string.read_progress_step_wait_idle)
+        }
+    }
+    else -> id
 }
 
 /**
@@ -65,6 +94,7 @@ fun ApiHealthScreen(
     vm: ApiHealthViewModel = viewModel(factory = factory { ApiHealthViewModel(app.kubeRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val progress by vm.readProgress.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
 
     Scaffold(
@@ -77,7 +107,7 @@ fun ApiHealthScreen(
         },
     ) { padding ->
         val modifier = Modifier.pageContent(padding)
-        Loaded(state, vm::refresh, modifier) { data ->
+        Loaded(state, vm::refresh, modifier, progress = progress, stepLabel = { apiHealthStepLabel(it, progress) }) { data ->
             ApiHealthList(data, onAudit)
             
         }

@@ -4579,6 +4579,16 @@
     <string name="read_progress_step_nodes">Nodes</string>
     <string name="read_progress_step_pvcs">Volume claims</string>
     <string name="read_progress_step_version">Kubernetes version</string>
+    <string name="read_progress_step_kinds">Kinds of each API group</string>
+    <string name="read_progress_step_policies">Network policies</string>
+    <string name="read_progress_step_namespaces">Namespaces</string>
+    <string name="read_progress_step_readyz">Readiness checks (readyz)</string>
+    <string name="read_progress_step_livez">Liveness checks (livez)</string>
+    <string name="read_progress_step_queued">Queued requests</string>
+    <string name="read_progress_step_scrape1">First metrics sample</string>
+    <string name="read_progress_step_wait">Waiting %1$s s for the second sample</string>
+    <string name="read_progress_step_wait_idle">Wait for the second sample</string>
+    <string name="read_progress_step_scrape2">Second metrics sample</string>
     <string name="capacity_title">Capacity</string>
     <string name="capacity_intro">Free room counts requests against allocatable, as the scheduler does; usage comes from metrics-server.</string>
     <string name="capacity_free_cpu">%1$s CPU free of %2$s</string>

@@ -9,8 +9,25 @@ struct SupportedIntegrationsView: View {
     @State private var problem: String?
     /// Asking the cluster failed (not: it needs another config).
     @State private var retryable = false
+    /// How far the first detection got, while the list has no status yet.
+    @State private var progress: ReadProgress?
 
     var body: some View {
+        content
+            .navigationTitle("Integrations")
+            .task(id: model.client?.kubeServer) { await load() }
+    }
+
+    /// The first detection's steps while it runs, then the list.
+    @ViewBuilder private var content: some View {
+        if let progress, progress.running, !list.checked {
+            ReadProgressView(progress: progress, stepLabel: Self.stepLabel)
+        } else {
+            integrationList
+        }
+    }
+
+    private var integrationList: some View {
         List {
             Section("Platform") {
                 Link(destination: ProjectLinks.talos) {
@@ -31,8 +48,15 @@ struct SupportedIntegrationsView: View {
             }
         }
         .themedBackground()
-        .navigationTitle("Integrations")
-        .task(id: model.client?.kubeServer) { await load() }
+    }
+
+    /// A read step by name; an unknown one by its id.
+    private static func stepLabel(_ id: String) -> String {
+        switch id {
+        case "api": String(localized: "API groups")
+        case "kinds": String(localized: "Reading resource kinds")
+        default: id
+        }
     }
 
     private func load() async {
@@ -43,12 +67,24 @@ struct SupportedIntegrationsView: View {
         }
         guard let client = model.client else { return }
         let hints = model.lastKnown(.inventory, as: ClusterInventory.self).map { supportedIntegrationHints($0.value) } ?? ""
-        do {
-            list = try await client.supportedIntegrations(hints: hints)
+        let result: Result<SupportedIntegrations, Error> = await client.withReadProgress(
+            TalosClient.integrationsProgressOp, watching: !list.checked, update: { progress = $0 }
+        ) {
+            do {
+                return .success(try await client.supportedIntegrations(hints: hints))
+            } catch {
+                return .failure(error)
+            }
+        }
+        progress = nil
+        switch result {
+        case .success(let read):
+            list = read
             problem = nil
             retryable = false
-        } catch is CancellationError {
-        } catch {
+        case .failure(let error) where error is CancellationError:
+            break
+        case .failure(let error):
             problem = error.localizedDescription
             retryable = true
         }

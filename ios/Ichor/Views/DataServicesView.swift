@@ -12,6 +12,8 @@ struct DataServicesView: View {
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<DataServices> = .loading
     @State private var selected: DataServiceKind?
+    /// How far the first read got, while there is nothing else to show.
+    @State private var progress: ReadProgress?
 
     /// [selected]: the system to open on; nil (or not found) for the first.
     init(hints: String, downNodes: Set<String>, selected: DataServiceKind? = nil) {
@@ -21,7 +23,7 @@ struct DataServicesView: View {
     }
 
     var body: some View {
-        LoadStateView(state: state, retry: load) { services in
+        LoadStateView(state: state, retry: load, progress: progress, stepLabel: Self.stepLabel) { services in
             let kinds = services.detected
             if kinds.isEmpty {
                 // None of the systems the app reads runs here: which ones it reads, and how to ask for another.
@@ -78,9 +80,47 @@ struct DataServicesView: View {
 
     private func load() async {
         guard let client = model.client else { return }
-        let loaded: LoadState<DataServices> = await .from { try await client.dataServices(hints: hints) }
+        let waiting: Bool = { if case .loading = state { return true } else { return false } }()
+        let loaded: LoadState<DataServices> = await client.withReadProgress(
+            TalosClient.dataServicesProgressOp, watching: waiting, update: { progress = $0 }
+        ) {
+            await .from { try await client.dataServices(hints: hints) }
+        }
+        progress = nil
         // A failed refresh keeps what was shown, with the error in the footer.
         state = state.refreshed(with: loaded)
+    }
+
+    /// A read step by name: the shared reads, then each system by the name its segment shows;
+    /// an unknown one by its id.
+    private static func stepLabel(_ id: String) -> String {
+        switch id {
+        case "api": String(localized: "API groups")
+        case "pods": String(localized: "Reading pods")
+        default: dataServiceStep(id)?.title ?? id
+        }
+    }
+
+    /// The system a Go step id reads (step ids are short words, not catalog ids).
+    private static func dataServiceStep(_ id: String) -> DataServiceKind? {
+        switch id {
+        case "snapshots": .snapshots
+        case "backups": .backupJobs
+        case "longhorn": .longhorn
+        case "cnpg": .cnpg
+        case "dragonfly": .dragonfly
+        case "mariadb": .mariadb
+        case "percona": .percona
+        case "certmanager": .certManager
+        case "sealedsecrets": .sealedSecrets
+        case "velero": .velero
+        case "externaldns": .externalDns
+        case "kubegreen": .kubeGreen
+        case "ceph": .ceph
+        case "castai": .castai
+        case "garage": .garage
+        default: nil
+        }
     }
 }
 

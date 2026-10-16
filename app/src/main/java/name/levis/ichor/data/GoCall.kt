@@ -3,6 +3,8 @@ package name.levis.ichor.data
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
+import name.levis.ichor.model.ReadProgress
+import name.levis.ichorgo.Ichorgo
 
 /**
  * The JSON boundary to the Go core shared by [TalosRepository], [KubeRepository],
@@ -69,4 +71,13 @@ abstract class GoRepository(protected val go: GoCall) {
     val invalidations: StateFlow<Int> get() = go.results.invalidations
 
     fun keeper(key: String): suspend (Any) -> Unit = go.results.keeper(key)
+
+    /**
+     * How far the running read [op] on the active cluster got ("checkup", "dataservices",
+     * "integrations", "netpol", "apihealth"); polled while it runs. Off the main thread: in
+     * screenshot mode the result waits for the mask.
+     */
+    suspend fun readProgress(op: String): ReadProgress = go.kube { cfg, ctx, _ ->
+        TalosJson.decodeFromString(ReadProgress.serializer(), Ichorgo.readProgress(cfg, ctx, op))
+    }
 }

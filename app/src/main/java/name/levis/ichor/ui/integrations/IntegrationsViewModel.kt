@@ -10,9 +10,13 @@ import name.levis.ichor.data.TalosJson
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.IntegrationFamily
 import name.levis.ichor.model.IntegrationReport
+import name.levis.ichor.model.ReadProgress
 import name.levis.ichor.model.picking
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichorgo.Ichorgo
+
+/** The ReadProgress op of the integrations read (Go KubeIntegrations). */
+const val INTEGRATIONS_PROGRESS_OP = "integrations"
 
 /** The issue form a request opens, with nothing filled in for "something else". */
 val INTEGRATION_FORM_URL = "$REPO_URL_BASE${BuildConfig.UPDATE_REPO}/issues/new?template=integration.yml"
@@ -29,6 +33,7 @@ class IntegrationsViewModel(private val kube: KubeRepository) : LoadingViewModel
     private var source: Any? = null
 
     override suspend fun fetch() = kube.integrations()
+    override val progressReader: suspend () -> ReadProgress = { kube.readProgress(INTEGRATIONS_PROGRESS_OP) }
 
     /** Loads once per [key] (context, config generation); [refresh] forces it. */
     fun load(key: Any) {

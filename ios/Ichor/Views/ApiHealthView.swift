@@ -9,9 +9,11 @@ import IchorCore
 struct ApiHealthView: View {
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<ApiHealthReport> = .loading
+    /// How far the first read got, while there is nothing else to show.
+    @State private var progress: ReadProgress?
 
     var body: some View {
-        LoadStateView(state: state, retry: load) { report in
+        LoadStateView(state: state, retry: load, progress: progress, stepLabel: stepLabel) { report in
             List {
                 ApiVerdictSection(report: report)
                 // The metrics group clients; the audit log names them, and what they do wrong.
@@ -44,7 +46,37 @@ struct ApiHealthView: View {
 
     private func load() async {
         guard let client = model.client else { return }
-        state = state.refreshed(with: await .from { try await client.apiHealth() })
+        let waiting: Bool = { if case .loading = state { return true } else { return false } }()
+        let loaded: LoadState<ApiHealthReport> = await client.withReadProgress(
+            TalosClient.apiHealthProgressOp, watching: waiting, update: { progress = $0 }
+        ) {
+            await .from { try await client.apiHealth() }
+        }
+        progress = nil
+        state = state.refreshed(with: loaded)
+    }
+
+    /// A read step by name; an unknown one by its id. The wait between the two /metrics samples
+    /// counts down the seconds left (its count is the seconds elapsed of the window).
+    private func stepLabel(_ id: String) -> String {
+        switch id {
+        case "readyz": String(localized: "Readiness checks")
+        case "livez": String(localized: "Liveness checks")
+        case "version": String(localized: "Kubernetes version")
+        case "queued": String(localized: "Queued requests")
+        case "scrape1": String(localized: "First metrics sample")
+        case "wait": waitLabel
+        case "scrape2": String(localized: "Second metrics sample")
+        default: id
+        }
+    }
+
+    private var waitLabel: String {
+        guard let wait = progress?.steps.first(where: { $0.id == "wait" }), wait.state == .running,
+              wait.total > wait.count else {
+            return String(localized: "Waiting for the second sample")
+        }
+        return String(localized: "Waiting \(String(wait.total - wait.count)) s for the second sample")
     }
 }
 

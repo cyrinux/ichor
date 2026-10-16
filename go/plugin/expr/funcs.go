@@ -62,6 +62,18 @@ var registry = map[string]Func{}
 // safe for writes concurrent with evaluation.
 func Register(name string, fn Func) { registry[name] = fn }
 
+// lookup finds a function among the local ones (a Scope's or an Env's Funcs) first, then the
+// library.
+func lookup(local map[string]Func, name string) (Func, bool) {
+	if fn, ok := local[name]; ok {
+		return fn, true
+	}
+
+	fn, ok := registry[name]
+
+	return fn, ok
+}
+
 func init() {
 	for name, fn := range builtins {
 		Register(name, fn)

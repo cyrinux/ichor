@@ -49,6 +49,7 @@ import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.LikelyCause
 import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.model.alertSystem
 import name.levis.ichor.model.formatMilliCores
 import name.levis.ichor.model.health
 import name.levis.ichor.model.summary
@@ -59,6 +60,21 @@ import name.levis.ichor.ui.components.color
 import name.levis.ichor.ui.components.label
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
+
+/** The ReadProgress op of the data services read (Go KubeDataServices). */
+const val DATA_SERVICES_PROGRESS_OP = "dataservices"
+
+/**
+ * A data services progress step by name: the shared reads, then each system detected by its
+ * tab's name (step ids are the alert system names, "backups" for the backup CronJobs).
+ */
+@Composable
+fun dataServicesStepLabel(id: String): String = when (id) {
+    "api" -> stringResource(R.string.read_progress_step_api)
+    "pods" -> stringResource(R.string.read_progress_step_pods)
+    "backups" -> DataServiceKind.BACKUP_JOBS.tabTitle
+    else -> DataServiceKind.entries.firstOrNull { it.alertSystem == id }?.tabTitle ?: id
+}
 
 /** The tab's name, short enough for four tabs. */
 val DataServiceKind.tabTitle: String
