@@ -21,6 +21,7 @@ object CheckupSectionId {
     const val HELM = "helm"
     const val MONITORING = "monitoring"
     const val CROSSPLANE = "crossplane"
+    const val TAILSCALE = "tailscale"
 }
 
 /** What a finding is about ([CheckupFinding.kind]); CheckupWording words each one. */
@@ -91,6 +92,14 @@ object CheckupKind {
     const val CROSSPLANE_NOT_READY = "crossplaneNotReady"
     /** A Crossplane definition (XRD) whose Established condition is not True. */
     const val CROSSPLANE_DEFINITION_NOT_ESTABLISHED = "crossplaneDefinitionNotEstablished"
+    /** The Tailscale operator Deployment not ready or scaled to zero (extra: "ready/desired"). */
+    const val TAILSCALE_OPERATOR_DOWN = "tailscaleOperatorDown"
+    /** A Tailscale Connector not ready (extra: its roles, "subnet-router, exit-node", or ""). */
+    const val TAILSCALE_CONNECTOR_NOT_READY = "tailscaleConnectorNotReady"
+    /** A Tailscale ProxyGroup with no proxy up (critical) or some down (warning) (extra: its type). */
+    const val TAILSCALE_PROXY_GROUP_DOWN = "tailscaleProxyGroupDown"
+    /** A Tailscale ProxyClass not ready that Connectors or ProxyGroups name (count: how many). */
+    const val TAILSCALE_PROXY_CLASS_NOT_READY = "tailscaleProxyClassNotReady"
 }
 
 /** A section's or the whole checkup's state, worst first. */

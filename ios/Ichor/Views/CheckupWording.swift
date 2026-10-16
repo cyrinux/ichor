@@ -35,6 +35,7 @@ extension CheckupSectionID {
         case .helm: CheckupText.checkupSectionHelm
         case .monitoring: String(localized: "Monitoring")
         case .crossplane: CheckupText.checkupSectionCrossplane
+        case .tailscale: CheckupText.checkupSectionTailscale
         }
     }
 
@@ -56,6 +57,7 @@ extension CheckupSectionID {
         case .helm: CheckupText.checkupSectionHelmHint
         case .monitoring: PromMonitoringText.checkupSectionMonitoringHint
         case .crossplane: CheckupText.checkupSectionCrossplaneHint
+        case .tailscale: CheckupText.checkupSectionTailscaleHint
         }
     }
 
@@ -76,6 +78,7 @@ extension CheckupSectionID {
         case .helm: "shippingbox"
         case .monitoring: "waveform.path.ecg"
         case .crossplane: "cloud"
+        case .tailscale: "network.badge.shield.half.filled"
         }
     }
 }
@@ -171,6 +174,16 @@ extension CheckupFinding {
         case .crossplaneProviderUnhealthy: return CheckupText.checkupCrossplaneProviderUnhealthy(f.extra)
         case .crossplaneNotReady: return CheckupText.checkupCrossplaneNotReady(age.isEmpty ? "-" : age)
         case .crossplaneDefinitionNotEstablished: return CheckupText.checkupCrossplaneDefinitionNotEstablished
+        case .tailscaleOperatorDown: return CheckupText.checkupTailscaleOperatorDown(f.extra)
+        case .tailscaleConnectorNotReady where f.reason == "ProxyClassMissing",
+             .tailscaleProxyGroupDown where f.reason == "ProxyClassMissing":
+            // Ready, but naming a ProxyClass that does not exist: its next proxy cannot start.
+            return CheckupText.checkupTailscaleProxyClassMissing
+        case .tailscaleConnectorNotReady:
+            return f.extra.isEmpty ? CheckupText.checkupTailscaleConnectorNotReadyPlain : CheckupText.checkupTailscaleConnectorNotReady(f.extra)
+        case .tailscaleProxyGroupDown:
+            return f.extra.isEmpty ? CheckupText.checkupTailscaleProxyGroupDownPlain : CheckupText.checkupTailscaleProxyGroupDown(f.extra)
+        case .tailscaleProxyClassNotReady: return CheckupText.checkupTailscaleProxyClassNotReady("\(f.count)")
         }
     }
 
@@ -231,6 +244,10 @@ extension CheckupFinding {
         case .crossplaneProviderUnhealthy: return CheckupText.checkupCrossplaneProviderUnhealthyFix
         case .crossplaneNotReady: return CheckupText.checkupCrossplaneNotReadyFix
         case .crossplaneDefinitionNotEstablished: return CheckupText.checkupCrossplaneDefinitionNotEstablishedFix
+        case .tailscaleOperatorDown: return CheckupText.checkupTailscaleOperatorDownFix
+        case .tailscaleConnectorNotReady: return CheckupText.checkupTailscaleConnectorNotReadyFix
+        case .tailscaleProxyGroupDown: return CheckupText.checkupTailscaleProxyGroupDownFix
+        case .tailscaleProxyClassNotReady: return CheckupText.checkupTailscaleProxyClassNotReadyFix
         }
     }
 }

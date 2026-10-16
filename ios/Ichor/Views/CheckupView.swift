@@ -262,6 +262,12 @@ private struct CheckupSectionBody: View {
                     Label(CheckupText.checkupOpenPolicies, systemImage: "checklist").font(.callout)
                 }
             }
+        case .tailscale:
+            if !section.findings.isEmpty || !section.error.isEmpty {
+                NavigationLink { TailscaleView() } label: {
+                    Label(CheckupText.checkupOpenTailscale, systemImage: "network.badge.shield.half.filled").font(.callout)
+                }
+            }
         default:
             EmptyView()
         }

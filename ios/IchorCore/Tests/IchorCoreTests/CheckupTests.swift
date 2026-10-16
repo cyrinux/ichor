@@ -133,4 +133,21 @@ final class CheckupTests: XCTestCase {
             "crossplane|crossplaneNotReady|Bucket/assets-bucket": "warning",
         ])
     }
+
+    // The demo checkup's Tailscale section (go/ichorgo/kube_checkup_demo.go), plus a proxy group.
+    func testTailscaleSectionDecodesAndAlerts() throws {
+        let r = try TalosJSON.decode(CheckupReport.self, from: #"""
+        {"status":"critical","sections":[{"id":"tailscale","status":"critical","checked":6,"findings":[
+          {"kind":"tailscaleConnectorNotReady","severity":"critical","name":"lab-router","reason":"ConnectorCreationFailed","message":"failed to create the subnet router","extra":"subnet-router"},
+          {"kind":"tailscaleProxyGroupDown","severity":"warning","name":"egress-proxies","reason":"ProxyGroupNotReady","extra":"egress"}]}]}
+        """#)
+        let section = try XCTUnwrap(r.shownSections.first)
+        XCTAssertEqual(section.section, .tailscale)
+        XCTAssertEqual(section.findings.compactMap(\.kind), [.tailscaleConnectorNotReady, .tailscaleProxyGroupDown])
+        XCTAssertEqual(section.findings[0].detail, "ConnectorCreationFailed: failed to create the subnet router")
+        XCTAssertEqual(r.alertIssues, [
+            "tailscale|tailscaleConnectorNotReady|lab-router": "critical",
+            "tailscale|tailscaleProxyGroupDown|egress-proxies": "warning",
+        ])
+    }
 }

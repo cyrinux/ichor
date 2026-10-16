@@ -38,6 +38,7 @@ type tsConnectorObject struct {
 		Hostname     string   `json:"hostname"`
 		ProxyClass   string   `json:"proxyClass"`
 		Replicas     *int     `json:"replicas"`
+		ExitNode     bool     `json:"exitNode"`
 		SubnetRouter *struct {
 			AdvertiseRoutes []string `json:"advertiseRoutes"`
 		} `json:"subnetRouter"`
@@ -133,9 +134,15 @@ func readTailscale(ctx context.Context, k *kubeClient) (tsReport, error) {
 		return tsReport{}, err
 	}
 
+	return readTailscaleWithin(ctx, k, groups), nil
+}
+
+// readTailscaleWithin reads the operator through the API groups already read (the checkup's):
+// not installed without tailscale.com. A list that fails is the report's Error.
+func readTailscaleWithin(ctx context.Context, k *kubeClient, groups map[string]string) tsReport {
 	version := groups[groupTailscale]
 	if version == "" {
-		return emptyTailscale(), nil
+		return emptyTailscale()
 	}
 
 	base := "/apis/" + groupTailscale + "/" + version
@@ -172,7 +179,7 @@ func readTailscale(ctx context.Context, k *kubeClient) (tsReport, error) {
 	r := buildTailscale(raw)
 	r.Version = version
 
-	return r, nil
+	return r
 }
 
 func emptyTailscale() tsReport {
@@ -378,13 +385,14 @@ func tsOperatorRow(d *tsDeploymentObject) *tsOperator {
 func tsConnectorRow(c tsConnectorObject) tsConnector {
 	s := c.Status
 	row := tsConnector{
-		Name:               c.Metadata.Name,
-		Hostname:           cmp.Or(s.Hostname, c.Spec.Hostname),
-		TailnetIPs:         nonNil(s.TailnetIPs),
-		SubnetRoutes:       s.SubnetRoutes,
-		AdvertisedRoutes:   []string{},
-		ExitNode:           s.IsExitNode,
-		AppConnector:       s.IsAppConnector,
+		Name:             c.Metadata.Name,
+		Hostname:         cmp.Or(s.Hostname, c.Spec.Hostname),
+		TailnetIPs:       nonNil(s.TailnetIPs),
+		SubnetRoutes:     s.SubnetRoutes,
+		AdvertisedRoutes: []string{},
+		// The spec's role while the status has none yet (a connector that is not ready).
+		ExitNode:           s.IsExitNode || c.Spec.ExitNode,
+		AppConnector:       s.IsAppConnector || c.Spec.AppConnector != nil,
 		AppConnectorRoutes: []string{},
 		Tags:               nonNil(c.Spec.Tags),
 		ProxyClass:         c.Spec.ProxyClass,

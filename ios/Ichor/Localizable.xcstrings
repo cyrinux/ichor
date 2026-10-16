@@ -1,6 +1,461 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Names a ProxyClass that does not exist" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nennt eine ProxyClass, die es nicht gibt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indica una ProxyClass que no existe"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désigne une ProxyClass qui n’existe pas"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indica una ProxyClass che non esiste"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вказує ProxyClass, якого не існує"
+          }
+        }
+      }
+    },
+    "Operator, connectors, proxy groups and proxy classes that are not ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operator, Connectors, Proxy-Gruppen und Proxy-Klassen, die nicht bereit sind"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operador, conectores, grupos de proxies y clases de proxy que no están listos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opérateur, connecteurs, groupes de proxys et classes de proxy qui ne sont pas prêts"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operatore, connettori, gruppi di proxy e classi di proxy non pronti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оператор, конектори, групи проксі й класи проксі, що не готові"
+          }
+        }
+      }
+    },
+    "Open Tailscale" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Tailscale"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir Tailscale"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri Tailscale"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити Tailscale"
+          }
+        }
+      }
+    },
+    "Operator down: %@ replicas ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operator ausgefallen: %@ Replikate bereit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operador caído: %@ réplicas listas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opérateur hors service : %@ réplicas prêts"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operatore non attivo: %@ repliche pronte"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оператор не працює: готово реплік %@"
+          }
+        }
+      }
+    },
+    "Connector not ready (%@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connector nicht bereit (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conector no listo (%@)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecteur pas prêt (%@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connettore non pronto (%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конектор не готовий (%@)"
+          }
+        }
+      }
+    },
+    "Connector not ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connector nicht bereit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conector no listo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecteur pas prêt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connettore non pronto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конектор не готовий"
+          }
+        }
+      }
+    },
+    "%@ proxy group not ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proxy-Gruppe %@ nicht bereit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupo de proxies %@ no listo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groupe de proxys %@ pas prêt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gruppo di proxy %@ non pronto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Група проксі %@ не готова"
+          }
+        }
+      }
+    },
+    "Proxy group not ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proxy-Gruppe nicht bereit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupo de proxies no listo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groupe de proxys pas prêt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gruppo di proxy non pronto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Група проксі не готова"
+          }
+        }
+      }
+    },
+    "ProxyClass not ready, used by %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ProxyClass nicht bereit, genutzt von %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ProxyClass no lista, usada por %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ProxyClass pas prête, utilisée par %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ProxyClass non pronta, usata da %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ProxyClass не готовий, використовується %@"
+          }
+        }
+      }
+    },
+    "Nothing Tailscale is reconciled while the operator is down: check its pod and its logs (kubectl logs deploy/operator in its namespace)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solange der Operator ausgefallen ist, wird nichts von Tailscale abgeglichen: prüfen Sie seinen Pod und seine Logs (kubectl logs deploy/operator in seinem Namespace)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada de Tailscale se reconcilia mientras el operador está caído: revisa su pod y sus registros (kubectl logs deploy/operator en su namespace)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien de Tailscale n’est réconcilié tant que l’opérateur est hors service : vérifiez son pod et ses journaux (kubectl logs deploy/operator dans son namespace)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nulla di Tailscale viene riconciliato finché l’operatore non è attivo: controlla il suo pod e i suoi log (kubectl logs deploy/operator nel suo namespace)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поки оператор не працює, нічого з Tailscale не узгоджується: перевірте його под і журнали (kubectl logs deploy/operator у його namespace)."
+          }
+        }
+      }
+    },
+    "Its routes, exit node or app connector are off the tailnet. Check the Connector’s events and the operator logs: kubectl describe connector <name>." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seine Routen, sein Exit-Node oder App-Connector sind nicht im Tailnet. Prüfen Sie die Events des Connectors und die Operator-Logs: kubectl describe connector <name>."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sus rutas, nodo de salida o conector de apps están fuera del tailnet. Revisa los eventos del Connector y los registros del operador: kubectl describe connector <nombre>."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses routes, son nœud de sortie ou son connecteur d’app sont hors du tailnet. Vérifiez les événements du Connector et les journaux de l’opérateur : kubectl describe connector <nom>."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le sue rotte, l’exit node o l’app connector sono fuori dalla tailnet. Controlla gli eventi del Connector e i log dell’operatore: kubectl describe connector <nome>."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його маршрути, вихідний вузол або конектор застосунків поза tailnet. Перевірте події Connector і журнали оператора: kubectl describe connector <назва>."
+          }
+        }
+      }
+    },
+    "What it serves is unreachable through the tailnet (for kube-apiserver, the API itself). Check its pods and the operator logs: kubectl describe proxygroup <name>." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was sie bereitstellt, ist über das Tailnet nicht erreichbar (bei kube-apiserver die API selbst). Prüfen Sie ihre Pods und die Operator-Logs: kubectl describe proxygroup <name>."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo que sirve no es accesible por el tailnet (para kube-apiserver, la propia API). Revisa sus pods y los registros del operador: kubectl describe proxygroup <nombre>."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce qu’il sert est injoignable via le tailnet (pour kube-apiserver, l’API elle-même). Vérifiez ses pods et les journaux de l’opérateur : kubectl describe proxygroup <nom>."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciò che serve non è raggiungibile tramite la tailnet (per kube-apiserver, l’API stessa). Controlla i suoi pod e i log dell’operatore: kubectl describe proxygroup <nome>."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Те, що вона обслуговує, недоступне через tailnet (для kube-apiserver — сам API). Перевірте її поди й журнали оператора: kubectl describe proxygroup <назва>."
+          }
+        }
+      }
+    },
+    "The Connectors and proxy groups that use it cannot start new proxies: kubectl describe proxyclass <name> names the invalid field." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connectors und Proxy-Gruppen, die sie nutzen, können keine neuen Proxys starten: kubectl describe proxyclass <name> nennt das ungültige Feld."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los Connectors y grupos de proxies que la usan no pueden iniciar nuevos proxies: kubectl describe proxyclass <nombre> indica el campo no válido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les Connectors et groupes de proxys qui l’utilisent ne peuvent pas démarrer de nouveaux proxys : kubectl describe proxyclass <nom> indique le champ invalide."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I Connector e i gruppi di proxy che la usano non possono avviare nuovi proxy: kubectl describe proxyclass <nome> indica il campo non valido."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connector і групи проксі, що його використовують, не можуть запускати нові проксі: kubectl describe proxyclass <назва> вказує недійсне поле."
+          }
+        }
+      }
+    },
     "Pause at…" : {
       "extractionState" : "manual",
       "localizations" : {
