@@ -18,7 +18,10 @@ import (
 const (
 	// xpPausedAnnotation pauses reconciliation; only "true" pauses, and removing it resumes.
 	xpPausedAnnotation = "crossplane.io/paused"
-	// xpReconcileAnnotation triggers an immediate reconciliation when its value changes.
+	// xpReconcileAnnotation triggers an immediate reconciliation when its value changes:
+	// handled by crossplane-runtime 2.3+ providers (and core 2.3+ for composites), which write
+	// the value to status.lastHandledReconcileAt. Older ones ignore the key, but an annotation
+	// change is itself an update their watch predicate lets through, so it still queues one.
 	xpReconcileAnnotation = "crossplane.io/reconcile-requested-at"
 
 	xpActionPause     = "pause"

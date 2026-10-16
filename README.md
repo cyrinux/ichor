@@ -646,7 +646,10 @@ three reversible actions, each a plain confirmation and an entry in the activity
   leaves its composed resources reconciling.
 - **Resume** removes the annotation.
 - **Reconcile now** (`crossplane.io/reconcile-requested-at`) reconciles it at once instead of at
-  the next poll.
+  the next poll. Providers built on crossplane-runtime 2.3+ (and Crossplane 2.3+ for composites)
+  handle the annotation and record it in `status.lastHandledReconcileAt`; older ones do not read
+  it, but the annotation changing is still an update their watch reacts to, so the request queues
+  a reconcile there too, without that status line. The app says "requested", not "done".
 
 The actions are off, with the reason, for credentials that may not patch the object (`os:admin`).
 A claim is changed through its composite; deleting stays with the object screen's delete.
