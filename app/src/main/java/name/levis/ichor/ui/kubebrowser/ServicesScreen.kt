@@ -54,6 +54,7 @@ import name.levis.ichor.model.filteredServices
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.apps.RouteCertBadge
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
@@ -210,6 +211,7 @@ private fun ServiceRowItem(svc: ServiceRow, showNamespace: Boolean, onClick: () 
                             onClick = { runCatching { uriHandler.openUri(route.url) } },
                             label = { Text(route.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         )
+                        RouteCertBadge(route)
                         route.objectRef?.let { ref ->
                             IconButton(onClick = { onObject(ref) }, modifier = Modifier.size(32.dp)) {
                                 Icon(

@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"slices"
 	"strings"
+	"time"
 )
 
 // demoRouteTable maps a demo pod name prefix to the route that serves it.
@@ -28,9 +29,22 @@ func demoRoutes(pods []routePod) []kubeRoute {
 		if slices.ContainsFunc(pods, func(p routePod) bool {
 			return p.Namespace == d.route.Namespace && strings.HasPrefix(p.Pod, d.prefix)
 		}) {
-			routes = append(routes, d.route)
+			routes = append(routes, demoRouteCert(d.route, time.Now()))
 		}
 	}
 
 	return uniqueRoutes(routes)
+}
+
+// demoRouteCert badges the demo's two certificates in trouble: Vaultwarden's expires in nine
+// days, Paperless's names other hosts.
+func demoRouteCert(r kubeRoute, now time.Time) kubeRoute {
+	switch r.Name {
+	case "vaultwarden":
+		r.CertSecret, r.CertIssue, r.CertNotAfter = "default/vaultwarden-tls", routeCertExpiring, now.Add(9*24*time.Hour+time.Hour).Unix()
+	case "paperless":
+		r.CertSecret, r.CertIssue, r.CertNotAfter = "default/paperless-tls", routeCertHostMismatch, now.Add(200*24*time.Hour).Unix()
+	}
+
+	return r
 }

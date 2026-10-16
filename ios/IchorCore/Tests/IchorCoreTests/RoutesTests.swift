@@ -50,4 +50,21 @@ final class RoutesTests: XCTestCase {
         let encoded = String(decoding: try JSONEncoder().encode([app.routePods[0]]), as: UTF8.self)
         XCTAssertTrue(encoded.contains(#""namespace":"shop""#) && encoded.contains(#""pod":"web-0""#), encoded)
     }
+
+    func testCertificateFieldsDecodeAndDefault() throws {
+        let list = try JSONDecoder().decode(KubeRouteList.self, from: Data(#"""
+        {"routes":[
+          {"kind":"Ingress","namespace":"default","name":"vaultwarden","url":"https://vault.home.example","certNotAfter":1000000,"certIssue":"expiring","certSecret":"default/vaultwarden-tls"},
+          {"kind":"Ingress","namespace":"default","name":"paperless","url":"https://paperless.home.example","certIssue":"hostMismatch","certManaged":true},
+          {"kind":"Ingress","namespace":"demo","name":"hello","url":"https://hello.home.example"}]}
+        """#.utf8))
+        let routes = list.routes
+        XCTAssertEqual(routes[0].certHealth, .warning)
+        XCTAssertEqual(routes[0].certSecret, "default/vaultwarden-tls")
+        XCTAssertEqual(routes[0].certDaysLeft(now: 1_000_000 - 9 * 86_400 - 3_600), 9)
+        XCTAssertEqual(routes[1].certHealth, .warning)
+        XCTAssertTrue(routes[1].certManaged)
+        XCTAssertNil(routes[2].certHealth)
+        XCTAssertEqual(routes[2].certNotAfter, 0)
+    }
 }

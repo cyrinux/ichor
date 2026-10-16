@@ -24,7 +24,26 @@ data class KubeRoute(
     val group: String = "",
     val version: String = "",
     val resource: String = "",
+    /** The certificate the route's host serves, read from a TLS handshake: its expiry (unix seconds), 0 when unknown. */
+    val certNotAfter: Long = 0,
+    /** What is wrong with it ([RouteCertIssue]), "" when fine or unknown. */
+    val certIssue: String = "",
+    /** The TLS Secret the route names, "namespace/name". */
+    val certSecret: String = "",
+    /** cert-manager writes that Secret. */
+    val certManaged: Boolean = false,
 ) {
+    /** Whole days until the certificate expires, rounded towards the past. */
+    fun certDaysLeft(nowSeconds: Long): Long = Math.floorDiv(certNotAfter - nowSeconds, 86_400L)
+
+    /** How bad the certificate is: null when it is fine or unknown. */
+    val certHealth: ServiceHealth?
+        get() = when (certIssue) {
+            RouteCertIssue.EXPIRING, RouteCertIssue.HOST_MISMATCH -> ServiceHealth.WARNING
+            RouteCertIssue.EXPIRED -> ServiceHealth.CRITICAL
+            else -> null
+        }
+
     /** The URL without its scheme, to show. */
     val label: String get() = url.substringAfter("://")
 
@@ -34,6 +53,13 @@ data class KubeRoute(
      */
     val objectRef: KubeObjectRef?
         get() = if (resource.isEmpty()) null else KubeObjectRef(group, version, resource, kind, namespace, name, editable = false)
+}
+
+/** What is wrong with the certificate a route serves ([KubeRoute.certIssue]). */
+object RouteCertIssue {
+    const val EXPIRED = "expired"
+    const val EXPIRING = "expiring"
+    const val HOST_MISMATCH = "hostMismatch"
 }
 
 /** One pod of an app, as KubeAppRoutes takes it. */

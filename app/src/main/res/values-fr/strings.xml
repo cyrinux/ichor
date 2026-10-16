@@ -3674,6 +3674,15 @@
     <string name="checkup_sealedSecretNotSynced_fix">Le contrôleur n’a pas pu le déchiffrer en Secret : il a été scellé pour un autre cluster, nom ou namespace, ou avec une clé que le contrôleur n’a plus. Scellez-le de nouveau avec kubeseal et le certificat de ce cluster.</string>
     <string name="checkup_sealingKeyMissing_fix">Le contrôleur n’a aucune clé pour déchiffrer. Restaurez la sauvegarde de la clé (un Secret avec le label sealedsecrets.bitnami.com/sealed-secrets-key) dans son namespace, puis redémarrez le contrôleur.</string>
     <string name="checkup_sealingKeyCompromised_fix">Le contrôleur ne scelle plus avec elle, mais ce qu’elle a scellé reste lisible avec elle. Scellez de nouveau ces SealedSecrets avec kubeseal, puis supprimez la clé.</string>
+    <string name="route_cert_expired">Certificat expiré</string>
+    <string name="route_cert_expiring">Le certificat expire dans %1$d jours</string>
+    <string name="route_cert_host_mismatch">Le certificat ne couvre pas cet hôte</string>
+    <string name="checkup_routeCertExpired">Certificat expiré sur %1$s</string>
+    <string name="checkup_routeCertExpiring">Le certificat de %2$s expire dans %1$s jours</string>
+    <string name="checkup_routeCertHostMismatch">Le certificat ne nomme pas %1$s</string>
+    <string name="checkup_routeCertExpired_fix">Les navigateurs refusent cette adresse. Rien ne renouvelle ce certificat (il n’est pas à cert-manager) : renouvelez-le là où il a été émis et remplacez le Secret TLS, ou émettez-le avec un Certificate cert-manager.</string>
+    <string name="checkup_routeCertExpiring_fix">Rien ne renouvelle ce certificat (il n’est pas à cert-manager) : renouvelez-le là où il a été émis et remplacez le Secret TLS, ou émettez-le avec un Certificate cert-manager.</string>
+    <string name="checkup_routeCertHostMismatch_fix">Les navigateurs avertissent sur cette adresse. Le certificat nomme d’autres hôtes (ci-dessous) : ajoutez-y cet hôte, ou vérifiez que la route nomme le bon Secret TLS ; un Secret introuvable fait servir au proxy son certificat par défaut.</string>
     <string name="checkup_helmFailed_fix">Lancez helm history pour voir pourquoi, puis helm rollback ou une nouvelle mise à niveau.</string>
     <string name="checkup_helmPending_fix">Une opération Helm a été interrompue et a laissé son verrou : helm rollback vers la dernière révision déployée le libère.</string>
     <string name="checkup_section_monitoring">Supervision</string>

@@ -121,7 +121,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   elsewhere), quotas at their limit, nodes left cordoned or under pressure, LoadBalancer Services
   without an address (and why), empty MetalLB or Cilium pools, MetalLB pools nothing advertises,
   a refused MetalLB configuration and BGP sessions down, namespaces, pods and claims stuck in Terminating,
-  certificate requests nobody approved, External Secrets that do not sync, Helm releases
+  certificate requests nobody approved, web address certificates (not cert-manager's) expired,
+  expiring or naming other hosts, External Secrets that do not sync, Helm releases
   failed or stuck, and Crossplane: managed resources that cannot sync, unhealthy providers. Every finding says what to change. Read-only; the critical ones can also
   notify in the background (Settings → Alerts). A pod's log sheet and a workload's sheet show
   the object's Kubernetes events, like the end of `kubectl describe`. See
@@ -219,7 +220,7 @@ reads those roles and explains up front when a feature needs more.
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
 | **Policies (Kyverno)** | `Kubeconfig`, then the Kubernetes API (kyverno.io policies, wgpolicyk8s.io policy reports, Kyverno's Deployments and webhooks) | **`os:admin`** |
 | **Virtual machines: list, start/stop/restart/pause/migrate, serial console** | `Kubeconfig`, then the Kubernetes API (kubevirt.io, subresources.kubevirt.io including `virtualmachineinstances/console`, cdi.kubevirt.io) | **`os:admin`** |
-| **Cluster checkup, events of a pod or workload** | `Kubeconfig`, then the Kubernetes API (pods, nodes, events, claims, webhooks, quotas, services, CSRs, secrets metadata…) and each kubelet's `stats/summary` through the API server proxy | **`os:admin`** |
+| **Cluster checkup, events of a pod or workload** | `Kubeconfig`, then the Kubernetes API (pods, nodes, events, claims, webhooks, quotas, services, CSRs, secrets metadata…), each kubelet's `stats/summary` through the API server proxy, and a TLS handshake with each web address to read the certificate it serves (never the Secret, whose private key would come along) | **`os:admin`** |
 | **Talos rollback (`talosctl rollback`)** | `Rollback` | **`os:admin`** |
 | **CloudNativePG primary restart and hibernate/wake** | `Kubeconfig`, then the Kubernetes API: get clusters and pods, patch `clusters/status` for restart, patch clusters for hibernation | **`os:admin`** |
 | **Longhorn faulted-volume salvage** | `Kubeconfig`, then the Kubernetes API: get volumes, list replicas/nodes, create `services/proxy` to the Longhorn manager | **`os:admin`** |
@@ -434,6 +435,16 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   not a finding. Since it runs at every background check, it reads at most 2,000 managed
   resources of each kind (the Crossplane screen reads them all): past that, a problem further
   down the list is not seen. Condition messages are cut to 300 characters.
+- **Web address certificates:** the certificate each host of an Ingress tls entry (or the rule
+  hosts behind its wildcard), a Gateway HTTPS listener that names a host, or a Traefik
+  IngressRoute serves, read from a TLS handshake (port 443, a Gateway listener's own port;
+  what a browser sees, dialled straight from the phone; never from the Secret, so no private
+  key reaches the phone). Expired is
+  critical; expiring within 14 days or not naming the host (a Secret the proxy cannot find
+  serves its default certificate) are warnings. A certificate cert-manager writes is left to
+  its own alerts. Up to 40 hosts per check, each read at most every 30 minutes; a host the
+  phone cannot reach says nothing. The app sheet's and the Services screen's web addresses
+  show the same badge.
 - **Tailscale:** with the Tailscale operator installed, an operator Deployment with replicas not
   ready, a Connector whose `ConnectorReady` failed (named with its role: subnet router, exit
   node, app connector) and a ProxyGroup with no proxy available are critical. An operator scaled

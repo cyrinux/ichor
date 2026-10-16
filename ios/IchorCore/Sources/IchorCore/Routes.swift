@@ -29,8 +29,30 @@ public struct KubeRoute: Decodable, Hashable, Identifiable, Sendable {
     public let group: String
     public let version: String
     public let resource: String
+    /// The certificate the route's host serves, read from a TLS handshake: its expiry (unix
+    /// seconds), 0 when unknown; what is wrong with it (RouteCertIssue), "" when fine or unknown;
+    /// the TLS Secret the route names; whether cert-manager writes it.
+    public let certNotAfter: Int64
+    public let certIssue: String
+    public let certSecret: String
+    public let certManaged: Bool
 
     public var id: String { url }
+
+    /// Whole days until the certificate expires, rounded towards the past.
+    public func certDaysLeft(now: Int64) -> Int64 {
+        let seconds = certNotAfter - now
+        return seconds >= 0 ? seconds / 86_400 : -((-seconds + 86_399) / 86_400)
+    }
+
+    /// How bad the certificate is: nil when it is fine or unknown.
+    public var certHealth: ServiceHealth? {
+        switch certIssue {
+        case RouteCertIssue.expiring, RouteCertIssue.hostMismatch: .warning
+        case RouteCertIssue.expired: .critical
+        default: nil
+        }
+    }
 
     /// Where the route itself is read, so its object summary opens: nil when the answer
     /// carries no resource (an older ichorgo).
@@ -46,7 +68,8 @@ public struct KubeRoute: Decodable, Hashable, Identifiable, Sendable {
     }
 
     public init(kind: String, namespace: String, name: String, url: String, service: String = "",
-                group: String = "", version: String = "", resource: String = "") {
+                group: String = "", version: String = "", resource: String = "",
+                certNotAfter: Int64 = 0, certIssue: String = "", certSecret: String = "", certManaged: Bool = false) {
         self.kind = kind
         self.namespace = namespace
         self.name = name
@@ -55,6 +78,10 @@ public struct KubeRoute: Decodable, Hashable, Identifiable, Sendable {
         self.group = group
         self.version = version
         self.resource = resource
+        self.certNotAfter = certNotAfter
+        self.certIssue = certIssue
+        self.certSecret = certSecret
+        self.certManaged = certManaged
     }
 
     public init(from decoder: Decoder) throws {
@@ -67,9 +94,22 @@ public struct KubeRoute: Decodable, Hashable, Identifiable, Sendable {
         group = try c.field(.group, "")
         version = try c.field(.version, "")
         resource = try c.field(.resource, "")
+        certNotAfter = try c.field(.certNotAfter, 0)
+        certIssue = try c.field(.certIssue, "")
+        certSecret = try c.field(.certSecret, "")
+        certManaged = try c.field(.certManaged, false)
     }
 
-    private enum CodingKeys: String, CodingKey { case kind, namespace, name, url, service, group, version, resource }
+    private enum CodingKeys: String, CodingKey {
+        case kind, namespace, name, url, service, group, version, resource, certNotAfter, certIssue, certSecret, certManaged
+    }
+}
+
+/// What is wrong with the certificate a route serves (KubeRoute.certIssue).
+public enum RouteCertIssue {
+    public static let expired = "expired"
+    public static let expiring = "expiring"
+    public static let hostMismatch = "hostMismatch"
 }
 
 /// One pod of an app, as KubeAppRoutes takes it.

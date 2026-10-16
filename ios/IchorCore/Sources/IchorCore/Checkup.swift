@@ -56,6 +56,10 @@ public enum CheckupKind: String, Sendable {
     /// A SealedSecret the controller could not decrypt, the controller without a key (extra: its
     /// namespace), a sealing key kept out of use (namespace, name: the key's Secret).
     case sealedSecretNotSynced, sealingKeyMissing, sealingKeyCompromised
+    /// A certificate a route's host serves (read by TLS handshake) that expired, expires within
+    /// 14 days (count: days left) or does not name the host (message: the names it covers).
+    /// Namespace, name: its Secret; extra: the route; reason: the host.
+    case routeCertExpired, routeCertExpiring, routeCertHostMismatch
 }
 
 /// What the cluster hides behind green nodes: one section per kind of trouble.

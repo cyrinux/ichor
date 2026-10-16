@@ -233,12 +233,23 @@ type csrObject struct {
 	} `json:"status"`
 }
 
+// checkupCertificates is the certificates section: the requests nobody answered and the
+// certificates routes serve.
+func checkupCertificates(ctx context.Context, k *kubeClient, in checkupInput) checkupSection {
+	return sectionFromParts(checkCertificates, checkupCSRs(ctx, k, in), checkupRouteCerts(ctx, k, in))
+}
+
 // checkupCSRs finds the certificate requests nobody answered: a kubelet asks for its
 // serving certificate again every few minutes, so they pile up, one finding per requester.
-func checkupCSRs(ctx context.Context, k *kubeClient, in checkupInput) checkupSection {
+func checkupCSRs(ctx context.Context, k *kubeClient, in checkupInput) checkupPart {
 	csrs, err := listObjects[csrObject](ctx, k, "/apis/certificates.k8s.io/v1/certificatesigningrequests")
 
-	return newSection(checkCertificates, len(csrs), csrFindings(csrs, in.now), err)
+	part := checkupPart{served: true, checked: len(csrs), findings: csrFindings(csrs, in.now)}
+	if err != nil {
+		part.errs = []error{err}
+	}
+
+	return part
 }
 
 func csrFindings(csrs []csrObject, now time.Time) []checkupFinding {

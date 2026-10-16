@@ -3675,6 +3675,15 @@
     <string name="checkup_sealedSecretNotSynced_fix">Il controller non è riuscito a decifrarlo in un Secret: è stato sigillato per un altro cluster, nome o namespace, o con una chiave che il controller non ha più. Sigillalo di nuovo con kubeseal e il certificato di questo cluster.</string>
     <string name="checkup_sealingKeyMissing_fix">Il controller non ha alcuna chiave per decifrare. Ripristina il backup della chiave (un Secret con l’etichetta sealedsecrets.bitnami.com/sealed-secrets-key) nel suo namespace, poi riavvia il controller.</string>
     <string name="checkup_sealingKeyCompromised_fix">Il controller non sigilla più con essa, ma ciò che ha sigillato è ancora leggibile con essa. Sigilla di nuovo quei SealedSecret con kubeseal, poi elimina la chiave.</string>
+    <string name="route_cert_expired">Certificato scaduto</string>
+    <string name="route_cert_expiring">Il certificato scade tra %1$d giorni</string>
+    <string name="route_cert_host_mismatch">Il certificato non copre questo host</string>
+    <string name="checkup_routeCertExpired">Certificato scaduto su %1$s</string>
+    <string name="checkup_routeCertExpiring">Il certificato di %2$s scade tra %1$s giorni</string>
+    <string name="checkup_routeCertHostMismatch">Il certificato non nomina %1$s</string>
+    <string name="checkup_routeCertExpired_fix">I browser rifiutano questo indirizzo. Nulla rinnova questo certificato (non è di cert-manager): rinnovalo dove è stato emesso e sostituisci il Secret TLS, oppure emettilo con un Certificate di cert-manager.</string>
+    <string name="checkup_routeCertExpiring_fix">Nulla rinnova questo certificato (non è di cert-manager): rinnovalo dove è stato emesso e sostituisci il Secret TLS, oppure emettilo con un Certificate di cert-manager.</string>
+    <string name="checkup_routeCertHostMismatch_fix">I browser avvisano su questo indirizzo. Il certificato nomina altri host (sotto): aggiungi questo host oppure verifica che la rotta nomini il Secret TLS giusto; un Secret che il proxy non trova gli fa servire il certificato predefinito.</string>
     <string name="checkup_helmFailed_fix">Esegui helm history per vedere perché, poi helm rollback o un nuovo aggiornamento.</string>
     <string name="checkup_helmPending_fix">Un’operazione Helm è stata interrotta e ha lasciato il suo blocco: helm rollback all’ultima revisione distribuita lo rilascia.</string>
     <string name="checkup_section_monitoring">Monitoraggio</string>
