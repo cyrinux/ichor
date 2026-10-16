@@ -5099,7 +5099,7 @@
     <string name="sa_help_template_read">Lecture seule</string>
     <string name="sa_help_template_read_desc">Le rôle intégré view dans chaque namespace, plus les nœuds&#160;: workloads, événements, logs et métriques, sans les Secrets. Recommandé pour un téléphone.</string>
     <string name="sa_help_template_operate">Lecture + redémarrage</string>
-    <string name="sa_help_template_operate_desc">Lecture seule, plus le redémarrage des Deployments, StatefulSets et DaemonSets et la mise à l\'échelle des Deployments et StatefulSets.</string>
+    <string name="sa_help_template_operate_desc">Lecture seule partout, plus le redémarrage et la mise à l’échelle des Deployments, StatefulSets et DaemonSets d’un seul namespace (my-apps dans le YAML : changez-le). Un redémarrage demande le droit de modifier la charge de travail, et RBAC ne peut pas le restreindre : ce jeton peut modifier entièrement ces charges, image comprise. Ne le liez que là où vous laisseriez ce téléphone déployer.</string>
     <string name="sa_help_template_namespace">Un namespace</string>
     <string name="sa_help_template_namespace_desc">Tout dans le namespace ichor (le rôle intégré admin), rien en dehors&#160;: ni les nœuds, ni les autres namespaces.</string>
     <string name="sa_help_step_apply">1. Enregistrez-le sous ichor-phone.yaml (pour un autre namespace, remplacez ichor partout), puis appliquez-le&#160;:</string>

@@ -1559,37 +1559,37 @@
         }
       }
     },
-    "Read-only, plus restarting Deployments, StatefulSets and DaemonSets and scaling Deployments and StatefulSets." : {
+    "Read-only everywhere, plus restarting and scaling Deployments, StatefulSets and DaemonSets in one namespace (my-apps in the YAML: change it). A restart needs the right to edit the workload and RBAC cannot narrow that: this token can change those workloads entirely, their image too. Bind it only where you would let this phone deploy." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nur Lesen, dazu Neustart von Deployments, StatefulSets und DaemonSets und Skalieren von Deployments und StatefulSets."
+            "value" : "Überall nur Lesen, dazu Neustart und Skalieren von Deployments, StatefulSets und DaemonSets in einem einzigen Namespace (my-apps im YAML: anpassen). Ein Neustart braucht das Recht, die Workload zu ändern, und RBAC kann das nicht eingrenzen: Dieses Token kann diese Workloads vollständig ändern, auch ihr Image. Binden Sie es nur dort, wo dieses Telefon deployen dürfte."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Solo lectura, más reiniciar Deployments, StatefulSets y DaemonSets y escalar Deployments y StatefulSets."
+            "value" : "Solo lectura en todas partes, más reiniciar y escalar Deployments, StatefulSets y DaemonSets de un único namespace (my-apps en el YAML: cámbielo). Un reinicio necesita el derecho de modificar la carga de trabajo y RBAC no puede acotarlo: este token puede cambiar esas cargas por completo, también su imagen. Vincúlelo solo donde dejaría que este teléfono despliegue."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lecture seule, plus le redémarrage des Deployments, StatefulSets et DaemonSets et la mise à l'échelle des Deployments et StatefulSets."
+            "value" : "Lecture seule partout, plus le redémarrage et la mise à l’échelle des Deployments, StatefulSets et DaemonSets d’un seul namespace (my-apps dans le YAML : changez-le). Un redémarrage demande le droit de modifier la charge de travail, et RBAC ne peut pas le restreindre : ce jeton peut modifier entièrement ces charges, image comprise. Ne le liez que là où vous laisseriez ce téléphone déployer."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sola lettura, più il riavvio di Deployment, StatefulSet e DaemonSet e la scalatura di Deployment e StatefulSet."
+            "value" : "Sola lettura ovunque, più il riavvio e la scalatura di Deployment, StatefulSet e DaemonSet in un solo namespace (my-apps nello YAML: cambialo). Un riavvio richiede il diritto di modificare il carico di lavoro e RBAC non può restringerlo: questo token può cambiare del tutto quei carichi, anche l’immagine. Collegalo solo dove lasceresti che questo telefono faccia deploy."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Лише читання, плюс перезапуск Deployment, StatefulSet і DaemonSet та масштабування Deployment і StatefulSet."
+            "value" : "Лише читання всюди, плюс перезапуск і масштабування Deployment, StatefulSet і DaemonSet в одному namespace (my-apps у YAML: змініть його). Перезапуск потребує права змінювати робоче навантаження, і RBAC не може це звузити: цей токен може повністю змінити ці навантаження, зокрема образ. Прив’язуйте його лише там, де дозволили б цьому телефону розгортати."
           }
         }
       }

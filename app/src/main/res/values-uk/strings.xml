@@ -5353,7 +5353,7 @@
     <string name="sa_help_template_read">Лише читання</string>
     <string name="sa_help_template_read_desc">Вбудована роль view у кожному namespace, плюс вузли: робочі навантаження, події, журнали й метрики, без Secret. Рекомендовано для телефона.</string>
     <string name="sa_help_template_operate">Читання + перезапуск</string>
-    <string name="sa_help_template_operate_desc">Лише читання, плюс перезапуск Deployment, StatefulSet і DaemonSet та масштабування Deployment і StatefulSet.</string>
+    <string name="sa_help_template_operate_desc">Лише читання всюди, плюс перезапуск і масштабування Deployment, StatefulSet і DaemonSet в одному namespace (my-apps у YAML: змініть його). Перезапуск потребує права змінювати робоче навантаження, і RBAC не може це звузити: цей токен може повністю змінити ці навантаження, зокрема образ. Прив’язуйте його лише там, де дозволили б цьому телефону розгортати.</string>
     <string name="sa_help_template_namespace">Один namespace</string>
     <string name="sa_help_template_namespace_desc">Усе в namespace ichor (вбудована роль admin), нічого поза ним: ні вузлів, ні інших namespace.</string>
     <string name="sa_help_step_apply">1. Збережіть його як ichor-phone.yaml (для іншого namespace замініть ichor усюди), потім застосуйте:</string>
