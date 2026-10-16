@@ -160,6 +160,13 @@ func GitForgeTree(hostJSON, repoURL, ref, dir string) (out string, err error) {
 		return "", err
 	}
 
+	sortGitForgeEntries(entries)
+
+	return gitForgeJSON(gitForgeTree{Ref: ref, Entries: nonNil(entries)})
+}
+
+// sortGitForgeEntries puts directories first, then sorts by path.
+func sortGitForgeEntries(entries []gitForgeEntry) {
 	slices.SortFunc(entries, func(a, b gitForgeEntry) int {
 		if a.Type != b.Type {
 			if a.Type == "dir" {
@@ -171,8 +178,6 @@ func GitForgeTree(hostJSON, repoURL, ref, dir string) (out string, err error) {
 
 		return strings.Compare(a.Path, b.Path)
 	})
-
-	return gitForgeJSON(gitForgeTree{Ref: ref, Entries: nonNil(entries)})
 }
 
 // GitForgeFile reads the file path of repoURL at ref: {"path","sha","size","content",

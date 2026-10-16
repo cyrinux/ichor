@@ -76,6 +76,12 @@ type argoSourceObject struct {
 	Path           string `json:"path"`
 	Chart          string `json:"chart"`
 	TargetRevision string `json:"targetRevision"`
+	// Ref names a source other sources read value files from ($ref/values.yaml).
+	Ref  string `json:"ref"`
+	Helm *struct {
+		ValueFiles []string `json:"valueFiles"`
+	} `json:"helm"`
+	Kustomize json.RawMessage `json:"kustomize"`
 }
 
 type argoHealth struct {

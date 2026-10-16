@@ -55,34 +55,13 @@ spec:
 
 // demoGitForgeTree lists one directory of the demo repository.
 func demoGitForgeTree(dir string) ([]gitForgeEntry, error) {
-	seen := map[string]bool{}
-
-	var entries []gitForgeEntry
-
-	prefix := ""
-	if dir != "" {
-		prefix = dir + "/"
+	sizes := make(map[string]int64, len(demoGitForgeFiles))
+	for p, c := range demoGitForgeFiles {
+		sizes[p] = int64(len(c))
 	}
 
-	for path, content := range demoGitForgeFiles {
-		rest, ok := strings.CutPrefix(path, prefix)
-		if !ok {
-			continue
-		}
-
-		if name, _, isDir := strings.Cut(rest, "/"); isDir {
-			if !seen[prefix+name] {
-				seen[prefix+name] = true
-				entries = append(entries, gitForgeEntry{Path: prefix + name, Type: "dir"})
-			}
-
-			continue
-		}
-
-		entries = append(entries, gitForgeEntry{Path: path, Type: "file", Size: int64(len(content))})
-	}
-
-	if len(entries) == 0 {
+	entries := listTreeDir(sizes, dir)
+	if entries == nil {
 		return nil, errGitForgeNotFound
 	}
 

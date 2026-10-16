@@ -55,9 +55,10 @@ type fluxHelmReleaseObject struct {
 	Spec     struct {
 		Chart *struct {
 			Spec struct {
-				Chart     string       `json:"chart"`
-				Version   string       `json:"version"`
-				SourceRef fluxCrossRef `json:"sourceRef"`
+				Chart       string       `json:"chart"`
+				Version     string       `json:"version"`
+				SourceRef   fluxCrossRef `json:"sourceRef"`
+				ValuesFiles []string     `json:"valuesFiles"`
 			} `json:"spec"`
 		} `json:"chart"`
 		ChartRef         *fluxCrossRef  `json:"chartRef"`
@@ -83,24 +84,30 @@ type fluxHelmReleaseObject struct {
 	} `json:"status"`
 }
 
+// fluxFollow is what a GitRepository or OCIRepository follows.
+type fluxFollow struct {
+	Branch string `json:"branch"`
+	Tag    string `json:"tag"`
+	SemVer string `json:"semver"`
+	Name   string `json:"name"`
+	Commit string `json:"commit"`
+	Digest string `json:"digest"`
+}
+
 type fluxSourceObject struct {
 	Kind     string   `json:"kind"`
 	Metadata fluxMeta `json:"metadata"`
 	Spec     struct {
-		URL        string `json:"url"`
-		Type       string `json:"type"` // a HelmRepository's "oci"
-		Interval   string `json:"interval"`
-		Suspend    bool   `json:"suspend"`
-		BucketName string `json:"bucketName"`
-		Endpoint   string `json:"endpoint"`
-		Ref        *struct {
-			Branch string `json:"branch"`
-			Tag    string `json:"tag"`
-			SemVer string `json:"semver"`
-			Name   string `json:"name"`
-			Commit string `json:"commit"`
-			Digest string `json:"digest"`
-		} `json:"ref"`
+		URL        string      `json:"url"`
+		Type       string      `json:"type"` // a HelmRepository's "oci"
+		Interval   string      `json:"interval"`
+		Suspend    bool        `json:"suspend"`
+		BucketName string      `json:"bucketName"`
+		Endpoint   string      `json:"endpoint"`
+		Ref        *fluxFollow `json:"ref"`
+		// A HelmChart's chart and version.
+		Chart   string `json:"chart"`
+		Version string `json:"version"`
 	} `json:"spec"`
 	Status struct {
 		fluxCommonStatus
