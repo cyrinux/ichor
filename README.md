@@ -682,6 +682,18 @@ devices), proxy group (type, devices, the kube-apiserver URL), proxy class (and 
 the tailnet nameserver — problems first, with the operator's reason. Tapping a row opens the
 object's summary; nothing is changed here (os:admin).
 
+### Cluster lifecycle (Cluster API, Sidero Metal)
+
+**Kubernetes → Cluster lifecycle** (the button appears on a management cluster that runs
+Cluster API or Sidero Metal) shows the workload clusters with their phase, control plane and
+workers ready of desired, endpoint and Kubernetes versions; their machines grouped by cluster,
+control plane first, with phase, node, version, addresses and a "stuck since" when one has not
+moved for half an hour; the machine deployments with their replicas; and, with Sidero Metal,
+the bare-metal servers (accepted, cordoned, in use, clean, power, server classes, CPU and
+memory) and how many servers each server class has free. Problems come first, with the failure
+or the conditions that are not True. Tapping a row opens the object's summary; nothing is
+changed here (os:admin).
+
 ### Argo CD app icons
 
 Ichor names an Argo CD app's logo from its Helm chart, its name or the images it runs. An app it

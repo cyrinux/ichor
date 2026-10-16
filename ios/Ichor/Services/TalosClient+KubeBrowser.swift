@@ -159,6 +159,11 @@ extension TalosClient {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeTailscale(config, context, kubeServer, $0) }
     }
 
+    /// Cluster API's clusters, machines and machine deployments, and Sidero Metal's servers, problems first.
+    func clusterLifecycle() async throws -> ClusterLifecycle {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeClusterAPI(config, context, kubeServer, $0) }
+    }
+
     /// The load balancer controllers, their pools, advertisements and BGP peers, and why a Service has no address.
     func loadBalancing() async throws -> KubeLoadBalancing {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeLoadBalancing(config, context, kubeServer, $0) }

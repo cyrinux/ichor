@@ -202,6 +202,8 @@ fun OverviewScreen(
     onCrossplane: () -> Unit,
     /** The Tailscale operator's connectors and proxies (from the Kubernetes home). */
     onTailscale: () -> Unit,
+    /** Cluster API and Sidero Metal (from the Kubernetes home). */
+    onClusterLifecycle: () -> Unit,
     onLoadBalancing: () -> Unit,
     onJobs: () -> Unit,
     /** The cluster's Kubernetes events, live (from the Kubernetes home). */
@@ -253,6 +255,7 @@ fun OverviewScreen(
                 onServices = onServices,
                 onCrossplane = onCrossplane,
                 onTailscale = onTailscale,
+                onClusterLifecycle = onClusterLifecycle,
                 onLoadBalancing = onLoadBalancing,
                 onJobs = onJobs,
                 onEvents = onKubeEvents,

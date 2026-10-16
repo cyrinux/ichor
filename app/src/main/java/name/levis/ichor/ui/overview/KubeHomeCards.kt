@@ -227,7 +227,7 @@ private fun nodeCapacityLabel(node: KubeNodeInfo): String? = when (node.capacity
 /** The Kubernetes screens that work with these credentials alone. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun KubeToolsCard(nav: KubeHomeNavigation, crossplane: Boolean = false, tailscale: Boolean = false) {
+internal fun KubeToolsCard(nav: KubeHomeNavigation, crossplane: Boolean = false, tailscale: Boolean = false, clusterLifecycle: Boolean = false) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.common_kind_kubernetes), style = MaterialTheme.typography.titleMedium)
@@ -253,6 +253,8 @@ internal fun KubeToolsCard(nav: KubeHomeNavigation, crossplane: Boolean = false,
                 if (crossplane) OutlinedButton(onClick = nav.onCrossplane) { Text(stringResource(R.string.crossplane_title)) }
                 // Only when the cluster runs the Tailscale operator, the same way.
                 if (tailscale) OutlinedButton(onClick = nav.onTailscale) { Text(stringResource(R.string.tailscale_title)) }
+                // Only on a management cluster running Cluster API or Sidero Metal.
+                if (clusterLifecycle) OutlinedButton(onClick = nav.onClusterLifecycle) { Text(stringResource(R.string.cluster_lifecycle_title)) }
             }
         }
     }
