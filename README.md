@@ -203,7 +203,7 @@ reads those roles and explains up front when a feature needs more.
 | **CloudNativePG replica promotion** | `Kubeconfig`, then the Kubernetes API (clusters/status, pods and optional pods/proxy for lag) | **`os:admin`** |
 | **Velero: run a schedule now, delete a backup** | `Kubeconfig`, then the Kubernetes API (velero.io schedules, backups, deletebackuprequests) | **`os:admin`** |
 | **Velero: restore a backup with a preview and namespace mapping** | `Kubeconfig`, then the Kubernetes API (velero.io backups, restores, backupstoragelocations) | **`os:admin`** |
-| **kube-green sleep schedules** | `Kubeconfig`, then the Kubernetes API (sleepinfos.kube-green.com, optional controller Deployment in `kube-green`) | **`os:admin`** |
+| **kube-green sleep schedules** | `Kubeconfig`, then the Kubernetes API (sleepinfos.kube-green.com, cluster-wide and one namespace's own when a workload or CronJob sheet opens; optional controller Deployment in `kube-green`) | **`os:admin`** |
 | **Data services: ExternalDNS hostnames and controllers** | `Kubeconfig`, then the Kubernetes API (deployments, ingresses, services, optional dnsendpoints.externaldns.k8s.io and httproutes/gateways) | **`os:admin`** |
 | **Data services: Sealed Secrets status and sealing keys** | `Kubeconfig`, then the Kubernetes API (sealedsecrets.bitnami.com, deployments, secrets metadata with the sealing-key label) | **`os:admin`** |
 | **App web addresses (Ingress, HTTPRoute, GRPCRoute, TLSRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, grpcroutes, tlsroutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
@@ -340,6 +340,11 @@ ones come first; tap a card for its recent runs.
 cleanup apply. A suspended CronJob can be run once without resuming its schedule; the
 confirmation warns when a run is already in progress, since a manual run ignores the
 `concurrencyPolicy`.
+
+When kube-green has the namespace asleep, a workload sheet says so on the row (with its wake-up
+time) and warns before scaling a workload or resuming a CronJob, since kube-green restores the
+replicas it saved at the next wake-up and re-suspends the CronJob at the next sleep; a cluster
+without kube-green shows nothing new.
 
 Tune how a CronJob looks with these optional keys, as labels or annotations (an annotation wins;
 the title and description hold spaces, so they must be annotations):

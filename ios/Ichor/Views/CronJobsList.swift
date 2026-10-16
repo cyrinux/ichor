@@ -20,6 +20,9 @@ struct CronJobsList: View {
     @State private var suspending: Set<String> = []
     @State private var expanded: Set<String> = []
     @State private var resultMessage: String?
+    /// kube-green has the shown namespace asleep: a suspended CronJob says so, and resuming
+    /// warns that the next sleep would suspend it again.
+    @State private var kubeGreen: KubeGreenNamespace?
 
     var body: some View {
         KubeListFrame(control: control, list: list, query: query, namespaces: cronJobNamespaces) { load in
@@ -33,6 +36,7 @@ struct CronJobsList: View {
                                    expanded: expanded.contains(cronJob.id),
                                    triggering: triggering.contains(cronJob.id),
                                    suspending: suspending.contains(cronJob.id),
+                                   kubeGreen: kubeGreen,
                                    onToggle: { toggle(cronJob) },
                                    onRun: { confirm = cronJob },
                                    onSuspend: { confirmSuspend = cronJob })
@@ -76,6 +80,7 @@ struct CronJobsList: View {
             suspendMessage(cronJob)
         }
         .messageAlert($resultMessage)
+        .task(id: control.scope.namespace) { await loadKubeGreen() }
         .task(id: list.loadedItems.map(\.id)) {
             guard let focus, list.loadedItems.contains(where: { $0.id == focus }) else { return }
             expanded.insert(focus)
@@ -100,6 +105,9 @@ struct CronJobsList: View {
             : Text("No new run starts on schedule until it is resumed; a run in progress goes on. Run now still works.")
         if let healer = healer(cronJob) {
             text = text + Text(verbatim: "\n\n") + Text("\(healer.app.name) deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze \(healer.app.name) first to keep your change for a while.")
+        }
+        if let warning = kubeGreenChangeWarning(kubeGreen) {
+            text = text + Text(verbatim: "\n\n") + Text(verbatim: warning)
         }
         return text
     }
@@ -146,6 +154,13 @@ struct CronJobsList: View {
         await list.refresh(model: model)
     }
 
+    /// Reads kube-green's state for the shown namespace, once, so a suspended CronJob can say
+    /// kube-green suspended it. In the all-namespaces view there is no single namespace to read.
+    private func loadKubeGreen() async {
+        guard let client = model.client, let namespace = control.scope.namespace, !namespace.isEmpty else { return }
+        kubeGreen = await KubeGreenStore.shared.load(namespace: namespace, key: model.kubeGreenKey, with: client)
+    }
+
     private func trigger(_ cronJob: KubeCronJob) async {
         guard let client = model.client, !triggering.contains(cronJob.id) else { return }
         triggering.insert(cronJob.id)
@@ -167,6 +182,8 @@ private struct CronJobRow: View {
     let expanded: Bool
     let triggering: Bool
     let suspending: Bool
+    /// kube-green's state for the row's namespace, nil when unknown or none.
+    let kubeGreen: KubeGreenNamespace?
     let onToggle: () -> Void
     let onRun: () -> Void
     let onSuspend: () -> Void
@@ -181,6 +198,9 @@ private struct CronJobRow: View {
                     .foregroundStyle(.secondary)
             }
             timing
+            if cronJob.suspended, let kubeGreen {
+                KubeGreenAsleepLabel(status: kubeGreen, kind: "CronJob", suspended: true)
+            }
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 4) {
                     RunHistoryStrip(runs: cronJob.runs)

@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
 import name.levis.ichor.model.KubeAction
+import name.levis.ichor.model.KubeGreenNamespace
 import name.levis.ichor.model.KubePermission
 import name.levis.ichor.model.KubeRevision
 import name.levis.ichor.ui.argocd.ArgoRevertDialog
@@ -93,6 +94,8 @@ fun WorkloadSheet(
     onAutoscaling: (() -> Unit)? = null,
 ) {
     val busy by actions.busy.collectAsStateWithLifecycle()
+    // kube-green may have the namespace asleep: say it, and warn before a change it would undo.
+    val kubeGreen = rememberKubeGreenNamespace(workload.namespace)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(
             Modifier.verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
@@ -106,6 +109,7 @@ fun WorkloadSheet(
                 }
                 ShareLinkButton(ShareTarget.workload(workload.kind, workload.namespace, workload.name))
             }
+            KubeGreenAsleepNote(kubeGreen, workload.kind)
             val access = rememberKubeActionAccess(workload.namespace)
             val restartDenial = access?.denial(KubeAction.restart(workload.kind))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -125,7 +129,7 @@ fun WorkloadSheet(
             KubeDenialNote(restartDenial)
             if (workload.canScale) {
                 HorizontalDivider()
-                ScaleSection(workload, actions, workload.key in busy, access?.denial(KubeAction.scale(workload.kind)), onAutoscaling)
+                ScaleSection(workload, actions, workload.key in busy, access?.denial(KubeAction.scale(workload.kind)), kubeGreen, onAutoscaling)
             }
             if (workload.hasHistory) {
                 HorizontalDivider()
@@ -139,7 +143,7 @@ fun WorkloadSheet(
 }
 
 @Composable
-private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy: Boolean, denial: KubePermission?, onAutoscaling: (() -> Unit)? = null) {
+private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy: Boolean, denial: KubePermission?, kubeGreen: KubeGreenNamespace?, onAutoscaling: (() -> Unit)? = null) {
     val colors = LocalStatusColors.current
     val outcome by actions.lastScale.collectAsStateWithLifecycle()
     // Starts again from the live count once a refresh brings it.
@@ -169,6 +173,11 @@ private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy:
     workload.autoscaler?.let { autoscaler ->
         AutoscalerChip(autoscaler, onAutoscaling)
         Text(stringResource(R.string.workloads_autoscaler_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    // kube-green restores the replicas it saved at the next wake-up: say so before the tap.
+    val kubeGreenWarning = kubeGreenChangeWarning(kubeGreen)
+    if (kubeGreenWarning != null && target != workload.desired) {
+        Text(kubeGreenWarning, color = colors.warn, style = MaterialTheme.typography.bodySmall)
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = { target = clampReplicas(target - 1) }, enabled = target > 0 && !busy) {

@@ -86,6 +86,72 @@ public enum KubeGreenReason: String, Sendable {
     case noWakeUp, invalidSchedule, overdue, neverRan
 }
 
+/// What kube-green has done to one namespace, read when a workload or CronJob row is opened so
+/// it can say the namespace is asleep before a scale, a restart or a resume.
+/// (go/ichorgo/kube_kubegreen_namespace.go)
+public struct KubeGreenNamespace: Decodable, Equatable, Sendable {
+    /// False when kube-green is not installed, or the list was refused: nothing to say.
+    public let installed: Bool
+    public let asleep: Bool
+    public let sleepInfos: [KubeGreenSleepInfo]
+    public let sleepsDeployments: Bool
+    public let sleepsStatefulSets: Bool
+    public let sleepsCronJobs: Bool
+    /// Unix ms, 0 when none.
+    public let nextWakeUpAt: Int64
+    /// Unix ms, 0 when none.
+    public let nextSleepAt: Int64
+    /// A SleepInfo has excludeRef or includeRef: which objects it touches cannot be told.
+    public let filtered: Bool
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        installed = try c.field(.installed, false)
+        asleep = try c.field(.asleep, false)
+        sleepInfos = try c.field(.sleepInfos, [])
+        sleepsDeployments = try c.field(.sleepsDeployments, false)
+        sleepsStatefulSets = try c.field(.sleepsStatefulSets, false)
+        sleepsCronJobs = try c.field(.sleepsCronJobs, false)
+        nextWakeUpAt = try c.field(.nextWakeUpAt, 0)
+        nextSleepAt = try c.field(.nextSleepAt, 0)
+        filtered = try c.field(.filtered, false)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case installed, asleep, sleepInfos, sleepsDeployments, sleepsStatefulSets, sleepsCronJobs, nextWakeUpAt, nextSleepAt, filtered
+    }
+}
+
+/// Why kube-green would undo a change made by hand: the namespace is asleep, or sleeps soon.
+public enum KubeGreenWarn: Equatable, Sendable { case asleep, sleepsSoon }
+
+public extension KubeGreenNamespace {
+    /// The SleepInfo that has the namespace asleep now; nil when none does.
+    var asleepInfo: KubeGreenSleepInfo? { sleepInfos.first { $0.asleep } }
+
+    /// Whether kube-green sleeps the kind this row is ("Deployment", "StatefulSet", "CronJob").
+    func sleeps(_ kind: String) -> Bool {
+        switch kind {
+        case "Deployment": sleepsDeployments
+        case "StatefulSet": sleepsStatefulSets
+        case "CronJob": sleepsCronJobs
+        default: false
+        }
+    }
+
+    /// Whether a change made now is undone by kube-green: `.asleep` while it sleeps the
+    /// namespace, `.sleepsSoon` when it sleeps it within a day, nil otherwise. The pieces the
+    /// row's wording is built from (see `KubeGreenAsleepLabel`).
+    func warnBeforeChange(now: Date = Date()) -> KubeGreenWarn? {
+        if asleep { return .asleep }
+        let soon = now.epochMillis + 24 * 60 * 60 * 1000
+        return nextSleepAt > 0 && nextSleepAt <= soon ? .sleepsSoon : nil
+    }
+
+    /// The instant a change made now is undone: the next wake-up while asleep, else the next sleep.
+    var changeUndoneAt: Int64 { asleep ? nextWakeUpAt : nextSleepAt }
+}
+
 public extension KubeGreenStatus {
     /// Sleep schedules are the items; one that needs a look is a warning, never critical.
     var summary: ServiceSummary {

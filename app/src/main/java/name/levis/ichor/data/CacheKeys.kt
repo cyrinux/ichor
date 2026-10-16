@@ -40,6 +40,10 @@ fun podsKey(namespace: String?) = "$PODS|${namespace ?: "*"}"
 fun workloadsKey(namespace: String?) = "$WORKLOADS|${namespace ?: "*"}"
 fun cronJobsKey(namespace: String?) = "$CRON_JOBS|${namespace ?: "*"}"
 const val DATA_SERVICES = "dataservices"
+
+/** What kube-green has done to one namespace, read when a workload or CronJob sheet opens. */
+const val KUBE_GREEN_NAMESPACE = "kubegreen"
+fun kubeGreenNamespaceKey(namespace: String) = "$KUBE_GREEN_NAMESPACE|$namespace"
 const val ARGO_CD = "argocd"
 const val FLUX = "flux"
 fun servicesKey(node: String) = "services|$node"

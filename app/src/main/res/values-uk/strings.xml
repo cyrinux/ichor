@@ -2551,6 +2551,13 @@
         <item quantity="many">%1$d розкладів сну</item>
         <item quantity="other">%1$d розкладів сну</item>
     </plurals>
+    <string name="kubegreen_resumes">відновлюється %1$s</string>
+    <string name="kubegreen_asleep_note">Спить: kube-green приспав цей namespace (SleepInfo %1$s), %2$s</string>
+    <string name="kubegreen_asleep_note_maybe">Спить: можливо, kube-green приспав цей namespace (SleepInfo %1$s), %2$s</string>
+    <string name="kubegreen_cronjob_suspended">Призупинено kube-green, %1$s</string>
+    <string name="kubegreen_warn_asleep">kube-green приспав цей namespace: цю зміну буде скасовано під час наступного пробудження, %1$s</string>
+    <string name="kubegreen_warn_asleep_until">kube-green приспав цей namespace: цю зміну буде скасовано, коли namespace прокинеться, а пробудження не заплановано</string>
+    <string name="kubegreen_warn_soon">kube-green приспить цей namespace о %1$s: зміну, зроблену зараз, буде скасовано під час наступного сну</string>
     <string name="crossplane_title">Crossplane</string>
     <string name="crossplane_empty">Crossplane встановлено, але він ще нічого не визначає.</string>
     <string name="crossplane_no_match">Нічого не відповідає «%1$s».</string>

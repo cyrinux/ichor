@@ -1,6 +1,287 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Asleep: kube-green has this namespace asleep (SleepInfo %@), %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asleep: kube-green has this namespace asleep (SleepInfo %1$@), %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlafend: kube-green hat diesen Namespace schlafen gelegt (SleepInfo %1$@), %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dormido: kube-green ha puesto este namespace a dormir (SleepInfo %1$@), %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endormi : kube-green a mis ce namespace en veille (SleepInfo %1$@), %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Addormentato: kube-green ha messo in sospensione questo namespace (SleepInfo %1$@), %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спить: kube-green приспав цей namespace (SleepInfo %1$@), %2$@"
+          }
+        }
+      }
+    },
+    "Asleep: kube-green may have this namespace asleep (SleepInfo %@), %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asleep: kube-green may have this namespace asleep (SleepInfo %1$@), %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlafend: kube-green hat diesen Namespace möglicherweise schlafen gelegt (SleepInfo %1$@), %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dormido: puede que kube-green haya puesto este namespace a dormir (SleepInfo %1$@), %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endormi : kube-green a peut-être mis ce namespace en veille (SleepInfo %1$@), %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Addormentato: kube-green potrebbe aver messo in sospensione questo namespace (SleepInfo %1$@), %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спить: можливо, kube-green приспав цей namespace (SleepInfo %1$@), %2$@"
+          }
+        }
+      }
+    },
+    "Suspended by kube-green, %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspended by kube-green, %1$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von kube-green angehalten, %1$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspendido por kube-green, %1$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suspendu par kube-green, %1$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sospeso da kube-green, %1$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Призупинено kube-green, %1$@"
+          }
+        }
+      }
+    },
+    "kube-green has this namespace asleep: this change is undone at the next wake-up, %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green has this namespace asleep: this change is undone at the next wake-up, %1$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green hat diesen Namespace schlafen gelegt: diese Änderung wird beim nächsten Aufwachen rückgängig gemacht, %1$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green ha puesto este namespace a dormir: este cambio se deshará en el próximo despertar, %1$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green a mis ce namespace en veille : cette modification sera annulée au prochain réveil, %1$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green ha messo in sospensione questo namespace: questa modifica verrà annullata al prossimo risveglio, %1$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green приспав цей namespace: цю зміну буде скасовано під час наступного пробудження, %1$@"
+          }
+        }
+      }
+    },
+    "kube-green has this namespace asleep: this change is undone when the namespace wakes up, with no wake-up scheduled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green hat diesen Namespace schlafen gelegt: diese Änderung wird rückgängig gemacht, wenn der Namespace aufwacht, ohne geplantes Aufwachen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green ha puesto este namespace a dormir: este cambio se deshará cuando despierte el namespace, sin ningún despertar programado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green a mis ce namespace en veille : cette modification sera annulée au réveil du namespace, aucun réveil n'étant planifié"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green ha messo in sospensione questo namespace: questa modifica verrà annullata quando il namespace si risveglia, senza alcun risveglio pianificato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green приспав цей namespace: цю зміну буде скасовано, коли namespace прокинеться, а пробудження не заплановано"
+          }
+        }
+      }
+    },
+    "kube-green sleeps this namespace at %@: a change made now is undone at the next sleep" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green sleeps this namespace at %1$@: a change made now is undone at the next sleep"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green legt diesen Namespace um %1$@ schlafen: eine jetzt gemachte Änderung wird beim nächsten Schlaf rückgängig gemacht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green duerme este namespace a las %1$@: un cambio hecho ahora se deshará en el próximo sueño"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green endort ce namespace à %1$@ : une modification faite maintenant sera annulée au prochain endormissement"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green sospende questo namespace alle %1$@: una modifica fatta ora verrà annullata alla prossima sospensione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kube-green приспить цей namespace о %1$@: зміну, зроблену зараз, буде скасовано під час наступного сну"
+          }
+        }
+      }
+    },
+    "resumes %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "resumes %1$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "läuft %1$@ wieder an"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "se reanuda %1$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "reprend %1$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "riprende %1$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "відновлюється %1$@"
+          }
+        }
+      }
+    },
     "VolumeSnapshot %@" : {
       "extractionState" : "manual",
       "localizations" : {

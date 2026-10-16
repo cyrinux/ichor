@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 )
@@ -186,6 +187,142 @@ func TestKubeGreenDemo(t *testing.T) {
 	if !slices.Contains(jsonKeys(raw), "kubeGreen") {
 		t.Error("no kubeGreen key in the demo JSON")
 	}
+}
+
+// One namespace's kube-green state, from the list in the path: two SleepInfos, one asleep (the
+// night schedule last ran Friday 20:00 Rome, see fixtureNow), one awake; excludeRef makes it
+// filtered. Another namespace answers an empty list; a third has no kube-green at all (404).
+func TestKubeGreenNamespace(t *testing.T) {
+	f := newFakeKubeAPI(t, map[string]string{
+		"GET /apis/kube-green.com/v1alpha1/namespaces/staging/sleepinfos": `{"items":[
+			{"metadata":{"name":"nights","namespace":"staging"},
+			 "spec":{"weekdays":"1-5","sleepAt":"20:00","wakeUpAt":"07:00","timeZone":"Europe/Rome","excludeRef":[{"kind":"Deployment","name":"keep"}]},
+			 "status":{"lastScheduleTime":"2026-10-02T20:00:00+02:00","operation":"SLEEP"}},
+			{"metadata":{"name":"quiet","namespace":"staging"},
+			 "spec":{"weekdays":"*","sleepAt":"22:00","wakeUpAt":"06:00","timeZone":"Europe/Rome","suspendCronJobs":true},
+			 "status":{"lastScheduleTime":"2026-10-03T06:00:00+02:00","operation":"WAKE_UP"}}]}`,
+		"GET /apis/kube-green.com/v1alpha1/namespaces/empty/sleepinfos": `{"items":[]}`,
+	})
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// A namespace with two SleepInfos, one asleep: the booleans are the OR over them.
+	got := readKubeGreenNamespace(context.Background(), k, "staging", fixtureNow)
+	if !got.Installed || !got.Asleep || len(got.SleepInfos) != 2 {
+		t.Fatalf("staging: %+v", got)
+	}
+
+	if !got.SleepsDeployments || !got.SleepsStatefulSets || !got.SleepsCronJobs || !got.Filtered {
+		t.Errorf("staging flags: %+v", got)
+	}
+
+	if got.NextWakeUpAt != time.Date(2026, 10, 5, 5, 0, 0, 0, time.UTC).UnixMilli() {
+		t.Errorf("next wake-up: got %s", time.UnixMilli(got.NextWakeUpAt))
+	}
+
+	if got.NextSleepAt != time.Date(2026, 10, 3, 20, 0, 0, 0, time.UTC).UnixMilli() {
+		t.Errorf("next sleep: got %s", time.UnixMilli(got.NextSleepAt))
+	}
+
+	// A namespace without a SleepInfo is installed (the list answered) and awake.
+	got = readKubeGreenNamespace(context.Background(), k, "empty", fixtureNow)
+	if !got.Installed || got.Asleep || len(got.SleepInfos) != 0 || got.SleepsDeployments {
+		t.Errorf("empty namespace: %+v", got)
+	}
+
+	// No kube-green at all: the list 404s, one request, nothing to say.
+	before := len(f.recorded())
+	got = readKubeGreenNamespace(context.Background(), k, "missing", fixtureNow)
+	if got.Installed || got.Asleep || got.SleepInfos == nil || len(got.SleepInfos) != 0 {
+		t.Errorf("without kube-green: %+v", got)
+	}
+
+	if after := len(f.recorded()); after != before+1 {
+		t.Errorf("requests: got %d, want one more than %d", after, before)
+	}
+
+	// The JSON the apps decode carries every field under its tag.
+	for _, key := range []string{"installed", "asleep", "sleepInfos", "sleepsDeployments", "sleepsStatefulSets", "sleepsCronJobs", "nextWakeUpAt", "nextSleepAt", "filtered"} {
+		if !slices.Contains(kubeGreenKeys(t, got), key) {
+			t.Errorf("no %q key in the JSON", key)
+		}
+	}
+}
+
+// The Go warning a scale or a resume carries, "" when kube-green will not touch the namespace.
+func TestKubeGreenScaleWarning(t *testing.T) {
+	now := fixtureNow
+
+	asleep := kubeGreenNamespace{Installed: true, Asleep: true, NextWakeUpAt: time.Date(2026, 10, 5, 5, 0, 0, 0, time.UTC).UnixMilli(),
+		SleepInfos: []kubeGreenSleepInfo{{Asleep: true, TimeZone: "Europe/Rome", NextWakeUpAt: time.Date(2026, 10, 5, 5, 0, 0, 0, time.UTC).UnixMilli()}}}
+
+	if got := kubeGreenWarningText(asleep, now); !strings.Contains(got, "the replicas are restored at the next wake-up, Mon 07:00") {
+		t.Errorf("asleep: %q", got)
+	}
+
+	// A sleep until changed by hand has no wake-up time to name.
+	hand := kubeGreenNamespace{Installed: true, Asleep: true, SleepInfos: []kubeGreenSleepInfo{{Asleep: true}}}
+	if got := kubeGreenWarningText(hand, now); !strings.Contains(got, "no wake-up scheduled") {
+		t.Errorf("asleep until changed: %q", got)
+	}
+
+	// Awake but sleeping within the day: the plan's next sleep at 18:00 UTC is 22:00 Rome.
+	soon := kubeGreenNamespace{Installed: true, NextSleepAt: time.Date(2026, 10, 3, 18, 0, 0, 0, time.UTC).UnixMilli(),
+		SleepInfos: []kubeGreenSleepInfo{{TimeZone: "Europe/Rome", NextSleepAt: time.Date(2026, 10, 3, 18, 0, 0, 0, time.UTC).UnixMilli()}}}
+	if got := kubeGreenWarningText(soon, now); !strings.Contains(got, "sleeps this namespace at Sat 20:00") {
+		t.Errorf("sleeping soon: %q", got)
+	}
+
+	// Beyond a day, and a namespace without kube-green: no warning.
+	later := kubeGreenNamespace{Installed: true, NextSleepAt: now.Add(25 * time.Hour).UnixMilli()}
+	if got := kubeGreenWarningText(later, now); got != "" {
+		t.Errorf("sleeping later: %q", got)
+	}
+
+	if got := kubeGreenWarningText(kubeGreenNamespace{}, now); got != "" {
+		t.Errorf("without kube-green: %q", got)
+	}
+
+	// Both warnings apply: the autoscaling one stays first (CYR-56).
+	joined := joinWarnings("ScaledObject web manages the replicas (1 to 5): it will change them again", kubeGreenWarningText(asleep, now))
+	if !strings.HasPrefix(joined, "ScaledObject web") || !strings.Contains(joined, "kube-green sleeps") {
+		t.Errorf("joined warnings: %q", joined)
+	}
+
+	if joinWarnings("", "") != "" {
+		t.Error("no warnings should join to nothing")
+	}
+}
+
+func TestKubeGreenNamespaceDemo(t *testing.T) {
+	if got := demoKubeGreenNamespace("other", fixtureNow); !got.Installed || got.Asleep || len(got.SleepInfos) != 0 {
+		t.Errorf("demo, other namespace: %+v", got)
+	}
+
+	got := demoKubeGreenNamespace("staging", fixtureNow)
+	if !got.Installed || !got.Asleep || !got.SleepsDeployments || !got.SleepsCronJobs || got.NextWakeUpAt == 0 {
+		t.Fatalf("demo staging: %+v", got)
+	}
+
+	// The demo says kube-green is installed with the namespace even when it has no SleepInfo.
+	if demoKubeGreenNamespace("staging", fixtureNow).NextWakeUpAt != got.NextWakeUpAt {
+		t.Error("demo staging is not stable")
+	}
+}
+
+// kubeGreenKeys reads the tags a kubeGreenNamespace marshals to.
+func kubeGreenKeys(t *testing.T, ns kubeGreenNamespace) []string {
+	t.Helper()
+
+	raw, err := json.Marshal(ns)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return jsonKeys(raw)
 }
 
 // jsonKeys reads the top-level keys of a JSON object.

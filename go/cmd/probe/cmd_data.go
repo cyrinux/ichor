@@ -128,6 +128,12 @@ var dataCommands = []command{
 
 		return out, err
 	}},
+	{name: "kubegreen", args: "NAMESPACE", run: func(e env) (out string, err error) {
+		// kubegreen NAMESPACE: what kube-green has done to one namespace (read-only).
+		out, err = ichorgo.KubeGreenNamespace(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+
+		return out, err
+	}},
 	{name: "garage-blocks", args: "NAMESPACE POD", run: func(e env) (out string, err error) {
 		// garage-blocks NAMESPACE POD: what the blocks failing to resync are (read-only).
 		out, err = ichorgo.KubeGarageBlockErrors(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))

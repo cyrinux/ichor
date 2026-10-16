@@ -13,6 +13,7 @@ import name.levis.ichor.model.ExternalDnsController
 import name.levis.ichor.model.ExternalDnsRecord
 import name.levis.ichor.model.GarageBlockReport
 import name.levis.ichor.model.GarageInstance
+import name.levis.ichor.model.KubeGreenNamespace
 import name.levis.ichor.model.GarageRepairResult
 import name.levis.ichor.model.LonghornAction
 import name.levis.ichor.model.LonghornSnapshotAction
@@ -21,6 +22,9 @@ import name.levis.ichor.model.VeleroRestoreOptions
 import name.levis.ichor.model.VeleroRestorePreview
 import name.levis.ichor.model.isDemo
 import name.levis.ichorgo.Ichorgo
+
+/** A minute: how long a namespace's kube-green state is reused while sheets open and close. */
+private const val KUBE_GREEN_FRESH_MILLIS = 60_000L
 
 /** Longhorn, Garage, CloudNativePG and cert-manager: their health and the actions on them. */
 class DataServicesRepository(go: GoCall) : GoRepository(go) {
@@ -46,6 +50,23 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
      */
     suspend fun dataServices(hints: String): DataServices = go.remember(DATA_SERVICES) {
         go.kube { cfg, ctx, server -> TalosJson.decodeFromString(DataServices.serializer(), Ichorgo.kubeDataServices(cfg, ctx, server, hints)) }
+    }
+
+    /**
+     * What kube-green has done to [namespace] (os:admin): whether it is asleep, what its
+     * SleepInfos suspend and when. Read when a workload or CronJob sheet opens, kept for a
+     * minute per namespace so opening several rows costs one call; a refusal (403) throws and
+     * the caller shows nothing.
+     */
+    suspend fun kubeGreenNamespace(namespace: String): KubeGreenNamespace = go.remember(kubeGreenNamespaceKey(namespace)) { last ->
+        val fresh = last()
+        if (fresh != null && System.currentTimeMillis() - fresh.at < KUBE_GREEN_FRESH_MILLIS) {
+            fresh.value
+        } else {
+            go.kube { cfg, ctx, server ->
+                TalosJson.decodeFromString(KubeGreenNamespace.serializer(), Ichorgo.kubeGreenNamespace(cfg, ctx, server, namespace))
+            }
+        }
     }
 
     /** What the blocks failing to resync in a Garage cluster are, run in its ready pod (os:admin). Never cached. */

@@ -28,7 +28,8 @@ const (
 
 // KubeScale sets the replicas of a Deployment or StatefulSet, like `kubectl scale
 // KIND/NAME --replicas=N -n NAMESPACE` (os:admin). It returns a warning ("" when none) when
-// a HorizontalPodAutoscaler manages the workload: it will change the count again.
+// a HorizontalPodAutoscaler manages the workload (it will change the count again) or when
+// kube-green has the namespace asleep or puts it to sleep within a day (it undoes the scale).
 // kubeServer: see KubePods.
 func KubeScale(configYAML, contextName, kubeServer, kind, namespace, name string, replicas int) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -63,7 +64,11 @@ func KubeScale(configYAML, contextName, kubeServer, kind, namespace, name string
 			return err
 		}
 
-		out = autoscalerWarning(ctx, k, wk.kind, namespace, name)
+		now := time.Now()
+		out = joinWarnings(
+			autoscalerWarning(ctx, k, wk.kind, namespace, name),
+			kubeGreenWarningText(readKubeGreenNamespace(ctx, k, namespace, now), now),
+		)
 
 		return nil
 	})
@@ -90,6 +95,20 @@ func autoscalerWarning(ctx context.Context, k *kubeClient, kind, namespace, name
 	}
 
 	return fmt.Sprintf("%s %s manages the replicas (%d to %d): it will change them again", what, a.Name, a.Min, a.Max)
+}
+
+// joinWarnings is the warnings that apply, one per line, in the order given (the autoscaling
+// one first: see CYR-56). Empty warnings are dropped.
+func joinWarnings(warnings ...string) string {
+	kept := []string{}
+
+	for _, w := range warnings {
+		if w != "" {
+			kept = append(kept, w)
+		}
+	}
+
+	return strings.Join(kept, "\n")
 }
 
 // KubeSuspendCronJob suspends (no new runs) or resumes a CronJob, like `kubectl patch

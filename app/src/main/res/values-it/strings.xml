@@ -2396,6 +2396,13 @@
         <item quantity="many">%1$d pianificazioni di sospensione</item>
         <item quantity="other">%1$d pianificazioni di sospensione</item>
     </plurals>
+    <string name="kubegreen_resumes">riprende %1$s</string>
+    <string name="kubegreen_asleep_note">Addormentato: kube-green ha messo in sospensione questo namespace (SleepInfo %1$s), %2$s</string>
+    <string name="kubegreen_asleep_note_maybe">Addormentato: kube-green potrebbe aver messo in sospensione questo namespace (SleepInfo %1$s), %2$s</string>
+    <string name="kubegreen_cronjob_suspended">Sospeso da kube-green, %1$s</string>
+    <string name="kubegreen_warn_asleep">kube-green ha messo in sospensione questo namespace: questa modifica verrà annullata al prossimo risveglio, %1$s</string>
+    <string name="kubegreen_warn_asleep_until">kube-green ha messo in sospensione questo namespace: questa modifica verrà annullata quando il namespace si risveglia, senza alcun risveglio pianificato</string>
+    <string name="kubegreen_warn_soon">kube-green sospende questo namespace alle %1$s: una modifica fatta ora verrà annullata alla prossima sospensione</string>
     <string name="crossplane_title">Crossplane</string>
     <string name="crossplane_empty">Crossplane è installato ma non definisce ancora nulla.</string>
     <string name="crossplane_no_match">Niente corrisponde a «%1$s».</string>
