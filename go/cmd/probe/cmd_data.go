@@ -222,6 +222,11 @@ var dataCommands = []command{
 
 		return out, err
 	}},
+	{name: "argo-follow", args: "NAMESPACE NAME", run: func(e env) (string, error) {
+		// argo-follow NAMESPACE NAME, e.g. "argocd web" after argocd-action ... sync: prints the
+		// progress to stderr until the sync ends.
+		return argoFollowRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2)), nil
+	}},
 	{name: "flux", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.KubeFlux(e.cfg, e.context, e.kubeServer)
 
@@ -234,6 +239,11 @@ var dataCommands = []command{
 		}
 
 		return out, err
+	}},
+	{name: "flux-follow", args: "KIND NAMESPACE NAME", run: func(e env) (string, error) {
+		// flux-follow KIND NAMESPACE NAME, e.g. "Kustomization flux-system apps" after
+		// flux-action ... reconcile: prints the progress to stderr until it is handled.
+		return fluxFollowRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3)), nil
 	}},
 	{name: "flux-diff", args: "KIND NAMESPACE NAME", run: func(e env) (out string, err error) {
 		// flux-diff KIND NAMESPACE NAME, e.g. "Kustomization flux-system apps"
