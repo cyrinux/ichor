@@ -1,0 +1,6 @@
+• Tailscale screen on Android and iOS, problems first
+• Open a KubeVirt VM's serial console in the app's terminal
+• Longhorn volumes show their snapshots and backups, and can take, back up or delete them
+• Data services check every ExternalDNS hostname against what the record says
+• A Longhorn snapshot that keeps a CSI VolumeSnapshot cannot be deleted from the sheet
+• Garage operator cluster alerts get their own key
