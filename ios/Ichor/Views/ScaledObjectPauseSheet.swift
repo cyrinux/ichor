@@ -2,7 +2,8 @@ import SwiftUI
 import IchorCore
 
 /// Pauses a KEDA ScaledObject at a count (KEDA scales the workload to it and stops), or holds
-/// it where it is. Reversible: the sheet is the confirmation.
+/// it where it is. Reversible: the sheet is the confirmation, but a pause at 0 stops every pod,
+/// so it needs the object's name typed, like a scale to 0.
 struct ScaledObjectPauseSheet: View {
     let row: ScaledObjectRow
     /// Called once paused, before the sheet closes.
@@ -11,6 +12,7 @@ struct ScaledObjectPauseSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppModel.self) private var model
     @State private var count: Int
+    @State private var typed = ""
     @State private var applying = false
     @State private var failure: String?
 
@@ -34,6 +36,18 @@ struct ScaledObjectPauseSheet: View {
                 } footer: {
                     Text("KEDA scales the workload to this count and stops scaling it until you resume.")
                 }
+                if scaleNeedsTypedName(count) {
+                    Section {
+                        Text(AutoscaleText.pauseZero(row.target.label.isEmpty ? row.name : row.target.label))
+                            .foregroundStyle(.statusWarn)
+                    }
+                    Section("Type \(row.name) to confirm") {
+                        TextField("Name", text: $typed, prompt: Text(verbatim: row.name))
+                            .font(.body.monospaced())
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                    }
+                }
                 Section {
                     if let failure {
                         Label {
@@ -51,6 +65,7 @@ struct ScaledObjectPauseSheet: View {
                             Text(AutoscaleText.pauseConfirm(String(count)))
                         }
                     }
+                    .disabled(scaleNeedsTypedName(count) && !typedConfirmationMatches(typed, token: row.name))
                     Button("Hold current count") {
                         Task { await apply(ScaledObjectPause.hold) }
                     }

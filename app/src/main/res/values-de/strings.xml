@@ -4774,6 +4774,8 @@
     <string name="autoscaling_pause_confirm">Bei %1$s pausieren</string>
     <string name="autoscaling_hold">Aktuelle Anzahl halten</string>
     <string name="autoscaling_hold_text">Aktuelle Anzahl halten stoppt KEDA dort, wo die Arbeitslast gerade steht.</string>
+    <string name="autoscaling_pause_zero_title">%1$s bei 0 pausieren?</string>
+    <string name="autoscaling_pause_zero_text">KEDA skaliert %1$s auf 0: jeder Pod stoppt, und nichts antwortet, bis Sie fortsetzen.</string>
     <string name="autoscaling_resume_title">%1$s fortsetzen?</string>
     <string name="autoscaling_resume_text">KEDA skaliert die Arbeitslast wieder nach ihren Triggern.</string>
     <string name="autoscaling_bounds_section">Grenzen</string>

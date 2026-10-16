@@ -5030,6 +5030,8 @@
     <string name="autoscaling_pause_confirm">Призупинити на %1$s</string>
     <string name="autoscaling_hold">Утримати поточну кількість</string>
     <string name="autoscaling_hold_text">Утримання поточної кількості зупиняє KEDA там, де навантаження зараз.</string>
+    <string name="autoscaling_pause_zero_title">Призупинити %1$s на 0?</string>
+    <string name="autoscaling_pause_zero_text">KEDA масштабує %1$s до 0: кожен под зупиняється, і ніщо не відповідає, доки ви не відновите.</string>
     <string name="autoscaling_resume_title">Відновити %1$s?</string>
     <string name="autoscaling_resume_text">KEDA знову масштабує навантаження за його тригерами.</string>
     <string name="autoscaling_bounds_section">Межі</string>
