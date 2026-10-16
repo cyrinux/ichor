@@ -87,7 +87,13 @@ func KubeArgoAction(configYAML, contextName, kubeServer, namespace, name, action
 		}
 	}
 
-	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
+	return runArgoAction(kubeTarget{configYAML, contextName, kubeServer}, namespace, name, action, opts)
+}
+
+// runArgoAction is KubeArgoAction once its arguments are unmasked and checked: refused in
+// the demo, one patch otherwise. ArgoSyncRun.Terminate goes through it too.
+func runArgoAction(target kubeTarget, namespace, name, action string, opts argoSyncOptions) error {
+	return kubeMutate(target, func(ctx context.Context, k *kubeClient) error {
 		return argoAction(ctx, k, namespace, name, action, opts, time.Now())
 	})
 }

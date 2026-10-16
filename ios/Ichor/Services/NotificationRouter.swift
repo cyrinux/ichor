@@ -92,6 +92,11 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             }
             return
         }
+        // A followed run's result (OperationNotice): its screen, like its Live Activity.
+        if let kind = (content.userInfo[OperationNotice.kindKey] as? String).flatMap(OperationKind.init(rawValue:)) {
+            await MainActor.run { NotificationRouter.shared.pendingOperation = kind }
+            return
+        }
         let identifier = response.notification.request.identifier
         let action = response.actionIdentifier
         let cluster = content.userInfo[AlertNotificationActions.clusterKey] as? String ?? ""

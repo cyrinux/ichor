@@ -34,6 +34,9 @@ import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.TalosUpdateChecker
 import name.levis.ichor.data.UpgradeManager
 import name.levis.ichor.data.ImagePullManager
+import name.levis.ichor.data.GitOpsOperationManager
+import name.levis.ichor.data.NetPerfManager
+import name.levis.ichor.data.RolloutManager
 import name.levis.ichor.data.MaintenanceManager
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.DataServicesRepository
@@ -121,6 +124,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Holds app-wide singletons (manual DI; the app is small). */
 class TalosApp : Application() {
@@ -235,6 +239,26 @@ class TalosApp : Application() {
     }
     /** The followed image pull; OperationService keeps the app alive while it runs. */
     val imagePullManager by lazy { ImagePullManager(talosRepository, onStarted = { OperationService.start(this, OperationKind.IMAGE_PULL) }) }
+    /** The followed Argo CD sync and Flux reconcile started from the phone; OperationService keeps the app alive meanwhile. */
+    val gitOpsOperations by lazy {
+        GitOpsOperationManager(
+            gitOpsRepository::startArgoSyncFollow,
+            gitOpsRepository::startFluxReconcileFollow,
+            onArgoStarted = { OperationService.start(this, OperationKind.ARGO_SYNC) },
+            onFluxStarted = { OperationService.start(this, OperationKind.FLUX_RECONCILE) },
+        )
+    }
+    /** The followed rollout after a restart; OperationService keeps the app alive while it rolls. */
+    val rolloutManager by lazy { RolloutManager(kubeRepository::rolloutWatch, onStarted = { OperationService.start(this, OperationKind.ROLLOUT) }) }
+    /** The network test running or last run, app-wide; OperationService keeps the app alive while it runs. */
+    val netPerfManager by lazy {
+        NetPerfManager(
+            netPerfRepository::start,
+            // A failed write loses this test from the history only.
+            save = { scope, report -> withContext(Dispatchers.IO) { runCatching { netPerfHistory.add(scope, report) } } },
+            onStarted = { OperationService.start(this, OperationKind.NETPERF) },
+        )
+    }
     val talosUpdateChecker by lazy { TalosUpdateChecker() }
     /** The Talos release each cluster's update card was skipped for. */
     val skippedTalosUpdates by lazy { SkippedTalosUpdates(getSharedPreferences(SkippedTalosUpdates.FILE, Context.MODE_PRIVATE)) }

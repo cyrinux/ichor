@@ -60,6 +60,10 @@ extension OperationKind {
         case .imagePull: String(localized: "Image pull")
         case .join: String(localized: "Node join")
         case .imageScan: String(localized: "Image scan")
+        case .argoSync: String(localized: "Argo CD sync")
+        case .fluxReconcile: String(localized: "Flux reconcile")
+        case .rollout: String(localized: "Rollout restart")
+        case .netPerf: String(localized: "Network test")
         }
     }
 }

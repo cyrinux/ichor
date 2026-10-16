@@ -52,7 +52,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   peers, kube-vip ranges and leases) and why one has none; or export a kubeconfig.
 - **Argo CD:** when the cluster runs it, list its Applications with their health and sync state,
   follow a sync wave by wave, and sync (with prune, dry run, selected resources…), refresh,
-  terminate a sync, pause or resume auto-sync, or roll back to an earlier deployment. Ichor
+  terminate a sync, pause or resume auto-sync, or roll back to an earlier deployment. A sync,
+  a Flux reconcile or a rollout restart started from the phone is followed in the background,
+  with its progress and Terminate or Stop in the notification (Android) or Live Activity (iOS). Ichor
   patches the Application resources with the admin kubeconfig, like `argocd --core`, so no
   Argo CD token is needed. **Show diff** tells what a sync would change before running it,
   like the Diff tab of the Argo CD UI: Ichor reads the comparison the application controller
@@ -279,7 +281,8 @@ or in Wireshark.
 **Kubernetes → Network** (also under **Cluster insights → Network**) measures the network from a
 client node to a server node with netperf, the way `cilium connectivity perf` does, on any CNI:
 TCP throughput (`TCP_STREAM`), then TCP round trips (`TCP_RR`: p50/p90/p99 latency), pod to pod
-and, optionally, host to host.
+and, optionally, host to host. The test keeps running when you leave the screen, with its progress and Stop in the
+notification or Live Activity.
 
 - **What runs:** a namespace `ichor-netperf-<random>`, a `netserver` pod on the server node and
   one short-lived `netperf` pod per measurement on the client node, with the

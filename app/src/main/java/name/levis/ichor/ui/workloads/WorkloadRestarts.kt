@@ -6,6 +6,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.StreamItem
 import name.levis.ichor.model.KubeRolloutStatus
@@ -58,7 +61,8 @@ class WorkloadRestarts(
     suspend fun current(workload: KubeWorkload): KubeWorkload =
         cancellableCatching { kube.workload(workload.kind, workload.namespace, workload.name) }.getOrDefault(workload)
 
-    fun restart(workload: KubeWorkload) {
+    /** Restarts [workload]; [onFollow] gets it once the restart went through (to follow its rollout app-wide). */
+    fun restart(workload: KubeWorkload, onFollow: (KubeWorkload) -> Unit = {}) {
         if (workload.key in _restarting.value) return
         _restarting.update { it + workload.key }
         scope.launch {
@@ -68,6 +72,7 @@ class WorkloadRestarts(
             if (outcome.isSuccess) {
                 _following.value = workload
                 onRestarted()
+                onFollow(workload)
             }
         }
     }
@@ -89,6 +94,13 @@ class WorkloadRestarts(
 
     /** The followed rollout ended: show its final state. */
     fun rolloutEnded() = onRestarted()
+}
+
+/** Hands a restarted workload's rollout to the app-wide [name.levis.ichor.data.RolloutManager] (its notification). */
+@Composable
+fun rememberRolloutFollow(): (KubeWorkload) -> Unit {
+    val app = LocalContext.current.applicationContext as TalosApp
+    return remember(app) { { workload -> app.rolloutManager.start(workload) } }
 }
 
 /** A toast for each failed restart of [results]; a successful one opens [RolloutStatusSheet]. */

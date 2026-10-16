@@ -22,12 +22,14 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.Feature
+import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.contextFor
 import name.levis.ichor.model.kubeFocus
 import name.levis.ichor.model.nodeTab
+import name.levis.ichor.ui.workloads.NETPERF_TAB
 import name.levis.ichor.monitor.AlertAction
 import name.levis.ichor.monitor.AlertActionRequest
 import name.levis.ichor.ui.backup.IncomingBackup
@@ -57,7 +59,7 @@ enum class DeepLink {
     ISSUE_CONFIG, DEMO, DEMO_KUBE, ARGO_WINDOWS, ARGO_CD, FLUX, CHECKUP, CONFIG_TRY, SEARCH,
 
     // A followed run's notification (OperationService): the screen it shows on.
-    UPGRADE, MAINTENANCE, CONFIG_MULTI, CLUSTER_UPGRADE, K8S_UPGRADE, JOIN_NODE;
+    UPGRADE, MAINTENANCE, CONFIG_MULTI, CLUSTER_UPGRADE, K8S_UPGRADE, JOIN_NODE, ARGO_APP, FLUX_APP, WORKLOAD, NETPERF;
 
     companion object {
         /** The screen an EXTRA_OPEN value names; null for anything else. */
@@ -211,6 +213,20 @@ fun Navigation(
             }
             DeepLink.JOIN_NODE -> if (!startWithImport && app.joinManager.current.value != null) {
                 nav.navigate(Routes.JOIN_NODE) { launchSingleTop = true }
+            }
+            // The Kubernetes runs: the screen they were started from, while the manager holds them.
+            DeepLink.ARGO_APP -> app.gitOpsOperations.argoSync.value?.takeIf { !startWithImport && canUseKube() }?.let {
+                nav.navigate(Routes.argoApp(it.namespace, it.name)) { launchSingleTop = true }
+            }
+            DeepLink.FLUX_APP -> app.gitOpsOperations.fluxReconcile.value?.takeIf { !startWithImport && canUseKube() }?.let {
+                nav.navigate(Routes.fluxApp(it.kind, it.namespace, it.name)) { launchSingleTop = true }
+            }
+            DeepLink.WORKLOAD -> app.rolloutManager.current.value?.takeIf { !startWithImport && canUseKube() }?.let {
+                val w = it.workload
+                nav.navigate(Routes.workloads(KubeFocus(0, w.key, w.namespace, w.name))) { launchSingleTop = true }
+            }
+            DeepLink.NETPERF -> if (!startWithImport && canUseKube() && app.netPerfManager.current.value != null) {
+                nav.navigate(Routes.workloads(KubeFocus(NETPERF_TAB))) { launchSingleTop = true }
             }
         }
         onDeepLinkHandled()
