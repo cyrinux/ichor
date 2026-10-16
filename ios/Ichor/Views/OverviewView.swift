@@ -46,6 +46,8 @@ struct OverviewView: View {
     @AppStorage(OverviewLayout.storageKey) private var layoutText = ""
     @AppStorage(OverviewBar.storageKey) private var barText = ""
     @State private var customizing = false
+    /// The incident summary sheet (CYR-77), from the title menu.
+    @State private var sharingIncident = false
     @Environment(\.scenePhase) private var scenePhase
     @State private var visible = false
     /// "Since you last looked" (the history ring).
@@ -144,6 +146,11 @@ struct OverviewView: View {
                     Label("Add a node…", systemImage: "plus.circle")
                 }
             }
+            if model.activeSummary != nil {
+                Button { sharingIncident = true } label: {
+                    Label("Share incident summary…", systemImage: "square.and.arrow.up")
+                }
+            }
             ShareLinkButton(target: .screen(.cluster))
         }
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -193,6 +200,11 @@ struct OverviewView: View {
             }
         }
         .sheet(isPresented: $customizing) { OverviewEditorSheet(OverviewCard.self, OverviewAction.self, title: "Customize overview", absent: absentCards) }
+        .sheet(isPresented: $sharingIncident) {
+            if let context = model.activeSummary {
+                IncidentSummarySheet(context: context.name, cluster: monitorClusterKey(context))
+            }
+        }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
         .watchesHistory(look, cluster: model.activeSummary.map(monitorClusterKey) ?? "", id: loadID)

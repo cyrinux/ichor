@@ -4639,6 +4639,15 @@
     <string name="history_since_title">Відтоді, як ви востаннє дивилися</string>
     <string name="history_since_more">+%1$d ще</string>
     <string name="history_since_dismiss">Зрозуміло</string>
+    <string name="incident_summary_menu">Поділитися підсумком інциденту…</string>
+    <string name="incident_summary_title">Підсумок інциденту</string>
+    <string name="incident_window_6h">Останні 6 годин</string>
+    <string name="incident_window_24h">Останні 24 години</string>
+    <string name="incident_window_7d">Останні 7 днів</string>
+    <string name="incident_hide_names">Приховати імена</string>
+    <string name="incident_share">Поділитися</string>
+    <string name="incident_copy">Копіювати</string>
+    <string name="incident_empty">На цьому телефоні ще немає історії: фонова перевірка додає один запис за кожен запуск.</string>
     <string name="history_since_down">%1$s досі не працює (%2$s)</string>
     <string name="history_since_alert_open">Нове сповіщення, досі відкрите: %1$s</string>
     <string name="history_since_recovered">%1$s не працював (%2$s) протягом %3$s, тепер знову працює</string>

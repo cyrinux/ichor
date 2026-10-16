@@ -4395,6 +4395,15 @@
     <string name="history_since_title">Depuis votre dernière visite</string>
     <string name="history_since_more">+%1$d de plus</string>
     <string name="history_since_dismiss">Compris</string>
+    <string name="incident_summary_menu">Partager un résumé d’incident…</string>
+    <string name="incident_summary_title">Résumé d’incident</string>
+    <string name="incident_window_6h">6 dernières heures</string>
+    <string name="incident_window_24h">24 dernières heures</string>
+    <string name="incident_window_7d">7 derniers jours</string>
+    <string name="incident_hide_names">Masquer les noms</string>
+    <string name="incident_share">Partager</string>
+    <string name="incident_copy">Copier</string>
+    <string name="incident_empty">Aucun historique enregistré sur ce téléphone pour l’instant : la vérification en arrière-plan ajoute une entrée à chaque passage.</string>
     <string name="history_since_down">%1$s est toujours hors service (%2$s)</string>
     <string name="history_since_alert_open">Nouvelle alerte, toujours ouverte : %1$s</string>
     <string name="history_since_recovered">%1$s a été hors service (%2$s) pendant %3$s, revenu depuis</string>
