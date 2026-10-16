@@ -147,7 +147,7 @@ private struct PrivacyCover: View {
 
 enum Route: Hashable {
     case node(NodeRef)
-    /// Node screen opened on a tab, or with a reboot/shutdown confirmation (from row swipes).
+    /// Node tabs opened on Live; node hub with a reboot/shutdown confirmation (from row swipes).
     case nodeLive(NodeRef)
     case nodePower(NodeRef, PowerAction)
     /// Every node to a Talos version, one after the other ("": the newest stable release).
@@ -156,10 +156,10 @@ enum Route: Hashable {
     case k8sUpgrade
     /// "Add a node…": a node in maintenance mode, booted from the Talos ISO.
     case joinNode
-    /// Node screen opened on its cordon / uncordon confirmation (from a row's menu).
+    /// Node hub opened on its cordon / uncordon confirmation (from a row's menu).
     case nodeCordon(NodeRef)
-    /// Node screen opened on a tab (a share link).
-    case nodeTab(NodeRef, tab: NodeDetailView.Tab)
+    /// Node tabs opened on a tab (a hub row, a share link that names a tab).
+    case nodeTab(NodeRef, tab: NodeTabsView.Tab)
     /// Every node of a large cluster (see isDenseCluster), as the overview loaded them; filter preselects one.
     case nodes(filter: NodeFilter?, nodes: [NodeOverview])
     /// Every node of a large cluster added from a kubeconfig, as its home loaded them; filter preselects one.
@@ -262,6 +262,16 @@ struct NodeRef: Hashable {
     let role: String
 }
 
+extension Route {
+    /// The node a share link opens, on its hub or on one of its tabs; nil for any other screen.
+    var nodeRef: NodeRef? {
+        switch self {
+        case .node(let ref), .nodeTab(let ref, _): ref
+        default: nil
+        }
+    }
+}
+
 struct MainNavigation: View {
     @Environment(AppModel.self) private var model
     @State private var path: [Route] = []
@@ -276,13 +286,13 @@ struct MainNavigation: View {
                 .navigationDestination(for: Route.self) { route in
                     switch route {
                     case .node(let ref): NodeDetailView(ref: ref)
-                    case .nodeLive(let ref): NodeDetailView(ref: ref, initialTab: .live)
+                    case .nodeLive(let ref): NodeTabsView(ref: ref, initialTab: .live)
                     case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
                     case .clusterUpgrade(let version): ClusterUpgradePlanView(initialVersion: version)
                     case .k8sUpgrade: K8sUpgradePlanView()
                     case .joinNode: JoinNodeView(path: $path)
                     case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
-                    case .nodeTab(let ref, let tab): NodeDetailView(ref: ref, initialTab: tab)
+                    case .nodeTab(let ref, let tab): NodeTabsView(ref: ref, initialTab: tab)
                     case .nodes(let filter, let nodes): NodesView(nodes: nodes, filter: filter, path: $path)
                     case .kubeNodes(let filter, let nodes): KubeNodesView(nodes: nodes, filter: filter, path: $path)
                     case .logs(let node, let hostname, let service):
@@ -491,10 +501,10 @@ struct MainNavigation: View {
         if action?.action != .reboot { NotificationRouter.shared.alertActionRequest = action }
     }
 
-    /// The node screen with its reboot confirmation for an alert's Reboot (when this config may
+    /// The node hub with its reboot confirmation for an alert's Reboot (when this config may
     /// power nodes); `route` otherwise.
     private func actionRoute(_ route: Route, for action: AlertActionRequest?) -> Route {
-        guard let action, case .nodeTab(let ref, _) = route, action.isReboot(node: ref.address), model.allows(.power) else { return route }
+        guard let action, let ref = route.nodeRef, action.isReboot(node: ref.address), model.allows(.power) else { return route }
         return .nodePower(ref, .reboot)
     }
 
