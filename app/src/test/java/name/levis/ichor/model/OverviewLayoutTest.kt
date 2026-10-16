@@ -6,6 +6,7 @@ import name.levis.ichor.model.OverviewCard.ARGO_CD
 import name.levis.ichor.model.OverviewCard.DATA_SERVICES
 import name.levis.ichor.model.OverviewCard.FLUX
 import name.levis.ichor.model.OverviewCard.NODES
+import name.levis.ichor.model.OverviewCard.PINNED
 import name.levis.ichor.model.OverviewCard.SUMMARY
 import name.levis.ichor.model.OverviewCard.TALOS_UPDATE
 import name.levis.ichor.model.OverviewCard.TIME_DRIFT
@@ -26,8 +27,8 @@ class OverviewLayoutTest {
 
     @Test
     fun encodeRoundTrips() {
-        val layout = OverviewCard.layout.default.move(6, 0).hide(APPS)
-        assertEquals("NODES,TALOS_UPDATE,SUMMARY,-APPS,DATA_SERVICES,ARGO_CD,FLUX,TIME_DRIFT,ALERTS", layout.encode())
+        val layout = OverviewCard.layout.default.move(7, 0).hide(APPS)
+        assertEquals("NODES,PINNED,TALOS_UPDATE,SUMMARY,-APPS,DATA_SERVICES,ARGO_CD,FLUX,TIME_DRIFT,ALERTS", layout.encode())
         assertEquals(layout, OverviewCard.layout.parse(layout.encode()))
     }
 
@@ -41,29 +42,41 @@ class OverviewLayoutTest {
     @Test
     fun parseSkipsUnknownAndRepeatedAndAppendsMissing() {
         val layout = OverviewCard.layout.parse("TIME_DRIFT, -NODES,GONE,TIME_DRIFT,-NODES")
-        assertEquals(listOf(TALOS_UPDATE, TIME_DRIFT, NODES, SUMMARY, APPS, DATA_SERVICES, ARGO_CD, FLUX, ALERTS), layout.order)
+        assertEquals(listOf(PINNED, TALOS_UPDATE, TIME_DRIFT, NODES, SUMMARY, APPS, DATA_SERVICES, ARGO_CD, FLUX, ALERTS), layout.order)
         assertEquals(setOf(NODES), layout.hidden)
-        assertEquals(listOf(TALOS_UPDATE, TIME_DRIFT, SUMMARY, APPS, DATA_SERVICES, ARGO_CD, FLUX, ALERTS), layout.visible)
+        assertEquals(listOf(PINNED, TALOS_UPDATE, TIME_DRIFT, SUMMARY, APPS, DATA_SERVICES, ARGO_CD, FLUX, ALERTS), layout.visible)
     }
 
     @Test
     fun aLayoutSavedBeforeTheTalosUpdateCardKeepsItOnTop() {
         // It was pinned above the cards then; other new cards still come last.
         val saved = OverviewCard.layout.parse("NODES,SUMMARY,-APPS,DATA_SERVICES,ARGO_CD,FLUX")
-        assertEquals(listOf(TALOS_UPDATE, NODES, SUMMARY, DATA_SERVICES, ARGO_CD, FLUX, TIME_DRIFT, ALERTS), saved.visible)
-        assertEquals(TALOS_UPDATE, OverviewCard.entries.single { it.leadsWhenNew })
+        assertEquals(listOf(PINNED, TALOS_UPDATE, NODES, SUMMARY, DATA_SERVICES, ARGO_CD, FLUX, TIME_DRIFT, ALERTS), saved.visible)
+        assertEquals(listOf(PINNED, TALOS_UPDATE), OverviewCard.entries.filter { it.leadsWhenNew })
         // Once saved with it, it stays where it was put.
         val placed = OverviewCard.layout.parse("SUMMARY,-TALOS_UPDATE,NODES")
-        assertEquals(listOf(SUMMARY, TALOS_UPDATE, NODES), placed.order.take(3))
+        assertEquals(listOf(PINNED, SUMMARY, TALOS_UPDATE, NODES), placed.order.take(4))
         assertEquals(setOf(TALOS_UPDATE), placed.hidden)
+    }
+
+    @Test
+    fun aLayoutSavedBeforeThePinnedCardKeepsItsFormAndGetsItFirst() {
+        val saved = OverviewCard.layout.parse("SUMMARY,-APPS,NODES,TALOS_UPDATE")
+        assertEquals(listOf(PINNED, SUMMARY, APPS, NODES, TALOS_UPDATE), saved.order.take(5))
+        assertEquals(setOf(APPS), saved.hidden)
+        // Saved again, the card is one more name of the same form.
+        assertEquals("PINNED,SUMMARY,-APPS,NODES,TALOS_UPDATE,", saved.encode().substringBefore("DATA_SERVICES"))
+        val moved = OverviewCard.layout.parse("SUMMARY,-PINNED,NODES")
+        assertEquals(setOf(PINNED), moved.hidden)
+        assertEquals(listOf(TALOS_UPDATE, SUMMARY, PINNED, NODES), moved.order.take(4))
     }
 
     @Test
     fun moveWorksOnShownCards() {
         val layout = OverviewCard.layout.default.hide(APPS)
-        // Shown: TALOS_UPDATE, SUMMARY, DATA_SERVICES, ARGO_CD, FLUX, NODES, TIME_DRIFT, ALERTS
-        val moved = layout.move(from = 5, to = 2)
-        assertEquals(listOf(TALOS_UPDATE, SUMMARY, NODES, DATA_SERVICES, ARGO_CD, FLUX, TIME_DRIFT, ALERTS), moved.visible)
+        // Shown: PINNED, TALOS_UPDATE, SUMMARY, DATA_SERVICES, ARGO_CD, FLUX, NODES, TIME_DRIFT, ALERTS
+        val moved = layout.move(from = 6, to = 3)
+        assertEquals(listOf(PINNED, TALOS_UPDATE, SUMMARY, NODES, DATA_SERVICES, ARGO_CD, FLUX, TIME_DRIFT, ALERTS), moved.visible)
         assertEquals(listOf(APPS), moved.hiddenCards)
     }
 
@@ -71,11 +84,11 @@ class OverviewLayoutTest {
     fun absentCardsAreLeftOutAndKeepTheirPlace() {
         val absent = setOf(DATA_SERVICES, FLUX)
         val layout = OverviewCard.layout.default.hide(ARGO_CD).hide(FLUX)
-        assertEquals(listOf(TALOS_UPDATE, SUMMARY, APPS, NODES, TIME_DRIFT, ALERTS), layout.visible(absent))
+        assertEquals(listOf(PINNED, TALOS_UPDATE, SUMMARY, APPS, NODES, TIME_DRIFT, ALERTS), layout.visible(absent))
         assertEquals(listOf(ARGO_CD), layout.hiddenCards(absent))
-        // APPS (index 2 without DATA_SERVICES) after NODES: DATA_SERVICES stays fourth.
-        val moved = layout.move(2, 3, absent)
-        assertEquals(listOf(TALOS_UPDATE, SUMMARY, NODES, DATA_SERVICES, APPS, TIME_DRIFT, ALERTS), moved.visible)
+        // APPS (index 3 without DATA_SERVICES) after NODES: DATA_SERVICES stays fifth.
+        val moved = layout.move(3, 4, absent)
+        assertEquals(listOf(PINNED, TALOS_UPDATE, SUMMARY, NODES, DATA_SERVICES, APPS, TIME_DRIFT, ALERTS), moved.visible)
         assertEquals(setOf(ARGO_CD, FLUX), moved.hidden)
     }
 
@@ -83,7 +96,7 @@ class OverviewLayoutTest {
     fun moveOutOfRangeIsIgnored() {
         val layout = OverviewCard.layout.default
         assertEquals(layout, layout.move(-1, 2))
-        assertEquals(layout, layout.move(0, 9))
+        assertEquals(layout, layout.move(0, 10))
         assertEquals(layout, layout.move(2, 2))
     }
 
@@ -91,7 +104,7 @@ class OverviewLayoutTest {
     fun showPutsTheCardLast() {
         val layout = OverviewCard.layout.default.hide(SUMMARY).hide(NODES)
         val shown = layout.show(SUMMARY)
-        assertEquals(listOf(TALOS_UPDATE, APPS, DATA_SERVICES, ARGO_CD, FLUX, TIME_DRIFT, ALERTS, SUMMARY), shown.visible)
+        assertEquals(listOf(PINNED, TALOS_UPDATE, APPS, DATA_SERVICES, ARGO_CD, FLUX, TIME_DRIFT, ALERTS, SUMMARY), shown.visible)
         assertEquals(listOf(NODES), shown.hiddenCards)
         assertEquals(shown, shown.show(APPS))
     }
@@ -104,6 +117,6 @@ class OverviewLayoutTest {
 
     @Test
     fun detectedCards() {
-        assertEquals(setOf(DATA_SERVICES, ARGO_CD, FLUX, ALERTS), OverviewCard.entries.filter { it.whenDetected }.toSet())
+        assertEquals(setOf(PINNED, DATA_SERVICES, ARGO_CD, FLUX, ALERTS), OverviewCard.entries.filter { it.whenDetected }.toSet())
     }
 }

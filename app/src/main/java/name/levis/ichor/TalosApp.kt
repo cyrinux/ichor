@@ -51,6 +51,7 @@ import name.levis.ichor.data.createFeatureStore
 import name.levis.ichor.data.createGoogleNativeSignIn
 import name.levis.ichor.data.PrivacyMask
 import name.levis.ichor.data.UiPreferences
+import name.levis.ichor.data.PinStore
 import androidx.glance.appwidget.updateAll
 import name.levis.ichor.widget.ClusterWidget
 import name.levis.ichor.widget.WidgetClusters
@@ -265,6 +266,8 @@ class TalosApp : Application() {
     /** The network tools' recent targets, per cluster. */
     val netToolTargets by lazy { NetToolTargets(getSharedPreferences(NetToolTargets.FILE, Context.MODE_PRIVATE)) }
     val uiPreferences by lazy { UiPreferences(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
+    /** The objects pinned to each cluster's overview. */
+    val pinStore by lazy { PinStore(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
     val clusterColors by lazy { ClusterColors(getSharedPreferences(ClusterColors.FILE, Context.MODE_PRIVATE)) }
     val clusterNames by lazy { ClusterNames(getSharedPreferences(ClusterNames.FILE, Context.MODE_PRIVATE)) }
     val wakeOnLan by lazy {

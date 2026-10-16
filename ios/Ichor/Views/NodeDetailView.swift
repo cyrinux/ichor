@@ -54,6 +54,7 @@ struct NodeDetailView: View {
                     Menu {
                         // No tab: the link opens this hub.
                         ShareLinkButton(target: .node(address: ref.address, hostname: ref.hostname, tab: ""))
+                        PinButton(target: .node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
                         Button { copyAddress() } label: { Label("Copy IP", systemImage: "doc.on.doc") }
                     } label: {
                         Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))

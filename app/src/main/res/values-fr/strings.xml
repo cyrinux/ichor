@@ -3323,6 +3323,11 @@
     <string name="overview_card_desc_flux">Kustomizations et HelmReleases prêtes, en réconciliation ou en échec</string>
     <string name="overview_card_talos_update">Mise à jour de Talos</string>
     <string name="overview_card_desc_talos_update">Une version de Talos plus récente que celle des nœuds, quand il y en a une</string>
+    <string name="overview_card_pinned">Épinglés</string>
+    <string name="overview_card_desc_pinned">Les nœuds, charges de travail et applications épinglés depuis leur écran</string>
+    <string name="pin_add">Épingler</string>
+    <string name="pin_remove">Désépingler</string>
+    <string name="pin_limit">Au plus %1$d épingles par cluster : désépinglez-en une d’abord</string>
 
     <!-- Argo CD freeze (sync windows) -->
     <string name="argo_freeze_title">Geler Argo CD</string>

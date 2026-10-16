@@ -106,6 +106,7 @@ class CardLook<C>(val label: @Composable (C) -> String, val description: @Compos
 @Composable
 fun overviewCardLabel(card: OverviewCard): String = stringResource(
     when (card) {
+        OverviewCard.PINNED -> R.string.overview_card_pinned
         OverviewCard.TALOS_UPDATE -> R.string.overview_card_talos_update
         OverviewCard.SUMMARY -> R.string.overview_card_summary
         OverviewCard.APPS -> R.string.apps_title
@@ -122,6 +123,7 @@ fun overviewCardLabel(card: OverviewCard): String = stringResource(
 @Composable
 fun overviewCardDescription(card: OverviewCard): String = stringResource(
     when (card) {
+        OverviewCard.PINNED -> R.string.overview_card_desc_pinned
         OverviewCard.TALOS_UPDATE -> R.string.overview_card_desc_talos_update
         OverviewCard.SUMMARY -> R.string.overview_card_desc_summary
         OverviewCard.APPS -> R.string.overview_card_desc_apps

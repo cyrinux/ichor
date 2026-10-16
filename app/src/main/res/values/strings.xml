@@ -3322,6 +3322,11 @@
     <string name="overview_card_desc_flux">Ready, reconciling and failing Kustomizations and HelmReleases</string>
     <string name="overview_card_talos_update">Talos update</string>
     <string name="overview_card_desc_talos_update">A newer Talos release than the nodes run, when there is one</string>
+    <string name="overview_card_pinned">Pinned</string>
+    <string name="overview_card_desc_pinned">The nodes, workloads and apps pinned from their screens</string>
+    <string name="pin_add">Pin</string>
+    <string name="pin_remove">Unpin</string>
+    <string name="pin_limit">At most %1$d pins per cluster: unpin one first</string>
 
     <!-- Argo CD freeze (sync windows) -->
     <string name="argo_freeze_title">Freeze Argo CD</string>

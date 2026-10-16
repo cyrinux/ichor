@@ -89,8 +89,9 @@ struct OverviewView: View {
                             if support.visible { Section { SupportCard(prompt: support) } }
                             // The sections as arranged (Customize overview, in the ⋯ menu).
                             ForEach(layout.visible) { card in section(card, overview: overview) }
-                            // The Talos update section alone, with no release to offer, leaves the list as empty.
-                            if layout.visible.allSatisfy({ $0 == .talosUpdate && !offersTalosUpdate }) {
+                            // The Talos update section alone, with no release to offer, leaves the list as empty
+                            // (the Pinned one too, without pins).
+                            if layout.visible.allSatisfy({ $0 == .talosUpdate && !offersTalosUpdate || $0 == .pinned && pins.isEmpty }) {
                                 Section {
                                     Button { customizing = true } label: {
                                         Text("Every card is hidden. Tap to choose the ones to show.").foregroundStyle(.secondary)
@@ -298,6 +299,12 @@ struct OverviewView: View {
     @ViewBuilder
     private func section(_ card: OverviewCard, overview: ClusterOverview) -> some View {
         switch card {
+        case .pinned:
+            if !pins.isEmpty {
+                PinnedSection(pins: pins.pins, nodes: overview.nodes, argo: argoStatus, flux: fluxStatus,
+                              masked: model.privacyMask, open: { open($0, overview: overview) },
+                              unpin: { PinStore.shared.remove($0.target, fingerprint: pinsFingerprint) })
+            }
         case .talosUpdate:
             if let update { TalosUpdateSection(info: update, nodes: overview.nodes) }
         case .summary:
@@ -472,6 +479,33 @@ struct OverviewView: View {
         return overview.downHostnames
     }
 
+    /// The fingerprint the cluster on screen keeps its pins under.
+    private var pinsFingerprint: String { model.activeSummary?.fingerprint ?? "" }
+
+    /// The screens pinned on the cluster on screen.
+    private var pins: PinList { PinStore.shared.pins(for: pinsFingerprint) }
+
+    /// Opens a pin's screen as its share link would: a node straight from the overview's nodes,
+    /// the rest through the link's route.
+    private func open(_ pin: Pin, overview: ClusterOverview) {
+        if pin.target.target == .node {
+            if let node = pinnedNode(pin.target, in: overview.nodes) { path.append(.node(node.ref)) }
+            return
+        }
+        let client = model.client
+        let kube = model.activeIsKube
+        Task {
+            guard let route = await pin.target.route(client: client, kube: kube) else { return }
+            path.append(route)
+        }
+    }
+
+    /// The Flux status the Flux section loaded, for the Pinned card's chips.
+    private var fluxStatus: FluxStatus? {
+        if case .loaded(let status, _, _)? = flux { return status }
+        return nil
+    }
+
     /// The Argo CD status the Argo CD section loaded, for the Apps card's badges.
     private var argoStatus: ArgoStatus? {
         if case .loaded(let status, _, _)? = argo { return status }
@@ -635,11 +669,12 @@ struct OverviewView: View {
     /// Sections the cluster has nothing for (the same checks as their loading), left out of the
     /// editor too; all offered until the inventory is known.
     private var absentCards: Set<OverviewCard> {
-        var alertsAbsent: Set<OverviewCard> = []
-        if !model.allows(.workloads) || AlertsStore.shared.absent(for: model.alertsKey) { alertsAbsent.insert(.alerts) }
-        guard case .loaded(let apps, _, _) = inventory else { return alertsAbsent }
+        // Known before the inventory: no pins, no Alertmanager.
+        var known: Set<OverviewCard> = pins.isEmpty ? [.pinned] : []
+        if !model.allows(.workloads) || AlertsStore.shared.absent(for: model.alertsKey) { known.insert(.alerts) }
+        guard case .loaded(let apps, _, _) = inventory else { return known }
         let kubernetes = model.allows(.workloads)
-        var absent: Set<OverviewCard> = alertsAbsent
+        var absent: Set<OverviewCard> = known
         if !kubernetes || dataServiceHints(apps).isEmpty { absent.insert(.dataServices) }
         if !kubernetes || !argoCDHinted(apps) { absent.insert(.argoCD) }
         if !kubernetes || !fluxHinted(apps) { absent.insert(.flux) }

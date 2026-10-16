@@ -78,6 +78,7 @@ import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.upwardScrollStaysInSheet
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.components.copyToClipboard
+import name.levis.ichor.ui.share.PinButton
 import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.components.shareFile
 import name.levis.ichor.ui.factory
@@ -214,6 +215,7 @@ fun PodLogSheet(
                     Text(pod.name, style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text(pod.namespace, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                PinButton(ShareTarget.pod(pod.namespace, pod.name), pod.name)
                 ShareLinkButton(ShareTarget.pod(pod.namespace, pod.name), icon = Icons.Outlined.Link)
                 TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.pod_logs_copy), enabled = hasText, onClick = {
                     copyLog(context, pod, text())

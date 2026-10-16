@@ -3324,6 +3324,11 @@
     <string name="overview_card_desc_flux">Kustomization e HelmRelease pronte, in riconciliazione o in errore</string>
     <string name="overview_card_talos_update">Aggiornamento di Talos</string>
     <string name="overview_card_desc_talos_update">Una versione di Talos più recente di quella dei nodi, quando c’è</string>
+    <string name="overview_card_pinned">Fissati</string>
+    <string name="overview_card_desc_pinned">I nodi, i carichi di lavoro e le app fissati dalle loro schermate</string>
+    <string name="pin_add">Fissa</string>
+    <string name="pin_remove">Sblocca</string>
+    <string name="pin_limit">Al massimo %1$d elementi fissati per cluster: sbloccane uno prima</string>
 
     <!-- Argo CD freeze (sync windows) -->
     <string name="argo_freeze_title">Congela Argo CD</string>

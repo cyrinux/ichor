@@ -1,6 +1,56 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Pinned" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Angeheftet" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Fijados" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Épinglés" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Fissati" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Закріплені" } }
+      }
+    },
+    "Pin" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Anheften" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Fijar" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Épingler" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Fissa" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Закріпити" } }
+      }
+    },
+    "Unpin" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lösen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Dejar de fijar" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Désépingler" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Відкріпити" } }
+      }
+    },
+    "Nodes, workloads and GitOps apps pinned from their screens" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Knoten, Workloads und GitOps-Apps, von ihrer Ansicht aus angeheftet" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nodos, cargas de trabajo y apps GitOps fijados desde su pantalla" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nœuds, workloads et apps GitOps épinglés depuis leur écran" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nodi, workload e app GitOps fissati dalla loro schermata" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Вузли, робочі навантаження та застосунки GitOps, закріплені з їхніх екранів" } }
+      }
+    },
+    "%lld pins at most. Unpin one first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Höchstens %lld angeheftet. Zuerst eines lösen." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld elementos fijados como máximo. Quita uno primero." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld épingles au maximum. Désépinglez-en une d’abord." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Al massimo %lld elementi fissati. Rimuovine prima uno." } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Не більше %lld закріплених. Спершу відкріпіть один." } }
+      }
+    },
     "Reading resource kinds" : {
       "extractionState" : "manual",
       "localizations" : {

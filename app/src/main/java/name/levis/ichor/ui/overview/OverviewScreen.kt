@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.ui.share.rememberClusterPins
+import name.levis.ichor.ui.share.ClusterPins
+import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.BuildConfig
 import name.levis.ichor.ui.history.SinceLastLookedCard
 import name.levis.ichor.ui.components.MutedText
@@ -214,6 +217,8 @@ fun OverviewScreen(
     onActivity: (cluster: String) -> Unit,
     /** The search across clusters. */
     onSearch: () -> Unit,
+    /** Opens a pinned object's screen, like its share link. */
+    onOpenTarget: (ShareTarget) -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository, app::overviewSeed) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
     liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
@@ -327,8 +332,10 @@ fun OverviewScreen(
     }
     val alerts by alertsVm.state.collectAsStateWithLifecycle()
     val alertsShown = alerts.takeIf { alertsAllowed && it.alertmanagerFound }
+    // The objects pinned on this cluster (kept apart while screenshot mode is on).
+    val pins = rememberClusterPins()
     // Cards the cluster has nothing for, left out of the editor too; all offered until the inventory is known.
-    val absentCards = if (apps is UiState.Loaded) setOfNotNull(
+    val absentCards = setOfNotNull(OverviewCard.PINNED.takeIf { pins?.pins.isNullOrEmpty() }) + if (apps is UiState.Loaded) setOfNotNull(
         OverviewCard.DATA_SERVICES.takeIf { dataHints.isEmpty() },
         OverviewCard.ARGO_CD.takeIf { !argoHinted },
         OverviewCard.FLUX.takeIf { !fluxHinted },
@@ -605,6 +612,8 @@ fun OverviewScreen(
                     onToggleNodes = { app.uiPreferences.setNodesExpanded(!nodesExpanded) },
                     onChangelog = onChangelog,
                     onAllNodes = onAllNodes,
+                    pins = pins,
+                    onOpenTarget = onOpenTarget,
                 )
             }
         }
@@ -657,6 +666,8 @@ private fun NodeList(
     onToggleNodes: () -> Unit,
     onChangelog: () -> Unit,
     onAllNodes: (NodeFilter?) -> Unit,
+    pins: ClusterPins?,
+    onOpenTarget: (ShareTarget) -> Unit,
 ) {
     var sheetFor by remember { mutableStateOf<NodeOverview?>(null) }
     val wakeOnLan = rememberWakeOnLan(fingerprint)
@@ -714,6 +725,18 @@ private fun NodeList(
         // The cards, as arranged; a long press on one opens the arrangement.
         layout.visible.forEach { card ->
             when (card) {
+                OverviewCard.PINNED -> if (pins != null && pins.pins.isNotEmpty()) item(key = card.name) {
+                    // The Argo CD and Flux data only when the role reads them (else null): no chip then.
+                    val data = PinnedData(overview.nodes, (argo as? UiState.Loaded)?.data, (flux as? UiState.Loaded)?.data)
+                    PinnedCard(
+                        pins.pins,
+                        data,
+                        onOpen = { onOpenTarget(it.target) },
+                        onUnpin = { pins.toggle(it.target, it.label) },
+                        // Only on the title: a long press on a row offers Unpin.
+                        titleModifier = Modifier.longPressToCustomize(onCustomize),
+                    )
+                }
                 OverviewCard.TALOS_UPDATE -> if (talosUpdate != null) item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) {
                         TalosUpdateCard(
@@ -780,8 +803,15 @@ private fun NodeList(
                 }
             }
         }
-        // The Talos update card alone, with no release to offer, leaves the overview as empty.
-        if (layout.visible.none { it != OverviewCard.TALOS_UPDATE || talosUpdate != null }) item(key = "all-hidden") {
+        // The Talos update card with no release to offer, or the Pinned one without pins, leaves the overview as empty.
+        val shows: (OverviewCard) -> Boolean = {
+            when (it) {
+                OverviewCard.TALOS_UPDATE -> talosUpdate != null
+                OverviewCard.PINNED -> pins?.pins?.isNotEmpty() == true
+                else -> true
+            }
+        }
+        if (layout.visible.none(shows)) item(key = "all-hidden") {
             Card(onClick = onCustomize, modifier = Modifier.fillMaxWidth()) {
                 MutedText(stringResource(R.string.overview_edit_all_hidden), modifier = Modifier.padding(16.dp))
             }

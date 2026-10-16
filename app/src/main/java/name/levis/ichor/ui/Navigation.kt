@@ -332,6 +332,7 @@ fun Navigation(
                 onNodeDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
                 onActivity = { nav.navigate(Routes.activity(it)) },
                 onSearch = { nav.navigate(Routes.SEARCH) { launchSingleTop = true } },
+                onOpenTarget = openTarget,
             )
             // After an update: what changed since the build that ran before.
             WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })

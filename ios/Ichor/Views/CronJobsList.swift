@@ -40,7 +40,10 @@ struct CronJobsList: View {
                                    onToggle: { toggle(cronJob) },
                                    onRun: { confirm = cronJob },
                                    onSuspend: { confirmSuspend = cronJob })
-                            .contextMenu { ShareLinkButton(target: .cronJob(namespace: cronJob.namespace, name: cronJob.name)) }
+                            .contextMenu {
+                                ShareLinkButton(target: .cronJob(namespace: cronJob.namespace, name: cronJob.name))
+                                PinButton(target: .cronJob(namespace: cronJob.namespace, name: cronJob.name), label: cronJob.name)
+                            }
                     }
                 }
                 if load.hasMore && query.isEmpty {

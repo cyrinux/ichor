@@ -40,6 +40,7 @@ struct PodsList: View {
                             .contextMenu {
                                 Button { actions.logsPod = pod } label: { Label("Logs", systemImage: "doc.text") }
                                 ShareLinkButton(target: .pod(namespace: pod.namespace, name: pod.name))
+                                PinButton(target: .pod(namespace: pod.namespace, name: pod.name), label: pod.name)
                                 if let onFlows {
                                     Button { onFlows(pod) } label: {
                                         Label("Live flows of this pod", systemImage: "point.3.filled.connected.trianglepath.dotted")

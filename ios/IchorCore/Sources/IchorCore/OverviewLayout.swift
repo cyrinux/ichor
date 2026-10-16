@@ -13,6 +13,8 @@ public protocol HomeCard: RawRepresentable, CaseIterable, Sendable, Hashable, Id
 
 /// The Talos overview's sections. Raw values are Android's `OverviewCard` names.
 public enum OverviewCard: String, HomeCard {
+    /// The screens pinned on this cluster (Pins.swift): first, and absent without pins.
+    case pinned = "PINNED"
     case talosUpdate = "TALOS_UPDATE"
     case summary = "SUMMARY"
     case apps = "APPS"
@@ -27,9 +29,9 @@ public enum OverviewCard: String, HomeCard {
     public var id: String { rawValue }
     public static let layoutStorageKey = "overview.layout"
 
-    public var whenDetected: Bool { self == .dataServices || self == .argoCD || self == .flux || self == .alerts }
+    public var whenDetected: Bool { self == .pinned || self == .dataServices || self == .argoCD || self == .flux || self == .alerts }
 
-    public var leadsWhenNew: Bool { self == .talosUpdate }
+    public var leadsWhenNew: Bool { self == .pinned || self == .talosUpdate }
 }
 
 /// The sections of the Kubernetes home (a cluster added from a kubeconfig): the API server and

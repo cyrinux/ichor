@@ -3323,6 +3323,11 @@
     <string name="overview_card_desc_flux">Kustomizations y HelmReleases listas, reconciliando o con fallos</string>
     <string name="overview_card_talos_update">Actualización de Talos</string>
     <string name="overview_card_desc_talos_update">Una versión de Talos más reciente que la de los nodos, cuando la hay</string>
+    <string name="overview_card_pinned">Fijados</string>
+    <string name="overview_card_desc_pinned">Los nodos, cargas de trabajo y aplicaciones fijados desde su pantalla</string>
+    <string name="pin_add">Fijar</string>
+    <string name="pin_remove">Quitar fijación</string>
+    <string name="pin_limit">Como máximo %1$d elementos fijados por clúster: quita uno primero</string>
 
     <!-- Argo CD freeze (sync windows) -->
     <string name="argo_freeze_title">Congelar Argo CD</string>
