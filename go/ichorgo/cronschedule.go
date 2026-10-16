@@ -103,7 +103,9 @@ func parseCronField(field string, f cronField) (uint64, error) {
 				return 0, fmt.Errorf("bad step in %q", part)
 			}
 
-			step = n
+			// A step past the field's range runs once; capping it keeps v += step from
+			// overflowing into a negative shift.
+			step = min(n, f.max+1)
 		}
 
 		lo, hi, err := parseCronRange(rangePart, f, hasStep)
