@@ -58,6 +58,7 @@ import name.levis.ichor.ui.apps.AppIconTile
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.share.PinButton
 import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -99,6 +100,7 @@ internal fun CronJobCard(
                     RunHistoryStrip(cronJob.runs)
                     LastRunText(cronJob.runs.firstOrNull())
                 }
+                PinButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), cronJob.name)
                 ShareLinkButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), icon = Icons.Outlined.Link)
                 SuspendButton(cronJob, suspending, enabled = suspendDenial == null, onSuspend)
                 RunNowButton(cronJob, triggering, enabled = runDenial == null, onRun)

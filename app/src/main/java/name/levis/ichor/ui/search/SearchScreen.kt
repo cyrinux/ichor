@@ -233,7 +233,7 @@ private fun ResultRow(result: SearchResult, now: Long, onOpen: (ShareTarget) -> 
     )
 }
 
-private fun kindIcon(kind: String): ImageVector = when (kind) {
+internal fun kindIcon(kind: String): ImageVector = when (kind) {
     "node" -> Icons.Outlined.Dns
     "pod" -> Icons.Outlined.ViewInAr
     "workload" -> Icons.Outlined.Widgets
@@ -243,7 +243,7 @@ private fun kindIcon(kind: String): ImageVector = when (kind) {
 }
 
 @Composable
-private fun kindLabel(kind: String): String = when (kind) {
+internal fun kindLabel(kind: String): String = when (kind) {
     "node" -> stringResource(R.string.search_kind_node)
     "pod" -> stringResource(R.string.search_kind_pod)
     "workload" -> stringResource(R.string.search_kind_workload)

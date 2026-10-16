@@ -839,6 +839,11 @@ a Home Screen quick action on iOS. On iOS the clusters and the Argo CD and Flux 
 knows also show in Spotlight and open Ichor on them; only their names are indexed, and only
 while "Keep last known state" is on and neither the app lock nor the screenshot mode is.
 
+**Pin a node, workload, pod, CronJob, Argo CD or Flux app** (the pin button next to its share
+link) to a Pinned card at the top of that cluster's overview: up to 12 per cluster, each with its
+ready or health state when the overview knows it, opening like its share link; a long press on a
+row (Android) or a swipe (iOS) unpins it, and the card moves or hides like the others.
+
 ### Kubernetes clusters without Talos
 
 A cluster can also be added from a kubeconfig alone, the same ways as a talosconfig (file,

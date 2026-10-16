@@ -9,8 +9,9 @@ interface HomeCard {
     val leadsWhenNew: Boolean
 }
 
-/** The Talos overview's cards. */
+/** The Talos overview's cards. [PINNED]: the objects pinned on this cluster, absent without any. */
 enum class OverviewCard : HomeCard {
+    PINNED,
     TALOS_UPDATE,
     SUMMARY,
     APPS,
@@ -22,9 +23,10 @@ enum class OverviewCard : HomeCard {
     ALERTS,
     ;
 
-    override val whenDetected: Boolean get() = this == DATA_SERVICES || this == ARGO_CD || this == FLUX || this == ALERTS
+    override val whenDetected: Boolean
+        get() = this == PINNED || this == DATA_SERVICES || this == ARGO_CD || this == FLUX || this == ALERTS
 
-    override val leadsWhenNew: Boolean get() = this == TALOS_UPDATE
+    override val leadsWhenNew: Boolean get() = this == PINNED || this == TALOS_UPDATE
 
     companion object {
         val layout = CardLayoutKind(entries)

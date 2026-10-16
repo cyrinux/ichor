@@ -2,6 +2,7 @@ package name.levis.ichor.ui.flux
 
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.components.Loaded
+import name.levis.ichor.ui.share.PinButton
 import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -97,6 +98,7 @@ fun FluxAppScreen(
                 title = { Text(name) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    PinButton(ShareTarget.fluxApp(kind, namespace, name), name)
                     ShareLinkButton(ShareTarget.fluxApp(kind, namespace, name))
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
                 },

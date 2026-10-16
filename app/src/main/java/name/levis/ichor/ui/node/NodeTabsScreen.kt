@@ -62,6 +62,7 @@ import name.levis.ichor.ui.components.rememberNodeFeatures
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.history.NodeUptime
 import name.levis.ichor.ui.live.LiveStatsTab
+import name.levis.ichor.ui.share.PinButton
 import name.levis.ichor.ui.share.rememberShareLink
 import name.levis.ichor.ui.workloads.SelectedPodsList
 
@@ -217,6 +218,8 @@ fun NodeTabsScreen(
                     if (controlState is ServiceControlState.Running || restartState is ContainerRestartState.Running) {
                         CircularProgressIndicator(Modifier.size(20.dp).padding(end = 4.dp), strokeWidth = 2.dp)
                     }
+                    // Without the tab: the pin opens the node, like the overview's rows.
+                    PinButton(ShareTarget(target = ShareTarget.NODE, addr = node, host = hostname), hostname)
                     TooltipIconButton(Icons.Outlined.Share, stringResource(R.string.share_link), onClick = {
                         share(ShareTarget.node(node, hostname, tab))
                     })

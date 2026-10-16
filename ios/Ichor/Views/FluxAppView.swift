@@ -40,7 +40,10 @@ struct FluxAppView: View {
         }
         .gitOpsPolling(key: model.fluxKey, shouldPoll: { store.shouldPoll(for: model.fluxKey) }, load: { await load() })
         .navigationTitle(Text(verbatim: name))
-        .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .fluxApp(kind: kind, namespace: namespace, name: name)) } }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .fluxApp(kind: kind, namespace: namespace, name: name)) }
+            ToolbarItem(placement: .primaryAction) { PinButton(target: .fluxApp(kind: kind, namespace: namespace, name: name), label: name) }
+        }
         .navigationBarTitleDisplayMode(.inline)
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)

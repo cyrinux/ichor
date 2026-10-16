@@ -108,6 +108,10 @@ struct NodeTabsView: View {
                     ShareLinkButton(target: .node(address: ref.address, hostname: ref.hostname, tab: tab.rawValue.lowercased()))
                 }
             }
+            // The node itself (its hub), whatever the tab on screen.
+            ToolbarItem(placement: .primaryAction) {
+                PinButton(target: .node(address: ref.address, hostname: ref.hostname, tab: ""), label: ref.hostname)
+            }
         }
         .confirmationDialog(serviceRequest.map { confirmationTitle($0) } ?? "",
                             isPresented: $serviceRequest.isPresent(),

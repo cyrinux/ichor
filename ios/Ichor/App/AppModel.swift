@@ -662,6 +662,7 @@ final class AppModel {
         SecureConfigStore.delete()
         LastKnownStore.wipe()
         SearchRecents.clear()
+        PinStore.shared.wipe() // they name the clusters' nodes and objects
         PublicIPStore.wipe()
         MetricsStore.keep(fingerprints: []) // their credentials go with the config
         AlertmanagerStore.keep(fingerprints: [])

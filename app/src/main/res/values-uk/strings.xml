@@ -3525,6 +3525,11 @@
     <string name="overview_card_desc_flux">Готові, ті, що узгоджуються, та збійні Kustomization і HelmRelease</string>
     <string name="overview_card_talos_update">Оновлення Talos</string>
     <string name="overview_card_desc_talos_update">Новіший випуск Talos, ніж на вузлах, коли такий є</string>
+    <string name="overview_card_pinned">Закріплені</string>
+    <string name="overview_card_desc_pinned">Вузли, навантаження й застосунки, закріплені з їхніх екранів</string>
+    <string name="pin_add">Закріпити</string>
+    <string name="pin_remove">Відкріпити</string>
+    <string name="pin_limit">Не більше %1$d закріплених на кластер: спершу відкріпіть один</string>
 
     <!-- Argo CD freeze (sync windows) -->
     <string name="argo_freeze_title">Заморозити Argo CD</string>

@@ -59,6 +59,7 @@ import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.components.rememberNodeFeatures
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.history.NodeUptime
+import name.levis.ichor.ui.share.PinButton
 import name.levis.ichor.ui.share.rememberShareLink
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
@@ -207,6 +208,7 @@ fun NodeDetailScreen(
                     if (powerState is PowerState.Running || cordonBusy || resetState is ResetState.Running) {
                         CircularProgressIndicator(Modifier.size(20.dp).padding(end = 4.dp), strokeWidth = 2.dp)
                     }
+                    PinButton(ShareTarget(target = ShareTarget.NODE, addr = node, host = hostname), hostname)
                     // No tab: the link opens this screen.
                     TooltipIconButton(Icons.Outlined.Share, stringResource(R.string.share_link), onClick = {
                         share(ShareTarget(target = ShareTarget.NODE, addr = node, host = hostname))

@@ -69,8 +69,9 @@ struct WorkloadActionsSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItemGroup(placement: .topBarLeading) {
                     ShareLinkButton(target: .workload(kind: workload.kind, namespace: workload.namespace, name: workload.name))
+                    PinButton(target: .workload(kind: workload.kind, namespace: workload.namespace, name: workload.name), label: workload.name)
                 }
             }
             .task {

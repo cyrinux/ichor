@@ -3315,6 +3315,11 @@
     <string name="overview_card_desc_flux">Bereite, abgleichende und fehlerhafte Kustomizations und HelmReleases</string>
     <string name="overview_card_talos_update">Talos-Update</string>
     <string name="overview_card_desc_talos_update">Eine neuere Talos-Version als die der Knoten, sobald es eine gibt</string>
+    <string name="overview_card_pinned">Angeheftet</string>
+    <string name="overview_card_desc_pinned">Die von ihren Bildschirmen angehefteten Knoten, Workloads und Apps</string>
+    <string name="pin_add">Anheften</string>
+    <string name="pin_remove">Lösen</string>
+    <string name="pin_limit">Höchstens %1$d angeheftete Elemente pro Cluster: zuerst eines lösen</string>
 
     <!-- Argo CD freeze (sync windows) -->
     <string name="argo_freeze_title">Argo CD einfrieren</string>
