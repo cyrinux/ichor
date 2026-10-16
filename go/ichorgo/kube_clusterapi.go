@@ -382,6 +382,7 @@ func sideroServerHealth(s sideroServer) (string, []string) {
 // Deleting, a rollout or scale in progress): False there is not a problem, so they are left out.
 var capiNegativeConditions = map[string]bool{
 	"Paused": true, "Deleting": true, "RollingOut": true, "ScalingUp": true, "ScalingDown": true, "Remediating": true,
+	"Updating": true,
 }
 
 // capiProblemConditions keeps the conditions the app shows, at most capiConditionMax: the False

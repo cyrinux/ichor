@@ -218,7 +218,7 @@ func readClusterAPI(ctx context.Context, k *kubeClient, now time.Time) (capiRepo
 
 			var list kubeList[capiTalosControlPlaneObject]
 			raw.errs[3] = getList(ctx, k, "/apis/"+groupCAPIControlPlane+"/"+capiTalosControlPlaneVersion+"/taloscontrolplanes", &list)
-			raw.controlPlanes, raw.talosControlPlane = list.Items, true
+			raw.controlPlanes, raw.talosControlPlane = list.Items, raw.errs[3] == nil
 		})
 	}
 
@@ -324,25 +324,29 @@ func capiClusterRow(c capiClusterObject, controlPlanes map[string]capiTalosContr
 		}
 	}
 
-	if s.ControlPlane != nil {
-		row.ControlPlane = capiReplicasOf(s.ControlPlane)
-		for _, v := range s.ControlPlane.Versions {
-			row.Versions = append(row.Versions, v.Version)
-		}
-	}
+	var talos *capiReplicas
 
 	ref := c.Spec.ControlPlaneRef
 	if cp, ok := controlPlanes[cmp.Or(ref.Namespace, c.Metadata.Namespace)+"/"+ref.Name]; ok && ref.Kind == "TalosControlPlane" {
-		if row.ControlPlane == nil {
-			row.ControlPlane = capiTalosControlPlaneReplicas(cp)
-		}
-		if v := cmp.Or(cp.Status.Version, cp.Spec.Version); len(row.Versions) == 0 && v != "" {
+		talos = capiTalosControlPlaneReplicas(cp)
+		if v := cmp.Or(cp.Status.Version, cp.Spec.Version); v != "" {
 			row.Versions = []string{v}
 		}
 	}
 
+	row.ControlPlane = talos
+	if s.ControlPlane != nil {
+		row.ControlPlane = capiControlPlaneOf(s.ControlPlane, talos)
+		if len(s.ControlPlane.Versions) > 0 {
+			row.Versions = []string{}
+			for _, v := range s.ControlPlane.Versions {
+				row.Versions = append(row.Versions, v.Version)
+			}
+		}
+	}
+
 	if s.Workers != nil {
-		row.Workers = *capiReplicasOf(s.Workers)
+		row.Workers = capiReplicasOf(s.Workers, capiReplicas{})
 	} else {
 		row.Workers = capiWorkersOf(row.Namespace, row.Name, deployments)
 	}
@@ -350,12 +354,27 @@ func capiClusterRow(c capiClusterObject, controlPlanes map[string]capiTalosContr
 	return row
 }
 
-func capiReplicasOf(s *capiReplicaStatus) *capiReplicas {
-	return &capiReplicas{
-		Desired:   derefOr(s.DesiredReplicas, 0),
-		Ready:     derefOr(s.ReadyReplicas, 0),
-		Available: derefOr(s.AvailableReplicas, 0),
-		UpToDate:  derefOr(s.UpToDateReplicas, 0),
+// capiControlPlaneOf is a v1beta2 status.controlPlane, each count it leaves unset taken from the
+// provider's own object (talos, nil without one). A provider on the v1beta1 contract (the Talos
+// one) does not feed readyReplicas and availableReplicas: without talos to fill them the counts
+// are unknown (nil), never "0 ready".
+func capiControlPlaneOf(s *capiReplicaStatus, talos *capiReplicas) *capiReplicas {
+	if talos == nil && (s.ReadyReplicas == nil || s.AvailableReplicas == nil) {
+		return nil
+	}
+
+	r := capiReplicasOf(s, *cmp.Or(talos, &capiReplicas{}))
+
+	return &r
+}
+
+// capiReplicasOf is a v1beta2 replica status, fallback filling the counts it leaves unset.
+func capiReplicasOf(s *capiReplicaStatus, fallback capiReplicas) capiReplicas {
+	return capiReplicas{
+		Desired:   derefOr(s.DesiredReplicas, fallback.Desired),
+		Ready:     derefOr(s.ReadyReplicas, fallback.Ready),
+		Available: derefOr(s.AvailableReplicas, fallback.Available),
+		UpToDate:  derefOr(s.UpToDateReplicas, fallback.UpToDate),
 	}
 }
 

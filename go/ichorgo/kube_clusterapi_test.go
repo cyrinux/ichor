@@ -230,9 +230,27 @@ func TestClusterAPIWithoutSidero(t *testing.T) {
 	if !r.Installed || r.Sidero || r.TalosControlPlane || r.TalosBootstrap || r.Servers == nil || len(r.Servers) != 0 || len(r.Clusters) != 2 {
 		t.Errorf("without sidero %+v", r)
 	}
-	// Without the TalosControlPlane, a v1beta2 cluster still has its status counts.
-	if r.Clusters[1].ControlPlane == nil || r.Clusters[1].ControlPlane.Ready != 3 {
-		t.Errorf("control plane %+v", r.Clusters[1].ControlPlane)
+	// The Talos control plane (v1beta1 contract) does not feed status.controlPlane's ready and
+	// available counts; without its TalosControlPlane they are unknown, not "0 ready".
+	if prod := r.Clusters[1]; prod.ControlPlane != nil || prod.Health != capiHealthOK {
+		t.Errorf("control plane %+v, health %s", prod.ControlPlane, prod.Health)
+	}
+}
+
+func TestCAPIControlPlaneOf(t *testing.T) {
+	three := 3
+	full := capiReplicaStatus{DesiredReplicas: &three, ReadyReplicas: &three, AvailableReplicas: &three, UpToDateReplicas: &three}
+	if got := capiControlPlaneOf(&full, nil); got == nil || *got != (capiReplicas{3, 3, 3, 3}) {
+		t.Errorf("full status %+v", got)
+	}
+
+	partial := capiReplicaStatus{DesiredReplicas: &three, UpToDateReplicas: &three}
+	talos := &capiReplicas{Desired: 3, Ready: 2, Available: 2, UpToDate: 2}
+	if got := capiControlPlaneOf(&partial, talos); got == nil || *got != (capiReplicas{3, 2, 2, 3}) {
+		t.Errorf("partial status filled from talos %+v", got)
+	}
+	if got := capiControlPlaneOf(&partial, nil); got != nil {
+		t.Errorf("partial status without talos %+v", got)
 	}
 }
 
@@ -317,6 +335,11 @@ func TestClusterAPIDemo(t *testing.T) {
 	var r capiReport
 	if err := json.Unmarshal([]byte(out), &r); err != nil {
 		t.Fatal(err)
+	}
+
+	// The apps decode lists as arrays: no list may be null.
+	if strings.Contains(out, ":null") && strings.Count(out, ":null") != strings.Count(out, `"controlPlane":null`) {
+		t.Errorf("demo has a null list: %s", out)
 	}
 
 	if !r.Installed || r.Version != "v1beta2" || !r.Sidero || len(r.Clusters) != 3 || r.Clusters[0].Name != "old-lab" ||

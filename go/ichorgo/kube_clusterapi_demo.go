@@ -82,7 +82,7 @@ func demoClusterAPI() capiReport {
 	server := func(name, host, power string, accepted, inUse, ready, clean bool, classes ...string) sideroServer {
 		return sideroServer{
 			Name: name, Hostname: host, Accepted: accepted, Ready: ready, InUse: inUse, IsClean: clean, Power: power,
-			Addresses: []string{}, ServerClasses: classes, CPU: "AMD EPYC 7313P, 16 cores", MemoryBytes: 128 << 30,
+			Addresses: []string{}, ServerClasses: nonNil(classes), CPU: "AMD EPYC 7313P, 16 cores", MemoryBytes: 128 << 30,
 		}
 	}
 
