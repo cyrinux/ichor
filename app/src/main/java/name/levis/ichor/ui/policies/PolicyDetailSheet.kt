@@ -30,7 +30,7 @@ import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
 
-/** One policy: what its mode does, whether it is ready, its rules, then the resources it fails. */
+/** One policy or constraint: what its mode does, whether it is ready, its rules, then the resources it fails. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PolicyDetailSheet(policy: KyvernoPolicy, onDismiss: () -> Unit, onObject: (KubeObjectRef) -> Unit) {
@@ -59,17 +59,22 @@ fun PolicyDetailSheet(policy: KyvernoPolicy, onDismiss: () -> Unit, onObject: (K
             if (policy.category.isNotEmpty()) InfoRow(stringResource(R.string.kpol_category), policy.category)
             if (policy.severity.isNotEmpty()) InfoRow(stringResource(R.string.kpol_severity), policy.severity)
             if (policy.background) MutedText(stringResource(R.string.kpol_background))
+            if (policy.auditAt > 0) MutedText(stringResource(R.string.kpol_audited, timeAgo(policy.auditAt * 1000)))
 
-            SectionTitle(stringResource(R.string.kpol_rules))
-            Text(rulesByKind(policy), style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
-            policy.ruleNames.forEach { MutedText(it) }
+            // A Gatekeeper constraint has no rules of its own: its template's Rego is the rule.
+            if (!policy.isGatekeeper) {
+                SectionTitle(stringResource(R.string.kpol_rules))
+                Text(rulesByKind(policy), style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
+                policy.ruleNames.forEach { MutedText(it) }
+            }
             ResultCounts(policy.fail, policy.warn, policy.pass, Modifier.padding(top = 4.dp))
 
             SectionTitle(stringResource(R.string.kpol_failing))
             if (policy.failing.isEmpty() && policy.fail == 0) MutedText(stringResource(R.string.kpol_no_failing))
             policy.failing.forEach { FailureRow(it, onObject) }
             if (policy.fail > policy.failing.size) {
-                MutedText(stringResource(R.string.kpol_failing_shown, policy.failing.size.toString(), policy.fail.toString()))
+                val shown = if (policy.failingCapped) R.string.kpol_failing_capped else R.string.kpol_failing_shown
+                MutedText(stringResource(shown, policy.failing.size.toString(), policy.fail.toString()))
             }
         }
     }

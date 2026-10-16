@@ -255,7 +255,8 @@ var dataCommands = []command{
 		return out, err
 	}},
 	{name: "kube-policies", args: "", run: func(e env) (out string, err error) {
-		// kube-policies: the Kyverno policies and their PolicyReport findings (read-only).
+		// kube-policies: Kyverno policies with their PolicyReport findings and Gatekeeper
+		// constraints with their audit violations (read-only).
 		out, err = ichorgo.KubePolicies(e.cfg, e.context, e.kubeServer)
 
 		return out, err

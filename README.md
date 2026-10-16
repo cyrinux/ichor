@@ -542,21 +542,26 @@ and what goes if a node goes down?":
 
 ### Policies
 
-**Kubernetes → Policies** shows the Kyverno admission policies of the cluster, to answer "is a
-policy blocking this rollout, and can I relax it?" in two taps:
+**Kubernetes → Policies** shows the admission policies of the cluster, Kyverno policies and OPA
+Gatekeeper constraints in one list, to answer "is a policy blocking this rollout, and can I relax
+it?" in two taps:
 
-- **The engine:** each Kyverno controller ready or not, and what its webhook does while Kyverno is
-  down: `Fail` refuses every request it covers (a Kyverno outage blocks deployments), `Ignore`
-  lets them through unchecked.
+- **The engines:** each Kyverno or Gatekeeper controller ready or not, and what its webhook does
+  while the engine is down: `Fail` refuses every request it covers (an outage blocks
+  deployments), `Ignore` lets them through unchecked. With both engines, each row says which one
+  it belongs to.
 - **The policies:** not ready ones first, then those in **Enforce** mode (a request that breaks a
-  rule is refused) before those in **Audit** mode (it is let through and only reported), each
-  with its failing, warning and passing counts from the policy reports. A search narrows the
+  rule is refused) before **Warn** (Gatekeeper: it is let through with a warning) and **Audit**
+  mode (it is let through and only reported), each with its failing, warning and passing counts
+  from the policy reports, or a constraint's violations from Gatekeeper's last audit. A search narrows the
   list, and a namespace keeps its own policies and the cluster-wide ones that checked something
   there (or are not ready), each with its counts in that namespace.
 - **One policy:** its rules, why it is not ready, and the newest resources it fails with
-  Kyverno's message; a Pod, Deployment or other well-known kind opens its object screen.
+  Kyverno's message; a Pod, Deployment or other well-known kind opens its object screen. A
+  Gatekeeper constraint shows its kind, when the audit last ran, and the violations Gatekeeper
+  kept (20 by default, its `--constraint-violations-limit`) out of the total.
 
-A cluster without Kyverno says so; credentials that cannot read the policy reports still show
+A cluster without either engine says so; credentials that cannot read the policy reports still show
 the policies, with their counts at zero and the reason.
 
 ### Autoscaling

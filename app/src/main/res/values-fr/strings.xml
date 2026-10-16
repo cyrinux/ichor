@@ -4767,6 +4767,15 @@
     <string name="kpol_mode_mixed">Certaines règles refusent une requête qui les enfreint, d’autres la signalent seulement</string>
     <string name="kpol_category">Catégorie</string>
     <string name="kpol_severity">Gravité</string>
+    <string name="kpol_engine_gatekeeper">Moteur Gatekeeper</string>
+    <string name="kpol_webhook_fail_gatekeeper">Fail : les requêtes sont refusées tant que Gatekeeper est arrêté</string>
+    <string name="kpol_webhook_ignore_gatekeeper">Ignore : les politiques sont ignorées tant que Gatekeeper est arrêté</string>
+    <string name="kpol_empty_gatekeeper">Aucune politique Gatekeeper</string>
+    <string name="kpol_empty_hint_gatekeeper">Gatekeeper tourne, mais aucune politique n’est définie.</string>
+    <string name="kpol_warn">Avertir</string>
+    <string name="kpol_mode_warn">Une requête qui l’enfreint passe, avec un avertissement</string>
+    <string name="kpol_audited">Dernier audit %1$s</string>
+    <string name="kpol_failing_capped">Gatekeeper garde les %1$s premières des %2$s violations</string>
     <string name="velero_backup_now">Sauvegarder maintenant</string>
     <string name="velero_backup_now_title">Sauvegarder %1$s maintenant ?</string>
     <string name="velero_backup_now_text">Velero lance une sauvegarde avec les réglages de cette planification (namespaces : %1$s, emplacement de stockage : %2$s). Elle s’ajoute aux sauvegardes planifiées et expire comme elles.</string>

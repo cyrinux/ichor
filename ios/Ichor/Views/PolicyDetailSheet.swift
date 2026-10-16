@@ -1,8 +1,8 @@
 import SwiftUI
 import IchorCore
 
-/// One Kyverno policy: what its mode does, whether it is ready, its rules, then the resources it
-/// fails, each of a kind the browser knows opening its object screen.
+/// One Kyverno policy or Gatekeeper constraint: what its mode does, whether it is ready, its rules,
+/// then the resources it fails, each of a kind the browser knows opening its object screen.
 struct PolicyDetailSheet: View {
     let policy: KyvernoPolicy
 
@@ -25,10 +25,15 @@ struct PolicyDetailSheet: View {
                         }
                     }
                 }
-                Section("Rules") {
-                    Text(verbatim: policy.rules.text).font(.callout.monospaced())
-                    ForEach(policy.ruleNames, id: \.self) { Text(verbatim: $0).font(.caption.monospaced()).foregroundStyle(.secondary) }
-                    PolicyCounts(fail: policy.fail, warn: policy.warn, pass: policy.pass)
+                // A Gatekeeper constraint has no rules of its own: its template's Rego is the rule.
+                if policy.engine == .gatekeeper {
+                    Section { PolicyCounts(fail: policy.fail, warn: policy.warn, pass: policy.pass) }
+                } else {
+                    Section("Rules") {
+                        Text(verbatim: policy.rules.text).font(.callout.monospaced())
+                        ForEach(policy.ruleNames, id: \.self) { Text(verbatim: $0).font(.caption.monospaced()).foregroundStyle(.secondary) }
+                        PolicyCounts(fail: policy.fail, warn: policy.warn, pass: policy.pass)
+                    }
                 }
                 failingSection
             }
@@ -65,6 +70,11 @@ struct PolicyDetailSheet: View {
             if policy.background {
                 Text("Also checks the resources already in the cluster").font(.footnote).foregroundStyle(.secondary)
             }
+            if policy.auditAt > 0 {
+                (Text("Last audit") + Text(verbatim: " ")
+                    + Text(Date(timeIntervalSince1970: TimeInterval(policy.auditAt)), format: .relative(presentation: .named)))
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -88,7 +98,11 @@ struct PolicyDetailSheet: View {
             Text("Failing resources")
         } footer: {
             if policy.fail > policy.failing.count {
-                Text(PolicyText.failingShown(String(policy.failing.count), String(policy.fail)))
+                if policy.failingCapped {
+                    Text(PolicyText.failingCapped(String(policy.failing.count), String(policy.fail)))
+                } else {
+                    Text(PolicyText.failingShown(String(policy.failing.count), String(policy.fail)))
+                }
             }
         }
     }

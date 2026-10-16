@@ -15,36 +15,63 @@ class PoliciesTest {
         """
         {
           "installed": true,
+          "kyverno": true,
+          "gatekeeper": true,
           "version": "v1",
-          "engine": {
-            "namespace": "kyverno",
-            "controllers": [
-              {
-                "name": "admission-controller",
-                "ready": 1,
-                "desired": 1
-              },
-              {
-                "name": "background-controller",
-                "ready": 1,
-                "desired": 1
-              },
-              {
-                "name": "cleanup-controller",
-                "ready": 1,
-                "desired": 1
-              },
-              {
-                "name": "reports-controller",
-                "ready": 1,
-                "desired": 1
+          "engines": [
+            {
+              "name": "kyverno",
+              "namespace": "kyverno",
+              "controllers": [
+                {
+                  "name": "admission-controller",
+                  "ready": 1,
+                  "desired": 1
+                },
+                {
+                  "name": "background-controller",
+                  "ready": 1,
+                  "desired": 1
+                },
+                {
+                  "name": "cleanup-controller",
+                  "ready": 1,
+                  "desired": 1
+                },
+                {
+                  "name": "reports-controller",
+                  "ready": 1,
+                  "desired": 1
+                }
+              ],
+              "webhook": {
+                "name": "kyverno-resource-validating-webhook-cfg",
+                "present": true,
+                "failurePolicy": "Fail"
               }
-            ],
-            "webhook": {
-              "present": true,
-              "failurePolicy": "Fail"
+            },
+            {
+              "name": "gatekeeper",
+              "namespace": "gatekeeper-system",
+              "controllers": [
+                {
+                  "name": "gatekeeper-audit",
+                  "ready": 1,
+                  "desired": 1
+                },
+                {
+                  "name": "gatekeeper-controller-manager",
+                  "ready": 3,
+                  "desired": 3
+                }
+              ],
+              "webhook": {
+                "name": "gatekeeper-validating-webhook-configuration",
+                "present": true,
+                "failurePolicy": "Ignore"
+              }
             }
-          },
+          ],
           "policies": [
             {
               "namespace": "",
@@ -72,7 +99,62 @@ class PoliciesTest {
               "error": 0,
               "skip": 0,
               "failing": null,
+              "engine": "kyverno",
               "byNamespace": null
+            },
+            {
+              "namespace": "",
+              "name": "must-have-team",
+              "action": "Enforce",
+              "background": true,
+              "ready": true,
+              "description": "Requires resources to contain specified labels",
+              "rules": {
+                "validate": 0,
+                "mutate": 0,
+                "generate": 0,
+                "verifyImages": 0
+              },
+              "ruleNames": [],
+              "pass": 0,
+              "fail": 3,
+              "warn": 0,
+              "error": 0,
+              "skip": 0,
+              "failing": [
+                {
+                  "kind": "Namespace",
+                  "name": "sandbox",
+                  "message": "you must provide labels: {\"team\"}",
+                  "at": 1760000060
+                },
+                {
+                  "kind": "Deployment",
+                  "namespace": "shop",
+                  "name": "cart",
+                  "message": "you must provide labels: {\"team\"}",
+                  "at": 1760000060
+                },
+                {
+                  "kind": "Deployment",
+                  "namespace": "shop",
+                  "name": "search",
+                  "message": "you must provide labels: {\"team\"}",
+                  "at": 1760000060
+                }
+              ],
+              "engine": "gatekeeper",
+              "kind": "K8sRequiredLabels",
+              "auditAt": 1760000060,
+              "byNamespace": [
+                {
+                  "namespace": "shop",
+                  "pass": 0,
+                  "fail": 2,
+                  "warn": 0,
+                  "error": 0
+                }
+              ]
             },
             {
               "namespace": "",
@@ -98,6 +180,7 @@ class PoliciesTest {
               "error": 0,
               "skip": 0,
               "failing": null,
+              "engine": "kyverno",
               "byNamespace": [
                 {
                   "namespace": "billing",
@@ -155,6 +238,7 @@ class PoliciesTest {
               "error": 0,
               "skip": 0,
               "failing": null,
+              "engine": "kyverno",
               "byNamespace": [
                 {
                   "namespace": "shop",
@@ -218,11 +302,53 @@ class PoliciesTest {
                   "at": 1760000000
                 }
               ],
+              "engine": "kyverno",
               "byNamespace": [
                 {
                   "namespace": "shop",
                   "pass": 0,
                   "fail": 7,
+                  "warn": 0,
+                  "error": 0
+                }
+              ]
+            },
+            {
+              "namespace": "",
+              "name": "psp-privileged-container",
+              "action": "Audit",
+              "background": true,
+              "ready": true,
+              "description": "Controls the ability of any container to enable privileged mode",
+              "rules": {
+                "validate": 0,
+                "mutate": 0,
+                "generate": 0,
+                "verifyImages": 0
+              },
+              "ruleNames": [],
+              "pass": 0,
+              "fail": 1,
+              "warn": 0,
+              "error": 0,
+              "skip": 0,
+              "failing": [
+                {
+                  "kind": "Pod",
+                  "namespace": "billing",
+                  "name": "ledger-backup-29318400-x7k2p",
+                  "message": "Privileged container is not allowed: backup",
+                  "at": 1760000060
+                }
+              ],
+              "engine": "gatekeeper",
+              "kind": "K8sPSPPrivilegedContainer",
+              "auditAt": 1760000060,
+              "byNamespace": [
+                {
+                  "namespace": "billing",
+                  "pass": 0,
+                  "fail": 1,
                   "warn": 0,
                   "error": 0
                 }
@@ -233,14 +359,14 @@ class PoliciesTest {
             {
               "namespace": "shop",
               "pass": 4,
-              "fail": 7,
+              "fail": 9,
               "warn": 2,
               "error": 0
             },
             {
               "namespace": "billing",
               "pass": 9,
-              "fail": 0,
+              "fail": 1,
               "warn": 0,
               "error": 0
             },
@@ -268,15 +394,30 @@ class PoliciesTest {
     @Test
     fun decodesTheDemoInTheReadersOrder() {
         assertTrue(demo.installed)
-        assertEquals("kyverno", demo.engine.namespace)
-        assertEquals(4, demo.engine.controllers.size)
-        assertTrue(demo.engine.controllers.all { it.healthy })
-        assertEquals(WEBHOOK_FAIL, demo.engine.webhook.failurePolicy)
-        // Not ready first, then Enforce, Mixed, Audit.
+        assertTrue(demo.bothEngines)
+        assertEquals(listOf(POLICY_ENGINE_KYVERNO, POLICY_ENGINE_GATEKEEPER), demo.engines.map { it.name })
+        val kyverno = demo.engines.first()
+        assertEquals("kyverno", kyverno.namespace)
+        assertEquals(4, kyverno.controllers.size)
+        assertTrue(kyverno.controllers.all { it.healthy })
+        assertEquals(WEBHOOK_FAIL, kyverno.webhook.failurePolicy)
+        assertEquals(WEBHOOK_IGNORE, demo.engines.last().webhook.failurePolicy)
+        // Not ready first, then Enforce, Mixed, Audit; both engines in one list.
         assertEquals(
-            listOf("verify-image-signatures", "disallow-privileged", "restrict-image-registries", "require-labels"),
+            listOf(
+                "verify-image-signatures", "must-have-team", "disallow-privileged", "restrict-image-registries",
+                "require-labels", "psp-privileged-container",
+            ),
             demo.policies.map { it.name },
         )
+        val team = demo.policies.single { it.name == "must-have-team" }
+        assertTrue(team.isGatekeeper)
+        assertEquals("K8sRequiredLabels", team.kind)
+        assertEquals(POLICY_ACTION_ENFORCE, team.action)
+        assertEquals(1760000060L, team.auditAt)
+        assertEquals(3, team.failing.size)
+        assertFalse(team.failingCapped)
+        assertEquals(POLICY_ACTION_AUDIT, demo.policies.single { it.name == "psp-privileged-container" }.action)
         val notReady = demo.policies.first()
         assertFalse(notReady.ready)
         assertEquals("WebhookNotConfigured", notReady.readyReason)
@@ -289,6 +430,32 @@ class PoliciesTest {
         assertEquals("shop", labels.failing.first().namespace)
         assertEquals(6, demo.reportsRead)
         assertFalse(demo.reportsTruncated)
+    }
+
+    @Test
+    fun aConstraintIsFoundByItsKindAndKeyedApartFromAPolicy() {
+        assertEquals(listOf("must-have-team"), demo.filtered(null, "K8sRequiredLabels").map { it.name })
+        val twins = PolicyReport(
+            policies = listOf(
+                KyvernoPolicy(name = "same"),
+                KyvernoPolicy(name = "same", engine = POLICY_ENGINE_GATEKEEPER, kind = "K8sRequiredLabels"),
+                KyvernoPolicy(name = "same", engine = POLICY_ENGINE_GATEKEEPER, kind = "K8sAllowedRepos"),
+            ),
+        )
+        assertEquals(3, twins.policies.map { it.key }.distinct().size)
+    }
+
+    @Test
+    fun warnAndCappedViolationsDecode() {
+        val report = TalosJson.decodeFromString(
+            PolicyReport.serializer(),
+            """{"installed":true,"gatekeeper":true,"policies":[{"name":"w","engine":"gatekeeper","action":"Warn","fail":40,"failingCapped":true,"failing":[{"kind":"Pod","name":"p"}]}]}""",
+        )
+        val w = report.policies.single()
+        assertEquals(POLICY_ACTION_WARN, w.action)
+        assertTrue(w.failingCapped)
+        assertEquals(40, w.fail)
+        assertFalse(report.bothEngines)
     }
 
     @Test
@@ -314,10 +481,14 @@ class PoliciesTest {
     fun aNamespaceKeepsItsOwnPoliciesAndTheClusterWideOnesThatCheckedIt() {
         assertEquals(demo.policies, demo.filtered(null, ""))
         // billing: no policy of its own; require-labels has no result there, so it is left out,
-        // and the not-ready one stays (a broken policy matters everywhere).
-        assertEquals(listOf("verify-image-signatures", "disallow-privileged"), demo.filtered("billing", "").map { it.name })
+        // the not-ready one stays (a broken policy matters everywhere), and the constraint with a
+        // violation there joins.
         assertEquals(
-            listOf("verify-image-signatures", "disallow-privileged", "restrict-image-registries", "require-labels"),
+            listOf("verify-image-signatures", "disallow-privileged", "psp-privileged-container"),
+            demo.filtered("billing", "").map { it.name },
+        )
+        assertEquals(
+            listOf("verify-image-signatures", "must-have-team", "disallow-privileged", "restrict-image-registries", "require-labels"),
             demo.filtered("shop", "").map { it.name },
         )
         assertEquals(listOf("billing", "media", "shop", "vault"), demo.policyNamespaces)

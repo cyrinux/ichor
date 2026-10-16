@@ -3,30 +3,42 @@ package name.levis.ichor.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-// Mirrors go/ichorgo/kube_policies.go: the Kyverno admission policies and their PolicyReport findings.
+// Mirrors go/ichorgo/kube_policies.go: the Kyverno admission policies with their PolicyReport
+// findings, and the Gatekeeper constraints with their audit violations.
 
 const val POLICY_ACTION_ENFORCE = "Enforce"
 const val POLICY_ACTION_AUDIT = "Audit"
 
-/** Ours: the rules' own failure actions disagree with the policy's. */
+/** Ours: the rules' own failure actions disagree with the policy's (Gatekeeper's "scoped"). */
 const val POLICY_ACTION_MIXED = "Mixed"
 
-/** What the webhook does to requests while Kyverno is down. */
+/** Gatekeeper's warn: a request that breaks the constraint is admitted with a warning. */
+const val POLICY_ACTION_WARN = "Warn"
+
+const val POLICY_ENGINE_KYVERNO = "kyverno"
+const val POLICY_ENGINE_GATEKEEPER = "gatekeeper"
+
+/** What the webhook does to requests while the engine is down. */
 const val WEBHOOK_FAIL = "Fail"
 const val WEBHOOK_IGNORE = "Ignore"
 
-/** Kyverno's policies (os:admin); [installed] false and nothing else on a cluster without it. */
+/** Kyverno's policies and Gatekeeper's constraints (os:admin); [installed] false and nothing else on a cluster with neither. */
 @Serializable
 data class PolicyReport(
     val installed: Boolean = false,
+    val kyverno: Boolean = false,
+    val gatekeeper: Boolean = false,
     /** The served kyverno.io version. */
     val version: String = "",
-    /** A policy or engine read that failed; the rest still shows. */
+    /** A Kyverno policy or engine read that failed; the rest still shows. */
     val error: String = "",
+    /** A Gatekeeper template, constraint or engine read that failed. */
+    val gatekeeperError: String = "",
     /** The policy reports could not be read (often a 403): the counts stay at 0. */
     val reportsError: String = "",
-    val engine: PolicyEngine = PolicyEngine(),
-    /** Not ready first, then Enforce, Mixed, Audit, the most failing first (the Go order). */
+    /** One per engine that runs: Kyverno first. */
+    val engines: List<PolicyEngine> = emptyList(),
+    /** Not ready first, then Enforce, Mixed, Warn, Audit, the most failing first (the Go order). */
     val policies: List<KyvernoPolicy> = emptyList(),
     val namespaces: List<PolicyNamespaceTotals> = emptyList(),
     val reportsRead: Int = 0,
@@ -34,9 +46,14 @@ data class PolicyReport(
     val reportsTruncated: Boolean = false,
 )
 
-/** The engine: its controllers, and what its webhook does while it is down. */
+/** Both engines run: each row says which one it belongs to. */
+val PolicyReport.bothEngines: Boolean get() = kyverno && gatekeeper
+
+/** An engine: its controllers, and what its webhook does while it is down. */
 @Serializable
 data class PolicyEngine(
+    /** [POLICY_ENGINE_KYVERNO] or [POLICY_ENGINE_GATEKEEPER]. */
+    val name: String = "",
     val namespace: String = "",
     val controllers: List<PolicyController> = emptyList(),
     val webhook: PolicyWebhook = PolicyWebhook(),
@@ -48,14 +65,19 @@ data class PolicyController(val name: String, val ready: Int = 0, val desired: I
 }
 
 @Serializable
-data class PolicyWebhook(val present: Boolean = false, val failurePolicy: String = "")
+data class PolicyWebhook(val name: String = "", val present: Boolean = false, val failurePolicy: String = "")
 
+/** A Kyverno policy or a Gatekeeper constraint ([engine] says which). */
 @Serializable
 data class KyvernoPolicy(
-    /** Empty for a ClusterPolicy. */
+    /** Empty for a ClusterPolicy or a constraint. */
     val namespace: String = "",
     val name: String,
-    /** [POLICY_ACTION_ENFORCE], [POLICY_ACTION_AUDIT] or [POLICY_ACTION_MIXED]. */
+    /** [POLICY_ENGINE_KYVERNO] or [POLICY_ENGINE_GATEKEEPER]. */
+    val engine: String = POLICY_ENGINE_KYVERNO,
+    /** A constraint's kind (its template's): K8sRequiredLabels. */
+    val kind: String = "",
+    /** [POLICY_ACTION_ENFORCE], [POLICY_ACTION_AUDIT], [POLICY_ACTION_MIXED] or [POLICY_ACTION_WARN]. */
     val action: String = "",
     /** It also checks the resources already there, not only new requests. */
     val background: Boolean = false,
@@ -74,11 +96,17 @@ data class KyvernoPolicy(
     val skip: Int = 0,
     /** The newest failing resources, at most 20; [fail] counts them all. */
     val failing: List<PolicyFailure> = emptyList(),
+    /** [failing] is the first violations Gatekeeper kept (its own limit), not all of [fail]. */
+    val failingCapped: Boolean = false,
+    /** When Gatekeeper's audit last wrote the violations, unix seconds; 0 for Kyverno. */
+    val auditAt: Long = 0,
     /** The same counts per namespace: a ClusterPolicy's results spread over every namespace. */
     val byNamespace: List<PolicyNamespaceTotals> = emptyList(),
 ) {
-    val key: String get() = "$namespace/$name"
+    /** Unique in a report: a Gatekeeper constraint's name is unique per kind only. */
+    val key: String get() = "$engine/$kind/$namespace/$name"
     val clusterWide: Boolean get() = namespace.isEmpty()
+    val isGatekeeper: Boolean get() = engine == POLICY_ENGINE_GATEKEEPER
 
     /** Its counts in [namespace], or across the cluster for null. */
     fun counts(namespace: String?): PolicyResultCounts {
@@ -160,7 +188,7 @@ fun PolicyReport.filtered(namespace: String?, query: String): List<KyvernoPolicy
     return policies
         .filter { namespace == null || it.namespace == namespace || (it.clusterWide && (!it.ready || it.checks(namespace))) }
         .filter { p ->
-            q.isEmpty() || (listOf(p.name, p.namespace, p.category, p.severity, p.description, p.action) + p.ruleNames)
+            q.isEmpty() || (listOf(p.name, p.namespace, p.kind, p.category, p.severity, p.description, p.action) + p.ruleNames)
                 .any { it.contains(q, ignoreCase = true) }
         }
 }

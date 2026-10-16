@@ -2,23 +2,31 @@ package ichorgo
 
 import "slices"
 
-// demoPolicies is what the demo cluster answers: a healthy engine, four policies and a
-// namespace's worth of findings. Everything invented; nothing readable as a real cluster.
+// demoPolicies is what the demo cluster answers: both engines healthy, four Kyverno policies,
+// two Gatekeeper constraints and a namespace's worth of findings. Everything invented; nothing
+// readable as a real cluster.
 func demoPolicies() policiesReport {
 	report := policiesReport{
-		Installed: true,
-		Version:   "v1",
-		Engine: kyvernoEngine{
-			Namespace: "kyverno",
-			Controllers: []kyvernoController{
+		Installed: true, Kyverno: true, Gatekeeper: true,
+		Version: "v1",
+		Engines: []policyEngine{{
+			Name: policyEngineKyverno, Namespace: "kyverno",
+			Controllers: []policyController{
 				{Name: "admission-controller", Ready: 1, Desired: 1},
 				{Name: "background-controller", Ready: 1, Desired: 1},
 				{Name: "cleanup-controller", Ready: 1, Desired: 1},
 				{Name: "reports-controller", Ready: 1, Desired: 1},
 			},
-			Webhook: kyvernoWebhook{Present: true, FailurePolicy: "Fail"},
-		},
-		Policies: []kyvernoPolicy{
+			Webhook: policyWebhook{Name: "kyverno-resource-validating-webhook-cfg", Present: true, FailurePolicy: "Fail"},
+		}, {
+			Name: policyEngineGatekeeper, Namespace: gatekeeperNamespace,
+			Controllers: []policyController{
+				{Name: "gatekeeper-audit", Ready: 1, Desired: 1},
+				{Name: "gatekeeper-controller-manager", Ready: 3, Desired: 3},
+			},
+			Webhook: policyWebhook{Name: gatekeeperWebhook, Present: true, FailurePolicy: "Ignore"},
+		}},
+		Policies: []policyRow{
 			{
 				Namespace: "", Name: "verify-image-signatures", Action: policyActionEnforce,
 				Ready: false, ReadyReason: "WebhookNotConfigured", ReadyMessage: "the validating webhook configuration is missing: policies are not applied",
@@ -57,15 +65,45 @@ func demoPolicies() policiesReport {
 			},
 		},
 		Namespaces: []policyNSRow{
-			{Namespace: "shop", Pass: 4, Fail: 7, Warn: 2},
-			{Namespace: "billing", Pass: 9},
+			{Namespace: "shop", Pass: 4, Fail: 9, Warn: 2},
+			{Namespace: "billing", Pass: 9, Fail: 1},
 			{Namespace: "media", Pass: 3},
 			{Namespace: "vault", Pass: 2},
 		},
 		ReportsRead: 6,
 	}
+
+	for i := range report.Policies {
+		report.Policies[i].Engine = policyEngineKyverno
+	}
+
+	// Gatekeeper's audit wrote these a minute before the demo's latest Kyverno result.
+	const auditAt = 1760000060
+
+	report.Policies = append(report.Policies,
+		policyRow{
+			Name: "must-have-team", Engine: policyEngineGatekeeper, Kind: "K8sRequiredLabels", Action: policyActionEnforce,
+			Background: true, Ready: true, Description: "Requires resources to contain specified labels",
+			RuleNames: []string{}, Fail: 3, AuditAt: auditAt,
+			ByNamespace: []policyNSRow{{Namespace: "shop", Fail: 2}},
+			Failing: []policyFailure{
+				{Kind: "Namespace", Name: "sandbox", Message: `you must provide labels: {"team"}`, At: auditAt},
+				{Kind: "Deployment", Namespace: "shop", Name: "cart", Message: `you must provide labels: {"team"}`, At: auditAt},
+				{Kind: "Deployment", Namespace: "shop", Name: "search", Message: `you must provide labels: {"team"}`, At: auditAt},
+			},
+		},
+		policyRow{
+			Name: "psp-privileged-container", Engine: policyEngineGatekeeper, Kind: "K8sPSPPrivilegedContainer", Action: policyActionAudit,
+			Background: true, Ready: true, Description: "Controls the ability of any container to enable privileged mode",
+			RuleNames: []string{}, Fail: 1, AuditAt: auditAt,
+			ByNamespace: []policyNSRow{{Namespace: "billing", Fail: 1}},
+			Failing: []policyFailure{
+				{Kind: "Pod", Namespace: "billing", Name: "ledger-backup-29318400-x7k2p", Message: "Privileged container is not allowed: backup", At: auditAt},
+			},
+		},
+	)
 	// In the order a live read gives: not ready first, then Enforce, Mixed, Audit.
-	slices.SortFunc(report.Policies, kyvernoPolicyLess)
+	slices.SortFunc(report.Policies, policyRowLess)
 
 	return report
 }

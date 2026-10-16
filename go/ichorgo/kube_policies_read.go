@@ -79,20 +79,46 @@ type kyvernoDeployObject struct {
 	} `json:"status"`
 }
 
-// readPolicies lists the Kyverno policies, the reports and the engine, and aggregates the
-// reports into the policy rows. Every part fails soft: a 403 on one of them is an error
-// field, not a failed call.
+// readPolicies reads the engines the cluster runs, Kyverno and Gatekeeper side by side, into
+// one report. Every part fails soft: a 403 on one of them is an error field, not a failed
+// call. Neither engine: installed false, no error.
 func readPolicies(ctx context.Context, k *kubeClient) (policiesReport, error) {
 	groups, err := readAPIGroups(ctx, k)
 	if err != nil {
 		return policiesReport{}, err
 	}
 
-	version := groups[groupKyverno]
-	if version == "" {
-		return policiesReport{}, nil // no Kyverno: installed false, no error
+	var (
+		report policiesReport
+		gk     gatekeeperRead
+		wg     sync.WaitGroup
+	)
+
+	kyvernoVersion, templatesVersion := groups[groupKyverno], groups[groupGatekeeperTemplates]
+
+	if kyvernoVersion != "" {
+		wg.Go(func() { report = readKyverno(ctx, k, groups, kyvernoVersion) })
 	}
 
+	if templatesVersion != "" {
+		wg.Go(func() { gk = readGatekeeper(ctx, k, templatesVersion, groups[groupGatekeeperConstraints]) })
+	}
+
+	wg.Wait()
+
+	if templatesVersion != "" {
+		mergeGatekeeper(&report, gk)
+	}
+
+	slices.SortFunc(report.Policies, policyRowLess)
+	slices.SortFunc(report.Namespaces, func(a, b policyNSRow) int { return strings.Compare(a.Namespace, b.Namespace) })
+
+	return report, nil
+}
+
+// readKyverno lists the Kyverno policies, the reports and the engine, and aggregates the
+// reports into the policy rows.
+func readKyverno(ctx context.Context, k *kubeClient, groups map[string]string, version string) policiesReport {
 	var (
 		clusterPolicies kubeList[kyvernoPolicyObject]
 		policies        kubeList[kyvernoPolicyObject]
@@ -135,8 +161,9 @@ func readPolicies(ctx context.Context, k *kubeClient) (policiesReport, error) {
 
 	report := policiesReport{
 		Installed:        true,
+		Kyverno:          true,
 		Version:          version,
-		Engine:           readKyvernoEngine(deployments.Items, webhookList.Items),
+		Engines:          []policyEngine{readKyvernoEngine(deployments.Items, webhookList.Items)},
 		Policies:         readKyvernoPolicies(clusterPolicies.Items, policies.Items),
 		ReportsRead:      reports.readCount + clusterReports.readCount,
 		ReportsTruncated: reports.truncated || clusterReports.truncated,
@@ -146,10 +173,7 @@ func readPolicies(ctx context.Context, k *kubeClient) (policiesReport, error) {
 
 	aggregatePolicyReports(report.Policies, reports.items, clusterReports.items, &report)
 
-	slices.SortFunc(report.Policies, kyvernoPolicyLess)
-	slices.SortFunc(report.Namespaces, func(a, b policyNSRow) int { return strings.Compare(a.Namespace, b.Namespace) })
-
-	return report, nil
+	return report
 }
 
 // firstErr returns the first error of the given ones, in order.
@@ -174,8 +198,8 @@ func listKyvernoPolicies(ctx context.Context, k *kubeClient, version string, clu
 }
 
 // readKyvernoPolicies maps the two policy kinds into rows, ClusterPolicies first.
-func readKyvernoPolicies(cluster, namespaced []kyvernoPolicyObject) []kyvernoPolicy {
-	out := make([]kyvernoPolicy, 0, len(cluster)+len(namespaced))
+func readKyvernoPolicies(cluster, namespaced []kyvernoPolicyObject) []policyRow {
+	out := make([]policyRow, 0, len(cluster)+len(namespaced))
 
 	for i := range cluster {
 		out = append(out, kyvernoPolicyOf(cluster[i]))
@@ -190,10 +214,11 @@ func readKyvernoPolicies(cluster, namespaced []kyvernoPolicyObject) []kyvernoPol
 
 // kyvernoPolicyOf maps one policy object into its row: the action with the rule-level
 // failureAction overrides applied, the rule counts, and the annotations the screen shows.
-func kyvernoPolicyOf(o kyvernoPolicyObject) kyvernoPolicy {
-	row := kyvernoPolicy{
+func kyvernoPolicyOf(o kyvernoPolicyObject) policyRow {
+	row := policyRow{
 		Namespace:   o.Metadata.Namespace,
 		Name:        o.Metadata.Name,
+		Engine:      policyEngineKyverno,
 		Background:  o.Spec.Background == nil || *o.Spec.Background,
 		RuleNames:   []string{},
 		Description: clipUTF8(o.Metadata.Annotations["policies.kyverno.io/description"], policyDescriptionMax),
@@ -259,8 +284,8 @@ func policyActionOf(actions map[string]bool, policyLevel string) string {
 
 // readKyvernoEngine maps the engine's Deployments and its resource webhook. A Deployment
 // whose replicas are unset wants one.
-func readKyvernoEngine(deployments []kyvernoDeployObject, webhooks []webhookConfig) kyvernoEngine {
-	out := kyvernoEngine{Namespace: "kyverno"}
+func readKyvernoEngine(deployments []kyvernoDeployObject, webhooks []webhookConfig) policyEngine {
+	out := policyEngine{Name: policyEngineKyverno, Namespace: "kyverno"}
 
 	if len(deployments) > 0 {
 		sorted := slices.Clone(deployments)
@@ -268,7 +293,7 @@ func readKyvernoEngine(deployments []kyvernoDeployObject, webhooks []webhookConf
 		out.Namespace = sorted[0].Metadata.Namespace
 	}
 
-	out.Controllers = []kyvernoController{}
+	out.Controllers = []policyController{}
 	for _, d := range deployments {
 		name := d.Metadata.Labels["app.kubernetes.io/component"]
 		if name == "" {
@@ -280,7 +305,7 @@ func readKyvernoEngine(deployments []kyvernoDeployObject, webhooks []webhookConf
 			desired = int(*d.Spec.Replicas)
 		}
 
-		out.Controllers = append(out.Controllers, kyvernoController{Name: name, Ready: int(d.Status.ReadyReplicas), Desired: desired})
+		out.Controllers = append(out.Controllers, policyController{Name: name, Ready: int(d.Status.ReadyReplicas), Desired: desired})
 	}
 
 	for _, c := range webhooks {
@@ -288,7 +313,7 @@ func readKyvernoEngine(deployments []kyvernoDeployObject, webhooks []webhookConf
 			continue
 		}
 
-		out.Webhook.Present = true
+		out.Webhook.Present, out.Webhook.Name = true, c.Metadata.Name
 		for _, w := range c.Webhooks {
 			// Fail is the default; any non-Ignore webhook refuses the requests when the engine is down.
 			if w.FailurePolicy != "Ignore" {
@@ -350,7 +375,7 @@ func (r *policyReportRead) read(ctx context.Context, k *kubeClient, path string)
 // aggregatePolicyReports folds the report results into the policy rows (per policy, the
 // counts of every rule) and into the per-namespace totals. The rows keep the first
 // policyFailingMax failing resources, newest first.
-func aggregatePolicyReports(rows []kyvernoPolicy, reports []policyReportObject, clusterReports []policyReportObject, out *policiesReport) {
+func aggregatePolicyReports(rows []policyRow, reports []policyReportObject, clusterReports []policyReportObject, out *policiesReport) {
 	rowByKey := map[string]int{}
 	for i := range rows {
 		row := &rows[i]
@@ -505,17 +530,19 @@ func clipPolicyFailings(in []policyFailure, n int) []policyFailure {
 	return in[:n]
 }
 
-// kyvernoPolicyLess orders the rows: not ready first, then Enforce before Audit, then the
-// most failing first, then by name.
-func kyvernoPolicyLess(a, b kyvernoPolicy) int {
-	rank := func(p kyvernoPolicy) int {
+// policyRowLess orders the rows: not ready first, then Enforce, Mixed, Warn and Audit, then
+// the most failing first, then by name.
+func policyRowLess(a, b policyRow) int {
+	rank := func(p policyRow) int {
 		switch p.Action {
 		case policyActionEnforce:
 			return 0
 		case policyActionMixed:
 			return 1
-		default:
+		case policyActionWarn:
 			return 2
+		default:
+			return 3
 		}
 	}
 
@@ -524,6 +551,8 @@ func kyvernoPolicyLess(a, b kyvernoPolicy) int {
 		cmp.Compare(rank(a), rank(b)),
 		cmp.Compare(b.Fail, a.Fail),
 		strings.Compare(a.Namespace+"/"+a.Name, b.Namespace+"/"+b.Name),
+		// Gatekeeper names are unique per kind only.
+		strings.Compare(a.Engine+"/"+a.Kind, b.Engine+"/"+b.Kind),
 	)
 }
 

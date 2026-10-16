@@ -112,16 +112,16 @@ func TestPoliciesReport(t *testing.T) {
 	}
 
 	// The engine: its namespace, one Deployment down (0/1), and the webhook (Fail default).
-	if r.Engine.Namespace != "kyverno" || len(r.Engine.Controllers) != 2 {
-		t.Fatalf("engine %+v", r.Engine)
+	if len(r.Engines) != 1 || r.Engines[0].Name != policyEngineKyverno || r.Engines[0].Namespace != "kyverno" || len(r.Engines[0].Controllers) != 2 {
+		t.Fatalf("engine %+v", r.Engines)
 	}
 
-	if r.Engine.Controllers[0].Name != "admission-controller" || r.Engine.Controllers[0].Ready != 0 || r.Engine.Controllers[0].Desired != 1 {
-		t.Errorf("admission controller %+v", r.Engine.Controllers[0])
+	if r.Engines[0].Controllers[0].Name != "admission-controller" || r.Engines[0].Controllers[0].Ready != 0 || r.Engines[0].Controllers[0].Desired != 1 {
+		t.Errorf("admission controller %+v", r.Engines[0].Controllers[0])
 	}
 
-	if !r.Engine.Webhook.Present || r.Engine.Webhook.FailurePolicy != "Fail" {
-		t.Errorf("webhook %+v", r.Engine.Webhook)
+	if !r.Engines[0].Webhook.Present || r.Engines[0].Webhook.FailurePolicy != "Fail" {
+		t.Errorf("webhook %+v", r.Engines[0].Webhook)
 	}
 
 	// Namespace totals come from the namespaced reports only.
@@ -305,11 +305,11 @@ func TestPoliciesDemo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !got.Installed || got.Version != "v1" || got.Engine.Namespace != "kyverno" || !got.Engine.Webhook.Present {
+	if !got.Installed || got.Version != "v1" || got.Engines[0].Namespace != "kyverno" || !got.Engines[0].Webhook.Present {
 		t.Fatalf("demo report %+v", got)
 	}
 
-	if len(got.Policies) != 4 || got.Namespaces[0].Namespace != "shop" || got.ReportsRead != 6 {
+	if len(got.Policies) != 6 || len(got.Engines) != 2 || !got.Kyverno || !got.Gatekeeper || got.Namespaces[0].Namespace != "shop" || got.ReportsRead != 6 {
 		t.Errorf("demo policies %+v", got.Policies)
 	}
 
@@ -319,7 +319,7 @@ func TestPoliciesDemo(t *testing.T) {
 	}
 
 	// The whole list in the reader's order (not ready, Enforce, Mixed, Audit): the apps show it as is.
-	if !slices.IsSortedFunc(got.Policies, kyvernoPolicyLess) {
+	if !slices.IsSortedFunc(got.Policies, policyRowLess) {
 		t.Errorf("demo not in reader order: %v", firstNames(got.Policies))
 	}
 
@@ -368,7 +368,7 @@ func TestKyvernoGroupsSupported(t *testing.T) {
 	}
 }
 
-func findPolicyRow(t *testing.T, rows []kyvernoPolicy, namespace, name string) kyvernoPolicy {
+func findPolicyRow(t *testing.T, rows []policyRow, namespace, name string) policyRow {
 	t.Helper()
 
 	for _, p := range rows {
@@ -379,7 +379,7 @@ func findPolicyRow(t *testing.T, rows []kyvernoPolicy, namespace, name string) k
 
 	t.Fatalf("no policy %s/%s", namespace, name)
 
-	return kyvernoPolicy{}
+	return policyRow{}
 }
 
 func nsNames(rows []policyNSRow) []string {
@@ -391,7 +391,7 @@ func nsNames(rows []policyNSRow) []string {
 	return out
 }
 
-func firstNames(rows []kyvernoPolicy) []string {
+func firstNames(rows []policyRow) []string {
 	out := make([]string, 0, len(rows))
 	for _, p := range rows {
 		out = append(out, p.Name)
@@ -475,7 +475,7 @@ func TestPolicyCountsByNamespace(t *testing.T) {
 			{"source":"kyverno","policy":"require-labels","result":"fail","resources":[{"kind":"Namespace","name":"billing"}]},
 			{"source":"other","policy":"require-labels","result":"fail","resources":[{"kind":"Pod","namespace":"billing","name":"e"}]}]}]`)
 
-	rows := []kyvernoPolicy{{Name: "require-labels"}, {Namespace: "shop", Name: "local"}}
+	rows := []policyRow{{Name: "require-labels"}, {Namespace: "shop", Name: "local"}}
 
 	var out policiesReport
 

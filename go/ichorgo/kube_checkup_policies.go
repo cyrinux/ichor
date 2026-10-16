@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"net/url"
 	"strings"
@@ -34,8 +35,8 @@ const (
 // policyOwnerLookups bounds how many ReplicaSets are read for their owner Deployment.
 const policyOwnerLookups = 20
 
-// checkupPolicies reads the Kyverno policies and engine (the Policies screen's reader) and
-// the FailedCreate denial events. Absent when the cluster runs neither Kyverno nor
+// checkupPolicies reads the Kyverno policies and Gatekeeper constraints with the Kyverno
+// engine (the Policies screen's reader) and the FailedCreate denial events. Absent when the cluster runs neither Kyverno nor
 // Gatekeeper: a Gatekeeper-only cluster still gets its denial events.
 func checkupPolicies(ctx context.Context, k *kubeClient, in checkupInput) checkupSection {
 	var (
@@ -70,33 +71,40 @@ func checkupPolicies(ctx context.Context, k *kubeClient, in checkupInput) checku
 	return newSection(checkPolicies, len(report.Policies)+len(events), findings, readErr, evErr)
 }
 
-// policyEngineFindings says when the engine cannot admit: a controller at 0 ready, or the
-// resource webhook refusing (failurePolicy Fail) with no ready endpoint behind it.
+// policyEngineFindings says when Kyverno cannot admit: a controller at 0 ready, or the
+// resource webhook refusing (failurePolicy Fail) with no ready endpoint behind it. Gatekeeper's
+// own pods are not checked here (its audit pod down admits everything); its denials still are,
+// from the events.
 func policyEngineFindings(ctx context.Context, k *kubeClient, report policiesReport) []checkupFinding {
 	var findings []checkupFinding
 
-	for _, c := range report.Engine.Controllers {
+	engine, ok := report.engine(policyEngineKyverno)
+	if !ok {
+		return nil
+	}
+
+	for _, c := range engine.Controllers {
 		if c.Ready > 0 {
 			continue
 		}
 
 		message := "policies are skipped"
-		if report.Engine.Webhook.FailurePolicy != "Ignore" {
+		if engine.Webhook.FailurePolicy != "Ignore" {
 			message = "every create/update it matches is refused"
 		}
 
 		findings = append(findings, checkupFinding{
 			Kind: findPolicyEngineDown, Severity: sevCritical,
-			Name: c.Name, Extra: report.Engine.Namespace, Message: message,
+			Name: c.Name, Extra: engine.Namespace, Message: message,
 		})
 	}
 
-	if w := report.Engine.Webhook; w.Present && w.FailurePolicy == "Fail" && w.Service != "" {
+	if w := engine.Webhook; w.Present && w.FailurePolicy == "Fail" && w.Service != "" {
 		ns, name, _ := strings.Cut(w.Service, "/")
 		if ready, err := serviceHasReadyEndpoint(ctx, k, ns, name); err == nil && !ready {
 			findings = append(findings, checkupFinding{
 				Kind: findPolicyEngineDown, Severity: sevCritical,
-				Name: "kyverno-resource-validating-webhook-cfg", Extra: w.Service,
+				Name: cmp.Or(w.Name, "kyverno-resource-validating-webhook-cfg"), Extra: w.Service,
 				Message: "every create/update it matches is refused",
 			})
 		}
@@ -222,13 +230,16 @@ func replicaSetOwner(ctx context.Context, k *kubeClient, namespace, name string)
 	return ""
 }
 
-// policyFailureFindings is one finding per Audit policy whose background scans keep
-// failing: in Enforce mode those workloads would be refused.
+// policyFailureFindings is one finding per Kyverno Audit policy whose background scans keep
+// failing: in Enforce mode those workloads would be refused. Gatekeeper's dryrun constraints
+// are left out: teams run them to measure a rule before enforcing it, often with many
+// violations on purpose, and the Policies screen lists those. A constraint not enforced still
+// counts (policyNotReadyFindings).
 func policyFailureFindings(report policiesReport) []checkupFinding {
 	var findings []checkupFinding
 
 	for _, p := range report.Policies {
-		if p.Action != policyActionAudit || p.Fail == 0 {
+		if p.Engine == policyEngineGatekeeper || p.Action != policyActionAudit || p.Fail == 0 {
 			continue
 		}
 

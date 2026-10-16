@@ -4767,6 +4767,15 @@
     <string name="kpol_mode_mixed">Algunas reglas rechazan una solicitud que las incumple; otras solo lo informan</string>
     <string name="kpol_category">Categoría</string>
     <string name="kpol_severity">Gravedad</string>
+    <string name="kpol_engine_gatekeeper">Motor de Gatekeeper</string>
+    <string name="kpol_webhook_fail_gatekeeper">Fail: las solicitudes se rechazan mientras Gatekeeper está caído</string>
+    <string name="kpol_webhook_ignore_gatekeeper">Ignore: las políticas se omiten mientras Gatekeeper está caído</string>
+    <string name="kpol_empty_gatekeeper">No hay políticas de Gatekeeper</string>
+    <string name="kpol_empty_hint_gatekeeper">Gatekeeper está en marcha, pero no hay ninguna política definida.</string>
+    <string name="kpol_warn">Avisar</string>
+    <string name="kpol_mode_warn">Una solicitud que la incumple pasa, con una advertencia</string>
+    <string name="kpol_audited">Última auditoría %1$s</string>
+    <string name="kpol_failing_capped">Gatekeeper guarda las %1$s primeras de %2$s infracciones</string>
     <string name="velero_backup_now">Copia de seguridad ahora</string>
     <string name="velero_backup_now_title">¿Hacer copia de %1$s ahora?</string>
     <string name="velero_backup_now_text">Velero inicia una copia con los ajustes de esta programación (namespaces: %1$s, ubicación de almacenamiento: %2$s). Se suma a las programadas y caduca como ellas.</string>

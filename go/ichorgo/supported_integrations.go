@@ -58,6 +58,8 @@ var integrationSpecs = []integrationSpec{
 	{ID: "external-secrets", Name: "External Secrets Operator", Website: "https://external-secrets.io", Groups: []string{groupExternalSecrets}},
 	// Kyverno is read through its policies and the (standard) policy reports it writes.
 	{ID: "kyverno", Name: "Kyverno", Website: "https://kyverno.io", Groups: []string{groupKyverno, groupPolicyReport}, Resource: "clusterpolicies", FallbackVersion: kyvernoPoliciesVersion},
+	// Gatekeeper: its constraint kinds are only served once a template is created.
+	{ID: "gatekeeper", Name: "OPA Gatekeeper", Website: "https://open-policy-agent.github.io/gatekeeper/website/", Groups: []string{groupGatekeeperTemplates, groupGatekeeperConstraints}, AnyGroup: true},
 	// The autoscalers: KEDA's ScaledObjects, the VPA's recommendations and Karpenter's pools.
 	{ID: "keda", Name: "KEDA", Website: "https://keda.sh", Groups: []string{groupKEDA}, Resource: "scaledobjects"},
 	{ID: "vpa", Name: "Vertical Pod Autoscaler", Website: "https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler", Groups: []string{groupVPA}, Resource: "verticalpodautoscalers"},
