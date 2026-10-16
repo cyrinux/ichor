@@ -154,8 +154,8 @@ dependencies {
     implementation(libs.camerax.camera2)
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
-    implementation(libs.mlkit.barcode)
-    // QR encoder for sharing an issued talosconfig (ML Kit only decodes). Pure Java, no Android deps.
+    // QR codes: the import scanner's decoder and the encoder for sharing an issued talosconfig.
+    // Pure Java, no Android or Google Play deps, so the open-source APK stays free.
     implementation(libs.zxing.core)
     implementation(libs.termlib)
     implementation(libs.androidx.biometric)

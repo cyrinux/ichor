@@ -6,11 +6,13 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.OptIn
+import android.util.Size
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Arrangement
@@ -34,11 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions
-import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.common.Barcode
-import com.google.mlkit.vision.common.InputImage
-import name.levis.ichorgo.Ichorgo
+import com.google.zxing.LuminanceSource
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -78,7 +76,14 @@ fun QrScanner(onScanned: (String) -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-@OptIn(ExperimentalGetImage::class) // ImageProxy.image, needed by ML Kit
+// A whole talosconfig is a dense version-40 code (177 modules a side): the default 640x480
+// analysis frame leaves under 3 pixels per module, so ask for 1080p.
+private val ANALYSIS_RESOLUTION = ResolutionSelector.Builder()
+    .setResolutionStrategy(
+        ResolutionStrategy(Size(1920, 1080), ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER),
+    )
+    .build()
+
 @Composable
 private fun CameraQrPreview(onScanned: (String) -> Unit, modifier: Modifier) {
     val context = LocalContext.current
@@ -86,9 +91,7 @@ private fun CameraQrPreview(onScanned: (String) -> Unit, modifier: Modifier) {
     val callback by rememberUpdatedState(onScanned)
     val delivered = remember { AtomicBoolean(false) }
     val executor = remember { Executors.newSingleThreadExecutor() }
-    val scanner = remember {
-        BarcodeScanning.getClient(BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build())
-    }
+    val reader = remember { QrPayload.newReader() }
     val previewView = remember { PreviewView(context) }
 
     DisposableEffect(lifecycleOwner) {
@@ -100,24 +103,15 @@ private fun CameraQrPreview(onScanned: (String) -> Unit, modifier: Modifier) {
             val preview = Preview.Builder().build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
             val analysis = ImageAnalysis.Builder()
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .setResolutionSelector(ANALYSIS_RESOLUTION)
                 .build()
             analysis.setAnalyzer(executor) { proxy ->
-                val media = proxy.image
-                if (media == null || delivered.get()) {
-                    proxy.close()
-                    return@setAnalyzer
+                val text = proxy.use {
+                    if (delivered.get()) null else QrPayload.decode(reader, it.luminance())?.let(QrPayload::text)
                 }
-                scanner.process(InputImage.fromMediaImage(media, proxy.imageInfo.rotationDegrees))
-                    .addOnSuccessListener { codes ->
-                        // rawBytes carries a binary (gzip) payload that rawValue mangles.
-                        val text = codes.firstOrNull()?.let { code ->
-                            runCatching { Ichorgo.qrCodeText(code.rawValue.orEmpty(), code.rawBytes, 0) }.getOrElse { code.rawValue }
-                        }
-                        if (!text.isNullOrEmpty() && delivered.compareAndSet(false, true)) {
-                            ContextCompat.getMainExecutor(context).execute { callback(text) }
-                        }
-                    }
-                    .addOnCompleteListener { proxy.close() }
+                if (!text.isNullOrEmpty() && delivered.compareAndSet(false, true)) {
+                    ContextCompat.getMainExecutor(context).execute { callback(text) }
+                }
             }
             provider.unbindAll()
             provider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis)
@@ -126,10 +120,22 @@ private fun CameraQrPreview(onScanned: (String) -> Unit, modifier: Modifier) {
         onDispose {
             disposed = true
             if (providerFuture.isDone) runCatching { providerFuture.get().unbindAll() }
-            scanner.close()
             executor.shutdown()
         }
     }
 
     AndroidView(factory = { previewView }, modifier = modifier.fillMaxSize())
+}
+
+/**
+ * The frame's Y plane as ZXing luminance, in sensor orientation: the QR detector finds the
+ * finder patterns at any angle, so the frame is not rotated (rotationDegrees is not needed,
+ * and rotating a 1080p plane per frame would cost more than the decode). The row stride is
+ * kept as the data width, so the padded rows are cropped rather than copied.
+ */
+private fun ImageProxy.luminance(): LuminanceSource {
+    val plane = planes[0]
+    val buffer = plane.buffer.duplicate().apply { rewind() }
+    val y = ByteArray(buffer.remaining()).also(buffer::get)
+    return QrPayload.lumaSource(y, width, height, plane.rowStride)
 }
