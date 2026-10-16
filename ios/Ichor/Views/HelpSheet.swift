@@ -69,6 +69,7 @@ struct HelpSheet: View {
                     CommandRow("gzip -9 < kubeconfig-phone | qrencode -8 -t ansiutf8")
                     Text("Prefer a ServiceAccount with read-only rights over your admin credentials.")
                         .font(.footnote).foregroundStyle(.secondary)
+                    NavigationLink("How to create a service account") { ServiceAccountHelpView() }
                 }
                 Section("Sidero Omni: your omniconfig") {
                     Text("Import or scan your omniconfig.yaml, or the talosconfig Omni gives for your whole account: the Omni sign-in opens with the address and account filled in, then adds every cluster. These files hold no secret.")
@@ -83,9 +84,15 @@ struct HelpSheet: View {
     }
 }
 
-private struct CommandRow: View {
+/// A monospace block of `command` (a command, or YAML) with a button that copies it.
+struct CommandRow: View {
     let command: String
-    init(_ command: String) { self.command = command }
+    let copyLabel: LocalizedStringKey
+
+    init(_ command: String, copyLabel: LocalizedStringKey = "Copy command") {
+        self.command = command
+        self.copyLabel = copyLabel
+    }
 
     var body: some View {
         HStack {
@@ -97,7 +104,7 @@ private struct CommandRow: View {
                 Image(systemName: "doc.on.doc")
             }
             .buttonStyle(.borderless)
-            .accessibilityLabel("Copy command")
+            .accessibilityLabel(copyLabel)
         }
     }
 }
