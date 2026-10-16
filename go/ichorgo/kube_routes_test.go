@@ -248,8 +248,9 @@ func TestAppRoutesGRPCRoute(t *testing.T) {
 	}
 }
 
-// A TLSRoute passes TLS through to the app: the URL is the listener's host at its public
-// port (443 left out), or the Gateway's address without a listener.
+// A TLSRoute passes TLS through to the app: the URL is the listener's host at its public port
+// (443 left out); without a matching listener there is no URL, since a bare address cannot be
+// reached over SNI.
 func TestAppRoutesTLSRoute(t *testing.T) {
 	k := openRoutesKube(t, map[string]string{
 		"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[]}`,
@@ -277,10 +278,9 @@ func TestAppRoutesTLSRoute(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := strings.Join([]string{
-		"TLSRoute https://198.51.100.7 web",
-		"TLSRoute https://registry.shop.example web",
-	}, "\n")
+	// The "nogw" route's sectionName matches no listener: it gets no URL, not the Gateway's
+	// address, which no browser can open for a TLSRoute.
+	want := "TLSRoute https://registry.shop.example web"
 	if got := routeURLs(list.Routes); got != want {
 		t.Fatalf("got\n%s\nwant\n%s", got, want)
 	}
