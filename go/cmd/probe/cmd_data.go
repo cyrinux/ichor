@@ -84,6 +84,9 @@ var dataCommands = []command{
 	{name: "tailscale", args: "", run: func(e env) (string, error) {
 		return ichorgo.KubeTailscale(e.cfg, e.context, e.kubeServer)
 	}},
+	{name: "cluster-api", args: "", run: func(e env) (string, error) {
+		return ichorgo.KubeClusterAPI(e.cfg, e.context, e.kubeServer)
+	}},
 	{name: "crossplane", args: "", run: func(e env) (out string, err error) {
 		return ichorgo.KubeCrossplane(e.cfg, e.context, e.kubeServer)
 	}},

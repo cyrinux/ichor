@@ -1,0 +1,4 @@
+{"kind":"ServerClassList","apiVersion":"metal.sidero.dev/v1alpha2","metadata":{},"items":[
+{"metadata":{"name":"large"},"spec":{},"status":{"serversAvailable":[],"serversInUse":["srv-a1"]}},
+{"metadata":{"name":"any"},"spec":{},"status":{"serversAvailable":["srv-c1"],"serversInUse":["srv-a1","srv-b2"]}}
+]}

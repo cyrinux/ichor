@@ -1,0 +1,8 @@
+{"kind":"MachineDeploymentList","metadata":{},"items":[
+{"metadata":{"name":"prod-edge-workers","namespace":"fleet","labels":{"cluster.x-k8s.io/cluster-name":"prod-edge"}},
+ "spec":{"clusterName":"prod-edge","replicas":4,"template":{"spec":{"clusterName":"prod-edge","version":"v1.34.1"}}},
+ "status":{"phase":"Running","replicas":4,"readyReplicas":4,"availableReplicas":4,"upToDateReplicas":4}},
+{"metadata":{"name":"staging-workers","namespace":"fleet"},
+ "spec":{"clusterName":"staging","replicas":4,"template":{"spec":{"clusterName":"staging","version":"v1.34.1"}}},
+ "status":{"phase":"ScalingUp","replicas":2,"readyReplicas":2,"availableReplicas":2,"updatedReplicas":2,"unavailableReplicas":2}}
+]}

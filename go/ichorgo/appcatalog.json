@@ -23,6 +23,8 @@
 {"id":"reloader","name":"Reloader","cat":"devops","icon":"reloader","images":["stakater/reloader"]},
 {"id":"keda","name":"KEDA","cat":"devops","prefixes":["ghcr.io/kedacore/"]},
 {"id":"kubevirt","name":"KubeVirt","cat":"system","icon":"","prefixes":["quay.io/kubevirt/"]},
+{"id":"cluster-api","name":"Cluster API","cat":"system","icon":"","prefixes":["registry.k8s.io/cluster-api/"]},
+{"id":"sidero","name":"Sidero Metal","cat":"system","icon":"","images":["siderolabs/sidero-controller-manager"]},
 
 {"id":"cilium","name":"Cilium","cat":"networking","prefixes":["quay.io/cilium/"],"match":["hubble-relay","hubble-ui","hubble-ui-backend","cilium-envoy","tetragon"]},
 {"id":"calico","name":"Calico","cat":"networking","icon":"sh:calico","prefixes":["calico/","docker.io/calico/","quay.io/calico/","quay.io/tigera/"]},

@@ -41,7 +41,8 @@ func TestReadIntegrations(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !slices.Equal(res.Supported, []string{"argoproj.io", "longhorn.io"}) {
+	// Cluster API's core group is read; its infrastructure providers' are not (a request).
+	if !slices.Equal(res.Supported, []string{"argoproj.io", "cluster.x-k8s.io", "longhorn.io"}) {
 		t.Errorf("supported: %v", res.Supported)
 	}
 
@@ -59,7 +60,7 @@ func TestReadIntegrations(t *testing.T) {
 		t.Errorf("istio: %+v", istio)
 	}
 
-	if capi := res.Families[0].Groups; len(capi) != 2 || !slices.Equal(capi[1].Kinds, []string{"TalosCluster"}) {
+	if capi := res.Families[0].Groups; len(capi) != 1 || !slices.Equal(capi[0].Kinds, []string{"TalosCluster"}) {
 		t.Errorf("cluster api: %+v", capi)
 	}
 
