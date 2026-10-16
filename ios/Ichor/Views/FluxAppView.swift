@@ -83,7 +83,7 @@ struct FluxAppView: View {
         .confirmationDialog(confirm.map { $0.title(for: app.name) } ?? "",
                             isPresented: $confirm.isPresent(),
                             titleVisibility: .visible, presenting: confirm) { action in
-            Button(correctingDrift ? String(localized: "Correct drift") : action.label, role: action == .suspend ? ButtonRole.destructive : nil) {
+            Button(correctingDrift && action == .force ? String(localized: "Correct drift") : action.label, role: action == .suspend ? ButtonRole.destructive : nil) {
                 Task { await run(action, on: app) }
             }
             Button("Cancel", role: .cancel) {}
@@ -123,7 +123,10 @@ struct FluxAppView: View {
               request.isReconcile(kind: kind, namespace: namespace, name: name),
               case .loaded(let status, _, _) = state else { return }
         NotificationRouter.shared.alertActionRequest = nil
-        if status.app(kind: kind, namespace: namespace, name: name) != nil { confirm = .reconcile }
+        if status.app(kind: kind, namespace: namespace, name: name) != nil {
+            correctingDrift = false
+            confirm = .reconcile
+        }
     }
 
     private func run(_ action: FluxAction, on app: FluxApp) async {
