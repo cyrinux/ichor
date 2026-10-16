@@ -1,0 +1,931 @@
+{
+  "$defs": {
+    "Action": {
+      "additionalProperties": false,
+      "description": "Action is a declared mutation of one object.",
+      "properties": {
+        "audit": {
+          "description": "Audit is the audit log key.",
+          "type": "string"
+        },
+        "body": {
+          "description": "Body is the patch or object; its strings are templates (now, name, namespace, params.*)."
+        },
+        "confirm": {
+          "description": "Confirm is how the app confirms: none, plain, or the object's name typed.",
+          "enum": [
+            "none",
+            "plain",
+            "typedName"
+          ],
+          "type": "string"
+        },
+        "disabledReason": {
+          "description": "DisabledReason is shown when EnabledWhen is false; a template.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "enabledWhen": {
+          "description": "EnabledWhen is a boolean expression over the row's object.",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "on": {
+          "description": "On is the resource the action applies to.",
+          "type": "string"
+        },
+        "params": {
+          "description": "Params are typed inputs, available to the body as params.<name>.",
+          "items": {
+            "$ref": "#/$defs/Param"
+          },
+          "type": "array"
+        },
+        "rbac": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/RBAC"
+            }
+          ],
+          "description": "RBAC is what the account needs; it becomes a can-I check."
+        },
+        "subresource": {
+          "description": "Subresource is the subresource of verb subresource (start, scale…).",
+          "type": "string"
+        },
+        "verb": {
+          "description": "Verb is how the object is changed.",
+          "enum": [
+            "mergePatch",
+            "jsonPatch",
+            "subresource",
+            "delete",
+            "annotate",
+            "create"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "on",
+        "verb",
+        "rbac",
+        "audit"
+      ],
+      "type": "object"
+    },
+    "Card": {
+      "additionalProperties": false,
+      "description": "Card is the summary card or a list card.",
+      "properties": {
+        "badges": {
+          "description": "Badges are the summary's chips.",
+          "items": {
+            "$ref": "#/$defs/Item"
+          },
+          "type": "array"
+        },
+        "empty": {
+          "description": "Empty is the text shown when there is no row.",
+          "type": "string"
+        },
+        "from": {
+          "description": "From is the resource or data service (dataServices.<name>) a list card shows, one row per element.",
+          "type": "string"
+        },
+        "health": {
+          "description": "Health is the summary's health.",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        "row": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/Row"
+            }
+          ],
+          "description": "Row is one row of a list card."
+        },
+        "sort": {
+          "description": "Sort orders the rows: expressions, each optionally followed by asc or desc.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "title": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/Title"
+            }
+          ],
+          "description": "Title is the summary's title: an expression, or a count with singular and plural."
+        }
+      },
+      "type": "object"
+    },
+    "Column": {
+      "additionalProperties": false,
+      "description": "Column is one column of a table.",
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "description": "An expression (docs/plugins.md#expressions).",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "label",
+        "value"
+      ],
+      "type": "object"
+    },
+    "DataService": {
+      "additionalProperties": false,
+      "description": "DataService is derived data: aggregate over resources, or from + groupBy + aggregate, or from + where + select.",
+      "properties": {
+        "aggregate": {
+          "additionalProperties": {
+            "description": "An expression (docs/plugins.md#expressions).",
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          "description": "Aggregate are named values: count(res), count(res, pred), sum/min/max(res, expr), worst(res.health); with groupBy, count(), count(pred), sum(expr)…",
+          "type": "object"
+        },
+        "from": {
+          "description": "From is the resource the data service walks.",
+          "type": "string"
+        },
+        "groupBy": {
+          "description": "GroupBy is the key of each group (one row per key).",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        "health": {
+          "description": "Health is the data service's health, e.g. worst(sleepinfo.health).",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        "select": {
+          "additionalProperties": {
+            "description": "An expression (docs/plugins.md#expressions).",
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          "description": "Select projects each kept object into named values.",
+          "type": "object"
+        },
+        "where": {
+          "description": "Where keeps the objects it holds for.",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "Detect": {
+      "additionalProperties": false,
+      "description": "Detect is one way to tell the product is installed: an API group (with a resource when the group is shared), running pods of an app catalog id, or a Prometheus-style service.",
+      "properties": {
+        "group": {
+          "description": "Group is an API group served by the cluster (GET /apis).",
+          "type": "string"
+        },
+        "pods": {
+          "description": "Pods is the app catalog id of running pods.",
+          "type": "string"
+        },
+        "resource": {
+          "description": "Resource must be served too, for a group several products share.",
+          "type": "string"
+        },
+        "service": {
+          "description": "Service is a service kind matched by name.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Finding": {
+      "additionalProperties": false,
+      "description": "Finding is a problem the checkup and the monitor report, one per matching object.",
+      "properties": {
+        "detail": {
+          "description": "Detail is a template.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "from": {
+          "description": "From is the resource whose objects are tested.",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z0-9-]+$",
+          "type": "string"
+        },
+        "opens": {
+          "description": "Opens is the card the finding links to.",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "info",
+            "warning",
+            "critical"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "description": "Title is a template (name, namespace, message, reason, fields.*).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "when": {
+          "description": "When is a boolean expression over the object, its fields and health.",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "from",
+        "when",
+        "severity",
+        "title"
+      ],
+      "type": "object"
+    },
+    "HealthRule": {
+      "additionalProperties": false,
+      "description": "HealthRule sets an object's health when its condition holds.",
+      "properties": {
+        "health": {
+          "description": "Health is the tone the object takes.",
+          "enum": [
+            "ok",
+            "idle",
+            "info",
+            "warning",
+            "critical",
+            "unknown"
+          ],
+          "type": "string"
+        },
+        "message": {
+          "description": "Message explains the health; a template.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reason": {
+          "description": "Reason is a stable id the apps may map to a string.",
+          "type": "string"
+        },
+        "when": {
+          "description": "When is a boolean expression over the object and its fields.",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "when",
+        "health"
+      ],
+      "type": "object"
+    },
+    "Item": {
+      "description": "Item is a keyValues, badges or relations entry, or an action id (a plain string) in an actions section.",
+      "oneOf": [
+        {
+          "description": "An action id (in an actions section).",
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Item is a keyValues, badges or relations entry, or an action id (a plain string) in an actions section.",
+          "properties": {
+            "hideWhenZero": {
+              "description": "HideWhenZero drops a badge whose value is 0.",
+              "type": "boolean"
+            },
+            "label": {
+              "type": "string"
+            },
+            "mono": {
+              "type": "boolean"
+            },
+            "on": {
+              "description": "On lights a badge (ok) or dims it (idle).",
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            },
+            "ref": {
+              "description": "Ref is the related object (relations): an object, as join() returns.",
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            },
+            "text": {
+              "description": "Text replaces the related object's name (relations).",
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            },
+            "tone": {
+              "description": "A tone (ok, idle, info, warning, critical, unknown) or an expression that evaluates to one.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "value": {
+              "description": "Value is the shown value (keyValues, badges).",
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "ListOptions": {
+      "additionalProperties": false,
+      "description": "ListOptions narrow a list call.",
+      "properties": {
+        "fieldSelector": {
+          "type": "string"
+        },
+        "labelSelector": {
+          "type": "string"
+        },
+        "limit": {
+          "description": "Limit is the page size (0 or absent is 500).",
+          "maximum": 5000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "Param": {
+      "additionalProperties": false,
+      "description": "Param is a typed input of an action.",
+      "properties": {
+        "default": {},
+        "label": {
+          "type": "string"
+        },
+        "name": {
+          "pattern": "^[a-zA-Z][a-zA-Z0-9]*$",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "string",
+            "int",
+            "bool",
+            "enum"
+          ],
+          "type": "string"
+        },
+        "values": {
+          "description": "Values are the choices of an enum.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "label",
+        "type"
+      ],
+      "type": "object"
+    },
+    "RBAC": {
+      "additionalProperties": false,
+      "description": "RBAC is the permission an action needs.",
+      "properties": {
+        "group": {
+          "type": "string"
+        },
+        "resource": {
+          "type": "string"
+        },
+        "verbs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "verbs",
+        "resource"
+      ],
+      "type": "object"
+    },
+    "Resource": {
+      "additionalProperties": false,
+      "description": "Resource is a kind the plugin lists.",
+      "properties": {
+        "group": {
+          "description": "Group is the API group, \"\" for the core group.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is the object kind (SleepInfo).",
+          "type": "string"
+        },
+        "list": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ListOptions"
+            }
+          ],
+          "description": "List narrows and pages the list call."
+        },
+        "resource": {
+          "description": "Resource is the plural resource name (sleepinfos).",
+          "type": "string"
+        },
+        "reveal": {
+          "description": "Reveal shows a Secret's data; it stays masked otherwise.",
+          "type": "boolean"
+        },
+        "scope": {
+          "description": "Scope is Namespaced or Cluster.",
+          "enum": [
+            "Namespaced",
+            "Cluster"
+          ],
+          "type": "string"
+        },
+        "source": {
+          "description": "Source is native:<id> to read through a Go reader instead of a list call.",
+          "pattern": "^native:[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        "version": {
+          "description": "Version is the API version, or preferred for the group's preferred version.",
+          "type": "string"
+        },
+        "watch": {
+          "description": "Watch refreshes the plugin screen on watch events.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "version",
+        "resource",
+        "kind",
+        "scope"
+      ],
+      "type": "object"
+    },
+    "Row": {
+      "additionalProperties": false,
+      "description": "Row is one row of a list card.",
+      "properties": {
+        "detail": {
+          "description": "Detail are the sections shown when the row is expanded.",
+          "items": {
+            "$ref": "#/$defs/Section"
+          },
+          "type": "array"
+        },
+        "status": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/Status"
+            }
+          ]
+        },
+        "subtitle": {
+          "description": "An expression (docs/plugins.md#expressions).",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        "title": {
+          "description": "An expression (docs/plugins.md#expressions).",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        "trailing": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/Trailing"
+            }
+          ]
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "type": "object"
+    },
+    "Section": {
+      "additionalProperties": false,
+      "description": "Section is a primitive of a row's detail; which keys apply depends on its type.",
+      "properties": {
+        "columns": {
+          "description": "Columns are a table's columns.",
+          "items": {
+            "$ref": "#/$defs/Column"
+          },
+          "type": "array"
+        },
+        "from": {
+          "description": "From is the data service (dataServices.<name>) or resource a table walks.",
+          "type": "string"
+        },
+        "items": {
+          "description": "Items are the rows of keyValues, badges and relations, and the action ids of actions.",
+          "items": {
+            "$ref": "#/$defs/Item"
+          },
+          "type": "array"
+        },
+        "label": {
+          "description": "Label names a gauge.",
+          "type": "string"
+        },
+        "max": {
+          "description": "Max is a gauge's maximum.",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        "mono": {
+          "description": "Mono sets a text in a monospace font.",
+          "type": "boolean"
+        },
+        "text": {
+          "description": "Text is a text section's template, or a gauge's caption.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tone": {
+          "description": "Tone colors a gauge or a text.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "description": "Type is the primitive.",
+          "enum": [
+            "keyValues",
+            "badges",
+            "gauge",
+            "conditions",
+            "relations",
+            "table",
+            "text",
+            "actions"
+          ],
+          "type": "string"
+        },
+        "unit": {
+          "description": "Unit formats a gauge's value: bytes, percent, or a word.",
+          "type": "string"
+        },
+        "value": {
+          "description": "Value is a gauge's value.",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "Status": {
+      "additionalProperties": false,
+      "description": "Status is a row's colored status.",
+      "properties": {
+        "text": {
+          "description": "An expression (docs/plugins.md#expressions).",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        "tone": {
+          "description": "A tone (ok, idle, info, warning, critical, unknown) or an expression that evaluates to one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "Title": {
+      "description": "Title is an expression, or {count, one, other}: \"%d\" in one and other is the count.",
+      "oneOf": [
+        {
+          "description": "An expression (docs/plugins.md#expressions).",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        {
+          "additionalProperties": false,
+          "description": "Title is an expression, or {count, one, other}: \"%d\" in one and other is the count.",
+          "properties": {
+            "count": {
+              "description": "An expression (docs/plugins.md#expressions).",
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            },
+            "one": {
+              "type": "string"
+            },
+            "other": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "Trailing": {
+      "additionalProperties": false,
+      "description": "Trailing is the text at a row's end.",
+      "properties": {
+        "text": {
+          "description": "An expression (docs/plugins.md#expressions).",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/cyrinux/ichor/main/go/plugin/schema/plugin.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Plugin is one plugin file.",
+  "properties": {
+    "actions": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Action"
+      },
+      "description": "Actions are declared mutations, by id.",
+      "propertyNames": {
+        "pattern": "^[a-zA-Z][a-zA-Z0-9]*$"
+      },
+      "type": "object"
+    },
+    "cards": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Card"
+      },
+      "description": "Cards are what the apps show: summary (the tile and the hub header) and list cards.",
+      "type": "object"
+    },
+    "catalogId": {
+      "description": "CatalogID is the app catalog id used to detect the product from its pods.",
+      "type": "string"
+    },
+    "category": {
+      "description": "Category picks the hub that lists the plugin (default data-services).",
+      "enum": [
+        "data-services",
+        "networking",
+        "gitops",
+        "policies",
+        "workloads",
+        "compute",
+        "security"
+      ],
+      "type": "string"
+    },
+    "dataServices": {
+      "additionalProperties": {
+        "$ref": "#/$defs/DataService"
+      },
+      "description": "DataServices are derived data (aggregations, groupings, projections), by name, in order.",
+      "propertyNames": {
+        "pattern": "^[a-zA-Z][a-zA-Z0-9]*$"
+      },
+      "type": "object"
+    },
+    "detect": {
+      "description": "Detect activates the plugin when any entry matches.",
+      "items": {
+        "$ref": "#/$defs/Detect"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "fields": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "description": "An expression (docs/plugins.md#expressions).",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        "type": "object"
+      },
+      "description": "Fields are named expressions per resource, evaluated per object in order; a field may use the earlier ones as fields.<name>.",
+      "type": "object"
+    },
+    "findings": {
+      "description": "Findings feed the cluster checkup and the background monitor.",
+      "items": {
+        "$ref": "#/$defs/Finding"
+      },
+      "type": "array"
+    },
+    "health": {
+      "additionalProperties": {
+        "items": {
+          "$ref": "#/$defs/HealthRule"
+        },
+        "type": "array"
+      },
+      "description": "Health are the rules per resource; the first matching rule wins, and an object no rule matches is ok.",
+      "type": "object"
+    },
+    "i18n": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": "object"
+      },
+      "description": "I18n maps an English label to its translation, per locale; a missing label stays English.",
+      "type": "object"
+    },
+    "icon": {
+      "description": "Icon is an app catalog id (assets/appicons).",
+      "type": "string"
+    },
+    "id": {
+      "description": "ID is unique across built-in and user plugins: lowercase letters, digits and dashes.",
+      "pattern": "^[a-z0-9-]+$",
+      "type": "string"
+    },
+    "name": {
+      "description": "Name is the product name, a proper noun, never translated.",
+      "type": "string"
+    },
+    "resources": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Resource"
+      },
+      "description": "Resources are the kinds the plugin reads, by local name (the key used everywhere else).",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-zA-Z][a-zA-Z0-9]*$"
+      },
+      "type": "object"
+    },
+    "samples": {
+      "additionalProperties": {
+        "items": {
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "description": "Samples are demo objects per resource, in the API's shape: the demo context and the tests render them.",
+      "type": "object"
+    },
+    "schemaVersion": {
+      "const": "ichor.dev/plugin/v1alpha1",
+      "description": "SchemaVersion is ichor.dev/plugin/v1alpha1; the loader refuses another major version.",
+      "type": "string"
+    },
+    "screen": {
+      "description": "Screen is native:<route> to open a native screen from the hub tile; empty is the generic plugin screen.",
+      "pattern": "^native:[A-Za-z0-9_-]+$",
+      "type": "string"
+    },
+    "website": {
+      "description": "Website is the project's home page.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "name",
+    "detect",
+    "resources",
+    "cards",
+    "samples"
+  ],
+  "title": "Ichor plugin (ichor.dev/plugin/v1alpha1)",
+  "type": "object"
+}

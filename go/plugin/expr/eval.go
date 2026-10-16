@@ -215,6 +215,10 @@ func (e *evaluator) evalName(n *name) (Value, error) {
 	case "now":
 		return e.clock().UnixMilli(), nil
 	default:
+		if v, ok := e.env.Vars[n.id]; ok {
+			return normalize(v), nil
+		}
+
 		return nil, e.errorf(n, "unknown name %q", n.id)
 	}
 }
@@ -438,7 +442,7 @@ func (e *evaluator) evalBinary(n *binary) (Value, error) {
 }
 
 func (e *evaluator) evalCall(n *call) (Value, error) {
-	fn, ok := registry[n.fn]
+	fn, ok := lookup(e.env.Funcs, n.fn)
 	if !ok {
 		return nil, e.errorf(n, "unknown function %q", n.fn)
 	}
