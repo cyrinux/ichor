@@ -7,6 +7,7 @@ import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.rememberKubeDenialAcross
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -149,6 +150,7 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
                 navigationIcon = { BackButton(onBack) },
                 actions = {
                     ShareLinkButton(ShareTarget.screen(ShareTarget.ARGO_CD))
+                    AddToHomeButton(ShareTarget.screen(ShareTarget.ARGO_CD), stringResource(R.string.argo_title))
                     TooltipIconButton(Icons.Outlined.AcUnit, stringResource(R.string.argo_windows_title), onClick = onWindows)
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
                 },

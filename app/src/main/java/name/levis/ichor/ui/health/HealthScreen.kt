@@ -2,6 +2,7 @@ package name.levis.ichor.ui.health
 
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import androidx.compose.foundation.layout.Arrangement
@@ -172,7 +173,10 @@ fun HealthScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.health_title)) },
                 navigationIcon = { BackButton(onBack) },
-                actions = { ShareLinkButton(ShareTarget.screen(ShareTarget.HEALTH)) },
+                actions = {
+                    ShareLinkButton(ShareTarget.screen(ShareTarget.HEALTH))
+                    AddToHomeButton(ShareTarget.screen(ShareTarget.HEALTH), stringResource(R.string.health_title))
+                },
             )
         },
     ) { padding ->

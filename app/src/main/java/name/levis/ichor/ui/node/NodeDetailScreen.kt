@@ -60,6 +60,7 @@ import name.levis.ichor.ui.components.rememberNodeFeatures
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.history.NodeUptime
 import name.levis.ichor.ui.share.PinButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.ui.share.rememberShareLink
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
@@ -213,6 +214,7 @@ fun NodeDetailScreen(
                     TooltipIconButton(Icons.Outlined.Share, stringResource(R.string.share_link), onClick = {
                         share(ShareTarget(target = ShareTarget.NODE, addr = node, host = hostname))
                     })
+                    AddToHomeButton(ShareTarget(target = ShareTarget.NODE, addr = node, host = hostname), hostname)
                 },
             )
         },

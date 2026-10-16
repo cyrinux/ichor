@@ -79,6 +79,7 @@ import name.levis.ichor.ui.components.upwardScrollStaysInSheet
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.share.PinButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.components.shareFile
 import name.levis.ichor.ui.factory
@@ -217,6 +218,7 @@ fun PodLogSheet(
                 }
                 PinButton(ShareTarget.pod(pod.namespace, pod.name), pod.name)
                 ShareLinkButton(ShareTarget.pod(pod.namespace, pod.name), icon = Icons.Outlined.Link)
+                AddToHomeButton(ShareTarget.pod(pod.namespace, pod.name), pod.name)
                 TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.pod_logs_copy), enabled = hasText, onClick = {
                     copyLog(context, pod, text())
                     Toast.makeText(context, R.string.pod_logs_copied, Toast.LENGTH_SHORT).show()

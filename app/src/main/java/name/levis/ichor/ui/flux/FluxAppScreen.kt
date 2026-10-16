@@ -3,6 +3,7 @@ package name.levis.ichor.ui.flux
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.share.PinButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -100,6 +101,7 @@ fun FluxAppScreen(
                 actions = {
                     PinButton(ShareTarget.fluxApp(kind, namespace, name), name)
                     ShareLinkButton(ShareTarget.fluxApp(kind, namespace, name))
+                    AddToHomeButton(ShareTarget.fluxApp(kind, namespace, name), name)
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
                 },
             )

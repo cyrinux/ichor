@@ -452,6 +452,9 @@
     <string name="shortcut_cluster_removed">This cluster was removed</string>
     <string name="shortcut_search_short">Search</string>
     <string name="shortcut_search_long">Search clusters</string>
+    <string name="shortcut_add_home">Add to home screen</string>
+    <string name="shortcut_pin_unsupported">This launcher can\'t add shortcuts to the home screen</string>
+    <string name="shortcut_screen_label" translatable="false">%1$s · %2$s</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

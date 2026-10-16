@@ -82,6 +82,8 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.components.pageContent
+import name.levis.ichor.ui.share.AddToHomeButton
+import name.levis.ichor.model.ShareTarget
 
 /** A checkup lists the cluster's pods and asks every kubelet: loaded on demand, never polled. */
 class CheckupViewModel(private val kube: KubeRepository) : LoadingViewModel<CheckupReport>() {
@@ -156,7 +158,10 @@ fun CheckupScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.checkup_title)) },
                 navigationIcon = { BackButton(onBack) },
-                actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
+                actions = {
+                    AddToHomeButton(ShareTarget.screen(ShareTarget.CHECKUP), stringResource(R.string.checkup_title))
+                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
+                },
             )
         },
     ) { padding ->
