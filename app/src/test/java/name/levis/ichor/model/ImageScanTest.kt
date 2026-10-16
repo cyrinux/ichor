@@ -89,4 +89,42 @@ class ImageScanTest {
         assertEquals(ImageScanner.TRIVY, ImageScanner.parse("trivy"))
         assertEquals(ImageScanner.GRYPE, ImageScanSession("ctx", "nginx").scanner)
     }
+
+    @Test
+    fun oldReportsDecodeWithoutTheNewFields() {
+        // A report kept before the "new since the last scan" fields: nothing new, nothing to compare.
+        assertEquals(VulnSummary(), report.newSummary)
+        assertFalse(report.hasPrevious)
+        assertFalse(report.images[0].vulnerabilities.any { it.new })
+    }
+
+    @Test
+    fun marksWhatIsNewSinceTheLastScan() {
+        val marked = TalosJson.decodeFromString(
+            ImageScanReport.serializer(),
+            """{"images":[{"image":"nginx:1.25","previousScannedAt":5,"summary":{"critical":1,"high":1},"new":{"high":1,"fixable":1},
+                "vulnerabilities":[{"id":"CVE-1","severity":"CRITICAL","fixed":"1"},{"id":"CVE-2","severity":"HIGH","fixed":"2","new":true}]}]}""",
+        )
+        assertTrue(marked.hasPrevious)
+        assertEquals(1, marked.newSummary.total)
+        val newOnly = VulnFilter(newOnly = true)
+        assertEquals(listOf("CVE-2"), marked.images[0].vulnerabilities.filter(newOnly::keeps).map { it.id })
+        assertEquals(2, marked.images[0].vulnerabilities.count(VulnFilter()::keeps))
+    }
+
+    @Test
+    fun savedScans() {
+        val saved = TalosJson.decodeFromString(
+            kotlinx.serialization.builtins.ListSerializer(SavedScan.serializer()),
+            """[{"id":"2-aaaaaaaa","cluster":"lab","app":"grafana","scanner":"Grype 0.80","finished":2,"images":1,"summary":{"high":2},"new":{"high":1},"digests":["sha256:a"]},
+                {"id":"1-bbbbbbbb","cluster":"lab","app":"grafana","finished":1,"summary":{},"new":{}},
+                {"id":"0-cccccccc","cluster":"lab","app":"talos:10.0.0.2","finished":0}]""",
+        )
+        assertEquals("2-aaaaaaaa", saved.lastOf("grafana")?.id)
+        assertNull(saved.lastOf("loki"))
+        assertEquals(1, saved[0].new.total)
+        assertEquals("10.0.0.2", systemImagesNode(saved[2].app))
+        assertNull(systemImagesNode("grafana"))
+        assertEquals("app", ImageScanOptions(app = "app").app)
+    }
 }

@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -82,6 +83,9 @@ type imageScanOptions struct {
 	Images []string `json:"images,omitempty"`
 	// App names what is scanned in the kept report (an inventory app id, "talos:<node>").
 	App string `json:"app,omitempty"`
+	// Cluster is the name the app lists kept reports under (its context): a Talos cluster
+	// scanned through a linked kubeconfig has another Kubernetes context. Empty: that context.
+	Cluster string `json:"cluster,omitempty"`
 	// Scanner is "trivy" (the default when empty) or "grype".
 	Scanner string `json:"scanner,omitempty"`
 	// GrypeDBUpdateURL replaces Grype's database listing URL, for a cluster that cannot
@@ -193,7 +197,7 @@ func startImageScan(ctx context.Context, target kubeTarget, pods, options string
 
 	// A completed scan is kept, its findings marked against the last scan of each image.
 	if err == nil {
-		report = keepScan(target.context, opts.App, report)
+		report = keepScan(cmp.Or(privacy.unmaskContext(strings.TrimSpace(opts.Cluster)), target.context), opts.App, report)
 	}
 
 	return report, err

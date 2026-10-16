@@ -25,9 +25,9 @@ extension TalosClient {
     /// Starts a scan of the pods' images and of `images`, refs with no pod behind them (a node's
     /// system images). The stream finishes after `done`; `stop` ends it early, and `done` follows
     /// once Go deleted the scan Job.
-    func imageScan(pods: [RoutePod], images: [String] = [], scanner: ImageScanner) throws -> (events: AsyncStream<ImageScanEvent>, stop: @Sendable () -> Void) {
+    func imageScan(pods: [RoutePod], images: [String] = [], scanner: ImageScanner, app: String, cluster: String) throws -> (events: AsyncStream<ImageScanEvent>, stop: @Sendable () -> Void) {
         let encoded = try TalosJSON.encode(pods)
-        let options = try imageScanOptions(images: images, scanner: scanner)
+        let options = try imageScanOptions(images: images, scanner: scanner, app: app, cluster: cluster)
         let (stream, continuation) = AsyncStream.makeStream(of: ImageScanEvent.self)
         let bridge = ImageScanBridge(
             progress: { continuation.yield(.progress($0)) },
@@ -42,6 +42,28 @@ extension TalosClient {
             _ = bridge // keep the listener alive for the whole scan
         }
         return (stream, { run?.cancel() })
+    }
+
+    /// The reports the core keeps on the phone for `cluster` (a context name), newest first.
+    /// No cluster call: static, like the audit log.
+    static func imageScanHistory(cluster: String) async throws -> [SavedScan] {
+        try await json { IchorgoImageScanHistory(cluster, $0) }
+    }
+
+    /// The kept report `id`, decoded, with the core's JSON the exports are written from.
+    static func imageScanSaved(id: String) async throws -> (report: ImageScanReport, json: String) {
+        let json = try await run { IchorgoImageScanSaved(id, $0) }
+        return (try TalosJSON.decode(ImageScanReport.self, from: json), json)
+    }
+
+    /// Deletes the kept report `id`.
+    static func imageScanForget(id: String) async throws {
+        try await run { error -> Void in _ = IchorgoImageScanForget(id, error) }
+    }
+
+    /// Deletes every report kept for `cluster`.
+    static func imageScanClear(cluster: String) async throws {
+        try await run { error -> Void in _ = IchorgoImageScanClear(cluster, error) }
     }
 
     /// `reportJSON` (a scan's or the operator's) written in `format`.

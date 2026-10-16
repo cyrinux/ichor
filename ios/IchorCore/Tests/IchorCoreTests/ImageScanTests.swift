@@ -137,4 +137,43 @@ final class ImageScanTests: XCTestCase {
         XCTAssertEqual(ImageScanner.stored(defaults), .grype)
         XCTAssertEqual(ImageScanner.allCases.map(\.label), ["Trivy", "Grype"])
     }
+
+    // A report kept before the "new since the last scan" fields: nothing new, nothing to compare.
+    func testOldReportsDecodeWithoutTheNewFields() throws {
+        let report = try TalosJSON.decode(ImageScanReport.self, from: """
+            {"images":[{"image":"nginx:1.25","summary":{"high":1},"vulnerabilities":[{"id":"CVE-1","severity":"HIGH"}]}]}
+            """)
+        XCTAssertEqual(report.newSummary, VulnSummary())
+        XCTAssertFalse(report.hasPrevious)
+        XCTAssertFalse(report.images[0].vulnerabilities[0].new)
+    }
+
+    func testMarksWhatIsNewSinceTheLastScan() throws {
+        let report = try TalosJSON.decode(ImageScanReport.self, from: """
+            {"images":[{"image":"nginx:1.25","previousScannedAt":5,"summary":{"critical":1,"high":1},"new":{"high":1,"fixable":1},
+              "vulnerabilities":[{"id":"CVE-1","severity":"CRITICAL","fixed":"1"},{"id":"CVE-2","severity":"HIGH","fixed":"2","new":true}]}]}
+            """)
+        XCTAssertTrue(report.hasPrevious)
+        XCTAssertEqual(report.newSummary.total, 1)
+        XCTAssertEqual(report.images[0].vulnerabilities.filter(VulnFilter(newOnly: true).keeps).map(\.id), ["CVE-2"])
+        XCTAssertEqual(report.images[0].vulnerabilities.filter(VulnFilter().keeps).count, 2)
+        // The exports re-encode the report: the new fields go with it.
+        let again = try TalosJSON.decode(ImageScanReport.self, from: String(decoding: JSONEncoder().encode(report), as: UTF8.self))
+        XCTAssertEqual(again, report)
+    }
+
+    func testSavedScans() throws {
+        let saved = try TalosJSON.decode([SavedScan].self, from: """
+            [{"id":"2-aaaaaaaa","cluster":"lab","app":"grafana","scanner":"Grype 0.80","finished":2,"images":1,"summary":{"high":2},"new":{"high":1},"digests":["sha256:a"]},
+             {"id":"1-bbbbbbbb","cluster":"lab","app":"grafana","finished":1,"summary":{},"new":{}},
+             {"id":"0-cccccccc","cluster":"lab","app":"talos:192.0.2.10","finished":0}]
+            """)
+        XCTAssertEqual(saved.last(of: "grafana")?.id, "2-aaaaaaaa")
+        XCTAssertNil(saved.last(of: "loki"))
+        XCTAssertEqual(saved[0].newSummary.total, 1)
+        XCTAssertEqual(systemImagesNode(saved[2].app), "192.0.2.10")
+        XCTAssertNil(systemImagesNode("grafana"))
+        let options = try imageScanOptions(images: [], scanner: .trivy, app: "grafana")
+        XCTAssertEqual(try TalosJSON.decode(ImageScanOptions.self, from: options), ImageScanOptions(images: [], scanner: "trivy", app: "grafana"))
+    }
 }

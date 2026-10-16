@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -86,6 +87,8 @@ class ActivityViewModel(private val cluster: String) : LoadingViewModel<List<Act
 fun ActivityScreen(
     cluster: String,
     onBack: () -> Unit,
+    /** The vulnerability scan reports kept for [cluster]. */
+    onScanReports: () -> Unit = {},
     vm: ActivityViewModel = viewModel(key = "activity-$cluster", factory = factory { ActivityViewModel(cluster) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -109,6 +112,7 @@ fun ActivityScreen(
                 },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    TooltipIconButton(Icons.Outlined.Security, stringResource(R.string.imagescan_saved_title), onClick = onScanReports)
                     TooltipIconButton(Icons.Outlined.Share, shareTitle, enabled = entries.isNotEmpty(), onClick = {
                         scope.launch {
                             runCatching { vm.export() }.onSuccess { shareText(context, it, shareTitle) }

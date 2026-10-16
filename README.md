@@ -336,6 +336,9 @@ namespace: the cluster downloads the vulnerability database and the image layers
   exports do not depend on the scanner. "New since the last scan" compares a scan with the last
   one by the same scanner, since the two name their findings differently.
 - **Trivy Operator:** when it runs in the cluster, its reports are read instead, without a Job.
+- **Kept reports:** completed scans stay on the phone, encrypted, for 90 days. The app's sheet
+  says "Last scan 3 days ago · 2 new" and opens the report without scanning again; the report
+  marks and filters what is new. **Activity → Scan reports** lists, opens and deletes them.
 
 ### CronJobs
 
