@@ -120,6 +120,7 @@ fun CheckupScreen(
     onOpenCapacity: () -> Unit,
     onOpenLoadBalancing: () -> Unit,
     onOpenPolicies: () -> Unit,
+    onOpenTailscale: () -> Unit,
     vm: CheckupViewModel = viewModel(factory = factory { CheckupViewModel(app.kubeRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -159,18 +160,19 @@ fun CheckupScreen(
         },
     ) { padding ->
         Loaded(state, vm::refresh, Modifier.pageContent(padding), progress = progress, stepLabel = { checkupStepLabel(it) }) { report ->
-            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring, onOpenCapacity, onOpenLoadBalancing, onOpenPolicies), onDeleteLeftover = { confirmDelete = it })
+            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring, onOpenCapacity, onOpenLoadBalancing, onOpenPolicies, onOpenTailscale), onDeleteLeftover = { confirmDelete = it })
         }
     }
 }
 
-/** Where the checkup leads: a Helm release, the Monitoring tab of the Metrics screen, the Capacity, Load balancing and Policies screens. */
+/** Where the checkup leads: a Helm release, the Monitoring tab of the Metrics screen, the Capacity, Load balancing, Policies and Tailscale screens. */
 private class CheckupLinks(
     val onOpenRelease: (namespace: String, name: String) -> Unit,
     val onOpenMonitoring: () -> Unit,
     val onOpenCapacity: () -> Unit,
     val onOpenLoadBalancing: () -> Unit,
     val onOpenPolicies: () -> Unit,
+    val onOpenTailscale: () -> Unit,
 )
 
 @Composable
@@ -336,6 +338,9 @@ private fun SectionBody(
         }
         CheckupSectionId.POLICIES -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
             TextButton(onClick = links.onOpenPolicies) { Text(stringResource(R.string.checkup_open_policies)) }
+        }
+        CheckupSectionId.TAILSCALE -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
+            TextButton(onClick = links.onOpenTailscale) { Text(stringResource(R.string.checkup_open_tailscale)) }
         }
     }
 }

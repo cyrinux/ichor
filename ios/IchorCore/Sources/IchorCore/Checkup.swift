@@ -18,7 +18,7 @@ public enum CheckupSeverity: String, Sendable, WireEnum {
 
 /// The sections of a checkup, as Go names them.
 public enum CheckupSectionID: String, Sendable {
-    case workloads, events, storage, upgrade, webhooks, policies, capacity, nodes, loadbalancers, terminating, certificates, secrets, helm, monitoring, crossplane
+    case workloads, events, storage, upgrade, webhooks, policies, capacity, nodes, loadbalancers, terminating, certificates, secrets, helm, monitoring, crossplane, tailscale
 }
 
 /// What a finding is about, as Go names it.
@@ -43,6 +43,10 @@ public enum CheckupKind: String, Sendable {
     /// A Crossplane resource that cannot sync, a package not healthy, a resource not ready past
     /// the grace, a definition not established. Name: "Kind/name".
     case crossplaneSyncFailed, crossplaneProviderUnhealthy, crossplaneNotReady, crossplaneDefinitionNotEstablished
+    /// The Tailscale operator down (extra: "ready/desired"), a Connector not ready (extra: its
+    /// roles), a ProxyGroup with proxies down (extra: its type), a ProxyClass in use not ready
+    /// (count: its users).
+    case tailscaleOperatorDown, tailscaleConnectorNotReady, tailscaleProxyGroupDown, tailscaleProxyClassNotReady
 }
 
 /// What the cluster hides behind green nodes: one section per kind of trouble.
@@ -161,7 +165,8 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
         let reasonKinds: Set<CheckupKind> = [.podCrashLoop, .podOOMKilled, .podStuckStarting, .jobFailed, .nodeNotReady, .nodePressure,
                                              .externalSecretFailed, .secretStoreNotReady, .prometheusRuleErrors, .ruleGroupErrors,
                                              .crossplaneSyncFailed, .crossplaneProviderUnhealthy, .crossplaneNotReady,
-                                             .crossplaneDefinitionNotEstablished]
+                                             .crossplaneDefinitionNotEstablished, .tailscaleConnectorNotReady,
+                                             .tailscaleProxyGroupDown, .tailscaleProxyClassNotReady]
         let shownReason = kind.map(reasonKinds.contains) == true ? reason : ""
         return [shownReason, message].filter { !$0.isEmpty }.joined(separator: ": ")
     }

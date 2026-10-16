@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Upgrade
 import androidx.compose.material.icons.outlined.VerifiedUser
+import androidx.compose.material.icons.outlined.VpnLock
 import androidx.compose.material.icons.outlined.Webhook
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.runtime.Composable
@@ -50,6 +51,7 @@ fun sectionLook(id: String): SectionLook? = when (id) {
     CheckupSectionId.HELM -> SectionLook(Icons.Outlined.Anchor, R.string.checkup_section_helm, R.string.checkup_section_helm_hint)
     CheckupSectionId.MONITORING -> SectionLook(Icons.Outlined.MonitorHeart, R.string.checkup_section_monitoring, R.string.checkup_section_monitoring_hint)
     CheckupSectionId.CROSSPLANE -> SectionLook(Icons.Outlined.Cloud, R.string.checkup_section_crossplane, R.string.checkup_section_crossplane_hint)
+    CheckupSectionId.TAILSCALE -> SectionLook(Icons.Outlined.VpnLock, R.string.checkup_section_tailscale, R.string.checkup_section_tailscale_hint)
     else -> null
 }
 
@@ -84,6 +86,10 @@ private fun percent(value: Double): String = formatPercent(value, decimals = if 
 /** What the finding says happens, in the user's words; the kind's name for one this version does not know. */
 @Composable
 fun checkupTitle(f: CheckupFinding, now: Long): String {
+    // Ready, but naming a ProxyClass that does not exist: its next proxy cannot start.
+    if (f.reason == TAILSCALE_PROXY_CLASS_MISSING && f.kind in TAILSCALE_PROXY_KINDS) {
+        return stringResource(R.string.checkup_tailscaleProxyClassMissing)
+    }
     val age = ageSince(f.since, now)
     return when (f.kind) {
         CheckupKind.POD_CRASH_LOOP -> stringResource(R.string.checkup_podCrashLoop, f.count.toString())
@@ -144,6 +150,12 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
         CheckupKind.CROSSPLANE_PROVIDER_UNHEALTHY -> stringResource(R.string.checkup_crossplaneProviderUnhealthy, f.extra)
         CheckupKind.CROSSPLANE_NOT_READY -> stringResource(R.string.checkup_crossplaneNotReady, age.ifEmpty { "-" })
         CheckupKind.CROSSPLANE_DEFINITION_NOT_ESTABLISHED -> stringResource(R.string.checkup_crossplaneDefinitionNotEstablished)
+        CheckupKind.TAILSCALE_OPERATOR_DOWN -> stringResource(R.string.checkup_tailscaleOperatorDown, f.extra)
+        CheckupKind.TAILSCALE_CONNECTOR_NOT_READY ->
+            if (f.extra.isEmpty()) stringResource(R.string.checkup_tailscaleConnectorNotReady_plain) else stringResource(R.string.checkup_tailscaleConnectorNotReady, f.extra)
+        CheckupKind.TAILSCALE_PROXY_GROUP_DOWN ->
+            if (f.extra.isEmpty()) stringResource(R.string.checkup_tailscaleProxyGroupDown_plain) else stringResource(R.string.checkup_tailscaleProxyGroupDown, f.extra)
+        CheckupKind.TAILSCALE_PROXY_CLASS_NOT_READY -> stringResource(R.string.checkup_tailscaleProxyClassNotReady, f.count.toString())
         else -> f.kind
     }
 }
@@ -203,8 +215,16 @@ fun checkupFix(kind: String): Int = when (kind) {
     CheckupKind.CROSSPLANE_PROVIDER_UNHEALTHY -> R.string.checkup_crossplaneProviderUnhealthy_fix
     CheckupKind.CROSSPLANE_NOT_READY -> R.string.checkup_crossplaneNotReady_fix
     CheckupKind.CROSSPLANE_DEFINITION_NOT_ESTABLISHED -> R.string.checkup_crossplaneDefinitionNotEstablished_fix
+    CheckupKind.TAILSCALE_OPERATOR_DOWN -> R.string.checkup_tailscaleOperatorDown_fix
+    CheckupKind.TAILSCALE_CONNECTOR_NOT_READY -> R.string.checkup_tailscaleConnectorNotReady_fix
+    CheckupKind.TAILSCALE_PROXY_GROUP_DOWN -> R.string.checkup_tailscaleProxyGroupDown_fix
+    CheckupKind.TAILSCALE_PROXY_CLASS_NOT_READY -> R.string.checkup_tailscaleProxyClassNotReady_fix
     else -> 0
 }
+
+/** The Tailscale operator's reason for a Connector or ProxyGroup naming a ProxyClass that does not exist. */
+private const val TAILSCALE_PROXY_CLASS_MISSING = "ProxyClassMissing"
+private val TAILSCALE_PROXY_KINDS = setOf(CheckupKind.TAILSCALE_CONNECTOR_NOT_READY, CheckupKind.TAILSCALE_PROXY_GROUP_DOWN)
 
 /** The kinds whose [CheckupFinding.reason] says more than their title does. */
 private val REASON_KINDS = setOf(
@@ -212,6 +232,7 @@ private val REASON_KINDS = setOf(
     CheckupKind.NODE_NOT_READY, CheckupKind.NODE_PRESSURE, CheckupKind.EXTERNAL_SECRET_FAILED, CheckupKind.SECRET_STORE_NOT_READY,
     CheckupKind.POLICY_NOT_READY, CheckupKind.CROSSPLANE_SYNC_FAILED, CheckupKind.CROSSPLANE_PROVIDER_UNHEALTHY,
     CheckupKind.CROSSPLANE_NOT_READY, CheckupKind.CROSSPLANE_DEFINITION_NOT_ESTABLISHED,
+    CheckupKind.TAILSCALE_CONNECTOR_NOT_READY, CheckupKind.TAILSCALE_PROXY_GROUP_DOWN, CheckupKind.TAILSCALE_PROXY_CLASS_NOT_READY,
 )
 
 /** Kubernetes' own words about the finding, "" when it has none. */

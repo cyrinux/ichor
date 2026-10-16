@@ -154,6 +154,20 @@ enum CheckupText {
     static var checkupCrossplaneProviderUnhealthyFix: String { String(localized: "Every resource of this package stops reconciling. Check that its image can be pulled (registry, tag, pull secret), then the logs of its pod.") }
     static var checkupCrossplaneNotReadyFix: String { String(localized: "The provider has not finished creating it, or the external resource is unavailable. Check the object’s events and the resource on the provider’s side.") }
     static var checkupCrossplaneDefinitionNotEstablishedFix: String { String(localized: "Its composite kind is not served, so nothing of that kind can be created. Look for a CRD that conflicts with it or an invalid schema.") }
+    static var checkupSectionTailscale: String { String(localized: "Tailscale") }
+    static var checkupSectionTailscaleHint: String { String(localized: "Operator, connectors, proxy groups and proxy classes that are not ready") }
+    static var checkupOpenTailscale: String { String(localized: "Open Tailscale") }
+    static func checkupTailscaleOperatorDown(_ a: String) -> String { String(localized: "Operator down: \(a) replicas ready") }
+    static func checkupTailscaleConnectorNotReady(_ a: String) -> String { String(localized: "Connector not ready (\(a))") }
+    static var checkupTailscaleConnectorNotReadyPlain: String { String(localized: "Connector not ready") }
+    static var checkupTailscaleProxyClassMissing: String { String(localized: "Names a ProxyClass that does not exist") }
+    static func checkupTailscaleProxyGroupDown(_ a: String) -> String { String(localized: "\(a) proxy group not ready") }
+    static var checkupTailscaleProxyGroupDownPlain: String { String(localized: "Proxy group not ready") }
+    static func checkupTailscaleProxyClassNotReady(_ a: String) -> String { String(localized: "ProxyClass not ready, used by \(a)") }
+    static var checkupTailscaleOperatorDownFix: String { String(localized: "Nothing Tailscale is reconciled while the operator is down: check its pod and its logs (kubectl logs deploy/operator in its namespace).") }
+    static var checkupTailscaleConnectorNotReadyFix: String { String(localized: "Its routes, exit node or app connector are off the tailnet. Check the Connector’s events and the operator logs: kubectl describe connector <name>.") }
+    static var checkupTailscaleProxyGroupDownFix: String { String(localized: "What it serves is unreachable through the tailnet (for kube-apiserver, the API itself). Check its pods and the operator logs: kubectl describe proxygroup <name>.") }
+    static var checkupTailscaleProxyClassNotReadyFix: String { String(localized: "The Connectors and proxy groups that use it cannot start new proxies: kubectl describe proxyclass <name> names the invalid field.") }
     static var checkupHelmFailedFix: String { String(localized: "Run helm history to see why, then helm rollback or a new upgrade.") }
     static var checkupHelmPendingFix: String { String(localized: "A Helm operation was interrupted and left its lock: helm rollback to the last deployed revision releases it.") }
     static var kubeEventsTitle: String { String(localized: "Events") }

@@ -430,6 +430,13 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   not a finding. Since it runs at every background check, it reads at most 2,000 managed
   resources of each kind (the Crossplane screen reads them all): past that, a problem further
   down the list is not seen. Condition messages are cut to 300 characters.
+- **Tailscale:** with the Tailscale operator installed, an operator Deployment with replicas not
+  ready, a Connector whose `ConnectorReady` failed (named with its role: subnet router, exit
+  node, app connector) and a ProxyGroup with no proxy available are critical. An operator scaled
+  to zero, a Connector the operator has not reconciled yet, a Connector or ProxyGroup naming a
+  ProxyClass that does not exist, a ProxyGroup with some proxies down and a ProxyClass that is
+  not ready while something uses it are warnings. One still reconciling a changed spec is not a
+  finding. "Open Tailscale" leads to the screen.
 - **Alerts:** Settings → Alerts → Cluster checkup runs it at every background check (it lists every
   pod and asks each kubelet). A critical finding notifies at once, a warning when seen on two
   checks in a row, a cleared one once; a section that could not be read keeps what it knew.

@@ -185,6 +185,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             onOpenCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
             onOpenLoadBalancing = { nav.navigate(KubeBrowserRoutes.LOAD_BALANCING) },
             onOpenPolicies = { nav.navigate(Routes.POLICIES) },
+            onOpenTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
         )
     }
     composable(Routes.KUBE_CAPACITY) {

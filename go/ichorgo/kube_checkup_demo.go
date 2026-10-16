@@ -96,6 +96,9 @@ func demoCheckup(now time.Time) checkupReport {
 			{Kind: findCrossplaneProviderUnhealthy, Severity: sevCritical, Name: "Provider/provider-storage", Extra: "xpkg.example.org/demo/provider-storage:v1.4.0", Reason: "UnhealthyPackageRevision", Message: "cannot pull package: manifest unknown"},
 			{Kind: findCrossplaneNotReady, Severity: sevWarning, Name: "Bucket/assets-bucket", Extra: "default", Reason: "Creating", Count: 42, Since: ago(42 * time.Minute)},
 		}),
+		newSection(checkTailscale, 6, []checkupFinding{
+			{Kind: findTailscaleConnectorNotReady, Severity: sevCritical, Name: "lab-router", Extra: tsRoleSubnetRouter, Reason: "ConnectorCreationFailed", Message: "failed to create the subnet router's StatefulSet: proxy class \"lab\" is not ready"},
+		}),
 	}
 
 	return checkupReport{Status: checkupVerdict(sections), KubeVersion: "v1.34.1", Sections: sections, Nodes: nodes, Volumes: volumes, Releases: releases}

@@ -54,7 +54,7 @@ func TestParseQuantity(t *testing.T) {
 func checkCheckupProgress(t *testing.T, p readProgressOut) {
 	t.Helper()
 
-	if p.Running || p.Total != 19 || p.Done != 19 || len(p.Steps) != 19 {
+	if p.Running || p.Total != 20 || p.Done != 20 || len(p.Steps) != 20 {
 		t.Fatalf("progress = %+v", p)
 	}
 
@@ -185,6 +185,7 @@ func TestReadCheckup(t *testing.T) {
 		checkHelm:          {"helmFailed:warning:shop", "helmPending:warning:mon"},
 		checkMonitoring:    {},
 		checkCrossplane:    {},
+		checkTailscale:     {},
 	}
 
 	if len(r.Sections) != len(want) {
@@ -264,7 +265,7 @@ func TestReadCheckupEmptyCluster(t *testing.T) {
 
 	for _, s := range r.Sections {
 		want := healthOK
-		if s.ID == checkLoadBalancers || s.ID == checkPolicies || s.ID == checkSecrets || s.ID == checkHelm || s.ID == checkMonitoring || s.ID == checkCrossplane {
+		if s.ID == checkLoadBalancers || s.ID == checkPolicies || s.ID == checkSecrets || s.ID == checkHelm || s.ID == checkMonitoring || s.ID == checkCrossplane || s.ID == checkTailscale {
 			want = checkAbsent
 		}
 
@@ -442,7 +443,7 @@ func TestKubeCheckupDemo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if r.Status != healthCritical || len(r.Sections) != 15 || len(r.Nodes) != 5 || len(r.Volumes) == 0 || len(r.Releases) == 0 {
+	if r.Status != healthCritical || len(r.Sections) != 16 || len(r.Nodes) != 5 || len(r.Volumes) == 0 || len(r.Releases) == 0 {
 		t.Fatalf("%+v", r)
 	}
 
