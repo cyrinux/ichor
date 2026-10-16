@@ -59,6 +59,16 @@ type gatewayListener struct {
 	Hostname string `json:"hostname"`
 	Port     int32  `json:"port"`
 	Protocol string `json:"protocol"` // HTTP, HTTPS, TLS...
+	TLS      *struct {
+		CertificateRefs []struct {
+			Group     string `json:"group"`
+			Kind      string `json:"kind"`
+			Name      string `json:"name"`
+			Namespace string `json:"namespace"`
+		} `json:"certificateRefs"`
+	} `json:"tls"`
+
+	namespace string // the Gateway's, which a certificate ref without one defaults to
 }
 
 type gatewayObject struct {
@@ -147,8 +157,12 @@ func gatewayRoutes(routes []gatewayRouteObject, gateways []gatewayObject, servic
 					path = t.path
 				}
 
-				out = append(out, routeRow(r.Kind, r.Metadata.Namespace, r.Metadata.Name,
-					routeURL(scheme, host, port, path), t.service))
+				row := routeRow(r.Kind, r.Metadata.Namespace, r.Metadata.Name, routeURL(scheme, host, port, path), t.service)
+				if scheme == "https" {
+					row.tlsSecret = listenerTLSSecret(listeners, host)
+				}
+
+				out = append(out, row)
 			}
 		}
 	}
@@ -223,6 +237,8 @@ func routeParents(r gatewayRouteObject, gateways []gatewayObject) ([]gatewayList
 				if public, ok := gateways[i].publicPorts[l.Port]; ok {
 					l.Port = public
 				}
+
+				l.namespace = gateways[i].Metadata.Namespace
 
 				listeners = append(listeners, l)
 			}

@@ -171,6 +171,9 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
         CheckupKind.SEALED_SECRET_NOT_SYNCED -> stringResource(R.string.checkup_sealedSecretNotSynced)
         CheckupKind.SEALING_KEY_MISSING -> stringResource(R.string.checkup_sealingKeyMissing, f.extra.ifEmpty { f.namespace })
         CheckupKind.SEALING_KEY_COMPROMISED -> stringResource(R.string.checkup_sealingKeyCompromised, f.name)
+        CheckupKind.ROUTE_CERT_EXPIRED -> stringResource(R.string.checkup_routeCertExpired, f.reason.ifEmpty { "-" })
+        CheckupKind.ROUTE_CERT_EXPIRING -> stringResource(R.string.checkup_routeCertExpiring, f.count.toString(), f.reason.ifEmpty { "-" })
+        CheckupKind.ROUTE_CERT_HOST_MISMATCH -> stringResource(R.string.checkup_routeCertHostMismatch, f.reason.ifEmpty { "-" })
         else -> f.kind
     }
 }
@@ -244,6 +247,9 @@ fun checkupFix(kind: String): Int = when (kind) {
     CheckupKind.SEALED_SECRET_NOT_SYNCED -> R.string.checkup_sealedSecretNotSynced_fix
     CheckupKind.SEALING_KEY_MISSING -> R.string.checkup_sealingKeyMissing_fix
     CheckupKind.SEALING_KEY_COMPROMISED -> R.string.checkup_sealingKeyCompromised_fix
+    CheckupKind.ROUTE_CERT_EXPIRED -> R.string.checkup_routeCertExpired_fix
+    CheckupKind.ROUTE_CERT_EXPIRING -> R.string.checkup_routeCertExpiring_fix
+    CheckupKind.ROUTE_CERT_HOST_MISMATCH -> R.string.checkup_routeCertHostMismatch_fix
     else -> 0
 }
 

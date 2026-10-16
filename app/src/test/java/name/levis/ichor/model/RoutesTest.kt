@@ -70,4 +70,29 @@ class RoutesTest {
             TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), app.routePods.take(1)),
         )
     }
+
+    @Test
+    fun certificateFieldsDecodeAndDefault() {
+        val routes = TalosJson.decodeFromString(
+            KubeRouteList.serializer(),
+            """{"routes":[
+              {"kind":"Ingress","namespace":"default","name":"vaultwarden","url":"https://vault.home.example","certNotAfter":1000000,"certIssue":"expiring","certSecret":"default/vaultwarden-tls"},
+              {"kind":"Ingress","namespace":"default","name":"paperless","url":"https://paperless.home.example","certIssue":"hostMismatch","certManaged":true},
+              {"kind":"Ingress","namespace":"demo","name":"hello","url":"https://hello.home.example"}]}""",
+        ).routes
+        assertEquals(ServiceHealth.WARNING, routes[0].certHealth)
+        assertEquals("default/vaultwarden-tls", routes[0].certSecret)
+        assertEquals(9L, routes[0].certDaysLeft(1_000_000L - 9 * 86_400L - 3_600L))
+        assertEquals(ServiceHealth.WARNING, routes[1].certHealth)
+        assertEquals(true, routes[1].certManaged)
+        assertEquals(null, routes[2].certHealth)
+        assertEquals(0L, routes[2].certNotAfter)
+    }
+
+    @Test
+    fun routeCertKindsKeepTheirWireNames() {
+        assertEquals("routeCertExpired", CheckupKind.ROUTE_CERT_EXPIRED)
+        assertEquals("routeCertExpiring", CheckupKind.ROUTE_CERT_EXPIRING)
+        assertEquals("routeCertHostMismatch", CheckupKind.ROUTE_CERT_HOST_MISMATCH)
+    }
 }

@@ -3678,6 +3678,15 @@
     <string name="checkup_sealedSecretNotSynced_fix">The controller could not decrypt it into a Secret: it was sealed for another cluster, name or namespace, or with a key the controller no longer has. Seal it again with kubeseal against this cluster’s certificate.</string>
     <string name="checkup_sealingKeyMissing_fix">The controller has no key to decrypt with. Restore the key backup (a Secret labelled sealedsecrets.bitnami.com/sealed-secrets-key) into its namespace, then restart the controller.</string>
     <string name="checkup_sealingKeyCompromised_fix">The controller no longer seals with it, but what it sealed can still be read with it. Seal those SealedSecrets again with kubeseal, then delete the key.</string>
+    <string name="route_cert_expired">Certificate expired</string>
+    <string name="route_cert_expiring">Certificate expires in %1$d days</string>
+    <string name="route_cert_host_mismatch">Certificate does not cover this host</string>
+    <string name="checkup_routeCertExpired">Certificate expired at %1$s</string>
+    <string name="checkup_routeCertExpiring">Certificate expires in %1$s days at %2$s</string>
+    <string name="checkup_routeCertHostMismatch">Certificate does not name %1$s</string>
+    <string name="checkup_routeCertExpired_fix">Browsers refuse this address. Nothing renews this certificate (it is not cert-manager’s): renew it where it was issued and replace the TLS Secret, or issue it with a cert-manager Certificate.</string>
+    <string name="checkup_routeCertExpiring_fix">Nothing renews this certificate (it is not cert-manager’s): renew it where it was issued and replace the TLS Secret, or issue it with a cert-manager Certificate.</string>
+    <string name="checkup_routeCertHostMismatch_fix">Browsers warn on this address. The certificate names other hosts (below): add this host to it, or check the route names the right TLS Secret; a Secret the proxy cannot find makes it serve its default certificate.</string>
     <string name="checkup_helmFailed_fix">Run helm history to see why, then helm rollback or a new upgrade.</string>
     <string name="checkup_helmPending_fix">A Helm operation was interrupted and left its lock: helm rollback to the last deployed revision releases it.</string>
     <string name="checkup_section_monitoring">Monitoring</string>

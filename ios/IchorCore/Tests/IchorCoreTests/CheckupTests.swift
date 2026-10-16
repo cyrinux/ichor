@@ -181,4 +181,17 @@ final class CheckupTests: XCTestCase {
         XCTAssertEqual(section.findings[0].detail, "UnsealFailed: failed to decrypt: no key could decrypt secret")
         XCTAssertEqual(dataServiceAlertedKinds, ["sealedSecretNotSynced", "sealingKeyMissing"])
     }
+
+    // The demo checkup's route certificate findings (go/ichorgo/kube_checkup_demo.go).
+    func testRouteCertKindsDecode() throws {
+        let r = try TalosJSON.decode(CheckupReport.self, from: #"""
+        {"status":"warning","sections":[{"id":"certificates","status":"warning","checked":18,"findings":[
+          {"kind":"routeCertExpiring","severity":"warning","namespace":"default","name":"vaultwarden-tls","extra":"Ingress default/vaultwarden","reason":"vault.home.example","count":9,"since":1},
+          {"kind":"routeCertHostMismatch","severity":"warning","namespace":"default","name":"paperless-tls","extra":"Ingress default/paperless","reason":"paperless.home.example","message":"paperless.lan, *.lan"}]}]}
+        """#)
+        let section = try XCTUnwrap(r.shownSections.first)
+        XCTAssertEqual(section.findings.compactMap(\.kind), [.routeCertExpiring, .routeCertHostMismatch])
+        XCTAssertEqual(section.findings[1].detail, "paperless.lan, *.lan")
+        XCTAssertEqual(r.alertIssues["certificates|routeCertExpiring|default/vaultwarden-tls"], "warning")
+    }
 }

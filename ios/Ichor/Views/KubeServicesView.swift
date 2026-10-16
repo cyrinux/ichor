@@ -82,6 +82,7 @@ struct KubeServicesView: View {
                             }
                             .buttonStyle(.plain)
                         }
+                        RouteCertBadge(route: route)
                         RouteSummaryLink(route: route)
                     }
                 }

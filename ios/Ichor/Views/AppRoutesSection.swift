@@ -68,6 +68,7 @@ private struct AppRouteLine: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                RouteCertBadge(route: route)
             }
             Spacer(minLength: 8)
             Image(systemName: "arrow.up.right.square")

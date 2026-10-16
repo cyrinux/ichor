@@ -3893,6 +3893,15 @@
     <string name="checkup_sealedSecretNotSynced_fix">Контролер не зміг розшифрувати його в Secret: його запечатано для іншого кластера, імені чи namespace або ключем, якого контролер більше не має. Запечатайте його знову за допомогою kubeseal і сертифіката цього кластера.</string>
     <string name="checkup_sealingKeyMissing_fix">Контролер не має ключа для розшифрування. Відновіть резервну копію ключа (Secret з міткою sealedsecrets.bitnami.com/sealed-secrets-key) у його namespace, потім перезапустіть контролер.</string>
     <string name="checkup_sealingKeyCompromised_fix">Контролер більше не запечатує ним, але запечатане ним досі можна прочитати. Запечатайте ці SealedSecrets знову за допомогою kubeseal, потім видаліть ключ.</string>
+    <string name="route_cert_expired">Сертифікат прострочено</string>
+    <string name="route_cert_expiring">Сертифікат спливає через %1$d дн.</string>
+    <string name="route_cert_host_mismatch">Сертифікат не покриває цей хост</string>
+    <string name="checkup_routeCertExpired">Сертифікат на %1$s прострочено</string>
+    <string name="checkup_routeCertExpiring">Сертифікат %2$s спливає через %1$s дн.</string>
+    <string name="checkup_routeCertHostMismatch">Сертифікат не називає %1$s</string>
+    <string name="checkup_routeCertExpired_fix">Браузери відхиляють цю адресу. Цей сертифікат ніщо не оновлює (він не від cert-manager): оновіть його там, де його видано, і замініть TLS Secret, або видайте його через Certificate cert-manager.</string>
+    <string name="checkup_routeCertExpiring_fix">Цей сертифікат ніщо не оновлює (він не від cert-manager): оновіть його там, де його видано, і замініть TLS Secret, або видайте його через Certificate cert-manager.</string>
+    <string name="checkup_routeCertHostMismatch_fix">Браузери попереджають про цю адресу. Сертифікат називає інші хости (нижче): додайте цей хост або перевірте, що маршрут називає правильний TLS Secret; Secret, якого проксі не знаходить, змушує його віддавати типовий сертифікат.</string>
     <string name="checkup_helmFailed_fix">Запустіть helm history, щоб побачити причину, потім helm rollback або нове оновлення.</string>
     <string name="checkup_helmPending_fix">Операцію Helm перервали, і лишилося її блокування: helm rollback до останньої розгорнутої ревізії його знімає.</string>
     <string name="checkup_section_monitoring">Моніторинг</string>

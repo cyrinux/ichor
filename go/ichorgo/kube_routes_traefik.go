@@ -170,8 +170,9 @@ func traefikRoutes(set traefikRouteSet, services map[serviceRef]bool) []kubeRout
 			hosts, path := traefikMatch(r.Match)
 			for _, service := range traefikTargets(r.Services, ns, services) {
 				for _, host := range hosts {
-					routes = append(routes, routeRow("IngressRoute", ns, ir.Metadata.Name,
-						routeURL(scheme, host, port, path), service))
+					row := routeRow("IngressRoute", ns, ir.Metadata.Name, routeURL(scheme, host, port, path), service)
+					row.tlsSecret = ingressRouteTLSSecret(ir)
+					routes = append(routes, row)
 				}
 			}
 		}
