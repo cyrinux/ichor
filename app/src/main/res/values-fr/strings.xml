@@ -63,7 +63,7 @@
     <string name="common_role_notice_title">%1$s&#160;: accès %2$s requis</string>
     <string name="common_role_notice_body">Rôles de ce talosconfig&#160;: %1$s. Importez un talosconfig créé avec --roles %2$s pour l\'utiliser (voir le README).</string>
     <string name="common_role_notice_no_roles">aucun rôle</string>
-    <string name="common_no_config">Aucun talosconfig importé</string>
+    <string name="common_no_config">Aucun talosconfig ni kubeconfig importé</string>
     <string name="common_vpn_required">Ce cluster est configuré pour n\'être joint que via un VPN, et aucun VPN n\'est connecté. Connectez-le : cet écran se recharge tout seul.</string>
     <string name="common_vpn_settings">Réglages VPN</string>
 
@@ -488,8 +488,7 @@
     <string name="settings_kube_desc">Exporte un kubeconfig admin (nécessite un talosconfig os:admin). Toute personne disposant de ce fichier a un accès complet au cluster Kubernetes&#160;: gardez-le privé.</string>
     <string name="settings_kube_exporting">Export…</string>
     <string name="settings_kube_export">Exporter le kubeconfig…</string>
-    <string name="settings_kube_saved">Enregistré. Dans kubenav, ajoutez un cluster à partir de ce fichier.</string>
-    <string name="settings_kube_open_kubenav">Ouvrir kubenav</string>
+    <string name="settings_kube_saved">Enregistré. Utilisez-le avec kubectl ou tout client Kubernetes.</string>
     <string name="settings_node_debug_shell">Shell de débogage des nœuds</string>
     <string name="settings_node_debug_shell_desc">Sur les clusters sans Talos, ajoute « Shell de débogage… » au menu d’un nœud : un pod privilégié dans les namespaces du nœud donne un shell root sur le nœud. Le pod est supprimé à la fermeture du shell. Désactivé par défaut.</string>
     <string name="settings_image_scanner">Scanner de vulnérabilités</string>
@@ -502,7 +501,7 @@
     <string name="settings_key_tee">le Trusted Execution Environment</string>
     <string name="settings_key_software">le keystore logiciel</string>
     <string name="keystore_unavailable">La puce sécurisée du téléphone ne répond pas. Réessayez dans un instant ou redémarrez le téléphone.</string>
-    <string name="settings_import_new">Ajouter un cluster (importer un talosconfig)</string>
+    <string name="settings_import_new">Ajouter un cluster (importer un talosconfig ou un kubeconfig)</string>
     <string name="settings_delete_config">Supprimer le talosconfig enregistré</string>
     <string name="settings_delete_title">Supprimer le talosconfig&#160;?</string>
     <string name="settings_delete_body">La configuration chiffrée de tous les clusters, avec leurs clés client, sera supprimée de cet appareil.</string>
@@ -744,7 +743,7 @@
     <string name="lock_delete_config">Supprimer le talosconfig enregistré</string>
     <string name="lock_onboarding_title">Mettez vos clusters sous clé</string>
     <string name="lock_onboarding_done">Vos clusters sont protégés</string>
-    <string name="lock_onboarding_intro">Votre talosconfig contient des clés client qui donnent un accès direct à vos nœuds. Ichor les garde derrière le verrouillage de l\'app.</string>
+    <string name="lock_onboarding_intro">Votre talosconfig ou kubeconfig contient des identifiants qui donnent un accès direct à vos clusters. Ichor les garde derrière le verrouillage de l\'app.</string>
     <string name="lock_onboarding_unlock">Empreinte ou code de l\'appareil</string>
     <string name="lock_onboarding_unlock_desc">Demandé à l\'ouverture d\'Ichor et après 30 secondes en arrière-plan.</string>
     <string name="lock_onboarding_actions">Une vérification avant les actions risquées</string>

@@ -46103,37 +46103,37 @@
         }
       }
     },
-    "Add a cluster (import a talosconfig)" : {
+    "Add a cluster (import a talosconfig or a kubeconfig)" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cluster hinzufügen (talosconfig importieren)"
+            "value" : "Cluster hinzufügen (talosconfig oder kubeconfig importieren)"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Añadir un clúster (importar un talosconfig)"
+            "value" : "Añadir un clúster (importar un talosconfig o un kubeconfig)"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajouter un cluster (importer un talosconfig)"
+            "value" : "Ajouter un cluster (importer un talosconfig ou un kubeconfig)"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aggiungi un cluster (importa un talosconfig)"
+            "value" : "Aggiungi un cluster (importa un talosconfig o un kubeconfig)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Додати кластер (імпортувати talosconfig)"
+            "value" : "Додати кластер (імпортувати talosconfig або kubeconfig)"
           }
         }
       }
@@ -46249,43 +46249,43 @@
         }
       }
     },
-    "Your talosconfig holds client keys with direct access to your nodes. Ichor keeps them behind the app lock." : {
+    "Your talosconfig or kubeconfig holds credentials with direct access to your clusters. Ichor keeps them behind the app lock." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deine talosconfig enthält Client-Schlüssel mit direktem Zugriff auf deine Nodes. Ichor schützt sie mit der App-Sperre."
+            "value" : "Deine talosconfig oder kubeconfig enthält Zugangsdaten mit direktem Zugriff auf deine Cluster. Ichor schützt sie mit der App-Sperre."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your talosconfig holds client keys with direct access to your nodes. Ichor keeps them behind the app lock."
+            "value" : "Your talosconfig or kubeconfig holds credentials with direct access to your clusters. Ichor keeps them behind the app lock."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tu talosconfig contiene claves de cliente con acceso directo a tus nodos. Ichor las protege con el bloqueo de la app."
+            "value" : "Tu talosconfig o kubeconfig contiene credenciales con acceso directo a tus clústeres. Ichor las protege con el bloqueo de la app."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Votre talosconfig contient des clés client qui donnent un accès direct à vos nœuds. Ichor les garde derrière le verrouillage de l'app."
+            "value" : "Votre talosconfig ou kubeconfig contient des identifiants qui donnent un accès direct à vos clusters. Ichor les garde derrière le verrouillage de l'app."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Il tuo talosconfig contiene chiavi client con accesso diretto ai tuoi nodi. Ichor le protegge con il blocco dell'app."
+            "value" : "Il tuo talosconfig o kubeconfig contiene credenziali con accesso diretto ai tuoi cluster. Ichor le protegge con il blocco dell'app."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ваш talosconfig містить клієнтські ключі з прямим доступом до вузлів. Ichor тримає їх під блокуванням застосунку."
+            "value" : "Ваш talosconfig або kubeconfig містить облікові дані з прямим доступом до кластерів. Ichor тримає їх під блокуванням застосунку."
           }
         }
       }
@@ -46765,37 +46765,37 @@
         }
       }
     },
-    "Anyone with this file has full access to the Kubernetes cluster: keep it private. In kubenav, add a cluster from the file." : {
+    "Anyone with this file has full access to the Kubernetes cluster: keep it private. Use it with kubectl or any Kubernetes client." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wer diese Datei hat, hat vollen Zugriff auf den Kubernetes-Cluster: Halte sie privat. Füge in kubenav einen Cluster aus der Datei hinzu."
+            "value" : "Wer diese Datei hat, hat vollen Zugriff auf den Kubernetes-Cluster: Halte sie privat. Verwende sie mit kubectl oder einem anderen Kubernetes-Client."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Quien tenga este archivo tiene acceso total al clúster de Kubernetes: mantenlo privado. En kubenav, añade un clúster desde el archivo."
+            "value" : "Quien tenga este archivo tiene acceso total al clúster de Kubernetes: mantenlo privado. Úsalo con kubectl o cualquier cliente de Kubernetes."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toute personne disposant de ce fichier a un accès complet au cluster Kubernetes : gardez-le privé. Dans kubenav, ajoutez un cluster à partir du fichier."
+            "value" : "Toute personne disposant de ce fichier a un accès complet au cluster Kubernetes : gardez-le privé. Utilisez-le avec kubectl ou tout client Kubernetes."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chiunque abbia questo file ha accesso completo al cluster Kubernetes: tienilo privato. In kubenav, aggiungi un cluster dal file."
+            "value" : "Chiunque abbia questo file ha accesso completo al cluster Kubernetes: tienilo privato. Usalo con kubectl o con qualsiasi client Kubernetes."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Будь-хто з цим файлом має повний доступ до кластера Kubernetes: зберігайте його приватно. У kubenav додайте кластер із файлу."
+            "value" : "Будь-хто з цим файлом має повний доступ до кластера Kubernetes: зберігайте його приватно. Використовуйте його з kubectl або будь-яким клієнтом Kubernetes."
           }
         }
       }
@@ -51321,41 +51321,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Створіть окрему ідентичність замість копіювання адміністраторського ~/.talos/config: якщо телефон загубиться, його сертифікат дає лише вибрані права й сам закінчиться."
-          }
-        }
-      }
-    },
-    "Get kubenav" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kubenav laden"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Obtener kubenav"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Obtenir kubenav"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scarica kubenav"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отримати kubenav"
           }
         }
       }
