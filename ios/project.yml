@@ -50,6 +50,8 @@ targets:
       - framework: Frameworks/Ichorgo.xcframework
         embed: false
       - target: TalosWidget
+      # "Open in Ichor" (Ichor/Intents): the app's AppShortcutsProvider, listed in the Shortcuts app.
+      - sdk: AppIntents.framework
     # GOOGLE_IOS_CLIENT_ID and GOOGLE_IOS_REVERSED_CLIENT_ID (GKE's Sign in with Google): empty
     # unless a git-ignored Config/GoogleSignIn.local.xcconfig sets them.
     configFiles:

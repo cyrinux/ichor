@@ -35,24 +35,35 @@ object ClusterShortcuts {
     /**
      * Makes [specs] the app's shortcuts. Pinned shortcuts (on the home screen) whose id is
      * not among [known], those of removed clusters, are disabled (the system keeps them,
-     * greyed out); [known] also covers the clusters past what the launcher shows. Best effort: the
+     * greyed out); [known] also covers the clusters past what the launcher shows. Screen shortcuts
+     * (see [ScreenShortcuts]) are kept while their cluster is among [clusters]. Best effort: the
      * system rate-limits apps in the background, and the next change publishes again.
      */
-    fun publish(context: Context, specs: List<ShortcutSpec>, known: Set<String>) {
+    fun publish(context: Context, specs: List<ShortcutSpec>, known: Set<String>, clusters: Set<String>) {
         runCatching {
             val shortcuts = specs.map { build(context, it) }
             val ids = specs.map { it.id }.toSet()
             val pinned = ShortcutManagerCompat.getShortcuts(context, ShortcutManagerCompat.FLAG_MATCH_PINNED)
-            // A cluster imported again after its removal: its pinned shortcut works again.
-            val revived = pinned.filter { it.id in ids && !it.isEnabled }
-            if (revived.isNotEmpty()) ShortcutManagerCompat.enableShortcuts(context, shortcuts.filter { s -> revived.any { it.id == s.id } })
+            val kept = pinned.filter { keepsPinned(PinnedShortcut(it.id, linkOf(it)), ids, known, clusters) }
+            // A cluster imported again after its removal: its pinned shortcuts work again.
+            val revived = kept.filter { !it.isEnabled }
+            val revivedClusters = revived.filter { it.id in ids }.map { it.id }.toSet()
+            if (revived.isNotEmpty()) {
+                ShortcutManagerCompat.enableShortcuts(
+                    context,
+                    shortcuts.filter { it.id in revivedClusters } + revived.filter { isScreenShortcut(it.id) },
+                )
+            }
             ShortcutManagerCompat.setDynamicShortcuts(context, shortcuts)
-            val gone = pinned.map { it.id }.filter { it !in known && it !in ids }
+            val gone = pinned.filter { it !in kept }.map { it.id }
             if (gone.isNotEmpty()) {
                 ShortcutManagerCompat.disableShortcuts(context, gone, context.getString(R.string.shortcut_cluster_removed))
             }
         }
     }
+
+    /** The link a pinned shortcut opens; null when the system did not return its intent. */
+    private fun linkOf(shortcut: ShortcutInfoCompat): String? = runCatching { shortcut.intent.dataString }.getOrNull()
 
     private fun build(context: Context, spec: ShortcutSpec): ShortcutInfoCompat =
         ShortcutInfoCompat.Builder(context, spec.id)
@@ -67,13 +78,16 @@ object ClusterShortcuts {
             )
             .build()
 
-    private fun icon(context: Context, spec: ShortcutSpec): Bitmap {
+    private fun icon(context: Context, spec: ShortcutSpec): Bitmap = glyphIcon(context, spec.color, shortcutInitial(spec.label))
+
+    /** An adaptive icon bitmap: [glyph] in black or white on [background], whichever reads better. */
+    fun glyphIcon(context: Context, background: Int, glyph: String): Bitmap {
         val density = context.resources.displayMetrics.density
         val size = (ICON_DP * density).toInt()
         val bitmap = createBitmap(size, size)
         val canvas = Canvas(bitmap)
-        canvas.drawColor(spec.color)
-        val light = ColorUtils.calculateLuminance(spec.color) > LIGHT_BACKGROUND
+        canvas.drawColor(background)
+        val light = ColorUtils.calculateLuminance(background) > LIGHT_BACKGROUND
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = if (light) android.graphics.Color.BLACK else android.graphics.Color.WHITE
             textSize = LETTER_DP * density
@@ -82,7 +96,7 @@ object ClusterShortcuts {
         }
         // Vertically centered on the glyph box, not the baseline.
         val y = size / 2f - (paint.descent() + paint.ascent()) / 2f
-        canvas.drawText(shortcutInitial(spec.label), size / 2f, y, paint)
+        canvas.drawText(glyph, size / 2f, y, paint)
         return bitmap
     }
 }

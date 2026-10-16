@@ -2,6 +2,7 @@ package name.levis.ichor.ui.argocd
 
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.PinButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -123,6 +124,7 @@ fun ArgoAppScreen(
                 actions = {
                     PinButton(ShareTarget.argoApp(namespace, name), name)
                     ShareLinkButton(ShareTarget.argoApp(namespace, name))
+                    AddToHomeButton(ShareTarget.argoApp(namespace, name), name)
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
                 },
             )

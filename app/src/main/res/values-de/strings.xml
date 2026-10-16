@@ -450,6 +450,8 @@
     <string name="shortcut_cluster_removed">Dieser Cluster wurde entfernt</string>
     <string name="shortcut_search_short">Suchen</string>
     <string name="shortcut_search_long">Cluster durchsuchen</string>
+    <string name="shortcut_add_home">Zum Startbildschirm hinzufügen</string>
+    <string name="shortcut_pin_unsupported">Dieser Launcher kann keine Verknüpfungen zum Startbildschirm hinzufügen</string>
 
     <!-- Settings -->
     <string name="settings_title">Einstellungen</string>

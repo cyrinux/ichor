@@ -844,6 +844,14 @@ link) to a Pinned card at the top of that cluster's overview: up to 12 per clust
 ready or health state when the overview knows it, opening like its share link; a long press on a
 row (Android) or a swipe (iOS) unpins it, and the card moves or hides like the others.
 
+**Open a screen straight from the home screen or a shortcut:**
+
+- **Android:** "Add to home screen" (next to a screen's share link, and on the checkup and
+  alerts screens) pins an icon in the cluster's color that opens that screen of that cluster
+  after unlock; it greys out when the cluster is removed.
+- **iOS:** "Open in Ichor" in the Shortcuts app takes a share link and opens its screen once
+  unlocked, so a shortcut (or Siri, with the phrase you give it) opens a node, an app or etcd.
+
 ### Kubernetes clusters without Talos
 
 A cluster can also be added from a kubeconfig alone, the same ways as a talosconfig (file,

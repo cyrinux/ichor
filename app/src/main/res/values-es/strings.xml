@@ -457,6 +457,8 @@
     <string name="shortcut_cluster_removed">Este clúster se ha eliminado</string>
     <string name="shortcut_search_short">Buscar</string>
     <string name="shortcut_search_long">Buscar en los clústeres</string>
+    <string name="shortcut_add_home">Añadir a la pantalla de inicio</string>
+    <string name="shortcut_pin_unsupported">Este launcher no puede añadir accesos directos a la pantalla de inicio</string>
 
     <!-- Settings -->
     <string name="settings_title">Ajustes</string>

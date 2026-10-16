@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.PinButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -110,6 +111,7 @@ fun WorkloadSheet(
                 }
                 PinButton(ShareTarget.workload(workload.kind, workload.namespace, workload.name), workload.name)
                 ShareLinkButton(ShareTarget.workload(workload.kind, workload.namespace, workload.name))
+                AddToHomeButton(ShareTarget.workload(workload.kind, workload.namespace, workload.name), workload.name)
             }
             KubeGreenAsleepNote(kubeGreen, workload.kind)
             val access = rememberKubeActionAccess(workload.namespace)

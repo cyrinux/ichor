@@ -2,6 +2,7 @@ package name.levis.ichor.ui.flux
 
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkButton
+import name.levis.ichor.ui.share.AddToHomeButton
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -88,6 +89,7 @@ fun FluxScreen(onBack: () -> Unit, onApp: (kind: String, namespace: String, name
                 navigationIcon = { BackButton(onBack) },
                 actions = {
                     ShareLinkButton(ShareTarget.screen(ShareTarget.FLUX))
+                    AddToHomeButton(ShareTarget.screen(ShareTarget.FLUX), stringResource(R.string.flux_title))
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
                 },
             )

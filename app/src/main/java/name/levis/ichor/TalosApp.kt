@@ -676,7 +676,8 @@ class TalosApp : Application() {
     /**
      * Keeps a launcher shortcut per cluster, labelled and colored like in the app. Until the
      * config is loaded (generation 0, e.g. before the first unlock) the previous ones stay;
-     * once every cluster is removed, so are they.
+     * once every cluster is removed, so are they. Home screen shortcuts to a screen stay while
+     * their cluster is on the phone.
      */
     private fun publishClusterShortcuts() {
         val sources = combine(
@@ -687,19 +688,18 @@ class TalosApp : Application() {
             uiPreferences.privacyMask,
         ) { stored, generation, colors, names, mask ->
             when {
-                stored != null -> clusterShortcuts(
-                    stored.summary,
-                    ClusterLabels(names, mask.enabled),
-                    colors,
-                    ClusterShortcuts.max(this),
-                ) to clusterShortcutIds(stored.summary)
-                generation > 0 -> emptyList<ShortcutSpec>() to emptySet()
+                stored != null -> Triple(
+                    clusterShortcuts(stored.summary, ClusterLabels(names, mask.enabled), colors, ClusterShortcuts.max(this)),
+                    clusterShortcutIds(stored.summary),
+                    stored.summary.contexts.map { it.clusterId }.filter { it.isNotBlank() }.toSet(),
+                )
+                generation > 0 -> Triple(emptyList<ShortcutSpec>(), emptySet<String>(), emptySet<String>())
                 else -> null
             }
         }
         ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.Default) {
-            sources.filterNotNull().distinctUntilChanged().collect { (specs, known) ->
-                ClusterShortcuts.publish(this@TalosApp, specs, known)
+            sources.filterNotNull().distinctUntilChanged().collect { (specs, known, clusters) ->
+                ClusterShortcuts.publish(this@TalosApp, specs, known, clusters)
             }
         }
     }
