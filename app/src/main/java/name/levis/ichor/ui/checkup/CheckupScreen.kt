@@ -121,6 +121,7 @@ fun CheckupScreen(
     onOpenLoadBalancing: () -> Unit,
     onOpenPolicies: () -> Unit,
     onOpenTailscale: () -> Unit,
+    onOpenClusterLifecycle: () -> Unit,
     vm: CheckupViewModel = viewModel(factory = factory { CheckupViewModel(app.kubeRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -160,12 +161,12 @@ fun CheckupScreen(
         },
     ) { padding ->
         Loaded(state, vm::refresh, Modifier.pageContent(padding), progress = progress, stepLabel = { checkupStepLabel(it) }) { report ->
-            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring, onOpenCapacity, onOpenLoadBalancing, onOpenPolicies, onOpenTailscale), onDeleteLeftover = { confirmDelete = it })
+            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring, onOpenCapacity, onOpenLoadBalancing, onOpenPolicies, onOpenTailscale, onOpenClusterLifecycle), onDeleteLeftover = { confirmDelete = it })
         }
     }
 }
 
-/** Where the checkup leads: a Helm release, the Monitoring tab of the Metrics screen, the Capacity, Load balancing, Policies and Tailscale screens. */
+/** Where the checkup leads: a Helm release, the Monitoring tab of the Metrics screen, the Capacity, Load balancing, Policies, Tailscale and Cluster lifecycle screens. */
 private class CheckupLinks(
     val onOpenRelease: (namespace: String, name: String) -> Unit,
     val onOpenMonitoring: () -> Unit,
@@ -173,6 +174,7 @@ private class CheckupLinks(
     val onOpenLoadBalancing: () -> Unit,
     val onOpenPolicies: () -> Unit,
     val onOpenTailscale: () -> Unit,
+    val onOpenClusterLifecycle: () -> Unit,
 )
 
 @Composable
@@ -341,6 +343,9 @@ private fun SectionBody(
         }
         CheckupSectionId.TAILSCALE -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
             TextButton(onClick = links.onOpenTailscale) { Text(stringResource(R.string.checkup_open_tailscale)) }
+        }
+        CheckupSectionId.CLUSTER_API -> if (section.findings.isNotEmpty() || section.error.isNotEmpty()) {
+            TextButton(onClick = links.onOpenClusterLifecycle) { Text(stringResource(R.string.checkup_open_cluster_lifecycle)) }
         }
     }
 }

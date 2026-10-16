@@ -3696,6 +3696,23 @@
     <string name="checkup_tailscaleConnectorNotReady">Connettore non pronto (%1$s)</string>
     <string name="checkup_tailscaleConnectorNotReady_plain">Connettore non pronto</string>
     <string name="checkup_tailscaleProxyClassMissing">Indica una ProxyClass che non esiste</string>
+    <string name="checkup_section_clusterapi_hint">Cluster, macchine e server bare-metal bloccati, falliti o spenti</string>
+    <string name="checkup_open_cluster_lifecycle">Apri il ciclo di vita dei cluster</string>
+    <string name="checkup_capiClusterFailed">Cluster fallito</string>
+    <string name="checkup_capiClusterProvisioning">Non predisposto dopo %1$s</string>
+    <string name="checkup_capiMachineFailed">Macchina di %1$s fallita</string>
+    <string name="checkup_capiMachineStuck">Bloccata in %1$s da %2$s</string>
+    <string name="checkup_capiWorkersShort">%1$s worker su %2$s disponibili</string>
+    <string name="checkup_sideroServerOff">In uso ma spento</string>
+    <string name="checkup_sideroServerUnaccepted">In attesa di essere accettato</string>
+    <string name="checkup_sideroServerUnaccepted_more">Altri %1$s server in attesa di essere accettati</string>
+    <string name="checkup_capiClusterFailed_fix">Leggi il suo errore, poi le Machine e l’infrastruttura sottostante: clusterctl describe cluster &lt;name> -n &lt;namespace>.</string>
+    <string name="checkup_capiClusterProvisioning_fix">Qualcosa sotto non è mai diventato pronto: clusterctl describe cluster &lt;name> -n &lt;namespace> mostra quale parte attende (infrastruttura, control plane o una Machine).</string>
+    <string name="checkup_capiMachineFailed_fix">Non è stato possibile predisporre la sua infrastruttura. Leggi kubectl describe machine -n &lt;namespace> &lt;name>, poi eliminala perché il suo MachineSet o il control plane ne crei una nuova.</string>
+    <string name="checkup_capiMachineStuck_fix">La sua infrastruttura o il bootstrap non sono mai finiti (nessun server libero, PXE senza risposta, nessun Secret di bootstrap): kubectl describe machine -n &lt;namespace> &lt;name>.</string>
+    <string name="checkup_capiWorkersShort_fix">Alcune sue Machine non sono disponibili: kubectl get machines -n &lt;namespace> -l cluster.x-k8s.io/deployment-name=&lt;name>, poi i server liberi per loro.</string>
+    <string name="checkup_sideroServerOff_fix">Un nodo di un cluster è giù. Accendilo dal suo BMC o controlla le credenziali BMC che usa Sidero: kubectl describe server &lt;name>.</string>
+    <string name="checkup_sideroServerUnaccepted_fix">Sidero non lo usa finché non è accettato: kubectl patch server &lt;name> --type merge -p \'{\"spec\":{\"accepted\":true}}\'.</string>
     <string name="checkup_tailscaleProxyGroupDown">Gruppo di proxy %1$s non pronto</string>
     <string name="checkup_tailscaleProxyGroupDown_plain">Gruppo di proxy non pronto</string>
     <string name="checkup_tailscaleProxyClassNotReady">ProxyClass non pronta, usata da %1$s</string>

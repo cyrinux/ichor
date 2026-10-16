@@ -1,6 +1,572 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Workload clusters, machines and bare-metal servers that are stuck, failed or off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workload-Cluster, Maschinen und Bare-Metal-Server, die hängen, fehlgeschlagen oder aus sind"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clústeres, máquinas y servidores bare-metal atascados, fallidos o apagados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clusters, machines et serveurs bare-metal bloqués, en échec ou éteints"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster, macchine e server bare-metal bloccati, falliti o spenti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кластери, машини й bare-metal сервери, що застрягли, збійні чи вимкнені"
+          }
+        }
+      }
+    },
+    "Open Cluster lifecycle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster-Lebenszyklus öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir el ciclo de vida de clústeres"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir le cycle de vie des clusters"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri il ciclo di vita dei cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити життєвий цикл кластерів"
+          }
+        }
+      }
+    },
+    "Cluster failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster fehlgeschlagen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clúster fallido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster en échec"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster fallito"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кластер збійний"
+          }
+        }
+      }
+    },
+    "Not provisioned after %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach %@ nicht bereitgestellt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin aprovisionar tras %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas provisionné après %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non predisposto dopo %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не підготовлено за %@"
+          }
+        }
+      }
+    },
+    "Machine of %@ failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maschine von %@ fehlgeschlagen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máquina de %@ fallida"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Machine de %@ en échec"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Macchina di %@ fallita"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Машина %@ збійна"
+          }
+        }
+      }
+    },
+    "%@ of %@ workers available" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ of %2$@ workers available"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ von %2$@ Workern verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ de %2$@ workers disponibles"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ workers sur %2$@ disponibles"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ worker su %2$@ disponibili"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступно %1$@ з %2$@ робочих вузлів"
+          }
+        }
+      }
+    },
+    "In use but powered off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Gebrauch, aber ausgeschaltet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En uso pero apagado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilisé mais éteint"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In uso ma spento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовується, але вимкнений"
+          }
+        }
+      }
+    },
+    "Waiting to be accepted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet auf Annahme"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando ser aceptado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente d’acceptation"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa di essere accettato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очікує прийняття"
+          }
+        }
+      }
+    },
+    "%@ more servers waiting to be accepted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ weitere Server warten auf Annahme"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ servidores más esperando ser aceptados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ autres serveurs en attente d’acceptation"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Altri %@ server in attesa di essere accettati"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ще %@ серверів очікують прийняття"
+          }
+        }
+      }
+    },
+    "Read its failure, then the Machines and infrastructure under it: clusterctl describe cluster <name> -n <namespace>." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lesen Sie den Fehler, dann die Machines und die Infrastruktur darunter: clusterctl describe cluster <name> -n <namespace>."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lee su fallo y luego las Machines y la infraestructura que tiene debajo: clusterctl describe cluster <name> -n <namespace>."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lisez son échec, puis les Machines et l’infrastructure en dessous : clusterctl describe cluster <name> -n <namespace>."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leggi il suo errore, poi le Machine e l’infrastruttura sottostante: clusterctl describe cluster <name> -n <namespace>."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитайте збій, потім Machines та інфраструктуру під ним: clusterctl describe cluster <name> -n <namespace>."
+          }
+        }
+      }
+    },
+    "Something under it never became ready: clusterctl describe cluster <name> -n <namespace> shows which part waits (infrastructure, control plane or a Machine)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etwas darunter wurde nie bereit: clusterctl describe cluster <name> -n <namespace> zeigt, welcher Teil wartet (Infrastruktur, Control Plane oder eine Machine)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algo debajo nunca llegó a estar listo: clusterctl describe cluster <name> -n <namespace> muestra qué parte espera (infraestructura, plano de control o una Machine)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelque chose en dessous n’est jamais devenu prêt : clusterctl describe cluster <name> -n <namespace> montre quelle partie attend (infrastructure, plan de contrôle ou une Machine)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualcosa sotto non è mai diventato pronto: clusterctl describe cluster <name> -n <namespace> mostra quale parte attende (infrastruttura, control plane o una Machine)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щось під ним так і не стало готовим: clusterctl describe cluster <name> -n <namespace> показує, яка частина чекає (інфраструктура, площина керування чи Machine)."
+          }
+        }
+      }
+    },
+    "Its infrastructure could not be provisioned. Read kubectl describe machine -n <namespace> <name>, then delete it so its MachineSet or control plane makes a new one." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihre Infrastruktur konnte nicht bereitgestellt werden. Lesen Sie kubectl describe machine -n <namespace> <name> und löschen Sie sie, damit ihr MachineSet oder die Control Plane eine neue anlegt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo aprovisionar su infraestructura. Lee kubectl describe machine -n <namespace> <name> y luego bórrala para que su MachineSet o plano de control cree otra."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son infrastructure n’a pas pu être provisionnée. Lisez kubectl describe machine -n <namespace> <name>, puis supprimez-la pour que son MachineSet ou son plan de contrôle en crée une nouvelle."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è stato possibile predisporre la sua infrastruttura. Leggi kubectl describe machine -n <namespace> <name>, poi eliminala perché il suo MachineSet o il control plane ne crei una nuova."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Її інфраструктуру не вдалося підготувати. Прочитайте kubectl describe machine -n <namespace> <name>, потім видаліть її, щоб MachineSet або площина керування створили нову."
+          }
+        }
+      }
+    },
+    "Its infrastructure or bootstrap never finished (no free server, PXE never answered, no bootstrap Secret): kubectl describe machine -n <namespace> <name>." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Infrastruktur oder Bootstrap wurden nie fertig (kein freier Server, PXE ohne Antwort, kein Bootstrap-Secret): kubectl describe machine -n <namespace> <name>."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su infraestructura o su bootstrap nunca terminó (ningún servidor libre, PXE sin respuesta, sin Secret de bootstrap): kubectl describe machine -n <namespace> <name>."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son infrastructure ou son bootstrap n’a jamais fini (aucun serveur libre, PXE sans réponse, pas de Secret de bootstrap) : kubectl describe machine -n <namespace> <name>."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sua infrastruttura o il bootstrap non sono mai finiti (nessun server libero, PXE senza risposta, nessun Secret di bootstrap): kubectl describe machine -n <namespace> <name>."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Її інфраструктура чи bootstrap так і не завершилися (немає вільного сервера, PXE не відповів, немає bootstrap Secret): kubectl describe machine -n <namespace> <name>."
+          }
+        }
+      }
+    },
+    "Some of its Machines are not available: kubectl get machines -n <namespace> -l cluster.x-k8s.io/deployment-name=<name>, then the servers free for them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einige ihrer Machines sind nicht verfügbar: kubectl get machines -n <namespace> -l cluster.x-k8s.io/deployment-name=<name>, dann die dafür freien Server."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algunas de sus Machines no están disponibles: kubectl get machines -n <namespace> -l cluster.x-k8s.io/deployment-name=<name> y luego los servidores libres para ellas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certaines de ses Machines ne sont pas disponibles : kubectl get machines -n <namespace> -l cluster.x-k8s.io/deployment-name=<name>, puis les serveurs libres pour elles."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alcune sue Machine non sono disponibili: kubectl get machines -n <namespace> -l cluster.x-k8s.io/deployment-name=<name>, poi i server liberi per loro."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Деякі її Machines недоступні: kubectl get machines -n <namespace> -l cluster.x-k8s.io/deployment-name=<name>, потім вільні для них сервери."
+          }
+        }
+      }
+    },
+    "A workload cluster node is down. Power it on from its BMC, or check the BMC credentials Sidero uses: kubectl describe server <name>." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Knoten eines Workload-Clusters ist ausgefallen. Schalten Sie ihn über sein BMC ein oder prüfen Sie die BMC-Zugangsdaten von Sidero: kubectl describe server <name>."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un nodo de un clúster está caído. Enciéndelo desde su BMC o revisa las credenciales de BMC que usa Sidero: kubectl describe server <name>."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un nœud d’un cluster est hors service. Allumez-le depuis son BMC, ou vérifiez les identifiants BMC qu’utilise Sidero : kubectl describe server <name>."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un nodo di un cluster è giù. Accendilo dal suo BMC o controlla le credenziali BMC che usa Sidero: kubectl describe server <name>."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вузол робочого кластера не працює. Увімкніть його через BMC або перевірте облікові дані BMC, які використовує Sidero: kubectl describe server <name>."
+          }
+        }
+      }
+    },
+    "Sidero does not use it until it is accepted: kubectl patch server <name> --type merge -p '{\"spec\":{\"accepted\":true}}'." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidero nutzt ihn erst, wenn er angenommen ist: kubectl patch server <name> --type merge -p '{\"spec\":{\"accepted\":true}}'."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidero no lo usa hasta que se acepta: kubectl patch server <name> --type merge -p '{\"spec\":{\"accepted\":true}}'."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidero ne l’utilise pas tant qu’il n’est pas accepté : kubectl patch server <name> --type merge -p '{\"spec\":{\"accepted\":true}}'."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidero non lo usa finché non è accettato: kubectl patch server <name> --type merge -p '{\"spec\":{\"accepted\":true}}'."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidero не використовує його, доки його не прийнято: kubectl patch server <name> --type merge -p '{\"spec\":{\"accepted\":true}}'."
+          }
+        }
+      }
+    },
     "stuck" : {
       "extractionState" : "manual",
       "localizations" : {

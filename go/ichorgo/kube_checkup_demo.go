@@ -99,6 +99,10 @@ func demoCheckup(now time.Time) checkupReport {
 		newSection(checkTailscale, 6, []checkupFinding{
 			{Kind: findTailscaleConnectorNotReady, Severity: sevCritical, Name: "lab-router", Extra: tsRoleSubnetRouter, Reason: "ConnectorCreationFailed", Message: "failed to create the subnet router's StatefulSet: proxy class \"lab\" is not ready"},
 		}),
+		newSection(checkClusterAPI, 19, []checkupFinding{
+			{Kind: findSideroServerOff, Severity: sevCritical, Name: "srv-b2", Extra: "rack2-u02"},
+			{Kind: findCapiMachineStuck, Severity: sevWarning, Namespace: "fleet", Name: "staging-cp-x7k2p", Extra: "staging/Provisioning", Since: ago(95 * time.Minute)},
+		}),
 	}
 
 	return checkupReport{Status: checkupVerdict(sections), KubeVersion: "v1.34.1", Sections: sections, Nodes: nodes, Volumes: volumes, Releases: releases}

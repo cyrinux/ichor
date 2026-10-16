@@ -96,6 +96,7 @@ func TestClusterAPIRead(t *testing.T) {
 		ControlPlane: &capiReplicas{Desired: 3, Ready: 3, Available: 3, UpToDate: 3},
 		Workers:      capiReplicas{Desired: 4, Ready: 4, Available: 4, UpToDate: 4},
 		Versions:     []string{"v1.34.1"}, Conditions: []capiCondition{}, Health: capiHealthOK, Reasons: []string{},
+		CreatedAt: time.Date(2026, 9, 1, 8, 0, 0, 0, time.UTC).UnixMilli(),
 	}
 	if !reflect.DeepEqual(prod, want) {
 		t.Errorf("prod-edge\n got %+v\nwant %+v", prod, want)

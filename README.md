@@ -439,6 +439,13 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   ProxyClass that does not exist, a ProxyGroup with some proxies down and a ProxyClass that is
   not ready while something uses it are warnings. One still reconciling a changed spec is not a
   finding. "Open Tailscale" leads to the screen.
+- **Cluster lifecycle:** on a management cluster running Cluster API or Sidero Metal, a workload
+  cluster that failed, a Machine that failed and a Sidero server in use but powered off are
+  critical; a cluster still provisioning after an hour, a Machine stuck in a provisioning phase
+  (or in Deleting) for over 30 minutes, a MachineDeployment short of available workers (not
+  while it scales) and a server waiting to be accepted (five named, then a count) are warnings.
+  Each fix line names the `clusterctl` or `kubectl` command; "Open Cluster lifecycle" leads to
+  the screen.
 - **Alerts:** Settings → Alerts → Cluster checkup runs it at every background check (it lists every
   pod and asks each kubelet). A critical finding notifies at once, a warning when seen on two
   checks in a row, a cleared one once; a section that could not be read keeps what it knew.

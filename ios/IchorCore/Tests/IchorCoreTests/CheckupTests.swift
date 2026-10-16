@@ -150,4 +150,22 @@ final class CheckupTests: XCTestCase {
             "tailscale|tailscaleProxyGroupDown|egress-proxies": "warning",
         ])
     }
+
+    // The demo checkup's Cluster lifecycle section (go/ichorgo/kube_checkup_demo.go), plus the unaccepted summary.
+    func testClusterAPISectionDecodesAndAlerts() throws {
+        let r = try TalosJSON.decode(CheckupReport.self, from: #"""
+        {"status":"critical","sections":[{"id":"clusterapi","status":"critical","checked":19,"findings":[
+          {"kind":"sideroServerOff","severity":"critical","name":"srv-b2","extra":"rack2-u02"},
+          {"kind":"capiMachineStuck","severity":"warning","namespace":"fleet","name":"staging-cp-x7k2p","extra":"staging/Provisioning","since":1},
+          {"kind":"sideroServerUnaccepted","severity":"warning","name":"","count":3}]}]}
+        """#)
+        let section = try XCTUnwrap(r.shownSections.first)
+        XCTAssertEqual(section.section, .clusterapi)
+        XCTAssertEqual(section.findings.compactMap(\.kind), [.sideroServerOff, .capiMachineStuck, .sideroServerUnaccepted])
+        XCTAssertEqual(r.alertIssues, [
+            "clusterapi|sideroServerOff|srv-b2": "critical",
+            "clusterapi|capiMachineStuck|fleet/staging-cp-x7k2p": "warning",
+            "clusterapi|sideroServerUnaccepted|": "warning",
+        ])
+    }
 }
