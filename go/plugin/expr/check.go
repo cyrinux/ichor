@@ -16,6 +16,11 @@ type Scope struct {
 	DataServices []string // dataServices.<name>; nil skips the check
 	Params       []string // params.<name>; nil skips the check
 	Bool         bool     // a condition (when, enabledWhen): the value must be a bool
+	// Vars are extra root names defined here (a plugin's resource keys, name, namespace…),
+	// given at evaluation by Env.Vars.
+	Vars []string
+	// Funcs are functions defined only here (aggregations), given at evaluation by Env.Funcs.
+	Funcs map[string]Func
 }
 
 // Problem is a static error at a position of the expression.
@@ -109,6 +114,7 @@ func (c *checker) walk(n node) Kind {
 func (c *checker) checkName(n *name) Kind {
 	switch {
 	case n.id == "$" || n.id == "@":
+	case slices.Contains(c.scope.Vars, n.id):
 	case !slices.Contains(Roots, n.id):
 		c.report(n, "unknown name %q (names start with $, or one of %v)", n.id, Roots)
 	case c.scope.Names != nil && !slices.Contains(c.scope.Names, n.id):
@@ -180,7 +186,7 @@ func (c *checker) checkBinary(n *binary, l, r Kind) Kind {
 }
 
 func (c *checker) checkCall(n *call) Kind {
-	fn, ok := registry[n.fn]
+	fn, ok := lookup(c.scope.Funcs, n.fn)
 
 	switch {
 	case !ok:
