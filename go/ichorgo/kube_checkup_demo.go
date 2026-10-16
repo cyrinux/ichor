@@ -81,8 +81,12 @@ func demoCheckup(now time.Time) checkupReport {
 			{Kind: findNamespaceTerminating, Severity: sevWarning, Name: "old-staging", Message: "Some resources are remaining: widgets.example.com has 2 resource instances. Some content in the namespace has finalizers remaining: example.com/cleanup in 2 resource instances.", Since: ago(6 * 24 * time.Hour)},
 			{Kind: findNetPerfLeftover, Severity: sevWarning, Name: "ichor-netperf-k7x2q", Since: ago(2 * 24 * time.Hour)},
 		}),
-		newSection(checkCertificates, 14, []checkupFinding{
+		newSection(checkCertificates, 18, []checkupFinding{
 			{Kind: findCSRPending, Severity: sevWarning, Name: "system:node:demo-worker-1", Extra: "kubernetes.io/kubelet-serving", Count: 12, Since: ago(3 * time.Hour)},
+			{Kind: findRouteCertExpiring, Severity: sevWarning, Namespace: "default", Name: "vaultwarden-tls", Extra: "Ingress default/vaultwarden",
+				Reason: "vault.home.example", Count: 9, Since: now.Add(9*24*time.Hour + time.Hour).UnixMilli()},
+			{Kind: findRouteCertHostMismatch, Severity: sevWarning, Namespace: "default", Name: "paperless-tls", Extra: "Ingress default/paperless",
+				Reason: "paperless.home.example", Message: "paperless.lan, *.lan"},
 		}),
 		newSection(checkSecrets, 11, []checkupFinding{
 			{Kind: findExternalSecretFailed, Severity: sevWarning, Namespace: "demo", Name: "database-credentials", Extra: "vault", Reason: "SecretSyncedError", Message: "could not get secret data from provider: permission denied"},

@@ -170,8 +170,11 @@ func readServices(ctx context.Context, k *kubeClient, namespace string, now time
 		counts = countEndpoints(endpointSlices)
 	}
 
+	rows := joinServices(services, counts, routes, now)
+	withServiceRouteCerts(ctx, k, rows, now)
+
 	out := kubeServices{
-		Services:      joinServices(services, counts, routes, now),
+		Services:      rows,
 		PartialAccess: sliceErr != nil || ingErr != nil || hrErr != nil || grpcErr != nil || tlsErr != nil || irErr != nil,
 	}
 

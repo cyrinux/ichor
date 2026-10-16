@@ -1,5 +1,7 @@
 package ichorgo
 
+import "time"
+
 // The demo's Services, as the checkup, routes and load balancing demos describe them:
 // hello-ichor's public load balancer still without an address (MetalLB's default pool is
 // exhausted), a worker with no ready pod, the Traefik entry point, the DNS server and the
@@ -17,7 +19,7 @@ func demoServices(namespace string) func() kubeServices {
 		routed := func(s serviceRow) serviceRow {
 			for _, d := range demoRouteTable {
 				if d.route.Namespace == s.Namespace && d.route.Service == s.Name {
-					s.Routes = append(s.Routes, d.route)
+					s.Routes = append(s.Routes, demoRouteCert(d.route, time.Now()))
 				}
 			}
 

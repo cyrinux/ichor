@@ -121,6 +121,12 @@ object CheckupKind {
     const val SEALING_KEY_MISSING = "sealingKeyMissing"
     /** A sealing key the controller keeps out of use (namespace, name: the key's Secret). */
     const val SEALING_KEY_COMPROMISED = "sealingKeyCompromised"
+    /** A certificate a route's host serves (read by TLS handshake) that expired (namespace, name: its Secret; extra: the route; reason: the host). */
+    const val ROUTE_CERT_EXPIRED = "routeCertExpired"
+    /** One expiring within 14 days (count: days left). */
+    const val ROUTE_CERT_EXPIRING = "routeCertExpiring"
+    /** One that does not name the host (message: the names it covers). */
+    const val ROUTE_CERT_HOST_MISMATCH = "routeCertHostMismatch"
 }
 
 /** A section's or the whole checkup's state, worst first. */

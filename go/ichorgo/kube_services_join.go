@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"cmp"
+	"context"
 	"slices"
 	"strconv"
 	"time"
@@ -115,6 +116,29 @@ func serviceAddresses(s serviceListObject) []string {
 	}
 
 	return addresses
+}
+
+// withServiceRouteCerts badges every route of rows with the certificate its host serves,
+// each host read once.
+func withServiceRouteCerts(ctx context.Context, k *kubeClient, rows []serviceRow, now time.Time) {
+	var targets []certTarget
+
+	for _, r := range rows {
+		for _, route := range r.Routes {
+			if t, ok := routeCertTarget(route); ok {
+				targets = append(targets, t)
+			}
+		}
+	}
+
+	if len(targets) == 0 {
+		return
+	}
+
+	certs, managed := probeRouteCerts(ctx, targets, now), certManagerSecrets(ctx, k)
+	for i := range rows {
+		fillRouteCerts(rows[i].Routes, certs, managed, now)
+	}
 }
 
 // routesOf lists the URLs of the Ingresses, Gateway API routes and Traefik routes sending

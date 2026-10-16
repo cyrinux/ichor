@@ -1,6 +1,327 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Certificate expired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat abgelaufen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificado caducado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificat expiré"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificato scaduto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сертифікат прострочено"
+          }
+        }
+      }
+    },
+    "Certificate expires in %lld days" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat läuft in %lld Tagen ab"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El certificado caduca en %lld días"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le certificat expire dans %lld jours"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il certificato scade tra %lld giorni"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сертифікат спливає через %lld дн."
+          }
+        }
+      }
+    },
+    "Certificate does not cover this host" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat deckt diesen Host nicht ab"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El certificado no cubre este host"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le certificat ne couvre pas cet hôte"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il certificato non copre questo host"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сертифікат не покриває цей хост"
+          }
+        }
+      }
+    },
+    "Certificate expired at %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat für %@ abgelaufen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificado caducado en %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificat expiré sur %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificato scaduto su %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сертифікат на %@ прострочено"
+          }
+        }
+      }
+    },
+    "Certificate expires in %@ days at %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate expires in %1$@ days at %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat für %2$@ läuft in %1$@ Tagen ab"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El certificado de %2$@ caduca en %1$@ días"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le certificat de %2$@ expire dans %1$@ jours"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il certificato di %2$@ scade tra %1$@ giorni"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сертифікат %2$@ спливає через %1$@ дн."
+          }
+        }
+      }
+    },
+    "Certificate does not name %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat nennt %@ nicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El certificado no nombra %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le certificat ne nomme pas %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il certificato non nomina %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сертифікат не називає %@"
+          }
+        }
+      }
+    },
+    "Browsers refuse this address. Nothing renews this certificate (it is not cert-manager’s): renew it where it was issued and replace the TLS Secret, or issue it with a cert-manager Certificate." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browser lehnen diese Adresse ab. Nichts erneuert dieses Zertifikat (es gehört nicht cert-manager): erneuern Sie es dort, wo es ausgestellt wurde, und ersetzen Sie das TLS-Secret, oder stellen Sie es mit einem cert-manager-Certificate aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los navegadores rechazan esta dirección. Nada renueva este certificado (no es de cert-manager): renuévalo donde se emitió y reemplaza el Secret TLS, o emítelo con un Certificate de cert-manager."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les navigateurs refusent cette adresse. Rien ne renouvelle ce certificat (il n’est pas à cert-manager) : renouvelez-le là où il a été émis et remplacez le Secret TLS, ou émettez-le avec un Certificate cert-manager."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I browser rifiutano questo indirizzo. Nulla rinnova questo certificato (non è di cert-manager): rinnovalo dove è stato emesso e sostituisci il Secret TLS, oppure emettilo con un Certificate di cert-manager."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Браузери відхиляють цю адресу. Цей сертифікат ніщо не оновлює (він не від cert-manager): оновіть його там, де його видано, і замініть TLS Secret, або видайте його через Certificate cert-manager."
+          }
+        }
+      }
+    },
+    "Nothing renews this certificate (it is not cert-manager’s): renew it where it was issued and replace the TLS Secret, or issue it with a cert-manager Certificate." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts erneuert dieses Zertifikat (es gehört nicht cert-manager): erneuern Sie es dort, wo es ausgestellt wurde, und ersetzen Sie das TLS-Secret, oder stellen Sie es mit einem cert-manager-Certificate aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada renueva este certificado (no es de cert-manager): renuévalo donde se emitió y reemplaza el Secret TLS, o emítelo con un Certificate de cert-manager."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien ne renouvelle ce certificat (il n’est pas à cert-manager) : renouvelez-le là où il a été émis et remplacez le Secret TLS, ou émettez-le avec un Certificate cert-manager."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nulla rinnova questo certificato (non è di cert-manager): rinnovalo dove è stato emesso e sostituisci il Secret TLS, oppure emettilo con un Certificate di cert-manager."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей сертифікат ніщо не оновлює (він не від cert-manager): оновіть його там, де його видано, і замініть TLS Secret, або видайте його через Certificate cert-manager."
+          }
+        }
+      }
+    },
+    "Browsers warn on this address. The certificate names other hosts (below): add this host to it, or check the route names the right TLS Secret; a Secret the proxy cannot find makes it serve its default certificate." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browser warnen bei dieser Adresse. Das Zertifikat nennt andere Hosts (unten): fügen Sie diesen Host hinzu oder prüfen Sie, ob die Route das richtige TLS-Secret nennt; ein Secret, das der Proxy nicht findet, lässt ihn sein Standardzertifikat ausliefern."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los navegadores avisan en esta dirección. El certificado nombra otros hosts (abajo): añade este host o comprueba que la ruta nombra el Secret TLS correcto; un Secret que el proxy no encuentra le hace servir su certificado por defecto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les navigateurs avertissent sur cette adresse. Le certificat nomme d’autres hôtes (ci-dessous) : ajoutez-y cet hôte, ou vérifiez que la route nomme le bon Secret TLS ; un Secret introuvable fait servir au proxy son certificat par défaut."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I browser avvisano su questo indirizzo. Il certificato nomina altri host (sotto): aggiungi questo host oppure verifica che la rotta nomini il Secret TLS giusto; un Secret che il proxy non trova gli fa servire il certificato predefinito."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Браузери попереджають про цю адресу. Сертифікат називає інші хости (нижче): додайте цей хост або перевірте, що маршрут називає правильний TLS Secret; Secret, якого проксі не знаходить, змушує його віддавати типовий сертифікат."
+          }
+        }
+      }
+    },
     "Could not be unsealed" : {
       "extractionState" : "manual",
       "localizations" : {

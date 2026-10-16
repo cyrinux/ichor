@@ -234,7 +234,7 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 	section(checkCapacity, func() { sections[6], sections[7], report.Nodes = checkupCapacity(ctx, k, in, version) }, 6, 7)
 	section(checkLoadBalancers, func() { sections[8] = checkupLoadBalancers(ctx, k, in) }, 8)
 	section(checkTerminating, func() { sections[9] = checkupTerminating(ctx, k, in) }, 9)
-	section(checkCertificates, func() { sections[10] = checkupCSRs(ctx, k, in) }, 10)
+	section(checkCertificates, func() { sections[10] = checkupCertificates(ctx, k, in) }, 10)
 	section(checkSecrets, func() { sections[11] = checkupSecrets(ctx, k, in) }, 11)
 	section(checkHelm, func() { sections[12], report.Releases = checkupHelm(ctx, k, in) }, 12)
 	section(checkMonitoring, func() { sections[13] = checkupMonitoring(ctx, k, in) }, 13)

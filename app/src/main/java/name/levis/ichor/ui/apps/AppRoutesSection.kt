@@ -77,6 +77,7 @@ private fun RouteRow(route: KubeRoute, onObject: (KubeObjectRef) -> Unit) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            RouteCertBadge(route, Modifier.padding(top = 2.dp))
         }
         route.objectRef?.let { ref ->
             IconButton(

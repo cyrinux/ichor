@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 // kubeRoute is an address an app is reachable at from outside the cluster: a host of an
@@ -27,6 +28,17 @@ type kubeRoute struct {
 	Name      string `json:"name"`
 	URL       string `json:"url"`
 	Service   string `json:"service"` // the backend Service, in Namespace
+
+	// The certificate the route's host serves, read from a TLS handshake (withRouteCerts,
+	// never from the Secret): its expiry (unix seconds), what is wrong with it (routeCert*),
+	// the TLS Secret the route names ("namespace/name") and whether cert-manager writes it.
+	// Empty when unknown.
+	CertNotAfter int64  `json:"certNotAfter,omitempty"`
+	CertIssue    string `json:"certIssue,omitempty"`
+	CertSecret   string `json:"certSecret,omitempty"`
+	CertManaged  bool   `json:"certManaged,omitempty"`
+
+	tlsSecret string // the TLS Secret the route names for its host, "namespace/name"
 }
 
 // routeAPIRefs is where each route kind is read, so the apps can ask KubeObjectSummary for
@@ -151,7 +163,7 @@ func appRoutes(ctx context.Context, k *kubeClient, pods []routePod) (kubeRouteLi
 		gatewayRoutes(slices.Concat(httpRoutes, grpcRoutes, tlsRoutes), gateways.Items, services)...)
 	routes = append(routes, traefikRoutes(traefik, services)...)
 
-	return kubeRouteList{Routes: uniqueRoutes(routes)}, nil
+	return kubeRouteList{Routes: withRouteCerts(ctx, k, uniqueRoutes(routes), time.Now())}, nil
 }
 
 type labeledObject struct {

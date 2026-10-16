@@ -3666,6 +3666,15 @@
     <string name="checkup_sealedSecretNotSynced_fix">Der Controller konnte es nicht zu einem Secret entschlüsseln: es wurde für einen anderen Cluster, Namen oder Namespace versiegelt oder mit einem Schlüssel, den der Controller nicht mehr hat. Versiegeln Sie es erneut mit kubeseal und dem Zertifikat dieses Clusters.</string>
     <string name="checkup_sealingKeyMissing_fix">Der Controller hat keinen Schlüssel zum Entschlüsseln. Stellen Sie die Schlüsselsicherung (ein Secret mit dem Label sealedsecrets.bitnami.com/sealed-secrets-key) in seinem Namespace wieder her und starten Sie den Controller neu.</string>
     <string name="checkup_sealingKeyCompromised_fix">Der Controller versiegelt nicht mehr damit, aber was damit versiegelt wurde, ist damit noch lesbar. Versiegeln Sie diese SealedSecrets erneut mit kubeseal und löschen Sie dann den Schlüssel.</string>
+    <string name="route_cert_expired">Zertifikat abgelaufen</string>
+    <string name="route_cert_expiring">Zertifikat läuft in %1$d Tagen ab</string>
+    <string name="route_cert_host_mismatch">Zertifikat deckt diesen Host nicht ab</string>
+    <string name="checkup_routeCertExpired">Zertifikat für %1$s abgelaufen</string>
+    <string name="checkup_routeCertExpiring">Zertifikat für %2$s läuft in %1$s Tagen ab</string>
+    <string name="checkup_routeCertHostMismatch">Zertifikat nennt %1$s nicht</string>
+    <string name="checkup_routeCertExpired_fix">Browser lehnen diese Adresse ab. Nichts erneuert dieses Zertifikat (es gehört nicht cert-manager): erneuern Sie es dort, wo es ausgestellt wurde, und ersetzen Sie das TLS-Secret, oder stellen Sie es mit einem cert-manager-Certificate aus.</string>
+    <string name="checkup_routeCertExpiring_fix">Nichts erneuert dieses Zertifikat (es gehört nicht cert-manager): erneuern Sie es dort, wo es ausgestellt wurde, und ersetzen Sie das TLS-Secret, oder stellen Sie es mit einem cert-manager-Certificate aus.</string>
+    <string name="checkup_routeCertHostMismatch_fix">Browser warnen bei dieser Adresse. Das Zertifikat nennt andere Hosts (unten): fügen Sie diesen Host hinzu oder prüfen Sie, ob die Route das richtige TLS-Secret nennt; ein Secret, das der Proxy nicht findet, lässt ihn sein Standardzertifikat ausliefern.</string>
     <string name="checkup_helmFailed_fix">Führen Sie helm history aus, um den Grund zu sehen, dann helm rollback oder ein neues Upgrade.</string>
     <string name="checkup_helmPending_fix">Eine Helm-Operation wurde unterbrochen und hat ihre Sperre hinterlassen: helm rollback auf die letzte ausgerollte Revision gibt sie frei.</string>
     <string name="checkup_section_monitoring">Monitoring</string>
