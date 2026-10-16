@@ -16,10 +16,11 @@ import name.levis.ichor.model.KyvernoPolicy
 import name.levis.ichor.model.POLICY_ACTION_AUDIT
 import name.levis.ichor.model.POLICY_ACTION_ENFORCE
 import name.levis.ichor.model.POLICY_ACTION_MIXED
+import name.levis.ichor.model.POLICY_ACTION_WARN
 import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
 
-/** Enforce stands out (it refuses requests), Audit is a warning, Mixed sits between. */
+/** Enforce stands out (it refuses requests), Audit and Warn are warnings, Mixed sits between. */
 @Composable
 fun ActionBadge(action: String, modifier: Modifier = Modifier) {
     val colors = LocalStatusColors.current
@@ -27,6 +28,7 @@ fun ActionBadge(action: String, modifier: Modifier = Modifier) {
         POLICY_ACTION_ENFORCE -> stringResource(R.string.kpol_enforce) to colors.bad
         POLICY_ACTION_AUDIT -> stringResource(R.string.kpol_audit) to colors.warn
         POLICY_ACTION_MIXED -> stringResource(R.string.kpol_mixed) to MaterialTheme.colorScheme.tertiary
+        POLICY_ACTION_WARN -> stringResource(R.string.kpol_warn) to colors.warn
         else -> action to colors.muted
     }
     val description = stringResource(R.string.kpol_mode) + ": " + label
@@ -39,7 +41,14 @@ fun actionMeaning(action: String): String? = when (action) {
     POLICY_ACTION_ENFORCE -> stringResource(R.string.kpol_mode_enforce)
     POLICY_ACTION_AUDIT -> stringResource(R.string.kpol_mode_audit)
     POLICY_ACTION_MIXED -> stringResource(R.string.kpol_mode_mixed)
+    POLICY_ACTION_WARN -> stringResource(R.string.kpol_mode_warn)
     else -> null
+}
+
+/** Kyverno or Gatekeeper, as a neutral tag: the row's engine when both run. */
+@Composable
+fun EngineBadge(policy: KyvernoPolicy, modifier: Modifier = Modifier) {
+    TagBadge(if (policy.isGatekeeper) "Gatekeeper" else "Kyverno", MaterialTheme.colorScheme.onSurfaceVariant, modifier)
 }
 
 /** A small tinted count ("7 failing"), shown only when it is not zero. */
@@ -68,9 +77,9 @@ fun NotReadyBadge(policy: KyvernoPolicy) {
     TagBadge(label, LocalStatusColors.current.bad, Modifier.semantics { contentDescription = description })
 }
 
-/** Namespace (or cluster-wide), category and severity, as the row's second line. */
+/** Namespace (or cluster-wide), a constraint's kind, category and severity, as the row's second line. */
 @Composable
 fun policyScopeText(policy: KyvernoPolicy): String =
-    listOf(policy.namespace.ifEmpty { stringResource(R.string.netpol_cluster_wide) }, policy.category, policy.severity)
+    listOf(policy.namespace.ifEmpty { stringResource(R.string.netpol_cluster_wide) }, policy.kind, policy.category, policy.severity)
         .filter { it.isNotEmpty() }
         .joinToString("  ·  ")

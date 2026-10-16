@@ -27,6 +27,12 @@ const (
 	policyActionEnforce = "Enforce"
 	policyActionAudit   = "Audit"
 	policyActionMixed   = "Mixed"
+	// policyActionWarn is Gatekeeper's warn: the request is admitted with a warning.
+	policyActionWarn = "Warn"
+
+	// The engines a report reads, as each row and engine names them.
+	policyEngineKyverno    = "kyverno"
+	policyEngineGatekeeper = "gatekeeper"
 )
 
 const (
@@ -41,46 +47,65 @@ const (
 	policyDescriptionMax = 200
 )
 
-// policiesReport is the Kyverno admission policies and their findings. Policies is empty
-// (not nil, Installed false) when the cluster runs no Kyverno.
+// policiesReport is the admission policies of the engines the cluster runs (Kyverno policies,
+// Gatekeeper constraints) and their findings. Policies is empty (not nil, Installed false)
+// when it runs neither.
 type policiesReport struct {
-	Installed bool   `json:"installed"`
-	Version   string `json:"version"` // the served kyverno.io version, "" when not installed
-	// Error is a policy or engine read that failed; the rest of the report still shows.
+	Installed bool `json:"installed"` // Kyverno or Gatekeeper
+	// Kyverno and Gatekeeper say which engines run; Engines has one entry for each.
+	Kyverno    bool   `json:"kyverno"`
+	Gatekeeper bool   `json:"gatekeeper"`
+	Version    string `json:"version"` // the served kyverno.io version, "" without Kyverno
+	// Error is a Kyverno policy or engine read that failed; the rest of the report still shows.
 	Error string `json:"error,omitempty"`
+	// GatekeeperError is a Gatekeeper template, constraint or engine read that failed.
+	GatekeeperError string `json:"gatekeeperError,omitempty"`
 	// ReportsError is the policy reports being unreadable (often a 403 for a restricted
 	// kubeconfig): the policies still show, their counts just stay at 0.
-	ReportsError     string          `json:"reportsError,omitempty"`
-	Engine           kyvernoEngine   `json:"engine"`
-	Policies         []kyvernoPolicy `json:"policies"`
-	Namespaces       []policyNSRow   `json:"namespaces"`
-	ReportsRead      int             `json:"reportsRead"`
-	ReportsTruncated bool            `json:"reportsTruncated"`
+	ReportsError     string         `json:"reportsError,omitempty"`
+	Engines          []policyEngine `json:"engines"`
+	Policies         []policyRow    `json:"policies"`
+	Namespaces       []policyNSRow  `json:"namespaces"`
+	ReportsRead      int            `json:"reportsRead"`
+	ReportsTruncated bool           `json:"reportsTruncated"`
 }
 
-// kyvernoEngine is the policy engine itself: its controllers, and what happens to the
-// workloads' requests when it is down (the webhook's failurePolicy).
-type kyvernoEngine struct {
-	Namespace   string              `json:"namespace"`
-	Controllers []kyvernoController `json:"controllers"`
-	Webhook     kyvernoWebhook      `json:"webhook"`
+// engine is the named engine of the report, false when it does not run.
+func (r policiesReport) engine(name string) (policyEngine, bool) {
+	for _, e := range r.Engines {
+		if e.Name == name {
+			return e, true
+		}
+	}
+
+	return policyEngine{}, false
 }
 
-type kyvernoController struct {
+// policyEngine is one policy engine: its controllers, and what happens to the workloads'
+// requests when it is down (the webhook's failurePolicy).
+type policyEngine struct {
+	Name        string             `json:"name"` // kyverno or gatekeeper
+	Namespace   string             `json:"namespace"`
+	Controllers []policyController `json:"controllers"`
+	Webhook     policyWebhook      `json:"webhook"`
+}
+
+type policyController struct {
 	Name    string `json:"name"` // app.kubernetes.io/component, else the Deployment's name
 	Ready   int    `json:"ready"`
 	Desired int    `json:"desired"`
 }
 
-type kyvernoWebhook struct {
+type policyWebhook struct {
+	Name          string `json:"name,omitempty"` // the ValidatingWebhookConfiguration's
 	Present       bool   `json:"present"`
 	FailurePolicy string `json:"failurePolicy,omitempty"` // Fail or Ignore
 	// Service is the webhook's backend as "namespace/name", for the checkup's endpoint check.
 	Service string `json:"service,omitempty"`
 }
 
-// kyvernoPolicy is one policy row: what it enforces, whether it is ready, and what it found.
-type kyvernoPolicy struct {
+// policyRow is one policy row: what it enforces, whether it is ready, and what it found.
+type policyRow struct {
 	Namespace    string          `json:"namespace"` // "" for a ClusterPolicy
 	Name         string          `json:"name"`
 	Action       string          `json:"action"` // Enforce, Audit or Mixed
@@ -99,6 +124,14 @@ type kyvernoPolicy struct {
 	ErrorCount   int             `json:"error"` // a result value collides with Go's error type
 	Skip         int             `json:"skip"`
 	Failing      []policyFailure `json:"failing"`
+	// Engine is kyverno or gatekeeper. Kind is a Gatekeeper constraint's kind (its template's).
+	Engine string `json:"engine"`
+	Kind   string `json:"kind,omitempty"`
+	// FailingCapped: Failing is the first violations Gatekeeper kept (its
+	// --constraint-violations-limit), not all of Fail.
+	FailingCapped bool `json:"failingCapped,omitempty"`
+	// AuditAt is when Gatekeeper's audit last wrote the violations, unix seconds, 0 for Kyverno.
+	AuditAt int64 `json:"auditAt,omitempty"`
 	// ByNamespace is the same counts per namespace, sorted by name, for the screen's namespace
 	// filter: a ClusterPolicy's results spread over every namespace it checks.
 	ByNamespace []policyNSRow `json:"byNamespace"`
@@ -132,10 +165,11 @@ type policyNSRow struct {
 	ErrorCount int    `json:"error"`
 }
 
-// KubePolicies reads the cluster's Kyverno admission policies and their PolicyReport findings
-// (os:admin): {"installed","version","error","reportsError","engine","policies","namespaces",
-// "reportsRead","reportsTruncated"} (see policiesReport). A cluster without Kyverno answers
-// {"installed":false} and no error. kubeServer: see KubePods.
+// KubePolicies reads the cluster's admission policies: Kyverno policies with their PolicyReport
+// findings, and Gatekeeper constraints with their audit violations (os:admin):
+// {"installed","kyverno","gatekeeper","version","error","gatekeeperError","reportsError",
+// "engines","policies","namespaces","reportsRead","reportsTruncated"} (see policiesReport). A
+// cluster with neither answers {"installed":false} and no error. kubeServer: see KubePods.
 func KubePolicies(configYAML, contextName, kubeServer string) (out string, err error) {
 	defer maskResult(&out, &err)
 

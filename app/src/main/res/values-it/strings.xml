@@ -4768,6 +4768,15 @@
     <string name="kpol_mode_mixed">Alcune regole rifiutano una richiesta che le viola, altre la segnalano soltanto</string>
     <string name="kpol_category">Categoria</string>
     <string name="kpol_severity">Gravità</string>
+    <string name="kpol_engine_gatekeeper">Motore Gatekeeper</string>
+    <string name="kpol_webhook_fail_gatekeeper">Fail: le richieste vengono rifiutate mentre Gatekeeper è fermo</string>
+    <string name="kpol_webhook_ignore_gatekeeper">Ignore: le policy vengono saltate mentre Gatekeeper è fermo</string>
+    <string name="kpol_empty_gatekeeper">Nessuna policy Gatekeeper</string>
+    <string name="kpol_empty_hint_gatekeeper">Gatekeeper è attivo, ma non è definita alcuna policy.</string>
+    <string name="kpol_warn">Avvisa</string>
+    <string name="kpol_mode_warn">Una richiesta che la viola passa, con un avviso</string>
+    <string name="kpol_audited">Ultimo audit %1$s</string>
+    <string name="kpol_failing_capped">Gatekeeper conserva le prime %1$s di %2$s violazioni</string>
     <string name="velero_backup_now">Esegui backup ora</string>
     <string name="velero_backup_now_title">Eseguire ora il backup di %1$s?</string>
     <string name="velero_backup_now_text">Velero avvia un backup con le impostazioni di questa pianificazione (namespace: %1$s, posizione di archiviazione: %2$s). Si aggiunge a quelli pianificati e scade come loro.</string>

@@ -45,10 +45,12 @@ import name.levis.ichor.R
 import name.levis.ichor.data.PolicyRepository
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KyvernoPolicy
+import name.levis.ichor.model.POLICY_ENGINE_GATEKEEPER
 import name.levis.ichor.model.PolicyEngine
 import name.levis.ichor.model.PolicyReport
 import name.levis.ichor.model.WEBHOOK_FAIL
 import name.levis.ichor.model.WEBHOOK_IGNORE
+import name.levis.ichor.model.bothEngines
 import name.levis.ichor.model.filtered
 import name.levis.ichor.model.policyNamespaces
 import name.levis.ichor.ui.LoadingViewModel
@@ -75,9 +77,10 @@ class PoliciesViewModel(private val policies: PolicyRepository) : LoadingViewMod
 private const val KYVERNO_SITE = "https://kyverno.io"
 
 /**
- * Kyverno's admission policies: whether the engine's controllers and webhook are up, then every
- * policy (not ready first, then Enforce before Audit) with its findings; one opens its rules and
- * the resources it fails, each of a known kind opening its object screen ([onObject]).
+ * Kyverno's admission policies and Gatekeeper's constraints: whether each engine's controllers and
+ * webhook are up, then every policy (not ready first, then Enforce before Audit) with its findings;
+ * one opens its rules and the resources it fails, each of a known kind opening its object screen
+ * ([onObject]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -141,7 +144,7 @@ private fun PolicyList(
     val selected = namespace?.takeIf { it in namespaces }
     val rows = remember(report, selected, query) { report.filtered(selected, query) }
     LazyColumn(Modifier.fillMaxSize()) {
-        item(key = "engine") { EngineCard(report) }
+        items(report.engines, key = { "engine/" + it.name }) { EngineCard(report, it) }
         item(key = "filters") {
             Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 SearchField(query, onQuery, stringResource(R.string.kpol_search), Modifier.fillMaxWidth().padding(horizontal = 16.dp))
@@ -162,10 +165,11 @@ private fun PolicyList(
             HorizontalDivider()
         }
         if (rows.isEmpty()) {
-            item(key = "empty") { EmptyText(emptyOrNoMatch(query, R.string.kpol_empty, R.string.kpol_no_match)) }
+            val empty = if (report.kyverno) R.string.kpol_empty else R.string.kpol_empty_gatekeeper
+            item(key = "empty") { EmptyText(emptyOrNoMatch(query, empty, R.string.kpol_no_match)) }
         }
         items(rows, key = { it.key }) { policy ->
-            PolicyRow(policy, selected, onClick = { onOpen(policy) })
+            PolicyRow(policy, selected, showEngine = report.bothEngines, onClick = { onOpen(policy) })
             HorizontalDivider()
         }
         if (report.reportsTruncated) {
@@ -176,19 +180,20 @@ private fun PolicyList(
     }
 }
 
-/** The controllers as ready/desired chips, what the webhook does while Kyverno is down, and the reads that failed. */
+/** One engine: its controllers as ready/desired chips, what its webhook does while it is down, and the reads that failed. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun EngineCard(report: PolicyReport) {
+private fun EngineCard(report: PolicyReport, engine: PolicyEngine) {
     val colors = LocalStatusColors.current
-    val engine = report.engine
+    val gatekeeper = engine.name == POLICY_ENGINE_GATEKEEPER
     Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        SectionTitle(stringResource(R.string.kpol_engine))
-        MutedText(
+        SectionTitle(stringResource(if (gatekeeper) R.string.kpol_engine_gatekeeper else R.string.kpol_engine))
+        val details = if (gatekeeper) {
+            listOf(engine.namespace)
+        } else {
             listOf(engine.namespace, report.version, stringResource(R.string.kpol_reports_read, report.reportsRead.toString()))
-                .filter { it.isNotEmpty() }
-                .joinToString("  ·  "),
-        )
+        }
+        MutedText(details.filter { it.isNotEmpty() }.joinToString("  ·  "))
         if (engine.controllers.isNotEmpty()) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 engine.controllers.forEach { c ->
@@ -203,28 +208,35 @@ private fun EngineCard(report: PolicyReport) {
             }
         }
         WebhookLine(engine)
-        if (report.reportsError.isNotEmpty()) InlineError(stringResource(R.string.kpol_reports_unavailable, report.reportsError))
-        if (report.error.isNotEmpty()) InlineError(stringResource(R.string.kpol_read_error, report.error))
+        if (gatekeeper) {
+            if (report.gatekeeperError.isNotEmpty()) InlineError(stringResource(R.string.kpol_read_error, report.gatekeeperError))
+        } else {
+            if (report.reportsError.isNotEmpty()) InlineError(stringResource(R.string.kpol_reports_unavailable, report.reportsError))
+            if (report.error.isNotEmpty()) InlineError(stringResource(R.string.kpol_read_error, report.error))
+        }
     }
 }
 
-/** Fail refuses requests while Kyverno is down (an outage risk), Ignore lets them through unchecked. */
+/** Fail refuses requests while the engine is down (an outage risk), Ignore lets them through unchecked. */
 @Composable
 private fun WebhookLine(engine: PolicyEngine) {
     val colors = LocalStatusColors.current
     val webhook = engine.webhook
+    val gatekeeper = engine.name == POLICY_ENGINE_GATEKEEPER
+    val fail = if (gatekeeper) R.string.kpol_webhook_fail_gatekeeper else R.string.kpol_webhook_fail
+    val ignore = if (gatekeeper) R.string.kpol_webhook_ignore_gatekeeper else R.string.kpol_webhook_ignore
     val (text, color) = when {
         !webhook.present -> stringResource(R.string.kpol_webhook_missing) to colors.bad
-        webhook.failurePolicy == WEBHOOK_FAIL -> stringResource(R.string.kpol_webhook_fail) to colors.warn
-        webhook.failurePolicy == WEBHOOK_IGNORE -> stringResource(R.string.kpol_webhook_ignore) to MaterialTheme.colorScheme.onSurfaceVariant
+        webhook.failurePolicy == WEBHOOK_FAIL -> stringResource(fail) to colors.warn
+        webhook.failurePolicy == WEBHOOK_IGNORE -> stringResource(ignore) to MaterialTheme.colorScheme.onSurfaceVariant
         else -> return
     }
     Text(text, style = MaterialTheme.typography.bodySmall, color = color)
 }
 
-/** Name and mode, its scope, not-ready reason and counts (in [namespace] when one is picked). */
+/** Name and mode (and its engine when both run), its scope, not-ready reason and counts (in [namespace] when one is picked). */
 @Composable
-private fun PolicyRow(policy: KyvernoPolicy, namespace: String?, onClick: () -> Unit) {
+private fun PolicyRow(policy: KyvernoPolicy, namespace: String?, showEngine: Boolean, onClick: () -> Unit) {
     Column(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -238,6 +250,7 @@ private fun PolicyRow(policy: KyvernoPolicy, namespace: String?, onClick: () -> 
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
+            if (showEngine) EngineBadge(policy)
             ActionBadge(policy.action)
         }
         MutedText(policyScopeText(policy), maxLines = 1, overflow = TextOverflow.Ellipsis)

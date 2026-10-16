@@ -1,9 +1,9 @@
 import SwiftUI
 import IchorCore
 
-/// Kyverno's admission policies (os:admin): whether the engine's controllers and webhook are up,
-/// then every policy (not ready first, then Enforce before Audit) with its findings; one opens
-/// its rules and the resources it fails.
+/// Kyverno's admission policies and Gatekeeper's constraints (os:admin): whether each engine's
+/// controllers and webhook are up, then every policy (not ready first, then Enforce before Audit)
+/// with its findings; one opens its rules and the resources it fails.
 struct PoliciesView: View {
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<PolicyReport> = .loading
@@ -33,7 +33,7 @@ struct PoliciesView: View {
         let chosen = namespace.flatMap { namespaces.contains($0) ? $0 : nil }
         let rows = report.filtered(namespace: chosen, query: query)
         return List {
-            PolicyEngineSection(report: report)
+            ForEach(report.engines) { PolicyEngineSection(report: report, engine: $0) }
             if !namespaces.isEmpty {
                 Section {
                     NamespacePicker(namespaces: namespaces, namespace: $namespace)
@@ -44,7 +44,7 @@ struct PoliciesView: View {
             }
             Section {
                 ForEach(rows) { policy in
-                    Button { selected = policy } label: { PolicyRow(policy: policy, namespace: chosen) }
+                    Button { selected = policy } label: { PolicyRow(policy: policy, namespace: chosen, showEngine: report.bothEngines) }
                 }
             } footer: {
                 if report.reportsTruncated {
@@ -54,8 +54,13 @@ struct PoliciesView: View {
         }
         .overlay {
             if report.policies.isEmpty {
-                ContentUnavailableView("No Kyverno policies", systemImage: "checkmark.shield",
-                                       description: Text("Kyverno runs, but no policy is defined."))
+                if report.kyverno {
+                    ContentUnavailableView("No Kyverno policies", systemImage: "checkmark.shield",
+                                           description: Text("Kyverno runs, but no policy is defined."))
+                } else {
+                    ContentUnavailableView("No Gatekeeper policies", systemImage: "checkmark.shield",
+                                           description: Text("Gatekeeper runs, but no policy is defined."))
+                }
             } else if rows.isEmpty && !query.isEmpty {
                 ContentUnavailableView.search(text: query)
             }
@@ -85,12 +90,14 @@ struct PoliciesView: View {
     }
 }
 
-/// The controllers as ready/desired chips, what the webhook does while Kyverno is down, and the reads that failed.
+/// One engine: its controllers as ready/desired chips, what its webhook does while it is down, and the reads that failed.
 private struct PolicyEngineSection: View {
     let report: PolicyReport
+    let engine: PolicyEngine
+
+    private var gatekeeper: Bool { engine.name == .gatekeeper }
 
     var body: some View {
-        let engine = report.engine
         Section {
             if !engine.controllers.isEmpty {
                 ChipFlow(spacing: 6) {
@@ -101,40 +108,55 @@ private struct PolicyEngineSection: View {
                 }
             }
             webhookLine(engine.webhook)
-            if !report.reportsError.isEmpty {
-                ErrorOrNoticeText(message: PolicyText.reportsUnavailable(report.reportsError))
-            }
-            if !report.error.isEmpty {
-                ErrorOrNoticeText(message: PolicyText.readError(report.error))
+            if gatekeeper {
+                if !report.gatekeeperError.isEmpty {
+                    ErrorOrNoticeText(message: PolicyText.readError(report.gatekeeperError))
+                }
+            } else {
+                if !report.reportsError.isEmpty {
+                    ErrorOrNoticeText(message: PolicyText.reportsUnavailable(report.reportsError))
+                }
+                if !report.error.isEmpty {
+                    ErrorOrNoticeText(message: PolicyText.readError(report.error))
+                }
             }
         } header: {
-            Text("Kyverno engine")
+            if gatekeeper { Text("Gatekeeper engine") } else { Text("Kyverno engine") }
         } footer: {
-            Text(verbatim: [engine.namespace, report.version, PolicyText.reportsRead(String(report.reportsRead))]
+            Text(verbatim: (gatekeeper ? [engine.namespace] : [engine.namespace, report.version, PolicyText.reportsRead(String(report.reportsRead))])
                 .filter { !$0.isEmpty }
                 .joined(separator: "  ·  "))
         }
     }
 
-    /// Fail refuses requests while Kyverno is down (an outage risk), Ignore lets them through unchecked.
+    /// Fail refuses requests while the engine is down (an outage risk), Ignore lets them through unchecked.
     @ViewBuilder
     private func webhookLine(_ webhook: PolicyWebhook) -> some View {
         if !webhook.present {
             Text("No admission webhook: policies are not applied to new requests").font(.footnote).foregroundStyle(Color.statusBad)
         } else {
             switch webhook.failurePolicy {
-            case .fail: Text("Fail: requests are refused while Kyverno is down").font(.footnote).foregroundStyle(Color.statusWarn)
-            case .ignore: Text("Ignore: policies are skipped while Kyverno is down").font(.footnote).foregroundStyle(.secondary)
+            case .fail:
+                Group {
+                    if gatekeeper { Text("Fail: requests are refused while Gatekeeper is down") } else { Text("Fail: requests are refused while Kyverno is down") }
+                }
+                .font(.footnote).foregroundStyle(Color.statusWarn)
+            case .ignore:
+                Group {
+                    if gatekeeper { Text("Ignore: policies are skipped while Gatekeeper is down") } else { Text("Ignore: policies are skipped while Kyverno is down") }
+                }
+                .font(.footnote).foregroundStyle(.secondary)
             case .unknown: EmptyView()
             }
         }
     }
 }
 
-/// Name and mode, its scope, not-ready reason and counts (in `namespace` when one is picked).
+/// Name and mode (and its engine when both run), its scope, not-ready reason and counts (in `namespace` when one is picked).
 private struct PolicyRow: View {
     let policy: KyvernoPolicy
     let namespace: String?
+    let showEngine: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -145,6 +167,9 @@ private struct PolicyRow: View {
                     .truncationMode(.middle)
                     .foregroundStyle(.primary)
                 Spacer()
+                if showEngine {
+                    InfoChip(text: policy.engine.title, color: .secondary)
+                }
                 PolicyActionBadge(action: policy.action)
             }
             policy.scopeText

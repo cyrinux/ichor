@@ -4759,6 +4759,15 @@
     <string name="kpol_mode_mixed">Manche Regeln lehnen eine Anfrage ab, die gegen sie verstößt, andere melden sie nur</string>
     <string name="kpol_category">Kategorie</string>
     <string name="kpol_severity">Schweregrad</string>
+    <string name="kpol_engine_gatekeeper">Gatekeeper-Engine</string>
+    <string name="kpol_webhook_fail_gatekeeper">Fail: Anfragen werden abgelehnt, solange Gatekeeper ausgefallen ist</string>
+    <string name="kpol_webhook_ignore_gatekeeper">Ignore: Richtlinien werden übersprungen, solange Gatekeeper ausgefallen ist</string>
+    <string name="kpol_empty_gatekeeper">Keine Gatekeeper-Richtlinien</string>
+    <string name="kpol_empty_hint_gatekeeper">Gatekeeper läuft, aber es ist keine Richtlinie definiert.</string>
+    <string name="kpol_warn">Warnen</string>
+    <string name="kpol_mode_warn">Eine Anfrage, die dagegen verstößt, wird mit einer Warnung durchgelassen</string>
+    <string name="kpol_audited">Letzte Prüfung %1$s</string>
+    <string name="kpol_failing_capped">Gatekeeper behält die ersten %1$s von %2$s Verstößen</string>
     <string name="velero_backup_now">Jetzt sichern</string>
     <string name="velero_backup_now_title">%1$s jetzt sichern?</string>
     <string name="velero_backup_now_text">Velero startet eine Sicherung mit den Einstellungen dieses Zeitplans (Namespaces: %1$s, Speicherort: %2$s). Sie kommt zu den geplanten hinzu und läuft wie diese ab.</string>

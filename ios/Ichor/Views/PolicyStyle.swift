@@ -14,14 +14,15 @@ enum PolicyText {
     static func passCount(_ a: String) -> String { String(localized: "\(a) passing") }
     static func ruleOf(_ a: String) -> String { String(localized: "Rule \(a)") }
     static func failingShown(_ a: String, _ b: String) -> String { String(localized: "The latest \(a) of \(b)") }
+    static func failingCapped(_ a: String, _ b: String) -> String { String(localized: "Gatekeeper keeps the first \(a) of \(b) violations") }
 }
 
 extension PolicyAction {
-    /// Enforce stands out (it refuses requests), Audit is a warning, Mixed sits between.
+    /// Enforce stands out (it refuses requests), Audit and Warn are warnings, Mixed sits between.
     var color: Color {
         switch self {
         case .enforce: .statusBad
-        case .audit: .statusWarn
+        case .audit, .warn: .statusWarn
         case .mixed: .purple
         case .unknown: .secondary
         }
@@ -32,6 +33,7 @@ extension PolicyAction {
         case .enforce: Text("Enforce")
         case .audit: Text("Audit")
         case .mixed: Text("Mixed")
+        case .warn: Text("Warn")
         case .unknown: Text(verbatim: "?")
         }
     }
@@ -42,6 +44,7 @@ extension PolicyAction {
         case .enforce: Text("A request that breaks a rule is refused")
         case .audit: Text("A request that breaks a rule is let through and reported")
         case .mixed: Text("Some rules refuse a request that breaks them, others only report it")
+        case .warn: Text("A request that breaks it is let through with a warning")
         case .unknown: nil
         }
     }
@@ -97,10 +100,10 @@ struct PolicyCounts: View {
 }
 
 extension KyvernoPolicy {
-    /// Namespace (or cluster-wide), category and severity, as the row's second line.
+    /// Namespace (or cluster-wide), a constraint's kind, category and severity, as the row's second line.
     var scopeText: Text {
         let scope = clusterWide ? Text("Cluster-wide") : Text(verbatim: namespace)
-        let rest = [category, severity].filter { !$0.isEmpty }
+        let rest = [kind, category, severity].filter { !$0.isEmpty }
         return rest.isEmpty ? scope : scope + Text(verbatim: "  ·  " + rest.joined(separator: "  ·  "))
     }
 }

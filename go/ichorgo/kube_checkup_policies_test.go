@@ -207,3 +207,23 @@ func TestKubeEventsPolicyField(t *testing.T) {
 		t.Fatalf("quota event got a policy %+v", got.Events[1].Policy)
 	}
 }
+
+// Gatekeeper's dryrun constraints are measured on purpose: their violations stay on the
+// Policies screen, not in the checkup. A constraint no pod enforces is still a finding.
+func TestPolicyFindingsLeaveGatekeeperDryrunOut(t *testing.T) {
+	report := policiesReport{Policies: []policyRow{
+		{Name: "require-labels", Engine: policyEngineKyverno, Action: policyActionAudit, Ready: true, Fail: 4},
+		{Name: "must-have-team", Engine: policyEngineGatekeeper, Action: policyActionAudit, Ready: true, Fail: 300},
+		{Name: "psp-privileged", Engine: policyEngineGatekeeper, Action: policyActionEnforce, Ready: false, ReadyReason: "NotEnforced"},
+	}}
+
+	failures := policyFailureFindings(report)
+	if len(failures) != 1 || failures[0].Name != "require-labels" {
+		t.Errorf("failures %+v", failures)
+	}
+
+	notReady := policyNotReadyFindings(report)
+	if len(notReady) != 1 || notReady[0].Name != "psp-privileged" || notReady[0].Severity != sevCritical {
+		t.Errorf("not ready %+v", notReady)
+	}
+}

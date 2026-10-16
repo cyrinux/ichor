@@ -4771,6 +4771,15 @@
     <string name="kpol_mode_mixed">Some rules refuse a request that breaks them, others only report it</string>
     <string name="kpol_category">Category</string>
     <string name="kpol_severity">Severity</string>
+    <string name="kpol_engine_gatekeeper">Gatekeeper engine</string>
+    <string name="kpol_webhook_fail_gatekeeper">Fail: requests are refused while Gatekeeper is down</string>
+    <string name="kpol_webhook_ignore_gatekeeper">Ignore: policies are skipped while Gatekeeper is down</string>
+    <string name="kpol_empty_gatekeeper">No Gatekeeper policies</string>
+    <string name="kpol_empty_hint_gatekeeper">Gatekeeper runs, but no policy is defined.</string>
+    <string name="kpol_warn">Warn</string>
+    <string name="kpol_mode_warn">A request that breaks it is let through with a warning</string>
+    <string name="kpol_audited">Last audit %1$s</string>
+    <string name="kpol_failing_capped">Gatekeeper keeps the first %1$s of %2$s violations</string>
     <string name="velero_backup_now">Back up now</string>
     <string name="velero_backup_now_title">Back up %1$s now?</string>
     <string name="velero_backup_now_text">Velero starts a backup with this schedule\'s settings (namespaces: %1$s, storage location: %2$s). It runs next to the scheduled ones and expires like them.</string>

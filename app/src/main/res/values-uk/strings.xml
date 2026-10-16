@@ -5015,6 +5015,15 @@
     <string name="kpol_mode_mixed">Деякі правила відхиляють запит, що їх порушує, інші лише повідомляють про нього</string>
     <string name="kpol_category">Категорія</string>
     <string name="kpol_severity">Серйозність</string>
+    <string name="kpol_engine_gatekeeper">Рушій Gatekeeper</string>
+    <string name="kpol_webhook_fail_gatekeeper">Fail: запити відхиляються, поки Gatekeeper не працює</string>
+    <string name="kpol_webhook_ignore_gatekeeper">Ignore: політики пропускаються, поки Gatekeeper не працює</string>
+    <string name="kpol_empty_gatekeeper">Немає політик Gatekeeper</string>
+    <string name="kpol_empty_hint_gatekeeper">Gatekeeper працює, але жодної політики не визначено.</string>
+    <string name="kpol_warn">Попередити</string>
+    <string name="kpol_mode_warn">Запит, що її порушує, пропускається з попередженням</string>
+    <string name="kpol_audited">Останній аудит %1$s</string>
+    <string name="kpol_failing_capped">Gatekeeper зберігає перші %1$s з %2$s порушень</string>
     <string name="velero_backup_now">Створити копію зараз</string>
     <string name="velero_backup_now_title">Створити копію %1$s зараз?</string>
     <string name="velero_backup_now_text">Velero запускає копію з налаштуваннями цього розкладу (простори імен: %1$s, сховище: %2$s). Вона додається до запланованих і спливає так само.</string>
