@@ -6,7 +6,7 @@ import IchorCore
 /// between them. Same as Android's TopologyContent.
 struct KubeSpanMapTab: View {
     let topology: ClusterTopology
-    let netPerf: NetPerfSession
+    let netPerf: NetPerfJob
     let refresh: () async -> Void
     let openNode: (TopologyNode) -> Void
 
@@ -112,7 +112,7 @@ struct KubeSpanMapTab: View {
     }
 }
 
-extension NetPerfSession {
+extension NetPerfJob {
     /// The setup from `client` to `server`, back from a finished or saved test; checked against
     /// the ready nodes once the test screen loads them. Nothing changes while a test runs.
     func prepare(client: String, server: String) {

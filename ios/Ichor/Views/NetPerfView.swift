@@ -2,10 +2,10 @@ import SwiftUI
 import IchorCore
 
 /// A network test between two nodes (netperf, like `cilium connectivity perf`): the setup,
-/// then its progress and the measurements. The session belongs to the screen showing it
-/// (Kubernetes or Cluster insights), which stops a running test when it goes away.
+/// then its progress and the measurements. The test is app-wide (NetPerfJob): leaving the
+/// screen keeps it running, with its Live Activity and Stop.
 struct NetPerfView: View {
-    @Bindable var session: NetPerfSession
+    @Bindable var session: NetPerfJob
 
     @Environment(AppModel.self) private var model
     @State private var nodes: LoadState<[NetPerfNode]> = .loading
@@ -171,7 +171,7 @@ struct NetPerfView: View {
 
 /// The pair and duration tested, the progress while running, then how the test ended.
 private struct NetPerfStatusSection: View {
-    let run: NetPerfSession.Run
+    let run: NetPerfJob.Run
     let stop: () -> Void
     let reset: () -> Void
 
@@ -182,10 +182,10 @@ private struct NetPerfStatusSection: View {
                 .font(.subheadline.monospaced())
             if run.running {
                 ProgressView(value: Double(run.results.count), total: Double(setup.steps))
-                (run.stopping ? Text("Stopping: deleting the test namespace…") : phaseText)
+                Text(verbatim: NetPerfJob.step(run))
                     .font(.callout)
                 if run.progress?.phase != NetPerfPhase.cleaning {
-                    Text("Keep this screen open: leaving it stops the test.")
+                    Text("Leaving this screen keeps the test running.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -198,21 +198,6 @@ private struct NetPerfStatusSection: View {
                 if run.stopped { Text("Test stopped.") }
                 Button("New test", action: reset)
             }
-        }
-    }
-
-    private var phaseText: Text {
-        guard let p = run.progress else { return Text("Preparing the test namespace…") }
-        switch p.phase {
-        case NetPerfPhase.starting:
-            // "node: reason" while a pod waits, e.g. for its image.
-            return p.message.contains(":") ? Text("Waiting for \(p.message)…") : Text("Starting netserver on \(run.setup.server)…")
-        case NetPerfPhase.testing:
-            return Text("\(netPerfPathLabel(p.path)) · \(netPerfTestLabel(p.test)) (\(p.step)/\(p.steps))…")
-        case NetPerfPhase.cleaning:
-            return Text("Deleting the test namespace…")
-        default:
-            return Text("Preparing the test namespace…")
         }
     }
 }
@@ -282,7 +267,7 @@ private struct NetPerfResultRow: View {
     }
 }
 
-private func netPerfPathLabel(_ path: String) -> String {
+func netPerfPathLabel(_ path: String) -> String {
     path == NetPerfPath.host ? String(localized: "Host to host") : String(localized: "Pod to pod")
 }
 

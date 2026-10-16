@@ -1,7 +1,11 @@
 package name.levis.ichor.ui.operations
 
 import name.levis.ichor.R
+import name.levis.ichor.data.ArgoSyncRunState
 import name.levis.ichor.data.ClusterUpgradeRunState
+import name.levis.ichor.data.FluxReconcileRunState
+import name.levis.ichor.data.NetPerfRunState
+import name.levis.ichor.data.RolloutRunState
 import name.levis.ichor.data.ConfigMultiRunState
 import name.levis.ichor.data.ConfigTryRunState
 import name.levis.ichor.data.ImagePullRunState
@@ -11,7 +15,19 @@ import name.levis.ichor.data.JoinRunState
 import name.levis.ichor.data.K8sUpgradeRunState
 import name.levis.ichor.data.MaintenanceRunState
 import name.levis.ichor.data.UpgradeRunState
+import name.levis.ichor.model.ArgoSyncProgress
 import name.levis.ichor.model.ClusterUpgradeProgress
+import name.levis.ichor.model.FluxReconcileProgress
+import name.levis.ichor.model.KubeRolloutPod
+import name.levis.ichor.model.KubeRolloutStatus
+import name.levis.ichor.model.KubeWorkload
+import name.levis.ichor.model.NETPERF_LATENCY
+import name.levis.ichor.model.NETPERF_PATH_POD
+import name.levis.ichor.model.NETPERF_PHASE_TESTING
+import name.levis.ichor.model.NETPERF_THROUGHPUT
+import name.levis.ichor.model.NetPerfProgress
+import name.levis.ichor.model.NetPerfResult
+import name.levis.ichor.model.NetPerfSetup
 import name.levis.ichor.model.ConfigApplyMode
 import name.levis.ichor.model.ConfigTryState
 import name.levis.ichor.model.IMAGESCAN_PHASE_SCANNING
@@ -156,6 +172,78 @@ class OperationPresenterTest {
         assertEquals(OperationProgress(1, 4), ImageScanPresenter.progress(run).progress)
         assertEquals(OperationProgress.INDETERMINATE, ImageScanPresenter.progress(run.copy(progress = null)).progress)
         assertEquals(res(R.string.imagescan_stopping), ImageScanPresenter.progress(run.copy(stopping = true)).text)
+    }
+
+    @Test
+    fun anArgoSyncShowsItsWaveAndResourcesAndCanBeTerminated() {
+        val run = ArgoSyncRunState("argocd", "shop", ArgoSyncProgress("Running", wave = 2, waves = 4, done = 12, total = 30))
+        val n = ArgoSyncPresenter.progress(run)
+        assertEquals(res(R.string.argo_sync_notification_title, "shop"), n.title)
+        assertEquals(
+            OperationText.Joined(listOf(OperationText.Joined(listOf(res(R.string.argo_sync_wave, 2, 4), res(R.string.argo_sync_resources, 12, 30)), " · "), raw("")), "\n"),
+            n.text,
+        )
+        assertEquals(OperationProgress(12, 30), n.progress)
+        assertEquals(listOf(OperationAction.TERMINATE), n.actions)
+        // Not picked up by Argo CD yet: a spinner.
+        val pending = ArgoSyncPresenter.progress(run.copy(progress = ArgoSyncProgress("Pending")))
+        assertEquals(OperationProgress.INDETERMINATE, pending.progress)
+        assertEquals(emptyList<OperationAction>(), ArgoSyncPresenter.progress(run.copy(terminating = true)).actions)
+
+        val done = run.copy(result = "Succeeded", finished = true)
+        assertEquals(OperationResult(res(R.string.argo_sync_notification_done, "shop"), res(R.string.argo_sync_resources, 12, 30)), ArgoSyncPresenter.result(done))
+        assertEquals(res(R.string.argo_sync_notification_terminated, "shop"), ArgoSyncPresenter.result(done.copy(result = "Terminated")).title)
+        assertEquals(res(R.string.argo_sync_notification_failed, "shop"), ArgoSyncPresenter.result(done.copy(result = "Failed", error = "hook failed")).title)
+    }
+
+    @Test
+    fun aFluxReconcileSpinsUntilReadyAndCanStopBeingFollowed() {
+        val run = FluxReconcileRunState("Kustomization", "flux-system", "apps", FluxReconcileProgress("reconciling", "applying the manifests"))
+        val n = FluxReconcilePresenter.progress(run)
+        assertEquals(res(R.string.flux_reconcile_notification_title, "apps"), n.title)
+        assertEquals(raw("applying the manifests"), n.text)
+        assertEquals(OperationProgress.INDETERMINATE, n.progress)
+        assertEquals(listOf(OperationAction.STOP_FOLLOWING), n.actions)
+        assertEquals(res(R.string.flux_reconcile_waiting), FluxReconcilePresenter.progress(run.copy(progress = null)).text)
+
+        assertEquals(res(R.string.flux_reconcile_notification_ready, "apps"), FluxReconcilePresenter.result(run.copy(result = "ready", finished = true)).title)
+        assertEquals(res(R.string.flux_reconcile_notification_still, "apps"), FluxReconcilePresenter.result(run.copy(result = "still reconciling", finished = true)).title)
+        assertEquals(res(R.string.operation_stopped_following, "apps"), FluxReconcilePresenter.result(run.copy(finished = true, stopped = true)).title)
+    }
+
+    @Test
+    fun aRolloutCountsTheNewPodsReady() {
+        val web = KubeWorkload("Deployment", "shop", "web", desired = 5)
+        val pods = (1..5).map { KubeRolloutPod("web-$it", updated = it <= 4, healthy = it <= 3) }
+        val run = RolloutRunState(web, KubeRolloutStatus(web, pods = pods))
+        val n = RolloutPresenter.progress(run)
+        assertEquals(res(R.string.rollout_notification_title, "web"), n.title)
+        assertEquals(res(R.string.rollout_notification_ready, 3, 5), n.text)
+        assertEquals(OperationProgress(3, 5), n.progress)
+        assertEquals(listOf(OperationAction.STOP_FOLLOWING), n.actions)
+        assertEquals(OperationProgress.INDETERMINATE, RolloutPresenter.progress(run.copy(status = null)).progress)
+
+        val done = run.copy(status = KubeRolloutStatus(web, done = true), finished = true)
+        assertEquals(OperationResult(res(R.string.rollout_notification_done, "web"), res(R.string.rollout_notification_ready, 5, 5)), RolloutPresenter.result(done))
+        assertEquals(res(R.string.rollout_notification_stalled, "web"), RolloutPresenter.result(done.copy(status = KubeRolloutStatus(web, failed = true))).title)
+        assertEquals(res(R.string.operation_stopped_following, "web"), RolloutPresenter.result(run.copy(finished = true, stopped = true)).title)
+    }
+
+    @Test
+    fun aNetworkTestCountsItsSecondsAndStops() {
+        val setup = NetPerfSetup(server = "w-2", client = "w-1", seconds = 10)
+        val progress = NetPerfProgress(NETPERF_PHASE_TESTING, path = NETPERF_PATH_POD, test = NETPERF_LATENCY, step = 2, steps = 2, results = listOf(NetPerfResult(NETPERF_PATH_POD, NETPERF_THROUGHPUT)))
+        val run = NetPerfRunState("lab-plain", setup, progress)
+        val n = NetPerfPresenter.progress(run)
+        assertEquals(res(R.string.netperf_notification_title, "w-1", "w-2"), n.title)
+        assertEquals(OperationProgress(10, 20), n.progress)
+        val phase = res(R.string.netperf_phase_testing, res(R.string.netperf_path_pod), res(R.string.netperf_test_latency), 2, 2)
+        assertEquals(OperationText.Joined(listOf(phase, res(R.string.netperf_notification_seconds, 10, 20)), " · "), n.text)
+        assertEquals(listOf(OperationAction.STOP), n.actions)
+        assertEquals(emptyList<OperationAction>(), NetPerfPresenter.progress(run.copy(stopping = true)).actions)
+
+        assertEquals(res(R.string.netperf_notification_stopped), NetPerfPresenter.result(run.copy(finished = true, stopping = true)).title)
+        assertEquals(res(R.string.netperf_notification_failed), NetPerfPresenter.result(run.copy(finished = true, error = "no route")).title)
     }
 
     @Test

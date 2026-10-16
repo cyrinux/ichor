@@ -1,6 +1,41 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Terminate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+            "stringUnit" : {
+              "state" : "translated",
+              "value" : "Beenden"
+            }
+          },
+        "es" : {
+            "stringUnit" : {
+              "state" : "translated",
+              "value" : "Detener"
+            }
+          },
+        "fr" : {
+            "stringUnit" : {
+              "state" : "translated",
+              "value" : "Arrêter"
+            }
+          },
+        "it" : {
+            "stringUnit" : {
+              "state" : "translated",
+              "value" : "Interrompi"
+            }
+          },
+        "uk" : {
+            "stringUnit" : {
+              "state" : "translated",
+              "value" : "Зупинити"
+            }
+          }
+      }
+    },
     "Stop" : {
       "extractionState" : "manual",
       "localizations" : {

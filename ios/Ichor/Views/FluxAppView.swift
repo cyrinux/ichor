@@ -119,6 +119,10 @@ struct FluxAppView: View {
         busy = true
         defer { busy = false }
         let failure = await store.run(action, on: app.target, with: client)
+        // A reconcile the phone started: followed app-wide, with its Live Activity.
+        if failure == nil, action == .reconcile || action == .reconcileWithSource {
+            GitOpsOperationJob.shared.followFluxReconcile(client: client, target: app.target)
+        }
         if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
         await load()
     }

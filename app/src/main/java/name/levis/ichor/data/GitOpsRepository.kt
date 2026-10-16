@@ -10,6 +10,8 @@ import name.levis.ichor.model.ArgoSyncOptions
 import name.levis.ichor.model.FluxAction
 import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.FluxStatus
+import name.levis.ichorgo.ArgoSyncListener
+import name.levis.ichorgo.FluxReconcileListener
 import name.levis.ichorgo.Ichorgo
 
 /** Argo CD and Flux through their custom resources, on the Kubernetes API of the active cluster. */
@@ -74,5 +76,53 @@ class GitOpsRepository(go: GoCall) : GoRepository(go) {
      */
     suspend fun argoDiff(namespace: String, name: String): FluxDiff = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(FluxDiff.serializer(), Ichorgo.kubeArgoDiff(cfg, ctx, server, namespace, name))
+    }
+
+    /**
+     * StartArgoSyncFollow: follows the sync of the Application [namespace]/[name] the phone just
+     * started (os:admin, reads only); returns at once, the follow reports to [onProgress] and
+     * [onDone] (once). See [GitOpsOperationManager].
+     */
+    fun startArgoSyncFollow(namespace: String, name: String, onProgress: (String) -> Unit, onDone: (String, String) -> Unit): ArgoSyncHandle {
+        val t = go.kubeTarget()
+        val run = Ichorgo.startArgoSyncFollow(
+            t.yaml,
+            t.context,
+            t.server,
+            namespace,
+            name,
+            object : ArgoSyncListener {
+                override fun onProgress(json: String) = onProgress(json)
+                override fun onDone(result: String, errMessage: String) = onDone(result, errMessage)
+            },
+        )
+        return ArgoSyncHandle(cancel = run::cancel, terminate = run::terminate)
+    }
+
+    /**
+     * StartFluxReconcileFollow: follows the reconcile of the Flux object [kind] [namespace]/[name]
+     * the phone just requested (os:admin, reads only), for 10 minutes at most; returns at once.
+     */
+    fun startFluxReconcileFollow(
+        kind: String,
+        namespace: String,
+        name: String,
+        onProgress: (String) -> Unit,
+        onDone: (String, String) -> Unit,
+    ): FluxReconcileHandle {
+        val t = go.kubeTarget()
+        val run = Ichorgo.startFluxReconcileFollow(
+            t.yaml,
+            t.context,
+            t.server,
+            kind,
+            namespace,
+            name,
+            object : FluxReconcileListener {
+                override fun onProgress(json: String) = onProgress(json)
+                override fun onDone(result: String, errMessage: String) = onDone(result, errMessage)
+            },
+        )
+        return FluxReconcileHandle { run.cancel() }
     }
 }

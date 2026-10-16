@@ -77,6 +77,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
 import name.levis.ichor.ui.workloads.RolloutStatusSheet
+import name.levis.ichor.ui.workloads.rememberRolloutFollow
 import name.levis.ichor.ui.components.pageContent
 
 /**
@@ -168,7 +169,14 @@ private fun AppDetail(
     var rollback by remember { mutableStateOf<ArgoHistory?>(null) }
     var restart by remember { mutableStateOf<KubeWorkload?>(null) }
     val chosen = app.resources.filter { it.key in selected }
-    val act = { action: ArgoAction, options: ArgoSyncOptions? -> vm.act(listOf(app), action, options) }
+    val talos = LocalContext.current.applicationContext as TalosApp
+    val act = { action: ArgoAction, options: ArgoSyncOptions? ->
+        // A sync is followed app-wide once Argo CD has it: its notification shows the waves.
+        vm.act(listOf(app), action, options) {
+            if (action == ArgoAction.SYNC) runCatching { talos.gitOpsOperations.followArgoSync(app.namespace, app.name) }
+        }
+    }
+    val followRollout = rememberRolloutFollow()
     // Sync, refresh, auto-sync and rollback all patch the Application.
     val argoDenial = rememberKubeDenial(KubeAction.ARGO_SYNC, app.namespace)
     val denied = argoDenial != null
@@ -243,7 +251,7 @@ private fun AppDetail(
             val fresh = vm.restarts.current(w)
             if (restart?.key == w.key) restart = fresh
         }
-        RestartConfirmDialog(w, onConfirm = { restart = null; vm.restarts.restart(w) }, onDismiss = { restart = null })
+        RestartConfirmDialog(w, onConfirm = { restart = null; vm.restarts.restart(w, followRollout) }, onDismiss = { restart = null })
     }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {

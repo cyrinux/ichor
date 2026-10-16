@@ -159,6 +159,7 @@ private extension OperationButton {
         case .abort: "Abort"
         case .keep: "Keep"
         case .revert: "Revert now"
+        case .terminate: "Terminate"
         }
     }
 }

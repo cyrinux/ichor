@@ -55,7 +55,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
  * A network test between two nodes (netperf, like `cilium connectivity perf`): the setup,
- * then its progress and the measurements. Leaving the screen stops a running test.
+ * then its progress and the measurements. Leaving the screen keeps a running test going.
  */
 @Composable
 fun NetPerfTab(vm: NetPerfViewModel, modifier: Modifier = Modifier) {

@@ -17,8 +17,8 @@ private struct InsightsContent: View {
     @State private var session: InsightsSession
     @State private var tab = 0
     @State private var showMetrics = false
-    /// Kept across tabs: only leaving the screen stops a running network test.
-    @State private var netPerf = NetPerfSession()
+    /// App-wide: leaving the screen keeps a running network test.
+    private var netPerf: NetPerfJob { .shared }
     init(cluster: String, storageScope: String) {
         _session = State(initialValue: InsightsSession(cluster: cluster, storageScope: storageScope))
     }
@@ -54,7 +54,6 @@ private struct InsightsContent: View {
         .onChange(of: scenePhase) { _, phase in if phase != .active { session.stop() } }
         .onChange(of: session.recording) { _, recording in UIApplication.shared.isIdleTimerDisabled = recording }
         .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
-        .onDisappear { if netPerf.isRunning { netPerf.leave() } }
     }
     @ViewBuilder private var drift: some View {
         Section {

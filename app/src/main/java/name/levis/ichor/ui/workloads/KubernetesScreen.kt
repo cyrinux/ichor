@@ -47,8 +47,11 @@ import name.levis.ichor.ui.components.ActionBarEditor
 import name.levis.ichor.ui.components.SwipeTabPager
 import name.levis.ichor.ui.components.pageContent
 
+/** The network test's tab (its notification opens it). */
+const val NETPERF_TAB = 3
+
 /** Workloads, Pods, CronJobs and NetPerf. */
-private val KUBE_TABS = listOf(0, 1, 2, 3)
+private val KUBE_TABS = listOf(0, 1, 2, NETPERF_TAB)
 
 /**
  * The cluster's Kubernetes side, through the Kubernetes API with the admin kubeconfig Talos
@@ -188,7 +191,7 @@ fun KubernetesScreen(
                 AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.workloads_title)) })
                 AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.pods_title)) })
                 AppTab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.cronjobs_title)) })
-                AppTab(selected = tab == 3, onClick = { tab = 3 }, text = { Text(stringResource(R.string.netperf_tab)) })
+                AppTab(selected = tab == NETPERF_TAB, onClick = { tab = NETPERF_TAB }, text = { Text(stringResource(R.string.netperf_tab)) })
             }
             SwipeTabPager(KUBE_TABS, tab, onSelect = { tab = it }) { page ->
                 when (page) {

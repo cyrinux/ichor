@@ -103,6 +103,10 @@ enum OperationActivities {
         case (.clusterUpgrade, .abort): ClusterUpgradeJob.shared.abort()
         case (.configTry, .keep): ConfigTryJob.shared.keep()
         case (.configTry, .revert): ConfigTryJob.shared.revert()
+        case (.argoSync, .terminate): GitOpsOperationJob.shared.terminate()
+        case (.fluxReconcile, .stopFollowing): GitOpsOperationJob.shared.stopFollowingFlux()
+        case (.rollout, .stopFollowing): RolloutJob.shared.stopFollowing()
+        case (.netPerf, .stop): NetPerfJob.shared.stop()
         default: break
         }
     }
@@ -115,7 +119,8 @@ enum OperationActivities {
         let entries: [(OperationKind, OperationContent?)] = [
             (.upgrade, upgrade()), (.maintenance, maintenance()), (.configTry, configTry()), (.configMulti, configMulti()),
             (.clusterUpgrade, clusterUpgrade()), (.k8sUpgrade, k8sUpgrade()), (.imagePull, imagePull()), (.join, join()),
-            (.imageScan, imageScan()),
+            (.imageScan, imageScan()), (.argoSync, argoSync()), (.fluxReconcile, fluxReconcile()), (.rollout, rollout()),
+            (.netPerf, netPerf()),
         ]
         let locked = lockEnabled
         var contents: [OperationKind: OperationContent] = [:]

@@ -187,6 +187,8 @@ enum Route: Hashable {
     case workloads
     /// The Kubernetes screen on a tab, showing one workload, pod or CronJob (a share link).
     case kubernetes(KubeFocus)
+    /// The Kubernetes screen on its network test (a followed test's Live Activity).
+    case networkTest
     /// Longhorn, Garage and CloudNativePG health (os:admin); hints: catalog ids from the
     /// inventory, downNodes: hostnames Talos reports not ready, for the likely cause; kind: the
     /// system to open on (nil: the first).
@@ -312,6 +314,7 @@ struct MainNavigation: View {
                     case .kubespan: KubeSpanView()
                     case .workloads: KubernetesView()
                     case .kubernetes(let focus): KubernetesView(focus: focus)
+                    case .networkTest: KubernetesView(networkTest: true)
                     case .dataServices(let hints, let downNodes, let kind): DataServicesView(hints: hints, downNodes: downNodes, selected: kind)
                     case .argoCD(let downNodes): ArgoCDView(downNodes: downNodes)
                     case .argoWindows: ArgoWindowsView()
@@ -456,6 +459,17 @@ struct MainNavigation: View {
             return K8sUpgradeJob.shared.version == nil ? nil : Route.k8sUpgrade
         case .join:
             return JoinJob.shared.request == nil ? nil : Route.joinNode
+        case .argoSync:
+            guard let run = GitOpsOperationJob.shared.argo else { return nil }
+            return Route.argoApp(namespace: run.namespace, name: run.name)
+        case .fluxReconcile:
+            guard let target = GitOpsOperationJob.shared.flux?.target else { return nil }
+            return Route.fluxApp(kind: target.kind, namespace: target.namespace, name: target.name)
+        case .rollout:
+            guard let w = RolloutJob.shared.workload else { return nil }
+            return Route.kubernetes(KubeFocus(tab: .workloads, id: w.id, namespace: w.namespace, name: w.name))
+        case .netPerf:
+            return NetPerfJob.shared.run == nil ? nil : Route.networkTest
         case .configMulti, .imagePull, .imageScan:
             return nil
         }

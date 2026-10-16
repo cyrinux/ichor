@@ -59,6 +59,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
 import name.levis.ichor.ui.workloads.RolloutStatusSheet
+import name.levis.ichor.ui.workloads.rememberRolloutFollow
 import name.levis.ichor.ui.workloads.WorkloadPodsSheet
 import name.levis.ichor.model.ImageScanReport
 import name.levis.ichor.model.KubeObjectRef
@@ -114,13 +115,14 @@ fun AppsScreen(
     // A workload's pods, over the app's sheet.
     var podsOf by remember { mutableStateOf<PodSelection.OfWorkload?>(null) }
     RestartResultToasts(workloadsVm.restarts.results)
+    val followRollout = rememberRolloutFollow()
     RolloutStatusSheet(workloadsVm.restarts)
     confirm?.let { w ->
         RestartConfirmDialog(
             workload = w,
             onConfirm = {
                 confirm = null
-                workloadsVm.restarts.restart(w)
+                workloadsVm.restarts.restart(w, followRollout)
             },
             onDismiss = { confirm = null },
         )
