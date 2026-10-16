@@ -16,6 +16,13 @@ struct ActivityLogView: View {
             .navigationTitle("Activity")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    NavigationLink {
+                        SavedScansView(cluster: cluster)
+                    } label: {
+                        Image(systemName: "checkmark.shield").accessibilityLabel(Text("Scan reports"))
+                    }
+                }
                 if let export {
                     ToolbarItem(placement: .primaryAction) {
                         ShareLink(item: export) {

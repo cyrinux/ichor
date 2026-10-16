@@ -205,6 +205,11 @@ internal object Routes {
     const val ACTIVITY = "activity?cluster={cluster}"
 
     fun activity(cluster: String = "") = "activity?cluster=${Uri.encode(cluster)}"
+
+    /** The vulnerability scan reports kept on the phone for [cluster]. */
+    const val SCAN_REPORTS = "scan-reports?cluster={cluster}"
+
+    fun scanReports(cluster: String) = "scan-reports?cluster=${Uri.encode(cluster)}"
     const val DIAGNOSIS = "diagnosis?note={note}"
 
     /** [note]: what to tell the model up front, e.g. a failed health check. */

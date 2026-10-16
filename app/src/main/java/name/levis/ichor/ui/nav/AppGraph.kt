@@ -8,6 +8,7 @@ import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.activity.ActivityScreen
+import name.levis.ichor.ui.imagescan.SavedScansScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
 import name.levis.ichor.ui.diagnosis.DiagnosisScreen
 import name.levis.ichor.ui.funding.FundingScreen
@@ -54,7 +55,11 @@ internal fun NavGraphBuilder.appGraph(nav: NavHostController, app: TalosApp, kub
         )
     }
     composable(Routes.ACTIVITY, arguments = listOf(navArgument("cluster") { type = NavType.StringType; defaultValue = "" })) { entry ->
-        ActivityScreen(cluster = entry.arguments?.getString("cluster").orEmpty(), onBack = { nav.popBackStack() })
+        val cluster = entry.arguments?.getString("cluster").orEmpty()
+        ActivityScreen(cluster = cluster, onBack = { nav.popBackStack() }, onScanReports = { nav.navigate(Routes.scanReports(cluster)) })
+    }
+    composable(Routes.SCAN_REPORTS, arguments = listOf(navArgument("cluster") { type = NavType.StringType; defaultValue = "" })) { entry ->
+        SavedScansScreen(cluster = entry.arguments?.getString("cluster").orEmpty(), onBack = { nav.popBackStack() })
     }
     composable(Routes.SETTINGS) {
         SettingsScreen(
