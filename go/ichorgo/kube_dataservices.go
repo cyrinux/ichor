@@ -267,7 +267,10 @@ type dsPod struct {
 		} `json:"containers"`
 	} `json:"spec"`
 	Status struct {
-		Phase             string `json:"phase"`
+		Phase string `json:"phase"`
+		// PodIP and HostIP are the same for a hostNetwork pod (a MetalLB speaker).
+		PodIP             string `json:"podIP"`
+		HostIP            string `json:"hostIP"`
 		ContainerStatuses []struct {
 			Name  string `json:"name"`
 			Ready bool   `json:"ready"`

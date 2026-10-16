@@ -31,6 +31,9 @@ var errLBPartial = errors.New("some MetalLB objects could not be read")
 // lbPod is a running pod of a load balancer controller, App its catalog id.
 type lbPod struct {
 	Namespace, Name, Node, App string
+	// IPs are the pod's and its node's, when listed here (not from the checkup's pods): a
+	// Prometheus series without a pod label names its target by instance address.
+	IPs []string
 }
 
 // readLBInputs reads the LoadBalancer Services, then the controllers together, each allowed
@@ -118,7 +121,10 @@ func listLBPods(ctx context.Context, k *kubeClient) ([]lbPod, error) {
 		}
 
 		if app := lbAppOf(images); app != "" {
-			out = append(out, lbPod{Namespace: p.Metadata.Namespace, Name: p.Metadata.Name, Node: p.Spec.NodeName, App: app})
+			out = append(out, lbPod{
+				Namespace: p.Metadata.Namespace, Name: p.Metadata.Name, Node: p.Spec.NodeName, App: app,
+				IPs: nonEmpty([]string{p.Status.PodIP, p.Status.HostIP}),
+			})
 		}
 	}
 
