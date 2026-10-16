@@ -57,7 +57,7 @@ func demoPolicies() policiesReport {
 			},
 			{
 				Namespace: "", Name: "disallow-privileged", Action: policyActionEnforce,
-				Ready: true, Category: "Pod Security", Severity: "high",
+				Ready: true, Category: "Pod Security", Severity: "high", ManagedBy: ownerViaArgo,
 				Description: "Privileged containers are not allowed",
 				Rules:       policyRules{Validate: 1}, RuleNames: []string{"privileged-containers"},
 				Pass:        15,

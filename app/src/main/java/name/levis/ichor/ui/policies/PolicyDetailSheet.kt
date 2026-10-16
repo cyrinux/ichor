@@ -33,7 +33,13 @@ import name.levis.ichor.util.timeAgo
 /** One policy or constraint: what its mode does, whether it is ready, its rules, then the resources it fails. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PolicyDetailSheet(policy: KyvernoPolicy, onDismiss: () -> Unit, onObject: (KubeObjectRef) -> Unit) {
+fun PolicyDetailSheet(
+    policy: KyvernoPolicy,
+    onDismiss: () -> Unit,
+    onObject: (KubeObjectRef) -> Unit,
+    switching: Boolean = false,
+    onSetAction: (String) -> Unit = {},
+) {
     val colors = LocalStatusColors.current
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -56,6 +62,7 @@ fun PolicyDetailSheet(policy: KyvernoPolicy, onDismiss: () -> Unit, onObject: (K
                 }
                 if (policy.readyMessage.isNotEmpty()) MutedText(policy.readyMessage)
             }
+            PolicySwitchButtons(policy, switching, onSetAction)
             if (policy.category.isNotEmpty()) InfoRow(stringResource(R.string.kpol_category), policy.category)
             if (policy.severity.isNotEmpty()) InfoRow(stringResource(R.string.kpol_severity), policy.severity)
             if (policy.background) MutedText(stringResource(R.string.kpol_background))

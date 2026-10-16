@@ -132,6 +132,9 @@ type policyRow struct {
 	FailingCapped bool `json:"failingCapped,omitempty"`
 	// AuditAt is when Gatekeeper's audit last wrote the violations, unix seconds, 0 for Kyverno.
 	AuditAt int64 `json:"auditAt,omitempty"`
+	// ManagedBy is argocd or flux when a GitOps tool applies the policy: a change made from the
+	// phone is reverted on its next sync.
+	ManagedBy string `json:"managedBy,omitempty"`
 	// ByNamespace is the same counts per namespace, sorted by name, for the screen's namespace
 	// filter: a ClusterPolicy's results spread over every namespace it checks.
 	ByNamespace []policyNSRow `json:"byNamespace"`

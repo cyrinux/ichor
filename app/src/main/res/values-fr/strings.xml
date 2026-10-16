@@ -4767,6 +4767,14 @@
     <string name="kpol_mode_mixed">Certaines règles refusent une requête qui les enfreint, d’autres la signalent seulement</string>
     <string name="kpol_category">Catégorie</string>
     <string name="kpol_severity">Gravité</string>
+    <string name="kpol_switch_audit">Passer en Audit</string>
+    <string name="kpol_switch_enforce">Passer en Enforce</string>
+    <string name="kpol_switch_audit_body">Les pods qui enfreignent cette politique seront admis et seulement signalés jusqu’à ce que vous la rebasculiez.</string>
+    <string name="kpol_switch_enforce_body">Les requêtes qui enfreignent cette politique seront de nouveau refusées.</string>
+    <string name="kpol_switch_gitops">%1$s applique cette politique : sa prochaine synchronisation remettra le mode précédent.</string>
+    <string name="kpol_switch_mixed">Ses règles mélangent Enforce et Audit : chaque règle prend ce mode, et rebasculer plus tard ne rétablit pas ce mélange.</string>
+    <string name="kpol_switched">%1$s est maintenant en mode %2$s</string>
+    <string name="kpol_switch_failed">Impossible de basculer %1$s : %2$s</string>
     <string name="kpol_engine_gatekeeper">Moteur Gatekeeper</string>
     <string name="kpol_webhook_fail_gatekeeper">Fail : les requêtes sont refusées tant que Gatekeeper est arrêté</string>
     <string name="kpol_webhook_ignore_gatekeeper">Ignore : les politiques sont ignorées tant que Gatekeeper est arrêté</string>

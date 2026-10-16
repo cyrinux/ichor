@@ -40,7 +40,16 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.PolicyRepository
 import name.levis.ichor.model.KubeObjectRef
@@ -67,11 +76,38 @@ import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 class PoliciesViewModel(private val policies: PolicyRepository) : LoadingViewModel<PolicyReport>() {
     override suspend fun fetch() = policies.policies()
+
+    private val _switching = MutableStateFlow<String?>(null)
+    /** The key of the policy being switched, null when none is. */
+    val switching: StateFlow<String?> = _switching.asStateFlow()
+
+    private val _switches = MutableSharedFlow<PolicySwitchResult>(extraBufferCapacity = 4)
+    val switches: SharedFlow<PolicySwitchResult> = _switches.asSharedFlow()
+
+    /** Switches [policy] to [action] (Audit or Enforce), then reads the policies again. */
+    fun setAction(policy: KyvernoPolicy, action: String) {
+        if (_switching.value != null) return
+        _switching.value = policy.key
+        viewModelScope.launch {
+            val error = try {
+                policies.setAction(policy.namespace, policy.name, action)
+                null
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                e.uiText()
+            }
+            _switching.value = null
+            _switches.emit(PolicySwitchResult(policy.name, action, error))
+            if (error == null) refresh()
+        }
+    }
 }
 
 private const val KYVERNO_SITE = "https://kyverno.io"
@@ -95,9 +131,17 @@ fun PoliciesScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var open by rememberSaveable { mutableStateOf<String?>(null) }
     val loaded = (state as? UiState.Loaded)?.data
+    val switching by vm.switching.collectAsStateWithLifecycle()
+    PolicySwitchToasts(vm.switches)
 
     loaded?.policies?.firstOrNull { it.key == open }?.let {
-        PolicyDetailSheet(it, onDismiss = { open = null }, onObject = { ref -> open = null; onObject(ref) })
+        PolicyDetailSheet(
+            it,
+            onDismiss = { open = null },
+            onObject = { ref -> open = null; onObject(ref) },
+            switching = switching == it.key,
+            onSetAction = { action -> vm.setAction(it, action) },
+        )
     }
 
     Scaffold(

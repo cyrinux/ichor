@@ -25,7 +25,7 @@ struct PoliciesView: View {
         .searchable(text: $query, prompt: Text("Name, category or rule"))
         .navigationTitle("Policies")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $selected) { PolicyDetailSheet(policy: $0) }
+        .sheet(item: $selected) { PolicyDetailSheet(policy: $0) { Task { await load() } } }
     }
 
     private func list(_ report: PolicyReport) -> some View {

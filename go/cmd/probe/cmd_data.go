@@ -261,6 +261,16 @@ var dataCommands = []command{
 
 		return out, err
 	}},
+	{name: "kube-policy-set-action", args: "NAMESPACE NAME Audit|Enforce", run: func(e env) (string, error) {
+		// kube-policy-set-action: switch a Kyverno policy (NAMESPACE "-" for a ClusterPolicy)
+		// between Audit and Enforce, the rules' failureAction with it. Mutates the cluster.
+		namespace := flag.Arg(1)
+		if namespace == "-" {
+			namespace = ""
+		}
+
+		return ichorgo.KubePolicySetAction(e.cfg, e.context, e.kubeServer, namespace, flag.Arg(2), flag.Arg(3))
+	}},
 	{name: "kube-autoscaling", args: "", run: func(e env) (out string, err error) {
 		// kube-autoscaling: HPAs, KEDA, VPA recommendations and Karpenter pools (read-only).
 		out, err = ichorgo.KubeAutoscaling(e.cfg, e.context, e.kubeServer)

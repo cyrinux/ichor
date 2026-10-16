@@ -5015,6 +5015,14 @@
     <string name="kpol_mode_mixed">Деякі правила відхиляють запит, що їх порушує, інші лише повідомляють про нього</string>
     <string name="kpol_category">Категорія</string>
     <string name="kpol_severity">Серйозність</string>
+    <string name="kpol_switch_audit">Перевести в Audit</string>
+    <string name="kpol_switch_enforce">Перевести в Enforce</string>
+    <string name="kpol_switch_audit_body">Поди, що порушують цю політику, допускатимуться й лише фіксуватимуться, доки ви не повернете її назад.</string>
+    <string name="kpol_switch_enforce_body">Запити, що порушують цю політику, знову відхилятимуться.</string>
+    <string name="kpol_switch_gitops">%1$s застосовує цю політику: наступна синхронізація поверне попередній режим.</string>
+    <string name="kpol_switch_mixed">Її правила поєднують Enforce і Audit: кожне правило отримає цей режим, а повернення згодом не відновить це поєднання.</string>
+    <string name="kpol_switched">%1$s тепер у режимі %2$s</string>
+    <string name="kpol_switch_failed">Не вдалося перемкнути %1$s: %2$s</string>
     <string name="kpol_engine_gatekeeper">Рушій Gatekeeper</string>
     <string name="kpol_webhook_fail_gatekeeper">Fail: запити відхиляються, поки Gatekeeper не працює</string>
     <string name="kpol_webhook_ignore_gatekeeper">Ignore: політики пропускаються, поки Gatekeeper не працює</string>

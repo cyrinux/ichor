@@ -459,6 +459,21 @@ class PoliciesTest {
     }
 
     @Test
+    fun aKyvernoPolicySwitchesToTheOtherModeAndSaysWhoWouldRevertIt() {
+        assertEquals(listOf(POLICY_ACTION_AUDIT), KyvernoPolicy(name = "a", action = POLICY_ACTION_ENFORCE).switchTargets)
+        assertEquals(listOf(POLICY_ACTION_ENFORCE), KyvernoPolicy(name = "a", action = POLICY_ACTION_AUDIT).switchTargets)
+        assertEquals(listOf(POLICY_ACTION_AUDIT, POLICY_ACTION_ENFORCE), KyvernoPolicy(name = "a", action = POLICY_ACTION_MIXED).switchTargets)
+        // A Gatekeeper constraint is not switched from here.
+        assertTrue(KyvernoPolicy(name = "c", engine = POLICY_ENGINE_GATEKEEPER, action = POLICY_ACTION_ENFORCE).switchTargets.isEmpty())
+
+        assertEquals("clusterpolicies", KyvernoPolicy(name = "a").kyvernoResource)
+        assertEquals("policies", KyvernoPolicy(namespace = "shop", name = "a").kyvernoResource)
+        assertEquals("Argo CD", KyvernoPolicy(name = "a", managedBy = "argocd").gitopsTool)
+        assertEquals("Flux", KyvernoPolicy(name = "a", managedBy = "flux").gitopsTool)
+        assertNull(KyvernoPolicy(name = "a").gitopsTool)
+    }
+
+    @Test
     fun aClusterWithoutKyvernoIsNotAnError() {
         val none = TalosJson.decodeFromString(PolicyReport.serializer(), """{"installed":false,"version":"","engine":{"namespace":"","controllers":null,"webhook":{"present":false}},"policies":[],"namespaces":[],"reportsRead":0,"reportsTruncated":false}""")
         assertFalse(none.installed)
