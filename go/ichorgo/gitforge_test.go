@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 )
 
 const gitTestToken = "ghp_test_not_a_real_token"
@@ -118,7 +119,7 @@ func TestGitHubTreeAndFile(t *testing.T) {
 			`{"type":"file","path":"apps/podinfo/deployment.yaml","sha":"abc123","size":14,"encoding":"base64","content":"` + b64Content("kind: Deployment") + `"}`),
 		"/api/v3/repos/example-org/platform/contents/big.bin": jsonAnswer(`{"type":"file","path":"big.bin","sha":"f00","size":5000000,"encoding":"none","content":""}`),
 	})
-	host, repo := gitHostJSON("github", srv.URL), "https://git.example.org/example-org/platform.git"
+	host, repo := gitHostJSON("github", srv.URL), "https://127.0.0.1/example-org/platform.git"
 
 	out, err := GitForgeTree(host, repo, "main", "/apps/")
 	if err != nil {
@@ -192,13 +193,24 @@ func TestGitLabTreePagesAndPrivateToken(t *testing.T) {
 			fmt.Fprint(w, `[{"path":"clusters/README.md","type":"blob"}]`)
 		case project + "/repository/files/clusters%2Fprod%2Fkustomization.yaml":
 			fmt.Fprintf(w, `{"file_path":"clusters/prod/kustomization.yaml","size":5,"encoding":"base64","content":"%s","last_commit_id":"c0ffee"}`, b64Content("kind:"))
+		case project + "/repository/files/big.bin":
+			if r.Method != http.MethodHead {
+				t.Error("a file over 1 MiB was downloaded")
+			}
+
+			w.Header().Set("X-Gitlab-Size", "5000000")
+			w.Header().Set("X-Gitlab-Last-Commit-Id", "b16")
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
 	}))
 	t.Cleanup(srv.Close)
 
-	host, repo := gitHostJSON("gitlab", srv.URL), "ssh://git@gitlab.example.org/group/sub/infra.git"
+	host, repo := gitHostJSON("gitlab", srv.URL), "ssh://git@127.0.0.1/group/sub/infra.git"
+
+	if out, err := GitForgeFile(host, repo, "main", "big.bin"); err != nil || !strings.Contains(out, `"sha":"b16"`) || !strings.Contains(out, `"truncated":true`) {
+		t.Errorf("big file %s %v", out, err)
+	}
 
 	out, err := GitForgeTree(host, repo, "main", "clusters")
 	if err != nil {
@@ -219,12 +231,77 @@ func TestGitLabTreePagesAndPrivateToken(t *testing.T) {
 	}
 }
 
+// Gitea sends a file's whole content: one too large to read comes back truncated, described
+// from its directory's listing.
+func TestGiteaLargeFileIsTruncated(t *testing.T) {
+	big := strings.Repeat("A", gitForgeMaxBody)
+
+	srv := gitServer(t, map[string]func(w http.ResponseWriter, r *http.Request){
+		"/api/v1/repos/ops/fleet/contents/charts/big.tgz": jsonAnswer(`{"type":"file","path":"charts/big.tgz","sha":"5ha","size":3000000,"encoding":"base64","content":"` + big + `"}`),
+		"/api/v1/repos/ops/fleet/contents/charts":         jsonAnswer(`[{"type":"file","path":"charts/big.tgz","sha":"5ha","size":3000000}]`),
+		"/api/v1/repos/ops/fleet/contents/link":           jsonAnswer(`{"type":"symlink","path":"link","sha":"l1","size":4}`),
+	})
+	host, repo := gitHostJSON("gitea", srv.URL), "https://127.0.0.1/ops/fleet"
+
+	out, err := GitForgeFile(host, repo, "main", "charts/big.tgz")
+	if err != nil || !strings.Contains(out, `"sha":"5ha"`) || !strings.Contains(out, `"truncated":true`) || !strings.Contains(out, `"content":""`) {
+		t.Errorf("big file %s %v", out, err)
+	}
+
+	if _, err := GitForgeFile(host, repo, "main", "link"); err == nil || err.Error() != "link is a symlink, not a file" {
+		t.Errorf("symlink: %v", err)
+	}
+}
+
+// The token is for its own host: a repository on another host, or one whose path climbs, is
+// refused before any request.
+func TestGitForgeRefusesOtherRepos(t *testing.T) {
+	host := gitHostJSON("gitlab", "https://gitlab.example.org")
+
+	if _, err := GitForgeTree(host, "https://github.com/example-org/platform", "main", ""); err == nil || !strings.Contains(err.Error(), "is on github.com, not on the Git host gitlab.example.org") {
+		t.Errorf("other host: %v", err)
+	}
+
+	if _, err := GitForgeTree(host, "https://gitlab.example.org/example-org/..", "main", ""); err == nil {
+		t.Error("a repository path with .. was accepted")
+	}
+}
+
+func TestParseGitForgeHostAPIAddresses(t *testing.T) {
+	for in, want := range map[string]string{
+		`{"kind":"auto","baseURL":"https://api.github.com"}`:               "github|github.com|https://github.com",
+		`{"kind":"github","baseURL":"https://ghe.example.org/api/v3/"}`:    "github|ghe.example.org|https://ghe.example.org",
+		`{"kind":"auto","baseURL":"https://gitlab.example.org/api/v4"}`:    "gitlab|gitlab.example.org|https://gitlab.example.org",
+		`{"kind":"auto","baseURL":"https://gitea.example.org/git/api/v1"}`: "gitea|gitea.example.org|https://gitea.example.org/git",
+	} {
+		h, err := parseGitForgeHost(in)
+		if got := h.Kind + "|" + h.host + "|" + h.BaseURL; err != nil || got != want {
+			t.Errorf("%s: %q %v, want %q", in, got, err, want)
+		}
+	}
+
+	h, _ := parseGitForgeHost(`{"kind":"auto","baseURL":"https://api.github.com"}`) //nolint:errcheck
+	if api := newGitForge(h).(gitHubForge).c.api; api != "https://api.github.com" {
+		t.Errorf("github.com API %s", api)
+	}
+}
+
+func TestRateLimitResetPrefersRetryAfter(t *testing.T) {
+	h := http.Header{}
+	h.Set("X-RateLimit-Reset", "1900000000")
+	h.Set("Retry-After", "60")
+
+	if until := time.Until(rateLimitReset(h)); until <= 0 || until > 2*time.Minute {
+		t.Errorf("reset in %s, want about a minute", until)
+	}
+}
+
 func TestGiteaTree(t *testing.T) {
 	srv := gitServer(t, map[string]func(w http.ResponseWriter, r *http.Request){
 		"/api/v1/repos/ops/fleet/contents": jsonAnswer(`[{"type":"dir","path":"apps","size":0},{"type":"file","path":"README.md","size":3}]`),
 	})
 
-	out, err := GitForgeTree(gitHostJSON("gitea", srv.URL), "https://codeberg.org/ops/fleet", "main", "")
+	out, err := GitForgeTree(gitHostJSON("gitea", srv.URL), "https://127.0.0.1/ops/fleet", "main", "")
 	if err != nil || !strings.Contains(out, `{"path":"apps","type":"dir","size":0}`) {
 		t.Errorf("tree %s %v", out, err)
 	}
@@ -256,7 +333,7 @@ func TestGitForgeRefusesRedirects(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	_, err := GitForgeTree(gitHostJSON("gitea", srv.URL), "https://gitea.home.example/ops/fleet", "main", "")
+	_, err := GitForgeTree(gitHostJSON("gitea", srv.URL), "https://127.0.0.1/ops/fleet", "main", "")
 	if err == nil || !strings.Contains(err.Error(), "redirect") {
 		t.Errorf("redirect: %v", err)
 	}

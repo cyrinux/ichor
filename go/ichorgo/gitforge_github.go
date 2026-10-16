@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"slices"
@@ -92,23 +93,38 @@ func contentsTree(ctx context.Context, c gitForgeClient, base, ref, dir string) 
 }
 
 // contentsFile reads path through a contents endpoint (GitHub, Gitea); content is base64.
-// GitHub sends no content over 1 MiB (encoding "none"): the caller marks it truncated.
+// GitHub sends no content over 1 MiB (encoding "none"); Gitea sends it all, so an answer
+// too large to read is a truncated file, described from its directory's listing.
 func contentsFile(ctx context.Context, c gitForgeClient, base, ref, path string) (gitForgeFile, error) {
 	var raw json.RawMessage
-	if _, err := c.get(ctx, base+"/"+escapePath(path), url.Values{"ref": {ref}}, &raw); err != nil {
+
+	_, err := c.get(ctx, base+"/"+escapePath(path), url.Values{"ref": {ref}}, &raw)
+	if errors.Is(err, errGitForgeTooLarge) {
+		return contentsListed(ctx, c, base, ref, path)
+	}
+
+	if err != nil {
 		return gitForgeFile{}, err
 	}
 
 	var it contentsEntry
-	if err := json.Unmarshal(raw, &it); err != nil || it.Type != "file" {
+	if err := json.Unmarshal(raw, &it); err != nil {
 		return gitForgeFile{}, fmt.Errorf("%s is a directory, not a file", path)
 	}
 
+	if it.Type != "file" {
+		return gitForgeFile{}, fmt.Errorf("%s is a %s, not a file", path, it.Type)
+	}
+
 	f := gitForgeFile{Path: it.Path, SHA: it.SHA, Size: it.Size}
-	if it.Size > gitForgeMaxFile || it.Encoding != "base64" {
-		f.Truncated = it.Size > gitForgeMaxFile || it.Encoding == "none"
+	if it.Size > gitForgeMaxFile || it.Encoding == "none" {
+		f.Truncated = true
 
 		return f, nil
+	}
+
+	if it.Encoding != "base64" {
+		return gitForgeFile{}, fmt.Errorf("%s: unexpected encoding %q", path, it.Encoding)
 	}
 
 	content, err := base64.StdEncoding.DecodeString(strings.ReplaceAll(it.Content, "\n", ""))
@@ -119,4 +135,26 @@ func contentsFile(ctx context.Context, c gitForgeClient, base, ref, path string)
 	f.Content = string(content)
 
 	return f, nil
+}
+
+// contentsListed describes a file too large to read from its directory's listing: its sha
+// and size, truncated.
+func contentsListed(ctx context.Context, c gitForgeClient, base, ref, path string) (gitForgeFile, error) {
+	dir := base
+	if i := strings.LastIndex(path, "/"); i >= 0 {
+		dir += "/" + escapePath(path[:i])
+	}
+
+	var items []contentsEntry
+	if _, err := c.get(ctx, dir, url.Values{"ref": {ref}}, &items); err != nil {
+		return gitForgeFile{}, err
+	}
+
+	for _, it := range items {
+		if it.Path == path {
+			return gitForgeFile{Path: it.Path, SHA: it.SHA, Size: it.Size, Truncated: true}, nil
+		}
+	}
+
+	return gitForgeFile{}, errGitForgeNotFound
 }

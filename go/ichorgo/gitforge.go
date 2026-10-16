@@ -33,8 +33,9 @@ const (
 	gitForgeTimeout = 20 * time.Second
 	// gitForgeMaxFile is the largest file read: GitHub's contents API stops there too.
 	gitForgeMaxFile = 1 << 20
-	// gitForgeMaxBody bounds an answer: a 1 MiB file is about 1.4 MiB in base64.
-	gitForgeMaxBody = 8 << 20
+	// gitForgeMaxBody bounds an answer: a 1 MiB file is about 1.4 MiB in base64, a full
+	// directory page well under it. A bigger answer is a file read as truncated.
+	gitForgeMaxBody = 3 << 20
 	// gitForgeMaxPages bounds a GitLab directory listing (100 entries a page).
 	gitForgeMaxPages = 50
 )
@@ -45,6 +46,9 @@ var gitForgeHTTP = newHTTPClient(httpClientOpts{timeout: gitForgeTimeout})
 
 // errGitForgeNotFound is a 404, worded by the caller with the path and ref asked.
 var errGitForgeNotFound = errors.New("not found")
+
+// errGitForgeTooLarge is an answer over gitForgeMaxBody: a file read reports it truncated.
+var errGitForgeTooLarge = errors.New("answer too large")
 
 // gitForgeHost is where and how to reach a forge: {"kind","baseURL","token"}.
 type gitForgeHost struct {
@@ -230,6 +234,11 @@ func gitForgeArgs(hostJSON, repoURL, ref, path string) (gitForgeHost, gitRepoRef
 		if repo.host, repo.owner, repo.name, err = gitForgeRepo(repoURL); err != nil {
 			return gitForgeHost{}, gitRepoRef{}, "", "", err
 		}
+
+		// The token is for h.host: a repository elsewhere is not read with it.
+		if repo.host != h.host {
+			return gitForgeHost{}, gitRepoRef{}, "", "", fmt.Errorf("%s is on %s, not on the Git host %s", repo.full(), repo.host, h.host)
+		}
 	}
 
 	ref = strings.TrimSpace(ref)
@@ -269,7 +278,16 @@ func parseGitForgeHost(hostJSON string) (gitForgeHost, error) {
 		return gitForgeHost{}, fmt.Errorf("%s: the Git host must be reached over https", u.Hostname())
 	}
 
-	h.BaseURL, h.host = u.Scheme+"://"+u.Host+strings.TrimRight(u.Path, "/"), strings.ToLower(u.Hostname())
+	// A pasted API address is the forge's own: the API path is added back per forge.
+	path := strings.TrimRight(u.Path, "/")
+	for _, api := range []string{"/api/v1", "/api/v3", "/api/v4"} {
+		path = strings.TrimSuffix(path, api)
+	}
+
+	h.BaseURL, h.host = u.Scheme+"://"+u.Host+path, gitForgeHostName(u.Hostname())
+	if h.host == "github.com" {
+		h.BaseURL = "https://github.com"
+	}
 
 	if h.Kind == "" || h.Kind == gitForgeAuto {
 		if h.Kind, err = gitForgeKindOf(h.host); err != nil {
@@ -294,6 +312,21 @@ func isLoopbackHost(host string) bool {
 	ip := net.ParseIP(host)
 
 	return ip != nil && ip.IsLoopback()
+}
+
+// gitForgeHostName is the forge a host name stands for: GitHub's API, www and SSH hosts are
+// github.com, GitLab's SSH-over-443 host is gitlab.com.
+func gitForgeHostName(host string) string {
+	host = strings.ToLower(host)
+
+	switch host {
+	case "api.github.com", "www.github.com", "ssh.github.com":
+		return "github.com"
+	case "altssh.gitlab.com":
+		return "gitlab.com"
+	}
+
+	return host
 }
 
 // gitForgeKindOf guesses a forge from its host name.
@@ -322,11 +355,11 @@ func gitForgeRepo(repoURL string) (host, owner, name string, err error) {
 	host, path, _ := strings.Cut(rest, "/")
 
 	segs := strings.Split(strings.Trim(path, "/"), "/")
-	if len(segs) < 2 || slices.Contains(segs, "") {
+	if len(segs) < 2 || slices.Contains(segs, "") || slices.Contains(segs, ".") || slices.Contains(segs, "..") {
 		return "", "", "", fmt.Errorf("%s does not name an owner and a repository", repoURL)
 	}
 
-	return strings.ToLower(host), strings.Join(segs[:len(segs)-1], "/"), segs[len(segs)-1], nil
+	return gitForgeHostName(host), strings.Join(segs[:len(segs)-1], "/"), segs[len(segs)-1], nil
 }
 
 func newGitForge(h gitForgeHost) gitForge {
@@ -361,41 +394,71 @@ type gitForgeClient struct {
 	api  string
 }
 
-// get decodes the JSON answer to GET api+path?query into out and returns its headers. The
-// token goes in Authorization: Bearer (GitLab behind a proxy that strips it: PRIVATE-TOKEN on
-// a 401); a redirect is refused, never followed.
+// get decodes the JSON answer to GET api+path?query into out and returns its headers;
+// errGitForgeTooLarge past gitForgeMaxBody.
 func (c gitForgeClient) get(ctx context.Context, path string, query url.Values, out any) (http.Header, error) {
-	target := c.api + path
-	if len(query) > 0 {
-		target += "?" + query.Encode()
-	}
-
-	resp, err := c.send(ctx, target, false)
-	if err == nil && resp.StatusCode == http.StatusUnauthorized && c.host.Kind == gitForgeGitLab && c.host.Token != "" {
-		resp.Body.Close() //nolint:errcheck
-
-		resp, err = c.send(ctx, target, true)
-	}
-
+	resp, err := c.do(ctx, http.MethodGet, path, query)
 	if err != nil {
-		return nil, c.scrub(fmt.Errorf("%s: %w", c.host.host, err))
+		return nil, err
 	}
 
 	defer resp.Body.Close() //nolint:errcheck
 
-	if err := c.status(resp); err != nil {
-		return nil, err
-	}
+	body := &io.LimitedReader{R: resp.Body, N: gitForgeMaxBody}
+	if err := json.NewDecoder(body).Decode(out); err != nil {
+		if body.N == 0 {
+			return nil, errGitForgeTooLarge
+		}
 
-	if err := json.NewDecoder(io.LimitReader(resp.Body, gitForgeMaxBody)).Decode(out); err != nil {
 		return nil, fmt.Errorf("%s: unreadable answer: %w", c.host.host, err)
 	}
 
 	return resp.Header, nil
 }
 
-func (c gitForgeClient) send(ctx context.Context, target string, privateToken bool) (*http.Response, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+// head returns the headers of HEAD api+path?query.
+func (c gitForgeClient) head(ctx context.Context, path string, query url.Values) (http.Header, error) {
+	resp, err := c.do(ctx, http.MethodHead, path, query)
+	if err != nil {
+		return nil, err
+	}
+
+	resp.Body.Close() //nolint:errcheck
+
+	return resp.Header, nil
+}
+
+// do sends one request and returns its 2xx answer. The token goes in Authorization: Bearer
+// (GitLab behind a proxy that strips it: PRIVATE-TOKEN on a 401); a redirect is refused,
+// never followed.
+func (c gitForgeClient) do(ctx context.Context, method, path string, query url.Values) (*http.Response, error) {
+	target := c.api + path
+	if len(query) > 0 {
+		target += "?" + query.Encode()
+	}
+
+	resp, err := c.send(ctx, method, target, false)
+	if err == nil && resp.StatusCode == http.StatusUnauthorized && c.host.Kind == gitForgeGitLab && c.host.Token != "" {
+		resp.Body.Close() //nolint:errcheck
+
+		resp, err = c.send(ctx, method, target, true)
+	}
+
+	if err != nil {
+		return nil, c.scrub(fmt.Errorf("%s: %w", c.host.host, err))
+	}
+
+	if err := c.status(resp); err != nil {
+		resp.Body.Close() //nolint:errcheck
+
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (c gitForgeClient) send(ctx context.Context, method, target string, privateToken bool) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, method, target, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -477,17 +540,18 @@ func rateLimited(h http.Header) bool {
 	return h.Get("X-RateLimit-Remaining") == "0" || h.Get("RateLimit-Remaining") == "0" || h.Get("Retry-After") != ""
 }
 
-// rateLimitReset is when a rate limit ends: a unix time (GitHub X-RateLimit-Reset, GitLab
-// RateLimit-Reset) or Retry-After seconds; zero when unknown.
+// rateLimitReset is when a rate limit ends: Retry-After seconds or a unix time (GitHub
+// X-RateLimit-Reset, GitLab RateLimit-Reset); zero when unknown.
 func rateLimitReset(h http.Header) time.Time {
+	// Retry-After first: GitHub's secondary limits send it with the primary window's reset.
+	if s, err := strconv.Atoi(h.Get("Retry-After")); err == nil && s > 0 {
+		return time.Now().Add(time.Duration(s) * time.Second)
+	}
+
 	for _, key := range []string{"X-RateLimit-Reset", "RateLimit-Reset"} {
 		if s, err := strconv.ParseInt(h.Get(key), 10, 64); err == nil && s > 0 {
 			return time.Unix(s, 0)
 		}
-	}
-
-	if s, err := strconv.Atoi(h.Get("Retry-After")); err == nil && s > 0 {
-		return time.Now().Add(time.Duration(s) * time.Second)
 	}
 
 	return time.Time{}

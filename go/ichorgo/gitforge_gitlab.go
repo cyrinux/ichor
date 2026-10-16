@@ -97,7 +97,19 @@ func (g gitLabForge) file(ctx context.Context, repo gitRepoRef, ref, path string
 	}
 
 	// The file path is one URL-encoded segment (its slashes too).
-	if _, err := g.c.get(ctx, gitLabProject(repo)+"/repository/files/"+url.PathEscape(path), url.Values{"ref": {ref}}, &it); err != nil {
+	filePath, q := gitLabProject(repo)+"/repository/files/"+url.PathEscape(path), url.Values{"ref": {ref}}
+
+	// HEAD tells the size first: GitLab sends a file's whole content, whatever its size.
+	h, err := g.c.head(ctx, filePath, q)
+	if err != nil {
+		return gitForgeFile{}, err
+	}
+
+	if size, err := strconv.ParseInt(h.Get("X-Gitlab-Size"), 10, 64); err == nil && size > gitForgeMaxFile {
+		return gitForgeFile{Path: path, SHA: h.Get("X-Gitlab-Last-Commit-Id"), Size: size, Truncated: true}, nil
+	}
+
+	if _, err := g.c.get(ctx, filePath, q, &it); err != nil {
 		return gitForgeFile{}, err
 	}
 
