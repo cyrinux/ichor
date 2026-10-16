@@ -108,6 +108,14 @@ var kubeActionChecks = map[string][]accessNeed{
 		{ssarAttributes{Verb: "patch", Group: groupCNPG, Resource: "clusters"}, true},
 		{ssarAttributes{Verb: "get", Group: groupCNPG, Resource: "clusters"}, true},
 	},
+	// An HPA's min and max (one KEDA owns is refused by the core whatever the answer), and a
+	// KEDA ScaledObject's pause: apart, so a role on HPAs alone keeps its button.
+	"autoscale": {
+		{ssarAttributes{Verb: "patch", Group: "autoscaling", Resource: "horizontalpodautoscalers"}, true},
+	},
+	"autoscaleKeda": {
+		{ssarAttributes{Verb: "patch", Group: groupKEDA, Resource: "scaledobjects"}, true},
+	},
 	"cnpgPromote": {
 		{ssarAttributes{Verb: "patch", Group: groupCNPG, Resource: "clusters", Subresource: "status"}, true},
 		{ssarAttributes{Verb: "get", Group: groupCNPG, Resource: "clusters"}, true},
@@ -227,7 +235,7 @@ type accessNeed struct {
 // restartDaemonSet), scale (scaleStatefulSet), deletePod, execPod, debugPod, debugNode, suspendCronJob,
 // triggerCronJob, helmRollback, argoSync, fluxReconcile (fluxReconcileHelmRelease,
 // fluxReconcileGitRepository, fluxReconcileOCIRepository, fluxReconcileHelmRepository,
-// fluxReconcileBucket), cordonNode, drainNode, cnpgPromote, createVolumeSnapshot,
+// fluxReconcileBucket), cordonNode, drainNode, autoscale, autoscaleKeda, cnpgPromote, createVolumeSnapshot,
 // veleroBackupNow, veleroDeleteBackup, veleroRestore, vmStart, vmStop, vmRestart,
 // vmMigrate, vmPause, vmUnpause, vmConsole. Answers are cached a few minutes.
 // kubeServer: see KubePods.

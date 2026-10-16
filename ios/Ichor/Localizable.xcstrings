@@ -5,1062 +5,1622 @@
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Die Synchronisierung konnte nicht verfolgt werden."
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "No se pudo seguir la sincronización."
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Impossible de suivre la synchronisation."
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Impossibile seguire la sincronizzazione."
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Не вдалося відстежити синхронізацію."
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Synchronisierung konnte nicht verfolgt werden."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo seguir la sincronización."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de suivre la synchronisation."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile seguire la sincronizzazione."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося відстежити синхронізацію."
+          }
+        }
       }
     },
     "Could not follow the reconcile." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Der Abgleich konnte nicht verfolgt werden."
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "No se pudo seguir la reconciliación."
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Impossible de suivre la réconciliation."
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Impossibile seguire la riconciliazione."
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Не вдалося відстежити узгодження."
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Abgleich konnte nicht verfolgt werden."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo seguir la reconciliación."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de suivre la réconciliation."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile seguire la riconciliazione."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося відстежити узгодження."
+          }
+        }
       }
     },
     "Syncing %@" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "%@ wird synchronisiert"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sincronizando %@"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Synchronisation de %@"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sincronizzazione di %@"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Синхронізація %@"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ wird synchronisiert"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizando %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronisation de %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizzazione di %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синхронізація %@"
+          }
+        }
       }
     },
     "Terminating the sync…" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Synchronisierung wird beendet…"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Terminando la sincronización…"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Arrêt de la synchronisation…"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Interruzione della sincronizzazione…"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Зупинка синхронізації…"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronisierung wird beendet…"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminando la sincronización…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêt de la synchronisation…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interruzione della sincronizzazione…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинка синхронізації…"
+          }
+        }
       }
     },
     "Waiting for Argo CD to start the sync…" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Warten, bis Argo CD die Synchronisierung startet…"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Esperando a que Argo CD inicie la sincronización…"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "En attente du démarrage de la synchronisation par Argo CD…"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "In attesa che Argo CD avvii la sincronizzazione…"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Очікування, доки Argo CD почне синхронізацію…"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten, bis Argo CD die Synchronisierung startet…"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando a que Argo CD inicie la sincronización…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente du démarrage de la synchronisation par Argo CD…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa che Argo CD avvii la sincronizzazione…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очікування, доки Argo CD почне синхронізацію…"
+          }
+        }
       }
     },
     "Wave %lld/%lld · %lld/%lld resources" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Welle %1$lld/%2$lld · %3$lld/%4$lld Ressourcen"
-            }
-          },
-        "en" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Wave %1$lld/%2$lld · %3$lld/%4$lld resources"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Ola %1$lld/%2$lld · %3$lld/%4$lld recursos"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Vague %1$lld/%2$lld · %3$lld/%4$lld ressources"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Ondata %1$lld/%2$lld · %3$lld/%4$lld risorse"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Хвиля %1$lld/%2$lld · %3$lld/%4$lld ресурсів"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welle %1$lld/%2$lld · %3$lld/%4$lld Ressourcen"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wave %1$lld/%2$lld · %3$lld/%4$lld resources"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ola %1$lld/%2$lld · %3$lld/%4$lld recursos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vague %1$lld/%2$lld · %3$lld/%4$lld ressources"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ondata %1$lld/%2$lld · %3$lld/%4$lld risorse"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хвиля %1$lld/%2$lld · %3$lld/%4$lld ресурсів"
+          }
+        }
       }
     },
     "%lld/%lld resources" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "%1$lld/%2$lld Ressourcen"
-            }
-          },
-        "en" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "%1$lld/%2$lld resources"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "%1$lld/%2$lld recursos"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "%1$lld/%2$lld ressources"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "%1$lld/%2$lld risorse"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "%1$lld/%2$lld ресурсів"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld Ressourcen"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld resources"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld recursos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld ressources"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld risorse"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld ресурсів"
+          }
+        }
       }
     },
     "Syncing…" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Synchronisierung…"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sincronizando…"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Synchronisation…"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sincronizzazione…"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Синхронізація…"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronisierung…"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizando…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronisation…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizzazione…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синхронізація…"
+          }
+        }
       }
     },
     "Sync succeeded" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Synchronisierung erfolgreich"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sincronización correcta"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Synchronisation réussie"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sincronizzazione riuscita"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Синхронізацію завершено"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronisierung erfolgreich"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronización correcta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronisation réussie"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizzazione riuscita"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синхронізацію завершено"
+          }
+        }
       }
     },
     "Sync terminated" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Synchronisierung beendet"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sincronización terminada"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Synchronisation arrêtée"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sincronizzazione interrotta"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Синхронізацію зупинено"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronisierung beendet"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronización terminada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronisation arrêtée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizzazione interrotta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синхронізацію зупинено"
+          }
+        }
       }
     },
     "Sync failed" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Synchronisierung fehlgeschlagen"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "La sincronización falló"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Échec de la synchronisation"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sincronizzazione non riuscita"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Синхронізація не вдалася"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronisierung fehlgeschlagen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sincronización falló"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de la synchronisation"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizzazione non riuscita"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синхронізація не вдалася"
+          }
+        }
       }
     },
     "Stopped following. The sync goes on in Argo CD." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Verfolgung beendet. Die Synchronisierung läuft in Argo CD weiter."
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Seguimiento detenido. La sincronización continúa en Argo CD."
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Suivi arrêté. La synchronisation continue dans Argo CD."
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Monitoraggio interrotto. La sincronizzazione prosegue in Argo CD."
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Відстеження зупинено. Синхронізація триває в Argo CD."
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verfolgung beendet. Die Synchronisierung läuft in Argo CD weiter."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguimiento detenido. La sincronización continúa en Argo CD."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivi arrêté. La synchronisation continue dans Argo CD."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitoraggio interrotto. La sincronizzazione prosegue in Argo CD."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відстеження зупинено. Синхронізація триває в Argo CD."
+          }
+        }
       }
     },
     "Reconciling %@" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "%@ wird abgeglichen"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Reconciliando %@"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Réconciliation de %@"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Riconciliazione di %@"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Узгодження %@"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ wird abgeglichen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconciliando %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réconciliation de %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riconciliazione di %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Узгодження %@"
+          }
+        }
       }
     },
     "Reconciling…" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Abgleich läuft…"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Reconciliando…"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Réconciliation…"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Riconciliazione…"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Узгодження…"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgleich läuft…"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconciliando…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réconciliation…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riconciliazione…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Узгодження…"
+          }
+        }
       }
     },
     "Reconcile failed" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Abgleich fehlgeschlagen"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "La reconciliación falló"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Échec de la réconciliation"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Riconciliazione non riuscita"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Узгодження не вдалося"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgleich fehlgeschlagen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La reconciliación falló"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de la réconciliation"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riconciliazione non riuscita"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Узгодження не вдалося"
+          }
+        }
       }
     },
     "Still reconciling after 10 minutes: check it again later." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Nach 10 Minuten noch im Abgleich: später erneut prüfen."
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sigue reconciliando tras 10 minutos: compruébalo más tarde."
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Toujours en réconciliation après 10 minutes : vérifiez plus tard."
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Ancora in riconciliazione dopo 10 minuti: ricontrolla più tardi."
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Узгодження триває понад 10 хвилин: перевірте пізніше."
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach 10 Minuten noch im Abgleich: später erneut prüfen."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sigue reconciliando tras 10 minutos: compruébalo más tarde."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toujours en réconciliation après 10 minutes : vérifiez plus tard."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancora in riconciliazione dopo 10 minuti: ricontrolla più tardi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Узгодження триває понад 10 хвилин: перевірте пізніше."
+          }
+        }
       }
     },
     "Stopped following. The reconcile goes on in Flux." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Verfolgung beendet. Der Abgleich läuft in Flux weiter."
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Seguimiento detenido. La reconciliación continúa en Flux."
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Suivi arrêté. La réconciliation continue dans Flux."
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Monitoraggio interrotto. La riconciliazione prosegue in Flux."
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Відстеження зупинено. Узгодження триває у Flux."
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verfolgung beendet. Der Abgleich läuft in Flux weiter."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguimiento detenido. La reconciliación continúa en Flux."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivi arrêté. La réconciliation continue dans Flux."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitoraggio interrotto. La riconciliazione prosegue in Flux."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відстеження зупинено. Узгодження триває у Flux."
+          }
+        }
       }
     },
     "Its pods are replaced only when deleted: the restart replaces none." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Seine Pods werden nur beim Löschen ersetzt: der Neustart ersetzt keinen."
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sus pods solo se reemplazan al eliminarlos: el reinicio no reemplaza ninguno."
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Ses pods ne sont remplacés qu'une fois supprimés : le redémarrage n'en remplace aucun."
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "I suoi pod vengono sostituiti solo quando eliminati: il riavvio non ne sostituisce nessuno."
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Його поди замінюються лише після видалення: перезапуск не замінить жодного."
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seine Pods werden nur beim Löschen ersetzt: der Neustart ersetzt keinen."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sus pods solo se reemplazan al eliminarlos: el reinicio no reemplaza ninguno."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses pods ne sont remplacés qu'une fois supprimés : le redémarrage n'en remplace aucun."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I suoi pod vengono sostituiti solo quando eliminati: il riavvio non ne sostituisce nessuno."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його поди замінюються лише після видалення: перезапуск не замінить жодного."
+          }
+        }
       }
     },
     "Restarting %@" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "%@ wird neu gestartet"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Reiniciando %@"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Redémarrage de %@"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Riavvio di %@"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Перезапуск %@"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ wird neu gestartet"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciando %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redémarrage de %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riavvio di %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезапуск %@"
+          }
+        }
       }
     },
     "Rolling out…" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Rollout läuft…"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Desplegando…"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Déploiement…"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Rollout in corso…"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Розгортання…"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rollout läuft…"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplegando…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déploiement…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rollout in corso…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розгортання…"
+          }
+        }
       }
     },
     "Every pod was replaced and is ready." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Alle Pods wurden ersetzt und sind bereit."
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Todos los pods se reemplazaron y están listos."
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Tous les pods ont été remplacés et sont prêts."
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Tutti i pod sono stati sostituiti e sono pronti."
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Усі поди замінено, вони готові."
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Pods wurden ersetzt und sind bereit."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los pods se reemplazaron y están listos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les pods ont été remplacés et sont prêts."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutti i pod sono stati sostituiti e sono pronti."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі поди замінено, вони готові."
+          }
+        }
       }
     },
     "The rollout exceeded its progress deadline." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Der Rollout hat seine Fortschrittsfrist überschritten."
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "El despliegue superó su plazo de progreso."
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Le déploiement a dépassé son délai de progression."
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Il rollout ha superato la scadenza di avanzamento."
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Розгортання перевищило свій термін виконання."
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Rollout hat seine Fortschrittsfrist überschritten."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El despliegue superó su plazo de progreso."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le déploiement a dépassé son délai de progression."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il rollout ha superato la scadenza di avanzamento."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розгортання перевищило свій термін виконання."
+          }
+        }
       }
     },
     "Still rolling out after 10 minutes: check it again later." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Nach 10 Minuten noch im Rollout: später erneut prüfen."
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sigue desplegando tras 10 minutos: compruébalo más tarde."
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Toujours en déploiement après 10 minutes : vérifiez plus tard."
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Rollout ancora in corso dopo 10 minuti: ricontrolla più tardi."
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Розгортання триває понад 10 хвилин: перевірте пізніше."
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach 10 Minuten noch im Rollout: später erneut prüfen."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sigue desplegando tras 10 minutos: compruébalo más tarde."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toujours en déploiement après 10 minutes : vérifiez plus tard."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rollout ancora in corso dopo 10 minuti: ricontrolla più tardi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розгортання триває понад 10 хвилин: перевірте пізніше."
+          }
+        }
       }
     },
     "Stopped following. The rollout goes on." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Verfolgung beendet. Der Rollout läuft weiter."
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Seguimiento detenido. El despliegue continúa."
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Suivi arrêté. Le déploiement continue."
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Monitoraggio interrotto. Il rollout prosegue."
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Відстеження зупинено. Розгортання триває."
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verfolgung beendet. Der Rollout läuft weiter."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguimiento detenido. El despliegue continúa."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivi arrêté. Le déploiement continue."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitoraggio interrotto. Il rollout prosegue."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відстеження зупинено. Розгортання триває."
+          }
+        }
       }
     },
     "Network test" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Netzwerktest"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Prueba de red"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Test réseau"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Test di rete"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Тест мережі"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzwerktest"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba de red"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test réseau"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test di rete"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тест мережі"
+          }
+        }
       }
     },
     "Network test done" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Netzwerktest abgeschlossen"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Prueba de red terminada"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Test réseau terminé"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Test di rete completato"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Тест мережі завершено"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzwerktest abgeschlossen"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba de red terminada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test réseau terminé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test di rete completato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тест мережі завершено"
+          }
+        }
       }
     },
     "Leaving this screen keeps the test running." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Beim Verlassen dieses Bildschirms läuft der Test weiter."
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Salir de esta pantalla no detiene la prueba."
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Quitter cet écran laisse le test se poursuivre."
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Uscendo da questa schermata il test continua."
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Якщо вийти з цього екрана, тест триватиме."
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim Verlassen dieses Bildschirms läuft der Test weiter."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salir de esta pantalla no detiene la prueba."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitter cet écran laisse le test se poursuivre."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uscendo da questa schermata il test continua."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Якщо вийти з цього екрана, тест триватиме."
+          }
+        }
       }
     },
     "Argo CD sync" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Argo-CD-Synchronisierung"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sincronización de Argo CD"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Synchronisation Argo CD"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Sincronizzazione Argo CD"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Синхронізація Argo CD"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Argo-CD-Synchronisierung"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronización de Argo CD"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronisation Argo CD"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizzazione Argo CD"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синхронізація Argo CD"
+          }
+        }
       }
     },
     "Flux reconcile" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Flux-Abgleich"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Reconciliación de Flux"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Réconciliation Flux"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Riconciliazione Flux"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Узгодження Flux"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flux-Abgleich"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconciliación de Flux"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réconciliation Flux"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riconciliazione Flux"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Узгодження Flux"
+          }
+        }
       }
     },
     "Rollout restart" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Rollout-Neustart"
-            }
-          },
-        "es" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Reinicio del despliegue"
-            }
-          },
-        "fr" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Redémarrage du déploiement"
-            }
-          },
-        "it" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Riavvio del rollout"
-            }
-          },
-        "uk" : {
-            "stringUnit" : {
-              "state" : "translated",
-              "value" : "Перезапуск розгортання"
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rollout-Neustart"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinicio del despliegue"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redémarrage du déploiement"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riavvio del rollout"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезапуск розгортання"
+          }
+        }
+      }
+    },
+    "Pause at…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausieren bei…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar en…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre en pause à…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metti in pausa a…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Призупинити на…"
+          }
+        }
+      }
+    },
+    "Resume scaling" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skalierung fortsetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reanudar el escalado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre le scaling"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riprendi lo scaling"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновити масштабування"
+          }
+        }
+      }
+    },
+    "Pause %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ pausieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre %@ en pause"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metti in pausa %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Призупинити %@"
+          }
+        }
+      }
+    },
+    "KEDA scales the workload to this count and stops scaling it until you resume." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA skaliert die Arbeitslast auf diese Anzahl und skaliert sie nicht mehr, bis Sie fortsetzen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA escala la carga a este número y deja de escalarla hasta que la reanudes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA ramène la charge à ce nombre et arrête de la mettre à l’échelle jusqu’à la reprise."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA porta il carico a questo numero e smette di scalarlo finché non riprendi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA масштабує навантаження до цієї кількості й більше не змінює її, доки ви не відновите."
+          }
+        }
+      }
+    },
+    "Pause at %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei %@ pausieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar en %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause à %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausa a %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Призупинити на %@"
+          }
+        }
+      }
+    },
+    "Hold current count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuelle Anzahl halten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener el número actual"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder le nombre actuel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni il numero attuale"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Утримати поточну кількість"
+          }
+        }
+      }
+    },
+    "Hold current count stops KEDA where the workload is now." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuelle Anzahl halten stoppt KEDA dort, wo die Arbeitslast gerade steht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener el número actual detiene KEDA donde está la carga ahora."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder le nombre actuel arrête KEDA là où en est la charge."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni il numero attuale ferma KEDA dove si trova ora il carico."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Утримання поточної кількості зупиняє KEDA там, де навантаження зараз."
+          }
+        }
+      }
+    },
+    "KEDA scales the workload on its triggers again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA skaliert die Arbeitslast wieder nach ihren Triggern."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA vuelve a escalar la carga según sus disparadores."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA met de nouveau la charge à l’échelle selon ses déclencheurs."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA torna a scalare il carico secondo i suoi trigger."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA знову масштабує навантаження за його тригерами."
+          }
+        }
+      }
+    },
+    "Bounds" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grenzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Límites"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bornes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limiti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Межі"
+          }
+        }
+      }
+    },
+    "Edit min/max" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Min/Max bearbeiten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar mín/máx"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier min/max"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifica min/max"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінити мін/макс"
+          }
+        }
+      }
+    },
+    "Bounds of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grenzen von %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Límites de %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bornes de %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limiti di %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Межі %@"
+          }
+        }
+      }
+    },
+    "Min replicas" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Min. Replikate"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réplicas mín"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réplicas min"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repliche min"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мін. реплік"
+          }
+        }
+      }
+    },
+    "Max replicas" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Max. Replikate"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réplicas máx"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réplicas max"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repliche max"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Макс. реплік"
+          }
+        }
+      }
+    },
+    "Max must not be below min." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Max darf nicht unter Min liegen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El máximo no debe ser menor que el mínimo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le max ne doit pas être inférieur au min."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il massimo non deve essere inferiore al minimo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Макс не може бути меншим за мін."
+          }
+        }
+      }
+    },
+    "Save bounds" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grenzen speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar límites"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer les bornes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva limiti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти межі"
+          }
+        }
+      }
+    },
+    "KEDA owns this HPA: change the minReplicaCount or maxReplicaCount of the ScaledObject %@ instead." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA verwaltet diesen HPA: Ändern Sie stattdessen minReplicaCount oder maxReplicaCount des ScaledObject %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA es dueño de este HPA: cambia en su lugar el minReplicaCount o el maxReplicaCount del ScaledObject %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA possède ce HPA : modifiez plutôt le minReplicaCount ou le maxReplicaCount du ScaledObject %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA gestisce questo HPA: modifica invece il minReplicaCount o il maxReplicaCount dello ScaledObject %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цим HPA керує KEDA: змініть натомість minReplicaCount або maxReplicaCount ScaledObject %@."
+          }
+        }
       }
     },
     "Reconcile now" : {

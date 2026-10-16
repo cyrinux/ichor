@@ -607,6 +607,14 @@ The workload sheet names the autoscaler that owns the replica count — "HPA web
 1–5", or "KEDA worker-so · paused at 0" — with a tap through to the Autoscaling screen, and
 the list marks autoscaled workloads with an "auto" badge.
 
+**Pause and resume KEDA, raise an HPA ceiling.** The two fixes made at 3 a.m. are one tap from
+the sheets. On a ScaledObject, **Pause at…** sets `autoscaling.keda.sh/paused-replicas` (KEDA
+scales the workload to that count and stops), **Hold current count** sets
+`autoscaling.keda.sh/paused: "true"`, and **Resume scaling** removes both. On an HPA, **Edit
+min/max** sets `minReplicas` and `maxReplicas`; Save stays off while max is below min, and min
+cannot go under 1. An HPA KEDA created is not edited: KEDA would put its bounds back, so the sheet
+points to the ScaledObject's `minReplicaCount` / `maxReplicaCount` instead.
+
 ### Virtual machines
 
 **Kubernetes → Virtual machines** shows the KubeVirt virtual machines of the cluster ("Harvester"
@@ -1005,6 +1013,11 @@ a fresh install. Backups move between Android and iOS.
   to Audit, which lets requests that break it through, asks for the typed policy name; switching
   back to Enforce asks a plain confirm. The button is off, with the reason, when the credentials
   may not patch the policy, and the activity log keeps every switch.
+
+- **Autoscaling (Kubernetes → Autoscaling → a ScaledObject or an HPA, `os:admin`):** pausing,
+  holding or resuming a KEDA ScaledObject and editing an HPA's min and max are reversible: each
+  asks a plain confirm. Each button is off, with the reason, when the credentials may not patch
+  that kind; the activity log keeps every change; the demo cluster refuses them.
 
 - **META keys (node menu → Machine config → META, `os:admin`):**
   - **What they are:** the boot-time values Talos reads before the machine config, such as the

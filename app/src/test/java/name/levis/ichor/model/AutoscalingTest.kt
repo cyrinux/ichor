@@ -99,4 +99,19 @@ class AutoscalingTest {
         assertEquals("384Mi", container.memoryTarget)
         assertTrue(vpa.recommendationProvided)
     }
+
+    @Test
+    fun hpaBoundsRefuseWhatTheCoreRefuses() {
+        assertTrue(hpaBoundsValid(1, 1))
+        assertTrue(hpaBoundsValid(2, 10))
+        assertFalse(hpaBoundsValid(0, 3))
+        assertFalse(hpaBoundsValid(4, 3))
+        assertFalse(hpaBoundsValid(1, MAX_SCALE_REPLICAS + 1))
+    }
+
+    @Test
+    fun kedaOwnedHpaHasNoBoundsForm() {
+        assertTrue(demo.hpa.items.first { it.name == "keda-hpa-transcoder" }.kedaOwned)
+        assertFalse(demo.hpa.items.first { it.managedBy.isEmpty() }.kedaOwned)
+    }
 }

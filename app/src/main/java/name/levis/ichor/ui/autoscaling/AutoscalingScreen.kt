@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.data.AutoscalingRepository
@@ -74,6 +75,9 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 
 class AutoscalingViewModel(private val autoscaling: AutoscalingRepository) : LoadingViewModel<AutoscalingReport>() {
     override suspend fun fetch() = autoscaling.autoscaling()
+
+    /** Pause, resume and bounds: the report is read again after each. */
+    val actions = AutoscalingActions(viewModelScope, autoscaling, onChanged = { refresh() })
 }
 
 /** What a tap opens: one row of one group, by its key. */
@@ -102,10 +106,32 @@ fun AutoscalingScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var open by remember { mutableStateOf<Open?>(null) }
     val loaded = (state as? UiState.Loaded)?.data
+    val busy by vm.actions.busy.collectAsStateWithLifecycle()
+    AutoscalingActionToasts(vm.actions.results)
 
-    loaded?.let { report ->        when (val o = open) {
-            is Open.Hpa -> AutoscaleSheet(o.row, onDismiss = { open = null }, onObject = { open = null; onObject(it) })
-            is Open.ScaledObject -> ScaledObjectSheet(o.row, onDismiss = { open = null }, onObject = { open = null; onObject(it) })
+    loaded?.let { report ->
+        when (val o = open) {
+            // The live row: a refresh after an action shows its outcome on the open sheet.
+            is Open.Hpa -> {
+                val row = report.hpa.items.firstOrNull { it.key == o.row.key } ?: o.row
+                AutoscaleSheet(
+                    row,
+                    busy = row.actionKey in busy,
+                    onBounds = { min, max -> vm.actions.setBounds(row, min, max) },
+                    onDismiss = { open = null },
+                    onObject = { open = null; onObject(it) },
+                )
+            }
+            is Open.ScaledObject -> {
+                val row = report.keda.scaledObjects.firstOrNull { it.key == o.row.key } ?: o.row
+                ScaledObjectSheet(
+                    row,
+                    busy = row.actionKey in busy,
+                    onPause = { vm.actions.pause(row, it) },
+                    onDismiss = { open = null },
+                    onObject = { open = null; onObject(it) },
+                )
+            }
             is Open.ScaledJob -> ScaledJobSheet(o.row, onDismiss = { open = null })
             is Open.Vpa -> VpaSheet(o.row, onDismiss = { open = null }, onObject = { open = null; onObject(it) })
             is Open.Pool -> NodePoolSheet(o.row, o.claims, onDismiss = { open = null }, onObject = { open = null; onObject(it) })

@@ -19,6 +19,8 @@ public enum KubeAction: String, CaseIterable, Sendable {
     case vmStart, vmStop, vmRestart, vmMigrate, vmPause, vmUnpause
     /// A VM's serial console, like `virtctl console`.
     case vmConsole
+    /// An HPA's min and max; a KEDA ScaledObject's pause and resume.
+    case autoscale, autoscaleKeda
 
     /// Asked in a namespace; the node actions are cluster-wide whatever the namespace.
     public var isNamespaced: Bool {

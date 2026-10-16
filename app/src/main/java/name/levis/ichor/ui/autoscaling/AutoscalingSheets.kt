@@ -45,7 +45,7 @@ import name.levis.ichor.util.timeAgo
 /** One HPA: its metrics against their targets, the three conditions, and what it drives. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AutoscaleSheet(row: HpaRow, onDismiss: () -> Unit, onObject: (KubeObjectRef) -> Unit) {
+fun AutoscaleSheet(row: HpaRow, busy: Boolean, onBounds: (Int, Int) -> Unit, onDismiss: () -> Unit, onObject: (KubeObjectRef) -> Unit) {
     Sheet(onDismiss) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(row.name, style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f, fill = false))
@@ -84,6 +84,8 @@ fun AutoscaleSheet(row: HpaRow, onDismiss: () -> Unit, onObject: (KubeObjectRef)
         ConditionLine(stringResource(R.string.autoscaling_scaling_limited), row.conditions.scalingLimited)
         if (row.conditions.message.isNotEmpty()) MutedText(row.conditions.message)
 
+        HpaBoundsSection(row, busy, onBounds)
+
         WorkloadLink(row.namespace, row.target, onObject)
     }
 }
@@ -91,7 +93,7 @@ fun AutoscaleSheet(row: HpaRow, onDismiss: () -> Unit, onObject: (KubeObjectRef)
 /** One KEDA ScaledObject: its triggers, its fallback, and the HPA it owns. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScaledObjectSheet(row: ScaledObjectRow, onDismiss: () -> Unit, onObject: (KubeObjectRef) -> Unit) {
+fun ScaledObjectSheet(row: ScaledObjectRow, busy: Boolean, onPause: (Int) -> Unit, onDismiss: () -> Unit, onObject: (KubeObjectRef) -> Unit) {
     val colors = LocalStatusColors.current
     Sheet(onDismiss) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -121,6 +123,8 @@ fun ScaledObjectSheet(row: ScaledObjectRow, onDismiss: () -> Unit, onObject: (Ku
             SectionTitle(stringResource(R.string.autoscaling_owned_hpa))
             MutedText(row.hpaName)
         }
+
+        ScaledObjectPauseSection(row, busy, onPause)
 
         WorkloadLink(row.namespace, row.target, onObject)
     }

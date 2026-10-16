@@ -921,3 +921,21 @@ public func vpaChangeText(_ request: String, _ target: String) -> String {
     if request == target { return target }
     return "\(request) → \(target)"
 }
+
+/// The bounds the core accepts for an HPA: min at least 1, max not below min nor above `limit`.
+public enum HpaBounds {
+    public static func isValid(_ min: Int, _ max: Int, limit: Int = kubeMaxScaleReplicas) -> Bool {
+        min >= 1 && max >= min && max <= limit
+    }
+}
+
+/// KubePauseScaledObject's special counts: hold at the current count, and resume.
+public enum ScaledObjectPause {
+    public static let hold = -1
+    public static let resume = -2
+}
+
+extension HpaRow {
+    /// KEDA made this HPA for a ScaledObject: its bounds are the ScaledObject's, KEDA puts them back.
+    public var isKEDAOwned: Bool { managedBy == "keda" }
+}
