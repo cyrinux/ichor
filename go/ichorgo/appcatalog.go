@@ -165,7 +165,8 @@ func (c *appCatalog) identify(ref imageRef) identification {
 		return identification{}
 	}
 
-	repo, name := ref.Repo(), ref.Name()
+	// Catalog names use hyphens where some repositories use underscores (nut_exporter).
+	repo, name := ref.Repo(), strings.ReplaceAll(ref.Name(), "_", "-")
 
 	for i := range c.apps {
 		for _, image := range c.apps[i].Images {
@@ -210,6 +211,19 @@ func (c *appCatalog) byWord(name string) identification {
 	for _, candidate := range candidates {
 		if c.slugs[candidate] {
 			return identification{slug: candidate}
+		}
+	}
+
+	// Last, a catalog app followed by a variant: ollama-intel, timescaledb-postgis,
+	// cert-manager-webhook-pdns. Not a system or generic app (kubernetes-reflector is not
+	// Kubernetes), and not for an exporter: it is an app of its own, not what it watches.
+	if strings.HasSuffix(name, "-exporter") {
+		return identification{}
+	}
+
+	for i := strings.LastIndex(name, "-"); i > 0; i = strings.LastIndex(name[:i], "-") {
+		if app := c.byName[name[:i]]; app != nil && !app.Generic && !app.System {
+			return identification{app: app}
 		}
 	}
 
@@ -279,7 +293,7 @@ func isGeneratedSuffix(s string) bool {
 	return len(s) >= 5 && len(s) <= 10 && strings.Trim(s, generatedNameAlphabet) == ""
 }
 
-// Repository names too vague to name an app on their own: ente/web is shown as "Ente Web".
+// Repository names too vague to name an app on their own: zentrova/web is shown as "Zentrova Web".
 var vagueNames = map[string]bool{
 	"web": true, "api": true, "app": true, "server": true, "frontend": true, "backend": true,
 	"worker": true, "ui": true, "core": true, "main": true, "service": true,

@@ -1980,7 +1980,7 @@
     <string name="apps_detail_routes_open">Відкрити в браузері</string>
     <string name="apps_detail_routes_object">Відкрити огляд об’єкта</string>
     <string name="settings_remote_icons">Завантажувати відсутні значки застосунків</string>
-    <string name="settings_remote_icons_desc">Близько 250 поширених застосунків мають вбудовані значки. Якщо увімкнено, значки інших розпізнаних застосунків завантажуються з jsDelivr (Dashboard Icons). Надсилається лише публічна назва значка, ніколи — назви ваших образів чи дані кластера. Також завантажуються значки, на які застосунок Argo CD посилається в анотації ichor.levis.name/icon.</string>
+    <string name="settings_remote_icons_desc">Близько 330 поширених застосунків мають вбудовані значки. Якщо увімкнено, значки інших розпізнаних застосунків завантажуються з jsDelivr або GitHub (Dashboard Icons). Надсилається лише публічна назва значка, ніколи — назви ваших образів чи дані кластера. Також завантажуються значки, на які застосунок Argo CD посилається в анотації ichor.levis.name/icon.</string>
     <string name="settings_offline_cache">Зберігати останній відомий стан</string>
     <string name="settings_offline_cache_desc">Зберігає на цьому телефоні в зашифрованому вигляді останні дані, отримані від кожного кластера, щоб показувати їх, коли кластер недосяжний. Зберігаються 24 години, ніколи не потрапляють у резервні копії.</string>
     <string name="settings_audit_events">Записувати дії в кластері</string>

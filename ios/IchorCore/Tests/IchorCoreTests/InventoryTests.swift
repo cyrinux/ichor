@@ -149,6 +149,14 @@ final class InventoryTests: XCTestCase {
         XCTAssertEqual(bad.iconSource(remoteIcons: true), .remote("kimai"))
     }
 
+    func testRemoteIconURLsFallBackToGitHub() {
+        XCTAssertEqual(remoteIconURLs(slug: "kimai").map(\.absoluteString), [
+            "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/kimai.webp",
+            "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/webp/kimai.webp",
+        ])
+        XCTAssertEqual(remoteIconURLs(slug: "../secrets"), [])
+    }
+
     func testRemoteIconURL() {
         XCTAssertEqual(remoteIconURL(slug: "kimai")?.absoluteString,
                        "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/kimai.webp")
