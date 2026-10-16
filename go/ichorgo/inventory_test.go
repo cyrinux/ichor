@@ -66,6 +66,15 @@ func TestIdentify(t *testing.T) {
 		{"ghcr.io/gethomepage/homepage:v1.5", "homepage"},
 		{"docker.io/library/registry:2", "docker-registry"},
 		{"ghcr.io/example/kimai:2", "slug:kimai"}, // not curated, but dashboard-icons has an icon
+		// A catalog app followed by a variant; never for a system app or an exporter.
+		{"ghcr.io/example/ollama-intel:latest", "ollama"},
+		{"ghcr.io/example/timescaledb-postgis:17", "timescaledb"},
+		{"docker.io/example/cert-manager-webhook-pdns:v2", "cert-manager"},
+		{"ghcr.io/example/kubernetes-reflector:10", "kubernetes-reflector"},
+		{"ghcr.io/example/kubernetes-tools:1", ""},
+		{"ghcr.io/example/garage-exporter:1", ""},
+		// Underscores read as hyphens.
+		{"docker.io/example/nut_exporter:3", "nut"},
 		{"registry.example.com/internal/nightly-backup:1", ""},
 		{"sha256:0123456789abcdef", ""},
 	}
@@ -228,7 +237,7 @@ func TestBuildInventoryBaseImagesAndVersion(t *testing.T) {
 		{PodNamespace: "mqtt", Pod: "mosquitto-0", Name: "app", Image: "eclipse-mosquitto:2.0.22"},
 		{PodNamespace: "tools", Pod: "relay-5c8d7f9b6-rx2k9", Name: "socat", Image: "alpine/socat:1.8"},
 		{PodNamespace: "storage", Pod: "csi-attacher-7d9f8c6b5-k2m8p", Name: "attacher", Image: "longhornio/csi-attacher:v4.9"},
-		{PodNamespace: "a", Pod: "ente-0", Name: "web", Image: "ghcr.io/ente/web:latest"},
+		{PodNamespace: "a", Pod: "zentrova-0", Name: "web", Image: "ghcr.io/zentrova/web:latest"},
 		{PodNamespace: "b", Pod: "shop-0", Name: "web", Image: "registry.example.com/shop/web:1"},
 	}}})
 
@@ -248,8 +257,8 @@ func TestBuildInventoryBaseImagesAndVersion(t *testing.T) {
 	}
 
 	// Two unrelated "web" images stay apart, named with their parent path.
-	if ente := appByID(t, inv, "image:ghcr.io/ente/web"); ente.Name != "Ente Web" {
-		t.Errorf("ente = %+v", ente)
+	if zentrova := appByID(t, inv, "image:ghcr.io/zentrova/web"); zentrova.Name != "Zentrova Web" {
+		t.Errorf("zentrova = %+v", zentrova)
 	}
 
 	if shop := appByID(t, inv, "image:registry.example.com/shop/web"); shop.Name != "Shop Web" {
@@ -260,18 +269,18 @@ func TestBuildInventoryBaseImagesAndVersion(t *testing.T) {
 func TestBuildInventoryMergesWorkloadTwins(t *testing.T) {
 	inv := buildInventory(1, 1, []nodeContainers{{Node: "n", Containers: []containerInfo{
 		// A CronJob of base images next to the app, named like it, joins it.
-		{PodNamespace: "rss", Pod: "miniflux-ai-29384756-x7k2p", Name: "cleanup", Image: "busybox:latest"},
-		{PodNamespace: "rss", Pod: "miniflux-ai-7d9f8c6b5-k2m8p", Name: "app", Image: "ghcr.io/qetesh/miniflux-ai:0.9.5"},
+		{PodNamespace: "rss", Pod: "feedbot-29384756-x7k2p", Name: "cleanup", Image: "busybox:latest"},
+		{PodNamespace: "rss", Pod: "feedbot-7d9f8c6b5-k2m8p", Name: "app", Image: "ghcr.io/example/feedbot:0.9.5"},
 		// An exporter is an app of its own, not the software it watches.
 		{PodNamespace: "mastodon", Pod: "es-exporter-0", Name: "exporter", Image: "quay.io/prometheuscommunity/elasticsearch-exporter:v1.10.0"},
 	}}})
 
-	ai := appByID(t, inv, "image:ghcr.io/qetesh/miniflux-ai")
+	ai := appByID(t, inv, "image:ghcr.io/example/feedbot")
 	if ai.Containers != 2 || ai.Version != "0.9.5" || ai.Unpinned || len(inv.Apps) != 2 {
-		t.Errorf("miniflux-ai = %+v (apps %d)", ai, len(inv.Apps))
+		t.Errorf("feedbot = %+v (apps %d)", ai, len(inv.Apps))
 	}
 
-	if es := appByID(t, inv, "image:quay.io/prometheuscommunity/elasticsearch-exporter"); es.Name != "Elasticsearch Exporter" || es.Category != "observability" {
+	if es := appByID(t, inv, "elasticsearch-exporter"); es.Name != "Elasticsearch Exporter" || es.Category != "observability" {
 		t.Errorf("exporter = %+v", es)
 	}
 }

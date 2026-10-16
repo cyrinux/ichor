@@ -44,6 +44,15 @@ public func remoteIconURL(slug: String) -> URL? {
     return URL(string: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/\(slug).webp")
 }
 
+/// remoteIconURL, then its GitHub mirror, in the order to try (jsDelivr at times refuses the set,
+/// over its 50 MB package limit); empty for an invalid slug.
+public func remoteIconURLs(slug: String) -> [URL] {
+    guard let primary = remoteIconURL(slug: slug),
+          let mirror = URL(string: "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/webp/\(slug).webp")
+    else { return [] }
+    return [primary, mirror]
+}
+
 /// Larger than this decoded is not an icon (the Go core caps inline icons the same).
 public let customIconMaxBytes = 64 * 1024
 

@@ -144,7 +144,15 @@ class InventoryTest {
         listOf("", "-kimai", "Kimai", "../etc", "a/b", "kimai.webp", "a b", "a?x=1", "a".repeat(82)).forEach {
             assertFalse(it, isValidIconSlug(it))
             assertNull(it, remoteIconUrl(it))
+            assertTrue(it, remoteIconUrls(it).isEmpty())
         }
+        assertEquals(
+            listOf(
+                "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/kimai.webp",
+                "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/webp/kimai.webp",
+            ),
+            remoteIconUrls("kimai"),
+        )
         assertTrue(isValidIconSlug("a".repeat(81)))
     }
 

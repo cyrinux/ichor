@@ -1872,7 +1872,7 @@
     <string name="apps_detail_routes_open">Apri nel browser</string>
     <string name="apps_detail_routes_object">Apri il riepilogo dell’oggetto</string>
     <string name="settings_remote_icons">Scarica le icone delle app mancanti</string>
-    <string name="settings_remote_icons_desc">Circa 250 app comuni hanno l’icona inclusa. Se attivo, le icone delle altre app riconosciute vengono scaricate da jsDelivr (Dashboard Icons). Viene inviato solo il nome pubblico dell’icona, mai i nomi delle tue immagini o i dettagli del cluster. Vengono scaricate anche le icone che un’app Argo CD collega nella sua annotazione ichor.levis.name/icon.</string>
+    <string name="settings_remote_icons_desc">Circa 330 app comuni hanno l’icona inclusa. Se attivo, le icone delle altre app riconosciute vengono scaricate da jsDelivr o GitHub (Dashboard Icons). Viene inviato solo il nome pubblico dell’icona, mai i nomi delle tue immagini o i dettagli del cluster. Vengono scaricate anche le icone che un’app Argo CD collega nella sua annotazione ichor.levis.name/icon.</string>
     <string name="settings_offline_cache">Conserva l\'ultimo stato noto</string>
     <string name="settings_offline_cache_desc">Salva su questo telefono, cifrati, gli ultimi dati ricevuti da ogni cluster, per mostrarli anche quando il cluster è irraggiungibile. Conservati 24 ore e mai inclusi nei backup.</string>
     <string name="settings_audit_events">Registrare le azioni nel cluster</string>
