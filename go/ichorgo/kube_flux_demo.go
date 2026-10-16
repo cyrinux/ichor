@@ -2,6 +2,9 @@ package ichorgo
 
 import "time"
 
+// demoFluxDriftMessage is what the helm-controller says of the demo's drifted release.
+const demoFluxDriftMessage = "Deployment/demo/podinfo changed: /spec/replicas"
+
 // demoFlux is the Flux of the built-in demo cluster, in every state the app shows: a
 // Kustomization applying a new revision, a HelmRelease whose upgrade failed, one waiting on
 // a dependency, a suspended one, and a Git source that cannot be fetched.
@@ -52,6 +55,7 @@ func demoFlux(now time.Time) fluxStatus {
 		res("source.toolkit.fluxcd.io", "GitRepository", "flux-system", "flux-system"),
 		res("kustomize.toolkit.fluxcd.io", "Kustomization", "flux-system", "flux-system"),
 		res("kustomize.toolkit.fluxcd.io", "Kustomization", "flux-system", "infra-controllers"),
+		res("kustomize.toolkit.fluxcd.io", "Kustomization", "flux-system", "infra-configs"),
 		res("kustomize.toolkit.fluxcd.io", "Kustomization", "flux-system", "apps"),
 	}
 
@@ -73,7 +77,11 @@ func demoFlux(now time.Time) fluxStatus {
 		res("helm.toolkit.fluxcd.io", "HelmRelease", "ingress-nginx", "ingress-nginx"),
 	}
 
-	appsKs := ks("apps", "./apps/homelab", healthCritical, "flux-system/infra-controllers")
+	// infra-configs waits for infra-controllers, apps for infra-configs: a chain of three.
+	configsKs := ks("infra-configs", "./infrastructure/configs", healthOK, "flux-system/infra-controllers")
+	configsKs.Owner = root
+
+	appsKs := ks("apps", "./apps/homelab", healthCritical, "flux-system/infra-configs")
 	appsKs.Owner = root
 	appsKs.Ready, appsKs.Reason = "False", "HealthCheckFailed"
 	appsKs.Message = "health check failed after 5m0s: failed early due to stalled resources: [Deployment/demo/worker status: 'Failed']"
@@ -125,6 +133,9 @@ func demoFlux(now time.Time) fluxStatus {
 		hist(6, "6.9.2", "6.9.2", "deployed", 3*time.Hour), hist(5, "6.9.1", "6.9.1", "superseded", 8*24*time.Hour))
 	podinfo.Chart, podinfo.Icon, podinfo.Revision, podinfo.AttemptedRevision = "podinfo", "", "6.9.2", "6.9.2"
 	podinfo.Owner = &fluxRef{Kind: "Kustomization", Namespace: "flux-system", Name: "apps"}
+	// Someone scaled it by hand: the helm-controller noticed (and corrects it, mode enabled).
+	podinfo.DriftMode, podinfo.Drifted, podinfo.DriftMessage, podinfo.DriftAt = "enabled", true, demoFluxDriftMessage, ms(18*time.Minute)
+	prom.DriftMode = "warn"
 
 	redis := hr("cache", "redis", "redis", "21.2.x", &fluxRef{Kind: "HelmRepository", Namespace: "flux-system", Name: "bitnami"}, "oci://registry-1.docker.io/bitnamicharts", healthIdle,
 		hist(2, "21.2.5", "8.0.2", "deployed", 40*24*time.Hour))
@@ -132,7 +143,7 @@ func demoFlux(now time.Time) fluxStatus {
 
 	out := mapFlux(nil, nil, nil)
 	out.Version = "v2.7.0"
-	out.Apps = []fluxApp{appsKs, nginx, infraKs, prom, rootKs, podinfo, redis}
+	out.Apps = []fluxApp{appsKs, nginx, infraKs, configsKs, prom, rootKs, podinfo, redis}
 	out.Sources = []fluxSource{
 		{Kind: "HelmRepository", Namespace: "flux-system", Name: "ingress-nginx", Level: healthCritical, URL: "https://kubernetes.github.io/ingress-nginx",
 			Ready: "False", Reason: "IndexationFailed", Message: "failed to fetch Helm repository index: Get \"https://kubernetes.github.io/ingress-nginx/index.yaml\": dial tcp: i/o timeout",

@@ -206,4 +206,65 @@ final class FluxTests: XCTestCase {
         XCTAssertTrue(fluxHinted(ClusterInventory(apps: [InventoryApp(id: "flux", name: "Flux")])))
         XCTAssertFalse(fluxHinted(ClusterInventory(apps: [InventoryApp(id: "argo-cd", name: "Argo CD")])))
     }
+
+    private func ks(_ name: String, _ deps: [String] = [], ready: String = "True") -> String {
+        let quoted = deps.map { "\"\($0)\"" }.joined(separator: ",")
+        return #"{"kind":"Kustomization","namespace":"flux-system","name":"\#(name)","level":"\#(ready == "True" ? "ok" : "warning")","ready":"\#(ready)","dependsOn":[\#(quoted)]}"#
+    }
+
+    private func statusOf(_ apps: [String]) throws -> FluxStatus {
+        try TalosJSON.decode(FluxStatus.self, from: #"{"installed":true,"apps":[\#(apps.joined(separator: ","))]}"#)
+    }
+
+    func testDependencyTreeFollowsTheChainOfTheSameKind() throws {
+        let status = try statusOf([
+            ks("apps", ["flux-system/infra-configs"], ready: "False"),
+            ks("infra-configs", ["flux-system/infra-controllers"]),
+            ks("infra-controllers"),
+            ks("monitoring", ["flux-system/infra-configs"]),
+            // A HelmRelease named like a Kustomization is not a link of its chain.
+            #"{"kind":"HelmRelease","namespace":"flux-system","name":"infra-controllers","dependsOn":["flux-system/infra-configs"]}"#,
+        ])
+        let apps = try XCTUnwrap(status.app(kind: "Kustomization", namespace: "flux-system", name: "apps"))
+        let tree = status.dependencyTree(of: apps)
+        XCTAssertEqual(tree.upstream.map(\.key), ["flux-system/infra-configs", "flux-system/infra-controllers"])
+        XCTAssertEqual(tree.upstream.map(\.depth), [1, 2])
+        XCTAssertTrue(tree.upstream.allSatisfy { $0.app?.kind == "Kustomization" })
+        XCTAssertTrue(tree.dependents.isEmpty)
+
+        let configs = try XCTUnwrap(status.app(kind: "Kustomization", namespace: "flux-system", name: "infra-configs"))
+        XCTAssertEqual(status.dependencyTree(of: configs).dependents.map(\.name), ["apps", "monitoring"])
+        let alone = try XCTUnwrap(status.app(kind: "Kustomization", namespace: "flux-system", name: "infra-controllers"))
+        XCTAssertFalse(status.dependencyTree(of: alone).isEmpty) // needed by infra-configs
+    }
+
+    func testDependencyTreeSurvivesCyclesAndMissingLinks() throws {
+        let status = try statusOf([ks("a", ["flux-system/b"]), ks("b", ["flux-system/a", "flux-system/gone"])])
+        let a = try XCTUnwrap(status.app(kind: "Kustomization", namespace: "flux-system", name: "a"))
+        let tree = status.dependencyTree(of: a)
+        XCTAssertEqual(tree.upstream.map(\.key), ["flux-system/b", "flux-system/gone"])
+        XCTAssertNil(tree.upstream[1].app)
+
+        let chain = try statusOf((0...9).map { i in ks("k\(i)", i < 9 ? ["flux-system/k\(i + 1)"] : []) })
+        let first = try XCTUnwrap(chain.app(kind: "Kustomization", namespace: "flux-system", name: "k0"))
+        XCTAssertEqual(chain.dependencyTree(of: first).upstream.count, fluxDependsMaxDepth)
+    }
+
+    func testDriftOfAHelmRelease() throws {
+        let drifted = try TalosJSON.decode(FluxApp.self, from: #"""
+            {"kind":"HelmRelease","namespace":"demo","name":"podinfo","driftMode":"enabled","drifted":true,"driftMessage":"Deployment/demo/podinfo changed","driftAt":5}
+            """#)
+        XCTAssertTrue(drifted.driftWatched)
+        XCTAssertTrue(drifted.canCorrectDrift)
+        XCTAssertEqual(drifted.driftAt, 5)
+
+        let suspended = try TalosJSON.decode(FluxApp.self, from: #"{"kind":"HelmRelease","name":"p","suspended":true,"driftMode":"warn","drifted":true}"#)
+        XCTAssertTrue(suspended.driftWatched)
+        XCTAssertFalse(suspended.canCorrectDrift)
+
+        // No driftDetection (older answers too): no line, nothing to correct.
+        let plain = try TalosJSON.decode(FluxApp.self, from: #"{"kind":"HelmRelease","name":"redis"}"#)
+        XCTAssertFalse(plain.driftWatched)
+        XCTAssertFalse(plain.canCorrectDrift)
+    }
 }

@@ -48,7 +48,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
  * The app at a glance: icon and name, a badge for its Ready reason and for suspended, stalled
  * or reconciling, Flux's message, where it comes from (source and URL, path or chart@version),
  * the revision applied against the one tried when they differ, its interval, the Kustomization
- * applying it, what it depends on and a release's failures.
+ * applying it, a release's drift and its failures.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -74,6 +74,7 @@ fun FluxAppHero(app: FluxApp) {
             Text(app.message, style = MaterialTheme.typography.bodySmall, color = app.state.color())
         }
         if (app.suspended) MutedText(stringResource(R.string.flux_suspended_hint))
+        if (app.driftWatched) FluxDriftLine(app)
         Column {
             app.source?.let { InfoRow(stringResource(R.string.flux_source), "${it.kind}/${it.name}", mono = true) }
             if (app.sourceURL.isNotEmpty()) InfoRow(stringResource(R.string.argo_repo), app.sourceURL, mono = true)
@@ -89,7 +90,6 @@ fun FluxAppHero(app: FluxApp) {
             if (app.targetNamespace.isNotEmpty()) InfoRow(stringResource(R.string.argo_destination), app.targetNamespace, mono = true)
             if (app.interval.isNotEmpty()) InfoRow(stringResource(R.string.flux_interval), app.interval, mono = true)
             app.owner?.let { InfoRow(stringResource(R.string.flux_applied_by), "${it.kind}/${it.namespace}/${it.name}", mono = true) }
-            if (app.dependsOn.isNotEmpty()) InfoRow(stringResource(R.string.flux_depends_on), app.dependsOn.joinToString("\n"), mono = true)
             if (app.failures > 0) InfoRow(stringResource(R.string.flux_failures), app.failures.toString(), valueColor = colors.bad)
         }
     }
@@ -102,10 +102,22 @@ fun FluxAppHero(app: FluxApp) {
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun FluxActionButtons(app: FluxApp, busy: Boolean, onDiff: (() -> Unit)? = null, onAction: (FluxAction) -> Unit) {
+fun FluxActionButtons(
+    app: FluxApp,
+    busy: Boolean,
+    onDiff: (() -> Unit)? = null,
+    onCorrectDrift: () -> Unit = {},
+    onAction: (FluxAction) -> Unit,
+) {
     // Every action patches the object; the diff only reads.
     val denial = rememberKubeDenial(KubeAction.fluxReconcile(app.kind), app.namespace)
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (app.canCorrectDrift) {
+            Button(onClick = onCorrectDrift, enabled = !busy && denial == null) {
+                Icon(Icons.Outlined.Difference, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(stringResource(R.string.flux_action_correct_drift), modifier = Modifier.padding(start = 6.dp), maxLines = 1)
+            }
+        }
         FluxActionRow(app, busy || denial != null, onDiff, onAction)
         KubeDenialNote(denial)
     }

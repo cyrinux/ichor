@@ -1,7 +1,8 @@
 {"items":[
  {"metadata":{"name":"cilium","namespace":"kube-system","resourceVersion":"200"},
-  "spec":{"interval":"30m","chart":{"spec":{"chart":"cilium","version":"1.18.x","sourceRef":{"kind":"HelmRepository","name":"cilium","namespace":"flux-system"}}}},
+  "spec":{"interval":"30m","driftDetection":{"mode":"warn"},"chart":{"spec":{"chart":"cilium","version":"1.18.x","sourceRef":{"kind":"HelmRepository","name":"cilium","namespace":"flux-system"}}}},
   "status":{"lastAttemptedRevision":"1.18.2","conditions":[
+    {"type":"Drifted","status":"True","reason":"DriftDetected","message":"DaemonSet/kube-system/cilium changed: /spec/template/spec/containers/0/image","lastTransitionTime":"2026-10-01T10:00:00Z"},
     {"type":"Reconciling","status":"True","reason":"Progressing","message":"Running 'upgrade' action"},
     {"type":"Ready","status":"Unknown","reason":"Progressing","message":"Running 'upgrade' action"}],
    "history":[{"version":3,"chartName":"cilium","chartVersion":"1.18.1","appVersion":"1.18.1","status":"deployed","lastDeployed":"2026-09-01T00:00:00Z"},

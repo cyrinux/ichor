@@ -1,6 +1,251 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Drift: none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drift: keiner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deriva: ninguna"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dérive : aucune"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deriva: nessuna"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дрейф: немає"
+          }
+        }
+      }
+    },
+    "Drift detected · %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drift erkannt · %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deriva detectada · %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dérive détectée · %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deriva rilevata · %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виявлено дрейф · %@"
+          }
+        }
+      }
+    },
+    "Flux only reports drift for this release; correcting it runs a forced upgrade." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flux meldet den Drift dieses Release nur; ihn zu korrigieren startet ein erzwungenes Upgrade."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flux solo informa de la deriva de esta release; corregirla ejecuta una actualización forzada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flux signale seulement la dérive de cette release ; la corriger lance une mise à niveau forcée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flux segnala soltanto la deriva di questa release; correggerla avvia un aggiornamento forzato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flux лише повідомляє про дрейф цього релізу; виправлення запускає примусове оновлення."
+          }
+        }
+      }
+    },
+    "Correct drift" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drift korrigieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Corregir la deriva"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Corriger la dérive"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correggi la deriva"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виправити дрейф"
+          }
+        }
+      }
+    },
+    "The helm-controller found objects that no longer match the release. A forced upgrade applies the release again now and puts them back." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der helm-controller hat Objekte gefunden, die nicht mehr zum Release passen. Ein erzwungenes Upgrade wendet das Release jetzt erneut an und stellt sie wieder her."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El helm-controller encontró objetos que ya no coinciden con la release. Una actualización forzada vuelve a aplicar la release ahora y los restaura."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le helm-controller a trouvé des objets qui ne correspondent plus à la release. Une mise à niveau forcée réapplique la release maintenant et les remet en place."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'helm-controller ha trovato oggetti che non corrispondono più alla release. Un aggiornamento forzato riapplica ora la release e li ripristina."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "helm-controller знайшов об'єкти, які більше не відповідають релізу. Примусове оновлення знову застосовує реліз зараз і повертає їх."
+          }
+        }
+      }
+    },
+    "Needed by (%@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benötigt von (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requerido por (%@)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requis par (%@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richiesto da (%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Потрібен для (%@)"
+          }
+        }
+      }
+    },
+    "Not found in this cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In diesem Cluster nicht gefunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No encontrado en este clúster"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introuvable dans ce cluster"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non trovato in questo cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не знайдено в цьому кластері"
+          }
+        }
+      }
+    },
     "Share incident summary…" : {
       "extractionState" : "manual",
       "localizations" : {

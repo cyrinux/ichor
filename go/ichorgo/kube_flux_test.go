@@ -125,7 +125,17 @@ func TestMapFluxHelmRelease(t *testing.T) {
 		t.Fatalf("history %+v", cilium.History)
 	}
 
+	// Drift as the helm-controller found it; the release's health stays its own.
+	if cilium.DriftMode != "warn" || !cilium.Drifted || !strings.HasPrefix(cilium.DriftMessage, "DaemonSet/kube-system/cilium changed") ||
+		cilium.DriftAt != time.Date(2026, 10, 1, 10, 0, 0, 0, time.UTC).UnixMilli() || cilium.Level != healthWarning {
+		t.Fatalf("cilium drift %+v", cilium)
+	}
+
 	podinfo := fluxAppByName(t, s, "podinfo")
+	if podinfo.DriftMode != "" || podinfo.Drifted || podinfo.DriftAt != 0 {
+		t.Fatalf("podinfo drift %+v", podinfo)
+	}
+
 	if !podinfo.Stalled || podinfo.Failures != 3 || podinfo.Chart != "podinfo" || podinfo.Source.Kind != "OCIRepository" || !equalJSON(t, podinfo.namespaces, []string{"web"}) {
 		t.Fatalf("podinfo %+v", podinfo)
 	}

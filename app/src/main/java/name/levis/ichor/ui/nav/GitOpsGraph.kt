@@ -87,6 +87,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             onBack = { nav.popBackStack() },
             onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
             onDiff = { nav.navigate(Routes.fluxDiff(kind, ns, name)) },
+            onApp = { other -> nav.navigate(Routes.fluxApp(other.kind, other.namespace, other.name)) },
         )
     }
     composable(

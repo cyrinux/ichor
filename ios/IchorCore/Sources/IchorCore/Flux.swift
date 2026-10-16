@@ -86,7 +86,7 @@ public struct FluxApp: Decodable, Equatable, Identifiable, Sendable {
     public let revision: String
     /// The last one tried, which differs while it fails.
     public let attemptedRevision: String
-    /// "namespace/name".
+    /// The apps it waits for, "namespace/name", of its own kind.
     public let dependsOn: [String]
     /// A release's install and upgrade failures in a row.
     public let failures: Int
@@ -99,6 +99,14 @@ public struct FluxApp: Decodable, Equatable, Identifiable, Sendable {
     public let unhealthyPods: [KubePod]
     /// When Ready last changed, unix ms.
     public let reconciledAt: Int64
+    /// A HelmRelease's drift detection: warn, enabled, disabled; "" when unset.
+    public let driftMode: String
+    /// The helm-controller found the cluster's objects no longer match the release.
+    public let drifted: Bool
+    /// What changed, as the helm-controller says it.
+    public let driftMessage: String
+    /// When it found it, unix ms.
+    public let driftAt: Int64
 
     public var id: String { "\(kind)/\(namespace)/\(name)" }
     /// What KubeFluxAction is called with.
@@ -137,12 +145,17 @@ public struct FluxApp: Decodable, Equatable, Identifiable, Sendable {
         history = try c.field(.history, [])
         unhealthyPods = try c.field(.unhealthyPods, [])
         reconciledAt = try c.field(.reconciledAt, 0)
+        driftMode = try c.field(.driftMode, "")
+        drifted = try c.field(.drifted, false)
+        driftMessage = try c.field(.driftMessage, "")
+        driftAt = try c.field(.driftAt, 0)
     }
 
     private enum CodingKeys: String, CodingKey {
         case kind, namespace, name, level, icon, remoteIcon, ready, reason, message, reconciling, pending, stalled, suspended
         case owner, source, sourceURL, path, chart, chartVersion, targetNamespace, interval, prune, revision, attemptedRevision
         case dependsOn, failures, conditions, resources, history, unhealthyPods, reconciledAt
+        case driftMode, drifted, driftMessage, driftAt
     }
 }
 

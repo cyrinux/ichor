@@ -5,13 +5,15 @@ import IchorCore
 
 /// Icon, name, kind, state badge and the actions, then where it comes from (source and URL,
 /// path or chart), the revision applied (and the one tried when they differ), interval, owner,
-/// dependencies and failures.
+/// a release's drift and its failures.
 struct FluxHero: View {
     let app: FluxApp
     /// The source listed, for what it follows and fetched; nil when not listed.
     let source: FluxSource?
     let busy: Bool
     let act: (FluxAction) -> Void
+    /// Asks for the forced upgrade that corrects the drift the helm-controller found.
+    var correctDrift: () -> Void = {}
 
     var body: some View {
         Section {
@@ -26,6 +28,14 @@ struct FluxHero: View {
                     ArgoBadge(label: app.state.label, symbol: app.state.symbol, color: app.state.color)
                     if app.stalled { ArgoBadge(label: String(localized: "Stalled"), symbol: "exclamationmark.octagon", color: .red) }
                 }
+                if app.canCorrectDrift {
+                    Button(action: correctDrift) {
+                        Label("Correct drift", systemImage: "arrow.uturn.backward.circle")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.statusWarn)
+                    .disabled(busy)
+                }
                 actions
                 KubeDeniedNote(app.target.accessAction, in: app.namespace)
                     .multilineTextAlignment(.center)
@@ -37,6 +47,7 @@ struct FluxHero: View {
         .listRowInsets(EdgeInsets())
         Section {
             readiness
+            if app.driftWatched { FluxDriftRow(app: app) }
             sourceRow
             if app.isHelmRelease {
                 if !app.origin.isEmpty { LabeledContent("Chart") { Text(verbatim: app.origin).font(.callout.monospaced()) } }
@@ -56,11 +67,6 @@ struct FluxHero: View {
             if app.reconciledAt > 0 { LabeledContent("Last change", value: relativeTime(app.reconciledAt)) }
             if let owner = app.owner {
                 LabeledContent("Applied by") { Text(verbatim: owner.label).multilineTextAlignment(.trailing) }
-            }
-            if !app.dependsOn.isEmpty {
-                LabeledContent("Depends on") {
-                    Text(verbatim: app.dependsOn.joined(separator: "\n")).font(.callout.monospaced()).multilineTextAlignment(.trailing)
-                }
             }
             if app.failures > 0 {
                 Label(String(localized: "\(app.failures) failed attempts in a row"), systemImage: "exclamationmark.triangle.fill")

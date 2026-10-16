@@ -61,7 +61,10 @@ type fluxHelmReleaseObject struct {
 				ValuesFiles []string     `json:"valuesFiles"`
 			} `json:"spec"`
 		} `json:"chart"`
-		ChartRef         *fluxCrossRef  `json:"chartRef"`
+		ChartRef       *fluxCrossRef `json:"chartRef"`
+		DriftDetection *struct {
+			Mode string `json:"mode"`
+		} `json:"driftDetection"`
 		Interval         string         `json:"interval"`
 		Suspend          bool           `json:"suspend"`
 		TargetNamespace  string         `json:"targetNamespace"`
@@ -245,8 +248,32 @@ func mapFluxHelmRelease(o fluxHelmReleaseObject, urls map[fluxRef]string) fluxAp
 	}
 
 	a.Icon, a.RemoteIcon = fluxIcon(a.Chart, a.Name)
+	fluxApplyDrift(&a, o)
 
 	return a
+}
+
+// fluxDriftCondition is the condition the helm-controller sets when it compared the release
+// with the cluster: True (reason DriftDetected) when objects changed.
+const fluxDriftCondition = "Drifted"
+
+// fluxApplyDrift fills what the helm-controller found about drift, never parsed from events.
+func fluxApplyDrift(a *fluxApp, o fluxHelmReleaseObject) {
+	if d := o.Spec.DriftDetection; d != nil {
+		a.DriftMode = d.Mode
+	}
+
+	c := o.Status.Conditions.get(fluxDriftCondition)
+	if c.Status != "True" {
+		return
+	}
+
+	msg := strings.TrimSpace(c.Message)
+	if len(msg) > eventMessageLimit {
+		msg = strings.ToValidUTF8(msg[:eventMessageLimit], "") + "…"
+	}
+
+	a.Drifted, a.DriftMessage, a.DriftAt = true, msg, unixMilli(c.LastTransitionTime)
 }
 
 func mapFluxSource(o fluxSourceObject) fluxSource {
