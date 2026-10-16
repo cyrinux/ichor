@@ -5050,4 +5050,19 @@
     <string name="netperf_notification_failed">Test di rete non riuscito</string>
     <string name="netperf_notification_public">Test di rete in corso</string>
     <string name="netperf_notification_result_public">Test di rete terminato</string>
+    <string name="sa_help_title">Come creare un account di servizio</string>
+    <string name="sa_help_menu">Account di servizio</string>
+    <string name="sa_help_intro">Dai al telefono un ServiceAccount tutto suo invece delle tue credenziali di amministratore: se perdi il telefono, il suo token concede solo ciò che hai scelto, ed eliminare il ServiceAccount lo revoca.</string>
+    <string name="sa_help_no_cluster_admin">Non associarlo mai a cluster-admin: chiunque abbia il telefono potrebbe modificare o eliminare qualsiasi cosa nel cluster.</string>
+    <string name="sa_help_token_expiry">Un token di kubectl create token (TokenRequest) scade, dopo un\'ora per impostazione predefinita. Il Secret kubernetes.io/service-account-token qui sotto ne conserva uno valido finché non lo elimini, per un accesso duraturo dal telefono.</string>
+    <string name="sa_help_template_read">Sola lettura</string>
+    <string name="sa_help_template_read_desc">Il ruolo integrato view in ogni namespace, più i nodi: workload, eventi, log e metriche, nessun Secret. Consigliato per un telefono.</string>
+    <string name="sa_help_template_operate">Lettura + riavvio</string>
+    <string name="sa_help_template_operate_desc">Sola lettura, più il riavvio di Deployment, StatefulSet e DaemonSet e la scalatura di Deployment e StatefulSet.</string>
+    <string name="sa_help_template_namespace">Un namespace</string>
+    <string name="sa_help_template_namespace_desc">Tutto nel namespace ichor (il ruolo integrato admin), niente al di fuori: né nodi né altri namespace.</string>
+    <string name="sa_help_step_apply">1. Salvalo come ichor-phone.yaml (per un altro namespace, sostituisci ichor ovunque), poi applicalo:</string>
+    <string name="sa_help_step_kubeconfig">2. Crea kubeconfig-phone dal suo token, con il server del tuo contesto attuale:</string>
+    <string name="sa_help_step_import">3. Porta kubeconfig-phone sul telefono e importalo, poi elimina le altre copie: il token è una password.</string>
+    <string name="sa_help_copy_yaml">Copia YAML</string>
 </resources>

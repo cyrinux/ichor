@@ -504,6 +504,7 @@ private struct KubePreviewList: View {
 
     @State private var selected: Set<Int>
     @State private var replacing: Set<Int> = []
+    @State private var showingServiceAccountHelp = false
 
     init(summary: ConfigSummary, conflicts: [KubeImportConflict], refused: [String] = [], busy: Bool,
          onCancel: @escaping () -> Void, onImport: @escaping ([KubeImportChoice]) -> Void) {
@@ -528,6 +529,12 @@ private struct KubePreviewList: View {
                     row(ctx, index: index)
                 }
             }
+            // A token context: a dedicated ServiceAccount's beats an admin's.
+            if summary.contexts.contains(where: { $0.auth == "token" }) {
+                Section {
+                    Button("How to create a service account") { showingServiceAccountHelp = true }
+                }
+            }
             if !refused.isEmpty {
                 Section {
                     Text("No access in \(refused.joined(separator: ", ")): clusters in these regions, if any, are not listed.")
@@ -544,6 +551,7 @@ private struct KubePreviewList: View {
                 Button("Cancel", role: .cancel, action: onCancel)
             }
         }
+        .sheet(isPresented: $showingServiceAccountHelp) { ServiceAccountHelpSheet() }
     }
 
     @ViewBuilder

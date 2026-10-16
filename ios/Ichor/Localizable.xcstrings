@@ -1,6 +1,461 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "How to create a service account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "So erstellst du ein Dienstkonto"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cómo crear una cuenta de servicio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un compte de service"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Come creare un account di servizio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як створити обліковий запис служби"
+          }
+        }
+      }
+    },
+    "Service account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dienstkonto"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuenta de servicio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compte de service"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account di servizio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обліковий запис служби"
+          }
+        }
+      }
+    },
+    "Give the phone its own ServiceAccount rather than your admin credentials: if the phone is lost, its token only grants what you chose, and deleting the ServiceAccount revokes it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib dem Telefon ein eigenes ServiceAccount statt deiner Admin-Zugangsdaten: Geht das Telefon verloren, gewährt sein Token nur, was du gewählt hast, und das Löschen des ServiceAccounts widerruft es."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da al teléfono su propia ServiceAccount en lugar de tus credenciales de administrador: si pierdes el teléfono, su token solo concede lo que hayas elegido, y borrar la ServiceAccount lo revoca."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Donnez au téléphone son propre ServiceAccount plutôt que vos identifiants d'admin : si le téléphone est perdu, son jeton n'accorde que ce que vous avez choisi, et supprimer le ServiceAccount le révoque."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dai al telefono un ServiceAccount tutto suo invece delle tue credenziali di amministratore: se perdi il telefono, il suo token concede solo ciò che hai scelto, ed eliminare il ServiceAccount lo revoca."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дайте телефону власний ServiceAccount замість ваших облікових даних адміністратора: якщо телефон загубиться, його токен надаватиме лише вибрані вами права, а видалення ServiceAccount його відкликає."
+          }
+        }
+      }
+    },
+    "Never bind it to cluster-admin: whoever holds the phone could then change or delete anything in the cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binde es nie an cluster-admin: Wer das Telefon hat, könnte dann alles im Cluster ändern oder löschen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nunca lo vincules a cluster-admin: quien tenga el teléfono podría cambiar o borrar cualquier cosa del clúster."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne le liez jamais à cluster-admin : quiconque tient le téléphone pourrait alors modifier ou supprimer n'importe quoi dans le cluster."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non associarlo mai a cluster-admin: chiunque abbia il telefono potrebbe modificare o eliminare qualsiasi cosa nel cluster."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ніколи не прив'язуйте його до cluster-admin: тоді будь-хто з телефоном зможе змінити або видалити будь-що в кластері."
+          }
+        }
+      }
+    },
+    "A token from kubectl create token (TokenRequest) expires, after an hour by default. The kubernetes.io/service-account-token Secret below holds one that lasts until you delete it, for long-lived access from the phone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Token von kubectl create token (TokenRequest) läuft ab, standardmäßig nach einer Stunde. Das Secret kubernetes.io/service-account-token unten enthält eines, das gilt, bis du es löschst, für dauerhaften Zugriff vom Telefon."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un token de kubectl create token (TokenRequest) caduca, tras una hora por defecto. El Secret kubernetes.io/service-account-token de abajo guarda uno que dura hasta que lo borres, para un acceso duradero desde el teléfono."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un jeton de kubectl create token (TokenRequest) expire, après une heure par défaut. Le Secret kubernetes.io/service-account-token ci-dessous en garde un valable jusqu'à sa suppression, pour un accès durable depuis le téléphone."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un token di kubectl create token (TokenRequest) scade, dopo un'ora per impostazione predefinita. Il Secret kubernetes.io/service-account-token qui sotto ne conserva uno valido finché non lo elimini, per un accesso duraturo dal telefono."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Токен від kubectl create token (TokenRequest) спливає, за замовчуванням за годину. Secret kubernetes.io/service-account-token нижче містить токен, що діє, доки ви його не видалите, для тривалого доступу з телефона."
+          }
+        }
+      }
+    },
+    "The built-in view role in every namespace, plus nodes: workloads, events, logs and metrics, no Secrets. Recommended for a phone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die eingebaute Rolle view in jedem Namespace, dazu die Nodes: Workloads, Events, Logs und Metriken, keine Secrets. Empfohlen für ein Telefon."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El rol integrado view en cada namespace, más los nodos: cargas de trabajo, eventos, logs y métricas, sin Secrets. Recomendado para un teléfono."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le rôle intégré view dans chaque namespace, plus les nœuds : workloads, événements, logs et métriques, sans les Secrets. Recommandé pour un téléphone."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il ruolo integrato view in ogni namespace, più i nodi: workload, eventi, log e metriche, nessun Secret. Consigliato per un telefono."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вбудована роль view у кожному namespace, плюс вузли: робочі навантаження, події, журнали й метрики, без Secret. Рекомендовано для телефона."
+          }
+        }
+      }
+    },
+    "Read + restart" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lesen + Neustart"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lectura + reinicio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture + redémarrage"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lettura + riavvio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читання + перезапуск"
+          }
+        }
+      }
+    },
+    "Read-only, plus restarting Deployments, StatefulSets and DaemonSets and scaling Deployments and StatefulSets." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur Lesen, dazu Neustart von Deployments, StatefulSets und DaemonSets und Skalieren von Deployments und StatefulSets."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo lectura, más reiniciar Deployments, StatefulSets y DaemonSets y escalar Deployments y StatefulSets."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture seule, plus le redémarrage des Deployments, StatefulSets et DaemonSets et la mise à l'échelle des Deployments et StatefulSets."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sola lettura, più il riavvio di Deployment, StatefulSet e DaemonSet e la scalatura di Deployment e StatefulSet."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лише читання, плюс перезапуск Deployment, StatefulSet і DaemonSet та масштабування Deployment і StatefulSet."
+          }
+        }
+      }
+    },
+    "One namespace" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Namespace"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un namespace"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un namespace"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un namespace"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Один namespace"
+          }
+        }
+      }
+    },
+    "Everything inside the ichor namespace (the built-in admin role there), nothing outside it: no nodes, no other namespace." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles im Namespace ichor (die eingebaute Rolle admin), nichts außerhalb: keine Nodes, keine anderen Namespaces."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todo dentro del namespace ichor (el rol integrado admin), nada fuera: ni nodos ni otros namespaces."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout dans le namespace ichor (le rôle intégré admin), rien en dehors : ni les nœuds, ni les autres namespaces."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutto nel namespace ichor (il ruolo integrato admin), niente al di fuori: né nodi né altri namespace."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усе в namespace ichor (вбудована роль admin), нічого поза ним: ні вузлів, ні інших namespace."
+          }
+        }
+      }
+    },
+    "1. Save it as ichor-phone.yaml (for another namespace, replace ichor everywhere), then apply it:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Speichere es als ichor-phone.yaml (für einen anderen Namespace ersetze ichor überall) und wende es an:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Guárdalo como ichor-phone.yaml (para otro namespace, sustituye ichor en todas partes) y aplícalo:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Enregistrez-le sous ichor-phone.yaml (pour un autre namespace, remplacez ichor partout), puis appliquez-le :"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Salvalo come ichor-phone.yaml (per un altro namespace, sostituisci ichor ovunque), poi applicalo:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Збережіть його як ichor-phone.yaml (для іншого namespace замініть ichor усюди), потім застосуйте:"
+          }
+        }
+      }
+    },
+    "2. Build kubeconfig-phone from its token, with the server of your current context:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Erstelle kubeconfig-phone aus seinem Token, mit dem Server deines aktuellen Kontexts:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Crea kubeconfig-phone a partir de su token, con el servidor de tu contexto actual:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Créez kubeconfig-phone à partir de son jeton, avec le serveur de votre contexte actuel :"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Crea kubeconfig-phone dal suo token, con il server del tuo contesto attuale:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Створіть kubeconfig-phone з його токена, із сервером вашого поточного контексту:"
+          }
+        }
+      }
+    },
+    "3. Bring kubeconfig-phone to the phone and import it, then delete the other copies: the token is a password." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Bring kubeconfig-phone aufs Telefon und importiere es, lösche dann die anderen Kopien: Das Token ist ein Passwort."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Lleva kubeconfig-phone al teléfono e impórtalo, luego borra las demás copias: el token es una contraseña."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Transférez kubeconfig-phone sur le téléphone et importez-le, puis supprimez les autres copies : le jeton est un mot de passe."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Porta kubeconfig-phone sul telefono e importalo, poi elimina le altre copie: il token è una password."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Перенесіть kubeconfig-phone на телефон та імпортуйте його, потім видаліть інші копії: токен — це пароль."
+          }
+        }
+      }
+    },
     "KEDA scales %@ to 0: every pod stops, and nothing serves until you resume." : {
       "extractionState" : "manual",
       "localizations" : {

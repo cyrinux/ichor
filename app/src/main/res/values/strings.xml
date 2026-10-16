@@ -5053,4 +5053,19 @@
     <string name="netperf_notification_failed">Network test failed</string>
     <string name="netperf_notification_public">A network test is running</string>
     <string name="netperf_notification_result_public">Network test finished</string>
+    <string name="sa_help_title">How to create a service account</string>
+    <string name="sa_help_menu">Service account</string>
+    <string name="sa_help_intro">Give the phone its own ServiceAccount rather than your admin credentials: if the phone is lost, its token only grants what you chose, and deleting the ServiceAccount revokes it.</string>
+    <string name="sa_help_no_cluster_admin">Never bind it to cluster-admin: whoever holds the phone could then change or delete anything in the cluster.</string>
+    <string name="sa_help_token_expiry">A token from kubectl create token (TokenRequest) expires, after an hour by default. The kubernetes.io/service-account-token Secret below holds one that lasts until you delete it, for long-lived access from the phone.</string>
+    <string name="sa_help_template_read">Read-only</string>
+    <string name="sa_help_template_read_desc">The built-in view role in every namespace, plus nodes: workloads, events, logs and metrics, no Secrets. Recommended for a phone.</string>
+    <string name="sa_help_template_operate">Read + restart</string>
+    <string name="sa_help_template_operate_desc">Read-only, plus restarting Deployments, StatefulSets and DaemonSets and scaling Deployments and StatefulSets.</string>
+    <string name="sa_help_template_namespace">One namespace</string>
+    <string name="sa_help_template_namespace_desc">Everything inside the ichor namespace (the built-in admin role there), nothing outside it: no nodes, no other namespace.</string>
+    <string name="sa_help_step_apply">1. Save it as ichor-phone.yaml (for another namespace, replace ichor everywhere), then apply it:</string>
+    <string name="sa_help_step_kubeconfig">2. Build kubeconfig-phone from its token, with the server of your current context:</string>
+    <string name="sa_help_step_import">3. Bring kubeconfig-phone to the phone and import it, then delete the other copies: the token is a password.</string>
+    <string name="sa_help_copy_yaml">Copy YAML</string>
 </resources>

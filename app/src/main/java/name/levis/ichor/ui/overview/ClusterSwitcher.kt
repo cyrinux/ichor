@@ -85,6 +85,7 @@ import name.levis.ichor.model.CLUSTER_SEEDS
 import name.levis.ichor.model.ClusterGroup
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.ContextSummary
+import name.levis.ichor.model.KUBE_AUTH_TOKEN
 import name.levis.ichor.model.accessLabel
 import name.levis.ichor.model.clusterGroups
 import name.levis.ichor.model.hueOf
@@ -654,10 +655,11 @@ private val HUE_BAR: List<Color> = (0..MAX_HUE.toInt() step HUE_BAR_STEP).map { 
 
 /**
  * The account entry of [context]'s menu, if any: the sign-in of a kubeconfig cluster that
- * signs in through a method, the Kubernetes access of a Talos cluster once a kubeconfig
- * cluster is stored ([contexts]).
+ * signs in through a method, how to make a ServiceAccount token for one added with a token,
+ * the Kubernetes access of a Talos cluster once a kubeconfig cluster is stored ([contexts]).
  */
 private fun clusterAccount(context: ContextSummary, contexts: List<ContextSummary>): Int? = when {
+    context.isKube && !context.demo && context.signIn.isEmpty() && context.auth == KUBE_AUTH_TOKEN -> R.string.sa_help_menu
     context.isKube || context.omni -> R.string.kube_signin_menu.takeIf { context.signIn.isNotEmpty() }
     context.demo -> null
     else -> R.string.kube_access_menu.takeIf { contexts.any { it.isKube } }

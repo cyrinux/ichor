@@ -16,6 +16,7 @@ import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.isKube
+import name.levis.ichor.ui.importconfig.ServiceAccountHelpDialog
 import name.levis.ichor.ui.kubeauth.KubeAccessDialog
 import name.levis.ichor.ui.kubeauth.SignInAccountDialog
 import name.levis.ichor.ui.kubeauth.SignInSheet
@@ -101,7 +102,10 @@ fun ManageClustersSheet(
     )
 
     account?.let { cluster ->
-        if (cluster.isKube || cluster.omni) {
+        if (cluster.isKube && cluster.signIn.isEmpty()) {
+            // Added with a token: how to make a least-privilege ServiceAccount one.
+            ServiceAccountHelpDialog(onDismiss = { account = null })
+        } else if (cluster.isKube || cluster.omni) {
             SignInAccountDialog(
                 cluster = cluster,
                 label = labels.of(cluster),

@@ -16,14 +16,20 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.KUBE_AUTH_TOKEN
 import name.levis.ichor.model.KubeImportRow
 import name.levis.ichor.model.kubeAuthLabel
 import name.levis.ichor.model.kubeImportRows
@@ -50,6 +56,8 @@ internal fun KubePreviewCard(
     onCancel: () -> Unit,
 ) {
     val rows = remember(preview) { kubeImportRows(preview.summary, preview.conflicts, preview.choices) }
+    var serviceAccountHelp by rememberSaveable { mutableStateOf(false) }
+    if (serviceAccountHelp) ServiceAccountHelpDialog(onDismiss = { serviceAccountHelp = false })
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -64,6 +72,10 @@ internal fun KubePreviewCard(
                 onRename = { onRename(row.index, it) },
                 onReplace = { onReplace(row.index, it) },
             )
+        }
+        // A token context: a dedicated ServiceAccount's beats an admin's.
+        if (rows.any { it.context.auth == KUBE_AUTH_TOKEN }) {
+            TextButton(onClick = { serviceAccountHelp = true }) { Text(stringResource(R.string.sa_help_title)) }
         }
         if (rows.none { it.importable }) {
             Text(stringResource(R.string.import_kube_none_importable), color = LocalStatusColors.current.warn, style = MaterialTheme.typography.bodyMedium)

@@ -37,11 +37,14 @@ fun kubeImportRows(summary: ConfigSummary, conflicts: List<ImportConflict>, choi
         )
     }
 
+/** The core's auth method for a kubeconfig context with a bearer token (a ServiceAccount's, say). */
+const val KUBE_AUTH_TOKEN = "token"
+
 /** How a kubeconfig context signs in, for the preview; null for a method the app does not know. */
 @StringRes
 fun kubeAuthLabel(auth: String): Int? = when (auth) {
     "cert" -> R.string.kube_auth_cert
-    "token" -> R.string.kube_auth_token
+    KUBE_AUTH_TOKEN -> R.string.kube_auth_token
     "eks" -> R.string.kube_auth_eks
     "gke" -> R.string.kube_auth_gke
     "oidc" -> R.string.kube_auth_oidc

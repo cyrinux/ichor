@@ -118,10 +118,13 @@ private const val COMPRESSED_QR_COMMAND = "gzip -9 < talosconfig-phone | qrencod
 /** Clusters added from a kubeconfig: what works today, and how to make one the app can read. */
 @Composable
 private fun KubeconfigHelp() {
+    var serviceAccount by rememberSaveable { mutableStateOf(false) }
+    if (serviceAccount) ServiceAccountHelpDialog(onDismiss = { serviceAccount = false })
     Text(stringResource(R.string.help_kube_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
     Text(stringResource(R.string.help_kube_body), style = MaterialTheme.typography.bodyMedium)
     Step(stringResource(R.string.help_kube_flatten))
     Command("kubectl config view --flatten --minify > kubeconfig-phone")
+    TextButton(onClick = { serviceAccount = true }) { Text(stringResource(R.string.sa_help_title)) }
     MutedText(stringResource(R.string.help_kube_later))
 }
 
@@ -134,12 +137,13 @@ private fun OmniHelp() {
 }
 
 @Composable
-private fun Step(text: String) {
+internal fun Step(text: String) {
     Text(text, style = MaterialTheme.typography.labelLarge)
 }
 
+/** A monospace block of [command] (a command, or YAML) with a button that copies it. */
 @Composable
-private fun Command(command: String) {
+internal fun Command(command: String, @StringRes copyLabel: Int = R.string.help_copy_command) {
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
     Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.small) {
@@ -151,7 +155,7 @@ private fun Command(command: String) {
                 modifier = Modifier.weight(1f).padding(vertical = 8.dp),
             )
             IconButton(onClick = { scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(command, command))) } }) {
-                Icon(Icons.Outlined.ContentCopy, contentDescription = stringResource(R.string.help_copy_command))
+                Icon(Icons.Outlined.ContentCopy, contentDescription = stringResource(copyLabel))
             }
         }
     }

@@ -89,6 +89,7 @@ struct ClustersView: View {
     /// The sign-in of each kubeconfig cluster that signs in through a method, by fingerprint.
     @State private var signIns: [String: KubeSignInInfo] = [:]
     @State private var signingIn: KubeSignInTarget?
+    @State private var showingServiceAccountHelp = false
 
     var body: some View {
         List {
@@ -130,6 +131,7 @@ struct ClustersView: View {
         }
         .endpointTools(editing: $editingEndpoints, scanning: $scanning)
         .sheet(item: $signingIn) { KubeSignInSheet(target: $0) }
+        .sheet(isPresented: $showingServiceAccountHelp) { ServiceAccountHelpSheet() }
         .navigationDestination(item: $activityOf) { ActivityLogView(cluster: $0) }
         .task(id: "\(model.summary?.contexts.map(\.fingerprint) ?? [])#\(model.dataGeneration)") { await loadSignIns() }
         .themedBackground()
@@ -271,6 +273,10 @@ struct ClustersView: View {
         }
         if context.isKube || context.omni, let target = model.signInTarget(for: context) {
             Button { signingIn = target } label: { Label("Sign in", systemImage: "person.badge.key") }
+        }
+        // Added with a token: how to make a least-privilege ServiceAccount one.
+        if context.usesKubeToken {
+            Button { showingServiceAccountHelp = true } label: { Label("Service account", systemImage: "person.badge.key") }
         }
         Button { activityOf = context.name } label: { Label("Activity", systemImage: "clock.arrow.circlepath") }
         Button(role: .destructive) { removing = context } label: { Label("Delete", systemImage: "trash") }
