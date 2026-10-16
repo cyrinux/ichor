@@ -272,6 +272,30 @@ var dataCommands = []command{
 
 		return flag.Arg(6) + " requested", ichorgo.KubeCrossplaneAction(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), namespace, flag.Arg(5), flag.Arg(6))
 	}},
+	{name: "kube-scaledobject-pause", args: "NAMESPACE NAME REPLICAS", run: func(e env) (string, error) {
+		// kube-scaledobject-pause: pause a KEDA ScaledObject at REPLICAS (-1 holds the current
+		// count, -2 resumes). Mutates the cluster.
+		replicas, err := strconv.Atoi(flag.Arg(3))
+		if err != nil {
+			return "", err
+		}
+
+		return "updated", ichorgo.KubePauseScaledObject(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), replicas)
+	}},
+	{name: "kube-hpa-bounds", args: "NAMESPACE NAME MIN MAX", run: func(e env) (string, error) {
+		// kube-hpa-bounds: set an HPA's minReplicas and maxReplicas. Mutates the cluster.
+		minReplicas, err := strconv.Atoi(flag.Arg(3))
+		if err != nil {
+			return "", err
+		}
+
+		maxReplicas, err := strconv.Atoi(flag.Arg(4))
+		if err != nil {
+			return "", err
+		}
+
+		return "updated", ichorgo.KubeSetHPABounds(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), minReplicas, maxReplicas)
+	}},
 	{name: "kube-policies", args: "", run: func(e env) (out string, err error) {
 		// kube-policies: Kyverno policies with their PolicyReport findings and Gatekeeper
 		// constraints with their audit violations (read-only).

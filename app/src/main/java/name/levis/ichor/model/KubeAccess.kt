@@ -53,6 +53,12 @@ enum class KubeAction(val wire: String) {
 
     /** Its serial console, like `virtctl console`. */
     VM_CONSOLE("vmConsole"),
+
+    /** An HPA's min and max. */
+    AUTOSCALE("autoscale"),
+
+    /** Pause or resume a KEDA ScaledObject. */
+    AUTOSCALE_KEDA("autoscaleKeda"),
     ;
 
     /** The action asked for an object of a kind, on that kind's own resource; null for a kind the core does not ask about (offered). */

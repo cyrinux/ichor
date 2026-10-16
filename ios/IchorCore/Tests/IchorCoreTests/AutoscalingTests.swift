@@ -635,4 +635,23 @@ final class AutoscalingTests: XCTestCase {
         XCTAssertFalse(report.karpenter.state.installed)
         XCTAssertTrue(report.problems.isEmpty)
     }
+
+    func testHpaBoundsRefuseWhatTheCoreRefuses() {
+        XCTAssertTrue(HpaBounds.isValid(1, 1))
+        XCTAssertTrue(HpaBounds.isValid(2, 10))
+        XCTAssertFalse(HpaBounds.isValid(0, 3))
+        XCTAssertFalse(HpaBounds.isValid(4, 3))
+        XCTAssertFalse(HpaBounds.isValid(1, kubeMaxScaleReplicas + 1))
+        XCTAssertFalse(HpaBounds.isValid(1, 6, limit: 5))
+    }
+
+    func testKEDAOwnedHPA() {
+        XCTAssertTrue(HpaRow(namespace: "media", name: "keda-hpa-transcoder", managedBy: "keda", scaledObject: "transcoder").isKEDAOwned)
+        XCTAssertFalse(HpaRow(namespace: "shop", name: "web").isKEDAOwned)
+    }
+
+    func testPauseCountsMatchTheCore() {
+        XCTAssertEqual(ScaledObjectPause.hold, -1)
+        XCTAssertEqual(ScaledObjectPause.resume, -2)
+    }
 }

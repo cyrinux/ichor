@@ -4,11 +4,13 @@ import IchorCore
 /// The detail sheet of the row a tap opened: one per kind, the content the screen's rows hint.
 struct AutoscalingDetailSheets: View {
     let selection: AutoscalingView.Selection
+    /// Reads the report again after an action: the open sheet shows its outcome.
+    let onChanged: () async -> Void
 
     var body: some View {
         switch selection {
-        case .hpa(let row): AutoscaleSheet(row: row)
-        case .scaledObject(let row): ScaledObjectSheet(row: row)
+        case .hpa(let row): AutoscaleSheet(row: row, onChanged: onChanged)
+        case .scaledObject(let row): ScaledObjectSheet(row: row, onChanged: onChanged)
         case .scaledJob(let row): ScaledJobSheet(row: row)
         case .vpa(let row): VpaSheet(row: row)
         case .pool(let row, let claims): NodePoolSheet(row: row, claims: claims)
@@ -19,8 +21,10 @@ struct AutoscalingDetailSheets: View {
 /// One HPA: its metrics against their targets, the three conditions, and what it drives.
 struct AutoscaleSheet: View {
     let row: HpaRow
+    let onChanged: () async -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var editingBounds = false
 
     var body: some View {
         NavigationStack {
@@ -44,8 +48,11 @@ struct AutoscaleSheet: View {
                         Text(verbatim: row.conditions.message).font(.footnote).foregroundStyle(.secondary)
                     }
                 }
+                boundsSection
                 workloadLink
             }
+            .loadsKubeActionAccess(namespace: row.namespace)
+            .sheet(isPresented: $editingBounds) { HpaBoundsSheet(row: row, onDone: onChanged) }
             .themedBackground()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -78,6 +85,19 @@ struct AutoscaleSheet: View {
         }
     }
 
+    /// Edit min/max, gated on patch; an HPA KEDA owns says where its bounds live instead.
+    private var boundsSection: some View {
+        Section("Bounds") {
+            if row.isKEDAOwned {
+                Text(AutoscaleText.kedaOwned(row.scaledObject)).font(.footnote).foregroundStyle(.secondary)
+            } else {
+                Button("Edit min/max", systemImage: "arrow.up.and.down") { editingBounds = true }
+                    .kubeGated(.autoscale)
+                KubeDeniedNote(.autoscale)
+            }
+        }
+    }
+
     @ViewBuilder
     private func condition(_ label: String, _ ok: Bool) -> some View {
         LabeledContent(label) {
@@ -100,8 +120,14 @@ struct AutoscaleSheet: View {
 /// One KEDA ScaledObject: its triggers, its fallback, and the HPA it owns.
 struct ScaledObjectSheet: View {
     let row: ScaledObjectRow
+    let onChanged: () async -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppModel.self) private var model
+    @State private var pausing = false
+    @State private var confirmResume = false
+    @State private var resuming = false
+    @State private var failure: String?
 
     var body: some View {
         NavigationStack {
@@ -120,7 +146,15 @@ struct ScaledObjectSheet: View {
                         Text(verbatim: row.hpaName).font(.callout.monospaced())
                     }
                 }
+                pauseSection
                 workloadLink
+            }
+            .loadsKubeActionAccess(namespace: row.namespace)
+            .sheet(isPresented: $pausing) { ScaledObjectPauseSheet(row: row, onDone: onChanged) }
+            .confirmationDialog(AutoscaleText.resumeTitle(row.name), isPresented: $confirmResume, titleVisibility: .visible) {
+                Button("Resume scaling") { Task { await resume() } }
+            } message: {
+                Text("KEDA scales the workload on its triggers again.")
             }
             .themedBackground()
             .navigationBarTitleDisplayMode(.inline)
@@ -130,6 +164,44 @@ struct ScaledObjectSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+    }
+
+    /// Pause at a count or hold (a sheet), resume when paused (confirmed), gated on patch.
+    private var pauseSection: some View {
+        Section("Pause") {
+            Button("Pause at…", systemImage: "pause.circle") { pausing = true }
+                .kubeGated(.autoscaleKeda)
+                .disabled(resuming)
+            if row.paused {
+                Button {
+                    confirmResume = true
+                } label: {
+                    HStack {
+                        Label("Resume scaling", systemImage: "play.circle")
+                        if resuming { Spacer(); ProgressView() }
+                    }
+                }
+                .kubeGated(.autoscaleKeda)
+                .disabled(resuming)
+            }
+            KubeDeniedNote(.autoscaleKeda)
+            if let failure {
+                Text(verbatim: failure).font(.footnote).foregroundStyle(.statusBad).textSelection(.enabled)
+            }
+        }
+    }
+
+    private func resume() async {
+        guard let client = model.client else { return }
+        resuming = true
+        failure = nil
+        do {
+            try await client.pauseScaledObject(namespace: row.namespace, name: row.name, replicas: ScaledObjectPause.resume)
+            await onChanged()
+        } catch {
+            failure = error.localizedDescription
+        }
+        resuming = false
     }
 
     private var header: some View {

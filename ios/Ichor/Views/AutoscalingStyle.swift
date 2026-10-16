@@ -18,6 +18,14 @@ enum AutoscaleText {
     static func poolNodes(_ a: String) -> String { String(format: String(localized: "%@ nodes"), a) }
     static func poolClaims(_ a: String) -> String { String(format: String(localized: "%@ claims"), a) }
     static func capacityTypes(_ a: String) -> String { String(format: String(localized: "Capacity types: %@"), a) }
+    static func pauseTitle(_ a: String) -> String { String(format: String(localized: "Pause %@"), a) }
+    static func pauseConfirm(_ a: String) -> String { String(format: String(localized: "Pause at %@"), a) }
+    static func resumeTitle(_ a: String) -> String { String(format: String(localized: "Resume %@?"), a) }
+    static func boundsTitle(_ a: String) -> String { String(format: String(localized: "Bounds of %@"), a) }
+    static func boundsCurrent(_ a: String) -> String { String(format: String(localized: "Running now: %@"), a) }
+    static func kedaOwned(_ a: String) -> String {
+        String(format: String(localized: "KEDA owns this HPA: change the minReplicaCount or maxReplicaCount of the ScaledObject %@ instead."), a)
+    }
     static func consolidateAfter(_ a: String) -> String { String(format: String(localized: "consolidate after %@"), a) }
     static func budgetNodes(_ a: String) -> String { String(format: String(localized: "%@ nodes"), a) }
     static func notInstalled(_ a: String) -> String { String(format: String(localized: "%@ is not installed on this cluster"), a) }
