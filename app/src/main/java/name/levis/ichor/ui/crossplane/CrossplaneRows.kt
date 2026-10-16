@@ -22,8 +22,8 @@ import name.levis.ichor.model.CrossplaneObject
 import name.levis.ichor.model.CrossplanePackage
 import name.levis.ichor.model.CrossplaneReason
 import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.dataservices.HealthDot
 import name.levis.ichor.util.timeAgo
 
 /** One row of the screen: health dot, kind and name, then the details that matter. */

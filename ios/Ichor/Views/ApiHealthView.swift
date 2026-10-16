@@ -159,9 +159,9 @@ private struct ApiClientsSection: View {
                         if top > 0 { ProgressView(value: min(flow.rate / top, 1)).tint(.accentColor) }
                         if flow.rejectedRate > 0 || flow.queued > 0 {
                             HStack(spacing: 6) {
-                                if flow.rejectedRate > 0 { InfoChip(text: String(localized: "\(formatRate(flow.rejectedRate)) rejected"), color: .red) }
-                                if flow.queued > 0 { InfoChip(text: String(localized: "\(flow.queued) queued"), color: .orange) }
-                                if flow.waitMs > 0 { InfoChip(text: String(localized: "waits \(formatMs(flow.waitMs))"), color: .orange) }
+                                if flow.rejectedRate > 0 { Tag(String(localized: "\(formatRate(flow.rejectedRate)) rejected"), color: .red) }
+                                if flow.queued > 0 { Tag(String(localized: "\(flow.queued) queued"), color: .orange) }
+                                if flow.waitMs > 0 { Tag(String(localized: "waits \(formatMs(flow.waitMs))"), color: .orange) }
                             }
                         }
                     }
@@ -192,8 +192,8 @@ private struct ApiPrioritiesSection: View {
                         }
                         if level.queued > 0 || level.rejectedRate > 0 {
                             HStack(spacing: 6) {
-                                if level.queued > 0 { InfoChip(text: String(localized: "\(level.queued) queued"), color: .orange) }
-                                if level.rejectedRate > 0 { InfoChip(text: String(localized: "\(formatRate(level.rejectedRate)) rejected"), color: .red) }
+                                if level.queued > 0 { Tag(String(localized: "\(level.queued) queued"), color: .orange) }
+                                if level.rejectedRate > 0 { Tag(String(localized: "\(formatRate(level.rejectedRate)) rejected"), color: .red) }
                             }
                         }
                     }
@@ -213,7 +213,7 @@ private struct ApiRequestsSection: View {
             }
             ForEach(requests) { row in
                 HStack(spacing: 8) {
-                    InfoChip(text: row.verb, monospaced: true, color: .accentColor)
+                    Tag(row.verb, color: .accentColor, mono: true)
                     VStack(alignment: .leading, spacing: 2) {
                         if row.resource.isEmpty {
                             Text("Non-resource paths").font(.callout)
@@ -225,7 +225,7 @@ private struct ApiRequestsSection: View {
                         }
                     }
                     Spacer()
-                    if row.errorRate > 0 { InfoChip(text: String(localized: "\(formatRate(row.errorRate)) errors"), color: .orange) }
+                    if row.errorRate > 0 { Tag(String(localized: "\(formatRate(row.errorRate)) errors"), color: .orange) }
                     Text(verbatim: formatRate(row.rate)).font(.callout.monospaced())
                 }
             }

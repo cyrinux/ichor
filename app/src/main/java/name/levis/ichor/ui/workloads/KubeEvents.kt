@@ -33,7 +33,7 @@ import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.checkup.ageSince
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.netpol.TagBadge
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiStateOf
 
@@ -81,7 +81,7 @@ private fun EventRow(e: KubeEvent, now: Long, showObject: Boolean) {
     val colors = LocalStatusColors.current
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            TagBadge(e.reason, if (e.isWarning) colors.warn else colors.muted)
+            Tag(e.reason, if (e.isWarning) colors.warn else colors.muted)
             if (e.count > 1) MutedText("× ${e.count}")
             MutedText(stringResource(R.string.kube_events_ago, ageSince(e.last, now)), modifier = Modifier.weight(1f), maxLines = 1)
             if (e.source.isNotEmpty()) MutedText(e.source, maxLines = 1)

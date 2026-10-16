@@ -170,10 +170,10 @@ private struct PromRuleRow: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: rule.name).font(.callout.monospaced()).lineLimit(2).truncationMode(.middle)
             HStack(spacing: 6) {
-                InfoChip(text: rule.type == .alerting ? PromMonitoringText.alerting : PromMonitoringText.recording)
-                if let stateText { InfoChip(text: stateText, color: stateColor) }
-                if rule.health == .err { InfoChip(text: PromMonitoringText.healthErr, color: Color.statusBad) }
-                if rule.alerts > 0 { InfoChip(text: PromMonitoringText.activeAlerts("\(rule.alerts)")) }
+                Tag(rule.type == .alerting ? PromMonitoringText.alerting : PromMonitoringText.recording)
+                if let stateText { Tag(stateText, color: stateColor) }
+                if rule.health == .err { Tag(PromMonitoringText.healthErr, color: Color.statusBad) }
+                if rule.alerts > 0 { Tag(PromMonitoringText.activeAlerts("\(rule.alerts)")) }
             }
             if !rule.lastError.isEmpty {
                 Text(verbatim: rule.lastError).font(.caption.monospaced()).foregroundStyle(Color.statusBad).lineLimit(6)
@@ -264,8 +264,8 @@ private struct PromServerRow: View {
                 if server.shards > 1 {
                     Text(verbatim: PromMonitoringText.shards("\(server.shards)")).font(.caption).foregroundStyle(.secondary)
                 }
-                if !server.version.isEmpty { InfoChip(text: server.version, monospaced: true) }
-                if server.paused { InfoChip(text: PromMonitoringText.paused, color: Color.statusWarn) }
+                if !server.version.isEmpty { Tag(server.version, mono: true) }
+                if server.paused { Tag(PromMonitoringText.paused, color: Color.statusWarn) }
             }
             ForEach(Array(server.conditions.enumerated()), id: \.offset) { _, condition in
                 Text(verbatim: conditionLine(condition))

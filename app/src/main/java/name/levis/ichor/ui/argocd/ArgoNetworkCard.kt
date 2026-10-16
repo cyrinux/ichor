@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ArgoNetNode
 import name.levis.ichor.model.ServiceHealth
-import name.levis.ichor.ui.dataservices.color
+import name.levis.ichor.ui.components.color
 
 /**
  * One box of the graph: a 3 dp accent bar in its health colour, the kind's icon, its name and

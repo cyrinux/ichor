@@ -35,12 +35,14 @@ import name.levis.ichor.model.worst
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.apps.AppIconPlaceholder
+import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SectionCard
 import name.levis.ichor.ui.components.StatusPill
-import name.levis.ichor.ui.dataservices.HealthDot
+import name.levis.ichor.ui.components.color
+import name.levis.ichor.ui.components.label
 import name.levis.ichor.ui.dataservices.KindIcon
 import name.levis.ichor.ui.dataservices.LikelyCauseBanner
-import name.levis.ichor.ui.dataservices.color
 import name.levis.ichor.ui.dataservices.label
 import name.levis.ichor.ui.dataservices.summaryText
 
@@ -88,21 +90,11 @@ fun DataServicesCard(
 
 @Composable
 private fun Frame(worst: ServiceHealth?, onOpen: () -> Unit, content: @Composable () -> Unit) {
-    Card(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.data_services_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                if (worst != null && worst.needsAttention) StatusPill(worst.label(), worst.color())
-                Icon(
-                    Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 4.dp),
-                )
-            }
-            content()
-        }
-    }
+    SectionCard(
+        stringResource(R.string.data_services_title),
+        pill = worst?.takeIf { it.needsAttention }?.let { { StatusPill(it) } },
+        onOpen = onOpen,
+    ) { content() }
 }
 
 /** A system: its icon, name and one line; a placeholder while [text] is null. [onClick] opens its tab. */

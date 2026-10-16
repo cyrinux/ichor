@@ -52,7 +52,7 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
-import name.levis.ichor.ui.netpol.TagBadge
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 
@@ -230,7 +230,7 @@ private fun ChangeRow(c: HelmRollbackChange) {
     }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TagBadge(label, color)
+            Tag(label, color)
             Text(
                 listOf(c.kind, listOf(c.namespace, c.name).filter { it.isNotEmpty() }.joinToString("/")).filter { it.isNotEmpty() }.joinToString(" "),
                 style = MaterialTheme.typography.bodySmall,

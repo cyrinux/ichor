@@ -22,8 +22,8 @@ import name.levis.ichor.model.TailscaleDNSConfig
 import name.levis.ichor.model.TailscaleOperator
 import name.levis.ichor.model.TailscaleProxyClass
 import name.levis.ichor.model.TailscaleProxyGroup
+import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.dataservices.HealthDot
 
 /**
  * One row: health dot and name, the details that matter, then (for a problem) the operator's

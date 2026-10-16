@@ -25,7 +25,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -191,24 +190,6 @@ fun InfoRow(label: String, value: String, mono: Boolean = false, valueColor: Col
             modifier = Modifier.weight(0.6f),
         )
     }
-}
-
-/** Usage bar coloured by how full it is. */
-@Composable
-fun UsageBar(fraction: Float, modifier: Modifier = Modifier, warnAt: Float = 0.75f) {
-    val colors = LocalStatusColors.current
-    val color = when {
-        fraction >= 0.9f -> colors.bad
-        fraction >= warnAt -> colors.warn
-        else -> colors.ok
-    }
-    LinearProgressIndicator(
-        progress = { fraction },
-        color = color,
-        trackColor = MaterialTheme.colorScheme.surfaceVariant,
-        modifier = modifier.fillMaxWidth().height(6.dp),
-        drawStopIndicator = {},
-    )
 }
 
 /** Top app bar "back" arrow. */

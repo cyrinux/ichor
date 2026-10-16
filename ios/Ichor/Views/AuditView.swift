@@ -189,8 +189,8 @@ private struct AuditActorView: View {
                 .lineLimit(1)
             if row.throttled > 0 || row.errors > 0 {
                 HStack(spacing: 6) {
-                    if row.throttled > 0 { InfoChip(text: String(localized: "\(row.throttled) throttled"), color: .red) }
-                    if row.errors > 0 { InfoChip(text: String(localized: "\(row.errors) errors"), color: .orange) }
+                    if row.throttled > 0 { Tag(String(localized: "\(row.throttled) throttled"), color: .red) }
+                    if row.errors > 0 { Tag(String(localized: "\(row.errors) errors"), color: .orange) }
                 }
             }
         }

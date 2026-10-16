@@ -102,7 +102,7 @@ private struct PolicyEngineSection: View {
             if !engine.controllers.isEmpty {
                 ChipFlow(spacing: 6) {
                     ForEach(engine.controllers) { c in
-                        InfoChip(text: "\(c.name) \(c.ready)/\(c.desired)", monospaced: true, color: c.healthy ? .statusOK : .statusBad)
+                        Tag("\(c.name) \(c.ready)/\(c.desired)", color: c.healthy ? .statusOK : .statusBad, mono: true)
                             .accessibilityLabel(Text(PolicyText.controllerReady(c.name, String(c.ready), String(c.desired))))
                     }
                 }
@@ -168,7 +168,7 @@ private struct PolicyRow: View {
                     .foregroundStyle(.primary)
                 Spacer()
                 if showEngine {
-                    InfoChip(text: policy.engine.title, color: .secondary)
+                    Tag(policy.engine.title, color: .secondary)
                 }
                 PolicyActionBadge(action: policy.action)
             }

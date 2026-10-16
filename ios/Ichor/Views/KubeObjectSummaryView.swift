@@ -57,7 +57,7 @@ struct KubeObjectSummarySections: View {
     @ViewBuilder private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                InfoChip(text: healthText, color: summary.healthTone.color ?? .secondary)
+                Tag(healthText, color: summary.healthTone.color ?? .secondary)
                 if !summary.healthReason.isEmpty {
                     Text(verbatim: summary.healthReason).font(.caption).foregroundStyle(.secondary).lineLimit(2)
                 }
@@ -124,7 +124,7 @@ private struct ConditionRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
-                InfoChip(text: condition.type, color: condition.toneValue.color ?? .secondary)
+                Tag(condition.type, color: condition.toneValue.color ?? .secondary)
                 Text(verbatim: [condition.status, condition.reason].filter { !$0.isEmpty }.joined(separator: " · "))
                     .font(.caption).lineLimit(1)
                 Spacer()
@@ -168,7 +168,7 @@ private struct OwnerLink: View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
                 Text(verbatim: owner.isHelmRelease ? "Helm" : owner.kind).font(.subheadline.weight(.semibold))
-                if let tag { InfoChip(text: tag) }
+                if let tag { Tag(tag) }
             }
             Text(verbatim: [owner.namespace, owner.name].filter { !$0.isEmpty }.joined(separator: "/"))
                 .font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)

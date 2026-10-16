@@ -23,7 +23,7 @@ struct ClusterSummaryCard: View {
             Breakdown(summary: summary)
             Divider()
             HStack(alignment: .top, spacing: 12) {
-                SummaryStat(icon: "cube", value: "\(summary.ready)/\(summary.total)", label: String(localized: "Nodes"))
+                StatTile(icon: "cube", value: "\(summary.ready)/\(summary.total)", label: String(localized: "Nodes"))
                     .frame(maxWidth: .infinity, alignment: .leading)
                 CpuStat(cpuCount: summary.cpuCount, live: live)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -83,12 +83,12 @@ private struct CpuStat: View {
     var body: some View {
         if let used = live?.usage?.cpuFraction, let live {
             VStack(alignment: .leading, spacing: 4) {
-                SummaryStat(icon: "cpu", value: percent(used),
-                            label: cpuCount > 0 ? String(localized: "of \(cpuCount) cores") : String(localized: "CPU in use"))
+                StatTile(icon: "cpu", value: percent(used),
+                         label: cpuCount > 0 ? String(localized: "of \(cpuCount) cores") : String(localized: "CPU in use"))
                 CpuSparkline(history: live.cpuHistory)
             }
         } else {
-            SummaryStat(icon: "cpu", value: cpuCount > 0 ? "\(cpuCount)" : unknownValue, label: String(localized: "CPU cores"))
+            StatTile(icon: "cpu", value: cpuCount > 0 ? "\(cpuCount)" : unknownValue, label: String(localized: "CPU cores"))
         }
     }
 }
@@ -101,8 +101,8 @@ private struct MemoryStat: View {
         let total = live.map(\.memTotal).flatMap { $0 > 0 ? $0 : nil } ?? summary.memTotal
         let used = live?.memUsedFraction ?? summary.memUsedFraction
         VStack(alignment: .leading, spacing: 6) {
-            SummaryStat(icon: "memorychip", value: total > 0 ? formatBytes(total) : unknownValue,
-                        label: used.map { String(localized: "\(percent($0)) used") } ?? String(localized: "Memory"))
+            StatTile(icon: "memorychip", value: total > 0 ? formatBytes(total) : unknownValue,
+                     label: used.map { String(localized: "\(percent($0)) used") } ?? String(localized: "Memory"))
             if let used {
                 // Glide between samples rather than jump.
                 UsageBar(fraction: used).animation(.easeInOut, value: used)
@@ -114,22 +114,4 @@ private struct MemoryStat: View {
 /// "42 %" as the locale writes it.
 private func percent(_ fraction: Double) -> String {
     fraction.formatted(.percent.precision(.fractionLength(0)))
-}
-
-private struct SummaryStat: View {
-    let icon: String
-    let value: String
-    let label: String
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Image(systemName: icon).foregroundStyle(.tint).accessibilityHidden(true)
-            // Narrow phones and long translations wrap rather than cut the label short.
-            VStack(alignment: .leading, spacing: 1) {
-                Text(verbatim: value).font(.headline).monospacedDigit()
-                Text(verbatim: label).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .accessibilityElement(children: .combine)
-    }
 }

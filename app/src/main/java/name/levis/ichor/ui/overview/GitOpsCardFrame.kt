@@ -32,7 +32,7 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.apps.AppIconTile
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.dataservices.color
+import name.levis.ichor.ui.components.color
 
 /**
  * The frame of a GitOps tool's overview card, opening its screen: the tool's tile, [title] and

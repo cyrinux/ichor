@@ -163,7 +163,7 @@ struct ArgoOperationSection: View {
         Section(operation.phase.active ? String(localized: "Sync in progress") : String(localized: "Last sync")) {
             HStack {
                 StatusPill(label: operation.phase.label, color: operation.phase.color)
-                if operation.dryRun { InfoChip(text: String(localized: "dry run")) }
+                if operation.dryRun { Tag(String(localized: "dry run")) }
                 Spacer()
                 elapsed.font(.caption.monospacedDigit()).foregroundStyle(.secondary)
             }
@@ -289,7 +289,7 @@ struct ArgoHistorySection: View {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 6) {
                             RevisionLink(label: entry.label, url: entry.url).font(.callout.monospaced())
-                            if index == 0 { InfoChip(text: String(localized: "current"), color: .green) }
+                            if index == 0 { Tag(String(localized: "current"), color: .green) }
                         }
                         Text(verbatim: [relativeTime(entry.deployedAt),
                                         entry.initiatedBy == "automated" ? String(localized: "auto-sync") : entry.initiatedBy]

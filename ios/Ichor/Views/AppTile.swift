@@ -120,19 +120,3 @@ struct FilterChip: View {
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
-
-/// A small rounded label: a version (monospaced) or an amber warning.
-struct InfoChip: View {
-    let text: String
-    var monospaced = false
-    var color: Color?
-
-    var body: some View {
-        Text(verbatim: text)
-            .font(monospaced ? .caption.monospaced() : .caption.weight(.medium))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .foregroundStyle(color.map { AnyShapeStyle($0) } ?? AnyShapeStyle(HierarchicalShapeStyle.primary))
-            .background(color.map { AnyShapeStyle($0.opacity(0.15)) } ?? AnyShapeStyle(Color(.tertiarySystemFill)), in: Capsule())
-    }
-}

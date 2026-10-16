@@ -24,6 +24,22 @@ Do the same on Android and iOS:
   rollout restart.
 - When a safer way out exists (a backup before deleting), offer it in the dialog.
 
+## UI components
+
+Screens build on one small set, the same names on both apps (`ui/components/` on Android,
+`ios/Ichor/Views/SharedComponents.swift` and `Components.swift` on iOS):
+
+- Health colours come only from the status tokens (ok / warn / bad / muted), never from the
+  cluster's colour.
+- One `StatusPill` per header or card for a named state; a `HealthDot` leads each row; a `Tag`
+  is for categories (role, type, scope, QoS) and is not health-coloured unless the value itself
+  is a problem. A tag with the same value on every row goes in the header, or on the exceptions.
+- Numbers are `StatTile`s, not prose; usage is `UsageBar` or `MeterRow`, with the caller's
+  thresholds. Lists use `ResourceRow`; an empty list shows `EmptyState`.
+- An explanatory paragraph is an `InfoHint`; at most one filled button per screen, and row
+  actions live in the row's menu or sheet.
+- Errors are a whole-screen error or an inline section error, never a plain line of text.
+
 ## Measuring a cold start
 
 Turn on Settings → Support → "Startup timing" (always on in a debug build), close the app,

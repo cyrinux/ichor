@@ -63,6 +63,14 @@ public func usageLevel(percent: Double) -> UsageLevel {
     return .normal
 }
 
+/// Colour of a plain usage bar from a fraction in [0, 1]: warning from `warnAt` (the caller's
+/// threshold, 75 % by default), critical from 90 % whatever `warnAt` is.
+public func usageLevel(fraction: Double, warnAt: Double = 0.75) -> UsageLevel {
+    if fraction >= 0.9 { return .critical }
+    if fraction >= warnAt { return .warning }
+    return .normal
+}
+
 /// A used percentage as a bar fraction in [0, 1] (NaN counts as 0).
 public func usageFraction(percent: Double) -> Double {
     percent.isNaN ? 0 : min(max(percent / 100, 0), 1)

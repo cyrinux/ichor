@@ -443,7 +443,7 @@ private struct CheckupReleaseRow: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            InfoChip(text: release.status, color: release.inTrouble ? Color.statusWarn : Color.statusOK)
+            Tag(release.status, color: release.inTrouble ? Color.statusWarn : Color.statusOK)
         }
     }
 }

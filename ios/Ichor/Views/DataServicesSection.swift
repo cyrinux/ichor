@@ -40,16 +40,6 @@ extension ClusterOverview {
     }
 }
 
-struct HealthDot: View {
-    let health: ServiceHealth
-    var size: CGFloat = 10
-
-    var body: some View {
-        Circle().fill(health.color).frame(width: size, height: size)
-            .accessibilityLabel(Text(health.label))
-    }
-}
-
 /// One line about a system: "12 volumes · 1 needs a look", "Degraded · 6/7 nodes up"...
 func dataServiceSummary(_ kind: DataServiceKind, _ services: DataServices) -> String {
     guard let summary = services.summary(kind) else { return "" }

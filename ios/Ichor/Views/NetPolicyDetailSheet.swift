@@ -131,11 +131,11 @@ private struct NetRuleRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            InfoChip(text: rule.action.label, color: rule.action.color)
+            Tag(rule.action.label, color: rule.action.color)
             Text(direction == .ingress ? LocalizedStringKey("From") : LocalizedStringKey("To")).font(.caption).foregroundStyle(.secondary)
             ChipFlow {
                 if rule.peers.isEmpty {
-                    InfoChip(text: String(localized: "Anyone"))
+                    Tag(String(localized: "Anyone"))
                 }
                 ForEach(rule.peers.indices, id: \.self) { index in
                     NetPeerChip(peer: rule.peers[index], clusterWide: clusterWide)
@@ -144,10 +144,10 @@ private struct NetRuleRow: View {
             Text("On").font(.caption).foregroundStyle(.secondary)
             ChipFlow {
                 if rule.ports.isEmpty {
-                    InfoChip(text: String(localized: "Any port"))
+                    Tag(String(localized: "Any port"))
                 }
                 ForEach(rule.ports.indices, id: \.self) { index in
-                    InfoChip(text: rule.ports[index].text, monospaced: true)
+                    Tag(rule.ports[index].text, mono: true)
                 }
             }
             ForEach(rule.l7, id: \.self) { line in

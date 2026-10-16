@@ -43,10 +43,12 @@ import name.levis.ichor.model.VeleroReason
 import name.levis.ichor.model.VeleroSchedule
 import name.levis.ichor.model.VeleroStatus
 import name.levis.ichor.ui.components.EmptyText
+import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.components.color
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
 

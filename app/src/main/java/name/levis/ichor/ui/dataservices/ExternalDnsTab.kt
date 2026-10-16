@@ -38,10 +38,12 @@ import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.EmptyText
+import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.components.color
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**

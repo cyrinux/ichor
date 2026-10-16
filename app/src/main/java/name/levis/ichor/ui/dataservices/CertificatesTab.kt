@@ -38,9 +38,11 @@ import name.levis.ichor.model.CertManagerStatus
 import name.levis.ichor.model.CertReason
 import name.levis.ichor.model.Certificate
 import name.levis.ichor.ui.components.EmptyText
+import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.color
 import name.levis.ichor.util.timeAgo
 
 /**

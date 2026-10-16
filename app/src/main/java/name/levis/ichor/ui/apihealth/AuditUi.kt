@@ -37,8 +37,8 @@ import name.levis.ichor.model.level
 import name.levis.ichor.model.target
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.localizedDuration
-import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
 import kotlin.math.roundToInt
 
@@ -137,8 +137,8 @@ fun ActorRow(row: AuditActorRow) {
         MutedText(stringResource(R.string.audit_actor_share, (row.share * 100).roundToInt(), row.topVerb, row.topResource), maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (row.errors > 0 || row.throttled > 0) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (row.throttled > 0) TagBadge(stringResource(R.string.audit_actor_throttled, row.throttled), colors.bad)
-                if (row.errors > 0) TagBadge(stringResource(R.string.audit_actor_errors, row.errors), colors.warn)
+                if (row.throttled > 0) Tag(stringResource(R.string.audit_actor_throttled, row.throttled), colors.bad)
+                if (row.errors > 0) Tag(stringResource(R.string.audit_actor_errors, row.errors), colors.warn)
             }
         }
     }

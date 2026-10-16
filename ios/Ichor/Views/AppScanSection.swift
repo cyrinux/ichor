@@ -103,7 +103,7 @@ struct SeverityChips: View {
             ForEach(VulnSeverity.allCases, id: \.self) { severity in
                 let count = summary.count(severity)
                 if severity != .unknown || count > 0 {
-                    InfoChip(text: "\(severity.label) \(count)", color: count > 0 ? severity.color : nil)
+                    Tag("\(severity.label) \(count)", color: count > 0 ? severity.color : nil)
                 }
             }
         }

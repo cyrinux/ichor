@@ -27,6 +27,19 @@ final class StorageTests: XCTestCase {
         XCTAssertEqual(usageFraction(percent: .nan), 0)
     }
 
+    func testUsageLevelFromFraction() {
+        XCTAssertEqual(usageLevel(fraction: 0), .normal)
+        XCTAssertEqual(usageLevel(fraction: 0.74), .normal)
+        XCTAssertEqual(usageLevel(fraction: 0.75), .warning)
+        XCTAssertEqual(usageLevel(fraction: 0.89), .warning)
+        XCTAssertEqual(usageLevel(fraction: 0.9), .critical)
+        XCTAssertEqual(usageLevel(fraction: 1.2), .critical)
+        // A caller's own warning threshold; critical stays at 90 %.
+        XCTAssertEqual(usageLevel(fraction: 0.79, warnAt: 0.8), .normal)
+        XCTAssertEqual(usageLevel(fraction: 0.8, warnAt: 0.8), .warning)
+        XCTAssertEqual(usageLevel(fraction: 0.9, warnAt: 0.8), .critical)
+    }
+
     func testMountSorting() {
         let mounts = [MountInfo(filesystem: "a", mountedOn: "/b", size: 9, usedPercent: 10), MountInfo(filesystem: "a", mountedOn: "/a", size: 9, usedPercent: 10),
                       MountInfo(filesystem: "a", mountedOn: "/var", size: 9, usedPercent: 92)]

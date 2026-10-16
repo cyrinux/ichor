@@ -93,9 +93,9 @@ struct PolicyCounts: View {
     var body: some View {
         if fail > 0 || warn > 0 || pass > 0 {
             HStack(spacing: 6) {
-                if fail > 0 { InfoChip(text: PolicyText.failCount(String(fail)), color: .statusBad) }
-                if warn > 0 { InfoChip(text: PolicyText.warnCount(String(warn)), color: .statusWarn) }
-                if pass > 0 { InfoChip(text: PolicyText.passCount(String(pass)), color: .statusOK) }
+                if fail > 0 { Tag(PolicyText.failCount(String(fail)), color: .statusBad) }
+                if warn > 0 { Tag(PolicyText.warnCount(String(warn)), color: .statusWarn) }
+                if pass > 0 { Tag(PolicyText.passCount(String(pass)), color: .statusOK) }
             }
         }
     }

@@ -38,9 +38,9 @@ import name.levis.ichor.model.verdict
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.UsageBar
 import name.levis.ichor.ui.components.localizedDuration
-import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
 import kotlin.math.roundToInt
 
@@ -124,9 +124,9 @@ fun ClientRow(flow: ApiFlow, top: Double) {
         if (top > 0) ShareBar((flow.rate / top).toFloat().coerceIn(0f, 1f))
         if (flow.rejectedRate > 0 || flow.queued > 0) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (flow.rejectedRate > 0) TagBadge(stringResource(R.string.apihealth_rejected_rate, formatRate(flow.rejectedRate)), colors.bad)
-                if (flow.queued > 0) TagBadge(pluralStringResource(R.plurals.apihealth_queued_count, flow.queued, flow.queued), colors.warn)
-                if (flow.waitMs > 0) TagBadge(stringResource(R.string.apihealth_wait, formatMs(flow.waitMs)), colors.warn)
+                if (flow.rejectedRate > 0) Tag(stringResource(R.string.apihealth_rejected_rate, formatRate(flow.rejectedRate)), colors.bad)
+                if (flow.queued > 0) Tag(pluralStringResource(R.plurals.apihealth_queued_count, flow.queued, flow.queued), colors.warn)
+                if (flow.waitMs > 0) Tag(stringResource(R.string.apihealth_wait, formatMs(flow.waitMs)), colors.warn)
             }
         }
     }
@@ -144,8 +144,8 @@ fun PriorityRow(p: ApiPriority) {
         p.share?.let { UsageBar(it, warnAt = API_PRIORITY_FULL) }
         if (p.queued > 0 || p.rejectedRate > 0) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (p.queued > 0) TagBadge(pluralStringResource(R.plurals.apihealth_queued_count, p.queued, p.queued), colors.warn)
-                if (p.rejectedRate > 0) TagBadge(stringResource(R.string.apihealth_rejected_rate, formatRate(p.rejectedRate)), colors.bad)
+                if (p.queued > 0) Tag(pluralStringResource(R.plurals.apihealth_queued_count, p.queued, p.queued), colors.warn)
+                if (p.rejectedRate > 0) Tag(stringResource(R.string.apihealth_rejected_rate, formatRate(p.rejectedRate)), colors.bad)
             }
         }
     }
@@ -160,7 +160,7 @@ fun RequestRow(row: ApiRequestRow) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        TagBadge(row.verb, MaterialTheme.colorScheme.primary, mono = true)
+        Tag(row.verb, MaterialTheme.colorScheme.primary, mono = true)
         Column(Modifier.weight(1f)) {
             Text(
                 row.resource.ifEmpty { stringResource(R.string.apihealth_non_resource) },
@@ -174,7 +174,7 @@ fun RequestRow(row: ApiRequestRow) {
             )
             if (details.isNotEmpty()) MutedText(details.joinToString("  ·  "))
         }
-        if (row.errorRate > 0) TagBadge(stringResource(R.string.apihealth_error_rate, formatRate(row.errorRate)), colors.warn)
+        if (row.errorRate > 0) Tag(stringResource(R.string.apihealth_error_rate, formatRate(row.errorRate)), colors.warn)
         Text(formatRate(row.rate), style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
     }
 }
