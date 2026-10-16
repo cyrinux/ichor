@@ -563,7 +563,8 @@ it?" in two taps:
 - **Audit or Enforce:** a Kyverno policy's sheet switches it to **Audit** (to let a hotfix
   through) and back to **Enforce**, its rules' own `failureAction` with it. Audit asks you to type
   the policy's name; Enforce asks a plain confirm. When Argo CD or Flux applies the policy, the
-  confirmation says its next sync puts the previous mode back.
+  confirmation says its next sync puts the previous mode back. A policy whose rules mix the two modes is
+  warned that every rule takes the new one, and that switching back does not restore the mix.
 
 A cluster without either engine says so; credentials that cannot read the policy reports still show
 the policies, with their counts at zero and the reason.

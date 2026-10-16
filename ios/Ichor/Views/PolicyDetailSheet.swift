@@ -97,9 +97,13 @@ struct PolicyDetailSheet: View {
         }
     }
 
-    /// The confirmation's body, with the GitOps warning when a tool would revert the switch.
+    /// The confirmation's body, warning when the policy's rules mix modes (they all take the new
+    /// one, and switching back does not restore the mix) and when a GitOps tool would revert it.
     private func switchMessage(_ body: String) -> String {
-        [body, policy.gitopsTool.map(PolicyText.switchGitOps) ?? ""].filter { !$0.isEmpty }.joined(separator: "\n\n")
+        let mixed = policy.action == .mixed
+            ? String(localized: "Its rules mix Enforce and Audit: every rule takes this mode, and switching back later does not restore the mix.")
+            : ""
+        return [body, mixed, policy.gitopsTool.map(PolicyText.switchGitOps) ?? ""].filter { !$0.isEmpty }.joined(separator: "\n\n")
     }
 
     private func askAccess() async {

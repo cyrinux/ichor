@@ -4776,6 +4776,7 @@
     <string name="kpol_switch_audit_body">Pods that break this policy will be admitted and only reported until you switch it back.</string>
     <string name="kpol_switch_enforce_body">Requests that break this policy will be refused again.</string>
     <string name="kpol_switch_gitops">%1$s applies this policy: its next sync puts the previous mode back.</string>
+    <string name="kpol_switch_mixed">Its rules mix Enforce and Audit: every rule takes this mode, and switching back later does not restore the mix.</string>
     <string name="kpol_switched">%1$s is now in %2$s mode</string>
     <string name="kpol_switch_failed">Could not switch %1$s: %2$s</string>
     <string name="kpol_engine_gatekeeper">Gatekeeper engine</string>

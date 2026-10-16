@@ -1,6 +1,41 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Its rules mix Enforce and Audit: every rule takes this mode, and switching back later does not restore the mix." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihre Regeln mischen Enforce und Audit: jede Regel übernimmt diesen Modus, und späteres Zurückstellen stellt die Mischung nicht wieder her."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sus reglas mezclan Enforce y Audit: cada regla toma este modo, y volver a cambiar más tarde no restaura la mezcla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses règles mélangent Enforce et Audit : chaque règle prend ce mode, et rebasculer plus tard ne rétablit pas ce mélange."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le sue regole mescolano Enforce e Audit: ogni regola prende questa modalità, e tornare indietro in seguito non ripristina la combinazione."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Її правила поєднують Enforce і Audit: кожне правило отримає цей режим, а повернення згодом не відновить це поєднання."
+          }
+        }
+      }
+    },
     "Switch to Audit" : {
       "extractionState" : "manual",
       "localizations" : {

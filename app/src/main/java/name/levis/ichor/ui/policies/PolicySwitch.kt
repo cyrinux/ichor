@@ -20,6 +20,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.KYVERNO_GROUP
 import name.levis.ichor.model.KyvernoPolicy
 import name.levis.ichor.model.POLICY_ACTION_AUDIT
+import name.levis.ichor.model.POLICY_ACTION_MIXED
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.KubeDenialNote
@@ -77,15 +78,18 @@ fun PolicySwitchButtons(policy: KyvernoPolicy, busy: Boolean, onSetAction: (Stri
 private fun PolicySwitchConfirm(policy: KyvernoPolicy, target: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
     val title = stringResource(switchLabel(target))
     val gitops = policy.gitopsTool?.let { stringResource(R.string.kpol_switch_gitops, it) }
+    // A Mixed policy's rules lose their own modes: switching back sets them all alike.
+    val mixed = if (policy.action == POLICY_ACTION_MIXED) stringResource(R.string.kpol_switch_mixed) else null
     if (target == POLICY_ACTION_AUDIT) {
         HostnameConfirmDialog(title = title, hostname = policy.name, confirmLabel = title, onConfirm = onConfirm, onDismiss = onDismiss, emphasized = true) {
             Text(stringResource(R.string.kpol_switch_audit_body))
+            mixed?.let { Text(it, color = LocalStatusColors.current.warn) }
             gitops?.let { Text(it, color = LocalStatusColors.current.warn) }
         }
     } else {
         ConfirmDialog(
             title = title,
-            text = listOfNotNull(stringResource(R.string.kpol_switch_enforce_body), gitops).joinToString("\n\n"),
+            text = listOfNotNull(stringResource(R.string.kpol_switch_enforce_body), mixed, gitops).joinToString("\n\n"),
             confirm = title,
             onConfirm = onConfirm,
             onDismiss = onDismiss,

@@ -4764,6 +4764,7 @@
     <string name="kpol_switch_audit_body">Pods, die gegen diese Richtlinie verstoßen, werden zugelassen und nur gemeldet, bis Sie sie zurückstellen.</string>
     <string name="kpol_switch_enforce_body">Anfragen, die gegen diese Richtlinie verstoßen, werden wieder abgelehnt.</string>
     <string name="kpol_switch_gitops">%1$s wendet diese Richtlinie an: die nächste Synchronisierung stellt den vorherigen Modus wieder her.</string>
+    <string name="kpol_switch_mixed">Ihre Regeln mischen Enforce und Audit: jede Regel übernimmt diesen Modus, und späteres Zurückstellen stellt die Mischung nicht wieder her.</string>
     <string name="kpol_switched">%1$s ist jetzt im Modus %2$s</string>
     <string name="kpol_switch_failed">%1$s konnte nicht umgestellt werden: %2$s</string>
     <string name="kpol_engine_gatekeeper">Gatekeeper-Engine</string>
