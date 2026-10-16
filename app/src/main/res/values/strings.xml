@@ -65,7 +65,7 @@
     <string name="common_role_notice_title">%1$s needs %2$s</string>
     <string name="common_role_notice_body">This talosconfig has %1$s. Import a talosconfig created with --roles %2$s to use it (see README).</string>
     <string name="common_role_notice_no_roles">no roles</string>
-    <string name="common_no_config">No talosconfig imported</string>
+    <string name="common_no_config">No talosconfig or kubeconfig imported</string>
     <string name="common_vpn_required">This cluster is set to be reached over a VPN only, and no VPN is connected. Connect it: this screen reloads by itself.</string>
     <string name="common_vpn_settings">VPN settings</string>
 
@@ -483,8 +483,7 @@
     <string name="settings_kube_desc">Export an admin kubeconfig (needs an os:admin talosconfig). Anyone with this file has full access to the Kubernetes cluster: keep it private.</string>
     <string name="settings_kube_exporting">Exporting…</string>
     <string name="settings_kube_export">Export kubeconfig…</string>
-    <string name="settings_kube_saved">Saved. In kubenav, add a cluster from that file.</string>
-    <string name="settings_kube_open_kubenav">Open kubenav</string>
+    <string name="settings_kube_saved">Saved. Use it with kubectl or any Kubernetes client.</string>
     <string name="settings_node_debug_shell">Node debug shell</string>
     <string name="settings_node_debug_shell_desc">On clusters without Talos, adds “Debug shell…” to a node’s menu: a privileged pod in the node’s namespaces gives a root shell on the node. The pod is deleted when the shell closes. Off by default.</string>
     <string name="settings_image_scanner">Vulnerability scanner</string>
@@ -497,7 +496,7 @@
     <string name="settings_key_tee">Trusted Execution Environment</string>
     <string name="settings_key_software">software keystore</string>
     <string name="keystore_unavailable">The phone\'s secure chip is not answering. Try again in a moment, or restart the phone.</string>
-    <string name="settings_import_new">Add a cluster (import a talosconfig)</string>
+    <string name="settings_import_new">Add a cluster (import a talosconfig or a kubeconfig)</string>
     <string name="settings_delete_config">Delete stored talosconfig</string>
     <string name="settings_delete_title">Delete talosconfig?</string>
     <string name="settings_delete_body">The encrypted config of every cluster, with their client keys, will be removed from this device.</string>
@@ -739,7 +738,7 @@
     <string name="lock_delete_config">Delete stored talosconfig</string>
     <string name="lock_onboarding_title">Lock your clusters away</string>
     <string name="lock_onboarding_done">Your clusters are protected</string>
-    <string name="lock_onboarding_intro">Your talosconfig holds client keys with direct access to your nodes. Ichor keeps them behind the app lock.</string>
+    <string name="lock_onboarding_intro">Your talosconfig or kubeconfig holds credentials with direct access to your clusters. Ichor keeps them behind the app lock.</string>
     <string name="lock_onboarding_unlock">Fingerprint or device PIN</string>
     <string name="lock_onboarding_unlock_desc">Asked when Ichor opens and after 30 seconds in the background.</string>
     <string name="lock_onboarding_actions">A check before risky actions</string>
@@ -5079,4 +5078,19 @@
     <string name="netperf_notification_failed">Network test failed</string>
     <string name="netperf_notification_public">A network test is running</string>
     <string name="netperf_notification_result_public">Network test finished</string>
+    <string name="sa_help_title">How to create a service account</string>
+    <string name="sa_help_menu">Service account</string>
+    <string name="sa_help_intro">Give the phone its own ServiceAccount rather than your admin credentials: if the phone is lost, its token only grants what you chose, and deleting the ServiceAccount revokes it.</string>
+    <string name="sa_help_no_cluster_admin">Never bind it to cluster-admin: whoever holds the phone could then change or delete anything in the cluster.</string>
+    <string name="sa_help_token_expiry">A token from kubectl create token (TokenRequest) expires, after an hour by default. The kubernetes.io/service-account-token Secret below holds one that lasts until you delete it, for long-lived access from the phone.</string>
+    <string name="sa_help_template_read">Read-only</string>
+    <string name="sa_help_template_read_desc">The built-in view role in every namespace, plus nodes: workloads, events, logs and metrics, no Secrets. Recommended for a phone.</string>
+    <string name="sa_help_template_operate">Read + restart</string>
+    <string name="sa_help_template_operate_desc">Read-only, plus restarting Deployments, StatefulSets and DaemonSets and scaling Deployments and StatefulSets.</string>
+    <string name="sa_help_template_namespace">One namespace</string>
+    <string name="sa_help_template_namespace_desc">Everything inside the ichor namespace (the built-in admin role there), nothing outside it: no nodes, no other namespace.</string>
+    <string name="sa_help_step_apply">1. Save it as ichor-phone.yaml (for another namespace, replace ichor everywhere), then apply it:</string>
+    <string name="sa_help_step_kubeconfig">2. Build kubeconfig-phone from its token, with the server of your current context:</string>
+    <string name="sa_help_step_import">3. Bring kubeconfig-phone to the phone and import it, then delete the other copies: the token is a password.</string>
+    <string name="sa_help_copy_yaml">Copy YAML</string>
 </resources>

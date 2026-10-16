@@ -63,7 +63,7 @@
     <string name="common_role_notice_title">%1$s richiede %2$s</string>
     <string name="common_role_notice_body">Questo talosconfig ha %1$s. Per usare questa funzione importa un talosconfig creato con --roles %2$s (vedi README).</string>
     <string name="common_role_notice_no_roles">nessun ruolo</string>
-    <string name="common_no_config">Nessun talosconfig importato</string>
+    <string name="common_no_config">Nessun talosconfig o kubeconfig importato</string>
     <string name="common_vpn_required">Questo cluster è impostato per essere raggiunto solo tramite VPN e nessuna VPN è connessa. Connettila: questa schermata si ricarica da sola.</string>
     <string name="common_vpn_settings">Impostazioni VPN</string>
 
@@ -488,8 +488,7 @@
     <string name="settings_kube_desc">Esporta un kubeconfig amministratore (richiede un talosconfig os:admin). Chiunque abbia questo file ha accesso completo al cluster Kubernetes: tienilo privato.</string>
     <string name="settings_kube_exporting">Esportazione…</string>
     <string name="settings_kube_export">Esporta kubeconfig…</string>
-    <string name="settings_kube_saved">Salvato. In kubenav, aggiungi un cluster da quel file.</string>
-    <string name="settings_kube_open_kubenav">Apri kubenav</string>
+    <string name="settings_kube_saved">Salvato. Usalo con kubectl o con qualsiasi client Kubernetes.</string>
     <string name="settings_node_debug_shell">Shell di debug dei nodi</string>
     <string name="settings_node_debug_shell_desc">Sui cluster senza Talos, aggiunge «Shell di debug…» al menu di un nodo: un pod privilegiato nei namespace del nodo dà una shell root sul nodo. Il pod viene eliminato alla chiusura della shell. Disattivato per impostazione predefinita.</string>
     <string name="settings_image_scanner">Scanner di vulnerabilità</string>
@@ -502,7 +501,7 @@
     <string name="settings_key_tee">Trusted Execution Environment</string>
     <string name="settings_key_software">keystore software</string>
     <string name="keystore_unavailable">Il chip sicuro del telefono non risponde. Riprova tra un momento o riavvia il telefono.</string>
-    <string name="settings_import_new">Aggiungi un cluster (importa un talosconfig)</string>
+    <string name="settings_import_new">Aggiungi un cluster (importa un talosconfig o un kubeconfig)</string>
     <string name="settings_delete_config">Elimina il talosconfig salvato</string>
     <string name="settings_delete_title">Eliminare il talosconfig?</string>
     <string name="settings_delete_body">La configurazione crittografata di tutti i cluster, con le loro chiavi client, verrà rimossa da questo dispositivo.</string>
@@ -744,7 +743,7 @@
     <string name="lock_delete_config">Elimina il talosconfig salvato</string>
     <string name="lock_onboarding_title">Metti i tuoi cluster sotto chiave</string>
     <string name="lock_onboarding_done">I tuoi cluster sono protetti</string>
-    <string name="lock_onboarding_intro">Il tuo talosconfig contiene chiavi client con accesso diretto ai tuoi nodi. Ichor le protegge con il blocco dell\'app.</string>
+    <string name="lock_onboarding_intro">Il tuo talosconfig o kubeconfig contiene credenziali con accesso diretto ai tuoi cluster. Ichor le protegge con il blocco dell\'app.</string>
     <string name="lock_onboarding_unlock">Impronta o PIN del dispositivo</string>
     <string name="lock_onboarding_unlock_desc">Richiesto all\'apertura di Ichor e dopo 30 secondi in background.</string>
     <string name="lock_onboarding_actions">Una verifica prima delle azioni rischiose</string>
@@ -5076,4 +5075,19 @@
     <string name="netperf_notification_failed">Test di rete non riuscito</string>
     <string name="netperf_notification_public">Test di rete in corso</string>
     <string name="netperf_notification_result_public">Test di rete terminato</string>
+    <string name="sa_help_title">Come creare un account di servizio</string>
+    <string name="sa_help_menu">Account di servizio</string>
+    <string name="sa_help_intro">Dai al telefono un ServiceAccount tutto suo invece delle tue credenziali di amministratore: se perdi il telefono, il suo token concede solo ciò che hai scelto, ed eliminare il ServiceAccount lo revoca.</string>
+    <string name="sa_help_no_cluster_admin">Non associarlo mai a cluster-admin: chiunque abbia il telefono potrebbe modificare o eliminare qualsiasi cosa nel cluster.</string>
+    <string name="sa_help_token_expiry">Un token di kubectl create token (TokenRequest) scade, dopo un\'ora per impostazione predefinita. Il Secret kubernetes.io/service-account-token qui sotto ne conserva uno valido finché non lo elimini, per un accesso duraturo dal telefono.</string>
+    <string name="sa_help_template_read">Sola lettura</string>
+    <string name="sa_help_template_read_desc">Il ruolo integrato view in ogni namespace, più i nodi: workload, eventi, log e metriche, nessun Secret. Consigliato per un telefono.</string>
+    <string name="sa_help_template_operate">Lettura + riavvio</string>
+    <string name="sa_help_template_operate_desc">Sola lettura, più il riavvio di Deployment, StatefulSet e DaemonSet e la scalatura di Deployment e StatefulSet.</string>
+    <string name="sa_help_template_namespace">Un namespace</string>
+    <string name="sa_help_template_namespace_desc">Tutto nel namespace ichor (il ruolo integrato admin), niente al di fuori: né nodi né altri namespace.</string>
+    <string name="sa_help_step_apply">1. Salvalo come ichor-phone.yaml (per un altro namespace, sostituisci ichor ovunque), poi applicalo:</string>
+    <string name="sa_help_step_kubeconfig">2. Crea kubeconfig-phone dal suo token, con il server del tuo contesto attuale:</string>
+    <string name="sa_help_step_import">3. Porta kubeconfig-phone sul telefono e importalo, poi elimina le altre copie: il token è una password.</string>
+    <string name="sa_help_copy_yaml">Copia YAML</string>
 </resources>

@@ -63,7 +63,7 @@
     <string name="common_role_notice_title">%1$s erfordert %2$s</string>
     <string name="common_role_notice_body">Diese talosconfig hat %1$s. Importiere eine mit --roles %2$s erstellte talosconfig, um diese Funktion zu nutzen (siehe README).</string>
     <string name="common_role_notice_no_roles">keine Rollen</string>
-    <string name="common_no_config">Keine talosconfig importiert</string>
+    <string name="common_no_config">Keine talosconfig oder kubeconfig importiert</string>
     <string name="common_vpn_required">Dieser Cluster ist nur über ein VPN erreichbar eingestellt, und kein VPN ist verbunden. Verbinde es: dieser Bildschirm lädt dann von selbst neu.</string>
     <string name="common_vpn_settings">VPN-Einstellungen</string>
 
@@ -481,8 +481,7 @@
     <string name="settings_kube_desc">Eine Admin-kubeconfig exportieren (erfordert eine os:admin-talosconfig). Wer diese Datei besitzt, hat vollen Zugriff auf den Kubernetes-Cluster: Halte sie geheim.</string>
     <string name="settings_kube_exporting">Wird exportiert…</string>
     <string name="settings_kube_export">kubeconfig exportieren…</string>
-    <string name="settings_kube_saved">Gespeichert. Füge in kubenav einen Cluster aus dieser Datei hinzu.</string>
-    <string name="settings_kube_open_kubenav">kubenav öffnen</string>
+    <string name="settings_kube_saved">Gespeichert. Verwende sie mit kubectl oder einem anderen Kubernetes-Client.</string>
     <string name="settings_node_debug_shell">Debug-Shell für Knoten</string>
     <string name="settings_node_debug_shell_desc">Auf Clustern ohne Talos fügt dies „Debug-Shell…“ zum Menü eines Knotens hinzu: Ein privilegierter Pod in den Namespaces des Knotens gibt eine Root-Shell auf dem Knoten. Der Pod wird beim Schließen der Shell gelöscht. Standardmäßig aus.</string>
     <string name="settings_image_scanner">Schwachstellenscanner</string>
@@ -495,7 +494,7 @@
     <string name="settings_key_tee">Trusted Execution Environment</string>
     <string name="settings_key_software">Software-Schlüsselspeicher</string>
     <string name="keystore_unavailable">Der Sicherheitschip des Telefons antwortet nicht. Versuche es gleich noch einmal oder starte das Telefon neu.</string>
-    <string name="settings_import_new">Cluster hinzufügen (talosconfig importieren)</string>
+    <string name="settings_import_new">Cluster hinzufügen (talosconfig oder kubeconfig importieren)</string>
     <string name="settings_delete_config">Gespeicherte talosconfig löschen</string>
     <string name="settings_delete_title">talosconfig löschen?</string>
     <string name="settings_delete_body">Die verschlüsselte Konfiguration aller Cluster wird samt ihren Client-Schlüsseln von diesem Gerät entfernt.</string>
@@ -737,7 +736,7 @@
     <string name="lock_delete_config">Gespeicherte talosconfig löschen</string>
     <string name="lock_onboarding_title">Schließ deine Cluster weg</string>
     <string name="lock_onboarding_done">Deine Cluster sind geschützt</string>
-    <string name="lock_onboarding_intro">Deine talosconfig enthält Client-Schlüssel mit direktem Zugriff auf deine Nodes. Ichor schützt sie mit der App-Sperre.</string>
+    <string name="lock_onboarding_intro">Deine talosconfig oder kubeconfig enthält Zugangsdaten mit direktem Zugriff auf deine Cluster. Ichor schützt sie mit der App-Sperre.</string>
     <string name="lock_onboarding_unlock">Fingerabdruck oder Geräte-PIN</string>
     <string name="lock_onboarding_unlock_desc">Wird beim Öffnen von Ichor und nach 30 Sekunden im Hintergrund abgefragt.</string>
     <string name="lock_onboarding_actions">Eine Prüfung vor riskanten Aktionen</string>
@@ -5067,4 +5066,19 @@
     <string name="netperf_notification_failed">Netzwerktest fehlgeschlagen</string>
     <string name="netperf_notification_public">Ein Netzwerktest läuft</string>
     <string name="netperf_notification_result_public">Netzwerktest beendet</string>
+    <string name="sa_help_title">So erstellst du ein Dienstkonto</string>
+    <string name="sa_help_menu">Dienstkonto</string>
+    <string name="sa_help_intro">Gib dem Telefon ein eigenes ServiceAccount statt deiner Admin-Zugangsdaten: Geht das Telefon verloren, gewährt sein Token nur, was du gewählt hast, und das Löschen des ServiceAccounts widerruft es.</string>
+    <string name="sa_help_no_cluster_admin">Binde es nie an cluster-admin: Wer das Telefon hat, könnte dann alles im Cluster ändern oder löschen.</string>
+    <string name="sa_help_token_expiry">Ein Token von kubectl create token (TokenRequest) läuft ab, standardmäßig nach einer Stunde. Das Secret kubernetes.io/service-account-token unten enthält eines, das gilt, bis du es löschst, für dauerhaften Zugriff vom Telefon.</string>
+    <string name="sa_help_template_read">Nur Lesen</string>
+    <string name="sa_help_template_read_desc">Die eingebaute Rolle view in jedem Namespace, dazu die Nodes: Workloads, Events, Logs und Metriken, keine Secrets. Empfohlen für ein Telefon.</string>
+    <string name="sa_help_template_operate">Lesen + Neustart</string>
+    <string name="sa_help_template_operate_desc">Nur Lesen, dazu Neustart von Deployments, StatefulSets und DaemonSets und Skalieren von Deployments und StatefulSets.</string>
+    <string name="sa_help_template_namespace">Ein Namespace</string>
+    <string name="sa_help_template_namespace_desc">Alles im Namespace ichor (die eingebaute Rolle admin), nichts außerhalb: keine Nodes, keine anderen Namespaces.</string>
+    <string name="sa_help_step_apply">1. Speichere es als ichor-phone.yaml (für einen anderen Namespace ersetze ichor überall) und wende es an:</string>
+    <string name="sa_help_step_kubeconfig">2. Erstelle kubeconfig-phone aus seinem Token, mit dem Server deines aktuellen Kontexts:</string>
+    <string name="sa_help_step_import">3. Bring kubeconfig-phone aufs Telefon und importiere es, lösche dann die anderen Kopien: Das Token ist ein Passwort.</string>
+    <string name="sa_help_copy_yaml">YAML kopieren</string>
 </resources>

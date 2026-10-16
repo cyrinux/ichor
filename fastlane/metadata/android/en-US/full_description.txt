@@ -1,8 +1,10 @@
-Your Talos cluster, from your phone.
+Any Kubernetes cluster from your phone, plus the whole Talos layer.
 
-Ichor puts your Talos Linux cluster in your pocket. It talks to the Talos API with the official Go client, the same code as talosctl, so talosconfig contexts, mTLS and endpoint-to-node proxying behave exactly as they do on your workstation.
+Ichor opens any Kubernetes cluster from its kubeconfig: EKS, GKE, AKS, DigitalOcean, Rancher, Omni or your own, with OIDC and cloud sign-ins. Workloads, pods, logs, events, Argo CD and Flux, as far as its RBAC allows.
 
-Bring your own cluster: the app needs a talosconfig for a Talos Linux cluster you run. It has no server and no account of its own.
+On Talos Linux it goes down to the nodes: node health, etcd, upgrades and the machine config. It talks to the Talos API with the official Go client, the same code as talosctl, so talosconfig contexts, mTLS and endpoint-to-node proxying behave exactly as they do on your workstation.
+
+Bring your own cluster: the app needs a kubeconfig or a talosconfig for a cluster you run. It has no server and no account of its own.
 
 <b>What you see</b>
 • Cluster overview: every node ready, not ready or unreachable, with unmet conditions, clock drift and available Talos upgrades

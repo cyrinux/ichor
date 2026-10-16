@@ -115,6 +115,7 @@ struct KubeHomeView: View {
     @AppStorage(KubeHomeLayout.storageKey) private var layoutText = ""
     @AppStorage(KubeHomeBar.storageKey) private var barText = ""
     @State private var customizing = false
+    @State private var showingServiceAccountHelp = false
     /// "Since you last looked" (the history ring).
     @State private var look = HistoryLook()
 
@@ -207,6 +208,7 @@ struct KubeHomeView: View {
         .sheet(isPresented: $customizing) {
             HomeEditorSheet(KubeHomeCard.self, KubeHomeAction.self, title: "Customize home", absent: absentCards)
         }
+        .sheet(isPresented: $showingServiceAccountHelp) { ServiceAccountHelpSheet() }
         .navigationDestination(item: $screen) { screen in
             switch screen {
             case .resources: KubeBrowserView()
@@ -278,6 +280,9 @@ struct KubeHomeView: View {
                     LabeledContent("Nodes ready", value: "\(overview.readyCount)/\(overview.nodes.count)")
                 }
                 LabeledContent("Sign-in", value: ctx.localizedAuthLabel)
+                if ctx.usesKubeToken {
+                    Button("How to create a service account") { showingServiceAccountHelp = true }
+                }
                 if let user = ctx.user, !user.isEmpty { LabeledContent("Signed in as", value: user) }
                 if let whoAmI, whoAmI.isKnown { whoAmIRow(whoAmI) }
                 if ctx.certNotAfter > 0 { LabeledContent("Expires", value: localizedCertExpiry(ctx.certNotAfter)) }

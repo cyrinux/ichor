@@ -15,7 +15,7 @@ struct ClustersSection: View {
             if let protection = SecureConfigStore.protection {
                 LabeledContent("Encryption key", value: protection.label)
             }
-            NavigationLink(model.kubeYAML == nil ? LocalizedStringKey("Add a cluster (import a talosconfig)") : "Add a cluster", value: Route.importConfig)
+            NavigationLink(model.kubeYAML == nil ? LocalizedStringKey("Add a cluster (import a talosconfig or a kubeconfig)") : "Add a cluster", value: Route.importConfig)
             if model.allows(.issueConfig) {
                 NavigationLink("Renew my certificate…", value: Route.issueConfig(renew: true))
                 NavigationLink("Create a config for another device…", value: Route.issueConfig(renew: false))

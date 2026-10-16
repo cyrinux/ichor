@@ -36,9 +36,6 @@ struct KubeconfigSection: View {
             }
             Button(busy ? String(localized: "Exporting…") : String(localized: "Export kubeconfig…")) { Task { await export() } }
                 .disabled(busy)
-            if !model.activeIsKube {
-                Link("Get kubenav", destination: URL(string: "https://apps.apple.com/app/kubenav/id1494512160")!)
-            }
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
         } header: {
             Text("Kubernetes")
@@ -46,7 +43,7 @@ struct KubeconfigSection: View {
             if model.activeIsKube {
                 Text("The kubeconfig of this cluster, as it was imported. Anyone with this file has the access it grants: keep it private.")
             } else {
-                Text("Anyone with this file has full access to the Kubernetes cluster: keep it private. In kubenav, add a cluster from the file.")
+                Text("Anyone with this file has full access to the Kubernetes cluster: keep it private. Use it with kubectl or any Kubernetes client.")
             }
         }
         .fileExporter(isPresented: $exporting, document: document, contentType: .yaml,
