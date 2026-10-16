@@ -28,7 +28,7 @@ import name.levis.ichor.util.timeAgo
 
 /** One row of the screen: health dot, kind and name, then the details that matter. */
 @Composable
-private fun RowShell(health: ServiceHealth, title: String, line: String, onClick: () -> Unit) {
+private fun RowShell(health: ServiceHealth, title: String, line: String, onClick: () -> Unit, trailing: (@Composable () -> Unit)? = null) {
     Column(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -43,6 +43,7 @@ private fun RowShell(health: ServiceHealth, title: String, line: String, onClick
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
+            trailing?.invoke()
         }
         line.takeIf { it.isNotEmpty() }?.let { MutedText(it, maxLines = 3, overflow = TextOverflow.Ellipsis) }
     }
@@ -96,7 +97,7 @@ fun DefinitionRow(d: CrossplaneDefinition, onClick: () -> Unit) {
 
 /** A composite resource, a claim or a managed resource: Ready and Synced with their reasons. */
 @Composable
-fun ObjectRow(o: CrossplaneObject, showKind: Boolean, onClick: () -> Unit) {
+fun ObjectRow(o: CrossplaneObject, showKind: Boolean, onClick: () -> Unit, actions: (@Composable () -> Unit)? = null) {
     val line = listOfNotNull(
         o.composition.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.crossplane_composition, it) },
         stringResource(R.string.crossplane_resources, o.resources).takeIf { o.resources > 0 },
@@ -114,6 +115,7 @@ fun ObjectRow(o: CrossplaneObject, showKind: Boolean, onClick: () -> Unit) {
         line = (listOf(line.takeIf { it.isNotEmpty() }) + o.reasonList.map { reasonText(it) } +
             listOfNotNull(stringResource(R.string.crossplane_paused).takeIf { o.paused })).filterNotNull().joinToString(" · "),
         onClick = onClick,
+        trailing = actions,
     )
 }
 

@@ -1,6 +1,292 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Reconcile now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt abgleichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconciliar ahora"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réconcilier maintenant"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riconcilia ora"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Узгодити зараз"
+          }
+        }
+      }
+    },
+    "Pause %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ pausieren?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Pausar %@?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre %@ en pause ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettere in pausa %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Призупинити %@?"
+          }
+        }
+      }
+    },
+    "Crossplane stops reconciling it until it is resumed: no more calls to the provider’s API. A paused resource cannot be deleted." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane gleicht es nicht mehr ab, bis es fortgesetzt wird: keine Aufrufe der Provider-API mehr. Eine pausierte Ressource kann nicht gelöscht werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane deja de reconciliarlo hasta que se reanude: no más llamadas a la API del proveedor. Un recurso en pausa no se puede eliminar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane cesse de le réconcilier jusqu’à la reprise : plus d’appels à l’API du fournisseur. Une ressource en pause ne peut pas être supprimée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane smette di riconciliarlo finché non viene ripreso: nessuna chiamata all’API del provider. Una risorsa in pausa non può essere eliminata."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane припиняє його узгоджувати до відновлення: жодних викликів API провайдера. Призупинений ресурс не можна видалити."
+          }
+        }
+      }
+    },
+    "Its composed resources keep reconciling: each has its own pause." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seine zusammengesetzten Ressourcen werden weiter abgeglichen: jede hat ihre eigene Pause."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sus recursos compuestos siguen reconciliándose: cada uno tiene su propia pausa."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses ressources composées continuent d’être réconciliées : chacune a sa propre pause."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le sue risorse composte continuano a essere riconciliate: ognuna ha la propria pausa."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його складові ресурси й далі узгоджуються: кожен має власну паузу."
+          }
+        }
+      }
+    },
+    "Crossplane reconciles it again, calling the provider’s API as before." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane gleicht es wieder ab und ruft die Provider-API wie zuvor auf."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane vuelve a reconciliarlo, llamando a la API del proveedor como antes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane le réconcilie de nouveau, en appelant l’API du fournisseur comme avant."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane torna a riconciliarlo, chiamando l’API del provider come prima."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane знову його узгоджує, викликаючи API провайдера, як раніше."
+          }
+        }
+      }
+    },
+    "Reconcile %@ now?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ jetzt abgleichen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Reconciliar %@ ahora?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réconcilier %@ maintenant ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riconciliare %@ ora?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Узгодити %@ зараз?"
+          }
+        }
+      }
+    },
+    "Crossplane reconciles it now instead of at its next poll." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane gleicht es jetzt ab statt bei der nächsten Abfrage."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane lo reconcilia ahora en lugar de en su próxima consulta."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane le réconcilie maintenant au lieu d’attendre sa prochaine vérification."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane lo riconcilia ora invece che al prossimo controllo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crossplane узгоджує його зараз, а не під час наступного опитування."
+          }
+        }
+      }
+    },
+    "%@ on %@ failed: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ on %2$@ failed: %3$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ für %2$@ fehlgeschlagen: %3$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ en %2$@ falló: %3$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ sur %2$@ a échoué : %3$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ su %2$@ non riuscito: %3$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ для %2$@ не вдалося: %3$@"
+          }
+        }
+      }
+    },
     "Edit schedule" : {
       "extractionState" : "manual",
       "localizations" : {
