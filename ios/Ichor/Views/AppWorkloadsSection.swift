@@ -82,6 +82,8 @@ struct AppWorkloadsSection: View {
         do {
             try await client.rolloutRestart(workload)
             following = workload
+            // Followed app-wide too, with its Live Activity, after the sheet closes.
+            RolloutJob.shared.start(client: client, workload: workload)
             // Show the rollout starting: the controller already bumped the generation.
             await load()
         } catch {

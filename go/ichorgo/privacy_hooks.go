@@ -397,3 +397,23 @@ func (l maskedJoinListener) OnDone(nodeAddress string, errMessage string) {
 	// The address goes into the stored talosconfig: it stays real (joins refuse privacy mode).
 	l.JoinListener.OnDone(nodeAddress, privacy.maskPlain(errMessage))
 }
+
+type maskedArgoSyncListener struct{ ArgoSyncListener }
+
+func (l maskedArgoSyncListener) OnProgress(json string) {
+	l.ArgoSyncListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedArgoSyncListener) OnDone(result, errMessage string) {
+	l.ArgoSyncListener.OnDone(result, privacy.maskPlain(errMessage))
+}
+
+type maskedFluxReconcileListener struct{ FluxReconcileListener }
+
+func (l maskedFluxReconcileListener) OnProgress(json string) {
+	l.FluxReconcileListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedFluxReconcileListener) OnDone(result, errMessage string) {
+	l.FluxReconcileListener.OnDone(result, privacy.maskPlain(errMessage))
+}

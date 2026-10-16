@@ -190,8 +190,15 @@ fun isValidIconSlug(slug: String): Boolean = ICON_SLUG.matches(slug)
 
 private const val REMOTE_ICON_BASE = "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/"
 
+// jsDelivr at times refuses the set (over its 50 MB package limit): GitHub serves the same files.
+private const val REMOTE_ICON_FALLBACK = "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/webp/"
+
 /** Where a Dashboard Icons icon is downloaded from; null for an invalid slug. Only the slug is sent. */
 fun remoteIconUrl(slug: String): String? = if (isValidIconSlug(slug)) "$REMOTE_ICON_BASE$slug.webp" else null
+
+/** [remoteIconUrl], then its GitHub mirror, in the order to try; empty for an invalid slug. */
+fun remoteIconUrls(slug: String): List<String> =
+    remoteIconUrl(slug)?.let { listOf(it, "$REMOTE_ICON_FALLBACK$slug.webp") }.orEmpty()
 
 /**
  * The asset path of the bundled icon [icon], its `-night` variant in a [dark] theme when

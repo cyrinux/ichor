@@ -137,6 +137,7 @@ fun WorkloadsTab(
     podsOf?.let { WorkloadPodsSheet(it, onDismiss = { podsOf = null }) }
 
     RestartResultToasts(vm.restarts.results)
+    val followRollout = rememberRolloutFollow()
     ActionMessageToasts(vm.actions.messages)
     RolloutStatusSheet(vm.restarts)
 
@@ -179,7 +180,7 @@ fun WorkloadsTab(
             workload = w,
             onConfirm = {
                 confirm = null
-                vm.restarts.restart(w)
+                vm.restarts.restart(w, followRollout)
             },
             onDismiss = { confirm = null },
         )

@@ -171,6 +171,10 @@ struct AppArgoSection: View {
         busy.insert(argo.id)
         defer { busy.remove(argo.id) }
         let failure = await store.run(action, on: argo, options: options, with: client)
+        // A sync the phone started: followed app-wide, with its Live Activity.
+        if failure == nil, action == .sync {
+            GitOpsOperationJob.shared.followArgoSync(client: client, namespace: argo.namespace, name: argo.name)
+        }
         if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
         await load()
     }

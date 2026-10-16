@@ -45,7 +45,7 @@ fun netPerfViewModel(): NetPerfViewModel {
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
     val scope = "${config?.activeSummary?.fingerprint.orEmpty()}-${mask.storageKey}"
-    return viewModel(key = "netperf-$scope", factory = factory { NetPerfViewModel(app.netPerfRepository, app.netPerfHistory, scope) })
+    return viewModel(key = "netperf-$scope", factory = factory { NetPerfViewModel(app.netPerfRepository, app.netPerfManager, app.netPerfHistory, scope) })
 }
 
 /** The saved tests under the setup, newest first; one opens its results. */

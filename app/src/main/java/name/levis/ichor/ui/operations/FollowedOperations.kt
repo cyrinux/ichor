@@ -70,4 +70,16 @@ fun TalosApp.followedOperations(): List<FollowedOperation<*>> = listOf(
     FollowedOperation(OperationKind.IMAGE_SCAN, imageScanRepository.session, ImageScanPresenter) { action ->
         if (action == OperationAction.STOP) imageScanRepository.stop()
     },
+    FollowedOperation(OperationKind.ARGO_SYNC, gitOpsOperations.argoSync, ArgoSyncPresenter) { action ->
+        if (action == OperationAction.TERMINATE) gitOpsOperations.terminate()
+    },
+    FollowedOperation(OperationKind.FLUX_RECONCILE, gitOpsOperations.fluxReconcile, FluxReconcilePresenter) { action ->
+        if (action == OperationAction.STOP_FOLLOWING) gitOpsOperations.stopFollowingFlux()
+    },
+    FollowedOperation(OperationKind.ROLLOUT, rolloutManager.current, RolloutPresenter) { action ->
+        if (action == OperationAction.STOP_FOLLOWING) rolloutManager.stop()
+    },
+    FollowedOperation(OperationKind.NETPERF, netPerfManager.current, NetPerfPresenter) { action ->
+        if (action == OperationAction.STOP) netPerfManager.stop()
+    },
 )

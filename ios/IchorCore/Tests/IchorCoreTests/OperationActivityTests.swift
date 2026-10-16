@@ -19,10 +19,15 @@ final class OperationActivityTests: XCTestCase {
         XCTAssertEqual(OperationButton.offered(for: .upgrade), [.stopFollowing])
         XCTAssertEqual(OperationButton.offered(for: .imagePull), [.stop])
         XCTAssertEqual(OperationButton.offered(for: .maintenance, stopping: true), [])
+        XCTAssertEqual(OperationButton.offered(for: .argoSync), [.terminate])
+        XCTAssertEqual(OperationButton.offered(for: .fluxReconcile), [.stopFollowing])
+        XCTAssertEqual(OperationButton.offered(for: .rollout), [.stopFollowing])
+        XCTAssertEqual(OperationButton.offered(for: .netPerf), [.stop])
+        XCTAssertEqual(OperationButton.offered(for: .argoSync, stopping: true), [])
     }
 
     func testStopAbortAndKeepOpenTheAppWhenLocked() {
-        XCTAssertEqual(OperationButton.allCases.filter(\.opensAppWhenLocked), [.stop, .abort, .keep])
+        XCTAssertEqual(OperationButton.allCases.filter(\.opensAppWhenLocked), [.stop, .abort, .keep, .terminate])
         XCTAssertTrue(OperationButton.stop.opensApp(for: .maintenance, locked: true))
         XCTAssertFalse(OperationButton.stop.opensApp(for: .maintenance, locked: false))
         XCTAssertFalse(OperationButton.pause.opensApp(for: .clusterUpgrade, locked: true))

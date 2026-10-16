@@ -12,8 +12,8 @@ struct KubeSpanView: View {
     @State private var map: LoadState<ClusterTopology> = .loading
     @State private var peers: LoadState<KubeSpanOverview> = .loading
     @State private var hostnames: [String: String] = [:]
-    /// The network test started from the map: kept while a node screen is pushed on top.
-    @State private var netPerf = NetPerfSession()
+    /// The network test started from the map: app-wide, it outlives the screen.
+    private var netPerf: NetPerfJob { .shared }
     @State private var openNode: NodeRef?
     @State private var diag: KubeSpanDiagAll?
     @State private var openedPeer: OpenedPeer?
@@ -58,8 +58,6 @@ struct KubeSpanView: View {
                 netPerf.loadHistory(scope: "\(cluster)-\(model.privacyStorageKey)")
             }
         }
-        // Leaving the screen stops a running test; opening a node from the map does not.
-        .onDisappear { if openNode == nil, netPerf.isRunning { netPerf.leave() } }
     }
 
     /// Only a node the talosconfig targets has a detail screen.

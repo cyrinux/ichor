@@ -58,6 +58,7 @@ enum class OperationAction(@StringRes val label: Int, val opensAppWhenLocked: Bo
     ABORT(R.string.cluster_upgrade_abort, true),
     KEEP(R.string.machine_config_keep, true),
     REVERT(R.string.machine_config_revert_now, false),
+    TERMINATE(R.string.argo_terminate, true),
     ;
 
     companion object {
@@ -114,6 +115,10 @@ enum class OperationKind(
     IMAGE_PULL(0x0b80, 0x0b81, R.string.image_pull_notification_public, R.string.image_pull_notification_result_public, null),
     JOIN(0x0b82, 0x0b83, R.string.join_notification_public, R.string.join_notification_result_public, DeepLink.JOIN_NODE),
     IMAGE_SCAN(0x0b90, 0x0b91, R.string.imagescan_notification_public, R.string.imagescan_notification_result_public, null),
+    ARGO_SYNC(0x0b92, 0x0b93, R.string.argo_sync_notification_public, R.string.argo_sync_notification_result_public, DeepLink.ARGO_APP),
+    FLUX_RECONCILE(0x0b94, 0x0b95, R.string.flux_reconcile_notification_public, R.string.flux_reconcile_notification_result_public, DeepLink.FLUX_APP),
+    ROLLOUT(0x0b96, 0x0b97, R.string.rollout_notification_public, R.string.rollout_notification_result_public, DeepLink.WORKLOAD),
+    NETPERF(0x0b98, 0x0b99, R.string.netperf_notification_public, R.string.netperf_notification_result_public, DeepLink.NETPERF),
     ;
 
     companion object {

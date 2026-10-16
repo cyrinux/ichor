@@ -54,6 +54,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
 import name.levis.ichor.ui.workloads.RolloutStatusSheet
+import name.levis.ichor.ui.workloads.rememberRolloutFollow
 import name.levis.ichor.ui.components.pageContent
 
 /**
@@ -132,11 +133,23 @@ private fun AppDetail(
         confirm = FluxConfirm(FluxAction.RECONCILE, app.kind, app.namespace, app.name, owner = app.ownerKey)
     }
     var restart by remember { mutableStateOf<KubeWorkload?>(null) }
+    val talos = LocalContext.current.applicationContext as TalosApp
+    val followRollout = rememberRolloutFollow()
     val downNodes = remember(overview) { overview?.downHostnames().orEmpty() }
     val nodesByName = remember(overview) { overview?.nodes.orEmpty().associateBy { it.hostname } }
 
     confirm?.let { c ->
-        FluxConfirmDialog(c, onConfirm = { confirm = null; vm.act(c.kind, c.namespace, c.name, c.action) }, onDismiss = { confirm = null })
+        FluxConfirmDialog(
+            c,
+            onConfirm = {
+                confirm = null
+                // A reconcile is followed app-wide once requested: its notification says when it is Ready.
+                vm.act(c.kind, c.namespace, c.name, c.action) {
+                    if (c.action in FOLLOWED_ACTIONS) runCatching { talos.gitOpsOperations.followFluxReconcile(c.kind, c.namespace, c.name) }
+                }
+            },
+            onDismiss = { confirm = null },
+        )
     }
     restart?.let { w ->
         // The replicas decide the downtime warning: read them fresh, unless dismissed meanwhile.
@@ -144,7 +157,7 @@ private fun AppDetail(
             val fresh = vm.restarts.current(w)
             if (restart?.key == w.key) restart = fresh
         }
-        RestartConfirmDialog(w, onConfirm = { restart = null; vm.restarts.restart(w) }, onDismiss = { restart = null })
+        RestartConfirmDialog(w, onConfirm = { restart = null; vm.restarts.restart(w, followRollout) }, onDismiss = { restart = null })
     }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -196,3 +209,6 @@ private fun LazyListScope.history(app: FluxApp) {
         }
     }
 }
+
+/** The actions whose reconcile is followed app-wide. */
+private val FOLLOWED_ACTIONS = setOf(FluxAction.RECONCILE, FluxAction.RECONCILE_WITH_SOURCE)

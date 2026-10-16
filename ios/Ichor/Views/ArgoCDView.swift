@@ -246,6 +246,10 @@ struct ArgoCDView: View {
         let failure: String?
         if let options, let app = apps.first, apps.count == 1 {
             failure = await store.run(action, on: app, options: options, with: client)
+            // A single sync the phone started: followed app-wide, with its Live Activity.
+            if failure == nil, action == .sync {
+                GitOpsOperationJob.shared.followArgoSync(client: client, namespace: app.namespace, name: app.name)
+            }
         } else {
             failure = await store.run(action, on: apps, with: client)
         }

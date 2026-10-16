@@ -61,8 +61,8 @@ struct KubernetesView: View {
     @State private var customizingBar = false
     @State private var serverInput = ""
     @State private var serverError: String?
-    /// Kept across tabs: only leaving the screen stops a running network test.
-    @State private var netPerf = NetPerfSession()
+    /// App-wide: leaving the screen keeps a running network test.
+    private var netPerf: NetPerfJob { .shared }
     /// Read once on open: Live flows needs Cilium, or Calico with Whisker.
     @State private var cilium: CiliumStatus?
     @State private var netScreen: NetScreen?
@@ -72,8 +72,10 @@ struct KubernetesView: View {
     @State private var focusID: String?
     private let focusTab: Tab
 
-    init(focus: KubeFocus? = nil) {
+    /// networkTest: opened on the network test (a followed test's Live Activity).
+    init(focus: KubeFocus? = nil, networkTest: Bool = false) {
         let tab: Tab = switch focus?.tab {
+        case _ where networkTest: .network
         case .pods?: .pods
         case .cronJobs?: .cronJobs
         default: .workloads
@@ -231,7 +233,6 @@ struct KubernetesView: View {
         .navigationTitle(Text(verbatim: "Kubernetes"))
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: model.privacyMask) { _, masked in if masked { editingServer = false } }
-        .onDisappear { if netPerf.isRunning { netPerf.leave() } }
     }
 
     /// The cluster whose scope is kept on the device: not the demo, not in screenshot mode
@@ -385,6 +386,8 @@ private struct WorkloadsList: View {
         do {
             try await client.rolloutRestart(workload)
             following = workload
+            // Followed app-wide too, with its Live Activity, after the sheet closes.
+            RolloutJob.shared.start(client: client, workload: workload)
             // Show the rollout starting: the controller already bumped the generation.
             await load()
         } catch {
