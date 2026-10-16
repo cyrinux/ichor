@@ -12,22 +12,26 @@ struct ImageScanReportView: View {
     let appName: String
 
     @State private var fixableOnly = true
+    @State private var newOnly = false
     @State private var hidden: Set<VulnSeverity> = []
     @State private var shared: SharedReport?
     @State private var exporting = false
     @State private var message: String?
 
     private var filter: VulnFilter {
-        VulnFilter(fixableOnly: fixableOnly, severities: Set(VulnSeverity.allCases).subtracting(hidden))
+        VulnFilter(fixableOnly: fixableOnly, severities: Set(VulnSeverity.allCases).subtracting(hidden),
+                   newOnly: newOnly && report.newSummary.total > 0)
     }
 
     var body: some View {
         List {
             Section {
                 SeverityChips(summary: report.summary)
+                NewFindingsLine(summary: report.newSummary, hasPrevious: report.hasPrevious)
                 Text(verbatim: reportSourceText(report)).font(.caption).foregroundStyle(.secondary)
             }
             Section {
+                Toggle("New", isOn: $newOnly).disabled(report.newSummary.total == 0)
                 Toggle("Fixable only", isOn: $fixableOnly)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
@@ -89,6 +93,9 @@ private struct ImageSection: View {
         Section {
             let meta = [image.os, String(image.digest.prefix(19))].filter { !$0.isEmpty }
             if !meta.isEmpty { Text(verbatim: meta.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).lineLimit(1) }
+            if image.previousScannedAt > 0 {
+                Text("Previous scan \(dateTimeText(image.previousScannedAt))").font(.caption).foregroundStyle(.secondary)
+            }
             if !image.pods.isEmpty {
                 Text("Pods: \(image.pods.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary).lineLimit(2)
             }
@@ -96,6 +103,7 @@ private struct ImageSection: View {
                 Text(verbatim: imageScanErrorText(image.error)).font(.callout).foregroundStyle(.statusBad)
             } else {
                 if image.summary.total > 0 { SeverityChips(summary: image.summary) }
+                if image.newSummary.total > 0 { NewFindingsLine(summary: image.newSummary, hasPrevious: true) }
                 if image.summary.os > 0, !image.os.isEmpty {
                     Text("\(String(image.summary.os)) come from the OS packages (\(image.os)): a newer base image fixes those with a fix.")
                         .font(.caption).foregroundStyle(.secondary)
@@ -156,6 +164,7 @@ private struct VulnLine: View {
                         .foregroundStyle(vuln.level.color ?? Color.secondary)
                         .frame(width: 58, alignment: .leading)
                     Text(verbatim: vuln.id).font(.caption.monospaced())
+                    if vuln.new { Tag(String(localized: "new"), color: .statusWarn) }
                     Spacer(minLength: 4)
                     Text(verbatim: vuln.fixable ? String(localized: "fixed in \(vuln.fixed)") : String(localized: "no fix yet"))
                         .font(.caption2)
@@ -168,6 +177,11 @@ private struct VulnLine: View {
             }
         }
     }
+}
+
+/// A date and time from epoch milliseconds, in the user's format.
+func dateTimeText(_ millis: Int64) -> String {
+    Date(timeIntervalSince1970: TimeInterval(millis) / 1000).formatted(date: .abbreviated, time: .shortened)
 }
 
 extension ImageScanFormat {

@@ -14,6 +14,7 @@ import name.levis.ichor.model.ImageScanReport
 import name.levis.ichor.model.ImageScanner
 import name.levis.ichor.model.OperatorReports
 import name.levis.ichor.model.RoutePod
+import name.levis.ichor.model.SavedScan
 import name.levis.ichor.ui.FollowedRun
 import name.levis.ichor.ui.goErrorText
 import name.levis.ichorgo.ImageScanListener
@@ -89,7 +90,7 @@ class ImageScanRepository(
         }
         val picked = scanner()
         _session.value = ImageScanSession(stored.activeContext, appId, name, picked)
-        run = Ichorgo.startImageScan(stored.yaml, stored.activeContext, server, podsJson(pods), optionsJson(images, picked), listener())
+        run = Ichorgo.startImageScan(stored.yaml, stored.activeContext, server, podsJson(pods), optionsJson(appId, images, picked), listener())
         onStarted()
     }
 
@@ -99,6 +100,23 @@ class ImageScanRepository(
         _session.update { it?.copy(stopping = true) }
         r.cancel()
     }
+
+    /** The reports the core keeps for [cluster] (a context name), newest first. No cluster call. */
+    suspend fun history(cluster: String): List<SavedScan> = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(ListSerializer(SavedScan.serializer()), Ichorgo.imageScanHistory(cluster))
+    }
+
+    /** The kept report [id], decoded, with the core's JSON the exports are written from. */
+    suspend fun saved(id: String): Pair<ImageScanReport, String> = withContext(Dispatchers.IO) {
+        val json = Ichorgo.imageScanSaved(id)
+        TalosJson.decodeFromString(ImageScanReport.serializer(), json) to json
+    }
+
+    /** Deletes the kept report [id]. */
+    suspend fun forget(id: String) = withContext(Dispatchers.IO) { Ichorgo.imageScanForget(id) }
+
+    /** Deletes every report kept for [cluster]. */
+    suspend fun clear(cluster: String) = withContext(Dispatchers.IO) { Ichorgo.imageScanClear(cluster) }
 
     /** [reportJson] (a scan's or the operator's) written in [format]. */
     suspend fun export(reportJson: String, format: ImageScanFormat): String = withContext(Dispatchers.IO) {
@@ -131,8 +149,8 @@ class ImageScanRepository(
 
     private fun podsJson(pods: List<RoutePod>) = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
 
-    private fun optionsJson(images: List<String>, scanner: ImageScanner) =
-        TalosJson.encodeToString(ImageScanOptions.serializer(), ImageScanOptions(images, scanner.id))
+    private fun optionsJson(appId: String, images: List<String>, scanner: ImageScanner) =
+        TalosJson.encodeToString(ImageScanOptions.serializer(), ImageScanOptions(images, scanner.id, appId))
 
     /** The config to call with and the Kubernetes API address the user set ("" for the kubeconfig's). */
     private fun target(): Pair<StoredConfig, String> {

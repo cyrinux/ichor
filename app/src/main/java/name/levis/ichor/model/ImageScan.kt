@@ -43,7 +43,12 @@ fun systemImagesScanId(node: String) = "talos:$node"
 
 /** A scan's options: the refs scanned with no pod behind them, and the scanner. */
 @Serializable
-data class ImageScanOptions(val images: List<String> = emptyList(), val scanner: String = "")
+data class ImageScanOptions(
+    val images: List<String> = emptyList(),
+    val scanner: String = "",
+    /** The app scanned, under which the core keeps the report ([systemImagesScanId] for a node). */
+    val app: String = "",
+)
 
 /** The scanners a scan may run in the cluster, by their core [id]; [DEFAULT] (Grype) when none was picked. */
 enum class ImageScanner(val id: String, val label: String) {
@@ -79,6 +84,12 @@ data class ImageScanReport(
 ) {
     val summary: VulnSummary get() = images.fold(VulnSummary()) { sum, image -> sum + image.summary }
     val failed: Int get() = images.count { it.error.isNotEmpty() }
+
+    /** The findings that were not in the last kept scan of the same images. */
+    val newSummary: VulnSummary get() = images.fold(VulnSummary()) { sum, image -> sum + image.new }
+
+    /** Some image was scanned before: "nothing new" then means something. */
+    val hasPrevious: Boolean get() = images.any { it.previousScannedAt > 0 }
 }
 
 @Serializable
@@ -93,6 +104,10 @@ data class ScannedImage(
     val scannedAt: Long = 0,
     val error: String = "",
     val summary: VulnSummary = VulnSummary(),
+    /** The findings not in the last kept scan of the same digest (none when there is none). */
+    val new: VulnSummary = VulnSummary(),
+    /** When that last kept scan ran; 0 when there is none. */
+    val previousScannedAt: Long = 0,
     val vulnerabilities: List<ImageVuln> = emptyList(),
 )
 
@@ -141,6 +156,8 @@ data class ImageVuln(
     val `class`: String = "",
     val type: String = "",
     val published: String = "",
+    /** Not in the last kept scan of the same digest. */
+    val new: Boolean = false,
 ) {
     val level: VulnSeverity get() = severityOf(severity)
     val fixable: Boolean get() = fixed.isNotEmpty()
@@ -150,9 +167,13 @@ data class ImageVuln(
 @Serializable
 data class OperatorReports(val available: Boolean = false, val report: ImageScanReport = ImageScanReport())
 
-/** What the report shows: the fixable findings only, of the chosen severities. */
-data class VulnFilter(val fixableOnly: Boolean = true, val severities: Set<VulnSeverity> = VulnSeverity.entries.toSet()) {
-    fun keeps(v: ImageVuln) = (!fixableOnly || v.fixable) && v.level in severities
+/** What the report shows: the fixable findings only, of the chosen severities, the new ones only. */
+data class VulnFilter(
+    val fixableOnly: Boolean = true,
+    val severities: Set<VulnSeverity> = VulnSeverity.entries.toSet(),
+    val newOnly: Boolean = false,
+) {
+    fun keeps(v: ImageVuln) = (!fixableOnly || v.fixable) && v.level in severities && (!newOnly || v.new)
 
     fun toggle(severity: VulnSeverity) = copy(severities = if (severity in severities) severities - severity else severities + severity)
 }
@@ -171,3 +192,26 @@ const val IMAGESCAN_NOT_SCANNED = "not scanned"
 
 /** The core's messages for a scan that timed out or was stopped (go/ichorgo/imagescan.go). */
 const val IMAGESCAN_TIMED_OUT = "image scan timed out"
+
+/** A scan report the core keeps on the phone (ImageScanHistory), newest first. */
+@Serializable
+data class SavedScan(
+    val id: String = "",
+    /** The context name it was scanned on. */
+    val cluster: String = "",
+    /** The app id, or [systemImagesScanId] for a node's system images. */
+    val app: String = "",
+    val scanner: String = "",
+    val started: Long = 0,
+    val finished: Long = 0,
+    val images: Int = 0,
+    val summary: VulnSummary = VulnSummary(),
+    /** The findings that were not in the previous scan of the same images. */
+    val new: VulnSummary = VulnSummary(),
+)
+
+/** The node of a system images scan id, null for an app's. */
+fun systemImagesNode(scanId: String): String? = scanId.removePrefix("talos:").takeIf { it != scanId }
+
+/** The newest kept report of [app], if any ([this] is newest first). */
+fun List<SavedScan>.lastOf(app: String): SavedScan? = firstOrNull { it.app == app }

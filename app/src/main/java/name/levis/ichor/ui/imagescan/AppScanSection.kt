@@ -2,6 +2,7 @@ package name.levis.ichor.ui.imagescan
 
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +18,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +34,8 @@ import name.levis.ichor.model.ImageScanProgress
 import name.levis.ichor.model.ImageScanReport
 import name.levis.ichor.model.ImageScanner
 import name.levis.ichor.model.OperatorReports
+import name.levis.ichor.model.SavedScan
+import name.levis.ichor.model.VulnSummary
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
@@ -40,6 +44,7 @@ import name.levis.ichor.ui.operations.OperationText
 import name.levis.ichor.ui.operations.res
 import name.levis.ichor.ui.operations.resolve
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.util.timeAgo
 
 /** The scan in the cluster's namespace, named in the hint. */
 const val IMAGESCAN_NAMESPACE = "ichor-imagescan"
@@ -58,14 +63,17 @@ data class AppScanUi(
     val onStop: () -> Unit,
     /** Opens a report, with the core's own JSON for the exports ("" to encode it again). */
     val onOpen: (ImageScanReport, String) -> Unit,
+    /** The newest report kept on the phone for this app, null when none. */
+    val saved: SavedScan? = null,
+    /** Opens [saved] (read from the phone, nothing runs in the cluster). */
+    val onOpenSaved: (SavedScan) -> Unit = {},
+    /** The cluster's kept reports. */
+    val onSavedList: () -> Unit = {},
 ) {
     /** The report to show: the app's last scan when it scanned something, else the operator's. */
     val report: Pair<ImageScanReport, String>?
         get() = session?.usableReport?.let { it to session.reportJson }
             ?: (operator as? UiState.Loaded)?.data?.report?.takeIf { it.images.isNotEmpty() }?.let { it to "" }
-
-    /** Whether the report shown is this app's own scan (the button then scans again). */
-    val scanned: Boolean get() = session?.usableReport != null
 }
 
 /** The app's vulnerabilities: the scan running, the last report's summary, or how to start one. */
@@ -86,29 +94,56 @@ private fun ScanBody(ui: AppScanUi) {
         (ui.operator as? UiState.Failed)?.let {
             MutedText(stringResource(R.string.imagescan_operator_failed, it.message.asString()))
         }
+        // This session's report first, then the newest kept on the phone, then the operator's.
+        val current = session?.usableReport
+        val saved = ui.saved.takeIf { current == null }
         val shown = ui.report
-        if (shown == null) {
-            MutedText(stringResource(R.string.imagescan_hint, ui.scanner.label, IMAGESCAN_NAMESPACE))
-        } else {
-            ScanSummary(shown.first)
+        when {
+            current != null -> {
+                LastScanLines(current.finished, current.summary)
+                NewFindingsLine(current.newSummary, current.hasPrevious)
+                ScanFailures(current)
+            }
+            saved != null -> {
+                LastScanLines(saved.finished, saved.summary)
+                NewFindingsLine(saved.new, hasPrevious = false)
+            }
+            shown != null -> ScanSummary(shown.first)
+            else -> MutedText(stringResource(R.string.imagescan_hint, ui.scanner.label, IMAGESCAN_NAMESPACE))
+        }
+        val onView: (() -> Unit)? = when {
+            current != null -> fun() = ui.onOpen(current, session?.reportJson.orEmpty())
+            saved != null -> fun() = ui.onOpenSaved(saved)
+            shown != null -> fun() = ui.onOpen(shown.first, shown.second)
+            else -> null
         }
         if (ui.busyElsewhere) MutedText(stringResource(R.string.imagescan_busy_elsewhere))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            shown?.let { (report, json) ->
-                FilledTonalButton(onClick = { ui.onOpen(report, json) }) {
+            onView?.let { view ->
+                FilledTonalButton(onClick = view) {
                     Icon(Icons.Outlined.Description, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Text(stringResource(R.string.imagescan_open), modifier = Modifier.padding(start = 6.dp))
+                    Text(stringResource(R.string.imagescan_view), modifier = Modifier.padding(start = 6.dp))
                 }
             }
             OutlinedButton(onClick = ui.onScan, enabled = !ui.busyElsewhere) {
                 Icon(Icons.Outlined.Security, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(
-                    stringResource(if (ui.scanned) R.string.imagescan_scan_again else R.string.imagescan_scan),
+                    stringResource(if (current != null || saved != null) R.string.imagescan_scan_again else R.string.imagescan_scan),
                     modifier = Modifier.padding(start = 6.dp),
                 )
             }
         }
+        TextButton(onClick = ui.onSavedList, contentPadding = PaddingValues(0.dp)) {
+            Text(stringResource(R.string.imagescan_saved_link))
+        }
     }
+}
+
+/** "Last scan 3 min ago" and the severities it found. */
+@Composable
+private fun LastScanLines(finished: Long, summary: VulnSummary) {
+    MutedText(stringResource(R.string.imagescan_last_scan, timeAgo(finished)))
+    SeverityPills(summary)
 }
 
 /** Severity pills, then where the report comes from and the images it could not scan. */
@@ -116,6 +151,12 @@ private fun ScanBody(ui: AppScanUi) {
 fun ScanSummary(report: ImageScanReport) {
     SeverityPills(report.summary)
     MutedText(reportSource(report))
+    ScanFailures(report)
+}
+
+/** "2 images could not be scanned", when some could not. */
+@Composable
+private fun ScanFailures(report: ImageScanReport) {
     if (report.failed > 0) {
         Text(
             stringResource(R.string.imagescan_images_failed, report.failed.toString()),

@@ -9,18 +9,22 @@ struct AppScanSection: View {
 
     @Environment(AppModel.self) private var model
     @State private var operatorState: LoadState<OperatorReports> = .loading
+    /// The newest report kept on the phone for this app.
+    @State private var saved: SavedScan?
     @AppStorage(ImageScannerKeys.selected) private var scanner = ImageScanner.defaultScanner
 
     private var job: ImageScanJob { ImageScanJob.shared }
     private var scan: ImageScanState? { job.scan(context: model.activeContext, appID: app.id) }
     private var busyElsewhere: Bool { job.busy(otherThan: model.activeContext, appID: app.id) }
 
-    /// The report to show: the app's last scan when it scanned something, else the operator's.
-    private var shown: (report: ImageScanReport, json: String)? {
-        if let scan, let report = scan.usableReport { return (report, scan.reportJSON) }
-        if case .loaded(let reports, _, _) = operatorState, !reports.report.images.isEmpty { return (reports.report, "") }
+    /// The Trivy Operator's report, shown when the app has no scan of its own.
+    private var operatorReport: ImageScanReport? {
+        if case .loaded(let reports, _, _) = operatorState, !reports.report.images.isEmpty { return reports.report }
         return nil
     }
+
+    /// Reads the kept reports again when the app, the cluster or the scan's state changes.
+    private var savedKey: String { "\(model.activeContext)|\(app.id)|\(scan?.running == true)|\(scan?.report?.finished ?? 0)" }
 
     var body: some View {
         Section("Vulnerabilities") {
@@ -33,14 +37,33 @@ struct AppScanSection: View {
                 if case .failed(let message) = operatorState {
                     Text("Could not read the Trivy Operator's reports: \(message)").note()
                 }
-                if let shown {
-                    SeverityChips(summary: shown.report.summary)
-                    Text(verbatim: reportSourceText(shown.report)).font(.caption).foregroundStyle(.secondary)
-                    if shown.report.failed > 0 {
-                        Text("Images not scanned: \(String(shown.report.failed))").font(.caption).foregroundStyle(.statusWarn)
+                // This session's scan first, then the newest kept on the phone, then the operator's.
+                let current = scan?.usableReport
+                let lastSaved = current == nil ? saved : nil
+                if let current, let scan {
+                    LastScanLines(finished: current.finished, summary: current.summary)
+                    NewFindingsLine(summary: current.newSummary, hasPrevious: current.hasPrevious)
+                    if current.failed > 0 {
+                        Text("Images not scanned: \(String(current.failed))").font(.caption).foregroundStyle(.statusWarn)
                     }
                     NavigationLink {
-                        ImageScanReportView(report: shown.report, reportJSON: shown.json, appName: app.name)
+                        ImageScanReportView(report: current, reportJSON: scan.reportJSON, appName: app.name)
+                    } label: {
+                        Label("View", systemImage: "doc.text.magnifyingglass")
+                    }
+                } else if let lastSaved {
+                    LastScanLines(finished: lastSaved.finished, summary: lastSaved.summary)
+                    NewFindingsLine(summary: lastSaved.newSummary, hasPrevious: false)
+                    NavigationLink {
+                        SavedScanReportView(saved: lastSaved, appName: app.name)
+                    } label: {
+                        Label("View", systemImage: "doc.text.magnifyingglass")
+                    }
+                } else if let report = operatorReport {
+                    SeverityChips(summary: report.summary)
+                    Text(verbatim: reportSourceText(report)).font(.caption).foregroundStyle(.secondary)
+                    NavigationLink {
+                        ImageScanReportView(report: report, reportJSON: "", appName: app.name)
                     } label: {
                         Label("Open report", systemImage: "doc.text.magnifyingglass")
                     }
@@ -54,11 +77,20 @@ struct AppScanSection: View {
                     guard let client = model.client else { return }
                     job.start(client: client, context: model.activeContext, appID: app.id, pods: app.routePods)
                 } label: {
-                    Label(scan?.usableReport != nil ? LocalizedStringKey("Scan again") : LocalizedStringKey("Scan images"),
+                    Label(current != nil || lastSaved != nil ? LocalizedStringKey("Scan again") : LocalizedStringKey("Scan images"),
                           systemImage: "checkmark.shield")
                 }
                 .disabled(busyElsewhere || app.pods.isEmpty)
+                NavigationLink {
+                    SavedScansView(cluster: model.activeContext)
+                } label: {
+                    Label("All scan reports", systemImage: "tray.full")
+                }
             }
+        }
+        .task(id: savedKey) {
+            let history = (try? await TalosClient.imageScanHistory(cluster: model.activeContext)) ?? []
+            saved = history.last(of: app.id)
         }
         .task(id: app) {
             operatorState = .loading
@@ -92,6 +124,39 @@ struct ScanProgressLines: View {
     }
 
     private func phaseText(_ p: ImageScanProgress?, scanner: String) -> String { imageScanPhaseText(p, scanner: scanner) }
+}
+
+/// "Last scan 3 minutes ago" and the severities it found.
+private struct LastScanLines: View {
+    let finished: Int64
+    let summary: VulnSummary
+
+    var body: some View {
+        Text("Last scan \(relativeTime(finished))").font(.caption).foregroundStyle(.secondary)
+        SeverityChips(summary: summary)
+    }
+}
+
+/// What is new since the last scan of the same images: "3 new" and their severities, or
+/// "Nothing new since the last scan" when `hasPrevious` says there was one to compare with.
+struct NewFindingsLine: View {
+    let summary: VulnSummary
+    let hasPrevious: Bool
+
+    var body: some View {
+        if summary.total > 0 {
+            HStack(spacing: 6) {
+                Text("\(String(summary.total)) new").font(.caption.weight(.semibold)).foregroundStyle(.statusWarn)
+                ForEach(VulnSeverity.allCases.filter { summary.count($0) > 0 }, id: \.self) { severity in
+                    Tag("\(severity.label) \(summary.count(severity))", color: severity.color)
+                }
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+        } else if hasPrevious {
+            Text("Nothing new since the last scan").font(.caption).foregroundStyle(.secondary)
+        }
+    }
 }
 
 /// "Critical 2  High 5  …": one chip per severity, muted when none (Unknown only when found).
