@@ -115,6 +115,12 @@ object CheckupKind {
     const val SIDERO_SERVER_OFF = "sideroServerOff"
     /** A Sidero server not accepted (extra: its hostname); name "" with count: that many more. */
     const val SIDERO_SERVER_UNACCEPTED = "sideroServerUnaccepted"
+    /** A SealedSecret the controller could not decrypt (reason, message: its Synced condition's). */
+    const val SEALED_SECRET_NOT_SYNCED = "sealedSecretNotSynced"
+    /** The Sealed Secrets controller has no key: nothing unseals (extra: its namespace). */
+    const val SEALING_KEY_MISSING = "sealingKeyMissing"
+    /** A sealing key the controller keeps out of use (namespace, name: the key's Secret). */
+    const val SEALING_KEY_COMPROMISED = "sealingKeyCompromised"
 }
 
 /** A section's or the whole checkup's state, worst first. */
@@ -243,7 +249,7 @@ val CheckupRelease.inTrouble: Boolean get() = status == "failed" || status.start
  * dataIssuesOf): shown on the checkup screen, never notified a second time. A SealedSecret that
  * failed to unseal and no active sealing key alert from the Sealed Secrets section.
  */
-val DATA_SERVICE_ALERTED_KINDS = setOf("sealedSecretNotSynced", "sealingKeyMissing")
+val DATA_SERVICE_ALERTED_KINDS = setOf(CheckupKind.SEALED_SECRET_NOT_SYNCED, CheckupKind.SEALING_KEY_MISSING)
 
 /**
  * The findings worth a background alert, keyed "section|kind|subject" and valued by severity

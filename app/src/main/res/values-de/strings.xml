@@ -3660,6 +3660,12 @@
     <string name="checkup_csrDenied_fix">Der Approver hat sie abgelehnt: seine Meldung sagt, warum.</string>
     <string name="checkup_externalSecretFailed_fix">Das Secret behält seinen letzten Wert oder existiert nicht. Prüfen Sie die Zugangsdaten des Stores und ob der entfernte Schlüssel existiert.</string>
     <string name="checkup_secretStoreNotReady_fix">Jedes ExternalSecret, das ihn nutzt, wird nicht mehr synchronisiert. Prüfen Sie seine Zugangsdaten, seine Adresse und den Status des Anbieters.</string>
+    <string name="checkup_sealedSecretNotSynced">Konnte nicht entsiegelt werden</string>
+    <string name="checkup_sealingKeyMissing">Kein Siegelschlüssel in %1$s: nichts kann entsiegelt werden</string>
+    <string name="checkup_sealingKeyCompromised">Schlüssel %1$s als kompromittiert markiert</string>
+    <string name="checkup_sealedSecretNotSynced_fix">Der Controller konnte es nicht zu einem Secret entschlüsseln: es wurde für einen anderen Cluster, Namen oder Namespace versiegelt oder mit einem Schlüssel, den der Controller nicht mehr hat. Versiegeln Sie es erneut mit kubeseal und dem Zertifikat dieses Clusters.</string>
+    <string name="checkup_sealingKeyMissing_fix">Der Controller hat keinen Schlüssel zum Entschlüsseln. Stellen Sie die Schlüsselsicherung (ein Secret mit dem Label sealedsecrets.bitnami.com/sealed-secrets-key) in seinem Namespace wieder her und starten Sie den Controller neu.</string>
+    <string name="checkup_sealingKeyCompromised_fix">Der Controller versiegelt nicht mehr damit, aber was damit versiegelt wurde, ist damit noch lesbar. Versiegeln Sie diese SealedSecrets erneut mit kubeseal und löschen Sie dann den Schlüssel.</string>
     <string name="checkup_helmFailed_fix">Führen Sie helm history aus, um den Grund zu sehen, dann helm rollback oder ein neues Upgrade.</string>
     <string name="checkup_helmPending_fix">Eine Helm-Operation wurde unterbrochen und hat ihre Sperre hinterlassen: helm rollback auf die letzte ausgerollte Revision gibt sie frei.</string>
     <string name="checkup_section_monitoring">Monitoring</string>

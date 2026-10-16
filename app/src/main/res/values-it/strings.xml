@@ -3669,6 +3669,12 @@
     <string name="checkup_csrDenied_fix">L’approvatore le ha rifiutate: il suo messaggio dice perché.</string>
     <string name="checkup_externalSecretFailed_fix">Il Secret mantiene l’ultimo valore, o non esiste. Controlla le credenziali dello store e che la chiave remota esista.</string>
     <string name="checkup_secretStoreNotReady_fix">Ogni ExternalSecret che lo usa smette di sincronizzarsi. Controlla le sue credenziali, il suo indirizzo e lo stato del provider.</string>
+    <string name="checkup_sealedSecretNotSynced">Impossibile da dissigillare</string>
+    <string name="checkup_sealingKeyMissing">Nessuna chiave di sigillo in %1$s: nulla può essere dissigillato</string>
+    <string name="checkup_sealingKeyCompromised">Chiave %1$s segnata come compromessa</string>
+    <string name="checkup_sealedSecretNotSynced_fix">Il controller non è riuscito a decifrarlo in un Secret: è stato sigillato per un altro cluster, nome o namespace, o con una chiave che il controller non ha più. Sigillalo di nuovo con kubeseal e il certificato di questo cluster.</string>
+    <string name="checkup_sealingKeyMissing_fix">Il controller non ha alcuna chiave per decifrare. Ripristina il backup della chiave (un Secret con l’etichetta sealedsecrets.bitnami.com/sealed-secrets-key) nel suo namespace, poi riavvia il controller.</string>
+    <string name="checkup_sealingKeyCompromised_fix">Il controller non sigilla più con essa, ma ciò che ha sigillato è ancora leggibile con essa. Sigilla di nuovo quei SealedSecret con kubeseal, poi elimina la chiave.</string>
     <string name="checkup_helmFailed_fix">Esegui helm history per vedere perché, poi helm rollback o un nuovo aggiornamento.</string>
     <string name="checkup_helmPending_fix">Un’operazione Helm è stata interrotta e ha lasciato il suo blocco: helm rollback all’ultima revisione distribuita lo rilascia.</string>
     <string name="checkup_section_monitoring">Monitoraggio</string>

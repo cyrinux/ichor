@@ -3668,6 +3668,12 @@
     <string name="checkup_csrDenied_fix">L’approbateur les a refusées : son message dit pourquoi.</string>
     <string name="checkup_externalSecretFailed_fix">Le Secret garde sa dernière valeur, ou n’existe pas. Vérifiez les identifiants du store et que la clé distante existe.</string>
     <string name="checkup_secretStoreNotReady_fix">Tous les ExternalSecret qui l’utilisent cessent de se synchroniser. Vérifiez ses identifiants, son adresse et l’état du fournisseur.</string>
+    <string name="checkup_sealedSecretNotSynced">N’a pas pu être descellé</string>
+    <string name="checkup_sealingKeyMissing">Aucune clé de scellement dans %1$s : rien ne peut être descellé</string>
+    <string name="checkup_sealingKeyCompromised">Clé %1$s marquée compromise</string>
+    <string name="checkup_sealedSecretNotSynced_fix">Le contrôleur n’a pas pu le déchiffrer en Secret : il a été scellé pour un autre cluster, nom ou namespace, ou avec une clé que le contrôleur n’a plus. Scellez-le de nouveau avec kubeseal et le certificat de ce cluster.</string>
+    <string name="checkup_sealingKeyMissing_fix">Le contrôleur n’a aucune clé pour déchiffrer. Restaurez la sauvegarde de la clé (un Secret avec le label sealedsecrets.bitnami.com/sealed-secrets-key) dans son namespace, puis redémarrez le contrôleur.</string>
+    <string name="checkup_sealingKeyCompromised_fix">Le contrôleur ne scelle plus avec elle, mais ce qu’elle a scellé reste lisible avec elle. Scellez de nouveau ces SealedSecrets avec kubeseal, puis supprimez la clé.</string>
     <string name="checkup_helmFailed_fix">Lancez helm history pour voir pourquoi, puis helm rollback ou une nouvelle mise à niveau.</string>
     <string name="checkup_helmPending_fix">Une opération Helm a été interrompue et a laissé son verrou : helm rollback vers la dernière révision déployée le libère.</string>
     <string name="checkup_section_monitoring">Supervision</string>

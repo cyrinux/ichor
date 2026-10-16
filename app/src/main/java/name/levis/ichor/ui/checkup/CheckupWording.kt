@@ -168,6 +168,9 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
         CheckupKind.SIDERO_SERVER_UNACCEPTED ->
             if (f.name.isEmpty()) stringResource(R.string.checkup_sideroServerUnaccepted_more, f.count.toString())
             else stringResource(R.string.checkup_sideroServerUnaccepted)
+        CheckupKind.SEALED_SECRET_NOT_SYNCED -> stringResource(R.string.checkup_sealedSecretNotSynced)
+        CheckupKind.SEALING_KEY_MISSING -> stringResource(R.string.checkup_sealingKeyMissing, f.extra.ifEmpty { f.namespace })
+        CheckupKind.SEALING_KEY_COMPROMISED -> stringResource(R.string.checkup_sealingKeyCompromised, f.name)
         else -> f.kind
     }
 }
@@ -238,6 +241,9 @@ fun checkupFix(kind: String): Int = when (kind) {
     CheckupKind.CAPI_WORKERS_SHORT -> R.string.checkup_capiWorkersShort_fix
     CheckupKind.SIDERO_SERVER_OFF -> R.string.checkup_sideroServerOff_fix
     CheckupKind.SIDERO_SERVER_UNACCEPTED -> R.string.checkup_sideroServerUnaccepted_fix
+    CheckupKind.SEALED_SECRET_NOT_SYNCED -> R.string.checkup_sealedSecretNotSynced_fix
+    CheckupKind.SEALING_KEY_MISSING -> R.string.checkup_sealingKeyMissing_fix
+    CheckupKind.SEALING_KEY_COMPROMISED -> R.string.checkup_sealingKeyCompromised_fix
     else -> 0
 }
 
@@ -253,6 +259,7 @@ private val REASON_KINDS = setOf(
     CheckupKind.CROSSPLANE_NOT_READY, CheckupKind.CROSSPLANE_DEFINITION_NOT_ESTABLISHED,
     CheckupKind.TAILSCALE_CONNECTOR_NOT_READY, CheckupKind.TAILSCALE_PROXY_GROUP_DOWN, CheckupKind.TAILSCALE_PROXY_CLASS_NOT_READY,
     CheckupKind.CAPI_CLUSTER_FAILED, CheckupKind.CAPI_CLUSTER_PROVISIONING, CheckupKind.CAPI_MACHINE_FAILED, CheckupKind.CAPI_MACHINE_STUCK,
+    CheckupKind.SEALED_SECRET_NOT_SYNCED,
 )
 
 /** Kubernetes' own words about the finding, "" when it has none. */

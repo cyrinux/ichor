@@ -197,6 +197,9 @@ extension CheckupFinding {
         case .sideroServerOff: return CheckupText.checkupSideroServerOff
         case .sideroServerUnaccepted:
             return f.name.isEmpty ? CheckupText.checkupSideroServerUnacceptedMore("\(f.count)") : CheckupText.checkupSideroServerUnaccepted
+        case .sealedSecretNotSynced: return CheckupText.checkupSealedSecretNotSynced
+        case .sealingKeyMissing: return CheckupText.checkupSealingKeyMissing(f.extra.isEmpty ? f.namespace : f.extra)
+        case .sealingKeyCompromised: return CheckupText.checkupSealingKeyCompromised(f.name)
         }
     }
 
@@ -268,6 +271,9 @@ extension CheckupFinding {
         case .capiWorkersShort: return CheckupText.checkupCapiWorkersShortFix
         case .sideroServerOff: return CheckupText.checkupSideroServerOffFix
         case .sideroServerUnaccepted: return CheckupText.checkupSideroServerUnacceptedFix
+        case .sealedSecretNotSynced: return CheckupText.checkupSealedSecretNotSyncedFix
+        case .sealingKeyMissing: return CheckupText.checkupSealingKeyMissingFix
+        case .sealingKeyCompromised: return CheckupText.checkupSealingKeyCompromisedFix
         }
     }
 }
