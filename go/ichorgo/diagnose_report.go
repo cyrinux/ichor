@@ -37,6 +37,7 @@ func renderDiagnosis(d diagnosisData) string {
 
 	renderEtcd(&b, d)
 	renderGitOps(&b, d.GitOps)
+	renderDataServices(&b, d.DataServices)
 	renderEvents(&b, d)
 
 	// Log lines are raw bytes from the nodes: the report must be text all the way to the UI

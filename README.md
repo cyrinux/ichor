@@ -1100,7 +1100,9 @@ and never contacts a model provider.
   evidence and the steps to fix it, and is written as it arrives.
 - **The report:** node readiness and stage, Talos services, memory, disks, clock offset, etcd,
   control-plane static pods, pods without a running container, recent warning and error events,
-  and the last 40 log lines of services that are not healthy. It never contains the
+  the last 40 log lines of services that are not healthy and, with an os:admin talosconfig,
+  the storage, database and backup operators that are not fine (Longhorn, Garage,
+  CloudNativePG, Velero, cert-manager…), with the nodes involved. It never contains the
   talosconfig, a machine configuration or a kubeconfig.
 - **Anonymized by default:** the nodes' names, IP addresses and domain are replaced with
   placeholders (`cp-1`, `10.0.0.7`, `homelab.lan`) before the report leaves the phone, and the

@@ -47,6 +47,8 @@ type diagnosisData struct {
 	EventsNote string
 	// GitOps: Argo CD and Flux, nil without os:admin or when neither runs.
 	GitOps *gitopsState
+	// DataServices: Longhorn, Garage, CloudNativePG… nil without os:admin or when none runs.
+	DataServices *dataServicesState
 
 	// What a mask has to learn to hide the cluster's names in the report.
 	hosts   []hostEntry
@@ -139,6 +141,7 @@ func collectDiagnosis(ctx context.Context, s *session, kube kubeTarget) diagnosi
 
 	wg.Go(func() { data.Events, data.EventsNote = recentProblemEvents(ctx, s.client, reachable) })
 	wg.Go(func() { data.GitOps = collectGitOps(ctx, kube, data.Roles) })
+	wg.Go(func() { data.DataServices = collectDataServices(ctx, kube, data.Roles) })
 
 	wg.Wait()
 

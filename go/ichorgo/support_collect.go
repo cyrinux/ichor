@@ -59,6 +59,7 @@ func clusterBundleSection(s *session, kube kubeTarget) bundleSection {
 		steps: []bundleStep{
 			{"etcd", func(ctx context.Context) ([]bundleFile, error) { return collectEtcd(ctx, s) }},
 			{"gitops", func(ctx context.Context) ([]bundleFile, error) { return collectGitOpsFile(ctx, s, kube) }},
+			{"data services", func(ctx context.Context) ([]bundleFile, error) { return collectDataServicesFile(ctx, s, kube) }},
 		},
 	}
 }
