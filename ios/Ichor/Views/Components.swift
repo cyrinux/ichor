@@ -113,12 +113,14 @@ extension NodeHealth {
     }
 }
 
+/// The one usage bar: status green, amber from `warnAt` (the caller's threshold), red from 90 %.
 struct UsageBar: View {
     let fraction: Double
+    var warnAt = 0.75
 
     var body: some View {
         ProgressView(value: min(max(fraction, 0), 1))
-            .tint(fraction >= 0.9 ? .red : fraction >= 0.75 ? .orange : .green)
+            .tint(usageLevel(fraction: fraction, warnAt: warnAt).statusColor)
     }
 }
 
@@ -148,6 +150,15 @@ extension UsageLevel {
         case .normal: .green
         case .warning: .orange
         case .critical: .red
+        }
+    }
+
+    /// The same level in the status palette, readable as text on both themes.
+    var statusColor: Color {
+        switch self {
+        case .normal: .statusOK
+        case .warning: .statusWarn
+        case .critical: .statusBad
         }
     }
 }

@@ -66,9 +66,9 @@ struct DropGroupSheet: View {
             HStack(spacing: 6) {
                 StatusPill(label: group.verdict.label, color: group.verdict.color)
                 if let direction = group.direction {
-                    InfoChip(text: direction.label)
+                    Tag(direction.label)
                 }
-                InfoChip(text: "×\(group.count)", monospaced: true)
+                Tag("×\(group.count)", mono: true)
             }
             Text(verbatim: group.reason.text).font(.callout)
             Text("Last seen \(relativeTime(group.lastSeen))")

@@ -54,9 +54,9 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.netpol.PolicyDetailSheet
-import name.levis.ichor.ui.netpol.TagBadge
 import java.text.DateFormat
 import name.levis.ichor.util.formatDateTime
 
@@ -78,11 +78,11 @@ fun DropDetailSheet(group: DropGroup, vm: FlowsViewModel, onDismiss: () -> Unit)
         ) {
             Text("${group.source.label} → ${group.destination.label}", style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace)
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                TagBadge(
+                Tag(
                     stringResource(if (group.verdict == HUBBLE_AUDIT) R.string.flows_would_drop else R.string.flows_verdict_dropped),
                     verdictColor(group.verdict),
                 )
-                directionText(group.direction)?.let { TagBadge(it, MaterialTheme.colorScheme.outline) }
+                directionText(group.direction)?.let { Tag(it, MaterialTheme.colorScheme.outline) }
                 Text(stringResource(R.string.flows_count, group.count), style = MaterialTheme.typography.labelLarge)
             }
             if (group.reason.isNotEmpty()) Text(reasonText(group.reason), style = MaterialTheme.typography.bodyMedium)

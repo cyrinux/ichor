@@ -17,7 +17,7 @@ import name.levis.ichor.model.POLICY_ACTION_AUDIT
 import name.levis.ichor.model.POLICY_ACTION_ENFORCE
 import name.levis.ichor.model.POLICY_ACTION_MIXED
 import name.levis.ichor.model.POLICY_ACTION_WARN
-import name.levis.ichor.ui.netpol.TagBadge
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /** Enforce stands out (it refuses requests), Audit and Warn are warnings, Mixed sits between. */
@@ -32,7 +32,7 @@ fun ActionBadge(action: String, modifier: Modifier = Modifier) {
         else -> action to colors.muted
     }
     val description = stringResource(R.string.kpol_mode) + ": " + label
-    TagBadge(label, color, modifier.semantics { contentDescription = description })
+    Tag(label, color, modifier.semantics { contentDescription = description })
 }
 
 /** What the policy's mode does to a request that breaks it, in one line. */
@@ -48,13 +48,13 @@ fun actionMeaning(action: String): String? = when (action) {
 /** Kyverno or Gatekeeper, as a neutral tag: the row's engine when both run. */
 @Composable
 fun EngineBadge(policy: KyvernoPolicy, modifier: Modifier = Modifier) {
-    TagBadge(if (policy.isGatekeeper) "Gatekeeper" else "Kyverno", MaterialTheme.colorScheme.onSurfaceVariant, modifier)
+    Tag(if (policy.isGatekeeper) "Gatekeeper" else "Kyverno", MaterialTheme.colorScheme.onSurfaceVariant, modifier)
 }
 
 /** A small tinted count ("7 failing"), shown only when it is not zero. */
 @Composable
 private fun CountBadge(text: String, color: Color) {
-    TagBadge(text, color, Modifier.semantics { contentDescription = text })
+    Tag(text, color, Modifier.semantics { contentDescription = text })
 }
 
 /** The failing, warning and passing counts, each only when it is not zero. */
@@ -74,7 +74,7 @@ fun ResultCounts(fail: Int, warn: Int, pass: Int, modifier: Modifier = Modifier)
 fun NotReadyBadge(policy: KyvernoPolicy) {
     val label = stringResource(R.string.kpol_not_ready)
     val description = listOf(label, policy.readyReason).filter { it.isNotEmpty() }.joinToString(": ")
-    TagBadge(label, LocalStatusColors.current.bad, Modifier.semantics { contentDescription = description })
+    Tag(label, LocalStatusColors.current.bad, Modifier.semantics { contentDescription = description })
 }
 
 /** Namespace (or cluster-wide), a constraint's kind, category and severity, as the row's second line. */

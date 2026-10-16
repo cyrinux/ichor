@@ -54,6 +54,9 @@ import name.levis.ichor.model.health
 import name.levis.ichor.model.summary
 import name.levis.ichor.model.title
 import name.levis.ichor.ui.apps.AppIconTile
+import name.levis.ichor.ui.components.HealthDot
+import name.levis.ichor.ui.components.color
+import name.levis.ichor.ui.components.label
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
 
@@ -88,28 +91,6 @@ fun ClusterOverview.downHostnames(): Set<String> =
     nodes.filter { it.health != NodeHealth.READY }.map { it.hostname }.filter { it.isNotEmpty() }.toSet()
 
 @Composable
-fun ServiceHealth.color(): Color {
-    val colors = LocalStatusColors.current
-    return when (this) {
-        ServiceHealth.CRITICAL -> colors.bad
-        ServiceHealth.WARNING -> colors.warn
-        ServiceHealth.OK -> colors.ok
-        ServiceHealth.IDLE, ServiceHealth.UNKNOWN -> colors.muted
-    }
-}
-
-@Composable
-fun ServiceHealth.label(): String = stringResource(
-    when (this) {
-        ServiceHealth.CRITICAL -> R.string.data_services_health_critical
-        ServiceHealth.WARNING -> R.string.data_services_health_warning
-        ServiceHealth.OK -> R.string.data_services_health_ok
-        ServiceHealth.IDLE -> R.string.data_services_health_idle
-        ServiceHealth.UNKNOWN -> R.string.data_services_health_unknown
-    },
-)
-
-@Composable
 fun GarageState.label(): String = stringResource(
     when (this) {
         GarageState.HEALTHY -> R.string.garage_status_healthy
@@ -118,12 +99,6 @@ fun GarageState.label(): String = stringResource(
         GarageState.UNKNOWN -> R.string.garage_status_unknown
     },
 )
-
-@Composable
-fun HealthDot(health: ServiceHealth, modifier: Modifier = Modifier) {
-    val label = health.label()
-    Box(modifier.size(10.dp).background(health.color(), CircleShape).semantics { contentDescription = label })
-}
 
 /** The app's own icon when the inventory has it, else a generic one. */
 @Composable

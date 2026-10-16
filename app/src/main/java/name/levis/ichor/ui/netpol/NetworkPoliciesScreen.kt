@@ -54,6 +54,7 @@ import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
@@ -174,8 +175,8 @@ private fun NamespaceRow(row: NetPolicyNamespace) {
             Text(row.namespace, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
             MutedText(pluralStringResource(R.plurals.netpol_pods, row.pods, row.pods))
         }
-        TagBadge(stringResource(R.string.netpol_ns_ingress, row.ingressIsolated, row.pods), isolation(row.ingressIsolated, row.pods).color())
-        TagBadge(stringResource(R.string.netpol_ns_egress, row.egressIsolated, row.pods), isolation(row.egressIsolated, row.pods).color())
+        Tag(stringResource(R.string.netpol_ns_ingress, row.ingressIsolated, row.pods), isolation(row.ingressIsolated, row.pods).color())
+        Tag(stringResource(R.string.netpol_ns_egress, row.egressIsolated, row.pods), isolation(row.egressIsolated, row.pods).color())
     }
 }
 
@@ -203,5 +204,5 @@ private fun PolicyRow(policy: NetPolicy, onClick: () -> Unit) {
 @Composable
 private fun DirectionBadge(label: String, isolated: Boolean) {
     val color = if (isolated) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.outline
-    TagBadge(label, color)
+    Tag(label, color)
 }

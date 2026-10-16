@@ -173,7 +173,7 @@ private struct HelmRollbackChangeRow: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            InfoChip(text: actionLabel, color: actionColor)
+            Tag(actionLabel, color: actionColor)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: change.label)
                     .font(.callout.monospaced())

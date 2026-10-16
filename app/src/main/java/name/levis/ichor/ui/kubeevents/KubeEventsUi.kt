@@ -34,7 +34,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.LiveKubeEvent
 import name.levis.ichor.ui.checkup.ageSince
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.netpol.TagBadge
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
@@ -57,7 +57,7 @@ internal fun KubeEventItem(e: LiveKubeEvent, now: Long, showNamespace: Boolean, 
             if (e.isWarning) {
                 Icon(Icons.Outlined.Warning, contentDescription = stringResource(R.string.events_severity_warning), tint = tint, modifier = Modifier.size(16.dp))
             }
-            TagBadge(e.reason, tint)
+            Tag(e.reason, tint)
             if (e.count > 1) {
                 val repeated = pluralStringResource(R.plurals.events_repeated, e.count, e.count)
                 MutedText("×${e.count}", modifier = Modifier.semantics { contentDescription = repeated })

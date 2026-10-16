@@ -22,9 +22,9 @@ struct AppDetailSheet: View {
                     .listRowInsets(EdgeInsets())
                 Section {
                     HStack(spacing: 10) {
-                        StatTile(value: "\(app.running)/\(app.containers)", label: String(localized: "Containers"))
-                        StatTile(value: "\(app.nodes.count)", label: String(localized: "Nodes"))
-                        StatTile(value: formatBytes(app.memory), label: String(localized: "Memory"))
+                        AppStatTile(value: "\(app.running)/\(app.containers)", label: String(localized: "Containers"))
+                        AppStatTile(value: "\(app.nodes.count)", label: String(localized: "Nodes"))
+                        AppStatTile(value: formatBytes(app.memory), label: String(localized: "Memory"))
                     }
                 }
                 .listRowBackground(Color.clear)
@@ -72,11 +72,11 @@ struct AppDetailSheet: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             HStack(spacing: 6) {
-                if !app.version.isEmpty { InfoChip(text: app.version, monospaced: true) }
+                if !app.version.isEmpty { Tag(app.version, mono: true) }
                 if app.drift {
-                    InfoChip(text: String(localized: "\(app.versionCount) versions running"), color: attentionColor)
+                    Tag(String(localized: "\(app.versionCount) versions running"), color: attentionColor)
                 }
-                if app.unpinned { InfoChip(text: String(localized: "Unpinned image"), color: attentionColor) }
+                if app.unpinned { Tag(String(localized: "Unpinned image"), color: attentionColor) }
             }
         }
         .frame(maxWidth: .infinity)
@@ -84,7 +84,7 @@ struct AppDetailSheet: View {
     }
 }
 
-private struct StatTile: View {
+private struct AppStatTile: View {
     let value: String
     let label: String
 

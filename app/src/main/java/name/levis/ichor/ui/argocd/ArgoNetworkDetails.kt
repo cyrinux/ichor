@@ -35,7 +35,8 @@ import name.levis.ichor.model.ArgoNetNode
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.TooltipIconButton
-import name.levis.ichor.ui.dataservices.color
+import name.levis.ichor.ui.components.color
+import name.levis.ichor.ui.components.label
 import name.levis.ichor.ui.dataservices.label
 
 /** What the details panel can do with the box it shows; a null action is not offered. */

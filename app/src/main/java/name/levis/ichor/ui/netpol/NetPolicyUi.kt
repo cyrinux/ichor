@@ -50,26 +50,13 @@ import name.levis.ichor.model.NetPeer
 import name.levis.ichor.model.NetPolicy
 import name.levis.ichor.model.NetRule
 import name.levis.ichor.model.label
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.theme.LocalStatusColors
-
-/** A small tinted label: a policy kind, a direction, a verdict. */
-@Composable
-fun TagBadge(label: String, color: Color, modifier: Modifier = Modifier, mono: Boolean = false) {
-    Surface(modifier, shape = RoundedCornerShape(6.dp), color = color.copy(alpha = 0.14f), contentColor = color) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            fontFamily = if (mono) FontFamily.Monospace else null,
-            maxLines = 1,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-        )
-    }
-}
 
 /** NP, CNP or CCNP. */
 @Composable
 fun KindBadge(policy: NetPolicy, modifier: Modifier = Modifier) =
-    TagBadge(policy.kindShort, MaterialTheme.colorScheme.primary, modifier, mono = true)
+    Tag(policy.kindShort, MaterialTheme.colorScheme.primary, modifier, mono = true)
 
 /** Green when every pod is isolated, amber for some, muted for none. */
 @Composable
@@ -160,10 +147,10 @@ fun RuleCard(rule: NetRule, ingress: Boolean, policy: NetPolicy) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 when {
-                    rule.deny -> TagBadge(stringResource(R.string.netpol_deny), colors.bad)
-                    rule.action == NETRULE_PASS -> TagBadge(stringResource(R.string.netpol_pass), colors.warn)
-                    rule.action == NETRULE_LOG -> TagBadge(stringResource(R.string.netpol_log), colors.muted)
-                    else -> TagBadge(stringResource(R.string.netpol_allow), colors.ok)
+                    rule.deny -> Tag(stringResource(R.string.netpol_deny), colors.bad)
+                    rule.action == NETRULE_PASS -> Tag(stringResource(R.string.netpol_pass), colors.warn)
+                    rule.action == NETRULE_LOG -> Tag(stringResource(R.string.netpol_log), colors.muted)
+                    else -> Tag(stringResource(R.string.netpol_allow), colors.ok)
                 }
                 Text(
                     stringResource(if (ingress) R.string.netpol_from else R.string.netpol_to),

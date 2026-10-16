@@ -152,8 +152,8 @@ private struct CapacityNodeRow: View {
                 HStack {
                     Text(verbatim: node.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
                     Spacer()
-                    ForEach(node.roles, id: \.self) { InfoChip(text: $0) }
-                    if node.overcommitted { InfoChip(text: CapacityText.capacityOvercommitted, color: Color.statusBad) }
+                    ForEach(node.roles, id: \.self) { Tag($0) }
+                    if node.overcommitted { Tag(CapacityText.capacityOvercommitted, color: Color.statusBad) }
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     bar(CapacityText.capacityRequests, fraction: node.memoryPercent / 100, value: "\(requests)%")
@@ -198,15 +198,15 @@ private struct CapacityWorkloadRow: View {
                 .font(.caption).foregroundStyle(.secondary)
             ChipFlow {
                 if w.noPriorityClass {
-                    InfoChip(text: CapacityText.capacityNoClass, color: Color.statusWarn)
+                    Tag(CapacityText.capacityNoClass, color: Color.statusWarn)
                 } else {
-                    InfoChip(text: w.priorityClassName, monospaced: true)
+                    Tag(w.priorityClassName, mono: true)
                 }
-                InfoChip(text: CapacityText.capacityPriority("\(w.priority)"))
-                if w.qos != .unknown { InfoChip(text: w.qos.rawValue) }
-                InfoChip(text: w.riskText, color: w.risk.color)
+                Tag(CapacityText.capacityPriority("\(w.priority)"))
+                if w.qos != .unknown { Tag(w.qos.rawValue) }
+                Tag(w.riskText, color: w.risk.color)
                 if !w.moreFitNA {
-                    InfoChip(text: CapacityText.capacityMoreFit("\(w.moreFit)"), color: w.moreFit > 0 ? Color.statusOK : Color.statusWarn)
+                    Tag(CapacityText.capacityMoreFit("\(w.moreFit)"), color: w.moreFit > 0 ? Color.statusOK : Color.statusWarn)
                 }
             }
         }

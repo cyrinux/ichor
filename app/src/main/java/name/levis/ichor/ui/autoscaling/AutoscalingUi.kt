@@ -20,7 +20,7 @@ import name.levis.ichor.model.AUTOSCALE_PAUSED
 import name.levis.ichor.model.AutoscaleTarget
 import name.levis.ichor.model.NodeClaimRow
 import name.levis.ichor.model.NodePoolBudget
-import name.levis.ichor.ui.netpol.TagBadge
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /** The state badge: what went wrong, in its colour (problems first, the Go order). */
@@ -37,13 +37,13 @@ fun AutoscaleStateBadge(state: String, modifier: Modifier = Modifier) {
         else -> state to colors.muted
     }
     val description = stringResource(R.string.autoscaling_state) + ": " + label
-    TagBadge(label, color, modifier.semantics { contentDescription = description })
+    Tag(label, color, modifier.semantics { contentDescription = description })
 }
 
 /** A small tinted fact, read out as it reads. */
 @Composable
 fun AutoscaleChip(text: String, color: Color, modifier: Modifier = Modifier) {
-    TagBadge(text, color, modifier.semantics { contentDescription = text })
+    Tag(text, color, modifier.semantics { contentDescription = text })
 }
 
 /** "Deployment web": the workload an autoscaler drives, as the row's second line shows it. */

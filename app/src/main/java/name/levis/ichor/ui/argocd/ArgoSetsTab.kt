@@ -32,9 +32,9 @@ import name.levis.ichor.model.ArgoAppSet
 import name.levis.ichor.model.ArgoProject
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.ui.components.EmptyText
+import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.SectionTitle
-import name.levis.ichor.ui.dataservices.HealthDot
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**

@@ -35,6 +35,8 @@ import name.levis.ichor.model.ClusterSummary
 import name.levis.ichor.model.ClusterUsage
 import name.levis.ichor.model.displayVersion
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.StatTile
+import name.levis.ichor.ui.components.StatTileRow
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.UsageBar
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -70,18 +72,14 @@ fun ClusterSummaryCard(
             }
             Breakdown(summary)
             HorizontalDivider(Modifier.padding(vertical = 12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Stat(
-                    Icons.Outlined.ViewInAr,
-                    "${summary.ready}/${summary.total}",
-                    stringResource(R.string.overview_stat_nodes),
-                    Modifier.weight(1f),
-                )
-                CpuStat(summary.cpuCount, live, Modifier.weight(1f))
-                // Live memory only once it covers every node the overview reached, never fewer.
-                val reached = summary.total - summary.unreachable
-                MemoryStat(summary, live?.usage?.takeIf { it.nodes >= reached }, Modifier.weight(1f))
-            }
+            // Live memory only once it covers every node the overview reached, never fewer.
+            val reached = summary.total - summary.unreachable
+            StatTileRow(
+                Modifier,
+                { StatTile(Icons.Outlined.ViewInAr, "${summary.ready}/${summary.total}", stringResource(R.string.overview_stat_nodes), it) },
+                { CpuStat(summary.cpuCount, live, it) },
+                { MemoryStat(summary, live?.usage?.takeIf { usage -> usage.nodes >= reached }, it) },
+            )
             Footer(onCapacity)
         }
     }
@@ -154,18 +152,16 @@ private fun Breakdown(summary: ClusterSummary) {
 private fun CpuStat(cpuCount: Int, live: ClusterLiveState?, modifier: Modifier) {
     val used = live?.usage?.cpuFraction
     val cores = cpuCount.takeIf { it > 0 }
-    Column(modifier) {
-        if (used == null) {
-            Stat(Icons.Outlined.Memory, cores?.toString() ?: UNKNOWN, stringResource(R.string.overview_stat_cpu))
-        } else {
-            Stat(
-                Icons.Outlined.Memory,
-                stringResource(R.string.overview_stat_percent, (used * 100).roundToInt()),
-                cores?.let { pluralStringResource(R.plurals.overview_stat_cpu_of_cores, it, it) }
-                    ?: stringResource(R.string.overview_stat_cpu_used),
-            )
-            CpuSparkline(live.cpuHistory, Modifier.padding(top = 4.dp))
-        }
+    if (used == null) {
+        StatTile(Icons.Outlined.Memory, cores?.toString() ?: UNKNOWN, stringResource(R.string.overview_stat_cpu), modifier)
+    } else {
+        StatTile(
+            Icons.Outlined.Memory,
+            stringResource(R.string.overview_stat_percent, (used * 100).roundToInt()),
+            cores?.let { pluralStringResource(R.plurals.overview_stat_cpu_of_cores, it, it) }
+                ?: stringResource(R.string.overview_stat_cpu_used),
+            modifier,
+        ) { CpuSparkline(live.cpuHistory, Modifier.padding(top = 4.dp)) }
     }
 }
 
@@ -175,30 +171,13 @@ private fun MemoryStat(summary: ClusterSummary, live: ClusterUsage?, modifier: M
     val used = live?.memUsedFraction ?: summary.memUsedFraction
     // Glide between samples rather than jump.
     val shown by animateFloatAsState(used ?: 0f, label = "memory")
-    Column(modifier) {
-        Stat(
-            ImageVector.vectorResource(R.drawable.ic_memory_alt),
-            if (total > 0) formatBytes(total) else UNKNOWN,
-            used?.let { stringResource(R.string.overview_stat_memory_used, (it * 100).roundToInt()) }
-                ?: stringResource(R.string.overview_stat_memory),
-        )
-        if (used != null) UsageBar(shown, Modifier.padding(top = 6.dp))
-    }
+    StatTile(
+        ImageVector.vectorResource(R.drawable.ic_memory_alt),
+        if (total > 0) formatBytes(total) else UNKNOWN,
+        used?.let { stringResource(R.string.overview_stat_memory_used, (it * 100).roundToInt()) }
+            ?: stringResource(R.string.overview_stat_memory),
+        modifier,
+        meter = used?.let { { UsageBar(shown, Modifier.padding(top = 6.dp)) } },
+    )
 }
 
-@Composable
-private fun Stat(icon: ImageVector, value: String, label: String, modifier: Modifier = Modifier) {
-    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(end = 8.dp).size(20.dp),
-        )
-        // Narrow phones and long translations wrap rather than cut the label short.
-        Column {
-            Text(value, style = MaterialTheme.typography.titleMedium)
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}

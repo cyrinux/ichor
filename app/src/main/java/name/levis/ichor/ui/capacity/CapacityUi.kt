@@ -27,12 +27,15 @@ import name.levis.ichor.model.CapacityNode
 import name.levis.ichor.model.CapacityWorkload
 import name.levis.ichor.model.KubeCapacity
 import name.levis.ichor.model.QosClass
+import name.levis.ichor.ui.components.MeterRow
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
-import name.levis.ichor.ui.components.UsageBar
-import name.levis.ichor.ui.netpol.TagBadge
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.theme.LocalStatusColors
 import kotlin.math.roundToInt
+
+/** A node's memory bars turn amber from 80 %, later than the usual 75 %. */
+private const val NODE_WARN_AT = 0.8f
 
 /** The cluster's free room, the N+1 verdict, what is missing to read, and "What if a node goes down". */
 @Composable
@@ -85,24 +88,15 @@ fun CapacityNodeRow(n: CapacityNode, metrics: Boolean, onOpen: () -> Unit) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(n.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                n.roles.forEach { TagBadge(it, MaterialTheme.colorScheme.primary) }
-                if (n.overcommitted) TagBadge(stringResource(R.string.capacity_overcommitted), colors.bad)
+                n.roles.forEach { Tag(it, MaterialTheme.colorScheme.primary) }
+                if (n.overcommitted) Tag(stringResource(R.string.capacity_overcommitted), colors.bad)
             }
             Column(Modifier.clearAndSetSemantics { contentDescription = bars }, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                NodeBar(stringResource(R.string.capacity_requests), (n.memoryPercent / 100).toFloat().coerceIn(0f, 1f), "$requests%")
-                if (metrics) NodeBar(stringResource(R.string.capacity_usage), n.memoryUsageFraction, "$usage%")
+                MeterRow(stringResource(R.string.capacity_requests), (n.memoryPercent / 100).toFloat().coerceIn(0f, 1f), "$requests%", warnAt = NODE_WARN_AT)
+                if (metrics) MeterRow(stringResource(R.string.capacity_usage), n.memoryUsageFraction, "$usage%", warnAt = NODE_WARN_AT)
             }
             MutedText(stringResource(R.string.capacity_node_free, cpuText(n.cpuFree), memoryText(n.memoryFree), n.podsFree.toString()), maxLines = 2)
         }
-    }
-}
-
-@Composable
-private fun NodeBar(label: String, fraction: Float, value: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        MutedText(label, modifier = Modifier.weight(0.25f), maxLines = 1)
-        UsageBar(fraction, Modifier.weight(0.6f), warnAt = 0.8f)
-        MutedText(value, modifier = Modifier.weight(0.15f), maxLines = 1)
     }
 }
 
@@ -121,14 +115,14 @@ fun CapacityWorkloadRow(w: CapacityWorkload) {
             )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (w.noPriorityClass) {
-                    TagBadge(stringResource(R.string.capacity_no_class), colors.warn)
+                    Tag(stringResource(R.string.capacity_no_class), colors.warn)
                 } else {
-                    TagBadge(w.priorityClassName, MaterialTheme.colorScheme.primary, mono = true)
+                    Tag(w.priorityClassName, MaterialTheme.colorScheme.primary, mono = true)
                 }
-                TagBadge(stringResource(R.string.capacity_priority, w.priority.toString()), colors.muted)
-                if (w.qosClass != QosClass.UNKNOWN) TagBadge(w.qosClass.label(), colors.muted)
-                TagBadge(riskText(w), w.riskLevel.color())
-                if (!w.moreFitNA) TagBadge(stringResource(R.string.capacity_more_fit, w.moreFit.toString()), if (w.moreFit > 0) colors.ok else colors.warn)
+                Tag(stringResource(R.string.capacity_priority, w.priority.toString()), colors.muted)
+                if (w.qosClass != QosClass.UNKNOWN) Tag(w.qosClass.label(), colors.muted)
+                Tag(riskText(w), w.riskLevel.color())
+                if (!w.moreFitNA) Tag(stringResource(R.string.capacity_more_fit, w.moreFit.toString()), if (w.moreFit > 0) colors.ok else colors.warn)
             }
         }
     }

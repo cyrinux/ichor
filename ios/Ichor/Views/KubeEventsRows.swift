@@ -81,7 +81,7 @@ private struct KubeEventRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
-                InfoChip(text: event.reason, color: event.isWarning ? Color.statusWarn : nil)
+                Tag(event.reason, color: event.isWarning ? Color.statusWarn : nil)
                 if event.count > 1 { Text(verbatim: "× \(event.count)").font(.caption).foregroundStyle(.secondary) }
                 Spacer()
                 Text(verbatim: CheckupText.kubeEventsAgo(checkupAge(event.last, now: now))).font(.caption).foregroundStyle(.secondary)

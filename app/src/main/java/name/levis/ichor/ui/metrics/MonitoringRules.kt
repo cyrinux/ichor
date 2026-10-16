@@ -41,8 +41,8 @@ import name.levis.ichor.model.ruleRef
 import name.levis.ichor.ui.checkup.ageSince
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.expandable
-import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 @Composable
@@ -80,9 +80,9 @@ private fun GroupCard(group: PromRuleGroup, now: Long, onLink: (PromLink) -> Uni
         Column(Modifier.fillMaxWidth().expandable(open) { open = !open }.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(group.name, style = MaterialTheme.typography.titleSmall, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                if (group.errors > 0) TagBadge(stringResource(R.string.monitoring_rule_failing, group.errors.toString()), colors.bad)
-                if (group.firing > 0) TagBadge(stringResource(R.string.monitoring_rule_firing, group.firing.toString()), colors.warn)
-                if (group.pending > 0) TagBadge(stringResource(R.string.monitoring_rule_pending, group.pending.toString()), colors.muted)
+                if (group.errors > 0) Tag(stringResource(R.string.monitoring_rule_failing, group.errors.toString()), colors.bad)
+                if (group.firing > 0) Tag(stringResource(R.string.monitoring_rule_firing, group.firing.toString()), colors.warn)
+                if (group.pending > 0) Tag(stringResource(R.string.monitoring_rule_pending, group.pending.toString()), colors.muted)
                 MutedText(stringResource(R.string.monitoring_rule_total, group.rules.size.toString()))
             }
             if (group.lastEvaluation > 0) MutedText(stringResource(R.string.monitoring_last_evaluation, ageSince(group.lastEvaluation, now)))
@@ -110,10 +110,10 @@ private fun RuleRow(rule: PromRule) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text(rule.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            TagBadge(rule.type, MaterialTheme.colorScheme.primary, mono = true)
-            if (rule.type == "alerting") TagBadge(rule.state, level.takeIf { rule.state != "inactive" }?.color() ?: colors.muted, mono = true)
-            TagBadge(rule.health, if (rule.health == "err") colors.bad else if (rule.health == "ok") colors.ok else colors.muted, mono = true)
-            if (rule.severity.isNotEmpty()) TagBadge(rule.severity, colors.muted, mono = true)
+            Tag(rule.type, MaterialTheme.colorScheme.primary, mono = true)
+            if (rule.type == "alerting") Tag(rule.state, level.takeIf { rule.state != "inactive" }?.color() ?: colors.muted, mono = true)
+            Tag(rule.health, if (rule.health == "err") colors.bad else if (rule.health == "ok") colors.ok else colors.muted, mono = true)
+            if (rule.severity.isNotEmpty()) Tag(rule.severity, colors.muted, mono = true)
             if (rule.alerts > 0) MutedText(stringResource(R.string.monitoring_rule_alerts, rule.alerts.toString()))
         }
         if (rule.lastError.isNotEmpty()) {
@@ -162,11 +162,11 @@ private fun ServerCard(server: PromOperatorServer, alertmanager: Boolean, onLink
                     Text("${server.namespace}/${server.name}", style = MaterialTheme.typography.titleSmall, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     MutedText(listOf(stringResource(kindLabel), server.version).filter { it.isNotEmpty() }.joinToString(" "), maxLines = 1)
                 }
-                TagBadge(stringResource(R.string.monitoring_available, server.available.toString(), server.desired.toString()), server.level.color())
+                Tag(stringResource(R.string.monitoring_available, server.available.toString(), server.desired.toString()), server.level.color())
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                if (server.paused) TagBadge(stringResource(R.string.monitoring_paused), colors.warn)
-                server.conditions.forEach { c -> TagBadge("${c.type}: ${c.status}", c.level.color(), mono = true) }
+                if (server.paused) Tag(stringResource(R.string.monitoring_paused), colors.warn)
+                server.conditions.forEach { c -> Tag("${c.type}: ${c.status}", c.level.color(), mono = true) }
             }
             server.conditions.filter { it.status != "True" && (it.reason.isNotEmpty() || it.message.isNotEmpty()) }.forEach { c ->
                 MutedText(listOf(c.reason, c.message).filter { it.isNotEmpty() }.joinToString(": "), maxLines = 4, overflow = TextOverflow.Ellipsis)

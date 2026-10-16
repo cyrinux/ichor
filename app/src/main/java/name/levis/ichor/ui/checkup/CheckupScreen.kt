@@ -75,10 +75,10 @@ import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.expandable
 import name.levis.ichor.ui.factory
-import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.components.pageContent
@@ -292,12 +292,12 @@ private fun SectionBadges(section: CheckupSection) {
     val warnings = section.findings.count { it.level == CheckupSeverity.WARNING }
     val notes = section.findings.size - critical - warnings
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (critical > 0) TagBadge(critical.toString(), colors.bad)
-        if (warnings > 0) TagBadge(warnings.toString(), colors.warn)
-        if (notes > 0) TagBadge(notes.toString(), colors.muted)
+        if (critical > 0) Tag(critical.toString(), colors.bad)
+        if (warnings > 0) Tag(warnings.toString(), colors.warn)
+        if (notes > 0) Tag(notes.toString(), colors.muted)
         when {
             critical + warnings + notes > 0 -> Unit
-            section.state == CheckupStatus.UNKNOWN -> TagBadge("?", colors.muted)
+            section.state == CheckupStatus.UNKNOWN -> Tag("?", colors.muted)
             else -> Icon(Icons.Outlined.CheckCircle, contentDescription = stringResource(R.string.checkup_nothing_found), tint = colors.ok, modifier = Modifier.size(20.dp))
         }
     }

@@ -36,7 +36,7 @@ struct ImageScanReportView: View {
                             Button {
                                 if on { hidden.insert(severity) } else { hidden.remove(severity) }
                             } label: {
-                                InfoChip(text: severity.label, color: on ? (severity.color ?? .accentColor) : nil)
+                                Tag(severity.label, color: on ? (severity.color ?? .accentColor) : nil)
                             }
                             .buttonStyle(.plain)
                             .accessibilityAddTraits(on ? .isSelected : [])

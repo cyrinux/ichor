@@ -38,7 +38,7 @@ struct AppFluxSection: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text("\(status.apps.count) apps").font(.subheadline.weight(.semibold)).monospacedDigit()
-                    if !status.version.isEmpty { InfoChip(text: status.version, monospaced: true) }
+                    if !status.version.isEmpty { Tag(status.version, mono: true) }
                     Spacer()
                     if status.worst.needsAttention { StatusPill(label: status.worst.label, color: status.worst.color) }
                 }

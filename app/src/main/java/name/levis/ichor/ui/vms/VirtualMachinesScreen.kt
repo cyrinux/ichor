@@ -53,10 +53,10 @@ import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
-import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 class VirtualMachinesViewModel(private val repository: VirtualMachineRepository) : LoadingViewModel<VirtualMachines>() {
@@ -189,7 +189,7 @@ private fun CountChips(report: VirtualMachines, modifier: Modifier = Modifier) {
     ).filter { it.first > 0 }
     if (chips.isEmpty()) return
     FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        chips.forEach { (count, label, color) -> TagBadge(stringResource(label, count), color) }
+        chips.forEach { (count, label, color) -> Tag(stringResource(label, count), color) }
     }
 }
 

@@ -43,9 +43,9 @@ import name.levis.ichor.model.inTrouble
 import name.levis.ichor.model.level
 import name.levis.ichor.model.subject
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.UsageBar
 import name.levis.ichor.ui.components.expandable
-import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import name.levis.ichor.util.formatPercent
@@ -149,10 +149,10 @@ fun NodeTaints(nodes: List<CheckupNode>) {
                 if (n.kubelet.isNotEmpty()) MutedText(n.kubelet)
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                n.roles.forEach { TagBadge(it, MaterialTheme.colorScheme.primary) }
-                if (!n.ready) TagBadge(stringResource(R.string.common_status_not_ready), colors.bad)
-                if (n.cordoned) TagBadge(stringResource(R.string.checkup_cordoned), colors.warn)
-                n.taints.forEach { TagBadge(it, colors.muted, mono = true) }
+                n.roles.forEach { Tag(it, MaterialTheme.colorScheme.primary) }
+                if (!n.ready) Tag(stringResource(R.string.common_status_not_ready), colors.bad)
+                if (n.cordoned) Tag(stringResource(R.string.checkup_cordoned), colors.warn)
+                n.taints.forEach { Tag(it, colors.muted, mono = true) }
                 if (n.taints.isEmpty()) MutedText(stringResource(R.string.checkup_no_taint))
             }
             if (labels) {
@@ -200,7 +200,7 @@ fun HelmReleases(releases: List<CheckupRelease>, now: Long, onOpenRelease: (name
                 Text("${r.namespace}/${r.name}", style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 MutedText(stringResource(R.string.checkup_release_revision, r.revision.toString(), ageSince(r.updated, now)), maxLines = 1)
             }
-            TagBadge(r.status, if (r.inTrouble) colors.warn else colors.ok)
+            Tag(r.status, if (r.inTrouble) colors.warn else colors.ok)
         }
     }
 }

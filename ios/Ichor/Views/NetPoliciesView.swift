@@ -110,7 +110,7 @@ private struct NetNamespaceRow: View {
     }
 
     private func chip(_ direction: NetDirection, isolated: Int) -> some View {
-        InfoChip(text: "\(direction.label) \(isolated)/\(row.pods)", color: row.isolation(direction).color)
+        Tag("\(direction.label) \(isolated)/\(row.pods)", color: row.isolation(direction).color)
     }
 }
 

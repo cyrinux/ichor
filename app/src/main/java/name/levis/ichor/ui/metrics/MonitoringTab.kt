@@ -36,7 +36,7 @@ import name.levis.ichor.model.monitorRef
 import name.levis.ichor.ui.checkup.ageSince
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.netpol.TagBadge
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
@@ -110,7 +110,7 @@ private fun PoolCard(pool: PromTargetPool, now: Long, onLink: (PromLink) -> Unit
                     )
                     MutedText(pool.kind.ifEmpty { stringResource(R.string.monitoring_config_job) }, maxLines = 1)
                 }
-                TagBadge(stringResource(R.string.monitoring_pool_counts, pool.down.toString(), pool.up.toString()), colors.bad)
+                Tag(stringResource(R.string.monitoring_pool_counts, pool.down.toString(), pool.up.toString()), colors.bad)
             }
             pool.targets.forEach { target ->
                 HorizontalDivider()

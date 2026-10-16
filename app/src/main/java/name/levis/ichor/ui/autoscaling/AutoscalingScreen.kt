@@ -65,11 +65,11 @@ import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
-import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 class AutoscalingViewModel(private val autoscaling: AutoscalingRepository) : LoadingViewModel<AutoscalingReport>() {
@@ -394,7 +394,7 @@ private fun NodePoolRowItem(row: NodePoolRow, claimCount: Int, onClick: () -> Un
                 modifier = Modifier.weight(1f),
             )
             if (row.atLimit) {
-                TagBadge(stringResource(R.string.autoscaling_at_limit), colors.bad, Modifier)
+                Tag(stringResource(R.string.autoscaling_at_limit), colors.bad, Modifier)
             } else {
                 AutoscaleStateBadge(if (row.ready) AUTOSCALE_OK else AUTOSCALE_NOT_READY)
             }

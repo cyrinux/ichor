@@ -50,7 +50,7 @@ import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
-import name.levis.ichor.ui.netpol.TagBadge
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
@@ -161,7 +161,7 @@ private fun ExplainContent(explain: KubeExplain) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(explain.type, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyMedium)
         if (explain.format.isNotEmpty() && !explain.type.contains(explain.format)) MutedText(explain.format)
-        if (explain.required) TagBadge(stringResource(R.string.kb_schema_required), LocalStatusColors.current.warn)
+        if (explain.required) Tag(stringResource(R.string.kb_schema_required), LocalStatusColors.current.warn)
     }
     if (explain.description.isNotEmpty()) Text(explain.description, style = MaterialTheme.typography.bodyMedium)
     if (explain.enum.isNotEmpty()) {
@@ -192,7 +192,7 @@ private fun ChildRow(child: KubeExplainChild, modifier: Modifier = Modifier) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(child.name, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
             MutedText(child.type)
-            if (child.required) TagBadge(stringResource(R.string.kb_schema_required), LocalStatusColors.current.warn)
+            if (child.required) Tag(stringResource(R.string.kb_schema_required), LocalStatusColors.current.warn)
         }
         if (child.description.isNotEmpty()) MutedText(child.description)
         if (child.enum.isNotEmpty()) MutedText(child.enum.joinToString("  ·  "))

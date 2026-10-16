@@ -53,7 +53,8 @@ import name.levis.ichor.ui.argocd.freezeClock
 import name.levis.ichor.ui.argocd.waveProgress
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.dataservices.color
+import name.levis.ichor.ui.components.color
+import name.levis.ichor.ui.components.label
 import name.levis.ichor.ui.dataservices.label
 
 /** Bar segments and counts, worst first. */

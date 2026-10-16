@@ -47,12 +47,15 @@ import name.levis.ichor.model.GarageOpReason
 import name.levis.ichor.model.GarageStatus
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.UsageBar
+import name.levis.ichor.ui.components.color
+import name.levis.ichor.ui.components.label
 import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes

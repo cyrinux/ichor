@@ -72,12 +72,12 @@ import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.uiText
-import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 class PoliciesViewModel(private val policies: PolicyRepository) : LoadingViewModel<PolicyReport>() {
@@ -242,7 +242,7 @@ private fun EngineCard(report: PolicyReport, engine: PolicyEngine) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 engine.controllers.forEach { c ->
                     val description = stringResource(R.string.kpol_controller_ready, c.name, c.ready.toString(), c.desired.toString())
-                    TagBadge(
+                    Tag(
                         "${c.name} ${c.ready}/${c.desired}",
                         if (c.healthy) colors.ok else colors.bad,
                         Modifier.semantics { contentDescription = description },

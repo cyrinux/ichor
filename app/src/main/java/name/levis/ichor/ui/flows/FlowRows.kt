@@ -31,8 +31,8 @@ import name.levis.ichor.model.humanizeReason
 import name.levis.ichor.model.label
 import name.levis.ichor.model.portLabel
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.agoLabel
-import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
 import java.text.DateFormat
 import java.util.Date
@@ -81,12 +81,12 @@ fun DropCard(group: DropGroup, onClick: () -> Unit) {
                 overflow = TextOverflow.Ellipsis,
             )
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                TagBadge(
+                Tag(
                     stringResource(if (group.verdict == HUBBLE_AUDIT) R.string.flows_would_drop else R.string.flows_verdict_dropped),
                     color,
                 )
-                portLabel(group.protocol, group.port).takeIf { it.isNotEmpty() }?.let { TagBadge(it, MaterialTheme.colorScheme.primary, mono = true) }
-                directionText(group.direction)?.let { TagBadge(it, MaterialTheme.colorScheme.outline) }
+                portLabel(group.protocol, group.port).takeIf { it.isNotEmpty() }?.let { Tag(it, MaterialTheme.colorScheme.primary, mono = true) }
+                directionText(group.direction)?.let { Tag(it, MaterialTheme.colorScheme.outline) }
                 Text(
                     stringResource(R.string.flows_count, group.count),
                     style = MaterialTheme.typography.labelLarge,
@@ -116,7 +116,7 @@ fun FlowLine(flow: HubbleFlow) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(time, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            TagBadge(flow.verdict, color, mono = true)
+            Tag(flow.verdict, color, mono = true)
             Text(
                 listOf(portLabel(flow.protocol, flow.port), flow.flags).filter { it.isNotEmpty() }.joinToString(" "),
                 style = MaterialTheme.typography.labelSmall,
