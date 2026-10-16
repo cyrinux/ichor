@@ -28,7 +28,7 @@ struct LockOnboardingView: View {
                         .font(.title2.bold())
                         .contentTransition(.opacity)
                         .accessibilityAddTraits(.isHeader)
-                    Text("Your talosconfig holds client keys with direct access to your nodes. Ichor keeps them behind the app lock.")
+                    Text("Your talosconfig or kubeconfig holds credentials with direct access to your clusters. Ichor keeps them behind the app lock.")
                         .foregroundStyle(.secondary)
                 }
                 .multilineTextAlignment(.center)

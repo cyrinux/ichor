@@ -2,10 +2,6 @@ package name.levis.ichor.ui.settings
 
 import name.levis.ichor.R
 import androidx.compose.ui.res.stringResource
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -56,8 +52,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val KUBENAV_PACKAGE = "io.kubenav.kubenav"
-
 private sealed interface ExportState {
     data object Idle : ExportState
     data object Working : ExportState
@@ -67,8 +61,7 @@ private sealed interface ExportState {
 
 /**
  * Exports the cluster's admin kubeconfig (os:admin role), or the stored one of a cluster added
- * from a kubeconfig, to a file the user picks, then offers to open kubenav, which imports
- * kubeconfigs through its own file picker (it has no intents).
+ * from a kubeconfig, to a file the user picks, for kubectl or any other Kubernetes client.
  */
 @Composable
 fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: ContextSummary) {
@@ -125,7 +118,6 @@ fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: Co
                 is ExportState.Failed -> Text(s.message.asString(), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
                 else -> Unit
             }
-            OutlinedButton(onClick = { openKubenav(context) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_kube_open_kubenav)) }
         }
     }
     NodeDebugShellSetting(appLock)
@@ -194,17 +186,5 @@ private fun NodeDebugShellSetting(appLock: AppLock) {
             }
             error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }
         }
-    }
-}
-
-private fun openKubenav(context: Context) {
-    val launch = context.packageManager.getLaunchIntentForPackage(KUBENAV_PACKAGE)
-    val intent = launch ?: Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$KUBENAV_PACKAGE"))
-    try {
-        context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-    } catch (_: ActivityNotFoundException) {
-        context.startActivity(
-            Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/kubenav/kubenav")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-        )
     }
 }

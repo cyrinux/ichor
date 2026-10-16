@@ -1,1 +1,1 @@
-Surveillez et pilotez votre cluster Talos Linux : nœuds, journaux, etcd, alertes
+Tout cluster Kubernetes via kubeconfig, plus Talos : nœuds, etcd, mises à jour

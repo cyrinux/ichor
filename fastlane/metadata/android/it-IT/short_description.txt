@@ -1,1 +1,1 @@
-Monitora e gestisci il tuo cluster Talos Linux: nodi, log, etcd, avvisi
+Ogni cluster Kubernetes da kubeconfig, più Talos: nodi, etcd, aggiornamenti

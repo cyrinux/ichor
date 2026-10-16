@@ -17,11 +17,6 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
-    <!-- Package visibility (API 30+) for the "Open kubenav" button. -->
-    <queries>
-        <package android:name="io.kubenav.kubenav" />
-    </queries>
-
     <application
         android:name=".TalosApp"
         android:allowBackup="false"

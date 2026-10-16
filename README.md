@@ -1,20 +1,22 @@
-# Ichor for Talos Linux, Kubernetes
+# Ichor for Kubernetes and Talos Linux
 
 [![Android CI](https://github.com/cyrinux/ichor/actions/workflows/android.yml/badge.svg?branch=main)](https://github.com/cyrinux/ichor/actions/workflows/android.yml)
 [![iOS CI](https://github.com/cyrinux/ichor/actions/workflows/ios.yml/badge.svg?branch=main)](https://github.com/cyrinux/ichor/actions/workflows/ios.yml)
 
-**Your Talos cluster, from your phone.** Ichor is a free, open-source Android and iOS app to
-monitor and operate [Talos Linux](https://www.talos.dev) clusters: node health, logs, etcd,
-KubeSpan and live graphs in your pocket, and a notification the moment a node goes down.
-Any other Kubernetes cluster works too, from its kubeconfig: see
-[Kubernetes clusters without Talos](#kubernetes-clusters-without-talos).
+**Any Kubernetes cluster from its kubeconfig, and the whole Talos layer, from your phone.**
+Ichor is a free, open-source Android and iOS app to monitor and operate Kubernetes clusters:
+workloads, pods, logs, Argo CD and Flux, on EKS, GKE, AKS, DigitalOcean, Rancher, Omni or your
+own (see [Kubernetes clusters without Talos](#kubernetes-clusters-without-talos)). On
+[Talos Linux](https://www.talos.dev) clusters it goes down to the nodes: node health, etcd,
+KubeSpan, upgrades, machine config and live graphs in your pocket, and a notification the
+moment a node goes down.
 
 Website: <https://cyrinux.github.io/ichor/>
 
 In the app, **Settings → About → Ichor website** opens the project site.
 **About → Integrations → Platform → Talos Linux** opens the Talos website.
 
-Want to explore without a Talos cluster? Tap **Try demo** on the import screen.
+Want to explore without a cluster? Tap **Try demo** on the import screen.
 The built-in demo works offline and shows five sample nodes, live metrics, services,
 logs, events, etcd, networking, storage, hardware and resources. The overview marks
 it as demo data; cluster changes and credential exports are unavailable. It can
@@ -1089,8 +1091,8 @@ a fresh install. Backups move between Android and iOS.
   it refreshes; never in screenshot mode.
 - **Notifications:** with the app lock on, alerts show only a generic text on the lock screen.
   The widget shows counts only, no hostnames.
-- **Kubeconfig export:** the kubeconfig is written only to the file you choose. kubenav has no
-  app-to-app import, so add the cluster from that file in kubenav, then delete the file.
+- **Kubeconfig export:** the kubeconfig is written only to the file you choose. Use it with
+  kubectl or any Kubernetes client, then delete the file.
 
 ## etcd snapshots
 

@@ -63,7 +63,7 @@
     <string name="common_role_notice_title">%1$s requiere %2$s</string>
     <string name="common_role_notice_body">Este talosconfig tiene %1$s. Importa un talosconfig creado con --roles %2$s para usarlo (consulta el README).</string>
     <string name="common_role_notice_no_roles">ningún rol</string>
-    <string name="common_no_config">No se ha importado ningún talosconfig</string>
+    <string name="common_no_config">No se ha importado ningún talosconfig ni kubeconfig</string>
     <string name="common_vpn_required">Este clúster está configurado para alcanzarse solo por VPN y no hay ninguna VPN conectada. Conéctala: esta pantalla se recarga sola.</string>
     <string name="common_vpn_settings">Ajustes de VPN</string>
 
@@ -488,8 +488,7 @@
     <string name="settings_kube_desc">Exporta un kubeconfig de administrador (requiere un talosconfig os:admin). Cualquiera que tenga este archivo tiene acceso total al clúster de Kubernetes: mantenlo en privado.</string>
     <string name="settings_kube_exporting">Exportando…</string>
     <string name="settings_kube_export">Exportar kubeconfig…</string>
-    <string name="settings_kube_saved">Guardado. En kubenav, añade un clúster desde ese archivo.</string>
-    <string name="settings_kube_open_kubenav">Abrir kubenav</string>
+    <string name="settings_kube_saved">Guardado. Úsalo con kubectl o cualquier cliente de Kubernetes.</string>
     <string name="settings_node_debug_shell">Shell de depuración de nodos</string>
     <string name="settings_node_debug_shell_desc">En clústeres sin Talos, añade «Shell de depuración…» al menú de un nodo: un pod privilegiado en los namespaces del nodo da una shell root en el nodo. El pod se borra al cerrar la shell. Desactivado por defecto.</string>
     <string name="settings_image_scanner">Escáner de vulnerabilidades</string>
@@ -502,7 +501,7 @@
     <string name="settings_key_tee">el entorno de ejecución de confianza (TEE)</string>
     <string name="settings_key_software">el almacén de claves por software</string>
     <string name="keystore_unavailable">El chip seguro del teléfono no responde. Vuelve a intentarlo en un momento o reinicia el teléfono.</string>
-    <string name="settings_import_new">Añadir un clúster (importar un talosconfig)</string>
+    <string name="settings_import_new">Añadir un clúster (importar un talosconfig o un kubeconfig)</string>
     <string name="settings_delete_config">Eliminar el talosconfig guardado</string>
     <string name="settings_delete_title">¿Eliminar el talosconfig?</string>
     <string name="settings_delete_body">La configuración cifrada de todos los clústeres, con sus claves de cliente, se eliminará de este dispositivo.</string>
@@ -744,7 +743,7 @@
     <string name="lock_delete_config">Eliminar el talosconfig guardado</string>
     <string name="lock_onboarding_title">Pon tus clústeres bajo llave</string>
     <string name="lock_onboarding_done">Tus clústeres están protegidos</string>
-    <string name="lock_onboarding_intro">Tu talosconfig contiene claves de cliente con acceso directo a tus nodos. Ichor las protege con el bloqueo de la app.</string>
+    <string name="lock_onboarding_intro">Tu talosconfig o kubeconfig contiene credenciales con acceso directo a tus clústeres. Ichor las protege con el bloqueo de la app.</string>
     <string name="lock_onboarding_unlock">Huella o PIN del dispositivo</string>
     <string name="lock_onboarding_unlock_desc">Se pide al abrir Ichor y tras 30 segundos en segundo plano.</string>
     <string name="lock_onboarding_actions">Una verificación antes de las acciones arriesgadas</string>
