@@ -10,6 +10,7 @@ import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.SystemUpdateAlt
 import androidx.compose.material.icons.outlined.Upgrade
 import androidx.compose.material.icons.outlined.SwapHoriz
@@ -29,14 +30,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.data.StoredConfig
+import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.seedOf
 import name.levis.ichor.ui.components.ClusterLogo
+import name.levis.ichor.ui.incident.IncidentSummarySheet
 
 /**
  * The overview title's menu, as on iOS: the clusters behind a "Switch cluster" submenu, so
  * "Manage clusters…" stays in reach without a scroll however many clusters there are.
  * Compose menus do not nest, so the submenu takes the menu's place, with a way back.
+ * "Share incident summary…" opens its sheet from here, so every cluster home gets it.
  */
 @Composable
 fun ClusterMenu(
@@ -57,7 +61,10 @@ fun ClusterMenu(
     onAddNode: (() -> Unit)? = null,
 ) {
     var switching by remember(expanded) { mutableStateOf(false) }
+    var incident by remember { mutableStateOf(false) }
     val contexts = config.summary.contexts
+    val current = config.activeSummary
+    if (incident && current != null) IncidentSummarySheet(current, onDismiss = { incident = false })
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         if (switching) {
             DropdownMenuItem(
@@ -134,6 +141,16 @@ fun ClusterMenu(
                     onClick = {
                         onDismiss()
                         add()
+                    },
+                )
+            }
+            if (current != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.incident_summary_menu)) },
+                    leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) },
+                    onClick = {
+                        onDismiss()
+                        incident = true
                     },
                 )
             }
