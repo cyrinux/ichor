@@ -162,6 +162,39 @@ func TestArgoNetworkTLSRoute(t *testing.T) {
 	}
 }
 
+// An HTTPRoute and a GRPCRoute may share a namespace and a name (the demo's grafana pair is an
+// HTTPRoute and a TLSRoute): each attaches to its own Gateways, so a parent lookup matches the
+// kind too.
+func TestGatewayRouteParentsMatchKind(t *testing.T) {
+	http := demoNetObject[gatewayRouteObject](`{"metadata":{"name":"grafana","namespace":"monitoring"},
+	  "spec":{"parentRefs":[{"name":"web","namespace":"traefik"}]}}`)
+	http.Kind = "HTTPRoute"
+
+	grpc := demoNetObject[gatewayRouteObject](`{"metadata":{"name":"grafana","namespace":"monitoring"},
+	  "spec":{"parentRefs":[{"name":"grpc","namespace":"traefik"}]}}`)
+	grpc.Kind = "GRPCRoute"
+
+	routes := []gatewayRouteObject{http, grpc}
+	gateways := []gatewayObject{
+		demoNetObject[gatewayObject](`{"metadata":{"name":"web","namespace":"traefik"}}`),
+		demoNetObject[gatewayObject](`{"metadata":{"name":"grpc","namespace":"traefik"}}`),
+	}
+
+	for _, tc := range []struct{ kind, want string }{
+		{"HTTPRoute", "web"},
+		{"GRPCRoute", "grpc"},
+	} {
+		got := gatewayRouteParents(routes, gateways, tc.kind, "monitoring", "grafana")
+		if len(got) != 1 || got[0].Metadata.Name != tc.want {
+			t.Errorf("%s parents %+v, want %s", tc.kind, got, tc.want)
+		}
+	}
+
+	if got := gatewayRouteParents(routes, gateways, "TLSRoute", "monitoring", "grafana"); got != nil {
+		t.Errorf("TLSRoute parents %+v, want none", got)
+	}
+}
+
 func TestArgoNetworkLoadBalancerAndWarnings(t *testing.T) {
 	n := demoArgoNetwork("traefik")
 	if lb := netNode(t, n, "lb/10.0.0.240"); lb.Kind != "LoadBalancer" || lb.Detail != "LoadBalancer" {

@@ -427,7 +427,7 @@ func argoNetGatewayRoutes(g *argoNetGraph, in argoNetInput, services map[service
 		hid := g.add(argoNetNode{ID: "host/" + r.URL, Layer: argoLayerHost, Kind: "Host", Name: hostOf(r.URL), Detail: r.URL, URL: r.URL})
 		g.link(rid, "svc/"+r.Namespace+"/"+r.Service)
 
-		parents := gatewayRouteParents(in.gatewayRoutes, in.gateways, r.Namespace, r.Name)
+		parents := gatewayRouteParents(in.gatewayRoutes, in.gateways, r.Kind, r.Namespace, r.Name)
 		if len(parents) == 0 {
 			g.link(hid, rid)
 		}
@@ -441,9 +441,13 @@ func argoNetGatewayRoutes(g *argoNetGraph, in argoNetInput, services map[service
 	}
 }
 
-// gatewayRouteParents are the Gateways the route namespace/name attaches to.
-func gatewayRouteParents(routes []gatewayRouteObject, gateways []gatewayObject, namespace, name string) []gatewayObject {
-	i := slices.IndexFunc(routes, func(r gatewayRouteObject) bool { return r.Metadata.Namespace == namespace && r.Metadata.Name == name })
+// gatewayRouteParents are the Gateways the route kind/namespace/name attaches to. The kind
+// matters: an HTTPRoute and a GRPCRoute may share a namespace and a name, and each attaches to
+// its own Gateways.
+func gatewayRouteParents(routes []gatewayRouteObject, gateways []gatewayObject, kind, namespace, name string) []gatewayObject {
+	i := slices.IndexFunc(routes, func(r gatewayRouteObject) bool {
+		return r.Kind == kind && r.Metadata.Namespace == namespace && r.Metadata.Name == name
+	})
 	if i < 0 {
 		return nil
 	}

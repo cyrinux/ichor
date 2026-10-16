@@ -125,8 +125,8 @@ type routeTarget struct{ path, service string }
 // gatewayRoutes lists a URL per hostname of the Gateway API routes sending traffic to one of
 // services. The scheme and port come from the listener of the parent Gateway serving the
 // hostname (https when it is unknown); a route without hostnames uses its listeners' ones,
-// else the Gateway's addresses. A GRPCRoute's and a TLSRoute's URL is the host root: only an
-// HTTPRoute match narrows it to a path.
+// else the Gateway's addresses (never for a TLSRoute, which is reached by SNI). A GRPCRoute's
+// and a TLSRoute's URL is the host root: only an HTTPRoute match narrows it to a path.
 func gatewayRoutes(routes []gatewayRouteObject, gateways []gatewayObject, services map[serviceRef]bool) []kubeRoute {
 	var out []kubeRoute
 
@@ -237,15 +237,21 @@ func routeParents(r gatewayRouteObject, gateways []gatewayObject) ([]gatewayList
 }
 
 // gatewayRouteHosts are the route's hostnames a browser can open, else its listeners', else
-// the Gateway addresses.
+// the Gateway addresses. A TLSRoute is reached by SNI, so a bare address is no URL: it needs
+// a hostname of its own or one of a listener it attaches to.
 func gatewayRouteHosts(r gatewayRouteObject, listeners []gatewayListener, addresses []string) []string {
 	var listenerHosts []string
 	for _, l := range listeners {
 		listenerHosts = append(listenerHosts, l.Hostname)
 	}
 
-	for _, candidates := range [][]string{r.Spec.Hostnames, listenerHosts, addresses} {
-		hosts := slices.DeleteFunc(slices.Clone(candidates), func(h string) bool { return !openableHost(h) })
+	candidates := [][]string{r.Spec.Hostnames, listenerHosts, addresses}
+	if r.Kind == "TLSRoute" {
+		candidates = candidates[:len(candidates)-1]
+	}
+
+	for _, list := range candidates {
+		hosts := slices.DeleteFunc(slices.Clone(list), func(h string) bool { return !openableHost(h) })
 		if len(hosts) > 0 {
 			return slices.Compact(hosts)
 		}
