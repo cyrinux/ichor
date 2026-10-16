@@ -42,10 +42,9 @@ import name.levis.ichor.ui.join.JoinNodeScreen
 import name.levis.ichor.ui.maintenance.MaintenanceScreen
 import name.levis.ichor.ui.network.NetworkScreen
 import name.levis.ichor.ui.node.NodeDetailScreen
-import name.levis.ichor.ui.node.NodeMenuEntry
 import name.levis.ichor.ui.node.NodeTabsScreen
 import name.levis.ichor.ui.node.PowerAction
-import name.levis.ichor.ui.nodes.NodesScreen
+import name.levis.ichor.ui.nodes.NodesListDetail
 import name.levis.ichor.ui.overview.OverviewViewModel
 import name.levis.ichor.ui.resources.ResourceDetailScreen
 import name.levis.ichor.ui.resources.ResourceListScreen
@@ -59,12 +58,14 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
     composable(Routes.NODES, arguments = listOf(navArgument("filter") { type = NavType.StringType; defaultValue = "" })) { entry ->
         // The overview's data and refresh: only ever opened from it, so it is below on the stack.
         val home = remember(entry) { nav.getBackStackEntry(Routes.OVERVIEW) }
-        NodesScreen(
+        NodesListDetail(
             initialFilter = NodeFilter.entries.firstOrNull { it.name == entry.arguments?.getString("filter") },
             vm = viewModel(viewModelStoreOwner = home, factory = factory { OverviewViewModel(app.talosRepository, app.configRepository, app::overviewSeed) }),
             onBack = { nav.popBackStack() },
-            onNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
             onNodeAction = nav::openNodeAction,
+            onOpenNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
+            onTab = { n, tab -> nav.navigate(Routes.nodeTabs(n.node, n.hostname, tab)) },
+            onMenu = { n, entry -> nodeMenuRoute(n.node, n.hostname, entry)?.let(nav::navigate) },
         )
     }
     composable(
@@ -90,27 +91,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             initialCordon = entry.arguments?.getString("action") == "cordon",
             onBack = { nav.popBackStack() },
             onTab = { tab -> nav.navigate(Routes.nodeTabs(addr, host, tab)) },
-            onMenu = { item ->
-                when (item) {
-                    NodeMenuEntry.KERNEL_LOG -> Routes.logs(addr, host, null)
-                    NodeMenuEntry.EVENTS -> Routes.events(addr, host)
-                    NodeMenuEntry.NETWORK -> Routes.network(addr, host)
-                    NodeMenuEntry.HARDWARE -> Routes.hardware(addr, host)
-                    NodeMenuEntry.IMAGES -> Routes.images(addr, host)
-                    NodeMenuEntry.STORAGE -> Routes.storage(addr, host)
-                    NodeMenuEntry.RESOURCES -> Routes.resources(addr, host)
-                    NodeMenuEntry.DEBUG_SHELL -> Routes.debug(addr, host)
-                    NodeMenuEntry.CAPTURE -> Routes.capture(addr, host)
-                    NodeMenuEntry.NET_TOOLS -> Routes.netTools(addr, host)
-                    NodeMenuEntry.CAPTURES -> Routes.CAPTURES
-                    NodeMenuEntry.MACHINE_CONFIG -> Routes.machineConfig(addr, host)
-                    NodeMenuEntry.UPGRADE -> Routes.upgrade(addr, host)
-                    NodeMenuEntry.MAINTENANCE -> Routes.maintenance(addr, host)
-                    NodeMenuEntry.DRAIN -> Routes.maintenance(addr, host, drain = true)
-                    // Handled on the node screen: the tabs through onTab, the others a confirmation.
-                    else -> null
-                }?.let { nav.navigate(it) }
-            },
+            onMenu = { item -> nodeMenuRoute(addr, host, item)?.let { nav.navigate(it) } },
         )
     }
     composable(

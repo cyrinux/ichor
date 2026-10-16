@@ -7,7 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
 import name.levis.ichor.ui.argocd.ArgoAppScreen
-import name.levis.ichor.ui.argocd.ArgoAppsScreen
+import name.levis.ichor.ui.argocd.ArgoListDetail
 import name.levis.ichor.ui.argocd.ArgoWindowsScreen
 import name.levis.ichor.ui.flux.DiffTool
 import name.levis.ichor.ui.flux.FluxAppScreen
@@ -18,10 +18,12 @@ import name.levis.ichor.ui.kubebrowser.KubeLinks
 /** Argo CD and Flux: their apps, sync windows and diffs. */
 internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, kubeLinks: KubeLinks) {
     composable(Routes.ARGO_CD) {
-        ArgoAppsScreen(
+        ArgoListDetail(
             onBack = { nav.popBackStack() },
-            onApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
+            onOpenApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
             onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
+            onNode = { n, tab -> nav.navigate(Routes.nodeOrTab(n.node, n.hostname, n.role, tab)) },
+            onDiff = { ns, name -> nav.navigate(Routes.argoDiff(ns, name)) },
         )
     }
     composable(Routes.ARGO_WINDOWS) {

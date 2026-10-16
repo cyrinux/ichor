@@ -5081,4 +5081,6 @@
     <string name="sa_help_step_kubeconfig">2. Erstelle kubeconfig-phone aus seinem Token, mit dem Server deines aktuellen Kontexts:</string>
     <string name="sa_help_step_import">3. Bring kubeconfig-phone aufs Telefon und importiere es, lösche dann die anderen Kopien: Das Token ist ein Passwort.</string>
     <string name="sa_help_copy_yaml">YAML kopieren</string>
+    <string name="panes_pick_node">Wähle einen Knoten, um seine Details zu sehen</string>
+    <string name="panes_pick_app">Wähle eine Anwendung, um ihre Details zu sehen</string>
 </resources>
