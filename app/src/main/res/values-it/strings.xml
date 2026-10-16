@@ -4335,6 +4335,8 @@
     <string name="kube_jobs_completions">Completamenti: %1$s</string>
     <string name="kube_jobs_owner">CronJob %1$s</string>
     <string name="imagescan_system_title">Immagini di sistema</string>
+    <string name="imagescan_saved_empty_all">Nessun report di scansione conservato su questo telefono. Le scansioni completate sono conservate, cifrate, per 90 giorni.</string>
+    <string name="imagescan_saved_clear_body_all">Tutti i report di scansione conservati su questo telefono, per tutti i cluster, vengono eliminati.</string>
     <string name="imagescan_last_scan">Ultima scansione %1$s</string>
     <string name="imagescan_nothing_new">Niente di nuovo dall\'ultima scansione</string>
     <string name="imagescan_new_count">%1$s nuove</string>

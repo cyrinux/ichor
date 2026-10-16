@@ -90,7 +90,7 @@ class ImageScanRepository(
         }
         val picked = scanner()
         _session.value = ImageScanSession(stored.activeContext, appId, name, picked)
-        run = Ichorgo.startImageScan(stored.yaml, stored.activeContext, server, podsJson(pods), optionsJson(appId, images, picked), listener())
+        run = Ichorgo.startImageScan(stored.yaml, stored.activeContext, server, podsJson(pods), optionsJson(appId, stored.activeContext, images, picked), listener())
         onStarted()
     }
 
@@ -149,8 +149,8 @@ class ImageScanRepository(
 
     private fun podsJson(pods: List<RoutePod>) = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
 
-    private fun optionsJson(appId: String, images: List<String>, scanner: ImageScanner) =
-        TalosJson.encodeToString(ImageScanOptions.serializer(), ImageScanOptions(images, scanner.id, appId))
+    private fun optionsJson(appId: String, cluster: String, images: List<String>, scanner: ImageScanner) =
+        TalosJson.encodeToString(ImageScanOptions.serializer(), ImageScanOptions(images, scanner.id, appId, cluster))
 
     /** The config to call with and the Kubernetes API address the user set ("" for the kubeconfig's). */
     private fun target(): Pair<StoredConfig, String> {

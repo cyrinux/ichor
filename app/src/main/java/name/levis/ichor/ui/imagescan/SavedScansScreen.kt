@@ -132,7 +132,10 @@ fun SavedScansScreen(
             UiState.Loading -> LoadingBox(Modifier.pageContent(padding))
             is UiState.Failed -> ErrorBox(s.message, { vm.refresh() }, Modifier.pageContent(padding))
             is UiState.Loaded -> if (s.data.isEmpty()) {
-                EmptyText(stringResource(R.string.imagescan_saved_empty), Modifier.pageContent(padding))
+                EmptyText(
+                    stringResource(if (cluster.isEmpty()) R.string.imagescan_saved_empty_all else R.string.imagescan_saved_empty),
+                    Modifier.pageContent(padding),
+                )
             } else {
                 LazyColumn(Modifier.pageContent(padding).fillMaxSize()) {
                     items(s.data, key = { it.id }) { scan ->
@@ -161,7 +164,7 @@ fun SavedScansScreen(
     if (confirmClear) {
         ConfirmDialog(
             title = stringResource(R.string.imagescan_saved_clear_title),
-            text = stringResource(R.string.imagescan_saved_clear_body),
+            text = stringResource(if (cluster.isEmpty()) R.string.imagescan_saved_clear_body_all else R.string.imagescan_saved_clear_body),
             confirm = stringResource(R.string.imagescan_saved_clear),
             destructive = true,
             onConfirm = {

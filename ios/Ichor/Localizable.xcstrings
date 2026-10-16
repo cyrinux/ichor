@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "No scan report kept on this phone yet. Completed scans are kept, encrypted, for 90 days." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf diesem Telefon ist noch kein Scan-Bericht gespeichert. Abgeschlossene Scans werden verschlüsselt 90 Tage aufbewahrt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no hay informes de análisis guardados en este teléfono. Los análisis terminados se guardan, cifrados, durante 90 días."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun rapport d'analyse conservé sur ce téléphone. Les analyses terminées sont conservées, chiffrées, pendant 90 jours."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun report di scansione conservato su questo telefono. Le scansioni completate sono conservate, cifrate, per 90 giorni."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На цьому телефоні ще немає збережених звітів. Завершені перевірки зберігаються зашифрованими 90 днів."
+          }
+        }
+      }
+    },
+    "Every scan report kept on this phone, for every cluster, is deleted." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle auf diesem Telefon gespeicherten Scan-Berichte aller Cluster werden gelöscht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se eliminan todos los informes de análisis guardados en este teléfono, de todos los clústeres."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les rapports d'analyse conservés sur ce téléphone, pour tous les clusters, sont supprimés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutti i report di scansione conservati su questo telefono, per tutti i cluster, vengono eliminati."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі звіти перевірок усіх кластерів на цьому телефоні буде видалено."
+          }
+        }
+      }
+    },
     "Last scan %@" : {
       "extractionState" : "manual",
       "localizations" : {

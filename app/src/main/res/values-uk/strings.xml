@@ -4566,6 +4566,8 @@
     <string name="kube_jobs_completions">Завершено: %1$s</string>
     <string name="kube_jobs_owner">CronJob %1$s</string>
     <string name="imagescan_system_title">Системні образи</string>
+    <string name="imagescan_saved_empty_all">На цьому телефоні ще немає збережених звітів. Завершені перевірки зберігаються зашифрованими 90 днів.</string>
+    <string name="imagescan_saved_clear_body_all">Усі звіти перевірок усіх кластерів на цьому телефоні буде видалено.</string>
     <string name="imagescan_last_scan">Остання перевірка %1$s</string>
     <string name="imagescan_nothing_new">Нічого нового з останньої перевірки</string>
     <string name="imagescan_new_count">%1$s нових</string>

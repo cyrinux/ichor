@@ -29,7 +29,11 @@ struct SavedScansView: View {
                 Button(String(localized: "Clear all"), role: .destructive) { Task { await clear() } }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Every scan report kept on this phone for this cluster is deleted.")
+                if cluster.isEmpty {
+                    Text("Every scan report kept on this phone, for every cluster, is deleted.")
+                } else {
+                    Text("Every scan report kept on this phone for this cluster is deleted.")
+                }
             }
             .task { await load() }
             .refreshable { await load() }
@@ -85,7 +89,11 @@ struct SavedScansView: View {
                     ContentUnavailableView {
                         Label("Scan reports", systemImage: "checkmark.shield")
                     } description: {
-                        Text("No scan report kept for this cluster yet. Completed scans are kept on this phone, encrypted, for 90 days.")
+                        if cluster.isEmpty {
+                            Text("No scan report kept on this phone yet. Completed scans are kept, encrypted, for 90 days.")
+                        } else {
+                            Text("No scan report kept for this cluster yet. Completed scans are kept on this phone, encrypted, for 90 days.")
+                        }
                     }
                 }
             }

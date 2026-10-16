@@ -4334,6 +4334,8 @@
     <string name="kube_jobs_completions">Completados: %1$s</string>
     <string name="kube_jobs_owner">CronJob %1$s</string>
     <string name="imagescan_system_title">Imágenes del sistema</string>
+    <string name="imagescan_saved_empty_all">Aún no hay informes de análisis guardados en este teléfono. Los análisis terminados se guardan, cifrados, durante 90 días.</string>
+    <string name="imagescan_saved_clear_body_all">Se eliminan todos los informes de análisis guardados en este teléfono, de todos los clústeres.</string>
     <string name="imagescan_last_scan">Último análisis %1$s</string>
     <string name="imagescan_nothing_new">Nada nuevo desde el último análisis</string>
     <string name="imagescan_new_count">%1$s nuevas</string>

@@ -48,6 +48,8 @@ data class ImageScanOptions(
     val scanner: String = "",
     /** The app scanned, under which the core keeps the report ([systemImagesScanId] for a node). */
     val app: String = "",
+    /** The context the report is listed under (ImageScanHistory), whatever Kubernetes context scanned it. */
+    val cluster: String = "",
 )
 
 /** The scanners a scan may run in the cluster, by their core [id]; [DEFAULT] (Grype) when none was picked. */

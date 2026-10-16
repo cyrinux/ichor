@@ -60,17 +60,21 @@ public struct ImageScanOptions: Codable, Equatable, Sendable {
     public let images: [String]
     public let scanner: String
     public let app: String
+    /// The context the report is listed under (ImageScanHistory), whatever Kubernetes context scanned it.
+    public let cluster: String
 
-    public init(images: [String] = [], scanner: String = ImageScanner.defaultScanner.rawValue, app: String = "") {
+    public init(images: [String] = [], scanner: String = ImageScanner.defaultScanner.rawValue, app: String = "", cluster: String = "") {
         self.images = images
         self.scanner = scanner
         self.app = app
+        self.cluster = cluster
     }
 }
 
-/// The options JSON of a scan of `images` (refs with no pod behind them) with `scanner`, kept under `app`.
-public func imageScanOptions(images: [String], scanner: ImageScanner = .defaultScanner, app: String = "") throws -> String {
-    try TalosJSON.encode(ImageScanOptions(images: images, scanner: scanner.rawValue, app: app))
+/// The options JSON of a scan of `images` (refs with no pod behind them) with `scanner`, kept
+/// under `app` in `cluster`.
+public func imageScanOptions(images: [String], scanner: ImageScanner = .defaultScanner, app: String = "", cluster: String = "") throws -> String {
+    try TalosJSON.encode(ImageScanOptions(images: images, scanner: scanner.rawValue, app: app, cluster: cluster))
 }
 
 /// An image Talos runs on a node outside of any app (TalosSystemImages): kubelet, etcd…

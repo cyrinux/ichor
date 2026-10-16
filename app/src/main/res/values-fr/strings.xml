@@ -4334,6 +4334,8 @@
     <string name="kube_jobs_completions">Complétions : %1$s</string>
     <string name="kube_jobs_owner">CronJob %1$s</string>
     <string name="imagescan_system_title">Images système</string>
+    <string name="imagescan_saved_empty_all">Aucun rapport d\'analyse conservé sur ce téléphone. Les analyses terminées sont conservées, chiffrées, pendant 90 jours.</string>
+    <string name="imagescan_saved_clear_body_all">Tous les rapports d\'analyse conservés sur ce téléphone, pour tous les clusters, sont supprimés.</string>
     <string name="imagescan_last_scan">Dernière analyse %1$s</string>
     <string name="imagescan_nothing_new">Rien de nouveau depuis la dernière analyse</string>
     <string name="imagescan_new_count">%1$s nouvelles</string>
