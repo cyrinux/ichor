@@ -4782,6 +4782,8 @@
     <string name="autoscaling_pause_confirm">Pause à %1$s</string>
     <string name="autoscaling_hold">Garder le nombre actuel</string>
     <string name="autoscaling_hold_text">Garder le nombre actuel arrête KEDA là où en est la charge.</string>
+    <string name="autoscaling_pause_zero_title">Mettre %1$s en pause à 0 ?</string>
+    <string name="autoscaling_pause_zero_text">KEDA ramène %1$s à 0 : chaque pod s’arrête, et rien ne répond jusqu’à la reprise.</string>
     <string name="autoscaling_resume_title">Reprendre %1$s ?</string>
     <string name="autoscaling_resume_text">KEDA met de nouveau la charge à l’échelle selon ses déclencheurs.</string>
     <string name="autoscaling_bounds_section">Bornes</string>

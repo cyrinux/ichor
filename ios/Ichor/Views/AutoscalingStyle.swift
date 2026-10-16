@@ -20,6 +20,9 @@ enum AutoscaleText {
     static func capacityTypes(_ a: String) -> String { String(format: String(localized: "Capacity types: %@"), a) }
     static func pauseTitle(_ a: String) -> String { String(format: String(localized: "Pause %@"), a) }
     static func pauseConfirm(_ a: String) -> String { String(format: String(localized: "Pause at %@"), a) }
+    static func pauseZero(_ a: String) -> String {
+        String(format: String(localized: "KEDA scales %@ to 0: every pod stops, and nothing serves until you resume."), a)
+    }
     static func resumeTitle(_ a: String) -> String { String(format: String(localized: "Resume %@?"), a) }
     static func boundsTitle(_ a: String) -> String { String(format: String(localized: "Bounds of %@"), a) }
     static func boundsCurrent(_ a: String) -> String { String(format: String(localized: "Running now: %@"), a) }

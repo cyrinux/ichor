@@ -4785,6 +4785,8 @@
     <string name="autoscaling_pause_confirm">Pause at %1$s</string>
     <string name="autoscaling_hold">Hold current count</string>
     <string name="autoscaling_hold_text">Hold current count stops KEDA where the workload is now.</string>
+    <string name="autoscaling_pause_zero_title">Pause %1$s at 0?</string>
+    <string name="autoscaling_pause_zero_text">KEDA scales %1$s to 0: every pod stops, and nothing serves until you resume.</string>
     <string name="autoscaling_resume_title">Resume %1$s?</string>
     <string name="autoscaling_resume_text">KEDA scales the workload on its triggers again.</string>
     <string name="autoscaling_bounds_section">Bounds</string>

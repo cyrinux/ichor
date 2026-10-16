@@ -1023,7 +1023,8 @@ a fresh install. Backups move between Android and iOS.
 
 - **Autoscaling (Kubernetes → Autoscaling → a ScaledObject or an HPA, `os:admin`):** pausing,
   holding or resuming a KEDA ScaledObject and editing an HPA's min and max are reversible: each
-  asks a plain confirm. Each button is off, with the reason, when the credentials may not patch
+  asks a plain confirm, except a pause at 0, which stops every pod and so asks for the
+  ScaledObject's name typed, like a scale to 0. Each button is off, with the reason, when the credentials may not patch
   that kind; the activity log keeps every change; the demo cluster refuses them.
 
 - **META keys (node menu → Machine config → META, `os:admin`):**

@@ -1,6 +1,41 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "KEDA scales %@ to 0: every pod stops, and nothing serves until you resume." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA skaliert %@ auf 0: jeder Pod stoppt, und nichts antwortet, bis Sie fortsetzen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA escala %@ a 0: todos los pods se detienen y nada responde hasta que lo reanudes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA ramène %@ à 0 : chaque pod s’arrête, et rien ne répond jusqu’à la reprise."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA porta %@ a 0: ogni pod si ferma e nulla risponde finché non riprendi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEDA масштабує %@ до 0: кожен под зупиняється, і ніщо не відповідає, доки ви не відновите."
+          }
+        }
+      }
+    },
     "Names a ProxyClass that does not exist" : {
       "extractionState" : "manual",
       "localizations" : {

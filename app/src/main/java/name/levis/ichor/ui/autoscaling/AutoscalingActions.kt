@@ -31,6 +31,7 @@ import name.levis.ichor.model.SCALED_OBJECT_HOLD
 import name.levis.ichor.model.SCALED_OBJECT_RESUME
 import name.levis.ichor.model.ScaledObjectRow
 import name.levis.ichor.model.kedaOwned
+import name.levis.ichor.model.scaleNeedsTypedName
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.components.ConfirmDialog
@@ -39,6 +40,7 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.ResultToasts
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.rememberKubeDenial
+import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.uiText
 
 /** What an autoscaling action did. */
@@ -101,13 +103,16 @@ fun AutoscalingActionToasts(results: Flow<AutoscalingActionResult>) = ResultToas
 
 /**
  * Pause at a count, hold where it is, or resume (when paused): the buttons are disabled with
- * the reason when the credentials may not patch ScaledObjects here. Reversible: a plain dialog.
+ * the reason when the credentials may not patch ScaledObjects here. Reversible: a plain dialog,
+ * but a pause at 0 stops every pod, so it asks for the typed name like a scale to 0.
  */
 @Composable
 fun ScaledObjectPauseSection(row: ScaledObjectRow, busy: Boolean, onPause: (Int) -> Unit) {
     val denial = rememberKubeDenial(KubeAction.AUTOSCALE_KEDA, row.namespace)
     var picking by remember { mutableStateOf(false) }
     var resuming by remember { mutableStateOf(false) }
+    // A pause at 0 stops every pod, like a scale to 0: the same typed name.
+    var confirmZero by remember { mutableStateOf(false) }
 
     SectionTitle(stringResource(R.string.autoscaling_pause_section))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -123,7 +128,28 @@ fun ScaledObjectPauseSection(row: ScaledObjectRow, busy: Boolean, onPause: (Int)
     KubeDenialNote(denial)
 
     if (picking) {
-        ScaledObjectPauseDialog(row, onPause = { picking = false; onPause(it) }, onDismiss = { picking = false })
+        ScaledObjectPauseDialog(
+            row,
+            onPause = { replicas ->
+                picking = false
+                if (scaleNeedsTypedName(replicas)) confirmZero = true else onPause(replicas)
+            },
+            onDismiss = { picking = false },
+        )
+    }
+    if (confirmZero) {
+        HostnameConfirmDialog(
+            title = stringResource(R.string.autoscaling_pause_zero_title, row.name),
+            hostname = row.name,
+            confirmLabel = stringResource(R.string.autoscaling_pause_confirm, "0"),
+            onConfirm = {
+                confirmZero = false
+                onPause(0)
+            },
+            onDismiss = { confirmZero = false },
+        ) {
+            Text(stringResource(R.string.autoscaling_pause_zero_text, row.target.label.ifEmpty { row.name }), style = MaterialTheme.typography.bodyMedium)
+        }
     }
     if (resuming) {
         ConfirmDialog(
