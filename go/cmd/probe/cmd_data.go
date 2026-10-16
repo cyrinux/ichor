@@ -254,6 +254,11 @@ var dataCommands = []command{
 
 		return out, err
 	}},
+	{name: "kubegreen-set", args: "NAMESPACE NAME WEEKDAYS SLEEP_AT [WAKE_UP_AT] [TZ]", run: func(e env) (string, error) {
+		// kubegreen-set: move a kube-green SleepInfo's schedule ("" WAKE_UP_AT: no wake-up).
+		// Mutates the cluster.
+		return "updated", ichorgo.KubeGreenSetSchedule(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6))
+	}},
 	{name: "kube-policies", args: "", run: func(e env) (out string, err error) {
 		// kube-policies: Kyverno policies with their PolicyReport findings and Gatekeeper
 		// constraints with their audit violations (read-only).

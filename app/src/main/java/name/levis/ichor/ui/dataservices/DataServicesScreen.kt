@@ -89,6 +89,7 @@ fun DataServicesScreen(
     LonghornAttachmentToasts(vm.longhorn.attachmentResults)
     LonghornSnapshotToasts(vm.longhorn.snapshotResults)
     CertificateRenewToasts(vm.certificates.results)
+    KubeGreenScheduleToasts(vm.kubeGreen.results)
     CnpgBackupToasts(vm.cnpg.results)
     CnpgPromoteToasts(vm.cnpg.promoteResults)
     CnpgLifecycleToasts(vm.cnpg.lifecycleResults)
@@ -135,7 +136,7 @@ fun DataServicesScreen(
                 else app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
             }
             if (data.detected.isEmpty()) NoDataServices(onSupportedIntegrations, onRequestIntegration)
-            else Systems(data, downNodes, initial, onObject, vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero, vm.externalDns)
+            else Systems(data, downNodes, initial, onObject, vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero, vm.externalDns, vm.kubeGreen)
         }
     }
 }
@@ -156,7 +157,7 @@ private fun NoDataServices(onSupportedIntegrations: () -> Unit, onRequestIntegra
 }
 
 @Composable
-private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, onObject: (KubeObjectRef) -> Unit, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions, cnpg: CnpgActions, velero: VeleroActions, externalDns: ExternalDnsActions) {
+private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, onObject: (KubeObjectRef) -> Unit, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions, cnpg: CnpgActions, velero: VeleroActions, externalDns: ExternalDnsActions, kubeGreen: KubeGreenActions) {
     val kinds = services.detected
     // Picked once: a system detected later, before it in the list, doesn't take its place.
     var selected by rememberSaveable { mutableStateOf(initial ?: kinds.first()) }
@@ -189,7 +190,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
                 DataServiceKind.SNAPSHOTS -> SnapshotsTab(services.snapshots!!)
                 DataServiceKind.BACKUP_JOBS -> BackupJobsTab(services.backupJobs!!)
                 DataServiceKind.CASTAI -> CastAITab(services.castai!!)
-                DataServiceKind.KUBE_GREEN -> KubeGreenTab(services.kubeGreen!!)
+                DataServiceKind.KUBE_GREEN -> KubeGreenTab(services.kubeGreen!!, kubeGreen)
             }
         }
     }

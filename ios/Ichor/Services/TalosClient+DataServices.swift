@@ -120,6 +120,14 @@ extension TalosClient {
         }
     }
 
+    /// Moves the kube-green SleepInfo namespace/name's schedule: `weekdays` (cron day-of-week),
+    /// `sleepAt` and `wakeUpAt` ("HH:mm"; "" for no wake-up) in `timeZone` (IANA).
+    func setKubeGreenSchedule(namespace: String, name: String, weekdays: String, sleepAt: String, wakeUpAt: String, timeZone: String) async throws {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeGreenSetSchedule(config, context, kubeServer, namespace, name, weekdays, sleepAt, wakeUpAt, timeZone, error)
+        }
+    }
+
     /// Issues the cert-manager certificate namespace/name again now, like `cmctl renew` (os:admin).
     /// Refused while it is already being issued.
     func renewCertificate(namespace: String, name: String) async throws {

@@ -116,3 +116,57 @@ fun KubeGreenStatus.summary(): ServiceSummary {
     val healths = sleepInfos.map { it.serviceHealth }
     return ServiceSummary(sleepInfos.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
 }
+
+// The schedule editor's values, checked the way the SleepInfo CRD and the Go core check them,
+// so a bad one is refused in the sheet before any request.
+
+private val KUBE_GREEN_TIME = Regex("^[0-9*,/-]+:[0-9*,/-]+$")
+private val KUBE_GREEN_WEEKDAYS = Regex("^[0-6*,/-]+$")
+
+/**
+ * The days a cron day-of-week field picks (0 Sunday … 6 Saturday; 7 is Sunday too); null when it
+ * uses steps or anything else day chips cannot show, which is then edited as text.
+ */
+fun kubeGreenDays(weekdays: String): Set<Int>? {
+    val w = weekdays.trim()
+    if (w.isEmpty() || w == "*") return (0..6).toSet()
+    val days = mutableSetOf<Int>()
+    for (part in w.split(",")) {
+        val bounds = part.split("-").map { it.trim().toIntOrNull()?.takeIf { d -> d in 0..7 } ?: return null }
+        when (bounds.size) {
+            1 -> days += bounds[0] % 7
+            2 -> {
+                if (bounds[0] > bounds[1]) return null
+                for (d in bounds[0]..bounds[1]) days += d % 7
+            }
+            else -> return null
+        }
+    }
+    return days
+}
+
+/** The cron day-of-week field for [days]: "*" for every day, else runs of days ("1-5", "0,6"). */
+fun kubeGreenWeekdays(days: Set<Int>): String {
+    if (days.containsAll((0..6).toList())) return "*"
+    val runs = mutableListOf<IntRange>()
+    for (d in days.filter { it in 0..6 }.sorted()) {
+        val last = runs.lastOrNull()
+        if (last != null && last.last + 1 == d) runs[runs.size - 1] = last.first..d else runs += d..d
+    }
+    return runs.joinToString(",") { if (it.first == it.last) "${it.first}" else "${it.first}-${it.last}" }
+}
+
+/** A sleepAt or wakeUpAt kube-green takes: "HH:mm", each part cron syntax; plain numbers make a real time. */
+fun kubeGreenTimeValid(at: String): Boolean {
+    val t = at.trim()
+    if (!KUBE_GREEN_TIME.matches(t)) return false
+    val (hour, minute) = t.split(":")
+    if ((hour.toIntOrNull() ?: 0) > 23) return false
+    return (minute.toIntOrNull() ?: 0) <= 59
+}
+
+fun kubeGreenWeekdaysValid(weekdays: String): Boolean = KUBE_GREEN_WEEKDAYS.matches(weekdays.trim())
+
+/** An IANA zone the phone knows ("" is UTC). */
+fun kubeGreenZoneValid(zone: String): Boolean =
+    zone.isBlank() || runCatching { java.time.ZoneId.of(zone.trim()) }.isSuccess

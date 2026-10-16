@@ -31,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
 import name.levis.ichor.model.KubeGreenReason
 import name.levis.ichor.model.KubeGreenSleepInfo
@@ -43,12 +44,21 @@ import name.levis.ichor.util.timeAgo
 
 /**
  * kube-green's sleep schedules, problems first: one row per SleepInfo with whether its
- * namespace is asleep now and when it wakes up (or sleeps again), opening to the details.
- * Read only: the schedule is changed on the cluster, not here.
+ * namespace is asleep now and when it wakes up (or sleeps again), opening to the details and
+ * "Edit schedule".
  */
 @Composable
-fun KubeGreenTab(status: KubeGreenStatus) {
+fun KubeGreenTab(status: KubeGreenStatus, actions: KubeGreenActions) {
     var expanded by rememberSaveable { mutableStateOf(setOf<String>()) }
+    var editing by rememberSaveable { mutableStateOf<String?>(null) }
+    val busy by actions.busy.collectAsStateWithLifecycle()
+
+    status.sleepInfos.firstOrNull { it.label == editing }?.let { info ->
+        KubeGreenScheduleSheet(info, onDismiss = { editing = null }, onSave = { schedule ->
+            editing = null
+            actions.setSchedule(info, schedule)
+        })
+    }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
@@ -56,6 +66,9 @@ fun KubeGreenTab(status: KubeGreenStatus) {
         items(status.sleepInfos, key = { it.label }) { s ->
             SleepInfoRow(s, open = s.label in expanded, onToggle = { expanded = if (s.label in expanded) expanded - s.label else expanded + s.label }) {
                 Details(s)
+                Column(Modifier.padding(start = 22.dp)) {
+                    KubeGreenEditButton(s, busy = s.label in busy, onEdit = { editing = s.label })
+                }
             }
             HorizontalDivider()
         }

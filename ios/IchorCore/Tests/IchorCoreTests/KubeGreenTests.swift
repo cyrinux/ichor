@@ -98,4 +98,28 @@ final class KubeGreenTests: XCTestCase {
         XCTAssertEqual(unknown.changeUndoneAt, 0)
         XCTAssertNil(unknown.asleepInfo)
     }
+
+    func testScheduleEditorReadsAndWritesWeekdays() {
+        XCTAssertEqual(KubeGreenSchedule.days("*"), Set(0...6))
+        XCTAssertEqual(KubeGreenSchedule.days("1-5"), Set(1...5))
+        XCTAssertEqual(KubeGreenSchedule.days("5-7"), [0, 5, 6])
+        XCTAssertNil(KubeGreenSchedule.days("*/2"))
+        XCTAssertNil(KubeGreenSchedule.days("MON"))
+        XCTAssertEqual(KubeGreenSchedule.weekdays(Set(0...6)), "*")
+        XCTAssertEqual(KubeGreenSchedule.weekdays(Set(1...5)), "1-5")
+        XCTAssertEqual(KubeGreenSchedule.weekdays([6, 0]), "0,6")
+        XCTAssertEqual(KubeGreenSchedule.weekdays([1, 3, 4]), "1,3-4")
+    }
+
+    func testScheduleEditorRefusesWhatTheCoreRefuses() {
+        XCTAssertTrue(KubeGreenSchedule.timeValid("20:00"))
+        XCTAssertTrue(KubeGreenSchedule.timeValid("*/2:30"))
+        XCTAssertFalse(KubeGreenSchedule.timeValid("25:00"))
+        XCTAssertFalse(KubeGreenSchedule.timeValid("20:61"))
+        XCTAssertFalse(KubeGreenSchedule.timeValid("20h"))
+        XCTAssertTrue(KubeGreenSchedule.weekdaysValid("1-5"))
+        XCTAssertFalse(KubeGreenSchedule.weekdaysValid("mon-fri"))
+        XCTAssertTrue(KubeGreenSchedule.zoneValid("Europe/Paris"))
+        XCTAssertFalse(KubeGreenSchedule.zoneValid("Mars/Olympus"))
+    }
 }

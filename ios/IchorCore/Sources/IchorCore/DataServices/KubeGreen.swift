@@ -160,3 +160,64 @@ public extension KubeGreenStatus {
         return ServiceSummary(total: sleepInfos.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: error)
     }
 }
+
+// The schedule editor's values, checked the way the SleepInfo CRD and the Go core check them,
+// so a bad one is refused in the sheet before any request.
+public enum KubeGreenSchedule {
+    /// The days a cron day-of-week field picks (0 Sunday … 6 Saturday; 7 is Sunday too); nil when
+    /// it uses steps or anything else day toggles cannot show, which is then edited as text.
+    public static func days(_ weekdays: String) -> Set<Int>? {
+        let w = weekdays.trimmingCharacters(in: .whitespaces)
+        if w.isEmpty || w == "*" { return Set(0...6) }
+        var days = Set<Int>()
+        for part in w.split(separator: ",", omittingEmptySubsequences: false) {
+            var bounds: [Int] = []
+            for b in part.split(separator: "-", omittingEmptySubsequences: false) {
+                guard let d = Int(b.trimmingCharacters(in: .whitespaces)), (0...7).contains(d) else { return nil }
+                bounds.append(d)
+            }
+            switch bounds.count {
+            case 1: days.insert(bounds[0] % 7)
+            case 2:
+                guard bounds[0] <= bounds[1] else { return nil }
+                for d in bounds[0]...bounds[1] { days.insert(d % 7) }
+            default: return nil
+            }
+        }
+        return days
+    }
+
+    /// The cron day-of-week field for `days`: "*" for every day, else runs of days ("1-5", "0,6").
+    public static func weekdays(_ days: Set<Int>) -> String {
+        if Set(0...6).isSubset(of: days) { return "*" }
+        var runs: [ClosedRange<Int>] = []
+        for d in days.filter({ (0...6).contains($0) }).sorted() {
+            if let last = runs.last, last.upperBound + 1 == d {
+                runs[runs.count - 1] = last.lowerBound...d
+            } else {
+                runs.append(d...d)
+            }
+        }
+        return runs.map { $0.lowerBound == $0.upperBound ? "\($0.lowerBound)" : "\($0.lowerBound)-\($0.upperBound)" }.joined(separator: ",")
+    }
+
+    /// A sleepAt or wakeUpAt kube-green takes: "HH:mm", each part cron syntax; plain numbers make a real time.
+    public static func timeValid(_ at: String) -> Bool {
+        let t = at.trimmingCharacters(in: .whitespaces)
+        guard t.range(of: #"^[0-9*,/-]+:[0-9*,/-]+$"#, options: .regularExpression) != nil else { return false }
+        let parts = t.split(separator: ":")
+        if let hour = Int(parts[0]), hour > 23 { return false }
+        if let minute = Int(parts[1]), minute > 59 { return false }
+        return true
+    }
+
+    public static func weekdaysValid(_ weekdays: String) -> Bool {
+        weekdays.trimmingCharacters(in: .whitespaces).range(of: #"^[0-6*,/-]+$"#, options: .regularExpression) != nil
+    }
+
+    /// An IANA zone the phone knows ("" is UTC).
+    public static func zoneValid(_ zone: String) -> Bool {
+        let z = zone.trimmingCharacters(in: .whitespaces)
+        return z.isEmpty || TimeZone(identifier: z) != nil
+    }
+}

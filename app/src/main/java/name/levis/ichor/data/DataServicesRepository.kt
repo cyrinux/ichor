@@ -93,6 +93,15 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
     }
 
     /**
+     * Moves the kube-green SleepInfo [namespace]/[name]'s schedule: [weekdays] (cron day-of-week),
+     * [sleepAt] and [wakeUpAt] ("HH:mm"; "" for no wake-up) in [timeZone] (IANA). Throws when refused.
+     */
+    suspend fun setKubeGreenSchedule(namespace: String, name: String, weekdays: String, sleepAt: String, wakeUpAt: String, timeZone: String) =
+        go.kube { cfg, ctx, server ->
+            Ichorgo.kubeGreenSetSchedule(cfg, ctx, server, namespace, name, weekdays, sleepAt, wakeUpAt, timeZone)
+        }
+
+    /**
      * Issues the cert-manager certificate [namespace]/[name] again now, like `cmctl renew`
      * (os:admin). Throws when refused, also while it is already being issued.
      */
