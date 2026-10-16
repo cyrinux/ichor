@@ -5318,4 +5318,6 @@
     <string name="sa_help_step_kubeconfig">2. Створіть kubeconfig-phone з його токена, із сервером вашого поточного контексту:</string>
     <string name="sa_help_step_import">3. Перенесіть kubeconfig-phone на телефон та імпортуйте його, потім видаліть інші копії: токен — це пароль.</string>
     <string name="sa_help_copy_yaml">Копіювати YAML</string>
+    <string name="panes_pick_node">Виберіть вузол, щоб побачити його деталі</string>
+    <string name="panes_pick_app">Виберіть застосунок, щоб побачити його деталі</string>
 </resources>

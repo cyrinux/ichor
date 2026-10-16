@@ -5064,4 +5064,6 @@
     <string name="sa_help_step_kubeconfig">2. Créez kubeconfig-phone à partir de son jeton, avec le serveur de votre contexte actuel&#160;:</string>
     <string name="sa_help_step_import">3. Transférez kubeconfig-phone sur le téléphone et importez-le, puis supprimez les autres copies&#160;: le jeton est un mot de passe.</string>
     <string name="sa_help_copy_yaml">Copier le YAML</string>
+    <string name="panes_pick_node">Choisissez un nœud pour voir ses détails</string>
+    <string name="panes_pick_app">Choisissez une application pour voir ses détails</string>
 </resources>
