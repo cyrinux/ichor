@@ -121,6 +121,8 @@ class KubeHomeNavigation(
     val onCrossplane: () -> Unit,
     /** The Tailscale operator's connectors, proxy groups, proxy classes and DNS, problems first. */
     val onTailscale: () -> Unit,
+    /** Cluster API's clusters and machines and Sidero Metal's servers, problems first. */
+    val onClusterLifecycle: () -> Unit,
     /** The load balancer controllers, their pools and peers, and why a Service has no address. */
     val onLoadBalancing: () -> Unit,
     /** The Jobs, failures first. */
@@ -157,6 +159,7 @@ fun KubeHomeScreen(
     dataVm: DataServicesViewModel = viewModel(key = "overview-data-services", factory = factory { DataServicesViewModel(app.dataServicesRepository) }),
     crossplaneVm: name.levis.ichor.ui.crossplane.CrossplaneViewModel = viewModel(key = "overview-crossplane", factory = factory { name.levis.ichor.ui.crossplane.CrossplaneViewModel(app.kubeBrowser) }),
     tailscaleVm: name.levis.ichor.ui.tailscale.TailscaleViewModel = viewModel(key = "overview-tailscale", factory = factory { name.levis.ichor.ui.tailscale.TailscaleViewModel(app.kubeBrowser) }),
+    lifecycleVm: name.levis.ichor.ui.lifecycle.ClusterLifecycleViewModel = viewModel(key = "overview-cluster-lifecycle", factory = factory { name.levis.ichor.ui.lifecycle.ClusterLifecycleViewModel(app.kubeBrowser) }),
     alertsVm: AlertsCardViewModel = viewModel(key = "overview-alerts", factory = factory { alertsCardViewModel(app) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
@@ -195,6 +198,7 @@ fun KubeHomeScreen(
         dataVm.load(gitopsKey, hints = "")
         crossplaneVm.refresh(reset = true)
         tailscaleVm.refresh(reset = true)
+        lifecycleVm.refresh(reset = true)
         alertsVm.load(gitopsKey)
     }
     val argo by argoVm.state.collectAsStateWithLifecycle()
@@ -202,12 +206,14 @@ fun KubeHomeScreen(
     val dataServices by dataVm.state.collectAsStateWithLifecycle()
     val crossplane by crossplaneVm.state.collectAsStateWithLifecycle()
     val tailscale by tailscaleVm.state.collectAsStateWithLifecycle()
+    val lifecycle by lifecycleVm.state.collectAsStateWithLifecycle()
     val alerts by alertsVm.state.collectAsStateWithLifecycle()
     val argoShown = argo.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val fluxShown = flux.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val dataShown = dataServices.takeIf { (it as? UiState.Loaded)?.data?.detected?.isNotEmpty() == true }
     val crossplaneShown = crossplane.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val tailscaleShown = tailscale.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
+    val lifecycleShown = lifecycle.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val alertsShown = alerts.takeIf { it.alertmanagerFound }
     // Cards the cluster has nothing for, left out of the editor too; each offered until its answer came.
     val absentCards = setOfNotNull(
@@ -244,7 +250,7 @@ fun KubeHomeScreen(
                     }
                 },
                 actions = {
-                    KubeHomeActions(bar, nav, argo = argoShown != null, flux = fluxShown != null, crossplane = crossplaneShown != null, tailscale = tailscaleShown != null, onCustomize = { customizing = true })
+                    KubeHomeActions(bar, nav, argo = argoShown != null, flux = fluxShown != null, crossplane = crossplaneShown != null, tailscale = tailscaleShown != null, clusterLifecycle = lifecycleShown != null, onCustomize = { customizing = true })
                 },
             )
         },
@@ -303,6 +309,7 @@ fun KubeHomeScreen(
                     dataServices = dataShown,
                     crossplane = crossplaneShown != null,
                     tailscale = tailscaleShown != null,
+                    clusterLifecycle = lifecycleShown != null,
                     alerts = alertsShown,
                     onNode = { nodeMenu = it },
                     nav = nav,
@@ -329,6 +336,7 @@ private fun KubeHomeList(
     dataServices: UiState<DataServices>?,
     crossplane: Boolean,
     tailscale: Boolean,
+    clusterLifecycle: Boolean,
     alerts: UiState<AlertsOverview?>?,
     onNode: (KubeNodeInfo) -> Unit,
     nav: KubeHomeNavigation,
@@ -364,7 +372,7 @@ private fun KubeHomeList(
                     Box(Modifier.longPressToCustomize(onCustomize)) { KubeNodesCard(nodes, onNode, nav.onAllNodes) }
                 }
                 KubeHomeCard.TOOLS -> item(key = card.name) {
-                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeToolsCard(nav, crossplane = crossplane, tailscale = tailscale) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeToolsCard(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle) }
                 }
                 KubeHomeCard.DATA_SERVICES -> if (dataServices != null) item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) {

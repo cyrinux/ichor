@@ -102,6 +102,8 @@ struct KubeHomeView: View {
     @State private var crossplane: LoadState<Crossplane>?
     /// Tailscale: nil until the cluster says it runs the operator (the read answers fast).
     @State private var tailscale: LoadState<Tailscale>?
+    /// Cluster API or Sidero Metal: nil until the cluster says it runs one (the read answers fast).
+    @State private var clusterLifecycle: LoadState<ClusterLifecycle>?
     /// The Alertmanager's alerts: nil until one is found (none hides the section).
     @State private var alerts: LoadState<AMAlerts>?
     /// Who the API server takes the credentials for; nil until known (or when it cannot say).
@@ -227,6 +229,7 @@ struct KubeHomeView: View {
             dataServices = nil
             crossplane = nil
             tailscale = nil
+            clusterLifecycle = nil
             alerts = nil
             whoAmI = nil
         }
@@ -360,6 +363,12 @@ struct KubeHomeView: View {
                     Label("Tailscale", systemImage: "network.badge.shield.half.filled")
                 }
             }
+            // Only on a management cluster running Cluster API or Sidero Metal.
+            if clusterLifecycle != nil {
+                NavigationLink { ClusterLifecycleView() } label: {
+                    Label("Cluster lifecycle", systemImage: "server.rack")
+                }
+            }
             NavigationLink { KubeLoadBalancingView() } label: {
                 Label(LoadBalancingText.title, systemImage: "point.3.connected.trianglepath.dotted")
             }
@@ -488,6 +497,10 @@ struct KubeHomeView: View {
         let tailscaleNext = await loadTailscale(with: client)
         guard id == loadID else { return }
         tailscale = tailscaleNext.map { (tailscale ?? .loading).refreshed(with: $0) }
+        // Cluster lifecycle: nil when the cluster runs neither Cluster API nor Sidero Metal.
+        let lifecycleNext = await loadClusterLifecycle(with: client)
+        guard id == loadID else { return }
+        clusterLifecycle = lifecycleNext.map { (clusterLifecycle ?? .loading).refreshed(with: $0) }
         let alertsNext = await loadAlerts(with: client)
         guard id == loadID else { return }
         alerts = alertsNext.map { (alerts ?? .loading).refreshed(with: $0) }
@@ -543,6 +556,14 @@ struct KubeHomeView: View {
     private func loadTailscale(with client: TalosClient) async -> LoadState<Tailscale>? {
         let loaded: LoadState<Tailscale> = await .from { try await client.tailscale() }
         if case .loaded(let tailscale, _, _) = loaded, !tailscale.installed { return nil }
+        return loaded
+    }
+
+    /// Cluster API and Sidero Metal, nil when the cluster serves neither: the read answers that
+    /// quickly.
+    private func loadClusterLifecycle(with client: TalosClient) async -> LoadState<ClusterLifecycle>? {
+        let loaded: LoadState<ClusterLifecycle> = await .from { try await client.clusterLifecycle() }
+        if case .loaded(let lifecycle, _, _) = loaded, !lifecycle.installed { return nil }
         return loaded
     }
 }

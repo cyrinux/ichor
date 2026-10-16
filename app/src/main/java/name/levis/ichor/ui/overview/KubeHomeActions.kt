@@ -12,6 +12,7 @@ import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.VpnLock
+import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Widgets
@@ -39,6 +40,7 @@ private fun kubeHomeActionIcon(action: KubeHomeAction): ImageVector = when (acti
     KubeHomeAction.SETTINGS -> Icons.Outlined.Settings
     KubeHomeAction.CROSSPLANE -> Icons.Outlined.Extension
     KubeHomeAction.TAILSCALE -> Icons.Outlined.VpnLock
+    KubeHomeAction.CLUSTER_LIFECYCLE -> Icons.Outlined.AccountTree
 }
 
 @Composable
@@ -57,6 +59,7 @@ fun kubeHomeActionLabel(action: KubeHomeAction): String = when (action) {
     KubeHomeAction.SETTINGS -> stringResource(R.string.overview_action_settings)
     KubeHomeAction.CROSSPLANE -> stringResource(R.string.crossplane_title)
     KubeHomeAction.TAILSCALE -> stringResource(R.string.tailscale_title)
+    KubeHomeAction.CLUSTER_LIFECYCLE -> stringResource(R.string.cluster_lifecycle_title)
 }
 
 /** How the Kubernetes home's actions look, in its bar and its editor. */
@@ -78,6 +81,7 @@ fun KubeHomeNavigation.open(action: KubeHomeAction, flux: Boolean = false): () -
     KubeHomeAction.SETTINGS -> onSettings
     KubeHomeAction.CROSSPLANE -> onCrossplane
     KubeHomeAction.TAILSCALE -> onTailscale
+    KubeHomeAction.CLUSTER_LIFECYCLE -> onClusterLifecycle
 }
 
 /**
@@ -86,7 +90,7 @@ fun KubeHomeNavigation.open(action: KubeHomeAction, flux: Boolean = false): () -
  * GitOps is only offered once the cluster answered it runs Argo CD ([argo]) or Flux ([flux]).
  */
 @Composable
-fun KubeHomeActions(bar: KubeHomeBar, nav: KubeHomeNavigation, argo: Boolean, flux: Boolean, crossplane: Boolean = false, tailscale: Boolean = false, onCustomize: () -> Unit) {
+fun KubeHomeActions(bar: KubeHomeBar, nav: KubeHomeNavigation, argo: Boolean, flux: Boolean, crossplane: Boolean = false, tailscale: Boolean = false, clusterLifecycle: Boolean = false, onCustomize: () -> Unit) {
     ActionBarActions(
         bar = bar,
         look = kubeHomeActionLook,
@@ -94,7 +98,7 @@ fun KubeHomeActions(bar: KubeHomeBar, nav: KubeHomeNavigation, argo: Boolean, fl
         customizeLabel = stringResource(R.string.kube_home_edit_title),
         onCustomize = onCustomize,
         offered = { (it != KubeHomeAction.GITOPS || argo || flux) && (it != KubeHomeAction.CROSSPLANE || crossplane) &&
-            (it != KubeHomeAction.TAILSCALE || tailscale)
+            (it != KubeHomeAction.TAILSCALE || tailscale) && (it != KubeHomeAction.CLUSTER_LIFECYCLE || clusterLifecycle)
         },
     )
 }
