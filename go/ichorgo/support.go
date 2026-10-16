@@ -323,6 +323,7 @@ func (w *bundleWriter) summary(sections []bundleSection) []byte {
 	}
 
 	b.WriteString("\nThe machine configs have their secrets redacted. Logs and resources are copied as they are.\n")
+	b.WriteString("Data services (Longhorn, Garage, CloudNativePG, Velero…) in cluster/dataservices.json are their operators' status, read-only.\n")
 
 	if len(w.failures) == 0 {
 		b.WriteString("\nEvery step succeeded.\n")
