@@ -17,7 +17,15 @@ const (
 	groupCalico    = "projectcalico.org"
 	// runningPods are the pods policies apply to: neither Succeeded nor Failed.
 	runningPods = "status.phase!=Succeeded,status.phase!=Failed"
+
+	// The ReadProgress op of the network policies and its steps, read in parallel.
+	netpolProgressOp     = "netpol"
+	netpolStepPolicies   = "policies"
+	netpolStepPods       = "pods"
+	netpolStepNamespaces = "namespaces"
 )
+
+var netpolSteps = []string{netpolStepPolicies, netpolStepPods, netpolStepNamespaces}
 
 // netPolicyReport is every network policy of the cluster, and how isolated each namespace is.
 type netPolicyReport struct {
@@ -71,7 +79,8 @@ func KubeNetworkPolicies(configYAML, contextName, kubeServer string) (out string
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demoNetPolicies, readNetPolicyReport)
+	return kubeReadProgressJSON(kubeTarget{configYAML, contextName, kubeServer}, netpolProgressOp,
+		netpolSteps, netpolSteps, demoNetPolicies, readNetPolicyReport)
 }
 
 func readNetPolicyReport(ctx context.Context, k *kubeClient) (netPolicyReport, error) {
@@ -83,12 +92,25 @@ func readNetPolicyReport(ctx context.Context, k *kubeClient) (netPolicyReport, e
 		namespaces kubeList[npNamespace]
 		errs       = make([]error, 2)
 		wg         sync.WaitGroup
+		progress   = readProgressFrom(ctx)
 	)
 
-	wg.Go(func() { policies, cni, policyErr = readNetPolicies(ctx, k) })
+	wg.Go(func() {
+		end := progress.track(netpolStepPolicies)
+		policies, cni, policyErr = readNetPolicies(ctx, k)
+		end(policyErr != nil)
+	})
 	// Finished pods are left out below anyway: the server drops them before sending.
-	wg.Go(func() { errs[0] = getList(ctx, k, "/api/v1/pods?fieldSelector="+url.QueryEscape(runningPods), &pods) })
-	wg.Go(func() { errs[1] = getList(ctx, k, "/api/v1/namespaces", &namespaces) })
+	wg.Go(func() {
+		end := progress.track(netpolStepPods)
+		errs[0] = getList(ctx, k, "/api/v1/pods?fieldSelector="+url.QueryEscape(runningPods), &pods)
+		end(errs[0] != nil)
+	})
+	wg.Go(func() {
+		end := progress.track(netpolStepNamespaces)
+		errs[1] = getList(ctx, k, "/api/v1/namespaces", &namespaces)
+		end(errs[1] != nil)
+	})
 	wg.Wait()
 
 	if policies == nil && policyErr != nil {

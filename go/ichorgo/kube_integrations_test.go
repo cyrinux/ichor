@@ -36,9 +36,18 @@ func TestReadIntegrations(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, err := readIntegrations(context.Background(), k)
+	progress := startReadProgress("test-integrations", "", integrationsSteps...)
+
+	res, err := readIntegrations(withReadProgress(context.Background(), progress), k)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	progress.finish()
+	checkFinishedProgress(t, "test-integrations", integrationsSteps)
+
+	if kinds := readProgressFor(t, "test-integrations").Steps[1]; kinds.Count == 0 || kinds.Count != kinds.Total {
+		t.Errorf("kinds step counted %d/%d documents", kinds.Count, kinds.Total)
 	}
 
 	// Cluster API's core group is read; its infrastructure providers' are not (a request).

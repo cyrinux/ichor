@@ -7,7 +7,18 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
+
+// The ReadProgress op of the integrations and its steps: the API groups, then the discovery
+// documents of the groups Ichor does not read (counted).
+const (
+	integrationsProgressOp = "integrations"
+	integrationsStepAPI    = "api"
+	integrationsStepKinds  = "kinds"
+)
+
+var integrationsSteps = []string{integrationsStepAPI, integrationsStepKinds}
 
 // Integration requests: the operators a cluster runs that Ichor does not show yet, read from
 // the API groups the server serves. Nothing leaves the phone from here: the app turns the
@@ -67,11 +78,16 @@ func KubeIntegrations(configYAML, contextName, kubeServer string) (out string, e
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demoIntegrations, readIntegrations)
+	return kubeReadProgressJSON(kubeTarget{configYAML, contextName, kubeServer}, integrationsProgressOp,
+		integrationsSteps, integrationsSteps, demoIntegrations, readIntegrations)
 }
 
 func readIntegrations(ctx context.Context, k *kubeClient) (integrationReport, error) {
+	endAPI := readProgressFrom(ctx).track(integrationsStepAPI)
+
 	groups, err := readAPIGroups(ctx, k)
+	endAPI(err != nil)
+
 	if err != nil {
 		return integrationReport{}, err
 	}
@@ -110,14 +126,19 @@ func readIntegrations(ctx context.Context, k *kubeClient) (integrationReport, er
 // does not answer keeps none.
 func readIntegrationKinds(ctx context.Context, k *kubeClient, groups []integrationGroup, crossplaneInstalled bool) {
 	var (
-		wg    sync.WaitGroup
-		slots = make(chan struct{}, integrationKindReads)
+		wg       sync.WaitGroup
+		slots    = make(chan struct{}, integrationKindReads)
+		read     atomic.Int64
+		progress = readProgressFrom(ctx)
 	)
+
+	progress.count(integrationsStepKinds, 0, len(groups))
 
 	for i := range groups {
 		wg.Go(func() {
 			slots <- struct{}{}
 			defer func() { <-slots }()
+			defer func() { progress.count(integrationsStepKinds, int(read.Add(1)), len(groups)) }()
 
 			var doc struct {
 				Resources []struct {
@@ -148,6 +169,8 @@ func readIntegrationKinds(ctx context.Context, k *kubeClient, groups []integrati
 	}
 
 	wg.Wait()
+	// A group that does not answer keeps no kinds; the step is still read through.
+	progress.done(integrationsStepKinds)
 }
 
 func containsAny(values []string, candidates ...string) bool {

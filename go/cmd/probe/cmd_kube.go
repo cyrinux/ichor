@@ -160,7 +160,11 @@ var kubeCommands = []command{
 		return out, err
 	}},
 	{name: "apihealth", args: "", run: func(e env) (out string, err error) {
+		// apihealth: the API server's health and load, with its progress on stderr (the
+		// wait between the two scrapes counts its seconds).
+		stop := watchReadProgress(e, "apihealth")
 		out, err = ichorgo.KubeAPIHealth(e.cfg, e.context, e.kubeServer)
+		stop()
 
 		return out, err
 	}},

@@ -127,7 +127,10 @@ var dataCommands = []command{
 	}},
 	{name: "dataservices", args: "[HINTS]", run: func(e env) (out string, err error) {
 		// dataservices [HINTS], e.g. "garage" or "longhorn,cloudnative-pg"; none checks all.
+		// Its progress goes to stderr every 500 ms while it reads.
+		stop := watchReadProgress(e, "dataservices")
 		out, err = ichorgo.KubeDataServices(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+		stop()
 
 		return out, err
 	}},
@@ -263,7 +266,18 @@ var dataCommands = []command{
 		return out, err
 	}},
 	{name: "netpol", args: "", run: func(e env) (out string, err error) {
+		// netpol: the network policies, with their progress on stderr while it reads.
+		stop := watchReadProgress(e, "netpol")
 		out, err = ichorgo.KubeNetworkPolicies(e.cfg, e.context, e.kubeServer)
+		stop()
+
+		return out, err
+	}},
+	{name: "integrations", args: "", run: func(e env) (out string, err error) {
+		// integrations: the API groups Ichor does not read yet, with their progress on stderr.
+		stop := watchReadProgress(e, "integrations")
+		out, err = ichorgo.KubeIntegrations(e.cfg, e.context, e.kubeServer)
+		stop()
 
 		return out, err
 	}},

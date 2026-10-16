@@ -40,9 +40,8 @@ const (
 	checkupTimeout = 60 * time.Second
 	// checkupMaxFindings caps a section's findings; Truncated counts the rest.
 	checkupMaxFindings = 40
-	// checkupProgressOp is the ReadProgress op of a checkup; checkupDemoStep paces its demo.
+	// checkupProgressOp is the ReadProgress op of a checkup.
 	checkupProgressOp = "checkup"
-	checkupDemoStep   = 100 * time.Millisecond
 	// How long something may stay in a transient state before it is a finding.
 	pendingGrace     = 5 * time.Minute
 	startingGrace    = 10 * time.Minute
@@ -123,7 +122,7 @@ func KubeCheckup(configYAML, contextName, kubeServer string) (out string, err er
 	contextName = unmaskContext(configYAML, contextName)
 
 	if isDemoContext(configYAML, contextName) {
-		playDemoCheckupProgress(contextName)
+		playDemoReadProgress(checkupProgressOp, contextName, checkupStepAPI, checkupStepPods, checkStorage)
 
 		return toJSON(demoCheckup(time.Now()))
 	}
@@ -142,19 +141,6 @@ func KubeCheckup(configYAML, contextName, kubeServer string) (out string, err er
 	}
 
 	return toJSON(report)
-}
-
-// playDemoCheckupProgress walks a few steps so the demo shows the progress the apps draw.
-func playDemoCheckupProgress(contextName string) {
-	steps := []string{checkupStepAPI, checkupStepPods, checkStorage}
-	progress := startReadProgress(checkupProgressOp, contextName, steps...)
-	defer progress.finish()
-
-	for _, step := range steps {
-		progress.begin(step)
-		time.Sleep(checkupDemoStep)
-		progress.done(step)
-	}
 }
 
 // checkupInput is what several sections share, read once.
