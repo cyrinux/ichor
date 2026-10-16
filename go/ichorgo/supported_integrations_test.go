@@ -122,9 +122,15 @@ func TestSupportedIntegrationsStatic(t *testing.T) {
 		icons[it.ID] = it.Icon
 	}
 
-	// Bundled icons are named after the catalog id (as in the inventory); none for Dragonfly.
-	if icons["longhorn"] != "longhorn" || icons["cloudnative-pg"] != "cloudnative-pg" || icons["dragonfly"] != "" || icons["gateway-api"] != "" {
+	// Bundled icons are named after the catalog id (as in the inventory); every project has one.
+	if icons["longhorn"] != "longhorn" || icons["cloudnative-pg"] != "cloudnative-pg" || icons["dragonfly"] != "dragonfly" {
 		t.Errorf("icons: %v", icons)
+	}
+
+	for id, icon := range icons {
+		if icon == "" {
+			t.Errorf("%s has no bundled icon", id)
+		}
 	}
 }
 
