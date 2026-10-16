@@ -106,6 +106,8 @@ func TestActionAccessAsksEachKindsOwnResource(t *testing.T) {
 		"fluxReconcileOCIRepository":  "patch ocirepositories.source.toolkit.fluxcd.io",
 		"fluxReconcileHelmRepository": "patch helmrepositories.source.toolkit.fluxcd.io",
 		"fluxReconcileBucket":         "patch buckets.source.toolkit.fluxcd.io",
+		"autoscale":                   "patch horizontalpodautoscalers.autoscaling",
+		"autoscaleKeda":               "patch scaledobjects.keda.sh",
 	}
 
 	for name, w := range want {

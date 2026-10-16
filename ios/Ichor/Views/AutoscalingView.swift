@@ -40,7 +40,7 @@ struct AutoscalingView: View {
         .navigationTitle("Autoscaling")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $selected) { selection in
-            AutoscalingDetailSheets(selection: selection)
+            AutoscalingDetailSheets(selection: live(selection), onChanged: load)
         }
     }
 
@@ -150,6 +150,20 @@ struct AutoscalingView: View {
             }
         } header: {
             Text(title)
+        }
+    }
+
+    /// The selection with its row as the last read has it: an action's outcome shows on the
+    /// open sheet. The selection itself when the row is gone or nothing is loaded.
+    private func live(_ selection: Selection) -> Selection {
+        guard case .loaded(let report, _, _) = state else { return selection }
+        switch selection {
+        case .hpa(let row):
+            return report.hpa.items.first { $0.id == row.id }.map(Selection.hpa) ?? selection
+        case .scaledObject(let row):
+            return report.keda.scaledObjects.first { $0.id == row.id }.map(Selection.scaledObject) ?? selection
+        default:
+            return selection
         }
     }
 

@@ -376,3 +376,13 @@ fun AutoscaleTarget.objectRef(namespace: String): KubeObjectRef? {
     if (name.isEmpty()) return null
     return KubeObjectRef(group, "v1", resource, kind, namespace, name, editable = true)
 }
+
+/** KubePauseScaledObject's special counts: hold at the current count, and resume. */
+const val SCALED_OBJECT_HOLD = -1
+const val SCALED_OBJECT_RESUME = -2
+
+/** Bounds the core accepts for an HPA: min at least 1, max not below min nor above the scale limit. */
+fun hpaBoundsValid(min: Int, max: Int): Boolean = min >= 1 && max >= min && max <= MAX_SCALE_REPLICAS
+
+/** KEDA made this HPA for a ScaledObject: its bounds are the ScaledObject's, KEDA puts them back. */
+val HpaRow.kedaOwned: Boolean get() = managedBy == "keda"
