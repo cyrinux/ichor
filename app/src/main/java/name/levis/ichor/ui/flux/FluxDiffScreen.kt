@@ -12,6 +12,9 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -32,6 +35,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.FluxDiff
+import name.levis.ichor.model.KubeDiffResource
+import name.levis.ichor.model.isFindableChange
 import name.levis.ichor.model.shortFluxRevision
 import name.levis.ichor.model.shortRevisions
 import name.levis.ichor.ui.UiState
@@ -51,20 +56,70 @@ import name.levis.ichor.ui.theme.LocalStatusColors
  * change, like `flux diff kustomization` or `argocd app diff`: the revisions compared, a count
  * per kind of change, then each object that would change with its diff (the first few
  * unfolded), and the unchanged ones folded. Built in the cluster with a server-side dry run:
- * nothing is written.
+ * nothing is written. [onOpenSource]: each object gets "Open source file" when the app has a
+ * readable Git source, opening the file of source `index` that declares it at `line`.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FluxDiffScreen(kind: String, namespace: String, name: String, onBack: () -> Unit, tool: DiffTool = DiffTool.FLUX) {
-    val talos = LocalContext.current.applicationContext as TalosApp
+fun FluxDiffScreen(
+    kind: String,
+    namespace: String,
+    name: String,
+    onBack: () -> Unit,
+    tool: DiffTool = DiffTool.FLUX,
+    onOpenSource: ((index: Int, path: String, line: Int) -> Unit)? = null,
+    onAddToken: (() -> Unit)? = null,
+) {
+    val context = LocalContext.current
+    val talos = context.applicationContext as TalosApp
     val vm: FluxDiffViewModel = viewModel(key = tool.name, factory = factory { FluxDiffViewModel(talos.gitOpsRepository, tool) })
+    val finder: DiffSourceViewModel = viewModel(
+        key = "source-${tool.name}",
+        factory = factory { DiffSourceViewModel(talos.gitOpsRepository, tool.sourceTool, kind, namespace, name) },
+    )
     val state by vm.state.collectAsStateWithLifecycle()
+    val sourceIndex by finder.sourceIndex.collectAsStateWithLifecycle()
+    val searching by finder.searching.collectAsStateWithLifecycle()
+    val outcome by finder.outcome.collectAsStateWithLifecycle()
     val config by talos.configRepository.config.collectAsStateWithLifecycle()
     val generation by talos.configRepository.generation.collectAsStateWithLifecycle()
-    LaunchedEffect(config?.activeContext, generation) { vm.load(kind, namespace, name, config?.activeContext to generation) }
+    LaunchedEffect(config?.activeContext, generation) {
+        vm.load(kind, namespace, name, config?.activeContext to generation)
+        if (onOpenSource != null) finder.load(config?.activeContext to generation)
+    }
     val refresh = { vm.refresh(kind, namespace, name) }
+    val snackbar = remember { SnackbarHostState() }
+    val addToken = stringResource(R.string.gitops_source_add_token)
+    LaunchedEffect(outcome) {
+        when (val o = outcome) {
+            is SourceFindOutcome.Open -> {
+                onOpenSource?.invoke(o.index, o.path, o.line)
+                finder.consumed()
+            }
+            is SourceFindOutcome.Message -> {
+                // Consumed once shown: consuming first would cancel this effect, and the snackbar with it.
+                val action = if (o.addToken && onAddToken != null) addToken else null
+                val result = snackbar.showSnackbar(o.text.resolve(context), actionLabel = action, withDismissAction = action != null)
+                if (result == SnackbarResult.ActionPerformed) onAddToken?.invoke()
+                finder.consumed()
+            }
+            is SourceFindOutcome.Choose, null -> Unit
+        }
+    }
+    (outcome as? SourceFindOutcome.Choose)?.let { choose ->
+        SourceMatchChooser(
+            choose.matches,
+            onPick = { m ->
+                finder.consumed()
+                onOpenSource?.invoke(choose.index, m.path, m.line)
+            },
+            onDismiss = finder::consumed,
+        )
+    }
+    val find: ((KubeDiffResource) -> Unit)? = if (onOpenSource != null && sourceIndex != null) finder::find else null
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
                 title = {
@@ -80,7 +135,7 @@ fun FluxDiffScreen(kind: String, namespace: String, name: String, onBack: () -> 
     ) { padding ->
         val modifier = Modifier.padding(padding)
         Loaded(state, refresh, modifier, freshness = true) { data ->
-            DiffBody(data, tool)
+            DiffBody(data, tool, find, searching)
         }
     }
 }
@@ -89,7 +144,7 @@ fun FluxDiffScreen(kind: String, namespace: String, name: String, onBack: () -> 
 private const val UNFOLDED_AT_FIRST = 3
 
 @Composable
-private fun DiffBody(diff: FluxDiff, tool: DiffTool) {
+private fun DiffBody(diff: FluxDiff, tool: DiffTool, onFind: ((KubeDiffResource) -> Unit)?, searching: String?) {
     val colors = LocalStatusColors.current
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val changed = remember(diff) { diff.changed }
@@ -115,7 +170,13 @@ private fun DiffBody(diff: FluxDiff, tool: DiffTool) {
         }
         itemsIndexed(changed, key = { _, r -> r.key }) { index, r ->
             val open = expanded[r.key] ?: (index < UNFOLDED_AT_FIRST && r.change.isChange)
-            DiffResourceCard(r, open) { expanded[r.key] = !open }
+            DiffResourceCard(
+                r,
+                open,
+                onToggle = { expanded[r.key] = !open },
+                onOpenSource = if (onFind != null && isFindableChange(r.change)) ({ onFind(r) }) else null,
+                searching = searching == r.key,
+            )
         }
         if (unchanged.isNotEmpty()) {
             item(key = "unchanged-fold") {

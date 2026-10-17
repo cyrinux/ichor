@@ -278,6 +278,12 @@ var dataCommands = []command{
 	{name: "gitops-source", args: "TOOL KIND NAMESPACE NAME", run: func(e env) (string, error) {
 		return ichorgo.GitOpsSource(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
 	}},
+	{name: "gitops-find", args: "TOOL KIND NAMESPACE NAME RESKIND RESNS RESNAME [HOST_JSON [SOURCE_INDEX]]", run: func(e env) (string, error) {
+		// gitops-find TOOL KIND NAMESPACE NAME RESKIND RESNS RESNAME, e.g. "flux Kustomization
+		// flux-system podinfo Deployment podinfo podinfo"; an Argo CD app needs HOST_JSON.
+		return ichorgo.GitOpsSourceFind(e.cfg, e.context, e.kubeServer, flag.Arg(8), flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4),
+			flag.Arg(9), flag.Arg(5), flag.Arg(6), flag.Arg(7))
+	}},
 	{name: "flux-tree", args: "KIND NAMESPACE NAME DIR", run: func(e env) (string, error) {
 		return ichorgo.FluxSourceTree(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
 	}},

@@ -71,18 +71,51 @@ struct DiffChangeBadge: View {
 }
 
 /// One object: its badge, kind, name and namespace; it unfolds its diff (or why it was refused,
-/// or why it is not compared) when it has one.
+/// or why it is not compared) when it has one. In a GitOps diff whose app has a browsable
+/// source, "Open source file" looks for the file that declares it (openSource).
 struct DiffResourceRow: View {
     let resource: KubeDiffResource
     @Binding var expanded: Bool
+    /// Looks for the source file declaring the object; nil hides the action.
+    var openSource: (() -> Void)?
+    /// That search runs.
+    var searching = false
 
     private var hasDetail: Bool { !resource.diff.isEmpty || !resource.error.isEmpty || resource.change.hint != nil }
 
     var body: some View {
         if hasDetail {
-            DisclosureGroup(isExpanded: $expanded) { detail } label: { header }
+            VStack(alignment: .leading, spacing: 6) {
+                DisclosureGroup(isExpanded: $expanded) { detail } label: { header }
+                sourceAction
+            }
+        } else if openSource != nil {
+            VStack(alignment: .leading, spacing: 6) {
+                header
+                sourceAction
+            }
         } else {
             header
+        }
+    }
+
+    @ViewBuilder private var sourceAction: some View {
+        if let openSource {
+            if searching {
+                Label {
+                    Text("Looking for the file…")
+                } icon: {
+                    ProgressView().controlSize(.small)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            } else {
+                Button(action: openSource) {
+                    Label("Open source file", systemImage: "doc.text.magnifyingglass")
+                }
+                .font(.caption)
+                .buttonStyle(.borderless)
+            }
         }
     }
 

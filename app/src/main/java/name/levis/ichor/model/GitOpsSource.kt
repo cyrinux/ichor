@@ -281,3 +281,35 @@ private fun topLevelValue(line: String, key: String): String? {
     val value = line.substring(key.length + 1).substringBefore(" #").trim().trim('"', '\'')
     return value.ifEmpty { null }
 }
+
+/** A manifest that declares a resource: its file [path], the [line] (1-based) of its `metadata.name`. */
+@Serializable
+data class ManifestMatch(
+    val path: String = "",
+    val line: Int = 0,
+    val documentIndex: Int = 0,
+)
+
+/**
+ * `GitOpsSourceFind`'s answer: the manifests of a source that declare a resource, the number of
+ * files [searched], and a [note] when none can match (a Helm-rendered app) or a name was rewritten.
+ */
+@Serializable
+data class GitOpsSourceFind(
+    val matches: List<ManifestMatch> = emptyList(),
+    val searched: Int = 0,
+    val note: String = "",
+)
+
+/**
+ * The source a diff's "Open source file" searches: the first Git source whose files can be read
+ * (a chart or a source read only for its value files is skipped); null when there is none.
+ */
+fun findableSourceIndex(source: GitOpsSource): Int? {
+    val readable = source.sources.withIndex().filter { (_, s) -> !s.isValuesOnly && !s.isChart && s.readPath != SourceReadPath.NONE }
+    // A Helm source only gives the "rendered by Helm" note: another readable source comes first.
+    return (readable.firstOrNull { (_, s) -> s.kind != "helm" } ?: readable.firstOrNull())?.index
+}
+
+/** Whether a diff object can be looked up in Git: one about to be deleted is no longer declared there. */
+fun isFindableChange(change: DiffChange): Boolean = change != DiffChange.DELETED

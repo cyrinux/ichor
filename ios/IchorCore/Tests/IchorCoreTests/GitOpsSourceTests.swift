@@ -102,4 +102,37 @@ final class GitOpsSourceTests: XCTestCase {
         XCTAssertEqual(gitWebURL(repo, kind: .auto, ref: "", path: "a", dir: false), repo)
         XCTAssertEqual(gitWebURL("", kind: .auto, ref: "main", path: "a", dir: false), "")
     }
+
+    func testDecodesSourceFind() throws {
+        let found = try TalosJSON.decode(GitOpsSourceFind.self, from: #"""
+        {"matches":[{"path":"apps/podinfo/deployment.yaml","line":12,"documentIndex":0}],"searched":17,"note":""}
+        """#)
+        XCTAssertEqual(found.searched, 17)
+        XCTAssertEqual(found.outcome, .open(ManifestMatch(path: "apps/podinfo/deployment.yaml", line: 12)))
+
+        let several = try TalosJSON.decode(GitOpsSourceFind.self, from: #"""
+        {"matches":[{"path":"a.yaml","line":4},{"path":"a.yaml","line":30,"documentIndex":2}]}
+        """#)
+        XCTAssertEqual(several.outcome, .choose([ManifestMatch(path: "a.yaml", line: 4), ManifestMatch(path: "a.yaml", line: 30, documentIndex: 2)]))
+        XCTAssertNotEqual(several.matches[0].id, several.matches[1].id)
+
+        let helm = try TalosJSON.decode(GitOpsSourceFind.self, from: #"{"matches":null,"searched":0,"note":"rendered by Helm; open the chart's templates"}"#)
+        XCTAssertEqual(helm.outcome, .none(note: "rendered by Helm; open the chart's templates"))
+        XCTAssertEqual(try TalosJSON.decode(GitOpsSourceFind.self, from: "{}").outcome, .none(note: ""))
+    }
+
+    func testFirstBrowsableSource() throws {
+        // The chart comes first and cannot be opened; the values-only source is not a row.
+        let chart = GitSource(repoURL: "https://charts.example.org", kind: .chart, chart: "podinfo")
+        let values = GitSource(repoURL: "v", webURL: "https://github.com/example-org/values", tracked: "main", kind: .values, browsable: true)
+        let git = GitSource(repoURL: "g", webURL: "https://github.com/example-org/platform", tracked: "main", browsable: true)
+        let picked = try XCTUnwrap(GitOpsSource(sources: [chart, values, git]).firstBrowsable)
+        XCTAssertEqual(picked.index, 2)
+        XCTAssertEqual(picked.source, git)
+
+        let flux = FluxRef(kind: "GitRepository", namespace: "flux-system", name: "flux-system")
+        XCTAssertEqual(GitOpsSource(sources: [GitSource(repoURL: "r", fluxArtifact: true, fluxSource: flux)]).firstBrowsable?.index, 0)
+        XCTAssertNil(GitOpsSource(sources: [chart, GitSource(repoURL: "local", browsable: true)]).firstBrowsable)
+        XCTAssertNil(GitOpsSource(sources: []).firstBrowsable)
+    }
 }

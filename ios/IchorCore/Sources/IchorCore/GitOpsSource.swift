@@ -272,3 +272,81 @@ public func gitWebURL(_ webURL: String, kind: GitHostKind, ref: String, path: St
     }
     return clean.isEmpty ? base + page : "\(base)\(page)/\(clean)"
 }
+
+// MARK: - The file that declares a resource
+
+/// One document of a source that declares a resource: the file (from the repository root),
+/// the line of its metadata.name, and which document of the file it is.
+public struct ManifestMatch: Codable, Hashable, Identifiable, Sendable {
+    public let path: String
+    /// 1-based, as the file viewer numbers its lines.
+    public let line: Int
+    public let documentIndex: Int
+
+    public var id: String { "\(path)#\(documentIndex)" }
+
+    public init(path: String, line: Int, documentIndex: Int = 0) {
+        self.path = path
+        self.line = line
+        self.documentIndex = documentIndex
+    }
+
+    enum CodingKeys: String, CodingKey { case path, line, documentIndex }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        path = try c.field(.path, "")
+        line = try c.field(.line, 0)
+        documentIndex = try c.field(.documentIndex, 0)
+    }
+}
+
+/// What GitOpsSourceFind answers: the documents declaring the resource, how many files were
+/// read, and why there is no match when it can say (a Helm-rendered name, a cut search).
+public struct GitOpsSourceFind: Decodable, Hashable, Sendable {
+    public let matches: [ManifestMatch]
+    public let searched: Int
+    public let note: String
+
+    public init(matches: [ManifestMatch], searched: Int = 0, note: String = "") {
+        self.matches = matches
+        self.searched = searched
+        self.note = note
+    }
+
+    enum CodingKeys: String, CodingKey { case matches, searched, note }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        matches = try c.field(.matches, [ManifestMatch]())
+        searched = try c.field(.searched, 0)
+        note = try c.field(.note, "")
+    }
+
+    /// What the diff does with the answer: open the one file, offer the files, or say why not.
+    public var outcome: SourceFindOutcome {
+        switch matches.count {
+        case 0: .none(note: note)
+        case 1: .open(matches[0])
+        default: .choose(matches)
+        }
+    }
+}
+
+/// The diff's next step after a search.
+public enum SourceFindOutcome: Hashable, Sendable {
+    case open(ManifestMatch)
+    case choose([ManifestMatch])
+    /// No file declares it; note is the Go core's reason, "" when it gave none.
+    case none(note: String)
+}
+
+extension GitOpsSource {
+    /// The source a diff searches for a resource's file: the first with a Git tree the app can
+    /// read (not a packaged chart, not a source only read for its value files), with its index
+    /// in `sources` (what GitOpsSourceFind takes).
+    public var firstBrowsable: (index: Int, source: GitSource)? {
+        // A Helm source only gives the "rendered by Helm" note: another readable source comes first.
+        rows.first { $0.source.canOpen && $0.source.kind != .helm } ?? rows.first { $0.source.canOpen }
+    }
+}

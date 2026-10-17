@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"cmp"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -43,6 +44,12 @@ type gitopsSource struct {
 	// FluxArtifact: the files can be read from FluxSource's artifact, with no Git token.
 	FluxArtifact bool     `json:"fluxArtifact"`
 	FluxSource   *fluxRef `json:"fluxSource,omitempty"`
+
+	// What the tool does to the names and namespace of the rendered resources: a Flux
+	// Kustomization's or Argo CD kustomize source's namePrefix, nameSuffix and target
+	// namespace (GitOpsSourceFind).
+	namePrefix, nameSuffix string
+	setsNamespace          bool
 }
 
 type gitopsSources struct {
@@ -139,6 +146,18 @@ func argoGitOpsSources(o argoObject) []gitopsSource {
 			g.ValueFiles = argoValueFiles(g.Path, s.Helm.ValueFiles)
 		}
 
+		if g.Kind == gitopsKindKustomize {
+			var k struct {
+				NamePrefix string `json:"namePrefix"`
+				NameSuffix string `json:"nameSuffix"`
+				Namespace  string `json:"namespace"`
+			}
+
+			if json.Unmarshal(s.Kustomize, &k) == nil {
+				g.namePrefix, g.nameSuffix, g.setsNamespace = k.NamePrefix, k.NameSuffix, k.Namespace != ""
+			}
+		}
+
 		if s.Chart == "" && i < len(revisions) && gitCommitSHA.MatchString(revisions[i]) {
 			g.Revision = revisions[i]
 		}
@@ -193,6 +212,7 @@ func readFluxSources(ctx context.Context, k *kubeClient, kind, namespace, name s
 		}
 
 		g.Path, g.Kind = cleanSourcePath(ks.Spec.Path), gitopsKindKustomize
+		g.namePrefix, g.nameSuffix, g.setsNamespace = ks.Spec.NamePrefix, ks.Spec.NameSuffix, ks.Spec.TargetNamespace != ""
 
 		return gitopsSources{Sources: []gitopsSource{g}}, nil
 	}
