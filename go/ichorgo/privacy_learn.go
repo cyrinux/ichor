@@ -25,14 +25,15 @@ func (m *privacyMask) learnConfig(configYAML string) {
 		return
 	}
 
-	if isKubeconfig(configYAML) {
+	parsed := configs.get(configYAML)
+	if parsed.kube() {
 		m.learnKubeconfigLocked(configYAML)
 		m.configs[key] = true
 
 		return
 	}
 
-	cfg, err := parseTalosconfig(configYAML)
+	cfg, err := parsed.talosconfig()
 	if err != nil {
 		return
 	}
