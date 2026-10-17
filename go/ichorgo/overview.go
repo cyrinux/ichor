@@ -78,9 +78,30 @@ func ClusterOverview(configYAML, contextName string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	start := time.Now()
+	contextName = unmaskContext(configYAML, contextName)
+
+	return clusterOverviewJSON(context.Background(), start, configYAML, contextName, overviewOptions{})
+}
+
+// overviewOptions are what a streamed overview changes; the zero value is ClusterOverview.
+type overviewOptions struct {
+	// onNode, when set, gets each node as soon as it is known (from the probing goroutines,
+	// in completion order; the demo's five 100 ms apart).
+	onNode func(nodeOverview)
+	// versionTimeout, when set, bounds each node's Version (its reachability probe) within
+	// nodeTimeout, so a node that does not answer is reported down early. ClusterOverview
+	// keeps the full nodeTimeout: the monitor must not call a slow node down.
+	versionTimeout time.Duration
+}
+
+// clusterOverviewJSON is ClusterOverview (and StartClusterOverview) for an unmasked context.
+// Cancelling parent ends the run with its error and skips what the complete overview
+// teaches (remembered names, masked hosts).
+func clusterOverviewJSON(parent context.Context, start time.Time, configYAML, contextName string, opts overviewOptions) (string, error) {
+	onNode := opts.onNode
+
 	defer trace("overview.total", start)
 
-	contextName = unmaskContext(configYAML, contextName)
 	demo := isDemoContext(configYAML, contextName)
 
 	trace("overview.resolve", start)
@@ -90,10 +111,14 @@ func ClusterOverview(configYAML, contextName string) (out string, err error) {
 			traceCounts("overview.all_nodes", start, len(demoNodes()), 0)
 		}
 
+		if err := streamDemoNodes(parent, onNode); err != nil {
+			return "", err
+		}
+
 		return demoRead("ClusterOverview", configYAML, contextName, "")
 	}
 
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
+	return withSessionFrom(parent, configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		trace("overview.session", start)
 
 		name, cfg, err := resolveContext(configYAML, contextName)
@@ -107,13 +132,22 @@ func ClusterOverview(configYAML, contextName string) (out string, err error) {
 		peerEndpoints := make([]map[string][]netip.Addr, len(nodes))
 
 		tracedFanout(start, nodes, func(i int, node string) bool {
-			p := probeNode(ctx, s.client, node)
+			p := probeNodeWithin(ctx, s.client, node, opts.versionTimeout)
 			result.Nodes[i], domains[i], peerEndpoints[i] = buildNodeOverview(node, p), p.domain, p.peerEndpoints
 
 			s.rememberVersion(node, result.Nodes[i].Version)
 
+			if onNode != nil {
+				learnNodeHost(result.Nodes[i], p.domain)
+				onNode(result.Nodes[i])
+			}
+
 			return result.Nodes[i].Reachable
 		})
+
+		if err := parent.Err(); err != nil {
+			return "", err
+		}
 
 		result.Nodes = withPeerSeenPublicIPs(result.Nodes, peerEndpoints)
 
@@ -124,7 +158,14 @@ func ClusterOverview(configYAML, contextName string) (out string, err error) {
 	})
 }
 
+// probeNode reads one node under nodeTimeout.
 func probeNode(ctx context.Context, c *client.Client, node string) nodeProbe {
+	return probeNodeWithin(ctx, c, node, 0)
+}
+
+// probeNodeWithin is probeNode with its first call (Version, which tells the node is
+// reachable) bounded by versionTimeout when set, the rest under what is left of nodeTimeout.
+func probeNodeWithin(ctx context.Context, c *client.Client, node string, versionTimeout time.Duration) nodeProbe {
 	ctx, cancel := context.WithTimeout(ctx, nodeTimeout)
 	defer cancel()
 
@@ -132,7 +173,15 @@ func probeNode(ctx context.Context, c *client.Client, node string) nodeProbe {
 
 	var p nodeProbe
 
-	resp, err := c.Version(nodeCtx)
+	versionCtx, cancelVersion := nodeCtx, context.CancelFunc(func() {})
+	if versionTimeout > 0 {
+		versionCtx, cancelVersion = context.WithTimeout(nodeCtx, versionTimeout)
+	}
+
+	resp, err := c.Version(versionCtx)
+
+	cancelVersion()
+
 	if err != nil {
 		p.versionErr = err
 

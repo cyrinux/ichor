@@ -12,9 +12,13 @@ import (
 )
 
 const (
-	callTimeout   = 20 * time.Second
-	nodeTimeout   = 8 * time.Second
-	healthTimeout = 2 * time.Minute
+	callTimeout = 20 * time.Second
+	nodeTimeout = 8 * time.Second
+	// nodeDialTimeout bounds a streamed overview node's first call (Version, which tells it
+	// is reachable) within nodeTimeout: a node that does not answer is shown down on the home
+	// after this. ClusterOverview (monitor, widgets) keeps the full nodeTimeout.
+	nodeDialTimeout = 3 * time.Second
+	healthTimeout   = 2 * time.Minute
 	// Connections are reused across calls (live graphs poll every few seconds) and closed
 	// after this long without use.
 	sessionIdle = 2 * time.Minute
@@ -116,6 +120,11 @@ func acquireSession(configYAML, contextName string) (*session, func(), error) {
 
 // withSession runs fn with a (reused) session, bounded by timeout.
 func withSession[T any](configYAML, contextName string, timeout time.Duration, fn func(context.Context, *session) (T, error)) (T, error) {
+	return withSessionFrom(context.Background(), configYAML, contextName, timeout, fn)
+}
+
+// withSessionFrom is withSession under parent: cancelling parent (a run stopped) ends fn too.
+func withSessionFrom[T any](parent context.Context, configYAML, contextName string, timeout time.Duration, fn func(context.Context, *session) (T, error)) (T, error) {
 	s, release, err := acquireSession(configYAML, contextName)
 	if err != nil {
 		var zero T
@@ -125,7 +134,7 @@ func withSession[T any](configYAML, contextName string, timeout time.Duration, f
 
 	defer release()
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(parent, timeout)
 	defer cancel()
 
 	return fn(ctx, s)

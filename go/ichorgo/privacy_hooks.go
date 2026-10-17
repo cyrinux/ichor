@@ -65,6 +65,17 @@ func (l maskedNetPerfListener) OnDone(reportJSON string, errMessage string) {
 	l.NetPerfListener.OnDone(privacy.mask(reportJSON), privacy.maskPlain(errMessage))
 }
 
+// maskedOverviewListener masks each streamed node and the complete overview.
+type maskedOverviewListener struct{ OverviewListener }
+
+func (l maskedOverviewListener) OnNode(json string) {
+	l.OverviewListener.OnNode(privacy.mask(json))
+}
+
+func (l maskedOverviewListener) OnDone(overviewJSON, errMessage string) {
+	l.OverviewListener.OnDone(privacy.mask(overviewJSON), privacy.maskPlain(errMessage))
+}
+
 type maskedHubbleListener struct{ HubbleListener }
 
 func (l maskedHubbleListener) OnUpdate(json string) { l.HubbleListener.OnUpdate(privacy.mask(json)) }
@@ -165,6 +176,21 @@ func learnClusterHosts(ctx context.Context, c *client.Client, nodes []nodeOvervi
 
 	privacy.learnDomains(domains...)
 	privacy.learnHosts(clusterHostEntries(ctx, c, nodes))
+}
+
+// learnNodeHost teaches the mask one node's hostname and domain before that node is shown
+// on its own (a streamed overview node); learnClusterHosts still learns the whole cluster
+// once the overview is complete.
+func learnNodeHost(n nodeOverview, domain string) {
+	if !privacy.isEnabled() {
+		return
+	}
+
+	privacy.learnDomains(domain)
+
+	if n.Hostname != n.Node {
+		privacy.learnHosts([]hostEntry{{address: n.Node, hostname: n.Hostname, role: n.Role}})
+	}
 }
 
 // clusterHostEntries lists the hosts of the cluster: the overview nodes plus the members

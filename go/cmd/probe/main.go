@@ -1,6 +1,6 @@
 // Command probe exercises the ichorgo API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] [-omni-browser] [-timing] COMMAND [ARGS]
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] [-omni-browser] [-timing] [-stream] COMMAND [ARGS]
 //
 // An Omni context signs in with OMNI_SERVICE_ACCOUNT_KEY from the environment, or in the
 // browser with -omni-browser.
@@ -100,6 +100,7 @@ func main() {
 	omniBrowser := flag.Bool("omni-browser", false, "an Omni account context: confirm a new key in the browser first (a service account reads OMNI_SERVICE_ACCOUNT_KEY)")
 	dataDir := flag.String("data-dir", "", "keep what the app keeps across launches (audit log, scan reports) in this directory")
 	timing := flag.Bool("timing", false, "print the startup trace (config parse, session, first node, all nodes) to stderr")
+	stream := flag.Bool("stream", false, "overview: print each node as it answers, then the complete overview")
 	// Flags may also follow the command: `probe overview -timing -context lab`.
 	_ = flag.CommandLine.Parse(hoistFlags(flag.CommandLine, os.Args[1:])) //nolint:errcheck // ExitOnError
 
@@ -133,7 +134,7 @@ func main() {
 
 	out, err := c.run(env{
 		cmd: c.name, cfg: cfg, context: *contextName, kubeServer: *kubeServer, ageRecipient: *ageRecipient,
-		configPath: *configPath, home: home, mask: *mask, maskWords: *maskWords,
+		configPath: *configPath, home: home, mask: *mask, maskWords: *maskWords, stream: *stream,
 	})
 	if err != nil {
 		fail(err)

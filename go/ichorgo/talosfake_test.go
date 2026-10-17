@@ -92,6 +92,9 @@ type fakeTalos struct {
 	// clockOffsets are a node's clock offsets to its NTP server, in ms, for TimeService.Time
 	// (a node without one: Unimplemented).
 	clockOffsets map[string]int64
+	// versionHold holds a node's Version answer until the channel is closed (or the call
+	// gives up): a slow node.
+	versionHold map[string]chan struct{}
 }
 
 type fakeConfigApply struct {
@@ -202,6 +205,29 @@ func (f *fakeTalos) called(prefix string) []string {
 	return out
 }
 
+// waitVersion blocks while the node ctx targets is held (see versionHold).
+func (f *fakeTalos) waitVersion(ctx context.Context) {
+	md, _ := metadata.FromIncomingContext(ctx)
+
+	v := md.Get("node")
+	if len(v) == 0 {
+		return
+	}
+
+	f.mu.Lock()
+	hold := f.versionHold[v[0]]
+	f.mu.Unlock()
+
+	if hold == nil {
+		return
+	}
+
+	select {
+	case <-hold:
+	case <-ctx.Done():
+	}
+}
+
 // start serves f over TLS on loopback and returns a talosconfig for nodes through it.
 func (f *fakeTalos) start(t *testing.T, nodes ...string) string {
 	t.Helper()
@@ -240,6 +266,8 @@ type fakeTalosMachine struct {
 }
 
 func (m fakeTalosMachine) Version(ctx context.Context, _ *emptypb.Empty) (*machineapi.VersionResponse, error) {
+	m.f.waitVersion(ctx)
+
 	node, err := m.f.enter(ctx, "Version")
 	if err != nil {
 		return nil, err
