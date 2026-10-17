@@ -8,6 +8,8 @@ import IchorCore
 /// opens nothing.
 struct ClusterSummaryCard: View {
     let name: String
+    /// The active context, for the provider logo before the name; none: no logo.
+    var context: ContextSummary? = nil
     let summary: ClusterSummary
     /// While the overview streams in: how many nodes answered, shown instead of the health
     /// pill (which only a complete overview can tell), with a thin bar when the total is known.
@@ -16,7 +18,13 @@ struct ClusterSummaryCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center) {
+            HStack(alignment: .center, spacing: 8) {
+                if let context {
+                    // A fixed frame, so the name does not shift; decorative, the name says it.
+                    BundledLogo(name: clusterLogo(context))
+                        .frame(width: 22, height: 22)
+                        .accessibilityHidden(true)
+                }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: name).font(.headline).lineLimit(1)
                     headline.font(.caption).foregroundStyle(.secondary).monospacedDigit()

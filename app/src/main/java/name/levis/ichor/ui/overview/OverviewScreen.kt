@@ -770,7 +770,8 @@ private fun NodeList(
                         overview.nodesAnswered,
                         onInsights,
                         onCapacity,
-                        Modifier.longPressToCustomize(onCustomize),
+                        context = certificate,
+                        modifier = Modifier.longPressToCustomize(onCustomize),
                     )
                 }
                 OverviewCard.APPS -> item(key = card.name) {
