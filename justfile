@@ -266,6 +266,10 @@ qr config="talosconfig-phone":
 qr-gz config="talosconfig-phone":
     gzip -9 < "{{ config }}" | qrencode -8 -t ansiutf8
 
+# A config too large even gzipped, over several QR codes the app collects (-o DIR writes PNGs).
+qr-parts config="talosconfig-phone" *args:
+    python3 scripts/qr-parts.py "{{ config }}" {{ args }}
+
 # Remove build outputs and caches (Gradle, Go AAR, gomobile/NDK shims).
 clean:
     rm -rf app/build build/reports .gradle .cache/ndk .cache/x-mobile .cache/gobin app/libs/ichorgo.aar

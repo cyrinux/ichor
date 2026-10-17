@@ -57,6 +57,8 @@ struct HelpSheet: View {
                     CommandRow("qrencode -t ansiutf8 -r talosconfig-phone")
                     Text("Too large for a QR code? Compress it, the app expands it:").font(.footnote)
                     CommandRow("gzip -9 < talosconfig-phone | qrencode -8 -t ansiutf8")
+                    Text("Still too large? From the Ichor repository, split it over several codes and scan them in any order:").font(.footnote)
+                    CommandRow("just qr-parts talosconfig-phone")
                     Text("Delete other copies afterwards: the file contains the private key. The app encrypts it with a Secure Enclave key.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
@@ -67,6 +69,8 @@ struct HelpSheet: View {
                     CommandRow("kubectl config view --flatten --minify > kubeconfig-phone")
                     Text("Too large for a QR code? Compress it, the app expands it:").font(.footnote)
                     CommandRow("gzip -9 < kubeconfig-phone | qrencode -8 -t ansiutf8")
+                    Text("Still too large? From the Ichor repository, split it over several codes and scan them in any order:").font(.footnote)
+                    CommandRow("just qr-parts kubeconfig-phone")
                     Text("Prefer a ServiceAccount with read-only rights over your admin credentials.")
                         .font(.footnote).foregroundStyle(.secondary)
                     NavigationLink("How to create a service account") { ServiceAccountHelpView() }

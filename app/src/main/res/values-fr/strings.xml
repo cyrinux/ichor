@@ -692,6 +692,14 @@
     <string name="import_import">Importer</string>
     <string name="import_camera_needed">L\'autorisation d\'accès à l\'appareil photo est nécessaire pour scanner le code QR d\'un talosconfig.</string>
     <string name="import_grant_camera">Autoriser l\'accès à l\'appareil photo</string>
+    <string name="qr_parts_progress">%1$d codes sur %2$d scannés</string>
+    <string name="qr_parts_still_missing">Manquants : %1$s</string>
+    <string name="qr_parts_start_over">Recommencer</string>
+    <string name="qr_parts_finish_first">Terminez d\'abord cette série ou recommencez.</string>
+    <string name="qr_parts_reset">Ce code appartient à une autre série : reprise à partir de celui-ci.</string>
+    <string name="qr_parts_mismatch">Ces codes viennent de séries différentes. Recommencez et scannez une seule série.</string>
+    <string name="qr_parts_missing">Il manque des codes. Recommencez et scannez-les tous.</string>
+    <string name="qr_parts_invalid">Ces codes ne forment pas une configuration. Recommencez et scannez-les à nouveau.</string>
 
     <!-- Help: creating a talosconfig -->
     <string name="help_title">Créer un talosconfig pour ce téléphone</string>
@@ -3986,6 +3994,7 @@
     <string name="kube_problem_no_credentials">Il n’a aucun identifiant : ajoutez un certificat client ou un jeton.</string>
     <string name="kube_problem_invalid">Ce contexte est illisible.</string>
     <string name="help_qr_compressed">Trop gros pour un seul QR code (un kubeconfig avec certificat) ? Compressez-le d’abord :</string>
+    <string name="help_qr_parts">Toujours trop grand ? Depuis le dépôt Ichor, répartissez-le sur plusieurs codes et scannez-les dans n\'importe quel ordre :</string>
     <string name="help_kube_title">Depuis un kubeconfig</string>
     <string name="help_kube_body">Un kubeconfig avec un certificat client ou un jeton fonctionne aussi : l’app montre alors le côté Kubernetes de ce cluster (workloads, nœuds, Argo CD, Flux…), sans Talos.</string>
     <string name="help_kube_flatten">Rendez-le autonome (certificats intégrés, contexte courant seul), puis transférez-le comme un talosconfig :</string>

@@ -685,6 +685,14 @@
     <string name="import_import">Importieren</string>
     <string name="import_camera_needed">Zum Scannen eines talosconfig-QR-Codes ist die Kameraberechtigung erforderlich.</string>
     <string name="import_grant_camera">Kamerazugriff erlauben</string>
+    <string name="qr_parts_progress">%1$d von %2$d Codes gescannt</string>
+    <string name="qr_parts_still_missing">Fehlend: %1$s</string>
+    <string name="qr_parts_start_over">Neu beginnen</string>
+    <string name="qr_parts_finish_first">Schließe zuerst diesen Satz ab oder beginne neu.</string>
+    <string name="qr_parts_reset">Dieser Code gehört zu einem anderen Satz: Neustart ab diesem Code.</string>
+    <string name="qr_parts_mismatch">Diese Codes stammen aus verschiedenen Sätzen. Beginne neu und scanne nur einen Satz.</string>
+    <string name="qr_parts_missing">Es fehlen Codes. Beginne neu und scanne alle.</string>
+    <string name="qr_parts_invalid">Diese Codes ergeben keine Konfiguration. Beginne neu und scanne sie erneut.</string>
 
     <!-- Help: creating a talosconfig -->
     <string name="help_title">talosconfig für dieses Smartphone erstellen</string>
@@ -3978,6 +3986,7 @@
     <string name="kube_problem_no_credentials">Er hat keine Zugangsdaten: Füge ein Client-Zertifikat oder ein Token hinzu.</string>
     <string name="kube_problem_invalid">Dieser Kontext kann nicht gelesen werden.</string>
     <string name="help_qr_compressed">Zu groß für einen QR-Code (eine kubeconfig mit Zertifikat)? Erst komprimieren:</string>
+    <string name="help_qr_parts">Immer noch zu groß? Teile sie im Ichor-Repository auf mehrere Codes auf und scanne sie in beliebiger Reihenfolge:</string>
     <string name="help_kube_title">Aus einer kubeconfig</string>
     <string name="help_kube_body">Eine kubeconfig mit Client-Zertifikat oder Token geht auch: Die App zeigt dann die Kubernetes-Seite dieses Clusters (Workloads, Nodes, Argo CD, Flux…), ohne Talos.</string>
     <string name="help_kube_flatten">Mach sie eigenständig (Zertifikate eingebettet, nur der aktuelle Kontext) und übertrage sie wie eine talosconfig:</string>

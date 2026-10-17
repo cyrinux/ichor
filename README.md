@@ -881,7 +881,17 @@ Pick one of these:
 
   Both forms work, as does the older `ichor-config:` text form (base64url of gzip).
 
-Delete `talosconfig.png` and the copy in `Download/` afterwards; both contain the private key.
+  A config too large even compressed (several clusters, long certificates) goes over several
+  codes, each `ichor:<i>/<n>:<chunk>` (up to 16 codes of 1,200 characters, version 25 at ECC
+  level L). Scan them in any order: the app shows "2 of 3" and imports the config once all
+  are in.
+
+  ```sh
+  just qr-parts talosconfig-phone            # one code after another in the terminal
+  just qr-parts talosconfig-phone -o parts   # parts/part-1-of-3.png, ...
+  ```
+
+Delete `talosconfig.png` (or the `parts` PNGs) and the copy in `Download/` afterwards; they contain the private key.
 The app stores the config AES-GCM encrypted, excluded from backups: an Android Keystore key (in
 the StrongBox chip when the phone has one) wraps a random data key that encrypts the config, so
 it opens in milliseconds however many clusters it holds. A busy chip is tried again for a few
