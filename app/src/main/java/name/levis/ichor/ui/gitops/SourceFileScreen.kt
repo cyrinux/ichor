@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.forgeFileUrl
 import name.levis.ichor.model.isYamlPath
 import name.levis.ichor.model.shortRevision
@@ -87,7 +88,7 @@ fun SourceFileScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
                 title = {
                     Column {
                         Text(path.substringAfterLast('/'), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        val sha = view?.let { it.file.sha.ifEmpty { it.source.revision } }.orEmpty()
+                        val sha = view?.let { if (it.source.readPath == SourceReadPath.FLUX) it.file.sha.ifEmpty { it.source.ref } else it.source.ref }.orEmpty()
                         Text(
                             if (sha.isEmpty()) path else "$path @ ${shortRevision(sha)}",
                             style = MaterialTheme.typography.labelMedium,
@@ -106,7 +107,7 @@ fun SourceFileScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
                             Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
                         })
                     }
-                    val url = view?.let { forgeFileUrl(it.source.webURL, it.file.sha.ifEmpty { it.source.ref }, path) }.orEmpty()
+                    val url = view?.let { forgeFileUrl(it.source.webURL, it.source.ref, path) }.orEmpty()
                     if (url.isNotEmpty()) {
                         TooltipIconButton(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.gitops_source_open_browser), onClick = { openUrl(context, url) })
                     }
@@ -121,7 +122,7 @@ fun SourceFileScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
             UiState.Loading -> LoadingBox(modifier)
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
             is UiState.Loaded -> if (s.data.file.truncated) {
-                val url = forgeFileUrl(s.data.source.webURL, s.data.file.sha.ifEmpty { s.data.source.ref }, path)
+                val url = forgeFileUrl(s.data.source.webURL, s.data.source.ref, path)
                 EmptyState(Icons.AutoMirrored.Outlined.InsertDriveFile, stringResource(R.string.gitops_source_truncated), modifier) {
                     if (url.isNotEmpty()) OpenInBrowserButton { openUrl(context, url) }
                 }

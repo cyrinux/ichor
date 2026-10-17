@@ -128,7 +128,7 @@ struct SourceFileText {
 
     init(file: GitFile) {
         self.file = file
-        lines = file.truncated ? [] : filterLines(file.content, query: "")
+        lines = file.truncated ? [] : filterLines(file.content.replacingOccurrences(of: "\r\n", with: "\n"), query: "")
         gutter = CGFloat(max(2, String(lines.count).count)) * 7
     }
 }

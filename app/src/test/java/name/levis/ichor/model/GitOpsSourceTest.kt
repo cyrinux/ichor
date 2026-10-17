@@ -52,6 +52,7 @@ class GitOpsSourceTest {
     fun theRowLabelIsThePathAtTheShortCommit() {
         assertEquals("apps/podinfo @ 1a2b3c4", sourceRowLabel(forge))
         assertEquals("/ @ main", sourceRowLabel(forge.copy(path = "", revision = "")))
+        assertEquals("apps", sourceRowLabel(forge.copy(path = "apps", revision = "", tracked = "")))
     }
 
     @Test

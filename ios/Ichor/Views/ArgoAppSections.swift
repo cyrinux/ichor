@@ -143,7 +143,7 @@ struct GitSourceRow: View {
 
     var body: some View {
         if source.isChart {
-            row(Text("Helm chart \(source.chart) · \(source.ref)"), symbol: "shippingbox")
+            row(Text("Helm chart \(source.chart.isEmpty ? source.repoURL : source.chart) · \(source.ref)"), symbol: "shippingbox")
                 .accessibilityElement(children: .combine)
         } else if source.canOpen {
             NavigationLink { SourceBrowserView(source: source, dir: source.startDir) } label: {

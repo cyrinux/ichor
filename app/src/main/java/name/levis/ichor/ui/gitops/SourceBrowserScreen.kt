@@ -102,7 +102,7 @@ fun SourceBrowserScreen(
                         Text(target.name, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                     }
                 },
-                navigationIcon = { BackButton(onBack) },
+                navigationIcon = { BackButton { if (trail.isNotEmpty()) vm.back() else onBack() } },
                 actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = vm::refresh) },
             )
         },

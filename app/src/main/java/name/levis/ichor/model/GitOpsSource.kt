@@ -94,8 +94,11 @@ data class GitFile(
 )
 
 /** The label of a source row: "apps/podinfo @ 1a2b3c4" (the followed ref when no commit is known). */
-fun sourceRowLabel(source: GitSource): String =
-    "${source.path.ifEmpty { "/" }} @ ${shortRevision(source.ref)}"
+fun sourceRowLabel(source: GitSource): String {
+    val path = source.path.ifEmpty { "/" }
+    val at = shortRevision(source.ref)
+    return if (at.isEmpty()) path else "$path @ $at"
+}
 
 /** A path cleaned of its leading and trailing slashes ("" is the repository root). */
 fun cleanSourceDir(dir: String): String = dir.trim().trim('/')
