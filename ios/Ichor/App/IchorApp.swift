@@ -203,6 +203,10 @@ enum Route: Hashable {
     case argoApp(namespace: String, name: String)
     /// One Flux object (a share link; the list pushes its own FluxAppRoute).
     case fluxApp(kind: String, namespace: String, name: String)
+    /// The directory dir (from the repository root) of an app's source, at the commit the cluster runs.
+    case gitOpsSource(GitSource, dir: String)
+    /// One file of an app's source, read only.
+    case gitOpsFile(GitSource, path: String)
     /// Flux Kustomizations, HelmReleases and sources (os:admin); downNodes as for dataServices.
     case flux(downNodes: Set<String>)
     /// The cluster checkup (a share link; the Kubernetes screens push their own).
@@ -322,6 +326,8 @@ struct MainNavigation: View {
                     case .argoWindows: ArgoWindowsView()
                     case .argoApp(let namespace, let name): ArgoAppView(namespace: namespace, name: name, downNodes: [])
                     case .fluxApp(let kind, let namespace, let name): FluxAppView(kind: kind, namespace: namespace, name: name, downNodes: [])
+                    case .gitOpsSource(let source, let dir): SourceBrowserView(source: source, dir: dir)
+                    case .gitOpsFile(let source, let path): SourceFileView(source: source, path: path)
                     case .flux(let downNodes): FluxView(downNodes: downNodes)
                     case .checkup: CheckupView()
                     case .alerts: AlertsView(path: $path)

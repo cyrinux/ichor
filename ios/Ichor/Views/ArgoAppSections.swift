@@ -119,6 +119,57 @@ struct ArgoHero: View {
     }
 }
 
+/// The app's sources as Source rows (shared with FluxAppView): one per Git source but those
+/// only read for their value files, each opening the files it deploys at the commit the cluster
+/// runs; a packaged Helm chart only names itself. Nothing until read, nor when it cannot be.
+struct GitOpsSourceSection: View {
+    let sources: GitOpsSource?
+
+    var body: some View {
+        if let sources, !sources.rows.isEmpty {
+            Section {
+                ForEach(sources.rows, id: \.index) { row in GitSourceRow(source: row.source) }
+            } footer: {
+                if !sources.note.isEmpty { Text(verbatim: sources.note) }
+            }
+        }
+    }
+}
+
+/// "Source", then "apps/podinfo @ 1a2b3c4" (or the chart and its version), opening the browser
+/// when the app can read the files.
+struct GitSourceRow: View {
+    let source: GitSource
+
+    var body: some View {
+        if source.isChart {
+            row(Text("Helm chart \(source.chart.isEmpty ? source.repoURL : source.chart) · \(source.ref)"), symbol: "shippingbox")
+                .accessibilityElement(children: .combine)
+        } else if source.canOpen {
+            NavigationLink { SourceBrowserView(source: source, dir: source.startDir) } label: {
+                row(Text(verbatim: sourceRowLabel(source)), symbol: "folder")
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 4) {
+                row(Text(verbatim: sourceRowLabel(source)), symbol: "folder")
+                Text("This source is not a Git repository the app can read.").font(.caption).foregroundStyle(.secondary)
+            }
+            .accessibilityElement(children: .combine)
+        }
+    }
+
+    private func row(_ value: Text, symbol: String) -> some View {
+        Label {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Source").font(.caption).foregroundStyle(.secondary)
+                value.font(.callout.monospaced()).lineLimit(2).truncationMode(.middle)
+            }
+        } icon: {
+            Image(systemName: symbol).foregroundStyle(.tint)
+        }
+    }
+}
+
 /// The likely cause when it points at a pod or a node, the health message, then Argo CD's conditions.
 struct ArgoConditionsSection: View {
     let app: ArgoApp

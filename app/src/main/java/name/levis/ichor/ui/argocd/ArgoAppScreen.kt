@@ -79,6 +79,8 @@ import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.gitops.GitOpsSourceSection
+import name.levis.ichor.ui.gitops.SOURCE_TOOL_ARGO
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
 import name.levis.ichor.ui.workloads.RolloutStatusSheet
@@ -101,6 +103,8 @@ fun ArgoAppScreen(
     onWindows: (() -> Unit)? = null,
     onDiff: (() -> Unit)? = null,
     initialSync: Boolean = false,
+    /** Opens the source browser on the app's source at that index. */
+    onSource: ((Int) -> Unit)? = null,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
     val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(talos.gitOpsRepository, talos.kubeRepository, freezeReminderHook(talos)) })
@@ -147,7 +151,7 @@ fun ArgoAppScreen(
                         val network = NetworkContext(s.fetchedAt, downNodes, overview?.nodes.orEmpty(), onNode)
                         val project = s.data.projectOf(app)
                         val freeze = FreezeContext(s.data, project, vm.freezeBusy(busy, project), onWindows)
-                        AppDetail(app, downNodes, app.key in busy, vm, network, freeze, onDiff, initialSync)
+                        AppDetail(app, downNodes, app.key in busy, vm, network, freeze, onDiff, initialSync, onSource)
                     }
                 }
                 DataFreshness(s, edgeToEdge = false)
@@ -166,6 +170,7 @@ private fun AppDetail(
     freeze: FreezeContext,
     onDiff: (() -> Unit)?,
     initialSync: Boolean,
+    onSource: ((Int) -> Unit)?,
 ) {
     var selecting by rememberSaveable { mutableStateOf(false) }
     var freezeSheet by remember { mutableStateOf(false) }
@@ -285,6 +290,9 @@ private fun AppDetail(
         }
         if (onDiff != null) {
             item(key = "diff") { ArgoDiffButton(app, onDiff) }
+        }
+        item(key = "source") {
+            GitOpsSourceSection(SOURCE_TOOL_ARGO, "Application", app.namespace, app.name, app.revision, onSource)
         }
         item(key = "freeze") {
             ArgoFreezeCard(

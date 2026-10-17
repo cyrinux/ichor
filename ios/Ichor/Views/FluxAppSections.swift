@@ -158,6 +158,16 @@ struct FluxHero: View {
     }
 }
 
+/// Where a Kustomization's or HelmRelease's files are: the Source row opens them, read from the
+/// source-controller's artifact (no Git token); a chart from a Helm repository only names itself.
+struct FluxSourceSection: View {
+    let sources: GitOpsSource?
+
+    var body: some View {
+        GitOpsSourceSection(sources: sources)
+    }
+}
+
 /// Flux's conditions (the Ready one only when the hero does not already say it), each with its
 /// reason, message and when it changed.
 struct FluxConditionsSection: View {

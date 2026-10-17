@@ -32,6 +32,8 @@ struct ArgoAppView: View {
     @State private var openNode: NodeRef?
     @State private var freezeSheet = false
     @State private var confirmUnfreeze = false
+    /// Where the app's files are (the Source rows); nil until read.
+    @State private var gitSources: GitOpsSource?
 
     private struct SyncRequest: Identifiable {
         let id = UUID()
@@ -85,6 +87,7 @@ struct ArgoAppView: View {
                     Text("What a sync would change now, compared in the cluster without changing anything.")
                 }
             }
+            GitOpsSourceSection(sources: gitSources)
             ArgoFreezeSection(app: app, windows: windows, busy: busy || project.map { store.busyProjects.contains($0.id) } == true,
                               freeze: { freezeSheet = true },
                               extend: {
@@ -103,6 +106,8 @@ struct ArgoAppView: View {
         }
         .refreshable { await load() }
         .themedBackground()
+        // Again after a sync to another commit.
+        .task(id: app.revision) { await loadSources() }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if selecting { selectionBar(app) }
         }
@@ -209,6 +214,14 @@ struct ArgoAppView: View {
         }
         takeAlertAction()
         await traffic
+    }
+
+    /// The Source rows: left out when the sources cannot be read, the rest of the screen stands alone.
+    private func loadSources() async {
+        guard let client = model.client else { return }
+        if let read = try? await client.gitOpsSource(tool: "argocd", kind: "Application", namespace: namespace, name: name) {
+            gitSources = read
+        }
     }
 
     /// Sync chosen on this app's alert: the sync sheet, as its Sync button opens it, once the app
