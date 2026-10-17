@@ -11,12 +11,17 @@ enum ProjectLinks {
 }
 
 struct AboutSection: View {
+    @Environment(AppModel.self) private var model
     @State private var donation: Donation?
+    @State private var replayingTour = false
+    @State private var tourError: String?
 
     var body: some View {
         Section {
             LabeledContent("Version", value: Self.version)
             NavigationLink(value: Route.changelog) { Label("What's new", systemImage: "sparkles") }
+            Button(action: replayTour) { Label("Replay the demo tour", systemImage: "play.circle") }
+                .disabled(replayingTour)
             Link(destination: ProjectLinks.repo) { Label("Source code on GitHub", systemImage: "chevron.left.forwardslash.chevron.right") }
             Link(destination: ProjectLinks.website) { Label("Ichor website", systemImage: "arrow.up.right.square") }
             NavigationLink(value: Route.licenses) { Label("Open-source licenses", systemImage: "doc.text") }
@@ -36,6 +41,32 @@ struct AboutSection: View {
             }
         }
         .sheet(item: $donation) { coin in DonationSheet(coin: coin) }
+        .messageAlert($tourError)
+    }
+
+    /// The Talos demo stored with the clusters, if any.
+    private var talosDemo: ContextSummary? {
+        model.summary?.contexts.first { DemoTourSteps.runs(demo: $0.demo, kube: $0.isKube) }
+    }
+
+    /// The tour's coach marks again, on the Talos demo's overview (the demo added back first
+    /// when it was removed).
+    private func replayTour() {
+        replayingTour = true
+        Task {
+            defer { replayingTour = false }
+            do {
+                if talosDemo == nil {
+                    try await model.save(yaml: try await TalosClient.demoConfig(), replacingSameCluster: true)
+                }
+                guard let demo = talosDemo else { return }
+                DemoTour.replay()
+                model.activeContext = demo.name
+                NotificationRouter.shared.pendingHome = true
+            } catch {
+                tourError = error.localizedDescription
+            }
+        }
     }
 
     static var version: String {

@@ -1,6 +1,146 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "A node needs a look" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un nœud à vérifier"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un nodo requiere atención"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вузол потребує уваги"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Knoten braucht Aufmerksamkeit"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un nodo da controllare"
+          }
+        }
+      }
+    },
+    "Alerts, screenshot mode, backups and this tour live here." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertes, mode capture d’écran, sauvegardes et cette visite se trouvent ici."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las alertas, el modo captura de pantalla, las copias de seguridad y este recorrido están aquí."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сповіщення, режим знімків екрана, резервні копії та цей тур — тут."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alarme, Screenshot-Modus, Backups und diese Tour findest du hier."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisi, modalità screenshot, backup e questo tour si trovano qui."
+          }
+        }
+      }
+    },
+    "Every node with its state. Tap one to open it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque nœud avec son état. Touchez-en un pour l’ouvrir."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada nodo con su estado. Toca uno para abrirlo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кожен вузол і його стан. Торкніться вузла, щоб відкрити його."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeder Knoten mit seinem Zustand. Tippe auf einen, um ihn zu öffnen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni nodo con il suo stato. Toccane uno per aprirlo."
+          }
+        }
+      }
+    },
+    "Long-press a node for its actions: reboot, shut down, logs." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appuyez longuement sur un nœud pour ses actions : redémarrer, éteindre, journaux."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén pulsado un nodo para ver sus acciones: reiniciar, apagar, registros."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Утримуйте вузол, щоб побачити його дії: перезавантаження, вимкнення, журнали."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halte einen Knoten gedrückt für seine Aktionen: neu starten, herunterfahren, Logs."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tieni premuto un nodo per le sue azioni: riavvia, spegni, log."
+          }
+        }
+      }
+    },
     "Pick a node to see its details" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -120,6 +260,181 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ su %2$@: DiskPressure"
+          }
+        }
+      }
+    },
+    "Quick actions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actions rapides"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acciones rápidas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Швидкі дії"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schnellaktionen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Azioni rapide"
+          }
+        }
+      }
+    },
+    "Replay the demo tour" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoir la visite de la démo"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repetir el recorrido de la demo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторити тур демо"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demo-Tour erneut ansehen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rivedi il tour della demo"
+          }
+        }
+      }
+    },
+    "Switch clusters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer de cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar de clúster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінити кластер"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster wechseln"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia cluster"
+          }
+        }
+      }
+    },
+    "Tap the cluster name to switch clusters or add one." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez le nom du cluster pour changer de cluster ou en ajouter un."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el nombre del clúster para cambiar de clúster o añadir uno."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Торкніться назви кластера, щоб змінити кластер або додати новий."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe auf den Clusternamen, um den Cluster zu wechseln oder einen hinzuzufügen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tocca il nome del cluster per cambiare cluster o aggiungerne uno."
+          }
+        }
+      }
+    },
+    "The bar at the top holds the actions you use most. Choose them in Settings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La barre du haut regroupe les actions que vous utilisez le plus. Choisissez-les dans les Réglages."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La barra superior reúne las acciones que más usas. Elígelas en Ajustes."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На верхній панелі — дії, якими ви користуєтеся найчастіше. Виберіть їх у Параметрах."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Leiste oben enthält die Aktionen, die du am häufigsten nutzt. Wähle sie in den Einstellungen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La barra in alto raccoglie le azioni che usi di più. Sceglile nelle Impostazioni."
           }
         }
       }
@@ -260,6 +575,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Запускається після: %@"
+          }
+        }
+      }
+    },
+    "Your nodes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos nœuds"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus nodos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваші вузли"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Knoten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I tuoi nodi"
           }
         }
       }

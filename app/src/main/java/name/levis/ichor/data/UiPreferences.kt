@@ -146,6 +146,24 @@ class UiPreferences(private val prefs: SharedPreferences) {
     )
     val privacyMask: StateFlow<PrivacyMask> = _privacyMask.asStateFlow()
 
+    /**
+     * The demo tour (coach marks on the Talos demo home) is due: set when the demo is first
+     * added, or replayed from Settings; cleared once skipped or finished.
+     */
+    private val _tourPending = MutableStateFlow(prefs.getBoolean(KEY_TOUR_PENDING, false))
+    val tourPending: StateFlow<Boolean> = _tourPending.asStateFlow()
+
+    /** Shows the demo tour the first time a demo is added; later demos do not bring it back. */
+    fun offerDemoTour() {
+        if (prefs.getBoolean(KEY_TOUR_OFFERED, false)) return
+        setTourPending(true)
+    }
+
+    fun setTourPending(pending: Boolean) {
+        prefs.edit().putBoolean(KEY_TOUR_PENDING, pending).putBoolean(KEY_TOUR_OFFERED, true).apply()
+        _tourPending.value = pending
+    }
+
     /** Committed synchronously: the worker and widget read it back at process start. */
     fun setPrivacyMask(mask: PrivacyMask) {
         prefs.edit().putBoolean(KEY_PRIVACY_MASK, mask.enabled).putString(KEY_PRIVACY_WORDS, mask.extraWords).commit()
@@ -280,6 +298,8 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_KUBE_OBJECT_BAR = "kube_object_bar"
         private const val KEY_MONO_TEXT_SCALE = "mono_text_scale_"
         private const val KEY_RECENT_SEARCHES = "recent_searches"
+        private const val KEY_TOUR_PENDING = "demo_tour_pending"
+        private const val KEY_TOUR_OFFERED = "demo_tour_offered"
 
         /** Reads the language without the app singletons (usable from attachBaseContext). */
         fun storedLanguage(context: Context): String =

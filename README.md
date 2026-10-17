@@ -21,6 +21,9 @@ The built-in demo works offline and shows five sample nodes, live metrics, servi
 logs, events, etcd, networking, storage, hardware and resources. The overview marks
 it as demo data; cluster changes and credential exports are unavailable. It can
 sit alongside your real clusters and be removed from **Manage clusters**.
+The first time the Talos demo opens, a short tour points at the cluster switcher, the nodes,
+a node that needs a look, the action bar and Settings; **Settings → About → Replay the demo
+tour** shows it again.
 
 > Ichor is an independent community project, not affiliated with or endorsed by Sidero Labs.
 > Talos is a trademark of Sidero Labs, Inc.

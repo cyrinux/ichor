@@ -16,6 +16,9 @@ final class NotificationRouter {
     /// A cluster's quick action was chosen: its fingerprint, to show that cluster.
     var pendingCluster: String?
 
+    /// Settings → "Replay the demo tour": back to the home screen (the demo's, now active).
+    var pendingHome = false
+
     /// The "Search clusters" quick action was chosen: open the search, once unlocked.
     var pendingSearch = false
 

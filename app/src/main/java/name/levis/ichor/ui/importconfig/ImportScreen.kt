@@ -68,7 +68,13 @@ fun ImportScreen(
     kubeDemo: Boolean = false,
     incoming: String? = null,
     onIncomingTaken: () -> Unit = {},
-    vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository, app.kubeAuthRepository, onBrowserDone = app::bringToFront) }),
+    vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(
+        app.configRepository,
+        app.kubeAuthRepository,
+        onBrowserDone = app::bringToFront,
+        // The Kubernetes demo has another home: no tour there yet.
+        onDemoSaved = { kube -> if (!kube) app.uiPreferences.offerDemoTour() },
+    ) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     // Keep the demo entry visible on first launch; config help is available in the toolbar.

@@ -129,6 +129,12 @@ import name.levis.ichor.ui.argocd.ArgoViewModel
 import name.levis.ichor.ui.dataservices.DataServicesViewModel
 import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.components.pageContent
+import name.levis.ichor.ui.tour.DemoTourHost
+import name.levis.ichor.ui.tour.TourAnchor
+import name.levis.ichor.ui.tour.tourAnchor
+import name.levis.ichor.ui.tour.tourScrollable
+import name.levis.ichor.model.isDenseCluster
+import androidx.compose.foundation.lazy.rememberLazyListState
 
 class OverviewViewModel(
     val talos: TalosRepository,
@@ -442,204 +448,211 @@ fun OverviewScreen(
         }
     }
 
-    Scaffold(
-        bottomBar = { DataFreshness(state) },
-        snackbarHost = { SnackbarHost(snackbar) },
-        // The AI diagnosis is optional: no trace of it unless it was turned on in Settings.
-        floatingActionButton = {
-            if (ai.enabled && !customizing) {
-                SmallFloatingActionButton(onClick = onDiagnose) {
-                    Icon(Icons.Outlined.AutoAwesome, stringResource(R.string.ai_title))
+    // The demo tour, once, on the Talos demo home; not over the editor, a menu or a screenshot-mode switch.
+    val tourPending by app.uiPreferences.tourPending.collectAsStateWithLifecycle()
+    val maskSwitching by app.maskTransition.collectAsStateWithLifecycle()
+    val touring = tourPending && config?.activeSummary?.isDemo == true && state is UiState.Loaded &&
+        !customizing && !clusterMenu && !showClusters && !maskSwitching
+    DemoTourHost(active = touring, onFinish = { app.uiPreferences.setTourPending(false) }) {
+        Scaffold(
+            bottomBar = { DataFreshness(state) },
+            snackbarHost = { SnackbarHost(snackbar) },
+            // The AI diagnosis is optional: no trace of it unless it was turned on in Settings.
+            floatingActionButton = {
+                if (ai.enabled && !customizing) {
+                    SmallFloatingActionButton(onClick = onDiagnose) {
+                        Icon(Icons.Outlined.AutoAwesome, stringResource(R.string.ai_title))
+                    }
                 }
-            }
-        },
-        topBar = {
-            if (customizing) TopAppBar(
-                title = { Text(stringResource(R.string.overview_edit_title)) },
-                actions = { TextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
-            ) else TopAppBar(
-                // Swipe the bar sideways for the previous/next cluster, tap the title for the menu.
-                modifier = Modifier.clusterSwipe(config, app::selectCluster),
-                title = {
-                    Box {
-                        ClusterTitle(config, clusterColors, clusterLabels, onOpen = { clusterMenu = true }) { ScreenshotModeIcon() }
-                        config?.let { stored ->
-                            ClusterMenu(
-                                expanded = clusterMenu,
-                                config = stored,
-                                colors = clusterColors,
-                                labels = clusterLabels,
-                                onSelect = app::selectCluster,
-                                onManage = { showClusters = true },
-                                onDismiss = { clusterMenu = false },
+            },
+            topBar = {
+                if (customizing) TopAppBar(
+                    title = { Text(stringResource(R.string.overview_edit_title)) },
+                    actions = { TextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
+                ) else TopAppBar(
+                    // Swipe the bar sideways for the previous/next cluster, tap the title for the menu.
+                    modifier = Modifier.clusterSwipe(config, app::selectCluster),
+                    title = {
+                        Box(Modifier.tourAnchor(TourAnchor.Switcher)) {
+                            ClusterTitle(config, clusterColors, clusterLabels, onOpen = { clusterMenu = true }) { ScreenshotModeIcon() }
+                            config?.let { stored ->
+                                ClusterMenu(
+                                    expanded = clusterMenu,
+                                    config = stored,
+                                    colors = clusterColors,
+                                    labels = clusterLabels,
+                                    onSelect = app::selectCluster,
+                                    onManage = { showClusters = true },
+                                    onDismiss = { clusterMenu = false },
+                                    onSearch = onSearch,
+                                    onUpgradeCluster = { onUpgradeCluster("") }.takeIf { config?.activeSummary?.allows(Feature.UPGRADE) == true },
+                                    onUpgradeKubernetes = onUpgradeKubernetes.takeIf { config?.activeSummary?.allows(Feature.UPGRADE) == true },
+                                    onAddNode = onAddNode.takeIf { config?.activeSummary?.let { !it.isKube && !it.omni } == true },
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        OverviewActions(
+                            bar = bar,
+                            nav = OverviewNavigation(
+                                onHealth = onHealth,
+                                onEvents = onEvents,
+                                onWorkloads = onWorkloads,
+                                onGitOps = if (argoHinted) onArgoCD else onFlux,
+                                onMetrics = onMetrics,
+                                onAlerts = onAlerts,
+                                onKubeSpan = onKubeSpan,
+                                onEtcd = onEtcd,
+                                onSettings = onSettings,
                                 onSearch = onSearch,
-                                onUpgradeCluster = { onUpgradeCluster("") }.takeIf { config?.activeSummary?.allows(Feature.UPGRADE) == true },
-                                onUpgradeKubernetes = onUpgradeKubernetes.takeIf { config?.activeSummary?.allows(Feature.UPGRADE) == true },
-                                onAddNode = onAddNode.takeIf { config?.activeSummary?.let { !it.isKube && !it.omni } == true },
+                            ),
+                            reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node },
+                            health = config?.activeSummary?.allows(Feature.HEALTH) == true,
+                            workloads = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
+                            gitOps = argoHinted || fluxHinted,
+                            onCustomize = { customizing = true },
+                        )
+                    },
+                )
+            },
+        ) { padding ->
+            config?.takeIf { showClusters }?.let { stored ->
+                ManageClustersSheet(
+                    config = stored,
+                    colors = clusterColors,
+                    labels = clusterLabels,
+                    onClose = { showClusters = false },
+                    onAddCluster = onAddCluster,
+                    onClustersCleared = onClustersCleared,
+                    onEndpoints = { editingEndpoints = it.name },
+                    onActivity = { onActivity(it.name) },
+                )
+            }
+            config?.let { stored ->
+                EndpointTools(
+                    config = stored,
+                    labels = clusterLabels,
+                    editing = editingEndpoints,
+                    scanning = scanningEndpoints,
+                    onEdit = { editingEndpoints = it },
+                    onScan = { scanningEndpoints = it },
+                )
+            }
+            config?.activeContext?.takeIf { showDiscovered && discovered.isNotEmpty() }?.let { contextName ->
+                AddDiscoveredNodesDialog(
+                    nodes = discovered,
+                    onAdd = { nodes ->
+                        showDiscovered = false
+                        scope.launch {
+                            runCatching { app.addClusterNodes(contextName, nodes.map { it.address }) }.fold(
+                                onSuccess = {
+                                    val text = context.resources.getQuantityString(R.plurals.discover_nodes_added, nodes.size, nodes.size)
+                                    Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+                                },
+                                onFailure = { Toast.makeText(context, it.userMessage(), Toast.LENGTH_LONG).show() },
                             )
                         }
-                    }
-                },
-                actions = {
-                    OverviewActions(
-                        bar = bar,
-                        nav = OverviewNavigation(
-                            onHealth = onHealth,
-                            onEvents = onEvents,
-                            onWorkloads = onWorkloads,
-                            onGitOps = if (argoHinted) onArgoCD else onFlux,
-                            onMetrics = onMetrics,
-                            onAlerts = onAlerts,
-                            onKubeSpan = onKubeSpan,
-                            onEtcd = onEtcd,
-                            onSettings = onSettings,
-                            onSearch = onSearch,
-                        ),
-                        reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node },
-                        health = config?.activeSummary?.allows(Feature.HEALTH) == true,
-                        workloads = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
-                        gitOps = argoHinted || fluxHinted,
-                        onCustomize = { customizing = true },
-                    )
-                },
-            )
-        },
-    ) { padding ->
-        config?.takeIf { showClusters }?.let { stored ->
-            ManageClustersSheet(
-                config = stored,
-                colors = clusterColors,
-                labels = clusterLabels,
-                onClose = { showClusters = false },
-                onAddCluster = onAddCluster,
-                onClustersCleared = onClustersCleared,
-                onEndpoints = { editingEndpoints = it.name },
-                onActivity = { onActivity(it.name) },
-            )
-        }
-        config?.let { stored ->
-            EndpointTools(
-                config = stored,
-                labels = clusterLabels,
-                editing = editingEndpoints,
-                scanning = scanningEndpoints,
-                onEdit = { editingEndpoints = it },
-                onScan = { scanningEndpoints = it },
-            )
-        }
-        config?.activeContext?.takeIf { showDiscovered && discovered.isNotEmpty() }?.let { contextName ->
-            AddDiscoveredNodesDialog(
-                nodes = discovered,
-                onAdd = { nodes ->
-                    showDiscovered = false
-                    scope.launch {
-                        runCatching { app.addClusterNodes(contextName, nodes.map { it.address }) }.fold(
-                            onSuccess = {
-                                val text = context.resources.getQuantityString(R.plurals.discover_nodes_added, nodes.size, nodes.size)
-                                Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
-                            },
-                            onFailure = { Toast.makeText(context, it.userMessage(), Toast.LENGTH_LONG).show() },
-                        )
-                    }
-                },
-                onNotNow = {
-                    showDiscovered = false
-                    discoveryVm.dismiss(discovered)
-                },
-                onDismiss = { showDiscovered = false },
-            )
-        }
-        if (customizing) HomeEditor(
-            layout = layout,
-            onChange = app.uiPreferences::setOverviewLayout,
-            look = overviewCardLook,
-            bar = bar,
-            barLook = overviewActionLook,
-            onBarChange = app.uiPreferences::setOverviewBar,
-            modifier = Modifier.pageContent(padding),
-            absent = absentCards,
-        )
-        else if (config?.activeSummary?.needsEndpoint == true) NoEndpointsBox(
-            onScan = { scanningEndpoints = true },
-            onAddEndpoint = { editingEndpoints = config?.activeContext }.takeIf { !clusterLabels.masked },
-            modifier = Modifier.padding(padding),
-        )
-        else when (val s = state) {
-            UiState.Loading -> LoadingBox(Modifier.pageContent(padding))
-            is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.pageContent(padding))
-            is UiState.Loaded -> PullToRefreshBox(
-                isRefreshing = s.refreshing,
-                onRefresh = {
-                    // A node may have been upgraded since: ask again what each one supports.
-                    vm.talos.forgetFeatures()
-                    vm.refresh()
-                    timeVm.refresh()
-                    appsVm.refresh()
-                    if (dataHints.isNotEmpty()) dataVm.refresh()
-                    if (alertsAllowed) alertsVm.refresh()
-                    scope.launch { discoveryVm.discover() }
-                },
-                modifier = Modifier.pageContent(padding).fillMaxSize(),
-            ) {
-                val down = s.data.outage
-                // With nodes known from before, they stay listed under a banner instead.
-                if (down != null && !showNodesAnyway && !s.data.hasLastKnown) ClusterUnreachableBox(
-                    outage = down,
-                    endpoints = config?.activeSummary?.endpoints.orEmpty(),
-                    onRetry = vm::refresh,
-                    onShowNodes = { showNodesAnyway = true },
-                    onScan = { scanningEndpoints = true }.takeIf { config?.activeSummary?.demo == false },
-                    onEditEndpoints = { editingEndpoints = config?.activeContext }
-                        .takeIf { config?.activeSummary?.demo == false && !clusterLabels.masked },
-                ) else NodeList(
-                    overview = s.data,
-                    // In the map's order, site by site, once the KubeSpan map was fetched (or kept from before).
-                    topology = remember(s.data) { vm.talos.cached<ClusterTopology>(TOPOLOGY)?.value },
-                    outage = down?.takeIf { s.data.hasLastKnown },
-                    onRetry = vm::refresh,
-                    clusterName = config?.activeSummary?.let(clusterLabels::of),
-                    fingerprint = config?.activeSummary?.fingerprint,
-                    time = timeState,
-                    certificate = config?.activeSummary,
-                    onIssueConfig = onIssueConfig,
-                    onInsights = onInsights,
-                    onCapacity = onCapacity,
-                    apps = apps,
-                    onApps = onApps,
-                    dataServices = dataServices.takeIf { dataHints.isNotEmpty() },
-                    dataHints = dataHints,
-                    onDataServices = onDataServices,
-                    argo = argo.takeIf { argoHinted },
-                    onArgoCD = onArgoCD,
-                    flux = flux.takeIf { fluxHinted },
-                    onFlux = onFlux,
-                    alerts = alertsShown,
-                    onAlerts = onAlerts,
-                    onNode = onNode,
-                    onSettings = onSettings,
-                    onFunding = onFunding,
-                    onNodeAction = onNodeAction,
-                    canPower = config?.activeSummary?.allows(Feature.POWER) == true,
-                    canShell = config?.activeSummary?.allows(Feature.DEBUG_SHELL) == true,
-                    canDrain = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
-                    canUpgrade = config?.activeSummary?.allows(Feature.UPGRADE) == true,
-                    onUpgrade = onUpgrade,
-                    onUpgradeCluster = onUpgradeCluster,
-                    skippedTalosUpdate = config?.activeSummary?.fingerprint?.let(skippedTalosUpdates::get),
-                    onSkipTalosUpdate = skipTalosUpdate,
-                    live = liveState.takeIf { liveEnabled },
-                    discovered = discovered.size,
-                    onDiscovered = { showDiscovered = true },
-                    canDetectPublicIps = config?.activeSummary?.allows(Feature.KUBECONFIG) == true,
-                    layout = layout,
-                    onCustomize = customize,
-                    nodesExpanded = nodesExpanded,
-                    onToggleNodes = { app.uiPreferences.setNodesExpanded(!nodesExpanded) },
-                    onChangelog = onChangelog,
-                    onAllNodes = onAllNodes,
-                    pins = pins,
-                    onOpenTarget = onOpenTarget,
+                    },
+                    onNotNow = {
+                        showDiscovered = false
+                        discoveryVm.dismiss(discovered)
+                    },
+                    onDismiss = { showDiscovered = false },
                 )
+            }
+            if (customizing) HomeEditor(
+                layout = layout,
+                onChange = app.uiPreferences::setOverviewLayout,
+                look = overviewCardLook,
+                bar = bar,
+                barLook = overviewActionLook,
+                onBarChange = app.uiPreferences::setOverviewBar,
+                modifier = Modifier.pageContent(padding),
+                absent = absentCards,
+            )
+            else if (config?.activeSummary?.needsEndpoint == true) NoEndpointsBox(
+                onScan = { scanningEndpoints = true },
+                onAddEndpoint = { editingEndpoints = config?.activeContext }.takeIf { !clusterLabels.masked },
+                modifier = Modifier.padding(padding),
+            )
+            else when (val s = state) {
+                UiState.Loading -> LoadingBox(Modifier.pageContent(padding))
+                is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.pageContent(padding))
+                is UiState.Loaded -> PullToRefreshBox(
+                    isRefreshing = s.refreshing,
+                    onRefresh = {
+                        // A node may have been upgraded since: ask again what each one supports.
+                        vm.talos.forgetFeatures()
+                        vm.refresh()
+                        timeVm.refresh()
+                        appsVm.refresh()
+                        if (dataHints.isNotEmpty()) dataVm.refresh()
+                        if (alertsAllowed) alertsVm.refresh()
+                        scope.launch { discoveryVm.discover() }
+                    },
+                    modifier = Modifier.pageContent(padding).fillMaxSize(),
+                ) {
+                    val down = s.data.outage
+                    // With nodes known from before, they stay listed under a banner instead.
+                    if (down != null && !showNodesAnyway && !s.data.hasLastKnown) ClusterUnreachableBox(
+                        outage = down,
+                        endpoints = config?.activeSummary?.endpoints.orEmpty(),
+                        onRetry = vm::refresh,
+                        onShowNodes = { showNodesAnyway = true },
+                        onScan = { scanningEndpoints = true }.takeIf { config?.activeSummary?.demo == false },
+                        onEditEndpoints = { editingEndpoints = config?.activeContext }
+                            .takeIf { config?.activeSummary?.demo == false && !clusterLabels.masked },
+                    ) else NodeList(
+                        overview = s.data,
+                        // In the map's order, site by site, once the KubeSpan map was fetched (or kept from before).
+                        topology = remember(s.data) { vm.talos.cached<ClusterTopology>(TOPOLOGY)?.value },
+                        outage = down?.takeIf { s.data.hasLastKnown },
+                        onRetry = vm::refresh,
+                        clusterName = config?.activeSummary?.let(clusterLabels::of),
+                        fingerprint = config?.activeSummary?.fingerprint,
+                        time = timeState,
+                        certificate = config?.activeSummary,
+                        onIssueConfig = onIssueConfig,
+                        onInsights = onInsights,
+                        onCapacity = onCapacity,
+                        apps = apps,
+                        onApps = onApps,
+                        dataServices = dataServices.takeIf { dataHints.isNotEmpty() },
+                        dataHints = dataHints,
+                        onDataServices = onDataServices,
+                        argo = argo.takeIf { argoHinted },
+                        onArgoCD = onArgoCD,
+                        flux = flux.takeIf { fluxHinted },
+                        onFlux = onFlux,
+                        alerts = alertsShown,
+                        onAlerts = onAlerts,
+                        onNode = onNode,
+                        onSettings = onSettings,
+                        onFunding = onFunding,
+                        onNodeAction = onNodeAction,
+                        canPower = config?.activeSummary?.allows(Feature.POWER) == true,
+                        canShell = config?.activeSummary?.allows(Feature.DEBUG_SHELL) == true,
+                        canDrain = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
+                        canUpgrade = config?.activeSummary?.allows(Feature.UPGRADE) == true,
+                        onUpgrade = onUpgrade,
+                        onUpgradeCluster = onUpgradeCluster,
+                        skippedTalosUpdate = config?.activeSummary?.fingerprint?.let(skippedTalosUpdates::get),
+                        onSkipTalosUpdate = skipTalosUpdate,
+                        live = liveState.takeIf { liveEnabled },
+                        discovered = discovered.size,
+                        onDiscovered = { showDiscovered = true },
+                        canDetectPublicIps = config?.activeSummary?.allows(Feature.KUBECONFIG) == true,
+                        layout = layout,
+                        onCustomize = customize,
+                        nodesExpanded = nodesExpanded,
+                        onToggleNodes = { app.uiPreferences.setNodesExpanded(!nodesExpanded) },
+                        onChangelog = onChangelog,
+                        onAllNodes = onAllNodes,
+                        pins = pins,
+                        onOpenTarget = onOpenTarget,
+                    )
+                }
             }
         }
     }
@@ -732,10 +745,21 @@ private fun NodeList(
             },
         )
     }
+    // The demo tour scrolls down to the nodes card and its node in trouble when they are below the fold.
+    val listState = rememberLazyListState()
+    val nodesListed = OverviewCard.NODES in layout.visible && overview.nodes.isNotEmpty()
+    val tourReachable = remember(nodesListed, nodeGroups) {
+        if (!nodesListed) emptySet()
+        else setOfNotNull(
+            TourAnchor.Nodes,
+            TourAnchor.DegradedNode.takeIf { !isDenseCluster(overview.nodes.size) && nodeGroups.firstDegraded() != null },
+        )
+    }
     LazyColumn(
+        state = listState,
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().tourScrollable(listState, tourReachable),
     ) {
         outage?.let { item { LastKnownBanner(it, onRetry) } }
         if (certificate?.isDemo == true) item {
@@ -807,18 +831,20 @@ private fun NodeList(
                     Box(Modifier.longPressToCustomize(onCustomize)) { FluxCard(flux, fluxTile, onFlux) }
                 }
                 OverviewCard.NODES -> if (overview.nodes.isNotEmpty()) item(key = card.name) {
-                    NodesCard(
-                        nodeGroups,
-                        publicIps,
-                        expanded = nodesExpanded,
-                        onToggle = onToggleNodes,
-                        onNode = onNode,
-                        onLive = { onNodeAction(it, NodeAction.LIVE) },
-                        onMore = { sheetFor = it },
-                        onAllNodes = onAllNodes,
-                        // Only on the title: a long press on a node row opens its actions.
-                        titleModifier = Modifier.longPressToCustomize(onCustomize),
-                    )
+                    Box(Modifier.tourAnchor(TourAnchor.Nodes)) {
+                        NodesCard(
+                            nodeGroups,
+                            publicIps,
+                            expanded = nodesExpanded,
+                            onToggle = onToggleNodes,
+                            onNode = onNode,
+                            onLive = { onNodeAction(it, NodeAction.LIVE) },
+                            onMore = { sheetFor = it },
+                            onAllNodes = onAllNodes,
+                            // Only on the title: a long press on a node row opens its actions.
+                            titleModifier = Modifier.longPressToCustomize(onCustomize),
+                        )
+                    }
                 }
                 OverviewCard.ALERTS -> if (alerts != null) item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) { AlertsCard(alerts, onAlerts) }
