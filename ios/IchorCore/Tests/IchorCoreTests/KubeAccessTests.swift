@@ -109,7 +109,7 @@ final class KubeAccessTests: XCTestCase {
             "createVolumeSnapshot", "restartWorkload", "restartStatefulSet", "restartDaemonSet", "scale", "scaleStatefulSet",
             "deletePod", "execPod", "debugPod", "debugNode", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync",
             "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
-            "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode",
+            "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode", "editNodeMeta",
             "alertmanagerSilence", "alertmanagerExpire", "cnpgPromote", "cnpgRestartPrimary", "cnpgHibernate", "longhornSalvage", "longhornAttachment", "longhornSnapshot", "longhornReplicas", "longhornNode",
             "veleroBackupNow", "veleroDeleteBackup", "veleroRestore",
             "vmStart", "vmStop", "vmRestart", "vmMigrate", "vmPause", "vmUnpause", "vmConsole", "autoscale", "autoscaleKeda",
@@ -117,6 +117,7 @@ final class KubeAccessTests: XCTestCase {
         ])
         XCTAssertFalse(KubeAction.cordonNode.isNamespaced)
         XCTAssertFalse(KubeAction.drainNode.isNamespaced)
+        XCTAssertFalse(KubeAction.editNodeMeta.isNamespaced)
         XCTAssertTrue(KubeAction.argoSync.isNamespaced)
         XCTAssertTrue(KubeAction.debugNode.isNamespaced) // the debug pod's namespace
     }

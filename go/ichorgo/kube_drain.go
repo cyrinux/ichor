@@ -52,6 +52,8 @@ type drainPod struct {
 	Reason     string `json:"reason,omitempty"`
 
 	uid string
+	// tolerations decide which NoExecute taints evict the pod (kube_node_meta.go).
+	tolerations []podToleration
 }
 
 type drainPodObject struct {
@@ -73,6 +75,7 @@ type drainPodObject struct {
 		Volumes  []struct {
 			EmptyDir *struct{} `json:"emptyDir"`
 		} `json:"volumes"`
+		Tolerations []podToleration `json:"tolerations"`
 	} `json:"spec"`
 }
 
@@ -128,7 +131,7 @@ func drainPods(ctx context.Context, k *kubeClient, kubeNode string) ([]drainPod,
 
 func classifyDrainPod(obj drainPodObject, pdbs []pdbObject) drainPod {
 	m := obj.Metadata
-	p := drainPod{Namespace: m.Namespace, Name: m.Name, Kind: drainBare, PDBAllowed: -1, uid: m.UID}
+	p := drainPod{Namespace: m.Namespace, Name: m.Name, Kind: drainBare, PDBAllowed: -1, uid: m.UID, tolerations: obj.Spec.Tolerations}
 
 	for _, o := range m.OwnerReferences {
 		if o.Controller != nil && *o.Controller {

@@ -11,6 +11,8 @@ public enum KubeAction: String, CaseIterable, Sendable {
     case deletePod, execPod, debugPod, debugNode, suspendCronJob, triggerCronJob, helmRollback, argoSync
     case fluxReconcile, fluxReconcileHelmRelease, fluxReconcileGitRepository, fluxReconcileOCIRepository
     case fluxReconcileHelmRepository, fluxReconcileBucket, cordonNode, drainNode
+    /// A node's taints and labels (patch nodes, like the cordon).
+    case editNodeMeta
     /// create and delete on services/proxy: an Alertmanager reached through the service proxy.
     case alertmanagerSilence, alertmanagerExpire
     case cnpgPromote, cnpgRestartPrimary, cnpgHibernate, longhornSalvage, longhornAttachment, longhornSnapshot
@@ -27,7 +29,7 @@ public enum KubeAction: String, CaseIterable, Sendable {
     /// Asked in a namespace; the node actions are cluster-wide whatever the namespace.
     public var isNamespaced: Bool {
         switch self {
-        case .cordonNode, .drainNode: false
+        case .cordonNode, .drainNode, .editNodeMeta: false
         default: true
         }
     }

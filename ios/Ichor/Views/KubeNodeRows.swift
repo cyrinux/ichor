@@ -41,6 +41,9 @@ struct KubeNodeMenu: View {
         KubeGatedMenuButton(String(localized: "Drain…"), systemImage: "rectangle.portrait.and.arrow.right", action: .drainNode) {
             path.append(.drain(node: node.name, hostname: node.name))
         }
+        KubeGatedMenuButton(String(localized: "Taints and labels…"), systemImage: "tag", action: .editNodeMeta) {
+            path.append(.nodeMeta(node: node.name, hostname: node.name))
+        }
         if nodeDebug {
             // The pod's namespace, not the cluster-wide answer this screen loaded: offered unless
             // refused there; the shell's screen asks about it.

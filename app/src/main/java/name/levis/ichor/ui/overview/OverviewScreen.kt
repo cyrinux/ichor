@@ -222,6 +222,8 @@ fun OverviewScreen(
     onKubeEvents: () -> Unit,
     onDrain: (node: String) -> Unit,
     onNodeDebug: (node: String) -> Unit,
+    /** The taints and labels of a Kubernetes node, by its name (from the Kubernetes home). */
+    onNodeMeta: (node: String) -> Unit,
     /** The action audit log of a cluster, by its context name. */
     onActivity: (cluster: String) -> Unit,
     /** The search across clusters. */
@@ -276,6 +278,7 @@ fun OverviewScreen(
                 onEvents = onKubeEvents,
                 onDrain = onDrain,
                 onNodeDebug = onNodeDebug,
+                onNodeMeta = onNodeMeta,
                 onAllNodes = onKubeNodes,
                 onActivity = onActivity,
                 onSearch = onSearch,

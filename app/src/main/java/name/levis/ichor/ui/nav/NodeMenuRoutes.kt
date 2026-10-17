@@ -23,5 +23,6 @@ internal fun nodeMenuRoute(addr: String, host: String, entry: NodeMenuEntry): St
     NodeMenuEntry.UPGRADE -> Routes.upgrade(addr, host)
     NodeMenuEntry.MAINTENANCE -> Routes.maintenance(addr, host)
     NodeMenuEntry.DRAIN -> Routes.maintenance(addr, host, drain = true)
+    NodeMenuEntry.TAINTS_LABELS -> Routes.nodeMeta(addr, host)
     else -> null
 }

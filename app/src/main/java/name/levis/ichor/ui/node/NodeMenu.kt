@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.MiscellaneousServices
 import androidx.compose.material.icons.outlined.NetworkCheck
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.SdStorage
+import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.SystemUpdateAlt
 import androidx.compose.material.icons.outlined.Terminal
@@ -89,6 +90,8 @@ enum class NodeMenuEntry(
     DRAIN(NodeMenuGroup.OPERATE, R.string.node_menu_drain, null, Feature.WORKLOADS),
     // Labelled Uncordon when the node is known to be cordoned (see label()).
     CORDON(NodeMenuGroup.OPERATE, R.string.node_menu_cordon, null, Feature.WORKLOADS),
+    // The node's taints and labels through the Kubernetes API, like the cordon: os:admin.
+    TAINTS_LABELS(NodeMenuGroup.OPERATE, R.string.node_meta_menu, null, Feature.WORKLOADS),
 }
 
 internal val NodeMenuEntry.icon: ImageVector
@@ -116,6 +119,7 @@ internal val NodeMenuEntry.icon: ImageVector
         NodeMenuEntry.MAINTENANCE -> Icons.Outlined.Build
         NodeMenuEntry.DRAIN -> Icons.AutoMirrored.Outlined.Logout
         NodeMenuEntry.CORDON -> Icons.Outlined.Block
+        NodeMenuEntry.TAINTS_LABELS -> Icons.Outlined.Sell
     }
 
 /**

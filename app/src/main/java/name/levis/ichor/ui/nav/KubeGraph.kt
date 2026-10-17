@@ -77,6 +77,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             onBack = { nav.popBackStack() },
             onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
             onDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
+            onMeta = { nav.navigate(Routes.nodeMeta(it, it)) },
         )
     }
     composable(

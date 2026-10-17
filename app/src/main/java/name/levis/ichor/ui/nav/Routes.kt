@@ -159,10 +159,14 @@ internal object Routes {
     const val K8S_UPGRADE = "k8supgrade"
     const val JOIN_NODE = "joinnode"
     const val MAINTENANCE = "maintenance?addr={addr}&host={host}&drain={drain}"
+    const val NODE_META = "nodemeta?addr={addr}&host={host}"
 
     /** [drain]: a drain only, without the reboot or shutdown that a maintenance can add. */
     fun maintenance(addr: String, host: String, drain: Boolean = false) =
         "maintenance?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&drain=$drain"
+
+    /** The taints and labels of a node: [addr] is its Talos address, or its Kubernetes name on a kubeconfig cluster. */
+    fun nodeMeta(addr: String, host: String) = "nodemeta?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
     /** [peer]: a second node to capture on too, prefilled ("" for none). */
     fun capture(addr: String, host: String, peer: String = "", peerHost: String = "") =

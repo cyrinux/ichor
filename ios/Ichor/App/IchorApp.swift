@@ -238,6 +238,9 @@ enum Route: Hashable {
     case machineConfig(node: String, hostname: String)
     /// A root shell on a node of a cluster without Talos, by its Kubernetes name.
     case kubeNodeDebug(node: String)
+    /// A node's taints and labels; on a cluster without Talos, node and hostname are its
+    /// Kubernetes name.
+    case nodeMeta(node: String, hostname: String)
     /// Events timeline for one node, or all of them (node nil); hostnames by address.
     case events(node: String?, hostnames: [String: String])
     /// The apps running in the cluster; hostnames by address, for the nodes pods run on;
@@ -349,6 +352,7 @@ struct MainNavigation: View {
                     case .maintenance(let node, let hostname): MaintenanceView(node: node, hostname: hostname)
                     case .machineConfig(let node, let hostname): MachineConfigView(node: node, hostname: hostname)
                     case .kubeNodeDebug(let node): KubeNodeDebugView(node: node)
+                    case .nodeMeta(let node, let hostname): NodeMetaEditorView(node: node, hostname: hostname)
                     case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
                     case .apps(let hostnames, let filter): AppsView(hostnames: hostnames, filter: filter)
                     case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)
