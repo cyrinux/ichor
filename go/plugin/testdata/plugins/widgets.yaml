@@ -1,0 +1,136 @@
+# yaml-language-server: $schema=../../schema/plugin.schema.json
+# A render fixture: every section type, every aggregation, a grouped and a projected data
+# service, a preferred version, a cluster-scoped resource without health rules, i18n.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: demo-widgets
+name: Demo Widgets
+category: workloads
+
+detect:
+  - group: widgets.example.com
+    resource: widgets
+
+resources:
+  widget:
+    group: widgets.example.com
+    version: preferred
+    resource: widgets
+    kind: Widget
+    scope: Namespaced
+    list: { limit: 3 }
+  gadget:
+    group: widgets.example.com
+    version: v1
+    resource: gadgets
+    kind: Gadget
+    scope: Cluster
+
+fields:
+  widget:
+    used: $.status.used | quantity() | default(0)
+    size: $.spec.size | quantity() | default(0)
+    replicas: $.spec.replicas | default(0)
+    phase: $.status.phase | default("")
+    gadget: join(gadget, $.metadata.name == left.spec.gadget)
+    broken: fields.replicas - $.metadata.name
+
+health:
+  widget:
+    - when: fields.phase == "Failed"
+      health: critical
+      reason: failed
+      message: "{{ $.status.message }}"
+    - when: "!conditions.Ready"
+      health: warning
+      reason: not-ready
+
+dataServices:
+  summary:
+    aggregate:
+      total: count(widget)
+      replicas: sum(widget, fields.replicas)
+      smallest: min(widget, fields.size)
+      largest: max(widget, fields.size)
+      gadgets: count(gadget)
+    health: worst(widget.health)
+  byNamespace:
+    from: widget
+    groupBy: $.metadata.namespace
+    aggregate: { count: count(), replicas: sum(fields.replicas) }
+    health: worst(health)
+  failing:
+    from: widget
+    where: health != "ok"
+    select: { name: $.metadata.name, why: fields.phase }
+
+cards:
+  summary:
+    title: { count: dataServices.summary.total, one: "%d widget", other: "%d widgets" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "replicas", value: dataServices.summary.replicas }
+      - { label: "gadgets", value: dataServices.summary.gadgets, tone: idle, hideWhenZero: true }
+      - { label: "empty", value: dataServices.summary.total - dataServices.summary.total, hideWhenZero: true }
+  widgets:
+    from: widget
+    sort: [health desc, fields.size desc]
+    empty: "No widgets."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status: { text: fields.phase }
+      trailing: { text: fields.size | bytes() }
+      detail:
+        - { type: gauge, label: "Used", value: fields.used, max: fields.size, unit: bytes, tone: 'fields.used > fields.size * 0.9 ? "warning" : "ok"' }
+        - { type: gauge, label: "Replicas", value: fields.replicas, max: 10 }
+        - { type: text, text: "{{ $.metadata.name }} has {{ fields.replicas }} replicas", tone: info, mono: true }
+        - type: conditions
+        - type: relations
+          items:
+            - { label: "Gadget", ref: fields.gadget, text: fields.gadget.metadata.name | upper() }
+        - type: table
+          from: dataServices.byNamespace
+          columns:
+            - { label: "Namespace", value: $.key }
+            - { label: "Widgets", value: $.count }
+        - type: keyValues
+          items:
+            - { label: "Broken", value: fields.broken }
+            - { label: "Ready", value: conditions.Ready, tone: 'conditions.Ready ? "ok" : "critical"', mono: true }
+  failing:
+    from: dataServices.failing
+    row:
+      title: $.name
+      status: { tone: critical, text: $.why }
+  gadgets:
+    from: gadget
+    sort: [$.metadata.name]
+    row:
+      title: $.metadata.name
+
+findings:
+  - id: widget-failed
+    from: widget
+    when: health == "critical"
+    severity: critical
+    title: "{{ name }} failed"
+    detail: "{{ namespace }}/{{ name }}: {{ message }} ({{ reason }})"
+    opens: widgets
+
+samples:
+  widget:
+    - metadata: { name: alpha, namespace: demo-shop }
+      spec: { size: 1Gi, replicas: 2, gadget: hub }
+      status: { used: 1000Mi, phase: Running, conditions: [{ type: Ready, status: "True", lastTransitionTime: "2026-10-15T10:00:00Z" }] }
+    - metadata: { name: beta, namespace: demo-shop }
+      spec: { size: 512Mi, replicas: 1 }
+      status: { phase: Failed, message: "disk full", conditions: [{ type: Ready, status: "False", reason: DiskFull, message: "no space left" }] }
+    - metadata: { name: gamma, namespace: demo-lab }
+      spec: { size: 2Gi, replicas: 3 }
+      status: { phase: Pending, conditions: [{ type: Ready, status: "False" }] }
+  gadget:
+    - { metadata: { name: hub }, status: { phase: Running } }
+    - { metadata: { name: spoke }, status: { phase: Failed } }
+
+i18n:
+  fr: { "%d widget": "%d widget", "%d widgets": "%d widgets", "No widgets.": "Aucun widget.", "Used": "Utilisé", "Running": "En marche", "yes": "oui", "no": "non" }

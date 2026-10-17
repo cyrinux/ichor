@@ -26,7 +26,7 @@ type command struct {
 
 // commands is every subcommand, by area.
 func commands() []command {
-	return slices.Concat(nodeCommands, configCommands, kubeCommands, dataCommands, etcdCommands, omniCommands, historyCommands)
+	return slices.Concat(nodeCommands, configCommands, kubeCommands, dataCommands, etcdCommands, omniCommands, historyCommands, pluginCommands)
 }
 
 func lookup(name string) (command, bool) {
