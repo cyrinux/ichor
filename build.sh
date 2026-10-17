@@ -7,6 +7,7 @@
 #   ./build.sh check      # formatting, vet, staticcheck and all unit tests (Go + Kotlin), no APK
 #   BUILDER=docker ./build.sh   # force the container toolchain
 #   IN_CONTAINER=1 ./build.sh   # tools already on PATH (CI runner using build/Dockerfile)
+#   ICHOR_SKIP_TESTS=1 ./build.sh debug   # no Go or Kotlin unit tests (CI: the check job runs them)
 set -euo pipefail
 
 VARIANT="${1:-debug}"
@@ -21,6 +22,10 @@ case "$VARIANT" in
   check) GRADLE_TASKS=(testDebugUnitTest) ;;
   *) echo "unknown variant: $VARIANT (debug|release|play|check)" >&2; exit 2 ;;
 esac
+# The CI build jobs skip the tests, which their check job runs once (see android.yml).
+if [[ "${ICHOR_SKIP_TESTS:-0}" == 1 && "$VARIANT" == debug ]]; then
+  GRADLE_TASKS=(assembleDebug)
+fi
 
 # gomobile panics on linux/arm64 hosts although NDK r24+ keeps its (x86_64, emulated)
 # toolchain under prebuilt/linux-x86_64. Build it from a patched copy of the pinned module
@@ -80,7 +85,11 @@ build_inside() {
     go vet ./...
     staticcheck ./...
   fi
-  go test ./...
+  if [[ "${ICHOR_SKIP_TESTS:-0}" == 1 ]]; then
+    echo "ICHOR_SKIP_TESTS=1: skipping go test"
+  else
+    go test ./...
+  fi
   # gomobile/gobind versions are pinned by the tool directive in go/go.mod.
   export GOBIN="$ROOT/.cache/gobin" PATH="$ROOT/.cache/gobin:$PATH"
   go install tool
@@ -134,6 +143,6 @@ docker run --rm --platform linux/amd64 \
   -e GOMODCACHE=/cache/gomod -e GOCACHE=/cache/gobuild -e GRADLE_USER_HOME=/cache/gradle \
   -e GOFLAGS=-buildvcs=false \
   -e ICHOR_KEYSTORE -e ICHOR_KEYSTORE_PASSWORD -e ICHOR_KEY_ALIAS -e ICHOR_KEY_PASSWORD \
-  -e ICHOR_VERSION -e ICHOR_BUILD_NUMBER \
+  -e ICHOR_VERSION -e ICHOR_BUILD_NUMBER -e ICHOR_SKIP_TESTS \
   -v "$ROOT:/src" -v "$ROOT/.cache:/cache" \
   "$IMAGE" bash -c 'mkdir -p /tmp/home && /src/build.sh '"$VARIANT"

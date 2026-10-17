@@ -37,7 +37,9 @@ enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOW
     /** What scales the cluster: HPAs, KEDA, VPA, Karpenter; last, so the saved bars keep theirs. */
     AUTOSCALING,
     /** KubeVirt (and Harvester) virtual machines; last, so the saved bars keep theirs. */
-    VIRTUAL_MACHINES;
+    VIRTUAL_MACHINES,
+    /** Clean up the current namespace's dead pods (k9s sanitize), on the pods tab; last, so the saved bars keep theirs. */
+    CLEAN_UP_PODS;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 3)

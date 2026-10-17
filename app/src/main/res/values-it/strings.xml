@@ -5365,4 +5365,26 @@
     <string name="sa_help_copy_yaml">Copia YAML</string>
     <string name="panes_pick_node">Scegli un nodo per vederne i dettagli</string>
     <string name="panes_pick_app">Scegli un\'applicazione per vederne i dettagli</string>
+    <string name="sanitize_title">Ripulisci i pod morti</string>
+    <string name="sanitize_subtitle_namespace">Pod terminati o bloccati in %1$s, scelti come fa k9s sanitize</string>
+    <string name="sanitize_subtitle_all">Pod terminati o bloccati in tutti i namespace, scelti come fa k9s sanitize</string>
+    <string name="sanitize_empty">Niente da ripulire</string>
+    <string name="sanitize_truncated">Più pod di una pagina: è stata controllata solo la prima. Scegli un namespace per vedere il resto.</string>
+    <string name="sanitize_group">%1$s · %2$d</string>
+    <string name="sanitize_age">Età %1$s</string>
+    <string name="sanitize_recreated_by">ricreato da %1$s %2$s</string>
+    <string name="sanitize_fresh_pending">Pending da meno di 2 minuti: forse ancora in pianificazione, non selezionato</string>
+    <string name="sanitize_confirm_text">I pod di un controller tornano come pod nuovi; gli altri spariscono per sempre.</string>
+    <plurals name="sanitize_delete">
+        <item quantity="one">Elimina %1$d pod</item>
+        <item quantity="other">Elimina %1$d pod</item>
+    </plurals>
+    <plurals name="sanitize_confirm_title">
+        <item quantity="one">Eliminare %1$d pod?</item>
+        <item quantity="other">Eliminare %1$d pod?</item>
+    </plurals>
+    <plurals name="sanitize_done">
+        <item quantity="one">%1$d pod eliminato</item>
+        <item quantity="other">%1$d pod eliminati</item>
+    </plurals>
 </resources>

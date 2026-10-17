@@ -59,6 +59,8 @@ struct KubernetesView: View {
     @State private var editingServer = false
     @AppStorage(KubernetesBar.storageKey) private var barText = ""
     @State private var customizingBar = false
+    /// The pods tab's "Clean up dead pods" sheet.
+    @State private var sanitizing = false
     @State private var serverInput = ""
     @State private var serverError: String?
     /// App-wide: leaving the screen keeps a running network test.
@@ -111,6 +113,7 @@ struct KubernetesView: View {
         case .share: sharedTab != nil
         case .flows: cilium?.installed == true
         case .apiAddress: editable != nil
+        case .cleanUpPods: tab == .pods
         default: true
         }
     }
@@ -138,6 +141,8 @@ struct KubernetesView: View {
         case .admissionPolicies: netScreen = .admissionPolicies
         case .autoscaling: netScreen = .autoscaling
         case .virtualMachines: netScreen = .virtualMachines
+        // The namespace listed; every namespace when none is picked.
+        case .cleanUpPods: sanitizing = true
         case .apiAddress:
             serverInput = model.client?.kubeServer ?? ""
             editingServer = true
@@ -179,6 +184,11 @@ struct KubernetesView: View {
             }
         }
         .sheet(isPresented: $customizingBar) { ActionBarEditorSheet(KubernetesAction.self) }
+        .sheet(isPresented: $sanitizing) {
+            SanitizeSheet(namespace: scopeControl.scope.namespace ?? "") {
+                Task { await pods.refresh(model: model) }
+            }
+        }
         .alert("Kubernetes API address", isPresented: $editingServer) {
             TextField(text: $serverInput, prompt: Text(verbatim: "k8s.example.com:6443")) { Text("Address") }
                 .keyboardType(.URL)
@@ -498,6 +508,7 @@ extension KubernetesAction: BarActionLook {
         case .admissionPolicies: "checkmark.shield"
         case .autoscaling: "arrow.up.and.down"
         case .virtualMachines: "desktopcomputer"
+        case .cleanUpPods: "sparkles"
         }
     }
 
@@ -516,6 +527,7 @@ extension KubernetesAction: BarActionLook {
         case .admissionPolicies: Text("Policies")
         case .autoscaling: Text("Autoscaling")
         case .virtualMachines: Text("Virtual machines")
+        case .cleanUpPods: Text("Clean up dead pods")
         }
     }
 }

@@ -36,7 +36,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   old and new pods (`kubectl rollout status`); list pods with their
   `kubectl get pods` status (a pod that cannot pull its image says why: not found, pull limit,
   pull secret, certificate, network, and what to do) and delete one so its controller starts a new one, or only those of
-  a node or of a workload (`--field-selector spec.nodeName=`, the workload's selector); list CronJobs
+  a node or of a workload (`--field-selector spec.nodeName=`, the workload's selector), or clean up a
+  namespace's dead pods in one tap (Completed, Evicted, CrashLoopBackOff, ImagePullBackOff…, as k9s's `z`
+  picks them, with a preview to uncheck any first); list CronJobs
   with their schedule, next run and recent runs, and run one now (`kubectl create job --from`,
   with an icon and a title of your choice, see [CronJobs](#cronjobs)); measure the
   network between two nodes (TCP throughput and latency, see [Network test](#network-test));
@@ -241,6 +243,7 @@ reads those roles and explains up front when a feature needs more.
 | **Cluster health check** | `ClusterService/HealthCheck` | **`os:admin`** |
 | **Kubeconfig export** | `Kubeconfig` | **`os:admin`** |
 | **Kubernetes workloads and pods, rollout restart, pod delete** | `Kubeconfig`, then the Kubernetes API | **`os:admin`** |
+| **Clean up dead pods (k9s sanitize)** | `Kubeconfig`, then the Kubernetes API (`list` and `delete` on pods in the namespace) | **`os:admin`** |
 | **Kubernetes CronJobs, run now** | `Kubeconfig`, then the Kubernetes API (cronjobs, jobs) | **`os:admin`** |
 | **CSI snapshots, snapshot creation and backup CronJob health** | `Kubeconfig`, then the Kubernetes API (volumesnapshots, volumesnapshotcontents, volumesnapshotclasses, PVCs, storageclasses, cronjobs, jobs) | **`os:admin`** |
 | **CloudNativePG replica promotion** | `Kubeconfig`, then the Kubernetes API (clusters/status, pods and optional pods/proxy for lag) | **`os:admin`** |
@@ -1476,10 +1479,14 @@ Wake-on-LAN, privacy label and manifest, export compliance, review notes) is in
 
 ## CI (GitHub Actions)
 
-- **`.github/workflows/android.yml`** (Ubuntu, Nix flake): `./build.sh check`, then the debug
-  and release APKs.
-- **`.github/workflows/ios.yml`** (macOS 26): core tests, simulator build, unsigned IPA; on
-  `v*` tags, the App Store upload (see [iOS](#ios)).
+- **`.github/workflows/android.yml`** (Ubuntu, Nix flake): four parallel jobs, `./build.sh check`
+  and the debug, release and Play builds (`ICHOR_SKIP_TESTS=1`, the check job runs the tests).
+- **`.github/workflows/ios.yml`** (macOS 26): two parallel jobs, core tests with the simulator
+  build, and the unsigned IPA; on `v*` tags, the App Store upload (see [iOS](#ios)).
+
+The Nix store, Gradle user home, Go module and build caches and the Swift package checkouts
+are restored from the Actions cache (`.github/actions/*-toolchain`); only the check and test
+jobs write them, on `main`.
 
 Both run on pushes to `main` and on pull requests. Release APKs are named
 `ichor-v<version>-<abi>.apk`, or `…-unsigned.apk` when no keystore secrets are set;

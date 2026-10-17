@@ -42,4 +42,20 @@ extension TalosClient {
             IchorgoKubePodLogs(config, context, kubeServer, pod.namespace, pod.name, container, previous, tailLines, error)
         }
     }
+
+    /// The pods of `namespace` ("" for every namespace, one page) that k9s's sanitize would
+    /// delete: Completed, Pending, CrashLoopBackOff, Error, ImagePullBackOff, Evicted...
+    func sanitizePreview(namespace: String) async throws -> KubeSanitizePreview {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeSanitizePreview(config, context, kubeServer, namespace, $0)
+        }
+    }
+
+    /// Deletes `names` (newline-separated "namespace/name" from the preview, see
+    /// `sanitizeNames`), going on past a failure. The demo refuses it.
+    func sanitize(namespace: String, names: String) async throws -> KubeSanitizeResult {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeSanitize(config, context, kubeServer, namespace, names, $0)
+        }
+    }
 }

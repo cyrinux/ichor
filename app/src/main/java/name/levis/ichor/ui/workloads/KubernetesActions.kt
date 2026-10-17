@@ -5,6 +5,7 @@ import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material.icons.outlined.Computer
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Gavel
@@ -38,6 +39,7 @@ private fun kubernetesActionIcon(action: KubernetesAction): ImageVector = when (
     KubernetesAction.POLICIES -> Icons.Outlined.Gavel
     KubernetesAction.AUTOSCALING -> Icons.Outlined.Speed
     KubernetesAction.VIRTUAL_MACHINES -> Icons.Outlined.Computer
+    KubernetesAction.CLEAN_UP_PODS -> Icons.Outlined.CleaningServices
 }
 
 /** How the Kubernetes screen's actions look, in its bar and its editor. */
@@ -59,6 +61,7 @@ val kubernetesActionLook = ActionLook<KubernetesAction>(::kubernetesActionIcon) 
             KubernetesAction.POLICIES -> R.string.kpol_title
             KubernetesAction.AUTOSCALING -> R.string.autoscaling_title
             KubernetesAction.VIRTUAL_MACHINES -> R.string.vm_title
+            KubernetesAction.CLEAN_UP_PODS -> R.string.sanitize_title
         },
     )
 }
