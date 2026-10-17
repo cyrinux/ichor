@@ -32,6 +32,10 @@ struct KubernetesView: View {
         case autoscaling
         /// KubeVirt (and Harvester) virtual machines.
         case virtualMachines
+        case crossplane
+        case tailscale
+        case argoRollouts
+        case clusterLifecycle
     }
 
     @Environment(AppModel.self) private var model
@@ -67,6 +71,10 @@ struct KubernetesView: View {
     private var netPerf: NetPerfJob { .shared }
     /// Read once on open: Live flows needs Cilium, or Calico with Whisker.
     @State private var cilium: CiliumStatus?
+    /// Read once on open, as on the Kubernetes home: whether the cluster runs Crossplane, the
+    /// Tailscale operator, Argo Rollouts and Cluster API / Sidero Metal (each read answers
+    /// "not installed" quickly). Unknown or unreadable: not offered.
+    @State private var operators = KubeOperators()
     @State private var netScreen: NetScreen?
     /// The namespace a share link scoped the lists to, not kept, until another is picked.
     @State private var linkedNamespace: String?
@@ -114,6 +122,10 @@ struct KubernetesView: View {
         case .flows: cilium?.installed == true
         case .apiAddress: editable != nil
         case .cleanUpPods: tab == .pods
+        case .crossplane: operators.crossplane
+        case .tailscale: operators.tailscale
+        case .argoRollouts: operators.argoRollouts
+        case .clusterLifecycle: operators.clusterLifecycle
         default: true
         }
     }
@@ -141,6 +153,10 @@ struct KubernetesView: View {
         case .admissionPolicies: netScreen = .admissionPolicies
         case .autoscaling: netScreen = .autoscaling
         case .virtualMachines: netScreen = .virtualMachines
+        case .crossplane: netScreen = .crossplane
+        case .tailscale: netScreen = .tailscale
+        case .argoRollouts: netScreen = .argoRollouts
+        case .clusterLifecycle: netScreen = .clusterLifecycle
         // The namespace listed; every namespace when none is picked.
         case .cleanUpPods: sanitizing = true
         case .apiAddress:
@@ -213,11 +229,16 @@ struct KubernetesView: View {
             case .admissionPolicies: PoliciesView()
             case .autoscaling: AutoscalingView()
             case .virtualMachines: VirtualMachinesView()
+            case .crossplane: CrossplaneView()
+            case .tailscale: TailscaleView()
+            case .argoRollouts: ArgoRolloutsView()
+            case .clusterLifecycle: ClusterLifecycleView()
             }
         }
         .task(id: model.client?.kubeServer) {
             guard let client = model.client else { return }
             cilium = try? await client.cilium()
+            operators = await KubeOperators.read(with: client)
         }
         .task(id: "\(model.activeContext)|\(model.client?.kubeServer ?? "")|\(model.dataGeneration)") {
             await loadNamespaces()
@@ -509,6 +530,10 @@ extension KubernetesAction: BarActionLook {
         case .autoscaling: "arrow.up.and.down"
         case .virtualMachines: "desktopcomputer"
         case .cleanUpPods: "sparkles"
+        case .crossplane: "square.stack.3d.up"
+        case .tailscale: "network.badge.shield.half.filled"
+        case .argoRollouts: "arrow.triangle.branch"
+        case .clusterLifecycle: "server.rack"
         }
     }
 
@@ -528,6 +553,28 @@ extension KubernetesAction: BarActionLook {
         case .autoscaling: Text("Autoscaling")
         case .virtualMachines: Text("Virtual machines")
         case .cleanUpPods: Text("Clean up dead pods")
+        case .crossplane: Text("Crossplane")
+        case .tailscale: Text("Tailscale")
+        case .argoRollouts: Text("Argo Rollouts")
+        case .clusterLifecycle: Text("Cluster lifecycle")
         }
+    }
+}
+
+/// Which operator screens the cluster has, as the Kubernetes home finds them: each read answers
+/// "not installed" quickly when its API group is not served; a failed read (no access) offers nothing.
+struct KubeOperators: Equatable {
+    var crossplane = false
+    var tailscale = false
+    var argoRollouts = false
+    var clusterLifecycle = false
+
+    static func read(with client: TalosClient) async -> KubeOperators {
+        var found = KubeOperators()
+        found.crossplane = (try? await client.crossplane().installed) ?? false
+        found.tailscale = (try? await client.tailscale().installed) ?? false
+        found.argoRollouts = (try? await client.argoRollouts().installed) ?? false
+        found.clusterLifecycle = (try? await client.clusterLifecycle().installed) ?? false
+        return found
     }
 }
