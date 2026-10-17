@@ -2986,6 +2986,11 @@
     <string name="argo_rollback_owned">Відкат недоступний: власник перезаписує spec цього застосунку.</string>
     <string name="argo_app_gone">%1$s більше немає в Argo CD.</string>
     <string name="argo_sync_title">Синхронізувати %1$s</string>
+    <string name="argo_sync_changes">Зміни</string>
+    <string name="argo_sync_changes_loading">Порівняння з останнім порівнянням Argo CD…</string>
+    <string name="argo_sync_changes_none">Нічого не зміниться</string>
+    <string name="argo_sync_changes_more">і ще %1$s</string>
+    <string name="argo_sync_open_full_diff">Відкрити повний diff</string>
     <string name="argo_sync_all_resources">Усі ресурси, до %1$s</string>
     <string name="argo_sync_quick_text">Синхронізує всі ресурси до %1$s без prune. Більше параметрів на екрані Argo CD застосунку.</string>
     <string name="argo_sync_confirm">Синхронізувати</string>
