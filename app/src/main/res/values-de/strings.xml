@@ -501,7 +501,11 @@
     <string name="settings_key_software">Software-Schlüsselspeicher</string>
     <string name="keystore_unavailable">Der Sicherheitschip des Telefons antwortet nicht. Versuche es gleich noch einmal oder starte das Telefon neu.</string>
     <string name="settings_import_new">Cluster hinzufügen (talosconfig oder kubeconfig importieren)</string>
-    <string name="security_key_fell_back">Der Schlüssel Ihrer Konfiguration liegt im TEE, nicht im Sicherheitschip, weil der Chip beim Erstellen nicht geantwortet hat. Wenn Sie alle Cluster entfernen und erneut importieren, wird der Chip noch einmal versucht.</string>
+    <string name="security_key_fell_back">Der Schlüssel Ihrer Konfiguration liegt im TEE, nicht im Sicherheitschip, weil der Chip beim Erstellen nicht geantwortet hat. In den Sicherheitschip verschieben versucht den Chip erneut und behält Ihre Cluster.</string>
+    <string name="security_key_move">In den Sicherheitschip verschieben</string>
+    <string name="security_key_moving">Schlüssel wird in den Sicherheitschip verschoben…</string>
+    <string name="security_key_moved">Der Schlüssel liegt jetzt im Sicherheitschip</string>
+    <string name="security_key_move_refused">Der Chip hat erneut abgelehnt, nichts wurde geändert</string>
     <string name="settings_delete_config">Gespeicherte talosconfig löschen</string>
     <string name="settings_delete_title">talosconfig löschen?</string>
     <string name="settings_delete_body">Die verschlüsselte Konfiguration aller Cluster wird samt ihren Client-Schlüsseln von diesem Gerät entfernt.</string>

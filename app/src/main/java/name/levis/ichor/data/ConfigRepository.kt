@@ -94,6 +94,23 @@ class ConfigRepository(
         _keyFallback.value = true
     }
 
+    /**
+     * Moves the key of each store still in the TEE into StrongBox, keeping the configs (see
+     * SecureStore.rekeyToStrongBox); the user asks for it from the TEE notice. True when every
+     * stored config is then under a StrongBox key, which also clears the notice. The configs
+     * themselves do not change, so nothing is reloaded.
+     */
+    suspend fun moveKeyToStrongBox(): Boolean = writing {
+        val stores = listOf(store, kubeStore)
+        stores.filter { runCatching { it.protection() }.getOrNull() == KeyProtection.TEE }
+            .forEach { it.rekeyToStrongBox() }
+        val moved = stores.all {
+            runCatching { it.protection() }.getOrNull().let { level -> level == null || level == KeyProtection.STRONGBOX }
+        }
+        if (moved) dismissKeyFallback()
+        moved
+    }
+
     /** Hides the TEE notice for good (a later fallback shows it again). */
     fun dismissKeyFallback() {
         prefs.edit().remove(KEY_TEE_FALLBACK).apply()

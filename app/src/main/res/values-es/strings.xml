@@ -508,7 +508,11 @@
     <string name="settings_key_software">el almacén de claves por software</string>
     <string name="keystore_unavailable">El chip seguro del teléfono no responde. Vuelve a intentarlo en un momento o reinicia el teléfono.</string>
     <string name="settings_import_new">Añadir un clúster (importar un talosconfig o un kubeconfig)</string>
-    <string name="security_key_fell_back">La clave de su configuración está en el TEE, no en el chip seguro, porque el chip no respondía cuando se creó. Eliminar todos los clústeres e importar de nuevo vuelve a intentar con el chip.</string>
+    <string name="security_key_fell_back">La clave de su configuración está en el TEE, no en el chip seguro, porque el chip no respondía cuando se creó. Mover al chip seguro vuelve a intentar con el chip y conserva sus clústeres.</string>
+    <string name="security_key_move">Mover al chip seguro</string>
+    <string name="security_key_moving">Moviendo la clave al chip seguro…</string>
+    <string name="security_key_moved">La clave ya está en el chip seguro</string>
+    <string name="security_key_move_refused">El chip volvió a negarse, no ha cambiado nada</string>
     <string name="settings_delete_config">Eliminar el talosconfig guardado</string>
     <string name="settings_delete_title">¿Eliminar el talosconfig?</string>
     <string name="settings_delete_body">La configuración cifrada de todos los clústeres, con sus claves de cliente, se eliminará de este dispositivo.</string>

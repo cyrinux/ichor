@@ -872,7 +872,9 @@ The app stores the config AES-GCM encrypted, excluded from backups: an Android K
 the StrongBox chip when the phone has one) wraps a random data key that encrypts the config, so
 it opens in milliseconds however many clusters it holds. A busy chip is tried again for a few
 seconds before the key goes to the TEE instead; Settings → Security then says so once, and
-removing every cluster and importing again tries the chip again.
+its "Move to the secure chip" button tries the chip again and, when it answers, encrypts the
+stored configs again under a new chip key in place, so a refusal or a crash at any step leaves
+them readable under the old one.
 
 ### Several clusters
 

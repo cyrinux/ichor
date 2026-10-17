@@ -5,7 +5,6 @@ import name.levis.ichor.R
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Looper
-import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import android.security.keystore.StrongBoxUnavailableException
@@ -17,8 +16,6 @@ import name.levis.ichor.ui.UiText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import java.io.File
-import java.security.KeyStore
-import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 
 /** Where the key protecting the config lives, strongest first. */
@@ -40,15 +37,37 @@ enum class KeyProtection(@StringRes val label: Int) {
  * after a key was tapped this run, and [read] throws [SecurityKeyRequiredException] before.
  *
  * [onTeeFallback] runs when a new key went to the TEE although the device has StrongBox (the
- * chip kept refusing), so Settings can say so.
+ * chip kept refusing), so Settings can say so; [rekeyToStrongBox] moves such a key to the chip.
+ *
+ * The key lives under one of two aliases, [keyAlias] or `"$keyAlias.next"`, because a Keystore
+ * alias cannot be renamed: a move makes the new key under the other one. A one-line marker
+ * next to the file (`<file>.alias`) records the alias in use; none means [keyAlias]. The file
+ * is decrypted with the recorded alias first, then the other, so a kill between the swap of
+ * the file and the marker still reads (and the marker is then fixed, see [adopt]).
  */
-class SecureStore(
+class SecureStore internal constructor(
     private val file: File,
-    private val keyAlias: String = "talosconfig",
-    private val strongBoxAvailable: Boolean = false,
-    private val outer: DekHolder? = null,
-    private val onTeeFallback: () -> Unit = {},
+    private val keyAlias: String,
+    private val strongBoxAvailable: Boolean,
+    private val outer: DekHolder?,
+    private val onTeeFallback: () -> Unit,
+    private val keys: KeySlots,
+    /** Runs before each step of [rekeyToStrongBox]: tests make one fail or stop the run there. */
+    private val beforeStep: (RekeyStep) -> Unit = {},
 ) {
+
+    constructor(
+        file: File,
+        keyAlias: String = "talosconfig",
+        strongBoxAvailable: Boolean = false,
+        outer: DekHolder? = null,
+        onTeeFallback: () -> Unit = {},
+    ) : this(file, keyAlias, strongBoxAvailable, outer, onTeeFallback, AndroidKeySlots)
+
+    private val dir: File = file.absoluteFile.parentFile
+    private val nextAlias = "$keyAlias.next"
+    private val aliasFile = File(dir, "${file.name}.alias")
+    private val nextFile = File(dir, "${file.name}.next")
 
     fun write(plaintext: ByteArray) {
         val inner = EnvelopeFormat.encrypt(plaintext, key())
@@ -59,7 +78,7 @@ class SecureStore(
         } else {
             inner
         }
-        val tmp = File(file.parentFile, "${file.name}.tmp")
+        val tmp = File(dir, "${file.name}.tmp")
         tmp.writeBytes(payload)
         if (!tmp.renameTo(file)) {
             tmp.delete()
@@ -87,12 +106,13 @@ class SecureStore(
             return
         }
         val strongBox = strongBoxAvailable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+        val alias = recordedAlias()
         strongBoxOrTee(
-            strongBox = if (strongBox) ({ generate(strongBox = true).also(::probe) }) else null,
-            tee = { generate(strongBox = false).also(::probe).also { if (strongBox) onTeeFallback() } },
+            strongBox = if (strongBox) ({ keys.generate(alias, strongBox = true).also(::probe) }) else null,
+            tee = { keys.generate(alias, strongBox = false).also(::probe).also { if (strongBox) onTeeFallback() } },
             delays = delays,
             // A StrongBox key left half made would be picked up by the next write.
-            discard = ::deleteKey,
+            discard = { keys.delete(alias) },
         )
     }
 
@@ -102,7 +122,7 @@ class SecureStore(
 
     fun read(): ByteArray? {
         if (!file.exists()) return null
-        return EnvelopeFormat.decrypt(unseal(file.readBytes()), storedKey())
+        return decryptStored(unseal(file.readBytes())).first
     }
 
     /**
@@ -113,7 +133,7 @@ class SecureStore(
         if (!file.exists()) return false
         val payload = unseal(file.readBytes())
         if (EnvelopeFormat.isEnvelope(payload)) return false
-        write(EnvelopeFormat.decrypt(payload, storedKey()))
+        write(decryptStored(payload).first)
         return true
     }
 
@@ -121,9 +141,54 @@ class SecureStore(
     private fun storedKey(): SecretKey = checkNotNull(existingKey()) { "The key of the stored config is missing" }
 
     /**
+     * The Keystore [payload] decrypted, with the alias whose key did it: the recorded alias
+     * first, then the other one (a move killed after the file was swapped, see [rekeyToStrongBox]).
+     * Throws the failure of the recorded key when neither opens it.
+     */
+    private fun decryptStored(payload: ByteArray): Pair<ByteArray, String> {
+        val recorded = recordedAlias()
+        var failure: Exception? = null
+        for (alias in listOf(recorded, otherAlias(recorded))) {
+            try {
+                val key = keys.get(alias) ?: continue
+                val plaintext = EnvelopeFormat.decrypt(payload, key)
+                if (alias != recorded) adopt(alias)
+                return plaintext to alias
+            } catch (e: Exception) {
+                failure?.addSuppressed(e) ?: run { failure = e }
+            }
+        }
+        throw failure ?: IllegalStateException("The key of the stored config is missing")
+    }
+
+    /**
+     * Finishes a move a kill cut short: the file opened with [alias], not the recorded one, so
+     * [alias] is recorded and the other key dropped (only once the directory is on disk, so a
+     * power cut cannot bring the old file back without its key). Best effort: the read works
+     * either way.
+     */
+    private fun adopt(alias: String) {
+        runCatching {
+            replaceSynced(aliasFile, alias.encodeToByteArray())
+            if (syncDir(dir)) keys.delete(otherAlias(alias))
+        }
+    }
+
+    /** The alias the marker records; [keyAlias] without one, or with anything else in it. */
+    private fun recordedAlias(): String =
+        runCatching { aliasFile.takeIf { it.exists() }?.readText()?.trim() }.getOrNull()
+            ?.takeIf { it == nextAlias } ?: keyAlias
+
+    private fun otherAlias(alias: String): String = if (alias == keyAlias) nextAlias else keyAlias
+
+    /** The alias of the key in use, for tests: the recorded one when its key exists, else the other. */
+    internal fun aliasInUse(): String? = recordedAlias().let { listOf(it, otherAlias(it)) }.firstOrNull { keys.get(it) != null }
+
+    /**
      * The Keystore payload of a stored file: opened with the DEK when sealed. A sealed file with
      * no DEK this run is unreadable while the key is required; a payload that only starts like a
-     * sealed one (a Keystore IV can) is taken as is when opening it fails.
+     * sealed one (a Keystore IV can) is taken as is when opening it fails. Returns [payload]
+     * itself when it was not opened, a new array when it was.
      */
     private fun unseal(payload: ByteArray): ByteArray {
         if (!SealedFile.isSealed(payload)) return payload
@@ -153,12 +218,109 @@ class SecureStore(
 
     fun clear() {
         file.delete()
+        nextFile.delete()
+        aliasFile.delete()
         // Drop the key too, so a later import gets a fresh one at the best available level.
-        deleteKey()
+        keys.delete(keyAlias)
+        keys.delete(nextAlias)
     }
 
-    private fun deleteKey() {
-        KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }.deleteEntry(keyAlias)
+    /**
+     * Moves the key of the stored file from the TEE into StrongBox, keeping what it holds; true
+     * when the file is now under a new StrongBox key. Never the security-key seal: a sealed file
+     * is sealed again with the same DEK. A failure, or a kill, at any step leaves a file that
+     * reads: until the swap ([RekeyStep.RENAME]) the old file and key are untouched, and a
+     * failure there removes what the move made; after it, [read] tries the recorded alias, then
+     * the other, so the file reads whichever of the old key and the marker went first. A chip
+     * that keeps refusing (tried again after each of [delays], ms) gives false, and one that
+     * refuses the parameters ([StrongBoxUnavailableException]) false at once: nothing changed.
+     */
+    suspend fun rekeyToStrongBox(
+        delays: List<Long> = CHIP_RETRY_DELAYS,
+        pause: suspend (Long) -> Unit = { delay(it) },
+    ): Boolean {
+        if (!strongBoxAvailable || !file.exists()) return false
+        return try {
+            beforeStep(RekeyStep.READ)
+            val raw = file.readBytes()
+            val inner = unseal(raw)
+            // Sealed again as it was: unseal returns a new array only when the DEK opened it.
+            val dek = if (inner !== raw) outer?.dek() else null
+            val (plaintext, oldAlias) = decryptStored(inner)
+            try {
+                moveKey(plaintext, oldAlias, otherAlias(oldAlias), dek, delays, pause)
+            } finally {
+                plaintext.fill(0)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private suspend fun moveKey(
+        plaintext: ByteArray,
+        oldAlias: String,
+        newAlias: String,
+        dek: ByteArray?,
+        delays: List<Long>,
+        pause: suspend (Long) -> Unit,
+    ): Boolean {
+        try {
+            beforeStep(RekeyStep.CLEAR_LEFTOVER_KEY)
+            // The file opened with oldAlias: a key under newAlias is left from a move cut short.
+            keys.delete(newAlias)
+            beforeStep(RekeyStep.GENERATE)
+            val key = retrying(delays, pause, retryOn = { it !is StrongBoxUnavailableException }) {
+                keys.generate(newAlias, strongBox = true).also(::probe)
+            }
+            beforeStep(RekeyStep.WRITE_NEXT)
+            val inner = EnvelopeFormat.encrypt(plaintext, key)
+            writeSynced(nextFile, dek?.let { SealedFile.seal(inner, it) } ?: inner)
+            beforeStep(RekeyStep.VERIFY_NEXT)
+            val written = nextFile.readBytes()
+            val back = EnvelopeFormat.decrypt(dek?.let { SealedFile.open(written, it) } ?: written, key)
+            try {
+                check(back.contentEquals(plaintext)) { "The re-keyed config does not read back" }
+            } finally {
+                back.fill(0)
+            }
+            beforeStep(RekeyStep.RENAME)
+            check(nextFile.renameTo(file)) { "Could not swap the re-keyed config" }
+        } catch (e: Exception) {
+            // Before the swap: the old file and key are untouched, drop what the move made.
+            runCatching { nextFile.delete() }
+            runCatching { keys.delete(newAlias) }
+            throw e
+        }
+        return finishMove(oldAlias, newAlias)
+    }
+
+    /**
+     * After the swap the file reads only with the new key: nothing is undone. The old key goes
+     * once the rename is on disk (kept when that cannot be told), then the marker records the
+     * new alias; a kill between the two leaves a marker naming a missing key, and [read] falls
+     * through to the new one and records it. True once the marker says the new alias; a
+     * failure here before that still reads, and the next [read] fixes the marker.
+     */
+    private fun finishMove(oldAlias: String, newAlias: String): Boolean {
+        try {
+            beforeStep(RekeyStep.SYNC_DIR)
+            val durable = syncDir(dir)
+            beforeStep(RekeyStep.DELETE_OLD_KEY)
+            if (durable) keys.delete(oldAlias)
+            beforeStep(RekeyStep.RECORD_ALIAS)
+            replaceSynced(aliasFile, newAlias.encodeToByteArray())
+            beforeStep(RekeyStep.CLEAN_UP)
+            File(dir, "${aliasFile.name}.tmp").delete()
+            File(dir, "${file.name}.tmp").delete()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            return recordedAlias() == newAlias
+        }
+        return true
     }
 
     /** Protection level of the existing key, or null before the first write. */
@@ -178,9 +340,10 @@ class SecureStore(
         }
     }
 
+    /** The key in use: under the recorded alias, else the other one (see [decryptStored]). */
     private fun existingKey(): SecretKey? {
-        val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
-        return keyStore.getKey(keyAlias, null) as? SecretKey
+        val recorded = recordedAlias()
+        return keys.get(recorded) ?: keys.get(otherAlias(recorded))
     }
 
     /**
@@ -191,28 +354,15 @@ class SecureStore(
     private fun key(): SecretKey {
         existingKey()?.let { return it }
         val onMain = Looper.myLooper() == Looper.getMainLooper()
+        val alias = recordedAlias()
         return chipKeyOrTee(
             strongBox = strongBoxAvailable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P,
-            generate = ::generate,
+            generate = { strongBox -> keys.generate(alias, strongBox) },
             delays = if (onMain) emptyList() else CHIP_RETRY_DELAYS,
             // A StrongBox key left half made would be picked up by the next write.
-            discard = ::deleteKey,
+            discard = { keys.delete(alias) },
             onTeeFallback = onTeeFallback,
         )
-    }
-
-    private fun generate(strongBox: Boolean): SecretKey {
-        val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
-        val spec = KeyGenParameterSpec.Builder(
-            keyAlias,
-            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
-        )
-            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-            .setKeySize(256)
-        if (strongBox && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) spec.setIsStrongBoxBacked(true)
-        generator.init(spec.build())
-        return generator.generateKey()
     }
 
     private companion object {
