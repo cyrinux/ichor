@@ -10,6 +10,7 @@ struct IchorApp: App {
     @State private var model = AppModel()
     @State private var support = SupportPrompt()
     @State private var ai = AISettings()
+    @State private var gitHosts = GitHostStore()
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -42,6 +43,7 @@ struct IchorApp: App {
                 .environment(model)
                 .environment(support)
                 .environment(ai)
+                .environment(gitHosts)
                 .task { support.onLaunch() }
                 // A share link or a config file while the app runs (the scene delegate takes them at launch).
                 .onOpenURL { url in

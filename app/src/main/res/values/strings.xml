@@ -1719,6 +1719,26 @@
 
     <!-- AI diagnosis -->
     <string name="ai_title">AI diagnosis</string>
+    <string name="git_hosts_title">Git hosts</string>
+    <string name="git_hosts_desc">A token per Git host, to read and change the repositories Argo CD and Flux deploy from.</string>
+    <string name="git_hosts_empty">No Git host yet. Add one to browse the files an app deploys and propose a change.</string>
+    <string name="git_hosts_add">Add a Git host</string>
+    <string name="git_host_field_host">Host</string>
+    <string name="git_host_field_kind">Kind</string>
+    <string name="git_host_kind_auto">Auto</string>
+    <string name="git_host_field_token">Token</string>
+    <string name="git_host_paste">Paste</string>
+    <string name="git_host_check">Check</string>
+    <string name="git_host_checking">Checking…</string>
+    <string name="git_host_signed_in">Signed in as %1$s</string>
+    <string name="git_host_not_checked">Not checked</string>
+    <string name="git_host_missing_scopes">Missing scopes: %1$s</string>
+    <string name="git_host_check_failed">Check failed: %1$s</string>
+    <string name="git_host_token_saved">A token is saved. Type a new one to replace it.</string>
+    <string name="git_host_remove">Remove</string>
+    <string name="git_host_remove_title">Remove %1$s?</string>
+    <string name="git_host_remove_text">Its token is deleted from this phone.</string>
+    <string name="git_hosts_explainer">Grant only what Ichor needs. GitHub fine-grained token: Contents and Pull requests, read and write, on the repositories you deploy from. GitLab: api, or read_repository and write_repository. Gitea: repository read and write, and issue write. The token stays on this phone, encrypted, and is only sent to its own host.</string>
     <string name="ai_enable_desc">Optional. Ask an AI model what is wrong with the cluster and how to fix it. Nothing is sent until you ask.</string>
     <string name="ai_provider">Provider</string>
     <string name="ai_api_key">API key</string>

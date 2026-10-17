@@ -1,6 +1,496 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Git hosts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git-Hosts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hosts Git"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hôtes Git"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Host Git"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git-хости"
+          }
+        }
+      }
+    },
+    "A token per Git host, to read and change the repositories Argo CD and Flux deploy from." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Token pro Git-Host, um die Repositories zu lesen und zu ändern, aus denen Argo CD und Flux deployen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un token por host Git, para leer y cambiar los repositorios desde los que despliegan Argo CD y Flux."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un jeton par hôte Git, pour lire et modifier les dépôts depuis lesquels Argo CD et Flux déploient."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un token per host Git, per leggere e modificare i repository da cui Argo CD e Flux distribuiscono."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Токен для кожного Git-хоста, щоб читати й змінювати репозиторії, з яких розгортають Argo CD і Flux."
+          }
+        }
+      }
+    },
+    "No Git host yet. Add one to browse the files an app deploys and propose a change." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch kein Git-Host. Fügen Sie einen hinzu, um die Dateien einer App zu durchsuchen und eine Änderung vorzuschlagen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no hay hosts Git. Añade uno para ver los archivos que despliega una app y proponer un cambio."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun hôte Git pour l'instant. Ajoutez-en un pour parcourir les fichiers qu'une application déploie et proposer un changement."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancora nessun host Git. Aggiungine uno per sfogliare i file che un'app distribuisce e proporre una modifica."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ще немає Git-хостів. Додайте один, щоб переглядати файли застосунку й пропонувати зміни."
+          }
+        }
+      }
+    },
+    "Add a Git host" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git-Host hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir un host Git"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un hôte Git"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi un host Git"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати Git-хост"
+          }
+        }
+      }
+    },
+    "Host" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Host"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Host"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hôte"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Host"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хост"
+          }
+        }
+      }
+    },
+    "Kind" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Art"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тип"
+          }
+        }
+      }
+    },
+    "Check" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifier"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірити"
+          }
+        }
+      }
+    },
+    "Checking…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird geprüft…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérification…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica in corso…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірка…"
+          }
+        }
+      }
+    },
+    "Not checked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht geprüft"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin comprobar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non vérifié"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non verificato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не перевірено"
+          }
+        }
+      }
+    },
+    "Missing scopes: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlende Berechtigungen: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permisos que faltan: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Droits manquants : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permessi mancanti: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бракує дозволів: %@"
+          }
+        }
+      }
+    },
+    "Check failed: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfung fehlgeschlagen: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falló la comprobación: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de la vérification : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica non riuscita: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірка не вдалася: %@"
+          }
+        }
+      }
+    },
+    "A token is saved. Type a new one to replace it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Token ist gespeichert. Geben Sie ein neues ein, um es zu ersetzen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hay un token guardado. Escribe uno nuevo para sustituirlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un jeton est enregistré. Saisissez-en un nouveau pour le remplacer."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C'è un token salvato. Digitane uno nuovo per sostituirlo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Токен збережено. Введіть новий, щоб замінити його."
+          }
+        }
+      }
+    },
+    "Its token is deleted from this phone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sein Token wird von diesem Telefon gelöscht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su token se elimina de este teléfono."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son jeton est supprimé de ce téléphone."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il suo token viene eliminato da questo telefono."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його токен буде видалено з цього телефона."
+          }
+        }
+      }
+    },
+    "Grant only what Ichor needs. GitHub fine-grained token: Contents and Pull requests, read and write, on the repositories you deploy from. GitLab: api, or read_repository and write_repository. Gitea: repository read and write, and issue write. The token stays on this phone, encrypted, and is only sent to its own host." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gewähren Sie nur, was Ichor braucht. Feingranulares GitHub-Token: Contents und Pull requests, Lesen und Schreiben, auf den Repositories, aus denen Sie deployen. GitLab: api, oder read_repository und write_repository. Gitea: repository Lesen und Schreiben, und issue Schreiben. Das Token bleibt verschlüsselt auf diesem Telefon und wird nur an seinen eigenen Host gesendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concede solo lo que Ichor necesita. Token detallado de GitHub: Contents y Pull requests, lectura y escritura, en los repositorios desde los que despliegas. GitLab: api, o read_repository y write_repository. Gitea: repository lectura y escritura, e issue escritura. El token se queda en este teléfono, cifrado, y solo se envía a su propio host."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N'accordez que ce dont Ichor a besoin. Jeton GitHub à granularité fine : Contents et Pull requests, en lecture et écriture, sur les dépôts depuis lesquels vous déployez. GitLab : api, ou read_repository et write_repository. Gitea : repository en lecture et écriture, et issue en écriture. Le jeton reste sur ce téléphone, chiffré, et n'est envoyé qu'à son propre hôte."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concedi solo ciò che serve a Ichor. Token GitHub a grana fine: Contents e Pull requests, lettura e scrittura, sui repository da cui distribuisci. GitLab: api, oppure read_repository e write_repository. Gitea: repository lettura e scrittura, e issue scrittura. Il token resta su questo telefono, cifrato, e viene inviato solo al suo host."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надавайте лише те, що потрібно Ichor. Детальний токен GitHub: Contents і Pull requests, читання й запис, на репозиторіях, з яких ви розгортаєте. GitLab: api, або read_repository і write_repository. Gitea: repository читання й запис, і issue запис. Токен залишається на цьому телефоні, зашифрований, і надсилається лише на свій хост."
+          }
+        }
+      }
+    },
     "Comparing with Argo CD's last comparison…" : {
       "extractionState" : "manual",
       "localizations" : {

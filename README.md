@@ -84,6 +84,12 @@ sit alongside your real clusters and be removed from **Manage clusters**.
 - **Argo Rollouts:** see each canary or blue-green rollout at its step, with its weight, pause
   reason and analysis, and promote (one step or fully), abort, retry or pause it with the same
   patches as the `kubectl argo rollouts` plugin.
+- **Git hosts:** Settings → Git hosts keeps one personal access token per Git host (GitHub,
+  GitLab, Gitea or Forgejo), to read and later change the repositories Argo CD and Flux deploy
+  from. Grant only what is needed (GitHub fine-grained: Contents and Pull requests, read and
+  write, on those repositories); **Check** says who the token signs in as. The token stays on
+  the phone, encrypted (Android Keystore, iOS Keychain), is never shown again, and is only sent
+  to its own host over https.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome. Optionally
   (Settings → Privacy, off by default) each Kubernetes object the app changes also gets a

@@ -1,5 +1,7 @@
 package name.levis.ichor.data
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoFreezeAction
@@ -10,12 +12,28 @@ import name.levis.ichor.model.ArgoSyncOptions
 import name.levis.ichor.model.FluxAction
 import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.FluxStatus
+import name.levis.ichor.model.GitHost
+import name.levis.ichor.model.GitHostCheck
 import name.levis.ichorgo.ArgoSyncListener
 import name.levis.ichorgo.FluxReconcileListener
 import name.levis.ichorgo.Ichorgo
 
 /** Argo CD and Flux through their custom resources, on the Kubernetes API of the active cluster. */
-class GitOpsRepository(go: GoCall) : GoRepository(go) {
+class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) : GoRepository(go) {
+    /**
+     * Who [host]'s token signs in as and the scopes it lacks, asked of the forge (the demo
+     * context answers without network). [token] checks a typed one before it is saved, else the
+     * stored one is used. A successful check is remembered for the Settings list. Throws when refused.
+     */
+    suspend fun gitHostCheck(host: GitHost, token: String? = null): GitHostCheck {
+        val store = checkNotNull(gitHosts) { "No Git host store" }
+        val json = store.hostJson(host, token)
+        val check = withContext(Dispatchers.IO) { decodeGitHostCheck(Ichorgo.gitForgeCheck(json)) }
+        // A typed token is not saved yet: its login is remembered on Save, not here.
+        if (token.isNullOrBlank()) store.rememberLogin(host.host, check.login)
+        return check
+    }
+
     /**
      * Argo CD Applications, ApplicationSets and projects through their custom resources
      * (os:admin); `installed` is false without Argo CD.
@@ -126,3 +144,6 @@ class GitOpsRepository(go: GoCall) : GoRepository(go) {
         return FluxReconcileHandle { run.cancel() }
     }
 }
+
+/** The answer of `GitForgeCheck`: login, host, scopesOK, missing. */
+internal fun decodeGitHostCheck(json: String): GitHostCheck = TalosJson.decodeFromString(GitHostCheck.serializer(), json)

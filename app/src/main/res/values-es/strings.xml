@@ -1719,6 +1719,26 @@
 
     <!-- AI diagnosis -->
     <string name="ai_title">Diagnóstico con IA</string>
+    <string name="git_hosts_title">Hosts Git</string>
+    <string name="git_hosts_desc">Un token por host Git, para leer y cambiar los repositorios desde los que despliegan Argo CD y Flux.</string>
+    <string name="git_hosts_empty">Aún no hay hosts Git. Añade uno para ver los archivos que despliega una app y proponer un cambio.</string>
+    <string name="git_hosts_add">Añadir un host Git</string>
+    <string name="git_host_field_host">Host</string>
+    <string name="git_host_field_kind">Tipo</string>
+    <string name="git_host_kind_auto">Auto</string>
+    <string name="git_host_field_token">Token</string>
+    <string name="git_host_paste">Pegar</string>
+    <string name="git_host_check">Comprobar</string>
+    <string name="git_host_checking">Comprobando…</string>
+    <string name="git_host_signed_in">Sesión iniciada como %1$s</string>
+    <string name="git_host_not_checked">Sin comprobar</string>
+    <string name="git_host_missing_scopes">Permisos que faltan: %1$s</string>
+    <string name="git_host_check_failed">Falló la comprobación: %1$s</string>
+    <string name="git_host_token_saved">Hay un token guardado. Escribe uno nuevo para sustituirlo.</string>
+    <string name="git_host_remove">Quitar</string>
+    <string name="git_host_remove_title">¿Quitar %1$s?</string>
+    <string name="git_host_remove_text">Su token se elimina de este teléfono.</string>
+    <string name="git_hosts_explainer">Concede solo lo que Ichor necesita. Token detallado de GitHub: Contents y Pull requests, lectura y escritura, en los repositorios desde los que despliegas. GitLab: api, o read_repository y write_repository. Gitea: repository lectura y escritura, e issue escritura. El token se queda en este teléfono, cifrado, y solo se envía a su propio host.</string>
     <string name="ai_enable_desc">Opcional. Pregunta a un modelo de IA qué falla en el clúster y cómo arreglarlo. No se envía nada hasta que lo pidas.</string>
     <string name="ai_provider">Proveedor</string>
     <string name="ai_api_key">Clave de API</string>

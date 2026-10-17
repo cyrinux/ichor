@@ -1820,6 +1820,26 @@
 
     <!-- AI diagnosis -->
     <string name="ai_title">Діагностика ШІ</string>
+    <string name="git_hosts_title">Git-хости</string>
+    <string name="git_hosts_desc">Токен для кожного Git-хоста, щоб читати й змінювати репозиторії, з яких розгортають Argo CD і Flux.</string>
+    <string name="git_hosts_empty">Ще немає Git-хостів. Додайте один, щоб переглядати файли застосунку й пропонувати зміни.</string>
+    <string name="git_hosts_add">Додати Git-хост</string>
+    <string name="git_host_field_host">Хост</string>
+    <string name="git_host_field_kind">Тип</string>
+    <string name="git_host_kind_auto">Авто</string>
+    <string name="git_host_field_token">Токен</string>
+    <string name="git_host_paste">Вставити</string>
+    <string name="git_host_check">Перевірити</string>
+    <string name="git_host_checking">Перевірка…</string>
+    <string name="git_host_signed_in">Вхід як %1$s</string>
+    <string name="git_host_not_checked">Не перевірено</string>
+    <string name="git_host_missing_scopes">Бракує дозволів: %1$s</string>
+    <string name="git_host_check_failed">Перевірка не вдалася: %1$s</string>
+    <string name="git_host_token_saved">Токен збережено. Введіть новий, щоб замінити його.</string>
+    <string name="git_host_remove">Вилучити</string>
+    <string name="git_host_remove_title">Вилучити %1$s?</string>
+    <string name="git_host_remove_text">Його токен буде видалено з цього телефона.</string>
+    <string name="git_hosts_explainer">Надавайте лише те, що потрібно Ichor. Детальний токен GitHub: Contents і Pull requests, читання й запис, на репозиторіях, з яких ви розгортаєте. GitLab: api, або read_repository і write_repository. Gitea: repository читання й запис, і issue запис. Токен залишається на цьому телефоні, зашифрований, і надсилається лише на свій хост.</string>
     <string name="ai_enable_desc">Необов’язково. Запитайте модель ШІ, що не так із кластером і як це виправити. Нічого не надсилається, доки ви не попросите.</string>
     <string name="ai_provider">Постачальник</string>
     <string name="ai_api_key">Ключ API</string>

@@ -1712,6 +1712,26 @@
 
     <!-- AI diagnosis -->
     <string name="ai_title">KI-Diagnose</string>
+    <string name="git_hosts_title">Git-Hosts</string>
+    <string name="git_hosts_desc">Ein Token pro Git-Host, um die Repositories zu lesen und zu ändern, aus denen Argo CD und Flux deployen.</string>
+    <string name="git_hosts_empty">Noch kein Git-Host. Fügen Sie einen hinzu, um die Dateien einer App zu durchsuchen und eine Änderung vorzuschlagen.</string>
+    <string name="git_hosts_add">Git-Host hinzufügen</string>
+    <string name="git_host_field_host">Host</string>
+    <string name="git_host_field_kind">Art</string>
+    <string name="git_host_kind_auto">Automatisch</string>
+    <string name="git_host_field_token">Token</string>
+    <string name="git_host_paste">Einfügen</string>
+    <string name="git_host_check">Prüfen</string>
+    <string name="git_host_checking">Wird geprüft…</string>
+    <string name="git_host_signed_in">Angemeldet als %1$s</string>
+    <string name="git_host_not_checked">Nicht geprüft</string>
+    <string name="git_host_missing_scopes">Fehlende Berechtigungen: %1$s</string>
+    <string name="git_host_check_failed">Prüfung fehlgeschlagen: %1$s</string>
+    <string name="git_host_token_saved">Ein Token ist gespeichert. Geben Sie ein neues ein, um es zu ersetzen.</string>
+    <string name="git_host_remove">Entfernen</string>
+    <string name="git_host_remove_title">%1$s entfernen?</string>
+    <string name="git_host_remove_text">Sein Token wird von diesem Telefon gelöscht.</string>
+    <string name="git_hosts_explainer">Gewähren Sie nur, was Ichor braucht. Feingranulares GitHub-Token: Contents und Pull requests, Lesen und Schreiben, auf den Repositories, aus denen Sie deployen. GitLab: api, oder read_repository und write_repository. Gitea: repository Lesen und Schreiben, und issue Schreiben. Das Token bleibt verschlüsselt auf diesem Telefon und wird nur an seinen eigenen Host gesendet.</string>
     <string name="ai_enable_desc">Optional. Fragen Sie ein KI-Modell, was im Cluster nicht stimmt und wie es sich beheben lässt. Nichts wird gesendet, bevor Sie fragen.</string>
     <string name="ai_provider">Anbieter</string>
     <string name="ai_api_key">API-Schlüssel</string>
