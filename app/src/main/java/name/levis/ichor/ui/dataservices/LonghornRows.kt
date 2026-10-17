@@ -25,6 +25,7 @@ import name.levis.ichor.model.LonghornVolume
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.actions
 import name.levis.ichor.model.diskPathLabel
+import name.levis.ichor.model.engineImageTag
 import name.levis.ichor.ui.components.MeterRow
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.ResourceRow
@@ -38,7 +39,16 @@ import name.levis.ichor.util.formatBytes
  * other actions, each confirmed by its own dialog.
  */
 @Composable
-internal fun VolumeRow(v: LonghornVolume, busy: Boolean, onAttachment: (Boolean) -> Unit, onSalvage: () -> Unit, onSnapshots: () -> Unit, onAction: (LonghornAction) -> Unit) {
+internal fun VolumeRow(
+    v: LonghornVolume,
+    busy: Boolean,
+    defaultEngineVersion: String,
+    onAttachment: (Boolean) -> Unit,
+    onSalvage: () -> Unit,
+    onEngine: () -> Unit,
+    onSnapshots: () -> Unit,
+    onAction: (LonghornAction) -> Unit,
+) {
     val colors = LocalStatusColors.current
     val subtitle = listOfNotNull(
         stateLabel(v.state),
@@ -52,9 +62,10 @@ internal fun VolumeRow(v: LonghornVolume, busy: Boolean, onAttachment: (Boolean)
         v.label,
         Modifier.padding(start = 16.dp, end = 4.dp),
         subtitle = subtitle,
-        trailing = { LonghornActionMenu(v.actions, v.namespace, busy, onAction, volumeExtras(v, onAttachment, onSalvage, onSnapshots)) },
+        trailing = { LonghornActionMenu(v.actions, v.namespace, busy, onAction, volumeExtras(v, onAttachment, onSalvage, onEngine, onSnapshots)) },
     ) {
         if (v.scheduleError.isNotEmpty()) MutedText(stringResource(R.string.longhorn_schedule_error, v.scheduleError))
+        EngineLine(v, defaultEngineVersion)
         if (v.tooManySnapshots) {
             Text(stringResource(R.string.longhorn_too_many_snapshots), style = MaterialTheme.typography.labelSmall, color = colors.warn)
         }
@@ -67,16 +78,34 @@ internal fun VolumeRow(v: LonghornVolume, busy: Boolean, onAttachment: (Boolean)
     }
 }
 
-/** The menu items a volume has beyond its [LonghornAction]s: salvage, attach or detach, snapshots. */
+/**
+ * "Engine upgrading" while Longhorn swaps it, else "Engine v1.12.0, v1.13.0 available" when it
+ * lags the default; nothing on the default engine.
+ */
 @Composable
-private fun volumeExtras(v: LonghornVolume, onAttachment: (Boolean) -> Unit, onSalvage: () -> Unit, onSnapshots: () -> Unit): List<LonghornMenuExtra> {
+private fun EngineLine(v: LonghornVolume, defaultEngineVersion: String) {
+    val colors = LocalStatusColors.current
+    when {
+        v.engineUpgrading -> Text(stringResource(R.string.longhorn_engine_upgrading), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+        v.engineOutdated && defaultEngineVersion.isNotEmpty() -> {
+            val current = v.engineVersion.ifEmpty { engineImageTag(v.engineCurrentImage) }.ifEmpty { "—" }
+            Text(stringResource(R.string.longhorn_engine_hint, current, defaultEngineVersion), style = MaterialTheme.typography.labelSmall, color = colors.warn)
+        }
+    }
+}
+
+/** The menu items a volume has beyond its [LonghornAction]s: salvage, attach or detach, engine upgrade, snapshots. */
+@Composable
+private fun volumeExtras(v: LonghornVolume, onAttachment: (Boolean) -> Unit, onSalvage: () -> Unit, onEngine: () -> Unit, onSnapshots: () -> Unit): List<LonghornMenuExtra> {
     val salvage = stringResource(R.string.longhorn_salvage)
     val attach = stringResource(R.string.longhorn_attach)
     val detach = stringResource(R.string.longhorn_detach)
+    val engine = stringResource(R.string.longhorn_engine_upgrade)
     val snapshots = stringResource(R.string.longhorn_snapshots_title)
     return listOfNotNull(
         LonghornMenuExtra(salvage, KubeAction.LONGHORN_SALVAGE, onSalvage).takeIf { v.salvageable },
         v.attachmentChoice?.let { a -> LonghornMenuExtra(if (a) attach else detach, KubeAction.LONGHORN_ATTACHMENT) { onAttachment(a) } },
+        LonghornMenuExtra(engine, KubeAction.LONGHORN_ENGINE_UPGRADE, onEngine).takeIf { v.engineUpgradable },
         LonghornMenuExtra(snapshots, null, onSnapshots),
     )
 }

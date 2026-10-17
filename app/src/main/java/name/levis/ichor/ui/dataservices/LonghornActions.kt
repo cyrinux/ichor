@@ -68,18 +68,32 @@ class LonghornActions(
     suspend fun attachmentPreview(volume: name.levis.ichor.model.LonghornVolume) = dataServices.longhornAttachmentPreview(volume.namespace, volume.name)
     fun attachment(volume: name.levis.ichor.model.LonghornVolume, node: String, attach: Boolean) {
         val key = longhornActionKey(volume.namespace, volume.name)
-        if (key in busy.value || key in salvageBusy.value || key in attachmentBusy.value) return
+        if (inFlight(key)) return
         attachment.launch(longhornActionKey(volume.namespace, volume.name), { dataServices.longhornAttachment(volume.namespace, volume.name, node, attach) }, {
             LonghornAttachmentResult(it.exceptionOrNull()?.uiText())
         }, onChanged)
     }
+    private val engine = KeyedActions<LonghornEngineResult>(scope)
+    val engineBusy: StateFlow<Set<String>> get() = engine.busy
+    val engineResults: Flow<LonghornEngineResult> get() = engine.results
+    suspend fun enginePreview(volume: name.levis.ichor.model.LonghornVolume) = dataServices.longhornEngineUpgradePreview(volume.namespace, volume.name)
+    fun engineUpgrade(volume: name.levis.ichor.model.LonghornVolume, image: String) {
+        val key = longhornActionKey(volume.namespace, volume.name)
+        if (inFlight(key)) return
+        engine.launch(key, { dataServices.longhornEngineUpgrade(volume.namespace, volume.name, image) }, {
+            LonghornEngineResult(it.exceptionOrNull()?.uiText())
+        }, onChanged)
+    }
+    /** Another volume action runs on [key]: one at a time, whichever its kind. */
+    private fun inFlight(key: String) =
+        key in busy.value || key in salvageBusy.value || key in attachmentBusy.value || key in engineBusy.value
     private val salvage = KeyedActions<LonghornSalvageResult>(scope)
     val salvageBusy: StateFlow<Set<String>> get() = salvage.busy
     val salvageResults: Flow<LonghornSalvageResult> get() = salvage.results
     suspend fun salvagePreview(volume: name.levis.ichor.model.LonghornVolume) = dataServices.longhornSalvagePreview(volume.namespace, volume.name)
     fun salvage(volume: name.levis.ichor.model.LonghornVolume, replicas: Set<String>) {
         val key = longhornActionKey(volume.namespace, volume.name)
-        if (key in busy.value || key in salvageBusy.value || key in attachmentBusy.value) return
+        if (inFlight(key)) return
         salvage.launch(longhornActionKey(volume.namespace, volume.name), { dataServices.longhornSalvage(volume.namespace, volume.name, replicas) }, {
             LonghornSalvageResult(volume.label, it.exceptionOrNull()?.uiText())
         }, onChanged)
@@ -101,7 +115,7 @@ class LonghornActions(
     val results: Flow<LonghornActionResult> get() = actions.results
 
     fun run(key: String, namespace: String, name: String, label: String, action: LonghornAction, value: Int = 0) {
-        if (key in busy.value || key in salvageBusy.value || key in attachmentBusy.value) return
+        if (inFlight(key)) return
         actions.launch(key, { dataServices.longhornAction(namespace, name, action, value) }, {
             LonghornActionResult(action, label, value, it.exceptionOrNull()?.uiText())
         }, onChanged)

@@ -2,6 +2,7 @@ package name.levis.ichor.data
 
 import kotlinx.serialization.encodeToString
 import name.levis.ichor.model.LonghornAttachmentPreview
+import name.levis.ichor.model.LonghornEngineUpgradePreview
 import name.levis.ichor.model.LonghornSalvagePreview
 import name.levis.ichor.model.VolumeSnapshots
 import name.levis.ichor.model.CnpgPromotePreview
@@ -31,6 +32,8 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
  suspend fun longhornAttachmentPreview(namespace: String, name: String): LonghornAttachmentPreview = go.kube { cfg, ctx, server -> TalosJson.decodeFromString(LonghornAttachmentPreview.serializer(), Ichorgo.kubeLonghornAttachmentPreview(cfg, ctx, server, namespace, name)) }
  suspend fun longhornAttachment(namespace: String, name: String, node: String, attach: Boolean) = go.kube { cfg, ctx, server -> Ichorgo.kubeLonghornAttachment(cfg, ctx, server, namespace, name, node, attach) }
 
+ suspend fun longhornEngineUpgradePreview(namespace: String, name: String): LonghornEngineUpgradePreview = go.kube { cfg, ctx, server -> TalosJson.decodeFromString(LonghornEngineUpgradePreview.serializer(), Ichorgo.kubeLonghornEngineUpgradePreview(cfg, ctx, server, namespace, name)) }
+ suspend fun longhornEngineUpgrade(namespace: String, name: String, image: String) = go.kube { cfg, ctx, server -> Ichorgo.kubeLonghornEngineUpgrade(cfg, ctx, server, namespace, name, image) }
  suspend fun longhornSalvagePreview(namespace: String, name: String): LonghornSalvagePreview = go.kube { cfg, ctx, server -> TalosJson.decodeFromString(LonghornSalvagePreview.serializer(), Ichorgo.kubeLonghornSalvagePreview(cfg, ctx, server, namespace, name)) }
  suspend fun longhornSalvage(namespace: String, name: String, replicas: Set<String>) = go.kube { cfg, ctx, server -> Ichorgo.kubeLonghornSalvage(cfg, ctx, server, namespace, name, TalosJson.encodeToString(replicas.toList())) }
 

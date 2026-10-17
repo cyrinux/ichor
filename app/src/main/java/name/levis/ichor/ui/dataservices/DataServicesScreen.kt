@@ -92,6 +92,7 @@ fun DataServicesScreen(
     LonghornResultToasts(vm.longhorn.results)
     LonghornSalvageToasts(vm.longhorn.salvageResults)
     LonghornAttachmentToasts(vm.longhorn.attachmentResults)
+    LonghornEngineToasts(vm.longhorn.engineResults)
     LonghornSnapshotToasts(vm.longhorn.snapshotResults)
     CertificateRenewToasts(vm.certificates.results)
     KubeGreenScheduleToasts(vm.kubeGreen.results)

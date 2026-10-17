@@ -269,6 +269,7 @@ reads those roles and explains up front when a feature needs more.
 | **CloudNativePG primary restart and hibernate/wake** | `Kubeconfig`, then the Kubernetes API: get clusters and pods, patch `clusters/status` for restart, patch clusters for hibernation | **`os:admin`** |
 | **Longhorn faulted-volume salvage** | `Kubeconfig`, then the Kubernetes API: get volumes, list replicas/nodes, create `services/proxy` to the Longhorn manager | **`os:admin`** |
 | **Longhorn volume attach/detach** | `Kubeconfig`, then the Kubernetes API: get volumes/nodes, list nodes for preview, create `services/proxy` to the Longhorn manager | **`os:admin`** |
+| **Longhorn engine upgrade** | `Kubeconfig`, then the Kubernetes API: get volumes and settings, list engineimages and replicas, create `services/proxy` to the Longhorn manager | **`os:admin`** |
 | **Node reset (`talosctl reset`)** | `Reset` | **`os:admin`** |
 
 Notes:

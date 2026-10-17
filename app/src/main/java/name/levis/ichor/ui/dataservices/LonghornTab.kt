@@ -33,7 +33,9 @@ import name.levis.ichor.model.LonghornStatus
 import name.levis.ichor.model.LonghornVolume
 import name.levis.ichor.model.VolumeFilter
 import name.levis.ichor.model.filtered
+import name.levis.ichor.model.defaultEngineVersion
 import name.levis.ichor.model.longhornActionKey
+import name.levis.ichor.model.oldEngineVolumes
 import name.levis.ichor.model.replicaChoices
 import name.levis.ichor.model.sharedDiskPath
 import name.levis.ichor.ui.components.EmptyText
@@ -57,6 +59,13 @@ fun LonghornTab(status: LonghornStatus, actions: LonghornActions, garageDetected
     var attachmentTarget by remember { mutableStateOf<Pair<LonghornVolume, Boolean>?>(null) }
     attachmentTarget?.let { (v, attach) -> LonghornAttachmentDialog(v, attach, actions,
         onDismiss = { attachmentTarget = null }, onConfirm = { node -> actions.attachment(v, node, attach); attachmentTarget = null }) }
+
+    val engineBusy by actions.engineBusy.collectAsStateWithLifecycle()
+    var engineTarget by remember { mutableStateOf<LonghornVolume?>(null) }
+    engineTarget?.let { v -> LonghornEngineDialog(v, actions,
+        onDismiss = { engineTarget = null }, onConfirm = { image -> actions.engineUpgrade(v, image); engineTarget = null }) }
+    val defaultEngineVersion = remember(status) { status.defaultEngineVersion }
+    val oldEngines = remember(status) { status.oldEngineVolumes }
 
     val salvageBusy by actions.salvageBusy.collectAsStateWithLifecycle()
     var salvageTarget by remember { mutableStateOf<LonghornVolume?>(null) }
@@ -104,6 +113,9 @@ fun LonghornTab(status: LonghornStatus, actions: LonghornActions, garageDetected
         if (status.error.isNotEmpty()) item {
             InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp))
         }
+        if (oldEngines > 0) item(key = "old-engines") {
+            MutedText(stringResource(R.string.longhorn_engine_old_count, oldEngines.toString()), Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+        }
         status.backupTargets.forEach { target ->
             item(key = "bt:${target.name}|${target.url}") { BackupTargetRow(target, garageDetected, onGarage) }
         }
@@ -122,8 +134,10 @@ fun LonghornTab(status: LonghornStatus, actions: LonghornActions, garageDetected
         }
         items(rows, key = { "v:${it.name}" }) { v ->
             VolumeRow(
-                v, v.key in busy || v.key in salvageBusy || v.key in attachmentBusy,
-                onAttachment = { attachmentTarget = v to it }, onSalvage = { salvageTarget = v }, onSnapshots = { snapshotsOf = v.name }, onAction = { onVolume(v, it) },
+                v, v.key in busy || v.key in salvageBusy || v.key in attachmentBusy || v.key in engineBusy,
+                defaultEngineVersion = defaultEngineVersion,
+                onAttachment = { attachmentTarget = v to it }, onSalvage = { salvageTarget = v }, onEngine = { engineTarget = v },
+                onSnapshots = { snapshotsOf = v.name }, onAction = { onVolume(v, it) },
             )
             HorizontalDivider()
         }

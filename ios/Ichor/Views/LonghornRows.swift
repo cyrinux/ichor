@@ -8,6 +8,8 @@ import IchorCore
 struct LonghornVolumeRow: View {
     let volume: LonghornVolume
     let busy: Bool
+    /// The default engine's version, for the hint on a volume that lags it.
+    var availableEngine = ""
     let openSnapshots: () -> Void
 
     var body: some View {
@@ -27,6 +29,11 @@ struct LonghornVolumeRow: View {
             }
             if volume.tooManySnapshots {
                 Text("Close to the snapshot limit").font(.caption).foregroundStyle(attentionColor)
+            }
+            if volume.engineUpgrading {
+                Text("Engine upgrading").font(.caption).foregroundStyle(.secondary)
+            } else if volume.engineOutdated && !volume.engineLabel.isEmpty && !availableEngine.isEmpty {
+                Text("Engine \(volume.engineLabel), \(availableEngine) available").font(.caption).foregroundStyle(.secondary)
             }
         }
         .accessibilityElement(children: .combine)

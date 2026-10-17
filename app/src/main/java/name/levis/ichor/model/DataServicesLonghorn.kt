@@ -12,6 +12,10 @@ data class LonghornStatus(
     val volumes: List<LonghornVolume> = emptyList(),
     val nodes: List<LonghornNode> = emptyList(),
     val backupTargets: List<LonghornBackupTarget> = emptyList(),
+    /** Longhorn's default-engine-image setting, "" when unread. */
+    val defaultEngineImage: String = "",
+    /** The installed engine images, the default first. */
+    val engineImages: List<LonghornEngineImageStatus> = emptyList(),
 )
 
 @Serializable
@@ -58,10 +62,23 @@ data class LonghornVolume(
     val backupStale: Boolean = false,
     /** The VolumeSnapshotContents were read: a snapshot without [LonghornSnapshot.volumeSnapshot] keeps none. */
     val volumeSnapshotsKnown: Boolean = false,
+    /** The engine image asked for (spec.image). */
+    val engineImage: String = "",
+    /** The engine image running (status.currentImage). */
+    val engineCurrentImage: String = "",
+    /** [engineImage] differs from [engineCurrentImage]: an upgrade is in flight. */
+    val engineUpgrading: Boolean = false,
+    /** Runs an engine other than the deployed default. */
+    val engineOutdated: Boolean = false,
+    /** The running engine's version, "" when unknown. */
+    val engineVersion: String = "",
 ) {
     val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
 
     val attached: Boolean get() = state == "attached"
+
+    /** Its menu offers "Upgrade engine": an old engine, no upgrade in flight, attached or detached. */
+    val engineUpgradable: Boolean get() = engineOutdated && !engineUpgrading && (state == "attached" || state == "detached")
 
     /** The claim it backs ("namespace/name"), or the volume's own name when unbound. */
     val label: String get() = if (pvcName.isNotEmpty()) "$pvcNamespace/$pvcName" else name

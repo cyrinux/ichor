@@ -110,7 +110,7 @@ final class KubeAccessTests: XCTestCase {
             "deletePod", "sanitizePods", "execPod", "debugPod", "debugNode", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync",
             "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
             "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode", "editNodeMeta",
-            "alertmanagerSilence", "alertmanagerExpire", "cnpgPromote", "cnpgRestartPrimary", "cnpgHibernate", "longhornSalvage", "longhornAttachment", "longhornSnapshot", "longhornReplicas", "longhornNode",
+            "alertmanagerSilence", "alertmanagerExpire", "cnpgPromote", "cnpgRestartPrimary", "cnpgHibernate", "longhornSalvage", "longhornAttachment", "longhornSnapshot", "longhornReplicas", "longhornNode", "longhornEngineUpgrade",
             "veleroBackupNow", "veleroDeleteBackup", "veleroRestore",
             "vmStart", "vmStop", "vmRestart", "vmMigrate", "vmPause", "vmUnpause", "vmConsole", "autoscale", "autoscaleKeda",
             "argoRollout",
