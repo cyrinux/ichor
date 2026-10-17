@@ -22,12 +22,17 @@ sealed interface BackupState {
     data object NewPassphrase : BackupState
     data object Sealing : BackupState
 
-    /** Sealed as [format], the save picker is to be opened (once: [Saving] while it shows). */
-    class ReadyToSave(val file: ByteArray, val format: BackupFileFormat) : BackupState
+    /**
+     * Sealed as [format], the save picker is to be opened (once: [Saving] while it shows).
+     * [recipientsOnly]: an age file for age keys only, which no passphrase opens.
+     */
+    class ReadyToSave(val file: ByteArray, val format: BackupFileFormat, val recipientsOnly: Boolean = false) : BackupState
 
     /** The save picker is open. */
-    class Saving(val file: ByteArray, val format: BackupFileFormat) : BackupState
-    data object Saved : BackupState
+    class Saving(val file: ByteArray, val format: BackupFileFormat, val recipientsOnly: Boolean = false) : BackupState
+
+    /** Written; [recipientsOnly] says it opens with an age key rather than a passphrase. */
+    data class Saved(val recipientsOnly: Boolean = false) : BackupState
 
     /** A picked backup file, waiting for its passphrase; [error] after a wrong one. */
     class Passphrase(val file: ByteArray, val error: UiText? = null) : BackupState
@@ -52,7 +57,7 @@ class BackupViewModel(private val manager: BackupManager) : ViewModel() {
         _state.value = BackupState.Sealing
         viewModelScope.launch {
             _state.value = runCatching { manager.create(seal, includeSecrets) }.fold(
-                onSuccess = { BackupState.ReadyToSave(it, seal.format) },
+                onSuccess = { BackupState.ReadyToSave(it, seal.format, recipientsOnly = seal is BackupSeal.AgeRecipients) },
                 onFailure = { BackupState.Failed(it.uiText()) },
             )
         }
@@ -61,7 +66,7 @@ class BackupViewModel(private val manager: BackupManager) : ViewModel() {
     /** The save picker opens for the sealed file; false when it already did (recomposition). */
     fun openSaver(): Boolean {
         val ready = _state.value as? BackupState.ReadyToSave ?: return false
-        _state.value = BackupState.Saving(ready.file, ready.format)
+        _state.value = BackupState.Saving(ready.file, ready.format, ready.recipientsOnly)
         return true
     }
 
@@ -73,11 +78,19 @@ class BackupViewModel(private val manager: BackupManager) : ViewModel() {
     }
 
     fun saved() {
-        _state.value = BackupState.Saved
+        val saving = _state.value as? BackupState.Saving
+        _state.value = BackupState.Saved(recipientsOnly = saving?.recipientsOnly == true)
     }
 
+    /** An age file for age keys only cannot open here: its error shows rather than the passphrase dialog. */
     fun picked(file: ByteArray) {
-        _state.value = BackupState.Passphrase(file)
+        viewModelScope.launch {
+            _state.value = if (manager.needsIdentity(file)) {
+                BackupState.Failed(UiText.Res(R.string.backup_err_needs_identity))
+            } else {
+                BackupState.Passphrase(file)
+            }
+        }
     }
 
     fun restore(passphrase: String) {

@@ -99,6 +99,37 @@ func TestBackupAgeRecipientsOnly(t *testing.T) {
 	requireBackupErr(t, err, BackupErrNeedsIdentity)
 }
 
+func TestBackupAgeUppercaseRecipient(t *testing.T) {
+	payload := backupTestPayload(t)
+	id := newTestAgeIdentity(t)
+
+	sealed, err := EncryptBackupAge(payload, "", strings.ToUpper(id.Recipient().String()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r, err := age.Decrypt(bytes.NewReader(sealed), id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	plain, err := io.ReadAll(r)
+	if err != nil || string(plain) != payload {
+		t.Fatalf("identity did not open the file: %v", err)
+	}
+}
+
+func TestBackupAgeEmptyPassphraseOnPassphraseFile(t *testing.T) {
+	sealed, err := EncryptBackupAge(backupTestPayload(t), backupTestPassphrase, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The apps try "" first to tell a keys-only file apart: a passphrase file must ask for it.
+	_, err = DecryptBackup(sealed, "")
+	requireBackupErr(t, err, BackupErrWrongPassphrase)
+}
+
 func TestBackupAgeWrongPassphrase(t *testing.T) {
 	sealed, err := EncryptBackupAge(backupTestPayload(t), backupTestPassphrase, "")
 	if err != nil {

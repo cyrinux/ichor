@@ -1,6 +1,41 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Line %lld is not an age public key (age1…)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ligne %lld n’est pas une clé publique age (age1…)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La línea %lld no es una clave pública age (age1…)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeile %lld ist kein öffentlicher age-Schlüssel (age1…)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La riga %lld non è una chiave pubblica age (age1…)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рядок %lld не є відкритим ключем age (age1…)."
+          }
+        }
+      }
+    },
     "Format" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -242,41 +277,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вставте принаймні один публічний ключ age."
-          }
-        }
-      }
-    },
-    "Not an age public key: %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pas une clé publique age : %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No es una clave pública age: %@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kein öffentlicher age-Schlüssel: %@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Non è una chiave pubblica age: %@"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не публічний ключ age: %@"
           }
         }
       }

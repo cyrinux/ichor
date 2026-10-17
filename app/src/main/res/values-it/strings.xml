@@ -1917,6 +1917,7 @@
     <string name="backup_sealing">Cifratura…</string>
     <string name="backup_restoring">Ripristino…</string>
     <string name="backup_saved">Backup salvato. Conserva la passphrase in un posto sicuro.</string>
+    <string name="backup_saved_age_keys">Backup salvato. Si apre con la tua chiave age su un computer.</string>
     <string name="backup_restored">Backup ripristinato.</string>
     <string name="backup_err_wrong_passphrase">Passphrase errata o file danneggiato.</string>
     <string name="backup_err_passphrase_short">Usa almeno %1$d caratteri.</string>

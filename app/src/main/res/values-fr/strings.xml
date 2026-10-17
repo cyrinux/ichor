@@ -1917,6 +1917,7 @@
     <string name="backup_sealing">Chiffrement…</string>
     <string name="backup_restoring">Restauration…</string>
     <string name="backup_saved">Sauvegarde enregistrée. Conservez la phrase secrète en lieu sûr.</string>
+    <string name="backup_saved_age_keys">Sauvegarde enregistrée. Elle s’ouvre avec votre clé age sur un ordinateur.</string>
     <string name="backup_restored">Sauvegarde restaurée.</string>
     <string name="backup_err_wrong_passphrase">Phrase secrète incorrecte, ou fichier endommagé.</string>
     <string name="backup_err_passphrase_short">Utilisez au moins %1$d caractères.</string>

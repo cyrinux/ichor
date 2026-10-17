@@ -1909,6 +1909,7 @@
     <string name="backup_sealing">Wird verschlüsselt…</string>
     <string name="backup_restoring">Wird wiederhergestellt…</string>
     <string name="backup_saved">Sicherung gespeichert. Bewahre die Passphrase sicher auf.</string>
+    <string name="backup_saved_age_keys">Sicherung gespeichert. Sie lässt sich mit deinem age-Schlüssel auf einem Computer öffnen.</string>
     <string name="backup_restored">Sicherung wiederhergestellt.</string>
     <string name="backup_err_wrong_passphrase">Falsche Passphrase oder beschädigte Datei.</string>
     <string name="backup_err_passphrase_short">Verwende mindestens %1$d Zeichen.</string>

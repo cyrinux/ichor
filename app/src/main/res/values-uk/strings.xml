@@ -2027,6 +2027,7 @@
     <string name="backup_sealing">Шифрування…</string>
     <string name="backup_restoring">Відновлення…</string>
     <string name="backup_saved">Резервну копію збережено. Зберігайте парольну фразу в надійному місці.</string>
+    <string name="backup_saved_age_keys">Резервну копію збережено. Вона відкривається вашим ключем age на комп’ютері.</string>
     <string name="backup_restored">Резервну копію відновлено.</string>
     <string name="backup_err_wrong_passphrase">Неправильна парольна фраза або файл пошкоджено.</string>
     <string name="backup_err_passphrase_short">Використайте щонайменше %1$d символів.</string>

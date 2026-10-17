@@ -32,7 +32,7 @@ public enum BackupAgeMode: String, Sendable, CaseIterable, Identifiable {
 public func ageRecipientLines(_ text: String) -> [String] {
     text.split(whereSeparator: \.isNewline)
         .map { $0.trimmingCharacters(in: .whitespaces) }
-        .filter { !$0.isEmpty && !$0.hasPrefix("#") }
+        .filter { !isSkippedRecipientLine($0) }
 }
 
 /// Whether `line` is an age X25519 public key: "age1" then 58 bech32 characters with a valid
@@ -52,20 +52,29 @@ public func isAgeRecipient(_ line: String) -> Bool {
 /// Why a pasted recipients text cannot be used yet.
 public enum AgeRecipientsProblem: Equatable, Sendable {
     case empty
-    /// The first line that is not an age public key.
-    case invalid(String)
+    /// The 1-based number of the first line that is not an age public key (blank and comment
+    /// lines counted): the line's text is never shown, a pasted secret key stays off screen.
+    case invalid(line: Int)
 }
 
 public func ageRecipientsProblem(_ text: String) -> AgeRecipientsProblem? {
-    let lines = ageRecipientLines(text)
-    if lines.isEmpty { return .empty }
-    if let bad = lines.first(where: { !isAgeRecipient($0) }) { return .invalid(bad) }
+    let lines = text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
+        .map { $0.trimmingCharacters(in: .whitespaces) }
+    let bad = lines.indices.first { !isSkippedRecipientLine(lines[$0]) && !isAgeRecipient(lines[$0]) }
+    if let bad { return .invalid(line: bad + 1) }
+    if !lines.contains(where: { !isSkippedRecipientLine($0) }) { return .empty }
     return nil
 }
 
-/// The recipients as the Go core takes them: one key per line.
+/// The recipients as the Go core takes them: one key per line, lower case (an all upper case
+/// key, as a QR code may carry it, is the same key).
 public func ageRecipientsArgument(_ text: String) -> String {
-    ageRecipientLines(text).joined(separator: "\n")
+    ageRecipientLines(text).map { $0.lowercased() }.joined(separator: "\n")
+}
+
+/// Whether a trimmed line holds no key: blank, or a `#` comment as in an age recipients file.
+private func isSkippedRecipientLine(_ line: String) -> Bool {
+    line.isEmpty || line.hasPrefix("#")
 }
 
 /// "age1" + 52 data characters (32 bytes) + 6 checksum characters.
@@ -88,4 +97,13 @@ private func bech32Polymod(_ values: [UInt8]) -> UInt32 {
         }
     }
     return chk
+}
+
+/// Whether a picked backup must say at once that it opens with an age key on a computer,
+/// instead of asking a passphrase: an age file (`isAge`, from Go BackupFormatOf) that the
+/// empty passphrase try (Go DecryptBackup with "") failed to open with
+/// `BackupError.needsIdentity`. Any other outcome (a passphrase file says wrong passphrase)
+/// goes on to the passphrase.
+public func pickedBackupNeedsIdentity(isAge: Bool, emptyPassphraseError: Error?) -> Bool {
+    isAge && (emptyPassphraseError as? BackupError) == .needsIdentity
 }

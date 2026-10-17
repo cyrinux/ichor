@@ -1916,6 +1916,7 @@
     <string name="backup_sealing">Encrypting…</string>
     <string name="backup_restoring">Restoring…</string>
     <string name="backup_saved">Backup saved. Keep the passphrase somewhere safe.</string>
+    <string name="backup_saved_age_keys">Backup saved. It opens with your age key on a computer.</string>
     <string name="backup_restored">Backup restored.</string>
     <string name="backup_err_wrong_passphrase">Wrong passphrase, or the file is damaged.</string>
     <string name="backup_err_passphrase_short">Use at least %1$d characters.</string>

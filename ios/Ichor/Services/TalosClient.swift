@@ -111,6 +111,11 @@ struct TalosClient: Sendable {
         try await run { IchorgoDecryptBackup(file, passphrase, $0) }
     }
 
+    /// Whether a picked backup `file` is a standard age file (Go BackupFormatOf).
+    static func isAgeBackup(_ file: Data) async -> Bool {
+        (try? await run { IchorgoBackupFormatOf(file, $0) }) == IchorgoBackupFormatAge
+    }
+
     /// `stored` without `context` (not the last one: the stored config is deleted instead).
     static func removeContext(stored: String, context: String) async throws -> String {
         try await run { IchorgoRemoveContext(stored, context, $0) }

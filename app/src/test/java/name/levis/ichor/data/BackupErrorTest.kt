@@ -4,6 +4,7 @@ import name.levis.ichor.R
 import name.levis.ichor.ui.UiText
 import name.levis.ichorgo.Ichorgo
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -15,6 +16,22 @@ class BackupErrorTest {
     fun recipientOnlyAgeFileSaysItNeedsTheAgeKey() {
         assertEquals("backup-needs-identity", Ichorgo.BackupErrNeedsIdentity)
         assertEquals(R.string.backup_err_needs_identity, resId(Ichorgo.BackupErrNeedsIdentity + ": no passphrase recipient"))
+    }
+
+    @Test
+    fun keysOnlyAgeFileShowsItsErrorBeforeAnyPassphrase() {
+        assertTrue(needsAgeIdentity(isAge = true) { throw Exception(Ichorgo.BackupErrNeedsIdentity + ": opens with your age key") })
+    }
+
+    @Test
+    fun otherFilesGoOnToThePassphrase() {
+        // A passphrase age file: the empty try is a wrong passphrase.
+        assertFalse(needsAgeIdentity(isAge = true) { throw Exception(Ichorgo.BackupErrWrongPassphrase + ": wrong passphrase") })
+        assertFalse(needsAgeIdentity(isAge = true) { throw Exception() })
+        assertFalse(needsAgeIdentity(isAge = true) {})
+        var tried = false
+        assertFalse(needsAgeIdentity(isAge = false) { tried = true })
+        assertFalse(tried)
     }
 
     @Test

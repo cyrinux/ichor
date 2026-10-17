@@ -121,9 +121,18 @@ struct RestoreBackupButton: View {
             let data = try Data(contentsOf: url)
             // A backup is a few KB; anything much bigger is not one.
             guard data.count <= 5 * 1024 * 1024 else { throw BackupError.notBackup }
-            picked = PickedBackup(data: data)
+            Task { await offer(data) }
         } catch {
             onError(error.localizedDescription)
+        }
+    }
+
+    /// An age file sealed for age keys only cannot open here: say so rather than ask a passphrase.
+    private func offer(_ data: Data) async {
+        if await AppBackup.needsIdentity(data) {
+            onError(BackupError.needsIdentity.localizedDescription)
+        } else {
+            picked = PickedBackup(data: data)
         }
     }
 }
@@ -247,7 +256,7 @@ private struct NewBackupPassphraseSheet: View {
         if forRecipients {
             switch ageRecipientsProblem(recipients) {
             case .empty: return String(localized: "Paste at least one age public key.")
-            case .invalid(let line): return String(localized: "Not an age public key: \(line)")
+            case .invalid(let line): return String(localized: "Line \(line) is not an age public key (age1…).")
             case nil: return nil
             }
         }

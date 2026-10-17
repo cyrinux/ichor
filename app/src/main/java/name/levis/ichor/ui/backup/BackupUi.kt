@@ -106,7 +106,7 @@ fun BackupFlow(vm: BackupViewModel, onRestored: () -> Unit = {}, replaceWarning:
 fun BackupStatus(state: BackupState) {
     val text = when (state) {
         BackupState.Sealing -> stringResource(R.string.backup_sealing)
-        BackupState.Saved -> stringResource(R.string.backup_saved)
+        is BackupState.Saved -> stringResource(if (state.recipientsOnly) R.string.backup_saved_age_keys else R.string.backup_saved)
         is BackupState.Restored, BackupState.RestoreDone -> stringResource(R.string.backup_restored)
         is BackupState.Failed -> state.message.asString()
         else -> return

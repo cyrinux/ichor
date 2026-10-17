@@ -1917,6 +1917,7 @@
     <string name="backup_sealing">Cifrando…</string>
     <string name="backup_restoring">Restaurando…</string>
     <string name="backup_saved">Copia guardada. Guarda la frase de contraseña en un lugar seguro.</string>
+    <string name="backup_saved_age_keys">Copia guardada. Se abre con tu clave age en un ordenador.</string>
     <string name="backup_restored">Copia restaurada.</string>
     <string name="backup_err_wrong_passphrase">Frase de contraseña incorrecta o archivo dañado.</string>
     <string name="backup_err_passphrase_short">Usa al menos %1$d caracteres.</string>

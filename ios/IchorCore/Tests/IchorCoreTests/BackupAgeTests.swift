@@ -40,7 +40,15 @@ final class BackupAgeTests: XCTestCase {
         XCTAssertEqual(ageRecipientsProblem(""), .empty)
         XCTAssertEqual(ageRecipientsProblem("# nothing\n"), .empty)
         XCTAssertNil(ageRecipientsProblem("\(key)\n"))
-        XCTAssertEqual(ageRecipientsProblem("\(key)\nage1nope\n"), .invalid("age1nope"))
+        XCTAssertEqual(ageRecipientsProblem("\(key)\nage1nope\n"), .invalid(line: 2))
+        // Blank and comment lines count, as in the editor (and Android).
+        XCTAssertEqual(ageRecipientsProblem("# laptop\n\n\(key)\r\nAGE-SECRET-KEY-1QQ\n"), .invalid(line: 4))
+        XCTAssertEqual(ageRecipientsProblem("nope"), .invalid(line: 1))
+        XCTAssertNil(ageRecipientsProblem(key.uppercased()))
+    }
+
+    func testRecipientsArgumentLowercasesKeys() {
+        XCTAssertEqual(ageRecipientsArgument(" \(key.uppercased()) \n# c\n\(key)"), "\(key)\n\(key)")
     }
 
     func testFileNames() {
@@ -55,5 +63,17 @@ final class BackupAgeTests: XCTestCase {
         XCTAssertEqual(BackupError(coreMessage: "backup-needs-identity: this backup opens with your age key on a computer"),
                        .needsIdentity)
         XCTAssertEqual(BackupError(coreMessage: "backup-needs-identity"), .needsIdentity)
+    }
+
+    func testKeysOnlyAgeFileNeedsIdentity() {
+        XCTAssertTrue(pickedBackupNeedsIdentity(isAge: true, emptyPassphraseError: BackupError.needsIdentity))
+    }
+
+    func testOtherFilesAskThePassphrase() {
+        // A passphrase age file: the empty try is a wrong passphrase.
+        XCTAssertFalse(pickedBackupNeedsIdentity(isAge: true, emptyPassphraseError: BackupError.wrongPassphrase))
+        XCTAssertFalse(pickedBackupNeedsIdentity(isAge: true, emptyPassphraseError: CancellationError()))
+        XCTAssertFalse(pickedBackupNeedsIdentity(isAge: true, emptyPassphraseError: nil))
+        XCTAssertFalse(pickedBackupNeedsIdentity(isAge: false, emptyPassphraseError: BackupError.needsIdentity))
     }
 }

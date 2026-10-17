@@ -116,6 +116,15 @@ class BackupManager(
         }
 
     /**
+     * Whether [file] is an age backup sealed for age keys only, which this phone cannot open:
+     * tried with an empty passphrase (cheap, no scrypt stanza is opened) before any is asked.
+     */
+    suspend fun needsIdentity(file: ByteArray): Boolean = withContext(Dispatchers.Default) {
+        val isAge = runCatching { Ichorgo.backupFormatOf(file) }.getOrNull() == Ichorgo.BackupFormatAge
+        needsAgeIdentity(isAge) { Ichorgo.decryptBackup(file, "") }
+    }
+
+    /**
      * Replaces the stored config and settings with those of [file], in either format (the Go core
      * tells them apart). Throws a
      * [BackupPassphraseException] for a wrong passphrase, so the user can try again.
@@ -198,6 +207,21 @@ class BackupManager(
         aiKeys = ai.providerIds.associateWith { ai.apiKey(it) },
         gitHostTokens = gitHosts.hosts.value.associate { it.host to gitHosts.token(it.host) },
     )
+}
+
+/**
+ * Whether a picked backup says at once that it opens with an age key on a computer: an age file
+ * ([isAge]) that [openWithoutPassphrase] (Go DecryptBackup with "") fails to open with
+ * backup-needs-identity. Any other outcome (a passphrase file: wrong passphrase) asks the passphrase.
+ */
+internal inline fun needsAgeIdentity(isAge: Boolean, openWithoutPassphrase: () -> Unit): Boolean {
+    if (!isAge) return false
+    return try {
+        openWithoutPassphrase()
+        false
+    } catch (e: Exception) {
+        e.message.orEmpty().startsWith(Ichorgo.BackupErrNeedsIdentity)
+    }
 }
 
 /** A backup that does not open with the passphrase given. */

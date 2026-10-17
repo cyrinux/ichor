@@ -59,6 +59,19 @@ enum AppBackup {
         }
     }
 
+    /// Whether a picked `file` is an age backup sealed for age keys only, which the phone
+    /// cannot open: its error shows at once instead of a passphrase prompt. The empty
+    /// passphrase try runs off the main thread (in the Go core).
+    static func needsIdentity(_ file: Data) async -> Bool {
+        guard await TalosClient.isAgeBackup(file) else { return false }
+        do {
+            _ = try await localized { try await TalosClient.decryptBackup(file, passphrase: "") }
+            return false
+        } catch {
+            return pickedBackupNeedsIdentity(isAge: true, emptyPassphraseError: error)
+        }
+    }
+
     /// Replaces the stored config and settings with those of `file`. Throws
     /// `BackupError.wrongPassphrase` for a wrong passphrase, so the user can try again.
     static func restore(_ file: Data, passphrase: String, model: AppModel, ai: AISettings,

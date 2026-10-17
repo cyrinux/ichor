@@ -98,11 +98,13 @@ func parseBackupRecipients(text string) ([]age.Recipient, error) {
 			return nil, fmt.Errorf("%s: line %d is a private key: paste the public key (age1…) instead", BackupErrInvalidContent, i+1)
 		}
 
-		if !strings.HasPrefix(line, "age1") {
+		// Bech32 allows an all upper case key (as a QR code may carry it); age parses lower case.
+		key := strings.ToLower(line)
+		if !strings.HasPrefix(key, "age1") {
 			return nil, fmt.Errorf("%s: line %d is not an age public key (age1…)", BackupErrInvalidContent, i+1)
 		}
 
-		r, _, err := parseSnapshotRecipient(line)
+		r, _, err := parseSnapshotRecipient(key)
 		if err != nil {
 			return nil, fmt.Errorf("%s: line %d is not a valid age public key", BackupErrInvalidContent, i+1)
 		}
