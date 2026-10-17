@@ -7,6 +7,8 @@
 #   scripts/ios-build.sh test   # core tests + simulator build (CI on every push)
 #   scripts/ios-build.sh ipa    # unsigned Release build packaged as an IPA (default)
 #   scripts/ios-build.sh appstore  # App Store build, signed and uploaded to App Store Connect
+#   scripts/ios-build.sh watch  # the Apple Watch app and complication, unsigned, for the watchOS
+#                               # simulator (not embedded in the IPA yet; no Go core needed)
 #   ICHOR_SKIP_TESTS=1 scripts/ios-build.sh ipa  # no core tests (CI: the test job runs them)
 #
 # The unsigned IPA can be re-signed and installed with your Apple ID by Sideloadly or
@@ -28,7 +30,7 @@ set -euo pipefail
 MODE="${1:-ipa}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 case "$MODE" in
-  test|ipa) ;;
+  test|ipa|watch) ;;
   appstore)
     : "${ICHOR_IOS_TEAM_ID:?ICHOR_IOS_TEAM_ID is not set}"
     : "${ASC_KEY_PATH:?ASC_KEY_PATH is not set (App Store Connect API key, AuthKey_<id>.p8)}"
@@ -36,7 +38,7 @@ case "$MODE" in
     : "${ASC_ISSUER_ID:?ASC_ISSUER_ID is not set}"
     ;;
   *)
-    echo "usage: $0 [test|ipa|appstore]" >&2
+    echo "usage: $0 [test|ipa|appstore|watch]" >&2
     exit 2
     ;;
 esac
@@ -48,6 +50,18 @@ set -a
 eval "$("$ROOT/scripts/version.sh" --env)"
 set +a
 echo "version $ICHOR_VERSION (build $ICHOR_BUILD_NUMBER)"
+
+# The watch targets use IchorCore only (no Go core, no licenses): generate (CI: already done by
+# the test step, kept as it is) and build the IchorWatch scheme, which builds its complication.
+if [[ "$MODE" == watch ]]; then
+  cd "$ROOT/ios"
+  [[ -d Ichor.xcodeproj ]] || xcodegen generate
+  xcodebuild -project Ichor.xcodeproj -scheme IchorWatch -derivedDataPath build \
+    MARKETING_VERSION="$ICHOR_VERSION_BASE" CURRENT_PROJECT_VERSION="$ICHOR_BUILD_NUMBER" \
+    -skipPackagePluginValidation -skipMacroValidation \
+    CODE_SIGNING_ALLOWED=NO -configuration Debug -destination 'generic/platform=watchOS Simulator' build
+  exit 0
+fi
 # Release notes bundled in the app, for the "what's new" shown after an update.
 python3 "$ROOT/scripts/changelog.py" --limit 30 -o "$ROOT/ios/Ichor/changelog.json"
 
