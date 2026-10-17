@@ -40,6 +40,7 @@ func demoCheckup(now time.Time) checkupReport {
 		newSection(checkWorkloads, 8, []checkupFinding{
 			{Kind: findPodCrashLoop, Severity: sevCritical, Namespace: "demo", Name: "worker-6f4b8-uvwxy", Node: "demo-worker-1", Count: 14, Reason: "Error (exit 1)", Since: ago(72 * time.Hour)},
 			{Kind: findPodUnschedulable, Severity: sevCritical, Namespace: "demo", Name: "batch-7c9d4-zzzzz", Reason: "Unschedulable", Message: "0/5 nodes are available: 1 node(s) were unschedulable, 3 node(s) had untolerated taint {node-role.kubernetes.io/control-plane: }, 1 Insufficient memory.", Since: ago(40 * time.Minute)},
+			{Kind: findPodImagePull, Severity: sevCritical, Namespace: "demo", Name: "reports-5b7c9-xkq2p", Node: "demo-worker-2", Reason: pullRateLimited, Message: demoPullMessage, Extra: demoPullImage, Since: ago(35 * time.Minute)},
 			{Kind: findPodOOMKilled, Severity: sevWarning, Namespace: "monitoring", Name: "prometheus-0", Node: "demo-worker-1", Count: 3, Reason: "OOMKilled (exit 137)", Since: ago(48 * time.Hour)},
 			{Kind: findJobFailed, Severity: sevWarning, Namespace: "demo", Name: "backup-29340120", Extra: "backup", Reason: "BackoffLimitExceeded", Message: "Job has reached the specified backoff limit", Since: ago(5 * time.Hour)},
 		}),

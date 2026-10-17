@@ -1,6 +1,951 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Image not found on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image nicht gefunden auf %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagen no encontrada en %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image introuvable sur %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Immagine non trovata su %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Образ не знайдено на %@"
+          }
+        }
+      }
+    },
+    "%@ refused the pull: check the pull secret" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ hat den Pull abgelehnt: Pull-Secret prüfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ rechazó la descarga: revisa el secreto de pull"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ a refusé le téléchargement : vérifiez le secret de pull"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ha rifiutato il pull: controlla il secret di pull"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ відмовив у завантаженні: перевірте секрет pull"
+          }
+        }
+      }
+    },
+    "%@ pull limit reached" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull-Limit von %@ erreicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Límite de descargas de %@ alcanzado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limite de téléchargement de %@ atteinte"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limite di pull di %@ raggiunto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Досягнуто ліміт завантажень %@"
+          }
+        }
+      }
+    },
+    "%@ certificate not trusted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikat von %@ nicht vertrauenswürdig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificado de %@ no confiable"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificat de %@ non approuvé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificato di %@ non attendibile"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сертифікат %@ не довірений"
+          }
+        }
+      }
+    },
+    "Node cannot reach %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Knoten erreicht %@ nicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nodo no alcanza %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nœud ne joint pas %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il nodo non raggiunge %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вузол не досягає %@"
+          }
+        }
+      }
+    },
+    "No image for this node's CPU architecture" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Image für die CPU-Architektur dieses Knotens"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay imagen para la arquitectura de este nodo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune image pour l'architecture de ce nœud"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna immagine per l'architettura di questo nodo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає образу для архітектури цього вузла"
+          }
+        }
+      }
+    },
+    "Invalid image name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültiger Image-Name"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de imagen no válido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom d'image invalide"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome immagine non valido"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недійсна назва образу"
+          }
+        }
+      }
+    },
+    "Image cannot be pulled from %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image kann nicht von %@ geladen werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede descargar la imagen de %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image impossible à télécharger depuis %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile scaricare l'immagine da %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неможливо завантажити образ з %@"
+          }
+        }
+      }
+    },
+    "Check the image name and tag: the registry has no such image or tag." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfen Sie Image-Name und Tag: Die Registry hat dieses Image oder diesen Tag nicht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisa el nombre y la etiqueta: el registro no tiene esa imagen o etiqueta."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifiez le nom et le tag de l'image : le registre n'a pas cette image ou ce tag."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlla nome e tag: il registro non ha questa immagine o questo tag."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірте назву й тег образу: реєстр не має такого образу чи тегу."
+          }
+        }
+      }
+    },
+    "The pod's pull secrets: %@. One must be for this registry and still valid." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull-Secrets des Pods: %@. Eines muss für diese Registry sein und noch gelten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secretos de pull del pod: %@. Uno debe ser de este registro y seguir siendo válido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secrets de pull du pod : %@. L'un d'eux doit être pour ce registre et encore valide."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret di pull del pod: %@. Uno deve essere per questo registro e ancora valido."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Секрети pull пода: %@. Один має бути для цього реєстру й досі дійсним."
+          }
+        }
+      }
+    },
+    "The pod has no pull secret: a private image needs one in imagePullSecrets." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Pod hat kein Pull-Secret: Ein privates Image braucht eines in imagePullSecrets."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El pod no tiene secreto de pull: una imagen privada necesita uno en imagePullSecrets."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le pod n'a pas de secret de pull : une image privée en demande un dans imagePullSecrets."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il pod non ha secret di pull: un'immagine privata ne richiede uno in imagePullSecrets."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Под не має секрету pull: приватному образу потрібен такий в imagePullSecrets."
+          }
+        }
+      }
+    },
+    "Anonymous pulls from this registry are limited. A pull-through mirror or registry credentials lift the limit." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonyme Pulls von dieser Registry sind begrenzt. Ein Pull-Through-Mirror oder Zugangsdaten heben das Limit auf."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las descargas anónimas de este registro están limitadas. Un espejo o credenciales del registro quitan el límite."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les téléchargements anonymes depuis ce registre sont limités. Un miroir ou des identifiants du registre lèvent la limite."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I pull anonimi da questo registro sono limitati. Un mirror pull-through o le credenziali del registro tolgono il limite."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Анонімні завантаження з цього реєстру обмежені. Дзеркало або облікові дані реєстру знімають ліміт."
+          }
+        }
+      }
+    },
+    "The registry's certificate is not signed by an authority the node trusts: add its CA to the machine config, or fix the certificate." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Zertifikat der Registry ist nicht von einer dem Knoten vertrauten Stelle signiert: CA zur Maschinenkonfiguration hinzufügen oder Zertifikat korrigieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El certificado del registro no lo firma una autoridad en la que confíe el nodo: añade su CA a la configuración de máquina o corrige el certificado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le certificat du registre n'est pas signé par une autorité de confiance du nœud : ajoutez son CA à la configuration machine, ou corrigez le certificat."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il certificato del registro non è firmato da un'autorità di cui il nodo si fida: aggiungi la sua CA alla configurazione macchina o correggi il certificato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сертифікат реєстру не підписаний центром, якому довіряє вузол: додайте його CA до конфігурації машини або виправте сертифікат."
+          }
+        }
+      }
+    },
+    "The node could not resolve or reach the registry: check its DNS, routes and egress, or use a mirror it can reach." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Knoten konnte die Registry nicht auflösen oder erreichen: DNS, Routen und Ausgang prüfen oder einen erreichbaren Mirror nutzen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nodo no pudo resolver ni alcanzar el registro: revisa su DNS, rutas y salida, o usa un espejo accesible."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nœud n'a pas pu résoudre ou joindre le registre : vérifiez son DNS, ses routes et sa sortie, ou utilisez un miroir joignable."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il nodo non ha potuto risolvere o raggiungere il registro: controlla DNS, rotte e uscita, o usa un mirror raggiungibile."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вузол не зміг знайти чи досягти реєстру: перевірте DNS, маршрути й вихід або використайте доступне дзеркало."
+          }
+        }
+      }
+    },
+    "The image has no build for this node's architecture: pick a multi-arch tag or schedule the pod on matching nodes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Image hat keinen Build für die Architektur dieses Knotens: Multi-Arch-Tag wählen oder den Pod auf passende Knoten legen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La imagen no tiene versión para la arquitectura de este nodo: usa una etiqueta multiarquitectura o programa el pod en nodos compatibles."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'image n'a pas de version pour l'architecture de ce nœud : prenez un tag multi-arch ou placez le pod sur des nœuds compatibles."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'immagine non ha una build per l'architettura di questo nodo: scegli un tag multi-arch o pianifica il pod su nodi compatibili."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Образ не має збірки для архітектури цього вузла: оберіть мультиархітектурний тег або розмістіть под на сумісних вузлах."
+          }
+        }
+      }
+    },
+    "The image reference cannot be parsed: check its spelling (lower case, no spaces)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Image-Referenz ist nicht lesbar: Schreibweise prüfen (Kleinbuchstaben, keine Leerzeichen)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La referencia de imagen no se puede analizar: revisa su escritura (minúsculas, sin espacios)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La référence d'image est illisible : vérifiez son orthographe (minuscules, sans espace)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il riferimento dell'immagine non è leggibile: controlla la scrittura (minuscole, senza spazi)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Посилання на образ не розібрати: перевірте написання (малі літери, без пробілів)."
+          }
+        }
+      }
+    },
+    "The kubelet's message below says what went wrong." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Kubelet-Meldung unten sagt, was schiefging."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El mensaje del kubelet de abajo dice qué falló."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le message du kubelet ci-dessous dit ce qui a échoué."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il messaggio del kubelet qui sotto dice cosa è andato storto."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повідомлення kubelet нижче пояснює, що пішло не так."
+          }
+        }
+      }
+    },
+    "Why the image cannot be pulled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warum das Image nicht geladen werden kann"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por qué no se puede descargar la imagen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pourquoi l'image ne peut pas être téléchargée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perché l'immagine non può essere scaricata"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чому образ не завантажується"
+          }
+        }
+      }
+    },
+    "Registry mirror snippet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snippet für Registry-Mirror"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragmento de espejo de registro"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extrait miroir de registre"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snippet mirror del registro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фрагмент дзеркала реєстру"
+          }
+        }
+      }
+    },
+    "Network tools on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzwerk-Tools auf %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herramientas de red en %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outils réseau sur %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strumenti di rete su %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мережеві інструменти на %@"
+          }
+        }
+      }
+    },
+    "The registry has no such image or tag: correct the name or tag, or publish the missing tag." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Registry hat dieses Image oder diesen Tag nicht: Name oder Tag korrigieren oder den fehlenden Tag veröffentlichen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El registro no tiene esa imagen o etiqueta: corrige el nombre o la etiqueta, o publica la que falta."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le registre n'a pas cette image ou ce tag : corrigez le nom ou le tag, ou publiez le tag manquant."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il registro non ha questa immagine o questo tag: correggi nome o tag, o pubblica il tag mancante."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Реєстр не має такого образу чи тегу: виправте назву чи тег або опублікуйте відсутній тег."
+          }
+        }
+      }
+    },
+    "The registry refused the pull: add or renew the pod's pull secret (imagePullSecrets) for it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Registry hat den Pull abgelehnt: Pull-Secret des Pods (imagePullSecrets) hinzufügen oder erneuern."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El registro rechazó la descarga: añade o renueva el secreto de pull del pod (imagePullSecrets)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le registre a refusé le téléchargement : ajoutez ou renouvelez le secret de pull du pod (imagePullSecrets)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il registro ha rifiutato il pull: aggiungi o rinnova il secret di pull del pod (imagePullSecrets)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Реєстр відмовив: додайте або оновіть секрет pull пода (imagePullSecrets)."
+          }
+        }
+      }
+    },
+    "The registry's pull limit is reached: add a registry mirror (pull-through cache) or registry credentials to the nodes' machine config." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Pull-Limit der Registry ist erreicht: Registry-Mirror (Pull-Through-Cache) oder Zugangsdaten zur Maschinenkonfiguration der Knoten hinzufügen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se alcanzó el límite de descargas del registro: añade un espejo (caché) o credenciales del registro a la configuración de máquina de los nodos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La limite de téléchargement du registre est atteinte : ajoutez un miroir de registre (cache) ou des identifiants à la configuration machine des nœuds."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il limite di pull del registro è raggiunto: aggiungi un mirror (cache pull-through) o le credenziali alla configurazione macchina dei nodi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Досягнуто ліміт завантажень реєстру: додайте дзеркало (кеш) або облікові дані до конфігурації машини вузлів."
+          }
+        }
+      }
+    },
+    "The node does not trust the registry's certificate: add its CA to the machine config, or fix the certificate." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Knoten vertraut dem Zertifikat der Registry nicht: CA zur Maschinenkonfiguration hinzufügen oder Zertifikat korrigieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nodo no confía en el certificado del registro: añade su CA a la configuración de máquina o corrige el certificado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nœud ne fait pas confiance au certificat du registre : ajoutez son CA à la configuration machine, ou corrigez le certificat."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il nodo non si fida del certificato del registro: aggiungi la sua CA alla configurazione macchina o correggi il certificato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вузол не довіряє сертифікату реєстру: додайте його CA до конфігурації машини або виправте сертифікат."
+          }
+        }
+      }
+    },
+    "The node cannot reach the registry: check its DNS and egress, or use a mirror it can reach." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Knoten erreicht die Registry nicht: DNS und Ausgang prüfen oder einen erreichbaren Mirror nutzen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nodo no alcanza el registro: revisa su DNS y salida, o usa un espejo accesible."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nœud ne joint pas le registre : vérifiez son DNS et sa sortie, ou utilisez un miroir joignable."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il nodo non raggiunge il registro: controlla DNS e uscita, o usa un mirror raggiungibile."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вузол не досягає реєстру: перевірте DNS і вихід або використайте доступне дзеркало."
+          }
+        }
+      }
+    },
+    "No build of the image for the node's architecture: use a multi-arch image, or schedule the pod on matching nodes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Build des Images für die Architektur des Knotens: Multi-Arch-Image nutzen oder den Pod auf passende Knoten legen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay versión de la imagen para la arquitectura del nodo: usa una imagen multiarquitectura o programa el pod en nodos compatibles."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune version de l'image pour l'architecture du nœud : utilisez une image multi-arch, ou placez le pod sur des nœuds compatibles."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna build dell'immagine per l'architettura del nodo: usa un'immagine multi-arch o pianifica il pod su nodi compatibili."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає збірки образу для архітектури вузла: використайте мультиархітектурний образ або розмістіть под на сумісних вузлах."
+          }
+        }
+      }
+    },
+    "The image reference cannot be parsed: correct its spelling in the workload." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Image-Referenz ist nicht lesbar: Schreibweise im Workload korrigieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La referencia de imagen no se puede analizar: corrige su escritura en la carga de trabajo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La référence d'image est illisible : corrigez son orthographe dans la charge de travail."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il riferimento dell'immagine non è leggibile: correggine la scrittura nel workload."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Посилання на образ не розібрати: виправте його написання у навантаженні."
+          }
+        }
+      }
+    },
     "Argo Rollouts" : {
       "extractionState" : "manual",
       "localizations" : {
