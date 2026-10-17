@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import name.levis.ichor.R
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Looper
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
@@ -37,12 +38,16 @@ enum class KeyProtection(@StringRes val label: Int) {
  * With a security key required ([outer], see SecurityKeys.kt) that payload is sealed once more
  * with the data key only a tap of the key unwraps ([SealedFile]): the file then reads only
  * after a key was tapped this run, and [read] throws [SecurityKeyRequiredException] before.
+ *
+ * [onTeeFallback] runs when a new key went to the TEE although the device has StrongBox (the
+ * chip kept refusing), so Settings can say so.
  */
 class SecureStore(
     private val file: File,
     private val keyAlias: String = "talosconfig",
     private val strongBoxAvailable: Boolean = false,
     private val outer: DekHolder? = null,
+    private val onTeeFallback: () -> Unit = {},
 ) {
 
     fun write(plaintext: ByteArray) {
@@ -84,7 +89,7 @@ class SecureStore(
         val strongBox = strongBoxAvailable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
         strongBoxOrTee(
             strongBox = if (strongBox) ({ generate(strongBox = true).also(::probe) }) else null,
-            tee = { generate(strongBox = false).also(::probe) },
+            tee = { generate(strongBox = false).also(::probe).also { if (strongBox) onTeeFallback() } },
             delays = delays,
             // A StrongBox key left half made would be picked up by the next write.
             discard = ::deleteKey,
@@ -178,19 +183,22 @@ class SecureStore(
         return keyStore.getKey(keyAlias, null) as? SecretKey
     }
 
+    /**
+     * The key, made on the first write. A busy chip is tried again after each of
+     * [CHIP_RETRY_DELAYS] like [prepare] does, but only off the main thread: there it gets a
+     * single try and never a wait, so no write from the UI blocks it longer than before.
+     */
     private fun key(): SecretKey {
         existingKey()?.let { return it }
-        if (strongBoxAvailable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            try {
-                return generate(strongBox = true)
-            } catch (_: StrongBoxUnavailableException) {
-                // Advertised but unusable (busy or unsupported parameters): use the TEE.
-            } catch (_: java.security.ProviderException) {
-                // The chip refused (UNKNOWN_ERROR while its connection is down): use the TEE.
-                deleteKey()
-            }
-        }
-        return generate(strongBox = false)
+        val onMain = Looper.myLooper() == Looper.getMainLooper()
+        return chipKeyOrTee(
+            strongBox = strongBoxAvailable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P,
+            generate = ::generate,
+            delays = if (onMain) emptyList() else CHIP_RETRY_DELAYS,
+            // A StrongBox key left half made would be picked up by the next write.
+            discard = ::deleteKey,
+            onTeeFallback = onTeeFallback,
+        )
     }
 
     private fun generate(strongBox: Boolean): SecretKey {
@@ -243,6 +251,35 @@ internal suspend fun <K> strongBoxOrTee(
         e.addSuppressed(chipFailure)
         throw e
     }
+}
+
+/**
+ * A new key from [generate] in StrongBox when [strongBox], tried again after each of [delays]
+ * (ms, waited with [pause] on the calling thread), else in the TEE. A
+ * [StrongBoxUnavailableException] (unsupported parameters) goes to the TEE at once. Unlike
+ * [strongBoxOrTee] it does not suspend: [SecureStore.write] does not either.
+ */
+internal fun <K> chipKeyOrTee(
+    strongBox: Boolean,
+    generate: (strongBox: Boolean) -> K,
+    delays: List<Long>,
+    pause: (Long) -> Unit = { Thread.sleep(it) },
+    discard: () -> Unit = {},
+    onTeeFallback: () -> Unit = {},
+): K {
+    if (!strongBox) return generate(false)
+    for (attempt in 0..delays.size) {
+        try {
+            return generate(true)
+        } catch (e: java.security.ProviderException) {
+            // Unsupported parameters: no point in waiting (checked like strongBoxOrTee does).
+            if (e is StrongBoxUnavailableException) break
+            // UNKNOWN_ERROR while the chip's connection is down: it reconnects in seconds.
+            delays.getOrNull(attempt)?.let(pause)
+        }
+    }
+    runCatching(discard)
+    return generate(false).also { onTeeFallback() }
 }
 
 /** The Keystore key of the stored config does not answer, even after a few tries. */

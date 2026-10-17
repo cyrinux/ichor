@@ -835,7 +835,9 @@ Pick one of these:
 Delete `talosconfig.png` and the copy in `Download/` afterwards; both contain the private key.
 The app stores the config AES-GCM encrypted, excluded from backups: an Android Keystore key (in
 the StrongBox chip when the phone has one) wraps a random data key that encrypts the config, so
-it opens in milliseconds however many clusters it holds.
+it opens in milliseconds however many clusters it holds. A busy chip is tried again for a few
+seconds before the key goes to the TEE instead; Settings → Security then says so once, and
+removing every cluster and importing again tries the chip again.
 
 ### Several clusters
 

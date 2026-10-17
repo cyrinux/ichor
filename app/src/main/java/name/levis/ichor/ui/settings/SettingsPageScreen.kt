@@ -61,8 +61,10 @@ fun SettingsPageScreen(page: SettingsPage, stores: SettingsStores, actions: Sett
     SettingsPageScaffold(page, onBack) {
         when (page) {
             SettingsPage.APPEARANCE -> AppearanceSection(stores.uiPreferences)
-            SettingsPage.SECURITY ->
+            SettingsPage.SECURITY -> {
+                KeyFallbackNotice(stores.configs)
                 SecuritySection(stores.appLock, stores.uiPreferences, required = lockRequired(config?.summary?.contexts.orEmpty()))
+            }
             SettingsPage.PRIVACY -> PrivacySection(app)
             SettingsPage.ALERTS -> MonitoringSection(app)
             SettingsPage.AI -> AiSection(app)
