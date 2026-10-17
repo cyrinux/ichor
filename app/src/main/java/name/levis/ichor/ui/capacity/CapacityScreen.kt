@@ -2,19 +2,22 @@ package name.levis.ichor.ui.capacity
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -28,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -44,6 +48,8 @@ import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.NodeLossCandidate
 import name.levis.ichor.model.NodeLossPlan
 import name.levis.ichor.model.filteredBy
+import name.levis.ichor.model.majority
+import name.levis.ichor.model.overcommittedFirst
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
@@ -53,6 +59,7 @@ import name.levis.ichor.ui.components.JumpSection
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionJumpRail
+import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
@@ -163,11 +170,13 @@ fun CapacityScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CapacityList(capacity: KubeCapacity, onLoss: (node: String?) -> Unit) {
     var filter by rememberSaveable { mutableStateOf(CapacityFilter.ALL) }
     val workloads = remember(capacity, filter) { capacity.workloads.filteredBy(filter) }
+    // Hidden values come from the whole list, so a filter does not change what a row shows.
+    val majority = remember(capacity) { capacity.workloads.majority() }
+    val nodes = remember(capacity) { capacity.nodes.overcommittedFirst() }
     val listState = rememberLazyListState()
     val summaryLabel = stringResource(R.string.capacity_section_summary)
     val nodesLabel = stringResource(R.string.capacity_nodes_title)
@@ -186,23 +195,45 @@ private fun CapacityList(capacity: KubeCapacity, onLoss: (node: String?) -> Unit
             Modifier.fillMaxSize(),
             state = listState,
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             item(key = "header") { CapacityHeader(capacity, onWhatIf = { onLoss(null) }) }
-            item(key = "nodes-title") { Text(stringResource(R.string.capacity_nodes_title), style = MaterialTheme.typography.titleSmall) }
-            items(capacity.nodes, key = { "node:${it.name}" }) { n -> CapacityNodeRow(n, capacity.metricsAvailable, onOpen = { onLoss(n.name) }) }
+            item(key = "nodes-title") { SectionTitle(stringResource(R.string.capacity_nodes_title)) }
+            items(nodes, key = { "node:${it.name}" }) { n -> CapacityNodeRow(n, capacity.metricsAvailable, onOpen = { onLoss(n.name) }) }
             item(key = "workloads-title") {
-                Text(stringResource(R.string.capacity_workloads_title), style = MaterialTheme.typography.titleSmall)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CapacityFilter.entries.forEach { f ->
-                        FilterChip(selected = filter == f, onClick = { filter = f }, label = { Text(filterLabel(f)) })
-                    }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SectionTitle(stringResource(R.string.capacity_workloads_title))
+                    WorkloadFilter(filter, onSelect = { filter = it })
                 }
             }
             if (workloads.isEmpty()) item(key = "workloads-empty") { MutedText(stringResource(R.string.capacity_workloads_empty)) }
-            items(workloads, key = { it.key }) { w -> CapacityWorkloadRow(w) }
+            items(workloads, key = { it.key }) { w -> CapacityWorkloadRow(w, majority) }
         }
         SectionJumpRail(sections, listState, Modifier.align(Alignment.CenterEnd))
+    }
+}
+
+/** "All", "At risk", "No priority class" as one segmented row. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WorkloadFilter(filter: CapacityFilter, onSelect: (CapacityFilter) -> Unit) {
+    val entries = CapacityFilter.entries
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        entries.forEachIndexed { i, f ->
+            SegmentedButton(
+                selected = filter == f,
+                onClick = { onSelect(f) },
+                shape = SegmentedButtonDefaults.itemShape(i, entries.size),
+                icon = {},
+            ) {
+                Text(
+                    filterLabel(f),
+                    maxLines = 1,
+                    softWrap = false,
+                    autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = MaterialTheme.typography.labelLarge.fontSize),
+                )
+            }
+        }
     }
 }
 

@@ -144763,125 +144763,288 @@
         }
       }
     },
-    "%@ CPU free of %@" : {
+    "%@ × %@ CPU" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ CPU free of %2$@"
+            "value" : "%1$@ × %2$@ CPU"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ CPU libres sur %2$@"
+            "value" : "%1$@ × %2$@ CPU"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ CPU libres de %2$@"
+            "value" : "%1$@ × %2$@ CPU"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ CPU вільно з %2$@"
+            "value" : "%1$@ × %2$@ CPU"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ CPU frei von %2$@"
+            "value" : "%1$@ × %2$@ CPU"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ CPU libere su %2$@"
+            "value" : "%1$@ × %2$@ CPU"
           }
         }
       }
     },
-    "%@ memory free of %@" : {
+    "CPU free" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ memory free of %2$@"
-          }
-        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ de mémoire libre sur %2$@"
+            "value" : "CPU libres"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ de memoria libre de %2$@"
+            "value" : "CPU libres"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ пам'яті вільно з %2$@"
+            "value" : "CPU вільно"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ Speicher frei von %2$@"
+            "value" : "CPU frei"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ di memoria libera su %2$@"
+            "value" : "CPU libere"
           }
         }
       }
     },
-    "%@ pod slots free of %@" : {
+    "Memory free" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ pod slots free of %2$@"
-          }
-        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ places de pod libres sur %2$@"
+            "value" : "Mémoire libre"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ huecos de pod libres de %2$@"
+            "value" : "Memoria libre"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ місць для подів вільно з %2$@"
+            "value" : "Пам'ять вільно"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ Pod-Plätze frei von %2$@"
+            "value" : "Speicher frei"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ posti pod liberi su %2$@"
+            "value" : "Memoria libera"
+          }
+        }
+      }
+    },
+    "Pod slots" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Places de pods"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huecos de pods"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Місця для подів"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pod-Plätze"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posti per pod"
+          }
+        }
+      }
+    },
+    "Ephemeral storage free" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stockage éphémère libre"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Almacenamiento efímero libre"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ефемерне сховище вільно"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flüchtiger Speicher frei"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Storage effimero libero"
+          }
+        }
+      }
+    },
+    "Deploy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deploy"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deploy"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deploy"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deploy"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deploy"
+          }
+        }
+      }
+    },
+    "STS" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "STS"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "STS"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "STS"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "STS"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "STS"
+          }
+        }
+      }
+    },
+    "DS" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DS"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DS"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DS"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DS"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DS"
           }
         }
       }
@@ -145466,47 +145629,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Libero: %1$@ CPU, %2$@ di memoria, %3$@ posti pod"
-          }
-        }
-      }
-    },
-    "%@ replicas, each asking %@ CPU and %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ replicas, each asking %2$@ CPU and %3$@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ réplicas, chacun demandant %2$@ CPU et %3$@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ réplicas, cada una pide %2$@ CPU y %3$@"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ реплік, кожна просить %2$@ CPU і %3$@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ Replikas, jede fordert %2$@ CPU und %3$@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ repliche, ciascuna chiede %2$@ CPU e %3$@"
           }
         }
       }
@@ -152202,47 +152324,6 @@
         "uk" : { "stringUnit" : { "state" : "translated", "value" : "частина проксі працює" } },
         "de" : { "stringUnit" : { "state" : "translated", "value" : "einige Proxys laufen" } },
         "it" : { "stringUnit" : { "state" : "translated", "value" : "alcuni proxy attivi" } }
-      }
-    },
-    "%@ ephemeral storage free of %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ ephemeral storage free of %2$@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ de stockage éphémère libres sur %2$@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ de almacenamiento efímero libres de %2$@"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ ефемерного сховища вільно з %2$@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ flüchtiger Speicher frei von %2$@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ di storage effimero liberi su %2$@"
-          }
-        }
       }
     },
     "Disk: %@ free on %@, the fullest node" : {
