@@ -3377,6 +3377,11 @@
     <string name="gitops_propose_copy_link">Copy link</string>
     <string name="gitops_propose_no_token">Add a token for %1$s to open pull requests.</string>
     <string name="gitops_propose_not_editable">This file cannot be edited here: open it in the browser.</string>
+    <string name="gitops_find_open">Open source file</string>
+    <string name="gitops_find_searching">Looking for the file…</string>
+    <string name="gitops_find_choose">Defined in several files</string>
+    <string name="gitops_find_none">No file of the source declares %1$s %2$s.</string>
+    <string name="gitops_find_defined_in">Defined in %1$s, line %2$s</string>
     <string name="flux_drift_none">Drift: none</string>
     <string name="flux_drift_detected">Drift detected · %1$s</string>
     <string name="flux_drift_warn_hint">Flux only reports drift for this release; correcting it runs a forced upgrade.</string>

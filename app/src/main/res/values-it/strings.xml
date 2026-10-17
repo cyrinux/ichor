@@ -3378,6 +3378,11 @@
     <string name="gitops_propose_copy_link">Copia link</string>
     <string name="gitops_propose_no_token">Aggiungi un token per %1$s per aprire pull request.</string>
     <string name="gitops_propose_not_editable">Questo file non si può modificare qui: aprilo nel browser.</string>
+    <string name="gitops_find_open">Apri il file sorgente</string>
+    <string name="gitops_find_searching">Ricerca del file…</string>
+    <string name="gitops_find_choose">Definito in più file</string>
+    <string name="gitops_find_none">Nessun file della sorgente dichiara %1$s %2$s.</string>
+    <string name="gitops_find_defined_in">Definito in %1$s, riga %2$s</string>
     <string name="flux_drift_none">Deriva: nessuna</string>
     <string name="flux_drift_detected">Deriva rilevata · %1$s</string>
     <string name="flux_drift_warn_hint">Flux segnala soltanto la deriva di questa release; correggerla avvia un aggiornamento forzato.</string>
