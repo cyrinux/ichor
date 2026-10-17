@@ -1,14 +1,14 @@
 name: Android toolchain
 description: >
   The Nix dev shell (JDK, Gradle, Go, Android SDK and NDK) with the Nix store, Gradle user home
-  and Go caches restored from the Actions cache. The four Android jobs share one set of caches:
-  only the check job writes them (the Nix store here when `save` is true, the Go cache from its
-  own save step), on main, so pull requests read main's caches and nothing races to upload the
-  same key.
+  and Go caches restored from the Actions cache. Caches are written on main only, so pull
+  requests read main's caches and the cache does not fill with one entry per push: the Nix
+  store by the check job (`save`), the Go cache by its own save step, the Gradle home by every
+  job.
 
 inputs:
   save:
-    description: Save the Nix store cache when its key missed (the check job only).
+    description: Save the Nix store cache when its key missed, on main (the check job only).
     default: "false"
 
 outputs:
@@ -26,17 +26,20 @@ runs:
 
     # /nix/store, keyed on the flake: without it every job downloads the Android SDK and NDK
     # zips from Google and unpacks them (the androidsdk derivation is not in cache.nixos.org).
+    # No prefix fallback on purpose: the action merges a restored store into the fresh one, so
+    # restoring the previous flake's closure and saving both would grow the entry at every
+    # flake.lock bump. A bump costs one cold run on main instead.
     - uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7
       with:
         primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
-        restore-prefixes-first-match: nix-${{ runner.os }}-
-        save: ${{ inputs.save }}
+        save: ${{ inputs.save == 'true' && github.ref == 'refs/heads/main' }}
 
     # GRADLE_USER_HOME: dependencies and the local build cache (org.gradle.caching in
-    # gradle.properties). Written on main by the check job, read-only everywhere else.
+    # gradle.properties). Each job writes its own entry on main (the artifacts themselves are
+    # deduplicated across jobs by the action), read-only on pull requests and tags.
     - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
       with:
-        cache-read-only: ${{ inputs.save != 'true' || github.ref != 'refs/heads/main' }}
+        cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
     # Go modules and build cache (GOMODCACHE and GOCACHE defaults of the Nix shell): a warm
     # cache turns `gomobile bind` from two minutes into twenty seconds. Keyed on the sources

@@ -17,14 +17,14 @@ permissions:
 
 # Two jobs in parallel, each binding the Go core itself (see .github/actions/ios-toolchain for
 # the caches): the core tests with the simulator build, and the Release IPA. A newer push to a
-# pull request cancels its running jobs; pushes to main always finish, auto-release.yml reads
-# their conclusion.
+# pull request cancels its running jobs; main and tag runs each get their own concurrency
+# group, so they neither queue nor cancel each other (auto-release.yml reads main's conclusions).
 jobs:
   test:
     name: Core tests and simulator build
     runs-on: macos-26
     concurrency:
-      group: ${{ github.workflow }}-test-${{ github.ref }}
+      group: ${{ github.workflow }}-test-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -54,7 +54,7 @@ jobs:
     # v* tags may use, like android.yml.
     environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || '' }}
     concurrency:
-      group: ${{ github.workflow }}-ipa-${{ github.ref }}
+      group: ${{ github.workflow }}-ipa-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

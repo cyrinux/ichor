@@ -26,14 +26,15 @@ permissions:
 # slowest variant instead of their sum. Each job binds the Go core itself (seconds with a warm
 # Go cache, see .github/actions/android-toolchain) and runs one Gradle build; the checks and
 # the Go and Kotlin unit tests run once, in `check`, so the others skip them
-# (ICHOR_SKIP_TESTS). A newer push to a pull request cancels its running jobs; pushes to main
-# always finish, auto-release.yml reads their conclusion.
+# (ICHOR_SKIP_TESTS). A newer push to a pull request cancels its running jobs; main and tag
+# runs each get their own concurrency group, so they neither queue nor cancel each other
+# (auto-release.yml reads main's conclusions).
 jobs:
   check:
     name: Check (gofmt, vet, staticcheck, Go and Kotlin unit tests)
     runs-on: ubuntu-latest
     concurrency:
-      group: ${{ github.workflow }}-check-${{ github.ref }}
+      group: ${{ github.workflow }}-check-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -62,7 +63,7 @@ jobs:
     name: Debug APK
     runs-on: ubuntu-latest
     concurrency:
-      group: ${{ github.workflow }}-debug-${{ github.ref }}
+      group: ${{ github.workflow }}-debug-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -90,7 +91,7 @@ jobs:
     # pull request and main builds get no secrets and come out unsigned.
     environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || '' }}
     concurrency:
-      group: ${{ github.workflow }}-release-${{ github.ref }}
+      group: ${{ github.workflow }}-release-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -154,7 +155,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || '' }}
     concurrency:
-      group: ${{ github.workflow }}-play-${{ github.ref }}
+      group: ${{ github.workflow }}-play-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
