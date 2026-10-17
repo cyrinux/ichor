@@ -12,9 +12,11 @@
   "detectedVia": "demo",
   "apiVersion": "v1alpha1",
   "health": "warning",
+  "partial": false,
   "summary": {
     "title": "2 sleep schedules",
     "health": "warning",
+    "partial": false,
     "badges": [
       {
         "label": "asleep",

@@ -367,6 +367,10 @@ func TestPluginListStopsAtItsLimit(t *testing.T) {
 		t.Fatalf("rows %+v", tree.Cards[0].Rows)
 	}
 
+	if !tree.Partial || !tree.Summary.Partial || tree.Summary.Title != "3 widgets" {
+		t.Errorf("a cut list is not flagged partial: %+v", tree.Summary)
+	}
+
 	// The fixture's broken field is the second error.
 	if len(tree.Errors) != 2 || tree.Errors[0] != (plugin.TreeError{Resource: "widgets.widgets.example.com", Message: "showing the first 3 widgets"}) {
 		t.Fatalf("errors %+v", tree.Errors)

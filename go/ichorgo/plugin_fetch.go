@@ -148,6 +148,7 @@ func (p *pluginProbe) fetch(ctx context.Context, k *kubeClient, c *plugin.Compil
 			case err != nil:
 				in.Errors = append(in.Errors, plugin.TreeError{Resource: resourceLabel(decl), Message: kubeError(err).Error()})
 			case note != "":
+				in.Partial = true
 				in.Errors = append(in.Errors, plugin.TreeError{Resource: resourceLabel(decl), Message: note})
 			}
 		})

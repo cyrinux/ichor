@@ -159,7 +159,10 @@ tile below for an active plugin and `null` otherwise. Examples: the goldens in
   `disabledReason`) and a row's `status.text`. Values read from objects are never
   translated.
 * Reads: each resource is listed page by page with its selectors, at most `list.limit`
-  objects (500 by default); more is an `errors` entry ("showing the first N …"). A
+  objects (500 by default, up to 5000: raise it in the plugin for a kind that grows large);
+  more is an `errors` entry ("showing the first N …") and sets `partial: true` on the tree
+  and its `summary`, whose counts are then a lower bound and whose health is at least
+  `unknown` (the apps show "N+" and say so). A
   resource that cannot be read (forbidden, not served) is an `errors` entry with the
   resource named, and the rest still renders. Secrets are masked unless `reveal`.
 * A value that fails to evaluate reads empty and is reported once in `errors` with `where`

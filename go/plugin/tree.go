@@ -8,15 +8,18 @@ import "strings"
 
 // Tree is one plugin rendered over one cluster (or its samples).
 type Tree struct {
-	Plugin      TreePlugin  `json:"plugin"`
-	Active      bool        `json:"active"`
-	DetectedVia string      `json:"detectedVia"`
-	APIVersion  string      `json:"apiVersion"`
-	Health      string      `json:"health"`
-	Summary     TreeSummary `json:"summary"`
-	Cards       []TreeCard  `json:"cards"`
-	Findings    []TreeFind  `json:"findings"`
-	Errors      []TreeError `json:"errors"`
+	Plugin      TreePlugin `json:"plugin"`
+	Active      bool       `json:"active"`
+	DetectedVia string     `json:"detectedVia"`
+	APIVersion  string     `json:"apiVersion"`
+	Health      string     `json:"health"`
+	// Partial is set when a resource held more objects than its list.limit: the counts and
+	// the health cover only the first ones.
+	Partial  bool        `json:"partial"`
+	Summary  TreeSummary `json:"summary"`
+	Cards    []TreeCard  `json:"cards"`
+	Findings []TreeFind  `json:"findings"`
+	Errors   []TreeError `json:"errors"`
 }
 
 // TreePlugin says which plugin the tree is.
@@ -32,9 +35,11 @@ type TreePlugin struct {
 
 // TreeSummary is the tile and the hub header.
 type TreeSummary struct {
-	Title  string      `json:"title"`
-	Health string      `json:"health"`
-	Badges []TreeBadge `json:"badges"`
+	Title  string `json:"title"`
+	Health string `json:"health"`
+	// Partial: see Tree.Partial; the tile says its counts are a lower bound.
+	Partial bool        `json:"partial"`
+	Badges  []TreeBadge `json:"badges"`
 }
 
 // TreeBadge is a chip.
@@ -188,6 +193,8 @@ type Input struct {
 	APIVersions map[string]string
 	// Errors are the read errors, carried into the tree.
 	Errors []TreeError
+	// Partial: a list stopped at its limit (see Tree.Partial).
+	Partial bool
 	// Locale picks the i18n map ("fr", "pt-BR"); "" or a missing one is English.
 	Locale string
 	// Heuristics read the health of an object no rule covers, and a condition's tone; nil

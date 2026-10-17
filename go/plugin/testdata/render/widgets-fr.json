@@ -11,9 +11,11 @@
   "detectedVia": "demo",
   "apiVersion": "v2",
   "health": "critical",
+  "partial": false,
   "summary": {
     "title": "3 widgets",
     "health": "critical",
+    "partial": false,
     "badges": [
       {
         "label": "replicas",

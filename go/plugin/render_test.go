@@ -131,8 +131,14 @@ func TestRenderNoObjects(t *testing.T) {
 		}
 	}
 
-	if tree.APIVersion != "" || tree.Findings == nil || tree.Errors == nil {
+	if tree.APIVersion != "" || tree.Findings == nil || tree.Errors == nil || tree.Partial {
 		t.Fatalf("tree %+v", tree)
+	}
+
+	// Cut at its limit, an all-ok list is no longer ok: what was left out is unknown.
+	partial, _ := Render(c, Input{Detected: Detection{Active: true, Via: "api"}, Partial: true}, renderNow)
+	if !partial.Partial || !partial.Summary.Partial || partial.Health != "unknown" || partial.Summary.Health != "unknown" {
+		t.Fatalf("partial tree %+v", partial.Summary)
 	}
 }
 

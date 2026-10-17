@@ -22,6 +22,12 @@ func (r *renderer) tree() Tree {
 		Summary: r.summary(), Cards: []TreeCard{},
 	}
 
+	// A cut list says so, and its health is never a plain ok: the objects left out are unknown.
+	if r.in.Partial {
+		t.Partial, t.Summary.Partial = true, true
+		t.Summary.Health = worse(t.Summary.Health, "unknown")
+	}
+
 	t.Health = t.Summary.Health
 
 	for _, card := range r.c.Cards[1:] {
