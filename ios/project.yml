@@ -7,6 +7,8 @@ options:
   developmentLanguage: en
   deploymentTarget:
     iOS: "17.0"
+    # The Apple Watch app and its complication (single-target watch app: watchOS 10).
+    watchOS: "10.0"
 settings:
   base:
     SWIFT_VERSION: "5.0"
@@ -50,6 +52,11 @@ targets:
       - framework: Frameworks/Ichorgo.xcframework
         embed: false
       - target: TalosWidget
+      # Not embedded yet (IchorWatch below): the App Store path for a watch app (its bundle IDs'
+      # profiles, watch screenshots) is unverified. Embedding it is `- target: IchorWatch` here
+      # (XcodeGen puts a watchOS app dependency in "Embed Watch Content", Ichor.app/Watch).
+      # The Apple Watch's data (WatchLink): harmless without the watch app.
+      - sdk: WatchConnectivity.framework
       # "Open in Ichor" (Ichor/Intents): the app's AppShortcutsProvider, listed in the Shortcuts app.
       - sdk: AppIntents.framework
     # GOOGLE_IOS_CLIENT_ID and GOOGLE_IOS_REVERSED_CLIENT_ID (GKE's Sign in with Google): empty
@@ -155,6 +162,73 @@ targets:
         com.apple.security.application-groups: [group.name.levis.ichor]
     info:
       path: TalosWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Ichor
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, fr, es, uk, de, it]
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+
+  # Apple Watch app (CYR-339), read-only: the clusters and nodes of the iPhone's last background
+  # check, sent over WatchConnectivity (Ichor/Services/WatchLink.swift); no config on the watch.
+  # A single-target watch app (watchOS 10, WKApplication). Built by CI on its own scheme
+  # (scripts/ios-build.sh watch), with its complication; not in the IPA yet.
+  IchorWatch:
+    type: application
+    platform: watchOS
+    sources: [IchorWatch, WatchShared]
+    scheme: {}
+    dependencies:
+      - package: IchorCore
+      - target: IchorWatchWidget
+      - sdk: WatchConnectivity.framework
+      - sdk: WidgetKit.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: name.levis.ichor.watchkitapp
+        GENERATE_INFOPLIST_FILE: NO
+        # Once embedded: inside Ichor.app, not a product of its own in an archive.
+        SKIP_INSTALL: YES
+    entitlements:
+      path: IchorWatch/IchorWatch.entitlements
+      properties:
+        # The watch's own App Group (not the phone's): where the app leaves the last payload for
+        # its complication.
+        com.apple.security.application-groups: [group.name.levis.ichor]
+    info:
+      path: IchorWatch/Info.plist
+      properties:
+        CFBundleDisplayName: Ichor
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, fr, es, uk, de, it]
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: name.levis.ichor
+        # It only shows what the iPhone sends.
+        WKRunsIndependentlyOfCompanionApp: false
+
+  # The watch face complication (accessory families), reading the watch app's App Group.
+  IchorWatchWidget:
+    type: app-extension
+    platform: watchOS
+    sources: [IchorWatchWidget, WatchShared]
+    dependencies:
+      - package: IchorCore
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: name.levis.ichor.watchkitapp.widget
+        GENERATE_INFOPLIST_FILE: NO
+    entitlements:
+      path: IchorWatchWidget/IchorWatchWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.name.levis.ichor]
+    info:
+      path: IchorWatchWidget/Info.plist
       properties:
         CFBundleDisplayName: Ichor
         CFBundleShortVersionString: $(MARKETING_VERSION)

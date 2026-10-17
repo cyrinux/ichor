@@ -1465,6 +1465,12 @@ models, formatting, lock state and power-request rules.
   remove the config.
 - **Widget:** shares the last check with the app through an App Group, which a free Apple ID
   may not support when sideloading. In that case the widget stays empty.
+- **Apple Watch:** a watch face complication (the open cluster's health, "N not ready", etcd
+  alarms, the age once stale) and a small app listing the clusters and their nodes with state
+  and reason, both from the iPhone's last background check. Read-only: the phone sends the
+  watch the names (masked under the screenshot mode) and node states over WatchConnectivity,
+  never a config, token or address. CI builds the watch app, but the IPA and App Store build
+  do not include it yet.
 
 **Building:** Xcode only runs on macOS.
 

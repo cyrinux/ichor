@@ -6,7 +6,8 @@ import UserNotifications
 import WidgetKit
 
 /// Shared with the widget extension (App Group): a snapshot per cluster (by monitor key, see
-/// monitorClusterKey), the clusters the widget can pick and the active one.
+/// monitorClusterKey), the clusters the widget can pick and the active one. Each change is also
+/// sent to the Apple Watch (WatchLink).
 enum SharedStore {
     static var defaults: UserDefaults { UserDefaults(suiteName: SharedSnapshot.suite) ?? .standard }
 
@@ -24,6 +25,8 @@ enum SharedStore {
         }
         defaults.removeObject(forKey: SharedSnapshot.key)
         WidgetCenter.shared.reloadAllTimelines()
+        // After each run (and when cleared): the Apple Watch shows the same.
+        WatchLink.shared.send()
     }
 
     /// Only the state of the clusters still stored (monitor keys): a removed cluster's snapshot
@@ -50,6 +53,8 @@ enum SharedStore {
         if let data { defaults.set(data, forKey: SharedSnapshot.clustersKey) } else { defaults.removeObject(forKey: SharedSnapshot.clustersKey) }
         if let active { defaults.set(active, forKey: SharedSnapshot.activeKey) } else { defaults.removeObject(forKey: SharedSnapshot.activeKey) }
         WidgetCenter.shared.reloadAllTimelines()
+        // The active cluster changed, or a cluster was added, renamed or masked.
+        WatchLink.shared.send()
     }
 }
 

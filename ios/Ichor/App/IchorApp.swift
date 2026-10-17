@@ -34,6 +34,8 @@ struct IchorApp: App {
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
         // The runs' Live Activities, and their buttons' handler.
         OperationActivities.start()
+        // The Apple Watch's link: ready before a background run sends it the last check.
+        WatchLink.shared.activate()
         StartupTrace.markOnce("app.init end")
     }
 

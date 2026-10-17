@@ -37,6 +37,10 @@ jobs:
 
       - run: scripts/ios-build.sh test
 
+      # The Apple Watch app and its complication (IchorWatch scheme), unsigned, for the watchOS
+      # simulator: built, not embedded in the IPA yet.
+      - run: scripts/ios-build.sh watch
+
       # The Go cache is written here only, on main: pull requests read it, so the cache does
       # not fill with one entry per push.
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

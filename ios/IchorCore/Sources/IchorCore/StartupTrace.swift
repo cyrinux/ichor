@@ -144,7 +144,8 @@ private final class TraceState: @unchecked Sendable {
 
     /// When the kernel started this process (wall clock), so the first step counts the launch.
     private static func processStartTime() -> Double? {
-        #if canImport(Darwin)
+        // Not on watchOS: the watch app never traces, and its SDK may not offer kinfo_proc.
+        #if canImport(Darwin) && !os(watchOS)
         var info = kinfo_proc()
         var size = MemoryLayout<kinfo_proc>.stride
         var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
