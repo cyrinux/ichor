@@ -66,6 +66,15 @@ func TestKubeNodeDisk(t *testing.T) {
 			want:    kubeNodeDisk{Forbidden: true, Nodes: []kubeNodeDiskUse{}},
 		},
 		{
+			// DiskPressure still reaches the monitor when no kubelet gives a size.
+			name:    "every kubelet refused, one node in DiskPressure",
+			nodes:   []string{nodeDiskNode("node-a", true, false), nodeDiskNode("node-b", true, true)},
+			answers: map[string]nodeDiskAnswer{"node-a": refused, "node-b": refused},
+			want: kubeNodeDisk{Forbidden: true, Nodes: []kubeNodeDiskUse{
+				{Name: "node-b", DiskPressure: true},
+			}},
+		},
+		{
 			// A kubelet that fails, and a node not ready, are absent: never reported as full.
 			name: "silent nodes are left out, DiskPressure kept",
 			nodes: []string{
@@ -167,7 +176,7 @@ func TestFsUsedPercent(t *testing.T) {
 		{"reserved blocks count as used", kubeletFsStats{CapacityBytes: 100, AvailableBytes: 5, UsedBytes: 90}, 95},
 		{"used larger than capacity minus available", kubeletFsStats{CapacityBytes: 100, AvailableBytes: 50, UsedBytes: 60}, 60},
 		{"clamped", kubeletFsStats{CapacityBytes: 100, UsedBytes: 120}, 100},
-		{"rounded", kubeletFsStats{CapacityBytes: 1000, AvailableBytes: 94}, 91},
+		{"rounded down", kubeletFsStats{CapacityBytes: 1000, AvailableBytes: 94}, 90},
 	}
 
 	for _, tc := range cases {

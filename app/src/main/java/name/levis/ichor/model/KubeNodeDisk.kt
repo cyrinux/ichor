@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 /**
  * Each node's disk as its kubelet reports it (Go `KubeNodeDisk`), for the background monitor of a
  * cluster added from a kubeconfig. A node whose kubelet did not answer is left out, never reported
- * as full. [forbidden]: nodes/proxy was refused; [measured]: how many kubelets answered;
+ * as full, unless it reports DiskPressure: then it is listed with no size. [forbidden]: nodes/proxy was refused; [measured]: how many nodes have a size;
  * [skipped]: the cluster has too many nodes to ask on every check.
  */
 @Serializable

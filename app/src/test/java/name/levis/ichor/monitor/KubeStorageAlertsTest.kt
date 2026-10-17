@@ -5,6 +5,7 @@ import name.levis.ichor.model.KubeNodeDisk
 import name.levis.ichor.model.KubeNodeDiskUsage
 import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.model.kubeNodeName
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -72,6 +73,16 @@ class KubeStorageAlertsTest {
     }
 
     @Test
+    fun diskPressureWithoutASizeStillAlerts() {
+        // Every kubelet refused, but the node list reports DiskPressure (the Go core lists it with no size).
+        val unmeasured = KubeNodeDiskUsage("worker-1", diskPressure = true)
+        val detail = StorageDetail.parse(issues(KubeNodeDisk(listOf(unmeasured), forbidden = true))!!.getValue("worker-1|nodefs"))
+        assertEquals(DATA_CRITICAL, detail.severity)
+        assertEquals(DISK_PRESSURE, detail.reason)
+        assertEquals(0L, detail.sizeBytes)
+    }
+
+    @Test
     fun forbiddenSkippedOrUnmeasuredIsNoReading() {
         assertNull(issues(disk(forbidden = true)))
         assertNull(issues(disk(node(used = 99), skipped = true)))
@@ -97,9 +108,23 @@ class KubeStorageAlertsTest {
         assertEquals(AlertKind.STORAGE_PROBLEM, alert.kind)
         assertEquals("worker-1", alert.subject)
         assertEquals(ShareTarget(target = ShareTarget.NODE, addr = "worker-1", host = "worker-1"), alert.shareTarget())
+        // On a kubeconfig context the tap opens the Kubernetes nodes searched for that node.
+        assertEquals("worker-1", alert.shareTarget()?.kubeNodeName(listed))
         val ok = evaluate(result.next, snap(issues(disk(node(used = 40)))), now).alerts.single()
         assertEquals(AlertKind.STORAGE_OK, ok.kind)
         assertEquals("storage:worker-1|nodefs", ok.key)
+    }
+
+    @Test
+    fun aDiskAlertAndItsTrendOpenTheKubeNodeSearchedForIt() {
+        val problem = Alert("storage:worker-1|nodefs", AlertKind.STORAGE_PROBLEM, problem = true, subject = "worker-1")
+        val trend = Alert("storage:worker-1|nodefs:trend", AlertKind.STORAGE_TREND, problem = true, subject = "worker-1")
+        assertEquals("worker-1", problem.shareTarget()?.kubeNodeName(listed))
+        assertEquals("worker-1", trend.shareTarget()?.kubeNodeName(listed))
+        // A node no longer listed opens the cluster's home.
+        assertNull(problem.shareTarget()?.kubeNodeName(setOf("worker-2")))
+        // Only a node or storage link names a Kubernetes node.
+        assertNull(ShareTarget.hardware("worker-1", "worker-1").kubeNodeName(listed))
     }
 
     @Test

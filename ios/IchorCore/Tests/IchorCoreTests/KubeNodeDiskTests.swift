@@ -133,7 +133,7 @@ final class KubeNodeDiskTests: XCTestCase {
         XCTAssertEqual(full.alerts.first?.title, "nodefs on worker-a at 91 %")
         // DiskPressure alerts at once.
         let pressure = evaluate(previous: base, current: try kubeSnap(issues(disk(40, pressure: true))), now: now)
-        XCTAssertEqual(pressure.alerts.map(\.title), ["nodefs on worker-a at 40 %, almost full"])
+        XCTAssertEqual(pressure.alerts.map(\.title), ["nodefs on worker-a: DiskPressure"])
         let back = evaluate(previous: full.next, current: try kubeSnap(issues(disk(50))), now: now)
         XCTAssertEqual(back.alerts.map(\.title), ["nodefs on worker-a back under 85 %"])
         XCTAssertEqual(back.alerts.first?.problem, false)
@@ -143,6 +143,17 @@ final class KubeNodeDiskTests: XCTestCase {
         let still = evaluate(previous: full.next, current: unread, now: now)
         XCTAssertEqual(still.alerts, [])
         XCTAssertEqual(still.next.storageIssues.keys.sorted(), ["worker-a|nodefs"])
+    }
+
+    func testDiskPressureWithoutASizeStillAlerts() throws {
+        // Every kubelet refused, but the node list reports DiskPressure (the Go core lists it with no size).
+        let unmeasured = KubeNodeDisk(nodes: [KubeNodeDiskNode(name: "worker-a", usedPercent: 0, diskPressure: true)], forbidden: true)
+        let out = issues(unmeasured)
+        XCTAssertEqual(severity(out), dataCritical)
+        let base = evaluate(previous: nil, current: try kubeSnap([:]), now: now).next
+        let alert = evaluate(previous: base, current: try kubeSnap(out), now: now).alerts.first
+        XCTAssertEqual(alert?.title, "nodefs on worker-a: DiskPressure")
+        XCTAssertEqual(alert?.text, "")
     }
 
     func testAKubeDiskAlertOpensTheNode() throws {

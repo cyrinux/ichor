@@ -7,11 +7,12 @@ import Foundation
 
 /// Each node's disk as its kubelet reports it (the Go core's KubeNodeDisk).
 public struct KubeNodeDisk: Decodable, Equatable, Sendable {
-    /// The nodes whose kubelet answered; one that did not is left out (never reported as full).
+    /// The nodes whose kubelet answered; one that did not is left out (never reported as full),
+    /// unless it reports DiskPressure: then it is listed with no size.
     public let nodes: [KubeNodeDiskNode]
     /// A kubelet read (or the node list) was refused: a missing reading, never an alert.
     public let forbidden: Bool
-    /// How many kubelets answered.
+    /// How many nodes have a size (their kubelet answered).
     public let measured: Int
     /// Too many nodes to ask each kubelet on a background run: not read.
     public let skipped: Bool
@@ -75,8 +76,8 @@ public let kubeNodeFsVolume = "nodefs"
 /// The storage issue key of a kube node: "<node>|nodefs", as the Talos path keys a volume ("<node>|<volume>").
 public func kubeNodeDiskKey(_ node: String) -> String { "\(node)|\(kubeNodeFsVolume)" }
 
-/// Why a node's disk is critical whatever its fill (the issue's detail).
-let kubeDiskPressure = "DiskPressure"
+/// Why a node's disk is critical whatever its fill (the issue's detail), named so in its alert.
+public let kubeDiskPressure = "DiskPressure"
 
 /// The nodes worth judging: named, and measured by their kubelet or reporting DiskPressure.
 private func judgedNodes(_ disk: KubeNodeDisk) -> [KubeNodeDiskNode] {

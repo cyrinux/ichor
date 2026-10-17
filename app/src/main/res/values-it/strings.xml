@@ -4435,6 +4435,7 @@
     <string name="monitor_storage_critical">Critico dal %1$d %% usato</string>
     <string name="monitor_storage_fill">%1$s su %2$s al %3$d %%</string>
     <string name="monitor_storage_fill_critical">%1$s su %2$s al %3$d %%, quasi pieno</string>
+    <string name="monitor_storage_disk_pressure">%1$s su %2$s: DiskPressure</string>
     <string name="monitor_storage_fill_text">%1$s liberi su %2$s</string>
     <string name="monitor_storage_smart">SMART non superato su %1$s (%2$s)</string>
     <string name="monitor_storage_fill_ok">%1$s su %2$s di nuovo sotto il %3$d %%</string>

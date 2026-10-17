@@ -727,9 +727,15 @@ enum BackgroundMonitor {
             return (String(localized: "\(name) on \(host) back under \(threshold)"), "")
         }
         let fill = "\(issue.percent) %"
-        let title = issue.severity == dataCritical
-            ? String(localized: "\(name) on \(host) at \(fill), almost full")
-            : String(localized: "\(name) on \(host) at \(fill)")
+        // A Kubernetes node in DiskPressure is named so whatever its fill; its kubelet may have given no size.
+        let title = if issue.detail == kubeDiskPressure {
+            String(localized: "\(name) on \(host): DiskPressure")
+        } else if issue.severity == dataCritical {
+            String(localized: "\(name) on \(host) at \(fill), almost full")
+        } else {
+            String(localized: "\(name) on \(host) at \(fill)")
+        }
+        guard issue.sizeBytes > 0 else { return (title, "") }
         let free = formatBytes(issue.freeBytes)
         let size = formatBytes(issue.sizeBytes)
         return (title, String(localized: "\(free) free of \(size)"))

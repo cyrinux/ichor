@@ -53,7 +53,8 @@ fun kubeStorageIssuesOf(
     return out
 }
 
-private const val DISK_PRESSURE = "DiskPressure"
+/** The [StorageDetail.reason] of a Kubernetes node reporting DiskPressure, named so in its notification. */
+const val DISK_PRESSURE = "DiskPressure"
 
 /** Every measured node's disk fill, for the history ring and the volume trends; null when [disk] is null. */
 fun kubeHistoryVolumesOf(disk: KubeNodeDisk?): List<HistoryVolumeEntry>? =

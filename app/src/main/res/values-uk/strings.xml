@@ -4656,6 +4656,7 @@
     <string name="monitor_storage_critical">Критично від %1$d %% зайнято</string>
     <string name="monitor_storage_fill">%1$s на %2$s заповнено на %3$d %%</string>
     <string name="monitor_storage_fill_critical">%1$s на %2$s заповнено на %3$d %%, майже повний</string>
+    <string name="monitor_storage_disk_pressure">%1$s на %2$s: DiskPressure</string>
     <string name="monitor_storage_fill_text">%1$s вільно з %2$s</string>
     <string name="monitor_storage_smart">SMART не пройдено на %1$s (%2$s)</string>
     <string name="monitor_storage_fill_ok">%1$s на %2$s знову нижче %3$d %%</string>

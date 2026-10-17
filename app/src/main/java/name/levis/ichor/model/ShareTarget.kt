@@ -78,6 +78,13 @@ data class ShareTarget(
 val ShareTarget.nodeTab: Int get() = ShareTarget.NODE_TABS.indexOf(tab).coerceAtLeast(0)
 
 /**
+ * The node of a cluster added from a kubeconfig a node or storage link names (a node or disk
+ * alert), by its Kubernetes name, when it is one of [nodes]; null otherwise (its home opens).
+ */
+fun ShareTarget.kubeNodeName(nodes: Collection<String>): String? =
+    addr.ifEmpty { host }.takeIf { (target == ShareTarget.NODE || target == ShareTarget.STORAGE) && it.isNotEmpty() && it in nodes }
+
+/**
  * What the Kubernetes screen opens for the link: its tab, and the item to show (a workload,
  * pod or CronJob), or null for a target that is not on that screen.
  */

@@ -14,17 +14,20 @@ import (
 
 const (
 	// nodeDiskParallel bounds the kubelets asked at once on a monitor run, nodeDiskTimeout
-	// each one: the monitor runs often and must stay cheap.
-	nodeDiskParallel = 4
-	nodeDiskTimeout  = 5 * time.Second
+	// each one, nodeDiskTotalTimeout all of them: the monitor runs often and must stay cheap,
+	// and the read must leave the caller's time to its other reads.
+	nodeDiskParallel     = 4
+	nodeDiskTimeout      = 5 * time.Second
+	nodeDiskTotalTimeout = 10 * time.Second
 	// nodeDiskMaxNodes: above it the monitor does not read the kubelets at all (Skipped).
 	nodeDiskMaxNodes = 200
 )
 
-// kubeNodeDisk is KubeNodeDisk's answer. Nodes holds only the nodes whose kubelet answered
-// with a nodefs: one that did not is absent, never full. Forbidden: a kubelet read (or the
+// kubeNodeDisk is KubeNodeDisk's answer. Nodes holds the nodes whose kubelet answered with a
+// nodefs: one that did not is absent, never full, unless it reports DiskPressure, then it is
+// listed with a zero size (CapacityBytes 0, not measured). Forbidden: a kubelet read (or the
 // node list) was refused, a missing reading rather than a problem. Skipped: the cluster has
-// more than nodeDiskMaxNodes nodes and no kubelet was asked. Measured counts Nodes.
+// more than nodeDiskMaxNodes nodes and no kubelet was asked. Measured counts the nodes with a size.
 type kubeNodeDisk struct {
 	Nodes     []kubeNodeDiskUse `json:"nodes"`
 	Forbidden bool              `json:"forbidden"`
@@ -70,12 +73,17 @@ func readNodeDisk(ctx context.Context, k *kubeClient) (kubeNodeDisk, error) {
 		return kubeNodeDisk{Nodes: []kubeNodeDiskUse{}, Skipped: true}, nil
 	}
 
-	reads := readKubeletSummariesWithin(ctx, k, nodes, nil, nodeDiskParallel, nodeDiskTimeout)
+	readCtx, cancel := context.WithTimeout(ctx, nodeDiskTotalTimeout)
+	defer cancel()
+
+	reads := readKubeletSummariesWithin(readCtx, k, nodes, nil, nodeDiskParallel, nodeDiskTimeout)
 
 	return nodeDiskOf(nodes, reads), nil
 }
 
-// nodeDiskOf joins the kubelets' answers with the nodes' DiskPressure, by node name.
+// nodeDiskOf joins the kubelets' answers with the nodes' DiskPressure, by node name. A node
+// reporting DiskPressure whose kubelet gave no size (refused, failed, timed out, not ready) is
+// listed with a zero size, so its condition still reaches the monitor.
 func nodeDiskOf(nodes []checkNodeObject, reads []kubeletRead) kubeNodeDisk {
 	pressure := make(map[string]bool, len(nodes))
 	for _, n := range nodes {
@@ -83,6 +91,7 @@ func nodeDiskOf(nodes []checkNodeObject, reads []kubeletRead) kubeNodeDisk {
 	}
 
 	out := kubeNodeDisk{Nodes: []kubeNodeDiskUse{}}
+	sized := make(map[string]bool, len(reads))
 
 	for _, r := range reads {
 		if r.err != nil {
@@ -104,15 +113,24 @@ func nodeDiskOf(nodes []checkNodeObject, reads []kubeletRead) kubeNodeDisk {
 			ImageFsUsedPercent: fsUsedPercent(r.summary.Node.Runtime.ImageFs),
 			DiskPressure:       pressure[r.node],
 		})
+		sized[r.node] = true
+	}
+
+	out.Measured = len(out.Nodes)
+
+	for _, n := range nodes {
+		if name := n.Metadata.Name; pressure[name] && !sized[name] {
+			out.Nodes = append(out.Nodes, kubeNodeDiskUse{Name: name, DiskPressure: true})
+		}
 	}
 
 	slices.SortFunc(out.Nodes, func(a, b kubeNodeDiskUse) int { return strings.Compare(a.Name, b.Name) })
-	out.Measured = len(out.Nodes)
 
 	return out
 }
 
-// fsUsedPercent is how full fs is, a whole percent in 0..100. The used side is the larger of
+// fsUsedPercent is how full fs is, a whole percent in 0..100, rounded down so a node never
+// reads above a threshold it is under. The used side is the larger of
 // usedBytes and capacity minus available: the kubelet evicts on available, which also counts
 // the blocks reserved for root.
 func fsUsedPercent(fs kubeletFsStats) int {
@@ -121,7 +139,7 @@ func fsUsedPercent(fs kubeletFsStats) int {
 	}
 
 	used := max(fs.UsedBytes, fs.CapacityBytes-fs.AvailableBytes)
-	percent := math.Round(used / fs.CapacityBytes * 100)
+	percent := math.Floor(used / fs.CapacityBytes * 100)
 
 	return int(min(max(percent, 0), 100))
 }
