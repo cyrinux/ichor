@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cyrinux/ichor/go/ichorgo"
@@ -287,6 +288,13 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "sanitize-preview", args: "[NAMESPACE]", run: func(e env) (out string, err error) {
+		// sanitize-preview [NAMESPACE]: the pods k9s's sanitize would delete, every namespace when omitted.
+		out, err = ichorgo.KubeSanitizePreview(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+
+		return out, err
+	}},
+	{name: "sanitize", args: "NAMESPACE", run: probeSanitize},
 	{name: "scale", args: "KIND NAMESPACE NAME REPLICAS", run: func(e env) (out string, err error) {
 		// scale KIND NAMESPACE NAME REPLICAS
 		replicas, convErr := strconv.Atoi(flag.Arg(4))
@@ -451,6 +459,42 @@ func probeDiscover(e env) (string, error) {
 	}
 
 	return ichorgo.ParseKubeconfig(yaml)
+}
+
+// probeSanitize deletes the pods sanitize-preview lists in NAMESPACE (required: never every
+// namespace by mistake), the way the apps pass back the preview's rows.
+func probeSanitize(e env) (string, error) {
+	namespace := flag.Arg(1)
+	if namespace == "" {
+		fmt.Fprintln(os.Stderr, "sanitize: NAMESPACE is required")
+		os.Exit(2)
+	}
+
+	preview, err := ichorgo.KubeSanitizePreview(e.cfg, e.context, e.kubeServer, namespace)
+	if err != nil {
+		return "", err
+	}
+
+	var p struct {
+		Pods []struct {
+			Namespace string `json:"namespace"`
+			Name      string `json:"name"`
+		} `json:"pods"`
+	}
+	if err := json.Unmarshal([]byte(preview), &p); err != nil {
+		return "", err
+	}
+
+	if len(p.Pods) == 0 {
+		return "nothing to clean up", nil
+	}
+
+	names := make([]string, 0, len(p.Pods))
+	for _, pod := range p.Pods {
+		names = append(names, pod.Namespace+"/"+pod.Name)
+	}
+
+	return ichorgo.KubeSanitize(e.cfg, e.context, e.kubeServer, namespace, strings.Join(names, "\n"))
 }
 
 // probeSearch reads the context's overview, pods and workloads the way the apps cache them,

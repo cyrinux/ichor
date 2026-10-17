@@ -196,6 +196,11 @@ var kubeActionChecks = map[string][]accessNeed{
 	"scaleStatefulSet":   {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "statefulsets", Subresource: "scale"}, true}},
 	"deletePod":          {{ssarAttributes{Verb: "delete", Resource: "pods"}, true}},
 	"execPod":            {{ssarAttributes{Verb: "create", Resource: "pods", Subresource: "exec"}, true}},
+	// k9s sanitize: list the namespace's pods for the preview, then delete the dead ones.
+	"sanitizePods": {
+		{ssarAttributes{Verb: "delete", Resource: "pods"}, true},
+		{ssarAttributes{Verb: "list", Resource: "pods"}, true},
+	},
 	// kubectl debug: add the ephemeral container, then attach to it.
 	"debugPod": {
 		{ssarAttributes{Verb: "patch", Resource: "pods", Subresource: "ephemeralcontainers"}, true},
