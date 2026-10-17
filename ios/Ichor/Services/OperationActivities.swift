@@ -31,15 +31,16 @@ enum OperationActivities {
         observe()
     }
 
-    /// What the jobs show now, sent again only where it changed (the lock's masking).
+    /// What the jobs show now, sent again only where it changed (the lock's or the screenshot
+    /// mode's masking).
     private static func resync() {
-        let locked = lockEnabled
-        guard locked != shownLocked else { return }
+        guard lockEnabled != shownLocked || screenshotMode != shownScreenshotMode else { return }
         sync(current())
     }
 
-    /// The app lock as last shown.
+    /// The app lock and the screenshot mode as last shown.
     private static var shownLocked = false
+    private static var shownScreenshotMode = false
 
     private static func observe() {
         let contents = withObservationTracking {
@@ -52,6 +53,7 @@ enum OperationActivities {
 
     private static func sync(_ contents: [OperationKind: OperationContent]) {
         shownLocked = lockEnabled
+        shownScreenshotMode = screenshotMode
         for kind in OperationKind.allCases {
             // Ended ones too: a finished run's card stays up to 15 minutes, until it is cleared
             // or the next run of its kind replaces it.
@@ -66,7 +68,13 @@ enum OperationActivities {
             shown[kind] = content
             let update = ActivityContent(state: content, staleDate: nil)
             if content.phase.ended {
-                if let activity { Task { await activity.end(update, dismissalPolicy: .after(.now + 15 * 60)) } }
+                if let activity {
+                    Task { await activity.end(update, dismissalPolicy: .after(.now + 15 * 60)) }
+                } else if screenshotMode {
+                    // A result card already ended still shows the names it ended with, and an
+                    // ended activity takes no update: it goes now (screenshot mode turned on).
+                    for gone in all { Task { await gone.end(update, dismissalPolicy: .immediate) } }
+                }
             } else if let activity {
                 Task { await activity.update(update) }
             } else if ActivityAuthorizationInfo().areActivitiesEnabled {
@@ -113,6 +121,8 @@ enum OperationActivities {
 
     // The setting AppModel keeps (Keys.lock).
     private static var lockEnabled: Bool { UserDefaults.standard.bool(forKey: "appLockEnabled") }
+    /// The screenshot mode (AppModel.setPrivacyMask): no node or cluster name shown either.
+    private static var screenshotMode: Bool { UserDefaults.standard.bool(forKey: PrivacyKeys.enabled) }
 
     /// What each run shows now; none for a kind with no run, nor one cleared.
     private static func current() -> [OperationKind: OperationContent] {
@@ -123,9 +133,19 @@ enum OperationActivities {
             (.netPerf, netPerf()),
         ]
         let locked = lockEnabled
+        let screenshot = screenshotMode
         var contents: [OperationKind: OperationContent] = [:]
         for case let (kind, content?) in entries {
-            contents[kind] = locked ? content.masked(title: kind.genericTitle) : content
+            if locked {
+                contents[kind] = content.masked(title: kind.genericTitle)
+            } else if screenshot {
+                // The names go; the buttons work as they do without the lock.
+                var masked = content.masked(title: kind.genericTitle)
+                masked.locked = false
+                contents[kind] = masked
+            } else {
+                contents[kind] = content
+            }
         }
         return contents
     }

@@ -3,7 +3,10 @@ package name.levis.ichor.ui
 import android.content.Context
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -46,6 +49,8 @@ import name.levis.ichor.ui.nav.appGraph
 import name.levis.ichor.ui.nav.gitOpsGraph
 import name.levis.ichor.ui.nav.kubeGraph
 import name.levis.ichor.ui.nav.openNodeAction
+import name.levis.ichor.ui.nav.navMaskMark
+import name.levis.ichor.ui.nav.rebuildAfterMaskSwitch
 import name.levis.ichor.ui.nav.resetTo
 import name.levis.ichor.ui.nav.talosGraph
 import kotlinx.coroutines.launch
@@ -244,101 +249,116 @@ fun Navigation(
         )
     }
 
-    NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW) {
-        talosGraph(nav, app, kubeLinks)
-        kubeGraph(nav, app, kubeLinks)
-        gitOpsGraph(nav, app, kubeLinks)
-        appGraph(nav, app, kubeLinks, openTarget)
-        composable(Routes.IMPORT) {
-            ImportScreen(
-                incoming = incomingConfig,
-                onIncomingTaken = { incomingConfig = null },
-                onImported = {
-                    app.launchSync(runNow = true)
-                    nav.resetTo(Routes.OVERVIEW)
-                },
-                // Adding a cluster comes from the overview or the settings: one can go back.
-                onBack = if (nav.previousBackStackEntry != null) ({ nav.popBackStack() }) else null,
-            )
+    // While screenshot mode switches, every screen is covered: none can draw a name read
+    // under the previous setting, nor one half-way through the switch.
+    val maskSwitching by app.maskTransition.collectAsStateWithLifecycle()
+    // Once switched, every screen but Settings is rebuilt: none keeps what it read before.
+    // Also for a switch that ended while this was not composed or the app was in the background.
+    val maskEpoch by app.maskSwitcher.epoch.collectAsStateWithLifecycle()
+    LaunchedEffect(nav, maskEpoch) {
+        if (!navMaskMark.due(maskEpoch)) return@LaunchedEffect
+        navMaskMark.done(maskEpoch)
+        val start = if (app.configRepository.config.value != null) Routes.OVERVIEW else Routes.IMPORT
+        nav.rebuildAfterMaskSwitch(start)
+    }
+    Box(Modifier.fillMaxSize()) {
+        NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW, modifier = Modifier.fillMaxSize()) {
+            talosGraph(nav, app, kubeLinks)
+            kubeGraph(nav, app, kubeLinks)
+            gitOpsGraph(nav, app, kubeLinks)
+            appGraph(nav, app, kubeLinks, openTarget)
+            composable(Routes.IMPORT) {
+                ImportScreen(
+                    incoming = incomingConfig,
+                    onIncomingTaken = { incomingConfig = null },
+                    onImported = {
+                        app.launchSync(runNow = true)
+                        nav.resetTo(Routes.OVERVIEW)
+                    },
+                    // Adding a cluster comes from the overview or the settings: one can go back.
+                    onBack = if (nav.previousBackStackEntry != null) ({ nav.popBackStack() }) else null,
+                )
+            }
+            composable(Routes.DEMO) {
+                ImportScreen(
+                    autoStartDemo = true,
+                    onImported = {
+                        app.launchSync(runNow = true)
+                        nav.resetTo(Routes.OVERVIEW)
+                    },
+                    onBack = { nav.popBackStack() },
+                )
+            }
+            composable(Routes.DEMO_KUBE) {
+                ImportScreen(
+                    autoStartDemo = true,
+                    kubeDemo = true,
+                    onImported = {
+                        app.launchSync(runNow = true)
+                        nav.resetTo(Routes.OVERVIEW)
+                    },
+                    onBack = { nav.popBackStack() },
+                )
+            }
+            composable(Routes.OVERVIEW) {
+                OverviewScreen(
+                    onNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
+                    onNodeAction = nav::openNodeAction,
+                    onEtcd = { nav.navigate(Routes.ETCD) },
+                    onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
+                    onWorkloads = { nav.navigate(Routes.workloads()) },
+                    onMetrics = { nav.navigate(Routes.metrics()) },
+                    onAlerts = { nav.navigate(Routes.alerts()) },
+                    onDataServices = { nav.navigate(Routes.dataServices(it)) },
+                    onArgoCD = { nav.navigate(Routes.ARGO_CD) },
+                    onFlux = { nav.navigate(Routes.FLUX) },
+                    onHealth = { nav.navigate(Routes.HEALTH) },
+                    onEvents = { nav.navigate(Routes.events()) },
+                    onInsights = { nav.navigate(Routes.INSIGHTS) },
+                    onApps = { attention -> nav.navigate(Routes.apps(attention)) },
+                    onSettings = { nav.navigate(Routes.SETTINGS) },
+                    onFunding = { nav.navigate(Routes.FUNDING) },
+                    onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
+                    onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
+                    onUpgradeCluster = { version -> nav.navigate(Routes.clusterUpgrade(version)) },
+                    onUpgradeKubernetes = { nav.navigate(Routes.K8S_UPGRADE) },
+                    onAddNode = { nav.navigate(Routes.JOIN_NODE) },
+                    onDiagnose = { nav.navigate(Routes.diagnosis()) },
+                    onAddCluster = { nav.navigate(Routes.IMPORT) },
+                    onClustersCleared = { nav.resetTo(Routes.IMPORT) },
+                    onChangelog = { nav.navigate(Routes.CHANGELOG) },
+                    onAllNodes = { nav.navigate(Routes.nodes(it)) },
+                    onKubeNodes = { nav.navigate(Routes.kubeNodes(it)) },
+                    onCheckup = { nav.navigate(Routes.CHECKUP) },
+                    onCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
+                    onApiHealth = { nav.navigate(Routes.API_HEALTH) },
+                    onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
+                    onPolicies = { nav.navigate(Routes.POLICIES) },
+                    onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
+                    onVirtualMachines = { nav.navigate(Routes.VIRTUAL_MACHINES) },
+                    onArgoRollouts = { nav.navigate(Routes.ARGO_ROLLOUTS) },
+                    onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
+                    onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
+                    onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
+                    onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
+                    onCrossplane = { nav.navigate(KubeBrowserRoutes.CROSSPLANE) },
+                    onTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
+                    onClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
+                    onLoadBalancing = { nav.navigate(KubeBrowserRoutes.LOAD_BALANCING) },
+                    onJobs = { nav.navigate(KubeBrowserRoutes.JOBS) },
+                    onKubeEvents = { nav.navigate(Routes.KUBE_EVENTS) },
+                    onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
+                    onNodeDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
+                    onNodeMeta = { nav.navigate(Routes.nodeMeta(it, it)) },
+                    onActivity = { nav.navigate(Routes.activity(it)) },
+                    onSearch = { nav.navigate(Routes.SEARCH) { launchSingleTop = true } },
+                    onOpenTarget = openTarget,
+                )
+                // After an update: what changed since the build that ran before.
+                WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
+            }
         }
-        composable(Routes.DEMO) {
-            ImportScreen(
-                autoStartDemo = true,
-                onImported = {
-                    app.launchSync(runNow = true)
-                    nav.resetTo(Routes.OVERVIEW)
-                },
-                onBack = { nav.popBackStack() },
-            )
-        }
-        composable(Routes.DEMO_KUBE) {
-            ImportScreen(
-                autoStartDemo = true,
-                kubeDemo = true,
-                onImported = {
-                    app.launchSync(runNow = true)
-                    nav.resetTo(Routes.OVERVIEW)
-                },
-                onBack = { nav.popBackStack() },
-            )
-        }
-        composable(Routes.OVERVIEW) {
-            OverviewScreen(
-                onNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
-                onNodeAction = nav::openNodeAction,
-                onEtcd = { nav.navigate(Routes.ETCD) },
-                onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
-                onWorkloads = { nav.navigate(Routes.workloads()) },
-                onMetrics = { nav.navigate(Routes.metrics()) },
-                onAlerts = { nav.navigate(Routes.alerts()) },
-                onDataServices = { nav.navigate(Routes.dataServices(it)) },
-                onArgoCD = { nav.navigate(Routes.ARGO_CD) },
-                onFlux = { nav.navigate(Routes.FLUX) },
-                onHealth = { nav.navigate(Routes.HEALTH) },
-                onEvents = { nav.navigate(Routes.events()) },
-                onInsights = { nav.navigate(Routes.INSIGHTS) },
-                onApps = { attention -> nav.navigate(Routes.apps(attention)) },
-                onSettings = { nav.navigate(Routes.SETTINGS) },
-                onFunding = { nav.navigate(Routes.FUNDING) },
-                onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
-                onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
-                onUpgradeCluster = { version -> nav.navigate(Routes.clusterUpgrade(version)) },
-                onUpgradeKubernetes = { nav.navigate(Routes.K8S_UPGRADE) },
-                onAddNode = { nav.navigate(Routes.JOIN_NODE) },
-                onDiagnose = { nav.navigate(Routes.diagnosis()) },
-                onAddCluster = { nav.navigate(Routes.IMPORT) },
-                onClustersCleared = { nav.resetTo(Routes.IMPORT) },
-                onChangelog = { nav.navigate(Routes.CHANGELOG) },
-                onAllNodes = { nav.navigate(Routes.nodes(it)) },
-                onKubeNodes = { nav.navigate(Routes.kubeNodes(it)) },
-                onCheckup = { nav.navigate(Routes.CHECKUP) },
-                onCapacity = { nav.navigate(Routes.KUBE_CAPACITY) },
-                onApiHealth = { nav.navigate(Routes.API_HEALTH) },
-                onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
-                onPolicies = { nav.navigate(Routes.POLICIES) },
-                onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
-                onVirtualMachines = { nav.navigate(Routes.VIRTUAL_MACHINES) },
-                onArgoRollouts = { nav.navigate(Routes.ARGO_ROLLOUTS) },
-                onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
-                onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
-                onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
-                onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
-                onCrossplane = { nav.navigate(KubeBrowserRoutes.CROSSPLANE) },
-                onTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
-                onClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
-                onLoadBalancing = { nav.navigate(KubeBrowserRoutes.LOAD_BALANCING) },
-                onJobs = { nav.navigate(KubeBrowserRoutes.JOBS) },
-                onKubeEvents = { nav.navigate(Routes.KUBE_EVENTS) },
-                onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
-                onNodeDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
-                onNodeMeta = { nav.navigate(Routes.nodeMeta(it, it)) },
-                onActivity = { nav.navigate(Routes.activity(it)) },
-                onSearch = { nav.navigate(Routes.SEARCH) { launchSingleTop = true } },
-                onOpenTarget = openTarget,
-            )
-            // After an update: what changed since the build that ran before.
-            WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
-        }
+        if (maskSwitching) MaskSwitchingPlaceholder()
     }
 
     // Its dialogs are windows over the lock screen: kept for after the unlock.

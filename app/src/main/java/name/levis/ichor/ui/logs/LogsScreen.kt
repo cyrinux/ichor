@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.logs
 
+import name.levis.ichor.data.MaskScoped
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -109,8 +110,15 @@ class LogFollowViewModel(
     private val _state = MutableStateFlow(FollowState())
     val state: StateFlow<FollowState> = _state.asStateFlow()
 
-    /** Starts over with the last FOLLOW_TAIL_LINES lines; runs until cancelled or the stream ends. */
-    suspend fun follow() {
+    private val mask = MaskScoped()
+
+    /**
+     * Starts over with the last FOLLOW_TAIL_LINES lines; runs until cancelled or the stream
+     * ends, and starts over after a screenshot mode switch.
+     */
+    suspend fun follow() = mask.run(clear = { _state.value = FollowState() }) { followOnce() }
+
+    private suspend fun followOnce() {
         _state.value = FollowState(streaming = true)
         try {
             coroutineScope {

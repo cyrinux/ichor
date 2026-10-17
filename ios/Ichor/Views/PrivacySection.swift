@@ -14,7 +14,7 @@ struct PrivacySection: View {
     var body: some View {
         Section {
             Toggle(isOn: Binding(get: { model.privacyMask }, set: { on in
-                Task { await model.setPrivacyMask(on, words: normalizedMaskWords(words)) }
+                Task { await model.setPrivacyMask(on) }
             })) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Screenshot mode")
@@ -23,6 +23,8 @@ struct PrivacySection: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            // No second flip while the names switch (AppModel.maskTransition).
+            .disabled(model.maskTransition)
             if model.privacyMask {
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("Also hide these words", text: $words)

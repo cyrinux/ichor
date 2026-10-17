@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.MaskScoped
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ReadProgress
 import name.levis.ichor.model.pollReadProgress
@@ -71,8 +72,27 @@ abstract class LoadingViewModel<T> : ViewModel() {
     val readProgress: StateFlow<ReadProgress?> = _progress.asStateFlow()
     private var progressPoll: Job? = null
 
+    /** Follows the screenshot mode switches once something was loaded (see [forgetMasked]). */
+    private var maskWatch: Job? = null
+    private val mask = MaskScoped()
+
+    /**
+     * What was read under the previous screenshot mode setting never stays, even with the screen
+     * in the back stack: dropped when a switch starts, read again once it is over.
+     */
+    private fun forgetMasked(switching: Boolean) {
+        job?.cancel()
+        watch?.cancel()
+        progressPoll?.cancel()
+        _progress.value = null
+        partial = false
+        _state.value = UiState.Loading
+        if (!switching) refresh(reset = true)
+    }
+
     /** [reset] drops the current data first, e.g. when the data source (context) changed. */
     fun refresh(reset: Boolean = false) {
+        if (maskWatch == null) maskWatch = mask.watch(viewModelScope, ::forgetMasked)
         job?.cancel()
         watch?.cancel()
         partial = false
