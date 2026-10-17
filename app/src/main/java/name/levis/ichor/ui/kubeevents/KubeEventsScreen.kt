@@ -7,14 +7,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -48,6 +46,10 @@ import name.levis.ichor.model.kubeEventsText
 import name.levis.ichor.model.matching
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.RowCard
+import name.levis.ichor.ui.components.RowPosition
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
@@ -140,21 +142,23 @@ fun KubeEventsScreen(
                     label = { Text(stringResource(R.string.kube_events_warnings_only)) },
                 )
             }
-            KubeEventsStatusLine(state, Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp))
+            // The stream's status in a small card under the chips.
+            RowCard(RowPosition.ONLY, Modifier.padding(top = 8.dp, bottom = 4.dp)) {
+                KubeEventsStatusLine(state, Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp))
+            }
             if (state.feed.paused) PausedBar(state.feed.pendingCount, onResume = vm::resume)
             if (!state.streaming && state.error != null) {
                 TextButton(onClick = { attempt++ }, modifier = Modifier.padding(horizontal = 8.dp)) { Text(stringResource(R.string.common_retry)) }
             }
-            HorizontalDivider()
             val rest = Modifier.weight(1f)
             when {
                 !control.ready -> EmptyText(stringResource(R.string.kube_scope_type_prompt), rest)
                 !state.received && state.streaming -> LoadingBox(rest)
                 shown.isEmpty() -> EmptyText(emptyOrNoMatch(query, R.string.kube_events_stream_empty, R.string.kube_events_no_match), rest)
-                else -> LazyColumn(rest.fillMaxSize()) {
-                    items(shown, key = { it.key }) { e ->
+                // Newest first in one card, no group titles.
+                else -> LazyColumn(rest.fillMaxSize(), contentPadding = CardListPadding) {
+                    cardRows(shown, key = { it.key }) { e ->
                         KubeEventItem(e, now, showNamespace = namespace == null, onClick = e.regarding.ref?.let { ref -> { onObject(ref) } })
-                        HorizontalDivider()
                     }
                 }
             }
