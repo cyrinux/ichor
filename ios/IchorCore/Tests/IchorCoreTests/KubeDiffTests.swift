@@ -75,4 +75,45 @@ final class KubeDiffTests: XCTestCase {
         let r = try TalosJSON.decode(KubeDiffResource.self, from: #"{"kind":"X","name":"x","change":"teleported"}"#)
         XCTAssertEqual(r.change, .unchanged)
     }
+
+    func testResourcesForNoRefsAreAllTheChangedOnes() throws {
+        XCTAssertEqual(try diff.resources(for: []).map(\.name), ["migrate", "settings", "web", "creds"])
+    }
+
+    func testResourcesForRefsKeepsTheTickedChangedOnes() throws {
+        let refs = [ArgoResourceRef(group: "apps", kind: "Deployment", namespace: "web", name: "web")]
+        XCTAssertEqual(try diff.resources(for: refs).map(\.id), ["apps/Deployment/web/web"])
+    }
+
+    func testResourcesForRefsMatchesAnEmptyGroupOnEitherSide() throws {
+        let d = try diff
+        // Core kind: "" in the diff, and a ref with a group still matches.
+        let configMap = ArgoResourceRef(group: "v1", kind: "ConfigMap", namespace: "web", name: "settings")
+        XCTAssertEqual(d.resources(for: [configMap]).map(\.name), ["settings"])
+        // A ref with no group matches an object of any group.
+        let job = ArgoResourceRef(group: "", kind: "Job", namespace: "web", name: "migrate")
+        XCTAssertEqual(d.resources(for: [job]).map(\.name), ["migrate"])
+        // Two groups that are both set must be equal.
+        let other = ArgoResourceRef(group: "extensions", kind: "Deployment", namespace: "web", name: "web")
+        XCTAssertEqual(d.resources(for: [other]), [])
+    }
+
+    func testResourcesForRefsMatchesClusterScopedObjects() {
+        let rbac = "rbac.authorization.k8s.io"
+        let d = FluxDiff(resources: [
+            KubeDiffResource(group: rbac, kind: "ClusterRole", name: "reader", change: .changed),
+            KubeDiffResource(group: rbac, kind: "ClusterRole", namespace: "web", name: "reader", change: .created),
+        ])
+        let refs = [ArgoResourceRef(group: rbac, kind: "ClusterRole", namespace: "", name: "reader")]
+        XCTAssertEqual(d.resources(for: refs).map(\.change), [.changed])
+    }
+
+    func testResourcesForRefsLeavesOutUnchangedAndMissingOnes() throws {
+        // Service web is unchanged; Deployment other is not in the diff.
+        let refs = [
+            ArgoResourceRef(group: "", kind: "Service", namespace: "web", name: "web"),
+            ArgoResourceRef(group: "apps", kind: "Deployment", namespace: "web", name: "other"),
+        ]
+        XCTAssertEqual(try diff.resources(for: refs), [])
+    }
 }

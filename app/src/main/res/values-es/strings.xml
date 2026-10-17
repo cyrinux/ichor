@@ -2812,6 +2812,11 @@
     <string name="argo_rollback_owned">Sin vuelta atrás: su propietario reescribe la spec de esta app.</string>
     <string name="argo_app_gone">%1$s ya no está en Argo CD.</string>
     <string name="argo_sync_title">Sincronizar %1$s</string>
+    <string name="argo_sync_changes">Cambios</string>
+    <string name="argo_sync_changes_loading">Comparando con la última comparación de Argo CD…</string>
+    <string name="argo_sync_changes_none">Nada cambiaría</string>
+    <string name="argo_sync_changes_more">y %1$s más</string>
+    <string name="argo_sync_open_full_diff">Abrir el diff completo</string>
     <string name="argo_sync_all_resources">Todos los recursos, a %1$s</string>
     <string name="argo_sync_quick_text">Sincroniza todos los recursos a %1$s, sin prune. La pantalla de Argo CD de la app tiene más opciones.</string>
     <string name="argo_sync_confirm">Sincronizar</string>

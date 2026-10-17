@@ -63,7 +63,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   like the Diff tab of the Argo CD UI: Ichor reads the comparison the application controller
   already made (the live and the predicted state of each object, in Argo CD's Redis, through a
   port-forward: nothing runs in the cluster, nothing is written) and renders it object by
-  object, Secret values hidden; the revision, each history entry and the running sync link to
+  object, Secret values hidden, also in the sync sheet for the resources about to be synced;
+  the revision, each history entry and the running sync link to
   their commit on GitHub, GitLab, Gitea, Forgejo, Codeberg or Bitbucket. An app an ApplicationSet or a parent app manages keeps its spec:
   only sync, refresh and terminate are offered there, since its owner would revert the rest.
   Each app also has a network view, like Argo CD's own but down to the nodes: host → Gateway →

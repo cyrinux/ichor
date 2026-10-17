@@ -37,17 +37,31 @@ import name.levis.ichor.R
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoResource
 import name.levis.ichor.model.ArgoSyncOptions
+import name.levis.ichor.model.DiffChange
+import name.levis.ichor.model.FluxDiff
+import name.levis.ichor.model.forResources
+import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.diff.DiffCounts
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
  * The sync options, defaults from the app (server-side apply when its syncOptions say so) and
  * never pruning unless ticked; ticking prune lists what would be deleted. [resources] limits
- * the sync to those (selective sync); empty syncs everything.
+ * the sync to those (selective sync); empty syncs everything. [diff] is what Argo CD compared
+ * last, loaded while the sheet is open: the options and Sync never wait for it.
+ * [onFullDiff] opens the full diff screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ArgoSyncSheet(app: ArgoApp, resources: List<ArgoResource>, onSync: (ArgoSyncOptions) -> Unit, onDismiss: () -> Unit) {
+fun ArgoSyncSheet(
+    app: ArgoApp,
+    resources: List<ArgoResource>,
+    diff: UiState<FluxDiff>,
+    onFullDiff: (() -> Unit)?,
+    onSync: (ArgoSyncOptions) -> Unit,
+    onDismiss: () -> Unit,
+) {
     var prune by remember { mutableStateOf(false) }
     var dryRun by remember { mutableStateOf(false) }
     var force by remember { mutableStateOf(false) }
@@ -55,6 +69,9 @@ fun ArgoSyncSheet(app: ArgoApp, resources: List<ArgoResource>, onSync: (ArgoSync
     var serverSide by remember { mutableStateOf(app.serverSideApply) }
     var replace by remember { mutableStateOf(app.syncOptions.contains("Replace=true")) }
     val pruned = (if (resources.isEmpty()) app.resources else resources).filter { it.prune }
+    val changes = (diff as? UiState.Loaded)?.data?.forResources(resources.map { it.ref })
+    // What the sync creates or deletes, beside the button: visible without scrolling.
+    val destructive = changes.orEmpty().filter { it.change == DiffChange.CREATED || it.change == DiffChange.DELETED }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -67,6 +84,7 @@ fun ArgoSyncSheet(app: ArgoApp, resources: List<ArgoResource>, onSync: (ArgoSync
                 else pluralStringResource(R.plurals.argo_sync_some_resources, resources.size, resources.size),
                 modifier = Modifier.padding(bottom = 8.dp),
             )
+            ArgoSyncChanges(diff, changes, onFullDiff)
             Toggle(stringResource(R.string.argo_opt_prune), stringResource(R.string.argo_opt_prune_desc), prune) { prune = it }
             AnimatedVisibility(prune) { PruneList(pruned) }
             Toggle(stringResource(R.string.argo_opt_dry_run), stringResource(R.string.argo_opt_dry_run_desc), dryRun) { dryRun = it }
@@ -74,6 +92,11 @@ fun ArgoSyncSheet(app: ArgoApp, resources: List<ArgoResource>, onSync: (ArgoSync
             Toggle(stringResource(R.string.argo_opt_out_of_sync_only), stringResource(R.string.argo_opt_out_of_sync_only_desc), outOfSyncOnly) { outOfSyncOnly = it }
             Toggle(stringResource(R.string.argo_opt_server_side), stringResource(R.string.argo_opt_server_side_desc), serverSide) { serverSide = it }
             Toggle(stringResource(R.string.argo_opt_replace), stringResource(R.string.argo_opt_replace_desc), replace) { replace = it }
+            if (destructive.isNotEmpty()) {
+                Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.End) {
+                    DiffCounts(changeCounts(destructive))
+                }
+            }
             Button(
                 onClick = {
                     onSync(

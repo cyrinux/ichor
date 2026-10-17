@@ -59,6 +59,27 @@ public struct FluxDiff: Decodable, Equatable, Sendable {
     public var newRevision: Bool { !revision.isEmpty && !applied.isEmpty && revision != applied }
 }
 
+extension FluxDiff {
+    /// What a sync of refs would change (the sync sheet): every changed object when refs is
+    /// empty (a full sync), else the changed objects among refs. Argo CD's group for core kinds
+    /// can be "" on one side only, so an empty group on either side matches on kind, namespace
+    /// and name; cluster-scoped objects have an empty namespace on both.
+    public func resources(for refs: [ArgoResourceRef]) -> [KubeDiffResource] {
+        guard !refs.isEmpty else { return changed }
+        return changed.filter { resource in refs.contains { $0.matches(resource) } }
+    }
+}
+
+private extension ArgoResourceRef {
+    /// "core" is the empty group under another name, as on Android.
+    func matches(_ resource: KubeDiffResource) -> Bool {
+        let mine = group == "core" ? "" : group
+        let theirs = resource.group == "core" ? "" : resource.group
+        return kind == resource.kind && namespace == resource.namespace && name == resource.name
+            && (mine.isEmpty || theirs.isEmpty || mine == theirs)
+    }
+}
+
 /// How many objects a diff has with one kind of change.
 public struct DiffCount: Equatable, Hashable, Sendable {
     public let change: DiffChange

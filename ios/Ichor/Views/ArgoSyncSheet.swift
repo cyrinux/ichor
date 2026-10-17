@@ -10,8 +10,16 @@ struct ArgoSyncSheet: View {
     let sync: (ArgoSyncOptions) async -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppModel.self) private var model
     @State private var options: ArgoSyncOptions
     @State private var syncing = false
+    /// What Argo CD compared last; loaded beside the options, Sync never waits for it.
+    @State private var diff: LoadState<FluxDiff> = .loading
+    /// The unfolded objects, by id: folded at first.
+    @State private var expanded: Set<String> = []
+
+    /// The objects listed at most; the full diff screen has the rest.
+    private static let shownChanges = 20
 
     init(app: ArgoApp, resources: [ArgoResource], sync: @escaping (ArgoSyncOptions) async -> Void) {
         self.app = app
@@ -42,6 +50,7 @@ struct ArgoSyncSheet: View {
                             .font(.callout)
                     }
                 }
+                Section("Changes") { changes }
                 Section {
                     Toggle(isOn: $options.prune) {
                         Text("Prune")
@@ -117,8 +126,62 @@ struct ArgoSyncSheet: View {
             }
             .interactiveDismissDisabled(syncing)
         }
+        // On the stack, not the Form: opening the full diff keeps the load running; closing the
+        // sheet cancels it.
+        .task { await loadDiff() }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+    }
+
+    /// What the sync changes, for the chosen resources (all of them for a full sync).
+    @ViewBuilder private var changes: some View {
+        switch diff {
+        case .loading:
+            HStack(spacing: 10) {
+                ProgressView()
+                Text("Comparing with Argo CD's last comparison…").font(.callout).foregroundStyle(.secondary)
+            }
+        case .failed(let message):
+            ErrorOrNoticeText(message: message)
+            fullDiffLink
+        case .loaded(let loaded, _, _):
+            let changed = loaded.resources(for: resources.map(\.ref))
+            if changed.isEmpty {
+                Text("Nothing would change").font(.callout).foregroundStyle(.secondary)
+            } else {
+                ForEach(changed.prefix(Self.shownChanges)) { resource in
+                    DiffResourceRow(resource: resource, expanded: binding(for: resource))
+                }
+                if changed.count > Self.shownChanges {
+                    Text("and \(String(changed.count - Self.shownChanges)) more").font(.callout).foregroundStyle(.secondary)
+                    fullDiffLink
+                }
+            }
+        }
+    }
+
+    private var fullDiffLink: some View {
+        NavigationLink {
+            FluxDiffView(argo: app.namespace, name: app.name)
+        } label: {
+            Text("Open the full diff")
+        }
+    }
+
+    private func binding(for resource: KubeDiffResource) -> Binding<Bool> {
+        Binding(
+            get: { expanded.contains(resource.id) },
+            set: { open in
+                if open { expanded.insert(resource.id) } else { expanded.remove(resource.id) }
+            }
+        )
+    }
+
+    private func loadDiff() async {
+        guard let client = model.client else { return }
+        let namespace = app.namespace, name = app.name
+        let loaded: LoadState<FluxDiff> = await .from { try await client.argoDiff(namespace: namespace, name: name) }
+        if !Task.isCancelled { diff = loaded }
     }
 
     /// The revision a sync goes to: chart@version or repo path@revision.
