@@ -155,17 +155,24 @@ fun restoredClusters(clusters: Map<String, BackupCluster>, fingerprints: List<St
 private const val RGB = 0xFFFFFF
 private const val OPAQUE = 0xFF shl 24
 
-/** The file name a new backup is offered under, e.g. "ichor-2026-10-02.ichorbackup". */
-fun backupFileName(date: java.time.LocalDate): String = "ichor-$date.$BACKUP_EXTENSION"
+/** The file name a new backup in the app's own format is offered under, e.g. "ichor-2026-10-02.ichorbackup". */
+fun backupFileName(date: java.time.LocalDate): String = backupFileName(date, BackupFileFormat.ICHOR)
 
 const val BACKUP_EXTENSION = "ichorbackup"
 
 /** The first bytes of every backup file (backupMagic in the Go core). */
 private val BACKUP_MAGIC = "ICHORBAK".toByteArray(Charsets.US_ASCII)
 
-/** Whether [file] starts like a backup: tells one opened from a file manager from any other file. */
-fun looksLikeBackup(file: ByteArray): Boolean =
-    file.size >= BACKUP_MAGIC.size && BACKUP_MAGIC.indices.all { file[it] == BACKUP_MAGIC[it] }
+/** The first line of every age file (an age backup, or any other), binary or ASCII-armored. */
+private val AGE_MAGICS = listOf("age-encryption.org/v1\n", "-----BEGIN AGE ENCRYPTED FILE-----").map { it.toByteArray(Charsets.US_ASCII) }
+
+/**
+ * Whether [file] starts like a backup, in the app's format or as an age file: tells one opened
+ * from a file manager from any other file (the Go core tells an age backup from another age file).
+ */
+fun looksLikeBackup(file: ByteArray): Boolean = file.startsWith(BACKUP_MAGIC) || AGE_MAGICS.any { file.startsWith(it) }
+
+private fun ByteArray.startsWith(prefix: ByteArray): Boolean = size >= prefix.size && prefix.indices.all { this[it] == prefix[it] }
 
 /**
  * The sign-ins a backup keeps for the kubeconfig clusters [fingerprints], from this device's

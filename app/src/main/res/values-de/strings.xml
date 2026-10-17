@@ -1909,6 +1909,7 @@
     <string name="backup_sealing">Wird verschlüsselt…</string>
     <string name="backup_restoring">Wird wiederhergestellt…</string>
     <string name="backup_saved">Sicherung gespeichert. Bewahre die Passphrase sicher auf.</string>
+    <string name="backup_saved_age_keys">Sicherung gespeichert. Sie lässt sich mit deinem age-Schlüssel auf einem Computer öffnen.</string>
     <string name="backup_restored">Sicherung wiederhergestellt.</string>
     <string name="backup_err_wrong_passphrase">Falsche Passphrase oder beschädigte Datei.</string>
     <string name="backup_err_passphrase_short">Verwende mindestens %1$d Zeichen.</string>
@@ -1917,6 +1918,17 @@
     <string name="backup_err_unsupported">Diese Sicherung stammt aus einer neueren Ichor-Version. Aktualisiere die App, um sie wiederherzustellen.</string>
     <string name="backup_err_invalid">Die Sicherung wurde geöffnet, aber ihr Inhalt ist ungültig.</string>
     <string name="backup_err_open">Die Datei konnte nicht gelesen oder geschrieben werden.</string>
+    <string name="backup_format">Dateiformat</string>
+    <string name="backup_format_ichor">Ichor-Format (Standard)</string>
+    <string name="backup_format_age">age-Datei</string>
+    <string name="backup_format_age_desc">Eine normale age-Datei: Sie lässt sich auf einem Computer mit age -d öffnen, ohne die App.</string>
+    <string name="backup_age_with_passphrase">Mit einer Passphrase (in der App wiederherstellbar)</string>
+    <string name="backup_age_with_recipients">Mit öffentlichen age-Schlüsseln</string>
+    <string name="backup_age_recipients">age-Empfänger</string>
+    <string name="backup_age_recipients_help">Ein öffentlicher age1…-Schlüssel pro Zeile. Nur die passenden age-Schlüssel öffnen die Datei, auf einem Computer: Die App kann sie nicht wiederherstellen.</string>
+    <string name="backup_err_age_recipient">Zeile %1$d ist kein öffentlicher age-Schlüssel (age1…).</string>
+    <string name="backup_err_age_recipients_empty">Füge mindestens einen öffentlichen age-Schlüssel hinzu.</string>
+    <string name="backup_err_needs_identity">Diese Sicherung öffnet sich mit deinem age-Schlüssel auf einem Computer.</string>
     <!-- Apps inventory -->
     <string name="apps_title">Apps</string>
     <string name="apps_search">Apps, Namespaces, Images suchen</string>

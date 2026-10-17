@@ -1916,6 +1916,7 @@
     <string name="backup_sealing">Encrypting…</string>
     <string name="backup_restoring">Restoring…</string>
     <string name="backup_saved">Backup saved. Keep the passphrase somewhere safe.</string>
+    <string name="backup_saved_age_keys">Backup saved. It opens with your age key on a computer.</string>
     <string name="backup_restored">Backup restored.</string>
     <string name="backup_err_wrong_passphrase">Wrong passphrase, or the file is damaged.</string>
     <string name="backup_err_passphrase_short">Use at least %1$d characters.</string>
@@ -1924,6 +1925,17 @@
     <string name="backup_err_unsupported">This backup was made by a newer version of Ichor. Update the app to restore it.</string>
     <string name="backup_err_invalid">The backup opened but its content is not valid.</string>
     <string name="backup_err_open">Could not read or write the file.</string>
+    <string name="backup_format">File format</string>
+    <string name="backup_format_ichor">Ichor format (default)</string>
+    <string name="backup_format_age">age file</string>
+    <string name="backup_format_age_desc">A standard age file: it opens on a computer with age -d, without the app.</string>
+    <string name="backup_age_with_passphrase">With a passphrase (restores in the app)</string>
+    <string name="backup_age_with_recipients">With age public keys</string>
+    <string name="backup_age_recipients">age recipients</string>
+    <string name="backup_age_recipients_help">One age1… public key per line. Only the matching age keys open the file, on a computer: the app cannot restore it.</string>
+    <string name="backup_err_age_recipient">Line %1$d is not an age public key (age1…).</string>
+    <string name="backup_err_age_recipients_empty">Add at least one age public key.</string>
+    <string name="backup_err_needs_identity">This backup opens with your age key on a computer.</string>
     <!-- Apps inventory -->
     <string name="apps_title">Apps</string>
     <string name="apps_search">Search apps, namespaces, images</string>

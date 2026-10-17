@@ -1,6 +1,391 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Line %lld is not an age public key (age1…)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ligne %lld n’est pas une clé publique age (age1…)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La línea %lld no es una clave pública age (age1…)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeile %lld ist kein öffentlicher age-Schlüssel (age1…)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La riga %lld non è una chiave pubblica age (age1…)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рядок %lld не є відкритим ключем age (age1…)."
+          }
+        }
+      }
+    },
+    "Format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Формат"
+          }
+        }
+      }
+    },
+    "Ichor format (default)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format Ichor (par défaut)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato Ichor (predeterminado)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor-Format (Standard)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato Ichor (predefinito)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Формат Ichor (типово)"
+          }
+        }
+      }
+    },
+    "age file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fichier age"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo age"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "age-Datei"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File age"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл age"
+          }
+        }
+      }
+    },
+    "age recipients" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destinataires age"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destinatarios age"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "age-Empfänger"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destinatari age"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримувачі age"
+          }
+        }
+      }
+    },
+    "An age file opens on a computer with the age command (age -d). Sealed with a passphrase, it also restores in Ichor on iOS or Android." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un fichier age s’ouvre sur un ordinateur avec la commande age (age -d). Chiffré avec une phrase secrète, il se restaure aussi dans Ichor sur iOS ou Android."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un archivo age se abre en un ordenador con el comando age (age -d). Cifrado con una frase de contraseña, también se restaura en Ichor en iOS o Android."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine age-Datei lässt sich auf einem Computer mit dem Befehl age (age -d) öffnen. Mit einer Passphrase verschlüsselt, lässt sie sich auch in Ichor auf iOS oder Android wiederherstellen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un file age si apre su un computer con il comando age (age -d). Cifrato con una passphrase, si ripristina anche in Ichor su iOS o Android."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл age відкривається на комп’ютері командою age (age -d). Зашифрований парольною фразою, він також відновлюється в Ichor на iOS або Android."
+          }
+        }
+      }
+    },
+    "One age public key (age1…) per line. Only the matching age keys open the file, on a computer: this phone cannot restore it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une clé publique age (age1…) par ligne. Seules les clés age correspondantes ouvrent le fichier, sur un ordinateur : ce téléphone ne peut pas le restaurer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una clave pública age (age1…) por línea. Solo las claves age correspondientes abren el archivo, en un ordenador: este móvil no puede restaurarlo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein öffentlicher age-Schlüssel (age1…) pro Zeile. Nur die passenden age-Schlüssel öffnen die Datei, auf einem Computer: Dieses Handy kann sie nicht wiederherstellen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una chiave pubblica age (age1…) per riga. Solo le chiavi age corrispondenti aprono il file, su un computer: questo telefono non può ripristinarlo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Один публічний ключ age (age1…) на рядок. Відкрити файл можуть лише відповідні ключі age, на комп’ютері: цей телефон не може його відновити."
+          }
+        }
+      }
+    },
+    "Paste at least one age public key." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collez au moins une clé publique age."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pega al menos una clave pública age."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füge mindestens einen öffentlichen age-Schlüssel ein."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incolla almeno una chiave pubblica age."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставте принаймні один публічний ключ age."
+          }
+        }
+      }
+    },
+    "This backup opens with your age key on a computer." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette sauvegarde s’ouvre avec votre clé age sur un ordinateur."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta copia se abre con tu clave age en un ordenador."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Sicherung lässt sich mit deinem age-Schlüssel auf einem Computer öffnen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo backup si apre con la tua chiave age su un computer."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ця резервна копія відкривається вашим ключем age на комп’ютері."
+          }
+        }
+      }
+    },
+    "Backup saved. It opens with your age key on a computer." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarde enregistrée. Elle s’ouvre avec votre clé age sur un ordinateur."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia guardada. Se abre con tu clave age en un ordenador."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherung gespeichert. Sie lässt sich mit deinem age-Schlüssel auf einem Computer öffnen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup salvato. Si apre con la tua chiave age su un computer."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Резервну копію збережено. Вона відкривається вашим ключем age на комп’ютері."
+          }
+        }
+      }
+    },
+    "Anyone with the file and a matching age key can use them." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toute personne ayant le fichier et une clé age correspondante peut les utiliser."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cualquiera con el archivo y una clave age correspondiente puede usarlos."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wer die Datei und einen passenden age-Schlüssel hat, kann sie verwenden."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiunque abbia il file e una chiave age corrispondente può usarli."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Будь-хто, хто має файл і відповідний ключ age, може ними скористатися."
+          }
+        }
+      }
+    },
     "%lld of %lld codes scanned" : {
       "extractionState" : "manual",
       "localizations" : {

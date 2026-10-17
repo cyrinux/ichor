@@ -42,6 +42,9 @@ const (
 	BackupErrNotBackup       = "backup-not-a-backup"
 	BackupErrUnsupported     = "backup-unsupported"
 	BackupErrInvalidContent  = "backup-invalid-content"
+	// BackupErrNeedsIdentity: an age backup sealed for age keys only, which opens with the
+	// matching age identity on a computer, not with a passphrase on the phone.
+	BackupErrNeedsIdentity = "backup-needs-identity"
 )
 
 // BackupMinPassphrase is the shortest passphrase EncryptBackup accepts, in characters.
@@ -123,9 +126,23 @@ func EncryptBackup(payloadJSON, passphrase string) (out []byte, err error) {
 	return aead.Seal(header, p.nonce, []byte(payloadJSON), header), nil
 }
 
-// DecryptBackup opens a backup file with its passphrase and returns the validated payload JSON.
+// DecryptBackup opens a backup file (Ichor format or an age file, see backup_age.go) with its
+// passphrase and returns the validated payload JSON.
 func DecryptBackup(backup []byte, passphrase string) (out string, err error) {
 	defer maskErr(&err)
+
+	if backupFormat(backup) == BackupFormatAge {
+		plain, err := decryptBackupAge(backup, passphrase)
+		if err != nil {
+			return "", err
+		}
+
+		if _, err := validateBackupPayload(plain); err != nil {
+			return "", err
+		}
+
+		return string(plain), nil
+	}
 
 	p, err := parseBackupHeader(backup)
 	if err != nil {

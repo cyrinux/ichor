@@ -4,15 +4,19 @@ import IchorCore
 /// Backs up the talosconfig, the kubeconfig of the clusters added without Talos, and the
 /// settings that go with them (pins, Git hosts, AI settings; their keys and tokens only when
 /// the user opts in) into a file sealed with a
-/// passphrase (Argon2id + AES-256-GCM, in the Go core), and restores one, on this device or
+/// passphrase (Argon2id + AES-256-GCM, in the Go core) or saved as an age file (a passphrase or
+/// age public keys), and restores one, on this device or
 /// on another, iOS or Android. The stored config cannot be copied as it is: its key never
 /// leaves this device's Secure Enclave.
 @MainActor
 enum AppBackup {
     /// The backup file of the stored config and settings, sealed with `passphrase`. The AI keys
     /// and Git tokens go in only with `includeSecrets`. The payload is never logged.
+    /// As an age file (`format` .age), it is sealed with either `passphrase` or `recipients`
+    /// (age1… public keys, one per line), the other one empty.
     static func create(model: AppModel, ai: AISettings, gitHosts: GitHostStore, passphrase: String,
-                       includeSecrets: Bool) async throws -> Data {
+                       includeSecrets: Bool, format: BackupFileFormat = .ichor,
+                       recipients: String = "") async throws -> Data {
         guard model.hasConfig, let summary = model.summary else {
             throw TalosError(message: String(localized: "No talosconfig is stored."))
         }
@@ -44,7 +48,28 @@ enum AppBackup {
                                    gitHostTokens: includeSecrets ? gitHosts.tokensForBackup() : [:])
         )
         let json = try TalosJSON.encode(payload)
-        return try await localized { try await TalosClient.encryptBackup(payload: json, passphrase: passphrase) }
+        switch format {
+        case .ichor:
+            return try await localized { try await TalosClient.encryptBackup(payload: json, passphrase: passphrase) }
+        case .age:
+            let keys = ageRecipientsArgument(recipients)
+            return try await localized {
+                try await TalosClient.encryptBackupAge(payload: json, passphrase: passphrase, recipients: keys)
+            }
+        }
+    }
+
+    /// Whether a picked `file` is an age backup sealed for age keys only, which the phone
+    /// cannot open: its error shows at once instead of a passphrase prompt. The empty
+    /// passphrase try runs off the main thread (in the Go core).
+    static func needsIdentity(_ file: Data) async -> Bool {
+        guard await TalosClient.isAgeBackup(file) else { return false }
+        do {
+            _ = try await localized { try await TalosClient.decryptBackup(file, passphrase: "") }
+            return false
+        } catch {
+            return pickedBackupNeedsIdentity(isAge: true, emptyPassphraseError: error)
+        }
     }
 
     /// Replaces the stored config and settings with those of `file`. Throws
@@ -151,6 +176,7 @@ extension BackupError: @retroactive LocalizedError {
         case .notBackup: String(localized: "This file is not an Ichor backup.")
         case .unsupported: String(localized: "This backup was made by a newer version of Ichor. Update the app to restore it.")
         case .invalidContent: String(localized: "The backup opened but its content is not valid.")
+        case .needsIdentity: String(localized: "This backup opens with your age key on a computer.")
         }
     }
 }

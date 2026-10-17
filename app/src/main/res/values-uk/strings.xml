@@ -2027,6 +2027,7 @@
     <string name="backup_sealing">Шифрування…</string>
     <string name="backup_restoring">Відновлення…</string>
     <string name="backup_saved">Резервну копію збережено. Зберігайте парольну фразу в надійному місці.</string>
+    <string name="backup_saved_age_keys">Резервну копію збережено. Вона відкривається вашим ключем age на комп’ютері.</string>
     <string name="backup_restored">Резервну копію відновлено.</string>
     <string name="backup_err_wrong_passphrase">Неправильна парольна фраза або файл пошкоджено.</string>
     <string name="backup_err_passphrase_short">Використайте щонайменше %1$d символів.</string>
@@ -2035,6 +2036,17 @@
     <string name="backup_err_unsupported">Цю резервну копію створено новішою версією Ichor. Оновіть застосунок, щоб відновити її.</string>
     <string name="backup_err_invalid">Резервну копію відкрито, але її вміст недійсний.</string>
     <string name="backup_err_open">Не вдалося прочитати або записати файл.</string>
+    <string name="backup_format">Формат файлу</string>
+    <string name="backup_format_ichor">Формат Ichor (типово)</string>
+    <string name="backup_format_age">Файл age</string>
+    <string name="backup_format_age_desc">Стандартний файл age: відкривається на комп’ютері командою age -d, без застосунку.</string>
+    <string name="backup_age_with_passphrase">З парольною фразою (відновлюється в застосунку)</string>
+    <string name="backup_age_with_recipients">З відкритими ключами age</string>
+    <string name="backup_age_recipients">Отримувачі age</string>
+    <string name="backup_age_recipients_help">Один відкритий ключ age1… на рядок. Файл відкривають лише відповідні ключі age, на комп’ютері: застосунок не може його відновити.</string>
+    <string name="backup_err_age_recipient">Рядок %1$d не є відкритим ключем age (age1…).</string>
+    <string name="backup_err_age_recipients_empty">Додайте хоча б один відкритий ключ age.</string>
+    <string name="backup_err_needs_identity">Ця резервна копія відкривається вашим ключем age на комп’ютері.</string>
     <!-- Apps inventory -->
     <string name="apps_title">Застосунки</string>
     <string name="apps_search">Пошук застосунків, просторів імен, образів</string>

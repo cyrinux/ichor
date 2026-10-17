@@ -4,6 +4,7 @@ import name.levis.ichor.R
 import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.model.BACKUP_FORMAT
 import name.levis.ichor.model.BackupPayload
+import name.levis.ichor.model.BackupSeal
 import name.levis.ichor.model.BackupSecrets
 import name.levis.ichor.model.BackupSettings
 import name.levis.ichor.model.backupAi
@@ -32,7 +33,7 @@ data class RestoreOutcome(val languageChanged: Boolean, val language: String)
 
 /**
  * Backs up the talosconfig, the kubeconfig and the settings that go with them into a file sealed with a
- * passphrase (Argon2id + AES-256-GCM, in the Go core), and restores one, on this device or
+ * passphrase (Argon2id + AES-256-GCM, in the Go core) or as an age file, and restores one, on this device or
  * on another, Android or iOS. The stored config cannot be copied as it is: its key never
  * leaves this device's keystore.
  */
@@ -57,11 +58,11 @@ class BackupManager(
     private val onRestored: () -> Unit,
 ) {
     /**
-     * The backup file of the stored config and settings, sealed with [passphrase]; the API keys
-     * and Git tokens only with [includeSecrets] (the payload has no "secrets" key otherwise).
-     * The payload is never logged.
+     * The backup file of the stored config and settings, sealed as [seal] says (the app's format,
+     * or an age file with a passphrase or for age public keys); the API keys and Git tokens only
+     * with [includeSecrets] (the payload has no "secrets" key otherwise). The payload is never logged.
      */
-    suspend fun create(passphrase: String, includeSecrets: Boolean = false, now: Long = System.currentTimeMillis() / 1000): ByteArray =
+    suspend fun create(seal: BackupSeal, includeSecrets: Boolean = false, now: Long = System.currentTimeMillis() / 1000): ByteArray =
         withContext(Dispatchers.Default) {
             val stored = configs.config.value ?: throw NoConfigException()
             val mask = ui.privacyMask.value
@@ -104,11 +105,28 @@ class BackupManager(
                 ai = backupAi(ai.settings.value),
                 secrets = if (includeSecrets) secrets() else null,
             )
-            backupCall { Ichorgo.encryptBackup(TalosJson.encodeToString(BackupPayload.serializer(), payload), passphrase) }
+            val json = TalosJson.encodeToString(BackupPayload.serializer(), payload)
+            backupCall {
+                when (seal) {
+                    is BackupSeal.Ichor -> Ichorgo.encryptBackup(json, seal.passphrase)
+                    is BackupSeal.AgePassphrase -> Ichorgo.encryptBackupAge(json, seal.passphrase, "")
+                    is BackupSeal.AgeRecipients -> Ichorgo.encryptBackupAge(json, "", seal.recipients.joinToString("\n"))
+                }
+            }
         }
 
     /**
-     * Replaces the stored config and settings with those of [file]. Throws a
+     * Whether [file] is an age backup sealed for age keys only, which this phone cannot open:
+     * tried with an empty passphrase (cheap, no scrypt stanza is opened) before any is asked.
+     */
+    suspend fun needsIdentity(file: ByteArray): Boolean = withContext(Dispatchers.Default) {
+        val isAge = runCatching { Ichorgo.backupFormatOf(file) }.getOrNull() == Ichorgo.BackupFormatAge
+        needsAgeIdentity(isAge) { Ichorgo.decryptBackup(file, "") }
+    }
+
+    /**
+     * Replaces the stored config and settings with those of [file], in either format (the Go core
+     * tells them apart). Throws a
      * [BackupPassphraseException] for a wrong passphrase, so the user can try again.
      */
     suspend fun restore(file: ByteArray, passphrase: String): RestoreOutcome {
@@ -191,6 +209,21 @@ class BackupManager(
     )
 }
 
+/**
+ * Whether a picked backup says at once that it opens with an age key on a computer: an age file
+ * ([isAge]) that [openWithoutPassphrase] (Go DecryptBackup with "") fails to open with
+ * backup-needs-identity. Any other outcome (a passphrase file: wrong passphrase) asks the passphrase.
+ */
+internal inline fun needsAgeIdentity(isAge: Boolean, openWithoutPassphrase: () -> Unit): Boolean {
+    if (!isAge) return false
+    return try {
+        openWithoutPassphrase()
+        false
+    } catch (e: Exception) {
+        e.message.orEmpty().startsWith(Ichorgo.BackupErrNeedsIdentity)
+    }
+}
+
 /** A backup that does not open with the passphrase given. */
 class BackupPassphraseException : LocalizedException(UiText.Res(R.string.backup_err_wrong_passphrase))
 
@@ -208,5 +241,7 @@ internal fun backupException(message: String): LocalizedException? = when {
     message.startsWith(Ichorgo.BackupErrNotBackup) -> LocalizedException(UiText.Res(R.string.backup_err_not_backup))
     message.startsWith(Ichorgo.BackupErrUnsupported) -> LocalizedException(UiText.Res(R.string.backup_err_unsupported))
     message.startsWith(Ichorgo.BackupErrInvalidContent) -> LocalizedException(UiText.Res(R.string.backup_err_invalid))
+    // An age file for public keys only: the phone holds no age key to open it with.
+    message.startsWith(Ichorgo.BackupErrNeedsIdentity) -> LocalizedException(UiText.Res(R.string.backup_err_needs_identity))
     else -> null
 }

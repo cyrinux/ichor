@@ -15,8 +15,8 @@ import (
 // (fixed commands whose well-known addresses masking would break), nor the GitHub links of
 // integration requests (opened, not shown; built from already masked results), nor share
 // links (built from the masked names on screen), nor a config's digest (a hash, which masking
-// a word could corrupt).
-var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "JoinNodeConfigSealed", "BuildTalosconfig", "ReplaceContextCredentials", "MergeConfig", "RemoveContext", "MergeKubeconfig", "RemoveKubeContext", "ExportKubeContext", "MergeTalosconfig", "DecodeImportText", "QRCodeText", "QRPart", "QRPartsJoin", "KubeAuthForBackup", "DiscoverClusters", "AddContextNodes", "SetContextEndpoints", "AddContextEndpoint", "DemoConfig", "DemoKubeconfig", "DecryptBackup", "NormalizeKubeServer", "NormalizePromSource", "DebugSnippets", "IntegrationIssueURL", "IntegrationSearchURL", "BuildShareLink", "SearchSnapshots", "DemoSearchEntries", "ServiceAccountTemplates", "DiscoverOmniClusters", "SetOmniServiceAccount", "ConfigDigest"}
+// a word could corrupt), nor the name of a backup file format (a fixed word).
+var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "JoinNodeConfigSealed", "BuildTalosconfig", "ReplaceContextCredentials", "MergeConfig", "RemoveContext", "MergeKubeconfig", "RemoveKubeContext", "ExportKubeContext", "MergeTalosconfig", "DecodeImportText", "QRCodeText", "QRPart", "QRPartsJoin", "KubeAuthForBackup", "DiscoverClusters", "AddContextNodes", "SetContextEndpoints", "AddContextEndpoint", "DemoConfig", "DemoKubeconfig", "DecryptBackup", "BackupFormatOf", "NormalizeKubeServer", "NormalizePromSource", "DebugSnippets", "IntegrationIssueURL", "IntegrationSearchURL", "BuildShareLink", "SearchSnapshots", "DemoSearchEntries", "ServiceAccountTemplates", "DiscoverOmniClusters", "SetOmniServiceAccount", "ConfigDigest"}
 
 // The shells (and the VM console) wrap their listener in newDebugSession: status and exit
 // masked, not the terminal.

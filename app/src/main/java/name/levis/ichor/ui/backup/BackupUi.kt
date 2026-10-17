@@ -46,7 +46,6 @@ import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
-import name.levis.ichor.ui.components.ToggleRow
 import name.levis.ichor.ui.components.openTruncating
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.readBounded
@@ -84,9 +83,9 @@ fun BackupFlow(vm: BackupViewModel, onRestored: () -> Unit = {}, replaceWarning:
     }
 
     when (val state = state) {
-        BackupState.NewPassphrase -> NewPassphraseDialog(onConfirm = vm::seal, onDismiss = vm::reset)
+        BackupState.NewPassphrase -> NewBackupDialog(onConfirm = vm::seal, onDismiss = vm::reset)
         is BackupState.ReadyToSave -> LaunchedEffect(state) {
-            if (vm.openSaver()) saver.launch(backupFileName(LocalDate.now()))
+            if (vm.openSaver()) saver.launch(backupFileName(LocalDate.now(), state.format))
         }
         is BackupState.Passphrase -> UnlockDialog(state.error, working = false, replaceWarning, onConfirm = vm::restore, onDismiss = vm::reset)
         BackupState.Restoring -> UnlockDialog(null, working = true, replaceWarning, onConfirm = {}, onDismiss = {})
@@ -107,7 +106,7 @@ fun BackupFlow(vm: BackupViewModel, onRestored: () -> Unit = {}, replaceWarning:
 fun BackupStatus(state: BackupState) {
     val text = when (state) {
         BackupState.Sealing -> stringResource(R.string.backup_sealing)
-        BackupState.Saved -> stringResource(R.string.backup_saved)
+        is BackupState.Saved -> stringResource(if (state.recipientsOnly) R.string.backup_saved_age_keys else R.string.backup_saved)
         is BackupState.Restored, BackupState.RestoreDone -> stringResource(R.string.backup_restored)
         is BackupState.Failed -> state.message.asString()
         else -> return
@@ -116,40 +115,6 @@ fun BackupStatus(state: BackupState) {
         text,
         style = MaterialTheme.typography.bodySmall,
         color = if (state is BackupState.Failed) LocalStatusColors.current.bad else MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-}
-
-@Composable
-private fun NewPassphraseDialog(onConfirm: (String, Boolean) -> Unit, onDismiss: () -> Unit) {
-    // Not saveable: the passphrase must not land in saved instance state.
-    var passphrase by remember { mutableStateOf("") }
-    var again by remember { mutableStateOf("") }
-    // Off by default, asked again for every backup.
-    var includeSecrets by remember { mutableStateOf(false) }
-    val error = newPassphraseError(passphrase, again)
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.backup_create_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.backup_create_desc, minPassphrase), style = MaterialTheme.typography.bodySmall)
-                PassphraseField(passphrase, { passphrase = it }, stringResource(R.string.backup_passphrase))
-                PassphraseField(again, { again = it }, stringResource(R.string.backup_passphrase_again))
-                ToggleRow(
-                    title = stringResource(R.string.backup_include_secrets),
-                    checked = includeSecrets,
-                    onChange = { includeSecrets = it },
-                    description = stringResource(R.string.backup_include_secrets_warning),
-                )
-                if (error != null && again.isNotEmpty()) {
-                    Text(error.asString(), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(passphrase, includeSecrets) }, enabled = error == null) { Text(stringResource(R.string.backup_create_confirm)) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
