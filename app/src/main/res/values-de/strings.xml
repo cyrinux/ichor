@@ -4213,6 +4213,11 @@
     <string name="helm_rollback_wait_timeout">Nach 5 Minuten noch im Rollout: Prüfen Sie die Workloads</string>
     <string name="helm_rollback_stop_following">Nicht mehr verfolgen</string>
     <string name="helm_rollback_wait_manual">Pods werden erst beim Löschen ersetzt</string>
+    <string name="helm_rollback_hooks">Hooks</string>
+    <string name="helm_rollback_hook_before">Läuft vorher: %1$s</string>
+    <string name="helm_rollback_hook_after">Läuft danach: %1$s</string>
+    <string name="helm_rollback_hook_weight">Gewicht %1$s</string>
+    <string name="helm_rollback_hooks_running">Rollback läuft, die Hooks des Charts werden ausgeführt…</string>
     <string name="imagescan_title">Schwachstellen</string>
     <string name="imagescan_hint">Prüft die Images dieser Pods per Digest mit %1$s auf bekannte Schwachstellen. Läuft als Job im Namespace %2$s, der sich danach selbst löscht.</string>
     <string name="imagescan_scan">Images prüfen</string>

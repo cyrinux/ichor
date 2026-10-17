@@ -4443,6 +4443,11 @@
     <string name="helm_rollback_wait_timeout">Розгортання триває вже 5 хвилин: перевірте навантаження</string>
     <string name="helm_rollback_stop_following">Припинити стеження</string>
     <string name="helm_rollback_wait_manual">Поди замінюються лише після видалення</string>
+    <string name="helm_rollback_hooks">Хуки</string>
+    <string name="helm_rollback_hook_before">Запускається до: %1$s</string>
+    <string name="helm_rollback_hook_after">Запускається після: %1$s</string>
+    <string name="helm_rollback_hook_weight">вага %1$s</string>
+    <string name="helm_rollback_hooks_running">Відкат, виконуються хуки чарта…</string>
     <string name="imagescan_title">Вразливості</string>
     <string name="imagescan_hint">Перевіряє образи цих подів (за digest) на відомі вразливості за допомогою %1$s. Запускається як Job у просторі імен %2$s і потім видаляє себе.</string>
     <string name="imagescan_scan">Перевірити образи</string>

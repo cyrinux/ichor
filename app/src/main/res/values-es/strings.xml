@@ -4221,6 +4221,11 @@
     <string name="helm_rollback_wait_timeout">Sigue desplegándose tras 5 minutos: revisa las cargas</string>
     <string name="helm_rollback_stop_following">Dejar de seguir</string>
     <string name="helm_rollback_wait_manual">Los pods solo se sustituyen al eliminarlos</string>
+    <string name="helm_rollback_hooks">Hooks</string>
+    <string name="helm_rollback_hook_before">Se ejecuta antes: %1$s</string>
+    <string name="helm_rollback_hook_after">Se ejecuta después: %1$s</string>
+    <string name="helm_rollback_hook_weight">peso %1$s</string>
+    <string name="helm_rollback_hooks_running">Revirtiendo, ejecutando los hooks del chart…</string>
     <string name="imagescan_title">Vulnerabilidades</string>
     <string name="imagescan_hint">Busca vulnerabilidades conocidas en las imágenes de estos pods, por digest, con %1$s. Se ejecuta como Job en el namespace %2$s y luego se elimina.</string>
     <string name="imagescan_scan">Analizar imágenes</string>
