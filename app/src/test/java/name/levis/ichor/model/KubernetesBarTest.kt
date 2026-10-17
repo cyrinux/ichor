@@ -1,10 +1,13 @@
 package name.levis.ichor.model
 
 import name.levis.ichor.model.KubernetesAction.API_ADDRESS
+import name.levis.ichor.model.KubernetesAction.ARGO_ROLLOUTS
 import name.levis.ichor.model.KubernetesAction.AUTOSCALING
 import name.levis.ichor.model.KubernetesAction.API_HEALTH
 import name.levis.ichor.model.KubernetesAction.CHECKUP
 import name.levis.ichor.model.KubernetesAction.CLEAN_UP_PODS
+import name.levis.ichor.model.KubernetesAction.CLUSTER_LIFECYCLE
+import name.levis.ichor.model.KubernetesAction.CROSSPLANE
 import name.levis.ichor.model.KubernetesAction.EVENTS
 import name.levis.ichor.model.KubernetesAction.FLOWS
 import name.levis.ichor.model.KubernetesAction.HELM
@@ -15,6 +18,7 @@ import name.levis.ichor.model.KubernetesAction.RESOURCES
 import name.levis.ichor.model.KubernetesAction.SERVICES
 import name.levis.ichor.model.KubernetesAction.SHARE
 import name.levis.ichor.model.KubernetesAction.STORAGE
+import name.levis.ichor.model.KubernetesAction.TAILSCALE
 import name.levis.ichor.model.KubernetesAction.VIRTUAL_MACHINES
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -27,14 +31,21 @@ class KubernetesBarTest {
     fun defaultKeepsThreeIconsSoTheTitleFits() {
         val bar = KubernetesAction.bar.default
         assertEquals(listOf(CHECKUP, NETWORK_POLICIES, SHARE), bar.icons)
-        assertEquals(listOf(API_HEALTH, FLOWS, RESOURCES, HELM, STORAGE, SERVICES, JOBS, EVENTS, API_ADDRESS, POLICIES, AUTOSCALING, VIRTUAL_MACHINES, CLEAN_UP_PODS), bar.menu)
+        assertEquals(listOf(API_HEALTH, FLOWS, RESOURCES, HELM, STORAGE, SERVICES, JOBS, EVENTS, API_ADDRESS, POLICIES, AUTOSCALING, VIRTUAL_MACHINES, CLEAN_UP_PODS, CROSSPLANE, TAILSCALE, ARGO_ROLLOUTS, CLUSTER_LIFECYCLE), bar.menu)
         assertTrue(bar.isDefault)
+    }
+
+    @Test
+    fun aBarSavedBeforeTheOperatorScreensGetsThemLastInItsMenu() {
+        val saved = KubernetesAction.bar.parse("CHECKUP,FLOWS|SHARE,API_HEALTH")
+        assertEquals(listOf(CHECKUP, FLOWS), saved.icons)
+        assertEquals(listOf(CROSSPLANE, TAILSCALE, ARGO_ROLLOUTS, CLUSTER_LIFECYCLE), saved.menu.takeLast(4))
     }
 
     @Test
     fun keptApartFromTheOverviewsBar() {
         val bar = KubernetesAction.bar.default.toBar(FLOWS).toMenu(CHECKUP)
-        assertEquals("NETWORK_POLICIES,SHARE,FLOWS|CHECKUP,API_HEALTH,RESOURCES,HELM,STORAGE,SERVICES,JOBS,EVENTS,API_ADDRESS,POLICIES,AUTOSCALING,VIRTUAL_MACHINES,CLEAN_UP_PODS", bar.encode())
+        assertEquals("NETWORK_POLICIES,SHARE,FLOWS|CHECKUP,API_HEALTH,RESOURCES,HELM,STORAGE,SERVICES,JOBS,EVENTS,API_ADDRESS,POLICIES,AUTOSCALING,VIRTUAL_MACHINES,CLEAN_UP_PODS,CROSSPLANE,TAILSCALE,ARGO_ROLLOUTS,CLUSTER_LIFECYCLE", bar.encode())
         assertEquals(bar, KubernetesAction.bar.parse(bar.encode()))
         assertFalse(bar.isDefault)
         // Another screen's names are unknown here: none of them is taken.

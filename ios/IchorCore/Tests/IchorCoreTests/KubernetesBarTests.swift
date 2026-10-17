@@ -5,16 +5,22 @@ final class KubernetesBarTests: XCTestCase {
     func testDefaultKeepsThreeIconsSoTheTitleFits() {
         let bar = KubernetesBar()
         XCTAssertEqual(bar.icons, [.checkup, .networkPolicies, .share])
-        XCTAssertEqual(bar.menu, [.apiHealth, .flows, .resources, .helm, .events, .apiAddress, .capacity, .admissionPolicies, .autoscaling, .virtualMachines, .cleanUpPods])
+        XCTAssertEqual(bar.menu, [.apiHealth, .flows, .resources, .helm, .events, .apiAddress, .capacity, .admissionPolicies, .autoscaling, .virtualMachines, .cleanUpPods, .crossplane, .tailscale, .argoRollouts, .clusterLifecycle])
         XCTAssertTrue(bar.isDefault)
         XCTAssertEqual(KubernetesBar.storageKey, "kubernetes.bar")
     }
 
     func testEncodeMatchesAndroid() {
         let bar = KubernetesBar().toBar(.flows).toMenu(.checkup)
-        XCTAssertEqual(bar.encoded, "NETWORK_POLICIES,SHARE,FLOWS|CHECKUP,API_HEALTH,RESOURCES,HELM,EVENTS,API_ADDRESS,CAPACITY,POLICIES,AUTOSCALING,VIRTUAL_MACHINES,CLEAN_UP_PODS")
+        XCTAssertEqual(bar.encoded, "NETWORK_POLICIES,SHARE,FLOWS|CHECKUP,API_HEALTH,RESOURCES,HELM,EVENTS,API_ADDRESS,CAPACITY,POLICIES,AUTOSCALING,VIRTUAL_MACHINES,CLEAN_UP_PODS,CROSSPLANE,TAILSCALE,ARGO_ROLLOUTS,CLUSTER_LIFECYCLE")
         XCTAssertEqual(KubernetesBar.parse(bar.encoded), bar)
         XCTAssertFalse(bar.isDefault)
+    }
+
+    func testABarSavedBeforeTheOperatorScreensGetsThemLastInItsMenu() {
+        let bar = KubernetesBar.parse("CHECKUP,FLOWS|SHARE,API_HEALTH")
+        XCTAssertEqual(bar.icons, [.checkup, .flows])
+        XCTAssertEqual(Array(bar.menu.suffix(4)), [.crossplane, .tailscale, .argoRollouts, .clusterLifecycle])
     }
 
     func testAnotherScreensNamesAreNotTaken() {

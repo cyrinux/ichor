@@ -39,7 +39,11 @@ import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.rememberShareLink
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.argorollouts.ArgoRolloutsViewModel
+import name.levis.ichor.ui.crossplane.CrossplaneViewModel
 import name.levis.ichor.ui.flows.CiliumViewModel
+import name.levis.ichor.ui.lifecycle.ClusterLifecycleViewModel
+import name.levis.ichor.ui.tailscale.TailscaleViewModel
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.ActionBarActions
@@ -64,7 +68,9 @@ private val KUBE_TABS = listOf(0, 1, 2, NETPERF_TAB)
  * policies and, with Cilium or Calico,
  * the live flows ([onFlows] with the namespace and pod to narrow them to, or nulls), and from
  * its menu the browser of every kind ([onResources]), the Helm releases ([onHelm]) and the
- * live cluster events ([onEvents]), and the admission policies ([onPolicies]).
+ * live cluster events ([onEvents]), and the admission policies ([onPolicies]). Crossplane,
+ * the Tailscale operator, Argo Rollouts and Cluster API / Sidero Metal are offered once the
+ * cluster answered it runs them, as on the Kubernetes home of a cluster added from a kubeconfig.
  * [focus] (a share link) opens a tab, scoped to and searched for one item, whose sheet opens
  * once its row loads.
  */
@@ -86,6 +92,10 @@ fun KubernetesScreen(
     onPolicies: () -> Unit,
     onAutoscaling: () -> Unit,
     onVirtualMachines: () -> Unit,
+    onCrossplane: () -> Unit,
+    onTailscale: () -> Unit,
+    onArgoRollouts: () -> Unit,
+    onClusterLifecycle: () -> Unit,
     focus: KubeFocus = KubeFocus(0),
     /** Where a pod's pull problem leads; null on a cluster without Talos nodes. */
     pullLinks: PodPullLinks? = null,
@@ -110,6 +120,21 @@ fun KubernetesScreen(
     LaunchedEffect(Unit) { if (ciliumState == UiState.Loading) cilium.refresh() }
     // Unknown until read, or unreadable: no entry rather than one that fails.
     val hasFlows = (ciliumState as? UiState.Loaded)?.data?.installed == true
+    // The operators' screens, offered like on the Kubernetes home: each read answers "not installed" quickly.
+    val crossplane: CrossplaneViewModel = viewModel(factory = factory { CrossplaneViewModel(app.kubeBrowser) })
+    val tailscale: TailscaleViewModel = viewModel(factory = factory { TailscaleViewModel(app.kubeBrowser) })
+    val rollouts: ArgoRolloutsViewModel = viewModel(factory = factory { ArgoRolloutsViewModel(app.argoRolloutsRepository) })
+    val lifecycle: ClusterLifecycleViewModel = viewModel(factory = factory { ClusterLifecycleViewModel(app.kubeBrowser) })
+    val operators = listOf<LoadingViewModel<*>>(crossplane, tailscale, rollouts, lifecycle)
+    LaunchedEffect(Unit) { operators.filter { it.state.value == UiState.Loading }.forEach { it.refresh() } }
+    val crossplaneState by crossplane.state.collectAsStateWithLifecycle()
+    val tailscaleState by tailscale.state.collectAsStateWithLifecycle()
+    val rolloutsState by rollouts.state.collectAsStateWithLifecycle()
+    val lifecycleState by lifecycle.state.collectAsStateWithLifecycle()
+    val hasCrossplane = (crossplaneState as? UiState.Loaded)?.data?.installed == true
+    val hasTailscale = (tailscaleState as? UiState.Loaded)?.data?.installed == true
+    val hasRollouts = (rolloutsState as? UiState.Loaded)?.data?.installed == true
+    val hasLifecycle = (lifecycleState as? UiState.Loaded)?.data?.installed == true
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val servers by app.kubeServers.servers.collectAsStateWithLifecycle()
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
@@ -134,7 +159,7 @@ fun KubernetesScreen(
                 if (server != servers[fingerprint].orEmpty()) {
                     app.setKubeServer(fingerprint, server)
                     // Both reload through the new address; a load in flight through the old one is cancelled.
-                    listOf<LoadingViewModel<*>>(workloads, pods, cronJobs, netPerf, cilium, namespaces).forEach { it.refresh(reset = true) }
+                    (listOf<LoadingViewModel<*>>(workloads, pods, cronJobs, netPerf, cilium, namespaces) + operators).forEach { it.refresh(reset = true) }
                 }
             },
             onDismiss = { editing = false },
@@ -171,6 +196,10 @@ fun KubernetesScreen(
                                 KubernetesAction.AUTOSCALING -> onAutoscaling()
                                 KubernetesAction.VIRTUAL_MACHINES -> onVirtualMachines()
                                 KubernetesAction.CLEAN_UP_PODS -> sanitizing = true
+                                KubernetesAction.CROSSPLANE -> onCrossplane()
+                                KubernetesAction.TAILSCALE -> onTailscale()
+                                KubernetesAction.ARGO_ROLLOUTS -> onArgoRollouts()
+                                KubernetesAction.CLUSTER_LIFECYCLE -> onClusterLifecycle()
                             }
                         },
                         customizeLabel = stringResource(R.string.bar_edit_title),
@@ -181,6 +210,10 @@ fun KubernetesScreen(
                                 KubernetesAction.FLOWS -> hasFlows
                                 KubernetesAction.API_ADDRESS -> fingerprint != null
                                 KubernetesAction.CLEAN_UP_PODS -> tab == 1
+                                KubernetesAction.CROSSPLANE -> hasCrossplane
+                                KubernetesAction.TAILSCALE -> hasTailscale
+                                KubernetesAction.ARGO_ROLLOUTS -> hasRollouts
+                                KubernetesAction.CLUSTER_LIFECYCLE -> hasLifecycle
                                 else -> true
                             }
                         },

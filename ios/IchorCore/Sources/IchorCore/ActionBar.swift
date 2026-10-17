@@ -55,6 +55,12 @@ public enum KubernetesAction: String, BarAction {
     /// Clean up the listed namespace's dead pods (k9s sanitize), on the pods tab; last, so the
     /// saved bars keep theirs.
     case cleanUpPods = "CLEAN_UP_PODS"
+    /// Crossplane, the Tailscale operator, Argo Rollouts and Cluster API / Sidero Metal, each
+    /// offered when the cluster runs it (as on the Kubernetes home); last, so the saved bars keep theirs.
+    case crossplane = "CROSSPLANE"
+    case tailscale = "TAILSCALE"
+    case argoRollouts = "ARGO_ROLLOUTS"
+    case clusterLifecycle = "CLUSTER_LIFECYCLE"
 
     public var id: String { rawValue }
     public static let barStorageKey = "kubernetes.bar"

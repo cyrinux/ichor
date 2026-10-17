@@ -39,7 +39,10 @@ enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOW
     /** KubeVirt (and Harvester) virtual machines; last, so the saved bars keep theirs. */
     VIRTUAL_MACHINES,
     /** Clean up the current namespace's dead pods (k9s sanitize), on the pods tab; last, so the saved bars keep theirs. */
-    CLEAN_UP_PODS;
+    CLEAN_UP_PODS,
+    /** Crossplane, the Tailscale operator, Argo Rollouts and Cluster API / Sidero Metal, each offered
+     *  when the cluster runs it (as on the Kubernetes home); last, so the saved bars keep theirs. */
+    CROSSPLANE, TAILSCALE, ARGO_ROLLOUTS, CLUSTER_LIFECYCLE;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 3)

@@ -156,6 +156,10 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
                 onPolicies = { nav.navigate(Routes.POLICIES) },
                 onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
                 onVirtualMachines = { nav.navigate(Routes.VIRTUAL_MACHINES) },
+                onCrossplane = { nav.navigate(KubeBrowserRoutes.CROSSPLANE) },
+                onTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
+                onArgoRollouts = { nav.navigate(Routes.ARGO_ROLLOUTS) },
+                onClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
                 pullLinks = podPullLinks(nav, app),
             )
         }
