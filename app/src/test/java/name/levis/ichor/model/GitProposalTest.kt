@@ -31,6 +31,9 @@ class GitProposalTest {
         assertNull(proposalBaseRef(">=1.0.0 <2.0.0"))
         assertNull(proposalBaseRef("*"))
         assertNull(proposalBaseRef("HEAD"))
+        assertNull(proposalBaseRef("1.x"))
+        assertNull(proposalBaseRef("a..b"))
+        assertNull(proposalBaseRef("-main"))
         assertNull(proposalBaseRef(""))
     }
 

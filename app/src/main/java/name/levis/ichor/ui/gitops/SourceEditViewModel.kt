@@ -257,6 +257,7 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
                             original = file.content,
                             fileSha = file.sha,
                             draft = file.content,
+                            manifest = manifestType(it.path, file.content),
                             review = null,
                             form = it.form?.copy(error = null, stale = false),
                             formOpen = false,

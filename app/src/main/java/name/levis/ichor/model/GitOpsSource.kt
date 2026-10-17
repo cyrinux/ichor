@@ -194,7 +194,7 @@ fun gitProposalJson(repoURL: String, p: GitProposal): String = buildJsonObject {
 }.toString()
 
 private val COMMIT_SHA = Regex("^[0-9a-fA-F]{40}([0-9a-fA-F]{24})?$")
-private val TAG_LIKE = Regex("^v?\\d+(\\.\\d+)*([-+][0-9A-Za-z.-]+)?$")
+private val TAG_LIKE = Regex("^[vV]?\\d+(\\.(\\d+|[xX*]))*([-+][0-9A-Za-z.-]+)?$")
 
 // The characters of a branch name the Go core accepts (gitBranchName in gitforge_propose.go).
 private val BRANCH_NAME = Regex("^[\\w./-]+$")
@@ -207,11 +207,13 @@ private val BRANCH_NAME = Regex("^[\\w./-]+$")
  */
 fun proposalBaseRef(tracked: String): String? {
     val ref = tracked.trim()
-    if (ref.startsWith("refs/heads/")) return ref.removePrefix("refs/heads/").takeIf { BRANCH_NAME.matches(it) }
+    if (ref.startsWith("refs/heads/")) {
+        return ref.removePrefix("refs/heads/").takeIf { BRANCH_NAME.matches(it) && !it.startsWith("-") && ".." !in it }
+    }
     return when {
         ref.isEmpty() || ref == "HEAD" || ref.startsWith("refs/") -> null
         COMMIT_SHA.matches(ref) || TAG_LIKE.matches(ref) -> null
-        !BRANCH_NAME.matches(ref) -> null
+        !BRANCH_NAME.matches(ref) || ref.startsWith("-") || ".." in ref -> null
         else -> ref
     }
 }
