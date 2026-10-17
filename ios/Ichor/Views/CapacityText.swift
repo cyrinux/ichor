@@ -7,10 +7,6 @@ import Foundation
 enum CapacityText {
     static var capacityTitle: String { String(localized: "Capacity") }
     static var capacityIntro: String { String(localized: "Free room counts requests against allocatable, as the scheduler does; usage comes from metrics-server.") }
-    static func capacityFreeCpu(_ a: String, _ b: String) -> String { String(localized: "\(a) CPU free of \(b)") }
-    static func capacityFreeMemory(_ a: String, _ b: String) -> String { String(localized: "\(a) memory free of \(b)") }
-    static func capacityFreePods(_ a: String, _ b: String) -> String { String(localized: "\(a) pod slots free of \(b)") }
-    static func capacityFreeEphemeral(_ a: String, _ b: String) -> String { String(localized: "\(a) ephemeral storage free of \(b)") }
     static func capacityDiskFullest(_ a: String, _ b: String) -> String { String(localized: "Disk: \(a) free on \(b), the fullest node") }
     static var capacityDiskUnmeasured: String { String(localized: "Disk free space unavailable: the kubelets did not answer.") }
     static var capacityDiskForbidden: String { String(localized: "Disk free space unavailable: these credentials may not read nodes/proxy.") }
@@ -20,6 +16,15 @@ enum CapacityText {
     static func capacityNPlusOneShortDisk(_ a: String, _ b: String) -> String { String(localized: "Losing \(a) leaves \(b) pods Pending, short of ephemeral storage") }
     static func capacityWorkloadEphemeral(_ a: String) -> String { String(localized: "asks \(a) ephemeral storage") }
     static var capacityRiskDiskNear: String { String(localized: "near its ephemeral storage limit, evicted when over it") }
+    static func capacityTileOf(_ a: String, _ b: String) -> String { String(localized: "\(a) of \(b)") }
+    static var capacityTileCpuFree: String { String(localized: "CPU free") }
+    static var capacityTileMemoryFree: String { String(localized: "Memory free") }
+    static var capacityTilePods: String { String(localized: "Pod slots") }
+    static var capacityTileEphemeralFree: String { String(localized: "Ephemeral storage free") }
+    static func capacityWorkloadReplicas(_ a: String, _ b: String) -> String { String(localized: "\(a) × \(b) CPU") }
+    static var capacityKindDeploymentShort: String { String(localized: "Deploy") }
+    static var capacityKindStatefulsetShort: String { String(localized: "STS") }
+    static var capacityKindDaemonsetShort: String { String(localized: "DS") }
     static var capacityNPlusOneOk: String { String(localized: "N+1: losing any one node leaves no pod Pending") }
     static func capacityNPlusOneShort(_ a: String, _ b: String) -> String { String(localized: "Losing \(a) leaves \(b) pods Pending") }
     static var capacityMetricsUnavailable: String { String(localized: "Usage unavailable: metrics-server is not installed. The bars show requests only.") }
@@ -42,7 +47,6 @@ enum CapacityText {
     static var capacityRequests: String { String(localized: "Requests") }
     static var capacityUsage: String { String(localized: "Usage") }
     static func capacityNodeFree(_ a: String, _ b: String, _ c: String) -> String { String(localized: "Free: \(a) CPU, \(b) memory, \(c) pod slots") }
-    static func capacityWorkloadLine(_ a: String, _ b: String, _ c: String) -> String { String(localized: "\(a) replicas, each asking \(b) CPU and \(c)") }
     static func capacityPriority(_ a: String) -> String { String(localized: "priority \(a)") }
     static func capacityMoreFit(_ a: String) -> String { String(localized: "\(a) more fit") }
     static func capacityRiskOomKills(_ a: String) -> String { String(localized: "OOM-killed \(a) times") }

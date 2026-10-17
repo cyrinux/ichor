@@ -28,6 +28,8 @@ struct KubeCapacityView: View {
     var body: some View {
         LoadStateView(state: state, retry: load) { capacity in
             let workloads = capacity.workloads.filtered(filter)
+            // Hidden values come from the whole list, so a filter does not change what a row shows.
+            let majority = CapacityMajority(capacity.workloads)
             // The rail only helps once the list is longer than a screen; without measuring the
             // content, a dozen node and workload rows is taken as that point.
             SectionRailScroll(sections: sections, showsRail: capacity.nodes.count + workloads.count >= Self.railMinimumRows) {
@@ -37,20 +39,26 @@ struct KubeCapacityView: View {
                             .sectionTarget(Self.summaryId)
                     }
                     Section {
-                        ForEach(capacity.nodes) { node in
+                        ForEach(capacity.nodes.overcommittedFirst) { node in
                             CapacityNodeRow(node: node, metrics: capacity.metricsAvailable) { loss = NodeLossRequest(node: node.name) }
                         }
                     } header: {
-                        Text(verbatim: CapacityText.capacityNodesTitle)
+                        SectionHeader(title: CapacityText.capacityNodesTitle)
                             .sectionTarget(Self.nodesId)
                     }
                     Section {
+                        Picker(selection: $filter) {
+                            ForEach(CapacityFilter.allCases, id: \.self) { Text(verbatim: $0.label).tag($0) }
+                        } label: {
+                            Text(verbatim: CapacityText.capacitySectionWorkloads)
+                        }
+                        .pickerStyle(.segmented)
                         if workloads.isEmpty {
                             Text(verbatim: CapacityText.capacityWorkloadsEmpty).foregroundStyle(.secondary)
                         }
-                        ForEach(workloads) { CapacityWorkloadRow(workload: $0) }
+                        ForEach(workloads) { CapacityWorkloadRow(workload: $0, majority: majority) }
                     } header: {
-                        Text(verbatim: CapacityText.capacityWorkloadsTitle)
+                        SectionHeader(title: CapacityText.capacityWorkloadsTitle)
                             .sectionTarget(Self.workloadsId)
                     }
                 }
@@ -62,20 +70,6 @@ struct KubeCapacityView: View {
         // A new API address (set on the Kubernetes screen): read again through it.
         .id(model.client?.kubeServer)
         .sheet(item: $loss) { KubeNodeLossSheet(start: $0.node) }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Picker(selection: $filter) {
-                        ForEach(CapacityFilter.allCases, id: \.self) { Text(verbatim: $0.label).tag($0) }
-                    } label: {
-                        Text(verbatim: filter.label)
-                    }
-                } label: {
-                    Image(systemName: filter == .all ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
-                }
-                .accessibilityLabel(Text(verbatim: filter.label))
-            }
-        }
         .navigationTitle(Text(verbatim: CapacityText.capacityTitle))
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -103,7 +97,15 @@ extension CapacityFilter {
     }
 }
 
-/// The cluster's free room, the N+1 verdict, what could not be read, and "What if a node goes down".
+/// A trailing pill wraps rather than squeeze the row's title away.
+private let pillMaxWidth: CGFloat = 160
+
+/// A node's memory meters turn amber from 80 %, later than the usual 75 %.
+private let nodeWarnAt = 0.8
+
+/// The N+1 verdict, the cluster's free room as tiles (CPU, memory, pod slots, and ephemeral
+/// storage when the nodes report it: then two rows of two), what could not be read, and
+/// "What if a node goes down".
 private struct CapacityHeader: View {
     let capacity: KubeCapacity
     let onWhatIf: () -> Void
@@ -111,38 +113,63 @@ private struct CapacityHeader: View {
     var body: some View {
         let t = capacity.totals
         let n1 = capacity.nPlusOne
-        VStack(alignment: .leading, spacing: 6) {
-            StatusPill(label: nPlusOneLabel(n1), color: n1.ok ? .statusOK : .statusWarn)
-            Text(verbatim: CapacityText.capacityFreeCpu(formatCPU(t.cpuFree), formatCPU(t.cpuAllocatable)))
-            Text(verbatim: CapacityText.capacityFreeMemory(formatBytes(Int64(t.memoryFree)), formatBytes(Int64(t.memoryAllocatable))))
-            Text(verbatim: CapacityText.capacityFreePods("\(t.podsFree)", "\(t.podCapacity)"))
-            // No allocatable ephemeral storage reported (old kubelets, some managed clusters): unknown, not full.
-            if t.ephemeralAllocatable > 0 {
-                Text(verbatim: CapacityText.capacityFreeEphemeral(formatBytes(Int64(t.ephemeralFree)), formatBytes(Int64(t.ephemeralAllocatable))))
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center) {
+                StatusPill(label: nPlusOneLabel(n1), color: n1.ok ? .statusOK : .statusWarn)
+                Spacer(minLength: 4)
+                InfoHint(title: Text(verbatim: CapacityText.capacityTitle), text: Text(verbatim: CapacityText.capacityIntro))
             }
-            if capacity.diskMeasured, let fullest = capacity.fullestDiskNode {
-                Text(verbatim: CapacityText.capacityDiskFullest(formatBytes(Int64(fullest.diskAvailable)), fullest.name))
-            }
-            Group {
-                if !capacity.diskMeasured || capacity.fullestDiskNode == nil {
-                    Text(verbatim: capacity.diskForbidden ? CapacityText.capacityDiskForbidden : CapacityText.capacityDiskUnmeasured)
-                }
-                if capacity.metricsForbidden {
-                    Text(verbatim: CapacityText.capacityMetricsForbidden)
-                } else if !capacity.metricsAvailable {
-                    Text(verbatim: CapacityText.capacityMetricsUnavailable)
-                }
-                if !capacity.priorityClassesRead { Text(verbatim: CapacityText.capacityClassesUnread) }
-                Text(verbatim: CapacityText.capacityIntro)
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            tiles(t)
+            notes
             if t.schedulableNodes > 1 {
                 Button(action: onWhatIf) { Text(verbatim: CapacityText.capacityWhatIf) }
                     .buttonStyle(.bordered)
             }
         }
         .padding(.vertical, 4)
+    }
+
+    /// Three tiles in a row; four (ephemeral storage reported) in two rows of two.
+    @ViewBuilder
+    private func tiles(_ t: CapacityTotals) -> some View {
+        let cpu = FreeTile(free: formatCPU(t.cpuFree), of: formatCPU(t.cpuAllocatable), label: CapacityText.capacityTileCpuFree,
+                           used: freeFraction(t.cpuRequests, of: t.cpuAllocatable))
+        let memory = FreeTile(free: formatBytes(Int64(t.memoryFree)), of: formatBytes(Int64(t.memoryAllocatable)),
+                              label: CapacityText.capacityTileMemoryFree,
+                              used: freeFraction(t.memoryRequests, of: t.memoryAllocatable))
+        let pods = FreeTile(free: "\(t.podsFree)", of: "\(t.podCapacity)", label: CapacityText.capacityTilePods,
+                            used: freeFraction(Double(t.pods), of: Double(t.podCapacity)))
+        // No allocatable ephemeral storage reported (old kubelets, some managed clusters): unknown, not full.
+        if t.ephemeralAllocatable > 0 {
+            let ephemeral = FreeTile(free: formatBytes(Int64(t.ephemeralFree)), of: formatBytes(Int64(t.ephemeralAllocatable)),
+                                     label: CapacityText.capacityTileEphemeralFree,
+                                     used: freeFraction(t.ephemeralRequests, of: t.ephemeralAllocatable))
+            Grid(alignment: .topLeading, horizontalSpacing: 12, verticalSpacing: 10) {
+                GridRow { cpu; memory }
+                GridRow { pods; ephemeral }
+            }
+        } else {
+            HStack(alignment: .top, spacing: 12) { cpu; memory; pods }
+        }
+    }
+
+    /// The disk, metrics and priority-class notes, one muted line each.
+    private var notes: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if capacity.diskMeasured, let fullest = capacity.fullestDiskNode {
+                Text(verbatim: CapacityText.capacityDiskFullest(formatBytes(Int64(fullest.diskAvailable)), fullest.name))
+            } else {
+                Text(verbatim: capacity.diskForbidden ? CapacityText.capacityDiskForbidden : CapacityText.capacityDiskUnmeasured)
+            }
+            if capacity.metricsForbidden {
+                Text(verbatim: CapacityText.capacityMetricsForbidden)
+            } else if !capacity.metricsAvailable {
+                Text(verbatim: CapacityText.capacityMetricsUnavailable)
+            }
+            if !capacity.priorityClassesRead { Text(verbatim: CapacityText.capacityClassesUnread) }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
     }
 
     private func nPlusOneLabel(_ n1: NPlusOne) -> String {
@@ -153,8 +180,22 @@ private struct CapacityHeader: View {
     }
 }
 
-/// One node: its memory requests and usage as two bars (usage only with metrics-server) and its
-/// free room; a schedulable node opens what losing it costs.
+/// "31.2 of 60.6" over "CPU free", with the requested share as a bar.
+private struct FreeTile: View {
+    let free: String
+    let of: String
+    let label: String
+    let used: Double
+
+    var body: some View {
+        StatTile(icon: nil, value: CapacityText.capacityTileOf(free, of), label: label, meter: { AnyView(UsageBar(fraction: used)) })
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// One node: its name, its roles as text, its memory requests and usage as two meters (usage
+/// only with metrics-server), its free room and disk; a schedulable node opens what losing it
+/// costs. One pill at most: overcommitted, else DiskPressure, else disk low.
 private struct CapacityNodeRow: View {
     let node: CapacityNode
     let metrics: Bool
@@ -164,39 +205,28 @@ private struct CapacityNodeRow: View {
         let requests = Int(node.memoryPercent.rounded())
         let usage = Int((node.memoryUsageFraction * 100).rounded())
         Button(action: onOpen) {
-            VStack(alignment: .leading, spacing: 4) {
-                // The name keeps its own line: only the overcommitted tag sits beside it, so role and
-                // disk tags wrap below instead of squeezing it away.
-                HStack {
-                    Text(verbatim: node.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
-                        .layoutPriority(1)
-                    Spacer(minLength: 0)
-                    if node.overcommitted { Tag(CapacityText.capacityOvercommitted, color: Color.statusBad) }
-                }
-                if node.diskPressure || node.diskLow || !node.roles.isEmpty {
-                    ChipFlow(spacing: 4) {
-                        if node.diskPressure {
-                            Tag(CapacityText.capacityNodeDiskPressure, color: Color.statusBad)
-                        } else if node.diskLow {
-                            Tag(CapacityText.capacityNodeDiskLow, color: Color.statusWarn)
+            ResourceRow(health: nil, title: node.name, subtitle: node.roleLine, trailing: pill) {
+                VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        MeterRow(label: CapacityText.capacityRequests, fraction: node.memoryPercent / 100,
+                                 value: "\(requests)%", warnAt: nodeWarnAt)
+                        if metrics {
+                            MeterRow(label: CapacityText.capacityUsage, fraction: node.memoryUsageFraction,
+                                     value: "\(usage)%", warnAt: nodeWarnAt)
                         }
-                        ForEach(node.roles, id: \.self) { Tag($0) }
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(Text(verbatim: metrics
+                        ? CapacityText.capacityNodeBars(node.name, "\(requests)", "\(usage)")
+                        : CapacityText.capacityNodeBarsNoUsage(node.name, "\(requests)")))
+                    Text(verbatim: CapacityText.capacityNodeFree(formatCPU(node.cpuFree), formatBytes(Int64(node.memoryFree)), "\(node.podsFree)"))
+                        .font(.caption).foregroundStyle(.secondary)
+                    if node.diskKnown {
+                        Text(verbatim: CapacityText.capacityNodeDisk(formatBytes(Int64(node.diskAvailable)), formatBytes(Int64(node.diskCapacity))))
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                 }
-                VStack(alignment: .leading, spacing: 4) {
-                    bar(CapacityText.capacityRequests, fraction: node.memoryPercent / 100, value: "\(requests)%")
-                    if metrics { bar(CapacityText.capacityUsage, fraction: node.memoryUsageFraction, value: "\(usage)%") }
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text(verbatim: metrics
-                    ? CapacityText.capacityNodeBars(node.name, "\(requests)", "\(usage)")
-                    : CapacityText.capacityNodeBarsNoUsage(node.name, "\(requests)")))
-                Text(verbatim: CapacityText.capacityNodeFree(formatCPU(node.cpuFree), formatBytes(Int64(node.memoryFree)), "\(node.podsFree)"))
-                    .font(.caption).foregroundStyle(.secondary)
-                if node.diskKnown {
-                    Text(verbatim: CapacityText.capacityNodeDisk(formatBytes(Int64(node.diskAvailable)), formatBytes(Int64(node.diskCapacity))))
-                        .font(.caption).foregroundStyle(.secondary)
-                }
+                .padding(.top, 4)
             }
             .padding(.vertical, 2)
             .contentShape(Rectangle())
@@ -206,52 +236,115 @@ private struct CapacityNodeRow: View {
         .accessibilityHint(Text(verbatim: CapacityText.capacityNodeOpen))
     }
 
-    private func bar(_ label: String, fraction: Double, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text(verbatim: label).font(.caption).foregroundStyle(.secondary)
-                Spacer()
-                Text(verbatim: value).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-            }
-            UsageBar(fraction: fraction)
+    @ViewBuilder
+    private var pill: some View {
+        switch node.flag {
+        case .overcommitted: CapacityPill(label: CapacityText.capacityOvercommitted, color: .statusBad)
+        case .diskPressure: CapacityPill(label: CapacityText.capacityNodeDiskPressure, color: .statusBad)
+        case .diskLow: CapacityPill(label: CapacityText.capacityNodeDiskLow, color: .statusWarn)
+        case nil: EmptyView()
         }
     }
 }
 
-/// One workload: what one replica asks, then its priority class, priority, QoS, risk and how many more fit.
+/// A row's one StatusPill, wrapping within `pillMaxWidth` rather than squeezing the title.
+private struct CapacityPill: View {
+    let label: String
+    let color: Color
+
+    var body: some View {
+        // Spelled out: a trailing closure right after the initializer would go to the init.
+        CappedWidth(maxWidth: pillMaxWidth).callAsFunction {
+            StatusPill(label: label, color: color)
+        }
+    }
+}
+
+/// Its one subview at its own width, never wider than `maxWidth` (a longer text wraps), set
+/// against the trailing edge.
+private struct CappedWidth: Layout {
+    let maxWidth: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard let child = subviews.first else { return .zero }
+        let width = min(proposal.width ?? maxWidth, maxWidth)
+        return child.sizeThatFits(ProposedViewSize(width: width, height: nil))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        subviews.first?.place(at: CGPoint(x: bounds.maxX, y: bounds.midY), anchor: .trailing,
+                              proposal: ProposedViewSize(width: bounds.width, height: nil))
+    }
+}
+
+/// One workload: what its replicas ask and how many more fit, its risk as the only pill (none
+/// when it is fine), then its kind and the priority class, priority and QoS that differ from
+/// the list's majority.
 private struct CapacityWorkloadRow: View {
     let workload: CapacityWorkload
+    let majority: CapacityMajority
 
     var body: some View {
         let w = workload
-        VStack(alignment: .leading, spacing: 4) {
-            Text(verbatim: "\(w.kind) \(w.namespace)/\(w.name)").font(.callout.monospaced()).lineLimit(2).truncationMode(.middle)
-            Text(verbatim: requestLine)
-                .font(.caption).foregroundStyle(.secondary)
-            ChipFlow {
-                if w.noPriorityClass {
-                    Tag(CapacityText.capacityNoClass, color: Color.statusWarn)
-                } else {
-                    Tag(w.priorityClassName, mono: true)
-                }
-                Tag(CapacityText.capacityPriority("\(w.priority)"))
-                if w.qos != .unknown { Tag(w.qos.rawValue) }
-                Tag(w.riskText, color: w.risk.color)
-                if !w.moreFitNA {
-                    Tag(CapacityText.capacityMoreFit("\(w.moreFit)"), color: w.moreFit > 0 ? Color.statusOK : Color.statusWarn)
+        ResourceRow(health: health, title: "\(w.namespace)/\(w.name)", subtitle: subtitle, trailing: pill) {
+            HStack(spacing: 6) {
+                Tag(kindShort)
+                if !traits.isEmpty {
+                    Text(verbatim: traits).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.tail)
                 }
             }
+            .padding(.top, 2)
         }
         .padding(.vertical, 2)
         .accessibilityElement(children: .combine)
     }
 
-    /// What one replica asks; its ephemeral storage only when it asks for some.
-    private var requestLine: String {
+    @ViewBuilder
+    private var pill: some View {
+        if workload.atRisk { CapacityPill(label: workload.riskText, color: workload.risk.color) }
+    }
+
+    /// "3 × 500m CPU · 1.0 GiB · 35 more fit"; its ephemeral storage only when it asks for some.
+    private var subtitle: String {
         let w = workload
-        let line = CapacityText.capacityWorkloadLine("\(w.replicas)", formatCPU(w.cpuRequest), formatBytes(Int64(w.memoryRequest)))
-        guard w.ephemeralRequest > 0 else { return line }
-        return "\(line), \(CapacityText.capacityWorkloadEphemeral(formatBytes(Int64(w.ephemeralRequest))))"
+        let parts = [
+            CapacityText.capacityWorkloadReplicas("\(w.replicas)", formatCPU(w.cpuRequest)),
+            formatBytes(Int64(w.memoryRequest)),
+            w.ephemeralRequest > 0 ? CapacityText.capacityWorkloadEphemeral(formatBytes(Int64(w.ephemeralRequest))) : nil,
+            w.moreFitNA ? nil : CapacityText.capacityMoreFit("\(w.moreFit)"),
+            w.atRisk ? nil : CapacityText.capacityRiskOk,
+        ]
+        return parts.compactMap { $0 }.joined(separator: " · ")
+    }
+
+    /// "platform-optional · priority 10 · Burstable" without the majority values.
+    private var traits: String {
+        workload.details(against: majority).map { detail -> String in
+            switch detail {
+            case .noPriorityClass: CapacityText.capacityNoClass
+            case let .priorityClass(name): name
+            case let .priority(value): CapacityText.capacityPriority("\(value)")
+            case let .qos(qos): qos.rawValue
+            }
+        }
+        .joined(separator: " · ")
+    }
+
+    /// OOM is bad, any other risk or a missing priority class a warning, nothing otherwise.
+    private var health: ServiceHealth? {
+        if workload.risk == .oom { return .critical }
+        if workload.atRisk || workload.noPriorityClass { return .warning }
+        return nil
+    }
+
+    /// Deployment, StatefulSet and DaemonSet as kubectl shortens them; any other kind as it is.
+    private var kindShort: String {
+        switch workload.kind {
+        case "Deployment": CapacityText.capacityKindDeploymentShort
+        case "StatefulSet": CapacityText.capacityKindStatefulsetShort
+        case "DaemonSet": CapacityText.capacityKindDaemonsetShort
+        default: workload.kind
+        }
     }
 }
 
