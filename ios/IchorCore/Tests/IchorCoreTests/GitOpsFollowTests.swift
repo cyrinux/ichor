@@ -75,6 +75,49 @@ final class GitOpsFollowTests: XCTestCase {
         XCTAssertNil(KubeRolloutStatus(workload: KubeWorkload(kind: "Deployment", namespace: "shop", name: "web")).restartCount)
     }
 
+    func testHelmWaitProgressDecoding() throws {
+        let p = try TalosJSON.decode(HelmRollbackFollowProgress.self, from: """
+        {"phase":"Running","done":1,"total":3,"at":1700000000000,"workloads":[
+          {"kind":"Deployment","namespace":"web","name":"site","ready":1,"desired":2,"done":false,"failed":false,"manual":false},
+          {"kind":"StatefulSet","namespace":"web","name":"db","ready":0,"desired":1,"done":false,"failed":false,"manual":true},
+          {"kind":"DaemonSet","namespace":"web","name":"agent","ready":3,"desired":3,"done":true,"failed":false,"manual":false}]}
+        """)
+        XCTAssertEqual(p.phase, HelmRollbackWaitPhase.running)
+        XCTAssertEqual(p.done, 1)
+        XCTAssertEqual(p.total, 3)
+        XCTAssertEqual(p.at, 1_700_000_000_000)
+        XCTAssertEqual(p.workloads.count, 3)
+        XCTAssertEqual(p.workloads[0].label, "Deployment site")
+        XCTAssertEqual(p.workloads[0].fraction, 0.5)
+        XCTAssertEqual(p.workloads[1].fraction, 1, "a manual workload counts as done")
+        XCTAssertEqual(p.workloads[2].fraction, 1)
+        XCTAssertEqual(Set(p.workloads.map(\.id)).count, 3)
+        XCTAssertTrue(p.hasManual)
+        XCTAssertNil(p.failedWorkload)
+
+        let failed = try TalosJSON.decode(HelmRollbackFollowProgress.self, from: """
+        {"phase":"Failed","workloads":[{"kind":"Deployment","name":"ok","done":true},{"kind":"Deployment","name":"site","failed":true}]}
+        """)
+        XCTAssertEqual(failed.failedWorkload?.label, "Deployment site")
+        XCTAssertFalse(failed.hasManual)
+
+        let empty = try TalosJSON.decode(HelmRollbackFollowProgress.self, from: #"{"workloads":null}"#)
+        XCTAssertEqual(empty, HelmRollbackFollowProgress(phase: ""))
+        XCTAssertEqual(try TalosJSON.decode(HelmRollbackWorkload.self, from: "{}"), HelmRollbackWorkload(kind: "", name: ""))
+        XCTAssertEqual(HelmRollbackWorkload(kind: "Deployment", name: "idle", ready: 0, desired: 0).fraction, 0)
+        XCTAssertEqual(HelmRollbackWorkload(kind: "Deployment", name: "over", ready: 5, desired: 2).fraction, 1)
+    }
+
+    func testHelmWaitOutcomes() {
+        XCTAssertEqual(FollowOutcome.helmWait(result: "Succeeded", error: nil), .succeeded)
+        XCTAssertEqual(FollowOutcome.helmWait(result: "Failed", error: nil), .failed(""))
+        XCTAssertEqual(FollowOutcome.helmWait(result: "Timeout", error: nil), .stillRunning)
+        XCTAssertEqual(FollowOutcome.helmWait(result: "", error: nil), .unfollowed)
+        XCTAssertEqual(FollowOutcome.helmWait(result: "", error: ""), .unfollowed)
+        XCTAssertEqual(FollowOutcome.helmWait(result: "", error: "revision 4 is not deployed"), .failed("revision 4 is not deployed"))
+        XCTAssertEqual(FollowOutcome.helmWait(result: "Running", error: nil), .failed(""))
+    }
+
     func testTheNewRunsOpenTheirScreen() {
         for kind in [OperationKind.argoSync, .fluxReconcile, .rollout, .netPerf] {
             XCTAssertTrue(kind.hasScreen)

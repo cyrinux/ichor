@@ -14,6 +14,25 @@ enum FluxReconcileEvent: Sendable {
     case done(result: String, error: String?)
 }
 
+enum HelmRollbackFollowEvent: Sendable {
+    case progress(HelmRollbackFollowProgress)
+    /// `result` is the final phase (Succeeded, Failed, Timeout); both empty after Cancel.
+    case done(result: String, error: String?)
+}
+
+/// A followed rollback wait: its events and Cancel (stop following; the rollback stays done).
+final class HelmRollbackFollowHandle: @unchecked Sendable {
+    let events: AsyncStream<HelmRollbackFollowEvent>
+    private let run: IchorgoHelmRollbackRun?
+
+    fileprivate init(events: AsyncStream<HelmRollbackFollowEvent>, run: IchorgoHelmRollbackRun?) {
+        self.events = events
+        self.run = run
+    }
+
+    func cancel() { run?.cancel() }
+}
+
 /// A followed Argo CD sync: its events, Cancel (stop following; the sync goes on) and
 /// Terminate (stop the sync itself; a network call, so off the main actor).
 final class ArgoSyncHandle: @unchecked Sendable {
@@ -91,6 +110,29 @@ extension TalosClient {
         }
         return FluxReconcileHandle(events: stream, run: run)
     }
+
+    /// StartHelmRollbackFollow: the release's Deployments, StatefulSets and DaemonSets read
+    /// every 3 s until they all run the rolled-back template, for 5 minutes at most (helm
+    /// rollback --wait).
+    func startHelmRollbackFollow(namespace: String, name: String) -> HelmRollbackFollowHandle {
+        let (stream, continuation) = AsyncStream.makeStream(of: HelmRollbackFollowEvent.self)
+        let bridge = HelmRollbackBridge(
+            progress: { continuation.yield(.progress($0)) },
+            done: {
+                continuation.yield(.done(result: $0, error: $1))
+                continuation.finish()
+            }
+        )
+        let run = IchorgoStartHelmRollbackFollow(kubeConfig, kubeContext, kubeAPIServer, namespace, name, bridge)
+        continuation.onTermination = { _ in
+            _ = bridge // keep the listener alive for the whole follow
+        }
+        if run == nil {
+            continuation.yield(.done(result: "", error: String(localized: "Could not follow the workloads.")))
+            continuation.finish()
+        }
+        return HelmRollbackFollowHandle(events: stream, run: run)
+    }
 }
 
 private final class ArgoSyncBridge: NSObject, IchorgoArgoSyncListenerProtocol, @unchecked Sendable {
@@ -123,6 +165,25 @@ private final class FluxReconcileBridge: NSObject, IchorgoFluxReconcileListenerP
 
     func onProgress(_ json: String?) {
         guard let json, let decoded = try? TalosJSON.decode(FluxReconcileProgress.self, from: json) else { return }
+        progress(decoded)
+    }
+
+    func onDone(_ result: String?, errMessage: String?) {
+        done(result ?? "", errMessage.nonEmpty)
+    }
+}
+
+private final class HelmRollbackBridge: NSObject, IchorgoHelmRollbackListenerProtocol, @unchecked Sendable {
+    private let progress: @Sendable (HelmRollbackFollowProgress) -> Void
+    private let done: @Sendable (String, String?) -> Void
+
+    init(progress: @escaping @Sendable (HelmRollbackFollowProgress) -> Void, done: @escaping @Sendable (String, String?) -> Void) {
+        self.progress = progress
+        self.done = done
+    }
+
+    func onProgress(_ json: String?) {
+        guard let json, let decoded = try? TalosJSON.decode(HelmRollbackFollowProgress.self, from: json) else { return }
         progress(decoded)
     }
 

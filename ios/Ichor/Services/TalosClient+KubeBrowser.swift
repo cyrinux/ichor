@@ -187,18 +187,21 @@ extension TalosClient {
     }
 
     /// What rolling the release back to `revision` (0: the previous one) would change, each
-    /// change dry-run on the API server. Read-only.
-    func helmRollbackPlan(namespace: String, name: String, revision: Int) async throws -> HelmRollbackPlan {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
-            IchorgoKubeHelmRollbackPlan(config, context, kubeServer, namespace, name, revision, $0)
+    /// change dry-run on the API server with `options` (replace, history max). Read-only.
+    func helmRollbackPlan(namespace: String, name: String, revision: Int, options: HelmRollbackOptions) async throws -> HelmRollbackPlan {
+        let optionsJSON = try options.json()
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeHelmRollbackPlan(config, context, kubeServer, namespace, name, revision, optionsJSON, $0)
         }
     }
 
     /// Rolls the release back to `revision` (0: the previous one), as `helm rollback` does: a
-    /// new revision with the older one's chart and values.
-    func helmRollback(namespace: String, name: String, revision: Int) async throws {
+    /// new revision with the older one's chart and values; `options` as helm rollback's
+    /// --force and --history-max (the wait is StartHelmRollbackFollow, afterwards).
+    func helmRollback(namespace: String, name: String, revision: Int, options: HelmRollbackOptions) async throws {
+        let optionsJSON = try options.json()
         try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
-            _ = IchorgoKubeHelmRollback(config, context, kubeServer, namespace, name, revision, error)
+            _ = IchorgoKubeHelmRollback(config, context, kubeServer, namespace, name, revision, optionsJSON, error)
         }
     }
 

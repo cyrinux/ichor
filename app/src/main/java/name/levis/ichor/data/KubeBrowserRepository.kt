@@ -17,7 +17,10 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.model.ApiResourceList
 import name.levis.ichor.model.HelmReleaseDetail
 import name.levis.ichor.model.HelmReleaseList
+import name.levis.ichor.model.HelmRollbackOptions
+import name.levis.ichor.model.HelmRollbackOptionsPayload
 import name.levis.ichor.model.HelmRollbackPlan
+import name.levis.ichor.model.payload
 import name.levis.ichor.model.DeletePropagation
 import name.levis.ichor.model.KUBE_PAGE_SIZE
 import name.levis.ichor.model.KubeApplyResult
@@ -36,6 +39,7 @@ import name.levis.ichor.model.ResourceRow
 import name.levis.ichor.model.ResourceRowJson
 import name.levis.ichor.model.ResourceWatchRows
 import name.levis.ichor.ui.goErrorText
+import name.levis.ichorgo.HelmRollbackListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.LogListener
 import name.levis.ichorgo.PortForwardListener
@@ -224,14 +228,42 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
         TalosJson.decodeFromString(HelmReleaseDetail.serializer(), Ichorgo.kubeHelmRelease(cfg, ctx, server, namespace, name))
     }
 
-    /** What rolling the release back to [revision] (0 for the previous one) would change, from dry runs. */
-    suspend fun helmRollbackPlan(namespace: String, name: String, revision: Int): HelmRollbackPlan = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(HelmRollbackPlan.serializer(), Ichorgo.kubeHelmRollbackPlan(cfg, ctx, server, namespace, name, revision.toLong()))
-    }
+    /** What rolling the release back to [revision] (0 for the previous one) with [options] would change, from dry runs. */
+    suspend fun helmRollbackPlan(namespace: String, name: String, revision: Int, options: HelmRollbackOptions): HelmRollbackPlan =
+        kubeCall { cfg, ctx, server ->
+            val json = Ichorgo.kubeHelmRollbackPlan(cfg, ctx, server, namespace, name, revision.toLong(), helmRollbackOptionsJson(options))
+            TalosJson.decodeFromString(HelmRollbackPlan.serializer(), json)
+        }
 
     /** Rolls the release back to [revision] like `helm rollback`, suspending its Flux HelmRelease first. */
-    suspend fun helmRollback(namespace: String, name: String, revision: Int) = kubeCall { cfg, ctx, server ->
-        Ichorgo.kubeHelmRollback(cfg, ctx, server, namespace, name, revision.toLong())
+    suspend fun helmRollback(namespace: String, name: String, revision: Int, options: HelmRollbackOptions) = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeHelmRollback(cfg, ctx, server, namespace, name, revision.toLong(), helmRollbackOptionsJson(options))
+    }
+
+    /**
+     * Follows the workloads of the release's deployed revision until they are ready, one failed
+     * or 5 minutes passed (reads only); returns at once. [onProgress] gets the progress JSON,
+     * [onDone] the final phase and an error, both empty once cancelled; both on a Go thread.
+     */
+    fun startHelmRollbackFollow(
+        namespace: String,
+        name: String,
+        onProgress: (String) -> Unit,
+        onDone: (String, String) -> Unit,
+    ): HelmRollbackFollowHandle {
+        val t = target()
+        val run = Ichorgo.startHelmRollbackFollow(
+            t.yaml,
+            t.context,
+            t.server,
+            namespace,
+            name,
+            object : HelmRollbackListener {
+                override fun onProgress(json: String) = onProgress(json)
+                override fun onDone(result: String, errMessage: String) = onDone(result, errMessage)
+            },
+        )
+        return HelmRollbackFollowHandle { run.cancel() }
     }
 
     /**
@@ -305,3 +337,12 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
         return withContext(Dispatchers.IO) { block(target.yaml, target.context, target.server) }
     }
 }
+
+/** A followed rollback wait, which can stop being followed. */
+fun interface HelmRollbackFollowHandle {
+    fun cancel()
+}
+
+/** The options JSON of KubeHelmRollbackPlan / KubeHelmRollback: `{"force":…,"historyMax":…}`. */
+internal fun helmRollbackOptionsJson(options: HelmRollbackOptions): String =
+    TalosJson.encodeToString(HelmRollbackOptionsPayload.serializer(), options.payload)
