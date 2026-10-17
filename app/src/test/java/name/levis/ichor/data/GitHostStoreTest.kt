@@ -96,6 +96,45 @@ class GitHostStoreTest {
     }
 
     @Test
+    fun aliasesAreSavedAndKeptWhenNotGiven() = runBlocking {
+        val store = store()
+        store.set("git.example.org", GitHostKind.GITEA, "gitea-test", listOf("ssh.git.example.org", "git.example.org", "SSH.git.example.org"))
+        assertEquals(listOf(GitHost("git.example.org", GitHostKind.GITEA, listOf("ssh.git.example.org"))), store().hosts.value)
+
+        store.set("git.example.org", GitHostKind.AUTO, "")
+        assertEquals(listOf("ssh.git.example.org"), store.hosts.value.single().aliases)
+        store.set("git.example.org", GitHostKind.AUTO, "", emptyList())
+        assertEquals(emptyList<String>(), store.hosts.value.single().aliases)
+        // The token stays keyed by the base host.
+        assertEquals("gitea-test", files.getValue("git.example.org").value)
+        assertFalse(files.containsKey("ssh.git.example.org"))
+    }
+
+    @Test
+    fun aSourceOnAnAliasUsesTheBaseHostAndItsToken() = runBlocking {
+        val store = store()
+        store.set("git.example.org", GitHostKind.GITEA, "gitea-test", listOf("gitea-http.gitea.svc.cluster.local:3000"))
+        store.set("github.com", GitHostKind.GITHUB, "ghp-test")
+
+        val entry = store.hostFor("gitea-http.gitea.svc.cluster.local")
+        assertEquals("git.example.org", entry.host)
+        val json = store.hostJson(entry)
+        assertTrue(json.contains("\"baseURL\":\"https://git.example.org\""))
+        assertTrue(json.contains("\"token\":\"gitea-test\""))
+        assertEquals("github.com", store.hostFor("https://github.com/").host)
+        assertEquals(GitHost("other.example.org"), store.hostFor("other.example.org"))
+    }
+
+    @Test
+    fun aHostNamedExactlyWinsOverAnAlias() {
+        val store = store()
+        store.set("git.example.org", GitHostKind.AUTO, "one", listOf("mirror.example.org"))
+        store.set("mirror.example.org", GitHostKind.AUTO, "two")
+
+        assertEquals("mirror.example.org", store.hostFor("mirror.example.org").host)
+    }
+
+    @Test
     fun tokenFilesAreNamedFromAHash() {
         val name = GitHostStore.tokenName("https://github.com/")
         assertEquals(name, GitHostStore.tokenName("github.com"))

@@ -18,17 +18,28 @@ final class GitHostStore {
         logins = defaults.dictionary(forKey: GitHostKeys.logins) as? [String: String] ?? [:]
     }
 
-    func hasToken(_ host: String) -> Bool { token(host) != nil }
+    /// Whether a token is saved for the host `host` names, by its own name or an alias.
+    func hasToken(_ host: String) -> Bool { token(baseHost(host)) != nil }
 
-    /// The kind saved for `host`, auto when it is not listed.
+    /// The kind saved for the host `host` names (its own name or an alias), auto when none is listed.
     func kind(of host: String) -> GitHostKind {
-        hosts.first { $0.host == host }?.kind ?? .auto
+        hosts.resolving(host)?.kind ?? .auto
     }
 
-    /// The Go core's host argument for `host` with its saved token; nil without a token.
+    /// The Go core's host argument for the host `host` names (its own name or an alias): its
+    /// base host, kind, aliases and saved token; nil without a token. The token is only ever
+    /// sent to the base host.
     func hostJSON(for host: String) -> String? {
-        guard let token = token(host) else { return nil }
-        return gitHostJSON(host: host, kind: kind(of: host), token: token)
+        let saved = hosts.resolving(host)
+        let base = saved?.host ?? host
+        guard let token = token(base) else { return nil }
+        return gitHostJSON(host: base, kind: saved?.kind ?? .auto, token: token, aliases: saved?.aliases ?? [])
+    }
+
+    /// The listed host `host` names, by its own name or an alias; `host` itself when none does.
+    /// The Keychain account of a token is keyed by it.
+    private func baseHost(_ host: String) -> String {
+        hosts.resolving(host)?.host ?? host
     }
 
     /// Adds or updates `host`. An empty `token` keeps the saved one; a new token forgets the
@@ -56,7 +67,7 @@ final class GitHostStore {
     func check(_ host: GitHost, token: String, demo: Bool) async throws -> GitHostCheck {
         let typed = token.trimmingCharacters(in: .whitespacesAndNewlines)
         let used = typed.isEmpty ? (self.token(host.host) ?? "") : typed
-        let json = demo ? gitHostDemoJSON : gitHostJSON(host: host.host, kind: host.kind, token: used)
+        let json = demo ? gitHostDemoJSON : gitHostJSON(host: host.host, kind: host.kind, token: used, aliases: host.aliases)
         let result = try await TalosClient.gitHostCheck(json)
         if !demo, hosts.contains(where: { $0.host == host.host }), used == self.token(host.host) {
             setLogin(result.login, for: host.host)

@@ -1744,6 +1744,9 @@
     <string name="git_host_remove_title">Rimuovere %1$s?</string>
     <string name="git_host_remove_text">Il suo token viene eliminato da questo telefono.</string>
     <string name="git_hosts_explainer">Concedi solo ciò che serve a Ichor. Token GitHub a grana fine: Contents e Pull requests, lettura e scrittura, sui repository da cui distribuisci. GitLab: api, oppure read_repository e write_repository. Gitea: repository lettura e scrittura, e issue scrittura. Il token resta su questo telefono, cifrato, e viene inviato solo al suo host.</string>
+    <string name="git_host_field_aliases">Raggiungibile anche come</string>
+    <string name="git_host_aliases_hint">Altri nomi che Argo CD o Flux usano per questo server, come un indirizzo SSH o interno al cluster. Separali con virgole. Il token viene inviato solo all\'host qui sopra.</string>
+    <string name="git_host_aliases_line">Anche %1$s</string>
     <string name="ai_enable_desc">Facoltativo. Chiedi a un modello di IA cosa non va nel cluster e come risolverlo. Non viene inviato nulla finché non lo chiedi.</string>
     <string name="ai_provider">Fornitore</string>
     <string name="ai_api_key">Chiave API</string>

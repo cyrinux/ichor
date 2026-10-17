@@ -16,6 +16,7 @@ import name.levis.ichor.model.GitHost
 import name.levis.ichor.model.GitHostKind
 import name.levis.ichor.model.gitHostJson
 import name.levis.ichor.model.normalizeGitHost
+import name.levis.ichor.model.parseGitHostAliases
 import java.security.MessageDigest
 
 /**
@@ -50,14 +51,16 @@ class GitHostStore(
     }
 
     /**
-     * Adds [host] or changes its kind; a non-blank [token] replaces the stored one (blank keeps
-     * it). The list changes at once, the token is encrypted off the caller's thread.
+     * Adds [host] or changes its kind and [aliases] (null keeps the saved ones); a non-blank
+     * [token] replaces the stored one (blank keeps it). The list changes at once, the token is
+     * encrypted off the caller's thread, still keyed by [host] alone.
      */
-    fun set(host: String, kind: GitHostKind, token: String) {
+    fun set(host: String, kind: GitHostKind, token: String, aliases: List<String>? = null) {
         val key = normalizeGitHost(host)
         if (key.isEmpty()) return
-        val entry = GitHost(key, kind)
         val current = _hosts.value
+        val kept = aliases ?: current.firstOrNull { it.host == key }?.aliases.orEmpty()
+        val entry = GitHost(key, kind, parseGitHostAliases(kept.joinToString(","), key))
         val next = if (current.any { it.host == key }) current.map { if (it.host == key) entry else it } else current + entry
         writeHosts(next)
         val trimmed = token.trim()
@@ -74,6 +77,16 @@ class GitHostStore(
         synchronized(tokens) { tokens.remove(key) }
         forgetLogin(key)
         scope.launch(tokenWrites) { runCatching { tokenStore(key).delete() } }
+    }
+
+    /**
+     * The listed Git host a source on [host] belongs to: the one named [host], else the first
+     * with [host] among its aliases; a bare, unlisted [GitHost] for [host] when none is.
+     */
+    fun hostFor(host: String): GitHost {
+        val key = normalizeGitHost(host)
+        val hosts = _hosts.value
+        return hosts.firstOrNull { it.host == key } ?: hosts.firstOrNull { it.matches(key) } ?: GitHost(key)
     }
 
     /**

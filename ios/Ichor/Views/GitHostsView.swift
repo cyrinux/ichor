@@ -88,6 +88,12 @@ private struct GitHostRow: View {
                 Spacer()
                 GitHostKindLabel(kind: host.kind).font(.caption).foregroundStyle(.secondary)
             }
+            if !host.aliases.isEmpty {
+                Text("Also \(host.aliases.joined(separator: ", "))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
             Group {
                 if let login {
                     Text("Signed in as \(login)")
