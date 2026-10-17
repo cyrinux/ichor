@@ -1893,6 +1893,8 @@
     <string name="backup_passphrase_show">Passphrase anzeigen</string>
     <string name="backup_passphrase_hide">Passphrase verbergen</string>
     <string name="backup_create_confirm">Verschlüsseln und speichern</string>
+    <string name="backup_include_secrets">API-Schlüssel und Git-Tokens einschließen</string>
+    <string name="backup_include_secrets_warning">Wer die Datei und ihre Passphrase hat, kann sie verwenden.</string>
     <string name="backup_restore_title">Sicherung öffnen</string>
     <string name="backup_restore_desc">Gib die Passphrase ein, mit der die Sicherung verschlüsselt wurde.</string>
     <string name="backup_restore_confirm">Wiederherstellen</string>

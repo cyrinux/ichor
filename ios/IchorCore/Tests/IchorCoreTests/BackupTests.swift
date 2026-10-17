@@ -26,10 +26,9 @@ final class BackupTests: XCTestCase {
         ))
     }
 
-    func testFormatTwoOnlyWithAKubeconfig() {
-        XCTAssertEqual(backupPayloadFormat(kubeconfig: nil), 1)
-        XCTAssertEqual(backupPayloadFormat(kubeconfig: " \n"), 1)
-        XCTAssertEqual(backupPayloadFormat(kubeconfig: "apiVersion: v1\nkind: Config\n"), 2)
+    func testWritesFormatThree() {
+        XCTAssertEqual(backupPayloadFormat(), 3)
+        XCTAssertEqual(backupFormatSettings, 3)
     }
 
     func testKubeconfigOnlyPayload() throws {
@@ -47,10 +46,10 @@ final class BackupTests: XCTestCase {
     }
 
     func testPayloadWithoutKubeconfigLeavesItOut() throws {
-        let payload = BackupPayload(format: backupPayloadFormat(kubeconfig: nil), talosconfig: "context: lab\n")
+        let payload = BackupPayload(format: backupPayloadFormat(), talosconfig: "context: lab\n")
         let json = String(decoding: try JSONEncoder().encode(payload), as: UTF8.self)
         XCTAssertFalse(json.contains("kubeconfig"))
-        XCTAssertTrue(json.contains(#""format":1"#))
+        XCTAssertTrue(json.contains(#""format":3"#))
     }
 
     func testMinimalPayloadDecodes() throws {

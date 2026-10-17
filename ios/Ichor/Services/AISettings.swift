@@ -74,6 +74,52 @@ final class AISettings {
         UserDefaults.standard.set(url, forKey: AIKeys.baseURL(id))
     }
 
+    /// What a backup keeps of the AI settings, and the API keys by provider id (empty unless
+    /// `includeKeys`: they go in the backup only when the user opted in).
+    func backup(includeKeys: Bool) async -> (settings: BackupAI, keys: [String: String]) {
+        await loadProviders()
+        var models: [String: String] = [:]
+        var baseURLs: [String: String] = [:]
+        var keys: [String: String] = [:]
+        for item in providers {
+            let set = perProvider[item.id] ?? Self.stored(item.id)
+            if !set.model.isEmpty { models[item.id] = set.model }
+            if !set.baseURL.isEmpty { baseURLs[item.id] = set.baseURL }
+            if includeKeys, !set.apiKey.isEmpty { keys[item.id] = set.apiKey }
+        }
+        let settings = BackupAI(enabled: enabled, provider: provider?.id, models: models.isEmpty ? nil : models,
+                                baseUrls: baseURLs.isEmpty ? nil : baseURLs, anonymize: anonymize)
+        return (settings, keys)
+    }
+
+    /// Applies a backup's AI settings and keys; provider ids the Go core does not list are dropped,
+    /// a provider without a key in the backup keeps the one this device has.
+    func restore(_ backup: BackupAI?, keys: [String: String]) async {
+        await loadProviders()
+        let known = Set(providers.map(\.id))
+        if let on = backup?.enabled { enabled = on }
+        if let hide = backup?.anonymize { anonymize = hide }
+        if let id = backup?.provider, known.contains(id) { select(id) }
+        let defaults = UserDefaults.standard
+        for (id, model) in backup?.models ?? [:] where known.contains(id) {
+            perProvider[id, default: AIProviderSettings()].model = model
+            defaults.set(model, forKey: AIKeys.model(id))
+        }
+        for (id, url) in backup?.baseUrls ?? [:] where known.contains(id) {
+            perProvider[id, default: AIProviderSettings()].baseURL = url
+            defaults.set(url, forKey: AIKeys.baseURL(id))
+        }
+        for (id, key) in keys where known.contains(id) && !key.isEmpty {
+            // A key the Keychain refuses is left out; the user can type it again.
+            do {
+                try Keychain.write(Data(key.utf8), account: AIKeys.keychainAccount(id))
+                perProvider[id, default: AIProviderSettings()].apiKey = key
+            } catch {
+                continue
+            }
+        }
+    }
+
     private static func stored(_ id: String) -> AIProviderSettings {
         let defaults = UserDefaults.standard
         let key = Keychain.read(AIKeys.keychainAccount(id)).flatMap { String(data: $0, encoding: .utf8) }

@@ -12,6 +12,8 @@ struct BackupSection: View {
     /// Set from elsewhere in Settings (the delete confirmation's "Back up first") to start a backup.
     @Binding var requested: Bool
     @Environment(AppModel.self) private var model
+    @Environment(AISettings.self) private var ai
+    @Environment(GitHostStore.self) private var gitHosts
     @State private var askingPassphrase = false
     @State private var document: BackupDocument?
     @State private var exporting = false
@@ -50,8 +52,9 @@ struct BackupSection: View {
         }
         // The exporter opens once the sheet is gone: one modal cannot present over another.
         .sheet(isPresented: $askingPassphrase, onDismiss: { exporting = document != nil }) {
-            NewBackupPassphraseSheet { passphrase in
-                document = BackupDocument(data: try await AppBackup.create(model: model, passphrase: passphrase))
+            NewBackupPassphraseSheet { passphrase, includeSecrets in
+                document = BackupDocument(data: try await AppBackup.create(
+                    model: model, ai: ai, gitHosts: gitHosts, passphrase: passphrase, includeSecrets: includeSecrets))
             }
         }
     }
@@ -119,13 +122,15 @@ private struct PickedBackup: Identifiable {
     let data: Data
 }
 
-/// Asks the passphrase that seals a new backup, twice; `seal` runs while the sheet shows progress.
+/// Asks the passphrase that seals a new backup, twice, and whether to include the API keys and
+/// Git tokens (off by default); `seal` runs while the sheet shows progress.
 private struct NewBackupPassphraseSheet: View {
-    var seal: (String) async throws -> Void
+    var seal: (_ passphrase: String, _ includeSecrets: Bool) async throws -> Void
     @Environment(\.dismiss) private var dismiss
     // Not persisted anywhere: the passphrase only lives in this sheet.
     @State private var passphrase = ""
     @State private var again = ""
+    @State private var includeSecrets = false
     @State private var busy = false
     @State private var error: String?
 
@@ -139,6 +144,12 @@ private struct NewBackupPassphraseSheet: View {
                     if let error { Text(error).font(.footnote).foregroundStyle(.statusBad) }
                 } footer: {
                     Text("The backup holds your clusters’ credentials. Choose a passphrase of at least \(backupMinPassphrase) characters; it is needed to restore and cannot be recovered.")
+                }
+                Section {
+                    Toggle("Include API keys and Git tokens", isOn: $includeSecrets)
+                        .disabled(busy)
+                } footer: {
+                    Text("Anyone with the file and its passphrase can use them.")
                 }
                 if busy { ProgressView("Encrypting…") }
             }
@@ -166,7 +177,7 @@ private struct NewBackupPassphraseSheet: View {
         busy = true
         defer { busy = false }
         do {
-            try await seal(passphrase)
+            try await seal(passphrase, includeSecrets)
             dismiss()
         } catch {
             self.error = error.localizedDescription
@@ -179,6 +190,8 @@ private struct UnlockBackupSheet: View {
     let file: Data
     var onRestored: () -> Void
     @Environment(AppModel.self) private var model
+    @Environment(AISettings.self) private var ai
+    @Environment(GitHostStore.self) private var gitHosts
     @Environment(\.dismiss) private var dismiss
     @State private var passphrase = ""
     @State private var busy = false
@@ -215,7 +228,7 @@ private struct UnlockBackupSheet: View {
         busy = true
         defer { busy = false }
         do {
-            try await AppBackup.restore(file, passphrase: passphrase, model: model)
+            try await AppBackup.restore(file, passphrase: passphrase, model: model, ai: ai, gitHosts: gitHosts)
             onRestored()
         } catch {
             self.error = error.localizedDescription

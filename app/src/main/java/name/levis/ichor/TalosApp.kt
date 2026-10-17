@@ -43,6 +43,7 @@ import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.data.GitHostStore
+import name.levis.ichor.model.BackupLockMode
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.data.GoCall
 import name.levis.ichor.data.KubeRepository
@@ -405,6 +406,8 @@ class TalosApp : Application() {
     val backupManager by lazy {
         BackupManager(
             configRepository, uiPreferences, clusterColors, clusterNames, vpnOnly, kubeServers, kubeAccess, kubeAuthStore, wakeOnLan, monitorStore,
+            pinStore, gitHostStore, aiPreferences,
+            lockMode = { BackupLockMode.of(appLock.enabled.value, appLock.securityKeys.value != null) },
             setPrivacyMask = ::setPrivacyMask,
             notificationsAllowed = { canPostNotifications(this) },
             onRestored = {

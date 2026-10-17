@@ -46,6 +46,7 @@ import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.ToggleRow
 import name.levis.ichor.ui.components.openTruncating
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.readBounded
@@ -119,10 +120,12 @@ fun BackupStatus(state: BackupState) {
 }
 
 @Composable
-private fun NewPassphraseDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
+private fun NewPassphraseDialog(onConfirm: (String, Boolean) -> Unit, onDismiss: () -> Unit) {
     // Not saveable: the passphrase must not land in saved instance state.
     var passphrase by remember { mutableStateOf("") }
     var again by remember { mutableStateOf("") }
+    // Off by default, asked again for every backup.
+    var includeSecrets by remember { mutableStateOf(false) }
     val error = newPassphraseError(passphrase, again)
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -132,13 +135,19 @@ private fun NewPassphraseDialog(onConfirm: (String) -> Unit, onDismiss: () -> Un
                 Text(stringResource(R.string.backup_create_desc, minPassphrase), style = MaterialTheme.typography.bodySmall)
                 PassphraseField(passphrase, { passphrase = it }, stringResource(R.string.backup_passphrase))
                 PassphraseField(again, { again = it }, stringResource(R.string.backup_passphrase_again))
+                ToggleRow(
+                    title = stringResource(R.string.backup_include_secrets),
+                    checked = includeSecrets,
+                    onChange = { includeSecrets = it },
+                    description = stringResource(R.string.backup_include_secrets_warning),
+                )
                 if (error != null && again.isNotEmpty()) {
                     Text(error.asString(), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(passphrase) }, enabled = error == null) { Text(stringResource(R.string.backup_create_confirm)) }
+            TextButton(onClick = { onConfirm(passphrase, includeSecrets) }, enabled = error == null) { Text(stringResource(R.string.backup_create_confirm)) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )

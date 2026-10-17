@@ -1086,10 +1086,13 @@ first). Restore it from the same section, or from **Restore a backup** on the fi
 a fresh install. Backups move between Android and iOS.
 
 - **What it holds:** the talosconfig (every cluster's credentials), the cluster on screen,
-  theme, language, screenshot mode, monitoring, and each cluster's name, color, VPN-only
-  setting and Wake-on-LAN targets.
-- **What it leaves out:** AI diagnosis settings and API keys, the app lock and "Allow
-  screenshots" (set them again on the new phone).
+  theme, language, screenshot mode, monitoring and its storage thresholds, "Allow screenshots",
+  each cluster's name, color, VPN-only setting, Wake-on-LAN targets and pins, your Git hosts,
+  the AI diagnosis settings, and whether an app lock was on. API keys and Git tokens only
+  when you turn on **Include API keys and Git tokens** while backing up (off by default:
+  anyone with the file and its passphrase can use them).
+- **What it leaves out:** the app lock's secret and security-key data (set the lock again; the
+  app offers it after the restore), the audit log, and caches.
 - **Encryption:** a passphrase of at least 12 characters. The key comes from Argon2id (64 MiB,
   3 passes) and the file is sealed with AES-256-GCM. Without the passphrase it cannot be opened,
   and the passphrase cannot be recovered.

@@ -1901,6 +1901,8 @@
     <string name="backup_passphrase_show">Afficher la phrase secrète</string>
     <string name="backup_passphrase_hide">Masquer la phrase secrète</string>
     <string name="backup_create_confirm">Chiffrer et enregistrer</string>
+    <string name="backup_include_secrets">Inclure les clés d’API et les jetons Git</string>
+    <string name="backup_include_secrets_warning">Toute personne ayant le fichier et sa phrase secrète peut les utiliser.</string>
     <string name="backup_restore_title">Ouvrir la sauvegarde</string>
     <string name="backup_restore_desc">Saisissez la phrase secrète utilisée pour chiffrer la sauvegarde.</string>
     <string name="backup_restore_confirm">Restaurer</string>

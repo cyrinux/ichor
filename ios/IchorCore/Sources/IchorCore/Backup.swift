@@ -5,8 +5,9 @@ import Foundation
 /// moves between platforms; a setting this app does not have is ignored, one the backup lacks
 /// (nil) keeps its current value.
 ///
-/// Not included: AI diagnosis settings and keys (a third-party service, enabled per device),
-/// the app lock (per-device security), and caches.
+/// Format 3 adds the pins, the Git hosts, the AI diagnosis settings and, only when the user
+/// opts in, their API keys and Git tokens (`secrets`). Not included: the app lock's secret
+/// and security-key data (device-bound; only whether a lock was on), the audit log, caches.
 public struct BackupPayload: Codable, Equatable, Sendable {
     /// The payload version, checked by the Go core; bump it for changes older apps cannot read.
     public var format: Int
@@ -26,11 +27,20 @@ public struct BackupPayload: Codable, Equatable, Sendable {
     /// The sign-ins of the kubeconfig clusters by fingerprint (Go KubeAuthForBackup: what the
     /// user entered, never a session); nil when there is none. Older apps ignore it.
     public var kubeAuth: [String: String]?
+    /// The real-scope pins by context fingerprint (format 3); a pin this version cannot read is skipped.
+    public var pins: [String: [Pin]]?
+    /// The Git hosts, without their tokens (format 3).
+    public var gitHosts: [GitHost]?
+    /// The AI diagnosis settings, without their keys (format 3).
+    public var ai: BackupAI?
+    /// The AI keys and Git tokens: only when the user opted in, else left out of the JSON.
+    public var secrets: BackupSecrets?
 
     public init(
         format: Int = backupFormat, platform: String? = nil, createdAt: Int64? = nil, talosconfig: String,
         kubeconfig: String? = nil, activeContextIndex: Int? = nil, settings: BackupSettings? = nil,
-        clusters: [String: BackupCluster]? = nil, kubeAuth: [String: String]? = nil
+        clusters: [String: BackupCluster]? = nil, kubeAuth: [String: String]? = nil,
+        pins: [String: [Pin]]? = nil, gitHosts: [GitHost]? = nil, ai: BackupAI? = nil, secrets: BackupSecrets? = nil
     ) {
         self.format = format
         self.platform = platform
@@ -41,10 +51,15 @@ public struct BackupPayload: Codable, Equatable, Sendable {
         self.settings = settings
         self.clusters = clusters
         self.kubeAuth = kubeAuth
+        self.pins = pins
+        self.gitHosts = gitHosts
+        self.ai = ai
+        self.secrets = secrets
     }
 
     private enum CodingKeys: String, CodingKey {
         case format, platform, createdAt, talosconfig, kubeconfig, activeContextIndex, settings, clusters, kubeAuth
+        case pins, gitHosts, ai, secrets
     }
 
     // A format 2 payload may leave the talosconfig out (or null) when it only holds a kubeconfig.
@@ -59,7 +74,18 @@ public struct BackupPayload: Codable, Equatable, Sendable {
         settings = try c.decodeIfPresent(BackupSettings.self, forKey: .settings)
         clusters = try c.decodeIfPresent([String: BackupCluster].self, forKey: .clusters)
         kubeAuth = try c.decodeIfPresent([String: String].self, forKey: .kubeAuth)
+        pins = try c.decodeIfPresent([String: [LenientBackupPin]].self, forKey: .pins)?
+            .mapValues { $0.compactMap(\.pin) }
+        gitHosts = try c.decodeIfPresent([GitHost].self, forKey: .gitHosts)?.filter { !$0.host.isEmpty }
+        ai = try c.decodeIfPresent(BackupAI.self, forKey: .ai)
+        secrets = try c.decodeIfPresent(BackupSecrets.self, forKey: .secrets)
     }
+}
+
+/// A pin of a backup, nil when this version cannot read it (a newer target).
+private struct LenientBackupPin: Decodable {
+    let pin: Pin?
+    init(from decoder: Decoder) throws { pin = try? Pin(from: decoder) }
 }
 
 public struct BackupSettings: Codable, Equatable, Sendable {
@@ -76,6 +102,14 @@ public struct BackupSettings: Codable, Equatable, Sendable {
     public var monitorIntervalMinutes: Int?
     /// Download icons the app does not bundle (Apps inventory).
     public var remoteAppIcons: Bool?
+    /// Android only ("Allow screenshots"; iOS cannot block them).
+    public var allowScreenshots: Bool?
+    /// Whether an app lock was on: "off", "biometric" or "securityKey" (`BackupLockMode`);
+    /// never its secret. A restore only offers to set the lock up again.
+    public var appLockMode: String?
+    /// The monitor's storage thresholds (% used).
+    public var storageWarnPercent: Int?
+    public var storageCriticalPercent: Int?
 
     public init(
         themeMode: String? = nil, privacyMask: Bool? = nil, privacyMaskWords: String? = nil, monitorAlerts: Bool? = nil,
@@ -133,14 +167,14 @@ public let backupFormat = 1
 /// instead of restoring it without its kubeconfig clusters.
 public let backupFormatKubeconfig = 2
 
-/// The format to write: 2 only when there are kubeconfig clusters, so backups of Talos
-/// clusters alone stay readable by older apps. Same rule as Android.
-public func backupPayloadFormat(kubeconfig: String?) -> Int {
-    let kube = kubeconfig?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-    return kube.isEmpty ? backupFormat : backupFormatKubeconfig
-}
+/// The format of a payload holding pins, Git hosts, AI settings and maybe secrets: older apps
+/// refuse it ("update the app") instead of silently dropping them.
+public let backupFormatSettings = 3
 
-/// The kubeconfig of a restored payload: only a format 2 one carries it, nil when it holds none.
+/// The format to write: always 3 (the payload always holds the format 3 settings). Same as Android.
+public func backupPayloadFormat() -> Int { backupFormatSettings }
+
+/// The kubeconfig of a restored payload: only a format 2+ one carries it, nil when it holds none.
 public func restoredKubeconfig(_ payload: BackupPayload) -> String? {
     guard payload.format >= backupFormatKubeconfig else { return nil }
     let kube = payload.kubeconfig ?? ""

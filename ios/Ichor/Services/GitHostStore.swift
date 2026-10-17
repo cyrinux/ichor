@@ -75,6 +75,28 @@ final class GitHostStore {
         return result
     }
 
+    /// The saved token of each listed host, for a backup the user chose to include them in.
+    func tokensForBackup() -> [String: String] {
+        var out: [String: String] = [:]
+        for host in hosts {
+            if let token = token(host.host) { out[host.host] = token }
+        }
+        return out
+    }
+
+    /// Adds or replaces the hosts of a backup by host; a host without a token in the backup keeps
+    /// the one this device has. A token the Keychain refuses is skipped (typed again later).
+    func restore(_ restored: [(host: GitHost, token: String?)]) {
+        for entry in restored {
+            do {
+                try save(entry.host, token: entry.token ?? "", login: nil)
+            } catch {
+                // Only the token write throws: keep the host, without it.
+                try? save(entry.host, token: "", login: nil)
+            }
+        }
+    }
+
     private func token(_ host: String) -> String? {
         guard let data = Keychain.read(GitHostKeys.keychainAccount(host)),
               let token = String(data: data, encoding: .utf8), !token.isEmpty else { return nil }

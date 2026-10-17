@@ -33,6 +33,12 @@ final class PinStore {
         save(pins(for: fingerprint).removing(target), fingerprint: fingerprint)
     }
 
+    /// Replaces the pins of each cluster in `restored` (a backup's, already filtered); the
+    /// other clusters keep theirs. iOS keeps a single (real) scope: nothing is pinned in screenshot mode.
+    func restore(_ restored: [String: PinList]) {
+        for (fingerprint, list) in restored { save(list, fingerprint: fingerprint) }
+    }
+
     /// Every cluster's pins: the stored clusters were deleted.
     func wipe() {
         let defaults = UserDefaults.standard

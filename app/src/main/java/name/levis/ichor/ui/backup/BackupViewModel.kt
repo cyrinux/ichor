@@ -46,10 +46,10 @@ class BackupViewModel(private val manager: BackupManager) : ViewModel() {
         _state.value = BackupState.NewPassphrase
     }
 
-    fun seal(passphrase: String) {
+    fun seal(passphrase: String, includeSecrets: Boolean = false) {
         _state.value = BackupState.Sealing
         viewModelScope.launch {
-            _state.value = runCatching { manager.create(passphrase) }.fold(
+            _state.value = runCatching { manager.create(passphrase, includeSecrets) }.fold(
                 onSuccess = { BackupState.ReadyToSave(it) },
                 onFailure = { BackupState.Failed(it.uiText()) },
             )

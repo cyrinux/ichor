@@ -48,7 +48,10 @@ const (
 const BackupMinPassphrase = 12
 
 // BackupPayloadFormat is the newest payload "format" this core understands (see backupPayload).
-const BackupPayloadFormat = 2
+const BackupPayloadFormat = 3
+
+// backupFormatSecrets is the first payload format that may carry a "secrets" object.
+const backupFormatSecrets = 3
 
 const (
 	backupMagic       = "ICHORBAK"
@@ -210,10 +213,14 @@ func backupAEAD(passphrase string, p backupParams) (cipher.AEAD, error) {
 // Format 1 holds a talosconfig; format 2 adds the stored kubeconfig (clusters added without
 // Talos), either of them may then be empty. The apps write 1 when there is no kubeconfig,
 // so older apps keep reading their backups, and refuse a 2 instead of dropping its clusters.
+// Format 3 adds the rest of the settings (pins, Git hosts, AI settings…) and, when the user
+// opted in, a "secrets" object with API keys and Git tokens: an older app refuses it rather
+// than restoring it without them.
 type backupPayload struct {
-	Format      int    `json:"format"`
-	Talosconfig string `json:"talosconfig"`
-	Kubeconfig  string `json:"kubeconfig,omitempty"`
+	Format      int             `json:"format"`
+	Talosconfig string          `json:"talosconfig"`
+	Kubeconfig  string          `json:"kubeconfig,omitempty"`
+	Secrets     json.RawMessage `json:"secrets,omitempty"`
 }
 
 func validateBackupPayload(raw []byte) (backupPayload, error) {
@@ -232,6 +239,10 @@ func validateBackupPayload(raw []byte) (backupPayload, error) {
 
 	if p.Format > BackupPayloadFormat {
 		return backupPayload{}, fmt.Errorf("%s: payload format %d, update the app", BackupErrUnsupported, p.Format)
+	}
+
+	if err := validateBackupSecrets(p); err != nil {
+		return backupPayload{}, err
 	}
 
 	hasTalos := p.Format == 1 || strings.TrimSpace(p.Talosconfig) != ""
@@ -263,4 +274,22 @@ func validateBackupPayload(raw []byte) (backupPayload, error) {
 	}
 
 	return p, nil
+}
+
+// validateBackupSecrets allows a "secrets" object only from format 3 on, and only an object.
+func validateBackupSecrets(p backupPayload) error {
+	raw := bytes.TrimSpace(p.Secrets)
+	if len(raw) == 0 || bytes.Equal(raw, []byte("null")) {
+		return nil
+	}
+
+	if p.Format < backupFormatSecrets {
+		return fmt.Errorf("%s: secrets in a format %d payload", BackupErrInvalidContent, p.Format)
+	}
+
+	if raw[0] != '{' {
+		return errors.New(BackupErrInvalidContent + ": secrets is not an object")
+	}
+
+	return nil
 }

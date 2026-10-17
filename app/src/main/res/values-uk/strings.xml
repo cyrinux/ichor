@@ -2011,6 +2011,8 @@
     <string name="backup_passphrase_show">Показати парольну фразу</string>
     <string name="backup_passphrase_hide">Сховати парольну фразу</string>
     <string name="backup_create_confirm">Зашифрувати й зберегти</string>
+    <string name="backup_include_secrets">Додати ключі API та токени Git</string>
+    <string name="backup_include_secrets_warning">Будь-хто, хто має файл і його парольну фразу, може ними скористатися.</string>
     <string name="backup_restore_title">Відкрити резервну копію</string>
     <string name="backup_restore_desc">Введіть парольну фразу, якою зашифровано резервну копію.</string>
     <string name="backup_restore_confirm">Відновити</string>
