@@ -44,10 +44,12 @@ public struct GitHost: Codable, Hashable, Identifiable, Sendable {
     }
 
     /// Whether `host` (any form normalizedGitHost reads) names this server: its host or an alias.
+    /// Ports are ignored: a source's host comes from its web link, which has none, and this only
+    /// picks whose token to use; the Go core still checks the exact host and port of the repository.
     public func matches(_ host: String) -> Bool {
-        let name = normalizedGitHost(host)
+        let name = gitHostName(normalizedGitHost(host))
         guard !name.isEmpty else { return false }
-        return name == normalizedGitHost(self.host) || aliases.contains { normalizedGitHost($0) == name }
+        return ([self.host] + aliases).contains { gitHostName(normalizedGitHost($0)) == name }
     }
 }
 
@@ -60,7 +62,7 @@ public func parseGitHostAliases(_ text: String, host: String = "") -> [String] {
     let own = normalizedGitHost(host)
     var seen = Set<String>()
     let names = text
-        .split(whereSeparator: { $0 == "," || $0.isWhitespace })
+        .split(whereSeparator: { $0 == "," || $0 == ";" || $0.isWhitespace })
         .map { normalizedGitHost(String($0)) }
         .filter { !$0.isEmpty && $0 != own && seen.insert($0).inserted }
     return Array(names.prefix(gitHostAliasLimit))
@@ -109,7 +111,24 @@ public func normalizedGitHost(_ input: String) -> String {
     if let end = text.firstIndex(where: { "/?#".contains($0) }) { text = String(text[..<end]) }
     if let at = text.lastIndex(of: "@") { text = String(text[text.index(after: at)...]) }
     while text.hasSuffix(".") || text.hasSuffix(":") { text.removeLast() }
+    text = withoutScpPath(text)
     return text.contains(where: \.isWhitespace) ? "" : text
+}
+
+/// "host:org" of a pasted scp address (git@host:org/repo) is the host; a numeric port is kept.
+private func withoutScpPath(_ authority: String) -> String {
+    guard !authority.hasPrefix("["), let colon = authority.lastIndex(of: ":") else { return authority }
+    var name = String(authority[..<colon])
+    while name.hasSuffix(".") { name.removeLast() }
+    let port = authority[authority.index(after: colon)...]
+    return port.allSatisfy(\.isNumber) ? "\(name):\(port)" : name
+}
+
+/// The host name of a normalised host, without its port.
+public func gitHostName(_ host: String) -> String {
+    if host.hasPrefix("["), let close = host.firstIndex(of: "]") { return String(host[...close]) }
+    guard let colon = host.lastIndex(of: ":") else { return host }
+    return String(host[..<colon])
 }
 
 /// The Go core's host argument: {"kind","baseURL","token","aliases"}, the base URL always https.

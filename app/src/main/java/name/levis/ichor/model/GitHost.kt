@@ -36,11 +36,15 @@ data class GitHost(
     @Serializable(with = GitHostKindSerializer::class) val kind: GitHostKind = GitHostKind.AUTO,
     val aliases: List<String> = emptyList(),
 ) {
-    /** Whether a source on [host] is this Git host: its own name or one of its [aliases]. */
+    /**
+     * Whether a source on [host] is this Git host: its own name or one of its [aliases]. Ports
+     * are ignored: a source's host comes from its web link, which has none, and this only picks
+     * whose token to use; the Go core still checks the exact host and port of the repository.
+     */
     fun matches(host: String): Boolean {
-        val key = normalizeGitHost(host)
+        val key = gitHostName(normalizeGitHost(host))
         if (key.isEmpty()) return false
-        return key == normalizeGitHost(this.host) || aliases.any { normalizeGitHost(it) == key }
+        return (listOf(this.host) + aliases).any { gitHostName(normalizeGitHost(it)) == key }
     }
 }
 
@@ -71,9 +75,23 @@ data class GitHostCheck(
 fun normalizeGitHost(input: String): String {
     val noScheme = input.trim().lowercase().replace(SCHEME, "")
     val end = noScheme.indexOfFirst { it == '/' || it == '?' || it == '#' }
-    val authority = (if (end < 0) noScheme else noScheme.substring(0, end)).substringAfterLast('@').trimEnd('.', ':')
+    val raw = (if (end < 0) noScheme else noScheme.substring(0, end)).substringAfterLast('@').trimEnd('.', ':')
+    val authority = withoutScpPath(raw)
     return if (authority.any { it.isWhitespace() }) "" else authority
 }
+
+/** "host:org" of a pasted scp address (git@host:org/repo) is the host; a numeric port is kept. */
+private fun withoutScpPath(authority: String): String {
+    val colon = authority.lastIndexOf(':')
+    if (authority.startsWith("[") || colon < 0) return authority
+    val name = authority.substring(0, colon).trimEnd('.')
+    val port = authority.substring(colon + 1)
+    return if (port.all { it.isDigit() }) "$name:$port" else name
+}
+
+/** The host name of a normalised host, without its port. */
+fun gitHostName(host: String): String =
+    if (host.startsWith("[")) host.substringBefore("]") + "]" else host.substringBeforeLast(':')
 
 /**
  * The aliases typed in the Git host sheet: split on commas, spaces and new lines, each

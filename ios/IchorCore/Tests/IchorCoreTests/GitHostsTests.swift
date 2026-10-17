@@ -96,7 +96,12 @@ final class GitHostsTests: XCTestCase {
         XCTAssertTrue(host.matches("https://Git.Example.org/team/repo"))
         XCTAssertTrue(host.matches("ssh.git.example.org"))
         XCTAssertTrue(host.matches("http://gitea-http.gitea.svc.cluster.local:3000/team/repo.git"))
-        XCTAssertFalse(host.matches("gitea-http.gitea.svc.cluster.local"))
+        // A source's host has no port (it comes from the web link): the alias with one matches.
+        XCTAssertTrue(host.matches("gitea-http.gitea.svc.cluster.local"))
+        XCTAssertEqual(normalizedGitHost("git@ssh.git.example.org:org/repo.git"), "ssh.git.example.org")
+        XCTAssertEqual(normalizedGitHost("ssh://git@git.example.org:2222/org/repo.git"), "git.example.org:2222")
+        XCTAssertEqual(normalizedGitHost("git.example.org.:3000"), "git.example.org:3000")
+        XCTAssertEqual(parseGitHostAliases("a.example;b.example"), ["a.example", "b.example"])
         XCTAssertFalse(host.matches("other.example.org"))
         XCTAssertFalse(host.matches(""))
     }

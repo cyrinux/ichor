@@ -66,7 +66,12 @@ class GitHostTest {
         val host = GitHost("git.example.org", aliases = listOf("ssh.git.example.org"))
         assertTrue(host.matches("https://Git.example.org/"))
         assertTrue(host.matches("ssh.git.example.org"))
+        // A source's host has no port (it comes from the web link): the alias with one matches.
+        assertTrue(host.matches("gitea-http.gitea.svc.cluster.local"))
         assertFalse(host.matches("other.example.org"))
+        assertEquals("ssh.git.example.org", normalizeGitHost("git@ssh.git.example.org:org/repo.git"))
+        assertEquals("git.example.org:2222", normalizeGitHost("ssh://git@git.example.org:2222/org/repo.git"))
+        assertEquals("git.example.org:3000", normalizeGitHost("git.example.org.:3000"))
         assertFalse(host.matches(""))
     }
 

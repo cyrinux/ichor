@@ -116,7 +116,7 @@ class GitHostStoreTest {
         store.set("git.example.org", GitHostKind.GITEA, "gitea-test", listOf("gitea-http.gitea.svc.cluster.local:3000"))
         store.set("github.com", GitHostKind.GITHUB, "ghp-test")
 
-        val entry = store.hostFor("gitea-http.gitea.svc.cluster.local:3000")
+        val entry = store.hostFor("gitea-http.gitea.svc.cluster.local")
         assertEquals("git.example.org", entry.host)
         val json = store.hostJson(entry)
         assertTrue(json.contains("\"baseURL\":\"https://git.example.org\""))
