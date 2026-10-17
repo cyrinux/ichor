@@ -66,12 +66,16 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             navArgument("name") { type = NavType.StringType; defaultValue = "" },
         ),
     ) { entry ->
+        val ns = entry.arguments?.getString("ns").orEmpty()
+        val name = entry.arguments?.getString("name").orEmpty()
         FluxDiffScreen(
             kind = "Application",
-            namespace = entry.arguments?.getString("ns").orEmpty(),
-            name = entry.arguments?.getString("name").orEmpty(),
+            namespace = ns,
+            name = name,
             onBack = { nav.popBackStack() },
             tool = DiffTool.ARGO,
+            onOpenSource = { idx, path, line -> nav.navigate(Routes.gitOpsFile(SOURCE_TOOL_ARGO, "Application", ns, name, idx, path, line)) },
+            onAddToken = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
         )
     }
     composable(Routes.FLUX) {
@@ -109,11 +113,16 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             navArgument("name") { type = NavType.StringType; defaultValue = "" },
         ),
     ) { entry ->
+        val kind = entry.arguments?.getString("kind").orEmpty()
+        val ns = entry.arguments?.getString("ns").orEmpty()
+        val name = entry.arguments?.getString("name").orEmpty()
         FluxDiffScreen(
-            kind = entry.arguments?.getString("kind").orEmpty(),
-            namespace = entry.arguments?.getString("ns").orEmpty(),
-            name = entry.arguments?.getString("name").orEmpty(),
+            kind = kind,
+            namespace = ns,
+            name = name,
             onBack = { nav.popBackStack() },
+            onOpenSource = { idx, path, line -> nav.navigate(Routes.gitOpsFile(SOURCE_TOOL_FLUX, kind, ns, name, idx, path, line)) },
+            onAddToken = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
         )
     }
     sourceGraph(nav)
@@ -153,13 +162,15 @@ private fun NavGraphBuilder.sourceGraph(nav: NavHostController) {
     }
     composable(
         Routes.GITOPS_FILE,
-        arguments = targetArgs + navArgument("path") { type = NavType.StringType; defaultValue = "" },
+        arguments = targetArgs + navArgument("path") { type = NavType.StringType; defaultValue = "" } +
+            navArgument("line") { type = NavType.IntType; defaultValue = 0 },
     ) { entry ->
         val t = target(entry.arguments)
         val path = entry.arguments?.getString("path").orEmpty()
         SourceFileScreen(
             target = t,
             path = path,
+            line = entry.arguments?.getInt("line")?.takeIf { it > 0 },
             onBack = { nav.popBackStack() },
             onAddToken = onAddToken,
             onEdit = { nav.navigate(Routes.gitOpsEdit(t.tool, t.kind, t.namespace, t.name, t.index, path)) },

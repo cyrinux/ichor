@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,11 +17,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -91,10 +95,17 @@ fun DiffCounts(counts: List<Pair<DiffChange, Int>>) {
 
 /**
  * One object: its badge, kind, name and namespace; tapping unfolds its diff (or why it was
- * refused, or why it is not compared) when it has one.
+ * refused, or why it is not compared) when it has one. [onOpenSource]: "Open source file", for
+ * a GitOps diff whose app has a readable Git source; [searching] while that file is looked for.
  */
 @Composable
-fun DiffResourceCard(resource: KubeDiffResource, expanded: Boolean, onToggle: () -> Unit) {
+fun DiffResourceCard(
+    resource: KubeDiffResource,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    onOpenSource: (() -> Unit)? = null,
+    searching: Boolean = false,
+) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val detail = resource.diff.isNotEmpty() || resource.error.isNotEmpty() || resource.change.hint != null
     Column(
@@ -130,7 +141,24 @@ fun DiffResourceCard(resource: KubeDiffResource, expanded: Boolean, onToggle: ()
                 )
             }
         }
+        if (onOpenSource != null) OpenSourceAction(onOpenSource, searching)
         if (expanded && detail) DiffDetail(resource)
+    }
+}
+
+/** "Open source file", or a spinner and "Looking for the file…" while it is searched. */
+@Composable
+private fun OpenSourceAction(onClick: () -> Unit, searching: Boolean) {
+    if (searching) {
+        Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+            Text(stringResource(R.string.gitops_find_searching), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    } else {
+        TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
+            Icon(Icons.AutoMirrored.Outlined.InsertDriveFile, contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(stringResource(R.string.gitops_find_open), modifier = Modifier.padding(start = 8.dp))
+        }
     }
 }
 

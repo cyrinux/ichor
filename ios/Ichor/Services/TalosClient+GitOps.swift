@@ -52,6 +52,28 @@ extension TalosClient {
         }
     }
 
+    /// The files of app's source number sourceIndex (in GitOpsSource.sources) that declare the
+    /// resource resKind resNamespace/resName, with the line of its metadata.name: from the
+    /// Flux artifact (no token), else through the Git host with its token (GitHostMissing
+    /// without one).
+    func findSource(app: GitOpsAppRef, source: GitSource, sourceIndex: Int, resKind: String, resNamespace: String,
+                    resName: String, hosts: GitHostStore, demo: Bool) async throws -> GitOpsSourceFind {
+        let json: String
+        switch source.read {
+        case .flux:
+            json = ""
+        case .forge(let host, _):
+            json = try await Self.forgeHost(host, hosts: hosts, demo: demo)
+        case .unreadable:
+            throw TalosError(message: String(localized: "This source is not a Git repository the app can read."))
+        }
+        let index = String(sourceIndex)
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoGitOpsSourceFind(config, context, kubeServer, json, app.tool, app.kind, app.namespace, app.name,
+                                    index, resKind, resNamespace, resName, $0)
+        }
+    }
+
     /// The file path of source as its Git host has it at ref (a branch, or what the app
     /// follows), with the sha a proposal names: what the editor starts from, also for a Flux
     /// source read from its artifact. Throws GitHostMissing without a token.

@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.gitops
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -12,7 +13,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
@@ -72,10 +74,18 @@ import name.levis.ichor.ui.settings.openUrl
  * file scrolls smoothly), long lines scrolled sideways; Copy, Open in browser and Edit ([onEdit],
  * a pull request through the forge: disabled with the reason when there is no token for its
  * host or no forge). A file over 1 MiB comes without its content: a note sends to the browser.
+ * [line] (1-based, from a diff's "Open source file"): scrolled to and highlighted.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SourceFileScreen(target: SourceTarget, path: String, onBack: () -> Unit, onAddToken: (() -> Unit)?, onEdit: (() -> Unit)? = null) {
+fun SourceFileScreen(
+    target: SourceTarget,
+    path: String,
+    onBack: () -> Unit,
+    onAddToken: (() -> Unit)?,
+    onEdit: (() -> Unit)? = null,
+    line: Int? = null,
+) {
     val context = LocalContext.current
     val talos = context.applicationContext as TalosApp
     val vm: SourceFileViewModel = viewModel(factory = factory { SourceFileViewModel(talos.gitOpsRepository) })
@@ -143,7 +153,7 @@ fun SourceFileScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
                 Column(modifier) {
                     val block = state.editBlock
                     if (onEdit != null && block != null) EditBlockNote(block, onAddToken)
-                    SourceLines(s.data.file.content, yaml = isYamlPath(path), Modifier.weight(1f))
+                    SourceLines(s.data.file.content, yaml = isYamlPath(path), line = line, modifier = Modifier.weight(1f))
                 }
             }
         }
@@ -171,9 +181,15 @@ private fun EditBlockNote(block: ProposeBlock, onAddToken: (() -> Unit)?) {
 /** Past this, a line is cut on screen (Copy still copies it whole): the column stays measurable. */
 private const val MAX_LINE_CHARS = 1500
 
-/** [text] line by line in a lazy list, monospace and selectable, scrolled sideways as one block. */
+/** Lines kept above the highlighted line when it is scrolled to, so its context shows. */
+private const val LINES_ABOVE_TARGET = 3
+
+/**
+ * [text] line by line in a lazy list, monospace and selectable, scrolled sideways as one block;
+ * [line] (1-based) scrolled to once and highlighted.
+ */
 @Composable
-private fun SourceLines(text: String, yaml: Boolean, modifier: Modifier = Modifier) {
+private fun SourceLines(text: String, yaml: Boolean, line: Int? = null, modifier: Modifier = Modifier) {
     val colors = YamlColors(
         key = MaterialTheme.colorScheme.primary,
         comment = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -188,19 +204,27 @@ private fun SourceLines(text: String, yaml: Boolean, modifier: Modifier = Modifi
     val charWidth = remember(style) { measurer.measure("0", style).size.width }
     val density = LocalDensity.current
     val contentWidth = with(density) { (charWidth * longest).toDp() } + 32.dp
+    val target = line?.takeIf { it in 1..lines.size }
+    val listState = rememberLazyListState()
+    LaunchedEffect(target) {
+        if (target != null) listState.scrollToItem((target - 1 - LINES_ABOVE_TARGET).coerceAtLeast(0))
+    }
+    val highlight = MaterialTheme.colorScheme.primaryContainer
     BoxWithConstraints(modifier.fillMaxSize()) {
         val width = max(contentWidth, maxWidth)
         SelectionContainer {
             LazyColumn(
                 Modifier.horizontalScroll(rememberScrollState()).width(width).fillMaxHeight(),
+                state = listState,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             ) {
-                items(lines) { line ->
+                itemsIndexed(lines) { index, text ->
                     Text(
-                        if (yaml) remember(line, colors) { highlightYamlLine(line, colors) } else AnnotatedString(line),
+                        if (yaml) remember(text, colors) { highlightYamlLine(text, colors) } else AnnotatedString(text),
                         style = style,
                         softWrap = false,
                         maxLines = 1,
+                        modifier = if (index + 1 == target) Modifier.fillMaxWidth().background(highlight) else Modifier,
                     )
                 }
             }

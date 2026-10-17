@@ -38,6 +38,8 @@ type fluxKustomizationObject struct {
 		Suspend         bool           `json:"suspend"`
 		Prune           bool           `json:"prune"`
 		TargetNamespace string         `json:"targetNamespace"`
+		NamePrefix      string         `json:"namePrefix"`
+		NameSuffix      string         `json:"nameSuffix"`
 		DependsOn       []fluxCrossRef `json:"dependsOn"`
 	} `json:"spec"`
 	Status struct {

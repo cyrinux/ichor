@@ -4,6 +4,7 @@ import name.levis.ichor.model.DiffChange
 import name.levis.ichor.model.DiffLine
 import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.FluxRef
+import name.levis.ichor.model.ManifestMatch
 import name.levis.ichor.model.SourceReadPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -75,6 +76,25 @@ class GitOpsSourceDecodeTest {
         assertEquals("Update apps/podinfo/deployment.yaml", defaults.title)
         assertEquals("ichor/podinfo-deployment-1a2b", defaults.branch)
         assertTrue(defaults.body.startsWith("Proposed from Ichor"))
+    }
+
+    @Test
+    fun aSourceFindDecodesItsMatches() {
+        val json = """{"matches":[{"path":"apps/podinfo/deployment.yaml","line":4,"documentIndex":1}],"searched":17,"note":""}"""
+
+        val found = decodeGitOpsSourceFind(json)
+
+        assertEquals(ManifestMatch("apps/podinfo/deployment.yaml", 4, 1), found.matches.single())
+        assertEquals(17, found.searched)
+        assertEquals("", found.note)
+    }
+
+    @Test
+    fun aSourceFindWithNullMatchesDecodesEmpty() {
+        val found = decodeGitOpsSourceFind("""{"matches":null,"searched":3,"note":"rendered by Helm; open the chart's templates"}""")
+
+        assertTrue(found.matches.isEmpty())
+        assertEquals("rendered by Helm; open the chart's templates", found.note)
     }
 
     @Test

@@ -96,6 +96,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   app deploys from, at the revision the cluster runs, with read-only files (YAML highlighted on
   Android). Flux apps need no token (the files come from the source-controller's artifact);
   Argo CD apps use the Git host token, and without one the screen says which host to add.
+  **Open source file** on a changed resource of the Argo CD or Flux diff finds the manifest
+  that declares it (kustomize `namePrefix`/`nameSuffix` taken into account) and opens it at its
+  `metadata.name` line; a Helm-rendered app says why there is no file to open.
 - **Edit and open a pull request:** Edit on a source file opens the YAML editor, Review shows
   the diff, and **Open pull request** commits it on a new branch and opens a pull or merge
   request (GitHub, GitLab, Gitea). The tracked branch is never pushed to: Argo CD or Flux

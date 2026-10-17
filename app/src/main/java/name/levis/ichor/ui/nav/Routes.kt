@@ -132,10 +132,13 @@ internal object Routes {
     fun gitOpsSource(tool: String, kind: String, namespace: String, name: String, idx: Int, dir: String = "") =
         "gitops-source?tool=${Uri.encode(tool)}&kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&idx=$idx&dir=${Uri.encode(dir)}"
 
-    /** One file of source [idx] of an Argo CD or Flux app; [path] from the repository root. */
-    const val GITOPS_FILE = "gitops-file?tool={tool}&kind={kind}&ns={ns}&name={name}&idx={idx}&path={path}"
-    fun gitOpsFile(tool: String, kind: String, namespace: String, name: String, idx: Int, path: String) =
-        "gitops-file?tool=${Uri.encode(tool)}&kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&idx=$idx&path=${Uri.encode(path)}"
+    /**
+     * One file of source [idx] of an Argo CD or Flux app; [path] from the repository root, [line]
+     * (1-based) scrolled to and highlighted, 0 for none.
+     */
+    const val GITOPS_FILE = "gitops-file?tool={tool}&kind={kind}&ns={ns}&name={name}&idx={idx}&path={path}&line={line}"
+    fun gitOpsFile(tool: String, kind: String, namespace: String, name: String, idx: Int, path: String, line: Int = 0) =
+        "gitops-file?tool=${Uri.encode(tool)}&kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&idx=$idx&path=${Uri.encode(path)}&line=$line"
 
     /** The editor of the file [path] of source [idx]: the draft stays in its view model, never here. */
     const val GITOPS_EDIT = "gitops-edit?tool={tool}&kind={kind}&ns={ns}&name={name}&idx={idx}&path={path}"

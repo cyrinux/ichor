@@ -16,11 +16,13 @@ import name.levis.ichor.model.GitHost
 import name.levis.ichor.model.GitHostCheck
 import name.levis.ichor.model.GitFile
 import name.levis.ichor.model.GitOpsSource
+import name.levis.ichor.model.GitOpsSourceFind
 import name.levis.ichor.model.GitProposal
 import name.levis.ichor.model.GitProposalDefaults
 import name.levis.ichor.model.GitProposalResult
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.GitTree
+import name.levis.ichor.model.KubeDiffResource
 import name.levis.ichor.model.ProposeBlock
 import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.gitHostJsonLacksToken
@@ -159,6 +161,36 @@ class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) :
         return withContext(Dispatchers.IO) { decodeGitFile(Ichorgo.gitForgeFile(host, src.repoURL, ref, path)) }
     }
 
+    /**
+     * The manifests of source [index] ([src]) of [tool]'s [kind] [namespace]/[name] that declare
+     * [resource] (os:admin, read only), searched under the source's path: from the Flux artifact
+     * (no token) or through the Git host's API. Throws [GitHostMissing] when the forge needs a
+     * token and none is saved.
+     */
+    suspend fun findSource(
+        tool: String,
+        kind: String,
+        namespace: String,
+        name: String,
+        index: Int,
+        src: GitSource,
+        resource: KubeDiffResource,
+    ): GitOpsSourceFind {
+        val host = when (src.readPath) {
+            SourceReadPath.FLUX -> ""
+            SourceReadPath.FORGE -> forgeHost(src)
+            SourceReadPath.NONE -> throw LocalizedException(UiText.Res(R.string.gitops_source_not_browsable))
+        }
+        return go.kube { cfg, ctx, server ->
+            decodeGitOpsSourceFind(
+                Ichorgo.gitOpsSourceFind(
+                    cfg, ctx, server, host, tool, kind, namespace, name, index.toString(),
+                    resource.kind, resource.namespace, resource.name,
+                ),
+            )
+        }
+    }
+
     /** What stops proposing a change to [src]'s files (no Git host, no token), null when nothing does. */
     suspend fun proposeBlockOf(src: GitSource): ProposeBlock? {
         val blocked = proposeBlock(src, lacksToken = false)
@@ -261,6 +293,9 @@ internal fun decodeGitTree(json: String): GitTree = TalosJson.decodeFromString(G
 
 /** The answer of `GitForgeFile` and `FluxSourceFile`. */
 internal fun decodeGitFile(json: String): GitFile = TalosJson.decodeFromString(GitFile.serializer(), json)
+
+/** The answer of `GitOpsSourceFind`. */
+internal fun decodeGitOpsSourceFind(json: String): GitOpsSourceFind = TalosJson.decodeFromString(GitOpsSourceFind.serializer(), json)
 
 /** The answer of `GitForgePropose`. */
 internal fun decodeGitProposalResult(json: String): GitProposalResult = TalosJson.decodeFromString(GitProposalResult.serializer(), json)

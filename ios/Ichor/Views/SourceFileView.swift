@@ -12,12 +12,16 @@ struct SourceFileView: View {
     let path: String
     /// The app deploying it, for the defaults of the pull request.
     let app: GitOpsAppRef
+    /// The line to scroll to and highlight (1-based), nil for the top: the metadata.name of the
+    /// resource a diff opened the file for.
+    let line: Int?
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(source: GitSource, path: String, app: GitOpsAppRef) {
+    init(source: GitSource, path: String, app: GitOpsAppRef, line: Int? = nil) {
         self.source = source
         self.path = path
         self.app = app
+        self.line = line
     }
 
     @Environment(AppModel.self) private var model
@@ -86,25 +90,20 @@ struct SourceFileView: View {
             }
             .themedBackground()
         } else {
-            ScrollView([.horizontal, .vertical]) {
-                LazyVStack(alignment: .leading, spacing: 1) {
-                    ForEach(text.lines) { line in
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text(verbatim: "\(line.number)")
-                                .font(.caption2.monospacedDigit())
-                                .foregroundStyle(.tertiary)
-                                .frame(minWidth: text.gutter, alignment: .trailing)
-                                .accessibilityHidden(true)
-                            Text(verbatim: line.text)
-                                .font(.caption.monospaced())
-                                .lineLimit(1)
-                                .fixedSize(horizontal: true, vertical: false)
-                                .textSelection(.enabled)
+            ScrollViewReader { proxy in
+                ScrollView([.horizontal, .vertical]) {
+                    LazyVStack(alignment: .leading, spacing: 1) {
+                        ForEach(text.lines) { numbered in
+                            row(numbered, gutter: text.gutter)
                         }
                     }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
                 }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 6)
+                // The line a diff opened the file at, kept at the left edge.
+                .onAppear {
+                    if let line { proxy.scrollTo(line, anchor: UnitPoint(x: 0, y: 0.3)) }
+                }
             }
             .refreshable { await load() }
             .themedBackground()
@@ -112,6 +111,26 @@ struct SourceFileView: View {
                 if let editBlock { SourceEditBlockBar(block: editBlock) }
             }
         }
+    }
+
+    /// One numbered line; the line asked for is tinted and read out as such.
+    private func row(_ numbered: NumberedLine, gutter: CGFloat) -> some View {
+        let marked = numbered.number == line
+        return HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(verbatim: "\(numbered.number)")
+                .font(.caption2.monospacedDigit())
+                .foregroundStyle(marked ? Color.accentColor : Color(.tertiaryLabel))
+                .frame(minWidth: gutter, alignment: .trailing)
+                .accessibilityHidden(true)
+            Text(verbatim: numbered.text)
+                .font(.caption.monospaced())
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+                .textSelection(.enabled)
+        }
+        .background(marked ? Color.accentColor.opacity(0.18) : Color.clear)
+        .id(numbered.number)
+        .accessibilityAddTraits(marked ? .isSelected : [])
     }
 
     private func load() async {
