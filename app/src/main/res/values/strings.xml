@@ -4223,6 +4223,11 @@
     <string name="helm_rollback_wait_timeout">Still rolling out after 5 minutes: check the workloads</string>
     <string name="helm_rollback_stop_following">Stop following</string>
     <string name="helm_rollback_wait_manual">Pods are replaced only when deleted</string>
+    <string name="helm_rollback_hooks">Hooks</string>
+    <string name="helm_rollback_hook_before">Runs before: %1$s</string>
+    <string name="helm_rollback_hook_after">Runs after: %1$s</string>
+    <string name="helm_rollback_hook_weight">weight %1$s</string>
+    <string name="helm_rollback_hooks_running">Rolling back, running the chart\'s hooks…</string>
     <string name="imagescan_title">Vulnerabilities</string>
     <string name="imagescan_hint">Checks the images these pods run, by digest, for known vulnerabilities with %1$s. It runs as a Job in the %2$s namespace, which deletes itself afterwards.</string>
     <string name="imagescan_scan">Scan images</string>

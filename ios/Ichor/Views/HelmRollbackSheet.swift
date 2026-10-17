@@ -106,6 +106,9 @@ struct HelmRollbackSheet: View {
                 }
             }
             HelmRollbackOptionsSection(plan: plan, options: $options, planning: planning, disabled: running)
+            if !plan.hooks.isEmpty {
+                HelmRollbackHooksSection(hooks: plan.hooks)
+            }
             Section {
                 if plan.changes.isEmpty {
                     Text("No object changes: only the release record moves back.").note()
@@ -120,6 +123,9 @@ struct HelmRollbackSheet: View {
             Section {
                 if let failure {
                     Text(verbatim: failure).font(.callout).foregroundStyle(Color.statusBad)
+                }
+                if running && !plan.hooks.isEmpty {
+                    Text("Rolling back, running the chart's hooks…").note()
                 }
                 KubeDeniedNote(.helmRollback)
                 confirmButton(plan)

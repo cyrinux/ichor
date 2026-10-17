@@ -53,7 +53,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   over), list Helm releases and roll one back to an earlier revision
   (a dry-run plan first; a release Flux manages is suspended first; optionally waiting for its
   workloads to be ready, replacing objects instead of patching them, and keeping only the last N
-  revisions), follow a pod's log and
+  revisions; the chart's pre- and post-rollback hooks run in Helm's order with their delete
+  policies), follow a pod's log and
   port-forward to it on the phone (127.0.0.1 only); see what gives LoadBalancer Services their
   address (MetalLB and Cilium pools with their free addresses, MetalLB advertisements and BGP
   peers, kube-vip ranges and leases) and why one has none; or export a kubeconfig.

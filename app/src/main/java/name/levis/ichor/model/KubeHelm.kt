@@ -62,6 +62,24 @@ data class HelmRollbackChange(
     val error: String = "",
 )
 
+/** One pre- or post-rollback hook of the target revision's chart, checked by a dry run. */
+@Serializable
+data class HelmRollbackHook(
+    val name: String = "",
+    val kind: String = "",
+    /** pre-rollback or post-rollback. */
+    val event: String = "",
+    /** Helm runs the hooks of one event by weight, lowest first. */
+    val weight: Int = 0,
+    val deletePolicies: List<String> = emptyList(),
+    /** Why the API server refused the dry run; empty when it passed. */
+    val error: String = "",
+) {
+    val isPre: Boolean get() = event == HELM_HOOK_PRE_ROLLBACK
+}
+
+const val HELM_HOOK_PRE_ROLLBACK = "pre-rollback"
+
 /** What rolling a release back from revision [from] to [to] would do; nothing changed yet. */
 @Serializable
 data class HelmRollbackPlan(
@@ -88,9 +106,12 @@ data class HelmRollbackPlan(
     val prune: List<Int> = emptyList(),
     /** Deployments, StatefulSets and DaemonSets of the target revision: what a wait follows. */
     val workloads: Int = 0,
+    /** The chart's rollback hooks in Helm's order (event, weight, name); run around the changes. */
+    val hooks: List<HelmRollbackHook> = emptyList(),
 )
 
-val HelmRollbackPlan.canRun: Boolean get() = blockers.isEmpty()
+/** No blocker and no hook refused by its dry run (the Go core refuses the run then too). */
+val HelmRollbackPlan.canRun: Boolean get() = blockers.isEmpty() && hooks.none { it.error.isNotEmpty() }
 
 /** Helm's default --history-max, and the stepper's upper bound. */
 const val HELM_HISTORY_MAX_DEFAULT = 10

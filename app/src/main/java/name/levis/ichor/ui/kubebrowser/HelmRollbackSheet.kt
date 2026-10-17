@@ -319,7 +319,11 @@ private fun PlanContent(
     if (plan == null && state.error != null && !state.loading) {
         OutlinedButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
     }
-    if (state.running) LinearProgressIndicator(Modifier.fillMaxWidth())
+    if (state.running) {
+        // The rollback is one call: the hooks run (and are waited for) inside it.
+        if (plan?.hooks?.isNotEmpty() == true) MutedText(stringResource(R.string.helm_rollback_hooks_running))
+        LinearProgressIndicator(Modifier.fillMaxWidth())
+    }
     Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
         TextButton(onClick = onDismiss, enabled = !state.running) { Text(stringResource(R.string.common_cancel)) }
         Button(onClick = onConfirm, enabled = plan?.canRun == true && !state.running && !state.loading) {
@@ -344,6 +348,7 @@ private fun PlanBody(plan: HelmRollbackPlan, options: HelmRollbackOptions, optio
         }
     }
     HelmRollbackOptionsBlock(plan, options, enabled = optionsEnabled, onChange = onOptions)
+    HelmRollbackHooksSection(plan.hooks)
     SectionTitle(stringResource(R.string.helm_rollback_changes))
     if (plan.changes.isEmpty()) MutedText(stringResource(R.string.helm_rollback_none))
     plan.changes.forEach { ChangeRow(it) }
