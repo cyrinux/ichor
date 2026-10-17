@@ -71,9 +71,12 @@ extension FluxDiff {
 }
 
 private extension ArgoResourceRef {
+    /// "core" is the empty group under another name, as on Android.
     func matches(_ resource: KubeDiffResource) -> Bool {
-        kind == resource.kind && namespace == resource.namespace && name == resource.name
-            && (group.isEmpty || resource.group.isEmpty || group == resource.group)
+        let mine = group == "core" ? "" : group
+        let theirs = resource.group == "core" ? "" : resource.group
+        return kind == resource.kind && namespace == resource.namespace && name == resource.name
+            && (mine.isEmpty || theirs.isEmpty || mine == theirs)
     }
 }
 
