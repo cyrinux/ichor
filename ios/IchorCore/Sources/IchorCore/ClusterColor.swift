@@ -106,15 +106,25 @@ public func contrast(_ a: Int, _ b: Int) -> Double {
 /// that it reads as well whatever the hue (plain HSL lightness does not: yellow at 50 % is
 /// far brighter than blue at 50 %). Found by bisection: L* grows with the HSL lightness.
 public func tonalColor(seed: Int, tone target: Double) -> Int {
+    let (hue, saturation, _) = hsl(seed)
+    return tonal(hue: hue, saturation: seedSaturation(saturation), tone: target)
+}
+
+/// The saturation of the tones derived from a seed of HSL `saturation`: kept within Android's
+/// SeedPalettes bounds, and none for a grey (iOS's color picker offers them; its hue is
+/// meaningless).
+func seedSaturation(_ saturation: Double) -> Double {
+    saturation < greySaturation ? 0 : min(max(saturation, 0.45), 0.9)
+}
+
+/// The color of `hue` and `saturation` whose perceived lightness is `target`.
+func tonal(hue: Double, saturation: Double, tone target: Double) -> Int {
     if target <= 0 { return 0x000000 }
     if target >= 100 { return 0xFFFFFF }
-    let (hue, saturation, _) = hsl(seed)
-    // A grey (iOS's color picker offers them) stays grey: its hue is meaningless.
-    let clamped = saturation < greySaturation ? 0 : min(max(saturation, 0.45), 0.9)
     var low = 0.0, high = 1.0
     for _ in 0..<16 {
         let mid = (low + high) / 2
-        if tone(of: hslToRGB(hue: hue, saturation: clamped, lightness: mid)) < target { low = mid } else { high = mid }
+        if tone(of: hslToRGB(hue: hue, saturation: saturation, lightness: mid)) < target { low = mid } else { high = mid }
     }
-    return hslToRGB(hue: hue, saturation: clamped, lightness: (low + high) / 2)
+    return hslToRGB(hue: hue, saturation: saturation, lightness: (low + high) / 2)
 }

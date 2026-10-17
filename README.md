@@ -880,7 +880,8 @@ The list is also where a cluster is removed (its credentials are deleted from th
 where its color is chosen. Each cluster gets a color of its own, and the app's palette (light,
 dark and true black alike) is generated from the color of the cluster on screen, so it is
 always clear which cluster a reboot is about to hit. Background alerts and the widget follow
-the cluster on screen.
+the cluster on screen. On both homes, the summary card's name band and stat icon tiles carry the
+cluster's color, while health, metrics and bars keep their neutral surface and status colors.
 
 **Search every cluster's nodes, pods, workloads and GitOps apps from the overview** (Android:
 "Search clusters" in the title's menu, or the search action of the top bar; iOS: "Search

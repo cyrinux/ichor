@@ -86,13 +86,14 @@ internal fun KubeUnreachableCard(message: UiText, onRetry: () -> Unit) {
 @Composable
 internal fun KubeSummaryCard(name: String, cluster: ContextSummary, nodes: KubeNodesOverview?) {
     Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
+        SummaryIdentityBand(name)
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    val version = nodes?.serverVersion?.takeIf { it.isNotEmpty() }
-                    MutedText(version?.let { stringResource(R.string.kube_home_version, it) } ?: stringResource(R.string.common_kind_kubernetes))
-                }
+                val version = nodes?.serverVersion?.takeIf { it.isNotEmpty() }
+                MutedText(
+                    version?.let { stringResource(R.string.kube_home_version, it) } ?: stringResource(R.string.common_kind_kubernetes),
+                    modifier = Modifier.weight(1f),
+                )
                 nodes?.takeIf { !it.forbidden && it.nodes.isNotEmpty() }?.let { KubeStatusPill(it) }
             }
             HorizontalDivider(Modifier.padding(vertical = 12.dp))

@@ -67,9 +67,10 @@ struct StatTile: View {
     }
 
     private var stat: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
+        // Centred: on a home summary the icon sits in a container as tall as the two lines.
+        HStack(alignment: icon == nil ? .firstTextBaseline : .center, spacing: 8) {
             if let icon {
-                Image(systemName: icon).foregroundStyle(.tint).accessibilityHidden(true)
+                StatIcon(systemName: icon)
             }
             // Narrow phones and long translations wrap rather than cut the label short.
             VStack(alignment: .leading, spacing: 1) {
