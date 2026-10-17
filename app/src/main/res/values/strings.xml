@@ -1736,6 +1736,9 @@
     <string name="git_host_remove_title">Remove %1$s?</string>
     <string name="git_host_remove_text">Its token is deleted from this phone.</string>
     <string name="git_hosts_explainer">Grant only what Ichor needs. GitHub fine-grained token: Contents and Pull requests, read and write, on the repositories you deploy from. GitLab: api, or read_repository and write_repository. Gitea: repository read and write, and issue write. The token stays on this phone, encrypted, and is only sent to its own host.</string>
+    <string name="git_host_field_aliases">Also reached as</string>
+    <string name="git_host_aliases_hint">Other names Argo CD or Flux use for this server, such as an SSH or in-cluster address. Separate them with commas. The token is still only sent to the host above.</string>
+    <string name="git_host_aliases_line">Also %1$s</string>
     <string name="ai_enable_desc">Optional. Ask an AI model what is wrong with the cluster and how to fix it. Nothing is sent until you ask.</string>
     <string name="ai_provider">Provider</string>
     <string name="ai_api_key">API key</string>

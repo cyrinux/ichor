@@ -1736,6 +1736,9 @@
     <string name="git_host_remove_title">Retirer %1$s ?</string>
     <string name="git_host_remove_text">Son jeton est supprimé de ce téléphone.</string>
     <string name="git_hosts_explainer">N\'accordez que ce dont Ichor a besoin. Jeton GitHub à granularité fine : Contents et Pull requests, en lecture et écriture, sur les dépôts depuis lesquels vous déployez. GitLab : api, ou read_repository et write_repository. Gitea : repository en lecture et écriture, et issue en écriture. Le jeton reste sur ce téléphone, chiffré, et n\'est envoyé qu\'à son propre hôte.</string>
+    <string name="git_host_field_aliases">Aussi joignable via</string>
+    <string name="git_host_aliases_hint">Autres noms qu\'Argo CD ou Flux utilisent pour ce serveur, comme une adresse SSH ou interne au cluster. Séparez-les par des virgules. Le jeton n\'est envoyé qu\'à l\'hôte ci-dessus.</string>
+    <string name="git_host_aliases_line">Aussi %1$s</string>
     <string name="ai_enable_desc">Facultatif. Demandez à un modèle d’IA ce qui ne va pas dans le cluster et comment le réparer. Rien n’est envoyé tant que vous ne le demandez pas.</string>
     <string name="ai_provider">Fournisseur</string>
     <string name="ai_api_key">Clé d’API</string>

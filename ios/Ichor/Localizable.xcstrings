@@ -1,6 +1,111 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Also reached as" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auch erreichbar als"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "También accesible como"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aussi joignable via"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raggiungibile anche come"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Також доступний як"
+          }
+        }
+      }
+    },
+    "Other names Argo CD or Flux use for this server, such as an SSH or in-cluster address. Separate them with commas. The token is still only sent to the host above." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Andere Namen, die Argo CD oder Flux für diesen Server nutzen, etwa eine SSH- oder clusterinterne Adresse. Trennen Sie sie mit Kommas. Das Token wird weiterhin nur an den Host oben gesendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otros nombres que Argo CD o Flux usan para este servidor, como una dirección SSH o interna del clúster. Sepáralos con comas. El token solo se envía al host de arriba."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autres noms qu'Argo CD ou Flux utilisent pour ce serveur, comme une adresse SSH ou interne au cluster. Séparez-les par des virgules. Le jeton n'est envoyé qu'à l'hôte ci-dessus."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Altri nomi che Argo CD o Flux usano per questo server, come un indirizzo SSH o interno al cluster. Separali con virgole. Il token viene inviato solo all'host qui sopra."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інші імена, якими Argo CD чи Flux звертаються до цього сервера, як-от SSH- або внутрішньокластерна адреса. Розділяйте комами. Токен і далі надсилається лише на хост вище."
+          }
+        }
+      }
+    },
+    "Also %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auch %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "También %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aussi %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anche %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Також %@"
+          }
+        }
+      }
+    },
     "Nothing changed yet." : {
       "extractionState" : "manual",
       "localizations" : {
