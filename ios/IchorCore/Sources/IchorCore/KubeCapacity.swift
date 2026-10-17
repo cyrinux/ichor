@@ -2,7 +2,7 @@ import Foundation
 
 // Mirrors go/ichorgo/kube_capacity.go and kube_capacity_nodeloss.go: the cluster's free room,
 // each workload's priority, QoS and OOM risk, and what losing a node would cost. CPU in cores,
-// memory in bytes.
+// memory, ephemeral storage and disk in bytes.
 
 /// A pod's QoS class: who the kubelet evicts first under node pressure (BestEffort).
 public enum QosClass: String, Sendable, WireEnum {
@@ -13,7 +13,7 @@ public enum QosClass: String, Sendable, WireEnum {
 
 /// A workload's risk word, worst first; a word a newer core adds reads as `ok`.
 public enum CapacityRisk: String, Sendable, WireEnum {
-    case oom, evictFirst, unbounded, ok
+    case oom, diskNear, evictFirst, unbounded, ok
 
     public static let wireFallback: Self = .ok
 }
@@ -31,10 +31,16 @@ public func freeFraction(_ part: Double, of: Double) -> Double {
     of > 0 ? min(max(part / of, 0), 1) : 0
 }
 
-/// The cluster's capacity (Go `KubeCapacity`). `metricsAvailable` false: no metrics-server.
+/// Under this share of free disk a node reads as "disk low" (the kubelet evicts under 10%).
+public let diskLowFraction = 0.15
+
+/// The cluster's capacity (Go `KubeCapacity`). `metricsAvailable` false: no metrics-server;
+/// `diskMeasured` false: no kubelet answered stats/summary (`diskForbidden`: a 403 on nodes/proxy).
 public struct KubeCapacity: Decodable, Equatable, Sendable {
     public let metricsAvailable: Bool
     public let metricsForbidden: Bool
+    public let diskMeasured: Bool
+    public let diskForbidden: Bool
     public let priorityClassesRead: Bool
     public let pdbsRead: Bool
     public let totals: CapacityTotals
@@ -48,6 +54,8 @@ public struct KubeCapacity: Decodable, Equatable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         metricsAvailable = try c.field(.metricsAvailable, false)
         metricsForbidden = try c.field(.metricsForbidden, false)
+        diskMeasured = try c.field(.diskMeasured, false)
+        diskForbidden = try c.field(.diskForbidden, false)
         priorityClassesRead = try c.field(.priorityClassesRead, false)
         pdbsRead = try c.field(.pdbsRead, false)
         totals = try c.field(.totals, CapacityTotals())
@@ -58,7 +66,12 @@ public struct KubeCapacity: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case metricsAvailable, metricsForbidden, priorityClassesRead, pdbsRead, totals, nodes, workloads, nPlusOne, assumptions
+        case metricsAvailable, metricsForbidden, diskMeasured, diskForbidden, priorityClassesRead, pdbsRead, totals, nodes, workloads, nPlusOne, assumptions
+    }
+
+    /// The measured node with the least free disk, by share; nil when no kubelet answered.
+    public var fullestDiskNode: CapacityNode? {
+        nodes.filter(\.diskKnown).min { $0.diskFreeFraction < $1.diskFreeFraction }
     }
 }
 
@@ -71,10 +84,19 @@ public struct CapacityTotals: Decodable, Equatable, Sendable {
     public var podCapacity = 0
     public var nodes = 0
     public var schedulableNodes = 0
+    public var ephemeralAllocatable = 0.0
+    public var ephemeralRequests = 0.0
+    /// Sums over the nodes whose kubelet answered (`diskMeasuredNodes`).
+    public var diskCapacity = 0.0
+    public var diskAvailable = 0.0
+    public var diskMeasuredNodes = 0
 
     public var cpuFree: Double { max(cpuAllocatable - cpuRequests, 0) }
     public var memoryFree: Double { max(memoryAllocatable - memoryRequests, 0) }
     public var podsFree: Int { max(podCapacity - pods, 0) }
+    public var ephemeralFree: Double { max(ephemeralAllocatable - ephemeralRequests, 0) }
+    /// Free disk of the measured nodes against their capacity, 0...1 (0 when none answered).
+    public var diskFreeFraction: Double { freeFraction(diskAvailable, of: diskCapacity) }
 
     public init() {}
 
@@ -88,10 +110,16 @@ public struct CapacityTotals: Decodable, Equatable, Sendable {
         podCapacity = try c.field(.podCapacity, 0)
         nodes = try c.field(.nodes, 0)
         schedulableNodes = try c.field(.schedulableNodes, 0)
+        ephemeralAllocatable = try c.field(.ephemeralAllocatable, 0)
+        ephemeralRequests = try c.field(.ephemeralRequests, 0)
+        diskCapacity = try c.field(.diskCapacity, 0)
+        diskAvailable = try c.field(.diskAvailable, 0)
+        diskMeasuredNodes = try c.field(.diskMeasuredNodes, 0)
     }
 
     private enum CodingKeys: String, CodingKey {
         case cpuAllocatable, cpuRequests, memoryAllocatable, memoryRequests, pods, podCapacity, nodes, schedulableNodes
+        case ephemeralAllocatable, ephemeralRequests, diskCapacity, diskAvailable, diskMeasuredNodes
     }
 }
 
@@ -109,8 +137,28 @@ public struct CapacityNode: Decodable, Equatable, Sendable, Identifiable {
     public let memoryFree: Double
     public let podsFree: Int
     public let overcommitted: Bool
+    /// Ephemeral storage, the scheduler's view: requests against allocatable (0 allocatable: unknown).
+    public let ephemeralAllocatable: Double
+    public let ephemeralRequests: Double
+    public let ephemeralFree: Double
+    public let diskPressure: Bool
+    /// The kubelet's view (stats/summary nodefs and imagefs); false when it did not answer.
+    public let diskMeasured: Bool
+    public let diskCapacity: Double
+    public let diskAvailable: Double
+    public let imageFsCapacity: Double
+    public let imageFsAvailable: Double
 
     public var id: String { name }
+
+    /// The kubelet answered with a disk size.
+    public var diskKnown: Bool { diskMeasured && diskCapacity > 0 }
+    /// Free disk against its size, 0...1 (0 when unmeasured).
+    public var diskFreeFraction: Double { freeFraction(diskAvailable, of: diskCapacity) }
+    /// Disk in use against its size, 0...1 (0 when unmeasured).
+    public var diskUsedFraction: Double { diskKnown ? 1 - diskFreeFraction : 0 }
+    /// Measured and under 15% free.
+    public var diskLow: Bool { diskKnown && diskFreeFraction < diskLowFraction }
 
     /// Ordinary pods may land on it: ready, not cordoned, no NoSchedule/NoExecute taint.
     public var schedulable: Bool {
@@ -134,10 +182,21 @@ public struct CapacityNode: Decodable, Equatable, Sendable, Identifiable {
         memoryFree = try c.field(.memoryFree, 0)
         podsFree = try c.field(.podsFree, 0)
         overcommitted = try c.field(.overcommitted, false)
+        ephemeralAllocatable = try c.field(.ephemeralAllocatable, 0)
+        ephemeralRequests = try c.field(.ephemeralRequests, 0)
+        ephemeralFree = try c.field(.ephemeralFree, 0)
+        diskPressure = try c.field(.diskPressure, false)
+        diskMeasured = try c.field(.diskMeasured, false)
+        diskCapacity = try c.field(.diskCapacity, 0)
+        diskAvailable = try c.field(.diskAvailable, 0)
+        imageFsCapacity = try c.field(.imageFsCapacity, 0)
+        imageFsAvailable = try c.field(.imageFsAvailable, 0)
     }
 
     private enum CodingKeys: String, CodingKey {
         case name, roles, ready, cordoned, taints, memoryPercent, memoryAllocatable, memoryUsage, cpuFree, memoryFree, podsFree, overcommitted
+        case ephemeralAllocatable, ephemeralRequests, ephemeralFree, diskPressure, diskMeasured, diskCapacity, diskAvailable
+        case imageFsCapacity, imageFsAvailable
     }
 }
 
@@ -157,6 +216,10 @@ public struct CapacityWorkload: Decodable, Equatable, Sendable, Identifiable {
     public let risk: CapacityRisk
     public let moreFit: Int
     public let moreFitNA: Bool
+    /// One replica's ephemeral storage request and limit (0: none), and what its pods use (0: unmeasured).
+    public let ephemeralRequest: Double
+    public let ephemeralLimit: Double
+    public let ephemeralUsage: Double
 
     public var id: String { "\(kind)/\(namespace)/\(name)" }
     public var atRisk: Bool { risk != .ok }
@@ -178,11 +241,14 @@ public struct CapacityWorkload: Decodable, Equatable, Sendable, Identifiable {
         risk = try c.wire(.risk)
         moreFit = try c.field(.moreFit, 0)
         moreFitNA = try c.field(.moreFitNA, false)
+        ephemeralRequest = try c.field(.ephemeralRequest, 0)
+        ephemeralLimit = try c.field(.ephemeralLimit, 0)
+        ephemeralUsage = try c.field(.ephemeralUsage, 0)
     }
 
     private enum CodingKeys: String, CodingKey {
         case kind, namespace, name, replicas, cpuRequest, memoryRequest, priorityClassName, priority, noPriorityClass, qos, oomKills, risk
-        case moreFit, moreFitNA
+        case moreFit, moreFitNA, ephemeralRequest, ephemeralLimit, ephemeralUsage
     }
 }
 
@@ -206,6 +272,8 @@ public struct NPlusOne: Decodable, Equatable, Sendable {
     public var ok = true
     public var node = ""
     public var pendingPods = 0
+    /// Ephemeral storage (bytes) the Pending pods miss; > 0: short of ephemeral storage.
+    public var shortEphemeral = 0.0
 
     public init() {}
 
@@ -214,9 +282,10 @@ public struct NPlusOne: Decodable, Equatable, Sendable {
         ok = try c.field(.ok, true)
         node = try c.field(.node, "")
         pendingPods = try c.field(.pendingPods, 0)
+        shortEphemeral = try c.field(.shortEphemeral, 0)
     }
 
-    private enum CodingKeys: String, CodingKey { case ok, node, pendingPods }
+    private enum CodingKeys: String, CodingKey { case ok, node, pendingPods, shortEphemeral }
 }
 
 /// Losing `node` — one node, or the joined names when several were picked (`nodes`) — where

@@ -45,16 +45,28 @@ fun CapacityHeader(capacity: KubeCapacity, onWhatIf: () -> Unit) {
     val n1 = capacity.nPlusOne
     Column(Modifier.padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         StatusPill(
-            if (n1.ok) {
-                stringResource(R.string.capacity_n_plus_one_ok)
-            } else {
-                stringResource(R.string.capacity_n_plus_one_short, n1.node, n1.pendingPods.toString())
+            when {
+                n1.ok -> stringResource(R.string.capacity_n_plus_one_ok)
+                n1.shortEphemeral > 0 -> stringResource(R.string.capacity_n_plus_one_short_disk, n1.node, n1.pendingPods.toString())
+                else -> stringResource(R.string.capacity_n_plus_one_short, n1.node, n1.pendingPods.toString())
             },
             if (n1.ok) colors.ok else colors.warn,
         )
         Text(stringResource(R.string.capacity_free_cpu, cpuText(t.cpuFree), cpuText(t.cpuAllocatable)), style = MaterialTheme.typography.bodyMedium)
         Text(stringResource(R.string.capacity_free_memory, memoryText(t.memoryFree), memoryText(t.memoryAllocatable)), style = MaterialTheme.typography.bodyMedium)
         Text(stringResource(R.string.capacity_free_pods, t.podsFree.toString(), t.podCapacity.toString()), style = MaterialTheme.typography.bodyMedium)
+        if (t.ephemeralAllocatable > 0) {
+            Text(stringResource(R.string.capacity_free_ephemeral, memoryText(t.ephemeralFree), memoryText(t.ephemeralAllocatable)), style = MaterialTheme.typography.bodyMedium)
+        }
+        val fullest = capacity.fullestDiskNode
+        when {
+            capacity.diskMeasured && fullest != null -> Text(
+                stringResource(R.string.capacity_disk_fullest, memoryText(fullest.diskAvailable), fullest.name),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            capacity.diskForbidden -> MutedText(stringResource(R.string.capacity_disk_forbidden))
+            else -> MutedText(stringResource(R.string.capacity_disk_unmeasured))
+        }
         when {
             capacity.metricsForbidden -> MutedText(stringResource(R.string.capacity_metrics_forbidden))
             !capacity.metricsAvailable -> MutedText(stringResource(R.string.capacity_metrics_unavailable))
@@ -90,12 +102,20 @@ fun CapacityNodeRow(n: CapacityNode, metrics: Boolean, onOpen: () -> Unit) {
                 Text(n.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 n.roles.forEach { Tag(it, MaterialTheme.colorScheme.primary) }
                 if (n.overcommitted) Tag(stringResource(R.string.capacity_overcommitted), colors.bad)
+                if (n.diskPressure) {
+                    Tag(stringResource(R.string.capacity_node_disk_pressure), colors.bad)
+                } else if (n.diskLow) {
+                    Tag(stringResource(R.string.capacity_node_disk_low), colors.warn)
+                }
             }
             Column(Modifier.clearAndSetSemantics { contentDescription = bars }, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 MeterRow(stringResource(R.string.capacity_requests), (n.memoryPercent / 100).toFloat().coerceIn(0f, 1f), "$requests%", warnAt = NODE_WARN_AT)
                 if (metrics) MeterRow(stringResource(R.string.capacity_usage), n.memoryUsageFraction, "$usage%", warnAt = NODE_WARN_AT)
             }
             MutedText(stringResource(R.string.capacity_node_free, cpuText(n.cpuFree), memoryText(n.memoryFree), n.podsFree.toString()), maxLines = 2)
+            if (n.diskMeasured && n.diskCapacity > 0) {
+                MutedText(stringResource(R.string.capacity_node_disk, memoryText(n.diskAvailable), memoryText(n.diskCapacity)), maxLines = 1)
+            }
         }
     }
 }
@@ -108,9 +128,11 @@ fun CapacityWorkloadRow(w: CapacityWorkload) {
     OutlinedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text("${w.kind} ${w.namespace}/${w.name}", style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            val asks = stringResource(R.string.capacity_workload_line, w.replicas.toString(), cpuText(w.cpuRequest), memoryText(w.memoryRequest))
+            val ephemeral = if (w.ephemeralRequest > 0) stringResource(R.string.capacity_workload_ephemeral, memoryText(w.ephemeralRequest)) else null
             MutedText(
-                stringResource(R.string.capacity_workload_line, w.replicas.toString(), cpuText(w.cpuRequest), memoryText(w.memoryRequest)),
-                maxLines = 1,
+                if (ephemeral == null) asks else "$asks, $ephemeral",
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

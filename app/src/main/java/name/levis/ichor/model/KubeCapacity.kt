@@ -8,12 +8,13 @@ import kotlinx.serialization.Serializable
 enum class QosClass { BEST_EFFORT, BURSTABLE, GUARANTEED, UNKNOWN }
 
 /** A workload's risk word, worst first. */
-enum class CapacityRisk { OOM, EVICT_FIRST, UNBOUNDED, OK }
+enum class CapacityRisk { OOM, DISK_NEAR, EVICT_FIRST, UNBOUNDED, OK }
 
 /**
  * The cluster's capacity (Go `KubeCapacity`): free room per node and in total, each workload's
  * priority, QoS and OOM risk, how many more replicas fit, and whether one node's pods would fit
  * on the others ([nPlusOne]). [metricsAvailable] false: no metrics-server, usage is 0.
+ * [diskMeasured]: at least one kubelet reported its disk; [diskForbidden]: nodes/proxy was refused.
  */
 @Serializable
 data class KubeCapacity(
@@ -28,7 +29,13 @@ data class KubeCapacity(
     val workloads: List<CapacityWorkload> = emptyList(),
     val nPlusOne: NPlusOne = NPlusOne(),
     val assumptions: List<String> = emptyList(),
-)
+    val diskMeasured: Boolean = false,
+    val diskForbidden: Boolean = false,
+) {
+    /** The measured node with the least free disk, as a share of its capacity; null when none was measured. */
+    val fullestDiskNode: CapacityNode?
+        get() = nodes.filter { it.diskMeasured && it.diskCapacity > 0 }.minByOrNull { it.diskFreeFraction }
+}
 
 @Serializable
 data class CapacityPriorityClass(
@@ -52,7 +59,18 @@ data class CapacityTotals(
     val podCapacity: Int = 0,
     val nodes: Int = 0,
     val schedulableNodes: Int = 0,
+    val ephemeralAllocatable: Double = 0.0,
+    val ephemeralRequests: Double = 0.0,
+    /** Sums over the nodes whose kubelet answered ([diskMeasuredNodes]). */
+    val diskCapacity: Double = 0.0,
+    val diskAvailable: Double = 0.0,
+    val diskMeasuredNodes: Int = 0,
 ) {
+    val ephemeralFree: Double get() = (ephemeralAllocatable - ephemeralRequests).coerceAtLeast(0.0)
+
+    /** Free disk against capacity over the measured nodes, 0..1 (0 when none was measured). */
+    val diskFreeFraction: Float get() = fraction(diskAvailable, diskCapacity)
+
     val cpuFree: Double get() = (cpuAllocatable - cpuRequests).coerceAtLeast(0.0)
     val memoryFree: Double get() = (memoryAllocatable - memoryRequests).coerceAtLeast(0.0)
     val podsFree: Int get() = (podCapacity - pods).coerceAtLeast(0)
@@ -82,6 +100,17 @@ data class CapacityNode(
     val memoryFree: Double = 0.0,
     val podsFree: Int = 0,
     val overcommitted: Boolean = false,
+    /** Ephemeral storage in bytes; [ephemeralAllocatable] 0: the node does not say. */
+    val ephemeralAllocatable: Double = 0.0,
+    val ephemeralRequests: Double = 0.0,
+    val ephemeralFree: Double = 0.0,
+    val diskPressure: Boolean = false,
+    /** The kubelet's nodefs and imagefs in bytes, read only when [diskMeasured]. */
+    val diskMeasured: Boolean = false,
+    val diskCapacity: Double = 0.0,
+    val diskAvailable: Double = 0.0,
+    val imageFsCapacity: Double = 0.0,
+    val imageFsAvailable: Double = 0.0,
 ) {
     /** Ordinary pods may land on it: ready, not cordoned, no NoSchedule/NoExecute taint. */
     val schedulable: Boolean
@@ -91,7 +120,18 @@ data class CapacityNode(
     val memoryUsageFraction: Float get() = fraction(memoryUsage, memoryAllocatable)
 
     val cpuUsageFraction: Float get() = fraction(cpuUsage, cpuAllocatable)
+
+    /** The node's disk in use, 0..1 (0 when the kubelet did not answer). */
+    val diskUsedFraction: Float get() = fraction(diskCapacity - diskAvailable, diskCapacity)
+
+    val diskFreeFraction: Float get() = fraction(diskAvailable, diskCapacity)
+
+    /** Measured and under [DISK_LOW_FREE] free: the kubelet starts evicting at 10 %. */
+    val diskLow: Boolean get() = diskMeasured && diskCapacity > 0 && diskFreeFraction < DISK_LOW_FREE
 }
+
+/** Under this share of free disk a node row warns. */
+const val DISK_LOW_FREE = 0.15f
 
 /**
  * The running pods of one controller: one replica's requests and limits (a limit of 0: some pod
@@ -119,6 +159,10 @@ data class CapacityWorkload(
     val risk: String = "",
     val moreFit: Int = 0,
     val moreFitNA: Boolean = false,
+    /** One replica's ephemeral-storage request and limit in bytes, the usage of all of them. */
+    val ephemeralRequest: Double = 0.0,
+    val ephemeralLimit: Double = 0.0,
+    val ephemeralUsage: Double = 0.0,
 ) {
     val key: String get() = "$kind/$namespace/$name"
     val qosClass: QosClass get() = qosOf(qos)
@@ -135,6 +179,7 @@ data class NPlusOne(
     val pendingPods: Int = 0,
     val shortCPU: Double = 0.0,
     val shortMemory: Double = 0.0,
+    val shortEphemeral: Double = 0.0,
 )
 
 /**
@@ -225,6 +270,7 @@ private fun qosOf(value: String): QosClass = when (value) {
 
 private fun riskOf(value: String): CapacityRisk = when (value) {
     "oom" -> CapacityRisk.OOM
+    "diskNear" -> CapacityRisk.DISK_NEAR
     "evictFirst" -> CapacityRisk.EVICT_FIRST
     "unbounded" -> CapacityRisk.UNBOUNDED
     else -> CapacityRisk.OK

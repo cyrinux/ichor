@@ -582,10 +582,13 @@ and what goes if a node goes down?":
 - **Free room** for the cluster and per node: CPU, memory and pod slots left by requests (the
   scheduler's view), with each node's memory requests and live usage as two bars when
   metrics-server answers, and a mark on a node whose pods' memory limits exceed it.
+- **Disk:** ephemeral storage left by requests, and each node's free disk as its kubelet reports
+  it, with a DiskPressure or "disk low" (under 15% free) mark; a workload near its ephemeral
+  storage limit, which the kubelet evicts once it goes over, is flagged.
 - **N+1:** whether the pods of any one node would fit on the others, or which node would leave
   pods Pending.
 - **Workloads, the first to go first:** lowest priority first, those with no PriorityClass flagged,
-  each with its numeric priority, QoS class, risk (OOM-killed or near its memory limit, evicted
+  each with its numeric priority, QoS class, risk (OOM-killed or near its memory or ephemeral storage limit, evicted
   first as BestEffort, no memory limit) and how many more replicas of its size fit today.
 - **What if a node goes down:** a node, several picked together, or the worst one, is lost in a
   simulation of the scheduler: where its pods land, which lower priority pods they preempt, which

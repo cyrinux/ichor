@@ -19,6 +19,7 @@ fun riskText(w: CapacityWorkload): String = when (w.riskLevel) {
     } else {
         stringResource(R.string.capacity_risk_oom_near)
     }
+    CapacityRisk.DISK_NEAR -> stringResource(R.string.capacity_risk_disk_near)
     CapacityRisk.EVICT_FIRST -> stringResource(R.string.capacity_risk_evict_first)
     CapacityRisk.UNBOUNDED -> stringResource(R.string.capacity_risk_unbounded)
     CapacityRisk.OK -> stringResource(R.string.capacity_risk_ok)
@@ -29,7 +30,7 @@ fun CapacityRisk.color(): Color {
     val colors = LocalStatusColors.current
     return when (this) {
         CapacityRisk.OOM -> colors.bad
-        CapacityRisk.EVICT_FIRST, CapacityRisk.UNBOUNDED -> colors.warn
+        CapacityRisk.DISK_NEAR, CapacityRisk.EVICT_FIRST, CapacityRisk.UNBOUNDED -> colors.warn
         CapacityRisk.OK -> colors.ok
     }
 }

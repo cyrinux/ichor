@@ -150472,6 +150472,380 @@
         "de" : { "stringUnit" : { "state" : "translated", "value" : "einige Proxys laufen" } },
         "it" : { "stringUnit" : { "state" : "translated", "value" : "alcuni proxy attivi" } }
       }
+    },
+    "%@ ephemeral storage free of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ephemeral storage free of %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ de stockage éphémère libres sur %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ de almacenamiento efímero libres de %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ефемерного сховища вільно з %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ flüchtiger Speicher frei von %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ di storage effimero liberi su %2$@"
+          }
+        }
+      }
+    },
+    "Disk: %@ free on %@, the fullest node" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disk: %1$@ free on %2$@, the fullest node"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disque : %1$@ libres sur %2$@, le nœud le plus plein"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disco: %1$@ libres en %2$@, el nodo más lleno"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Диск: %1$@ вільно на %2$@, найзаповненішому вузлі"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disk: %1$@ frei auf %2$@, dem vollsten Knoten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disco: %1$@ liberi su %2$@, il nodo più pieno"
+          }
+        }
+      }
+    },
+    "Disk free space unavailable: the kubelets did not answer." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espace disque libre indisponible : les kubelets n'ont pas répondu."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espacio libre en disco no disponible: los kubelets no respondieron."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вільне місце на диску недоступне: kubelet-и не відповіли."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Freier Speicherplatz nicht verfügbar: Die Kubelets haben nicht geantwortet."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spazio libero su disco non disponibile: i kubelet non hanno risposto."
+          }
+        }
+      }
+    },
+    "Disk free space unavailable: these credentials may not read nodes/proxy." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espace disque libre indisponible : ces identifiants ne peuvent pas lire nodes/proxy."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espacio libre en disco no disponible: estas credenciales no pueden leer nodes/proxy."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вільне місце на диску недоступне: ці облікові дані не можуть читати nodes/proxy."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Freier Speicherplatz nicht verfügbar: Diese Anmeldedaten dürfen nodes/proxy nicht lesen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spazio libero su disco non disponibile: queste credenziali non possono leggere nodes/proxy."
+          }
+        }
+      }
+    },
+    "Disk: %@ free of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disk: %1$@ free of %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disque : %1$@ libres sur %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disco: %1$@ libres de %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Диск: %1$@ вільно з %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disk: %1$@ frei von %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disco: %1$@ liberi su %2$@"
+          }
+        }
+      }
+    },
+    "DiskPressure" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DiskPressure"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DiskPressure"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DiskPressure"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DiskPressure"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DiskPressure"
+          }
+        }
+      }
+    },
+    "disk under 15 percent free" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "disque à moins de 15 pour cent libre"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "disco con menos del 15 por ciento libre"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "на диску вільно менше 15 відсотків"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disk unter 15 Prozent frei"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "disco con meno del 15 per cento libero"
+          }
+        }
+      }
+    },
+    "Losing %@ leaves %@ pods Pending, short of ephemeral storage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Losing %1$@ leaves %2$@ pods Pending, short of ephemeral storage"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perdre %1$@ laisse %2$@ pods en Pending, faute de stockage éphémère"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perder %1$@ deja %2$@ pods en Pending, sin almacenamiento efímero suficiente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Втрата %1$@ залишає %2$@ подів у Pending, бракує ефемерного сховища"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Verlust von %1$@ lässt %2$@ Pods in Pending, zu wenig flüchtiger Speicher"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perdere %1$@ lascia %2$@ pod in Pending, manca storage effimero"
+          }
+        }
+      }
+    },
+    "asks %@ ephemeral storage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "demande %@ de stockage éphémère"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pide %@ de almacenamiento efímero"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "запитує %@ ефемерного сховища"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fordert %@ flüchtigen Speicher an"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "chiede %@ di storage effimero"
+          }
+        }
+      }
+    },
+    "near its ephemeral storage limit, evicted when over it" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "proche de sa limite de stockage éphémère, expulsé au-delà"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cerca de su límite de almacenamiento efímero, desalojado al superarlo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "близько до ліміту ефемерного сховища, буде витіснений при перевищенні"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nahe am Limit für flüchtigen Speicher, wird bei Überschreitung verdrängt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vicino al limite di storage effimero, sfrattato quando lo supera"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

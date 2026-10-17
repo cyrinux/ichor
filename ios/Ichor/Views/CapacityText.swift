@@ -10,6 +10,16 @@ enum CapacityText {
     static func capacityFreeCpu(_ a: String, _ b: String) -> String { String(localized: "\(a) CPU free of \(b)") }
     static func capacityFreeMemory(_ a: String, _ b: String) -> String { String(localized: "\(a) memory free of \(b)") }
     static func capacityFreePods(_ a: String, _ b: String) -> String { String(localized: "\(a) pod slots free of \(b)") }
+    static func capacityFreeEphemeral(_ a: String, _ b: String) -> String { String(localized: "\(a) ephemeral storage free of \(b)") }
+    static func capacityDiskFullest(_ a: String, _ b: String) -> String { String(localized: "Disk: \(a) free on \(b), the fullest node") }
+    static var capacityDiskUnmeasured: String { String(localized: "Disk free space unavailable: the kubelets did not answer.") }
+    static var capacityDiskForbidden: String { String(localized: "Disk free space unavailable: these credentials may not read nodes/proxy.") }
+    static func capacityNodeDisk(_ a: String, _ b: String) -> String { String(localized: "Disk: \(a) free of \(b)") }
+    static var capacityNodeDiskPressure: String { String(localized: "DiskPressure") }
+    static var capacityNodeDiskLow: String { String(localized: "disk under 15 percent free") }
+    static func capacityNPlusOneShortDisk(_ a: String, _ b: String) -> String { String(localized: "Losing \(a) leaves \(b) pods Pending, short of ephemeral storage") }
+    static func capacityWorkloadEphemeral(_ a: String) -> String { String(localized: "asks \(a) ephemeral storage") }
+    static var capacityRiskDiskNear: String { String(localized: "near its ephemeral storage limit, evicted when over it") }
     static var capacityNPlusOneOk: String { String(localized: "N+1: losing any one node leaves no pod Pending") }
     static func capacityNPlusOneShort(_ a: String, _ b: String) -> String { String(localized: "Losing \(a) leaves \(b) pods Pending") }
     static var capacityMetricsUnavailable: String { String(localized: "Usage unavailable: metrics-server is not installed. The bars show requests only.") }

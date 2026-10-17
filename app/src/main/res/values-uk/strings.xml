@@ -4972,6 +4972,16 @@
     <string name="capacity_risk_evict_first">витісняється першим під тиском на вузол (BestEffort)</string>
     <string name="capacity_risk_unbounded">без ліміту пам\'яті (Burstable)</string>
     <string name="capacity_risk_ok">обмежено</string>
+    <string name="capacity_free_ephemeral">%1$s ефемерного сховища вільно з %2$s</string>
+    <string name="capacity_disk_fullest">Диск: %1$s вільно на %2$s, найзаповненішому вузлі</string>
+    <string name="capacity_disk_unmeasured">Вільне місце на диску недоступне: kubelet-и не відповіли.</string>
+    <string name="capacity_disk_forbidden">Вільне місце на диску недоступне: ці облікові дані не можуть читати nodes/proxy.</string>
+    <string name="capacity_node_disk">Диск: %1$s вільно з %2$s</string>
+    <string name="capacity_node_disk_pressure">DiskPressure</string>
+    <string name="capacity_node_disk_low">на диску менше 15 відсотків вільно</string>
+    <string name="capacity_n_plus_one_short_disk">Втрата %1$s залишає %2$s подів у Pending, бракує ефемерного сховища</string>
+    <string name="capacity_workload_ephemeral">просить %1$s ефемерного сховища</string>
+    <string name="capacity_risk_disk_near">близько до ліміту ефемерного сховища, витісняється при перевищенні</string>
     <string name="capacity_loss_loading">Моделювання…</string>
     <string name="capacity_loss_title">Якщо %1$s впаде</string>
     <string name="capacity_loss_title_multi">Якщо %1$s впадуть</string>
