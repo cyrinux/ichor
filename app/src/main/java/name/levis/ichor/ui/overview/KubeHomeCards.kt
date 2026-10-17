@@ -20,7 +20,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -222,48 +221,4 @@ private fun nodeCapacityLabel(node: KubeNodeInfo): String? = when (node.capacity
     "on-demand" -> stringResource(R.string.kube_node_capacity_on_demand)
     "reserved" -> stringResource(R.string.kube_node_capacity_reserved)
     else -> null
-}
-
-/** The Kubernetes screens that work with these credentials alone. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-internal fun KubeToolsCard(
-    nav: KubeHomeNavigation,
-    crossplane: Boolean = false,
-    tailscale: Boolean = false,
-    clusterLifecycle: Boolean = false,
-    argoRollouts: Boolean = false,
-) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.common_kind_kubernetes), style = MaterialTheme.typography.titleMedium)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = nav.onWorkloads) { Text(stringResource(R.string.overview_action_workloads)) }
-                OutlinedButton(onClick = nav.onResources) { Text(stringResource(R.string.kb_title)) }
-                OutlinedButton(onClick = nav.onHelm) { Text(stringResource(R.string.kb_helm_title)) }
-                OutlinedButton(onClick = nav.onStorage) { Text(stringResource(R.string.storage_title)) }
-                OutlinedButton(onClick = nav.onServices) { Text(stringResource(R.string.kube_services_title)) }
-                OutlinedButton(onClick = nav.onJobs) { Text(stringResource(R.string.kube_jobs_title)) }
-                OutlinedButton(onClick = nav.onEvents) { Text(stringResource(R.string.kube_events_stream_title)) }
-                OutlinedButton(onClick = nav.onMetrics) { Text(stringResource(R.string.metrics_title)) }
-                OutlinedButton(onClick = { nav.onDataServices(null) }) { Text(stringResource(R.string.data_services_title)) }
-                OutlinedButton(onClick = nav.onCheckup) { Text(stringResource(R.string.checkup_title)) }
-                OutlinedButton(onClick = nav.onCapacity) { Text(stringResource(R.string.capacity_title)) }
-                OutlinedButton(onClick = nav.onApiHealth) { Text(stringResource(R.string.apihealth_title)) }
-                OutlinedButton(onClick = nav.onNetworkPolicies) { Text(stringResource(R.string.netpol_title)) }
-                OutlinedButton(onClick = nav.onPolicies) { Text(stringResource(R.string.kpol_title)) }
-                OutlinedButton(onClick = nav.onAutoscaling) { Text(stringResource(R.string.autoscaling_title)) }
-                OutlinedButton(onClick = nav.onVirtualMachines) { Text(stringResource(R.string.vm_title)) }
-                // Only when the cluster serves Argo Rollouts: the read answers "not installed" quickly.
-                if (argoRollouts) OutlinedButton(onClick = nav.onArgoRollouts) { Text(stringResource(R.string.argo_rollouts_title)) }
-                OutlinedButton(onClick = nav.onLoadBalancing) { Text(stringResource(R.string.lb_title)) }
-                // Only when the cluster runs Crossplane: the read answers "not installed" quickly.
-                if (crossplane) OutlinedButton(onClick = nav.onCrossplane) { Text(stringResource(R.string.crossplane_title)) }
-                // Only when the cluster runs the Tailscale operator, the same way.
-                if (tailscale) OutlinedButton(onClick = nav.onTailscale) { Text(stringResource(R.string.tailscale_title)) }
-                // Only on a management cluster running Cluster API or Sidero Metal.
-                if (clusterLifecycle) OutlinedButton(onClick = nav.onClusterLifecycle) { Text(stringResource(R.string.cluster_lifecycle_title)) }
-            }
-        }
-    }
 }

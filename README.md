@@ -895,7 +895,8 @@ paste, QR, or "Open with" / the share sheet); the app tells the two apart. The p
 every context with how it signs in, and why one cannot be added (a file path to inline with
 `kubectl config view --flatten --minify`, a proxy, plain HTTP…). These clusters get a
 Kubernetes home (nodes, API server version, who you are signed in as) and every Kubernetes
-screen; the Talos ones are hidden. What they may do is up to their RBAC.
+screen, grouped on that home as Workloads, Networking, Storage, Observe and Browse; the Talos
+ones are hidden. What they may do is up to their RBAC.
 
 Each node on that home also says where the cloud put it, read from its labels: the
 autoscaler pool it came from (a Karpenter NodePool — open source or EKS Auto Mode — an EKS

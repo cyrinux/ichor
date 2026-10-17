@@ -4474,6 +4474,11 @@
     <string name="kube_services_ready">Endpoints listos: %1$s</string>
     <string name="kube_services_headless">headless</string>
     <string name="kube_jobs_title">Jobs</string>
+    <string name="kube_tools_group_workloads">Cargas de trabajo</string>
+    <string name="kube_tools_group_networking">Redes</string>
+    <string name="kube_tools_group_storage">Almacenamiento</string>
+    <string name="kube_tools_group_observe">Observar</string>
+    <string name="kube_tools_group_browse">Explorar</string>
     <string name="kube_jobs_search">Buscar jobs, CronJobs o motivos</string>
     <string name="kube_jobs_empty">No hay jobs.</string>
     <string name="kube_jobs_no_match">Ningún job coincide.</string>

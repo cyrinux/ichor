@@ -4475,6 +4475,11 @@
     <string name="kube_services_ready">Endpoint pronti: %1$s</string>
     <string name="kube_services_headless">headless</string>
     <string name="kube_jobs_title">Job</string>
+    <string name="kube_tools_group_workloads">Workload</string>
+    <string name="kube_tools_group_networking">Rete</string>
+    <string name="kube_tools_group_storage">Archiviazione</string>
+    <string name="kube_tools_group_observe">Osserva</string>
+    <string name="kube_tools_group_browse">Sfoglia</string>
     <string name="kube_jobs_search">Cerca job, CronJob o motivi</string>
     <string name="kube_jobs_empty">Nessun job.</string>
     <string name="kube_jobs_no_match">Nessun job corrisponde.</string>

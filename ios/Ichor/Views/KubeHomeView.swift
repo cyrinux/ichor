@@ -341,77 +341,121 @@ struct KubeHomeView: View {
         }
     }
 
-    /// The Kubernetes screens that work with these credentials alone.
+    /// The Kubernetes screens that work with these credentials alone, in the families Android
+    /// groups them in. Native rows: the cluster color only tints the icon tile, never the label,
+    /// and says nothing about health.
+    @ViewBuilder
     private var toolsSection: some View {
         Section {
             NavigationLink(value: Route.workloads) {
-                Label("Kubernetes workloads", systemImage: "square.stack.3d.up")
+                toolLabel(KubeHomeAction.workloads)
             }
-            NavigationLink { KubeBrowserView() } label: {
-                Label("Resources", systemImage: "square.grid.3x3")
+            NavigationLink { KubeJobsView() } label: {
+                toolLabel(Text("Jobs"), systemImage: "checklist")
             }
             NavigationLink { HelmReleasesView() } label: {
-                Label("Helm releases", systemImage: "shippingbox")
+                toolLabel(KubeHomeAction.helm)
             }
-            NavigationLink { KubeStorageView() } label: {
-                Label("Storage", systemImage: "externaldrive")
+            NavigationLink { AutoscalingView() } label: {
+                toolLabel(Text("Autoscaling"), systemImage: "arrow.up.and.down")
             }
+            NavigationLink { VirtualMachinesView() } label: {
+                toolLabel(Text("Virtual machines"), systemImage: "desktopcomputer")
+            }
+            // Only when the cluster serves Argo Rollouts; a refused read (no access) stays quiet.
+            if case .loaded(let rollouts, _, _) = argoRollouts, rollouts.installed {
+                NavigationLink { ArgoRolloutsView() } label: {
+                    toolLabel(Text("Argo Rollouts"), systemImage: "arrow.triangle.branch")
+                }
+            }
+        } header: {
+            Text("Workloads")
+        }
+        Section {
             NavigationLink { KubeServicesView() } label: {
-                Label("Services", systemImage: "network")
+                toolLabel(Text("Services"), systemImage: "network")
+            }
+            NavigationLink { NetPoliciesView() } label: {
+                toolLabel(KubeHomeAction.networkPolicies)
+            }
+            NavigationLink { KubeLoadBalancingView() } label: {
+                toolLabel(Text(LoadBalancingText.title), systemImage: "point.3.connected.trianglepath.dotted")
+            }
+            // Only when the cluster runs the Tailscale operator: the read answers "not installed" quickly.
+            if tailscale != nil {
+                NavigationLink { TailscaleView() } label: {
+                    toolLabel(Text("Tailscale"), systemImage: "network.badge.shield.half.filled")
+                }
+            }
+        } header: {
+            Text("Networking")
+        }
+        Section {
+            NavigationLink { KubeStorageView() } label: {
+                toolLabel(Text("Storage"), systemImage: "externaldrive")
+            }
+            NavigationLink(value: Route.dataServices(hints: "", downNodes: loadedNotReadyNodes)) {
+                toolLabel(KubeHomeAction.dataServices)
+            }
+        } header: {
+            Text("Storage")
+        }
+        Section {
+            NavigationLink { KubeLiveEventsView() } label: {
+                toolLabel(Text("Kubernetes events"), systemImage: "list.bullet.rectangle")
+            }
+            NavigationLink(value: Route.metrics) {
+                toolLabel(KubeHomeAction.metrics)
+            }
+            NavigationLink { CheckupView() } label: {
+                toolLabel(KubeHomeAction.checkup)
+            }
+            NavigationLink(value: Route.capacity) {
+                toolLabel(KubeHomeAction.capacity)
+            }
+            NavigationLink { ApiHealthView() } label: {
+                toolLabel(KubeHomeAction.apiHealth)
+            }
+            NavigationLink { PoliciesView() } label: {
+                toolLabel(Text("Policies"), systemImage: "checkmark.shield")
+            }
+            NavigationLink(value: Route.alerts) {
+                toolLabel(KubeHomeAction.alerts)
+            }
+        } header: {
+            Text("Observe")
+        }
+        Section {
+            NavigationLink { KubeBrowserView() } label: {
+                toolLabel(KubeHomeAction.resources)
             }
             // Only when the cluster runs Crossplane: the read answers "not installed" quickly.
             if crossplane != nil {
                 NavigationLink { CrossplaneView() } label: {
-                    Label("Crossplane", systemImage: "square.stack.3d.up")
-                }
-            }
-            // Only when the cluster runs the Tailscale operator, the same way.
-            if tailscale != nil {
-                NavigationLink { TailscaleView() } label: {
-                    Label("Tailscale", systemImage: "network.badge.shield.half.filled")
+                    toolLabel(Text("Crossplane"), systemImage: "square.stack.3d.up")
                 }
             }
             // Only on a management cluster running Cluster API or Sidero Metal.
             if clusterLifecycle != nil {
                 NavigationLink { ClusterLifecycleView() } label: {
-                    Label("Cluster lifecycle", systemImage: "server.rack")
+                    toolLabel(Text("Cluster lifecycle"), systemImage: "server.rack")
                 }
-            }
-            NavigationLink { KubeLoadBalancingView() } label: {
-                Label(LoadBalancingText.title, systemImage: "point.3.connected.trianglepath.dotted")
-            }
-            NavigationLink { KubeJobsView() } label: {
-                Label("Jobs", systemImage: "checklist")
-            }
-            NavigationLink { KubeLiveEventsView() } label: {
-                Label("Kubernetes events", systemImage: "list.bullet.rectangle")
-            }
-            NavigationLink { PoliciesView() } label: {
-                Label("Policies", systemImage: "checkmark.shield")
-            }
-            NavigationLink { AutoscalingView() } label: {
-                Label("Autoscaling", systemImage: "arrow.up.and.down")
-            }
-            NavigationLink { VirtualMachinesView() } label: {
-                Label("Virtual machines", systemImage: "desktopcomputer")
-            }
-            // Only when the cluster serves Argo Rollouts; a refused read (no access) stays quiet.
-            if case .loaded(let rollouts, _, _) = argoRollouts, rollouts.installed {
-                NavigationLink { ArgoRolloutsView() } label: {
-                    Label("Argo Rollouts", systemImage: "arrow.triangle.branch")
-                }
-            }
-            NavigationLink(value: Route.metrics) {
-                Label("Metrics", systemImage: "chart.xyaxis.line")
-            }
-            NavigationLink(value: Route.dataServices(hints: "", downNodes: loadedNotReadyNodes)) {
-                Label("Data services", systemImage: "externaldrive.connected.to.line.below")
-            }
-            NavigationLink(value: Route.alerts) {
-                Label("Alerts", systemImage: "bell.badge")
             }
         } header: {
-            Text("Kubernetes")
+            Text("Browse")
+        }
+    }
+
+    /// A screen row named and drawn as in the toolbar and its editor.
+    private func toolLabel(_ action: KubeHomeAction) -> some View {
+        toolLabel(action.title, systemImage: action.systemImage)
+    }
+
+    private func toolLabel(_ title: Text, systemImage: String) -> some View {
+        Label {
+            title.foregroundStyle(.primary)
+        } icon: {
+            KubeToolIcon(systemImage: systemImage, accent: model.accent)
         }
     }
 
@@ -609,5 +653,22 @@ private struct KubeExpiryBanner: View {
             Image(systemName: "exclamationmark.triangle.fill")
         }
         .foregroundStyle(days < 0 ? Color.red : Color.orange)
+    }
+}
+
+/// A Kubernetes home row's icon: in the cluster's color on a faint tile of it, sized with the
+/// text. Decoration only, never a health signal: the row's label says what it opens.
+private struct KubeToolIcon: View {
+    let systemImage: String
+    let accent: Color
+    @ScaledMetric(relativeTo: .body) private var side: CGFloat = 28
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .font(.callout.weight(.medium))
+            .foregroundStyle(accent)
+            .frame(width: side, height: side)
+            .background(accent.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            .accessibilityHidden(true)
     }
 }
