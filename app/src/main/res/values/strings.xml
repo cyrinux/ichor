@@ -4321,6 +4321,7 @@
     <string name="activity_empty_filtered">No action matches these filters.</string>
     <string name="activity_filter_all">All</string>
     <string name="activity_filter_failed">Failed</string>
+    <string name="activity_outcome_partial">Partly done</string>
     <string name="activity_share">Share activity</string>
     <string name="activity_clear">Clear</string>
     <string name="activity_clear_title">Clear the activity log?</string>

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -49,6 +50,7 @@ import name.levis.ichor.model.actionLabel
 import name.levis.ichor.model.distinctOf
 import name.levis.ichor.model.failed
 import name.levis.ichor.model.matches
+import name.levis.ichor.model.partial
 import name.levis.ichor.model.target
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
@@ -211,6 +213,8 @@ private fun ActivityRow(entry: ActivityEntry, showCluster: Boolean) {
         leadingContent = {
             if (entry.failed) {
                 Icon(Icons.Outlined.ErrorOutline, stringResource(R.string.activity_filter_failed), tint = status.bad)
+            } else if (entry.partial) {
+                Icon(Icons.Outlined.WarningAmber, stringResource(R.string.activity_outcome_partial), tint = status.warn)
             } else {
                 Icon(Icons.Outlined.CheckCircle, null, tint = status.ok)
             }
@@ -229,8 +233,11 @@ private fun ActivityRow(entry: ActivityEntry, showCluster: Boolean) {
                 if (entry.params.isNotEmpty()) {
                     Text(entry.params, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                if (entry.partial) {
+                    Text(stringResource(R.string.activity_outcome_partial), style = MaterialTheme.typography.labelMedium, color = status.warn)
+                }
                 if (entry.error.isNotEmpty()) {
-                    Text(entry.error, style = MaterialTheme.typography.bodySmall, color = status.bad)
+                    Text(entry.error, style = MaterialTheme.typography.bodySmall, color = if (entry.partial) status.warn else status.bad)
                 }
             }
         },

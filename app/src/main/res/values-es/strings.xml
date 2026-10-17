@@ -4318,6 +4318,7 @@
     <string name="activity_empty_filtered">Ninguna acción coincide con estos filtros.</string>
     <string name="activity_filter_all">Todas</string>
     <string name="activity_filter_failed">Fallidas</string>
+    <string name="activity_outcome_partial">Hecho en parte</string>
     <string name="activity_share">Compartir la actividad</string>
     <string name="activity_clear">Borrar</string>
     <string name="activity_clear_title">¿Borrar el registro de actividad?</string>

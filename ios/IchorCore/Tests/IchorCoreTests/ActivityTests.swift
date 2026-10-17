@@ -19,6 +19,17 @@ final class ActivityTests: XCTestCase {
         XCTAssertEqual(decoded[0].params, "")
     }
 
+    func testPartialAndUnknownOutcomes() throws {
+        let json = #"[{"action":"sanitize-pods","outcome":"partial","error":"1 of 2 pods not deleted"},{"action":"x","outcome":"something-new"}]"#
+        let decoded = try TalosJSON.decode([ActivityEntry].self, from: json)
+        XCTAssertTrue(decoded[0].partial)
+        XCTAssertFalse(decoded[0].failed)
+        XCTAssertTrue(ActivityFilter(failedOnly: true).matches(decoded[0]))
+        XCTAssertTrue(decoded[1].failed)
+        XCTAssertFalse(decoded[1].partial)
+        XCTAssertFalse(entries[0].wentWrong)
+    }
+
     func testActionLabel() {
         XCTAssertEqual(entries[2].actionLabel, "Rollout restart")
         XCTAssertEqual(entries[0].actionLabel, "Scale")

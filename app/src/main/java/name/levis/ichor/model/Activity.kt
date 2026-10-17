@@ -20,14 +20,18 @@ data class ActivityEntry(
     val action: String = "",
     /** A summary of what the action was given, secrets redacted. */
     val params: String = "",
-    /** ok or failed. */
+    /** ok, partial (some of the work could not be done, see [error]) or failed. */
     val outcome: String = "ok",
     val error: String = "",
     /** Done on the demo cluster. */
     val demo: Boolean = false,
 )
 
-val ActivityEntry.failed: Boolean get() = outcome != "ok"
+/** The action did only part of its work (a pod sweep where some pods could not be deleted). */
+val ActivityEntry.partial: Boolean get() = outcome == "partial"
+
+/** Anything but ok or partial, an outcome a newer core may add included. */
+val ActivityEntry.failed: Boolean get() = outcome != "ok" && !partial
 
 /** What the entry acted on: the node, the namespace and the object that are set, joined by "/". */
 val ActivityEntry.target: String get() = listOf(node, namespace, obj).filter { it.isNotEmpty() }.joinToString("/")
@@ -42,7 +46,7 @@ data class ActivityFilter(val cluster: String? = null, val action: String? = nul
 fun ActivityEntry.matches(filter: ActivityFilter): Boolean =
     (filter.cluster == null || cluster == filter.cluster) &&
         (filter.action == null || action == filter.action) &&
-        (!filter.failedOnly || failed)
+        (!filter.failedOnly || failed || partial)
 
 /** The distinct values of [key] in [entries], in order of first appearance (newest first). */
 fun List<ActivityEntry>.distinctOf(key: (ActivityEntry) -> String): List<String> = map(key).filter { it.isNotEmpty() }.distinct()

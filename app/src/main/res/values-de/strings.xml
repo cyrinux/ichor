@@ -4310,6 +4310,7 @@
     <string name="activity_empty_filtered">Keine Aktion entspricht diesen Filtern.</string>
     <string name="activity_filter_all">Alle</string>
     <string name="activity_filter_failed">Fehlgeschlagen</string>
+    <string name="activity_outcome_partial">Teilweise erledigt</string>
     <string name="activity_share">Aktivität teilen</string>
     <string name="activity_clear">Löschen</string>
     <string name="activity_clear_title">Aktivitätsprotokoll löschen?</string>

@@ -4540,6 +4540,7 @@
     <string name="activity_empty_filtered">Жодна дія не відповідає цим фільтрам.</string>
     <string name="activity_filter_all">Усі</string>
     <string name="activity_filter_failed">Невдалі</string>
+    <string name="activity_outcome_partial">Виконано частково</string>
     <string name="activity_share">Поділитися активністю</string>
     <string name="activity_clear">Очистити</string>
     <string name="activity_clear_title">Очистити журнал активності?</string>

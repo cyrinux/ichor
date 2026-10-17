@@ -104,7 +104,7 @@ struct ActivityLogView: View {
                 FilterChip(label: String(localized: "All"), count: all.count, selected: filter == ActivityFilter()) {
                     filter = ActivityFilter()
                 }
-                FilterChip(label: String(localized: "Failed"), count: all.filter(\.failed).count, selected: filter.failedOnly) {
+                FilterChip(label: String(localized: "Failed"), count: all.filter(\.wentWrong).count, selected: filter.failedOnly) {
                     filter.failedOnly.toggle()
                 }
                 // Only a choice when there is more than one.
@@ -146,10 +146,10 @@ private struct ActivityRow: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Image(systemName: entry.failed ? "exclamationmark.circle" : "checkmark.circle")
-                .foregroundStyle(entry.failed ? Color.statusBad : Color.statusOK)
-                .accessibilityLabel(Text("Failed"))
-                .accessibilityHidden(!entry.failed)
+            Image(systemName: entry.failed ? "exclamationmark.circle" : entry.partial ? "exclamationmark.triangle" : "checkmark.circle")
+                .foregroundStyle(entry.failed ? Color.statusBad : entry.partial ? Color.statusWarn : Color.statusOK)
+                .accessibilityLabel(entry.partial ? Text("Partly done") : Text("Failed"))
+                .accessibilityHidden(!entry.wentWrong)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: [entry.actionLabel, entry.target].filter { !$0.isEmpty }.joined(separator: " · "))
                     .lineLimit(2)
@@ -157,8 +157,11 @@ private struct ActivityRow: View {
                 if !entry.params.isEmpty {
                     Text(verbatim: entry.params).font(.caption).foregroundStyle(.secondary)
                 }
+                if entry.partial {
+                    Text("Partly done").font(.caption.weight(.semibold)).foregroundStyle(Color.statusWarn)
+                }
                 if !entry.error.isEmpty {
-                    Text(verbatim: entry.error).font(.caption).foregroundStyle(Color.statusBad)
+                    Text(verbatim: entry.error).font(.caption).foregroundStyle(entry.partial ? Color.statusWarn : Color.statusBad)
                 }
             }
         }
