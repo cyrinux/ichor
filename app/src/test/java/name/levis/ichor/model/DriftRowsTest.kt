@@ -38,7 +38,7 @@ class DriftRowsTest {
         assertTrue(change.added.isEmpty() && change.removed.isEmpty() && change.changed.isEmpty())
         assertTrue(change.rows().isEmpty())
         assertEquals("true → false", change.beforeAfter())
-        assertEquals("∅ → b", change.copy(before = "").beforeAfter())
+        assertEquals("∅ → false", change.copy(before = "").beforeAfter())
     }
 
     @Test
