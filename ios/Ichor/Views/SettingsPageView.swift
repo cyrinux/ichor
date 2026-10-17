@@ -16,6 +16,7 @@ struct SettingsPageView: View {
             case .privacy: PrivacySection()
             case .alerts: MonitoringSection()
             case .ai: AISection()
+            case .gitHosts: GitHostsView()
             // The row is hidden without the feature; a stale path shows an empty page.
             case .kubernetes: if model.allows(.kubeconfig) { KubeconfigSection() }
             case .clusters: ClustersSection()
@@ -40,6 +41,7 @@ extension SettingsPage {
         case .privacy: "Privacy"
         case .alerts: "Alerts"
         case .ai: "AI diagnosis"
+        case .gitHosts: "Git hosts"
         case .kubernetes: "Kubernetes"
         case .clusters: "Clusters & backup"
         case .support: "Support"
@@ -54,6 +56,7 @@ extension SettingsPage {
         case .privacy: "Screenshot mode, cluster events, app icons, last known state"
         case .alerts: "Background checks, watches, thresholds"
         case .ai: "Provider, API key, model"
+        case .gitHosts: "A token per Git host, to read and change the repositories Argo CD and Flux deploy from."
         case .kubernetes: "Node debug shell, kubeconfig export"
         case .clusters: "Add, renew, back up, delete"
         case .support: "Support bundle, activity log, report a bug"

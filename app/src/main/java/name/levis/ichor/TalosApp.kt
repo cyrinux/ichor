@@ -42,6 +42,9 @@ import name.levis.ichor.data.MaintenanceManager
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.data.GitOpsRepository
+import name.levis.ichor.data.GitHostStore
+import name.levis.ichor.data.SecureStoreToken
+import name.levis.ichor.model.isDemo
 import name.levis.ichor.data.GoCall
 import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.SupportBundleRepository
@@ -153,7 +156,20 @@ class TalosApp : Application() {
     private val goCall by lazy { GoCall(configRepository, kubeServers, offlineCache) }
     val talosRepository by lazy { TalosRepository(goCall) }
     val kubeRepository by lazy { KubeRepository(goCall) }
-    val gitOpsRepository by lazy { GitOpsRepository(goCall) }
+    val gitOpsRepository by lazy { GitOpsRepository(goCall, gitHostStore) }
+
+    /** Git host tokens (Settings → Git hosts): one Keystore key and file per host. */
+    val gitHostStore by lazy {
+        GitHostStore(
+            getSharedPreferences(GitHostStore.FILE, Context.MODE_PRIVATE),
+            { host ->
+                val name = GitHostStore.tokenName(host)
+                SecureStoreToken(SecureStore(java.io.File(filesDir, "$name.enc"), keyAlias = name))
+            },
+            ProcessLifecycleOwner.get().lifecycleScope,
+            demo = { configRepository.config.value?.activeSummary?.isDemo == true },
+        )
+    }
 
     /** Search across clusters: what every cluster last showed, never a cluster call. */
     val searchRepository by lazy {
