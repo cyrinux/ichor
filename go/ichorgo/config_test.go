@@ -19,7 +19,7 @@ import (
 )
 
 // testIdentity returns base64 PEM ca/crt/key using an Ed25519 key, like talosctl generates.
-func testIdentity(t *testing.T, notAfter time.Time) (ca, crt, key string) {
+func testIdentity(t testing.TB, notAfter time.Time) (ca, crt, key string) {
 	t.Helper()
 
 	pub, priv, err := ed25519.GenerateKey(rand.Reader)

@@ -63,11 +63,11 @@ func isDemoContext(yaml, name string) bool {
 // that do not go through demoRead (which refuses a kubeconfig itself), so the Kubernetes
 // demo fails them with errTalosUnavailable like any kubeconfig cluster.
 func isTalosDemoContext(yaml, name string) bool {
-	if !strings.Contains(yaml, demoEndpoint) || isKubeconfig(yaml) {
+	// A text without the demo endpoint is no demo: no need to parse it.
+	if !mentionsDemo(yaml) || isKubeconfig(yaml) {
 		return false
 	}
-	_, c, err := resolveContext(yaml, name)
-	return err == nil && slices.Contains(c.Endpoints, demoEndpoint)
+	return configs.get(yaml).isDemo(name)
 }
 
 // demoTalosVersion is the Talos version the demo nodes say they run.

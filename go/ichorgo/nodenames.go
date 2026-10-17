@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"sync"
 )
 
@@ -156,17 +157,12 @@ func fillKnownNames(nodes []nodeOverview, known map[string]knownNode) {
 
 // contextFingerprints lists the fingerprint of every context of the talosconfig.
 func contextFingerprints(configYAML string) []string {
-	cfg, err := loadConfig(configYAML)
-	if err != nil {
+	p := configs.get(configYAML)
+	if _, err := p.parsed(); err != nil {
 		return nil
 	}
 
-	out := make([]string, 0, len(cfg.Contexts))
-	for name, ctx := range cfg.Contexts {
-		out = append(out, contextFingerprint(name, ctx))
-	}
-
-	return out
+	return slices.Clone(p.fingerprints)
 }
 
 // readKnownNodes decrypts the file with aead. plaintext reports a file written in clear by
