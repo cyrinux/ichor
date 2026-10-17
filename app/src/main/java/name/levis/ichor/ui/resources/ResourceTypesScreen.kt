@@ -8,15 +8,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -46,6 +43,9 @@ import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.cardGroupTitle
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.FeatureGate
 import name.levis.ichor.ui.components.Loaded
@@ -101,27 +101,15 @@ fun ResourceTypesScreen(
 @Composable
 private fun TypeList(types: List<ResourceType>, query: String, onType: (ResourceType) -> Unit) {
     val groups = remember(types, query) { resourceTypeGroups(types, query) }
-    LazyColumn(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (groups.isEmpty()) {
             item {
                 EmptyText(emptyOrNoMatch(query, R.string.resources_types_empty, R.string.resources_no_match))
             }
         }
         groups.forEach { group ->
-            item(key = "ns|${group.namespace}") {
-                Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        group.namespace.ifEmpty { "—" },
-                        style = MaterialTheme.typography.titleSmall,
-                        fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    )
-                }
-            }
-            items(group.types, key = { "t|${it.namespace}|${it.type}" }) { type ->
-                TypeRow(type, onClick = { onType(type) })
-                HorizontalDivider()
-            }
+            cardGroupTitle("ns|${group.namespace}", group.namespace.ifEmpty { "—" })
+            cardRows(group.types, key = { "t|${it.namespace}|${it.type}" }) { type -> TypeRow(type, onClick = { onType(type) }) }
         }
     }
 }

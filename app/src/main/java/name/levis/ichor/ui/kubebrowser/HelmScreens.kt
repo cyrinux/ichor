@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -63,6 +62,8 @@ import name.levis.ichor.ui.app
 import name.levis.ichor.ui.checkup.ageSince
 import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.groupedCardRows
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoRow
@@ -150,10 +151,11 @@ fun HelmReleasesScreen(
                     if (rows.isEmpty()) {
                         EmptyText(emptyOrNoMatch(query, R.string.kb_helm_empty, R.string.kb_helm_no_match))
                     } else {
-                        LazyColumn(Modifier.fillMaxSize()) {
-                            items(rows, key = { it.key }) { r ->
-                                ReleaseRow(r, showNamespace = control.scope.namespace == null, now) { onRelease(r) }
-                                HorizontalDivider()
+                        // All namespaces: one card per namespace, its name as the card's title.
+                        val byNamespace = if (control.scope.namespace == null) { r: HelmRelease -> r.namespace } else null
+                        LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
+                            groupedCardRows(rows, groupOf = byNamespace, key = { it.key }) { r ->
+                                ReleaseRow(r, now) { onRelease(r) }
                             }
                         }
                     }
@@ -165,7 +167,7 @@ fun HelmReleasesScreen(
 }
 
 @Composable
-private fun ReleaseRow(r: HelmRelease, showNamespace: Boolean, now: Long, onClick: () -> Unit) {
+private fun ReleaseRow(r: HelmRelease, now: Long, onClick: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -173,7 +175,7 @@ private fun ReleaseRow(r: HelmRelease, showNamespace: Boolean, now: Long, onClic
             ToneLabel(r.status, statusColor(r.status))
         }
         Text(
-            listOfNotNull(r.namespace.takeIf { showNamespace }, "${r.chart} ${r.chartVersion}", r.appVersion.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.kb_helm_app_version, it) })
+            listOfNotNull("${r.chart} ${r.chartVersion}", r.appVersion.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.kb_helm_app_version, it) })
                 .joinToString("  ·  "),
             style = MaterialTheme.typography.labelSmall,
             color = muted,

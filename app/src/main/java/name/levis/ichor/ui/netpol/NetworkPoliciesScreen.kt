@@ -50,6 +50,11 @@ import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.RowCard
+import name.levis.ichor.ui.components.RowPosition
+import name.levis.ichor.ui.components.cardGroupTitle
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.Loaded
@@ -140,7 +145,8 @@ private fun PolicyList(
     val namespaces = remember(report) { report.policyNamespaces }
     val selected = namespace?.takeIf { it in namespaces }
     val groups = remember(report, selected, query) { report.grouped(selected, query) }
-    LazyColumn(Modifier.fillMaxSize()) {
+    val clusterWide = stringResource(R.string.netpol_cluster_wide)
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         item(key = "summary") { Summary(report, selected) }
         item(key = "filters") {
             Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -160,27 +166,30 @@ private fun PolicyList(
             item(key = "empty") { EmptyText(emptyOrNoMatch(query, R.string.netpol_empty, R.string.netpol_no_match)) }
         }
         groups.forEach { (ns, policies) ->
-            item(key = "ns-$ns") {
-                SectionTitle(ns.ifEmpty { stringResource(R.string.netpol_cluster_wide) }, Modifier.padding(horizontal = 16.dp))
-            }
-            items(policies, key = { it.key }) { policy ->
-                PolicyRow(policy, onClick = { onOpen(policy) })
-                HorizontalDivider()
-            }
+            cardGroupTitle("ns-$ns", ns.ifEmpty { clusterWide })
+            cardRows(policies, key = { it.key }) { policy -> PolicyRow(policy, onClick = { onOpen(policy) }) }
         }
     }
 }
 
-/** How many policies of each kind, then how isolated each namespace's pods are. */
+/** How many policies of each kind, then a card of how isolated each namespace's pods are. */
 @Composable
 private fun Summary(report: NetPolicyReport, selected: String?) {
-    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         val kinds = remember(report) { report.policies.groupingBy { it.kindShort }.eachCount().toList().sortedBy { it.first } }
-        if (kinds.isNotEmpty()) MutedText(kinds.joinToString("  ·  ") { (kind, n) -> "$n $kind" })
-        if (report.error.isNotEmpty()) InlineError(stringResource(R.string.netpol_read_error, report.error))
+        Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (kinds.isNotEmpty()) MutedText(kinds.joinToString("  ·  ") { (kind, n) -> "$n $kind" })
+            if (report.error.isNotEmpty()) InlineError(stringResource(R.string.netpol_read_error, report.error))
+        }
         val rows = report.namespaces.filter { selected == null || it.namespace == selected }.filter { it.pods > 0 }
-        if (rows.isNotEmpty()) SectionTitle(stringResource(R.string.netpol_namespaces))
-        rows.forEach { NamespaceRow(it) }
+        if (rows.isNotEmpty()) {
+            SectionTitle(stringResource(R.string.netpol_namespaces), Modifier.padding(horizontal = 20.dp))
+            RowCard(RowPosition.ONLY) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    rows.forEach { NamespaceRow(it) }
+                }
+            }
+        }
     }
 }
 

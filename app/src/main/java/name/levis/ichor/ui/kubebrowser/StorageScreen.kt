@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.AssistChip
@@ -56,6 +55,8 @@ import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.groupedCardRows
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
@@ -167,17 +168,17 @@ fun StorageScreen(
                     if (rows.isEmpty()) {
                         EmptyText(emptyOrNoMatch(query, R.string.storage_kube_empty, R.string.storage_kube_no_match))
                     } else {
-                        LazyColumn(Modifier.fillMaxSize()) {
-                            items(rows, key = { it.key }) { c ->
+                        // All namespaces: one card per namespace, its name as the card's title.
+                        val byNamespace = if (control.scope.namespace == null) { r: StorageClaim -> r.namespace } else null
+                        LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
+                            groupedCardRows(rows, groupOf = byNamespace, key = { it.key }) { c ->
                                 ClaimRow(
                                     c,
-                                    showNamespace = control.scope.namespace == null,
                                     onClick = { onClaim(KubeObjectRef.pvc(c.namespace, c.name)) },
                                     onDataService = onDataService,
                                     canSnapshot = !busy && config?.activeSummary?.isDemo == false && snapshots?.canCreate(c) == true,
                                     onSnapshot = { confirming = c },
                                 )
-                                HorizontalDivider()
                             }
                         }
                     }
@@ -197,7 +198,7 @@ internal fun StorageLevel.color(): Color = when (this) {
 }
 
 @Composable
-private fun ClaimRow(c: StorageClaim, showNamespace: Boolean, onClick: () -> Unit, onDataService: (DataServiceKind) -> Unit, canSnapshot: Boolean, onSnapshot: () -> Unit) {
+private fun ClaimRow(c: StorageClaim, onClick: () -> Unit, onDataService: (DataServiceKind) -> Unit, canSnapshot: Boolean, onSnapshot: () -> Unit) {
     val denial = name.levis.ichor.ui.components.rememberKubeDenial(name.levis.ichor.model.KubeAction.CREATE_VOLUME_SNAPSHOT, c.namespace)
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(
@@ -206,7 +207,7 @@ private fun ClaimRow(c: StorageClaim, showNamespace: Boolean, onClick: () -> Uni
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                if (showNamespace) c.key else c.name,
+                c.name,
                 style = MaterialTheme.typography.bodyMedium,
                 fontFamily = FontFamily.Monospace,
                 maxLines = 1,
