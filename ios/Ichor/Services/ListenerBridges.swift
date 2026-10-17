@@ -29,4 +29,14 @@ extension TalosClient {
             continuation.onTermination = { _ in run.cancel() }
         }
     }
+
+    /// `bridged` for a run that ends with an error: the listener finishes the stream throwing it.
+    static func bridgedThrowing<Event>(
+        _ start: (AsyncThrowingStream<Event, Error>.Continuation) -> BridgedRun
+    ) -> AsyncThrowingStream<Event, Error> {
+        AsyncThrowingStream { continuation in
+            let run = start(continuation)
+            continuation.onTermination = { _ in run.cancel() }
+        }
+    }
 }

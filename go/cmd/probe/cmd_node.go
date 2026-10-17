@@ -96,7 +96,11 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
-	{name: "overview", args: "", run: func(e env) (out string, err error) {
+	{name: "overview", args: "[-stream]", run: func(e env) (out string, err error) {
+		if e.stream {
+			return overviewStream(e.cfg, e.context)
+		}
+
 		out, err = ichorgo.ClusterOverview(e.cfg, e.context)
 
 		return out, err

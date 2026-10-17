@@ -125,6 +125,8 @@
         <item quantity="other">%d вузла</item>
     </plurals>
     <string name="overview_stat_nodes">Вузли</string>
+    <string name="overview_nodes_answered">Відповіли %1$d з %2$d вузлів</string>
+    <string name="overview_nodes_answered_unknown">Вузлів відповіло: %1$d</string>
     <string name="overview_nodes_unplaced">Поза картою</string>
     <string name="overview_nodes_open_all">Показати всі вузли</string>
     <string name="nodes_search">Пошук за іменем хоста або адресою</string>

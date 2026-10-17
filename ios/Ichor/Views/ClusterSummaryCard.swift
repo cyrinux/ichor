@@ -8,6 +8,9 @@ import IchorCore
 struct ClusterSummaryCard: View {
     let name: String
     let summary: ClusterSummary
+    /// While the overview streams in: how many nodes answered, shown instead of the health
+    /// pill (which only a complete overview can tell), with a thin bar when the total is known.
+    var answered: NodesAnswered? = nil
     let live: ClusterLive?
 
     var body: some View {
@@ -18,7 +21,16 @@ struct ClusterSummaryCard: View {
                     Text(verbatim: headline).font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 }
                 Spacer()
-                ClusterStatusPill(status: summary.status)
+                if let answered {
+                    AnsweredLabel(answered: answered)
+                } else {
+                    ClusterStatusPill(status: summary.status)
+                }
+            }
+            if let fraction = answered?.fraction {
+                ProgressView(value: min(max(fraction, 0), 1))
+                    .animation(.easeInOut, value: fraction)
+                    .accessibilityHidden(true) // the label above says the same
             }
             Breakdown(summary: summary)
             Divider()
@@ -53,6 +65,25 @@ private struct ClusterStatusPill: View {
         case .degraded: StatusPill(label: String(localized: "Degraded"), color: .statusWarn)
         case .down: StatusPill(label: String(localized: "Unreachable"), color: .statusBad)
         }
+    }
+}
+
+/// "7 of 8 nodes answered", or "Nodes answered: 7" while the total is unknown.
+private struct AnsweredLabel: View {
+    let answered: NodesAnswered
+
+    var body: some View {
+        Group {
+            if let total = answered.total {
+                Text("\(answered.answered) of \(total) nodes answered")
+            } else {
+                Text("Nodes answered: \(answered.answered)")
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .monospacedDigit()
+        .lineLimit(1)
     }
 }
 

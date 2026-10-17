@@ -21,10 +21,10 @@ data class ClusterOutage(
     val errors: List<String>,
 )
 
-/** Null as long as one node answered (or there is none to try). */
+/** Null as long as one node answered (or there is none to try), and until the overview is complete. */
 val ClusterOverview.outage: ClusterOutage?
     get() {
-        if (nodes.isEmpty() || nodes.any { it.reachable }) return null
+        if (partial || nodes.isEmpty() || nodes.any { it.reachable }) return null
         val kinds = nodes.map { it.errorKind }.toSet()
         val cause = when {
             kinds == setOf(ERROR_KIND_NETWORK) -> OutageCause.NETWORK

@@ -171,10 +171,25 @@ public enum ContextKind {
 public struct ClusterOverview: Codable, Equatable, Sendable {
     public let context: String
     public let nodes: [NodeOverview]
+    /// Only the nodes that answered so far, while a streamed overview loads (OverviewStream).
+    /// Never encoded: what is remembered, cached or handed to the monitor is complete.
+    public let partial: Bool
 
-    public init(context: String, nodes: [NodeOverview]) {
+    public init(context: String, nodes: [NodeOverview], partial: Bool = false) {
         self.context = context
         self.nodes = nodes
+        self.partial = partial
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case context, nodes
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        context = try container.decode(String.self, forKey: .context)
+        nodes = try container.decode([NodeOverview].self, forKey: .nodes)
+        partial = false
     }
 }
 

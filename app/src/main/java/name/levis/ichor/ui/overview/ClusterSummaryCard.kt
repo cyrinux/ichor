@@ -17,6 +17,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.ClusterStatus
 import name.levis.ichor.model.ClusterSummary
 import name.levis.ichor.model.ClusterUsage
+import name.levis.ichor.model.NodesAnswered
 import name.levis.ichor.model.displayVersion
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatTile
@@ -57,6 +59,8 @@ fun ClusterSummaryCard(
     name: String,
     summary: ClusterSummary,
     live: ClusterLiveState?,
+    /** While the overview streams in: how many nodes answered, shown instead of the health badge. */
+    answered: NodesAnswered?,
     onInsights: () -> Unit,
     onCapacity: () -> Unit,
     modifier: Modifier = Modifier,
@@ -68,9 +72,9 @@ fun ClusterSummaryCard(
                     Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     MutedText(headline(summary))
                 }
-                ClusterStatusPill(summary.status)
+                if (answered == null) ClusterStatusPill(summary.status)
             }
-            Breakdown(summary)
+            if (answered != null) AnsweredProgress(answered) else Breakdown(summary)
             HorizontalDivider(Modifier.padding(vertical = 12.dp))
             // Live memory only once it covers every node the overview reached, never fewer.
             val reached = summary.total - summary.unreachable
@@ -105,6 +109,26 @@ private fun Footer(onCapacity: () -> Unit) {
         Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = color)
         IconButton(onClick = onCapacity) {
             Icon(Icons.Outlined.Speed, contentDescription = stringResource(R.string.capacity_title))
+        }
+    }
+}
+
+/**
+ * "7 of 8 nodes answered" over a thin bar (as the paged lists show their pages), or the count
+ * alone over a running bar when the context does not say how many nodes it has.
+ */
+@Composable
+private fun AnsweredProgress(answered: NodesAnswered) {
+    val total = answered.total
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        MutedText(
+            if (total != null) stringResource(R.string.overview_nodes_answered, answered.answered, total)
+            else stringResource(R.string.overview_nodes_answered_unknown, answered.answered),
+        )
+        if (total != null) {
+            LinearProgressIndicator(progress = { answered.answered.toFloat() / total }, modifier = Modifier.fillMaxWidth())
+        } else {
+            LinearProgressIndicator(Modifier.fillMaxWidth())
         }
     }
 }

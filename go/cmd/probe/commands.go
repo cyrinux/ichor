@@ -11,7 +11,7 @@ const noOutput = "\x00"
 // env is what a command runs with: the talosconfig and the flags.
 type env struct {
 	cmd, cfg, context, kubeServer, ageRecipient, configPath, home, maskWords string
-	mask                                                                     bool
+	mask, stream                                                             bool
 }
 
 // command is one subcommand of the probe: its name, its arguments as the usage shows them
