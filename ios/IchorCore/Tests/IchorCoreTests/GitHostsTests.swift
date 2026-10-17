@@ -76,6 +76,62 @@ final class GitHostsTests: XCTestCase {
         XCTAssertEqual(replaced.removing("absent.example.org"), replaced)
     }
 
+    func testParsesTheTypedAliases() {
+        XCTAssertEqual(parseGitHostAliases("ssh.git.example.org, gitea-http.gitea.svc.cluster.local:3000"),
+                       ["ssh.git.example.org", "gitea-http.gitea.svc.cluster.local:3000"])
+        XCTAssertEqual(parseGitHostAliases("SSH.Git.Example.org\n https://git-int.example.org/repo.git ,,  "),
+                       ["ssh.git.example.org", "git-int.example.org"])
+        // Blanks, the host itself and repeats are dropped.
+        XCTAssertEqual(parseGitHostAliases("git.example.org, ssh.git.example.org, SSH.git.example.org, https://", host: "git.example.org"),
+                       ["ssh.git.example.org"])
+        XCTAssertEqual(parseGitHostAliases("  "), [])
+        let many = (1...30).map { "mirror\($0).example.org" }.joined(separator: ",")
+        XCTAssertEqual(parseGitHostAliases(many).count, gitHostAliasLimit)
+        XCTAssertEqual(parseGitHostAliases(many).first, "mirror1.example.org")
+    }
+
+    func testMatchesTheHostOrAnAlias() {
+        let host = GitHost(host: "git.example.org", kind: .gitea, aliases: ["ssh.git.example.org", "gitea-http.gitea.svc.cluster.local:3000"])
+        XCTAssertTrue(host.matches("git.example.org"))
+        XCTAssertTrue(host.matches("https://Git.Example.org/team/repo"))
+        XCTAssertTrue(host.matches("ssh.git.example.org"))
+        XCTAssertTrue(host.matches("http://gitea-http.gitea.svc.cluster.local:3000/team/repo.git"))
+        XCTAssertFalse(host.matches("gitea-http.gitea.svc.cluster.local"))
+        XCTAssertFalse(host.matches("other.example.org"))
+        XCTAssertFalse(host.matches(""))
+    }
+
+    func testResolvesASourceHostByNameOrAlias() {
+        let hosts = [
+            GitHost(host: "github.com"),
+            GitHost(host: "git.example.org", kind: .gitea, aliases: ["ssh.git.example.org", "mirror.example.org"]),
+            GitHost(host: "mirror.example.org", kind: .gitlab),
+        ]
+        XCTAssertEqual(hosts.resolving("ssh.git.example.org")?.host, "git.example.org")
+        XCTAssertEqual(hosts.resolving("git.example.org")?.kind, .gitea)
+        // An entry's own name wins over another's alias.
+        XCTAssertEqual(hosts.resolving("mirror.example.org")?.host, "mirror.example.org")
+        XCTAssertNil(hosts.resolving("other.example.org"))
+        XCTAssertNil(hosts.resolving(""))
+    }
+
+    func testAliasesSurviveARoundTripAndOldListsDecode() {
+        let hosts = [GitHost(host: "git.example.org", kind: .gitea, aliases: ["ssh.git.example.org"])]
+        XCTAssertEqual([GitHost].stored(hosts.encoded()), hosts)
+        // A list saved before aliases existed.
+        XCTAssertEqual([GitHost].stored(Data(#"[{"host":"git.example.org","kind":"gitea"}]"#.utf8)),
+                       [GitHost(host: "git.example.org", kind: .gitea)])
+        XCTAssertEqual([GitHost].stored(Data(#"[{"host":"git.example.org","kind":"gitea"}]"#.utf8)).first?.aliases, [])
+    }
+
+    func testHostArgumentCarriesTheAliases() throws {
+        let json = gitHostJSON(host: "git.example.org", kind: .gitea, token: "t",
+                               aliases: ["ssh.git.example.org", "gitea-http.gitea.svc.cluster.local:3000"])
+        XCTAssertEqual(json, #"{"aliases":["ssh.git.example.org","gitea-http.gitea.svc.cluster.local:3000"],"baseURL":"https://git.example.org","kind":"gitea","token":"t"}"#)
+        // No key without aliases, as before.
+        XCTAssertFalse(gitHostJSON(host: "git.example.org", kind: .gitea, token: "t", aliases: []).contains("aliases"))
+    }
+
     func testTokenAccountIsPerHost() {
         XCTAssertEqual(GitHostKeys.keychainAccount("github.com"), "git-host:github.com")
         XCTAssertNotEqual(GitHostKeys.keychainAccount("github.com"), GitHostKeys.keychainAccount("git.example.org"))

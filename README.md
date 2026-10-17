@@ -89,7 +89,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   from. Grant only what is needed (GitHub fine-grained: Contents and Pull requests, read and
   write, on those repositories); **Check** says who the token signs in as. The token stays on
   the phone, encrypted (Android Keystore, iOS Keychain), is never shown again, and is only sent
-  to its own host over https.
+  to its own host over https. When Argo CD or Flux reach the same server by another name (an SSH
+  or in-cluster address such as `gitea-http.gitea.svc:3000`), list it under **Also reached as**:
+  those repositories then use the host's token, and requests still go only to the saved host.
 - **Source:** an Argo CD or Flux app's detail lists its Git sources; each opens the folder the
   app deploys from, at the revision the cluster runs, with read-only files (YAML highlighted on
   Android). Flux apps need no token (the files come from the source-controller's artifact);

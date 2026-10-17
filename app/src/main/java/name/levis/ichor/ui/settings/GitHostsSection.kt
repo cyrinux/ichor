@@ -103,6 +103,9 @@ private fun HostRow(host: GitHost, login: String?, onOpen: () -> Unit, onRemove:
         Column(Modifier.weight(1f)) {
             Text(host.host, style = MaterialTheme.typography.bodyLarge)
             MutedText(gitHostKindLabel(host.kind))
+            if (host.aliases.isNotEmpty()) {
+                MutedText(stringResource(R.string.git_host_aliases_line, host.aliases.joinToString(", ")))
+            }
             MutedText(login?.let { stringResource(R.string.git_host_signed_in, it) } ?: stringResource(R.string.git_host_not_checked))
         }
         IconButton(onClick = onRemove) {

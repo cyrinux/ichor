@@ -50,6 +50,7 @@ import name.levis.ichor.model.GitHost
 import name.levis.ichor.model.GitHostCheck
 import name.levis.ichor.model.GitHostKind
 import name.levis.ichor.model.normalizeGitHost
+import name.levis.ichor.model.parseGitHostAliases
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
 
@@ -62,8 +63,8 @@ private sealed interface CheckState {
 }
 
 /**
- * Adds a Git host, or changes the kind or token of [editing]: host (prefilled `github.com`),
- * kind, token (masked, pasteable, never read back into the field) and Check, which asks the
+ * Adds a Git host, or changes the aliases, kind or token of [editing]: host (prefilled
+ * `github.com`), the other names Argo CD or Flux reach it by, kind, token (masked, pasteable, never read back into the field) and Check, which asks the
  * forge with the typed token, or the stored one when none is typed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,6 +76,7 @@ internal fun GitHostSheet(app: TalosApp, editing: GitHost?, onDismiss: () -> Uni
     val scope = rememberCoroutineScope()
     var host by remember { mutableStateOf(editing?.host ?: DEFAULT_HOST) }
     var kind by remember { mutableStateOf(editing?.kind ?: GitHostKind.AUTO) }
+    var aliases by remember { mutableStateOf(editing?.aliases.orEmpty().joinToString(", ")) }
     var token by remember { mutableStateOf("") }
     var tokenSaved by remember { mutableStateOf(false) }
     var check by remember { mutableStateOf<CheckState>(CheckState.Idle) }
@@ -115,6 +117,14 @@ internal fun GitHostSheet(app: TalosApp, editing: GitHost?, onDismiss: () -> Uni
                 singleLine = true,
                 // The host keys its token: changing it is removing and adding again.
                 readOnly = editing != null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = aliases,
+                onValueChange = { aliases = it },
+                label = { Text(stringResource(R.string.git_host_field_aliases)) },
+                supportingText = { Text(stringResource(R.string.git_host_aliases_hint)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -165,7 +175,7 @@ internal fun GitHostSheet(app: TalosApp, editing: GitHost?, onDismiss: () -> Uni
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
                 Button(
                     onClick = {
-                        store.set(normalized, kind, token)
+                        store.set(normalized, kind, token, parseGitHostAliases(aliases, normalized))
                         (check as? CheckState.Done)?.let { store.rememberLogin(normalized, it.check.login) }
                         onDismiss()
                     },

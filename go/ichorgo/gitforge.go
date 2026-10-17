@@ -51,13 +51,16 @@ var errGitForgeNotFound = errors.New("not found")
 // errGitForgeTooLarge is an answer over gitForgeMaxBody: a file read reports it truncated.
 var errGitForgeTooLarge = errors.New("answer too large")
 
-// gitForgeHost is where and how to reach a forge: {"kind","baseURL","token"}.
+// gitForgeHost is where and how to reach a forge: {"kind","baseURL","token","aliases"};
+// aliases are other host[:port] names of the same server (gitforge_alias.go).
 type gitForgeHost struct {
-	Kind    string `json:"kind"`
-	BaseURL string `json:"baseURL"`
-	Token   string `json:"token"`
+	Kind    string   `json:"kind"`
+	BaseURL string   `json:"baseURL"`
+	Token   string   `json:"token"`
+	Aliases []string `json:"aliases"`
 
-	host string // baseURL's host
+	host    string   // baseURL's host
+	aliases []string // Aliases, normalized
 }
 
 // gitRepoRef is a repository on a forge: owner may hold GitLab subgroups (group/sub).
@@ -243,10 +246,13 @@ func gitForgeArgs(hostJSON, repoURL, ref, path string) (gitForgeHost, gitRepoRef
 			return gitForgeHost{}, gitRepoRef{}, "", "", err
 		}
 
-		// The token is for h.host: a repository elsewhere is not read with it.
-		if repo.host != h.host {
-			return gitForgeHost{}, gitRepoRef{}, "", "", fmt.Errorf("%s is on %s, not on the Git host %s", repo.full(), repo.host, h.host)
+		// The token is for h.host: a repository elsewhere is not read with it. One on an
+		// alias is read from h.host, the only address any request goes to.
+		if err := h.checkGitRepoHost(repo, repoURL); err != nil {
+			return gitForgeHost{}, gitRepoRef{}, "", "", err
 		}
+
+		repo.host = h.host
 	}
 
 	ref = strings.TrimSpace(ref)
@@ -293,6 +299,7 @@ func parseGitForgeHost(hostJSON string) (gitForgeHost, error) {
 	}
 
 	h.BaseURL, h.host = u.Scheme+"://"+u.Host+path, gitForgeHostName(u.Hostname())
+	h.aliases = normalizeGitHostAliases(h.Aliases)
 	if h.host == "github.com" {
 		h.BaseURL = "https://github.com"
 	}
