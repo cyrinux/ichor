@@ -2,12 +2,16 @@ package name.levis.ichor.monitor
 
 import android.content.Context
 import androidx.glance.appwidget.updateAll
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.StoredConfig
@@ -23,13 +27,21 @@ import name.levis.ichor.model.heldBackForVpn
 import name.levis.ichor.model.needsEndpoint
 import name.levis.ichor.model.wakeTargets
 import name.levis.ichor.model.wolKey
+import name.levis.ichor.util.StartupTrace
 import name.levis.ichor.widget.ClusterWidget
 
 /**
- * Periodic check of every watched cluster (see [monitoredContexts]), concurrently, each within
+ * Periodic check of every watched cluster (see [monitoredContexts]), each within
  * [CLUSTER_CHECK_TIMEOUT_MS]: its fresh snapshot is diffed against its own previous one. A cluster
  * unreachable as a whole (e.g. off VPN) keeps its previous snapshot (see [evaluate]), so you are
  * not spammed; several such checks in a row may alert once (opt-in, see [reachStep]).
+ *
+ * [MONITOR_CLUSTER_PARALLELISM] (4) clusters are read at a time, in [monitoredOrder]: the ones
+ * the last run could not read first, the one on screen last while the app is in the foreground,
+ * so a run with many clusters neither floods the Go core and the VPN nor races the screen.
+ * [MONITOR_RUN_NOW_DELAY_MS] (5 s): how long a check asked for while the app is in the foreground
+ * and the overview has not loaded yet waits, so an import's first check follows the home screen
+ * (see [syncMonitoring]). No user setting for either.
  */
 class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
@@ -86,25 +98,36 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
 }
 
 /**
- * Reads every watched cluster at once. A Talos cluster without an endpoint yet cannot be checked
- * (nor shown); a VPN-only one while no VPN is up is skipped, its state kept as it was.
+ * Reads every watched cluster, [MONITOR_CLUSTER_PARALLELISM] at a time in [monitoredOrder]. A
+ * Talos cluster without an endpoint yet cannot be checked (nor shown); a VPN-only one while no
+ * VPN is up is skipped, its state kept as it was.
  */
 private suspend fun readAll(app: TalosApp, stored: StoredConfig, before: MonitorState, now: Long): List<ClusterRead> = coroutineScope {
     val vpnUp = app.vpn.isUp()
-    monitoredContexts(stored.summary, stored.activeContext, app.unwatchedClusters.fingerprints.value)
+    val contexts = monitoredContexts(stored.summary, stored.activeContext, app.unwatchedClusters.fingerprints.value)
         .filterNot { it.needsEndpoint }
+    val ordered = monitoredOrder(contexts, stored.activeContext, isForeground(), lastFailedKeys(before))
+    StartupTrace.markOnce("monitor: ${ordered.size} clusters, $MONITOR_CLUSTER_PARALLELISM at a time")
+    val permits = Semaphore(MONITOR_CLUSTER_PARALLELISM)
+    ordered
         .map { context ->
             async {
-                if (heldBackForVpn(app.vpnOnly.fingerprints.value, context.fingerprint, vpnUp)) {
-                    ClusterRead(context, snapshot = null, skipped = true)
-                } else {
-                    val reading = readWithin { readCluster(app, context, before.clusters[monitorKeyOf(context)], now) }
-                    ClusterRead(context, reading?.snapshot, detail = reading?.detail)
+                permits.withPermit {
+                    if (heldBackForVpn(app.vpnOnly.fingerprints.value, context.fingerprint, vpnUp)) {
+                        ClusterRead(context, snapshot = null, skipped = true)
+                    } else {
+                        val reading = readWithin { readCluster(app, context, before.clusters[monitorKeyOf(context)], now) }
+                        ClusterRead(context, reading?.snapshot, detail = reading?.detail)
+                    }
                 }
             }
         }
         .awaitAll()
 }
+
+/** Whether an activity of the app is on screen (started), from the process lifecycle. */
+internal fun isForeground(): Boolean =
+    ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
 
 /** The volume forecast of each cluster whose storage this run read, by monitor key (see [wantsStorageForecast]). */
 private suspend fun storageForecasts(app: TalosApp, reads: List<ClusterRead>, now: Long): Map<String, HistoryForecast> {

@@ -1,6 +1,7 @@
 import BackgroundTasks
 import Foundation
 import IchorCore
+import UIKit
 import UserNotifications
 import WidgetKit
 
@@ -261,7 +262,13 @@ enum BackgroundMonitor {
         // A Talos cluster without an endpoint yet cannot be checked: the widget stops showing what
         // it showed (Android's clearSnapshot).
         for context in contexts where context.needsEndpoint { snapshots[monitorClusterKey(context)] = nil }
-        let jobs = await checkJobs(for: contexts.filter { !$0.needsEndpoint }, stored: stored,
+        // Read in monitorOrder (CYR-190): the clusters that missed the last run (a miss counted in
+        // the reachability map) first; with the app in front ("Check now"), the cluster on screen last.
+        let lastFailed = Set(reachability().filter { $0.value.misses > 0 }.keys)
+        let appActive = await MainActor.run { UIApplication.shared.applicationState == .active }
+        let ordered = monitorOrder(contexts.filter { !$0.needsEndpoint }, active: activeName, appActive: appActive,
+                                   lastFailed: lastFailed)
+        let jobs = await checkJobs(for: ordered, stored: stored,
                               kubeContexts: parsed.kube?.contexts ?? [], snapshots: snapshots)
         let reads = await read(jobs)
         let now = Date()
