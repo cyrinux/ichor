@@ -2445,7 +2445,6 @@
     <string name="certmanager_renew_started">Оновлення %1$s запитано</string>
     <string name="certmanager_renew_failed">%1$s: %2$s</string>
     <string name="certmanager_issuing">випускається</string>
-    <string name="certmanager_details">Подробиці</string>
     <string name="certmanager_details_conditions">Умови</string>
     <string name="certmanager_details_requests">Запити</string>
     <string name="certmanager_details_events">Події</string>
@@ -5220,17 +5219,27 @@
     <string name="checkup_lbBGPPeerDown_fix">Перевірте маршрутизатор: його адресу й номери AS, що він приймає цей вузол і що ніщо не фільтрує TCP 179 між ними.</string>
 
     <string name="backup_items">%1$d елементів резервного копіювання</string>
-    <string name="snapshot_ready">Знімок готовий</string>
-    <string name="snapshot_pending">Знімок очікує</string>
-    <string name="snapshot_source">PVC: %1$s · клас: %2$s</string>
-    <string name="snapshot_created">Створено: %1$s</string>
-    <string name="snapshot_last_good">Останній справний знімок: %1$s</string>
-    <string name="snapshot_stale">Немає справного знімка протягом 48 годин</string>
-    <string name="snapshot_default">Тип знімка за замовчуванням</string>
+    <string name="snapshot_pending">очікує</string>
+    <string name="snapshot_last_good">останній справний знімок %1$s</string>
+    <string name="snapshot_stale">немає справного знімка протягом 48 годин</string>
+    <string name="snapshot_default">за замовчуванням</string>
     <string name="snapshot_empty">Немає CSI VolumeSnapshot. Власні знімки Longhorn — у кожному томі Longhorn.</string>
-    <string name="backup_last_success">Остання успішна резервна копія: %1$s</string>
-    <string name="backup_failure_streak">Спостережені послідовні збої: %1$d</string>
-    <string name="backup_suspended">Розклад резервного копіювання призупинено</string>
+    <string name="backup_last_success">останній успіх %1$s</string>
+    <string name="backup_suspended">призупинено</string>
+    <string name="backup_never_succeeded">ще жодного успіху</string>
+    <string name="backup_empty">Немає CronJob резервного копіювання.</string>
+    <string name="snapshot_section_claims">Відстежувані томи</string>
+    <string name="snapshot_section_classes">Класи знімків</string>
+    <string name="snapshot_section_contents">Вміст знімків</string>
+    <string name="cron_daily">щодня о %1$s</string>
+    <string name="cron_weekly">щотижня, %1$s, о %2$s</string>
+    <string name="cron_monthly">щомісяця, %1$d числа, о %2$s</string>
+    <plurals name="backup_failures_in_row">
+        <item quantity="one">%1$d збій поспіль</item>
+        <item quantity="few">%1$d збої поспіль</item>
+        <item quantity="many">%1$d збоїв поспіль</item>
+        <item quantity="other">%1$d збою поспіль</item>
+    </plurals>
     <string name="snapshot_create">Створити знімок</string>
     <string name="snapshot_confirm">Створити знімок CSI для %1$s з типом за замовчуванням для його драйвера.</string>
 

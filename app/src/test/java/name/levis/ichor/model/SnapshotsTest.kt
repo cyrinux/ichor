@@ -28,4 +28,17 @@ class SnapshotsTest {
         assertTrue(dataIssuesOf(services.copy(snapshots=services.snapshots!!.copy(error="Forbidden"),
             backupJobs=services.backupJobs!!.copy(jobsError="Forbidden"))).isEmpty())
     }
+
+    @Test fun backupRowHealthFollowsFailuresSuspensionAndAge() {
+        val day = 24 * 60 * 60 * 1000L
+        val now = 100 * day
+        val fresh = BackupCronJob(namespace = "shop", name = "backup", lastSuccess = now - day)
+        assertEquals(ServiceHealth.OK, fresh.rowHealth(now))
+        assertEquals(ServiceHealth.CRITICAL, fresh.copy(failureStreak = 1).rowHealth(now))
+        assertEquals(ServiceHealth.CRITICAL, fresh.copy(failureStreak = 3, suspended = true).rowHealth(now))
+        assertEquals(ServiceHealth.WARNING, fresh.copy(suspended = true).rowHealth(now))
+        assertEquals(ServiceHealth.WARNING, fresh.copy(lastSuccess = now - 8 * day).rowHealth(now))
+        assertEquals(ServiceHealth.WARNING, fresh.copy(lastSuccess = 0).rowHealth(now))
+        assertEquals("shop/backup", fresh.label)
+    }
 }

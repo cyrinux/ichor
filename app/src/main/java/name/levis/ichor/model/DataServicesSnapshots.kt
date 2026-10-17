@@ -46,4 +46,16 @@ data class BackupJobStatus(val error: String = "", val jobsError: String = "", v
 data class BackupCronJob(
     val namespace: String = "", val name: String = "", val schedule: String = "", val suspended: Boolean = false,
     val lastSuccess: Long = 0, val ageSeconds: Long = -1, val failureStreak: Int = 0, val health: String = "",
-)
+) {
+    val label: String get() = "$namespace/$name"
+
+    /** The row's dot: critical after a failed run, a warning when suspended or no success in a week. */
+    fun rowHealth(now: Long): ServiceHealth = when {
+        failureStreak > 0 -> ServiceHealth.CRITICAL
+        suspended || lastSuccess <= 0 || now - lastSuccess > BACKUP_STALE_MS -> ServiceHealth.WARNING
+        else -> ServiceHealth.OK
+    }
+}
+
+/** 7 days without a successful backup run. */
+const val BACKUP_STALE_MS = 7L * 24 * 60 * 60 * 1000

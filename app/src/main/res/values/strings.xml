@@ -2294,6 +2294,7 @@
         <item quantity="other">%1$d Percona clusters</item>
     </plurals>
     <string name="certmanager_empty">No certificates.</string>
+    <string name="certmanager_names_more" translatable="false">%1$s +%2$d</string>
     <string name="certmanager_issuers">Issuers</string>
     <string name="certmanager_expires">expires %1$s</string>
     <string name="certmanager_expired">expired %1$s</string>
@@ -2308,7 +2309,6 @@
     <string name="certmanager_renew_started">Renewal of %1$s requested</string>
     <string name="certmanager_renew_failed">%1$s: %2$s</string>
     <string name="certmanager_issuing">issuing</string>
-    <string name="certmanager_details">Details</string>
     <string name="certmanager_details_conditions">Conditions</string>
     <string name="certmanager_details_requests">Requests</string>
     <string name="certmanager_details_events">Events</string>
@@ -4973,17 +4973,25 @@
     <string name="checkup_lbBGPPeerDown_fix">Check the router: its address and AS numbers, that it accepts this node, and that nothing filters TCP 179 between them.</string>
 
     <string name="backup_items">%1$d backup items</string>
-    <string name="snapshot_ready">Snapshot ready</string>
-    <string name="snapshot_pending">Snapshot pending</string>
-    <string name="snapshot_source">PVC: %1$s · class: %2$s</string>
-    <string name="snapshot_created">Created: %1$s</string>
-    <string name="snapshot_last_good">Last good snapshot: %1$s</string>
-    <string name="snapshot_stale">No good snapshot in 48 hours</string>
-    <string name="snapshot_default">Default snapshot class</string>
+    <string name="snapshot_pending">pending</string>
+    <string name="snapshot_last_good">last good snapshot %1$s</string>
+    <string name="snapshot_stale">no good snapshot in 48 hours</string>
+    <string name="snapshot_default">default</string>
     <string name="snapshot_empty">No CSI VolumeSnapshots. Longhorn’s own snapshots are under each Longhorn volume.</string>
-    <string name="backup_last_success">Last successful backup: %1$s</string>
-    <string name="backup_failure_streak">Observed consecutive failures: %1$d</string>
-    <string name="backup_suspended">Backup schedule suspended</string>
+    <string name="backup_last_success">last success %1$s</string>
+    <string name="backup_suspended">suspended</string>
+    <string name="backup_never_succeeded">no success yet</string>
+    <string name="backup_empty">No backup CronJobs.</string>
+    <string name="snapshot_section_claims">Watched claims</string>
+    <string name="snapshot_section_classes">Snapshot classes</string>
+    <string name="snapshot_section_contents">Snapshot contents</string>
+    <string name="cron_daily">daily at %1$s</string>
+    <string name="cron_weekly">weekly on %1$s at %2$s</string>
+    <string name="cron_monthly">monthly on day %1$d at %2$s</string>
+    <plurals name="backup_failures_in_row">
+        <item quantity="one">%1$d failure in a row</item>
+        <item quantity="other">%1$d failures in a row</item>
+    </plurals>
     <string name="snapshot_create">Create snapshot</string>
     <string name="snapshot_confirm">Create a CSI snapshot of %1$s using the default class for its driver.</string>
 
