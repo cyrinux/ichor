@@ -331,6 +331,7 @@ fun Navigation(
                 onKubeEvents = { nav.navigate(Routes.KUBE_EVENTS) },
                 onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
                 onNodeDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
+                onNodeMeta = { nav.navigate(Routes.nodeMeta(it, it)) },
                 onActivity = { nav.navigate(Routes.activity(it)) },
                 onSearch = { nav.navigate(Routes.SEARCH) { launchSingleTop = true } },
                 onOpenTarget = openTarget,

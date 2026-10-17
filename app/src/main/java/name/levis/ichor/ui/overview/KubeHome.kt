@@ -135,6 +135,8 @@ class KubeHomeNavigation(
     val onDrain: (node: String) -> Unit,
     /** A root shell on a node through a privileged pod, by its Kubernetes name. */
     val onNodeDebug: (node: String) -> Unit,
+    /** The taints and labels of a node, by its Kubernetes name. */
+    val onNodeMeta: (node: String) -> Unit,
     /** The Kubernetes nodes screen of a large cluster, on one filter (null: all). */
     val onAllNodes: (NodeFilter?) -> Unit,
     /** The action audit log of a cluster, by its context name. */
@@ -326,7 +328,7 @@ fun KubeHomeScreen(
             }
         }
     }
-    KubeNodeActionSheets(nodeMenu, snackbar, onClose = { nodeMenu = null }, onDrain = nav.onDrain, onDebug = nav.onNodeDebug, onCordoned = vm::refresh)
+    KubeNodeActionSheets(nodeMenu, snackbar, onClose = { nodeMenu = null }, onDrain = nav.onDrain, onDebug = nav.onNodeDebug, onCordoned = vm::refresh, onMeta = nav.onNodeMeta)
 }
 
 @Composable
