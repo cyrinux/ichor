@@ -6,6 +6,8 @@ import name.levis.ichor.R
 import name.levis.ichor.data.BackupManager
 import name.levis.ichor.data.BackupPassphraseException
 import name.levis.ichor.data.RestoreOutcome
+import name.levis.ichor.model.BackupFileFormat
+import name.levis.ichor.model.BackupSeal
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.uiText
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,15 +18,15 @@ import kotlinx.coroutines.launch
 sealed interface BackupState {
     data object Idle : BackupState
 
-    /** Asking the passphrase that will seal a new backup. */
+    /** Asking the format and the passphrase (or age keys) that will seal a new backup. */
     data object NewPassphrase : BackupState
     data object Sealing : BackupState
 
-    /** Sealed, the save picker is to be opened (once: [Saving] while it shows). */
-    class ReadyToSave(val file: ByteArray) : BackupState
+    /** Sealed as [format], the save picker is to be opened (once: [Saving] while it shows). */
+    class ReadyToSave(val file: ByteArray, val format: BackupFileFormat) : BackupState
 
     /** The save picker is open. */
-    class Saving(val file: ByteArray) : BackupState
+    class Saving(val file: ByteArray, val format: BackupFileFormat) : BackupState
     data object Saved : BackupState
 
     /** A picked backup file, waiting for its passphrase; [error] after a wrong one. */
@@ -46,11 +48,11 @@ class BackupViewModel(private val manager: BackupManager) : ViewModel() {
         _state.value = BackupState.NewPassphrase
     }
 
-    fun seal(passphrase: String, includeSecrets: Boolean = false) {
+    fun seal(seal: BackupSeal, includeSecrets: Boolean = false) {
         _state.value = BackupState.Sealing
         viewModelScope.launch {
-            _state.value = runCatching { manager.create(passphrase, includeSecrets) }.fold(
-                onSuccess = { BackupState.ReadyToSave(it) },
+            _state.value = runCatching { manager.create(seal, includeSecrets) }.fold(
+                onSuccess = { BackupState.ReadyToSave(it, seal.format) },
                 onFailure = { BackupState.Failed(it.uiText()) },
             )
         }
@@ -59,7 +61,7 @@ class BackupViewModel(private val manager: BackupManager) : ViewModel() {
     /** The save picker opens for the sealed file; false when it already did (recomposition). */
     fun openSaver(): Boolean {
         val ready = _state.value as? BackupState.ReadyToSave ?: return false
-        _state.value = BackupState.Saving(ready.file)
+        _state.value = BackupState.Saving(ready.file, ready.format)
         return true
     }
 

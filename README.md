@@ -1106,6 +1106,20 @@ a fresh install. Backups move between Android and iOS.
 - **Encryption:** a passphrase of at least 12 characters. The key comes from Argon2id (64 MiB,
   3 passes) and the file is sealed with AES-256-GCM. Without the passphrase it cannot be opened,
   and the passphrase cannot be recovered.
+
+  Choose **age file** instead of the Ichor format (the default) to get a standard
+  [age](https://age-encryption.org) file (`.age`) that opens on a computer without the app,
+  either with a passphrase (at least 12 characters) or for one or more age public keys
+  (`age1…`, one per line), not both:
+
+  ```sh
+  age -d backup.age | jq .                            # passphrase file: age asks for it
+  age -d -i ~/.config/age/key.txt backup.age | jq .   # file made for your age public key
+  ```
+
+  The phone restores an age file made with a passphrase. A file made only for age public keys
+  cannot be restored on the phone: open it on a computer with the matching age key, or back up
+  again with a passphrase.
 - **Restoring replaces** every cluster and setting on the phone with those of the backup.
 
 ## Safety features

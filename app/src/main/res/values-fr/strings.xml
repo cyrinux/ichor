@@ -1925,6 +1925,17 @@
     <string name="backup_err_unsupported">Cette sauvegarde vient d’une version plus récente d’Ichor. Mettez l’app à jour pour la restaurer.</string>
     <string name="backup_err_invalid">La sauvegarde s’est ouverte mais son contenu n’est pas valide.</string>
     <string name="backup_err_open">Impossible de lire ou d’écrire le fichier.</string>
+    <string name="backup_format">Format du fichier</string>
+    <string name="backup_format_ichor">Format Ichor (par défaut)</string>
+    <string name="backup_format_age">Fichier age</string>
+    <string name="backup_format_age_desc">Un fichier age standard : il s’ouvre sur un ordinateur avec age -d, sans l’app.</string>
+    <string name="backup_age_with_passphrase">Avec une phrase secrète (restaurable dans l’app)</string>
+    <string name="backup_age_with_recipients">Avec des clés publiques age</string>
+    <string name="backup_age_recipients">Destinataires age</string>
+    <string name="backup_age_recipients_help">Une clé publique age1… par ligne. Seules les clés age correspondantes ouvrent le fichier, sur un ordinateur : l’app ne peut pas le restaurer.</string>
+    <string name="backup_err_age_recipient">La ligne %1$d n’est pas une clé publique age (age1…).</string>
+    <string name="backup_err_age_recipients_empty">Ajoutez au moins une clé publique age.</string>
+    <string name="backup_err_needs_identity">Cette sauvegarde s’ouvre avec votre clé age sur un ordinateur.</string>
     <!-- Apps inventory -->
     <string name="apps_title">Applications</string>
     <string name="apps_search">Rechercher une app, un namespace, une image</string>

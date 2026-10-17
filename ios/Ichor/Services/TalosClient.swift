@@ -100,7 +100,13 @@ struct TalosClient: Sendable {
         try await run { IchorgoEncryptBackup(payload, passphrase, $0) ?? Data() }
     }
 
-    /// The validated payload JSON of a backup `file`.
+    /// The backup file of `payload` as a standard age file, sealed with either `passphrase`
+    /// (an age scrypt recipient) or `recipients` (age1… public keys, one per line), never both.
+    static func encryptBackupAge(payload: String, passphrase: String, recipients: String) async throws -> Data {
+        try await run { IchorgoEncryptBackupAge(payload, passphrase, recipients, $0) ?? Data() }
+    }
+
+    /// The validated payload JSON of a backup `file` (Ichor or age format, detected by the core).
     static func decryptBackup(_ file: Data, passphrase: String) async throws -> String {
         try await run { IchorgoDecryptBackup(file, passphrase, $0) }
     }

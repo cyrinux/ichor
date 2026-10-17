@@ -192,10 +192,11 @@ public let backupMinPassphrase = 12
 /// The extension backups are saved with, on both platforms.
 public let backupExtension = "ichorbackup"
 
-/// The file name a new backup is offered under, e.g. "ichor-2026-10-02.ichorbackup".
-public func backupFileName(date: Date, calendar: Calendar = .current) -> String {
+/// The file name a new backup is offered under, e.g. "ichor-2026-10-02.ichorbackup"
+/// ("ichor-2026-10-02.age" for an age file).
+public func backupFileName(date: Date, format: BackupFileFormat = .ichor, calendar: Calendar = .current) -> String {
     let c = calendar.dateComponents([.year, .month, .day], from: date)
-    return String(format: "ichor-%04d-%02d-%02d.%@", c.year ?? 0, c.month ?? 0, c.day ?? 0, backupExtension)
+    return String(format: "ichor-%04d-%02d-%02d.%@", c.year ?? 0, c.month ?? 0, c.day ?? 0, format.fileExtension)
 }
 
 /// Why a new backup's passphrase cannot be used yet.
@@ -279,6 +280,8 @@ public func restoredKubeAuth(_ payload: BackupPayload, fingerprints: [String]) -
 /// A backup error of the Go core, whose messages start with a code (backup.go).
 public enum BackupError: Error, Equatable, Sendable {
     case passphraseShort, wrongPassphrase, notBackup, unsupported, invalidContent
+    /// An age file sealed for public keys only: it opens with the matching age key on a computer.
+    case needsIdentity
 
     public init?(coreMessage: String) {
         let codes: [(String, BackupError)] = [
@@ -287,6 +290,7 @@ public enum BackupError: Error, Equatable, Sendable {
             ("backup-not-a-backup", .notBackup),
             ("backup-unsupported", .unsupported),
             ("backup-invalid-content", .invalidContent),
+            ("backup-needs-identity", .needsIdentity),
         ]
         guard let match = codes.first(where: { coreMessage.hasPrefix($0.0) }) else { return nil }
         self = match.1
