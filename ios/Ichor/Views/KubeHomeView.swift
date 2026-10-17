@@ -87,6 +87,7 @@ struct KubeHomeView: View {
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(\.colorScheme) private var colorScheme
     @State private var state: LoadState<KubeNodesOverview> = .loading
     /// `state` is only what the last background check saw (a seed), until the cluster answers.
     @State private var fromMonitor = false
@@ -277,6 +278,7 @@ struct KubeHomeView: View {
     private func summarySection(_ overview: KubeNodesOverview) -> some View {
         Section {
             if let ctx = model.activeSummary {
+                identityRow(ctx)
                 LabeledContent("API server", value: ctx.endpoints.first ?? "")
                 LabeledContent("Version", value: overview.serverVersion.isEmpty ? String(localized: "unknown") : overview.serverVersion)
                 if !overview.forbidden {
@@ -293,6 +295,20 @@ struct KubeHomeView: View {
         } header: {
             Text("Cluster")
         }
+    }
+
+    /// The summary's identity area, as on the Talos home: the provider logo and the cluster's
+    /// name on the cluster's container color, recomputed on every render so a switch or a hue
+    /// edit shows at once. The rows under it stay neutral.
+    private func identityRow(_ ctx: ContextSummary) -> some View {
+        HStack(alignment: .center, spacing: 8) {
+            // Decorative: the name says it.
+            BundledLogo(name: clusterLogo(ctx))
+                .frame(width: 22, height: 22)
+                .accessibilityHidden(true)
+            Text(verbatim: model.activeLabel).font(.headline).lineLimit(1).accessibilityAddTraits(.isHeader)
+        }
+        .identityArea(model.summaryColors(for: colorScheme))
     }
 
     /// The user and groups the API server takes the credentials for (what RBAC decides on).

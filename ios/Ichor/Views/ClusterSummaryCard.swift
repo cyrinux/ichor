@@ -16,8 +16,16 @@ struct ClusterSummaryCard: View {
     var answered: NodesAnswered? = nil
     let live: ClusterLive?
 
+    @Environment(AppModel.self) private var model
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
+        // Read on every render from the observed seed and theme: a switch or hue edit shows at once.
+        let colors = model.summaryColors(for: colorScheme)
         VStack(alignment: .leading, spacing: 10) {
+            // The identity area in the cluster's color, as on Android: only the logo and the
+            // name. The headline (its trouble counts in their status colours) and the status
+            // stay below, on the neutral row.
             HStack(alignment: .center, spacing: 8) {
                 if let context {
                     // A fixed frame, so the name does not shift; decorative, the name says it.
@@ -25,10 +33,11 @@ struct ClusterSummaryCard: View {
                         .frame(width: 22, height: 22)
                         .accessibilityHidden(true)
                 }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: name).font(.headline).lineLimit(1)
-                    headline.font(.caption).foregroundStyle(.secondary).monospacedDigit()
-                }
+                Text(verbatim: name).font(.headline).lineLimit(1).accessibilityAddTraits(.isHeader)
+            }
+            .identityArea(colors)
+            HStack(alignment: .center, spacing: 8) {
+                headline.font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 Spacer()
                 if let answered {
                     AnsweredLabel(answered: answered)
@@ -53,6 +62,8 @@ struct ClusterSummaryCard: View {
                 MemoryStat(summary: summary, live: live?.usage.flatMap { $0.nodes >= summary.total - summary.unreachable ? $0 : nil })
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
+            // The stat icons in cluster-tinted containers; the values stay neutral.
+            .environment(\.summaryColors, colors)
         }
         .padding(.vertical, 4)
     }

@@ -80,19 +80,17 @@ fun ClusterSummaryCard(
 ) {
     val troubles = troubles(summary)
     Card(modifier = modifier.fillMaxWidth()) {
-        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)) {
+        // A fixed box, so the name does not shift once the logo has loaded.
+        SummaryIdentityBand(name, leading = context?.let { { BundledLogo(clusterLogo(it), Modifier.padding(end = 8.dp).size(24.dp)) } })
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // A fixed box, so the name does not shift once the logo has loaded.
-                context?.let { BundledLogo(clusterLogo(it), Modifier.padding(end = 8.dp).size(24.dp)) }
-                Column(Modifier.weight(1f)) {
-                    Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    // One trouble reads in the headline; two get their own line below it.
-                    Text(
-                        headline(summary, troubles.singleOrNull()),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                // One trouble reads in the headline; two get their own line below it.
+                Text(
+                    headline(summary, troubles.singleOrNull()),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
                 if (answered == null) ClusterStatusPill(summary.status)
             }
             if (answered != null) AnsweredProgress(answered) else if (troubles.size > 1) Breakdown(troubles)
@@ -101,7 +99,7 @@ fun ClusterSummaryCard(
             val reached = summary.total - summary.unreachable
             StatTileRow(
                 Modifier,
-                { StatTile(Icons.Outlined.ViewInAr, "${summary.ready}/${summary.total}", stringResource(R.string.overview_stat_nodes), it) },
+                { StatTile(Icons.Outlined.ViewInAr, "${summary.ready}/${summary.total}", stringResource(R.string.overview_stat_nodes), it, iconTile = true) },
                 { CpuStat(summary.cpuCount, live, it) },
                 { MemoryStat(summary, live?.usage?.takeIf { usage -> usage.nodes >= reached }, it) },
             )
@@ -207,7 +205,7 @@ private fun CpuStat(cpuCount: Int, live: ClusterLiveState?, modifier: Modifier) 
     val used = live?.usage?.cpuFraction
     val cores = cpuCount.takeIf { it > 0 }
     if (used == null) {
-        StatTile(Icons.Outlined.Memory, cores?.toString() ?: UNKNOWN, stringResource(R.string.overview_stat_cpu), modifier)
+        StatTile(Icons.Outlined.Memory, cores?.toString() ?: UNKNOWN, stringResource(R.string.overview_stat_cpu), modifier, iconTile = true)
     } else {
         StatTile(
             Icons.Outlined.Memory,
@@ -215,6 +213,7 @@ private fun CpuStat(cpuCount: Int, live: ClusterLiveState?, modifier: Modifier) 
             cores?.let { pluralStringResource(R.plurals.overview_stat_cpu_of_cores, it, it) }
                 ?: stringResource(R.string.overview_stat_cpu_used),
             modifier,
+            iconTile = true,
         ) { CpuSparkline(live.cpuHistory, Modifier.padding(top = 4.dp)) }
     }
 }
@@ -231,6 +230,7 @@ private fun MemoryStat(summary: ClusterSummary, live: ClusterUsage?, modifier: M
         used?.let { stringResource(R.string.overview_stat_memory_used, (it * 100).roundToInt()) }
             ?: stringResource(R.string.overview_stat_memory),
         modifier,
+        iconTile = true,
         meter = used?.let { { UsageBar(shown, Modifier.padding(top = 6.dp)) } },
     )
 }
