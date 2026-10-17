@@ -31,6 +31,9 @@ class ResultCache(
     @Suppress("UNCHECKED_CAST")
     fun <T> cached(key: String): TalosRepository.Timed<T>? = (cache[scope() + key] ?: restored(key)) as TalosRepository.Timed<T>?
 
+    /** Whether [key] was fetched in this process for what is on screen now (not only restored [offline]). */
+    fun fetched(key: String): Boolean = cache.containsKey(scope() + key)
+
     /** Every result in memory for what is on screen now, by key (not what [offline] kept). */
     @Suppress("UNCHECKED_CAST")
     fun cachedAll(): Map<String, TalosRepository.Timed<Any>> {

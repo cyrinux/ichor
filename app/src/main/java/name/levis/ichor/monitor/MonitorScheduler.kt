@@ -10,6 +10,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.widget.ClusterWidget
 import name.levis.ichor.widget.staleInMillis
 import java.util.concurrent.TimeUnit
@@ -17,6 +18,17 @@ import java.util.concurrent.TimeUnit
 private const val PERIODIC = "cluster-monitor"
 private const val ONE_SHOT = "cluster-monitor-now"
 private const val WIDGET_STALE = "cluster-widget-stale"
+
+/** How long a check asked for while the home screen is still loading waits (see [runNowDelayMs]). */
+const val MONITOR_RUN_NOW_DELAY_MS = 5_000L
+
+/**
+ * The delay of a check asked for now: [MONITOR_RUN_NOW_DELAY_MS] while the app is in the
+ * [foreground] and the overview has not [overviewLoaded] yet, so it does not race the first
+ * overview (e.g. right after an import); none otherwise.
+ */
+fun runNowDelayMs(foreground: Boolean, overviewLoaded: Boolean): Long =
+    if (foreground && !overviewLoaded) MONITOR_RUN_NOW_DELAY_MS else 0L
 
 /** Runs the monitor while alerts are on or a widget is placed; otherwise cancels it. */
 suspend fun syncMonitoring(context: Context, runNow: Boolean = false) {
@@ -40,10 +52,14 @@ suspend fun syncMonitoring(context: Context, runNow: Boolean = false) {
         PeriodicWorkRequestBuilder<MonitorWorker>(minutes, TimeUnit.MINUTES).setConstraints(constraints).build(),
     )
     if (runNow) {
+        val delay = runNowDelayMs(isForeground(), app.talosRepository.fetched(OVERVIEW))
         work.enqueueUniqueWork(
             ONE_SHOT,
             ExistingWorkPolicy.REPLACE,
-            OneTimeWorkRequestBuilder<MonitorWorker>().setConstraints(constraints).build(),
+            OneTimeWorkRequestBuilder<MonitorWorker>()
+                .setConstraints(constraints)
+                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+                .build(),
         )
     }
 }

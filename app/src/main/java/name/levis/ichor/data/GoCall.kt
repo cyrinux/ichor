@@ -67,6 +67,9 @@ abstract class GoRepository(protected val go: GoCall) {
     /** The last result of [key]: fetched in this process, or else the last known one kept offline. */
     fun <T> cached(key: String): TalosRepository.Timed<T>? = go.results.cached(key)
 
+    /** Whether [key] was fetched in this process for the cluster on screen (see [ResultCache.fetched]). */
+    fun fetched(key: String): Boolean = go.results.fetched(key)
+
     /** Bumped once the last known state kept offline was read (see [ResultCache.restores]). */
     val restores: StateFlow<Int> get() = go.results.restores
 

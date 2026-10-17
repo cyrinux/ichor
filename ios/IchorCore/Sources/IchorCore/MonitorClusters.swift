@@ -174,6 +174,20 @@ public func evaluateReachability(previous: Reachability?, reachable: Bool, runs:
 public let monitorBudget: TimeInterval = 25
 public let monitorParallel = 4
 
+/// The order a run checks `contexts` in (CYR-190), at most monitorParallel at a time: the
+/// clusters that did not answer last time (`lastFailed`, monitor keys) first, so a down cluster's
+/// alert is not pushed past the refresh budget; with the app in front (`appActive`), the active
+/// context (`active`, a name) last, so the screen's own calls are not raced by the monitor's.
+/// Otherwise the stored order, unchanged.
+public func monitorOrder(_ contexts: [ContextSummary], active: String?, appActive: Bool,
+                         lastFailed: Set<String>) -> [ContextSummary] {
+    let isLast: (ContextSummary) -> Bool = { appActive && active != nil && $0.name == active }
+    let rest = contexts.filter { !isLast($0) }
+    let failed = rest.filter { lastFailed.contains(monitorClusterKey($0)) }
+    let others = rest.filter { !lastFailed.contains(monitorClusterKey($0)) }
+    return failed + others + contexts.filter(isLast)
+}
+
 /// How long one cluster may take: the budget split over the waves of `monitorParallel`, between
 /// 8 s and 20 s (a Go call gives up after 20 s). Past that it counts as unreachable for the run.
 public func monitorClusterTimeout(clusters: Int, budget: TimeInterval = monitorBudget, parallel: Int = monitorParallel) -> TimeInterval {
