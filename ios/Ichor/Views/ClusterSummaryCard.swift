@@ -4,7 +4,8 @@ import IchorCore
 /// The cluster at a glance, above the nodes: its name and overall state, how many nodes on
 /// which Talos version, and the capacity of the nodes that answered. With `live` usage, CPU
 /// and memory follow it; without, they show the overview's snapshot. Same as Android's
-/// ClusterSummaryCard; the cluster insights row under it is its footer.
+/// ClusterSummaryCard; the Insights and Capacity rows under it are its footer, the card itself
+/// opens nothing.
 struct ClusterSummaryCard: View {
     let name: String
     let summary: ClusterSummary
@@ -18,7 +19,7 @@ struct ClusterSummaryCard: View {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: name).font(.headline).lineLimit(1)
-                    Text(verbatim: headline).font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                    headline.font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 }
                 Spacer()
                 if let answered {
@@ -32,7 +33,8 @@ struct ClusterSummaryCard: View {
                     .animation(.easeInOut, value: fraction)
                     .accessibilityHidden(true) // the label above says the same
             }
-            Breakdown(summary: summary)
+            // A line of its own only when it says two things; one goes in the headline.
+            if issues.count > 1 { Breakdown(parts: issues) }
             Divider()
             HStack(alignment: .top, spacing: 12) {
                 StatTile(icon: "cube", value: "\(summary.ready)/\(summary.total)", label: String(localized: "Nodes"))
@@ -47,9 +49,28 @@ struct ClusterSummaryCard: View {
         .padding(.vertical, 4)
     }
 
-    /// "3 nodes  ·  v1.11.2", or "v1.10.4 – v1.11.2" while the nodes run different versions.
-    private var headline: String {
-        [String(localized: "\(summary.total) nodes"), summary.versionSpan].compactMap { $0 }.joined(separator: "  ·  ")
+    /// "3 nodes  ·  v1.11.2", "v1.10.4 – v1.11.2" while the nodes run different versions, with
+    /// the one kind of node in trouble between them: "8 nodes  ·  1 unreachable  ·  v1.14.1",
+    /// its count in its status colour.
+    private var headline: Text {
+        let issue = issues.count == 1 ? issues.first : nil
+        let parts: [Text?] = [Text(String(localized: "\(summary.total) nodes")), issue, summary.versionSpan.map { Text(verbatim: $0) }]
+        return dotJoined(parts.compactMap { $0 })
+    }
+
+    /// Which nodes are in trouble, each count in its own status colour; empty when all are ready.
+    private var issues: [Text] {
+        [
+            summary.notReady > 0 ? Text(String(localized: "\(summary.notReady) not ready")).foregroundStyle(.statusWarn) : nil,
+            summary.unreachable > 0 ? Text(String(localized: "\(summary.unreachable) unreachable")).foregroundStyle(.statusBad) : nil,
+        ].compactMap { $0 }
+    }
+}
+
+/// The parts with a muted "  ·  " between them.
+private func dotJoined(_ parts: [Text]) -> Text {
+    parts.indices.reduce(Text(verbatim: "")) { text, i in
+        text + Text(verbatim: i > 0 ? "  ·  " : "").foregroundStyle(.secondary) + parts[i]
     }
 }
 
@@ -87,22 +108,12 @@ private struct AnsweredLabel: View {
     }
 }
 
-/// Which nodes are in trouble, each count in its own status colour; nothing when all are ready.
+/// Both kinds of node in trouble, when there are both: "1 not ready  ·  1 unreachable".
 private struct Breakdown: View {
-    let summary: ClusterSummary
+    let parts: [Text]
 
     var body: some View {
-        let candidates: [Text?] = [
-            summary.notReady > 0 ? Text("\(summary.notReady) not ready").foregroundStyle(.statusWarn) : nil,
-            summary.unreachable > 0 ? Text("\(summary.unreachable) unreachable").foregroundStyle(.statusBad) : nil,
-        ]
-        let parts = candidates.compactMap { $0 }
-        if !parts.isEmpty {
-            parts.indices.reduce(Text(verbatim: "")) { text, i in
-                text + Text(verbatim: i > 0 ? "  ·  " : "").foregroundStyle(.secondary) + parts[i]
-            }
-            .font(.caption)
-        }
+        dotJoined(parts).font(.caption)
     }
 }
 

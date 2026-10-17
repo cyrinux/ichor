@@ -327,7 +327,16 @@ struct OverviewView: View {
                     answered: overview.answered(of: overviewNodeTargets),
                     live: liveStats ? ClusterLiveStore.shared.live(for: loadID) : nil
                 )
-                NavigationLink(value: Route.insights) { Label("Cluster insights", systemImage: "magnifyingglass") }
+                // The card's two actions as named rows; the card itself opens nothing.
+                NavigationLink(value: Route.insights) {
+                    Label { Text("Insights") } icon: { Image(systemName: "chart.xyaxis.line") }
+                }
+                // Capacity reads pods and nodes through the admin kubeconfig, as the workloads do.
+                if model.allows(.workloads) {
+                    NavigationLink(value: Route.capacity) {
+                        Label { Text(verbatim: CapacityText.capacityTitle) } icon: { Image(systemName: "gauge.with.dots.needle.33percent") }
+                    }
+                }
             } header: {
                 if let access = model.activeSummary?.localizedAccessLabel { Text(access) }
             }

@@ -31,6 +31,7 @@ import name.levis.ichor.model.FluxState
 import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.FLUX_TILE
 import name.levis.ichor.model.InventoryApp
+import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.allFine
 import name.levis.ichor.model.failingApps
 import name.levis.ichor.model.stateCounts
@@ -57,7 +58,7 @@ private const val MAX_FAILING = 2
  */
 @Composable
 fun FluxCard(state: UiState<FluxStatus>, fluxTile: InventoryApp?, onOpen: () -> Unit) =
-    GitOpsCardFrame(fluxTile ?: FLUX_TILE, R.string.flux_title, state, { it.apps.size }, onOpen) { Body(it) }
+    GitOpsCardFrame(fluxTile ?: FLUX_TILE, R.string.flux_title, state, { it.apps.size }, { s -> s.failingApps.map { ServiceHealth.CRITICAL } }, onOpen) { Body(it) }
 
 @Composable
 private fun Body(status: FluxStatus) {

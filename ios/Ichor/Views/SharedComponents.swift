@@ -190,7 +190,8 @@ struct SectionHeader<Pill: View>: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: title)
                 if let subtitle, !subtitle.isEmpty {
-                    Text(verbatim: subtitle).font(.caption).textCase(nil)
+                    // Muted as in a Section header, also when the header heads a row.
+                    Text(verbatim: subtitle).font(.caption).foregroundStyle(.secondary).monospacedDigit().textCase(nil)
                 }
             }
             Spacer(minLength: 8)

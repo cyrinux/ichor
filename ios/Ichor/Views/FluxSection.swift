@@ -21,7 +21,8 @@ struct FluxSection: View {
 
     private func content(_ status: FluxStatus) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            GitOpsSectionHeader(app: app ?? fluxTile, title: "Flux", count: status.apps.count)
+            GitOpsSectionHeader(app: app ?? fluxTile, title: "Flux", count: status.apps.count,
+                                attention: status.apps.filter(\.level.needsAttention).count)
             FluxStateBar(counts: status.stateCounts)
             if status.allCalm && status.failingSources.isEmpty {
                 Text("All Kustomizations and HelmReleases ready").font(.caption).foregroundStyle(.secondary)

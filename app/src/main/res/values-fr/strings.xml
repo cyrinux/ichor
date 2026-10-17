@@ -1251,10 +1251,6 @@
         <item quantity="one">%d nœud qui dérive</item>
         <item quantity="other">%d nœuds qui dérivent</item>
     </plurals>
-    <plurals name="time_drift_unreachable_count">
-        <item quantity="one">%d injoignable</item>
-        <item quantity="other">%d injoignables</item>
-    </plurals>
     <string name="network_title">Réseau</string>
     <string name="network_tab_interfaces">Interfaces</string>
     <string name="network_tab_connections">Connexions</string>
@@ -1822,6 +1818,7 @@
     <string name="local_network_allow">Autoriser l\'accès au réseau local</string>
 
     <string name="insights_title">Analyse du cluster</string>
+    <string name="overview_action_insights">Analyse</string>
     <string name="insights_drift">Écarts de configuration</string>
     <string name="insights_recorder">Enregistrement d’incident</string>
     <string name="insights_bottlenecks">Indicateurs de saturation</string>
@@ -2051,6 +2048,10 @@
 
     <!-- Data services: Longhorn, Garage, CloudNativePG -->
     <string name="data_services_title">Services de données</string>
+    <plurals name="overview_data_services_count">
+        <item quantity="one">%1$d système</item>
+        <item quantity="other">%1$d systèmes</item>
+    </plurals>
     <string name="data_services_unreadable">Lecture impossible : %1$s</string>
     <string name="data_services_refresh">Actualiser</string>
     <string name="data_services_filter_problems">Problèmes</string>

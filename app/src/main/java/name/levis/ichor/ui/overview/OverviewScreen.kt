@@ -780,8 +780,7 @@ private fun NodeList(
                     val inventory = (apps as? UiState.Loaded)?.data
                     val appsById = remember(inventory) { inventory?.apps.orEmpty().associateBy { it.id } }
                     val hinted = remember(dataHints) { DataServiceKind.entries.filter { it.catalogId in dataHints.split(',') } }
-                    val downNodes = remember(overview) { overview.downHostnames() }
-                    Box(Modifier.longPressToCustomize(onCustomize)) { DataServicesCard(dataServices, hinted, appsById, downNodes, onDataServices) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { DataServicesCard(dataServices, hinted, appsById, onDataServices) }
                 }
                 OverviewCard.ARGO_CD -> if (argo != null) item(key = card.name) {
                     val argoTile = (apps as? UiState.Loaded)?.data?.apps?.firstOrNull { it.id == ARGO_CD_CATALOG_ID }

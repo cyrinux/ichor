@@ -49,17 +49,7 @@ struct TimeDriftSection: View {
                 }
             }
         } header: {
-            HStack {
-                Label("Clock drift", systemImage: "clock")
-                Spacer()
-                if case .loaded(let time, _, _) = state, let status = time.summary.status {
-                    StatusPill(label: label(status), color: status.color)
-                        .textCase(nil)
-                }
-                Button { Task { await load() } } label: { Image(systemName: "arrow.clockwise") }
-                    .disabled(refreshing)
-                    .accessibilityLabel(Text("Refresh"))
-            }
+            SectionHeader(title: String(localized: "Clock drift"), pill: headerTrailing)
         } footer: {
             Text("Offset of each node's clock from its NTP server. Drift breaks etcd and certificate checks: warning from 500 ms, critical from 5 s.")
         }
@@ -68,6 +58,18 @@ struct TimeDriftSection: View {
             Button("OK") { shownError = nil }
         } message: {
             Text(shownError?.error ?? "")
+        }
+    }
+
+    /// The section's one pill, then the refresh button.
+    private var headerTrailing: some View {
+        HStack(spacing: 8) {
+            if let status = loadedSummary?.status {
+                StatusPill(label: label(status), color: status.color)
+            }
+            Button { Task { await load() } } label: { Image(systemName: "arrow.clockwise") }
+                .disabled(refreshing)
+                .accessibilityLabel(Text("Refresh"))
         }
     }
 
@@ -98,23 +100,20 @@ struct TimeDriftSection: View {
     }
 }
 
-/// "7 nodes in sync · max ±9 ms", or how many drift, then "1 unreachable" in neutral grey.
+/// "7 nodes in sync · max ±9 ms", or how many drift. The nodes that did not answer are said by
+/// the summary card and the Nodes section, and listed when expanded; only when none answered
+/// does this line say so, having nothing else to say.
 private struct SummaryLine: View {
     let summary: TimeDriftSummary
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            if summary.reachable > 0 {
-                let offset = formatOffsetMagnitude(summary.maxOffsetMs)
-                Text(summary.drifting == 0
-                     ? String(localized: "\(summary.reachable) nodes in sync · max ±\(offset)")
-                     : String(localized: "\(summary.drifting) nodes drifting · max ±\(offset)"))
-            }
-            if summary.unreachable > 0 {
-                Text(String(localized: "\(summary.unreachable) unreachable"))
-                    .font(summary.reachable > 0 ? Font.caption : Font.body)
-                    .foregroundStyle(.secondary)
-            }
+        if summary.reachable > 0 {
+            let offset = formatOffsetMagnitude(summary.maxOffsetMs)
+            Text(summary.drifting == 0
+                 ? String(localized: "\(summary.reachable) nodes in sync · max ±\(offset)")
+                 : String(localized: "\(summary.drifting) nodes drifting · max ±\(offset)"))
+        } else if summary.unreachable > 0 {
+            Text(String(localized: "\(summary.unreachable) unreachable")).foregroundStyle(.secondary)
         }
     }
 }

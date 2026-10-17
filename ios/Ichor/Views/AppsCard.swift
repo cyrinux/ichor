@@ -36,24 +36,11 @@ struct AppsCard: View {
         let attention = apps.filter(\.needsAttention).count
         let tiles = overviewTiles(apps, limit: 6, remoteIcons: remoteIcons)
         return VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Apps").font(.headline)
-                    Text(verbatim: [String(localized: "\(running) running"), String(localized: "\(containers) containers")]
-                        .joined(separator: " · "))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
-                Spacer()
-                if attention > 0 {
-                    // Borderless: its own tap target inside the row's link.
-                    Button { path.append(.apps(hostnames: hostnames, filter: .attention)) } label: {
-                        StatusPill(label: String(localized: "\(attention) need a look"), color: attentionColor)
-                    }
-                    .buttonStyle(.borderless)
-                }
-            }
+            SectionHeader(title: String(localized: "Apps"),
+                          subtitle: [String(localized: "\(running) running"), String(localized: "\(containers) containers")]
+                              .joined(separator: " · "),
+                          pill: attentionPill(attention))
+                .font(.headline)
             HStack(spacing: 8) {
                 ForEach(tiles.shown) { app in
                     AppIconView(app: app, size: 36)
@@ -71,6 +58,17 @@ struct AppsCard: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    /// "3 need a look", opening the Apps screen on its Attention chip; nothing when all are fine.
+    @ViewBuilder private func attentionPill(_ attention: Int) -> some View {
+        if attention > 0 {
+            // Borderless: its own tap target inside the row's link.
+            Button { path.append(.apps(hostnames: hostnames, filter: .attention)) } label: {
+                StatusPill(label: String(localized: "\(attention) need a look"), color: attentionColor)
+            }
+            .buttonStyle(.borderless)
+        }
     }
 
     /// Shapes for the skeleton row.

@@ -1244,10 +1244,6 @@
         <item quantity="one">%d Node weicht ab</item>
         <item quantity="other">%d Nodes weichen ab</item>
     </plurals>
-    <plurals name="time_drift_unreachable_count">
-        <item quantity="one">%d nicht erreichbar</item>
-        <item quantity="other">%d nicht erreichbar</item>
-    </plurals>
     <string name="network_title">Netzwerk</string>
     <string name="network_tab_interfaces">Schnittstellen</string>
     <string name="network_tab_connections">Verbindungen</string>
@@ -1814,6 +1810,7 @@
     <string name="local_network_allow">Zugriff auf lokales Netzwerk erlauben</string>
 
     <string name="insights_title">Clusteranalyse</string>
+    <string name="overview_action_insights">Analyse</string>
     <string name="insights_drift">Konfigurationsabweichungen</string>
     <string name="insights_recorder">Vorfallsaufzeichnung</string>
     <string name="insights_bottlenecks">Engpassmetriken</string>
@@ -2043,6 +2040,10 @@
 
     <!-- Data services: Longhorn, Garage, CloudNativePG -->
     <string name="data_services_title">Datendienste</string>
+    <plurals name="overview_data_services_count">
+        <item quantity="one">%1$d System</item>
+        <item quantity="other">%1$d Systeme</item>
+    </plurals>
     <string name="data_services_unreadable">Konnte nicht gelesen werden: %1$s</string>
     <string name="data_services_refresh">Aktualisieren</string>
     <string name="data_services_filter_problems">Probleme</string>

@@ -10,11 +10,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,6 +44,7 @@ import name.levis.ichor.model.formatMaxOffset
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.SectionHeader
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.components.expandable
@@ -67,49 +66,44 @@ fun driftColor(level: DriftLevel): Color {
 }
 
 /**
- * Per-node clock offset against NTP, like `talosctl time` on every node. Collapsed to one
- * line while every reachable clock is in sync; unreachable nodes are counted apart.
+ * Per-node clock offset against NTP, like `talosctl time` on every node, under the overview
+ * cards' header. Collapsed to its header while every reachable clock is in sync; the nodes
+ * that did not answer are left to the summary and Nodes cards.
  */
 @Composable
 fun TimeDriftCard(state: UiState<ClusterTime>, hostnames: Map<String, String>) {
     val summary = (state as? UiState.Loaded)?.data?.nodes?.let(::driftSummary)
     var expanded by rememberSaveable(summary?.expandedByDefault) { mutableStateOf(summary?.expandedByDefault == true) }
+    val level = summary?.level
+    val loading = state is UiState.Loading
+    val pill: (@Composable () -> Unit)? = if (loading || level != null) {
+        {
+            if (level == null) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+            else StatusPill(stringResource(levelLabel(level)), driftColor(level))
+        }
+    } else {
+        null
+    }
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            // Title and summary toggle the per-node list.
-            Column(
+            // The header toggles the per-node list.
+            SectionHeader(
+                stringResource(R.string.time_drift_title),
                 Modifier.fillMaxWidth().expandable(
                     expanded,
                     enabled = summary != null,
                     actionLabel = stringResource(if (expanded) R.string.time_drift_collapse else R.string.time_drift_expand),
                 ) { expanded = !expanded },
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Outlined.Schedule,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(end = 8.dp).size(18.dp),
-                    )
-                    Text(stringResource(R.string.time_drift_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                    when {
-                        state is UiState.Loading -> CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                        summary?.level != null -> StatusPill(stringResource(levelLabel(summary.level)), driftColor(summary.level))
-                    }
-                    if (summary != null) {
-                        Icon(
-                            if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(start = 8.dp),
-                        )
-                    }
-                }
-                if (state is UiState.Failed) {
-                    Text(state.message.asString(), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
-                }
-                summary?.let { SummaryLine(it) }
+                subtitle = summary?.let { summaryText(it) },
+                pill = pill,
+                chevron = when {
+                    summary == null -> null
+                    expanded -> Icons.Outlined.ExpandLess
+                    else -> Icons.Outlined.ExpandMore
+                },
+            )
+            if (state is UiState.Failed) {
+                Text(state.message.asString(), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
             }
             if (expanded && state is UiState.Loaded) {
                 state.data.nodes
@@ -126,27 +120,18 @@ private fun levelLabel(level: DriftLevel) = when (level) {
     DriftLevel.BAD -> R.string.time_drift_bad
 }
 
-/** "7 nodes in sync · max ±9 ms", then a neutral "1 unreachable" when some did not answer. */
+/** "7 nodes in sync · max ±9 ms"; null when no clock answered. */
 @Composable
-private fun SummaryLine(summary: DriftSummary) {
-    val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    if (summary.reachable > 0) {
-        val drifting = summary.drifting
-        val count = if (drifting == 0) {
-            pluralStringResource(R.plurals.time_drift_summary_in_sync, summary.reachable, summary.reachable)
-        } else {
-            pluralStringResource(R.plurals.time_drift_summary_drifting, drifting, drifting)
-        }
-        val max = summary.maxOffsetMs?.let { stringResource(R.string.time_drift_max, formatMaxOffset(it)) }
-        Text(listOfNotNull(count, max).joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = muted)
+private fun summaryText(summary: DriftSummary): String? {
+    if (summary.reachable == 0) return null
+    val drifting = summary.drifting
+    val count = if (drifting == 0) {
+        pluralStringResource(R.plurals.time_drift_summary_in_sync, summary.reachable, summary.reachable)
+    } else {
+        pluralStringResource(R.plurals.time_drift_summary_drifting, drifting, drifting)
     }
-    if (summary.unreachable > 0) {
-        Text(
-            pluralStringResource(R.plurals.time_drift_unreachable_count, summary.unreachable, summary.unreachable),
-            style = MaterialTheme.typography.bodySmall,
-            color = muted,
-        )
-    }
+    val max = summary.maxOffsetMs?.let { stringResource(R.string.time_drift_max, formatMaxOffset(it)) }
+    return listOfNotNull(count, max).joinToString(" · ")
 }
 
 @Composable

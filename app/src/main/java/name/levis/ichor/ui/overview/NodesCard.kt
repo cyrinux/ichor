@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
@@ -59,6 +60,7 @@ import name.levis.ichor.model.status
 import name.levis.ichor.model.shownPublicIps
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.NodeHealthPill
+import name.levis.ichor.ui.components.SectionHeader
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.hardware.cachedThrottled
 import name.levis.ichor.ui.components.agoLabel
@@ -67,9 +69,11 @@ import name.levis.ichor.ui.kubespan.siteTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
- * The nodes as one card, like Apps and Data services. Collapsed (the default), a chip per node,
- * one with a problem tinted in its status colour so it still stands out without growing the
- * card; expanded, a swipeable row per node with the details. The title toggles between the two.
+ * The nodes as one card under the shared header (count, one pill for the nodes in trouble).
+ * Collapsed (the default), a dense row per node up to FEW_NODES, else a chip per node, one with
+ * a problem tinted in its status colour so it still stands out without growing the card; the
+ * unreachable ones first. Expanded, a swipeable row per node with the details. The header
+ * toggles between the two.
  *
  * Past NODE_DENSE_THRESHOLD nodes it turns dense (see DenseNodes) and the title opens the
  * Nodes screen ([onAllNodes]) instead: a card holding hundreds of rows defeats the home screen.
@@ -87,31 +91,25 @@ fun NodesCard(
     titleModifier: Modifier = Modifier,
 ) {
     // The cluster summary shows the version all nodes share; the rows only say it when it differs.
-    val sharedVersion = remember(groups) { groups.flatMap { it.nodes }.sharedVersion() }
-    val total = groups.sumOf { it.nodes.size }
+    val all = remember(groups) { groups.flatMap { it.nodes } }
+    val sharedVersion = remember(all) { all.sharedVersion() }
+    val total = all.size
     val dense = isDenseCluster(total)
     Card(Modifier.fillMaxWidth().animateContentSize()) {
-        Row(
+        SectionHeader(
+            stringResource(R.string.overview_stat_nodes),
             (if (dense) titleModifier.clickable(role = Role.Button, onClickLabel = stringResource(R.string.overview_nodes_open_all)) { onAllNodes(null) }
             else titleModifier.expandable(expanded, onToggle = onToggle))
                 .padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(stringResource(R.string.overview_stat_nodes), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            DetectPublicIpsButton(publicIps)
-            Spacer(Modifier.width(8.dp))
-            Text(total.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Icon(
-                when {
-                    dense -> Icons.AutoMirrored.Outlined.KeyboardArrowRight
-                    expanded -> Icons.Outlined.ExpandLess
-                    else -> Icons.Outlined.ExpandMore
-                },
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp),
-            )
-        }
+            subtitle = pluralStringResource(R.plurals.overview_summary_nodes, total, total),
+            pill = nodesPill(all),
+            chevron = when {
+                dense -> Icons.AutoMirrored.Outlined.KeyboardArrowRight
+                expanded -> Icons.Outlined.ExpandLess
+                else -> Icons.Outlined.ExpandMore
+            },
+            trailing = { DetectPublicIpsButton(publicIps) },
+        )
         if (dense) DenseNodes(groups, publicIps, sharedVersion, onNode, onLive, onMore, onAllNodes)
         else groups.forEachIndexed { g, group ->
             // Site headers only when there is more than one: a single site says nothing.
@@ -123,8 +121,11 @@ fun NodesCard(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = if (g > 0) 12.dp else 4.dp, bottom = 2.dp),
             )
-            if (!expanded) NodeChips(group.nodes, onNode, onLive, onMore)
-            else group.nodes.forEachIndexed { i, node ->
+            // The unreachable nodes first, so the one in trouble is the first one read.
+            val nodes = group.nodes.sortedBy { it.status != NodeStatus.UNREACHABLE }
+            if (!expanded && total <= FEW_NODES) NodeLines(nodes, onNode, onLive, onMore)
+            else if (!expanded) NodeChips(nodes, onNode, onLive, onMore)
+            else nodes.forEachIndexed { i, node ->
                 if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
                 SwipeableNodeRow(node, publicIps, sharedVersion, onNode, onLive, onMore)
             }

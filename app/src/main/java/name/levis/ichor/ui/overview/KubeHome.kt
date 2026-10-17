@@ -384,7 +384,7 @@ private fun KubeHomeList(
                 }
                 KubeHomeCard.DATA_SERVICES -> if (dataServices != null) item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) {
-                        DataServicesCard(dataServices, hinted = emptyList(), apps = emptyMap(), downNodes = downNodes, onOpen = nav.onDataServices)
+                        DataServicesCard(dataServices, hinted = emptyList(), apps = emptyMap(), onOpen = nav.onDataServices)
                     }
                 }
                 KubeHomeCard.ARGO_CD -> if (argo != null) item(key = card.name) {
