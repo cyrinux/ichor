@@ -2105,7 +2105,7 @@
     <string name="garage_status_unknown">Inconnu</string>
     <string name="garage_storage_nodes">Nœuds de stockage</string>
     <string name="garage_up_of">%1$d/%2$d en ligne</string>
-    <string name="garage_partitions_replicated">Entièrement répliquées</string>
+    <string name="garage_partitions_replicated">Partitions répliquées</string>
     <string name="garage_partitions_quorum">Quorum d’écriture</string>
     <string name="garage_resync_queue">File de resynchronisation</string>
     <string name="garage_resync_errors">Blocs en échec de resynchro</string>
@@ -2151,7 +2151,12 @@
     <string name="garage_repair_nothing">Rien à réparer</string>
     <string name="garage_repair_failed">Échec de la réparation : %1$s</string>
     <string name="garage_tranquility_full">resynchro à pleine vitesse</string>
-    <string name="garage_tranquility_value">tranquillité de resynchro %1$d</string>
+    <string name="garage_details">Détails</string>
+    <string name="garage_meter_data">données</string>
+    <string name="garage_resync_failing">File de resynchro %1$s · en échec %2$s</string>
+    <string name="garage_resync_tag">resynchro %1$s</string>
+    <string name="data_services_tab_snapshots">Instantanés</string>
+    <string name="data_services_tab_backup_jobs">Tâches de sauvegarde</string>
     <string name="garage_tranquility_set_full">Resynchro à pleine vitesse</string>
     <string name="garage_tranquility_set_default">Vitesse de resynchro par défaut</string>
     <string name="garage_tranquility_full_title">Resynchro de %1$s à pleine vitesse ?</string>

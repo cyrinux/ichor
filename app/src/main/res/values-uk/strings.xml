@@ -2233,7 +2233,7 @@
     <string name="garage_status_unknown">Невідомо</string>
     <string name="garage_storage_nodes">Вузли зберігання</string>
     <string name="garage_up_of">%1$d/%2$d працюють</string>
-    <string name="garage_partitions_replicated">Повністю репліковані</string>
+    <string name="garage_partitions_replicated">Репліковані розділи</string>
     <string name="garage_partitions_quorum">Кворум запису</string>
     <string name="garage_resync_queue">Черга ресинхронізації</string>
     <string name="garage_resync_errors">Блоки з помилками ресинхронізації</string>
@@ -2279,7 +2279,12 @@
     <string name="garage_repair_nothing">Нічого відновлювати</string>
     <string name="garage_repair_failed">Відновлення не вдалося: %1$s</string>
     <string name="garage_tranquility_full">ресинхронізація на повній швидкості</string>
-    <string name="garage_tranquility_value">спокій ресинхронізації %1$d</string>
+    <string name="garage_details">Деталі</string>
+    <string name="garage_meter_data">дані</string>
+    <string name="garage_resync_failing">Черга ресинхронізації %1$s · з помилками %2$s</string>
+    <string name="garage_resync_tag">ресинхр. %1$s</string>
+    <string name="data_services_tab_snapshots">Знімки</string>
+    <string name="data_services_tab_backup_jobs">Завдання резервування</string>
     <string name="garage_tranquility_set_full">Ресинхронізація на повній швидкості</string>
     <string name="garage_tranquility_set_default">Типова швидкість ресинхронізації</string>
     <string name="garage_tranquility_full_title">Ресинхронізувати %1$s на повній швидкості?</string>

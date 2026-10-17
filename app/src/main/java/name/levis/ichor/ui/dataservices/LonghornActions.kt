@@ -40,6 +40,8 @@ import name.levis.ichor.model.LonghornSnapshotAction
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.model.kubeAction
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.model.KubePermission
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.rememberKubeActionAccess
@@ -142,11 +144,24 @@ fun LonghornResultToasts(results: Flow<LonghornActionResult>) = ResultToasts(res
 }
 
 /**
- * The ⋮ menu of a volume or node row, a spinner while one of its actions runs. An action the
- * account may not run in [namespace] (Longhorn's own) is disabled, with the reason under it.
+ * A menu item outside [LonghornAction]: salvage, attach or detach, the snapshots sheet. Its own
+ * dialog or sheet confirms it; [action] is what the account must be allowed, null for none.
+ */
+internal data class LonghornMenuExtra(val label: String, val action: KubeAction?, val onClick: () -> Unit)
+
+/**
+ * The ⋮ menu of a volume or node row, a spinner while one of its actions runs: [extras] first,
+ * then [actions]. An action the account may not run in [namespace] (Longhorn's own) is
+ * disabled, with the reason under it.
  */
 @Composable
-internal fun LonghornActionMenu(actions: List<LonghornAction>, namespace: String, busy: Boolean, onAction: (LonghornAction) -> Unit) {
+internal fun LonghornActionMenu(
+    actions: List<LonghornAction>,
+    namespace: String,
+    busy: Boolean,
+    onAction: (LonghornAction) -> Unit,
+    extras: List<LonghornMenuExtra> = emptyList(),
+) {
     if (busy) {
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -159,24 +174,34 @@ internal fun LonghornActionMenu(actions: List<LonghornAction>, namespace: String
     Box {
         TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { open = true })
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            extras.forEach { extra ->
+                MenuItem(extra.label, access?.denial(extra.action)) {
+                    open = false
+                    extra.onClick()
+                }
+            }
             actions.forEach { action ->
-                val denial = access?.denial(action.kubeAction)
-                DropdownMenuItem(
-                    text = {
-                        Column {
-                            Text(stringResource(action.menuLabel))
-                            KubeDenialNote(denial)
-                        }
-                    },
-                    enabled = denial == null,
-                    onClick = {
-                        open = false
-                        onAction(action)
-                    },
-                )
+                MenuItem(stringResource(action.menuLabel), access?.denial(action.kubeAction)) {
+                    open = false
+                    onAction(action)
+                }
             }
         }
     }
+}
+
+@Composable
+private fun MenuItem(label: String, denial: KubePermission?, onClick: () -> Unit) {
+    DropdownMenuItem(
+        text = {
+            Column {
+                Text(label)
+                KubeDenialNote(denial)
+            }
+        },
+        enabled = denial == null,
+        onClick = onClick,
+    )
 }
 
 private val LonghornAction.menuLabel: Int

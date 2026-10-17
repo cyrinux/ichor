@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,6 +75,14 @@ fun dataServicesStepLabel(id: String): String = when (id) {
     "pods" -> stringResource(R.string.read_progress_step_pods)
     "backups" -> DataServiceKind.BACKUP_JOBS.tabTitle
     else -> DataServiceKind.entries.firstOrNull { it.alertSystem == id }?.tabTitle ?: id
+}
+
+/** The tab row's name: [tabTitle], the long ones cut to a word or two (the tab's sections keep the long name). */
+@Composable
+fun DataServiceKind.tabLabel(): String = when (this) {
+    DataServiceKind.SNAPSHOTS -> stringResource(R.string.data_services_tab_snapshots)
+    DataServiceKind.BACKUP_JOBS -> stringResource(R.string.data_services_tab_backup_jobs)
+    else -> tabTitle
 }
 
 /** The tab's name, short enough for four tabs. */
@@ -169,22 +178,29 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
     return listOfNotNull(head, attention).joinToString(" · ")
 }
 
-/** "worker-3 is not ready: the likely cause of 3 problems", one line per node. */
+/**
+ * "worker-3 is not ready: the likely cause of 3 problems" as one line, the nodes joined, with a
+ * "Nodes" link to the nodes list when [onNodes] is given.
+ */
 @Composable
-fun LikelyCauseBanner(causes: List<LikelyCause>, modifier: Modifier = Modifier) {
+fun LikelyCauseBanner(causes: List<LikelyCause>, modifier: Modifier = Modifier, onNodes: (() -> Unit)? = null) {
     if (causes.isEmpty()) return
-    CauseBanner(causes.map { it.text() }.joinToString("\n"), modifier)
+    val link: (@Composable () -> Unit)? = onNodes?.let { open ->
+        @Composable { TextButton(onClick = open) { Text(stringResource(R.string.common_label_nodes)) } }
+    }
+    CauseBanner(causes.map { it.text() }.joinToString(" · "), modifier, action = link)
 }
 
-/** A red banner naming the likely root cause of what is broken. */
+/** A red banner naming the likely root cause of what is broken; [action] (a link) at its end. */
 @Composable
-fun CauseBanner(text: String, modifier: Modifier = Modifier) {
+fun CauseBanner(text: String, modifier: Modifier = Modifier, action: (@Composable () -> Unit)? = null) {
     val bad = LocalStatusColors.current.bad
     Surface(color = bad.copy(alpha = 0.12f), contentColor = bad, shape = RoundedCornerShape(12.dp), modifier = modifier.fillMaxWidth()) {
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
+        Row(Modifier.padding(horizontal = 12.dp, vertical = if (action != null) 4.dp else 12.dp), verticalAlignment = if (action != null) Alignment.CenterVertically else Alignment.Top) {
             Icon(Icons.Outlined.WarningAmber, contentDescription = null, modifier = Modifier.size(20.dp))
             Spacer(Modifier.size(8.dp))
-            Text(text, style = MaterialTheme.typography.bodyMedium)
+            Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f, fill = action != null))
+            action?.invoke()
         }
     }
 }

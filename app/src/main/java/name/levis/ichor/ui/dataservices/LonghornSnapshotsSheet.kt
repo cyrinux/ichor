@@ -101,6 +101,9 @@ internal fun LonghornProtectionLine(v: LonghornVolume, onClick: () -> Unit) {
 
 private val LonghornVolume.latestBackupFailed: Boolean get() = backups.firstOrNull()?.failed == true
 
+/** The last backup failed or is old: the row then shows its protection line. */
+internal val LonghornVolume.backupNeedsAttention: Boolean get() = latestBackupFailed || backupStale
+
 /** Warn for a missing or stale backup, bad for a failed one, null when all is well. */
 @Composable
 private fun LonghornVolume.protectionColor(): Color? {

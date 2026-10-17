@@ -145,7 +145,7 @@ private struct SystemPicker: View {
 
     var body: some View {
         let picker = Picker(selection: $selection) {
-            ForEach(kinds) { Text(verbatim: $0.tabTitle).tag($0) }
+            ForEach(kinds) { Text(verbatim: $0.localizedTabTitle).tag($0) }
         } label: {
             EmptyView()
         }
@@ -153,6 +153,18 @@ private struct SystemPicker: View {
             picker.pickerStyle(.segmented)
         } else {
             picker.pickerStyle(.menu).frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+private extension DataServiceKind {
+    /// The picker's name: the core's short product name, or a translated one where the full
+    /// name ("CSI VolumeSnapshots", "Backup CronJobs") describes the list it heads.
+    var localizedTabTitle: String {
+        switch self {
+        case .snapshots: String(localized: "Snapshots")
+        case .backupJobs: String(localized: "Backup jobs")
+        default: tabTitle
         }
     }
 }

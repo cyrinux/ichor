@@ -1,6 +1,57 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Replicated partitions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Partitions répliquées" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Particiones replicadas" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Репліковані розділи" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Replizierte Partitionen" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Partizioni replicate" } }
+      }
+    },
+    "Resync queue %@ · failing %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Resync queue %1$@ · failing %2$@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "File de resynchronisation %1$@ · en échec %2$@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cola de resincronización %1$@ · con fallos %2$@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Черга ресинхронізації %1$@ · з помилками %2$@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Resync-Warteschlange %1$@ · fehlerhaft %2$@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Coda di risincronizzazione %1$@ · in errore %2$@" } }
+      }
+    },
+    "data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "données" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "datos" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "дані" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Daten" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "dati" } }
+      }
+    },
+    "resync %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "resynchro %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "resincronización %@" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "ресинхронізація %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Resync %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "risincronizzazione %@" } }
+      }
+    },
+    "Backup jobs" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tâches de sauvegarde" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Trabajos de copia" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Завдання резервування" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Backup-Jobs" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Job di backup" } }
+      }
+    },
     "Nothing changed yet." : {
       "extractionState" : "manual",
       "localizations" : {

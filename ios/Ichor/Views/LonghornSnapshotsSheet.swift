@@ -5,6 +5,8 @@ import IchorCore
 /// the backup is missing, old or failed. Opens the snapshots sheet.
 struct LonghornProtectionLine: View {
     let volume: LonghornVolume
+    /// Icons only, for a row's trailing edge: the time of the last backup is read out, not shown.
+    var compact = false
     let open: () -> Void
 
     var body: some View {
@@ -15,7 +17,7 @@ struct LonghornProtectionLine: View {
                 Image(systemName: volume.latestBackupFailed ? "exclamationmark.icloud" : "checkmark.icloud")
                     .foregroundStyle(tint)
                     .padding(.leading, 4)
-                Text(verbatim: lastBackup).foregroundStyle(tint)
+                if !compact { Text(verbatim: lastBackup).foregroundStyle(tint) }
                 Image(systemName: "chevron.right").foregroundStyle(.tertiary)
             }
             .font(.caption)

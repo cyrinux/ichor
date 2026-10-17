@@ -2105,7 +2105,7 @@
     <string name="garage_status_unknown">Sconosciuto</string>
     <string name="garage_storage_nodes">Nodi di archiviazione</string>
     <string name="garage_up_of">%1$d/%2$d attivi</string>
-    <string name="garage_partitions_replicated">Completamente replicate</string>
+    <string name="garage_partitions_replicated">Partizioni replicate</string>
     <string name="garage_partitions_quorum">Quorum di scrittura</string>
     <string name="garage_resync_queue">Coda di risincronizzazione</string>
     <string name="garage_resync_errors">Blocchi con errori di risincronizzazione</string>
@@ -2151,7 +2151,12 @@
     <string name="garage_repair_nothing">Niente da riparare</string>
     <string name="garage_repair_failed">Riparazione non riuscita: %1$s</string>
     <string name="garage_tranquility_full">risincronizzazione a piena velocità</string>
-    <string name="garage_tranquility_value">tranquillità di risincronizzazione %1$d</string>
+    <string name="garage_details">Dettagli</string>
+    <string name="garage_meter_data">dati</string>
+    <string name="garage_resync_failing">Coda di risincronizzazione %1$s · in errore %2$s</string>
+    <string name="garage_resync_tag">risinc. %1$s</string>
+    <string name="data_services_tab_snapshots">Snapshot</string>
+    <string name="data_services_tab_backup_jobs">Job di backup</string>
     <string name="garage_tranquility_set_full">Risincronizza a piena velocità</string>
     <string name="garage_tranquility_set_default">Velocità di risincronizzazione predefinita</string>
     <string name="garage_tranquility_full_title">Risincronizzare %1$s a piena velocità?</string>

@@ -5,12 +5,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -54,6 +56,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.KubeServerDialog
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.SwipeTabPager
+import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.pageContent
 
 /**
@@ -70,6 +73,7 @@ fun DataServicesScreen(
     onObject: (KubeObjectRef) -> Unit,
     onSupportedIntegrations: () -> Unit,
     onRequestIntegration: () -> Unit,
+    onNodes: (() -> Unit)? = null,
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val vm: DataServicesViewModel = viewModel(factory = factory { DataServicesViewModel(app.dataServicesRepository) })
@@ -98,6 +102,10 @@ fun DataServicesScreen(
 
     val fingerprint = config?.realFingerprint?.takeUnless { mask.enabled }
     var editing by remember { mutableStateOf(false) }
+    // The top bar's search: for now it filters the Longhorn volumes.
+    var searching by rememberSaveable { mutableStateOf(false) }
+    var query by rememberSaveable { mutableStateOf("") }
+    val searchable = state.let { it is UiState.Loaded && it.data.longhorn != null }
     LaunchedEffect(fingerprint) { if (fingerprint == null) editing = false }
     if (editing && fingerprint != null) {
         KubeServerDialog(
@@ -119,6 +127,12 @@ fun DataServicesScreen(
                 title = { Text(stringResource(R.string.data_services_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    if (searchable) {
+                        TooltipIconButton(Icons.Outlined.Search, stringResource(R.string.data_services_search), onClick = {
+                            searching = !searching
+                            if (!searching) query = ""
+                        })
+                    }
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh), onClick = { vm.refresh() })
                     if (fingerprint != null) {
                         TooltipIconButton(Icons.Outlined.Dns, stringResource(R.string.kube_server_title), onClick = { editing = true })
@@ -137,7 +151,7 @@ fun DataServicesScreen(
                 else app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
             }
             if (data.detected.isEmpty()) NoDataServices(onSupportedIntegrations, onRequestIntegration)
-            else Systems(data, downNodes, initial, onObject, vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero, vm.externalDns, vm.kubeGreen)
+            else Systems(data, downNodes, initial, onObject, onNodes, query.takeIf { searching }, { query = it }, vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero, vm.externalDns, vm.kubeGreen)
         }
     }
 }
@@ -158,7 +172,7 @@ private fun NoDataServices(onSupportedIntegrations: () -> Unit, onRequestIntegra
 }
 
 @Composable
-private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, onObject: (KubeObjectRef) -> Unit, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions, cnpg: CnpgActions, velero: VeleroActions, externalDns: ExternalDnsActions, kubeGreen: KubeGreenActions) {
+private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, onObject: (KubeObjectRef) -> Unit, onNodes: (() -> Unit)?, query: String?, onQuery: (String) -> Unit, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions, cnpg: CnpgActions, velero: VeleroActions, externalDns: ExternalDnsActions, kubeGreen: KubeGreenActions) {
     val kinds = services.detected
     // Picked once: a system detected later, before it in the list, doesn't take its place.
     var selected by rememberSaveable { mutableStateOf(initial ?: kinds.first()) }
@@ -166,18 +180,22 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
     val causes = remember(services, downNodes) { services.likelyCauses(downNodes) }
 
     Column(Modifier.fillMaxSize()) {
-        LikelyCauseBanner(causes, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+        LikelyCauseBanner(causes, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), onNodes)
+        // Shown by the top bar's search action; only the Longhorn tab filters by it yet.
+        if (query != null && tab == DataServiceKind.LONGHORN) {
+            SearchField(query, onQuery, stringResource(R.string.data_services_search), Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp))
+        }
         if (kinds.size > 1) {
             // Scrollable: a cluster can run more systems than fit across the screen.
             PrimaryScrollableTabRow(selectedTabIndex = kinds.indexOf(tab), edgePadding = 0.dp) {
                 kinds.forEach { kind ->
-                    AppTab(selected = kind == tab, onClick = { selected = kind }, text = { Text(kind.tabTitle, maxLines = 1) })
+                    AppTab(selected = kind == tab, onClick = { selected = kind }, text = { Text(kind.tabLabel(), maxLines = 1) })
                 }
             }
         }
         SwipeTabPager(kinds, tab, onSelect = { selected = it }) { page ->
             when (page) {
-                DataServiceKind.LONGHORN -> LonghornTab(services.longhorn!!, longhorn, garageDetected = services.garage != null, onGarage = { selected = DataServiceKind.GARAGE })
+                DataServiceKind.LONGHORN -> LonghornTab(services.longhorn!!, longhorn, garageDetected = services.garage != null, onGarage = { selected = DataServiceKind.GARAGE }, query = query.orEmpty())
                 DataServiceKind.GARAGE -> GarageTab(services.garage!!, garage, onObject)
                 DataServiceKind.CNPG -> CnpgTab(services.cnpg!!, cnpg)
                 DataServiceKind.DRAGONFLY -> DragonflyTab(services.dragonfly!!)

@@ -3,7 +3,6 @@ package name.levis.ichor.ui.dataservices
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
@@ -26,13 +25,8 @@ data class LonghornSalvageResult(val label: String, val error: UiText?)
 fun LonghornSalvageToasts(results: Flow<LonghornSalvageResult>) = ResultToasts(results) { context, r ->
     (r.error?.resolve(context)?.let { context.getString(R.string.longhorn_salvage_failed, it) } ?: context.getString(R.string.longhorn_salvage_requested)) to (r.error != null)
 }
-@Composable
-fun LonghornSalvageButton(volume: LonghornVolume, busy: Boolean, onClick: () -> Unit) {
-    if (volume.robustness != "faulted") return
-    val denial = rememberKubeDenial(KubeAction.LONGHORN_SALVAGE, volume.namespace)
-    OutlinedButton(onClick = onClick, enabled = !busy && denial == null) { Text(stringResource(R.string.longhorn_salvage)) }
-    denial?.let { KubeDenialNote(it) }
-}
+/** Longhorn salvages only a faulted volume: the row's menu offers it then. */
+val LonghornVolume.salvageable: Boolean get() = robustness == "faulted"
 @Composable
 fun LonghornSalvageDialog(volume: LonghornVolume, actions: LonghornActions, onDismiss: () -> Unit, onConfirm: (Set<String>) -> Unit) {
     var preview by remember(volume.name) { mutableStateOf<LonghornSalvagePreview?>(null) }
