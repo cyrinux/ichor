@@ -33,6 +33,15 @@ const (
 
 	// helmHookTimeout bounds the wait for one hook (Helm's --timeout default is 5 minutes).
 	helmHookTimeout = 5 * time.Minute
+
+	helmKindCRD = "CustomResourceDefinition"
+)
+
+var (
+	// errHelmHookTimeout ends a wait that reached helmHookTimeout.
+	errHelmHookTimeout = fmt.Errorf("not done after %s", helmHookTimeout)
+	// errHelmRollbackTimeout ends a rollback's run that reached its deadline.
+	errHelmRollbackTimeout = errors.New("the rollback ran out of time")
 )
 
 // helmHookPollInterval is how often a hook object is read while waited for (a variable for
@@ -159,10 +168,11 @@ func helmHookObject(ctx context.Context, kinds *kubeKinds, h helmReleaseHook, na
 }
 
 // dryRunHelmHook checks the hook's creation and, for its delete policies, its deletion. An
-// object of the same name already there is fine when before-hook-creation deletes it first.
+// object of the same name already there is fine when before-hook-creation deletes it first,
+// which it never does for a CustomResourceDefinition (the run's create would conflict).
 func dryRunHelmHook(ctx context.Context, k *kubeClient, h helmHookStep) error {
 	err := applyHelmStep(ctx, k, helmStep{action: helmChangeCreate, obj: h.obj}, true)
-	if kubeCode(err) == http.StatusConflict && h.hasPolicy(helmHookBeforeCreation) {
+	if kubeCode(err) == http.StatusConflict && h.hasPolicy(helmHookBeforeCreation) && h.obj.Kind != helmKindCRD {
 		err = nil
 	}
 
@@ -210,9 +220,11 @@ func runHelmHook(ctx context.Context, k *kubeClient, h helmHookStep) error {
 		return nil
 	}
 
+	// Gone counts as done, as Helm's watcher takes watch.Deleted: a Job with
+	// ttlSecondsAfterFinished: 0 may be deleted before (or as soon as) it is first read.
 	return pollHelmHook(ctx, k, h.obj.Path, func(live map[string]any, gone bool) (bool, error) {
 		if gone {
-			return true, errors.New("deleted while it ran")
+			return true, nil
 		}
 
 		return helmHookDone(h.obj.Kind, live)
@@ -222,7 +234,7 @@ func runHelmHook(ctx context.Context, k *kubeClient, h helmHookStep) error {
 // deleteHelmHook deletes the hook's object when it has policy (never a CRD, as Helm), and
 // with wait until it is gone. One already gone is fine.
 func deleteHelmHook(ctx context.Context, k *kubeClient, h helmHookStep, policy string, wait bool) error {
-	if !h.hasPolicy(policy) || h.obj.Kind == "CustomResourceDefinition" || h.obj.Path == "" {
+	if !h.hasPolicy(policy) || h.obj.Kind == helmKindCRD || h.obj.Path == "" {
 		return nil
 	}
 
@@ -248,7 +260,7 @@ func deleteHelmHook(ctx context.Context, k *kubeClient, h helmHookStep, policy s
 // says done (gone: the object does not exist). A read refused ends it at once, other failed
 // reads after followMaxErrors in a row, as pollFollow.
 func pollHelmHook(ctx context.Context, k *kubeClient, path string, check func(live map[string]any, gone bool) (bool, error)) error {
-	ctx, cancel := context.WithTimeout(ctx, helmHookTimeout)
+	ctx, cancel := context.WithTimeoutCause(ctx, helmHookTimeout, errHelmHookTimeout)
 	defer cancel()
 
 	failures := 0
@@ -275,9 +287,26 @@ func pollHelmHook(ctx context.Context, k *kubeClient, path string, check func(li
 		}
 
 		if err := waitFollow(ctx, helmHookPollInterval); err != nil {
-			return fmt.Errorf("not done after %s", helmHookTimeout)
+			return helmHookWaitError(ctx)
 		}
 	}
+}
+
+// helmHookWaitError says which end stopped a wait: the hook's own limit, the rollback's
+// deadline or a cancellation.
+func helmHookWaitError(ctx context.Context) error {
+	cause := context.Cause(ctx)
+
+	switch {
+	case errors.Is(cause, errHelmHookTimeout), errors.Is(cause, errHelmRollbackTimeout):
+		return cause
+	case errors.Is(cause, context.DeadlineExceeded):
+		return errHelmRollbackTimeout
+	case cause != nil:
+		return fmt.Errorf("stopped while waiting: %w", cause)
+	}
+
+	return fmt.Errorf("stopped while waiting: %w", ctx.Err())
 }
 
 // helmHookDone reads a Job's conditions or a Pod's phase: done, with the failure if any.

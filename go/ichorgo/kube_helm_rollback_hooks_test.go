@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"reflect"
 	"strings"
@@ -420,5 +421,144 @@ func TestKubeHelmRollbackDemoHook(t *testing.T) {
 
 	if err := KubeHelmRollback(cfg, "", "", "ingress-nginx", "ingress-nginx", 6, ""); err == nil || err.Error() != errDemoUnavailable.Error() {
 		t.Fatalf("demo rollback: %v", err)
+	}
+}
+
+// A hook Job deleted while waited for (ttlSecondsAfterFinished: 0) is done, as Helm's
+// watcher takes watch.Deleted: the rollback goes on and is deployed.
+func TestHelmRollbackHookDeletedWhileWaited(t *testing.T) {
+	f := helmHooksAPI(t, helmHookSucceeded)
+	f.answerWith("GET "+helmTestPreJob, 200, helmTestJobRunning)
+
+	f.beforeAnswer = func(r *http.Request) {
+		if r.Method == http.MethodGet && r.URL.Path == helmTestPreJob {
+			f.mu.Lock()
+			delete(f.answers, "GET "+helmTestPreJob) // the next read is a 404
+			f.mu.Unlock()
+		}
+	}
+
+	_, writes, err := helmRollbackWrites(t, f, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	reads := 0
+
+	for _, r := range f.recorded() {
+		if r.method == "GET" && r.path == helmTestPreJob {
+			reads++
+		}
+	}
+
+	if reads != 2 || !strings.Contains(writes[len(writes)-1].body, `"status":"deployed"`) {
+		t.Fatalf("%d reads, last write %s", reads, writes[len(writes)-1].body)
+	}
+}
+
+func TestHelmRollbackTimeoutPerHook(t *testing.T) {
+	for _, c := range []struct {
+		hooks int
+		want  time.Duration
+	}{
+		{0, helmPlanTimeout},
+		{1, helmPlanTimeout + 10*time.Minute},
+		{3, helmPlanTimeout + 30*time.Minute},
+	} {
+		if got := helmRollbackTimeout(c.hooks); got != c.want {
+			t.Errorf("%d hooks: %s, want %s", c.hooks, got, c.want)
+		}
+	}
+}
+
+// before-hook-creation makes an existing object fine, except for a CustomResourceDefinition,
+// which is never deleted.
+func TestDryRunHelmHookConflict(t *testing.T) {
+	const crds = "/apis/apiextensions.k8s.io/v1/customresourcedefinitions"
+
+	conflict := `{"kind":"Status","status":"Failure","reason":"AlreadyExists","code":409,"message":"already exists"}`
+	f := newFakeKubeAPI(t, map[string]string{})
+	f.answerWith("POST "+helmTestJobs, 409, conflict)
+	f.answerWith("POST "+crds, 409, conflict)
+	f.answerWith("DELETE "+helmTestPreJob, 200, `{}`)
+	f.answerWith("DELETE "+crds+"/widgets.example.com", 200, `{}`)
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	step := func(kind, path string) helmHookStep {
+		return helmHookStep{
+			hook: helmHook{Kind: kind, DeletePolicies: []string{helmHookBeforeCreation}},
+			obj:  helmObject{Kind: kind, Path: path, Body: map[string]any{"kind": kind}},
+		}
+	}
+
+	if err := dryRunHelmHook(context.Background(), k, step("Job", helmTestPreJob)); err != nil {
+		t.Errorf("Job: %v", err)
+	}
+
+	if err := dryRunHelmHook(context.Background(), k, step(helmKindCRD, crds+"/widgets.example.com")); kubeCode(err) != http.StatusConflict {
+		t.Errorf("CRD: %v", err)
+	}
+}
+
+func TestHelmHookWaitError(t *testing.T) {
+	expired := func(parent context.Context, cause error) context.Context {
+		ctx, cancel := context.WithTimeoutCause(parent, 0, cause)
+		t.Cleanup(cancel)
+
+		return ctx
+	}
+
+	rollbackDeadline, cancel := context.WithTimeout(context.Background(), 0)
+	t.Cleanup(cancel)
+
+	cancelled, cancelNow := context.WithCancel(context.Background())
+	cancelNow()
+
+	for _, c := range []struct {
+		ctx  context.Context
+		want string
+	}{
+		{expired(context.Background(), errHelmHookTimeout), "not done after 5m0s"},
+		{expired(context.Background(), errHelmRollbackTimeout), "the rollback ran out of time"},
+		{expired(rollbackDeadline, errHelmHookTimeout), "the rollback ran out of time"},
+		{expired(cancelled, errHelmHookTimeout), "stopped while waiting: context canceled"},
+	} {
+		<-c.ctx.Done()
+
+		if err := helmHookWaitError(c.ctx); err == nil || err.Error() != c.want {
+			t.Errorf("got %v, want %q", err, c.want)
+		}
+	}
+}
+
+// The rollback's deadline, not the hook's 5 minutes, is named when it ends a wait.
+func TestPollHelmHookRollbackDeadline(t *testing.T) {
+	f := helmHooksAPI(t)
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithTimeoutCause(context.Background(), 20*time.Millisecond, errHelmRollbackTimeout)
+	defer cancel()
+
+	err = pollHelmHook(ctx, k, helmTestPreJob, func(map[string]any, bool) (bool, error) { return false, nil })
+	if !errors.Is(err, errHelmRollbackTimeout) {
+		t.Fatalf("err %v", err)
+	}
+}
+
+// The release Secret's description is one line; the error returned keeps its lines.
+func TestHelmFailureDescription(t *testing.T) {
+	err := errors.Join(errors.New("pre-rollback hook Job site-migrate failed: Job failed"), errors.New("delete: forbidden\n"))
+
+	got := helmFailureDescription("site", err)
+	if want := `Rollback "site" failed: pre-rollback hook Job site-migrate failed: Job failed; delete: forbidden`; got != want {
+		t.Fatalf("got  %q\nwant %q", got, want)
 	}
 }

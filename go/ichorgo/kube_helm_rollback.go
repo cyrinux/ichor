@@ -45,9 +45,6 @@ const (
 	// helmPlanTimeout bounds a plan: discovery, a read per object and a dry run per change
 	// and per hook, one after the other.
 	helmPlanTimeout = 3 * time.Minute
-	// helmRollbackTimeout bounds a rollback: the plan's work again, the changes, and the wait
-	// for the pre-rollback then the post-rollback hooks.
-	helmRollbackTimeout = helmPlanTimeout + 2*helmHookTimeout
 	// helmRecordTimeout is left for recording how a rollback ended, even past the first.
 	helmRecordTimeout = 30 * time.Second
 )
@@ -200,7 +197,7 @@ func KubeHelmRollback(configYAML, contextName, kubeServer, namespace, name strin
 		return errDemoUnavailable
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), helmRollbackTimeout)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// The prune's error stays out of kubeDo: it would unwrap it to the API error and drop
@@ -209,14 +206,22 @@ func KubeHelmRollback(configYAML, contextName, kubeServer, namespace, name strin
 	var pruneErr, hookErr error
 
 	err = kubeMutationError(kubeDo(ctx, target, func(ctx context.Context, k *kubeClient) error {
-		rb, err := prepareHelmRollback(ctx, k, namespace, name, revision, opts)
+		// The plan has its own deadline; the run's is sized from the hooks it holds.
+		planCtx, cancelPlan := context.WithTimeout(ctx, helmPlanTimeout)
+		rb, err := prepareHelmRollback(planCtx, k, namespace, name, revision, opts)
+
+		cancelPlan()
+
 		if err != nil {
 			return err
 		}
 
+		runCtx, cancelRun := context.WithTimeoutCause(ctx, helmRollbackTimeout(len(rb.preHooks)+len(rb.postHooks)), errHelmRollbackTimeout)
+		defer cancelRun()
+
 		var runErr error
 
-		pruneErr, runErr = runHelmRollback(ctx, k, rb, time.Now())
+		pruneErr, runErr = runHelmRollback(runCtx, k, rb, time.Now())
 
 		if failed := (*helmHookError)(nil); errors.As(runErr, &failed) {
 			hookErr, runErr = runErr, nil
@@ -234,6 +239,13 @@ func KubeHelmRollback(configYAML, contextName, kubeServer, namespace, name strin
 
 	// Rolled back: the audit entry and the apps get "history not pruned: ..." alone.
 	return pruneErr
+}
+
+// helmRollbackTimeout bounds the run of a planned rollback with hooks hooks: the plan's work
+// again and the changes, then per hook the wait for before-hook-creation's delete and the
+// wait for the hook itself.
+func helmRollbackTimeout(hooks int) time.Duration {
+	return helmPlanTimeout + time.Duration(hooks)*2*helmHookTimeout
 }
 
 func validateHelmRollback(namespace, name string, revision int) error {
@@ -647,8 +659,10 @@ func applyHelmStep(ctx context.Context, k *kubeClient, s helmStep, dryRun bool) 
 // pending-rollback, the pre-rollback hooks run, every change made, the post-rollback hooks
 // run, then N+1 deployed and the others superseded, then the revisions beyond the history
 // max deleted (a failed rollback leaves them all). A pre-rollback hook that fails records
-// N+1 failed with nothing changed (the current revision stays as it is); a change or a
-// post-rollback hook that fails records it failed and the current one superseded, as Helm.
+// N+1 failed with nothing changed (the current revision stays as it is); a change that
+// fails records it failed and the current one superseded, as Helm. A post-rollback hook that
+// fails does the same: the spec's choice, not Helm's (Helm leaves N+1 pending-rollback).
+// The description recorded is one line; the error returned keeps every detail.
 // A delete refused comes back as pruneErr with err nil: the rollback itself is done.
 func runHelmRollback(ctx context.Context, k *kubeClient, rb *helmRollback, now time.Time) (pruneErr, err error) {
 	if len(rb.plan.Blockers) > 0 {
@@ -679,7 +693,7 @@ func runHelmRollback(ctx context.Context, k *kubeClient, rb *helmRollback, now t
 	if err := runHelmHooks(ctx, k, rb.preHooks); err != nil {
 		return nil, errors.Join(
 			fmt.Errorf("rollback stopped before any change, revision %d recorded as failed: %w", next, err),
-			setHelmStatus(record, k, ns, nextSecret, helmStatusFailed, fmt.Sprintf("Rollback %q failed: %s", rb.plan.Name, err), now),
+			setHelmStatus(record, k, ns, nextSecret, helmStatusFailed, helmFailureDescription(rb.plan.Name, err), now),
 		)
 	}
 
@@ -688,7 +702,7 @@ func runHelmRollback(ctx context.Context, k *kubeClient, rb *helmRollback, now t
 		return errors.Join(
 			fmt.Errorf("rollback stopped, revision %d recorded as failed: %w", next, err),
 			setHelmStatus(record, k, ns, rb.current.ref.secret, helmStatusSuperseded, "", now),
-			setHelmStatus(record, k, ns, nextSecret, helmStatusFailed, fmt.Sprintf("Rollback %q failed: %s", rb.plan.Name, err), now),
+			setHelmStatus(record, k, ns, nextSecret, helmStatusFailed, helmFailureDescription(rb.plan.Name, err), now),
 		)
 	}
 
@@ -716,4 +730,18 @@ func runHelmRollback(ctx context.Context, k *kubeClient, rb *helmRollback, now t
 	}
 
 	return pruneHelmHistory(record, k, rb.prune), nil
+}
+
+// helmFailureDescription is a failed rollback's description for the release Secret, on one
+// line: the errors errors.Join put on separate lines joined with "; ".
+func helmFailureDescription(name string, err error) string {
+	lines := []string{}
+
+	for _, line := range strings.FieldsFunc(err.Error(), func(r rune) bool { return r == '\n' || r == '\r' }) {
+		if line = strings.TrimSpace(line); line != "" {
+			lines = append(lines, line)
+		}
+	}
+
+	return fmt.Sprintf("Rollback %q failed: %s", name, strings.Join(lines, "; "))
 }
