@@ -22,7 +22,7 @@ struct FluxAppsList: View {
                               namespace: accessNamespace)
             if !status.helmError.isEmpty { Section { ErrorLine(error: status.helmError) } }
             ForEach(shown) { app in
-                NavigationLink(value: FluxAppRoute(kind: app.kind, namespace: app.namespace, name: app.name, downNodes: downNodes)) {
+                ListDetailLink(value: FluxAppRoute(kind: app.kind, namespace: app.namespace, name: app.name, downNodes: downNodes)) {
                     FluxAppRow(app: app, busy: busy.contains(app.target))
                 }
                 .swipeActions(edge: .leading) {

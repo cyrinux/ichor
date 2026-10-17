@@ -25,8 +25,10 @@ struct ArgoCDView: View {
     let downNodes: Set<String>
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(downNodes: Set<String>) {
+    init(downNodes: Set<String>, selected: ArgoAppRoute? = nil) {
         self.downNodes = downNodes
+        // With the list's downNodes, as its rows' routes: the row shows as picked.
+        _picked = State(initialValue: selected.map { ArgoAppRoute(namespace: $0.namespace, name: $0.name, downNodes: downNodes) })
     }
 
     enum Tab: Hashable { case apps, sets }
@@ -49,32 +51,16 @@ struct ArgoCDView: View {
     @State private var busy: Set<String> = []
     @State private var message: String?
     @State private var succeeded = 0
+    /// The app shown beside the list on an iPad (AdaptiveListDetail).
+    @State private var picked: ArgoAppRoute?
 
     private var store: ArgoCDStore { .shared }
 
     var body: some View {
-        LoadStateView(state: state, retry: load) { status in
-            if !status.installed {
-                ContentUnavailableView("Argo CD is not installed", systemImage: "arrow.triangle.branch",
-                                       description: Text("No Argo CD Applications were found in this cluster."))
-                    .themedBackground()
-            } else {
-                Group {
-                    switch tab {
-                    case .apps:
-                        ArgoAppsList(status: status, filter: $filter, grouping: grouping, query: query, downNodes: downNodes,
-                                     selection: $selection, busy: busy, refresh: load,
-                                     onSync: { syncTarget = $0 }, onRefresh: { app in Task { await run(.refresh, on: [app]) } },
-                                     onSyncAll: { confirmSync = $0 },
-                                     onFreeze: { app, scope in freezeTarget = FreezeTarget(app: app, scope: scope) })
-                            .environment(\.editMode, $editMode)
-                    case .sets:
-                        ArgoAppSetsList(status: status, query: query, downNodes: downNodes, refresh: load)
-                    }
-                }
-                .safeAreaInset(edge: .top) { topBar(status) }
-                .toolbar { toolbar(status) }
-            }
+        AdaptiveListDetail(selection: $picked, placeholder: "Pick an application to see its details", systemImage: "arrow.triangle.branch") {
+            list
+        } detail: { app in
+            ArgoAppView(namespace: app.namespace, name: app.name, downNodes: app.downNodes)
         }
         .searchable(text: $query, prompt: Text("Name, project, namespace or repo"))
         // An app pushed on top polls for itself.
@@ -118,6 +104,33 @@ struct ArgoCDView: View {
         .loadsKubeActionAccess(namespace: appsNamespace)
         // Each namespace of the apps, for "Sync all" and the selection: allowed only in all of theirs.
         .loadsKubeNamespaceAccess(appsNamespaces)
+    }
+
+    /// The Applications and ApplicationSets tabs: alone on a phone, beside the picked app on an iPad.
+    private var list: some View {
+        LoadStateView(state: state, retry: load) { status in
+            if !status.installed {
+                ContentUnavailableView("Argo CD is not installed", systemImage: "arrow.triangle.branch",
+                                       description: Text("No Argo CD Applications were found in this cluster."))
+                    .themedBackground()
+            } else {
+                Group {
+                    switch tab {
+                    case .apps:
+                        ArgoAppsList(status: status, filter: $filter, grouping: grouping, query: query, downNodes: downNodes,
+                                     selection: $selection, busy: busy, refresh: load,
+                                     onSync: { syncTarget = $0 }, onRefresh: { app in Task { await run(.refresh, on: [app]) } },
+                                     onSyncAll: { confirmSync = $0 },
+                                     onFreeze: { app, scope in freezeTarget = FreezeTarget(app: app, scope: scope) })
+                            .environment(\.editMode, $editMode)
+                    case .sets:
+                        ArgoAppSetsList(status: status, query: query, downNodes: downNodes, refresh: load)
+                    }
+                }
+                .safeAreaInset(edge: .top) { topBar(status) }
+                .toolbar { toolbar(status) }
+            }
+        }
     }
 
     /// The namespace of the Applications when they share one (Argo CD's own, usually).

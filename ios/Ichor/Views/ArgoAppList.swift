@@ -37,7 +37,7 @@ struct ArgoAppsList: View {
             ForEach(groupArgoApps(shown, by: grouping)) { group in
                 Section {
                     ForEach(group.apps) { app in
-                        NavigationLink(value: ArgoAppRoute(namespace: app.namespace, name: app.name, downNodes: downNodes)) {
+                        ListDetailLink(value: ArgoAppRoute(namespace: app.namespace, name: app.name, downNodes: downNodes)) {
                             ArgoAppRow(app: app, downNodes: downNodes, busy: busy.contains(app.id))
                         }
                         .swipeActions(edge: .leading) {
@@ -190,7 +190,7 @@ struct ArgoAppSetsList: View {
                         let apps = status.apps(of: set)
                         if apps.isEmpty { Text("No apps generated.").font(.callout).foregroundStyle(.secondary) }
                         ForEach(apps) { app in
-                            NavigationLink(value: ArgoAppRoute(namespace: app.namespace, name: app.name, downNodes: downNodes)) {
+                            ListDetailLink(value: ArgoAppRoute(namespace: app.namespace, name: app.name, downNodes: downNodes)) {
                                 HStack(spacing: 10) {
                                     AppIconView(app: app.iconApp, size: 28)
                                     Text(verbatim: app.name).font(.callout)

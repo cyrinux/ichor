@@ -49,6 +49,7 @@ struct OverviewView: View {
     /// The incident summary sheet (CYR-77), from the title menu.
     @State private var sharingIncident = false
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var visible = false
     /// "Since you last looked" (the history ring).
     @State private var look = HistoryLook()
@@ -388,13 +389,15 @@ struct OverviewView: View {
                     DetectPublicIPsButton(running: model.isDetectingPublicIPs) { confirmDetectIPs = true }
                 }
                 Text(verbatim: "\(overview.nodes.count)")
-                if isDenseCluster(overview.nodes.count) {
-                    // A section holding hundreds of rows defeats the overview: a screen instead.
+                if isDenseCluster(overview.nodes.count) || ListDetailLayout.isSplit(sizeClass) {
+                    // A section holding hundreds of rows defeats the overview: a screen instead. On
+                    // an iPad, also the list beside a node's hub.
                     Button { path.append(.nodes(filter: nil, nodes: overview.nodes.overviewOrder)) } label: {
                         Image(systemName: "chevron.right")
                     }
                     .accessibilityLabel(Text("Show all nodes"))
-                } else {
+                }
+                if !isDenseCluster(overview.nodes.count) {
                     Button { withAnimation { nodesExpanded.toggle() } } label: {
                         Image(systemName: nodesExpanded ? "chevron.up" : "chevron.down")
                     }

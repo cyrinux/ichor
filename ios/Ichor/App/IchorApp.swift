@@ -163,7 +163,8 @@ enum Route: Hashable {
     /// Node tabs opened on a tab (a hub row, a share link that names a tab).
     case nodeTab(NodeRef, tab: NodeTabsView.Tab)
     /// Every node of a large cluster (see isDenseCluster), as the overview loaded them; filter preselects one.
-    case nodes(filter: NodeFilter?, nodes: [NodeOverview])
+    /// On an iPad, every cluster's, beside the selected node's hub (a link to a node selects it).
+    case nodes(filter: NodeFilter?, nodes: [NodeOverview], selected: NodeRef? = nil)
     /// Every node of a large cluster added from a kubeconfig, as its home loaded them; filter preselects one,
     /// query fills the search (a node or disk alert names its node).
     case kubeNodes(filter: NodeFilter?, nodes: [KubeNodeInfo], query: String = "")
@@ -199,8 +200,9 @@ enum Route: Hashable {
     /// inventory, downNodes: hostnames Talos reports not ready, for the likely cause; kind: the
     /// system to open on (nil: the first).
     case dataServices(hints: String, downNodes: Set<String>, kind: DataServiceKind? = nil)
-    /// Argo CD Applications (os:admin); downNodes as for dataServices.
-    case argoCD(downNodes: Set<String>)
+    /// Argo CD Applications (os:admin); downNodes as for dataServices; selected: the app shown
+    /// beside the list on an iPad (a link to an app).
+    case argoCD(downNodes: Set<String>, selected: ArgoAppRoute? = nil)
     /// Every Argo CD sync window, freezes first (from a freeze reminder).
     case argoWindows
     /// One Argo CD Application (a share link; the list pushes its own ArgoAppRoute).
@@ -211,8 +213,9 @@ enum Route: Hashable {
     case gitOpsSource(GitSource, dir: String, app: GitOpsAppRef)
     /// One file of an app's source, read only.
     case gitOpsFile(GitSource, path: String, app: GitOpsAppRef)
-    /// Flux Kustomizations, HelmReleases and sources (os:admin); downNodes as for dataServices.
-    case flux(downNodes: Set<String>)
+    /// Flux Kustomizations, HelmReleases and sources (os:admin); downNodes as for dataServices;
+    /// selected: the object shown beside the list on an iPad (a link to one).
+    case flux(downNodes: Set<String>, selected: FluxAppRoute? = nil)
     /// The cluster checkup (a share link; the Kubernetes screens push their own).
     case checkup
     /// The Alertmanager's alerts and silences (os:admin).
@@ -289,6 +292,7 @@ extension Route {
 
 struct MainNavigation: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var path: [Route] = []
     /// The outcome of "+1 h" from a freeze reminder.
     @State private var freezeMessage: String?
@@ -308,7 +312,7 @@ struct MainNavigation: View {
                     case .joinNode: JoinNodeView(path: $path)
                     case .nodeCordon(let ref): NodeDetailView(ref: ref, initialCordon: true)
                     case .nodeTab(let ref, let tab): NodeTabsView(ref: ref, initialTab: tab)
-                    case .nodes(let filter, let nodes): NodesView(nodes: nodes, filter: filter, path: $path)
+                    case .nodes(let filter, let nodes, let selected): NodesView(nodes: nodes, filter: filter, selected: selected, path: $path)
                     case .kubeNodes(let filter, let nodes, let query): KubeNodesView(nodes: nodes, filter: filter, query: query, path: $path)
                     case .logs(let node, let hostname, let service):
                         LogsView(node: node, hostname: hostname, service: service)
@@ -330,13 +334,13 @@ struct MainNavigation: View {
                     case .kubernetes(let focus): KubernetesView(focus: focus)
                     case .networkTest: KubernetesView(networkTest: true)
                     case .dataServices(let hints, let downNodes, let kind): DataServicesView(hints: hints, downNodes: downNodes, selected: kind)
-                    case .argoCD(let downNodes): ArgoCDView(downNodes: downNodes)
+                    case .argoCD(let downNodes, let selected): ArgoCDView(downNodes: downNodes, selected: selected)
                     case .argoWindows: ArgoWindowsView()
                     case .argoApp(let namespace, let name): ArgoAppView(namespace: namespace, name: name, downNodes: [])
                     case .fluxApp(let kind, let namespace, let name): FluxAppView(kind: kind, namespace: namespace, name: name, downNodes: [])
                     case .gitOpsSource(let source, let dir, let app): SourceBrowserView(source: source, dir: dir, app: app)
                     case .gitOpsFile(let source, let path, let app): SourceFileView(source: source, path: path, app: app)
-                    case .flux(let downNodes): FluxView(downNodes: downNodes)
+                    case .flux(let downNodes, let selected): FluxView(downNodes: downNodes, selected: selected)
                     case .checkup: CheckupView()
                     case .alerts: AlertsView(path: $path)
                     case .health: HealthView()
@@ -528,8 +532,25 @@ struct MainNavigation: View {
         }
         path = []
         guard let route = await target.route(client: model.client, kube: model.activeIsKube) else { return }
-        path = [actionRoute(route, for: action)]
+        path = [await splitRoute(actionRoute(route, for: action))]
         if action?.action != .reboot { NotificationRouter.shared.alertActionRequest = action }
+    }
+
+    /// On an iPad side by side (ListDetailLayout): a node, an Argo CD app or a Flux object opens
+    /// its list with it selected beside it; `route` otherwise, and when the nodes cannot be read.
+    private func splitRoute(_ route: Route) async -> Route {
+        guard ListDetailLayout.isSplit(sizeClass) else { return route }
+        switch route {
+        case .argoApp(let namespace, let name):
+            return .argoCD(downNodes: [], selected: ArgoAppRoute(namespace: namespace, name: name, downNodes: []))
+        case .fluxApp(let kind, let namespace, let name):
+            return .flux(downNodes: [], selected: FluxAppRoute(kind: kind, namespace: namespace, name: name, downNodes: []))
+        case .node(let ref):
+            guard !model.activeIsKube, let overview = try? await model.client?.overview(), overview.outage == nil else { return route }
+            return .nodes(filter: nil, nodes: overview.nodes.overviewOrder, selected: ref)
+        default:
+            return route
+        }
     }
 
     /// The node hub with its reboot confirmation for an alert's Reboot (when this config may
