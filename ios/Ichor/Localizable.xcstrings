@@ -1,6 +1,82 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ on %@: DiskPressure" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ on %2$@: DiskPressure"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ sur %2$@ : DiskPressure"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ en %2$@: DiskPressure"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ на %2$@: DiskPressure"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ auf %2$@: DiskPressure"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ su %2$@: DiskPressure"
+          }
+        }
+      }
+    },
+    "Volumes such as EPHEMERAL filling up past the thresholds below and disks failing SMART on Talos clusters, read through the Talos API; each node's disk and DiskPressure on clusters added from a kubeconfig, read from its kubelet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les volumes comme EPHEMERAL qui dépassent les seuils ci-dessous et les disques qui échouent SMART sur les clusters Talos, lus via l'API Talos ; le disque de chaque nœud et DiskPressure sur les clusters ajoutés par kubeconfig, lus via son kubelet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volúmenes como EPHEMERAL que superan los umbrales de abajo y discos que fallan SMART en clústeres Talos, leídos por la API de Talos; el disco de cada nodo y DiskPressure en clústeres añadidos con un kubeconfig, leídos de su kubelet."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volumes wie EPHEMERAL, die die Schwellen unten überschreiten, und Festplatten, die SMART nicht bestehen, auf Talos-Clustern, gelesen über die Talos-API; die Festplatte jedes Nodes und DiskPressure auf per Kubeconfig hinzugefügten Clustern, gelesen von seinem Kubelet."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volumi come EPHEMERAL che superano le soglie qui sotto e dischi che falliscono SMART sui cluster Talos, letti tramite l'API Talos; il disco di ogni nodo e DiskPressure sui cluster aggiunti da un kubeconfig, letti dal suo kubelet."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Томи на кшталт EPHEMERAL, що перевищують пороги нижче, і диски, що не проходять SMART, у кластерах Talos, через Talos API; диск кожного вузла й DiskPressure у кластерах, доданих з kubeconfig, з його kubelet."
+          }
+        }
+      }
+    },
     "Hooks" : {
       "extractionState" : "manual",
       "localizations" : {

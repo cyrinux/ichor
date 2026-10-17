@@ -49,9 +49,16 @@ fun Alert.shareTarget(): ShareTarget? = when (kind) {
     AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> gitopsTarget()
     AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK -> ShareTarget.screen(ShareTarget.CHECKUP)
     AlertKind.AM_FIRING, AlertKind.AM_RESOLVED -> ShareTarget.screen(ShareTarget.ALERTS)
-    // "storage:node|volume", "storage:node|smart|device" or "storage:node|volume:trend": that node's Storage screen.
-    AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK, AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK ->
-        ShareTarget.storage(key.substringAfter(':').substringBefore('|'), subject)
+    // "storage:node|volume", "storage:node|smart|device" or "storage:node|volume:trend": that node's Storage screen;
+    // a Kubernetes node's disk ("storage:node|nodefs"), which has no Storage screen: the node.
+    AlertKind.STORAGE_PROBLEM, AlertKind.STORAGE_OK, AlertKind.STORAGE_TREND, AlertKind.STORAGE_TREND_OK -> {
+        val node = key.substringAfter(':').substringBefore('|')
+        if (key.removeSuffix(":trend") == "storage:${kubeStorageKey(node)}") {
+            ShareTarget(target = ShareTarget.NODE, addr = node, host = subject)
+        } else {
+            ShareTarget.storage(node, subject)
+        }
+    }
     // "sensor:node|hot" or "sensor:node|throttled": that node's Hardware screen.
     AlertKind.SENSOR_PROBLEM, AlertKind.SENSOR_OK -> ShareTarget.hardware(key.substringAfter(':').substringBefore('|'), subject)
 }

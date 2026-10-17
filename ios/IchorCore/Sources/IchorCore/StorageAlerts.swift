@@ -248,13 +248,16 @@ public func storageIssueNode(_ key: String) -> String {
 /// English title of a storage issue.
 func storageProblemTitle(_ issue: StorageIssue) -> String {
     if issue.isSmart { return "SMART failing on \(issue.name) (\(issue.hostname))" }
+    if issue.detail == kubeDiskPressure { return "\(issue.name) on \(issue.hostname): DiskPressure" }
     let title = "\(issue.name) on \(issue.hostname) at \(issue.percent) %"
     return issue.severity == dataCritical ? "\(title), almost full" : title
 }
 
-/// English text of a storage issue: the free space, or why the disk fails.
+/// English text of a storage issue: the free space, or why the disk fails; none for a node in
+/// DiskPressure whose kubelet gave no size.
 func storageProblemText(_ issue: StorageIssue) -> String {
-    issue.isSmart ? issue.detail : "\(formatBytes(issue.freeBytes)) free of \(formatBytes(issue.sizeBytes))"
+    if issue.isSmart { return issue.detail }
+    return issue.sizeBytes == 0 ? "" : "\(formatBytes(issue.freeBytes)) free of \(formatBytes(issue.sizeBytes))"
 }
 
 /// English title of a storage issue resolved, `warn` the warning threshold of that check.

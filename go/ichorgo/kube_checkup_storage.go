@@ -202,6 +202,12 @@ func readVolumeUse(ctx context.Context, k *kubeClient, nodes []checkNodeObject) 
 // kubeletStatsParallel at a time and kubeletStatsTimeout each: a kubelet that does not reply
 // only leaves its node unmeasured. asked, when set, hears how many were asked so far.
 func readKubeletSummaries(ctx context.Context, k *kubeClient, nodes []checkNodeObject, asked func(done, total int)) []kubeletRead {
+	return readKubeletSummariesWithin(ctx, k, nodes, asked, kubeletStatsParallel, kubeletStatsTimeout)
+}
+
+// readKubeletSummariesWithin is readKubeletSummaries asking parallel kubelets at once and
+// giving each one timeout.
+func readKubeletSummariesWithin(ctx context.Context, k *kubeClient, nodes []checkNodeObject, asked func(done, total int), parallel int, timeout time.Duration) []kubeletRead {
 	ready := slices.DeleteFunc(slices.Clone(nodes), func(n checkNodeObject) bool { return !kubeConditions(n.Status.Conditions).is("Ready") })
 	reads := make([]kubeletRead, len(ready))
 
@@ -213,8 +219,8 @@ func readKubeletSummaries(ctx context.Context, k *kubeClient, nodes []checkNodeO
 
 	var done atomic.Int64
 
-	forEachLimit(ready, kubeletStatsParallel, func(i int, n checkNodeObject) {
-		nodeCtx, cancel := context.WithTimeout(ctx, kubeletStatsTimeout)
+	forEachLimit(ready, parallel, func(i int, n checkNodeObject) {
+		nodeCtx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 		defer func() { asked(int(done.Add(1)), len(ready)) }()
 

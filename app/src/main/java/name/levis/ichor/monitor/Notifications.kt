@@ -207,8 +207,9 @@ private fun trendAlertText(context: Context, alert: Alert): String {
 }
 
 /**
- * "EPHEMERAL on worker-1 at 91 %" (", almost full" when critical), "SMART failing on sda
- * (worker-2)", or the cleared forms, from a storage alert's [StorageDetail].
+ * "EPHEMERAL on worker-1 at 91 %" (", almost full" when critical), "nodefs on worker-1:
+ * DiskPressure", "SMART failing on sda (worker-2)", or the cleared forms, from a storage
+ * alert's [StorageDetail].
  */
 private fun storageAlertTitle(context: Context, alert: Alert): String {
     val d = StorageDetail.parse(alert.detail)
@@ -216,18 +217,23 @@ private fun storageAlertTitle(context: Context, alert: Alert): String {
         d.smart && alert.problem -> context.getString(R.string.monitor_storage_smart, d.name, d.hostname)
         d.smart -> context.getString(R.string.monitor_storage_smart_ok, d.name, d.hostname)
         !alert.problem -> context.getString(R.string.monitor_storage_fill_ok, d.name, d.hostname, d.warn)
+        d.reason == DISK_PRESSURE -> context.getString(R.string.monitor_storage_disk_pressure, d.name, d.hostname)
         d.severity == DATA_CRITICAL -> context.getString(R.string.monitor_storage_fill_critical, d.name, d.hostname, d.percent)
         else -> context.getString(R.string.monitor_storage_fill, d.name, d.hostname, d.percent)
     }
 }
 
-/** "9.0 GiB free of 100.0 GiB", the SMART reason (or the disk's model); "Node storage" once cleared. */
+/**
+ * "9.0 GiB free of 100.0 GiB", the SMART reason (or the disk's model); "Node storage" once
+ * cleared, or for a node in DiskPressure whose kubelet gave no size.
+ */
 private fun storageAlertText(context: Context, alert: Alert): String {
     val d = StorageDetail.parse(alert.detail)
     val fallback = context.getString(R.string.monitor_storage)
     return when {
         !alert.problem -> fallback
         d.smart -> d.reason.ifBlank { fallback }
+        d.sizeBytes <= 0 -> fallback
         else -> context.getString(R.string.monitor_storage_fill_text, formatBytes(d.freeBytes), formatBytes(d.sizeBytes))
     }
 }

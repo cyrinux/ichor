@@ -82,6 +82,12 @@ extension TalosClient {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeNodes(config, context, kubeServer, $0) }
     }
 
+    /// Each node's root filesystem fill (the kubelet summary) and DiskPressure: the background
+    /// monitor's node storage on a cluster added from a kubeconfig.
+    func kubeNodeDisk() async throws -> KubeNodeDisk {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeNodeDisk(config, context, kubeServer, $0) }
+    }
+
     /// CPU and memory each node uses (metrics-server).
     func topNodes() async throws -> KubeTopNodes {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeTopNodes(config, context, kubeServer, $0) }

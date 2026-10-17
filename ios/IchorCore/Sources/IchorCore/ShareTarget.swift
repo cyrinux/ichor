@@ -137,6 +137,10 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
             // "<node>|…": the node's hostname from the issue kept, else from its state.
             let address = storageIssueNode(subject)
             guard !address.isEmpty else { return nil }
+            // A Kubernetes node's disk ("<node>|nodefs", or its trend) has no Storage screen: the node.
+            if snapshot.kube, subject == kubeNodeDiskKey(address) || subject == "\(kubeNodeDiskKey(address)):trend" {
+                return .node(address: address, hostname: address, tab: "")
+            }
             // A trend alert ("<node>|<volume>:trend") names it in its own issue.
             let kept = storageTrendVolumeKey(subject: subject).flatMap { snapshot.storageTrends[$0] }
                 .map { StorageTrendIssue(value: $0).hostname }

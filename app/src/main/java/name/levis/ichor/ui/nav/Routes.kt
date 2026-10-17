@@ -73,10 +73,14 @@ internal object Routes {
 
     /** The Nodes screen of a large cluster; [filter] preselects one (null: all). */
     fun nodes(filter: NodeFilter?) = "nodes?filter=${filter?.name.orEmpty()}"
-    const val KUBE_NODES = "kube-nodes?filter={filter}"
+    const val KUBE_NODES = "kube-nodes?filter={filter}&query={query}"
 
-    /** The Kubernetes nodes screen of a large cluster added from a kubeconfig; [filter] preselects one (null: all). */
-    fun kubeNodes(filter: NodeFilter?) = "kube-nodes?filter=${filter?.name.orEmpty()}"
+    /**
+     * The Kubernetes nodes screen of a cluster added from a kubeconfig; [filter] preselects one
+     * (null: all), [query] searches for a node (a node or disk alert).
+     */
+    fun kubeNodes(filter: NodeFilter?, query: String = "") =
+        "kube-nodes?filter=${filter?.name.orEmpty()}&query=${Uri.encode(query)}"
     const val WORKLOADS = "workloads?tab={tab}&key={key}&ns={ns}&name={name}"
 
     /** The Kubernetes screen; [focus] opens a tab and shows one of its items (a share link). */

@@ -20,6 +20,7 @@ import name.levis.ichor.model.KubeCronJobPage
 import name.levis.ichor.model.KubeEvent
 import name.levis.ichor.model.KubeEventList
 import name.levis.ichor.model.KubeNamespaces
+import name.levis.ichor.model.KubeNodeDisk
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.KubePod
@@ -286,6 +287,14 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
      */
     suspend fun checkup(): CheckupReport = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(CheckupReport.serializer(), Ichorgo.kubeCheckup(cfg, ctx, server))
+    }
+
+    /**
+     * Each node's disk from its kubelet and whether it reports DiskPressure, for the background
+     * monitor: one kubelet read per node, on demand, never cached.
+     */
+    suspend fun nodeDisk(): KubeNodeDisk = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeNodeDisk.serializer(), Ichorgo.kubeNodeDisk(cfg, ctx, server))
     }
 
     /**

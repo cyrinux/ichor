@@ -28,6 +28,7 @@ import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.contextFor
 import name.levis.ichor.model.kubeFocus
+import name.levis.ichor.model.kubeNodeName
 import name.levis.ichor.model.nodeTab
 import name.levis.ichor.ui.workloads.NETPERF_TAB
 import name.levis.ichor.monitor.AlertAction
@@ -389,10 +390,18 @@ private suspend fun openShareTarget(
  * The route a share link opens over the overview; null for the overview itself. A node only
  * when it is one of the cluster's (with its role, for the control-plane warnings): a link
  * cannot point the app's Talos calls at another address. A Talos screen on a cluster added
- * from a kubeconfig (another phone's context of the same name) stays on its home. [action]: the
+ * from a kubeconfig (another phone's context of the same name) stays on its home, but a node of
+ * it (a node or disk alert) opens its nodes searched for that node. [action]: the
  * confirmation to open there (a reboot, a sync, a reconcile, a 1 h silence), checked to match.
  */
-private suspend fun ShareTarget.route(app: TalosApp, action: AlertActionRequest? = null): String? = when (target) {
+private suspend fun ShareTarget.route(app: TalosApp, action: AlertActionRequest? = null): String? =
+    if (app.configRepository.config.value?.activeIsKube == true && (target == ShareTarget.NODE || target == ShareTarget.STORAGE)) {
+        kubeNodeRoute(app)
+    } else {
+        talosRoute(app, action)
+    }
+
+private suspend fun ShareTarget.talosRoute(app: TalosApp, action: AlertActionRequest?): String? = when (target) {
     ShareTarget.ETCD -> Routes.ETCD.takeUnless { app.configRepository.config.value?.activeIsKube == true }
     ShareTarget.HEALTH -> Routes.HEALTH.takeUnless { app.configRepository.config.value?.activeIsKube == true }
     ShareTarget.ARGO_CD -> Routes.ARGO_CD
@@ -413,6 +422,15 @@ private suspend fun ShareTarget.route(app: TalosApp, action: AlertActionRequest?
     ShareTarget.CHECKUP -> Routes.CHECKUP
     ShareTarget.ALERTS -> Routes.alerts(silence = action?.takeIf { it.action == AlertAction.SILENCE }?.target.orEmpty())
     else -> kubeFocus?.let { Routes.workloads(it) }
+}
+
+/**
+ * On a cluster added from a kubeconfig, a node (a node or disk alert) opens its nodes searched
+ * for that node; null (its home) when it is none of its.
+ */
+private suspend fun ShareTarget.kubeNodeRoute(app: TalosApp): String? {
+    val names = runCatching { app.kubeRepository.kubeNodes() }.getOrNull()?.nodes.orEmpty().map { it.name }
+    return kubeNodeName(names)?.let { Routes.kubeNodes(null, query = it) }
 }
 
 /** The cluster's node the link names, by address or hostname; null when it is none of its. */

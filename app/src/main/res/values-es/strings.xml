@@ -4429,11 +4429,12 @@
     <string name="monitor_unreachable_desc">Avisa una vez cuando un clúster no ha respondido en varias comprobaciones seguidas (ningún nodo, ninguna API o demasiado lento), y una vez cuando vuelve a responder. Mientras tanto, las alertas de nodos callan.</string>
     <string name="monitor_unreachable_runs">Tras %1$s comprobaciones seguidas</string>
     <string name="monitor_storage">Almacenamiento de los nodos</string>
-    <string name="monitor_storage_desc">Notifica cuando un volumen de un nodo se llena (las advertencias una vez vistas en dos comprobaciones seguidas) o un disco falla SMART (en el acto), y una vez cuando vuelve a estar bien. Cada comprobación lee los volúmenes y discos de cada nodo a través de la API de Talos (solo clústeres Talos).</string>
+    <string name="monitor_storage_desc">Notifica cuando un volumen o disco de un nodo se llena (avisos tras dos comprobaciones seguidas), un disco falla SMART o un nodo informa DiskPressure (al momento), y cuando vuelve a estar bien. Clústeres Talos: los volúmenes y discos de cada nodo por la API de Talos. Clústeres añadidos con un kubeconfig: el disco de cada nodo por su kubelet.</string>
     <string name="monitor_storage_warn">Advertencia desde %1$d %% usado</string>
     <string name="monitor_storage_critical">Crítico desde %1$d %% usado</string>
     <string name="monitor_storage_fill">%1$s en %2$s al %3$d %%</string>
     <string name="monitor_storage_fill_critical">%1$s en %2$s al %3$d %%, casi lleno</string>
+    <string name="monitor_storage_disk_pressure">%1$s en %2$s: DiskPressure</string>
     <string name="monitor_storage_fill_text">%1$s libres de %2$s</string>
     <string name="monitor_storage_smart">SMART falla en %1$s (%2$s)</string>
     <string name="monitor_storage_fill_ok">%1$s en %2$s de nuevo por debajo del %3$d %%</string>

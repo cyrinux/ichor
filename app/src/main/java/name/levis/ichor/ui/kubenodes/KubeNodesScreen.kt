@@ -59,7 +59,7 @@ import name.levis.ichor.ui.overview.statusLabel
 /**
  * Every node of a large cluster added from a kubeconfig, where the dense home card only
  * shows dots: search by name or address, filter by status, the nodes grouped by status (the
- * worst first), the same rows and actions as home. [vm] is the Kubernetes home's, so both
+ * worst first), the same rows and actions as home. [initialQuery] searches for a node (an alert's). [vm] is the Kubernetes home's, so both
  * show the same load and a pull here refreshes home too.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,9 +71,10 @@ fun KubeNodesScreen(
     onDrain: (name: String) -> Unit,
     onDebug: (name: String) -> Unit,
     onMeta: (name: String) -> Unit,
+    initialQuery: String = "",
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    var query by rememberSaveable { mutableStateOf("") }
+    var query by rememberSaveable { mutableStateOf(initialQuery) }
     var filter by rememberSaveable { mutableStateOf(initialFilter) }
     var sheetFor by remember { mutableStateOf<KubeNodeInfo?>(null) }
     val snackbar = remember { SnackbarHostState() }

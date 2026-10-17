@@ -15,9 +15,10 @@ struct KubeNodesView: View {
     /// The node whose cordon to change, after a confirmation.
     @State private var cordoning: KubeNodeInfo?
 
-    init(nodes: [KubeNodeInfo], filter: NodeFilter?, path: Binding<[Route]>) {
+    init(nodes: [KubeNodeInfo], filter: NodeFilter?, query: String = "", path: Binding<[Route]>) {
         _nodes = State(initialValue: nodes)
         _filter = State(initialValue: filter)
+        _query = State(initialValue: query)
         _path = path
     }
 

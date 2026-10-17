@@ -255,12 +255,15 @@ public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNot
 /// The snapshot of a cluster added from a kubeconfig, from the nodes as the Kubernetes API lists
 /// them: a node is ready or not (Kubernetes reports a lost kubelet as not ready), its pressure
 /// conditions are the reason. No etcd. Credentials that may not list nodes give no node at all,
-/// so the opt-in tracks still alert. The other parameters are `snapshotOf`'s.
+/// so the opt-in tracks still alert. Node storage comes from the kubelets (storageIssues(of:warn:critical:)).
+/// The other parameters are `snapshotOf`'s.
 public func kubeSnapshotOf(_ overview: KubeNodesOverview, context: String, certNotAfter: Int64, takenAt: Date,
                            dataWatched: Bool = false, dataServices: DataServices? = nil,
                            gitopsWatched: Bool = false, gitopsIssues: [String: String]? = nil,
                            checkupWatched: Bool = false, checkupIssues: [String: String]? = nil,
-                           alertmanagerWatched: Bool = false, alertmanagerIssues: [String: String]? = nil) -> ClusterSnapshot {
+                           alertmanagerWatched: Bool = false, alertmanagerIssues: [String: String]? = nil,
+                           storageWatched: Bool = false, storageIssues: [String: String]? = nil,
+                           storageWarn: Int = storageWarnDefault) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
     for n in overview.nodes {
         nodes[n.name] = NodeState(hostname: n.name, health: n.ready ? .ready : .notReady, reason: n.pressure.joined(separator: "; "))
@@ -282,6 +285,10 @@ public func kubeSnapshotOf(_ overview: KubeNodesOverview, context: String, certN
         amWatched: alertmanagerWatched,
         amChecked: alertmanagerWatched && alertmanagerIssues != nil,
         amIssues: alertmanagerWatched ? alertmanagerIssues ?? [:] : [:],
+        storageWatched: storageWatched,
+        storageChecked: storageWatched && storageIssues != nil,
+        storageIssues: storageWatched ? storageIssues ?? [:] : [:],
+        storageWarn: storageWarn,
         kube: true
     )
 }

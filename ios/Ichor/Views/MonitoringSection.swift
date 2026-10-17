@@ -79,7 +79,7 @@ struct MonitoringSection: View {
             })) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Watch node storage")
-                    Text("Volumes such as EPHEMERAL filling up past the thresholds below, and disks failing SMART, on Talos clusters. Each check reads every node's volumes and disks through the Talos API.")
+                    Text("Volumes such as EPHEMERAL filling up past the thresholds below and disks failing SMART on Talos clusters, read through the Talos API; each node's disk and DiskPressure on clusters added from a kubeconfig, read from its kubelet.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

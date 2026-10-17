@@ -68,11 +68,15 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             silenceFingerprint = entry.arguments?.getString("silence").orEmpty(),
         )
     }
-    composable(Routes.KUBE_NODES, arguments = listOf(navArgument("filter") { type = NavType.StringType; defaultValue = "" })) { entry ->
+    composable(
+        Routes.KUBE_NODES,
+        arguments = listOf("filter", "query").map { navArgument(it) { type = NavType.StringType; defaultValue = "" } },
+    ) { entry ->
         // The Kubernetes home's data and refresh: only ever opened from it, so it is below on the stack.
         val home = remember(entry) { nav.getBackStackEntry(Routes.OVERVIEW) }
         KubeNodesScreen(
             initialFilter = NodeFilter.entries.firstOrNull { it.name == entry.arguments?.getString("filter") },
+            initialQuery = entry.arguments?.getString("query").orEmpty(),
             vm = viewModel(viewModelStoreOwner = home, factory = factory { KubeHomeViewModel(app.kubeRepository, app::kubeNodesSeed) }),
             onBack = { nav.popBackStack() },
             onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
