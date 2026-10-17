@@ -115,18 +115,21 @@ class NodeMetaViewModel(private val talos: TalosRepository, private val node: St
         if (ready.applying || !ready.plan.canApply) return
         _review.value = ready.copy(applying = true)
         viewModelScope.launch {
+            var stale = false
             val failure = try {
                 talos.nodeMetaApply(node, ready.edits, ready.force)
                 null
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                stale = e.message.orEmpty().contains("reload")
                 e.uiText()
             }
             _review.value = NodeMetaReview.Idle
             _outcome.value = NodeMetaOutcome(failure)
-            // A refusal for a stale copy says to reload: the next read is the fresh one either way.
-            if (failure == null) load()
+            // Read again after a success, and after a refusal for a stale copy (the node changed
+            // meanwhile): the draft then starts from the new read, as on iOS.
+            if (failure == null || stale) load()
         }
     }
 

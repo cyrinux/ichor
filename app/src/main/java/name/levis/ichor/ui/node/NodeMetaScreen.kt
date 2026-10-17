@@ -99,7 +99,8 @@ fun NodeMetaScreen(
         val done = outcome ?: return@LaunchedEffect
         vm.outcomeShown()
         val text = done.message?.resolve(context) ?: context.getString(R.string.node_meta_applied, hostname)
-        snackbar.showSnackbar(text, withDismissAction = true, duration = SnackbarDuration.Long)
+        // In the screen's scope: consuming the outcome restarts this effect, which would cancel it.
+        scope.launch { snackbar.showSnackbar(text, withDismissAction = true, duration = SnackbarDuration.Long) }
     }
 
     // With the app lock on, a taint change needs a fresh fingerprint/PIN, like the power actions.
@@ -189,8 +190,10 @@ fun NodeMetaScreen(
             onDismiss = vm::dismissReview,
         )
         is NodeMetaReview.Failed -> LaunchedEffect(r) {
+            val text = r.message.resolve(context)
             vm.dismissReview()
-            snackbar.showSnackbar(r.message.resolve(context), withDismissAction = true, duration = SnackbarDuration.Long)
+            // Dismissing leaves this branch and cancels the effect: the snackbar runs in the screen's scope.
+            scope.launch { snackbar.showSnackbar(text, withDismissAction = true, duration = SnackbarDuration.Long) }
         }
         else -> Unit
     }
