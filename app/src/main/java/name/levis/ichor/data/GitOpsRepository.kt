@@ -164,7 +164,7 @@ class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) :
         val blocked = proposeBlock(src, lacksToken = false)
         if (blocked != null) return blocked
         val store = gitHosts ?: return ProposeBlock.NotEditable
-        val entry = store.hosts.value.firstOrNull { it.host == src.host } ?: GitHost(src.host)
+        val entry = store.hostFor(src.host)
         return proposeBlock(src, lacksToken = gitHostJsonLacksToken(store.hostJson(entry)))
     }
 
@@ -195,7 +195,7 @@ class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) :
     private suspend fun forgeHost(src: GitSource): String {
         val store = checkNotNull(gitHosts) { "No Git host store" }
         val host = src.host
-        val entry = store.hosts.value.firstOrNull { it.host == host } ?: GitHost(host)
+        val entry = store.hostFor(host)
         val json = store.hostJson(entry)
         if (gitHostJsonLacksToken(json)) throw GitHostMissing(host)
         return json

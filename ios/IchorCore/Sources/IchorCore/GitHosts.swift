@@ -18,24 +18,54 @@ public enum GitHostKind: String, CaseIterable, Codable, Hashable, Sendable, Wire
 
 /// One Git host, as listed in Settings. No token in it: that is in the Keychain.
 public struct GitHost: Codable, Hashable, Identifiable, Sendable {
-    /// The host name, normalised ("github.com", "gitlab.example.org:8443").
+    /// The host name, normalised ("github.com", "gitlab.example.org:8443"): the API is called there.
     public let host: String
     public let kind: GitHostKind
+    /// Other names Argo CD or Flux reach the same server by (an SSH or in-cluster address),
+    /// normalised. A source on one of them uses this host's token, still sent only to `host`.
+    public let aliases: [String]
 
     public var id: String { host }
 
-    public init(host: String, kind: GitHostKind = .auto) {
+    public init(host: String, kind: GitHostKind = .auto, aliases: [String] = []) {
         self.host = host
         self.kind = kind
+        self.aliases = aliases
     }
 
-    enum CodingKeys: String, CodingKey { case host, kind }
+    enum CodingKeys: String, CodingKey { case host, kind, aliases }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         host = try c.field(.host, "")
         kind = try c.wire(.kind)
+        // A list saved before aliases existed has none.
+        aliases = try c.field(.aliases, [String]())
     }
+
+    /// Whether `host` (any form normalizedGitHost reads) names this server: its host or an alias.
+    /// Ports are ignored: a source's host comes from its web link, which has none, and this only
+    /// picks whose token to use; the Go core still checks the exact host and port of the repository.
+    public func matches(_ host: String) -> Bool {
+        let name = gitHostName(normalizedGitHost(host))
+        guard !name.isEmpty else { return false }
+        return ([self.host] + aliases).contains { gitHostName(normalizedGitHost($0)) == name }
+    }
+}
+
+/// The most aliases a host keeps.
+public let gitHostAliasLimit = 16
+
+/// The aliases typed for host: split on commas, spaces and new lines, each normalised; blanks,
+/// host itself and repeats dropped, at most gitHostAliasLimit kept.
+public func parseGitHostAliases(_ text: String, host: String = "") -> [String] {
+    let own = normalizedGitHost(host)
+    var seen = Set<String>()
+    let names = text
+        .split(whereSeparator: { $0 == "," || $0 == ";" || $0.isWhitespace })
+        .map { normalizedGitHost(String($0)) }
+        .filter { !$0.isEmpty && $0 != own && seen.insert($0).inserted }
+    return Array(names.prefix(gitHostAliasLimit))
 }
 
 /// What the Go core's GitForgeCheck answers: who the token signs in as, and the scopes it lacks.
@@ -81,20 +111,42 @@ public func normalizedGitHost(_ input: String) -> String {
     if let end = text.firstIndex(where: { "/?#".contains($0) }) { text = String(text[..<end]) }
     if let at = text.lastIndex(of: "@") { text = String(text[text.index(after: at)...]) }
     while text.hasSuffix(".") || text.hasSuffix(":") { text.removeLast() }
+    text = withoutScpPath(text)
     return text.contains(where: \.isWhitespace) ? "" : text
 }
 
-/// The Go core's host argument: {"kind","baseURL","token"}, the base URL always https.
-public func gitHostJSON(host: String, kind: GitHostKind, token: String) -> String {
+/// "host:org" of a pasted scp address (git@host:org/repo) is the host; a numeric port is kept.
+private func withoutScpPath(_ authority: String) -> String {
+    guard !authority.hasPrefix("["), let colon = authority.lastIndex(of: ":") else { return authority }
+    var name = String(authority[..<colon])
+    while name.hasSuffix(".") { name.removeLast() }
+    let port = authority[authority.index(after: colon)...]
+    return port.allSatisfy(\.isNumber) ? "\(name):\(port)" : name
+}
+
+/// The host name of a normalised host, without its port.
+public func gitHostName(_ host: String) -> String {
+    if host.hasPrefix("["), let close = host.firstIndex(of: "]") { return String(host[...close]) }
+    guard let colon = host.lastIndex(of: ":") else { return host }
+    return String(host[..<colon])
+}
+
+/// The Go core's host argument: {"kind","baseURL","token","aliases"}, the base URL always https.
+/// The aliases only let the core accept a repository on another name: requests go to baseURL.
+/// No "aliases" key without any.
+public func gitHostJSON(host: String, kind: GitHostKind, token: String, aliases: [String] = []) -> String {
     struct Wire: Encodable {
         let kind: String
         let baseURL: String
         let token: String
+        let aliases: [String]?
     }
-    let wire = Wire(kind: kind.rawValue, baseURL: "https://\(normalizedGitHost(host))", token: token)
+    let names = aliases.map(normalizedGitHost).filter { !$0.isEmpty }
+    let wire = Wire(kind: kind.rawValue, baseURL: "https://\(normalizedGitHost(host))", token: token,
+                    aliases: names.isEmpty ? nil : names)
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
-    // Encoding three strings cannot fail.
+    // Encoding strings cannot fail.
     let data = (try? encoder.encode(wire)) ?? Data()
     return String(decoding: data, as: UTF8.self)
 }
@@ -118,6 +170,14 @@ public extension Array where Element == GitHost {
     func upserting(_ host: GitHost) -> [GitHost] {
         guard contains(where: { $0.host == host.host }) else { return self + [host] }
         return map { $0.host == host.host ? host : $0 }
+    }
+
+    /// The entry `host` names, by its own name or an alias; an entry's own name wins over
+    /// another's alias. Nil when none does.
+    func resolving(_ host: String) -> GitHost? {
+        let name = normalizedGitHost(host)
+        guard !name.isEmpty else { return nil }
+        return first { normalizedGitHost($0.host) == name } ?? first { $0.matches(name) }
     }
 
     /// A copy without the entry of `host`.

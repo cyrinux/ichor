@@ -14,6 +14,7 @@ struct GitHostSheet: View {
     @Environment(GitHostStore.self) private var store
     @State private var host: String
     @State private var kind: GitHostKind
+    @State private var aliases: String
     @State private var token = ""
     @State private var checking = false
     @State private var result: GitHostCheck?
@@ -25,9 +26,12 @@ struct GitHostSheet: View {
         self.existing = existing
         _host = State(initialValue: existing?.host ?? "github.com")
         _kind = State(initialValue: existing?.kind ?? .auto)
+        _aliases = State(initialValue: existing?.aliases.joined(separator: ", ") ?? "")
     }
 
     private var normalized: String { normalizedGitHost(host) }
+    private var parsedAliases: [String] { parseGitHostAliases(aliases, host: normalized) }
+    private var edited: GitHost { GitHost(host: normalized, kind: kind, aliases: parsedAliases) }
     private var typedToken: String { token.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var hasSavedToken: Bool { existing.map { store.hasToken($0.host) } ?? false }
     private var demo: Bool { model.activeSummary?.demo == true }
@@ -50,6 +54,14 @@ struct GitHostSheet: View {
                         ForEach(GitHostKind.allCases, id: \.self) { GitHostKindLabel(kind: $0).tag($0) }
                     }
                     tokenRow
+                }
+                Section {
+                    TextField("Also reached as", text: $aliases, axis: .vertical)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.URL)
+                } footer: {
+                    Text("Other names Argo CD or Flux use for this server, such as an SSH or in-cluster address. Separate them with commas. The token is still only sent to the host above.")
                 }
                 Section {
                     Button {
@@ -132,7 +144,7 @@ struct GitHostSheet: View {
         failure = nil
         result = nil
         do {
-            result = try await store.check(GitHost(host: normalized, kind: kind), token: typedToken, demo: demo)
+            result = try await store.check(edited, token: typedToken, demo: demo)
         } catch {
             failure = error.localizedDescription
         }
@@ -142,7 +154,7 @@ struct GitHostSheet: View {
         // The demo's login is not the token's: keep only a real answer.
         let login = demo ? nil : result?.login
         do {
-            try store.save(GitHost(host: normalized, kind: kind), token: typedToken, login: login)
+            try store.save(edited, token: typedToken, login: login)
             dismiss()
         } catch {
             saveFailure = error.localizedDescription
