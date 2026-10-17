@@ -17,4 +17,6 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: getplumber/plumber@bdac4bb86e112220f05aaaa52264b9a25e21a9f5 # v0.6.3
