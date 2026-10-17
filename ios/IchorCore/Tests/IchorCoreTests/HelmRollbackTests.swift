@@ -46,6 +46,7 @@ final class HelmRollbackTests: XCTestCase {
         XCTAssertNil(plan.pruneList)
         XCTAssertEqual(plan.workloads, 0)
         XCTAssertFalse(plan.canWait)
+        XCTAssertEqual(plan.hooks, [])
     }
 
     func testDecodesOptionsFields() throws {
@@ -84,6 +85,44 @@ final class HelmRollbackTests: XCTestCase {
         XCTAssertNotEqual(HelmRollbackOptions(force: true).planKey, HelmRollbackOptions().planKey)
         XCTAssertNotEqual(HelmRollbackOptions(historyMax: 0).planKey, HelmRollbackOptions().planKey)
         XCTAssertEqual(HelmRollbackOptions.historyMaxRange, 0...50)
+    }
+
+    func testDecodesHooks() throws {
+        let plan = try TalosJSON.decode(HelmRollbackPlan.self, from: """
+        {"from":3,"to":2,"blockers":[],
+         "hooks":[{"name":"site-migrate","kind":"Job","event":"pre-rollback","weight":-5,
+                   "deletePolicies":["before-hook-creation","hook-succeeded"],"error":"","extra":1},
+                  {"name":"site-notify","kind":"Job","event":"post-rollback"}]}
+        """)
+        XCTAssertEqual(plan.hooks.count, 2)
+        let pre = plan.hooks[0]
+        XCTAssertTrue(pre.runsBefore)
+        XCTAssertEqual(pre.weight, -5)
+        XCTAssertEqual(pre.deletePolicies, ["before-hook-creation", "hook-succeeded"])
+        XCTAssertEqual(pre.label { "weight \($0)" }, "Job site-migrate (weight -5)")
+        let post = plan.hooks[1]
+        XCTAssertFalse(post.runsBefore)
+        XCTAssertEqual(post.weight, 0)
+        XCTAssertEqual(post.deletePolicies, [])
+        XCTAssertEqual(post.error, "")
+        XCTAssertEqual(post.label { "weight \($0)" }, "Job site-notify")
+        XCTAssertNotEqual(pre.id, post.id)
+        XCTAssertTrue(plan.canRun)
+
+        XCTAssertEqual(try TalosJSON.decode(HelmRollbackHook.self, from: "{}"),
+                       HelmRollbackHook(name: "", kind: "", event: ""))
+        let none = try TalosJSON.decode(HelmRollbackPlan.self, from: #"{"hooks":null}"#)
+        XCTAssertEqual(none.hooks, [])
+        XCTAssertTrue(none.canRun)
+    }
+
+    func testRefusedHookStopsIt() throws {
+        let plan = try TalosJSON.decode(HelmRollbackPlan.self, from: """
+        {"blockers":[],"hooks":[{"name":"site-migrate","kind":"Job","event":"pre-rollback","weight":3,
+                                 "error":"jobs.batch is forbidden"}]}
+        """)
+        XCTAssertFalse(plan.canRun)
+        XCTAssertEqual(plan.hooks.first?.label { "w=\($0)" }, "Job site-migrate (w=3)")
     }
 
     func testHistoryNotPrunedIsADoneRollback() {

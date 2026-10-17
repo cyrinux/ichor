@@ -3,8 +3,8 @@ package ichorgo
 import "cmp"
 
 // demoHelmRollbackPlan is a rollback of a demo release: one Deployment and one ConfigMap
-// back (replaced with the force option), one ServiceMonitor gone, and the revisions of the
-// demo history beyond opts.HistoryMax pruned.
+// back (replaced with the force option), one ServiceMonitor gone, a pre-rollback Job hook,
+// and the revisions of the demo history beyond opts.HistoryMax pruned.
 func demoHelmRollbackPlan(namespace, name string, revision int, opts helmRollbackOptions) helmRollbackPlan {
 	detail := demoHelmRelease(namespace, name)
 	from := detail.Revision
@@ -29,6 +29,10 @@ func demoHelmRollbackPlan(namespace, name string, revision int, opts helmRollbac
 			{Action: update, Kind: "Deployment", Namespace: namespace, Name: name},
 			{Action: helmChangeDelete, Kind: "ServiceMonitor", Namespace: namespace, Name: name},
 		},
+		Hooks: []helmHook{{
+			Name: name + "-migrate", Kind: "Job", Event: helmHookPreRollback, Weight: -5,
+			DeletePolicies: []string{helmHookBeforeCreation, helmHookSucceeded},
+		}},
 		Unchanged: 6, Blockers: []string{},
 		Force: opts.Force, HistoryMax: opts.HistoryMax, Prune: helmRevisions(helmPruneRefs(refs, opts.HistoryMax)),
 		Workloads: len(demoHelmRollbackWorkloads(namespace, name)),

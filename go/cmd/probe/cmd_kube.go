@@ -191,7 +191,8 @@ var kubeCommands = []command{
 	}},
 	{name: "helm-rollback-plan", args: "NAMESPACE NAME [REVISION] [OPTIONS_JSON]", run: func(e env) (out string, err error) {
 		// helm-rollback-plan NAMESPACE NAME [REVISION] [OPTIONS_JSON]: what a rollback would
-		// change, dry-run only, e.g. `web site 1 '{"force":true,"historyMax":2}'`.
+		// change and the chart's rollback hooks it would run ("hooks"), dry-run only, e.g.
+		// `web site 1 '{"force":true,"historyMax":2}'`.
 		revision, err := helmRevisionArg(flag.Arg(3))
 		if err == nil {
 			out, err = ichorgo.KubeHelmRollbackPlan(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), revision, flag.Arg(4))
@@ -201,7 +202,8 @@ var kubeCommands = []command{
 	}},
 	{name: "helm-rollback", args: "NAMESPACE NAME [REVISION] [OPTIONS_JSON]", run: func(e env) (out string, err error) {
 		// helm-rollback NAMESPACE NAME [REVISION] [OPTIONS_JSON]: rolls the release back (0 or
-		// none: the previous revision), with {"force","historyMax"}.
+		// none: the previous revision), with {"force","historyMax"}, running the chart's pre-
+		// and post-rollback hooks around the changes.
 		revision, err := helmRevisionArg(flag.Arg(3))
 		if err != nil {
 			return "", err

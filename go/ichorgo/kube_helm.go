@@ -79,13 +79,20 @@ type helmRelease struct {
 			AppVersion string `json:"appVersion"`
 		} `json:"metadata"`
 	} `json:"chart"`
-	Config   map[string]any `json:"config"`
-	Manifest string         `json:"manifest"`
-	Hooks    []struct {
-		Name   string   `json:"name"`
-		Kind   string   `json:"kind"`
-		Events []string `json:"events"`
-	} `json:"hooks"`
+	Config   map[string]any    `json:"config"`
+	Manifest string            `json:"manifest"`
+	Hooks    []helmReleaseHook `json:"hooks"`
+}
+
+// helmReleaseHook is a chart hook as Helm stores it (pkg/release/v1 Hook); every field may be
+// missing from an older Secret.
+type helmReleaseHook struct {
+	Name           string   `json:"name"`
+	Kind           string   `json:"kind"`
+	Manifest       string   `json:"manifest"` // the rendered object, one YAML document
+	Events         []string `json:"events"`
+	Weight         int      `json:"weight"`
+	DeletePolicies []string `json:"delete_policies"`
 }
 
 // helmSecretRef is a release revision as its Secret's labels tell it.

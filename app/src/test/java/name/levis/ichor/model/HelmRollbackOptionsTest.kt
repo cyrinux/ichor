@@ -88,4 +88,39 @@ class HelmRollbackOptionsTest {
         assertFalse(isHelmHistoryNotPruned("rollback failed: conflict"))
         assertFalse(isHelmHistoryNotPruned(null))
     }
+
+    @Test
+    fun planDecodesHooksInOrder() {
+        val json = """{"from":3,"to":2,"hooks":[
+            {"name":"site-migrate","kind":"Job","event":"pre-rollback","weight":-5,"deletePolicies":["before-hook-creation","hook-succeeded"],"error":""},
+            {"name":"site-notify","kind":"Pod","event":"post-rollback","weight":0,"deletePolicies":null}]}"""
+        val plan = TalosJson.decodeFromString(HelmRollbackPlan.serializer(), json)
+        assertEquals(2, plan.hooks.size)
+        val pre = plan.hooks[0]
+        assertEquals("site-migrate", pre.name)
+        assertEquals("Job", pre.kind)
+        assertEquals(-5, pre.weight)
+        assertTrue(pre.isPre)
+        assertEquals(listOf("before-hook-creation", "hook-succeeded"), pre.deletePolicies)
+        val post = plan.hooks[1]
+        assertFalse(post.isPre)
+        assertEquals(emptyList<String>(), post.deletePolicies)
+        assertEquals("", post.error)
+        assertTrue(plan.canRun)
+    }
+
+    @Test
+    fun planWithoutHooksDecodesToNone() {
+        assertEquals(emptyList<HelmRollbackHook>(), TalosJson.decodeFromString(HelmRollbackPlan.serializer(), """{"from":2,"to":1}""").hooks)
+        assertEquals(emptyList<HelmRollbackHook>(), TalosJson.decodeFromString(HelmRollbackPlan.serializer(), """{"from":2,"to":1,"hooks":null}""").hooks)
+    }
+
+    @Test
+    fun aRefusedHookBlocksTheRun() {
+        val ok = HelmRollbackHook(name = "site-migrate", kind = "Job", event = HELM_HOOK_PRE_ROLLBACK)
+        assertTrue(HelmRollbackPlan(hooks = listOf(ok)).canRun)
+        val refused = ok.copy(error = "admission webhook denied the request")
+        assertFalse(HelmRollbackPlan(hooks = listOf(ok, refused)).canRun)
+        assertFalse(HelmRollbackPlan(blockers = listOf("another operation is in progress"), hooks = listOf(ok)).canRun)
+    }
 }
