@@ -165,15 +165,22 @@ private struct CapacityNodeRow: View {
         let usage = Int((node.memoryUsageFraction * 100).rounded())
         Button(action: onOpen) {
             VStack(alignment: .leading, spacing: 4) {
+                // The name keeps its own line: only the overcommitted tag sits beside it, so role and
+                // disk tags wrap below instead of squeezing it away.
                 HStack {
                     Text(verbatim: node.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
-                    Spacer()
-                    ForEach(node.roles, id: \.self) { Tag($0) }
+                        .layoutPriority(1)
+                    Spacer(minLength: 0)
                     if node.overcommitted { Tag(CapacityText.capacityOvercommitted, color: Color.statusBad) }
-                    if node.diskPressure {
-                        Tag(CapacityText.capacityNodeDiskPressure, color: Color.statusBad)
-                    } else if node.diskLow {
-                        Tag(CapacityText.capacityNodeDiskLow, color: Color.statusWarn)
+                }
+                if node.diskPressure || node.diskLow || !node.roles.isEmpty {
+                    ChipFlow(spacing: 4) {
+                        if node.diskPressure {
+                            Tag(CapacityText.capacityNodeDiskPressure, color: Color.statusBad)
+                        } else if node.diskLow {
+                            Tag(CapacityText.capacityNodeDiskLow, color: Color.statusWarn)
+                        }
+                        ForEach(node.roles, id: \.self) { Tag($0) }
                     }
                 }
                 VStack(alignment: .leading, spacing: 4) {

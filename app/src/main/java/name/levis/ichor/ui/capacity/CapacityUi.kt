@@ -81,6 +81,7 @@ fun CapacityHeader(capacity: KubeCapacity, onWhatIf: () -> Unit) {
  * One node: its memory requests and usage against allocatable as two bars (usage only with
  * metrics-server), its CPU and free room in words; tapping it opens what losing it costs.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CapacityNodeRow(n: CapacityNode, metrics: Boolean, onOpen: () -> Unit) {
     val colors = LocalStatusColors.current
@@ -98,14 +99,20 @@ fun CapacityNodeRow(n: CapacityNode, metrics: Boolean, onOpen: () -> Unit) {
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
+            // The name keeps its own line: only the overcommitted tag sits beside it, so role and
+            // disk tags (up to five roles on a real node) wrap below instead of squeezing it away.
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(n.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                n.roles.forEach { Tag(it, MaterialTheme.colorScheme.primary) }
+                Text(n.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 if (n.overcommitted) Tag(stringResource(R.string.capacity_overcommitted), colors.bad)
-                if (n.diskPressure) {
-                    Tag(stringResource(R.string.capacity_node_disk_pressure), colors.bad)
-                } else if (n.diskLow) {
-                    Tag(stringResource(R.string.capacity_node_disk_low), colors.warn)
+            }
+            if (n.diskPressure || n.diskLow || n.roles.isNotEmpty()) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (n.diskPressure) {
+                        Tag(stringResource(R.string.capacity_node_disk_pressure), colors.bad)
+                    } else if (n.diskLow) {
+                        Tag(stringResource(R.string.capacity_node_disk_low), colors.warn)
+                    }
+                    n.roles.forEach { Tag(it, MaterialTheme.colorScheme.primary) }
                 }
             }
             Column(Modifier.clearAndSetSemantics { contentDescription = bars }, verticalArrangement = Arrangement.spacedBy(4.dp)) {
