@@ -36,6 +36,10 @@ Screens build on one small set, the same names on both apps (`ui/components/` on
   is a problem. A tag with the same value on every row goes in the header, or on the exceptions.
 - Numbers are `StatTile`s, not prose; usage is `UsageBar` or `MeterRow`, with the caller's
   thresholds. Lists use `ResourceRow`; an empty list shows `EmptyState`.
+- A list of resources sits in inset cards like the home, never a bare `LazyColumn` with a
+  `HorizontalDivider` after each row: on Android `cardRows` (one card) or `groupedCardRows`
+  (one titled card per namespace or status) with `CardListPadding`; a titled block is a
+  `SectionCard`. iOS gets the same from an inset-grouped `List { Section }`.
 - An explanatory paragraph is an `InfoHint`; at most one filled button per screen, and row
   actions live in the row's menu or sheet.
 - Errors are a whole-screen error or an inline section error, never a plain line of text.
