@@ -132,6 +132,12 @@ aboutLibraries {
     }
 }
 
+// The play build type only flips three flags on release, so its fatal-lint pass (lintVital,
+// about three minutes) would repeat lintVitalRelease's; the release build keeps it.
+tasks.configureEach {
+    if (name.matches(Regex("lintVital\\w*Play|generatePlayLintVital\\w*"))) enabled = false
+}
+
 dependencies {
     implementation(files("libs/ichorgo.aar"))
 

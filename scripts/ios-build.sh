@@ -7,6 +7,7 @@
 #   scripts/ios-build.sh test   # core tests + simulator build (CI on every push)
 #   scripts/ios-build.sh ipa    # unsigned Release build packaged as an IPA (default)
 #   scripts/ios-build.sh appstore  # App Store build, signed and uploaded to App Store Connect
+#   ICHOR_SKIP_TESTS=1 scripts/ios-build.sh ipa  # no core tests (CI: the test job runs them)
 #
 # The unsigned IPA can be re-signed and installed with your Apple ID by Sideloadly or
 # AltStore. Set ICHOR_IOS_TEAM_ID and drop CODE_SIGNING_ALLOWED=NO to sign in Xcode instead.
@@ -59,7 +60,11 @@ gomobile bind -target=ios,iossimulator -iosversion=17.0 -ldflags="-s -w" \
   -o "$ROOT/ios/Frameworks/Ichorgo.xcframework" ./ichorgo
 
 python3 "$ROOT/scripts/check-translations.py"
-(cd "$ROOT/ios/IchorCore" && swift test)
+if [[ "${ICHOR_SKIP_TESTS:-0}" == 1 ]]; then
+  echo "ICHOR_SKIP_TESTS=1: skipping the IchorCore tests"
+else
+  (cd "$ROOT/ios/IchorCore" && swift test)
+fi
 
 cd "$ROOT/ios"
 xcodegen generate
