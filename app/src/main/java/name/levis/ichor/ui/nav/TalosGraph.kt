@@ -43,6 +43,7 @@ import name.levis.ichor.ui.join.JoinNodeScreen
 import name.levis.ichor.ui.maintenance.MaintenanceScreen
 import name.levis.ichor.ui.network.NetworkScreen
 import name.levis.ichor.ui.node.NodeDetailScreen
+import name.levis.ichor.ui.node.NodeMetaScreen
 import name.levis.ichor.ui.node.NodeTabsScreen
 import name.levis.ichor.ui.node.PowerAction
 import name.levis.ichor.ui.nodes.NodesListDetail
@@ -200,6 +201,10 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             drainOnly = entry.arguments?.getBoolean("drain") ?: false,
             onBack = { nav.popBackStack() },
         )
+    }
+    composable(Routes.NODE_META, arguments = nodeArguments()) { entry ->
+        val addr = entry.arguments?.getString("addr").orEmpty()
+        NodeMetaScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
     }
     composable(
         Routes.CLUSTER_UPGRADE,

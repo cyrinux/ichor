@@ -156,6 +156,11 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   notify in the background (Settings → Alerts). A pod's log sheet and a workload's sheet show
   the object's Kubernetes events, like the end of `kubectl describe`. See
   [Cluster checkup](#cluster-checkup).
+- **Node taints and labels:** a node's menu → **Taints and labels…** lists them, with the ones
+  Kubernetes, Talos or the cloud set locked unless shown. Review shows the change, the API
+  server's dry-run verdict and the pods a new `NoExecute` taint would evict; a taint change asks
+  for the node's hostname. A node changed meanwhile is refused with Reload; the change is in the
+  activity log.
 - **Live flows (Cilium + Hubble, or Calico 3.30+ + Whisker):** follow the cluster's traffic like
   Hubble UI, or only what is dropped, for a namespace or a pod. With Cilium, Ichor runs
   `hubble observe --follow` in each cilium-agent pod (the CLI ships in the agent image, so nothing
@@ -251,6 +256,7 @@ reads those roles and explains up front when a feature needs more.
 | **Policies (Kyverno)** | `Kubeconfig`, then the Kubernetes API (kyverno.io policies, wgpolicyk8s.io policy reports, Kyverno's Deployments and webhooks) | **`os:admin`** |
 | **Virtual machines: list, start/stop/restart/pause/migrate, serial console** | `Kubeconfig`, then the Kubernetes API (kubevirt.io, subresources.kubevirt.io including `virtualmachineinstances/console`, cdi.kubevirt.io) | **`os:admin`** |
 | **Cluster checkup, events of a pod or workload** | `Kubeconfig`, then the Kubernetes API (pods, nodes, events, claims, webhooks, quotas, services, CSRs, secrets metadata…), each kubelet's `stats/summary` through the API server proxy, and a TLS handshake with each web address to read the certificate it serves (never the Secret, whose private key would come along) | **`os:admin`** |
+| **Node taints and labels: edit** | `Kubeconfig`, then the Kubernetes API (`patch nodes`, with a dry run; pods of the node for the eviction preview) | **`os:admin`** |
 | **Talos rollback (`talosctl rollback`)** | `Rollback` | **`os:admin`** |
 | **CloudNativePG primary restart and hibernate/wake** | `Kubeconfig`, then the Kubernetes API: get clusters and pods, patch `clusters/status` for restart, patch clusters for hibernation | **`os:admin`** |
 | **Longhorn faulted-volume salvage** | `Kubeconfig`, then the Kubernetes API: get volumes, list replicas/nodes, create `services/proxy` to the Longhorn manager | **`os:admin`** |
@@ -1470,10 +1476,14 @@ Wake-on-LAN, privacy label and manifest, export compliance, review notes) is in
 
 ## CI (GitHub Actions)
 
-- **`.github/workflows/android.yml`** (Ubuntu, Nix flake): `./build.sh check`, then the debug
-  and release APKs.
-- **`.github/workflows/ios.yml`** (macOS 26): core tests, simulator build, unsigned IPA; on
-  `v*` tags, the App Store upload (see [iOS](#ios)).
+- **`.github/workflows/android.yml`** (Ubuntu, Nix flake): four parallel jobs, `./build.sh check`
+  and the debug, release and Play builds (`ICHOR_SKIP_TESTS=1`, the check job runs the tests).
+- **`.github/workflows/ios.yml`** (macOS 26): two parallel jobs, core tests with the simulator
+  build, and the unsigned IPA; on `v*` tags, the App Store upload (see [iOS](#ios)).
+
+The Nix store, Gradle user home, Go module and build caches and the Swift package checkouts
+are restored from the Actions cache (`.github/actions/*-toolchain`); only the check and test
+jobs write them, on `main`.
 
 Both run on pushes to `main` and on pull requests. Release APKs are named
 `ichor-v<version>-<abi>.apk`, or `…-unsigned.apk` when no keystore secrets are set;

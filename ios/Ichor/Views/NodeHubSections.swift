@@ -5,7 +5,7 @@ import IchorCore
 enum NodeHubScreen: Hashable {
     case kernelLog, events, network, storage, images, resourceBrowser, hardware, kubePods
     case debugShell, netTools, capture
-    case machineConfig, upgrade, maintenance, drain
+    case machineConfig, upgrade, maintenance, drain, nodeMeta
 
     @ViewBuilder
     func view(_ ref: NodeRef) -> some View {
@@ -25,6 +25,7 @@ enum NodeHubScreen: Hashable {
         case .upgrade: UpgradeView(node: ref.address, hostname: ref.hostname)
         case .maintenance: MaintenanceView(node: ref.address, hostname: ref.hostname)
         case .drain: MaintenanceView(node: ref.address, hostname: ref.hostname, drainOnly: true)
+        case .nodeMeta: NodeMetaEditorView(node: ref.address, hostname: ref.hostname)
         }
     }
 }
@@ -212,6 +213,7 @@ struct NodeOperateSection: View {
                     // An uncordon mid-drain lets the evicted pods come back before the reboot.
                     NodeHubButton(title: String(localized: "Cordon / uncordon…"), systemImage: "nosign") { showingCordon = true }
                         .disabled(maintenanceRunning)
+                    NodeHubButton(title: String(localized: "Taints and labels…"), systemImage: "tag") { open = .nodeMeta }
                 }
             }
         }

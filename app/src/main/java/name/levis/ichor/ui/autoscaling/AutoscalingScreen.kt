@@ -68,6 +68,7 @@ import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
@@ -175,7 +176,7 @@ private fun AutoscalingList(
     fun openVpa(row: VpaRow) = onOpen(Open.Vpa(row))
     fun openPool(row: NodePoolRow) = onOpen(Open.Pool(row, claimsOf[row.name].orEmpty()))
 
-    LazyColumn(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
         item(key = "filters") {
             Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 SearchField(query, onQuery, stringResource(R.string.autoscaling_search), Modifier.fillMaxWidth().padding(horizontal = 16.dp))
@@ -193,11 +194,12 @@ private fun AutoscalingList(
             HorizontalDivider()
         }
 
-        item(key = "attention-title") { SectionTitle(stringResource(R.string.autoscaling_needs_attention), Modifier.padding(horizontal = 16.dp)) }
+        // One titled card per section; a section's missing, failed or empty state is a line under its title.
+        item(key = "attention-title", contentType = "cardGroupTitle") { SectionTitle(stringResource(R.string.autoscaling_needs_attention), GroupInset) }
         if (attention.isEmpty()) {
-            item(key = "attention-empty") { MutedText(stringResource(R.string.autoscaling_all_ok), Modifier.padding(horizontal = 16.dp)) }
+            item(key = "attention-empty") { MutedText(stringResource(R.string.autoscaling_all_ok), GroupInset) }
         }
-        items(attention, key = { "p-" + it.group + "/" + it.key }) { problem ->
+        cardRows(attention, key = { "p-" + it.group + "/" + it.key }) { problem ->
             ProblemRow(problem) {
                 when (problem.group) {
                     "hpa" -> view.hpa.items.firstOrNull { it.key == problem.key }?.let(::openHpa)
@@ -210,39 +212,36 @@ private fun AutoscalingList(
                         }
                 }
             }
-            HorizontalDivider()
         }
 
-        item(key = "h-hpa") { GroupHeader(stringResource(R.string.autoscaling_section_hpa), view.hpa.installed, view.hpa.error, view.hpa.truncated) }
+        item(key = "h-hpa", contentType = "cardGroupTitle") { GroupHeader(stringResource(R.string.autoscaling_section_hpa), view.hpa.installed, view.hpa.error, view.hpa.truncated) }
         if (view.hpa.installed) {
-            items(view.hpa.items, key = { "hpa-" + it.key }) { row ->
+            cardRows(view.hpa.items, key = { "hpa-" + it.key }) { row ->
                 HpaRowItem(row, onClick = { openHpa(row) })
-                HorizontalDivider()
             }
         }
-        item(key = "h-keda") { GroupHeader(stringResource(R.string.autoscaling_section_keda), view.keda.installed, view.keda.error, view.keda.truncated) }
+        item(key = "h-keda", contentType = "cardGroupTitle") { GroupHeader(stringResource(R.string.autoscaling_section_keda), view.keda.installed, view.keda.error, view.keda.truncated) }
         if (view.keda.installed) {
-            items(view.keda.scaledObjects, key = { "so-" + it.key }) { row ->
-                ScaledObjectRowItem(row, onClick = { openSo(row) })
-                HorizontalDivider()
-            }
-            items(view.keda.scaledJobs, key = { "sj-" + it.key }) { row ->
-                ScaledJobRowItem(row, onClick = { openSj(row) })
-                HorizontalDivider()
+            // ScaledObjects then ScaledJobs, in one card.
+            val keda: List<Open> = view.keda.scaledObjects.map { Open.ScaledObject(it) } + view.keda.scaledJobs.map { Open.ScaledJob(it) }
+            cardRows(keda, key = { o -> if (o is Open.ScaledObject) "so-" + o.row.key else "sj-" + (o as? Open.ScaledJob)?.row?.key }) { o ->
+                when (o) {
+                    is Open.ScaledObject -> ScaledObjectRowItem(o.row, onClick = { openSo(o.row) })
+                    is Open.ScaledJob -> ScaledJobRowItem(o.row, onClick = { openSj(o.row) })
+                    else -> {}
+                }
             }
         }
-        item(key = "h-vpa") { GroupHeader(stringResource(R.string.autoscaling_section_vpa), view.vpa.installed, view.vpa.error, view.vpa.truncated) }
+        item(key = "h-vpa", contentType = "cardGroupTitle") { GroupHeader(stringResource(R.string.autoscaling_section_vpa), view.vpa.installed, view.vpa.error, view.vpa.truncated) }
         if (view.vpa.installed) {
-            items(view.vpa.items, key = { "vpa-" + it.key }) { row ->
+            cardRows(view.vpa.items, key = { "vpa-" + it.key }) { row ->
                 VpaRowItem(row, onClick = { openVpa(row) })
-                HorizontalDivider()
             }
         }
-        item(key = "h-karpenter") { GroupHeader(stringResource(R.string.autoscaling_section_karpenter), view.karpenter.installed, view.karpenter.error, view.karpenter.truncated) }
+        item(key = "h-karpenter", contentType = "cardGroupTitle") { GroupHeader(stringResource(R.string.autoscaling_section_karpenter), view.karpenter.installed, view.karpenter.error, view.karpenter.truncated) }
         if (view.karpenter.installed) {
-            items(view.karpenter.nodePools, key = { "pool-" + it.key }) { row ->
+            cardRows(view.karpenter.nodePools, key = { "pool-" + it.key }) { row ->
                 NodePoolRowItem(row, claimsOf[row.name].orEmpty().size, onClick = { openPool(row) })
-                HorizontalDivider()
             }
         }
 
@@ -252,16 +251,19 @@ private fun AutoscalingList(
     }
 }
 
-/** One group's header: its title, or the one line a missing or failed group gets. */
+/** A section title or note, aligned with the content of the card under it (as `cardGroupTitle`). */
+private val GroupInset = Modifier.padding(horizontal = 20.dp)
+
+/** One section's card title, and the one line a missing or failed section gets under it. */
 @Composable
 private fun GroupHeader(title: String, installed: Boolean, error: String, truncated: Boolean) {
     Column(Modifier.padding(top = 12.dp)) {
-        SectionTitle(title, Modifier.padding(horizontal = 16.dp))
+        SectionTitle(title, GroupInset)
         if (!installed) {
-            MutedText(stringResource(R.string.autoscaling_not_installed, title), Modifier.padding(horizontal = 16.dp))
+            MutedText(stringResource(R.string.autoscaling_not_installed, title), GroupInset.padding(bottom = 4.dp))
         } else {
-            if (error.isNotEmpty()) InlineError(stringResource(R.string.autoscaling_group_error, error), Modifier.padding(horizontal = 16.dp))
-            if (truncated) MutedText(stringResource(R.string.autoscaling_truncated), Modifier.padding(horizontal = 16.dp))
+            if (error.isNotEmpty()) InlineError(stringResource(R.string.autoscaling_group_error, error), GroupInset.padding(bottom = 4.dp))
+            if (truncated) MutedText(stringResource(R.string.autoscaling_truncated), GroupInset.padding(bottom = 4.dp))
         }
     }
 }

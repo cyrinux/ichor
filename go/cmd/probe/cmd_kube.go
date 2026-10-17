@@ -341,6 +341,9 @@ var kubeCommands = []command{
 	}},
 	{name: "cordon", args: "NODE", run: runCordon},
 	{name: "uncordon", args: "NODE", run: runCordon},
+	{name: "node-meta", args: "NODE", run: runNodeMeta},
+	{name: "node-meta-plan", args: "NODE EDITS_JSON [force]", run: runNodeMeta},
+	{name: "node-meta-apply", args: "NODE EDITS_JSON [force]", run: runNodeMeta},
 	{name: "maintenance", args: "NODE ACTION [IMAGE]", run: func(e env) (out string, err error) {
 		// maintenance NODE reboot|shutdown|none, or NODE upgrade IMAGE: cordons and drains the
 		// node for real (then upgrades it to IMAGE).
@@ -423,6 +426,65 @@ func runCordon(e env) (out string, err error) {
 	}
 
 	return out, err
+}
+
+// runNodeMeta reads, plans or applies a node's taints and labels: NODE is the Kubernetes
+// node name on a kubeconfig, the Talos address otherwise. "force" allows protected changes
+// (for the plan, it sets the edits' force).
+func runNodeMeta(e env) (string, error) {
+	node, edits, force := flag.Arg(1), flag.Arg(2), flag.Arg(3) == "force"
+	kube := ichorgo.IsKubeconfig(e.cfg)
+
+	switch e.cmd {
+	case "node-meta":
+		if kube {
+			return ichorgo.KubeNodeMeta(e.cfg, e.context, e.kubeServer, node)
+		}
+
+		return ichorgo.NodeMeta(e.cfg, e.context, e.kubeServer, node)
+	case "node-meta-plan":
+		edits, err := withForce(edits, force)
+		if err != nil {
+			return "", err
+		}
+
+		if kube {
+			return ichorgo.KubeNodeMetaPlan(e.cfg, e.context, e.kubeServer, node, edits)
+		}
+
+		return ichorgo.NodeMetaPlan(e.cfg, e.context, e.kubeServer, node, edits)
+	default:
+		var err error
+		if kube {
+			err = ichorgo.KubeNodeMetaApply(e.cfg, e.context, e.kubeServer, node, edits, force)
+		} else {
+			err = ichorgo.NodeMetaApply(e.cfg, e.context, e.kubeServer, node, edits, force)
+		}
+
+		if err != nil {
+			return "", err
+		}
+
+		return "applied", nil
+	}
+}
+
+// withForce sets "force": true in an edits document.
+func withForce(edits string, force bool) (string, error) {
+	if !force {
+		return edits, nil
+	}
+
+	var doc map[string]any
+	if err := json.Unmarshal([]byte(edits), &doc); err != nil {
+		return "", fmt.Errorf("bad edits: %w", err)
+	}
+
+	doc["force"] = true
+
+	out, err := json.Marshal(doc)
+
+	return string(out), err
 }
 
 // probeCluster stands for the cluster id the apps store: the probe only prints the targets.

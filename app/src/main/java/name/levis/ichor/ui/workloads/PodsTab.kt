@@ -17,14 +17,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Stream
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -72,7 +70,9 @@ import name.levis.ichor.ui.app
 import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.rememberKubeDenial
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.components.groupedCardRows
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.emptyOrNoMatch
@@ -211,11 +211,12 @@ fun PodsTab(
             } else {
                 val listState = rememberLazyListState()
                 LoadMoreOnScroll(listState, enabled = load.hasMore && query.isBlank(), loaded = load.items.size, onLoadMore = vm::loadMore)
-                LazyColumn(Modifier.fillMaxSize(), state = listState) {
-                    items(rows, key = { it.key }) { pod ->
+                // All namespaces: one card per namespace, its name as the card's title.
+                LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = CardListPadding) {
+                    groupedCardRows(rows, groupOf = if (selected == null) { p: KubePod -> p.namespace } else null, key = { it.key }) { pod ->
                         PodRow(
                             pod,
-                            showNamespace = selected == null,
+                            showNamespace = false,
                             deleting = pod.key in deleting,
                             onDelete = { actions.confirm = pod },
                             onLogs = { actions.logs = pod },
@@ -223,7 +224,6 @@ fun PodsTab(
                             usage = usage[pod.key],
                             pullLinks = pullLinks,
                         )
-                        HorizontalDivider()
                     }
                 }
             }

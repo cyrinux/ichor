@@ -49,6 +49,9 @@ import name.levis.ichor.model.ClusterSensorHealth
 import name.levis.ichor.model.ClusterStorageHealth
 import name.levis.ichor.model.MaintenanceAction
 import name.levis.ichor.model.MaintenancePlan
+import name.levis.ichor.model.KubeNodeMeta
+import name.levis.ichor.model.NodeMetaEdits
+import name.levis.ichor.model.NodeMetaPlan
 import name.levis.ichor.model.MaintenanceUpgrade
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.ClusterTopology
@@ -571,6 +574,40 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         kubeCall { cfg, ctx, server -> Ichorgo.kubeNodeCordon(cfg, ctx, server, node, on) }
     } else {
         talosKubeCall { cfg, ctx, server -> Ichorgo.kubeCordon(cfg, ctx, server, node, on) }
+    }
+
+    /**
+     * The taints and labels of [node] (os:admin): its Talos address, or its Kubernetes name on a
+     * kubeconfig cluster, like [cordon].
+     */
+    suspend fun nodeMeta(node: String): KubeNodeMeta {
+        val json = if (configs.forCall().activeIsKube) {
+            kubeCall { cfg, ctx, server -> Ichorgo.kubeNodeMeta(cfg, ctx, server, node) }
+        } else {
+            talosKubeCall { cfg, ctx, server -> Ichorgo.nodeMeta(cfg, ctx, server, node) }
+        }
+        return TalosJson.decodeFromString(KubeNodeMeta.serializer(), json)
+    }
+
+    /** What [edits] would change on [node] (a dry run through the API server); never cached. */
+    suspend fun nodeMetaPlan(node: String, edits: NodeMetaEdits): NodeMetaPlan {
+        val body = edits.toJson()
+        val json = if (configs.forCall().activeIsKube) {
+            kubeCall { cfg, ctx, server -> Ichorgo.kubeNodeMetaPlan(cfg, ctx, server, node, body) }
+        } else {
+            talosKubeCall { cfg, ctx, server -> Ichorgo.nodeMetaPlan(cfg, ctx, server, node, body) }
+        }
+        return TalosJson.decodeFromString(NodeMetaPlan.serializer(), json)
+    }
+
+    /** Applies [edits] to [node]; [force] lets protected taints and labels change. Throws when refused. */
+    suspend fun nodeMetaApply(node: String, edits: NodeMetaEdits, force: Boolean) {
+        val body = edits.toJson()
+        if (configs.forCall().activeIsKube) {
+            kubeCall { cfg, ctx, server -> Ichorgo.kubeNodeMetaApply(cfg, ctx, server, node, body, force) }
+        } else {
+            talosKubeCall { cfg, ctx, server -> Ichorgo.nodeMetaApply(cfg, ctx, server, node, body, force) }
+        }
     }
 
     /**

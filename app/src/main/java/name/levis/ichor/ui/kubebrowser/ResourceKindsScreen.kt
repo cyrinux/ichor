@@ -9,12 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -45,6 +43,9 @@ import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoNotice
@@ -106,7 +107,7 @@ fun ResourceKindsScreen(
 @Composable
 private fun KindList(list: ApiResourceList, query: String, onKind: (ApiResource) -> Unit) {
     val groups = remember(list, query) { groupResources(list.resources, query) }
-    LazyColumn(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (list.failed.isNotEmpty()) {
             item(key = "failed") {
                 InfoNotice(stringResource(R.string.kb_failed_groups, list.failed.joinToString(", ")), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
@@ -115,20 +116,18 @@ private fun KindList(list: ApiResourceList, query: String, onKind: (ApiResource)
         if (groups.isEmpty()) {
             item(key = "empty") { EmptyText(emptyOrNoMatch(query, R.string.kb_no_kinds, R.string.kb_no_kind_match)) }
         }
+        // One card per API group; the group's title stays pinned while its card scrolls.
         groups.forEach { group ->
-            stickyHeader(key = "g-${group.group}") {
+            stickyHeader(key = "g-${group.group}", contentType = "cardGroupTitle") {
                 Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
-                    Text(
+                    SectionTitle(
                         group.group.ifEmpty { stringResource(R.string.kb_core_group) },
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
+                        Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp),
                     )
                 }
             }
-            items(group.resources, key = { "r-${it.key}" }) { r ->
+            cardRows(group.resources, key = { "r-${it.key}" }) { r ->
                 KindRow(r) { onKind(r) }
-                HorizontalDivider()
             }
         }
     }

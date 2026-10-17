@@ -229,6 +229,7 @@ var kubeActionChecks = map[string][]accessNeed{
 	"alertmanagerSilence": {{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy"}, true}},
 	"alertmanagerExpire":  {{ssarAttributes{Verb: "delete", Resource: "services", Subresource: "proxy"}, true}},
 	"cordonNode":          {{ssarAttributes{Verb: "patch", Resource: "nodes"}, false}},
+	"editNodeMeta":        {{ssarAttributes{Verb: "patch", Resource: "nodes"}, false}},
 	// A drain cordons, then evicts the node's pods whatever their namespace.
 	"drainNode": {
 		{ssarAttributes{Verb: "patch", Resource: "nodes"}, false},

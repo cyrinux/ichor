@@ -30,6 +30,8 @@ enum class KubeAction(val wire: String) {
     FLUX_RECONCILE_BUCKET("fluxReconcileBucket"),
     CORDON_NODE("cordonNode"),
     DRAIN_NODE("drainNode"),
+    /** A node's taints and labels. */
+    EDIT_NODE_META("editNodeMeta"),
     CNPG_PROMOTE("cnpgPromote"),
     CNPG_RESTART_PRIMARY("cnpgRestartPrimary"),
     CNPG_HIBERNATE("cnpgHibernate"),
