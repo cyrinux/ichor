@@ -117,4 +117,60 @@ class KubeCapacityTest {
         assertEquals(1f, freeFraction(5.0, 4.0), 0f)
         assertEquals(0f, freeFraction(1.0, 0.0), 0f)
     }
+
+    // A newer core's answer with ephemeral storage and the kubelets' disk.
+    private val diskJson = """{"diskMeasured":true,"diskForbidden":false,
+        "totals":{"ephemeralAllocatable":400,"ephemeralRequests":150,"diskCapacity":1000,"diskAvailable":250,"diskMeasuredNodes":2},
+        "nodes":[{"name":"demo-worker-1","ephemeralAllocatable":200,"ephemeralRequests":50,"ephemeralFree":150,
+            "diskMeasured":true,"diskCapacity":500,"diskAvailable":200,"imageFsCapacity":500,"imageFsAvailable":200},
+          {"name":"demo-worker-2","diskMeasured":true,"diskCapacity":500,"diskAvailable":50},
+          {"name":"demo-worker-3","diskPressure":true,"diskMeasured":false}],
+        "workloads":[{"kind":"Deployment","namespace":"demo","name":"report-cache","risk":"diskNear",
+            "ephemeralRequest":1073741824,"ephemeralLimit":2147483648,"ephemeralUsage":2040109465}],
+        "nPlusOne":{"ok":false,"node":"demo-worker-1","pendingPods":1,"shortEphemeral":6442450944}}"""
+
+    @Test
+    fun decodesEphemeralStorageAndDisk() {
+        val c = TalosJson.decodeFromString(KubeCapacity.serializer(), diskJson)
+        assertTrue(c.diskMeasured)
+        assertFalse(c.diskForbidden)
+        assertEquals(250.0, c.totals.ephemeralFree, 1e-9)
+        assertEquals(0.25f, c.totals.diskFreeFraction, 1e-6f)
+        assertEquals(2, c.totals.diskMeasuredNodes)
+        val n = c.nodes[0]
+        assertEquals(150.0, n.ephemeralFree, 1e-9)
+        assertEquals(500.0, n.imageFsCapacity, 1e-9)
+        assertEquals(0.6f, n.diskUsedFraction, 1e-6f)
+        assertFalse(n.diskLow)
+        // 10 % free: under the 15 % line.
+        assertTrue(c.nodes[1].diskLow)
+        assertEquals(0.9f, c.nodes[1].diskUsedFraction, 1e-6f)
+        // Not measured: never "low", whatever its numbers; the condition still shows.
+        assertTrue(c.nodes[2].diskPressure)
+        assertFalse(c.nodes[2].diskLow)
+        assertEquals(0f, c.nodes[2].diskUsedFraction, 0f)
+        assertEquals("demo-worker-2", c.fullestDiskNode?.name)
+        val w = c.workloads.single()
+        assertEquals(CapacityRisk.DISK_NEAR, w.riskLevel)
+        assertTrue(w.atRisk)
+        assertEquals(1073741824.0, w.ephemeralRequest, 0.0)
+        assertEquals(2147483648.0, w.ephemeralLimit, 0.0)
+        assertEquals(6442450944.0, c.nPlusOne.shortEphemeral, 0.0)
+    }
+
+    @Test
+    fun anOlderCoreLeavesTheDiskFieldsEmpty() {
+        val c = TalosJson.decodeFromString(KubeCapacity.serializer(), capacityJson)
+        assertFalse(c.diskMeasured)
+        assertFalse(c.diskForbidden)
+        assertEquals(0.0, c.totals.ephemeralFree, 0.0)
+        assertEquals(0f, c.totals.diskFreeFraction, 0f)
+        assertFalse(c.nodes[0].diskMeasured)
+        assertFalse(c.nodes[0].diskPressure)
+        assertFalse(c.nodes[0].diskLow)
+        assertEquals(0f, c.nodes[0].diskUsedFraction, 0f)
+        assertNull(c.fullestDiskNode)
+        assertEquals(0.0, c.workloads[0].ephemeralRequest, 0.0)
+        assertEquals(0.0, c.nPlusOne.shortEphemeral, 0.0)
+    }
 }

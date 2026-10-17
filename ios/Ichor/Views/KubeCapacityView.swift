@@ -112,12 +112,21 @@ private struct CapacityHeader: View {
         let t = capacity.totals
         let n1 = capacity.nPlusOne
         VStack(alignment: .leading, spacing: 6) {
-            StatusPill(label: n1.ok ? CapacityText.capacityNPlusOneOk : CapacityText.capacityNPlusOneShort(n1.node, "\(n1.pendingPods)"),
-                       color: n1.ok ? .statusOK : .statusWarn)
+            StatusPill(label: nPlusOneLabel(n1), color: n1.ok ? .statusOK : .statusWarn)
             Text(verbatim: CapacityText.capacityFreeCpu(formatCPU(t.cpuFree), formatCPU(t.cpuAllocatable)))
             Text(verbatim: CapacityText.capacityFreeMemory(formatBytes(Int64(t.memoryFree)), formatBytes(Int64(t.memoryAllocatable))))
             Text(verbatim: CapacityText.capacityFreePods("\(t.podsFree)", "\(t.podCapacity)"))
+            // No allocatable ephemeral storage reported (old kubelets, some managed clusters): unknown, not full.
+            if t.ephemeralAllocatable > 0 {
+                Text(verbatim: CapacityText.capacityFreeEphemeral(formatBytes(Int64(t.ephemeralFree)), formatBytes(Int64(t.ephemeralAllocatable))))
+            }
+            if capacity.diskMeasured, let fullest = capacity.fullestDiskNode {
+                Text(verbatim: CapacityText.capacityDiskFullest(formatBytes(Int64(fullest.diskAvailable)), fullest.name))
+            }
             Group {
+                if !capacity.diskMeasured || capacity.fullestDiskNode == nil {
+                    Text(verbatim: capacity.diskForbidden ? CapacityText.capacityDiskForbidden : CapacityText.capacityDiskUnmeasured)
+                }
                 if capacity.metricsForbidden {
                     Text(verbatim: CapacityText.capacityMetricsForbidden)
                 } else if !capacity.metricsAvailable {
@@ -134,6 +143,13 @@ private struct CapacityHeader: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private func nPlusOneLabel(_ n1: NPlusOne) -> String {
+        if n1.ok { return CapacityText.capacityNPlusOneOk }
+        return n1.shortEphemeral > 0
+            ? CapacityText.capacityNPlusOneShortDisk(n1.node, "\(n1.pendingPods)")
+            : CapacityText.capacityNPlusOneShort(n1.node, "\(n1.pendingPods)")
     }
 }
 
@@ -154,6 +170,11 @@ private struct CapacityNodeRow: View {
                     Spacer()
                     ForEach(node.roles, id: \.self) { Tag($0) }
                     if node.overcommitted { Tag(CapacityText.capacityOvercommitted, color: Color.statusBad) }
+                    if node.diskPressure {
+                        Tag(CapacityText.capacityNodeDiskPressure, color: Color.statusBad)
+                    } else if node.diskLow {
+                        Tag(CapacityText.capacityNodeDiskLow, color: Color.statusWarn)
+                    }
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     bar(CapacityText.capacityRequests, fraction: node.memoryPercent / 100, value: "\(requests)%")
@@ -165,6 +186,10 @@ private struct CapacityNodeRow: View {
                     : CapacityText.capacityNodeBarsNoUsage(node.name, "\(requests)")))
                 Text(verbatim: CapacityText.capacityNodeFree(formatCPU(node.cpuFree), formatBytes(Int64(node.memoryFree)), "\(node.podsFree)"))
                     .font(.caption).foregroundStyle(.secondary)
+                if node.diskKnown {
+                    Text(verbatim: CapacityText.capacityNodeDisk(formatBytes(Int64(node.diskAvailable)), formatBytes(Int64(node.diskCapacity))))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
             }
             .padding(.vertical, 2)
             .contentShape(Rectangle())
@@ -194,7 +219,7 @@ private struct CapacityWorkloadRow: View {
         let w = workload
         VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: "\(w.kind) \(w.namespace)/\(w.name)").font(.callout.monospaced()).lineLimit(2).truncationMode(.middle)
-            Text(verbatim: CapacityText.capacityWorkloadLine("\(w.replicas)", formatCPU(w.cpuRequest), formatBytes(Int64(w.memoryRequest))))
+            Text(verbatim: requestLine)
                 .font(.caption).foregroundStyle(.secondary)
             ChipFlow {
                 if w.noPriorityClass {
@@ -213,6 +238,14 @@ private struct CapacityWorkloadRow: View {
         .padding(.vertical, 2)
         .accessibilityElement(children: .combine)
     }
+
+    /// What one replica asks; its ephemeral storage only when it asks for some.
+    private var requestLine: String {
+        let w = workload
+        let line = CapacityText.capacityWorkloadLine("\(w.replicas)", formatCPU(w.cpuRequest), formatBytes(Int64(w.memoryRequest)))
+        guard w.ephemeralRequest > 0 else { return line }
+        return "\(line), \(CapacityText.capacityWorkloadEphemeral(formatBytes(Int64(w.ephemeralRequest))))"
+    }
 }
 
 extension CapacityWorkload {
@@ -220,6 +253,7 @@ extension CapacityWorkload {
     var riskText: String {
         switch risk {
         case .oom: oomKills > 0 ? CapacityText.capacityRiskOomKills("\(oomKills)") : CapacityText.capacityRiskOomNear
+        case .diskNear: CapacityText.capacityRiskDiskNear
         case .evictFirst: CapacityText.capacityRiskEvictFirst
         case .unbounded: CapacityText.capacityRiskUnbounded
         case .ok: CapacityText.capacityRiskOk
@@ -231,7 +265,7 @@ extension CapacityRisk {
     var color: Color {
         switch self {
         case .oom: .statusBad
-        case .evictFirst, .unbounded: .statusWarn
+        case .diskNear, .evictFirst, .unbounded: .statusWarn
         case .ok: .statusOK
         }
     }

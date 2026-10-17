@@ -122,4 +122,60 @@ final class KubeCapacityTests: XCTestCase {
         XCTAssertEqual(plan.suggestions[1].scaleResource?.resource, "statefulsets")
         XCTAssertNil(plan.suggestions[2].scaleResource)
     }
+
+    // The ephemeral storage and disk fields of Go KubeCapacity, trimmed.
+    private let diskJSON = #"""
+    {"diskMeasured":true,"diskForbidden":false,
+     "totals":{"ephemeralAllocatable":1000,"ephemeralRequests":250,"diskCapacity":2000,"diskAvailable":500,"diskMeasuredNodes":2},
+     "nodes":[
+       {"name":"demo-worker-1","ready":true,"ephemeralAllocatable":600,"ephemeralRequests":100,"ephemeralFree":500,
+        "diskMeasured":true,"diskCapacity":1000,"diskAvailable":400,"imageFsCapacity":1000,"imageFsAvailable":400},
+       {"name":"demo-worker-2","ready":true,"diskPressure":true,"diskMeasured":true,"diskCapacity":1000,"diskAvailable":100},
+       {"name":"demo-cp-1","ready":true,"diskMeasured":false}],
+     "workloads":[{"kind":"Deployment","namespace":"demo","name":"report-cache","risk":"diskNear",
+       "ephemeralRequest":64,"ephemeralLimit":128,"ephemeralUsage":120}],
+     "nPlusOne":{"ok":false,"node":"demo-worker-1","pendingPods":2,"shortEphemeral":4096}}
+    """#
+
+    func testDecodesEphemeralStorageAndDisk() throws {
+        let c = try JSONDecoder().decode(KubeCapacity.self, from: Data(diskJSON.utf8))
+        XCTAssertTrue(c.diskMeasured)
+        XCTAssertFalse(c.diskForbidden)
+        XCTAssertEqual(c.totals.ephemeralFree, 750, accuracy: 1e-9)
+        XCTAssertEqual(c.totals.diskFreeFraction, 0.25, accuracy: 1e-9)
+        XCTAssertEqual(c.totals.diskMeasuredNodes, 2)
+        XCTAssertEqual(c.nodes[0].ephemeralFree, 500)
+        XCTAssertEqual(c.nodes[0].imageFsAvailable, 400)
+        XCTAssertEqual(c.nodes[0].diskUsedFraction, 0.6, accuracy: 1e-9)
+        XCTAssertFalse(c.nodes[0].diskLow)
+        XCTAssertTrue(c.nodes[1].diskPressure)
+        XCTAssertEqual(c.nodes[1].diskUsedFraction, 0.9, accuracy: 1e-9)
+        XCTAssertTrue(c.nodes[1].diskLow)
+        // An unmeasured node is neither low nor used, and never the fullest.
+        XCTAssertFalse(c.nodes[2].diskLow)
+        XCTAssertEqual(c.nodes[2].diskUsedFraction, 0)
+        XCTAssertEqual(c.fullestDiskNode?.name, "demo-worker-2")
+        XCTAssertEqual(c.workloads[0].risk, .diskNear)
+        XCTAssertTrue(c.workloads[0].atRisk)
+        XCTAssertEqual(c.workloads[0].ephemeralRequest, 64)
+        XCTAssertEqual(c.workloads[0].ephemeralLimit, 128)
+        XCTAssertEqual(c.workloads[0].ephemeralUsage, 120)
+        XCTAssertEqual(c.nPlusOne.shortEphemeral, 4096)
+    }
+
+    func testAnOlderAnswerWithoutDiskFieldsDecodes() throws {
+        let c = try capacity()
+        XCTAssertFalse(c.diskMeasured)
+        XCTAssertFalse(c.diskForbidden)
+        XCTAssertEqual(c.totals.ephemeralFree, 0)
+        XCTAssertEqual(c.totals.diskFreeFraction, 0)
+        XCTAssertEqual(c.totals.diskMeasuredNodes, 0)
+        XCTAssertFalse(c.nodes[0].diskMeasured)
+        XCTAssertFalse(c.nodes[0].diskPressure)
+        XCTAssertEqual(c.nodes[0].ephemeralAllocatable, 0)
+        XCTAssertEqual(c.nodes[0].diskUsedFraction, 0)
+        XCTAssertNil(c.fullestDiskNode)
+        XCTAssertEqual(c.workloads[1].ephemeralRequest, 0)
+        XCTAssertEqual(c.nPlusOne.shortEphemeral, 0)
+    }
 }

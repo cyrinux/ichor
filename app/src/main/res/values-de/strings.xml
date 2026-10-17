@@ -4736,6 +4736,16 @@
     <string name="capacity_risk_evict_first">wird bei Knotendruck zuerst verdrängt (BestEffort)</string>
     <string name="capacity_risk_unbounded">kein Speicherlimit (Burstable)</string>
     <string name="capacity_risk_ok">begrenzt</string>
+    <string name="capacity_free_ephemeral">%1$s flüchtiger Speicher frei von %2$s</string>
+    <string name="capacity_disk_fullest">Festplatte: %1$s frei auf %2$s, dem vollsten Node</string>
+    <string name="capacity_disk_unmeasured">Freier Festplattenplatz nicht verfügbar: die Kubelets haben nicht geantwortet.</string>
+    <string name="capacity_disk_forbidden">Freier Festplattenplatz nicht verfügbar: diese Zugangsdaten dürfen nodes/proxy nicht lesen.</string>
+    <string name="capacity_node_disk">Festplatte: %1$s frei von %2$s</string>
+    <string name="capacity_node_disk_pressure">DiskPressure</string>
+    <string name="capacity_node_disk_low">Festplatte unter 15 Prozent frei</string>
+    <string name="capacity_n_plus_one_short_disk">Der Verlust von %1$s lässt %2$s Pods Pending, es fehlt flüchtiger Speicher</string>
+    <string name="capacity_workload_ephemeral">fordert %1$s flüchtigen Speicher</string>
+    <string name="capacity_risk_disk_near">nahe am Limit für flüchtigen Speicher, darüber verdrängt</string>
     <string name="capacity_loss_loading">Simuliere…</string>
     <string name="capacity_loss_title">Wenn %1$s ausfällt</string>
     <string name="capacity_loss_title_multi">Wenn %1$s ausfallen</string>

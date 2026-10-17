@@ -4749,6 +4749,16 @@
     <string name="capacity_risk_evict_first">evicted first under node pressure (BestEffort)</string>
     <string name="capacity_risk_unbounded">no memory limit (Burstable)</string>
     <string name="capacity_risk_ok">bounded</string>
+    <string name="capacity_free_ephemeral">%1$s ephemeral storage free of %2$s</string>
+    <string name="capacity_disk_fullest">Disk: %1$s free on %2$s, the fullest node</string>
+    <string name="capacity_disk_unmeasured">Disk free space unavailable: the kubelets did not answer.</string>
+    <string name="capacity_disk_forbidden">Disk free space unavailable: these credentials may not read nodes/proxy.</string>
+    <string name="capacity_node_disk">Disk: %1$s free of %2$s</string>
+    <string name="capacity_node_disk_pressure">DiskPressure</string>
+    <string name="capacity_node_disk_low">disk under 15 percent free</string>
+    <string name="capacity_n_plus_one_short_disk">Losing %1$s leaves %2$s pods Pending, short of ephemeral storage</string>
+    <string name="capacity_workload_ephemeral">asks %1$s ephemeral storage</string>
+    <string name="capacity_risk_disk_near">near its ephemeral storage limit, evicted when over it</string>
     <string name="capacity_loss_loading">Simulating…</string>
     <string name="capacity_loss_title">If %1$s goes down</string>
     <string name="capacity_loss_title_multi">If %1$s go down</string>

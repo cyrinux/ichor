@@ -4744,6 +4744,16 @@
     <string name="capacity_risk_evict_first">évincé en premier sous pression du nœud (BestEffort)</string>
     <string name="capacity_risk_unbounded">pas de limite mémoire (Burstable)</string>
     <string name="capacity_risk_ok">borné</string>
+    <string name="capacity_free_ephemeral">%1$s de stockage éphémère libres sur %2$s</string>
+    <string name="capacity_disk_fullest">Disque : %1$s libres sur %2$s, le nœud le plus plein</string>
+    <string name="capacity_disk_unmeasured">Espace disque libre indisponible : les kubelets n\'ont pas répondu.</string>
+    <string name="capacity_disk_forbidden">Espace disque libre indisponible : ces identifiants ne peuvent pas lire nodes/proxy.</string>
+    <string name="capacity_node_disk">Disque : %1$s libres sur %2$s</string>
+    <string name="capacity_node_disk_pressure">DiskPressure</string>
+    <string name="capacity_node_disk_low">disque à moins de 15 pour cent libre</string>
+    <string name="capacity_n_plus_one_short_disk">Perdre %1$s laisse %2$s pods Pending, faute de stockage éphémère</string>
+    <string name="capacity_workload_ephemeral">demande %1$s de stockage éphémère</string>
+    <string name="capacity_risk_disk_near">proche de sa limite de stockage éphémère, évincé au-delà</string>
     <string name="capacity_loss_loading">Simulation…</string>
     <string name="capacity_loss_title">Si %1$s tombe</string>
     <string name="capacity_loss_title_multi">Si %1$s tombent</string>

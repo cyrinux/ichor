@@ -87,13 +87,22 @@ type storageClassObject struct {
 	VolumeBindingMode string    `json:"volumeBindingMode"`
 }
 
-// kubeletSummary is the part of a kubelet's stats/summary about volumes.
+// kubeletSummary is the part of a kubelet's stats/summary about volumes and the node's disk.
 type kubeletSummary struct {
+	Node struct {
+		Fs      kubeletFsStats `json:"fs"`
+		Runtime struct {
+			ImageFs kubeletFsStats `json:"imageFs"`
+		} `json:"runtime"`
+	} `json:"node"`
 	Pods []struct {
 		PodRef struct {
 			Name      string `json:"name"`
 			Namespace string `json:"namespace"`
 		} `json:"podRef"`
+		EphemeralStorage struct {
+			UsedBytes float64 `json:"usedBytes"`
+		} `json:"ephemeral-storage"`
 		Volumes []struct {
 			PVCRef *struct {
 				Name      string `json:"name"`
@@ -105,6 +114,20 @@ type kubeletSummary struct {
 			InodesUsed    float64 `json:"inodesUsed"`
 		} `json:"volume"`
 	} `json:"pods"`
+}
+
+// kubeletFsStats is a filesystem as the kubelet sees it, in bytes.
+type kubeletFsStats struct {
+	AvailableBytes float64 `json:"availableBytes"`
+	CapacityBytes  float64 `json:"capacityBytes"`
+	UsedBytes      float64 `json:"usedBytes"`
+}
+
+// kubeletRead is what one ready node's kubelet answered; err is set when it did not.
+type kubeletRead struct {
+	node    string
+	summary kubeletSummary
+	err     error
 }
 
 // volumeUse is how full a claim's volume is, as the kubelet of the node mounting it says.
@@ -151,27 +174,13 @@ func checkupStorage(ctx context.Context, k *kubeClient, in checkupInput) (checku
 // readVolumeUse asks every ready node's kubelet for its volumes' fill level, keyed
 // "namespace/claim". A kubelet that does not answer leaves its volumes unmeasured.
 func readVolumeUse(ctx context.Context, k *kubeClient, nodes []checkNodeObject) map[string]volumeUse {
-	ready := slices.DeleteFunc(slices.Clone(nodes), func(n checkNodeObject) bool { return !kubeConditions(n.Status.Conditions).is("Ready") })
-	summaries := make([]kubeletSummary, len(ready))
-
 	// The slow step of a checkup on a large cluster: the progress counts the kubelets asked.
 	progress := readProgressFrom(ctx)
-	progress.count(checkStorage, 0, len(ready))
-
-	var asked atomic.Int64
-
-	forEachLimit(ready, kubeletStatsParallel, func(i int, n checkNodeObject) {
-		nodeCtx, cancel := context.WithTimeout(ctx, kubeletStatsTimeout)
-		defer cancel()
-		defer func() { progress.count(checkStorage, int(asked.Add(1)), len(ready)) }()
-
-		_ = k.get(nodeCtx, "/api/v1/nodes/"+url.PathEscape(n.Metadata.Name)+"/proxy/stats/summary", &summaries[i]) //nolint:errcheck // unmeasured
-	})
-
+	reads := readKubeletSummaries(ctx, k, nodes, func(asked, total int) { progress.count(checkStorage, asked, total) })
 	use := map[string]volumeUse{}
 
-	for i, s := range summaries {
-		for _, p := range s.Pods {
+	for _, r := range reads {
+		for _, p := range r.summary.Pods {
 			for _, v := range p.Volumes {
 				if v.PVCRef == nil || v.CapacityBytes <= 0 {
 					continue
@@ -180,13 +189,40 @@ func readVolumeUse(ctx context.Context, k *kubeClient, nodes []checkNodeObject) 
 				// A claim several pods mount reports the same numbers from each.
 				use[v.PVCRef.Namespace+"/"+v.PVCRef.Name] = volumeUse{
 					used: v.UsedBytes, capacity: v.CapacityBytes, inodes: v.Inodes, inodesUsed: v.InodesUsed,
-					pod: p.PodRef.Name, node: ready[i].Metadata.Name,
+					pod: p.PodRef.Name, node: r.node,
 				}
 			}
 		}
 	}
 
 	return use
+}
+
+// readKubeletSummaries asks every ready node's kubelet for its stats/summary,
+// kubeletStatsParallel at a time and kubeletStatsTimeout each: a kubelet that does not reply
+// only leaves its node unmeasured. asked, when set, hears how many were asked so far.
+func readKubeletSummaries(ctx context.Context, k *kubeClient, nodes []checkNodeObject, asked func(done, total int)) []kubeletRead {
+	ready := slices.DeleteFunc(slices.Clone(nodes), func(n checkNodeObject) bool { return !kubeConditions(n.Status.Conditions).is("Ready") })
+	reads := make([]kubeletRead, len(ready))
+
+	if asked == nil {
+		asked = func(int, int) {}
+	}
+
+	asked(0, len(ready))
+
+	var done atomic.Int64
+
+	forEachLimit(ready, kubeletStatsParallel, func(i int, n checkNodeObject) {
+		nodeCtx, cancel := context.WithTimeout(ctx, kubeletStatsTimeout)
+		defer cancel()
+		defer func() { asked(int(done.Add(1)), len(ready)) }()
+
+		reads[i].node = n.Metadata.Name
+		reads[i].err = k.get(nodeCtx, "/api/v1/nodes/"+url.PathEscape(n.Metadata.Name)+"/proxy/stats/summary", &reads[i].summary)
+	})
+
+	return reads
 }
 
 // volumeFindings maps the claims to volumes, fullest first, and finds those in trouble. A

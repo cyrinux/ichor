@@ -10,14 +10,18 @@ import (
 // qosRank orders the QoS classes from the first evicted.
 var qosRank = map[string]int{qosBestEffort: 0, qosBurstable: 1, qosGuaranteed: 2}
 
-// capacityNodes adds to each node its pods' limits, its usage (metrics-server) and its free room.
-func capacityNodes(nodes []checkupNode, pods []checkPod, top kubeTopNodes) []capacityNode {
+// capacityNodes is each node as the checkup maps it, with its pods' limits and ephemeral
+// requests, its usage (metrics-server) and its free room.
+func capacityNodes(objs []checkNodeObject, pods []checkPod, top kubeTopNodes) []capacityNode {
+	nodes := mapCheckupNodes(objs, pods)
+	ephemeral := nodeEphemerals(objs)
+
 	usage := map[string]kubeTopNode{}
 	for _, n := range top.Nodes {
 		usage[n.Name] = n
 	}
 
-	limits := map[string][2]float64{}
+	limits := map[string][3]float64{}
 
 	for _, p := range pods {
 		if p.Node == "" || !p.running() {
@@ -25,13 +29,16 @@ func capacityNodes(nodes []checkupNode, pods []checkPod, top kubeTopNodes) []cap
 		}
 
 		l := limits[p.Node]
-		limits[p.Node] = [2]float64{l[0] + p.CPULimit, l[1] + p.MemoryLimit}
+		limits[p.Node] = [3]float64{l[0] + p.CPULimit, l[1] + p.MemoryLimit, l[2] + p.Ephemeral}
 	}
 
 	out := make([]capacityNode, 0, len(nodes))
 
 	for _, n := range nodes {
+		e := ephemeral[n.Name]
 		c := capacityNode{
+			EphemeralAllocatable: e.allocatable, EphemeralRequests: limits[n.Name][2],
+			EphemeralFree: max(0, e.allocatable-limits[n.Name][2]), DiskPressure: e.pressure,
 			checkupNode: n,
 			CPULimits:   limits[n.Name][0], MemoryLimits: limits[n.Name][1],
 			CPUUsage: usage[n.Name].CPU, MemoryUsage: usage[n.Name].Memory,
@@ -60,6 +67,14 @@ func capacityTotalsOf(nodes []capacityNode) capacityTotals {
 		t.MemoryUsage += n.MemoryUsage
 		t.Pods += n.Pods
 		t.PodCapacity += n.PodCapacity
+		t.EphemeralAllocatable += n.EphemeralAllocatable
+		t.EphemeralRequests += n.EphemeralRequests
+
+		if n.DiskMeasured {
+			t.DiskCapacity += n.DiskCapacity
+			t.DiskAvailable += n.DiskAvailable
+			t.DiskMeasuredNodes++
+		}
 
 		if n.schedulable() {
 			t.SchedulableNodes++
@@ -73,8 +88,8 @@ func capacityTotalsOf(nodes []capacityNode) capacityTotals {
 type workloadAcc struct {
 	capacityWorkload
 
-	cpuUnbounded, memoryUnbounded, nearLimit bool
-	labels                                   labelSet
+	cpuUnbounded, memoryUnbounded, ephemeralUnbounded, nearLimit, diskNear bool
+	labels                                                                 labelSet
 }
 
 // podWorkload is the controller a pod belongs to: a ReplicaSet's Deployment (through sets),
@@ -109,8 +124,9 @@ func controllerOwners(sets []capacityReplicaSet) map[string]string {
 	return out
 }
 
-// capacityWorkloads groups the running pods by controller, what goes first first.
-func capacityWorkloads(pods []checkPod, sets []capacityReplicaSet, pdbs []pdbObject, usage map[string]kubeTopPod, nodes []capacityNode) []capacityWorkload {
+// capacityWorkloads groups the running pods by controller, what goes first first. usage and
+// ephemeralUse are keyed "namespace/pod".
+func capacityWorkloads(pods []checkPod, sets []capacityReplicaSet, pdbs []pdbObject, usage map[string]kubeTopPod, ephemeralUse map[string]float64, nodes []capacityNode) []capacityWorkload {
 	owners := controllerOwners(sets)
 	index := map[string]*workloadAcc{}
 
@@ -135,7 +151,7 @@ func capacityWorkloads(pods []checkPod, sets []capacityReplicaSet, pdbs []pdbObj
 			order = append(order, w)
 		}
 
-		addPod(w, p, usage[p.Namespace+"/"+p.Name])
+		addPod(w, p, usage[p.Namespace+"/"+p.Name], ephemeralUse[p.Namespace+"/"+p.Name])
 	}
 
 	out := make([]capacityWorkload, 0, len(order))
@@ -176,8 +192,17 @@ func cmpBool(a, b bool) int {
 	}
 }
 
-func addPod(w *workloadAcc, p checkPod, use kubeTopPod) {
+func addPod(w *workloadAcc, p checkPod, use kubeTopPod, ephemeralUse float64) {
 	w.Replicas++
+	w.EphemeralRequest = max(w.EphemeralRequest, p.Ephemeral)
+	w.EphemeralLimit = max(w.EphemeralLimit, p.EphemeralLimit)
+	w.ephemeralUnbounded = w.ephemeralUnbounded || p.EphemeralLimit == 0
+	w.EphemeralUsage += ephemeralUse
+
+	if p.EphemeralLimit > 0 && percentOf(ephemeralUse, p.EphemeralLimit) >= diskNearPercent {
+		w.diskNear = true
+	}
+
 	w.CPURequest = max(w.CPURequest, p.CPU)
 	w.MemoryRequest = max(w.MemoryRequest, p.Memory)
 	w.CPULimit = max(w.CPULimit, p.CPULimit)
@@ -209,6 +234,10 @@ func finishWorkload(w *workloadAcc, pdbs []pdbObject, nodes []capacityNode) {
 		w.MemoryLimit = 0
 	}
 
+	if w.ephemeralUnbounded {
+		w.EphemeralLimit = 0
+	}
+
 	for _, b := range pdbs {
 		if b.Metadata.Namespace == w.Namespace && b.Spec.Selector != nil && b.Spec.Selector.matches(w.labels) {
 			w.PDB, w.PDBAllowed = b.Metadata.Name, b.Status.DisruptionsAllowed
@@ -220,6 +249,8 @@ func finishWorkload(w *workloadAcc, pdbs []pdbObject, nodes []capacityNode) {
 	switch {
 	case w.OOMKills > 0 || w.nearLimit:
 		w.Risk = riskOOM
+	case w.diskNear:
+		w.Risk = riskDiskNear
 	case w.QoS == qosBestEffort:
 		w.Risk = riskEvictFirst
 	case w.QoS == qosBurstable && w.MemoryLimit == 0:
@@ -235,11 +266,13 @@ func finishWorkload(w *workloadAcc, pdbs []pdbObject, nodes []capacityNode) {
 		return
 	}
 
-	w.MoreFit = moreFit(w.CPURequest, w.MemoryRequest, nodes)
+	w.MoreFit = moreFit(w.CPURequest, w.MemoryRequest, w.EphemeralRequest, nodes)
 }
 
-// moreFit is how many more pods asking cpu and memory fit on the schedulable nodes' free room.
-func moreFit(cpu, memory float64, nodes []capacityNode) int {
+// moreFit is how many more pods asking cpu, memory and ephemeral storage fit on the
+// schedulable nodes' free room. A node that does not say its ephemeral storage is not
+// limited by it.
+func moreFit(cpu, memory, ephemeral float64, nodes []capacityNode) int {
 	total := 0
 
 	for _, n := range nodes {
@@ -255,6 +288,8 @@ func moreFit(cpu, memory float64, nodes []capacityNode) int {
 		if memory > 0 {
 			fit = min(fit, int(math.Floor(n.MemoryFree/memory)))
 		}
+
+		fit = min(fit, ephemeralFits(ephemeral, n.EphemeralFree, n.EphemeralAllocatable))
 
 		total += max(0, fit)
 	}
@@ -293,6 +328,7 @@ func nPlusOne(nodes []capacityNode, pods []checkPod) capacityNPlusOne {
 				verdict.PendingPods++
 				verdict.ShortCPU += p.CPU
 				verdict.ShortMemory += p.Memory
+				verdict.ShortEphemeral += p.Ephemeral
 			}
 		}
 
@@ -304,14 +340,16 @@ func nPlusOne(nodes []capacityNode, pods []checkPod) capacityNPlusOne {
 	return capacityNPlusOne{OK: true}
 }
 
-// place puts p on the first node of room with enough free CPU, memory and pod slots.
+// place puts p on the first node of room with enough free CPU, memory, ephemeral storage
+// (when the node says) and pod slots.
 func place(room []capacityNode, p checkPod) bool {
 	for j := range room {
 		n := &room[j]
-		if n.PodsFree > 0 && n.CPUFree >= p.CPU && n.MemoryFree >= p.Memory {
+		if n.PodsFree > 0 && n.CPUFree >= p.CPU && n.MemoryFree >= p.Memory && ephemeralFits(p.Ephemeral, n.EphemeralFree, n.EphemeralAllocatable) >= 1 {
 			n.PodsFree--
 			n.CPUFree -= p.CPU
 			n.MemoryFree -= p.Memory
+			n.EphemeralFree -= p.Ephemeral
 
 			return true
 		}
