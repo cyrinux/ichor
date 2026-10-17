@@ -13,6 +13,8 @@ enum class KubeAction(val wire: String) {
     SCALE("scale"),
     SCALE_STATEFUL_SET("scaleStatefulSet"),
     DELETE_POD("deletePod"),
+    /** List and delete a namespace's dead pods at once (k9s sanitize). */
+    SANITIZE_PODS("sanitizePods"),
     EXEC_POD("execPod"),
     DEBUG_POD("debugPod"),
     DEBUG_NODE("debugNode"),

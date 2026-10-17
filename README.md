@@ -36,7 +36,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   old and new pods (`kubectl rollout status`); list pods with their
   `kubectl get pods` status (a pod that cannot pull its image says why: not found, pull limit,
   pull secret, certificate, network, and what to do) and delete one so its controller starts a new one, or only those of
-  a node or of a workload (`--field-selector spec.nodeName=`, the workload's selector); list CronJobs
+  a node or of a workload (`--field-selector spec.nodeName=`, the workload's selector), or clean up a
+  namespace's dead pods in one tap (Completed, Evicted, CrashLoopBackOff, ImagePullBackOff…, as k9s's `z`
+  picks them, with a preview to uncheck any first); list CronJobs
   with their schedule, next run and recent runs, and run one now (`kubectl create job --from`,
   with an icon and a title of your choice, see [CronJobs](#cronjobs)); measure the
   network between two nodes (TCP throughput and latency, see [Network test](#network-test));
@@ -233,6 +235,7 @@ reads those roles and explains up front when a feature needs more.
 | **Cluster health check** | `ClusterService/HealthCheck` | **`os:admin`** |
 | **Kubeconfig export** | `Kubeconfig` | **`os:admin`** |
 | **Kubernetes workloads and pods, rollout restart, pod delete** | `Kubeconfig`, then the Kubernetes API | **`os:admin`** |
+| **Clean up dead pods (k9s sanitize)** | `Kubeconfig`, then the Kubernetes API (`list` and `delete` on pods in the namespace) | **`os:admin`** |
 | **Kubernetes CronJobs, run now** | `Kubeconfig`, then the Kubernetes API (cronjobs, jobs) | **`os:admin`** |
 | **CSI snapshots, snapshot creation and backup CronJob health** | `Kubeconfig`, then the Kubernetes API (volumesnapshots, volumesnapshotcontents, volumesnapshotclasses, PVCs, storageclasses, cronjobs, jobs) | **`os:admin`** |
 | **CloudNativePG replica promotion** | `Kubeconfig`, then the Kubernetes API (clusters/status, pods and optional pods/proxy for lag) | **`os:admin`** |

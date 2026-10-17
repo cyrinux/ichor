@@ -29,6 +29,8 @@ import name.levis.ichor.model.KubeRevisionList
 import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.KubeRouteList
+import name.levis.ichor.model.KubeSanitizePreview
+import name.levis.ichor.model.KubeSanitizeResult
 import name.levis.ichor.model.KubeWatchEvent
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.KubeWorkloadList
@@ -320,6 +322,16 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
 
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
     suspend fun deletePod(pod: KubePod) = go.kube { cfg, ctx, server -> Ichorgo.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
+
+    /** The dead or stuck pods of [namespace] ("" every namespace) a k9s-style sanitize would delete; not cached. */
+    suspend fun sanitizePreview(namespace: String): KubeSanitizePreview = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeSanitizePreview.serializer(), Ichorgo.kubeSanitizePreview(cfg, ctx, server, namespace))
+    }
+
+    /** Deletes the pods [names] (newline-separated "namespace/name" from the preview) of [namespace]; refused in the demo. */
+    suspend fun sanitize(namespace: String, names: String): KubeSanitizeResult = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeSanitizeResult.serializer(), Ichorgo.kubeSanitize(cfg, ctx, server, namespace, names))
+    }
 
     /** Deletes an `ichor-netperf-*` namespace a network test left behind (os:admin); the core refuses any other. */
     suspend fun deleteNetPerfNamespace(name: String) = go.kube { cfg, ctx, server -> Ichorgo.netPerfDeleteNamespace(cfg, ctx, server, name) }

@@ -5331,4 +5331,26 @@
     <string name="sa_help_copy_yaml">Copiar YAML</string>
     <string name="panes_pick_node">Elige un nodo para ver sus detalles</string>
     <string name="panes_pick_app">Elige una aplicación para ver sus detalles</string>
+    <string name="sanitize_title">Limpiar pods muertos</string>
+    <string name="sanitize_subtitle_namespace">Pods terminados o atascados en %1$s, elegidos como lo hace k9s sanitize</string>
+    <string name="sanitize_subtitle_all">Pods terminados o atascados en todos los namespaces, elegidos como lo hace k9s sanitize</string>
+    <string name="sanitize_empty">Nada que limpiar</string>
+    <string name="sanitize_truncated">Más pods que una página: solo se revisó la primera. Elige un namespace para ver el resto.</string>
+    <string name="sanitize_group">%1$s · %2$d</string>
+    <string name="sanitize_age">Edad %1$s</string>
+    <string name="sanitize_recreated_by">lo recrea %1$s %2$s</string>
+    <string name="sanitize_fresh_pending">Pending desde hace menos de 2 minutos: puede que aún se esté programando, sin marcar</string>
+    <string name="sanitize_confirm_text">Los pods que posee un controlador vuelven como pods nuevos; los demás desaparecen para siempre.</string>
+    <plurals name="sanitize_delete">
+        <item quantity="one">Eliminar %1$d pod</item>
+        <item quantity="other">Eliminar %1$d pods</item>
+    </plurals>
+    <plurals name="sanitize_confirm_title">
+        <item quantity="one">¿Eliminar %1$d pod?</item>
+        <item quantity="other">¿Eliminar %1$d pods?</item>
+    </plurals>
+    <plurals name="sanitize_done">
+        <item quantity="one">%1$d pod eliminado</item>
+        <item quantity="other">%1$d pods eliminados</item>
+    </plurals>
 </resources>

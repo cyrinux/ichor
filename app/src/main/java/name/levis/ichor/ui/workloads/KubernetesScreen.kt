@@ -122,6 +122,9 @@ fun KubernetesScreen(
     var customizing by rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = customizing) { customizing = false }
     val share = rememberShareLink()
+    // The pods tab's "Clean up dead pods", for the namespace listed.
+    var sanitizing by rememberSaveable { mutableStateOf(false) }
+    if (sanitizing) SanitizeSheet(scope.scope.namespace, app.kubeRepository, onSwept = { pods.refresh() }, onDismiss = { sanitizing = false })
 
     if (editing && fingerprint != null) {
         KubeServerDialog(
@@ -167,6 +170,7 @@ fun KubernetesScreen(
                                 KubernetesAction.POLICIES -> onPolicies()
                                 KubernetesAction.AUTOSCALING -> onAutoscaling()
                                 KubernetesAction.VIRTUAL_MACHINES -> onVirtualMachines()
+                                KubernetesAction.CLEAN_UP_PODS -> sanitizing = true
                             }
                         },
                         customizeLabel = stringResource(R.string.bar_edit_title),
@@ -176,6 +180,7 @@ fun KubernetesScreen(
                                 KubernetesAction.SHARE -> tab < ShareTarget.KUBE_TABS.size
                                 KubernetesAction.FLOWS -> hasFlows
                                 KubernetesAction.API_ADDRESS -> fingerprint != null
+                                KubernetesAction.CLEAN_UP_PODS -> tab == 1
                                 else -> true
                             }
                         },
