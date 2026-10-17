@@ -27,7 +27,8 @@ struct NodesView: View {
         AdaptiveListDetail(selection: $selected, placeholder: "Pick a node to see its details", systemImage: "server.rack") {
             nodeList
         } detail: { ref in
-            NodeDetailView(ref: ref)
+            // After a power action, back to the placeholder: dismiss would close the whole screen.
+            NodeDetailView(ref: ref, onDone: { selected = nil })
         }
         .navigationTitle("Nodes")
         .navigationBarTitleDisplayMode(.inline)

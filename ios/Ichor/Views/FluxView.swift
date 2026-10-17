@@ -51,22 +51,31 @@ struct FluxView: View {
     @State private var succeeded = 0
     /// The object shown beside the list on an iPad (AdaptiveListDetail).
     @State private var picked: FluxAppRoute?
+    /// The list and the picked object are side by side (AdaptiveListDetail).
+    @State private var split = false
 
     private var store: FluxStore { .shared }
 
+    /// An object is shown beside the list: it polls and shares for itself.
+    private var showsPick: Bool { split && picked != nil }
+
     var body: some View {
-        AdaptiveListDetail(selection: $picked, placeholder: "Pick an application to see its details", systemImage: "arrow.triangle.branch") {
+        AdaptiveListDetail(selection: $picked, split: $split, placeholder: "Pick an application to see its details",
+                           systemImage: "arrow.triangle.branch") {
             list
         } detail: { app in
             FluxAppView(kind: app.kind, namespace: app.namespace, name: app.name, downNodes: app.downNodes)
         }
         .searchable(text: $query, prompt: Text("Name, namespace, path or URL"))
-        // An app pushed on top polls for itself.
-        .gitOpsPolling(key: model.fluxKey, paused: { covered }, shouldPoll: { store.shouldPoll(for: model.fluxKey) }, load: { await load() })
+        // An app pushed on top or shown beside polls for itself.
+        .gitOpsPolling(key: model.fluxKey, paused: { covered || showsPick }, shouldPoll: { store.shouldPoll(for: model.fluxKey) }, load: { await load() })
         // A new API address (set on the Kubernetes screen): read again through it.
         .id(model.client?.kubeServer)
         .navigationTitle(Text(verbatim: "Flux"))
-        .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.flux)) } }
+        // One Share at a time: the picked object's while one is shown beside the list.
+        .toolbar {
+            if !showsPick { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.flux)) } }
+        }
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: FluxAppRoute.self) {
             FluxAppView(kind: $0.kind, namespace: $0.namespace, name: $0.name, downNodes: $0.downNodes)

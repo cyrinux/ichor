@@ -53,24 +53,33 @@ struct ArgoCDView: View {
     @State private var succeeded = 0
     /// The app shown beside the list on an iPad (AdaptiveListDetail).
     @State private var picked: ArgoAppRoute?
+    /// The list and the picked app are side by side (AdaptiveListDetail).
+    @State private var split = false
 
     private var store: ArgoCDStore { .shared }
 
+    /// An app is shown beside the list: it polls and shares for itself.
+    private var showsPick: Bool { split && picked != nil }
+
     var body: some View {
-        AdaptiveListDetail(selection: $picked, placeholder: "Pick an application to see its details", systemImage: "arrow.triangle.branch") {
+        AdaptiveListDetail(selection: $picked, split: $split, placeholder: "Pick an application to see its details",
+                           systemImage: "arrow.triangle.branch") {
             list
         } detail: { app in
             ArgoAppView(namespace: app.namespace, name: app.name, downNodes: app.downNodes)
         }
         .searchable(text: $query, prompt: Text("Name, project, namespace or repo"))
-        // An app pushed on top polls for itself.
-        .gitOpsPolling(key: model.argoKey, paused: { covered }, shouldPoll: { store.shouldPoll(for: model.argoKey) }, load: { await load() })
+        // An app pushed on top or shown beside polls for itself.
+        .gitOpsPolling(key: model.argoKey, paused: { covered || showsPick }, shouldPoll: { store.shouldPoll(for: model.argoKey) }, load: { await load() })
         // An Application that changes reads the status again at once, without waiting for a poll.
         .task(id: "\(model.argoKey)|\(scenePhase == .active && !covered)") { await followChanges() }
         // A new API address (set on the Kubernetes screen): read again through it.
         .id(model.client?.kubeServer)
         .navigationTitle(Text(verbatim: "Argo CD"))
-        .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.argoCD)) } }
+        // One Share at a time: the picked app's while one is shown beside the list.
+        .toolbar {
+            if !showsPick { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.argoCD)) } }
+        }
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: ArgoAppRoute.self) { ArgoAppView(namespace: $0.namespace, name: $0.name, downNodes: $0.downNodes) }
         .navigationDestination(for: ArgoWindowsRoute.self) { _ in ArgoWindowsView() }

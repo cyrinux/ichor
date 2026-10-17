@@ -20,9 +20,13 @@ struct NodeDetailView: View {
     /// The cluster's history over `period` (uptime strip); nil without one.
     @State private var history: HistoryQueryResult?
     @State private var period = HistoryPeriod.week
+    /// Closes the hub after a power action when it is not a pushed screen (beside the nodes list
+    /// on an iPad, where dismiss would close the list too); nil: dismiss.
+    private let onDone: (() -> Void)?
 
-    init(ref: NodeRef, initialAction: PowerAction? = nil, initialCordon: Bool = false) {
+    init(ref: NodeRef, initialAction: PowerAction? = nil, initialCordon: Bool = false, onDone: (() -> Void)? = nil) {
         self.ref = ref
+        self.onDone = onDone
         _powerAction = State(initialValue: initialAction)
         _showingCordon = State(initialValue: initialCordon)
     }
@@ -84,7 +88,10 @@ struct NodeDetailView: View {
             }
         }
         .alert(resultMessage ?? "", isPresented: $resultMessage.isPresent()) {
-            Button("OK") { if succeeded { dismiss() } }
+            Button("OK") {
+                guard succeeded else { return }
+                if let onDone { onDone() } else { dismiss() }
+            }
         }
     }
 
