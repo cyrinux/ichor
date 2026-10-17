@@ -109,7 +109,7 @@ fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
 
 /**
  * A config too large for one QR code (a kubeconfig with an embedded client certificate)
- * fits once compressed: the scanner reads raw gzip in a binary code (see
+ * fits once compressed: the scanner reads raw gzip in a binary code (see QrPayload.kt and
  * go/ichorgo/qr_payload.go), and the importer expands an "ichor-config:" text payload too
  * (go/ichorgo/import_text.go). Works for a kubeconfig as well.
  */
