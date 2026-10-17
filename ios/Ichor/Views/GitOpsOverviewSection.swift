@@ -43,11 +43,13 @@ struct GitOpsOverviewSection<Status, Placeholder: View, Content: View>: View {
     }
 }
 
-/// The row's first line: the tool's icon, its name and how many apps it manages.
+/// The row's first line: the tool's icon, then the shared header: its name, how many apps it
+/// manages and, when some need a look, the one pill saying how many.
 struct GitOpsSectionHeader: View {
     let app: InventoryApp?
     let title: String
     let count: Int
+    var attention = 0
 
     var body: some View {
         HStack(spacing: 10) {
@@ -58,9 +60,14 @@ struct GitOpsSectionHeader: View {
                     .frame(width: 28, height: 28)
                     .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
             }
-            Text(verbatim: title).font(.headline)
-            Spacer()
-            Text("\(count) apps").font(.subheadline).foregroundStyle(.secondary).monospacedDigit()
+            SectionHeader(title: title, subtitle: String(localized: "\(count) apps"), pill: pill)
+                .font(.headline)
+        }
+    }
+
+    @ViewBuilder private var pill: some View {
+        if attention > 0 {
+            StatusPill(label: String(localized: "\(attention) need a look"), color: attentionColor)
         }
     }
 }

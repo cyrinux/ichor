@@ -1250,10 +1250,6 @@
         <item quantity="one">%d node drifting</item>
         <item quantity="other">%d nodes drifting</item>
     </plurals>
-    <plurals name="time_drift_unreachable_count">
-        <item quantity="one">%d unreachable</item>
-        <item quantity="other">%d unreachable</item>
-    </plurals>
     <string name="network_title">Network</string>
     <string name="network_tab_interfaces">Interfaces</string>
     <string name="network_tab_connections">Connections</string>
@@ -1821,6 +1817,7 @@
     <string name="local_network_allow">Allow local network access</string>
 
     <string name="insights_title">Cluster insights</string>
+    <string name="overview_action_insights">Insights</string>
     <string name="insights_drift">Configuration drift</string>
     <string name="insights_recorder">Incident recorder</string>
     <string name="insights_bottlenecks">Bottleneck metrics</string>
@@ -2050,6 +2047,10 @@
 
     <!-- Data services: Longhorn, Garage, CloudNativePG -->
     <string name="data_services_title">Data services</string>
+    <plurals name="overview_data_services_count">
+        <item quantity="one">%1$d system</item>
+        <item quantity="other">%1$d systems</item>
+    </plurals>
     <string name="data_services_unreadable">Could not read: %1$s</string>
     <string name="data_services_refresh">Refresh</string>
     <string name="data_services_filter_problems">Problems</string>

@@ -170,6 +170,9 @@ enum Route: Hashable {
     /// Log of one Kubernetes container (from the Pods tab).
     case containerLogs(node: String, hostname: String, container: LogContainer)
     case insights
+    /// Free room per node and N+1 (os:admin), from the Talos overview; the Kubernetes home and
+    /// the checkup open their own.
+    case capacity
     /// PromQL panels from the cluster's Prometheus, Mimir, Thanos or VictoriaMetrics.
     case metrics
     case supportBundle
@@ -308,6 +311,7 @@ struct MainNavigation: View {
                     case .containerLogs(let node, let hostname, let container):
                         LogsView(node: node, hostname: hostname, service: nil, container: container)
                     case .insights: InsightsView()
+                    case .capacity: KubeCapacityView()
                     case .metrics: MetricsView()
                     case .supportBundle: SupportBundleView()
                     case .integrations: IntegrationRequestView()

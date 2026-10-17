@@ -1332,12 +1332,6 @@
         <item quantity="many">%d вузлів із розбіжністю</item>
         <item quantity="other">%d вузла з розбіжністю</item>
     </plurals>
-    <plurals name="time_drift_unreachable_count">
-        <item quantity="one">%d недоступний</item>
-        <item quantity="few">%d недоступні</item>
-        <item quantity="many">%d недоступних</item>
-        <item quantity="other">%d недоступного</item>
-    </plurals>
     <string name="network_title">Мережа</string>
     <string name="network_tab_interfaces">Інтерфейси</string>
     <string name="network_tab_connections">З’єднання</string>
@@ -1930,6 +1924,7 @@
     <string name="local_network_allow">Дозволити доступ до локальної мережі</string>
 
     <string name="insights_title">Аналіз кластера</string>
+    <string name="overview_action_insights">Аналіз</string>
     <string name="insights_drift">Відхилення конфігурації</string>
     <string name="insights_recorder">Запис інцидентів</string>
     <string name="insights_bottlenecks">Показники вузьких місць</string>
@@ -2177,6 +2172,12 @@
 
     <!-- Data services: Longhorn, Garage, CloudNativePG -->
     <string name="data_services_title">Сервіси даних</string>
+    <plurals name="overview_data_services_count">
+        <item quantity="one">%1$d система</item>
+        <item quantity="few">%1$d системи</item>
+        <item quantity="many">%1$d систем</item>
+        <item quantity="other">%1$d системи</item>
+    </plurals>
     <string name="data_services_unreadable">Не вдалося прочитати: %1$s</string>
     <string name="data_services_refresh">Оновити</string>
     <string name="data_services_filter_problems">Проблеми</string>

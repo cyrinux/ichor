@@ -140,17 +140,23 @@ struct DataServicesSection: View {
         }
     }
 
+    /// The shared header with one pill, "3 need a look" (the worst state when no count says
+    /// it); the likely cause stays on the Data services screen, the nodes say which one is down.
     private func header(_ services: DataServices) -> some View {
+        SectionHeader(title: String(localized: "Data services"),
+                      subtitle: String(localized: "\(services.detected.count) systems"), pill: pill(services))
+            .font(.headline)
+            .padding(.vertical, 4)
+    }
+
+    @ViewBuilder private func pill(_ services: DataServices) -> some View {
         let worst = services.worst
-        return VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Data services").font(.headline)
-                Spacer()
-                if worst.needsAttention { StatusPill(label: worst.label, color: worst.color) }
-            }
-            LikelyCauseBanner(causes: services.likelyCauses(downNodes: downNodes))
+        let attention = services.detected.compactMap { services.summary($0)?.attention }.reduce(0, +)
+        if attention > 0 {
+            StatusPill(label: String(localized: "\(attention) need a look"), color: worst.color)
+        } else if worst.needsAttention {
+            StatusPill(label: worst.label, color: worst.color)
         }
-        .padding(.vertical, 4)
     }
 
     private func line(_ kind: DataServiceKind, text: String, health: ServiceHealth?) -> some View {
