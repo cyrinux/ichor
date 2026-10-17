@@ -14,9 +14,12 @@ data class NodeCounters(
     val memAvailable: Long = 0,
 )
 
-/** One sample of every node that answered. */
+/**
+ * One sample of the nodes asked that answered: [sampled] nodes asked of the cluster's [total]
+ * (0 from an older core: every node).
+ */
 @Serializable
-data class ClusterStatsSample(val at: Long, val nodes: List<NodeCounters> = emptyList())
+data class ClusterStatsSample(val at: Long, val nodes: List<NodeCounters> = emptyList(), val sampled: Int = 0, val total: Int = 0)
 
 /**
  * Samples further apart than this (the screen was left a while) do not make a CPU point: it

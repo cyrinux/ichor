@@ -34670,6 +34670,47 @@
         }
       }
     },
+    "Live: %lld of %lld nodes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live: %1$lld of %2$lld nodes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En direct : %1$lld nœuds sur %2$lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En directo: %1$lld de %2$lld nodos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наживо: %1$lld з %2$lld вузлів"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live: %1$lld von %2$lld Nodes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In diretta: %1$lld nodi su %2$lld"
+          }
+        }
+      }
+    },
     "%lld of %lld nodes done" : {
       "extractionState" : "manual",
       "localizations" : {

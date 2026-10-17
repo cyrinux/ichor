@@ -281,6 +281,9 @@ Notes:
 - **Health check:** the call itself is allowed for `os:reader`. Talos then runs the check with the
   caller's roles, and the Kubernetes checks need an admin kubeconfig. With a lower role, the
   overview and etcd screens give the same node and etcd picture.
+- **Live cluster usage:** above 24 nodes, each sample (`SystemStat`, `Memory`) asks only the nodes
+  with a problem and those on screen, and every node once a minute, the totals keeping each node's
+  last counters, so the summary card says "Live: N of M nodes" in between.
 - **Roles combine:** an `os:operator` config can do everything an `os:reader` one can.
 - **Kubernetes access:** see [Kubernetes clusters without Talos](#kubernetes-clusters-without-talos)
   to use your own kubeconfig identity instead of the admin kubeconfig (no `os:admin` needed).

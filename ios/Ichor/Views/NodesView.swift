@@ -30,6 +30,9 @@ struct NodesView: View {
                 Section {
                     ForEach(group.nodes) { node in
                         NodeListRow(node: node, sharedVersion: version, path: $path)
+                            // The rows on screen are in the live samples' focus set (large clusters).
+                            .onAppear { ClusterLiveStore.shared.showing(node.node) }
+                            .onDisappear { ClusterLiveStore.shared.hiding(node.node) }
                     }
                 } header: {
                     if groups.count > 1 { Text(verbatim: group.title) }
