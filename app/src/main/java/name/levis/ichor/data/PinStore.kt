@@ -26,6 +26,15 @@ class PinStore(private val prefs: SharedPreferences) {
         return true
     }
 
+    /** Replaces the pins of [cluster] (a restored backup's), checked by [Pins.parse]'s rules. */
+    fun replace(cluster: String, pins: List<Pin>) {
+        val next = Pins.parse(Pins.encode(pins))
+        prefs.edit().apply {
+            if (next.isEmpty()) remove(KEY_PREFIX + cluster) else putString(KEY_PREFIX + cluster, Pins.encode(next))
+        }.apply()
+        flow(cluster).value = next
+    }
+
     private fun flow(cluster: String): MutableStateFlow<List<Pin>> =
         flows.getOrPut(cluster) { MutableStateFlow(Pins.parse(prefs.getString(KEY_PREFIX + cluster, null))) }
 

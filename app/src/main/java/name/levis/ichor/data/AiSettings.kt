@@ -52,7 +52,8 @@ fun healthCheckNote(error: String): String = "The cluster health check failed: $
 /** Settings in preferences, API keys encrypted with a Keystore key, one [SecureStore] per provider. */
 class AiPreferences(
     private val prefs: SharedPreferences,
-    private val providerIds: List<String>,
+    /** The providers the Go core lists: a backup's others are dropped. */
+    val providerIds: List<String>,
     private val keyStore: (provider: String) -> SecureStore,
     private val scope: CoroutineScope,
 ) {

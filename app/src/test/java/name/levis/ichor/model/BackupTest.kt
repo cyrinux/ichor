@@ -83,25 +83,24 @@ class BackupTest {
 
         assertEquals(payload, TalosJson.decodeFromString(BackupPayload.serializer(), json))
         assertTrue("unset settings are left out", "\"privacyMask\"" !in json)
-        assertTrue("the Go core requires the format", "\"format\":1" in json)
+        assertTrue("the Go core requires the format", "\"format\":3" in json)
         assertTrue("iOS reads the same key", "\"remoteAppIcons\":true" in json)
     }
 
     @Test
-    fun formatTwoOnlyWithAKubeconfig() {
-        assertEquals(1, backupFormat(null))
-        assertEquals(1, backupFormat("  "))
-        assertEquals(2, backupFormat("apiVersion: v1\nkind: Config\n"))
+    fun newBackupsAreFormatThree() {
+        assertEquals(3, BACKUP_FORMAT)
+        assertEquals(3, BackupPayload().format)
     }
 
     @Test
     fun kubeconfigPayloadKeepsAnEmptyTalosconfig() {
         val kube = "apiVersion: v1\nkind: Config\n"
-        val payload = BackupPayload(format = backupFormat(kube), platform = "android", talosconfig = "", kubeconfig = kube)
+        val payload = BackupPayload(platform = "android", talosconfig = "", kubeconfig = kube)
 
         val json = TalosJson.encodeToString(BackupPayload.serializer(), payload)
 
-        assertTrue("\"format\":2" in json)
+        assertTrue("\"format\":3" in json)
         assertTrue("older apps require the field", "\"talosconfig\":\"\"" in json)
         assertEquals(payload, TalosJson.decodeFromString(BackupPayload.serializer(), json))
     }
@@ -110,7 +109,7 @@ class BackupTest {
     fun aTalosOnlyPayloadHasNoKubeconfigKey() {
         val json = TalosJson.encodeToString(BackupPayload.serializer(), BackupPayload(talosconfig = "context: lab\n"))
 
-        assertTrue("\"format\":1" in json)
+        assertTrue("\"format\":3" in json)
         assertTrue("\"kubeconfig\"" !in json)
         assertNull(TalosJson.decodeFromString(BackupPayload.serializer(), json).kubeconfig)
     }

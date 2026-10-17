@@ -11,15 +11,17 @@ import kotlinx.serialization.Serializable
  * so a backup moves between platforms; a setting one app does not have is left out (null)
  * and the restoring app keeps its current value.
  *
- * Not included: AI diagnosis settings and keys (a third-party service, enabled per device),
- * the app lock and screenshot settings (per-device security), and caches.
+ * Format 3 adds pins, Git hosts, AI settings, the screenshot setting, the storage thresholds
+ * and the app-lock mode (never its secret); API keys and Git tokens only in [secrets], when the
+ * user opts in. Not included: the lock secret and security-key data (device-bound), the audit
+ * log, and caches.
  */
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class BackupPayload(
     /**
      * The payload version, checked by the Go core; bump it for changes older apps cannot read.
-     * See [backupFormat]: 2 only when [kubeconfig] is there.
+     * Always [BACKUP_FORMAT] when written; 1 and 2 are still read.
      */
     @EncodeDefault val format: Int = BACKUP_FORMAT,
     val platform: String = "",
@@ -39,6 +41,14 @@ data class BackupPayload(
      * keeps them: the secrets the user entered, never this device's session tokens.
      */
     val kubeAuth: Map<String, String>? = null,
+    /** Real-scope pins by fingerprint (format 3), only of clusters in the backup. */
+    val pins: Map<String, List<Pin>>? = null,
+    /** Git hosts without their tokens (format 3). */
+    val gitHosts: List<BackupGitHost>? = null,
+    /** AI diagnosis settings without the keys (format 3). */
+    val ai: BackupAi? = null,
+    /** Only with "Include API keys and Git tokens"; otherwise absent from the JSON. */
+    val secrets: BackupSecrets? = null,
 )
 
 @Serializable
@@ -55,6 +65,12 @@ data class BackupSettings(
     val monitorAlerts: Boolean? = null,
     /** Android only (iOS schedules background checks itself). */
     val monitorIntervalMinutes: Long? = null,
+    /** The "Allow screenshots" switch (format 3). */
+    val allowScreenshots: Boolean? = null,
+    /** A [BackupLockMode]: restoring never turns a lock on, the app offers to set it up. */
+    val appLockMode: String? = null,
+    val storageWarnPercent: Int? = null,
+    val storageCriticalPercent: Int? = null,
 )
 
 @Serializable
@@ -74,17 +90,14 @@ data class BackupCluster(
 @Serializable
 data class BackupWolTarget(val mac: String, val broadcast: String = "", val port: Int = WOL_DEFAULT_PORT)
 
-const val BACKUP_FORMAT = 1
-
-/** The format that adds [BackupPayload.kubeconfig]. */
-const val BACKUP_FORMAT_KUBE = 2
-
 /**
- * The format of a backup holding [kubeconfig]: 2 only with a kubeconfig, so older apps keep
- * reading the backups they can restore whole, and refuse ("update the app") one whose
- * kubeconfig clusters they would silently drop.
+ * The format every new backup is written in: 3 adds pins, Git hosts, AI settings and the
+ * opt-in secrets. Older apps refuse it ("update the app") rather than silently drop them.
  */
-fun backupFormat(kubeconfig: String?): Int = if (kubeconfig.isNullOrBlank()) BACKUP_FORMAT else BACKUP_FORMAT_KUBE
+const val BACKUP_FORMAT = 3
+
+/** The format that added [BackupPayload.kubeconfig]. */
+const val BACKUP_FORMAT_KUBE = 2
 
 /** The per-cluster settings of this device, as a backup stores them (only clusters still in [fingerprints]). */
 fun backupClusters(
