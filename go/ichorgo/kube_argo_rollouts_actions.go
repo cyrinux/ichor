@@ -139,28 +139,36 @@ func argoRolloutPatches(r argoRolloutObject, action string) ([]argoRolloutPatch,
 		return nil, argoRolloutNothing("promote")
 	}
 
+	// The plugin's order: the status first, then the spec.
 	var out []argoRolloutPatch
-	if r.Spec.Paused {
-		out = append(out, unpause)
-	}
+
+	canary := r.Spec.Strategy.Canary
+	nextStep := func() int { return min(*st.CurrentStepIndex+1, len(canary.Steps)) }
 
 	switch {
 	case len(st.PauseConditions) > 0:
 		status := map[string]any{"pauseConditions": nil}
-		// An inconclusive analysis pauses the controller too.
+		// An inconclusive analysis pauses the controller too; the plugin also moves to the
+		// next step, or a pause step next would keep the rollout stuck.
 		if st.ControllerPause {
 			status["controllerPause"] = false
+			if canary != nil && st.CurrentStepIndex != nil {
+				status["currentStepIndex"] = nextStep()
+			}
 		}
 
 		out = append(out, argoRolloutPatch{status: true, body: map[string]any{"status": status}})
-	case r.Spec.Strategy.Canary != nil && st.CurrentStepIndex != nil:
+	case canary != nil && st.CurrentStepIndex != nil:
 		// Mid-step (an analysis running, no pause): the next step, as the plugin skips it.
-		next := min(*st.CurrentStepIndex+1, len(r.Spec.Strategy.Canary.Steps))
-		out = append(out, argoRolloutPatch{status: true, body: map[string]any{"status": map[string]any{"pauseConditions": nil, "currentStepIndex": next}}})
+		out = append(out, argoRolloutPatch{status: true, body: map[string]any{"status": map[string]any{"pauseConditions": nil, "currentStepIndex": nextStep()}}})
+	}
+
+	if r.Spec.Paused {
+		out = append(out, unpause)
 	}
 
 	if len(out) == 0 {
-		return nil, argoRolloutNothing("promote")
+		return nil, &kubeAPIError{Code: 409, Reason: "Conflict", Message: "nothing to promote: the rollout is not paused"}
 	}
 
 	return out, nil

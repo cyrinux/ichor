@@ -63,7 +63,7 @@ fun ArgoRolloutSheet(rollout: ArgoRollout, busy: Boolean, actions: ArgoRolloutAc
             if (rollout.message.isNotEmpty()) MutedText(rollout.message)
             if (rollout.steps.isNotEmpty()) ArgoRolloutStepBar(rollout, Modifier.padding(vertical = 4.dp))
             ArgoRolloutPauseLine(rollout)
-            if (rollout.isBlueGreen && rollout.canPromote) {
+            if (rollout.awaitsPromotion) {
                 Text(stringResource(R.string.argo_rollout_waits_promotion), style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.warn)
             }
             Details(rollout)

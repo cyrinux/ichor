@@ -117,7 +117,8 @@ public struct ArgoRollout: Decodable, Equatable, Identifiable, Hashable, Sendabl
     // What each action can do in this state; the Go core refuses the rest anyway.
 
     /// A paused rollout moves on; a blue-green with a new version switches the traffic.
-    public var canPromote: Bool { paused && !aborted || (isBlueGreen && hasNewVersion && !aborted) }
+    /// Paused (a pause step, a blue-green awaiting the switch, spec.paused): what promote resumes.
+    public var canPromote: Bool { paused && !aborted }
     public var canPromoteFull: Bool { !aborted && hasNewVersion }
     public var canAbort: Bool { !aborted && hasNewVersion }
     public var canRetry: Bool { aborted }

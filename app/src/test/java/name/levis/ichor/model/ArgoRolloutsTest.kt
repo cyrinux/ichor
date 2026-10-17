@@ -90,9 +90,11 @@ class ArgoRolloutsTest {
         assertTrue(api.canPromote)
         assertTrue(api.canAbort)
         assertFalse(api.canPause)
-        // Not paused, a new version out: still promotable, and pausable.
+        assertTrue(api.awaitsPromotion)
+        // Not paused (the preview still scaling, or auto-promotion on its way): nothing to promote yet, pausable.
         val running = api.copy(paused = false)
-        assertTrue(running.canPromote)
+        assertFalse(running.canPromote)
+        assertFalse(running.awaitsPromotion)
         assertTrue(running.canPause)
         // Nothing new: nothing to promote.
         assertFalse(api.copy(paused = false, currentHash = api.stableHash).canPromote)

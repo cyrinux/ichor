@@ -83,9 +83,10 @@ final class ArgoRolloutsTests: XCTestCase {
 
     func testBlueGreenAwaitingPromotion() throws {
         XCTAssertEqual(allowed(try rollout("gateway")), [.promote, .promoteFull, .abort])
-        // Not paused (auto-promotion on its way): still promotable, and pausable.
+        // Not paused (the preview still scaling, or auto-promotion on its way): nothing to promote yet, pausable.
         let moving = try make(#""strategy":"blueGreen","stableHash":"aa","currentHash":"bb""#)
-        XCTAssertTrue(moving.canPromote)
+        XCTAssertFalse(moving.canPromote)
+        XCTAssertFalse(moving.awaitsPromotion)
         XCTAssertTrue(moving.canPause)
     }
 

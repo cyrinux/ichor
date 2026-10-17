@@ -64,7 +64,11 @@ data class ArgoRollout(
     private val updating: Boolean get() = currentHash.isNotEmpty() && currentHash != stableHash
 
     /** Paused at a step, or a blue-green with a new version waiting for the switch. */
-    val canPromote: Boolean get() = paused && !aborted || (isBlueGreen && updating && !aborted)
+    /** Paused (a pause step, a blue-green awaiting the switch, spec.paused): what promote resumes. */
+    val canPromote: Boolean get() = paused && !aborted
+
+    /** A blue-green whose new version waits for the switch. */
+    val awaitsPromotion: Boolean get() = isBlueGreen && paused && !aborted && updating
     val canPromoteFull: Boolean get() = !aborted && updating
     val canAbort: Boolean get() = !aborted && updating
     val canRetry: Boolean get() = aborted

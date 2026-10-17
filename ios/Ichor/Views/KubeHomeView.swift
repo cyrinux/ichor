@@ -395,8 +395,8 @@ struct KubeHomeView: View {
             NavigationLink { VirtualMachinesView() } label: {
                 Label("Virtual machines", systemImage: "desktopcomputer")
             }
-            // Only when the cluster serves Argo Rollouts, like Crossplane above.
-            if argoRollouts != nil {
+            // Only when the cluster serves Argo Rollouts; a refused read (no access) stays quiet.
+            if case .loaded(let rollouts, _, _) = argoRollouts, rollouts.installed {
                 NavigationLink { ArgoRolloutsView() } label: {
                     Label("Argo Rollouts", systemImage: "arrow.triangle.branch")
                 }

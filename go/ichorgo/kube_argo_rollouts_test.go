@@ -119,6 +119,9 @@ func TestArgoRolloutPatches(t *testing.T) {
 	shop, api, checkout, web := list.Items[0], list.Items[1], list.Items[2], list.Items[3]
 	midStep := rolloutObject(t, `{"spec":{"strategy":{"canary":{"steps":[{"setWeight":10},{"analysis":{}},{"setWeight":50}]}}},
 		"status":{"currentStepIndex":2,"stableRS":"a","currentPodHash":"b"}}`)
+	inconclusive := rolloutObject(t, `{"spec":{"strategy":{"canary":{"steps":[{"analysis":{}},{"pause":{}}]}}},
+		"status":{"currentStepIndex":1,"controllerPause":true,"pauseConditions":[{"reason":"InconclusiveAnalysisRun"}],"stableRS":"a","currentPodHash":"b"}}`)
+	notPaused := rolloutObject(t, `{"spec":{"strategy":{"blueGreen":{}}},"status":{"stableRS":"a","currentPodHash":"b"}}`)
 	pausedSpec := rolloutObject(t, `{"spec":{"paused":true,"strategy":{"canary":{"steps":[]}}},"status":{"stableRS":"a","currentPodHash":"a","pauseConditions":[{"reason":"PausedBySpec"}],"controllerPause":true}}`)
 
 	cases := []struct {
@@ -131,7 +134,8 @@ func TestArgoRolloutPatches(t *testing.T) {
 		{"pause", shop, argoRolloutPause, `object:{"spec":{"paused":true}}`, false},
 		{"promote a paused canary", shop, argoRolloutPromote, `status:{"status":{"pauseConditions":null}}`, false},
 		{"promote mid-step", midStep, argoRolloutPromote, `status:{"status":{"currentStepIndex":3,"pauseConditions":null}}`, false},
-		{"promote paused by spec", pausedSpec, argoRolloutPromote, `object:{"spec":{"paused":false}} status:{"status":{"controllerPause":false,"pauseConditions":null}}`, false},
+		{"promote paused by spec", pausedSpec, argoRolloutPromote, `status:{"status":{"controllerPause":false,"pauseConditions":null}} object:{"spec":{"paused":false}}`, false},
+		{"promote after an inconclusive analysis", inconclusive, argoRolloutPromote, `status:{"status":{"controllerPause":false,"currentStepIndex":2,"pauseConditions":null}}`, false},
 		{"promote a blue-green", api, argoRolloutPromote, `status:{"status":{"pauseConditions":null}}`, false},
 		{"promote fully", shop, argoRolloutPromoteFull, `status:{"status":{"promoteFull":true}}`, false},
 		{"abort", shop, argoRolloutAbort, `status:{"status":{"abort":true}}`, false},
@@ -166,6 +170,11 @@ func TestArgoRolloutPatches(t *testing.T) {
 		if err != nil || strings.Join(got, " ") != c.want {
 			t.Errorf("%s: %v %q\nwant %q", c.name, err, strings.Join(got, " "), c.want)
 		}
+	}
+
+	// A blue-green still scaling its preview is not paused: nothing to promote yet.
+	if _, err := argoRolloutPatches(notPaused, argoRolloutPromote); err == nil || !strings.Contains(err.Error(), "not paused") {
+		t.Errorf("promote of an unpaused blue-green: %v", err)
 	}
 
 	// A settled blue-green has nothing to abort.
