@@ -623,7 +623,9 @@ and what goes if a node goes down?":
   metrics-server answers, and a mark on a node whose pods' memory limits exceed it.
 - **Disk:** ephemeral storage left by requests, and each node's free disk as its kubelet reports
   it, with a DiskPressure or "disk low" (under 15% free) mark; a workload near its ephemeral
-  storage limit, which the kubelet evicts once it goes over, is flagged.
+  storage limit, which the kubelet evicts once it goes over, is flagged. With Settings → Alerts →
+  Node storage on, the background monitor also alerts when a node's disk crosses the warning or
+  critical threshold or the node reports DiskPressure, on clusters added from a kubeconfig too.
 - **N+1:** whether the pods of any one node would fit on the others, or which node would leave
   pods Pending.
 - **Workloads, the first to go first:** lowest priority first, those with no PriorityClass flagged,

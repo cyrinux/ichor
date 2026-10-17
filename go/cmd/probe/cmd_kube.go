@@ -84,6 +84,12 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "node-disk", args: "", run: func(e env) (out string, err error) {
+		// node-disk: each ready node's nodefs/imagefs fill and DiskPressure, as the monitor reads it.
+		out, err = ichorgo.KubeNodeDisk(e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
 	{name: "node-loss", args: "[NODE[,NODE...]]", run: func(e env) (out string, err error) {
 		// node-loss [NODE[,NODE...]]: what losing the nodes costs; the worst node when omitted.
 		out, err = ichorgo.KubeCapacityNodeLoss(e.cfg, e.context, e.kubeServer, flag.Arg(1))

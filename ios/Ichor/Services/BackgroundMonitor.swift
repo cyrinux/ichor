@@ -226,9 +226,10 @@ enum BackgroundMonitor {
         let extras: HistoryExtras
     }
 
-    /// Node storage as a run read it: the issues worth an alert, and every volume's fill.
+    /// Node storage as a run read it: the issues worth an alert (nil: not readable, the last
+    /// snapshot's stand), and every volume's fill.
     private struct StorageRead: Sendable {
-        let issues: [String: String]
+        let issues: [String: String]?
         let volumes: [HistoryVolumeRecord]
     }
 
@@ -439,8 +440,13 @@ enum BackgroundMonitor {
         // And for the Alertmanager, reached like the metrics through the service proxy or a URL.
         let watchAlertmanager = alertmanagerWatched && job.kubeAllowed
         let knownAlertmanager = knownAlertmanagerIssues(previous, context: context.name)
-        // And node storage, through the Talos API only (any role may read it): none on a kubeconfig cluster.
-        let watchStorage = storageWatched && !context.isKube
+        // And node storage: through the Talos API (any role may read it), or on a kubeconfig cluster
+        // each kubelet's summary (credentials refused nodes/proxy: no reading, never an alert). A
+        // node still listed that did not answer keeps its issues. The demo's disks are read (its
+        // history shows them) but never open an issue: a demo never notifies.
+        let watchStorage = storageWatched
+        let kubeListed = kubeNodes.map { Set($0.nodes.map(\.name)) }
+        let demo = context.demo
         let knownStorage = knownStorageIssues(previous, context: context.name)
         let thresholds = storageThresholds
         // And node temperatures, the same way: one Talos call, nothing read with the setting off.
@@ -454,8 +460,11 @@ enum BackgroundMonitor {
         async let alertmanagerRead = ifWatched(watchAlertmanager, within: left) {
             await readAlertmanager(client, fingerprint: fingerprint, known: knownAlertmanager)
         }
-        async let storageRead = ifWatched(watchStorage, within: left) {
-            await readStorage(client, thresholds: thresholds, known: knownStorage)
+        async let storageRead = ifWatched(watchStorage, within: left) { () -> StorageRead? in
+            if let kubeListed {
+                return await readKubeStorage(client, thresholds: thresholds, listed: kubeListed, known: knownStorage, demo: demo)
+            }
+            return await readStorage(client, thresholds: thresholds, known: knownStorage)
         }
         async let sensorRead = ifWatched(watchSensors, within: left) { () -> [String: String]? in
             guard let health = try? await client.clusterSensorHealth() else { return nil }
@@ -470,12 +479,15 @@ enum BackgroundMonitor {
         let sensorIssues = await sensorRead
         let now = Date()
         if let kubeNodes {
+            var kubeExtras = historyExtras(kubeNodes)
+            kubeExtras.volumes = storage?.volumes ?? []
             return .read(kubeSnapshotOf(kubeNodes, context: context.name, certNotAfter: context.certNotAfter, takenAt: now,
                                         dataWatched: watchData, dataServices: dataServices,
                                         gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
                                         checkupWatched: watchCheckup, checkupIssues: checkupIssues,
-                                        alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues),
-                         historyExtras(kubeNodes))
+                                        alertmanagerWatched: watchAlertmanager, alertmanagerIssues: alertmanagerIssues,
+                                        storageWatched: watchStorage, storageIssues: storageIssues, storageWarn: thresholds.warn),
+                         kubeExtras)
         }
         guard let overview else { return .unreachable }
         var extras = historyExtras(overview)
@@ -568,6 +580,17 @@ enum BackgroundMonitor {
                                     known: [String: String]) async -> StorageRead? {
         guard let health = try? await client.clusterStorageHealth() else { return nil }
         return StorageRead(issues: storageIssuesOf(health, thresholds: thresholds, known: known), volumes: historyVolumes(health))
+    }
+
+    /// A kubeconfig cluster's nodes over `thresholds` or under DiskPressure (see
+    /// storageIssues(of:warn:critical:listed:known:demo:)), with each measured node's nodefs fill
+    /// (the history); nil when the call failed. Issues nil when skipped, refused or nothing measured.
+    private static func readKubeStorage(_ client: TalosClient, thresholds: StorageThresholds, listed: Set<String>,
+                                        known: [String: String], demo: Bool) async -> StorageRead? {
+        guard let disk = try? await client.kubeNodeDisk() else { return nil }
+        return StorageRead(issues: storageIssues(of: disk, warn: thresholds.warn, critical: thresholds.crit,
+                                                 listed: listed, known: known, demo: demo),
+                           volumes: historyVolumes(disk))
     }
 
     /// IchorCore builds English alerts; this rebuilds their text in the user's

@@ -28,8 +28,10 @@ extension ShareTarget {
     /// The screen the link opens over the overview; nil for the overview itself. A node only
     /// when it is one of the cluster's (with its role, for the control-plane warnings): a link
     /// cannot point the app's Talos calls at another address. On a cluster added from a
-    /// kubeconfig (`kube`) the Talos screens have nothing to show: its home opens instead.
+    /// kubeconfig (`kube`) the Talos screens have nothing to show: its home opens instead, but a
+    /// node of it (a node or disk alert) opens its nodes searched for that node.
     func route(client: TalosClient?, kube: Bool = false) async -> Route? {
+        if kube, target == .node || target == .storage { return await kubeNodeRoute(client: client) }
         if kube, [Target.node, .etcd, .health, .storage, .hardware].contains(target) { return nil }
         if target == .node || target == .storage || target == .hardware {
             guard let nodes = try? await client?.overview().nodes,
@@ -56,6 +58,15 @@ extension ShareTarget {
         case .checkup: .checkup
         case .alerts: .alerts
         }
+    }
+
+    /// The nodes of a kubeconfig cluster searched for the node the link names (its Kubernetes
+    /// name); nil (its home) when that node is not one of them.
+    private func kubeNodeRoute(client: TalosClient?) async -> Route? {
+        let name = addr.isEmpty ? host : addr
+        guard !name.isEmpty, let nodes = try? await client?.kubeNodes().nodes,
+              nodes.contains(where: { $0.name == name }) else { return nil }
+        return .kubeNodes(filter: nil, nodes: nodes, query: name)
     }
 }
 

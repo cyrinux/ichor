@@ -16,6 +16,7 @@ import name.levis.ichor.data.sourceFor
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
+import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.isKube
 
 /** How long one cluster's check may take: past it, the cluster counts as unreachable for this run. */
@@ -110,21 +111,30 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
         null
     }
 
-    // And for node storage: one Talos call reads every node's volumes and SMART (none for a
-    // cluster added from a kubeconfig). A node that does not answer keeps its known issues.
-    val watchStorage = store.storageWatched.value && !kube
-    val storageHealth = if (watchStorage) runCatching { reads.talos.storageHealth() }.getOrNull() else null
-    val storageIssues = if (watchStorage) {
-        storageHealth?.let {
-            storageIssuesOf(
+    // And for node storage: one Talos call reads every node's volumes and SMART; a cluster added
+    // from a kubeconfig asks each node's kubelet for its disk (none when nodes/proxy is refused).
+    // A node that does not answer keeps its known issues. The demo's disks are read (its history
+    // shows them) but never open an issue: a demo never notifies.
+    val watchStorage = store.storageWatched.value
+    val storageWarn = store.storageWarnPercent.value
+    val storageCritical = store.storageCriticalPercent.value
+    val storageHealth = if (watchStorage && !kube) runCatching { reads.talos.storageHealth() }.getOrNull() else null
+    val nodeDisk = if (watchStorage && kubeNodes != null) runCatching { reads.kube.nodeDisk() }.getOrNull() else null
+    val storageIssues = when {
+        !watchStorage -> null
+        kubeNodes != null && context.isDemo -> nodeDisk?.let { emptyMap<String, String>() }
+        kubeNodes != null -> nodeDisk?.let {
+            kubeStorageIssuesOf(
                 it,
-                warn = store.storageWarnPercent.value,
-                critical = store.storageCriticalPercent.value,
+                warn = storageWarn,
+                critical = storageCritical,
+                listed = kubeNodes.nodes.map { n -> n.name }.toSet(),
                 known = knownStorageIssues(prev, name),
             )
         }
-    } else {
-        null
+        else -> storageHealth?.let {
+            storageIssuesOf(it, warn = storageWarn, critical = storageCritical, known = knownStorageIssues(prev, name))
+        }
     }
 
     // And for node temperatures: one Talos call reads every node's hottest sensor (none for a
@@ -147,8 +157,10 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
             checkupIssues = checkupIssues,
             amWatched = watchAm,
             amIssues = amIssues,
+            storageWatched = watchStorage,
+            storageIssues = storageIssues,
         )
-        ClusterReading(snapshot, historyDetailOf(kubeNodes))
+        ClusterReading(snapshot, historyDetailOf(kubeNodes, nodeDisk))
     } else {
         val talos = checkNotNull(overview)
         val snapshot = snapshotOf(

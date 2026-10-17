@@ -65,7 +65,7 @@ data class ClusterSnapshot(
     val amIssues: Map<String, String> = emptyMap(),
     /** Alertmanager warnings seen once and not notified yet. */
     val amPending: List<String> = emptyList(),
-    /** Watching node storage (volume fill, SMART) was on for this check (opt-in, Talos clusters only). */
+    /** Watching node storage (volume fill, SMART; a kubeconfig cluster: each node's disk) was on for this check (opt-in). */
     val storageWatched: Boolean = false,
     /** Its health could be read this time. */
     val storageChecked: Boolean = false,
@@ -186,8 +186,14 @@ fun kubeSnapshotOf(
     checkupIssues: Map<String, String>? = null,
     amWatched: Boolean = false,
     amIssues: Map<String, String>? = null,
+    /** Each node's disk watched ([storageIssues] null when watched but unreadable, see [kubeStorageIssuesOf]). */
+    storageWatched: Boolean = false,
+    storageIssues: Map<String, String>? = null,
 ): ClusterSnapshot = ClusterSnapshot(
     kube = true,
+    storageWatched = storageWatched,
+    storageChecked = storageWatched && storageIssues != null,
+    storageIssues = storageIssues?.takeIf { storageWatched }.orEmpty(),
     amWatched = amWatched,
     amChecked = amWatched && amIssues != null,
     amIssues = amIssues?.takeIf { amWatched }.orEmpty(),
