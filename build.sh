@@ -19,7 +19,8 @@ case "$VARIANT" in
   # AGP 9 only creates unit-test tasks for debug; check/debug already run them.
   release) GRADLE_TASKS=(assembleRelease) ;;
   play) GRADLE_TASKS=(bundlePlay) ;;
-  check) GRADLE_TASKS=(testDebugUnitTest) ;;
+  # Also assembles the Wear OS app (tile and complication): its manifest and resources are checked.
+  check) GRADLE_TASKS=(testDebugUnitTest :wear:assembleDebug) ;;
   *) echo "unknown variant: $VARIANT (debug|release|play|check)" >&2; exit 2 ;;
 esac
 # The CI build jobs skip the tests, which their check job runs once (see android.yml).

@@ -22,6 +22,12 @@ appUpdate = "2.1.0"
 playServicesAuth = "21.3.0"
 yubikit = "3.2.1"
 slf4j = "2.0.17"
+# Wear OS: the watch app (:wear) and the phone's Data Layer sync (Play build only).
+playServicesWearable = "20.0.1"
+wearTiles = "1.6.2"
+wearProtolayout = "1.4.2"
+wearComplications = "1.3.0"
+concurrentFutures = "1.3.0"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -59,9 +65,15 @@ play-services-auth = { module = "com.google.android.gms:play-services-auth", ver
 yubikit-android = { module = "com.yubico.yubikit:android", version.ref = "yubikit" }
 yubikit-fido = { module = "com.yubico.yubikit:fido", version.ref = "yubikit" }
 slf4j-nop = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }
+play-services-wearable = { module = "com.google.android.gms:play-services-wearable", version.ref = "playServicesWearable" }
+wear-tiles = { module = "androidx.wear.tiles:tiles", version.ref = "wearTiles" }
+wear-protolayout = { module = "androidx.wear.protolayout:protolayout", version.ref = "wearProtolayout" }
+wear-complications-data-source = { module = "androidx.wear.watchface:watchface-complications-data-source-ktx", version.ref = "wearComplications" }
+androidx-concurrent-futures = { module = "androidx.concurrent:concurrent-futures", version.ref = "concurrentFutures" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 aboutlibraries-android = { id = "com.mikepenz.aboutlibraries.plugin.android", version.ref = "aboutLibraries" }
