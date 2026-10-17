@@ -19,4 +19,19 @@ final class SnapshotsTests: XCTestCase {
         let failed = try TalosJSON.decode(DataServices.self, from: json.replacingOccurrences(of: "\"jobsError\":\"\"", with: "\"jobsError\":\"Forbidden\"").replacingOccurrences(of: "\"error\":\"\"", with: "\"error\":\"Forbidden\""))
         XCTAssertTrue(dataIssuesOf(failed).isEmpty)
     }
+
+    func testBackupRowHealth() throws {
+        let day: Int64 = 86_400_000
+        let now: Int64 = 100 * day
+        func job(streak: Int = 0, suspended: Bool = false, lastSuccess: Int64) throws -> BackupCronJob {
+            try TalosJSON.decode(BackupCronJob.self, from: """
+            {"namespace":"shop","name":"backup","schedule":"0 1 * * *","health":"ok","suspended":\(suspended),"lastSuccess":\(lastSuccess),"ageSeconds":0,"failureStreak":\(streak)}
+            """)
+        }
+        XCTAssertEqual(try job(lastSuccess: now - day).rowHealth(now: now), .ok)
+        XCTAssertEqual(try job(streak: 1, lastSuccess: now - day).rowHealth(now: now), .critical)
+        XCTAssertEqual(try job(suspended: true, lastSuccess: now - day).rowHealth(now: now), .warning)
+        XCTAssertEqual(try job(lastSuccess: now - 8 * day).rowHealth(now: now), .warning)
+        XCTAssertEqual(try job(lastSuccess: 0).rowHealth(now: now), .warning)
+    }
 }

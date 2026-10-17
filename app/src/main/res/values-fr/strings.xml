@@ -2309,7 +2309,6 @@
     <string name="certmanager_renew_started">Renouvellement de %1$s demandé</string>
     <string name="certmanager_renew_failed">%1$s : %2$s</string>
     <string name="certmanager_issuing">émission en cours</string>
-    <string name="certmanager_details">Détails</string>
     <string name="certmanager_details_conditions">Conditions</string>
     <string name="certmanager_details_requests">Demandes</string>
     <string name="certmanager_details_events">Événements</string>
@@ -4953,17 +4952,26 @@
     <string name="checkup_lbBGPPeerDown_fix">Vérifiez le routeur : son adresse et ses numéros d’AS, qu’il accepte ce nœud, et que rien ne filtre le TCP 179 entre eux.</string>
 
     <string name="backup_items">%1$d éléments de sauvegarde</string>
-    <string name="snapshot_ready">Instantané prêt</string>
-    <string name="snapshot_pending">Instantané en attente</string>
-    <string name="snapshot_source">PVC : %1$s · classe : %2$s</string>
-    <string name="snapshot_created">Créé : %1$s</string>
-    <string name="snapshot_last_good">Dernier instantané valide : %1$s</string>
-    <string name="snapshot_stale">Aucun instantané valide depuis 48 heures</string>
-    <string name="snapshot_default">Classe d’instantané par défaut</string>
+    <string name="snapshot_pending">en attente</string>
+    <string name="snapshot_last_good">dernier instantané valide %1$s</string>
+    <string name="snapshot_stale">aucun instantané valide depuis 48 heures</string>
+    <string name="snapshot_default">par défaut</string>
     <string name="snapshot_empty">Aucun VolumeSnapshot CSI. Les snapshots propres à Longhorn sont sous chaque volume Longhorn.</string>
-    <string name="backup_last_success">Dernière sauvegarde réussie : %1$s</string>
-    <string name="backup_failure_streak">Échecs consécutifs observés : %1$d</string>
-    <string name="backup_suspended">Planification des sauvegardes suspendue</string>
+    <string name="backup_last_success">dernier succès %1$s</string>
+    <string name="backup_suspended">suspendu</string>
+    <string name="backup_never_succeeded">aucun succès pour l’instant</string>
+    <string name="backup_empty">Aucun CronJob de sauvegarde.</string>
+    <string name="snapshot_section_claims">Volumes surveillés</string>
+    <string name="snapshot_section_classes">Classes d’instantané</string>
+    <string name="snapshot_section_contents">Contenus d’instantané</string>
+    <string name="cron_daily">chaque jour à %1$s</string>
+    <string name="cron_weekly">chaque semaine le %1$s à %2$s</string>
+    <string name="cron_monthly">chaque mois le %1$d à %2$s</string>
+    <plurals name="backup_failures_in_row">
+        <item quantity="one">%1$d échec d’affilée</item>
+        <item quantity="many">%1$d échecs d’affilée</item>
+        <item quantity="other">%1$d échecs d’affilée</item>
+    </plurals>
     <string name="snapshot_create">Créer un instantané</string>
     <string name="snapshot_confirm">Créer un instantané CSI de %1$s avec la classe par défaut de son pilote.</string>
 

@@ -50,4 +50,17 @@ final class CertManagerTests: XCTestCase {
         let inventory = try TalosJSON.decode(ClusterInventory.self, from: #"{"apps":[{"id":"cert-manager","name":"cert-manager"},{"id":"longhorn","name":"Longhorn"}]}"#)
         XCTAssertEqual(dataServiceHints(inventory), "longhorn,cert-manager")
     }
+
+    func testRowsSortExpiredThenExpiringSoonThenTheRest() throws {
+        // 2026-11-18: old and stuck have expired, web expires within 30 days, internal later.
+        let cm = try XCTUnwrap(try services.certManager)
+        let now: Int64 = 1_795_000_000_000
+        XCTAssertEqual(cm.certificatesByExpiry(now: now).map(\.name), ["old", "stuck", "web", "internal"])
+        XCTAssertEqual(cm.certificates.map { $0.showsRenew(now: now) }, [true, true, true, true])
+        // 2025-09-01: nothing expired; only the healthy web certificate, far from expiry, hides renew.
+        let early: Int64 = 1_756_684_800_000
+        XCTAssertEqual(cm.certificatesByExpiry(now: early).map(\.name), ["old", "stuck", "internal", "web"])
+        XCTAssertEqual(cm.certificates.map { $0.showsRenew(now: early) }, [true, true, true, false])
+        XCTAssertEqual(cm.certificates.map(\.issuerName), ["letsencrypt", "letsencrypt", "internal-ca", "letsencrypt"])
+    }
 }

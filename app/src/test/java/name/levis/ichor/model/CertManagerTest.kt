@@ -66,4 +66,30 @@ class CertManagerTest {
         val inventory = Inventory(apps = listOf(InventoryApp(id = "cert-manager", name = "cert-manager"), InventoryApp(id = "longhorn", name = "Longhorn")))
         assertEquals("longhorn,cert-manager", inventory.dataServiceHints())
     }
+
+    @Test fun renewStaysOnTheRowOnlyWhereItMatters() {
+        val day = 24 * 60 * 60 * 1000L
+        val now = 1_000 * day
+        val healthy = Certificate(namespace = "web", name = "site", issuer = "ClusterIssuer/acme-example", health = "ok", notAfter = now + 60 * day)
+        assertEquals("acme-example", healthy.issuerName)
+        assertEquals(false, healthy.renewOnRow(now))
+        assertEquals(true, healthy.copy(notAfter = now + 29 * day).renewOnRow(now))
+        assertEquals(true, healthy.copy(health = "warning").renewOnRow(now))
+        assertEquals(true, healthy.copy(notAfter = now - day, health = "critical").renewOnRow(now))
+        assertEquals(false, healthy.copy(health = "critical", issuing = true).renewOnRow(now))
+        assertEquals(false, healthy.copy(notAfter = 0).renewOnRow(now))
+    }
+
+    @Test fun rowsPutExpiredThenExpiringSoonFirst() {
+        val day = 24 * 60 * 60 * 1000L
+        val now = 1_000 * day
+        val notReady = Certificate(namespace = "a", name = "not-ready", health = "critical", notAfter = now + 80 * day)
+        val unissued = Certificate(namespace = "a", name = "unissued", health = "critical")
+        val expiring = Certificate(namespace = "a", name = "expiring", health = "warning", notAfter = now + 10 * day)
+        val expired = Certificate(namespace = "a", name = "expired", health = "critical", notAfter = now - 2 * day)
+        val expiredToo = Certificate(namespace = "a", name = "expired-too", health = "warning", notAfter = now - day)
+        val healthy = Certificate(namespace = "a", name = "healthy", health = "ok", notAfter = now + 60 * day)
+        val sorted = certificatesForRows(listOf(notReady, unissued, expiring, expired, healthy, expiredToo), now)
+        assertEquals(listOf("expired", "expired-too", "expiring", "not-ready", "unissued", "healthy"), sorted.map { it.name })
+    }
 }

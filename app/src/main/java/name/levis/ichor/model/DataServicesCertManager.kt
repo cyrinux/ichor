@@ -40,7 +40,32 @@ data class Certificate(
     val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
     val label: String get() = "$namespace/$name"
     val reasonList: List<CertReason> get() = reasons.mapNotNull(CertReason::from)
+
+    /** "letsencrypt-prod" of "ClusterIssuer/letsencrypt-prod". */
+    val issuerName: String get() = issuer.substringAfterLast('/')
+
+    /**
+     * Whether the row offers renew itself: not while issuing, and only when the certificate needs
+     * attention or expires within [RENEW_ROW_WINDOW_MS]. The details sheet offers it for all.
+     */
+    fun renewOnRow(now: Long): Boolean =
+        !issuing && (serviceHealth.needsAttention || (notAfter > 0 && notAfter - now < RENEW_ROW_WINDOW_MS))
 }
+
+/**
+ * The rows' order: expired first, then expiring within [RENEW_ROW_WINDOW_MS], then the rest, each
+ * group keeping the Go core's order (worst health, then the soonest expiry).
+ */
+fun certificatesForRows(certs: List<Certificate>, now: Long): List<Certificate> = certs.sortedBy {
+    when {
+        it.notAfter in 1..now -> 0
+        it.notAfter > 0 && it.notAfter - now < RENEW_ROW_WINDOW_MS -> 1
+        else -> 2
+    }
+}
+
+/** 30 days: a certificate expiring sooner keeps its renew button on the row. */
+const val RENEW_ROW_WINDOW_MS = 30L * 24 * 60 * 60 * 1000
 
 @Serializable
 data class CertIssuer(

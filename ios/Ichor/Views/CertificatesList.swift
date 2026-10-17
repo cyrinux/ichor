@@ -1,9 +1,10 @@
 import SwiftUI
 import IchorCore
 
-/// Every certificate (problems first, then the soonest expiry) with its issuer, then the issuers.
-/// A certificate opens what explains its state; one not being issued can be renewed now from its
-/// context menu or swipe actions, after a confirmation.
+/// Every certificate (expired, then expiring within 30 days, then the rest) with its issuer, then
+/// the issuers. A certificate opens what explains its state; one not being issued can be renewed
+/// now from its context menu or swipe actions, after a confirmation, and from its row when it
+/// needs attention or expires soon.
 struct CertificatesList: View {
     let status: CertManagerStatus
     let refresh: () async -> Void
@@ -18,9 +19,10 @@ struct CertificatesList: View {
             if !status.error.isEmpty { Section { ErrorLine(error: status.error) } }
             Section {
                 if status.certificates.isEmpty {
-                    Text("No certificates.").foregroundStyle(.secondary)
+                    EmptyState(systemImage: "checkmark.shield", text: String(localized: "No certificates."))
                 }
-                ForEach(status.certificates) { certificateRow($0) }
+                let now = Date().epochMillis
+                ForEach(status.certificatesByExpiry(now: now)) { certificateRow($0, now: now) }
             }
             if !status.issuers.isEmpty {
                 Section("Issuers") {
@@ -42,12 +44,12 @@ struct CertificatesList: View {
         .messageAlert($resultMessage)
     }
 
-    private func certificateRow(_ cert: Certificate) -> some View {
+    private func certificateRow(_ cert: Certificate, now: Int64) -> some View {
         let busy = running.contains(cert.id)
         return NavigationLink {
             CertificateDetailsView(cert: cert, refreshList: refresh)
         } label: {
-            CertificateRow(cert: cert, busy: busy)
+            CertificateRow(cert: cert, busy: busy, now: now) { confirmRenew = cert }
         }
         .swipeActions(edge: .trailing) {
             if !busy && !cert.issuing {
@@ -75,47 +77,57 @@ struct CertificatesList: View {
     }
 }
 
+/// Three lines at most: the name, "expires in 32 days · letsencrypt-prod" (tinted when it needs
+/// a look), then one DNS name and how many more. The renew button shows only on a certificate
+/// that needs attention or expires within 30 days; the details offer renew for every one.
 private struct CertificateRow: View {
     let cert: Certificate
     let busy: Bool
+    let now: Int64
+    let onRenew: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 12) {
-                HealthDot(health: cert.health)
-                Text(verbatim: cert.label).font(.subheadline.monospaced()).lineLimit(1)
-                Spacer()
-                if busy { ProgressView() }
+        ResourceRow(health: cert.health, title: cert.label, subtitle: summary, trailing: trailing) {
+            if let names {
+                Text(verbatim: names).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1)
             }
-            Text(verbatim: summary)
-                .font(.caption)
-                .foregroundStyle(cert.health.needsAttention ? cert.health.color : .secondary)
-            Text(verbatim: [names, cert.issuer].filter { !$0.isEmpty }.joined(separator: " · "))
-                .font(.caption.monospaced())
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-            if !cert.message.isEmpty {
-                Text(verbatim: cert.message).font(.caption).foregroundStyle(.secondary).lineLimit(3)
+        }
+    }
+
+    @ViewBuilder private var trailing: some View {
+        if busy {
+            ProgressView()
+        } else if cert.showsRenew(now: now) && !cert.issuing {
+            Button(action: onRenew) {
+                Image(systemName: "arrow.clockwise")
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(Text("Renew now"))
         }
     }
 
     private var summary: String {
         let failed = cert.failedAttempts > 0 ? String(localized: "\(cert.failedAttempts) failed attempts") : nil
         let issuing = cert.issuing ? String(localized: "issuing") : nil
-        return ([expiry, issuing].compactMap { $0 } + cert.reasons.compactMap(reasonText) + [failed].compactMap { $0 }).joined(separator: " · ")
+        let issuer = cert.issuerName.isEmpty ? nil : cert.issuerName
+        return ([expiry, issuing].compactMap { $0 } + cert.reasons.compactMap(reasonText) + [failed, issuer].compactMap { $0 })
+            .joined(separator: " · ")
     }
 
     /// "expires in 23 days", "expired 2 days ago", or not issued yet.
     private var expiry: String {
         guard cert.notAfter > 0 else { return String(localized: "not issued yet") }
         let relative = relativeTime(cert.notAfter)
-        return Date(epochMillis: cert.notAfter) > .now ? String(localized: "expires \(relative)") : String(localized: "expired \(relative)")
+        return cert.expired(now: now) ? String(localized: "expired \(relative)") : String(localized: "expires \(relative)")
     }
 
-    private var names: String {
-        let more = cert.dnsNameCount - cert.dnsNames.count
-        return cert.dnsNames.joined(separator: ", ") + (more > 0 ? " +\(more)" : "")
+    /// "a.example.org +2": the first name; the details list them all.
+    private var names: String? {
+        guard let first = cert.dnsNames.first else { return nil }
+        let more = max(cert.dnsNameCount, cert.dnsNames.count) - 1
+        return more > 0 ? "\(first) +\(more)" : first
     }
 
     // Expiry is worded by the date itself: expired and expiring have no words of their own.
@@ -133,19 +145,16 @@ private struct IssuerRow: View {
     let issuer: CertIssuer
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 12) {
-                HealthDot(health: issuer.health)
-                Text(verbatim: issuer.label).font(.subheadline.monospaced()).lineLimit(1)
-            }
-            let state: String? = issuer.ready ? nil : String(localized: "not ready")
-            Text(verbatim: [type, issuer.server.nonEmpty, state].compactMap { $0 }.joined(separator: " · "))
-                .font(.caption)
-                .foregroundStyle(issuer.health.needsAttention ? issuer.health.color : .secondary)
+        ResourceRow(health: issuer.health, title: issuer.label, subtitle: subtitle) {
             if !issuer.ready && !issuer.message.isEmpty {
                 Text(verbatim: issuer.message).font(.caption).foregroundStyle(.secondary).lineLimit(3)
             }
         }
+    }
+
+    private var subtitle: String {
+        let state: String? = issuer.ready ? nil : String(localized: "not ready")
+        return [type, issuer.server.nonEmpty, state].compactMap { $0 }.joined(separator: " · ")
     }
 
     private var type: String? {

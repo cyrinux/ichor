@@ -103,6 +103,9 @@ private fun Header(state: CertDetailsState, onReload: () -> Unit) {
         Column(Modifier.weight(1f)) {
             Text(state.cert.label, style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace)
             Text(state.cert.issuer, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            dnsNamesText(state.cert, limit = state.cert.dnsNames.size)?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         IconButton(onClick = onReload, enabled = !state.loading) { Icon(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh)) }
     }

@@ -58,3 +58,15 @@ public struct BackupCronJob: Decodable, Equatable, Identifiable, Sendable {
     public let failureStreak: Int
     public var id: String { namespace + "/" + name }
 }
+
+public extension BackupCronJob {
+    /// A job with no success for longer than this needs a look.
+    static let staleMillis: Int64 = 7 * 86_400_000
+
+    /// Bad after a failed run, warning when suspended or without a success in 7 days.
+    func rowHealth(now: Int64) -> ServiceHealth {
+        if failureStreak > 0 { return .critical }
+        if suspended || lastSuccess <= 0 || now - lastSuccess > Self.staleMillis { return .warning }
+        return .ok
+    }
+}
