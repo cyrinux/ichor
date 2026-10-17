@@ -859,6 +859,14 @@
     <string name="snippet_apply">Aggiungi alla bozza</string>
     <string name="snippet_staged_note">Ha effetto al prossimo avvio: applicalo in differita o con un riavvio.</string>
     <string name="insights_fix">Correggi con una patch…</string>
+    <string name="insights_diff_added">Aggiunto: %1$s</string>
+    <string name="insights_diff_removed">Rimosso: %1$s</string>
+    <string name="insights_diff_changed">Modificato: %1$s</string>
+    <string name="insights_diff_copy">Copia il valore completo</string>
+    <plurals name="insights_differences">
+        <item quantity="one">%d differenza</item>
+        <item quantity="other">%d differenze</item>
+    </plurals>
     <string name="snippet_group_network">Rete</string>
     <string name="snippet_group_kernel">Kernel</string>
     <string name="snippet_group_kubernetes">Kubernetes</string>

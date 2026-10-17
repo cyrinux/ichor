@@ -57,39 +57,38 @@ private struct InsightsContent: View {
     }
     @ViewBuilder private var drift: some View {
         Section {
-            Text("Compare selected effective settings: DNS, NTP, MTU, extensions, Secure Boot, UKI and Talos version. Differences may be intentional; unavailable fields are unknown.")
-                .font(.caption)
-            Button("Refresh") { Task { if let client = model.client { await session.refresh(client: client) } } }
-                .disabled(session.busy)
-            Button("Save current baseline") { session.saveBaseline() }
-                .disabled(session.snapshot == nil || session.busy)
+            // Borderless and bordered styles keep the two buttons separate inside one list row.
+            HStack(spacing: 12) {
+                Button("Refresh") { Task { if let client = model.client { await session.refresh(client: client) } } }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(session.busy)
+                Button("Save current baseline") { session.saveBaseline() }
+                    .buttonStyle(.borderless)
+                    .disabled(session.snapshot == nil || session.busy)
+                Spacer(minLength: 0)
+                if session.busy { ProgressView() }
+            }
             if let at = session.baselineAt {
                 Text("Baseline: \(time(at))").font(.caption)
                 Button("Delete baseline", role: .destructive) { Task { await session.deleteBaseline() } }
             } else {
-                Text("Reference: first reachable node of each role. Save a baseline to track changes on the same nodes.").font(.caption)
+                Text("Reference: first reachable node of each role. Save a baseline to track changes on the same nodes.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
-            if session.busy { ProgressView() }
+        } footer: {
+            Text("Compare selected effective settings: DNS, NTP, MTU, extensions, Secure Boot, UKI and Talos version. Differences may be intentional; unavailable fields are unknown.")
         }
         if let snapshot = session.snapshot {
             Section {
                 Text("Sample: \(time(snapshot.at))").font(.caption)
                 if session.changes.isEmpty { Text("No differences in comparable fields.") }
-                ForEach(session.changes) { change in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(verbatim: "\(change.node) · \(change.key)").font(.headline)
-                        Text("Reference: \(change.reference)").font(.caption)
-                        Text(verbatim: "\(change.before.isEmpty ? "∅" : change.before) → \(change.after.isEmpty ? "∅" : change.after)").font(.caption.monospaced())
-                        if let fix = change.fix {
-                            let hostname = snapshot.nodes.first { $0.node == change.node }?.hostname ?? change.node
-                            NavigationLink {
-                                MachineConfigView(node: change.node, hostname: hostname.isEmpty ? change.node : hostname, fix: fix)
-                            } label: {
-                                Text("Fix with a patch…").font(.caption)
-                            }
-                        }
-                    }
-                }
+            }
+            ForEach(session.changes) { change in
+                DriftChangeSection(change: change, fixDestination: change.fix.map { (fix: DriftFix) -> AnyView in
+                    let known = snapshot.nodes.first { $0.node == change.node }?.hostname ?? ""
+                    let hostname = change.nodeName.isEmpty ? known : change.nodeName
+                    return AnyView(MachineConfigView(node: change.node, hostname: hostname.isEmpty ? change.node : hostname, fix: fix))
+                })
             }
             ForEach(snapshot.nodes.filter { !$0.errors.isEmpty }) { node in
                 Text(verbatim: "\(node.hostname): \(node.errors.keys.sorted().map { "\($0): \(node.errors[$0] ?? "")" }.joined(separator: "; "))")

@@ -859,6 +859,14 @@
     <string name="snippet_apply">Ajouter au brouillon</string>
     <string name="snippet_staged_note">Prend effet au prochain démarrage : appliquez-le en différé ou avec un redémarrage.</string>
     <string name="insights_fix">Corriger avec un patch…</string>
+    <string name="insights_diff_added">Ajouté : %1$s</string>
+    <string name="insights_diff_removed">Retiré : %1$s</string>
+    <string name="insights_diff_changed">Modifié : %1$s</string>
+    <string name="insights_diff_copy">Copier la valeur complète</string>
+    <plurals name="insights_differences">
+        <item quantity="one">%d différence</item>
+        <item quantity="other">%d différences</item>
+    </plurals>
     <string name="snippet_group_network">Réseau</string>
     <string name="snippet_group_kernel">Noyau</string>
     <string name="snippet_group_kubernetes">Kubernetes</string>

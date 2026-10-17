@@ -111,6 +111,26 @@ var configCommands = []command{
 
 		return ichorgo.DriftFixEdits(string(file), flag.Arg(2), flag.Arg(3), flag.Arg(4))
 	}},
+	{name: "drift", args: "[BASELINE]", run: func(e env) (string, error) {
+		// The drift of each node against BASELINE (a saved snapshot) or its role's first node.
+		baseline := ""
+		if flag.Arg(1) != "" {
+			file, err := os.ReadFile(flag.Arg(1))
+			if err != nil {
+				return "", err
+			}
+			baseline = string(file)
+		}
+		snapshot, err := ichorgo.ClusterDriftSnapshot(e.cfg, e.context)
+		if err != nil {
+			return "", err
+		}
+		changes, err := ichorgo.CompareDrift(baseline, snapshot)
+		if err != nil {
+			return "", err
+		}
+		return formatDrift(changes)
+	}},
 	{name: "config-edit", args: "FILE EDITJSON", run: func(env) (string, error) {
 		// FILE with one field edit applied (see MachineConfigEdit), printed. Local.
 		file, err := os.ReadFile(flag.Arg(1))

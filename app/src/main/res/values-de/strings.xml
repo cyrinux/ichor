@@ -852,6 +852,14 @@
     <string name="snippet_apply">Zum Entwurf hinzufügen</string>
     <string name="snippet_staged_note">Wirkt erst beim nächsten Boot: wende es vorgemerkt oder mit Neustart an.</string>
     <string name="insights_fix">Mit einem Patch beheben…</string>
+    <string name="insights_diff_added">Hinzugefügt: %1$s</string>
+    <string name="insights_diff_removed">Entfernt: %1$s</string>
+    <string name="insights_diff_changed">Geändert: %1$s</string>
+    <string name="insights_diff_copy">Vollständigen Wert kopieren</string>
+    <plurals name="insights_differences">
+        <item quantity="one">%d Unterschied</item>
+        <item quantity="other">%d Unterschiede</item>
+    </plurals>
     <string name="snippet_group_network">Netzwerk</string>
     <string name="snippet_group_kernel">Kernel</string>
     <string name="snippet_group_kubernetes">Kubernetes</string>
