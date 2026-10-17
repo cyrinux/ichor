@@ -2,7 +2,7 @@ import Foundation
 
 // Mirrors the JSON produced by the Go core (go/ichorgo), like the Android models.
 
-public struct ConfigSummary: Decodable, Equatable, Sendable {
+public struct ConfigSummary: Codable, Equatable, Sendable {
     public let current: String
     public let contexts: [ContextSummary]
 
@@ -54,7 +54,7 @@ public struct ConfigSummary: Decodable, Equatable, Sendable {
     }
 }
 
-public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
+public struct ContextSummary: Codable, Equatable, Identifiable, Sendable {
     public let name: String
     /// "talos" for a talosconfig context, "kube" for one added from a kubeconfig (no Talos API).
     public let kind: String

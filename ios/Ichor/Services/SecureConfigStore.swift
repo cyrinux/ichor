@@ -29,16 +29,21 @@ enum ConfigProtection: String {
 /// ciphertext is sealed once more with the data key only a tap of the key unwraps
 /// (SecurityKeyCrypto.seal): the items then read only after a key was tapped this run.
 enum SecureConfigStore {
-    /// The sealed items, under the same key: the two configs, and the sign-ins of the
-    /// kubeconfig clusters (KubeAuthStore).
+    /// The sealed items, under the same key: the two configs, the sign-ins of the
+    /// kubeconfig clusters (KubeAuthStore), and the configs' parsed summaries
+    /// (ConfigSummaryCache, names and endpoints: sealed like the configs).
     enum Item: CaseIterable {
-        case talosconfig, kubeconfig, kubeAuth
+        case talosconfig, kubeconfig, kubeAuth, summaryCache
+
+        /// Derived from the others: never what keeps the key alive.
+        fileprivate var isDerived: Bool { self == .summaryCache }
 
         fileprivate var account: String {
             switch self {
             case .talosconfig: "talosconfig.sealed"
             case .kubeconfig: "kubeconfig.sealed"
             case .kubeAuth: "kubeauth.sealed"
+            case .summaryCache: "config-summary.sealed"
             }
         }
     }
@@ -84,7 +89,14 @@ enum SecureConfigStore {
     static func reseal() throws {
         for item in Item.allCases {
             guard Keychain.read(item.account) != nil else { continue }
-            guard let plaintext = load(item) else { throw SecurityKeyRequiredError() }
+            guard let plaintext = load(item) else {
+                // The cache is rebuilt from the configs: one that cannot be read just goes.
+                if item.isDerived {
+                    Keychain.delete(item.account)
+                    continue
+                }
+                throw SecurityKeyRequiredError()
+            }
             try save(plaintext, item: item)
         }
     }
@@ -99,10 +111,11 @@ enum SecureConfigStore {
         Keychain.read(item.account) != nil
     }
 
-    /// Deletes `item`; the key goes too once no config is left.
+    /// Deletes `item`; the key goes too once no config is left (with the summary cache).
     static func delete(_ item: Item) {
         Keychain.delete(item.account)
-        if Item.allCases.allSatisfy({ Keychain.read($0.account) == nil }) {
+        if Item.allCases.filter({ !$0.isDerived }).allSatisfy({ Keychain.read($0.account) == nil }) {
+            for derived in Item.allCases where derived.isDerived { Keychain.delete(derived.account) }
             SecItemDelete(keyQuery as CFDictionary)
         }
     }

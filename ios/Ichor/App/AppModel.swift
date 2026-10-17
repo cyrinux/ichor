@@ -376,7 +376,8 @@ final class AppModel {
         guard unreadable.isEmpty, let all = ConfigSummary.combined(talos: parsed.talos, kube: parsed.kube) else { return }
         apply(talos: parsed.talos == nil ? nil : stored.talos, talosSummary: parsed.talos,
               kube: parsed.kube == nil ? nil : stored.kube, kubeSummary: parsed.kube,
-              preferred: all.selectedContext(index: Self.savedContextIndex, name: UserDefaults.standard.string(forKey: Keys.context)))
+              preferred: all.selectedContext(index: Self.savedContextIndex, name: UserDefaults.standard.string(forKey: Keys.context)),
+              generation: parsed.generation)
     }
 
     /// Stores `newYAML`. With a config already stored its contexts are added to it (one
@@ -400,9 +401,10 @@ final class AppModel {
         } else {
             merged = newYAML
         }
+        let generation = TalosClient.privacyGeneration() // before parsing: see ConfigSummaryCache.store
         let parsed = try await TalosClient.parse(merged)
         try SecureConfigStore.save(Data(merged.utf8))
-        apply(talos: merged, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, preferred: parsed.current)
+        apply(talos: merged, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, preferred: parsed.current, generation: generation)
     }
 
     /// Adds the contexts of the kubeconfig `added` to the stored kubeconfig, as `choices` say
@@ -411,9 +413,10 @@ final class AppModel {
     func saveKube(added: String, choices: [KubeImportChoice]) async throws {
         try checkWritable()
         let merged = try await TalosClient.mergeKubeconfig(stored: kubeYAML ?? "", talos: yaml ?? "", added: added, choices: choices)
+        let generation = TalosClient.privacyGeneration() // before parsing: see ConfigSummaryCache.store
         let parsed = try await TalosClient.parseKubeconfig(merged)
         try SecureConfigStore.save(Data(merged.utf8), item: .kubeconfig)
-        apply(talos: yaml, talosSummary: talosSummary, kube: merged, kubeSummary: parsed, preferred: parsed.current)
+        apply(talos: yaml, talosSummary: talosSummary, kube: merged, kubeSummary: parsed, preferred: parsed.current, generation: generation)
     }
 
     /// Adds the built-in Kubernetes demo next to the stored clusters, replacing one added before.
@@ -431,6 +434,7 @@ final class AppModel {
         try checkWritable()
         var parsedTalos: ConfigSummary?
         var parsedKube: ConfigSummary?
+        let generation = TalosClient.privacyGeneration() // before parsing: see ConfigSummaryCache.store
         if let newTalos { parsedTalos = try await TalosClient.parse(newTalos) }
         if let newKube { parsedKube = try await TalosClient.parseKubeconfig(newKube) }
         guard let all = ConfigSummary.combined(talos: parsedTalos, kube: parsedKube) else {
@@ -447,7 +451,7 @@ final class AppModel {
         }
         SharedStore.clear() // the widget stops showing the previous config's clusters
         apply(talos: newTalos, talosSummary: parsedTalos, kube: newKube, kubeSummary: parsedKube,
-              preferred: all.selectedContext(index: activeIndex, name: nil))
+              preferred: all.selectedContext(index: activeIndex, name: nil), generation: generation)
         dataGeneration += 1
     }
 
@@ -495,13 +499,15 @@ final class AppModel {
             let left = try await TalosClient.removeKubeContext(stored: current, context: name)
             // "" once no kubeconfig cluster is left: the store goes.
             let remaining = left.isEmpty ? nil : left
+            let generation = TalosClient.privacyGeneration() // before parsing: see ConfigSummaryCache.store
             var parsed: ConfigSummary?
             if let remaining { parsed = try await TalosClient.parseKubeconfig(remaining) }
             try write(remaining, item: .kubeconfig)
-            applyIndex(talos: yaml, talosSummary: talosSummary, kube: remaining, kubeSummary: parsed, index: index)
+            applyIndex(talos: yaml, talosSummary: talosSummary, kube: remaining, kubeSummary: parsed, index: index, generation: generation)
         } else {
             guard let current = yaml else { return }
             // The talosconfig's last cluster: the store goes (kubeconfig clusters are left).
+            let generation = TalosClient.privacyGeneration() // before parsing: see ConfigSummaryCache.store
             var remaining: String?
             var parsed: ConfigSummary?
             if (talosSummary?.contexts.count ?? 0) > 1 {
@@ -510,15 +516,16 @@ final class AppModel {
                 parsed = try await TalosClient.parse(left)
             }
             try write(remaining, item: .talosconfig)
-            applyIndex(talos: remaining, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, index: index)
+            applyIndex(talos: remaining, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, index: index, generation: generation)
         }
     }
 
     /// apply, showing the context at `index` of the combined list.
-    private func applyIndex(talos: String?, talosSummary: ConfigSummary?, kube: String?, kubeSummary: ConfigSummary?, index: Int?) {
+    private func applyIndex(talos: String?, talosSummary: ConfigSummary?, kube: String?, kubeSummary: ConfigSummary?,
+                            index: Int?, generation: Int) {
         let all = ConfigSummary.combined(talos: talosSummary, kube: kubeSummary)
         apply(talos: talos, talosSummary: talosSummary, kube: kube, kubeSummary: kubeSummary,
-              preferred: all?.selectedContext(index: index, name: nil))
+              preferred: all?.selectedContext(index: index, name: nil), generation: generation)
     }
 
     /// Replaces the active context's ca/crt/key with those of `generated` (a renewed
@@ -529,6 +536,7 @@ final class AppModel {
         guard let current = yaml, let before = talosSummary else { throw TalosError(message: String(localized: "No talosconfig is stored.")) }
         let context = activeContext
         let patched = try await TalosClient.replaceContextCredentials(stored: current, generated: generated, context: context)
+        let generation = TalosClient.privacyGeneration() // before parsing: see ConfigSummaryCache.store
         let parsed = try await TalosClient.parse(patched)
         let issued = try await TalosClient.parse(generated)
         guard let renewed = parsed.context(named: context), let fresh = issued.context(named: context),
@@ -537,7 +545,7 @@ final class AppModel {
             throw TalosError(message: String(localized: "The renewed talosconfig did not validate; the stored one is unchanged."))
         }
         try SecureConfigStore.save(Data(patched.utf8))
-        apply(talos: patched, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, preferred: context)
+        apply(talos: patched, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, preferred: context, generation: generation)
     }
 
     /// Adds discovered `nodes` (addresses) to the nodes of `contextName` (the active context by
@@ -547,9 +555,10 @@ final class AppModel {
         guard let current = yaml else { throw TalosError(message: String(localized: "No talosconfig is stored.")) }
         let context = activeContext
         let updated = try await TalosClient.addContextNodes(stored: current, context: contextName ?? context, nodes: nodes)
+        let generation = TalosClient.privacyGeneration() // before parsing: see ConfigSummaryCache.store
         let parsed = try await TalosClient.parse(updated)
         try SecureConfigStore.save(Data(updated.utf8))
-        apply(talos: updated, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, preferred: context)
+        apply(talos: updated, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, preferred: context, generation: generation)
         dataGeneration += 1
     }
 
@@ -577,12 +586,13 @@ final class AppModel {
     /// Stores an edited config, keeping the context on screen, and reloads the screens.
     private func store(_ updated: String) async throws {
         try checkWritable()
+        let generation = TalosClient.privacyGeneration() // before parsing: see ConfigSummaryCache.store
         let parsed = try await TalosClient.parse(updated)
         try SecureConfigStore.save(Data(updated.utf8))
         let index = summary?.contexts.firstIndex { $0.name == activeContext }
         let all = ConfigSummary.combined(talos: parsed, kube: kubeSummary)
         apply(talos: updated, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary,
-              preferred: all?.selectedContext(index: index, name: activeContext))
+              preferred: all?.selectedContext(index: index, name: activeContext), generation: generation)
         dataGeneration += 1
     }
 
@@ -758,14 +768,18 @@ final class AppModel {
         // Both stores parsed before: one that no longer does is kept as it was rather than dropped.
         guard parsed.unreadable.isEmpty else { return }
         let index = before.contexts.firstIndex { $0.name == activeContext }
-        applyIndex(talos: yaml, talosSummary: parsed.talos, kube: kubeYAML, kubeSummary: parsed.kube, index: index)
+        applyIndex(talos: yaml, talosSummary: parsed.talos, kube: kubeYAML, kubeSummary: parsed.kube, index: index, generation: parsed.generation)
     }
 
     /// Shows the stored configs `talos` and `kube` (nil: none of that kind) and their parsed
     /// summaries, on the context `preferred` (else the current one). Callers keep at least one.
     private func apply(talos newTalos: String?, talosSummary newTalosSummary: ConfigSummary?,
-                       kube newKube: String?, kubeSummary newKubeSummary: ConfigSummary?, preferred: String?) {
+                       kube newKube: String?, kubeSummary newKubeSummary: ConfigSummary?, preferred: String?,
+                       generation: Int) {
         guard let newSummary = ConfigSummary.combined(talos: newTalosSummary, kube: newKubeSummary) else { return }
+        // Every change of the stored configs comes through here: the next launch reads these.
+        ConfigSummaryCache.shared.store(talos: newTalos, talosSummary: newTalosSummary, kube: newKube, kubeSummary: newKubeSummary,
+                                        generation: generation)
         forgetFeatures()
         yaml = newTalos
         kubeYAML = newKube
