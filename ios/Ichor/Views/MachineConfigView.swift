@@ -14,11 +14,15 @@ struct MachineConfigView: View {
     let hostname: String
     /// A drift difference from Insights: the screen opens a draft that undoes it, then the review.
     let fix: DriftFix?
+    /// A snippet to add (a pod's pull problem: the registry mirror): the screen opens a draft
+    /// and the snippet's form on it.
+    let snippet: SnippetRequest?
 
-    init(node: String, hostname: String, fix: DriftFix? = nil) {
+    init(node: String, hostname: String, fix: DriftFix? = nil, snippet: SnippetRequest? = nil) {
         self.node = node
         self.hostname = hostname
         self.fix = fix
+        self.snippet = snippet
     }
 
     @Environment(AppModel.self) private var model
@@ -44,6 +48,9 @@ struct MachineConfigView: View {
     @State private var replayable = true
     @State private var pickingSnippet = false
     @State private var fixApplied = false
+    /// The snippet the picker opens on, until it closes once.
+    @State private var pendingSnippet: SnippetRequest?
+    @State private var snippetOpened = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -74,14 +81,15 @@ struct MachineConfigView: View {
         .fullScreenCover(isPresented: $followingTry, onDismiss: { Task { await finishTry() } }) {
             ConfigTryView(node: node, hostname: hostname, request: nil) { _ in }
         }
-        .sheet(isPresented: $pickingSnippet) {
-            SnippetPickerSheet { id, params in
+        .sheet(isPresented: $pickingSnippet, onDismiss: { pendingSnippet = nil }) {
+            SnippetPickerSheet(initial: pendingSnippet) { id, params in
                 Task { await applySnippet(id: id, params: params) }
             }
         }
         .task {
             await load()
             await applyFixOnce()
+            await openSnippetOnce()
         }
     }
 
@@ -289,6 +297,16 @@ struct MachineConfigView: View {
         } catch {
             message = error.localizedDescription
         }
+    }
+
+    /// Opened with a snippet to add: a draft, then the snippet's form on it.
+    private func openSnippetOnce() async {
+        guard let snippet, !snippetOpened, loadedYAML != nil else { return }
+        snippetOpened = true
+        await startEditing()
+        guard draft != nil else { return }
+        pendingSnippet = snippet
+        pickingSnippet = true
     }
 
     /// Opened from an Insights drift difference: a draft that undoes it, then the review.

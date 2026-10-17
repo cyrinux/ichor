@@ -2,8 +2,10 @@ import SwiftUI
 import IchorCore
 
 /// The ready-made config changes: pick one, fill its parameters, and `onApply` adds it to the
-/// draft (the change then shows in the tree and the review, like any edit).
+/// draft (the change then shows in the tree and the review, like any edit). `initial` opens
+/// on one snippet's form, its parameters prefilled, instead of the list.
 struct SnippetPickerSheet: View {
+    var initial: SnippetRequest?
     let onApply: (_ id: String, _ params: [String: String]) -> Void
 
     @Environment(AppModel.self) private var model
@@ -13,24 +15,13 @@ struct SnippetPickerSheet: View {
     var body: some View {
         NavigationStack {
             LoadStateView(state: state, retry: load) { list in
-                List {
-                    ForEach(list.byGroup, id: \.group) { entry in
-                        Section(snippetGroupTitle(entry.group)) {
-                            ForEach(entry.snippets) { snippet in
-                                NavigationLink {
-                                    SnippetForm(snippet: snippet) { params in
-                                        onApply(snippet.id, params)
-                                        dismiss()
-                                    }
-                                } label: {
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        Text(snippetTitle(snippet.id))
-                                        Text(snippetDescription(snippet.id)).font(.caption).foregroundStyle(.secondary)
-                                    }
-                                }
-                            }
-                        }
+                if let initial, let snippet = list.snippets.first(where: { $0.id == initial.id }) {
+                    SnippetForm(snippet: snippet, prefill: initial.params) { params in
+                        onApply(snippet.id, params)
+                        dismiss()
                     }
+                } else {
+                    snippetList(list)
                 }
             }
             .navigationTitle("Snippets")
@@ -44,15 +35,45 @@ struct SnippetPickerSheet: View {
         .task { await load() }
     }
 
+    private func snippetList(_ list: ConfigSnippetList) -> some View {
+        List {
+            ForEach(list.byGroup, id: \.group) { entry in
+                Section(snippetGroupTitle(entry.group)) {
+                    ForEach(entry.snippets) { snippet in
+                        NavigationLink {
+                            SnippetForm(snippet: snippet) { params in
+                                onApply(snippet.id, params)
+                                dismiss()
+                            }
+                        } label: {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(snippetTitle(snippet.id))
+                                Text(snippetDescription(snippet.id)).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private func load() async {
         guard let client = model.client else { return }
         state = await LoadState.from { try await client.configSnippets() }
     }
 }
 
+/// A snippet a screen opens on, its parameters prefilled (by name).
+struct SnippetRequest: Hashable {
+    let id: String
+    var params: [String: String] = [:]
+}
+
 /// The parameters of one snippet.
 private struct SnippetForm: View {
     let snippet: ConfigSnippet
+    /// Values filled in before the form shows.
+    var prefill: [String: String] = [:]
     let onApply: ([String: String]) -> Void
 
     @State private var values: [String: String] = [:]
@@ -75,6 +96,9 @@ private struct SnippetForm: View {
         }
         .navigationTitle(snippetTitle(snippet.id))
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            if values.isEmpty { values = prefill }
+        }
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Add to the draft") {

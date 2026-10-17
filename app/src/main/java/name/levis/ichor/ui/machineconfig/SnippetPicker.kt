@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ConfigSnippet
 import name.levis.ichor.model.SnippetParam
+import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.model.byGroup
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.ErrorBox
@@ -49,11 +50,15 @@ fun SnippetPickerDialog(
     onRetry: () -> Unit,
     onApply: (id: String, params: Map<String, String>) -> Unit,
     onDismiss: () -> Unit,
+    /** The snippet to open on, its parameters prefilled; null for the list. */
+    prefill: SnippetPrefill? = null,
 ) {
-    var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedId by rememberSaveable { mutableStateOf(prefill?.id) }
     val list = (snippets as? UiState.Loaded)?.data.orEmpty()
     val selected = list.firstOrNull { it.id == selectedId }
-    val values = remember(selectedId) { mutableStateMapOf<String, String>() }
+    val values = remember(selectedId) {
+        mutableStateMapOf<String, String>().apply { if (prefill != null && selectedId == prefill.id) putAll(prefill.params) }
+    }
     val complete = selected != null && selected.params.all { values[it.name].orEmpty().isNotBlank() || it.type == "bool" }
 
     AlertDialog(

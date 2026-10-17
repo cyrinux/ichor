@@ -82,7 +82,7 @@ fun FindingCard(f: CheckupFinding, now: Long, onDelete: (() -> Unit)? = null) {
                 f.detail.takeIf { it.isNotEmpty() }?.let {
                     Text(it, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = colors.muted, maxLines = 6, overflow = TextOverflow.Ellipsis)
                 }
-                checkupFix(f.kind).takeIf { it != 0 }?.let { MutedText(stringResource(it)) }
+                checkupFix(f.kind, f.reason).takeIf { it != 0 }?.let { MutedText(stringResource(it)) }
                 if (onDelete != null) {
                     TextButton(onClick = onDelete) { Text(stringResource(R.string.common_delete), color = colors.bad) }
                 }

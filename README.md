@@ -34,7 +34,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
 - **Kubernetes:** list Deployments, StatefulSets and DaemonSets with their rollout state and
   restart one with a rolling update (`kubectl rollout restart`), then follow it live with its
   old and new pods (`kubectl rollout status`); list pods with their
-  `kubectl get pods` status and delete one so its controller starts a new one, or only those of
+  `kubectl get pods` status (a pod that cannot pull its image says why: not found, pull limit,
+  pull secret, certificate, network, and what to do) and delete one so its controller starts a new one, or only those of
   a node or of a workload (`--field-selector spec.nodeName=`, the workload's selector); list CronJobs
   with their schedule, next run and recent runs, and run one now (`kubectl create job --from`,
   with an icon and a title of your choice, see [CronJobs](#cronjobs)); measure the

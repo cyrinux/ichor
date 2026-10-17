@@ -87,6 +87,8 @@ fun KubernetesScreen(
     onAutoscaling: () -> Unit,
     onVirtualMachines: () -> Unit,
     focus: KubeFocus = KubeFocus(0),
+    /** Where a pod's pull problem leads; null on a cluster without Talos nodes. */
+    pullLinks: PodPullLinks? = null,
 ) {
     var tab by rememberSaveable { mutableIntStateOf(focus.tab) }
     var query by rememberSaveable { mutableStateOf(focus.name) }
@@ -204,6 +206,7 @@ fun KubernetesScreen(
                         vm = pods,
                         focusKey = focusKey(page),
                         onFocused = onFocused,
+                        pullLinks = pullLinks,
                     )
                     2 -> CronJobsTab(scope, query, onQuery = { query = it }, vm = cronJobs, focusKey = focusKey(page), onFocused = onFocused)
                     else -> NetPerfTab(netPerf)

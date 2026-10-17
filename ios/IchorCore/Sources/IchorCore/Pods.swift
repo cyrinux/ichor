@@ -23,6 +23,10 @@ public struct KubePod: Codable, Equatable, Identifiable, Sendable {
     public let containerNames: [String]
     /// How a container last stopped, e.g. "OOMKilled (exit 137)"; "" when none did.
     public let lastTermination: String
+    /// The kubelet's message for the waiting reason the status shows, "" when none.
+    public let waiting: String
+    /// Why the image cannot be pulled; nil unless the pod is stuck pulling.
+    public let pull: PullProblem?
 
     public var id: String { "\(namespace)/\(name)" }
 
@@ -33,7 +37,7 @@ public struct KubePod: Codable, Equatable, Identifiable, Sendable {
 
     public init(namespace: String, name: String, status: String = "", healthy: Bool = false, ready: Int = 0, containers: Int = 0,
                 restarts: Int = 0, node: String = "", owner: String = "", created: Int64 = 0, images: [String] = [],
-                containerNames: [String] = [], lastTermination: String = "") {
+                containerNames: [String] = [], lastTermination: String = "", waiting: String = "", pull: PullProblem? = nil) {
         self.namespace = namespace
         self.name = name
         self.status = status
@@ -47,6 +51,8 @@ public struct KubePod: Codable, Equatable, Identifiable, Sendable {
         self.images = images
         self.containerNames = containerNames
         self.lastTermination = lastTermination
+        self.waiting = waiting
+        self.pull = pull
     }
 
     public init(from decoder: Decoder) throws {
@@ -64,10 +70,12 @@ public struct KubePod: Codable, Equatable, Identifiable, Sendable {
         images = try c.field(.images, [])
         containerNames = try c.field(.containerNames, [])
         lastTermination = try c.field(.lastTermination, "")
+        waiting = try c.field(.waiting, "")
+        pull = try c.decodeIfPresent(PullProblem.self, forKey: .pull)
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, status, healthy, ready, containers, restarts, node, owner, created, images, containerNames, lastTermination
+        case namespace, name, status, healthy, ready, containers, restarts, node, owner, created, images, containerNames, lastTermination, waiting, pull
     }
 }
 
