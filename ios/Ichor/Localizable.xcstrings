@@ -150395,6 +150395,41 @@
         }
       }
     },
+    "not enough ephemeral storage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pas assez de stockage éphémère"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no hay suficiente almacenamiento efímero"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "бракує ефемерного сховища"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nicht genug flüchtiger Speicher"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "storage effimero insufficiente"
+          }
+        }
+      }
+    },
     "not enough memory" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -4920,6 +4920,7 @@
     <string name="capacity_loss_pending_title">Stay Pending</string>
     <string name="capacity_loss_pending_cpu">not enough CPU</string>
     <string name="capacity_loss_pending_memory">not enough memory</string>
+    <string name="capacity_loss_pending_ephemeral">not enough ephemeral storage</string>
     <string name="capacity_loss_pending_pods">no pod slot left</string>
     <string name="capacity_loss_suggestions_title">To make room, scale down</string>
     <string name="capacity_loss_suggestion">Scale %1$s from %2$s to %3$s</string>

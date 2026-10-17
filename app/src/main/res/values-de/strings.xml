@@ -4906,6 +4906,7 @@
     <string name="capacity_loss_pending_title">Bleiben Pending</string>
     <string name="capacity_loss_pending_cpu">nicht genug CPU</string>
     <string name="capacity_loss_pending_memory">nicht genug Speicher</string>
+    <string name="capacity_loss_pending_ephemeral">nicht genug flüchtiger Speicher</string>
     <string name="capacity_loss_pending_pods">kein Pod-Platz mehr</string>
     <string name="capacity_loss_suggestions_title">Um Platz zu schaffen, herunterskalieren</string>
     <string name="capacity_loss_suggestion">%1$s von %2$s auf %3$s skalieren</string>

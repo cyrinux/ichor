@@ -6,8 +6,9 @@ import (
 )
 
 // The demo cluster losing a worker (see demoKubeCapacity): postgres preempts a pod of the
-// class-less worker, which then stays Pending with the batch-low cache (preemptionPolicy
-// Never); the suggestions start with the class-less importer and never touch a system class.
+// class-less worker, which then stays Pending for memory; the batch-low cache (preemptionPolicy
+// Never) stays Pending for the ephemeral storage its 1 GiB request asks. The suggestions start
+// with the class-less importer and never touch a system class.
 // Losing both workers leaves only the NoSchedule control planes: all eleven movable pods stay
 // Pending, and as every scalable workload then has a Pending pod there is nothing to suggest.
 // As with the real planner, every lost or preempted pod ends up placed or Pending exactly
@@ -53,7 +54,7 @@ func demoNodeLossOne(node, other string, nodes []string) nodeLossPlan {
 	}
 	plan.Pending = []nodeLossPending{
 		{Namespace: "demo", Name: "report-cache-8d5f6-q7r4t", Workload: "Deployment/report-cache", Priority: 100,
-			PriorityClassName: "batch-low", QoS: qosBurstable, Reason: pendingMemory},
+			PriorityClassName: "batch-low", QoS: qosBurstable, Reason: pendingEphemeral},
 		{Namespace: "demo", Name: "worker-6f4b8-uvwxy", Workload: "Deployment/worker", QoS: qosBurstable, Reason: pendingMemory},
 	}
 	plan.Suggestions = []nodeLossSuggestion{

@@ -5166,6 +5166,7 @@
     <string name="capacity_loss_pending_title">Залишаються в Pending</string>
     <string name="capacity_loss_pending_cpu">бракує CPU</string>
     <string name="capacity_loss_pending_memory">бракує пам\'яті</string>
+    <string name="capacity_loss_pending_ephemeral">бракує ефемерного сховища</string>
     <string name="capacity_loss_pending_pods">не лишилося місць для подів</string>
     <string name="capacity_loss_suggestions_title">Щоб звільнити місце, зменшити</string>
     <string name="capacity_loss_suggestion">Масштабувати %1$s з %2$s до %3$s</string>

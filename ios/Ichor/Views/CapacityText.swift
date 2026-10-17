@@ -69,6 +69,7 @@ enum CapacityText {
     static var capacityLossPendingTitle: String { String(localized: "Stay Pending") }
     static var capacityLossPendingCpu: String { String(localized: "not enough CPU") }
     static var capacityLossPendingMemory: String { String(localized: "not enough memory") }
+    static var capacityLossPendingEphemeral: String { String(localized: "not enough ephemeral storage") }
     static var capacityLossPendingPods: String { String(localized: "no pod slot left") }
     static var capacityLossSuggestionsTitle: String { String(localized: "To make room, scale down") }
     static func capacityLossSuggestion(_ a: String, _ b: String, _ c: String) -> String { String(localized: "Scale \(a) from \(b) to \(c)") }

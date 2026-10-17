@@ -158,6 +158,7 @@ struct KubeNodeLossSheet: View {
         switch reason {
         case "cpu": CapacityText.capacityLossPendingCpu
         case "memory": CapacityText.capacityLossPendingMemory
+        case "ephemeral": CapacityText.capacityLossPendingEphemeral
         default: CapacityText.capacityLossPendingPods
         }
     }
