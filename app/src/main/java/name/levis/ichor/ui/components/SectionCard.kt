@@ -18,12 +18,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 /**
  * A card with the overview cards' header: an optional [leading] icon, [title], a muted
  * [subtitle], one [pill] at the end and a chevron when the card opens a screen ([onOpen]);
- * [content] below.
+ * [content] below. The title is a heading for screen readers.
  */
 @Composable
 fun SectionCard(
@@ -75,7 +77,7 @@ fun SectionHeader(
             Spacer(Modifier.size(12.dp))
         }
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
+            Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
             if (subtitle != null) MutedText(subtitle)
         }
         trailing?.invoke()
