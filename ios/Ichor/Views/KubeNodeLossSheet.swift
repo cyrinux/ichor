@@ -20,11 +20,13 @@ struct KubeNodeLossSheet: View {
         _selected = State(initialValue: start.isEmpty ? [] : [start])
     }
 
-    /// "What if a node goes down" before the worst case answers, then the asked node or nodes.
+    /// The shown plan's node or nodes (as on Android), so ticking nodes before Simulate does not
+    /// retitle the previous plan; "What if a node goes down" or the worst node before a plan.
     private var titleText: String {
-        if selected.isEmpty { return worst.isEmpty ? CapacityText.capacityWhatIf : CapacityText.capacityLossTitle(worst) }
-        if selected.count == 1, let only = selected.first { return CapacityText.capacityLossTitle(only) }
-        return CapacityText.capacityLossTitleMulti(selected.sorted().joined(separator: ", "))
+        guard case .loaded(let plan, _, _) = state else {
+            return worst.isEmpty ? CapacityText.capacityWhatIf : CapacityText.capacityLossTitle(worst)
+        }
+        return plan.nodes.count > 1 ? CapacityText.capacityLossTitleMulti(plan.node) : CapacityText.capacityLossTitle(plan.node)
     }
 
     var body: some View {

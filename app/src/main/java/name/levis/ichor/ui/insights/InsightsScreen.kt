@@ -74,15 +74,15 @@ fun InsightsScreen(
     }) { padding ->
         Column(Modifier.pageContent(padding)) {
             SecondaryTabRow(selectedTabIndex = tab) {
-                AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.insights_drift)) })
-                AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.insights_recorder)) })
-                AppTab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.netperf_tab)) })
+                AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.insights_tab_drift)) })
+                AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.insights_tab_recorder)) })
+                AppTab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.insights_tab_network)) })
             }
             SwipeTabPager(INSIGHTS_TABS, tab, onSelect = { tab = it }) { page ->
                 if (page == 2) {
                     NetPerfTab(netPerf)
                 } else {
-                    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(if (page == 1) 4.dp else 12.dp)) {
                         state.error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
                         if (page == 0) {
                             item {
@@ -123,29 +123,14 @@ fun InsightsScreen(
                                 }
                             }
                         } else {
-                            item { Text(stringResource(R.string.insights_record_note), style = MaterialTheme.typography.bodySmall) }
-                            item {
-                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    Button(onClick = { if (state.recording) vm.stop() else vm.start() }) {
-                                        Text(stringResource(if (state.recording) R.string.insights_stop else R.string.insights_start))
-                                    }
-                                    TextButton(onClick = { vm.deleteRecording() }, enabled = !state.recording && state.document != null) { Text(stringResource(R.string.common_delete)) }
-                                }
-                            }
-                            if (state.recording) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-                            state.document?.let { document ->
-                                item { Text("${time(document.startedAt)} — ${time(document.updatedAt)}") }
-                                if (document.dropped > 0) item { Text(stringResource(R.string.insights_dropped, document.dropped)) }
-                                item {
-                                    Row {
-                                        Checkbox(checked = metrics, onCheckedChange = { metrics = it })
-                                        Text(stringResource(R.string.insights_show_metrics), modifier = Modifier.padding(top = 12.dp))
-                                    }
-                                }
-                                items(document.entries.asReversed().filter { metrics || it.kind != "metrics" }, key = { it.id }) { entry ->
-                                    IncidentEvidenceCard(entry, time(entry.at))
-                                }
-                            } ?: item { Text(stringResource(R.string.insights_no_recording)) }
+                            recorderPage(
+                                state = state,
+                                metrics = metrics,
+                                onMetrics = { metrics = it },
+                                onToggleRecording = { if (state.recording) vm.stop() else vm.start() },
+                                onDelete = { vm.deleteRecording() },
+                                time = ::time,
+                            )
                         }
                     }
                 }

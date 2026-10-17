@@ -1850,6 +1850,20 @@
     <string name="insights_dropped">Entradas antiguas descartadas: %1$d</string>
     <string name="insights_show_metrics">Mostrar muestras de métricas</string>
     <string name="insights_no_recording">No hay registros guardados.</string>
+    <string name="insights_tab_drift">Deriva</string>
+    <string name="insights_tab_recorder">Grabadora</string>
+    <string name="insights_tab_network">Red</string>
+    <string name="insights_kind_status">Nodo</string>
+    <string name="insights_kind_service">Servicio</string>
+    <string name="insights_kind_link">Enlace</string>
+    <string name="insights_kind_metrics">Métricas</string>
+    <string name="insights_kind_error">Error</string>
+    <string name="insights_kind_recovered">Recuperado</string>
+    <string name="insights_kind_event">Evento</string>
+    <plurals name="insights_healthy_run">
+        <item quantity="one">%d servicio en buen estado</item>
+        <item quantity="other">%d servicios en buen estado</item>
+    </plurals>
     <string name="insights_record_note">Registra hasta 10 minutos con esta pantalla en primer plano. Se muestrean salud, servicios, interfaces y métricas, junto con eventos Talos en directo. Sin registros sin procesar ni credenciales. La última sesión se cifra localmente; iniciar la reemplaza. Hasta 600 entradas. Los eventos usan los relojes de los nodos; el orden no prueba causalidad.</string>
     <string name="backup_desc">Guarda tus clústeres y ajustes en un archivo cifrado con una frase de contraseña para restaurarlos en un teléfono nuevo (Android o iOS). Sin la frase de contraseña no se puede abrir el archivo.</string>
     <string name="backup_create">Copia de seguridad de clústeres y ajustes</string>
