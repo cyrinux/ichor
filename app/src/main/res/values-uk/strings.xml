@@ -555,7 +555,13 @@
     <string name="settings_key_software">програмне сховище ключів</string>
     <string name="keystore_unavailable">Захищений чип телефона не відповідає. Спробуйте ще раз за мить або перезапустіть телефон.</string>
     <string name="settings_import_new">Додати кластер (імпортувати talosconfig або kubeconfig)</string>
-    <string name="security_key_fell_back">Ключ вашої конфігурації зберігається в TEE, а не в захищеному чипі, бо чип не відповідав під час його створення. Якщо видалити всі кластери й імпортувати знову, чип буде спробовано ще раз.</string>
+    <string name="security_key_fell_back">Ключ вашої конфігурації зберігається в TEE, а не в захищеному чипі, бо чип не відповідав під час його створення. «Перенести в захищений чип» пробує чип ще раз і зберігає ваші кластери.</string>
+    <string name="security_key_move">Перенести в захищений чип</string>
+    <string name="security_key_moving">Перенесення ключа в захищений чип…</string>
+    <string name="security_key_moved">Ключ тепер у захищеному чипі</string>
+    <string name="security_key_move_refused">Чип знову відмовив, нічого не змінилося</string>
+    <string name="security_key_move_partial">Один ключ перенесено в захищений чип; інший досі в TEE. Спробуйте ще раз.</string>
+    <string name="security_key_move_needs_key">Ваші конфігурації запечатано ключем безпеки: спершу розблокуйте ним, потім спробуйте ще раз.</string>
     <string name="settings_delete_config">Видалити збережений talosconfig</string>
     <string name="settings_delete_title">Видалити talosconfig?</string>
     <string name="settings_delete_body">Зашифровану конфігурацію всіх кластерів разом із їхніми клієнтськими ключами буде вилучено з цього пристрою.</string>

@@ -504,7 +504,13 @@
     <string name="settings_key_software">software keystore</string>
     <string name="keystore_unavailable">The phone\'s secure chip is not answering. Try again in a moment, or restart the phone.</string>
     <string name="settings_import_new">Add a cluster (import a talosconfig or a kubeconfig)</string>
-    <string name="security_key_fell_back">Your config key lives in the TEE, not the secure chip, because the chip did not answer when it was created. Removing every cluster and importing again tries the chip again.</string>
+    <string name="security_key_fell_back">Your config key lives in the TEE, not the secure chip, because the chip did not answer when it was created. Move to the secure chip tries the chip again and keeps your clusters.</string>
+    <string name="security_key_move">Move to the secure chip</string>
+    <string name="security_key_moving">Moving the key to the secure chip…</string>
+    <string name="security_key_moved">The key is now in the secure chip</string>
+    <string name="security_key_move_refused">The chip refused again, nothing changed</string>
+    <string name="security_key_move_partial">One key moved to the secure chip; the other is still in the TEE. Try again.</string>
+    <string name="security_key_move_needs_key">Your configs are sealed with a security key: unlock with it first, then try again.</string>
     <string name="settings_delete_config">Delete stored talosconfig</string>
     <string name="settings_delete_title">Delete talosconfig?</string>
     <string name="settings_delete_body">The encrypted config of every cluster, with their client keys, will be removed from this device.</string>

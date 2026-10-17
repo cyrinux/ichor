@@ -9,10 +9,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -58,11 +61,12 @@ fun SettingsPageScreen(page: SettingsPage, stores: SettingsStores, actions: Sett
     val config by stores.configs.config.collectAsStateWithLifecycle()
     val summary = config?.activeSummary
     val app = LocalContext.current.applicationContext as TalosApp
-    SettingsPageScaffold(page, onBack) {
+    val snackbar = remember { SnackbarHostState() }
+    SettingsPageScaffold(page, snackbar, onBack) {
         when (page) {
             SettingsPage.APPEARANCE -> AppearanceSection(stores.uiPreferences)
             SettingsPage.SECURITY -> {
-                KeyFallbackNotice(stores.configs)
+                KeyFallbackNotice(stores.configs, snackbar)
                 SecuritySection(stores.appLock, stores.uiPreferences, required = lockRequired(config?.summary?.contexts.orEmpty()))
             }
             SettingsPage.PRIVACY -> PrivacySection(app)
@@ -86,7 +90,7 @@ fun SettingsPageScreen(page: SettingsPage, stores: SettingsStores, actions: Sett
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsPageScaffold(page: SettingsPage, onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+private fun SettingsPageScaffold(page: SettingsPage, snackbar: SnackbarHostState, onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -94,6 +98,7 @@ private fun SettingsPageScaffold(page: SettingsPage, onBack: () -> Unit, content
                 navigationIcon = { BackButton(onBack) },
             )
         },
+        snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         Column(
             Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
