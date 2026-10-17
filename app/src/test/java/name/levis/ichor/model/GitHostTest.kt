@@ -16,7 +16,10 @@ class GitHostTest {
         assertEquals("github.com", normalizeGitHost("  GitHub.com  "))
         assertEquals("gitlab.example.org", normalizeGitHost("http://GitLab.Example.org//"))
         assertEquals("git.example.org:3000", normalizeGitHost("https://git.example.org:3000/api/v1/"))
-        assertEquals("gitlab.example.org/gitlab", normalizeGitHost("https://gitlab.example.org/gitlab/api/v4"))
+        assertEquals("gitlab.example.org", normalizeGitHost("https://gitlab.example.org/group/repo.git"))
+        assertEquals("git.example.org:3000", normalizeGitHost("http://git.example.org:3000/?tab=repos"))
+        assertEquals("github.com", normalizeGitHost("github.com."))
+        assertEquals("", normalizeGitHost("git example.org"))
         assertEquals("git.example.org", normalizeGitHost("https://user@git.example.org"))
         assertEquals("", normalizeGitHost(" https:// "))
     }
@@ -55,6 +58,17 @@ class GitHostTest {
         GitHostKind.entries.forEach { assertEquals(it, GitHostKind.fromWire(it.wire)) }
         assertEquals(GitHostKind.AUTO, GitHostKind.fromWire("bitbucket"))
         assertFalse(GitHostKind.entries.any { it != GitHostKind.AUTO && it.label == null })
+    }
+
+    @Test
+    fun aKindFromANewerAppReadsAsAuto() {
+        // A list saved by a newer app with a kind this one does not know keeps its hosts.
+        val hosts = Json.decodeFromString(
+            kotlinx.serialization.builtins.ListSerializer(GitHost.serializer()),
+            """[{"host":"git.example.org","kind":"bitbucket"},{"host":"github.com","kind":"github"}]""",
+        )
+        assertEquals(listOf(GitHost("git.example.org", GitHostKind.AUTO), GitHost("github.com", GitHostKind.GITHUB)), hosts)
+        assertEquals(""""gitlab"""", Json.encodeToString(GitHostKindSerializer, GitHostKind.GITLAB))
     }
 
     private fun parse(json: String): JsonObject = Json.parseToJsonElement(json).jsonObject

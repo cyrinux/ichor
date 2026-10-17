@@ -1,6 +1,11 @@
 package name.levis.ichor.model
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -22,7 +27,19 @@ enum class GitHostKind(val wire: String, val label: String?) {
  * Keystore file, see GitHostStore), so neither toString nor a serialized list can carry it.
  */
 @Serializable
-data class GitHost(val host: String, val kind: GitHostKind = GitHostKind.AUTO)
+data class GitHost(
+    val host: String,
+    @Serializable(with = GitHostKindSerializer::class) val kind: GitHostKind = GitHostKind.AUTO,
+)
+
+/** [GitHostKind] by its wire name; one a newer app wrote reads as [GitHostKind.AUTO]. */
+object GitHostKindSerializer : KSerializer<GitHostKind> {
+    override val descriptor = PrimitiveSerialDescriptor("GitHostKind", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: GitHostKind) = encoder.encodeString(value.wire)
+
+    override fun deserialize(decoder: Decoder): GitHostKind = GitHostKind.fromWire(decoder.decodeString())
+}
 
 /** What `GitForgeCheck` answers: who the token signs in as, and the scopes it lacks. */
 @Serializable
@@ -34,17 +51,16 @@ data class GitHostCheck(
 )
 
 /**
- * The host as typed or pasted, reduced to what the list keys on: no scheme, no trailing slash,
- * no API path, the host part in lower case ("https://GitHub.com/" is "github.com"). A path is
- * kept for a forge served under one (`gitlab.example.org/gitlab`). Blank when nothing is left.
+ * The host as typed or pasted, reduced to what the list keys on and the Go core matches a
+ * repository's host against: the host and its port, in lower case, without scheme, user, path
+ * or query ("https://GitHub.com/" and a pasted repository URL both give "github.com"). Blank
+ * when nothing is left or it holds a space. The same rule as iOS's normalizedGitHost.
  */
 fun normalizeGitHost(input: String): String {
-    val noScheme = input.trim().replace(SCHEME, "")
-    val trimmed = API_PATHS.fold(noScheme.trimEnd('/')) { acc, api -> acc.removeSuffix(api) }.trimEnd('/')
-    val slash = trimmed.indexOf('/')
-    val authority = if (slash < 0) trimmed else trimmed.substring(0, slash)
-    val path = if (slash < 0) "" else trimmed.substring(slash)
-    return authority.substringAfterLast('@').lowercase() + path
+    val noScheme = input.trim().lowercase().replace(SCHEME, "")
+    val end = noScheme.indexOfFirst { it == '/' || it == '?' || it == '#' }
+    val authority = (if (end < 0) noScheme else noScheme.substring(0, end)).substringAfterLast('@').trimEnd('.', ':')
+    return if (authority.any { it.isWhitespace() }) "" else authority
 }
 
 /**
@@ -64,4 +80,3 @@ fun gitHostJson(host: GitHost, token: String, demo: Boolean): String =
     }
 
 private val SCHEME = Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://")
-private val API_PATHS = listOf("/api/v1", "/api/v3", "/api/v4")

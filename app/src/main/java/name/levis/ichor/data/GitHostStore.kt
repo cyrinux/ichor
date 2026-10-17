@@ -131,10 +131,3 @@ class GitHostStore(
         private const val TOKEN_NAME_BYTES = 12
     }
 }
-
-/** A token in a [SecureStore]; [delete] drops its Keystore key with the file. */
-class SecureStoreToken(private val store: SecureStore) : SealedValue {
-    override fun read(): String? = store.read()?.decodeToString()
-    override fun write(value: String) = store.write(value.encodeToByteArray())
-    override fun delete() = store.clear()
-}

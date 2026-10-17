@@ -29,7 +29,8 @@ class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) :
         val store = checkNotNull(gitHosts) { "No Git host store" }
         val json = store.hostJson(host, token)
         val check = withContext(Dispatchers.IO) { decodeGitHostCheck(Ichorgo.gitForgeCheck(json)) }
-        store.rememberLogin(host.host, check.login)
+        // A typed token is not saved yet: its login is remembered on Save, not here.
+        if (token.isNullOrBlank()) store.rememberLogin(host.host, check.login)
         return check
     }
 

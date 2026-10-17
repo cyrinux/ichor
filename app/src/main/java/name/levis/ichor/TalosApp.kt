@@ -43,7 +43,6 @@ import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.data.GitHostStore
-import name.levis.ichor.data.SecureStoreToken
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.data.GoCall
 import name.levis.ichor.data.KubeRepository
@@ -164,7 +163,7 @@ class TalosApp : Application() {
             getSharedPreferences(GitHostStore.FILE, Context.MODE_PRIVATE),
             { host ->
                 val name = GitHostStore.tokenName(host)
-                SecureStoreToken(SecureStore(java.io.File(filesDir, "$name.enc"), keyAlias = name))
+                SecureStoreValue(java.io.File(filesDir, "$name.enc"), name, strongBox = false)
             },
             ProcessLifecycleOwner.get().lifecycleScope,
             demo = { configRepository.config.value?.activeSummary?.isDemo == true },
