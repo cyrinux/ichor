@@ -3,6 +3,7 @@ package name.levis.ichor.ui.gitops
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,9 +21,12 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -32,8 +36,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -51,6 +57,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ProposeBlock
+import name.levis.ichor.model.QuickEdit
+import name.levis.ichor.model.QuickEditTargets
 import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.forgeFileUrl
 import name.levis.ichor.model.isYamlPath
@@ -74,7 +82,9 @@ import name.levis.ichor.ui.settings.openUrl
  * file scrolls smoothly), long lines scrolled sideways; Copy, Open in browser and Edit ([onEdit],
  * a pull request through the forge: disabled with the reason when there is no token for its
  * host or no forge). A file over 1 MiB comes without its content: a note sends to the browser.
- * [line] (1-based, from a diff's "Open source file"): scrolled to and highlighted.
+ * [line] (1-based, from a diff's "Open source file"): scrolled to and highlighted. Quick edit
+ * (a workload's image tag or replicas, offered when Edit is) checks the edit on the file, then
+ * [onQuickEdit] opens the editor's review with it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,12 +94,21 @@ fun SourceFileScreen(
     onBack: () -> Unit,
     onAddToken: (() -> Unit)?,
     onEdit: (() -> Unit)? = null,
+    onQuickEdit: ((QuickEdit) -> Unit)? = null,
     line: Int? = null,
 ) {
     val context = LocalContext.current
     val talos = context.applicationContext as TalosApp
     val vm: SourceFileViewModel = viewModel(factory = factory { SourceFileViewModel(talos.gitOpsRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
+    val quickSheet by vm.quick.sheet.collectAsStateWithLifecycle()
+    val applied by vm.quick.applied.collectAsStateWithLifecycle()
+    val onQuick by rememberUpdatedState(onQuickEdit)
+    LaunchedEffect(applied) {
+        val edit = applied ?: return@LaunchedEffect
+        vm.quick.consumeApplied()
+        onQuick?.invoke(edit)
+    }
     val config by talos.configRepository.config.collectAsStateWithLifecycle()
     val generation by talos.configRepository.generation.collectAsStateWithLifecycle()
     LaunchedEffect(config?.activeContext, generation) { vm.load(target, path, config?.activeContext to generation) }
@@ -101,6 +120,15 @@ fun SourceFileScreen(
         onPauseOrDispose { }
     }
     val view = (state.file as? UiState.Loaded)?.data
+    // Quick edits follow Edit's rules: offered only when the file can be proposed.
+    val quick = state.quick?.takeIf { view != null && !view.file.truncated && onEdit != null && onQuickEdit != null && state.editBlock == null }
+    val sheet = quickSheet
+    if (quick != null && sheet != null) {
+        when (sheet.kind) {
+            QuickSheetKind.IMAGE -> QuickEditImageSheet(sheet, quick, onApply = vm.quick::applyEdit, onDismiss = vm.quick::close)
+            QuickSheetKind.REPLICAS -> QuickEditReplicasSheet(sheet, quick, onApply = vm.quick::applyEdit, onDismiss = vm.quick::close)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -120,6 +148,7 @@ fun SourceFileScreen(
                 },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    if (quick != null) QuickEditMenu(quick, onOpen = { vm.quick.open(it) })
                     if (view != null && !view.file.truncated && onEdit != null) {
                         TooltipIconButton(Icons.Outlined.Edit, stringResource(R.string.gitops_edit), onClick = onEdit, enabled = state.editBlock == null)
                     }
@@ -155,6 +184,29 @@ fun SourceFileScreen(
                     if (onEdit != null && block != null) EditBlockNote(block, onAddToken)
                     SourceLines(s.data.file.content, yaml = isYamlPath(path), line = line, modifier = Modifier.weight(1f))
                 }
+            }
+        }
+    }
+}
+
+/** The Quick edit button and its menu: Change image tag, Set replicas, each when the file offers it. */
+@Composable
+private fun QuickEditMenu(targets: QuickEditTargets, onOpen: (QuickSheetKind) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        TooltipIconButton(Icons.Outlined.Bolt, stringResource(R.string.gitops_quick_edit), onClick = { open = true })
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            if (targets.canEditImage) {
+                DropdownMenuItem(text = { Text(stringResource(R.string.gitops_quick_image)) }, onClick = {
+                    open = false
+                    onOpen(QuickSheetKind.IMAGE)
+                })
+            }
+            if (targets.canEditReplicas) {
+                DropdownMenuItem(text = { Text(stringResource(R.string.gitops_quick_replicas)) }, onClick = {
+                    open = false
+                    onOpen(QuickSheetKind.REPLICAS)
+                })
             }
         }
     }

@@ -7,6 +7,8 @@ import IchorCore
 /// than wrapping. Copy, and the file's page in the browser; a file over 1 MiB only says so.
 /// Edit opens SourceEditView, which turns a change into a pull request through the Git host
 /// (with its token); without a token, or off a forge, a bar says why it is not offered.
+/// Quick edit, when the file sets images or replicas, picks a tag or a count and opens the
+/// editor straight at the review (same rules as Edit).
 struct SourceFileView: View {
     let source: GitSource
     let path: String
@@ -32,6 +34,13 @@ struct SourceFileView: View {
     @State private var editing = false
     /// Why Edit is not offered, nil when it is.
     @State private var editBlock: SourceEditBlock?
+    /// What the file offers to quick edits, nil when nothing (no menu).
+    @State private var quickTargets: QuickEditTargets?
+    @State private var quickSheet: QuickEditSheet?
+    /// The edit a quick sheet chose: the editor opens with it once the sheet is gone.
+    @State private var pendingQuickEdit: QuickEdit?
+    /// The quick edit the editor opens with, nil for the plain editor.
+    @State private var quickEdit: QuickEdit?
 
     private var demo: Bool { model.activeSummary?.demo == true }
 
@@ -55,13 +64,24 @@ struct SourceFileView: View {
         .navigationTitle(Text(verbatim: name))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $editing) {
-            SourceEditView(source: source, path: path, app: app)
+            SourceEditView(source: source, path: path, app: app, quickEdit: quickEdit)
+        }
+        .sheet(item: $quickSheet, onDismiss: openPendingQuickEdit) { sheet in
+            quickSheetView(sheet)
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 if case .loaded(let file, _, _) = state, !file.file.truncated {
-                    Button { editing = true } label: { Label("Edit", systemImage: "pencil") }
+                    Button {
+                        quickEdit = nil
+                        editing = true
+                    } label: { Label("Edit", systemImage: "pencil") }
                         .disabled(editBlock != nil)
+                }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                if case .loaded(let file, _, _) = state, !file.file.truncated, let quickTargets {
+                    quickMenu(quickTargets)
                 }
             }
             ToolbarItem(placement: .primaryAction) {
@@ -113,6 +133,46 @@ struct SourceFileView: View {
         }
     }
 
+    /// Change image tag and Set replicas, for what the file sets.
+    private func quickMenu(_ targets: QuickEditTargets) -> some View {
+        Menu {
+            if !targets.images.isEmpty {
+                Button { quickSheet = .image } label: { Label("Change image tag", systemImage: "shippingbox") }
+            }
+            if !targets.replicas.isEmpty {
+                Button { quickSheet = .replicas } label: { Label("Set replicas", systemImage: "square.stack.3d.up") }
+            }
+        } label: {
+            Label("Quick edit", systemImage: "wand.and.stars")
+        }
+        .disabled(editBlock != nil)
+    }
+
+    @ViewBuilder private func quickSheetView(_ sheet: QuickEditSheet) -> some View {
+        if case .loaded(let file, _, _) = state, let quickTargets {
+            switch sheet {
+            case .image:
+                QuickEditImageSheet(targets: quickTargets.images, content: file.file.content, app: app) { edit in
+                    pendingQuickEdit = edit
+                    quickSheet = nil
+                }
+            case .replicas:
+                QuickEditReplicasSheet(targets: quickTargets.replicas, content: file.file.content) { edit in
+                    pendingQuickEdit = edit
+                    quickSheet = nil
+                }
+            }
+        }
+    }
+
+    /// The quick sheet is gone: the editor opens with its edit, at the review.
+    private func openPendingQuickEdit() {
+        guard let edit = pendingQuickEdit else { return }
+        pendingQuickEdit = nil
+        quickEdit = edit
+        editing = true
+    }
+
     /// One numbered line; the line asked for is tinted and read out as such.
     private func row(_ numbered: NumberedLine, gutter: CGFloat) -> some View {
         let marked = numbered.number == line
@@ -140,6 +200,7 @@ struct SourceFileView: View {
             missingHost = nil
             let saved = source.proposalHost.map { hosts.hasToken($0) } ?? false
             editBlock = sourceEditBlock(source, demo: demo, hasToken: saved)
+            quickTargets = await Self.quickTargets(of: file)
             state = .loaded(SourceFileText(file: file), at: Date())
         } catch let missing as GitHostMissing {
             missingHost = missing.host
@@ -147,6 +208,14 @@ struct SourceFileView: View {
             missingHost = nil
             state = state.refreshed(with: .failed(error.localizedDescription))
         }
+    }
+
+    /// What file offers to quick edits; nil when nothing, or the Go core cannot read it (not
+    /// YAML): the menu is then hidden, Edit still works.
+    private static func quickTargets(of file: GitFile) async -> QuickEditTargets? {
+        guard !file.truncated, let targets = try? await TalosClient.quickEditTargets(file.content),
+              !targets.isEmpty else { return nil }
+        return targets
     }
 
     private func copy(_ content: String) {
@@ -158,6 +227,13 @@ struct SourceFileView: View {
             copied = false
         }
     }
+}
+
+/// The quick edit sheet shown.
+private enum QuickEditSheet: String, Identifiable {
+    case image, replicas
+
+    var id: String { rawValue }
 }
 
 /// Why the file cannot be edited into a pull request, with the shortcut to add the Git host's

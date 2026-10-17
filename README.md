@@ -106,6 +106,11 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   request (GitHub, GitLab, Gitea). The tracked branch is never pushed to: Argo CD or Flux
   applies the change once someone merges it. A file changed upstream in the meantime is
   refused, with Reload to start from the new version.
+- **Quick edits:** on a source file, **Quick edit** changes a container's image tag (with the
+  running tag as a suggestion) or the replicas, through a kustomization `images:` or `replicas:`
+  entry when the file has one. Only that line changes, comments and quoting included, and the
+  edit goes straight to the review and pull request. For routine bumps, Flux image automation or
+  Argo CD Image Updater can open these changes for you.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome. Optionally
   (Settings → Privacy, off by default) each Kubernetes object the app changes also gets a

@@ -32,6 +32,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -42,6 +45,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.model.DiffChange
 import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.ProposeBlock
+import name.levis.ichor.model.QuickEdit
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
@@ -61,18 +65,19 @@ import name.levis.ichor.ui.kubebrowser.KubeYamlEditor
  * Edits one file of an app's source ([path] from the repository root) and opens a pull request
  * with it: the YAML editor (schema help for a Kubernetes manifest), Review (the text diff),
  * Continue (the pull request sheet), then the request's link. Back with unsaved changes asks
- * before discarding them.
+ * before discarding them. A [quick] edit (from the file's Quick edit) is applied to the file as
+ * read and opens on its review, the pull request titled after it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SourceEditScreen(target: SourceTarget, path: String, onBack: () -> Unit, onAddToken: (() -> Unit)?) {
+fun SourceEditScreen(target: SourceTarget, path: String, onBack: () -> Unit, onAddToken: (() -> Unit)?, quick: QuickEdit? = null) {
     val talos = LocalContext.current.applicationContext as TalosApp
     val vm: SourceEditViewModel = viewModel(factory = factory { SourceEditViewModel(talos.gitOpsRepository, talos.kubeBrowser) })
     val state by vm.state.collectAsStateWithLifecycle()
     val help by vm.help.collectAsStateWithLifecycle()
     val config by talos.configRepository.config.collectAsStateWithLifecycle()
     val generation by talos.configRepository.generation.collectAsStateWithLifecycle()
-    LaunchedEffect(config?.activeContext, generation) { vm.load(target, path, config?.activeContext to generation) }
+    LaunchedEffect(config?.activeContext, generation) { vm.load(target, path, config?.activeContext to generation, quick) }
     // Back from Settings with a token: read again.
     val block by rememberUpdatedState(state.block)
     LifecycleResumeEffect(Unit) {
@@ -153,17 +158,26 @@ fun SourceEditScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
                     when {
                         e.result != null -> ProposeResult(e.result, target.tool, onDone = onBack, modifier = modifier)
                         e.review != null -> EditReview(e.review, onBack = vm::backToEditor, onContinue = vm::openForm, onRetry = vm::review, modifier = modifier)
-                        else -> KubeYamlEditor(
-                            draft = e.draft,
-                            kind = e.manifest?.kind.orEmpty(),
-                            help = help,
-                            onChange = vm::changeDraft,
-                            onOpenHelp = vm::openHelp,
-                            onRetryHelp = vm::retryHelp,
-                            onCloseHelp = vm::closeHelp,
-                            modifier = modifier,
-                            schemaHelp = e.manifest != null,
-                        )
+                        else -> Column(modifier) {
+                            // A quick edit that did not apply to the branch's file says why.
+                            e.notice?.let { notice ->
+                                MutedText(
+                                    notice.asString(),
+                                    Modifier.padding(horizontal = 16.dp, vertical = 8.dp).semantics { liveRegion = LiveRegionMode.Polite },
+                                )
+                            }
+                            KubeYamlEditor(
+                                draft = e.draft,
+                                kind = e.manifest?.kind.orEmpty(),
+                                help = help,
+                                onChange = vm::changeDraft,
+                                onOpenHelp = vm::openHelp,
+                                onRetryHelp = vm::retryHelp,
+                                onCloseHelp = vm::closeHelp,
+                                modifier = Modifier.weight(1f),
+                                schemaHelp = e.manifest != null,
+                            )
+                        }
                     }
                 }
             }

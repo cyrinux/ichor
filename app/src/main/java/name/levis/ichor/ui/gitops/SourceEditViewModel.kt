@@ -22,9 +22,12 @@ import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.ManifestType
 import name.levis.ichor.model.ProposeBlock
+import name.levis.ichor.model.QuickEdit
 import name.levis.ichor.model.isStaleFileError
 import name.levis.ichor.model.manifestType
 import name.levis.ichor.model.proposalBaseRef
+import name.levis.ichor.model.quickEditTitle
+import name.levis.ichor.model.quickProposalDefaults
 import name.levis.ichor.model.yamlCursorAt
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiState
@@ -56,7 +59,9 @@ data class ProposeForm(
 /**
  * An edit of one source file: [original] as the forge has it at [readRef] (its [fileSha] is
  * the proposal's lock), the [draft] typed, then the [review] diff, the [form] of the pull
- * request (kept when its sheet closes: [formOpen]) and its [result].
+ * request (kept when its sheet closes: [formOpen]) and its [result]. A quick edit leaves its
+ * [quick] draft and title (the request's default while the draft is still that one), or a
+ * [notice] when it did not apply to the file read here.
  */
 data class SourceEdit(
     val source: GitSource,
@@ -72,9 +77,14 @@ data class SourceEdit(
     val formOpen: Boolean = false,
     val result: GitProposalResult? = null,
     val reloading: Boolean = false,
+    val quick: QuickDraft? = null,
+    val notice: UiText? = null,
 ) {
     val changed: Boolean get() = draft != original
 }
+
+/** A quick edit's result: the [draft] it made and the pull request [title] it names. */
+data class QuickDraft(val draft: String, val title: String)
 
 /** The editor screen: the file being read, or why it cannot be edited ([block]). */
 data class SourceEditState(val edit: UiState<SourceEdit> = UiState.Loading, val block: ProposeBlock? = null)
@@ -93,14 +103,17 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
     private var key: Any? = null
     private var target: SourceTarget? = null
     private var path: String = ""
+    private var quick: QuickEdit? = null
     private var job: Job? = null
     private var helpLoad: Job? = null
 
-    fun load(target: SourceTarget, path: String, key: Any) {
+    /** Reads [path] of [target] once per [key]; a [quick] edit is applied to it and reviewed at once. */
+    fun load(target: SourceTarget, path: String, key: Any, quick: QuickEdit? = null) {
         if (key == this.key) return
         this.key = key
         this.target = target
         this.path = path
+        this.quick = quick
         refresh()
     }
 
@@ -140,7 +153,22 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
             manifest = manifestType(path, file.content),
             defaults = defaults,
         )
-        return SourceEditState(UiState.Loaded(edit))
+        val q = quick
+        return SourceEditState(UiState.Loaded(if (q != null) withQuickEdit(edit, q) else edit))
+    }
+
+    /**
+     * [edit] with [quick] applied to the file as read here (the branch the request goes to may
+     * differ from the deployed file shown before), straight on its review; when the branch
+     * already has the value or the core refuses, the editor opens on the file with why.
+     */
+    private suspend fun withQuickEdit(edit: SourceEdit, quick: QuickEdit): SourceEdit {
+        val outcome = cancellableCatching { gitOps.quickEdit(edit.original, quick) }
+        val result = outcome.getOrElse { return edit.copy(notice = it.uiText()) }
+        if (!result.changed) return edit.copy(notice = UiText.Res(R.string.gitops_quick_unchanged))
+        val review = cancellableCatching { gitOps.textDiff(edit.original, result.content, edit.path) }
+            .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
+        return edit.copy(draft = result.content, review = review, quick = QuickDraft(result.content, quickEditTitle(quick)))
     }
 
     private fun updateEdit(transform: (SourceEdit) -> SourceEdit) = _state.update { s ->
@@ -150,7 +178,7 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
 
     private val current: SourceEdit? get() = (_state.value.edit as? UiState.Loaded)?.data
 
-    fun changeDraft(text: String) = updateEdit { it.copy(draft = text) }
+    fun changeDraft(text: String) = updateEdit { it.copy(draft = text, notice = null) }
 
     /** Shows what the draft changes, as a unified diff. */
     fun review() {
@@ -174,7 +202,7 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
         val edit = current ?: return
         if (edit.form != null) return updateEdit { it.copy(formOpen = true) }
         val fixed = proposalBaseRef(edit.source.tracked)
-        val d = edit.defaults
+        val d = quickProposalDefaults(edit.defaults, edit.quick?.draft, edit.quick?.title, edit.draft)
         val form = ProposeForm(
             title = d.title,
             message = d.message,

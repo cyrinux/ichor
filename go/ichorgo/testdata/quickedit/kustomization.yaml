@@ -1,0 +1,16 @@
+# Production overlay.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+images:
+  # The app image, bumped on release.
+  - name: ghcr.io/example-org/app
+    newTag: "1.4.1"
+  - name: ghcr.io/example-org/proxy
+    newName: ghcr.io/example-org/proxy-fips
+  - name: ghcr.io/example-org/pinned
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+replicas:
+  - name: app
+    count: 2 # peak hours
