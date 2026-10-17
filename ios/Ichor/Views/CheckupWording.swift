@@ -206,12 +206,27 @@ extension CheckupFinding {
         }
     }
 
+    /// The fix for the pull problem `reason` names (Go pullProblem kind); the general one when
+    /// it names none this version knows.
+    private var podImagePullFix: String {
+        switch checkupPullKind(reason: reason) {
+        case .notFound: CheckupText.checkupPodImagePullNotFoundFix
+        case .unauthorized: CheckupText.checkupPodImagePullUnauthorizedFix
+        case .rateLimited: CheckupText.checkupPodImagePullRateLimitedFix
+        case .tls: CheckupText.checkupPodImagePullTLSFix
+        case .network: CheckupText.checkupPodImagePullNetworkFix
+        case .platform: CheckupText.checkupPodImagePullPlatformFix
+        case .invalidName: CheckupText.checkupPodImagePullInvalidNameFix
+        case .unknown: CheckupText.checkupPodImagePullFix
+        }
+    }
+
     /// What to do about it; nil for an event, or a kind this version does not know.
     var fix: String? {
         guard let kind else { return nil }
         switch kind {
         case .podCrashLoop: return CheckupText.checkupPodCrashLoopFix
-        case .podImagePull: return CheckupText.checkupPodImagePullFix
+        case .podImagePull: return podImagePullFix
         case .podUnschedulable: return CheckupText.checkupPodUnschedulableFix
         case .podStuckStarting: return CheckupText.checkupPodStuckStartingFix
         case .podNotReady: return CheckupText.checkupPodNotReadyFix

@@ -38,6 +38,22 @@ data class SnippetEdits(
 /** A drift difference to undo with a config change: the node gets the reference's value [before]. */
 data class DriftFix(val key: String, val before: String, val after: String)
 
+/** A snippet to open the picker on, its [params] prefilled (from another screen: a pull hint). */
+data class SnippetPrefill(val id: String, val params: Map<String, String> = emptyMap()) {
+    /** [params] as one string for a route argument: one `name=value` per line. */
+    fun encodedParams(): String = params.entries.joinToString("\n") { (k, v) -> "$k=$v" }
+
+    companion object {
+        /** The prefill of route arguments [id] and [params] ([encodedParams]); null without an id. */
+        fun decode(id: String, params: String): SnippetPrefill? = id.takeIf { it.isNotEmpty() }?.let {
+            SnippetPrefill(
+                it,
+                params.lines().mapNotNull { line -> line.split('=', limit = 2).takeIf { p -> p.size == 2 && p[0].isNotEmpty() }?.let { p -> p[0] to p[1] } }.toMap(),
+            )
+        }
+    }
+}
+
 /** The drift keys a machine config change can undo (DriftFixEdits); the others come from elsewhere. */
 private val fixableDriftKeys = setOf("dns", "ntp", "mtu")
 

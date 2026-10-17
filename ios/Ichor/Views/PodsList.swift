@@ -152,6 +152,8 @@ struct PodRow: View {
     let onLogs: () -> Void
     let onDelete: () -> Void
 
+    @State private var explainingPull = false
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 3) {
@@ -176,6 +178,16 @@ struct PodRow: View {
                 }
                 .font(.caption)
                 .monospacedDigit()
+                if let pull = pod.pull {
+                    // Why the image cannot be pulled; tap for the kubelet's message and a hint.
+                    Button { explainingPull = true } label: {
+                        Label(pull.title.text, systemImage: "exclamationmark.triangle")
+                            .font(.caption)
+                            .foregroundStyle(Color.statusWarn)
+                            .multilineTextAlignment(.leading)
+                    }
+                    .buttonStyle(.borderless)
+                }
                 if let usage { PodUsageView(top: usage).padding(.trailing, 8) }
             }
             Spacer()
@@ -199,6 +211,9 @@ struct PodRow: View {
                     .kubeGated(.deletePod, in: pod.namespace)
                     .accessibilityLabel(Text("Delete \(pod.name)"))
             }
+        }
+        .sheet(isPresented: $explainingPull) {
+            if let pull = pod.pull { PullProblemSheet(pod: pod, pull: pull) }
         }
     }
 

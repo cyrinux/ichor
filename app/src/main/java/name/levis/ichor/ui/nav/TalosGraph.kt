@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.DriftFix
+import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.model.LogSource
 import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.address
@@ -125,6 +126,8 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             navArgument("fix") { type = NavType.StringType; defaultValue = "" },
             navArgument("before") { type = NavType.StringType; defaultValue = "" },
             navArgument("after") { type = NavType.StringType; defaultValue = "" },
+            navArgument("snippet") { type = NavType.StringType; defaultValue = "" },
+            navArgument("snippetParams") { type = NavType.StringType; defaultValue = "" },
         ),
     ) { entry ->
         val args = entry.arguments
@@ -132,7 +135,8 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
         val fix = args?.getString("fix").orEmpty().takeIf { it.isNotEmpty() }?.let {
             DriftFix(it, args?.getString("before").orEmpty(), args?.getString("after").orEmpty())
         }
-        MachineConfigScreen(node = addr, hostname = args?.getString("host") ?: addr, onBack = { nav.popBackStack() }, fix = fix)
+        val snippet = SnippetPrefill.decode(args?.getString("snippet").orEmpty(), args?.getString("snippetParams").orEmpty())
+        MachineConfigScreen(node = addr, hostname = args?.getString("host") ?: addr, onBack = { nav.popBackStack() }, fix = fix, snippet = snippet)
     }
     composable(Routes.NETWORK, arguments = nodeArguments()) { entry ->
         val addr = entry.arguments?.getString("addr").orEmpty()

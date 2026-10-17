@@ -338,6 +338,13 @@ func TestPodFinding(t *testing.T) {
 			t.Errorf("%s: %+v %v", name, f, ok)
 		}
 	}
+
+	// A pull problem's kind is the finding's reason, for the apps to word it.
+	limited := checkPod{kubePod: kubePod{Status: "ImagePullBackOff", Created: checkupNow.UnixMilli(), Images: []string{demoPullImage},
+		Pull: explainPull("ImagePullBackOff", demoPullMessage, demoPullImage, nil)}, Phase: "Pending", Waiting: demoPullMessage}
+	if f, ok := podFinding(limited, checkupNow); !ok || f.Reason != pullRateLimited || f.Message != demoPullMessage || f.Extra != demoPullImage {
+		t.Errorf("rate limited %+v %v", f, ok)
+	}
 }
 
 func TestDrainFinding(t *testing.T) {

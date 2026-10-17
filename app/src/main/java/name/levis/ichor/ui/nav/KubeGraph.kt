@@ -18,6 +18,8 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.PromLink
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.model.SnippetPrefill
+import name.levis.ichor.ui.workloads.PodPullLinks
 import name.levis.ichor.model.kubeFocus
 import name.levis.ichor.ui.alerts.AlertObjectLinks
 import name.levis.ichor.ui.alerts.AlertsScreen
@@ -149,6 +151,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
                 onPolicies = { nav.navigate(Routes.POLICIES) },
                 onAutoscaling = { nav.navigate(Routes.AUTOSCALING) },
                 onVirtualMachines = { nav.navigate(Routes.VIRTUAL_MACHINES) },
+                pullLinks = podPullLinks(nav, app),
             )
         }
     }
@@ -222,6 +225,25 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
         )
     }
 }
+
+/**
+ * Where a pod's pull problem leads on a Talos cluster: its node's network tools, or its machine
+ * config on the registry mirror snippet for the registry. Null for a cluster added from a
+ * kubeconfig, which has no node screens.
+ */
+private fun podPullLinks(nav: NavHostController, app: TalosApp): PodPullLinks? =
+    if (app.configRepository.config.value?.activeIsKube == true) null else PodPullLinks(
+        talosNode = { name ->
+            app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.nodes?.firstOrNull { it.hostname == name || it.node == name }
+        },
+        onNetTools = { n -> nav.navigate(Routes.netTools(n.node, n.hostname)) },
+        onMirrorSnippet = { n, registry ->
+            nav.navigate(Routes.machineConfig(n.node, n.hostname, snippet = SnippetPrefill(REGISTRY_MIRROR_SNIPPET, mapOf("host" to registry))))
+        },
+    )
+
+/** The config snippet (go/ichorgo/configsnippets.go) a registry's pull limit is lifted with. */
+private const val REGISTRY_MIRROR_SNIPPET = "registry_mirror"
 
 /**
  * Where an alert's labels lead: a pod or a namespace on the Kubernetes screen (focused as a

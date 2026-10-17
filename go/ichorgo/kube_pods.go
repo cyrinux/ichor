@@ -29,6 +29,10 @@ type kubePod struct {
 	// LastTermination is why a restarted container last stopped ("OOMKilled (exit 137)"),
 	// "" when none did: what the previous run's log explains.
 	LastTermination string `json:"lastTermination"`
+	// Waiting is the kubelet's message for the container whose waiting reason is the pod's
+	// status ("" when none); Pull says why its image cannot be pulled, nil when it can.
+	Waiting string       `json:"waiting,omitempty"`
+	Pull    *pullProblem `json:"pull,omitempty"`
 }
 
 type kubePodList struct {
@@ -37,7 +41,8 @@ type kubePodList struct {
 
 type containerState struct {
 	Waiting *struct {
-		Reason string `json:"reason"`
+		Reason  string `json:"reason"`
+		Message string `json:"message"`
 	} `json:"waiting"`
 	Terminated *struct {
 		Reason   string `json:"reason"`
@@ -79,6 +84,9 @@ type podObject struct {
 			Name  string `json:"name"`
 			Image string `json:"image"`
 		} `json:"containers"`
+		ImagePullSecrets []struct {
+			Name string `json:"name"`
+		} `json:"imagePullSecrets"`
 	} `json:"spec"`
 	Status struct {
 		Phase                 string            `json:"phase"`
@@ -177,8 +185,45 @@ func mapPod(obj podObject) kubePod {
 
 	p.Status = podStatus(obj)
 	p.Healthy = (p.Status == "Running" && p.Ready == p.Containers) || p.Status == "Completed"
+	p.Waiting, p.Pull = podWaiting(obj, p.Status)
 
 	return p
+}
+
+// podWaiting is the message of the container whose waiting reason is status (an init
+// container's for "Init:…"), clipped like an event's, and why its image cannot be pulled.
+func podWaiting(obj podObject, status string) (string, *pullProblem) {
+	reason := strings.TrimPrefix(status, "Init:")
+	images := map[string]string{}
+
+	for _, c := range obj.Spec.InitContainers {
+		images[c.Name] = c.Image
+	}
+
+	for _, c := range obj.Spec.Containers {
+		images[c.Name] = c.Image
+	}
+
+	for _, cs := range append(append([]containerStatus{}, obj.Status.InitContainerStatuses...), obj.Status.ContainerStatuses...) {
+		w := cs.State.Waiting
+		if w == nil || w.Reason != reason {
+			continue
+		}
+
+		message := strings.TrimSpace(w.Message)
+		if len(message) > eventMessageLimit {
+			message = strings.ToValidUTF8(message[:eventMessageLimit], "") + "…"
+		}
+
+		var secrets []string
+		for _, s := range obj.Spec.ImagePullSecrets {
+			secrets = append(secrets, s.Name)
+		}
+
+		return message, explainPull(reason, w.Message, images[cs.Name], secrets)
+	}
+
+	return "", nil
 }
 
 // sidecars are the names of the init containers that keep running (restartPolicy Always).

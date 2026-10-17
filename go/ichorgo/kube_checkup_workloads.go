@@ -277,6 +277,10 @@ func podFinding(p checkPod, now time.Time) (checkupFinding, bool) {
 		f.Kind, f.Severity, f.Reason, f.Message = findPodCrashLoop, sevCritical, p.LastTermination, p.Waiting
 	case strings.Contains(p.Status, "ImagePull") || strings.Contains(p.Status, "InvalidImageName"):
 		f.Kind, f.Severity, f.Message = findPodImagePull, sevWarning, p.Waiting
+		// The kind of pull problem, for the apps to word it (podWaiting saw the same message).
+		if p.Pull != nil {
+			f.Reason = p.Pull.Kind
+		}
 
 		if age > pendingGrace {
 			f.Severity = sevCritical

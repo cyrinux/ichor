@@ -170,6 +170,7 @@ fun PodsTab(
     vm: PodsViewModel = viewModel(factory = factory { PodsViewModel(app.kubeRepository) { isMeteredNetwork(app) } }),
     focusKey: String? = null,
     onFocused: () -> Unit = {},
+    pullLinks: PodPullLinks? = null,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
@@ -220,6 +221,7 @@ fun PodsTab(
                             onLogs = { actions.logs = pod },
                             onFlows = onFlows?.let { open -> { open(pod) } },
                             usage = usage[pod.key],
+                            pullLinks = pullLinks,
                         )
                         HorizontalDivider()
                     }
@@ -231,8 +233,9 @@ fun PodsTab(
 }
 
 /**
- * A pod: name, namespace and node (when asked), status, readiness, restarts, CPU and memory in
- * use ([usage], from metrics-server); logs, flows and delete actions.
+ * A pod: name, namespace and node (when asked), status, readiness, restarts, why its image
+ * cannot be pulled (with [pullLinks] to act on it), CPU and memory in use ([usage], from
+ * metrics-server); logs, flows and delete actions.
  */
 @Composable
 internal fun PodRow(
@@ -244,6 +247,7 @@ internal fun PodRow(
     onFlows: (() -> Unit)? = null,
     showNode: Boolean = true,
     usage: KubeTopPod? = null,
+    pullLinks: PodPullLinks? = null,
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -267,6 +271,7 @@ internal fun PodRow(
                     )
                 }
             }
+            PodPullLine(pod, pullLinks)
             usage?.let { PodUsage(it, Modifier.padding(top = 2.dp, end = 8.dp)) }
         }
         IconButton(onClick = onLogs) {

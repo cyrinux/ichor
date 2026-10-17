@@ -27,6 +27,7 @@ import name.levis.ichor.model.CheckupFinding
 import name.levis.ichor.model.CheckupKind
 import name.levis.ichor.model.CheckupSectionId
 import name.levis.ichor.model.LbCause
+import name.levis.ichor.model.pullCheckupFix
 import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.loadbalancing.lbCauseText
 import name.levis.ichor.util.formatBytes
@@ -178,11 +179,14 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
     }
 }
 
-/** What to do about it; 0 for a kind without advice (an event) or one this version does not know. */
+/**
+ * What to do about it; 0 for a kind without advice (an event) or one this version does not know.
+ * [reason]: the finding's, which narrows the advice of some kinds (the cause of a failed pull).
+ */
 @StringRes
-fun checkupFix(kind: String): Int = when (kind) {
+fun checkupFix(kind: String, reason: String = ""): Int = when (kind) {
     CheckupKind.POD_CRASH_LOOP -> R.string.checkup_podCrashLoop_fix
-    CheckupKind.POD_IMAGE_PULL -> R.string.checkup_podImagePull_fix
+    CheckupKind.POD_IMAGE_PULL -> pullCheckupFix(reason) ?: R.string.checkup_podImagePull_fix
     CheckupKind.POD_UNSCHEDULABLE -> R.string.checkup_podUnschedulable_fix
     CheckupKind.POD_STUCK_STARTING -> R.string.checkup_podStuckStarting_fix
     CheckupKind.POD_NOT_READY -> R.string.checkup_podNotReady_fix

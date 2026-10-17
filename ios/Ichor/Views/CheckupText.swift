@@ -110,6 +110,13 @@ enum CheckupText {
     static func checkupHelmPending(_ a: String, _ b: String) -> String { String(localized: "Stuck in \(a) for \(b)") }
     static var checkupPodCrashLoopFix: String { String(localized: "Open its previous log from the Pods tab: the last lines before the exit say why. A wrong command, a missing config or secret, or a dependency that is down are the usual causes.") }
     static var checkupPodImagePullFix: String { String(localized: "Check the image name and tag, that the registry answers from the node, and the pull secret if the registry is private.") }
+    static var checkupPodImagePullNotFoundFix: String { String(localized: "The registry has no such image or tag: correct the name or tag, or publish the missing tag.") }
+    static var checkupPodImagePullUnauthorizedFix: String { String(localized: "The registry refused the pull: add or renew the pod's pull secret (imagePullSecrets) for it.") }
+    static var checkupPodImagePullRateLimitedFix: String { String(localized: "The registry's pull limit is reached: add a registry mirror (pull-through cache) or registry credentials to the nodes' machine config.") }
+    static var checkupPodImagePullTLSFix: String { String(localized: "The node does not trust the registry's certificate: add its CA to the machine config, or fix the certificate.") }
+    static var checkupPodImagePullNetworkFix: String { String(localized: "The node cannot reach the registry: check its DNS and egress, or use a mirror it can reach.") }
+    static var checkupPodImagePullPlatformFix: String { String(localized: "No build of the image for the node's architecture: use a multi-arch image, or schedule the pod on matching nodes.") }
+    static var checkupPodImagePullInvalidNameFix: String { String(localized: "The image reference cannot be parsed: correct its spelling in the workload.") }
     static var checkupPodUnschedulableFix: String { String(localized: "The scheduler’s message says what is missing: free CPU or memory, a node matching its selector or affinity, a toleration for a taint, or a volume in the right zone.") }
     static var checkupPodStuckStartingFix: String { String(localized: "Usually a volume that does not attach or mount, a missing ConfigMap or Secret, or the network plugin failing to set the pod up: its events say which.") }
     static var checkupPodNotReadyFix: String { String(localized: "Its readiness probe fails: the app is up but refuses traffic. Check its log and what it depends on.") }

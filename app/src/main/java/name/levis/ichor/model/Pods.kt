@@ -38,11 +38,44 @@ data class KubePod(
     val containerNames: List<String> = emptyList(),
     /** Why a restarted container last stopped ("OOMKilled (exit 137)"), "" when none did. */
     val lastTermination: String = "",
+    /** The kubelet's message for the container whose waiting reason is [status], "" when none. */
+    val waiting: String = "",
+    /** Why its image cannot be pulled; null when it can. */
+    val pull: PullProblem? = null,
 ) {
     val key: String get() = "$namespace/$name"
 
     /** Pending or terminating: not broken, not done either. */
     val transitional: Boolean get() = status == "Pending" || status == "Terminating" || status.startsWith("Init:") && status.contains('/')
+}
+
+/** Why a pod's image cannot be pulled (go/ichorgo/kube_image_pull.go); [kind] is a [PullKind] wire name. */
+@Serializable
+data class PullProblem(
+    val kind: String = "",
+    val image: String = "",
+    /** The image's registry host ("docker.io" when the reference names none). */
+    val registry: String = "",
+    /** The pod's imagePullSecrets. */
+    val secrets: List<String> = emptyList(),
+) {
+    val pullKind: PullKind get() = PullKind.parse(kind)
+}
+
+/** The kinds of [PullProblem], by wire name; anything else is [UNKNOWN]. */
+enum class PullKind(val wire: String) {
+    NOT_FOUND("notFound"),
+    UNAUTHORIZED("unauthorized"),
+    RATE_LIMITED("rateLimited"),
+    TLS("tls"),
+    NETWORK("network"),
+    PLATFORM("platform"),
+    INVALID_NAME("invalidName"),
+    UNKNOWN("unknown");
+
+    companion object {
+        fun parse(wire: String): PullKind = entries.firstOrNull { it.wire == wire } ?: UNKNOWN
+    }
 }
 
 /** Namespaces that have pods, sorted. */

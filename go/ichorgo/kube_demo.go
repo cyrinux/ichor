@@ -20,6 +20,19 @@ func demoKubeWorkloads() []kubeWorkload {
 }
 
 // demoPods are the Kubernetes pods of the built-in demo cluster.
+// The demo's pod that Docker Hub's pull limit stops, and the kubelet's words for it.
+const (
+	demoPullImage   = "nginx:1.28"
+	demoPullMessage = `failed to pull and unpack image "docker.io/library/nginx:1.28": failed to copy: httpReadSeeker: failed open: unexpected status code https://registry-1.docker.io/v2/library/nginx/manifests/sha256:4f1c: 429 Too Many Requests - Server message: toomanyrequests: You have reached your unauthenticated pull rate limit.`
+)
+
+func demoPullRateLimited(p kubePod) kubePod {
+	p.Waiting = demoPullMessage
+	p.Pull = explainPull("ImagePullBackOff", demoPullMessage, demoPullImage, nil)
+
+	return p
+}
+
 func demoPods() []kubePod {
 	created := demoBoot.UnixMilli()
 	pod := func(ns, name, status, node, owner, image string, ready, restarts int) kubePod {
@@ -35,6 +48,7 @@ func demoPods() []kubePod {
 		pod("demo", "hello-ichor-7d9c5-klmno", "Running", "demo-worker-1", "ReplicaSet/hello-ichor-7d9c5", "nginx:1.27", 1, 0),
 		pod("demo", "worker-6f4b8-pqrst", "Running", "demo-worker-2", "ReplicaSet/worker-6f4b8", "busybox:1.37", 1, 0),
 		pod("demo", "worker-6f4b8-uvwxy", "CrashLoopBackOff", "demo-worker-1", "ReplicaSet/worker-6f4b8", "busybox:1.37", 0, 14),
+		demoPullRateLimited(pod("demo", "reports-5b7c9-xkq2p", "ImagePullBackOff", "demo-worker-2", "ReplicaSet/reports-5b7c9", demoPullImage, 0, 0)),
 		pod("demo", "postgres-0", "Running", "demo-worker-2", "StatefulSet/postgres", "postgres:17", 1, 0),
 		pod("kube-system", "coredns-5c6b7-aaaaa", "Running", "demo-cp-1", "ReplicaSet/coredns-5c6b7", "registry.k8s.io/coredns/coredns:v1.12.0", 1, 0),
 		pod("kube-system", "coredns-5c6b7-bbbbb", "Running", "demo-cp-2", "ReplicaSet/coredns-5c6b7", "registry.k8s.io/coredns/coredns:v1.12.0", 1, 0),

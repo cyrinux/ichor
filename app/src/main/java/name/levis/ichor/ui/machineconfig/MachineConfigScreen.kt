@@ -56,6 +56,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.model.DriftFix
+import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ConfigApplyMode
 import name.levis.ichor.model.ConfigApplyState
@@ -94,6 +95,8 @@ fun MachineConfigScreen(
     onBack: () -> Unit,
     /** A drift difference from Insights: the screen opens a draft that undoes it, then the review. */
     fix: DriftFix? = null,
+    /** A snippet from another screen: the screen opens a draft and the picker on it, prefilled. */
+    snippet: SnippetPrefill? = null,
     vm: MachineConfigViewModel = viewModel(
         key = "machineconfig-$node",
         factory = factory { MachineConfigViewModel(app.talosRepository, node, hostname, app.configTryManager, app.configMultiManager) },
@@ -113,6 +116,17 @@ fun MachineConfigScreen(
     }
     val snippets by vm.snippets.collectAsStateWithLifecycle()
     var pickingSnippet by rememberSaveable { mutableStateOf(false) }
+    // The prefill holds for the first opening of the picker only.
+    var prefillUsed by rememberSaveable { mutableStateOf(false) }
+    var snippetOpened by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(state is UiState.Loaded) {
+        if (snippet != null && !snippetOpened && state is UiState.Loaded) {
+            snippetOpened = true
+            if (!editor.editing) vm.startEditing()
+            vm.loadSnippets()
+            pickingSnippet = true
+        }
+    }
 
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
@@ -335,9 +349,14 @@ fun MachineConfigScreen(
             onRetry = vm::loadSnippets,
             onApply = { id, params ->
                 pickingSnippet = false
+                prefillUsed = true
                 vm.applySnippet(id, params)
             },
-            onDismiss = { pickingSnippet = false },
+            onDismiss = {
+                pickingSnippet = false
+                prefillUsed = true
+            },
+            prefill = snippet.takeUnless { prefillUsed },
         )
     }
 
@@ -473,3 +492,4 @@ private fun RevealedBanner() {
 
 private fun copy(context: Context, text: String, sensitive: Boolean) =
     copyToClipboard(context, context.getString(R.string.machine_config_title), text, sensitive)
+
