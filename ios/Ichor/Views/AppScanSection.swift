@@ -1,36 +1,51 @@
 import SwiftUI
 import IchorCore
 
-/// An app's vulnerabilities (os:admin): the Trivy Operator's report, read when the sheet opens
-/// (nothing runs in the cluster for it), or a scan started from here with a Job of the scanner
-/// picked in Settings, which goes on when the sheet closes (ImageScanJob).
+/// An app's, a pod's or a workload's vulnerabilities (os:admin): the Trivy Operator's report on
+/// its pods, read when the section shows (nothing runs in the cluster for it), or a scan started
+/// from here with a Job of the scanner picked in Settings, which goes on when the screen closes
+/// (ImageScanJob). A workload is scanned by its spec's image refs (`target.byRefs`).
 struct AppScanSection: View {
-    let app: InventoryApp
+    let target: ImageScanTarget
+    /// Why what to scan could not be read (a workload's images), shown first.
+    let targetError: String?
+
+    init(app: InventoryApp) {
+        self.init(target: ImageScanTarget(app: app))
+    }
+
+    init(target: ImageScanTarget, targetError: String? = nil) {
+        self.target = target
+        self.targetError = targetError
+    }
 
     @Environment(AppModel.self) private var model
     @State private var operatorState: LoadState<OperatorReports> = .loading
-    /// The newest report kept on the phone for this app.
+    /// The newest report kept on the phone for this target.
     @State private var saved: SavedScan?
     @AppStorage(ImageScannerKeys.selected) private var scanner = ImageScanner.defaultScanner
 
     private var job: ImageScanJob { ImageScanJob.shared }
-    private var scan: ImageScanState? { job.scan(context: model.activeContext, appID: app.id) }
-    private var busyElsewhere: Bool { job.busy(otherThan: model.activeContext, appID: app.id) }
+    private var scan: ImageScanState? { job.scan(context: model.activeContext, appID: target.id) }
+    private var busyElsewhere: Bool { job.busy(otherThan: model.activeContext, appID: target.id) }
 
-    /// The Trivy Operator's report, shown when the app has no scan of its own.
+    /// The Trivy Operator's report, shown when the target has no scan of its own.
     private var operatorReport: ImageScanReport? {
         if case .loaded(let reports, _, _) = operatorState, !reports.report.images.isEmpty { return reports.report }
         return nil
     }
 
-    /// Reads the kept reports again when the app, the cluster or the scan's state changes.
-    private var savedKey: String { "\(model.activeContext)|\(app.id)|\(scan?.running == true)|\(scan?.report?.finished ?? 0)" }
+    /// Reads the kept reports again when the target, the cluster or the scan's state changes.
+    private var savedKey: String { "\(model.activeContext)|\(target.id)|\(scan?.running == true)|\(scan?.report?.finished ?? 0)" }
 
     var body: some View {
         Section("Vulnerabilities") {
             if let scan, scan.running {
                 ScanProgressLines(scan: scan) { job.stop() }
             } else {
+                if let targetError {
+                    Text(verbatim: targetError).note()
+                }
                 if let error = scan?.error {
                     Text("The scan failed: \(imageScanErrorText(error))").font(.callout).foregroundStyle(.statusBad)
                 }
@@ -47,7 +62,7 @@ struct AppScanSection: View {
                         Text("Images not scanned: \(String(current.failed))").font(.caption).foregroundStyle(.statusWarn)
                     }
                     NavigationLink {
-                        ImageScanReportView(report: current, reportJSON: scan.reportJSON, appName: app.name)
+                        ImageScanReportView(report: current, reportJSON: scan.reportJSON, appName: target.name)
                     } label: {
                         Label("View", systemImage: "doc.text.magnifyingglass")
                     }
@@ -55,7 +70,7 @@ struct AppScanSection: View {
                     LastScanLines(finished: lastSaved.finished, summary: lastSaved.summary)
                     NewFindingsLine(summary: lastSaved.newSummary, hasPrevious: false)
                     NavigationLink {
-                        SavedScanReportView(saved: lastSaved, appName: app.name)
+                        SavedScanReportView(saved: lastSaved, appName: target.name)
                     } label: {
                         Label("View", systemImage: "doc.text.magnifyingglass")
                     }
@@ -63,24 +78,27 @@ struct AppScanSection: View {
                     SeverityChips(summary: report.summary)
                     Text(verbatim: reportSourceText(report)).font(.caption).foregroundStyle(.secondary)
                     NavigationLink {
-                        ImageScanReportView(report: report, reportJSON: "", appName: app.name)
+                        ImageScanReportView(report: report, reportJSON: "", appName: target.name)
                     } label: {
                         Label("Open report", systemImage: "doc.text.magnifyingglass")
                     }
-                } else {
+                } else if !target.byRefs {
                     Text("Checks the images these pods run, by digest, for known vulnerabilities with \(scanner.label). It runs as a Job in the \(imageScanNamespace) namespace, which deletes itself afterwards.").note()
+                }
+                if target.byRefs {
+                    Text("Scanned by the image references in this workload's spec: the findings are for those tags, not necessarily what runs right now.").note()
                 }
                 if busyElsewhere {
                     Text("Another app's scan is running: one at a time.").note()
                 }
                 Button {
                     guard let client = model.client else { return }
-                    job.start(client: client, context: model.activeContext, appID: app.id, pods: app.routePods)
+                    job.start(client: client, context: model.activeContext, appID: target.id, pods: target.pods, images: target.images)
                 } label: {
                     Label(current != nil || lastSaved != nil ? LocalizedStringKey("Scan again") : LocalizedStringKey("Scan images"),
                           systemImage: "checkmark.shield")
                 }
-                .disabled(busyElsewhere || app.pods.isEmpty)
+                .disabled(busyElsewhere || target.isEmpty)
                 NavigationLink {
                     SavedScansView(cluster: model.activeContext)
                 } label: {
@@ -90,12 +108,12 @@ struct AppScanSection: View {
         }
         .task(id: savedKey) {
             let history = (try? await TalosClient.imageScanHistory(cluster: model.activeContext)) ?? []
-            saved = history.last(of: app.id)
+            saved = history.last(of: target.id)
         }
-        .task(id: app) {
+        .task(id: target) {
             operatorState = .loading
             guard let client = model.client else { return }
-            let pods = app.routePods
+            let pods = target.pods
             guard !pods.isEmpty else {
                 operatorState = .loaded(OperatorReports(), at: Date())
                 return

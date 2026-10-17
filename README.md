@@ -351,7 +351,8 @@ notification or Live Activity.
 
 ### Image vulnerability scan
 
-**Scan images** on an app's sheet (and on a Talos node's Images screen) looks for known
+**Scan images** on an app's sheet (and on a Talos node's Images screen, and on the Summary of a
+Pod, Deployment, StatefulSet or DaemonSet in the Kubernetes browser) looks for known
 vulnerabilities in the images it runs, by digest, with Trivy or Grype (Settings → Kubernetes →
 *Vulnerability scanner*, Grype by default) in a short-lived Job of the `ichor-imagescan`
 namespace: the cluster downloads the vulnerability database and the image layers, not the phone.

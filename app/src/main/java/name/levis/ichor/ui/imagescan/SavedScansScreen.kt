@@ -41,6 +41,7 @@ import name.levis.ichor.model.ImageScanFormat
 import name.levis.ichor.model.ImageScanReport
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.SavedScan
+import name.levis.ichor.model.objectScanLabel
 import name.levis.ichor.model.systemImagesNode
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
@@ -102,7 +103,7 @@ fun SavedScansScreen(
     val application = context.applicationContext as TalosApp
     val names = remember { application.talosRepository.cached<Inventory>(INVENTORY)?.value?.apps.orEmpty().associate { it.id to it.name } }
     val nameOf = @Composable { s: SavedScan ->
-        systemImagesNode(s.app)?.let { stringResource(R.string.imagescan_saved_system, it) } ?: names[s.app] ?: s.app
+        systemImagesNode(s.app)?.let { stringResource(R.string.imagescan_saved_system, it) } ?: names[s.app] ?: objectScanLabel(s.app) ?: s.app
     }
 
     Scaffold(

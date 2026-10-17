@@ -53,7 +53,14 @@ private const val METADATA_PREVIEW = 6
  * owns or manages it ([onOwner] opens one), its events and metadata.
  */
 @Composable
-fun ObjectSummaryContent(state: UiState<KubeObjectSummary>, onRetry: () -> Unit, onOwner: (ObjectOwner) -> Unit, modifier: Modifier = Modifier) {
+fun ObjectSummaryContent(
+    state: UiState<KubeObjectSummary>,
+    onRetry: () -> Unit,
+    onOwner: (ObjectOwner) -> Unit,
+    modifier: Modifier = Modifier,
+    /** A section after the owners (the images' vulnerability scan), null for none. */
+    extra: (@Composable () -> Unit)? = null,
+) {
     when (state) {
         UiState.Loading -> Box(modifier) { LoadingBox(style = SkeletonStyle.TEXT) }
         is UiState.Failed -> Box(modifier) { ErrorBox(state.message, onRetry) }
@@ -70,6 +77,7 @@ fun ObjectSummaryContent(state: UiState<KubeObjectSummary>, onRetry: () -> Unit,
                     SectionTitle(stringResource(R.string.kb_summary_owners))
                     s.owners.forEach { OwnerRow(it, onOwner) }
                 }
+                extra?.invoke()
                 SectionTitle(stringResource(R.string.kube_events_title))
                 if (s.eventsError.isNotEmpty()) {
                     MutedText(stringResource(R.string.kb_summary_events_error, s.eventsError))
