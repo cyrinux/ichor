@@ -38,10 +38,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.zxing.LuminanceSource
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Camera preview that reports the first QR code payload once.
+ * Camera preview that reports the first QR code payload once, or, for a config split over
+ * several codes (`just qr-parts`), the joined config once every code is scanned (QrPartScan).
  * Generate one on the desktop with: qrencode -r ~/.talos/config -o talosconfig.png, or for a
  * config too large for one code, raw gzip (gzip -9 < config | qrencode -8) or the compressed
  * text form (see HelpDialog: ichor-config:).
@@ -61,7 +61,7 @@ fun QrScanner(onScanned: (String) -> Unit, modifier: Modifier = Modifier) {
     }
 
     if (granted) {
-        CameraQrPreview(onScanned, modifier)
+        QrPartScan(onScanned, modifier)
     } else {
         Column(
             modifier.fillMaxSize().padding(24.dp),
@@ -84,12 +84,15 @@ private val ANALYSIS_RESOLUTION = ResolutionSelector.Builder()
     )
     .build()
 
+/**
+ * The camera feed: each decoded text that differs from the last one goes to [onText] on the
+ * main thread, until [gate] is stopped.
+ */
 @Composable
-private fun CameraQrPreview(onScanned: (String) -> Unit, modifier: Modifier) {
+internal fun CameraQrPreview(onText: (String) -> Unit, gate: ScanGate, modifier: Modifier) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val callback by rememberUpdatedState(onScanned)
-    val delivered = remember { AtomicBoolean(false) }
+    val callback by rememberUpdatedState(onText)
     val executor = remember { Executors.newSingleThreadExecutor() }
     val reader = remember { QrPayload.newReader() }
     val previewView = remember { PreviewView(context) }
@@ -107,10 +110,10 @@ private fun CameraQrPreview(onScanned: (String) -> Unit, modifier: Modifier) {
                 .build()
             analysis.setAnalyzer(executor) { proxy ->
                 val text = proxy.use {
-                    if (delivered.get()) null else QrPayload.decode(reader, it.luminance())?.let(QrPayload::text)
+                    if (gate.stopped.get()) null else QrPayload.decode(reader, it.luminance())?.let(QrPayload::text)
                 }
-                if (!text.isNullOrEmpty() && delivered.compareAndSet(false, true)) {
-                    ContextCompat.getMainExecutor(context).execute { callback(text) }
+                if (!text.isNullOrEmpty() && gate.isNew(text)) {
+                    ContextCompat.getMainExecutor(context).execute { if (!gate.stopped.get()) callback(text) }
                 }
             }
             provider.unbindAll()

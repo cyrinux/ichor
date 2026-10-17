@@ -98,6 +98,8 @@ fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
                 Command("qrencode -t ansiutf8 -r talosconfig-phone")
                 Step(stringResource(R.string.help_qr_compressed))
                 Command(COMPRESSED_QR_COMMAND)
+                Step(stringResource(R.string.help_qr_parts))
+                Command(QR_PARTS_COMMAND)
                 MutedText(stringResource(R.string.help_cleanup))
                 KubeconfigHelp()
                 OmniHelp()
@@ -114,6 +116,12 @@ fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
  * (go/ichorgo/import_text.go). Works for a kubeconfig as well.
  */
 private const val COMPRESSED_QR_COMMAND = "gzip -9 < talosconfig-phone | qrencode -8 -t ansiutf8"
+
+/**
+ * Larger still (several clusters, long certificates): scripts/qr-parts.py splits the gzip
+ * into `ichor:<i>/<n>:<chunk>` codes that the scanner collects in any order (QrPartCollector).
+ */
+private const val QR_PARTS_COMMAND = "just qr-parts talosconfig-phone"
 
 /** Clusters added from a kubeconfig: what works today, and how to make one the app can read. */
 @Composable

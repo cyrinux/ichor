@@ -1,6 +1,292 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%lld of %lld codes scanned" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld codes scanned"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld codes sur %2$lld scannés"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld códigos escaneados"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld von %2$lld Codes gescannt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld di %2$lld codici scansionati"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відскановано %1$lld з %2$lld кодів"
+          }
+        }
+      }
+    },
+    "Missing: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manquants : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faltan: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlend: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mancanti: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бракує: %@"
+          }
+        }
+      }
+    },
+    "Start over" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recommencer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empezar de nuevo"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu beginnen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricomincia"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Почати знову"
+          }
+        }
+      }
+    },
+    "This code belongs to another set: started again from it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce code appartient à une autre série : reprise à partir de celui-ci."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este código pertenece a otra serie: se empezó de nuevo desde él."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Code gehört zu einem anderen Satz: Neustart ab diesem Code."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo codice appartiene a un'altra serie: ripartito da questo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей код з іншого набору: почато знову з нього."
+          }
+        }
+      }
+    },
+    "These codes come from different sets. Start over and scan one set." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ces codes viennent de séries différentes. Recommencez et scannez une seule série."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estos códigos vienen de series distintas. Empieza de nuevo y escanea una sola serie."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Codes stammen aus verschiedenen Sätzen. Beginne neu und scanne nur einen Satz."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questi codici vengono da serie diverse. Ricomincia e scansiona una sola serie."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ці коди з різних наборів. Почніть знову та скануйте один набір."
+          }
+        }
+      }
+    },
+    "Some codes are missing. Start over and scan them all." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il manque des codes. Recommencez et scannez-les tous."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faltan códigos. Empieza de nuevo y escanéalos todos."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es fehlen Codes. Beginne neu und scanne alle."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mancano dei codici. Ricomincia e scansionali tutti."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бракує деяких кодів. Почніть знову та скануйте всі."
+          }
+        }
+      }
+    },
+    "These codes do not make a config. Start over and scan them again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ces codes ne forment pas une configuration. Recommencez et scannez-les à nouveau."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estos códigos no forman una configuración. Empieza de nuevo y vuelve a escanearlos."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Codes ergeben keine Konfiguration. Beginne neu und scanne sie erneut."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questi codici non formano una configurazione. Ricomincia e scansionali di nuovo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ці коди не утворюють конфігурацію. Почніть знову та скануйте їх ще раз."
+          }
+        }
+      }
+    },
+    "Still too large? From the Ichor repository, split it over several codes and scan them in any order:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toujours trop grand ? Depuis le dépôt Ichor, répartissez-le sur plusieurs codes et scannez-les dans n'importe quel ordre :"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Sigue siendo demasiado grande? Desde el repositorio de Ichor, divídelo en varios códigos y escanéalos en cualquier orden:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Immer noch zu groß? Teile sie im Ichor-Repository auf mehrere Codes auf und scanne sie in beliebiger Reihenfolge:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancora troppo grande? Dal repository di Ichor, dividilo su più codici e scansionali in qualsiasi ordine:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Досі завеликий? У репозиторії Ichor розділіть його на кілька кодів і скануйте їх у будь-якому порядку:"
+          }
+        }
+      }
+    },
     "Pick a node to see its details" : {
       "extractionState" : "manual",
       "localizations" : {

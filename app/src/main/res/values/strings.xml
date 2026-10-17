@@ -688,6 +688,13 @@
     <string name="import_import">Import</string>
     <string name="import_camera_needed">Camera permission is needed to scan a talosconfig QR code.</string>
     <string name="import_grant_camera">Grant camera access</string>
+    <string name="qr_parts_progress">%1$d of %2$d codes</string>
+    <string name="qr_parts_still_missing">Still to scan: %1$s</string>
+    <string name="qr_parts_start_over">Start over</string>
+    <string name="qr_parts_reset">That code is from another set: started over from it.</string>
+    <string name="qr_parts_mismatch">These codes are not from the same config. Start over and scan one set.</string>
+    <string name="qr_parts_missing">A code is missing. Start over and scan every code.</string>
+    <string name="qr_parts_invalid">This code could not be read as part of a config. Start over.</string>
 
     <!-- Help: creating a talosconfig -->
     <string name="help_title">Create a talosconfig for this phone</string>
@@ -3974,6 +3981,7 @@
     <string name="kube_problem_no_credentials">It has no credentials: add a client certificate or a token.</string>
     <string name="kube_problem_invalid">This context cannot be read.</string>
     <string name="help_qr_compressed">Too large for one QR code (a kubeconfig with a certificate)? Compress it first:</string>
+    <string name="help_qr_parts">Still too large? From the Ichor source tree, split it over several codes and scan them in any order:</string>
     <string name="help_kube_title">From a kubeconfig</string>
     <string name="help_kube_body">A kubeconfig with a client certificate or a token works too: the app then shows that cluster\'s Kubernetes side (workloads, nodes, Argo CD, Flux…), without Talos.</string>
     <string name="help_kube_flatten">Make it self-contained (certificates inline, current context only), then bring it over like a talosconfig:</string>
