@@ -25,10 +25,10 @@ func TestNormalizeGitHostAlias(t *testing.T) {
 		"ssh://git@ssh.git.example.org:2222/org/x":   "ssh.git.example.org:2222",
 		"git@ssh.git.example.org:org/repo.git":       "ssh.git.example.org",
 		"gitea-http.gitea.svc.cluster.local:3000":    "gitea-http.gitea.svc.cluster.local:3000",
-		"[::1]:3000":                                 "[::1]:3000",
-		"":                                           "",
-		"   ":                                        "",
-		"https:///nohost":                            "",
+		"[::1]:3000":      "[::1]:3000",
+		"":                "",
+		"   ":             "",
+		"https:///nohost": "",
 	} {
 		if got := normalizeGitHostAlias(in); got != want {
 			t.Errorf("%q: %q, want %q", in, got, want)
@@ -135,7 +135,7 @@ func TestGitForgeAliasRequestsGoToBaseOnly(t *testing.T) {
 		},
 		"/api/v3/repos/example-org/platform/contents/apps/README.md": func(w http.ResponseWriter, r *http.Request) {
 			baseHits.Add(1)
-			jsonAnswer(`{"type":"file","path":"apps/README.md","sha":"abc","size":5,"encoding":"base64","content":"` + b64Content("hello") + `"}`)(w, r)
+			jsonAnswer(`{"type":"file","path":"apps/README.md","sha":"abc","size":5,"encoding":"base64","content":"`+b64Content("hello")+`"}`)(w, r)
 		},
 	})
 
