@@ -86,6 +86,7 @@ object KubeBrowserRoutes {
                 onPortForward = { links.onPortForward(ref.namespace, ref.name) },
                 onOwner = links.onObject,
                 onHelmRelease = { ns, name -> nav.navigate(helmRelease(ns, name)) },
+                onScanReports = { cluster -> nav.navigate(Routes.scanReports(cluster)) },
                 onDeleted = {
                     nav.previousBackStackEntry?.savedStateHandle?.set(DELETED, System.currentTimeMillis())
                     nav.popBackStack()

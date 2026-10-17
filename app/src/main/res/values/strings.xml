@@ -4504,6 +4504,7 @@
     <string name="imagescan_system_unavailable">System images need the os:admin role: %1$s</string>
     <string name="imagescan_system_hint">Checks the images Talos runs on this node (kubelet, etcd, the control plane), by digest, for known vulnerabilities with %1$s. It runs as a Job in the %2$s namespace, which deletes itself afterwards.</string>
     <string name="imagescan_system_scan">Scan system images</string>
+    <string name="imagescan_object_refs_note">Scanned by the image references in this workload\'s spec: the findings are for those tags, not necessarily what runs right now.</string>
     <string name="images_kubernetes_title">Kubernetes images</string>
     <string name="alert_action_wake">Wake</string>
     <string name="alert_action_silence_hour">Silence 1 h</string>

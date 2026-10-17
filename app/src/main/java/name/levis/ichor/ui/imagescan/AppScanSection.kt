@@ -69,6 +69,10 @@ data class AppScanUi(
     val onOpenSaved: (SavedScan) -> Unit = {},
     /** The cluster's kept reports. */
     val onSavedList: () -> Unit = {},
+    /** A line under the summary (how an object's images are scanned), in place of the pods' hint; null for none. */
+    val note: String? = null,
+    /** False while there is nothing to scan yet (a workload's images not read). */
+    val canStart: Boolean = true,
 ) {
     /** The report to show: the app's last scan when it scanned something, else the operator's. */
     val report: Pair<ImageScanReport, String>?
@@ -80,6 +84,13 @@ data class AppScanUi(
 fun LazyListScope.appScanSection(ui: AppScanUi) {
     item { SectionTitle(stringResource(R.string.imagescan_title)) }
     item { ScanBody(ui) }
+}
+
+/** The same section in a plain column: an object's summary. */
+@Composable
+fun AppScanSection(ui: AppScanUi) {
+    SectionTitle(stringResource(R.string.imagescan_title))
+    ScanBody(ui)
 }
 
 @Composable
@@ -109,8 +120,10 @@ private fun ScanBody(ui: AppScanUi) {
                 NewFindingsLine(saved.new, hasPrevious = false)
             }
             shown != null -> ScanSummary(shown.first)
-            else -> MutedText(stringResource(R.string.imagescan_hint, ui.scanner.label, IMAGESCAN_NAMESPACE))
+            // The pods' hint says "by digest": a note of its own replaces it.
+            ui.note == null -> MutedText(stringResource(R.string.imagescan_hint, ui.scanner.label, IMAGESCAN_NAMESPACE))
         }
+        ui.note?.let { MutedText(it) }
         val onView: (() -> Unit)? = when {
             current != null -> fun() = ui.onOpen(current, session?.reportJson.orEmpty())
             saved != null -> fun() = ui.onOpenSaved(saved)
@@ -125,7 +138,7 @@ private fun ScanBody(ui: AppScanUi) {
                     Text(stringResource(R.string.imagescan_view), modifier = Modifier.padding(start = 6.dp))
                 }
             }
-            OutlinedButton(onClick = ui.onScan, enabled = !ui.busyElsewhere) {
+            OutlinedButton(onClick = ui.onScan, enabled = !ui.busyElsewhere && ui.canStart) {
                 Icon(Icons.Outlined.Security, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(
                     stringResource(if (current != null || saved != null) R.string.imagescan_scan_again else R.string.imagescan_scan),

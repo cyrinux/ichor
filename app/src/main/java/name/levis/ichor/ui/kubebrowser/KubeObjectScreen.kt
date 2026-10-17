@@ -98,6 +98,8 @@ fun KubeObjectScreen(
     onDeleted: () -> Unit,
     /** Opens the scale dialog once, as the screen opens (a Capacity screen suggestion). */
     openScale: Boolean = false,
+    /** The vulnerability scan reports kept for a cluster (its context name). */
+    onScanReports: (String) -> Unit = {},
     vm: KubeObjectViewModel = viewModel(
         key = "kube-object-${ref.group}/${ref.resource}/${ref.namespace}/${ref.name}",
         factory = factory { KubeObjectViewModel(app.kubeBrowser, ref) },
@@ -131,6 +133,9 @@ fun KubeObjectScreen(
         null
     }
     val dataRevealed = dataVm?.revealed?.collectAsStateWithLifecycle()?.value
+    // A pod's or a workload's images scanned from its summary, for a role with the Kubernetes API.
+    val scanExtra: (@Composable () -> Unit)? =
+        if (offersObjectScan(ref)) { { KubeObjectScanSection(ref, onScanReports) } } else null
 
     SecureWhile(revealed || dataRevealed != null)
     // A Secret value read on the data tab leaves memory once another tab shows.
@@ -309,6 +314,7 @@ fun KubeObjectScreen(
                                 }
                             },
                             modifier = Modifier.weight(1f),
+                            extra = scanExtra,
                         )
                     } else {
                         if (ref.isSecret) SecretReveal(revealed, ::toggleReveal)

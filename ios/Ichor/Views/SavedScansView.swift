@@ -52,6 +52,7 @@ struct SavedScansView: View {
 
     private func name(of scan: SavedScan) -> String {
         if let node = systemImagesNode(scan.app) { return String(localized: "System images · \(node)") }
+        if let object = objectScanLabel(scan.app) { return object }
         return names[scan.app] ?? scan.app
     }
 

@@ -8,6 +8,7 @@ import IchorCore
 /// updated. A Secret's
 /// values stay hidden until asked for, behind Face ID / the passcode when the app lock is on,
 /// and it cannot be edited while they are hidden. A pod also opens its logs and a port-forward.
+/// A pod or a Deployment, StatefulSet or DaemonSet scans its images (KubeObjectScanSection).
 /// Delete confirms with what the deletion would touch, then goes back (`onDeleted` first).
 struct KubeObjectView: View {
     let resource: KubeAPIResource
@@ -53,9 +54,15 @@ struct KubeObjectView: View {
             switch tab {
             case .summary:
                 LoadStateView(state: summary, retry: loadSummary) { summary in
-                    List { KubeObjectSummarySections(summary: summary) }
-                        .themedBackground()
-                        .refreshable { await loadSummary() }
+                    List {
+                        KubeObjectSummarySections(summary: summary)
+                        // The images' vulnerabilities, for a role that reaches the Kubernetes API (as on an app's sheet).
+                        if model.allows(.workloads), let mode = resource.objectScanMode, !namespace.isEmpty {
+                            KubeObjectScanSection(mode: mode, kind: resource.kind, namespace: namespace, name: name)
+                        }
+                    }
+                    .themedBackground()
+                    .refreshable { await loadSummary() }
                 }
             case .data:
                 KubeConfigDataView(resource: resource, namespace: namespace, name: name)
