@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"slices"
 	"strconv"
@@ -132,4 +133,50 @@ func (g gitLabForge) file(ctx context.Context, repo gitRepoRef, ref, path string
 	f.Content = string(content)
 
 	return f, nil
+}
+
+// branchFrom is baseRef itself: GitLab branches from a name.
+func (g gitLabForge) branchFrom(_ context.Context, _ gitRepoRef, baseRef string) (string, error) {
+	return baseRef, nil
+}
+
+func (g gitLabForge) createBranch(ctx context.Context, repo gitRepoRef, from, branch string) error {
+	return g.c.call(ctx, http.MethodPost, gitLabProject(repo)+"/repository/branches", map[string]string{"branch": branch, "ref": from}, nil)
+}
+
+// commitFile updates with PUT and last_commit_id (the file's sha as GitForgeFile read it); a
+// new file is a POST. GitLab does not answer the commit: the merge request tells it.
+func (g gitLabForge) commitFile(ctx context.Context, repo gitRepoRef, p gitProposal) (string, error) {
+	in := map[string]string{"branch": p.Branch, "content": p.Content, "commit_message": p.Message}
+
+	method := http.MethodPost
+	if p.FileSha != "" {
+		method, in["last_commit_id"] = http.MethodPut, p.FileSha
+	}
+
+	return "", g.c.call(ctx, method, gitLabProject(repo)+"/repository/files/"+url.PathEscape(p.Path), in, nil)
+}
+
+// openRequest opens the merge request, its branch removed once merged; a "Draft:" title is
+// GitLab's draft.
+func (g gitLabForge) openRequest(ctx context.Context, repo gitRepoRef, p gitProposal) (gitRequest, error) {
+	var mr struct {
+		WebURL string `json:"web_url"`
+		IID    int    `json:"iid"`
+		SHA    string `json:"sha"`
+	}
+
+	in := map[string]any{
+		"source_branch": p.Branch, "target_branch": p.BaseRef, "title": draftTitle(p, "Draft:"),
+		"description": p.Body, "remove_source_branch": true,
+	}
+	if err := g.c.call(ctx, http.MethodPost, gitLabProject(repo)+"/merge_requests", in, &mr); err != nil {
+		return gitRequest{}, err
+	}
+
+	return gitRequest{URL: mr.WebURL, Number: mr.IID, Commit: mr.SHA}, nil
+}
+
+func (g gitLabForge) deleteBranch(ctx context.Context, repo gitRepoRef, branch string) error {
+	return g.c.call(ctx, http.MethodDelete, gitLabProject(repo)+"/repository/branches/"+url.PathEscape(branch), nil, nil)
 }

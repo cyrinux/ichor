@@ -17,7 +17,7 @@ import (
 // a Talos session, a pod exec).
 var auditedEntryPoints = []string{
 	"AlertmanagerExpire", "AlertmanagerSilence",
-	"EtcdAlarmDisarm", "EtcdDefragment", "EtcdForfeitLeadership", "EtcdRemoveMember",
+	"EtcdAlarmDisarm", "EtcdDefragment", "EtcdForfeitLeadership", "EtcdRemoveMember", "GitForgePropose",
 	"KubeArgoAction", "KubeArgoFreeze", "KubeCNPGBackup", "KubeCertManagerRenew", "KubeCordon",
 	"KubeDeletePod", "KubeFluxAction", "KubeGarageRepairBlocks", "KubeGarageSetTranquility",
 	"KubeHelmRollback", "KubeLonghornAction", "KubeNodeCordon", "KubeObjectUpdate",

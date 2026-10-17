@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"slices"
 	"strings"
@@ -54,11 +55,11 @@ func (g gitHubForge) check(ctx context.Context) (gitForgeCheck, error) {
 }
 
 func (g gitHubForge) tree(ctx context.Context, repo gitRepoRef, ref, dir string) ([]gitForgeEntry, error) {
-	return contentsTree(ctx, g.c, "/repos/"+url.PathEscape(repo.owner)+"/"+url.PathEscape(repo.name)+"/contents", ref, dir)
+	return contentsTree(ctx, g.c, reposPath(repo)+"/contents", ref, dir)
 }
 
 func (g gitHubForge) file(ctx context.Context, repo gitRepoRef, ref, path string) (gitForgeFile, error) {
-	return contentsFile(ctx, g.c, "/repos/"+url.PathEscape(repo.owner)+"/"+url.PathEscape(repo.name)+"/contents", ref, path)
+	return contentsFile(ctx, g.c, reposPath(repo)+"/contents", ref, path)
 }
 
 // contentsTree lists dir through a contents endpoint (GitHub, Gitea): an array for a
@@ -157,4 +158,76 @@ func contentsListed(ctx context.Context, c gitForgeClient, base, ref, path strin
 	}
 
 	return gitForgeFile{}, errGitForgeNotFound
+}
+
+// reposPath is a repository's API path on GitHub and Gitea.
+func reposPath(repo gitRepoRef) string {
+	return "/repos/" + url.PathEscape(repo.owner) + "/" + url.PathEscape(repo.name)
+}
+
+// branchFrom is the commit baseRef points to: a GitHub ref is created from a sha.
+func (g gitHubForge) branchFrom(ctx context.Context, repo gitRepoRef, baseRef string) (string, error) {
+	var ref struct {
+		Object struct {
+			SHA string `json:"sha"`
+		} `json:"object"`
+	}
+
+	if err := g.c.call(ctx, http.MethodGet, reposPath(repo)+"/git/ref/heads/"+escapePath(baseRef), nil, &ref); err != nil {
+		return "", err
+	}
+
+	if ref.Object.SHA == "" {
+		return "", fmt.Errorf("%s: no commit for %s", repo.full(), baseRef)
+	}
+
+	return ref.Object.SHA, nil
+}
+
+func (g gitHubForge) createBranch(ctx context.Context, repo gitRepoRef, from, branch string) error {
+	return g.c.call(ctx, http.MethodPost, reposPath(repo)+"/git/refs", map[string]string{"ref": "refs/heads/" + branch, "sha": from}, nil)
+}
+
+func (g gitHubForge) commitFile(ctx context.Context, repo gitRepoRef, p gitProposal) (string, error) {
+	return putContents(ctx, g.c, http.MethodPut, reposPath(repo)+"/contents/"+escapePath(p.Path), p)
+}
+
+func (g gitHubForge) openRequest(ctx context.Context, repo gitRepoRef, p gitProposal) (gitRequest, error) {
+	var pr struct {
+		HTMLURL string `json:"html_url"`
+		Number  int    `json:"number"`
+	}
+
+	in := map[string]any{"head": p.Branch, "base": p.BaseRef, "title": p.Title, "body": p.Body, "draft": p.Draft}
+	if err := g.c.call(ctx, http.MethodPost, reposPath(repo)+"/pulls", in, &pr); err != nil {
+		return gitRequest{}, err
+	}
+
+	return gitRequest{URL: pr.HTMLURL, Number: pr.Number}, nil
+}
+
+func (g gitHubForge) deleteBranch(ctx context.Context, repo gitRepoRef, branch string) error {
+	return g.c.call(ctx, http.MethodDelete, reposPath(repo)+"/git/refs/heads/"+escapePath(branch), nil, nil)
+}
+
+// putContents writes p's file through a contents endpoint (GitHub, Gitea) on p.Branch:
+// base64 on one line (Gitea refuses line breaks), the sha only for an update. It returns
+// the new commit.
+func putContents(ctx context.Context, c gitForgeClient, method, path string, p gitProposal) (string, error) {
+	in := map[string]string{"message": p.Message, "content": base64.StdEncoding.EncodeToString([]byte(p.Content)), "branch": p.Branch}
+	if p.FileSha != "" {
+		in["sha"] = p.FileSha
+	}
+
+	var out struct {
+		Commit struct {
+			SHA string `json:"sha"`
+		} `json:"commit"`
+	}
+
+	if err := c.call(ctx, method, path, in, &out); err != nil {
+		return "", err
+	}
+
+	return out.Commit.SHA, nil
 }
