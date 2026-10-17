@@ -50,6 +50,11 @@ type contextSummary struct {
 func ParseConfig(configYAML string) (out string, err error) {
 	defer maskResult(&out, &err)
 
+	return parseConfig(configYAML)
+}
+
+// parseConfig is ParseConfig before masking.
+func parseConfig(configYAML string) (string, error) {
 	start := time.Now()
 
 	privacy.learnConfig(configYAML)

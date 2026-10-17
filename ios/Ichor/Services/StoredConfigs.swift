@@ -33,17 +33,31 @@ struct StoredConfigs: Sendable {
 
     /// The parsed stores, and those stored but not readable (not decrypted, or not parsed):
     /// while there is one, the app must neither show the other alone nor write (see unreadableConfigs).
-    func parsed() async -> (talos: ConfigSummary?, kube: ConfigSummary?, unreadable: [StoredConfigKind]) {
+    /// A store whose text is unchanged since its summary was cached (ConfigSummaryCache, same
+    /// screenshot-mode masking) is not parsed again. `generation`: the masking they were made
+    /// under (TalosClient.privacyGeneration, read before parsing), for ConfigSummaryCache.store.
+    func parsed() async -> (talos: ConfigSummary?, kube: ConfigSummary?, unreadable: [StoredConfigKind], generation: Int) {
+        let cache = ConfigSummaryCache.shared
+        let record = cache.load()
+        let generation = TalosClient.privacyGeneration()
         var talosSummary: ConfigSummary?
         var kubeSummary: ConfigSummary?
-        if let talos { talosSummary = try? await TalosClient.parse(talos) }
-        if let kube { kubeSummary = try? await TalosClient.parseKubeconfig(kube) }
+        var cached: [Bool] = []
+        if let talos, let found = await cache.summary(.talosconfig, of: talos, record: record, generation: generation) {
+            talosSummary = found.summary
+            cached.append(found.cached)
+        }
+        if let kube, let found = await cache.summary(.kubeconfig, of: kube, record: record, generation: generation) {
+            kubeSummary = found.summary
+            cached.append(found.cached)
+        }
         let contexts = (talosSummary?.contexts.count ?? 0) + (kubeSummary?.contexts.count ?? 0)
-        StartupTrace.markOnce("config parsed", detail: "\(contexts) contexts")
+        let source = !cached.isEmpty && cached.allSatisfy { $0 } ? "cached" : "parsed"
+        StartupTrace.markOnce("config parsed", detail: "\(contexts) contexts, summary: \(source)")
         let unreadable = unreadableConfigs([
             .talosconfig: StoredConfigStatus(stored: talosStored, parsed: talosSummary != nil),
             .kubeconfig: StoredConfigStatus(stored: kubeStored, parsed: kubeSummary != nil),
         ])
-        return (talosSummary, kubeSummary, unreadable)
+        return (talosSummary, kubeSummary, unreadable, generation)
     }
 }

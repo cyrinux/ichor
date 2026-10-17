@@ -47,12 +47,21 @@ class ConfigRepository(
     private val kubeStore = SecureStore(File(context.filesDir, "kubeconfig.enc"), keyAlias = "kubeconfig", strongBoxAvailable = strongBox, outer = dekHolder)
 
     /**
+     * Their summary, so a launch skips the parse of every context (see [ConfigSummaryCache]):
+     * sealed like the stores (same DEK, so no name reads before the key tap), never backed up.
+     */
+    private val summaryCache = ConfigSummaryCache(
+        SecureStoreValue(File(context.noBackupFilesDir, ConfigSummaryCache.FILE), ConfigSummaryCache.KEY_ALIAS, strongBox, dekHolder),
+    )
+
+    /**
      * Seals both files with the security-key DEK, or unseals them, for the mode just set (see
      * SecureStore.reseal); the stored configs stay as they are.
      */
     suspend fun reseal() = writing {
         store.reseal()
         kubeStore.reseal()
+        summaryCache.reseal()
     }
 
     /**
@@ -106,8 +115,11 @@ class ConfigRepository(
         val kube = kubeStore.read()?.decodeToString()
         StartupTrace.markOnce("config decrypted")
         if (talos == null && kube == null) return null
-        val summary = linked(parse(talos.orEmpty(), kube.orEmpty()))
-        StartupTrace.markOnce("config parsed", "${summary.contexts.size} contexts")
+        val key = summaryKey(talos.orEmpty(), kube.orEmpty())
+        val cached = summaryCache.lookup(key)
+        val parsed = cached ?: parse(talos.orEmpty(), kube.orEmpty()).also { summaryCache.store(key, it) }
+        val summary = linked(parsed)
+        StartupTrace.markOnce("config parsed", "${summary.contexts.size} contexts, summary: ${if (cached != null) "cached" else "parsed"}")
         return StoredConfig(talos.orEmpty(), kube.orEmpty(), summary, resolveActive(summary, prefs.getString(KEY_CONTEXT, null), savedIndex()))
     }
 
@@ -253,7 +265,17 @@ class ConfigRepository(
      * stored config, changes it and writes it back, so two at once would lose one of them.
      */
     private suspend fun <T> writing(block: suspend CoroutineScope.() -> T): T =
-        writes.withLock { withContext(Dispatchers.IO, block) }
+        writes.withLock {
+            withContext(Dispatchers.IO) {
+                // Before any parse of this change: what [commit] keys the cached summary with.
+                writeMaskGeneration = Ichorgo.privacyGeneration()
+                block()
+            }
+        }
+
+    /** The mask generation when the running change started (see [writing]), read under [writes]. */
+    @Volatile
+    private var writeMaskGeneration = 0L
 
     /**
      * Stores the talosconfig changed by [change], keeping the context the user is looking at.
@@ -293,6 +315,7 @@ class ConfigRepository(
         if (previous?.talosYaml != talos && talos.isNotBlank()) store.prepare()
         if (previous?.kubeYaml != kube && kube.isNotBlank()) kubeStore.prepare()
         writeAll(writes)
+        summaryCache.store(SummaryKey(digest(talos), digest(kube), writeMaskGeneration), parsed)
         if (remember) saveActive(summary, shown)
         _config.value = StoredConfig(talos, kube, summary, shown)
         _generation.value++
@@ -334,7 +357,11 @@ class ConfigRepository(
      */
     suspend fun reparse() = withContext(Dispatchers.IO) {
         val current = _config.value ?: return@withContext
-        val summary = linked(parse(current.talosYaml, current.kubeYaml))
+        // The generation read before the parse: a mask switched meanwhile makes the record stale, never wrong.
+        val key = summaryKey(current.talosYaml, current.kubeYaml)
+        val parsed = parse(current.talosYaml, current.kubeYaml)
+        summaryCache.store(key, parsed)
+        val summary = linked(parsed)
         _config.value = current.copy(summary = summary, activeContext = contextAt(summary, current.summary.indexOf(current.activeContext)))
     }
 
@@ -351,10 +378,20 @@ class ConfigRepository(
     suspend fun clear() = withContext(Dispatchers.IO) {
         store.clear()
         kubeStore.clear()
+        summaryCache.clear()
         prefs.edit().clear().apply()
         _config.value = null
         _generation.value++
     }
+
+    /**
+     * What a summary of [talos] and [kube] depends on. Read before the parse it keys: a mask
+     * switched in between then makes the record stale, never a masked summary under 0.
+     */
+    private fun summaryKey(talos: String, kube: String): SummaryKey =
+        SummaryKey(digest(talos), digest(kube), Ichorgo.privacyGeneration())
+
+    private fun digest(yaml: String): String = if (yaml.isBlank()) "" else Ichorgo.configDigest(yaml)
 
     /** Both stores as one list; a store left empty ("") holds no cluster. */
     private fun parse(talos: String, kube: String): ConfigSummary = mergeSummaries(parseTalosOrNull(talos), parseKubeOrNull(kube))
