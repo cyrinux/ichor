@@ -162,9 +162,11 @@ struct FluxHero: View {
 /// source-controller's artifact (no Git token); a chart from a Helm repository only names itself.
 struct FluxSourceSection: View {
     let sources: GitOpsSource?
+    /// The object, for the defaults of a pull request opened from a file.
+    let app: GitOpsAppRef
 
     var body: some View {
-        GitOpsSourceSection(sources: sources)
+        GitOpsSourceSection(sources: sources, app: app)
     }
 }
 

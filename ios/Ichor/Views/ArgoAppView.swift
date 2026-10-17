@@ -87,7 +87,7 @@ struct ArgoAppView: View {
                     Text("What a sync would change now, compared in the cluster without changing anything.")
                 }
             }
-            GitOpsSourceSection(sources: gitSources)
+            GitOpsSourceSection(sources: gitSources, app: .argo(namespace: namespace, name: name))
             ArgoFreezeSection(app: app, windows: windows, busy: busy || project.map { store.busyProjects.contains($0.id) } == true,
                               freeze: { freezeSheet = true },
                               extend: {

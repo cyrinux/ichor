@@ -1,0 +1,244 @@
+import SwiftUI
+import IchorCore
+
+/// What the editor started from: the file as the Git host has it at the branch the pull
+/// request goes to (or, for an app following a tag or a commit, at what it follows), and its
+/// sha, the optimistic lock of the proposal. Reload replaces it.
+struct SourceEditBase {
+    let file: GitFile
+    /// The branch, tag or commit the file was read at.
+    let ref: String
+}
+
+/// Edits one file of an app's source, then shows the diff, then opens a pull request with it
+/// (ProposeSheet): the change lands in Git and the controller applies it after merge, the
+/// tracked branch is never pushed to. Always through the Git host with its token, also for a
+/// Flux source read from its artifact. The draft lives here, never in a route.
+struct SourceEditView: View {
+    let source: GitSource
+    let path: String
+    let app: GitOpsAppRef
+
+    // Explicit: the private @State properties make the memberwise init private.
+    init(source: GitSource, path: String, app: GitOpsAppRef) {
+        self.source = source
+        self.path = path
+        self.app = app
+        _target = State(initialValue: proposalBaseRef(for: source) ?? "main")
+    }
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(AppModel.self) private var model
+    @Environment(GitHostStore.self) private var hosts
+    @State private var state: LoadState<SourceEditBase> = .loading
+    @State private var draft = ""
+    /// The caret in the draft (UTF-16), for the schema help.
+    @State private var cursor = 0
+    @State private var help: KubeSchemaHelpRequest?
+    /// The Kubernetes type the file declares, for the schema help; nil hides it.
+    @State private var manifestType: SourceManifestType?
+    @State private var reviewing = false
+    @State private var confirmingDiscard = false
+    @State private var missingHost: String?
+    /// The branch the pull request goes to, as last named in the sheet.
+    @State private var target: String
+
+    private var demo: Bool { model.activeSummary?.demo == true }
+
+    private var name: String { path.split(separator: "/").last.map(String.init) ?? path }
+
+    private var base: SourceEditBase? {
+        if case .loaded(let base, _, _) = state { return base }
+        return nil
+    }
+
+    private var changed: Bool { base.map { !sameSourceText($0.file.content, draft) } ?? false }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if let missingHost {
+                    GitHostMissingView(host: missingHost, page: source.webURL)
+                        .themedBackground()
+                } else {
+                    LoadStateView(state: state, retry: load) { _ in editor }
+                }
+            }
+            .navigationTitle(Text(verbatim: name))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        if changed { confirmingDiscard = true } else { dismiss() }
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Review") { reviewing = true }
+                        .disabled(!changed)
+                }
+            }
+            .navigationDestination(isPresented: $reviewing) {
+                if let base {
+                    SourceEditReview(source: source, path: path, app: app, base: base, edited: draft, target: target,
+                                     onReload: reload(at:), onDone: { dismiss() })
+                }
+            }
+            .sheet(item: $help) { request in
+                if let manifestType {
+                    let resource = KubeAPIResource(group: manifestType.group, version: manifestType.version, resource: "",
+                                                   kind: manifestType.kind)
+                    KubeSchemaHelpSheet(resource: resource, request: request) { child, listItem in
+                        let inserted = insertYamlField(draft, utf16Offset: request.offset, name: child.name, listItem: listItem)
+                        cursor = inserted.cursor
+                        draft = inserted.text
+                    }
+                }
+            }
+            .confirmationDialog("Discard your changes?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
+                Button("Discard", role: .destructive) { dismiss() }
+                Button("Keep editing", role: .cancel) {}
+            } message: {
+                Text("Your edits to this file are lost.")
+            }
+        }
+        .interactiveDismissDisabled(changed)
+        // Only the first time: coming back from the review keeps the draft.
+        .task { if base == nil { await load() } }
+        // A token added through the shortcut: read again on the way back.
+        .onChange(of: hosts.hosts) { _, _ in
+            if base == nil { Task { await load() } }
+        }
+    }
+
+    private var editor: some View {
+        ConfigYamlEditor(text: $draft, error: nil, cursor: $cursor)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: path)
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    if manifestType != nil { YamlSchemaHelpButtons(open: openHelp) }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.vertical, 6)
+                .background(.bar)
+            }
+    }
+
+    /// Opens the schema help for the field at the caret.
+    private func openHelp(_ mode: KubeSchemaHelpRequest.Mode) {
+        help = KubeSchemaHelpRequest(mode: mode, cursor: yamlCursorAt(draft, utf16Offset: cursor), offset: cursor)
+    }
+
+    /// The first read: at the branch the app follows, else at what it follows (a tag, a commit).
+    private func load() async {
+        await read(at: proposalBaseRef(for: source) ?? source.ref)
+    }
+
+    /// The file changed on branch since it was read: read it there again, the edits dropped
+    /// (they were made on the old version), back to the editor.
+    private func reload(at branch: String) {
+        target = branch
+        reviewing = false
+        Task { await read(at: branch) }
+    }
+
+    private func read(at ref: String) async {
+        guard let client = model.client else { return }
+        state = .loading
+        do {
+            let file = try await client.forgeFile(source, path: path, ref: ref, hosts: hosts, demo: demo)
+            missingHost = nil
+            guard !file.truncated else {
+                state = .failed(String(localized: "This file is larger than 1 MiB: open it in the browser to read it."))
+                return
+            }
+            draft = file.content
+            cursor = 0
+            manifestType = sourceManifestType(file.content)
+            state = .loaded(SourceEditBase(file: file, ref: ref), at: Date())
+        } catch let missing as GitHostMissing {
+            missingHost = missing.host
+        } catch {
+            missingHost = nil
+            state = .failed(error.localizedDescription)
+        }
+    }
+}
+
+/// The unified diff of the edit, red and green, then Continue to the pull request.
+private struct SourceEditReview: View {
+    let source: GitSource
+    let path: String
+    let app: GitOpsAppRef
+    let base: SourceEditBase
+    let edited: String
+    let target: String
+    let onReload: (String) -> Void
+    let onDone: () -> Void
+
+    @State private var state: LoadState<FluxDiff> = .loading
+    @State private var proposing = false
+
+    var body: some View {
+        LoadStateView(state: state, retry: load) { diff in
+            let file = diff.resources.first
+            List {
+                if let file, file.change == .changed {
+                    Section {
+                        DiffLinesView(lines: file.lines)
+                            .listRowInsets(EdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8))
+                        if file.truncated {
+                            Text("Diff cut at 64 KB.").font(.caption2).foregroundStyle(.secondary)
+                        }
+                    } header: {
+                        let counts = file.counts
+                        HStack(spacing: 10) {
+                            Text(verbatim: path).lineLimit(1).truncationMode(.middle)
+                            Text(verbatim: "+\(counts.added)").foregroundStyle(.statusOK)
+                            Text(verbatim: "−\(counts.removed)").foregroundStyle(.statusBad)
+                        }
+                        .font(.caption.monospacedDigit().weight(.semibold))
+                    }
+                } else {
+                    Section {
+                        Label("Nothing changed yet.", systemImage: "checkmark.circle")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .themedBackground()
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if file?.change == .changed { continueBar }
+            }
+        }
+        .navigationTitle(Text("Review"))
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await load() }
+        .sheet(isPresented: $proposing) {
+            ProposeSheet(source: source, path: path, app: app, base: base, content: edited, target: target,
+                         onReload: onReload, onDone: onDone)
+        }
+    }
+
+    private var continueBar: some View {
+        Button { proposing = true } label: {
+            Text("Continue").frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+        .padding()
+        .background(.bar)
+    }
+
+    private func load() async {
+        let before = base.file.content
+        let after = edited
+        let path = path
+        state = .loading
+        state = await .from { try await TalosClient.textDiff(before: before, after: after, name: path) }
+    }
+}

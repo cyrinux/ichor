@@ -72,7 +72,7 @@ struct FluxAppView: View {
                     Text("What a reconcile would change now, compared in the cluster without changing anything.")
                 }
             }
-            FluxSourceSection(sources: gitSources)
+            FluxSourceSection(sources: gitSources, app: .flux(kind: app.kind, namespace: app.namespace, name: app.name))
             FluxConditionsSection(app: app)
             if !app.unhealthyPods.isEmpty { ArgoPodsSection(pods: app.unhealthyPods, downNodes: downNodes) }
             let children = status.children(of: app)

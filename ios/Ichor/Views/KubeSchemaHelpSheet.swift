@@ -16,6 +16,24 @@ struct KubeSchemaHelpRequest: Identifiable {
     var path: String { mode == .explain ? cursor.fieldPath : cursor.addPath }
 }
 
+/// "Explain field" and "Add field" above a YAML editor: they open the schema help at the caret.
+struct YamlSchemaHelpButtons: View {
+    let open: (KubeSchemaHelpRequest.Mode) -> Void
+
+    var body: some View {
+        HStack(spacing: 16) {
+            Button { open(.explain) } label: {
+                Label("Explain field", systemImage: "questionmark.circle")
+            }
+            Button { open(.add) } label: {
+                Label("Add field", systemImage: "plus.circle")
+            }
+        }
+        .font(.footnote)
+        .buttonStyle(.borderless)
+    }
+}
+
 /// `kubectl explain` for the field at the caret of the YAML editor, from the cluster's
 /// OpenAPI v3 schema: type, description, allowed values and fields; in add mode, the fields
 /// to pick from, required ones first.

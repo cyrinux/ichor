@@ -138,6 +138,9 @@ public struct KubeDiffResource: Decodable, Equatable, Identifiable, Sendable {
 
     /// The diff's lines without its "---"/"+++" header.
     public var lines: [DiffLine] { parseDiffLines(diff) }
+
+    /// Lines added and removed.
+    public var counts: (added: Int, removed: Int) { diffLineCounts(lines) }
 }
 
 /// How an object would change, in the order the screen lists them.
@@ -160,6 +163,14 @@ public struct DiffLine: Equatable, Sendable {
     public init(_ kind: Kind, _ text: String) {
         self.kind = kind
         self.text = text
+    }
+}
+
+/// The lines added and removed among lines.
+public func diffLineCounts(_ lines: [DiffLine]) -> (added: Int, removed: Int) {
+    lines.reduce(into: (0, 0)) { counts, line in
+        if line.kind == .added { counts.0 += 1 }
+        if line.kind == .removed { counts.1 += 1 }
     }
 }
 

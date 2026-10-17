@@ -5,6 +5,9 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
@@ -16,17 +19,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -42,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.ProposeBlock
 import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.forgeFileUrl
 import name.levis.ichor.model.isYamlPath
@@ -51,6 +58,7 @@ import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.EmptyState
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.components.pageContent
@@ -61,12 +69,13 @@ import name.levis.ichor.ui.settings.openUrl
 
 /**
  * One file of an app's source, read only: monospace, selectable, line by line (a large values
- * file scrolls smoothly), long lines scrolled sideways; Copy and Open in browser. A file over
- * 1 MiB comes without its content: a note sends to the browser.
+ * file scrolls smoothly), long lines scrolled sideways; Copy, Open in browser and Edit ([onEdit],
+ * a pull request through the forge: disabled with the reason when there is no token for its
+ * host or no forge). A file over 1 MiB comes without its content: a note sends to the browser.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SourceFileScreen(target: SourceTarget, path: String, onBack: () -> Unit, onAddToken: (() -> Unit)?) {
+fun SourceFileScreen(target: SourceTarget, path: String, onBack: () -> Unit, onAddToken: (() -> Unit)?, onEdit: (() -> Unit)? = null) {
     val context = LocalContext.current
     val talos = context.applicationContext as TalosApp
     val vm: SourceFileViewModel = viewModel(factory = factory { SourceFileViewModel(talos.gitOpsRepository) })
@@ -76,8 +85,9 @@ fun SourceFileScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
     LaunchedEffect(config?.activeContext, generation) { vm.load(target, path, config?.activeContext to generation) }
     // Back from Settings with a token: read again.
     val missingHost by rememberUpdatedState(state.missingHost)
+    val noToken by rememberUpdatedState(state.editBlock is ProposeBlock.NoToken)
     LifecycleResumeEffect(Unit) {
-        if (missingHost != null) vm.refresh()
+        if (missingHost != null || noToken) vm.refresh()
         onPauseOrDispose { }
     }
     val view = (state.file as? UiState.Loaded)?.data
@@ -100,6 +110,9 @@ fun SourceFileScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
                 },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    if (view != null && !view.file.truncated && onEdit != null) {
+                        TooltipIconButton(Icons.Outlined.Edit, stringResource(R.string.gitops_edit), onClick = onEdit, enabled = state.editBlock == null)
+                    }
                     if (view != null && !view.file.truncated) {
                         val copied = stringResource(R.string.gitops_source_copied)
                         TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.gitops_source_copy), onClick = {
@@ -127,8 +140,30 @@ fun SourceFileScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
                     if (url.isNotEmpty()) OpenInBrowserButton { openUrl(context, url) }
                 }
             } else {
-                SourceLines(s.data.file.content, yaml = isYamlPath(path), modifier)
+                Column(modifier) {
+                    val block = state.editBlock
+                    if (onEdit != null && block != null) EditBlockNote(block, onAddToken)
+                    SourceLines(s.data.file.content, yaml = isYamlPath(path), Modifier.weight(1f))
+                }
             }
+        }
+    }
+}
+
+/** Why Edit is disabled, with a shortcut to Settings → Git hosts when a token is what is missing. */
+@Composable
+private fun EditBlockNote(block: ProposeBlock, onAddToken: (() -> Unit)?) {
+    Row(
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val text = when (block) {
+            is ProposeBlock.NoToken -> stringResource(R.string.gitops_propose_no_token, block.host)
+            ProposeBlock.NotEditable -> stringResource(R.string.gitops_propose_not_editable)
+        }
+        MutedText(text, Modifier.weight(1f))
+        if (block is ProposeBlock.NoToken && onAddToken != null) {
+            TextButton(onClick = onAddToken) { Text(stringResource(R.string.gitops_source_add_token)) }
         }
     }
 }
