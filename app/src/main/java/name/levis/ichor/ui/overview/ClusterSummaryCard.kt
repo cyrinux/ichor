@@ -103,6 +103,10 @@ fun ClusterSummaryCard(
                 { CpuStat(summary.cpuCount, live, it) },
                 { MemoryStat(summary, live?.usage?.takeIf { usage -> usage.nodes >= reached }, it) },
             )
+            // A large cluster between full samples: the totals still cover every node's last counters.
+            if (live?.partial == true && live.usage != null) {
+                MutedText(stringResource(R.string.live_partial_nodes, live.sampled, live.total), Modifier.padding(top = 8.dp))
+            }
             Footer(onInsights, onCapacity)
         }
     }

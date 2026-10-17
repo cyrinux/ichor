@@ -2,6 +2,8 @@ package ichorgo
 
 import (
 	"context"
+	"slices"
+	"strings"
 	"time"
 
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
@@ -12,10 +14,17 @@ import (
 // A slow node must not hold the whole sample back past the app's next poll.
 const clusterStatsNodeTimeout = 4 * time.Second
 
-// clusterStats is one sample of every answering node's counters, for the live cluster summary.
+// clusterStats is one sample of the answering nodes' counters, for the live cluster summary.
+//
+// Sampled is how many nodes were asked (the chosen set, unknown nodes left out) and Total how
+// many nodes the context has, so the apps say "live: N of M nodes" when Sampled < Total. A node
+// asked that does not answer still counts in Sampled and is only missing from Nodes, as in a
+// full sample: a down node does not make a full sample read as a partial one.
 type clusterStats struct {
-	At    int64          `json:"at"` // unix milliseconds
-	Nodes []nodeCounters `json:"nodes"`
+	At      int64          `json:"at"` // unix milliseconds
+	Nodes   []nodeCounters `json:"nodes"`
+	Sampled int            `json:"sampled"`
+	Total   int            `json:"total"`
 }
 
 // nodeCounters are cumulative CPU times and current memory; the app derives usage from two samples.
@@ -35,18 +44,56 @@ func ClusterStats(configYAML, contextName string) (out string, err error) {
 
 	contextName = unmaskContext(configYAML, contextName)
 
+	return clusterStatsOf(configYAML, contextName, "")
+}
+
+// ClusterStatsNodes samples only the given nodes (newline-separated, as the context names
+// them; gomobile passes strings only). Empty samples every node, like ClusterStats. Nodes the
+// context does not have are left out, never an error.
+func ClusterStatsNodes(configYAML, contextName, nodes string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	// Screenshot mode hands back masked names: unmask them like any node list (comma-separated).
+	contextName, nodes = unmaskTargets(configYAML, contextName, strings.ReplaceAll(nodes, "\n", ","))
+
+	return clusterStatsOf(configYAML, contextName, nodes)
+}
+
+// clusterStatsOf samples the comma-separated nodes ("": every node); names are already unmasked.
+func clusterStatsOf(configYAML, contextName, nodes string) (string, error) {
 	if isDemoContext(configYAML, contextName) {
-		return demoRead("ClusterStats", configYAML, contextName, "")
+		return demoRead("ClusterStats", configYAML, contextName, "", nodes)
 	}
 
 	return withSession(configYAML, contextName, statsTimeout, func(ctx context.Context, s *session) (string, error) {
-		nodes := targetNodes(s.context)
-		samples := make([]*nodeCounters, len(nodes))
+		all := targetNodes(s.context)
+		chosen := chooseNodes(all, nodes)
+		samples := make([]*nodeCounters, len(chosen))
 
-		forEachNode(nodes, func(i int, node string) { samples[i] = sampleCounters(ctx, s.client, node) })
+		forEachNode(chosen, func(i int, node string) { samples[i] = sampleCounters(ctx, s.client, node) })
 
-		return toJSON(clusterStats{At: time.Now().UnixMilli(), Nodes: answered(samples)})
+		return toJSON(clusterStats{
+			At: time.Now().UnixMilli(), Nodes: answered(samples), Sampled: len(chosen), Total: len(all),
+		})
 	})
+}
+
+// chooseNodes keeps the nodes of all that the comma-separated list names, in all's order;
+// an empty list keeps every node.
+func chooseNodes(all []string, list string) []string {
+	if strings.Trim(list, ", \t") == "" {
+		return all
+	}
+
+	wanted := map[string]bool{}
+
+	for _, n := range strings.Split(list, ",") {
+		if n = strings.TrimSpace(n); n != "" {
+			wanted[n] = true
+		}
+	}
+
+	return slices.DeleteFunc(slices.Clone(all), func(n string) bool { return !wanted[n] })
 }
 
 // sampleCounters returns nil when the node did not report its CPU times.

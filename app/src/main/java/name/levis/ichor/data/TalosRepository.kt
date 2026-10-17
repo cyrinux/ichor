@@ -177,9 +177,12 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         TalosJson.decodeFromString(NodeStats.serializer(), Ichorgo.nodeStats(cfg, ctx, node))
     }
 
-    /** One sample of every node's CPU and memory counters for the live cluster summary (not cached). */
-    suspend fun clusterStats(): ClusterStatsSample = call { cfg, ctx ->
-        TalosJson.decodeFromString(ClusterStatsSample.serializer(), Ichorgo.clusterStats(cfg, ctx))
+    /**
+     * One sample of the CPU and memory counters of [nodes] (empty: every node) for the live
+     * cluster summary (not cached). Nodes the context does not have are left out.
+     */
+    suspend fun clusterStats(nodes: List<String> = emptyList()): ClusterStatsSample = call { cfg, ctx ->
+        TalosJson.decodeFromString(ClusterStatsSample.serializer(), Ichorgo.clusterStatsNodes(cfg, ctx, nodes.joinToString("\n")))
     }
 
     /** One sample of the node's processes for the Processes tab (not cached: always fresh). */

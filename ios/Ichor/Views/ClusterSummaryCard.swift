@@ -64,6 +64,13 @@ struct ClusterSummaryCard: View {
             }
             // The stat icons in cluster-tinted containers; the values stay neutral.
             .environment(\.summaryColors, colors)
+            // A large cluster between full samples: the totals still cover every node's last counters.
+            if let live, live.isPartial, live.usage != nil {
+                Text("Live: \(live.sampledCount) of \(live.total) nodes")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
         }
         .padding(.vertical, 4)
     }

@@ -110,6 +110,7 @@
     <string name="overview_stat_nodes">Nodos</string>
     <string name="overview_nodes_answered">%1$d de %2$d nodos han respondido</string>
     <string name="overview_nodes_answered_unknown">Nodos que han respondido: %1$d</string>
+    <string name="live_partial_nodes">En directo: %1$d de %2$d nodos</string>
     <string name="overview_nodes_unplaced">Fuera del mapa</string>
     <string name="overview_nodes_open_all">Ver todos los nodos</string>
     <string name="nodes_search">Buscar por nombre de host o dirección</string>

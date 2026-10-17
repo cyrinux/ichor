@@ -16,9 +16,18 @@ final class ClusterLiveStore {
     /// What was sampled for key, nil for another cluster.
     func live(for key: String) -> ClusterLive? { key == self.key ? live : nil }
 
-    /// Samples until cancelled; each sample asks every node, so a cluster of many `nodes` is
-    /// sampled less often (clusterPollSeconds).
-    func poll(with client: TalosClient, key: String, nodes: Int) async {
+    /// The node rows on screen (the Nodes screen's), by address: part of the focus set.
+    @ObservationIgnored private(set) var visibleNodes: Set<String> = []
+
+    func showing(_ node: String) { visibleNodes = visibleNodes.union([node]) }
+
+    func hiding(_ node: String) { visibleNodes = visibleNodes.subtracting([node]) }
+
+    /// Samples until cancelled. Up to the dense threshold each sample asks every node; above it,
+    /// most ask only the focus set (`focus`, the problem nodes, and the rows on screen) and every
+    /// clusterFullSampleEvery-th every node, the usage merged from each node's last counters
+    /// (IchorCore ClusterLive). A cluster of many `nodes` is also sampled less often.
+    func poll(with client: TalosClient, key: String, nodes: Int, focus: Set<String>) async {
         if key != self.key {
             self.key = key
             live = ClusterLive()
@@ -27,16 +36,26 @@ final class ClusterLiveStore {
         }
         // forget() (a screenshot mode switch) ends it too.
         while !Task.isCancelled, key == self.key {
-            do {
-                let sample = try await client.clusterStats()
-                // Leaving the screen (or another cluster) is not a sample.
-                guard !Task.isCancelled, key == self.key else { return }
-                live.record(sample)
-            } catch {
-                guard !Task.isCancelled, key == self.key else { return }
-                live.recordFailure()
+            if let asked = live.nodesToSample(nodeCount: nodes, focus: focus.union(visibleNodes)) {
+                await sample(with: client, key: key, nodes: asked)
+            } else {
+                live.skipTick()
             }
+            guard !Task.isCancelled, key == self.key else { return }
             try? await Task.sleep(for: .seconds(live.nextDelay(nodeCount: nodes)))
+        }
+    }
+
+    /// One sample of `nodes` ([]: every node), recorded unless the poll ended meanwhile.
+    private func sample(with client: TalosClient, key: String, nodes: [String]) async {
+        do {
+            let taken = try await client.clusterStats(nodes: nodes)
+            // Leaving the screen (or another cluster) is not a sample.
+            guard !Task.isCancelled, key == self.key else { return }
+            live.record(taken)
+        } catch {
+            guard !Task.isCancelled, key == self.key else { return }
+            live.recordFailure()
         }
     }
 

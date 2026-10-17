@@ -109,6 +109,7 @@
     <string name="overview_stat_nodes">Knoten</string>
     <string name="overview_nodes_answered">%1$d von %2$d Knoten haben geantwortet</string>
     <string name="overview_nodes_answered_unknown">Knoten mit Antwort: %1$d</string>
+    <string name="live_partial_nodes">Live: %1$d von %2$d Knoten</string>
     <string name="overview_nodes_unplaced">Nicht auf der Karte</string>
     <string name="overview_nodes_open_all">Alle Knoten anzeigen</string>
     <string name="nodes_search">Nach Hostname oder Adresse suchen</string>

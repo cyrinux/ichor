@@ -110,6 +110,7 @@ import name.levis.ichor.data.ClusterSecureFiles
 import name.levis.ichor.data.HistoryRepository
 import name.levis.ichor.data.HistoryStore
 import name.levis.ichor.data.LastLooked
+import name.levis.ichor.data.LiveFocus
 import name.levis.ichor.data.AlertmanagerRepository
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.data.VpnRequiredException
@@ -324,6 +325,8 @@ class TalosApp : Application() {
     /** When the user last looked at each cluster's home ("since you last looked"). */
     val lastLooked by lazy { LastLooked(getSharedPreferences(LastLooked.FILE, Context.MODE_PRIVATE)) }
     val vpn by lazy { VpnMonitor(this) }
+    /** The nodes the live cluster summary samples on every tick of a large cluster. */
+    val liveFocus by lazy { LiveFocus() }
     val appLock by lazy {
         AppLock(
             PrefsLockSettings(getSharedPreferences("ichor-security", Context.MODE_PRIVATE)),

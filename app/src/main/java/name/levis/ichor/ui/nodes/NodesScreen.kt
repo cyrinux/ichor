@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -19,17 +20,25 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
+import name.levis.ichor.data.LiveFocus
 import name.levis.ichor.data.TOPOLOGY
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ClusterTopology
@@ -145,9 +154,25 @@ fun NodesScreen(
     }
 }
 
+/** How long the list rests before its visible rows become the live focus set. */
+private const val VISIBLE_DEBOUNCE_MILLIS = 300L
+
+private const val NODE_KEY_PREFIX = "node:"
+
+@OptIn(FlowPreview::class)
 @Composable
 private fun NodeList(groups: List<NodeGroup>, sites: Boolean, row: @Composable (NodeOverview) -> Unit) {
-    LazyColumn(Modifier.fillMaxSize()) {
+    val listState = rememberLazyListState()
+    val liveFocus = (LocalContext.current.applicationContext as TalosApp).liveFocus
+    // The rows on screen are sampled live on every tick of a large cluster's summary; kept after
+    // leaving, as the nodes just looked at, until the next visit or another cluster.
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.mapNotNull { visibleNode(it.key) }.toSet() }
+            .distinctUntilChanged()
+            .debounce(VISIBLE_DEBOUNCE_MILLIS)
+            .collect { liveFocus.publish(LiveFocus.NODES_SCREEN, it) }
+    }
+    LazyColumn(Modifier.fillMaxSize(), state = listState) {
         groups.forEach { group ->
             if (sites) item(key = "site:${group.key}") {
                 Text(
@@ -159,13 +184,16 @@ private fun NodeList(groups: List<NodeGroup>, sites: Boolean, row: @Composable (
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
                 )
             }
-            items(group.nodes, key = { "node:${it.node}" }) { node ->
+            items(group.nodes, key = { NODE_KEY_PREFIX + it.node }) { node ->
                 row(node)
                 HorizontalDivider()
             }
         }
     }
 }
+
+/** The node of a row's [key], null for a site header. */
+private fun visibleNode(key: Any): String? = (key as? String)?.takeIf { it.startsWith(NODE_KEY_PREFIX) }?.removePrefix(NODE_KEY_PREFIX)
 
 /** All, needing attention, or one health. */
 @Composable

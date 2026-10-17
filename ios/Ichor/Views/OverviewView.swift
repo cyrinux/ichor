@@ -209,7 +209,7 @@ struct OverviewView: View {
         .task(id: loadID) { await load() }
         .watchesHistory(look, cluster: model.activeSummary.map(monitorClusterKey) ?? "", id: loadID)
         // Live CPU and memory while the overview is on screen, the app active, the setting on
-        // and a node answers; fewer samples on a large cluster (each one asks every node).
+        // and a node answers; fewer samples on a large cluster, most of them of the focus nodes only.
         .task(id: liveID) {
             guard liveStats else {
                 ClusterLiveStore.shared.clear()
@@ -217,7 +217,8 @@ struct OverviewView: View {
             }
             guard visible, scenePhase == .active, !fromMonitor, case .loaded(let overview, _, _) = state, !overview.partial,
                   overview.outage == nil, let client = model.client else { return }
-            await ClusterLiveStore.shared.poll(with: client, key: loadID, nodes: overview.nodes.count)
+            // Above the dense threshold most samples ask only the problem nodes and the rows on screen.
+            await ClusterLiveStore.shared.poll(with: client, key: loadID, nodes: overview.nodes.count, focus: liveFocus(overview))
         }
         .onAppear { visible = true }
         .onDisappear { visible = false }
@@ -442,8 +443,19 @@ struct OverviewView: View {
     /// Restarts (or stops) the live sampling when one of its conditions changes.
     private var liveID: String {
         var nodes = -1
-        if !fromMonitor, case .loaded(let overview, _, _) = state, !overview.partial, overview.outage == nil { nodes = overview.nodes.count }
-        return "\(loadID)|\(liveStats)|\(visible)|\(scenePhase == .active)|\(nodes)"
+        // Another set of problem nodes is another focus set for a large cluster's samples.
+        var problems = 0
+        if !fromMonitor, case .loaded(let overview, _, _) = state, !overview.partial, overview.outage == nil {
+            nodes = overview.nodes.count
+            problems = liveFocus(overview).hashValue
+        }
+        return "\(loadID)|\(liveStats)|\(visible)|\(scenePhase == .active)|\(nodes)|\(problems)"
+    }
+
+    /// The nodes a large cluster's live samples always ask: those needing attention (down, not
+    /// ready or reporting a problem), by address.
+    private func liveFocus(_ overview: ClusterOverview) -> Set<String> {
+        Set(overview.nodes.filter(\.needsAttention).map(\.node))
     }
 
     /// A cluster-wide screen is only disabled when no reachable node's Talos has it (unknown

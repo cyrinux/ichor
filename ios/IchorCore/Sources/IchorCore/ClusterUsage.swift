@@ -34,22 +34,33 @@ public struct NodeCounters: Decodable, Equatable, Sendable {
     }
 }
 
-/// One sample of every node that answered; `at` in epoch milliseconds.
+/// One sample of the asked nodes that answered; `at` in epoch milliseconds. `sampled` nodes
+/// were asked (a down one is asked but missing from `nodes`) of the context's `total`; both 0
+/// from an older core, which always asks every node.
 public struct ClusterStatsSample: Decodable, Equatable, Sendable {
     public let at: Int64
     public let nodes: [NodeCounters]
+    public let sampled: Int
+    public let total: Int
 
-    public init(at: Int64, nodes: [NodeCounters] = []) {
+    public init(at: Int64, nodes: [NodeCounters] = [], sampled: Int = 0, total: Int = 0) {
         self.at = at
         self.nodes = nodes
+        self.sampled = sampled
+        self.total = total
     }
 
-    private enum CodingKeys: String, CodingKey { case at, nodes }
+    /// Only some of the nodes were asked (the focus set of a large cluster).
+    public var isPartial: Bool { total > 0 && sampled < total }
+
+    private enum CodingKeys: String, CodingKey { case at, nodes, sampled, total }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         at = try c.field(.at, 0)
         nodes = try c.field(.nodes, [])
+        sampled = try c.field(.sampled, 0)
+        total = try c.field(.total, 0)
     }
 }
 
@@ -128,28 +139,65 @@ public let clusterLiveMaxFailures = 3
 public let clusterFirstDeltaSeconds = 1.0
 
 /// Live cluster usage: `usage` nil until the first sample (or after repeated failures).
-/// Fed by the overview's polling loop, which only makes the Go calls.
+/// Fed by the overview's polling loop, which only makes the Go calls. On a large cluster most
+/// samples ask only the focus set (`nodesToSample`); from the first partial one on, the usage
+/// is merged from the last known counters of every node (NodeCountersMerge).
 public struct ClusterLive: Equatable, Sendable {
     public private(set) var usage: ClusterUsage?
     public private(set) var cpuHistory: [Double] = []
+    /// Nodes the last sample asked, and of how many; equal unless it was partial.
+    public private(set) var sampledCount = 0
+    public private(set) var total = 0
     private var last: ClusterStatsSample?
+    private var merge = NodeCountersMerge()
+    /// A partial sample came: the usage is the merge's from then on.
+    private var merging = false
     private var failures = 0
     /// Samples since (re)starting; the second one comes after clusterFirstDeltaSeconds.
     private var samples = 0
+    /// Polls since (re)starting, sampled, failed or skipped: every clusterFullSampleEvery-th asks every node.
+    private var ticks = 0
 
     public init() {}
+
+    /// The last sample asked only some of the nodes: the summary says "live: N of M nodes".
+    public var isPartial: Bool { total > 0 && sampledCount < total }
 
     /// Sampling starts again (back on the overview): the values stay, but the next delta comes
     /// soon and earlier failures no longer count.
     public mutating func resume() {
         samples = 0
         failures = 0
+        ticks = 0
     }
 
-    /// A sample answered by at least one node (an empty one is a failure, not an empty cluster).
+    /// The nodes the next sample asks on a cluster of `nodeCount` nodes: [] for every node, nil
+    /// for no sample this tick (skipTick). Up to the dense threshold, at the start (the first
+    /// sample and its quick delta) and every clusterFullSampleEvery-th tick: every node;
+    /// otherwise the `focus` set (problem and visible nodes), nothing when it is empty.
+    public func nodesToSample(nodeCount: Int, focus: Set<String>) -> [String]? {
+        guard isDenseCluster(nodeCount), samples >= 2, ticks % clusterFullSampleEvery != 0 else { return [] }
+        return focus.isEmpty ? nil : focus.sorted()
+    }
+
+    /// A tick without a sample (an empty focus set): the values stay.
+    public mutating func skipTick() {
+        ticks += 1
+    }
+
+    /// A sample answered by at least one node (an empty one is a failure, not an empty cluster;
+    /// an empty partial one only means the asked nodes are down, so the values stay).
     public mutating func record(_ sample: ClusterStatsSample) {
-        guard !sample.nodes.isEmpty else { return recordFailure() }
-        var fresh = ClusterUsage(previous: last, current: sample)
+        ticks += 1
+        guard !sample.nodes.isEmpty else {
+            if sample.isPartial { return noteSampled(sample) }
+            failures += 1
+            if failures >= clusterLiveMaxFailures { self = ClusterLive() }
+            return
+        }
+        merge.add(sample)
+        merging = merging || sample.isPartial
+        var fresh = merging ? merge.usage(at: sample.at) : ClusterUsage(previous: last, current: sample)
         // One sample without CPU (nodes rebooted or replaced) keeps the last reading.
         let cpu = fresh.cpuFraction
         fresh.cpuFraction = cpu ?? usage?.cpuFraction
@@ -158,10 +206,17 @@ public struct ClusterLive: Equatable, Sendable {
         last = sample
         failures = 0
         samples += 1
+        noteSampled(sample)
+    }
+
+    private mutating func noteSampled(_ sample: ClusterStatsSample) {
+        sampledCount = sample.total > 0 ? sample.sampled : sample.nodes.count
+        total = sample.total > 0 ? sample.total : sample.nodes.count
     }
 
     /// A blip keeps the last values; a cluster that stopped answering must not look live.
     public mutating func recordFailure() {
+        ticks += 1
         failures += 1
         if failures >= clusterLiveMaxFailures {
             self = ClusterLive()

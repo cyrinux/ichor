@@ -31,9 +31,11 @@ extension TalosClient {
         try await Self.json { [config, context] in IchorgoClusterTopology(config, context, $0) }
     }
 
-    /// Cumulative CPU times and current memory of every node that answered in time.
-    func clusterStats() async throws -> ClusterStatsSample {
-        try await Self.json { [config, context] in IchorgoClusterStats(config, context, $0) }
+    /// Cumulative CPU times and current memory of the `nodes` (addresses; empty: every node)
+    /// that answered in time; gomobile takes the list as one newline-separated string.
+    func clusterStats(nodes: [String] = []) async throws -> ClusterStatsSample {
+        let list = nodes.joined(separator: "\n")
+        return try await Self.json { [config, context] in IchorgoClusterStatsNodes(config, context, list, $0) }
     }
 }
 

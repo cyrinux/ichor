@@ -111,6 +111,7 @@
     <string name="overview_stat_nodes">Nodes</string>
     <string name="overview_nodes_answered">%1$d of %2$d nodes answered</string>
     <string name="overview_nodes_answered_unknown">Nodes answered: %1$d</string>
+    <string name="live_partial_nodes">Live: %1$d of %2$d nodes</string>
     <string name="overview_nodes_unplaced">Not on the map</string>
     <string name="overview_nodes_open_all">Show all nodes</string>
     <string name="nodes_search">Search by hostname or address</string>

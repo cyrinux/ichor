@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cyrinux/ichor/go/ichorgo"
@@ -241,8 +242,9 @@ var nodeCommands = []command{
 
 		return out, err
 	}},
-	{name: "clusterstats", args: "", run: func(e env) (out string, err error) {
-		out, err = ichorgo.ClusterStats(e.cfg, e.context)
+	{name: "clusterstats", args: "[-nodes A,B]", run: func(e env) (out string, err error) {
+		// The apps pass the node list newline-separated (gomobile: strings only).
+		out, err = ichorgo.ClusterStatsNodes(e.cfg, e.context, strings.ReplaceAll(e.nodes, ",", "\n"))
 
 		return out, err
 	}},

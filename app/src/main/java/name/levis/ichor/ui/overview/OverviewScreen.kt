@@ -2,6 +2,7 @@ package name.levis.ichor.ui.overview
 
 import name.levis.ichor.ui.share.rememberClusterPins
 import name.levis.ichor.ui.share.ClusterPins
+import name.levis.ichor.model.needsAttention
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.BuildConfig
 import name.levis.ichor.ui.history.SinceLastLookedCard
@@ -62,6 +63,7 @@ import androidx.compose.ui.platform.LocalContext
 import name.levis.ichor.TalosApp
 import androidx.compose.material3.TextButton
 import name.levis.ichor.data.ConfigRepository
+import name.levis.ichor.data.LiveFocus
 import name.levis.ichor.data.SPONSOR_URL
 import name.levis.ichor.ui.settings.openUrl
 import name.levis.ichor.data.activeSummary
@@ -392,10 +394,19 @@ fun OverviewScreen(
     // Live CPU and memory only while the overview is on screen, once it loaded, and if not turned off.
     // Fewer samples on a large cluster: each one asks every node.
     val nodeCount = (state as? UiState.Loaded)?.data?.nodes?.size ?: 0
+    // On a large cluster most samples ask only the focus set: the problem nodes of the last
+    // overview, plus what the dense card and the Nodes screen show.
+    val problemNodes = (state as? UiState.Loaded)?.data?.nodes?.filter { it.needsAttention }?.map { it.node }?.toSet().orEmpty()
+    LaunchedEffect(config?.activeContext, invalidations, problemNodes) {
+        app.liveFocus.scope(config?.activeContext to invalidations)
+        app.liveFocus.publish(LiveFocus.OVERVIEW, problemNodes)
+    }
     LaunchedEffect(liveEnabled, loaded, config?.activeContext, invalidations, nodeCount) {
         if (!liveEnabled) liveVm.clear()
         if (!liveEnabled || !loaded) return@LaunchedEffect
-        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { liveVm.poll(config?.activeContext to invalidations, nodeCount) }
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            liveVm.poll(config?.activeContext to invalidations, nodeCount, app.liveFocus.nodes)
+        }
     }
 
     // Members the talosconfig misses, once the overview loaded (its nodes answer, so will discovery).

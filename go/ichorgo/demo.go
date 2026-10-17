@@ -127,8 +127,17 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 	case "NodeStats":
 		return toJSON(sample)
 	case "ClusterStats":
-		result := clusterStats{At: now, Nodes: []nodeCounters{}}
+		result := clusterStats{At: now, Nodes: []nodeCounters{}, Total: len(nodes)}
+		names := make([]string, 0, len(nodes))
 		for _, n := range nodes {
+			names = append(names, n.Node)
+		}
+		chosen := chooseNodes(names, strings.Join(args, ","))
+		result.Sampled = len(chosen)
+		for _, n := range nodes {
+			if !slices.Contains(chosen, n.Node) {
+				continue
+			}
 			s := demoStats(n)
 			result.Nodes = append(result.Nodes, nodeCounters{Node: n.Node, CPUBusy: s.CPUBusy, CPUTotal: s.CPUTotal, CPUCount: s.CPUCount, MemTotal: s.MemTotal, MemAvailable: s.MemAvailable})
 		}
