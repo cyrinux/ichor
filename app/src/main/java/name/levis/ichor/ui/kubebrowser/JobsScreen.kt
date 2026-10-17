@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Refresh
@@ -48,6 +47,8 @@ import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.groupedCardRows
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
@@ -131,16 +132,16 @@ fun JobsScreen(
                     if (rows.isEmpty()) {
                         EmptyText(emptyOrNoMatch(query, R.string.kube_jobs_empty, R.string.kube_jobs_no_match))
                     } else {
-                        LazyColumn(Modifier.fillMaxSize()) {
-                            items(rows, key = { it.key }) { job ->
+                        // All namespaces: one card per namespace, its name as the card's title.
+                        val byNamespace = if (control.scope.namespace == null) { r: JobRow -> r.namespace } else null
+                        LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
+                            groupedCardRows(rows, groupOf = byNamespace, key = { it.key }) { job ->
                                 JobRowItem(
                                     job,
-                                    showNamespace = control.scope.namespace == null,
                                     onClick = { onObject(job.ref) },
                                     onOwner = onObject,
                                     onDelete = { deleting = job.ref },
                                 )
-                                HorizontalDivider()
                             }
                         }
                     }
@@ -191,7 +192,7 @@ private fun JobRow.stateLabel(): String = when (runState) {
 }
 
 @Composable
-private fun JobRowItem(job: JobRow, showNamespace: Boolean, onClick: () -> Unit, onOwner: (KubeObjectRef) -> Unit, onDelete: () -> Unit) {
+private fun JobRowItem(job: JobRow, onClick: () -> Unit, onOwner: (KubeObjectRef) -> Unit, onDelete: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(start = 16.dp, top = 10.dp, bottom = 10.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -199,7 +200,7 @@ private fun JobRowItem(job: JobRow, showNamespace: Boolean, onClick: () -> Unit,
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    if (showNamespace) job.key else job.name,
+                    job.name,
                     style = MaterialTheme.typography.bodyMedium,
                     fontFamily = FontFamily.Monospace,
                     maxLines = 1,

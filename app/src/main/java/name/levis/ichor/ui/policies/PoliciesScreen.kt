@@ -66,6 +66,10 @@ import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.RowCard
+import name.levis.ichor.ui.components.RowPosition
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.Loaded
@@ -187,7 +191,7 @@ private fun PolicyList(
     val namespaces = remember(report) { report.policyNamespaces }
     val selected = namespace?.takeIf { it in namespaces }
     val rows = remember(report, selected, query) { report.filtered(selected, query) }
-    LazyColumn(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         items(report.engines, key = { "engine/" + it.name }) { EngineCard(report, it) }
         item(key = "filters") {
             Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -212,9 +216,8 @@ private fun PolicyList(
             val empty = if (report.kyverno) R.string.kpol_empty else R.string.kpol_empty_gatekeeper
             item(key = "empty") { EmptyText(emptyOrNoMatch(query, empty, R.string.kpol_no_match)) }
         }
-        items(rows, key = { it.key }) { policy ->
+        cardRows(rows, key = { it.key }) { policy ->
             PolicyRow(policy, selected, showEngine = report.bothEngines, onClick = { onOpen(policy) })
-            HorizontalDivider()
         }
         if (report.reportsTruncated) {
             item(key = "truncated") {
@@ -230,33 +233,38 @@ private fun PolicyList(
 private fun EngineCard(report: PolicyReport, engine: PolicyEngine) {
     val colors = LocalStatusColors.current
     val gatekeeper = engine.name == POLICY_ENGINE_GATEKEEPER
-    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        SectionTitle(stringResource(if (gatekeeper) R.string.kpol_engine_gatekeeper else R.string.kpol_engine))
-        val details = if (gatekeeper) {
-            listOf(engine.namespace)
-        } else {
-            listOf(engine.namespace, report.version, stringResource(R.string.kpol_reports_read, report.reportsRead.toString()))
-        }
-        MutedText(details.filter { it.isNotEmpty() }.joinToString("  ·  "))
-        if (engine.controllers.isNotEmpty()) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                engine.controllers.forEach { c ->
-                    val description = stringResource(R.string.kpol_controller_ready, c.name, c.ready.toString(), c.desired.toString())
-                    Tag(
-                        "${c.name} ${c.ready}/${c.desired}",
-                        if (c.healthy) colors.ok else colors.bad,
-                        Modifier.semantics { contentDescription = description },
-                        mono = true,
-                    )
+    // A titled card, like the sections of the list under it.
+    Column {
+        SectionTitle(stringResource(if (gatekeeper) R.string.kpol_engine_gatekeeper else R.string.kpol_engine), Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp))
+        RowCard(RowPosition.ONLY) {
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                val details = if (gatekeeper) {
+                    listOf(engine.namespace)
+                } else {
+                    listOf(engine.namespace, report.version, stringResource(R.string.kpol_reports_read, report.reportsRead.toString()))
+                }
+                MutedText(details.filter { it.isNotEmpty() }.joinToString("  ·  "))
+                if (engine.controllers.isNotEmpty()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        engine.controllers.forEach { c ->
+                            val description = stringResource(R.string.kpol_controller_ready, c.name, c.ready.toString(), c.desired.toString())
+                            Tag(
+                                "${c.name} ${c.ready}/${c.desired}",
+                                if (c.healthy) colors.ok else colors.bad,
+                                Modifier.semantics { contentDescription = description },
+                                mono = true,
+                            )
+                        }
+                    }
+                }
+                WebhookLine(engine)
+                if (gatekeeper) {
+                    if (report.gatekeeperError.isNotEmpty()) InlineError(stringResource(R.string.kpol_read_error, report.gatekeeperError))
+                } else {
+                    if (report.reportsError.isNotEmpty()) InlineError(stringResource(R.string.kpol_reports_unavailable, report.reportsError))
+                    if (report.error.isNotEmpty()) InlineError(stringResource(R.string.kpol_read_error, report.error))
                 }
             }
-        }
-        WebhookLine(engine)
-        if (gatekeeper) {
-            if (report.gatekeeperError.isNotEmpty()) InlineError(stringResource(R.string.kpol_read_error, report.gatekeeperError))
-        } else {
-            if (report.reportsError.isNotEmpty()) InlineError(stringResource(R.string.kpol_reports_unavailable, report.reportsError))
-            if (report.error.isNotEmpty()) InlineError(stringResource(R.string.kpol_read_error, report.error))
         }
     }
 }

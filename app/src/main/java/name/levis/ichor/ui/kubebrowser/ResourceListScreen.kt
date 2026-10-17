@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
@@ -63,6 +62,8 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.checkup.ageSince
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.groupedCardRows
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
@@ -204,10 +205,10 @@ private fun ColumnScope.Rows(
         } else {
             val listState = rememberLazyListState()
             LoadMoreOnScroll(listState, enabled = load.hasMore && query.isBlank(), loaded = load.items.size, onLoadMore = vm::loadMore)
-            LazyColumn(Modifier.fillMaxSize(), state = listState) {
-                items(rows, key = { it.key }) { row ->
-                    ObjectRow(row, wide, showNamespace, now) { onObject(row) }
-                    HorizontalDivider()
+            // All namespaces: one card per namespace, its name as the card's title.
+            LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = CardListPadding) {
+                groupedCardRows(rows, groupOf = if (showNamespace) { r: ResourceRow -> r.namespace } else null, key = { it.key }) { row ->
+                    ObjectRow(row, wide, now) { onObject(row) }
                 }
             }
         }
@@ -215,10 +216,10 @@ private fun ColumnScope.Rows(
     DataFreshness(s, edgeToEdge = false)
 }
 
-/** An object: its name first, then namespace and age, then each column as a chip. */
+/** An object: its name and age first, then each column as a chip; its namespace is the card's title. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ObjectRow(row: ResourceRow, wide: Boolean, showNamespace: Boolean, now: Long, onClick: () -> Unit) {
+private fun ObjectRow(row: ResourceRow, wide: Boolean, now: Long, onClick: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val fields = remember(row, wide) { rowFields(row, wide) }
     Column(
@@ -229,9 +230,6 @@ private fun ObjectRow(row: ResourceRow, wide: Boolean, showNamespace: Boolean, n
             Text(row.name, style = MaterialTheme.typography.bodyLarge, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             if (row.deleting) ToneLabel(stringResource(R.string.kb_deleting), LocalStatusColors.current.warn)
             if (row.created > 0) Text(ageSince(row.created * 1000, now), style = MaterialTheme.typography.labelSmall, color = muted)
-        }
-        if (showNamespace && row.namespace.isNotEmpty()) {
-            Text(row.namespace, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = muted)
         }
         if (fields.isNotEmpty()) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

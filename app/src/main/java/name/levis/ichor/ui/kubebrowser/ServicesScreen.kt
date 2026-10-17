@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Refresh
@@ -56,6 +55,8 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.apps.RouteCertBadge
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.groupedCardRows
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
@@ -138,15 +139,15 @@ fun ServicesScreen(
                     if (rows.isEmpty()) {
                         EmptyText(emptyOrNoMatch(query, R.string.kube_services_empty, R.string.kube_services_no_match))
                     } else {
-                        LazyColumn(Modifier.fillMaxSize()) {
-                            items(rows, key = { it.key }) { svc ->
+                        // All namespaces: one card per namespace, its name as the card's title.
+                        val byNamespace = if (control.scope.namespace == null) { r: ServiceRow -> r.namespace } else null
+                        LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
+                            groupedCardRows(rows, groupOf = byNamespace, key = { it.key }) { svc ->
                                 ServiceRowItem(
                                     svc,
-                                    showNamespace = control.scope.namespace == null,
                                     onClick = { onObject(KubeObjectRef.service(svc.namespace, svc.name)) },
                                     onObject = onObject,
                                 )
-                                HorizontalDivider()
                             }
                         }
                     }
@@ -167,7 +168,7 @@ private fun lbHint(controller: String): Int = when (LbController.of(controller))
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ServiceRowItem(svc: ServiceRow, showNamespace: Boolean, onClick: () -> Unit, onObject: (KubeObjectRef) -> Unit) {
+private fun ServiceRowItem(svc: ServiceRow, onClick: () -> Unit, onObject: (KubeObjectRef) -> Unit) {
     val uriHandler = LocalUriHandler.current
     Column(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
@@ -175,7 +176,7 @@ private fun ServiceRowItem(svc: ServiceRow, showNamespace: Boolean, onClick: () 
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                if (showNamespace) svc.key else svc.name,
+                svc.name,
                 style = MaterialTheme.typography.bodyMedium,
                 fontFamily = FontFamily.Monospace,
                 maxLines = 1,
