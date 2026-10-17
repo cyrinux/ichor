@@ -669,6 +669,8 @@ github:
         - docker/build-push-action
         - ossf/scorecard-action
         - anchore/scan-action
+        - google-github-actions/auth # Play upload sign-in (release.yml), pinned by SHA
+        - ruby/setup-ruby # fastlane for the Play upload (release.yml), pinned by SHA
 
     # ===========================================
     # Container images must not use forbidden reference
