@@ -129,7 +129,7 @@ func KubeCapacityNodeLoss(configYAML, contextName, kubeServer, kubeNode string) 
 	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer},
 		func() nodeLossPlan { return demoKubeNodeLoss(nodes) },
 		func(ctx context.Context, k *kubeClient) (nodeLossPlan, error) {
-			in, err := readCapacityInput(ctx, k)
+			in, err := readCapacityInput(ctx, k, false)
 			if err != nil {
 				return nodeLossPlan{}, err
 			}
@@ -235,10 +235,10 @@ type lossSim struct {
 
 func newLossSim(in capacityInput) lossSim {
 	pods := resolvePriorities(in.pods, in.classes)
-	nodes := capacityNodes(mapCheckupNodes(in.nodes, pods), pods, kubeTopNodes{})
+	nodes := capacityNodes(in.nodes, pods, kubeTopNodes{})
 	s := lossSim{
 		nodes: nodes, pods: pods, owners: controllerOwners(in.sets),
-		workloads: capacityWorkloads(pods, in.sets, in.pdbs, map[string]kubeTopPod{}, nodes),
+		workloads: capacityWorkloads(pods, in.sets, in.pdbs, map[string]kubeTopPod{}, nil, nodes),
 		never:     map[string]bool{}, pdbs: map[string]pdbObject{}, byKey: map[string]capacityWorkload{},
 		unscheduled: map[string]int{},
 	}
@@ -276,15 +276,18 @@ type simPod struct {
 }
 
 // simNode is a remaining node: its free room and the pods a preemption may evict from it.
+// ephemeralKnown is false when the node does not say its ephemeral storage: not a limit then.
 type simNode struct {
-	name        string
-	cpu, memory float64
-	slots       int
-	pods        []simPod
+	name                   string
+	cpu, memory, ephemeral float64
+	ephemeralKnown         bool
+	slots                  int
+	pods                   []simPod
 }
 
 func (n simNode) fits(p simPod) bool {
-	return n.slots > 0 && n.cpu >= p.CPU && n.memory >= p.Memory
+	return n.slots > 0 && n.cpu >= p.CPU && n.memory >= p.Memory &&
+		(!n.ephemeralKnown || p.Ephemeral <= 0 || n.ephemeral >= p.Ephemeral)
 }
 
 func (s lossSim) simPod(p checkPod) simPod {
@@ -379,7 +382,10 @@ func (s lossSim) remaining(nodes ...string) []simNode {
 			continue
 		}
 
-		r := simNode{name: n.Name, cpu: n.CPUFree, memory: n.MemoryFree, slots: n.PodsFree}
+		r := simNode{
+			name: n.Name, cpu: n.CPUFree, memory: n.MemoryFree, slots: n.PodsFree,
+			ephemeral: n.EphemeralFree, ephemeralKnown: n.EphemeralAllocatable > 0,
+		}
 
 		for _, p := range s.pods {
 			if p.Node == n.Name && p.running() && !stays(p) {
@@ -416,6 +422,7 @@ func placeOn(room []simNode, p simPod) string {
 func (n *simNode) add(p simPod) {
 	n.cpu -= p.CPU
 	n.memory -= p.Memory
+	n.ephemeral -= p.Ephemeral
 	n.slots--
 	n.pods = append(n.pods, p)
 }
@@ -423,6 +430,7 @@ func (n *simNode) add(p simPod) {
 func (n *simNode) remove(p simPod) {
 	n.cpu += p.CPU
 	n.memory += p.Memory
+	n.ephemeral += p.Ephemeral
 	n.slots++
 	n.pods = slices.DeleteFunc(n.pods, func(q simPod) bool { return q.Namespace == p.Namespace && q.Name == p.Name })
 }
@@ -481,7 +489,7 @@ func evictionSet(n simNode, p simPod) ([]simPod, bool) {
 	})
 
 	for i, q := range lower {
-		n.cpu, n.memory, n.slots = n.cpu+q.CPU, n.memory+q.Memory, n.slots+1
+		n.cpu, n.memory, n.ephemeral, n.slots = n.cpu+q.CPU, n.memory+q.Memory, n.ephemeral+q.Ephemeral, n.slots+1
 		if n.fits(p) {
 			return reprieve(n, p, slices.Clone(lower[:i+1])), true
 		}
@@ -497,7 +505,7 @@ func reprieve(n simNode, p simPod, set []simPod) []simPod {
 		q := set[j]
 
 		kept := n
-		kept.cpu, kept.memory, kept.slots = n.cpu-q.CPU, n.memory-q.Memory, n.slots-1
+		kept.cpu, kept.memory, kept.ephemeral, kept.slots = n.cpu-q.CPU, n.memory-q.Memory, n.ephemeral-q.Ephemeral, n.slots-1
 
 		if kept.fits(p) {
 			n = kept

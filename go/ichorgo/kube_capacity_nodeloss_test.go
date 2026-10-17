@@ -363,7 +363,7 @@ func TestSimulateNodeLossUnscheduledReplicasFreeNothing(t *testing.T) {
 }
 
 func TestKubeCapacityNodeLossReadsTheCluster(t *testing.T) {
-	in, err := readCapacityInput(context.Background(), openFakeKube(t, capacityFake(t)))
+	in, err := readCapacityInput(context.Background(), openFakeKube(t, capacityFake(t)), false)
 	if err != nil {
 		t.Fatal(err)
 	}

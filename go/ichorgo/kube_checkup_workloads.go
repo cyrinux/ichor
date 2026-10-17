@@ -40,6 +40,10 @@ type checkPod struct {
 	// Limits, 0 when some container has none (the pod is then not bounded).
 	CPULimit    float64
 	MemoryLimit float64
+	// Ephemeral is the ephemeral-storage requests in bytes, EphemeralLimit the limits (0 when
+	// some container has none).
+	Ephemeral      float64
+	EphemeralLimit float64
 	// PriorityClassName is spec.priorityClassName, "" when none; Priority its value, set from
 	// the class when the API server did not resolve it (see resolvePriority).
 	PriorityClassName string
@@ -49,6 +53,9 @@ type checkPod struct {
 	Labels            labelSet
 	Static            bool // a mirror pod of the kubelet's: no controller recreates it elsewhere
 }
+
+// ephemeralStorage is the resource name of a container's or node's local disk.
+const ephemeralStorage = "ephemeral-storage"
 
 // The pod QoS classes, in the order the kubelet evicts them under node pressure.
 const (
@@ -153,6 +160,7 @@ func decodeCheckPod(raw json.RawMessage) (checkPod, error) {
 	}
 
 	cpuBounded, memoryBounded := len(extra.Spec.Containers) > 0, len(extra.Spec.Containers) > 0
+	ephemeralBounded := len(extra.Spec.Containers) > 0
 
 	for _, c := range extra.Spec.Containers {
 		p.CPU += parseQuantity(c.Resources.Requests["cpu"])
@@ -161,6 +169,9 @@ func decodeCheckPod(raw json.RawMessage) (checkPod, error) {
 		p.MemoryLimit += parseQuantity(c.Resources.Limits["memory"])
 		cpuBounded = cpuBounded && c.Resources.Limits["cpu"] != ""
 		memoryBounded = memoryBounded && c.Resources.Limits["memory"] != ""
+		p.Ephemeral += parseQuantity(c.Resources.Requests[ephemeralStorage])
+		p.EphemeralLimit += parseQuantity(c.Resources.Limits[ephemeralStorage])
+		ephemeralBounded = ephemeralBounded && c.Resources.Limits[ephemeralStorage] != ""
 	}
 
 	if !cpuBounded {
@@ -169,6 +180,10 @@ func decodeCheckPod(raw json.RawMessage) (checkPod, error) {
 
 	if !memoryBounded {
 		p.MemoryLimit = 0
+	}
+
+	if !ephemeralBounded {
+		p.EphemeralLimit = 0
 	}
 
 	if p.QoS == "" {
