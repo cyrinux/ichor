@@ -12,6 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 LANGUAGES = ["fr", "es", "uk", "de", "it"]
+# The phone app only: the Wear OS tile (wear/src/main/res) is English only for now.
 ANDROID_RES = ROOT / "app/src/main/res"
 ANDROID_PLACEHOLDER = re.compile(r"%(\d+\$)?[sdf]")
 IOS_PLACEHOLDER = re.compile(r"%(\d+\$)?(@|lld|ld|d|lf|f)")

@@ -190,6 +190,12 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   the Argo CD apps open their node or app side by side with the list.
 - **iPad:** the nodes list and the Argo CD / Flux apps open their node or app side by side with the list.
 - **Background:** alerts and a home-screen widget.
+- **Widgets:** the home-screen widget, and on Wear OS a tile and a complication with the health
+  of the cluster on screen on the phone (ready count in its colour, "N down", etcd alarms; the
+  check's age once it is over an hour old). The phone sends them its last background check
+  over the Wear OS Data Layer: counts and the cluster's name only (masked in screenshot mode), no
+  talosconfig or kubeconfig on the watch. Google Play build only: the open-source APKs carry no
+  Google library, so they send nothing to a watch.
 - **Data services:** the storage and database operators the cluster runs (Longhorn, Garage,
   CloudNativePG, Dragonfly, MariaDB, Percona, cert-manager, Velero, ExternalDNS, Sealed Secrets,
   Rook Ceph, CAST AI, CSI VolumeSnapshots, backup CronJobs) on one tabbed screen, each with its
@@ -225,10 +231,14 @@ proxying behave exactly like `talosctl`.
   fits almost all phones.
 
 **F-Droid:** not listed yet. The planned route is [IzzyOnDroid](https://apt.izzysoft.de/fdroid/),
-an F-Droid repository that ships the signed release APKs.
+an F-Droid repository that ships the signed release APKs. The release also carries
+`ichor-wear-v<version>.apk`, the Wear OS tile: it only works with the Google Play phone build
+(same package and signing key), so it is not meant for F-Droid.
 
 ```
 app/            Android: Kotlin + Jetpack Compose UI
+wear/           Wear OS tile and complication (fed by the phone over the Data Layer)
+core-widget/    status rules and phone-to-watch payload shared by app/ and wear/
 ios/            iOS: SwiftUI app (XcodeGen) + IchorCore Swift package
 go/ichorgo  Go core exposed to Kotlin and Swift (JSON in/out)
 go/cmd/probe    desktop CLI calling the same Go functions
@@ -1211,7 +1221,7 @@ a fresh install. Backups move between Android and iOS.
   alerts on, the home opens on the nodes the last background check saw, labelled as such, while
   it refreshes; never in screenshot mode.
 - **Notifications:** with the app lock on, alerts show only a generic text on the lock screen.
-  The widget shows counts only, no hostnames.
+  The widget and the Wear OS tile show counts only, no hostnames.
 - **Kubeconfig export:** the kubeconfig is written only to the file you choose. Use it with
   kubectl or any Kubernetes client, then delete the file.
 

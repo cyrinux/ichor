@@ -80,6 +80,8 @@ import name.levis.ichor.security.SecurityKeyPrompts
 import name.levis.ichor.security.PrefsLockSettings
 import name.levis.ichor.update.UpdateManager
 import name.levis.ichor.update.createStoreUpdater
+import name.levis.ichor.wear.createWearSnapshotSync
+import name.levis.ichor.wear.wearPayload
 import name.levis.ichor.ui.debug.DebugShells
 import name.levis.ichor.ui.OperationService
 import name.levis.ichor.ui.operations.OperationKind
@@ -345,6 +347,24 @@ class TalosApp : Application() {
     }
     /** Google Play in-app updates in the Play build (the others use [updateManager]). */
     val storeUpdater by lazy { createStoreUpdater(this) }
+    private val wearSync by lazy { createWearSnapshotSync(this) }
+
+    /**
+     * Sends the Wear OS tile what the widget shows, with the same names (masked in screenshot
+     * mode). A no-op in the open-source builds and without Google Play services.
+     */
+    fun syncWear() {
+        val stored = configRepository.config.value
+        val payload = wearPayload(
+            monitorStore.state.value,
+            stored?.summary,
+            stored?.activeContext,
+            clusterNames.names.value,
+            uiPreferences.privacyMask.value.enabled,
+        )
+        wearSync.send(payload)
+    }
+
     /** Bundled app icons, and downloaded ones when the user allowed it (Settings → Privacy). */
     val appIcons by lazy { AppIconLoader(this) }
     val monitorStore by lazy {
@@ -409,7 +429,10 @@ class TalosApp : Application() {
     /** Gives the cluster [fingerprint] the name [name] (blank: its context name again); the widget follows. */
     fun renameCluster(fingerprint: String, name: String) {
         clusterNames.set(fingerprint, name)
-        ProcessLifecycleOwner.get().lifecycleScope.launch { ClusterWidget().updateAll(this@TalosApp) }
+        ProcessLifecycleOwner.get().lifecycleScope.launch {
+            ClusterWidget().updateAll(this@TalosApp)
+            syncWear()
+        }
     }
 
     /**
@@ -534,6 +557,7 @@ class TalosApp : Application() {
     private fun forgetShownCluster() {
         ProcessLifecycleOwner.get().lifecycleScope.launch {
             ClusterWidget().updateAll(this@TalosApp)
+            syncWear()
             syncMonitoring(this@TalosApp, runNow = true)
         }
     }
@@ -586,6 +610,7 @@ class TalosApp : Application() {
             // What was posted with real names goes; a running operation is shown again masked.
             if (mask.enabled) cancelNamedNotifications()
             ClusterWidget().updateAll(this@TalosApp)
+            syncWear()
             syncMonitoring(this@TalosApp, runNow = true)
         }
     }

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English only: scripts/check-translations.py covers app/src/main/res, not the watch. -->
+<resources>
+    <string name="wear_app_name">Ichor</string>
+    <string name="wear_tile_label">Cluster health</string>
+    <string name="wear_tile_description">The health of the cluster on screen on your phone</string>
+    <string name="wear_complication_label">Cluster health</string>
+    <string name="wear_no_data">Open Ichor on your phone and turn on background monitoring</string>
+    <string name="wear_ready_count">%1$d/%2$d ready</string>
+    <string name="wear_ready_short">%1$d/%2$d</string>
+    <string name="wear_updated">Updated %1$s</string>
+    <string name="wear_all_ready">All ready</string>
+    <string name="wear_etcd_no_alarms">etcd OK</string>
+    <plurals name="wear_not_ready">
+        <item quantity="one">%d down</item>
+        <item quantity="other">%d down</item>
+    </plurals>
+    <plurals name="wear_unreachable">
+        <item quantity="one">%d unreachable</item>
+        <item quantity="other">%d unreachable</item>
+    </plurals>
+    <plurals name="wear_etcd_alarms">
+        <item quantity="one">%d etcd alarm</item>
+        <item quantity="other">%d etcd alarms</item>
+    </plurals>
+    <string name="wear_tone_ok">OK</string>
+    <string name="wear_tone_warn">Warn</string>
+    <string name="wear_tone_bad">Alert</string>
+    <string name="wear_tone_stale">Stale</string>
+</resources>

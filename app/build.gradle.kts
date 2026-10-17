@@ -65,6 +65,8 @@ android {
             buildConfigField("boolean", "SELF_UPDATE", "false")
             buildConfigField("boolean", "DONATIONS", "false")
             buildConfigField("boolean", "FEATURE_FUNDING", "true")
+            // :core-widget has no play build type.
+            matchingFallbacks += listOf("release")
         }
     }
 
@@ -140,6 +142,7 @@ tasks.configureEach {
 
 dependencies {
     implementation(files("libs/ichorgo.aar"))
+    implementation(project(":core-widget"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
@@ -181,6 +184,8 @@ dependencies {
     "playImplementation"(libs.billing)
     "playImplementation"(libs.play.app.update)
     "playImplementation"(libs.play.services.auth)
+    // The Wear OS tile's Data Layer sync (src/play/.../wear); the open-source builds have none.
+    "playImplementation"(libs.play.services.wearable)
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)

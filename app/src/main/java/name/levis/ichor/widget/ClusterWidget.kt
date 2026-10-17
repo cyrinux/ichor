@@ -82,7 +82,7 @@ class ClusterWidget : GlanceAppWidget() {
             val choice = widgetId?.let { choices[it] }
             val snapshot = widgetSnapshot(state, widgetKeys(choice, stored?.summary, stored?.activeContext, state.active))
             // The name the user gave the cluster, as in the app (not in screenshot mode).
-            val label = snapshot?.let { s -> names[s.fingerprint].takeIf { !mask.enabled && s.fingerprint.isNotBlank() } ?: s.context }
+            val label = snapshot?.let { widgetLabel(it, names, mask.enabled) }
             // A widget on a cluster of its own opens that cluster, like its share link (selected once unlocked).
             val clusterId = widgetClusterId(choice, stored?.summary)
             val link = remember(clusterId) { clusterId?.let { shareLinkFor(ShareTarget.screen(ShareTarget.CLUSTER), it) } }

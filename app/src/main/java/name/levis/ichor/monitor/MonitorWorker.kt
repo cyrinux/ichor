@@ -55,6 +55,7 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             // Config deleted: forget what we saw so the widget stops showing it.
             store.clearSnapshots()
             ClusterWidget().updateAll(applicationContext)
+            app.syncWear()
             return Result.success()
         }
 
@@ -93,6 +94,7 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             run.alerts.forEach { post(app, it, now) }
         }
         ClusterWidget().updateAll(applicationContext)
+        app.syncWear()
         return Result.success()
     }
 }
