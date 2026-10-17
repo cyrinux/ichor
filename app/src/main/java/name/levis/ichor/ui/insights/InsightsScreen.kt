@@ -9,7 +9,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -19,9 +19,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.DriftFix
-import name.levis.ichor.model.fix
 import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.InfoHint
+import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SectionHeader
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.KeepScreenOn
 import name.levis.ichor.ui.components.SwipeTabPager
@@ -83,32 +85,37 @@ fun InsightsScreen(
                     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         state.error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
                         if (page == 0) {
-                            item { Text(stringResource(R.string.insights_drift_note), style = MaterialTheme.typography.bodySmall) }
+                            item {
+                                val drift = stringResource(R.string.insights_drift)
+                                SectionHeader(
+                                    drift,
+                                    subtitle = state.snapshot?.let { stringResource(R.string.insights_sample_at, time(it.at)) },
+                                    trailing = { InfoHint(drift, stringResource(R.string.insights_drift_note)) },
+                                )
+                            }
                             item {
                                 Column {
-                                    Button(onClick = { vm.refresh() }, enabled = !state.busy) { Text(stringResource(R.string.common_refresh)) }
-                                    TextButton(onClick = { vm.saveBaseline() }, enabled = state.snapshot != null && !state.busy) { Text(stringResource(R.string.insights_save_baseline)) }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Button(onClick = { vm.refresh() }, enabled = !state.busy) { Text(stringResource(R.string.common_refresh)) }
+                                        TextButton(onClick = { vm.saveBaseline() }, enabled = state.snapshot != null && !state.busy) { Text(stringResource(R.string.insights_save_baseline)) }
+                                    }
                                     state.baselineAt?.let { at ->
-                                        Text(stringResource(R.string.insights_baseline_at, time(at)))
-                                        TextButton(onClick = { vm.deleteBaseline() }) { Text(stringResource(R.string.insights_delete_baseline)) }
-                                    } ?: Text(stringResource(R.string.insights_peer_reference))
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            MutedText(stringResource(R.string.insights_baseline_at, time(at)), Modifier.weight(1f))
+                                            TextButton(onClick = { vm.deleteBaseline() }) { Text(stringResource(R.string.insights_delete_baseline)) }
+                                        }
+                                    } ?: MutedText(stringResource(R.string.insights_peer_reference))
                                 }
                             }
                             if (state.busy) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
                             state.snapshot?.let { snapshot ->
-                                item { Text(stringResource(R.string.insights_sample_at, time(snapshot.at)), style = MaterialTheme.typography.bodySmall) }
                                 if (state.changes.isEmpty()) item { Text(stringResource(R.string.insights_no_differences)) }
                                 items(state.changes, key = { "${it.node}/${it.key}" }) { change ->
-                                    Card(Modifier.fillMaxWidth()) {
-                                        Column(Modifier.padding(16.dp)) {
-                                            Text("${change.node} · ${change.key}", style = MaterialTheme.typography.titleSmall)
-                                            Text(stringResource(R.string.insights_reference, change.reference))
-                                            Text("${change.before.ifEmpty { "∅" }} → ${change.after.ifEmpty { "∅" }}", fontFamily = FontFamily.Monospace)
-                                            change.fix()?.let { fix ->
-                                                val hostname = snapshot.nodes.firstOrNull { it.node == change.node }?.hostname?.ifEmpty { null } ?: change.node
-                                                TextButton(onClick = { onFix(change.node, hostname, fix) }) { Text(stringResource(R.string.insights_fix)) }
-                                            }
-                                        }
+                                    val hostname = change.nodeName.ifEmpty { null }
+                                        ?: snapshot.nodes.firstOrNull { it.node == change.node }?.hostname?.ifEmpty { null }
+                                        ?: change.node
+                                    DriftChangeCard(change, hostname) { fix ->
+                                        onFix(change.node, hostname, fix)
                                     }
                                 }
                                 items(snapshot.nodes.filter { it.errors.isNotEmpty() }, key = { it.node }) { node ->

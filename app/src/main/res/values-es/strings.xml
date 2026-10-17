@@ -859,6 +859,14 @@
     <string name="snippet_apply">Añadir al borrador</string>
     <string name="snippet_staged_note">Surte efecto en el próximo arranque: aplícalo en diferido o con un reinicio.</string>
     <string name="insights_fix">Corregir con un parche…</string>
+    <string name="insights_diff_added">Añadido: %1$s</string>
+    <string name="insights_diff_removed">Eliminado: %1$s</string>
+    <string name="insights_diff_changed">Cambiado: %1$s</string>
+    <string name="insights_diff_copy">Copiar el valor completo</string>
+    <plurals name="insights_differences">
+        <item quantity="one">%d diferencia</item>
+        <item quantity="other">%d diferencias</item>
+    </plurals>
     <string name="snippet_group_network">Red</string>
     <string name="snippet_group_kernel">Kernel</string>
     <string name="snippet_group_kubernetes">Kubernetes</string>

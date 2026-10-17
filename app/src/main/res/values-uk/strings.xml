@@ -924,6 +924,16 @@
     <string name="snippet_apply">Додати до чернетки</string>
     <string name="snippet_staged_note">Набуває чинності під час наступного завантаження: застосуйте відкладено або з перезавантаженням.</string>
     <string name="insights_fix">Виправити патчем…</string>
+    <string name="insights_diff_added">Додано: %1$s</string>
+    <string name="insights_diff_removed">Вилучено: %1$s</string>
+    <string name="insights_diff_changed">Змінено: %1$s</string>
+    <string name="insights_diff_copy">Скопіювати повне значення</string>
+    <plurals name="insights_differences">
+        <item quantity="one">%d відмінність</item>
+        <item quantity="few">%d відмінності</item>
+        <item quantity="many">%d відмінностей</item>
+        <item quantity="other">%d відмінності</item>
+    </plurals>
     <string name="snippet_group_network">Мережа</string>
     <string name="snippet_group_kernel">Ядро</string>
     <string name="snippet_group_kubernetes">Kubernetes</string>

@@ -857,6 +857,14 @@
     <string name="snippet_apply">Add to the draft</string>
     <string name="snippet_staged_note">Takes effect at the next boot: apply it staged or with a reboot.</string>
     <string name="insights_fix">Fix with a patch…</string>
+    <string name="insights_diff_added">Added: %1$s</string>
+    <string name="insights_diff_removed">Removed: %1$s</string>
+    <string name="insights_diff_changed">Changed: %1$s</string>
+    <string name="insights_diff_copy">Copy the full value</string>
+    <plurals name="insights_differences">
+        <item quantity="one">%d difference</item>
+        <item quantity="other">%d differences</item>
+    </plurals>
     <string name="snippet_group_network">Network</string>
     <string name="snippet_group_kernel">Kernel</string>
     <string name="snippet_group_kubernetes">Kubernetes</string>
