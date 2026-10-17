@@ -187,6 +187,7 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   recorded in the activity log, and the pod is deleted when the shell ends.
 - **Tablets and foldables (Android):** on a tablet or an unfolded foldable, the nodes list and
   the Argo CD apps open their node or app side by side with the list.
+- **iPad:** the nodes list and the Argo CD / Flux apps open their node or app side by side with the list.
 - **Background:** alerts and a home-screen widget.
 - **Data services:** the storage and database operators the cluster runs (Longhorn, Garage,
   CloudNativePG, Dragonfly, MariaDB, Percona, cert-manager, Velero, ExternalDNS, Sealed Secrets,

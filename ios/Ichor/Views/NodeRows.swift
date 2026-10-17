@@ -18,7 +18,8 @@ struct NodeListRow: View {
                                   throttled: node.reachable && model.throttledNodes.contains(node.node))
         Group {
             if node.reachable {
-                NavigationLink(value: Route.node(ref)) { row }
+                // Beside the Nodes list on an iPad, pushed everywhere else.
+                ListDetailLink(value: Route.node(ref), pick: ref) { row }
             } else {
                 row
             }

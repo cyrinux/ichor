@@ -13,14 +13,29 @@ struct NodesView: View {
     /// A site's NodeGroup key ("" for the nodes the map misses), nil for all.
     @State private var site: String?
     @State private var query = ""
+    /// The node shown beside the list on an iPad (AdaptiveListDetail).
+    @State private var selected: NodeRef?
 
-    init(nodes: [NodeOverview], filter: NodeFilter?, path: Binding<[Route]>) {
+    init(nodes: [NodeOverview], filter: NodeFilter?, selected: NodeRef? = nil, path: Binding<[Route]>) {
         _nodes = State(initialValue: nodes)
         _filter = State(initialValue: filter)
+        _selected = State(initialValue: selected)
         _path = path
     }
 
     var body: some View {
+        AdaptiveListDetail(selection: $selected, placeholder: "Pick a node to see its details", systemImage: "server.rack") {
+            nodeList
+        } detail: { ref in
+            // After a power action, back to the placeholder: dismiss would close the whole screen.
+            NodeDetailView(ref: ref, onDone: { selected = nil })
+        }
+        .navigationTitle("Nodes")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    @ViewBuilder
+    private var nodeList: some View {
         // In the map's order, site by site, as on the overview.
         let groups = groupNodes(nodes, by: TopologyStore.shared.topology(for: model.topologyKey))
         let shown = groups.filtered(query: query, filter: filter, site: site)
@@ -47,8 +62,6 @@ struct NodesView: View {
         .safeAreaInset(edge: .top) { filterBar(groups: groups) }
         .searchable(text: $query, prompt: Text("Hostname or address"))
         .refreshable { await reload() }
-        .navigationTitle("Nodes")
-        .navigationBarTitleDisplayMode(.inline)
         .themedBackground()
     }
 

@@ -25,8 +25,10 @@ struct ArgoCDView: View {
     let downNodes: Set<String>
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(downNodes: Set<String>) {
+    init(downNodes: Set<String>, selected: ArgoAppRoute? = nil) {
         self.downNodes = downNodes
+        // With the list's downNodes, as its rows' routes: the row shows as picked.
+        _picked = State(initialValue: selected.map { ArgoAppRoute(namespace: $0.namespace, name: $0.name, downNodes: downNodes) })
     }
 
     enum Tab: Hashable { case apps, sets }
@@ -49,42 +51,35 @@ struct ArgoCDView: View {
     @State private var busy: Set<String> = []
     @State private var message: String?
     @State private var succeeded = 0
+    /// The app shown beside the list on an iPad (AdaptiveListDetail).
+    @State private var picked: ArgoAppRoute?
+    /// The list and the picked app are side by side (AdaptiveListDetail).
+    @State private var split = false
 
     private var store: ArgoCDStore { .shared }
 
+    /// An app is shown beside the list: it polls and shares for itself.
+    private var showsPick: Bool { split && picked != nil }
+
     var body: some View {
-        LoadStateView(state: state, retry: load) { status in
-            if !status.installed {
-                ContentUnavailableView("Argo CD is not installed", systemImage: "arrow.triangle.branch",
-                                       description: Text("No Argo CD Applications were found in this cluster."))
-                    .themedBackground()
-            } else {
-                Group {
-                    switch tab {
-                    case .apps:
-                        ArgoAppsList(status: status, filter: $filter, grouping: grouping, query: query, downNodes: downNodes,
-                                     selection: $selection, busy: busy, refresh: load,
-                                     onSync: { syncTarget = $0 }, onRefresh: { app in Task { await run(.refresh, on: [app]) } },
-                                     onSyncAll: { confirmSync = $0 },
-                                     onFreeze: { app, scope in freezeTarget = FreezeTarget(app: app, scope: scope) })
-                            .environment(\.editMode, $editMode)
-                    case .sets:
-                        ArgoAppSetsList(status: status, query: query, downNodes: downNodes, refresh: load)
-                    }
-                }
-                .safeAreaInset(edge: .top) { topBar(status) }
-                .toolbar { toolbar(status) }
-            }
+        AdaptiveListDetail(selection: $picked, split: $split, placeholder: "Pick an application to see its details",
+                           systemImage: "arrow.triangle.branch") {
+            list
+        } detail: { app in
+            ArgoAppView(namespace: app.namespace, name: app.name, downNodes: app.downNodes)
         }
         .searchable(text: $query, prompt: Text("Name, project, namespace or repo"))
-        // An app pushed on top polls for itself.
-        .gitOpsPolling(key: model.argoKey, paused: { covered }, shouldPoll: { store.shouldPoll(for: model.argoKey) }, load: { await load() })
+        // An app pushed on top or shown beside polls for itself.
+        .gitOpsPolling(key: model.argoKey, paused: { covered || showsPick }, shouldPoll: { store.shouldPoll(for: model.argoKey) }, load: { await load() })
         // An Application that changes reads the status again at once, without waiting for a poll.
         .task(id: "\(model.argoKey)|\(scenePhase == .active && !covered)") { await followChanges() }
         // A new API address (set on the Kubernetes screen): read again through it.
         .id(model.client?.kubeServer)
         .navigationTitle(Text(verbatim: "Argo CD"))
-        .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.argoCD)) } }
+        // One Share at a time: the picked app's while one is shown beside the list.
+        .toolbar {
+            if !showsPick { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.argoCD)) } }
+        }
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: ArgoAppRoute.self) { ArgoAppView(namespace: $0.namespace, name: $0.name, downNodes: $0.downNodes) }
         .navigationDestination(for: ArgoWindowsRoute.self) { _ in ArgoWindowsView() }
@@ -118,6 +113,33 @@ struct ArgoCDView: View {
         .loadsKubeActionAccess(namespace: appsNamespace)
         // Each namespace of the apps, for "Sync all" and the selection: allowed only in all of theirs.
         .loadsKubeNamespaceAccess(appsNamespaces)
+    }
+
+    /// The Applications and ApplicationSets tabs: alone on a phone, beside the picked app on an iPad.
+    private var list: some View {
+        LoadStateView(state: state, retry: load) { status in
+            if !status.installed {
+                ContentUnavailableView("Argo CD is not installed", systemImage: "arrow.triangle.branch",
+                                       description: Text("No Argo CD Applications were found in this cluster."))
+                    .themedBackground()
+            } else {
+                Group {
+                    switch tab {
+                    case .apps:
+                        ArgoAppsList(status: status, filter: $filter, grouping: grouping, query: query, downNodes: downNodes,
+                                     selection: $selection, busy: busy, refresh: load,
+                                     onSync: { syncTarget = $0 }, onRefresh: { app in Task { await run(.refresh, on: [app]) } },
+                                     onSyncAll: { confirmSync = $0 },
+                                     onFreeze: { app, scope in freezeTarget = FreezeTarget(app: app, scope: scope) })
+                            .environment(\.editMode, $editMode)
+                    case .sets:
+                        ArgoAppSetsList(status: status, query: query, downNodes: downNodes, refresh: load)
+                    }
+                }
+                .safeAreaInset(edge: .top) { topBar(status) }
+                .toolbar { toolbar(status) }
+            }
+        }
     }
 
     /// The namespace of the Applications when they share one (Argo CD's own, usually).
