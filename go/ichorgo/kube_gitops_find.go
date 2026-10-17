@@ -170,10 +170,10 @@ func findInSource(ctx context.Context, src gitopsSource, q manifestQuery, read f
 
 	matches := findManifest(sf.files, q.kind, ns, q.name, src.namePrefix, src.nameSuffix)
 
-	return gitopsFound{Matches: matches, Searched: len(sf.files), Note: gitopsFindNote(matches, sf.cut, src.Path, q)}, nil
+	return gitopsFound{Matches: matches, Searched: len(sf.files), Note: gitopsFindNote(matches, sf.cut, len(sf.files), src.Path, q)}, nil
 }
 
-func gitopsFindNote(matches []manifestMatch, cut bool, dir string, q manifestQuery) string {
+func gitopsFindNote(matches []manifestMatch, cut bool, read int, dir string, q manifestQuery) string {
 	if slices.ContainsFunc(matches, func(m manifestMatch) bool { return m.renamed }) {
 		return "the name is rewritten by kustomize (namePrefix/nameSuffix): matched without them"
 	}
@@ -183,7 +183,8 @@ func gitopsFindNote(matches []manifestMatch, cut bool, dir string, q manifestQue
 	}
 
 	if cut {
-		return fmt.Sprintf("no match in the first %d files under %s: the search stopped there", gitopsFindMaxFiles, cmpOrRoot(dir))
+		return fmt.Sprintf("no match in the %d files read under %s: the search stops at %d files, %d folders or %s",
+			read, cmpOrRoot(dir), gitopsFindMaxFiles, gitopsFindMaxDirs, gitopsFindTimeout)
 	}
 
 	return fmt.Sprintf("no file under %s declares %s %s: it may be generated (Helm, a kustomize generator or a patch)", cmpOrRoot(dir), q.kind, q.name)

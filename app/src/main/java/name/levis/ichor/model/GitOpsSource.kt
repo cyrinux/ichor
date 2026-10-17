@@ -305,8 +305,11 @@ data class GitOpsSourceFind(
  * The source a diff's "Open source file" searches: the first Git source whose files can be read
  * (a chart or a source read only for its value files is skipped); null when there is none.
  */
-fun findableSourceIndex(source: GitOpsSource): Int? =
-    source.sources.indexOfFirst { !it.isValuesOnly && !it.isChart && it.readPath != SourceReadPath.NONE }.takeIf { it >= 0 }
+fun findableSourceIndex(source: GitOpsSource): Int? {
+    val readable = source.sources.withIndex().filter { (_, s) -> !s.isValuesOnly && !s.isChart && s.readPath != SourceReadPath.NONE }
+    // A Helm source only gives the "rendered by Helm" note: another readable source comes first.
+    return (readable.firstOrNull { (_, s) -> s.kind != "helm" } ?: readable.firstOrNull())?.index
+}
 
 /** Whether a diff object can be looked up in Git: one about to be deleted is no longer declared there. */
 fun isFindableChange(change: DiffChange): Boolean = change != DiffChange.DELETED

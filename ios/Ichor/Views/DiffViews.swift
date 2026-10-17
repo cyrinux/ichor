@@ -85,7 +85,10 @@ struct DiffResourceRow: View {
 
     var body: some View {
         if hasDetail {
-            DisclosureGroup(isExpanded: $expanded) { detail } label: { header }
+            VStack(alignment: .leading, spacing: 6) {
+                DisclosureGroup(isExpanded: $expanded) { detail } label: { header }
+                sourceAction
+            }
         } else if openSource != nil {
             VStack(alignment: .leading, spacing: 6) {
                 header
@@ -132,7 +135,6 @@ struct DiffResourceRow: View {
 
     @ViewBuilder private var detail: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sourceAction
             if let hint = resource.change.hint {
                 Text(hint).font(.caption).foregroundStyle(.secondary)
             }

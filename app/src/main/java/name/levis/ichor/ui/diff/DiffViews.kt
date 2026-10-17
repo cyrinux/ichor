@@ -102,9 +102,9 @@ fun DiffCounts(counts: List<Pair<DiffChange, Int>>) {
 fun DiffResourceCard(
     resource: KubeDiffResource,
     expanded: Boolean,
-    onToggle: () -> Unit,
     onOpenSource: (() -> Unit)? = null,
     searching: Boolean = false,
+    onToggle: () -> Unit,
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val detail = resource.diff.isNotEmpty() || resource.error.isNotEmpty() || resource.change.hint != null

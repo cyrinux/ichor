@@ -346,6 +346,7 @@ extension GitOpsSource {
     /// read (not a packaged chart, not a source only read for its value files), with its index
     /// in `sources` (what GitOpsSourceFind takes).
     public var firstBrowsable: (index: Int, source: GitSource)? {
-        rows.first { $0.source.canOpen }
+        // A Helm source only gives the "rendered by Helm" note: another readable source comes first.
+        rows.first { $0.source.canOpen && $0.source.kind != .helm } ?? rows.first { $0.source.canOpen }
     }
 }

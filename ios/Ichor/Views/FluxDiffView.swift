@@ -209,9 +209,9 @@ struct FluxDiffView: View {
     private func loadSources() async {
         guard let client = model.client else { return }
         let app = target.app
-        if let read = try? await client.gitOpsSource(tool: app.tool, kind: app.kind, namespace: app.namespace, name: app.name) {
-            gitSources = read
-        }
+        // A failed or slow read must not leave the previous cluster's source to search in.
+        gitSources = nil
+        gitSources = try? await client.gitOpsSource(tool: app.tool, kind: app.kind, namespace: app.namespace, name: app.name)
     }
 
     /// What a reload keys on: the cluster and the tool's own key (its polling scope).
