@@ -115,7 +115,9 @@ struct NodeRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 WatchStyle.name(node, index: index).font(.body).lineLimit(1)
                 WatchStyle.state(node.health).font(.caption2).foregroundStyle(WatchStyle.color(node.health))
-                if !node.reason.isEmpty {
+                if let problem = node.problem.flatMap(WatchStyle.problem) {
+                    problem.font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+                } else if !node.reason.isEmpty {
                     Text(verbatim: node.reason).font(.caption2).foregroundStyle(.secondary).lineLimit(4)
                 }
             }

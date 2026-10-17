@@ -41,6 +41,17 @@ enum WatchStyle {
         }
     }
 
+    /// Why an unreachable node does not answer; nil when there is nothing more than "Unreachable".
+    static func problem(_ problem: WatchNodeProblem) -> Text? {
+        switch problem {
+        case .timeout: return Text("Timed out")
+        case .refused: return Text("Connection refused")
+        case .noSuchHost: return Text("Host not found")
+        case .tls: return Text("TLS error")
+        case .unreachable: return nil
+        }
+    }
+
     static func state(_ health: NodeHealth) -> Text {
         switch health {
         case .ready: return Text("Ready")

@@ -51,11 +51,11 @@ eval "$("$ROOT/scripts/version.sh" --env)"
 set +a
 echo "version $ICHOR_VERSION (build $ICHOR_BUILD_NUMBER)"
 
-# The watch targets use IchorCore only (no Go core, no licenses): generate (CI: already done by
-# the test step, kept as it is) and build the IchorWatch scheme, which builds its complication.
+# The watch targets use IchorCore only (no Go core, no licenses): generate (always, so a stale
+# project cannot lack the IchorWatch scheme) and build that scheme, which builds its complication.
 if [[ "$MODE" == watch ]]; then
   cd "$ROOT/ios"
-  [[ -d Ichor.xcodeproj ]] || xcodegen generate
+  xcodegen generate
   xcodebuild -project Ichor.xcodeproj -scheme IchorWatch -derivedDataPath build \
     MARKETING_VERSION="$ICHOR_VERSION_BASE" CURRENT_PROJECT_VERSION="$ICHOR_BUILD_NUMBER" \
     -skipPackagePluginValidation -skipMacroValidation \

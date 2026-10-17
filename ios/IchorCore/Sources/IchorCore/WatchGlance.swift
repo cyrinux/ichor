@@ -1,20 +1,45 @@
 import Foundation
 
 // Apple Watch (CYR-339): the phone sends the watch what its widget shows, read-only, over
-// WatchConnectivity. Only a WatchPayload crosses: cluster names as on screen (masked under the
-// screenshot mode, like the widget's list), node hostnames, states and reasons with addresses
-// scrubbed, and etcd alarm counts. No config, token, endpoint, context name or monitor key.
+// WatchConnectivity. Only a WatchPayload crosses: each cluster's name as shown on screen (its
+// given name, else its cloud cluster or context name; masked under the screenshot mode, like the
+// widget's list), node hostnames and states, a category for a node that does not answer (never
+// its error, which names the endpoint), not-ready reasons with addresses and host names scrubbed,
+// and etcd alarm counts. No config, token, endpoint, share link or monitor key.
 
-/// A node on the watch: its hostname (empty when unknown; never its address), state and reason.
+/// Why a node does not answer, as the watch says it: a category, never the error's text.
+public enum WatchNodeProblem: String, Codable, Equatable, Sendable {
+    case timeout, refused, noSuchHost, tls, unreachable
+}
+
+/// The category of a node's read error (Go's wording: "i/o timeout", "context deadline exceeded",
+/// "connect: connection refused", "lookup … no such host", "tls: …", "x509: …").
+public func watchNodeProblem(_ error: String) -> WatchNodeProblem {
+    let text = error.lowercased()
+    if text.contains("no such host") { return .noSuchHost }
+    if text.contains("connection refused") { return .refused }
+    if ["timeout", "timed out", "deadline exceeded"].contains(where: { text.contains($0) }) { return .timeout }
+    if ["tls", "x509", "certificate"].contains(where: { text.contains($0) }) { return .tls }
+    return .unreachable
+}
+
+/// A node on the watch: its hostname (empty when unknown; never its address) and state; for a
+/// node not ready, its reason (scrubbed); for one unreachable, the category of its error.
 public struct WatchNode: Codable, Equatable, Sendable {
     public var name: String
     public var health: NodeHealth
     public var reason: String
+    public var problem: WatchNodeProblem?
 
-    public init(name: String, health: NodeHealth, reason: String = "") {
+    public init(name: String, health: NodeHealth, reason: String = "", problem: WatchNodeProblem? = nil) {
         self.name = name
         self.health = health
         self.reason = reason
+        self.problem = problem
+    }
+
+    func with(reason: String) -> WatchNode {
+        WatchNode(name: name, health: health, reason: reason, problem: problem)
     }
 }
 
@@ -112,7 +137,8 @@ public let watchPayloadLimit = 60 * 1024
 public let watchReasonLength = 120
 
 /// A snapshot's nodes for the watch: the ones down first (unreachable, then not ready), then by
-/// name; reasons cut to `watchReasonLength`, with their addresses scrubbed.
+/// name. An unreachable node carries its error's category only; other reasons are cut to
+/// `watchReasonLength`, with their addresses and host names scrubbed.
 public func watchRows(from snapshot: ClusterSnapshot) -> [WatchNode] {
     let rank: (NodeHealth) -> Int = { health in
         switch health {
@@ -123,9 +149,11 @@ public func watchRows(from snapshot: ClusterSnapshot) -> [WatchNode] {
     }
     let rows = snapshot.nodes.values.map { state in
         // A hostname that is an address is no name to show: the watch numbers that node.
-        WatchNode(name: scrubbedAddresses(state.hostname) == state.hostname ? state.hostname : "",
-                  health: state.health,
-                  reason: cut(scrubbedAddresses(state.reason), to: watchReasonLength))
+        let name = scrubbedAddresses(state.hostname) == state.hostname ? state.hostname : ""
+        if state.health == .unreachable {
+            return WatchNode(name: name, health: .unreachable, problem: watchNodeProblem(state.reason))
+        }
+        return WatchNode(name: name, health: state.health, reason: cut(scrubbedAddresses(state.reason), to: watchReasonLength))
     }
     return rows.sorted {
         rank($0.health) != rank($1.health)
@@ -155,8 +183,8 @@ public func trimmedWatchPayload(_ payload: WatchPayload, limit: Int = watchPaylo
     let fits: (WatchPayload) -> Bool = { ($0.encoded()?.count ?? .max) <= limit }
     if fits(payload) { return payload }
     let steps: [(WatchNode, Bool) -> WatchNode?] = [
-        { node, _ in WatchNode(name: node.name, health: node.health, reason: cut(node.reason, to: 40)) },
-        { node, _ in WatchNode(name: node.name, health: node.health) },
+        { node, _ in node.with(reason: cut(node.reason, to: 40)) },
+        { node, _ in node.with(reason: "") },
         { node, active in active || node.health != .ready ? node : nil },
     ]
     var trimmed = payload
@@ -178,8 +206,9 @@ public func trimmedWatchPayload(_ payload: WatchPayload, limit: Int = watchPaylo
     return trimmed
 }
 
-/// `text` without IP addresses (v4 with an optional port, v6, bracketed or not) or URLs: each
-/// becomes "…". Node errors name the endpoint they could not reach; the watch gets none.
+/// `text` without URLs, IP addresses (v4 with an optional port, v6, bracketed or not), host:port
+/// tokens or the name after "lookup": each becomes "…". Node errors name the endpoint they could
+/// not reach; the watch gets none.
 public func scrubbedAddresses(_ text: String) -> String {
     guard !text.isEmpty else { return text }
     var result = text
@@ -193,9 +222,12 @@ public func scrubbedAddresses(_ text: String) -> String {
 
 private let addressPatterns = [
     #"[a-zA-Z][a-zA-Z0-9+.-]*://[^\s"']+"#,
+    #"(?<=\blookup )[^\s:]+"#,
     #"\[[0-9A-Fa-f.]*:[0-9A-Fa-f:.]*(?:%\w+)?\](?::\d+)?"#,
     #"(?<![\w.])\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?(?![\w.])"#,
     #"(?<![\w:])(?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{1,4}(?![\w:])"#,
+    // host:port: a DNS name, or a bare host name, with a port.
+    #"(?<![\w.-])[A-Za-z0-9][A-Za-z0-9.-]*:\d{1,5}(?![\w.])"#,
 ]
 
 private func cut(_ text: String, to length: Int) -> String {

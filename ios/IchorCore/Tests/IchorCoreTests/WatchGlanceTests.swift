@@ -26,8 +26,51 @@ final class WatchGlanceTests: XCTestCase {
         let json = try XCTUnwrap(String(data: JSONEncoder().encode(rows), encoding: .utf8))
         XCTAssertFalse(json.contains("10.0.0"))
         XCTAssertFalse(json.contains("192.168"))
-        XCTAssertEqual(rows[0].reason, "dial tcp …: i/o timeout")
+        XCTAssertEqual(rows[0].reason, "")
+        XCTAssertEqual(rows[0].problem, .timeout)
         XCTAssertEqual(rows[1].name, "")
+    }
+
+    func testUnreachableNodesCarryACategoryNotTheError() throws {
+        let errors = [
+            "dial tcp talos.lab.example:50000: connect: connection refused",
+            "lookup talos.lab.example on 10.0.0.53:53: no such host",
+            "rpc error: context deadline exceeded",
+            "tls: failed to verify certificate: x509: certificate signed by unknown authority",
+            "unexpected EOF",
+        ]
+        let rows = watchRows(from: snap(errors.enumerated().map { ("n\($0.offset)", .unreachable, $0.element) }))
+        XCTAssertEqual(rows.map(\.problem), [.refused, .noSuchHost, .timeout, .tls, .unreachable])
+        XCTAssertTrue(rows.allSatisfy { $0.reason.isEmpty })
+        let json = try XCTUnwrap(String(data: JSONEncoder().encode(rows), encoding: .utf8))
+        XCTAssertFalse(json.contains("lab.example"))
+    }
+
+    func testNotReadyNodesKeepTheirScrubbedReason() {
+        let rows = watchRows(from: snap([("n", .notReady, "Ready: KubeletNotReady (api talos.lab.example:6443)")]))
+        XCTAssertEqual(rows[0].reason, "Ready: KubeletNotReady (api …)")
+        XCTAssertNil(rows[0].problem)
+    }
+
+    func testWatchNodeProblem() {
+        XCTAssertEqual(watchNodeProblem("read tcp 10.0.0.1:50000: i/o timeout"), .timeout)
+        XCTAssertEqual(watchNodeProblem("operation timed out"), .timeout)
+        XCTAssertEqual(watchNodeProblem("connect: connection refused"), .refused)
+        XCTAssertEqual(watchNodeProblem("lookup cp on …: no such host"), .noSuchHost)
+        XCTAssertEqual(watchNodeProblem("remote error: tls: bad certificate"), .tls)
+        XCTAssertEqual(watchNodeProblem(""), .unreachable)
+    }
+
+    func testScrubbedHostNames() {
+        XCTAssertEqual(scrubbedAddresses("dial tcp talos.lab.example:50000: connect: connection refused"),
+                       "dial tcp …: connect: connection refused")
+        XCTAssertEqual(scrubbedAddresses("dial tcp cp-1:50000: refused"), "dial tcp …: refused")
+        XCTAssertEqual(scrubbedAddresses("lookup talos.lab.example on 10.0.0.53:53: no such host"),
+                       "lookup … on …: no such host")
+        XCTAssertEqual(scrubbedAddresses("lookup cp-1: no such host"), "lookup …: no such host")
+        XCTAssertEqual(scrubbedAddresses("dial 10.0.0.1:50000"), "dial …")
+        XCTAssertEqual(scrubbedAddresses("dial [fd00::1]:50000"), "dial …")
+        XCTAssertEqual(scrubbedAddresses("get https://talos.lab.example:6443/version failed"), "get … failed")
     }
 
     func testScrubbedAddresses() {
