@@ -36,6 +36,8 @@ private const val WORDS_DEBOUNCE_MS = 800L
 @Composable
 fun PrivacySection(app: TalosApp) {
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
+    // No second flip while the first one is switching names.
+    val switching by app.maskTransition.collectAsStateWithLifecycle()
     var words by rememberSaveable { mutableStateOf(mask.extraWords) }
     fun applyWords() = app.setPrivacyMask(mask.copy(extraWords = words))
 
@@ -54,6 +56,7 @@ fun PrivacySection(app: TalosApp) {
             Switch(
                 checked = mask.enabled,
                 onCheckedChange = { app.setPrivacyMask(mask.copy(enabled = it, extraWords = words)) },
+                enabled = !switching,
                 modifier = Modifier.padding(start = 12.dp),
             )
         }

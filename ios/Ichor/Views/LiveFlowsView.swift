@@ -29,6 +29,11 @@ final class HubbleFollower {
             }
         }
     }
+
+    /// The screenshot mode switched: the namespaces seen were named under the old setting.
+    func forgetNamespaces() {
+        namespaces = []
+    }
 }
 
 /// The cluster's flows live, like Hubble UI (os:admin): `hubble observe --follow` in every
@@ -43,6 +48,8 @@ struct LiveFlowsView: View {
     private struct RunKey: Hashable {
         let filter: HubbleFilter
         let attempt: Int
+        /// The screenshot mode's generation (AppModel.dataGeneration).
+        let generation: Int
     }
 
     @Environment(AppModel.self) private var model
@@ -78,9 +85,14 @@ struct LiveFlowsView: View {
                 .themedBackground()
             }
         }
-        .task(id: RunKey(filter: filter, attempt: attempt)) {
+        .task(id: RunKey(filter: filter, attempt: attempt, generation: model.dataGeneration)) {
             guard cilium.hubble, let client = model.client else { return }
             await follower.run(client, filter: filter)
+        }
+        // The screenshot mode switched: the namespaces seen and filtered on carry the old names.
+        .onChange(of: model.dataGeneration) {
+            follower.forgetNamespaces()
+            filter = HubbleFilter()
         }
         .navigationTitle("Live flows")
         .navigationBarTitleDisplayMode(.inline)

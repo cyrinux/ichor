@@ -46,6 +46,19 @@ fun ensureAlertChannels(context: Context) {
     if (legacy != null) manager.deleteNotificationChannel(LEGACY_CHANNEL_ID)
 }
 
+/**
+ * Cancels the alerts on screen: they name nodes and namespaces, so they go once screenshot mode
+ * is on; the next check raises what still holds, masked. Only the app's alert channels.
+ */
+fun cancelPostedAlerts(context: Context) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+    val manager = context.getSystemService(NotificationManager::class.java) ?: return
+    val channels = AlertChannel.entries.map { it.id }.toSet()
+    runCatching { manager.activeNotifications }.getOrDefault(emptyArray())
+        .filter { it.notification.channelId in channels }
+        .forEach { manager.cancel(it.tag, it.id) }
+}
+
 fun canPostNotifications(context: Context): Boolean =
     Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
         ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED

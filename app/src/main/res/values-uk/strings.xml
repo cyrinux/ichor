@@ -534,6 +534,7 @@
     <string name="settings_screenshot_mode_desc">Приховує IP-адреси, імена вузлів і логотипи застосунків, напр. для знімків екрана чи демонстрації екрана</string>
     <string name="settings_screenshot_mode_words">Також приховувати ці слова</string>
     <string name="settings_screenshot_mode_words_hint">Через кому, напр. домен або назва клієнта</string>
+    <string name="settings_screenshot_mode_switching">Перемикання назв…</string>
     <string name="settings_kube_section">Kubernetes</string>
     <string name="settings_kube_auth">Експортувати kubeconfig</string>
     <string name="settings_kube_desc">Експортувати kubeconfig адміністратора (потрібен talosconfig з os:admin). Будь-хто з цим файлом має повний доступ до кластера Kubernetes: зберігайте його в таємниці.</string>

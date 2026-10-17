@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.kubeevents
 
+import name.levis.ichor.data.MaskScoped
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,13 +32,17 @@ class KubeEventsViewModel(private val kube: KubeRepository) : ViewModel() {
     private val _state = MutableStateFlow(KubeEventsState())
     val state: StateFlow<KubeEventsState> = _state.asStateFlow()
     private var query: KubeEventsQuery? = null
+    private val mask = MaskScoped()
 
     /**
      * Runs until cancelled or the stream ends. Rows are kept across a restart with the same
      * filters (the Go core's first batch replaces them); other filters, or the privacy mask
-     * turned on or off, start from an empty list, not paused.
+     * turned on or off, start from an empty list, not paused; so does a screenshot mode switch.
      */
-    suspend fun stream(namespace: String?, warningsOnly: Boolean, masked: Boolean) {
+    suspend fun stream(namespace: String?, warningsOnly: Boolean, masked: Boolean) =
+        mask.run(clear = { query = null; _state.value = KubeEventsState() }) { streamOnce(namespace, warningsOnly, masked) }
+
+    private suspend fun streamOnce(namespace: String?, warningsOnly: Boolean, masked: Boolean) {
         val next = KubeEventsQuery(namespace, warningsOnly, masked)
         val same = next == query
         query = next

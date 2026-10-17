@@ -25,7 +25,8 @@ final class ClusterLiveStore {
         } else {
             live.resume()
         }
-        while !Task.isCancelled {
+        // forget() (a screenshot mode switch) ends it too.
+        while !Task.isCancelled, key == self.key {
             do {
                 let sample = try await client.clusterStats()
                 // Leaving the screen (or another cluster) is not a sample.
@@ -42,6 +43,13 @@ final class ClusterLiveStore {
     /// Forgets the samples, e.g. when live stats are turned off, so a later start is not stale.
     func clear() {
         live = ClusterLive()
+    }
+
+    /// Forgets the samples and the key they were for (the screenshot mode is switching): a poll
+    /// still running stops recording, and the next one starts afresh.
+    func forget() {
+        live = ClusterLive()
+        key = ""
     }
 }
 
