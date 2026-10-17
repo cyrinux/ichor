@@ -14,6 +14,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,7 +41,7 @@ import name.levis.ichor.ui.checkup.ageSince
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.SectionCard
 import name.levis.ichor.ui.components.SkeletonStyle
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.workloads.KubeEventRows
@@ -49,8 +50,8 @@ import name.levis.ichor.ui.workloads.KubeEventRows
 private const val METADATA_PREVIEW = 6
 
 /**
- * The summary tab of an object: its health, the spec fields read first, its conditions, who
- * owns or manages it ([onOwner] opens one), its events and metadata.
+ * The summary tab of an object, as cards: its health and the spec fields read first, then its
+ * conditions, who owns or manages it ([onOwner] opens one), its events and metadata.
  */
 @Composable
 fun ObjectSummaryContent(
@@ -67,24 +68,33 @@ fun ObjectSummaryContent(
         is UiState.Loaded -> {
             val s = state.data
             val now = remember(s) { System.currentTimeMillis() }
-            Column(modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                HealthLine(s)
-                Highlights(s)
-                SectionTitle(stringResource(R.string.kb_summary_conditions))
-                if (s.conditions.isEmpty()) MutedText(stringResource(R.string.kb_summary_no_conditions))
-                s.conditions.forEach { ConditionRow(it, now) }
+            Column(modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        HealthLine(s)
+                        Highlights(s)
+                    }
+                }
+                SectionCard(stringResource(R.string.kb_summary_conditions), subtitle = s.conditions.size.takeIf { it > 0 }?.toString()) {
+                    if (s.conditions.isEmpty()) MutedText(stringResource(R.string.kb_summary_no_conditions))
+                    s.conditions.forEach { ConditionRow(it, now) }
+                }
                 if (s.owners.isNotEmpty()) {
-                    SectionTitle(stringResource(R.string.kb_summary_owners))
-                    s.owners.forEach { OwnerRow(it, onOwner) }
+                    SectionCard(stringResource(R.string.kb_summary_owners)) {
+                        s.owners.forEach { OwnerRow(it, onOwner) }
+                    }
                 }
                 extra?.invoke()
-                SectionTitle(stringResource(R.string.kube_events_title))
-                if (s.eventsError.isNotEmpty()) {
-                    MutedText(stringResource(R.string.kb_summary_events_error, s.eventsError))
-                } else {
-                    KubeEventRows(s.events, showObject = false, now = now, key = "${s.namespace}/${s.kind}/${s.name}")
+                SectionCard(stringResource(R.string.kube_events_title)) {
+                    if (s.eventsError.isNotEmpty()) {
+                        MutedText(stringResource(R.string.kb_summary_events_error, s.eventsError))
+                    } else {
+                        KubeEventRows(s.events, showObject = false, now = now, key = "${s.namespace}/${s.kind}/${s.name}")
+                    }
                 }
-                Metadata(s, now)
+                SectionCard(stringResource(R.string.kb_summary_metadata)) {
+                    Metadata(s, now)
+                }
             }
         }
     }
@@ -179,7 +189,6 @@ private fun OwnerRow(o: ObjectOwner, onOwner: (ObjectOwner) -> Unit) {
 
 @Composable
 private fun Metadata(s: KubeObjectSummary, now: Long) {
-    SectionTitle(stringResource(R.string.kb_summary_metadata))
     if (s.created > 0) MutedText(stringResource(R.string.kb_summary_created, ageSince(s.created, now)))
     if (s.deleting > 0) Text(stringResource(R.string.kb_summary_deleting, ageSince(s.deleting, now)), style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.warn)
     if (s.finalizers.isNotEmpty()) KeyValues(stringResource(R.string.kb_summary_finalizers), s.finalizers.map { it to "" }, "finalizers")

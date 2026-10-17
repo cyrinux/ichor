@@ -260,6 +260,10 @@ private struct TranquilityRequest: Identifiable {
     }
 }
 
+/// One Garage cluster: its state as the header's pill, three tiles (storage nodes up, partitions
+/// fully replicated, partitions with write quorum), the resync backlog only while blocks fail to
+/// resync, the counters behind "Details", then its nodes with the resync speed in each row's
+/// context menu and swipe actions.
 private struct InstanceSection: View {
     let instance: GarageInstance
     let setting: Set<String>
@@ -267,13 +271,7 @@ private struct InstanceSection: View {
 
     var body: some View {
         Section {
-            if instance.detailed {
-                if !instance.message.isEmpty {
-                    Text(verbatim: instance.message)
-                        .font(.caption)
-                        .foregroundStyle(instance.state.health.needsAttention ? instance.state.health.color : .secondary)
-                }
-            } else {
+            if !instance.detailed {
                 Label {
                     Text("Only the basic status is available: \(instance.message.or("—"))")
                 } icon: {
@@ -282,22 +280,46 @@ private struct InstanceSection: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
-            if instance.storageNodes > 0 {
-                LabeledContent("Storage nodes", value: String(localized: "\(instance.storageNodesUp)/\(instance.storageNodes) up"))
-            }
-            if instance.partitions > 0 {
-                LabeledContent("Fully replicated", value: "\(instance.partitionsAllOk)/\(instance.partitions)")
-                LabeledContent("Write quorum", value: "\(instance.partitionsQuorum)/\(instance.partitions)")
-            }
-            if instance.resyncQueue >= 0 { LabeledContent("Resync queue", value: instance.resyncQueue.formatted()) }
-            if instance.resyncErrors >= 0 {
-                LabeledContent("Blocks failing to resync") {
-                    Text(verbatim: instance.resyncErrors.formatted()).foregroundStyle(instance.resyncErrors > 0 ? .red : .secondary)
+            if instance.storageNodes > 0 || instance.partitions > 0 {
+                HStack(alignment: .top, spacing: 12) {
+                    if instance.storageNodes > 0 {
+                        GarageTile(count: instance.storageNodesUp, of: instance.storageNodes,
+                                   label: String(localized: "Storage nodes"), shortColor: .statusWarn)
+                    }
+                    if instance.partitions > 0 {
+                        GarageTile(count: instance.partitionsAllOk, of: instance.partitions,
+                                   label: String(localized: "Replicated partitions"), shortColor: .statusWarn)
+                        GarageTile(count: instance.partitionsQuorum, of: instance.partitions,
+                                   label: String(localized: "Write quorum"), shortColor: .statusBad)
+                    }
                 }
             }
-            if instance.tableSyncQueue >= 0 { LabeledContent("Metadata sync queue", value: instance.tableSyncQueue.formatted()) }
-            LabeledContent("Pods", value: String(localized: "\(instance.podsReady)/\(instance.pods) ready"))
-            if !instance.version.isEmpty { LabeledContent("Version", value: instance.version) }
+            if instance.resyncErrors > 0 {
+                Text(verbatim: String(localized: "Resync queue \(max(0, instance.resyncQueue).formatted()) · failing \(instance.resyncErrors.formatted())"))
+                    .font(.callout)
+                    .monospacedDigit()
+                    .foregroundStyle(.statusBad)
+            }
+            DisclosureGroup {
+                if instance.storageNodes > 0 {
+                    LabeledContent("Storage nodes", value: String(localized: "\(instance.storageNodesUp)/\(instance.storageNodes) up"))
+                }
+                if instance.partitions > 0 {
+                    LabeledContent("Fully replicated", value: "\(instance.partitionsAllOk)/\(instance.partitions)")
+                    LabeledContent("Write quorum", value: "\(instance.partitionsQuorum)/\(instance.partitions)")
+                }
+                if instance.resyncQueue >= 0 { LabeledContent("Resync queue", value: instance.resyncQueue.formatted()) }
+                if instance.resyncErrors >= 0 {
+                    LabeledContent("Blocks failing to resync") {
+                        Text(verbatim: instance.resyncErrors.formatted()).foregroundStyle(instance.resyncErrors > 0 ? Color.statusBad : Color.secondary)
+                    }
+                }
+                if instance.tableSyncQueue >= 0 { LabeledContent("Metadata sync queue", value: instance.tableSyncQueue.formatted()) }
+                LabeledContent("Pods", value: String(localized: "\(instance.podsReady)/\(instance.pods) ready"))
+                if !instance.version.isEmpty { LabeledContent("Version", value: instance.version) }
+            } label: {
+                Text("Details")
+            }
             if instance.detailed && !instance.pod.isEmpty {
                 NavigationLink {
                     GarageBlockErrorsView(instance: instance)
@@ -322,12 +344,26 @@ private struct InstanceSection: View {
                     }
             }
         } header: {
-            HStack {
-                Text(verbatim: instance.label).textCase(nil)
-                Spacer()
-                StatusPill(label: instance.state.label, color: instance.state.health.color)
-            }
+            SectionHeader(title: instance.label, pill: StatusPill(label: instance.state.label, color: instance.state.health.color))
+                .textCase(nil)
         }
+    }
+}
+
+/// "6 / 7" over what it counts, with the share as a bar: green when all are there, else
+/// `shortColor`. A plain bar, not a UsageBar: here a full bar is the good case.
+private struct GarageTile: View {
+    let count: Int
+    let of: Int
+    let label: String
+    let shortColor: Color
+
+    var body: some View {
+        StatTile(icon: nil, value: "\(count) / \(of)", label: label, meter: {
+            AnyView(ProgressView(value: Double(min(max(count, 0), of)), total: Double(max(of, 1)))
+                .tint(count >= of ? Color.statusOK : shortColor))
+        })
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -343,6 +379,7 @@ private struct TranquilityLabel: View {
     }
 }
 
+/// A Garage node: where it runs, its data disk as a meter, and its resync backlog as a tag.
 private struct NodeRow: View {
     let node: GarageNode
     let busy: Bool
@@ -357,26 +394,25 @@ private struct NodeRow: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack {
-                HealthDot(health: health)
-                Text(verbatim: node.label).font(.subheadline.monospaced()).lineLimit(1)
-                Spacer()
-                if !node.zone.isEmpty { Text(verbatim: node.zone).font(.caption).foregroundStyle(.secondary) }
-                if busy { ProgressView() }
-            }
-            if !details.isEmpty {
-                Text(verbatim: details).font(.caption).foregroundStyle(down ? .red : .secondary).monospacedDigit()
-            }
+        ResourceRow(health: health, title: node.label, subtitle: details, trailing: trailing) {
             if node.dataTotal > 0 {
-                ProgressView(value: Double(node.dataTotal - node.dataAvail), total: Double(node.dataTotal))
-                Text(verbatim: "\(formatBytes(node.dataTotal - node.dataAvail)) / \(formatBytes(node.dataTotal))")
-                    .font(.caption).foregroundStyle(.secondary)
+                let used = node.dataTotal - node.dataAvail
+                MeterRow(label: String(localized: "data"), fraction: Double(used) / Double(node.dataTotal),
+                         value: "\(formatBytes(used)) / \(formatBytes(node.dataTotal))")
             }
         }
         .accessibilityElement(children: .combine)
     }
 
+    @ViewBuilder private var trailing: some View {
+        if busy {
+            ProgressView()
+        } else if node.resyncQueue > 0 {
+            Tag(String(localized: "resync \(node.resyncQueue.formatted())"), color: .statusWarn)
+        }
+    }
+
+    /// "on <host> · zone <zone>", then why it is down or not counted, and its resync speed.
     private var details: String {
         var parts: [String] = []
         if !node.up {
@@ -385,7 +421,7 @@ private struct NodeRow: View {
                 : String(localized: "down"))
         }
         if !node.kubeNode.isEmpty { parts.append(String(localized: "on \(node.kubeNode)")) }
-        if node.resyncQueue >= 0 { parts.append(String(localized: "Resync queue") + " " + node.resyncQueue.formatted()) }
+        if !node.zone.isEmpty { parts.append(String(localized: "zone \(node.zone)")) }
         if node.resyncErrors > 0 { parts.append(String(localized: "Blocks failing to resync") + " " + node.resyncErrors.formatted()) }
         if !node.statsError.isEmpty && node.up { parts.append(String(localized: "no statistics: \(node.statsError)")) }
         if node.tranquility == GarageTranquility.fullSpeed {

@@ -131,3 +131,13 @@ data class LonghornBackupTarget(
     val available: Boolean = false,
     val message: String = "",
 )
+
+/**
+ * The one disk path every node mounts, to state once above the node rows; null when the
+ * nodes' paths differ (each row then names its own) or none is known.
+ */
+fun List<LonghornNode>.sharedDiskPath(): String? =
+    flatMap { it.disks }.map { it.path }.filter { it.isNotEmpty() }.distinct().singleOrNull()
+
+/** A disk path's last segment, the meter's label: "/var/mnt/storage/longhorn" is "longhorn". */
+fun diskPathLabel(path: String): String = path.trimEnd('/').substringAfterLast('/').ifEmpty { path }
