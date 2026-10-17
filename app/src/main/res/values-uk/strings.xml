@@ -553,6 +553,7 @@
     <string name="settings_key_software">програмне сховище ключів</string>
     <string name="keystore_unavailable">Захищений чип телефона не відповідає. Спробуйте ще раз за мить або перезапустіть телефон.</string>
     <string name="settings_import_new">Додати кластер (імпортувати talosconfig або kubeconfig)</string>
+    <string name="security_key_fell_back">Ключ вашої конфігурації зберігається в TEE, а не в захищеному чипі, бо чип не відповідав під час його створення. Якщо видалити всі кластери й імпортувати знову, чип буде спробовано ще раз.</string>
     <string name="settings_delete_config">Видалити збережений talosconfig</string>
     <string name="settings_delete_title">Видалити talosconfig?</string>
     <string name="settings_delete_body">Зашифровану конфігурацію всіх кластерів разом із їхніми клієнтськими ключами буде вилучено з цього пристрою.</string>

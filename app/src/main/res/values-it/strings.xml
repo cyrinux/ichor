@@ -506,6 +506,7 @@
     <string name="settings_key_software">keystore software</string>
     <string name="keystore_unavailable">Il chip sicuro del telefono non risponde. Riprova tra un momento o riavvia il telefono.</string>
     <string name="settings_import_new">Aggiungi un cluster (importa un talosconfig o un kubeconfig)</string>
+    <string name="security_key_fell_back">La chiave della configurazione è nel TEE, non nel chip sicuro, perché il chip non rispondeva quando è stata creata. Rimuovere tutti i cluster e importare di nuovo riprova il chip.</string>
     <string name="settings_delete_config">Elimina il talosconfig salvato</string>
     <string name="settings_delete_title">Eliminare il talosconfig?</string>
     <string name="settings_delete_body">La configurazione crittografata di tutti i cluster, con le loro chiavi client, verrà rimossa da questo dispositivo.</string>

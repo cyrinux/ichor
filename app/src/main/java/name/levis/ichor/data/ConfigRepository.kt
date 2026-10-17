@@ -41,10 +41,15 @@ class ConfigRepository(
 ) {
 
     private val strongBox = hasStrongBox(context.packageManager)
-    private val store = SecureStore(File(context.filesDir, "talosconfig.enc"), strongBoxAvailable = strongBox, outer = dekHolder)
+    private val store = SecureStore(
+        File(context.filesDir, "talosconfig.enc"), strongBoxAvailable = strongBox, outer = dekHolder, onTeeFallback = ::keyFellBack,
+    )
 
     /** Clusters added from a kubeconfig: a second sealed file with a key of its own, protected alike. */
-    private val kubeStore = SecureStore(File(context.filesDir, "kubeconfig.enc"), keyAlias = "kubeconfig", strongBoxAvailable = strongBox, outer = dekHolder)
+    private val kubeStore = SecureStore(
+        File(context.filesDir, "kubeconfig.enc"), keyAlias = "kubeconfig", strongBoxAvailable = strongBox, outer = dekHolder,
+        onTeeFallback = ::keyFellBack,
+    )
 
     /**
      * Their summary, so a launch skips the parse of every context (see [ConfigSummaryCache]):
@@ -76,6 +81,24 @@ class ConfigRepository(
     /** Where the key protecting the stored config lives (null before the first import). */
     fun keyProtection(): KeyProtection? = runCatching { store.protection() ?: kubeStore.protection() }.getOrNull()
     private val prefs = context.getSharedPreferences("ichor", Context.MODE_PRIVATE)
+
+    /**
+     * A config key went to the TEE although the phone has StrongBox (the chip kept refusing):
+     * Settings → Security says so once, until dismissed. Only that fact is stored, no secret.
+     */
+    private val _keyFallback = MutableStateFlow(prefs.getBoolean(KEY_TEE_FALLBACK, false))
+    val keyFallback: StateFlow<Boolean> = _keyFallback.asStateFlow()
+
+    private fun keyFellBack() {
+        prefs.edit().putBoolean(KEY_TEE_FALLBACK, true).apply()
+        _keyFallback.value = true
+    }
+
+    /** Hides the TEE notice for good (a later fallback shows it again). */
+    fun dismissKeyFallback() {
+        prefs.edit().remove(KEY_TEE_FALLBACK).apply()
+        _keyFallback.value = false
+    }
 
     private val writes = Mutex()
 
@@ -322,7 +345,13 @@ class ConfigRepository(
     }
 
     private fun persist(target: SecureStore, yaml: String) {
-        if (yaml.isBlank()) target.clear() else target.write(yaml.encodeToByteArray())
+        if (yaml.isBlank()) {
+            // Its key goes too: the next one tries the chip again, so the TEE notice no longer holds.
+            target.clear()
+            dismissKeyFallback()
+        } else {
+            target.write(yaml.encodeToByteArray())
+        }
     }
 
     /**
@@ -380,6 +409,7 @@ class ConfigRepository(
         kubeStore.clear()
         summaryCache.clear()
         prefs.edit().clear().apply()
+        _keyFallback.value = false
         _config.value = null
         _generation.value++
     }
@@ -414,6 +444,7 @@ class ConfigRepository(
     private companion object {
         const val KEY_CONTEXT = "active_context"
         const val KEY_CONTEXT_INDEX = "active_context_index"
+        const val KEY_TEE_FALLBACK = "key_tee_fallback"
     }
 }
 
