@@ -2,19 +2,24 @@ import Foundation
 import IchorCore
 
 /// Backs up the talosconfig, the kubeconfig of the clusters added without Talos, and the
-/// settings that go with them into a file sealed with a
+/// settings that go with them (pins, Git hosts, AI settings; their keys and tokens only when
+/// the user opts in) into a file sealed with a
 /// passphrase (Argon2id + AES-256-GCM, in the Go core), and restores one, on this device or
 /// on another, iOS or Android. The stored config cannot be copied as it is: its key never
 /// leaves this device's Secure Enclave.
 @MainActor
 enum AppBackup {
-    /// The backup file of the stored config and settings, sealed with `passphrase`.
-    static func create(model: AppModel, passphrase: String) async throws -> Data {
+    /// The backup file of the stored config and settings, sealed with `passphrase`. The AI keys
+    /// and Git tokens go in only with `includeSecrets`. The payload is never logged.
+    static func create(model: AppModel, ai: AISettings, gitHosts: GitHostStore, passphrase: String,
+                       includeSecrets: Bool) async throws -> Data {
         guard model.hasConfig, let summary = model.summary else {
             throw TalosError(message: String(localized: "No talosconfig is stored."))
         }
+        let fingerprints = summary.contexts.map(\.fingerprint)
+        let aiBackup = await ai.backup(includeKeys: includeSecrets)
         let payload = BackupPayload(
-            format: backupPayloadFormat(kubeconfig: model.kubeYAML),
+            format: backupPayloadFormat(),
             platform: "ios",
             createdAt: Int64(Date().timeIntervalSince1970),
             talosconfig: model.yaml ?? "",
@@ -22,7 +27,7 @@ enum AppBackup {
             activeContextIndex: summary.contexts.firstIndex { $0.name == model.activeContext },
             settings: backupSettings(model: model),
             clusters: backupClusters(
-                fingerprints: summary.contexts.map(\.fingerprint),
+                fingerprints: fingerprints,
                 names: model.clusterNames,
                 colors: model.clusterColors,
                 kubeServers: model.kubeServers,
@@ -30,7 +35,13 @@ enum AppBackup {
                 wakeOnLan: WakeOnLanStore.shared.allTargets,
                 kubeAccess: model.kubeAccess
             ),
-            kubeAuth: backupKubeAuth(fingerprints: model.signInFingerprints)
+            kubeAuth: backupKubeAuth(fingerprints: model.signInFingerprints),
+            // iOS pins nothing in screenshot mode: the stored pins are all of the real scope.
+            pins: backupPins(fingerprints: fingerprints) { PinStore.shared.pins(for: $0) },
+            gitHosts: gitHosts.hosts.isEmpty ? nil : gitHosts.hosts,
+            ai: aiBackup.settings,
+            secrets: backupSecrets(include: includeSecrets, aiKeys: aiBackup.keys,
+                                   gitHostTokens: includeSecrets ? gitHosts.tokensForBackup() : [:])
         )
         let json = try TalosJSON.encode(payload)
         return try await localized { try await TalosClient.encryptBackup(payload: json, passphrase: passphrase) }
@@ -38,7 +49,8 @@ enum AppBackup {
 
     /// Replaces the stored config and settings with those of `file`. Throws
     /// `BackupError.wrongPassphrase` for a wrong passphrase, so the user can try again.
-    static func restore(_ file: Data, passphrase: String, model: AppModel) async throws {
+    static func restore(_ file: Data, passphrase: String, model: AppModel, ai: AISettings,
+                        gitHosts: GitHostStore) async throws {
         let json = try await localized { try await TalosClient.decryptBackup(file, passphrase: passphrase) }
         guard let payload = try? JSONDecoder().decode(BackupPayload.self, from: Data(json.utf8)) else {
             throw BackupError.invalidContent
@@ -60,6 +72,16 @@ enum AppBackup {
         // After the configs: the sign-ins of the kubeconfig and Omni clusters restored.
         KubeAuthStore.shared.restore(restoredKubeAuth(payload, fingerprints: model.signInFingerprints))
         WakeOnLanStore.shared.restore(restored.wakeOnLan)
+        PinStore.shared.restore(restoredPins(payload, fingerprints: model.summary?.contexts.map(\.fingerprint) ?? []))
+        gitHosts.restore(restoredGitHosts(payload))
+        if payload.ai != nil || payload.secrets?.aiKeys != nil {
+            await ai.restore(payload.ai, keys: payload.secrets?.aiKeys ?? [:])
+        }
+        restoreStorageThresholds(settings)
+        // settings.appLockMode is not applied: a lock's secret is bound to the device it was set
+        // on. With a real cluster restored and no lock here, RootView shows LockOnboardingView
+        // by itself (the lock is required), so the lock is offered again, never enabled.
+        // settings.allowScreenshots is Android only: iOS cannot block screenshots.
         if let mask = settings?.privacyMask {
             await model.setPrivacyMask(mask, words: settings?.privacyMaskWords ?? "")
         }
@@ -72,6 +94,14 @@ enum AppBackup {
             BackgroundMonitor.alertsEnabled = on
             if on { BackgroundMonitor.schedule() }
         }
+    }
+
+    private static func restoreStorageThresholds(_ settings: BackupSettings?) {
+        guard settings?.storageWarnPercent != nil || settings?.storageCriticalPercent != nil else { return }
+        let current = BackgroundMonitor.storageThresholds
+        // StorageThresholds clamps them like the Settings sliders.
+        BackgroundMonitor.storageThresholds = StorageThresholds(warn: settings?.storageWarnPercent ?? current.warn,
+                                                                crit: settings?.storageCriticalPercent ?? current.crit)
     }
 
     /// The sign-ins of the kubeconfig and Omni clusters as a backup keeps them (what the user entered,
@@ -95,6 +125,11 @@ enum AppBackup {
             remoteAppIcons: AppIconSettings.remoteEnabled
         )
         settings.liveClusterStats = LiveStatsSettings.enabled
+        let securityKey = model.securityKeys?.keys.isEmpty == false
+        settings.appLockMode = BackupLockMode(enabled: model.lock.enabled, securityKey: securityKey).rawValue
+        let thresholds = BackgroundMonitor.storageThresholds
+        settings.storageWarnPercent = thresholds.warn
+        settings.storageCriticalPercent = thresholds.crit
         return settings
     }
 

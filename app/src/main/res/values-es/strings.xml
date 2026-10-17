@@ -1909,6 +1909,8 @@
     <string name="backup_passphrase_show">Mostrar frase de contraseña</string>
     <string name="backup_passphrase_hide">Ocultar frase de contraseña</string>
     <string name="backup_create_confirm">Cifrar y guardar</string>
+    <string name="backup_include_secrets">Incluir claves de API y tokens de Git</string>
+    <string name="backup_include_secrets_warning">Cualquiera con el archivo y su frase de contraseña puede usarlos.</string>
     <string name="backup_restore_title">Abrir la copia de seguridad</string>
     <string name="backup_restore_desc">Introduce la frase de contraseña con la que se cifró la copia.</string>
     <string name="backup_restore_confirm">Restaurar</string>

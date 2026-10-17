@@ -2,14 +2,23 @@ package name.levis.ichor.data
 
 import name.levis.ichor.R
 import name.levis.ichor.i18n.AppLocale
+import name.levis.ichor.model.BACKUP_FORMAT
 import name.levis.ichor.model.BackupPayload
+import name.levis.ichor.model.BackupSecrets
 import name.levis.ichor.model.BackupSettings
+import name.levis.ichor.model.backupAi
 import name.levis.ichor.model.backupClusters
-import name.levis.ichor.model.backupFormat
+import name.levis.ichor.model.backupGitHosts
 import name.levis.ichor.model.backupKubeAuth
-import name.levis.ichor.model.isKube
+import name.levis.ichor.model.backupPins
+import name.levis.ichor.model.backupSecrets
+import name.levis.ichor.model.restoredAi
+import name.levis.ichor.model.restoredAiKeys
 import name.levis.ichor.model.restoredClusters
+import name.levis.ichor.model.restoredGitHosts
+import name.levis.ichor.model.restoredGitTokens
 import name.levis.ichor.model.restoredKubeAuth
+import name.levis.ichor.model.restoredPins
 import name.levis.ichor.model.signInKeys
 import name.levis.ichor.monitor.MonitorStore
 import name.levis.ichor.ui.LocalizedException
@@ -38,18 +47,28 @@ class BackupManager(
     private val kubeAuth: KubeAuthStore,
     private val wakeOnLan: WakeOnLanStore,
     private val monitor: MonitorStore,
+    private val pins: PinStore,
+    private val gitHosts: GitHostStore,
+    private val ai: AiPreferences,
+    /** This device's [name.levis.ichor.model.BackupLockMode]; a restore never sets the lock. */
+    private val lockMode: () -> String,
     private val setPrivacyMask: (PrivacyMask) -> Unit,
     private val notificationsAllowed: () -> Boolean,
     private val onRestored: () -> Unit,
 ) {
-    /** The backup file of the stored config and settings, sealed with [passphrase]. */
-    suspend fun create(passphrase: String, now: Long = System.currentTimeMillis() / 1000): ByteArray =
+    /**
+     * The backup file of the stored config and settings, sealed with [passphrase]; the API keys
+     * and Git tokens only with [includeSecrets] (the payload has no "secrets" key otherwise).
+     * The payload is never logged.
+     */
+    suspend fun create(passphrase: String, includeSecrets: Boolean = false, now: Long = System.currentTimeMillis() / 1000): ByteArray =
         withContext(Dispatchers.Default) {
             val stored = configs.config.value ?: throw NoConfigException()
             val mask = ui.privacyMask.value
             val kubeconfig = stored.kubeYaml.takeIf { it.isNotBlank() }
+            val fingerprints = stored.summary.contexts.map { it.fingerprint }
             val payload = BackupPayload(
-                format = backupFormat(kubeconfig),
+                format = BACKUP_FORMAT,
                 platform = "android",
                 createdAt = now,
                 talosconfig = stored.talosYaml,
@@ -64,9 +83,13 @@ class BackupManager(
                     privacyMaskWords = mask.extraWords,
                     monitorAlerts = monitor.alertsEnabled.value,
                     monitorIntervalMinutes = monitor.intervalMinutes.value,
+                    allowScreenshots = ui.allowScreenshots.value,
+                    appLockMode = lockMode(),
+                    storageWarnPercent = monitor.storageWarnPercent.value,
+                    storageCriticalPercent = monitor.storageCriticalPercent.value,
                 ),
                 clusters = backupClusters(
-                    stored.summary.contexts.map { it.fingerprint },
+                    fingerprints,
                     names.names.value,
                     colors.colors.value,
                     vpnOnly.fingerprints.value,
@@ -75,6 +98,11 @@ class BackupManager(
                     kubeAccess.links.value,
                 ),
                 kubeAuth = backupKubeAuth(signInKeys(stored.summary.contexts), kubeAuth.all(), Ichorgo::kubeAuthForBackup),
+                // The real scope only (pinScope with screenshot mode off): masked pins hold made-up names.
+                pins = backupPins(fingerprints) { pins.pins(it).value },
+                gitHosts = backupGitHosts(gitHosts.hosts.value),
+                ai = backupAi(ai.settings.value),
+                secrets = if (includeSecrets) secrets() else null,
             )
             backupCall { Ichorgo.encryptBackup(TalosJson.encodeToString(BackupPayload.serializer(), payload), passphrase) }
         }
@@ -86,7 +114,12 @@ class BackupManager(
     suspend fun restore(file: ByteArray, passphrase: String): RestoreOutcome {
         val payload = withContext(Dispatchers.Default) {
             val json = backupCall { Ichorgo.decryptBackup(file, passphrase) }
-            TalosJson.decodeFromString(BackupPayload.serializer(), json)
+            // Never the parser's message: it can quote the payload, secrets included.
+            try {
+                TalosJson.decodeFromString(BackupPayload.serializer(), json)
+            } catch (_: IllegalArgumentException) {
+                throw LocalizedException(UiText.Res(R.string.backup_err_invalid))
+            }
         }
         val settings = payload.settings
         // The config first: on failure nothing else changed. Screenshot mode comes after it,
@@ -125,6 +158,13 @@ class BackupManager(
         // Alerts need this device's notification permission; without it they stay off.
         settings.monitorAlerts?.let { monitor.setAlertsEnabled(it && notificationsAllowed()) }
         settings.monitorIntervalMinutes?.takeIf { it in MonitorStore.INTERVALS }?.let(monitor::setIntervalMinutes)
+        settings.allowScreenshots?.let(ui::setAllowScreenshots)
+        // Warn first: it moves critical above it, then critical lands where the backup had it.
+        settings.storageWarnPercent?.let(monitor::setStorageWarnPercent)
+        settings.storageCriticalPercent?.let(monitor::setStorageCriticalPercent)
+        // settings.appLockMode is never applied: the lock's secret is device-bound. With a real
+        // cluster restored and no lock here, the app shows the lock onboarding (lockRequired).
+        restoreExtras(payload, fingerprints)
         val language = settings.language?.let(AppLocale::normalize)
         val languageChanged = language != null && language != ui.language.value
         if (languageChanged) ui.setLanguage(language)
@@ -132,6 +172,23 @@ class BackupManager(
         onRestored()
         return RestoreOutcome(languageChanged, language ?: ui.language.value)
     }
+
+    /** Pins, Git hosts and AI settings (format 3), each only when the backup has it; secrets through their stores. */
+    private fun restoreExtras(payload: BackupPayload, fingerprints: List<String>) {
+        restoredPins(payload.pins, fingerprints)?.forEach { (fp, list) -> pins.replace(fp, list) }
+        val hosts = restoredGitHosts(payload.gitHosts)
+        val tokens = restoredGitTokens(payload.secrets, hosts)
+        // No token in the backup: "" keeps the one this device has for the host.
+        hosts.forEach { gitHosts.set(it.host, it.kind, tokens[it.host].orEmpty(), it.aliases) }
+        restoredAi(payload.ai, ai.providerIds, ai.settings.value, payload.secrets)?.let(ai::update)
+        restoredAiKeys(payload.secrets, ai.providerIds).forEach { (provider, key) -> ai.setApiKey(provider, key) }
+    }
+
+    /** This device's API keys and Git tokens, for a backup the user opted in for. */
+    private suspend fun secrets(): BackupSecrets? = backupSecrets(
+        aiKeys = ai.providerIds.associateWith { ai.apiKey(it) },
+        gitHostTokens = gitHosts.hosts.value.associate { it.host to gitHosts.token(it.host) },
+    )
 }
 
 /** A backup that does not open with the passphrase given. */

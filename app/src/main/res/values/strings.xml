@@ -1908,6 +1908,8 @@
     <string name="backup_passphrase_show">Show passphrase</string>
     <string name="backup_passphrase_hide">Hide passphrase</string>
     <string name="backup_create_confirm">Encrypt and save</string>
+    <string name="backup_include_secrets">Include API keys and Git tokens</string>
+    <string name="backup_include_secrets_warning">Anyone with the file and its passphrase can use them.</string>
     <string name="backup_restore_title">Open the backup</string>
     <string name="backup_restore_desc">Enter the passphrase the backup was encrypted with.</string>
     <string name="backup_restore_confirm">Restore</string>

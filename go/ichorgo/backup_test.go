@@ -201,3 +201,48 @@ func TestBackupHoldsKubeconfigClusters(t *testing.T) {
 		}
 	}
 }
+
+func TestBackupSecretsNeedFormat3(t *testing.T) {
+	talos := testConfig(t, time.Now().Add(time.Hour))
+	secrets := map[string]any{
+		"aiKeys":        map[string]string{"anthropic": "sk-test"},
+		"gitHostTokens": map[string]string{"git.example.org": "tok"},
+	}
+
+	for name, tc := range map[string]struct {
+		payload map[string]any
+		ok      bool
+	}{
+		"format 3 with secrets": {map[string]any{"format": 3, "talosconfig": talos, "secrets": secrets}, true},
+		"format 3 without":      {map[string]any{"format": 3, "talosconfig": talos}, true},
+		"format 3 null secrets": {map[string]any{"format": 3, "talosconfig": talos, "secrets": nil}, true},
+		"format 2 with secrets": {map[string]any{"format": 2, "talosconfig": talos, "secrets": secrets}, false},
+		"format 1 with secrets": {map[string]any{"format": 1, "talosconfig": talos, "secrets": secrets}, false},
+		"secrets not an object": {map[string]any{"format": 3, "talosconfig": talos, "secrets": []string{"x"}}, false},
+	} {
+		raw, err := json.Marshal(tc.payload)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		sealed, err := EncryptBackup(string(raw), backupTestPassphrase)
+		if !tc.ok {
+			requireBackupErr(t, err, BackupErrInvalidContent)
+
+			continue
+		}
+
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+
+		out, err := DecryptBackup(sealed, backupTestPassphrase)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+
+		if out != string(raw) {
+			t.Errorf("%s: payload not kept as written", name)
+		}
+	}
+}
