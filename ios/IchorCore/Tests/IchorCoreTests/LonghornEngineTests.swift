@@ -50,13 +50,14 @@ final class LonghornEngineTests: XCTestCase {
         XCTAssertFalse(p.live)
     }
 
-    func testPreselectFallsBackToTheFirstSelectable() {
+    func testPreselectIsTheDefaultOnly() {
         let p = LonghornEngineUpgradePreview(currentImage: "a:v1", canUpgrade: true, images: [
             LonghornEngineImage(image: "a:v3", deployed: false, isDefault: true),
             LonghornEngineImage(image: "a:v1", deployed: true),
             LonghornEngineImage(image: "a:v2", deployed: true),
         ])
-        XCTAssertEqual(p.preselected, "a:v2")
+        // The default is not deployed yet: nothing is preselected, the user picks one (as on Android).
+        XCTAssertEqual(p.preselected, "")
     }
 
     func testVolumeEngineFieldsAndUpgradable() throws {

@@ -95,8 +95,7 @@ public struct LonghornEngineUpgradePreview: Decodable, Equatable, Sendable {
     /// The image the sheet starts on: the default one when it can be picked, else the first that can,
     /// never the one already running; "" when none.
     public var preselected: String {
-        let candidates = images.filter { $0.selectable && $0.image != currentImage }
-        return (candidates.first { $0.isDefault } ?? candidates.first)?.image ?? ""
+        images.first { $0.isDefault && $0.selectable && $0.image != currentImage }?.image ?? ""
     }
 
     /// Confirming moves the volume to `selected`: the core allows it, and the image is a listed,

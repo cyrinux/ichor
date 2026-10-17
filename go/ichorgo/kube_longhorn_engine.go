@@ -334,7 +334,46 @@ func compareEngineImages(a, b, defaultImage string) int {
 		return 1
 	}
 
-	return strings.Compare(b, a)
+	return naturalCompare(b, a)
+}
+
+// naturalCompare orders strings with their digit runs compared as numbers, so that
+// "engine:v1.10.0" comes after "engine:v1.9.1".
+func naturalCompare(a, b string) int {
+	for a != "" && b != "" {
+		if isDigit(a[0]) && isDigit(b[0]) {
+			na, ra := leadingDigits(a)
+			nb, rb := leadingDigits(b)
+			na, nb = strings.TrimLeft(na, "0"), strings.TrimLeft(nb, "0")
+			if c := cmp.Compare(len(na), len(nb)); c != 0 {
+				return c
+			}
+			if c := strings.Compare(na, nb); c != 0 {
+				return c
+			}
+			a, b = ra, rb
+
+			continue
+		}
+
+		if a[0] != b[0] {
+			return cmp.Compare(a[0], b[0])
+		}
+
+		a, b = a[1:], b[1:]
+	}
+
+	return cmp.Compare(len(a), len(b))
+}
+
+// leadingDigits splits s into its leading run of digits and the rest.
+func leadingDigits(s string) (digits, rest string) {
+	i := 0
+	for i < len(s) && isDigit(s[i]) {
+		i++
+	}
+
+	return s[:i], s[i:]
 }
 
 func (f lhEngineFacts) live() bool { return f.volume.Status.State == "attached" }

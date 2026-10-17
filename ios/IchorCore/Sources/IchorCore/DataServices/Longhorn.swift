@@ -31,7 +31,11 @@ public struct LonghornStatus: Decodable, Equatable, Sendable {
     }
 
     /// Volumes whose engine lags the default image.
-    public var outdatedEngineVolumes: Int { volumes.filter(\.engineOutdated).count }
+    public var outdatedEngineVolumes: Int {
+        // Only when the cluster really runs more than one engine (as on Android).
+        guard engineImages.filter({ $0.refCount > 0 }).count > 1 else { return 0 }
+        return volumes.filter(\.engineOutdated).count
+    }
 
     private enum CodingKeys: String, CodingKey { case version, error, volumes, nodes, backupTargets, defaultEngineImage, engineImages }
 }

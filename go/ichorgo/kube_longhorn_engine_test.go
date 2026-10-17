@@ -337,3 +337,20 @@ func byNameOutdated(out *longhornStatus) bool {
 
 	return false
 }
+
+func TestNaturalCompareOrdersEngineTags(t *testing.T) {
+	for _, tc := range []struct {
+		a, b string
+		want int
+	}{
+		{"longhornio/longhorn-engine:v1.9.1", "longhornio/longhorn-engine:v1.10.0", -1},
+		{"longhornio/longhorn-engine:v1.10.0", "longhornio/longhorn-engine:v1.9.1", 1},
+		{"longhornio/longhorn-engine:v1.12.0", "longhornio/longhorn-engine:v1.12.0", 0},
+		{"a:v01", "a:v1", 0},
+		{"a:v1", "a:v1.0", -1},
+	} {
+		if got := naturalCompare(tc.a, tc.b); got != tc.want {
+			t.Errorf("naturalCompare(%q, %q) = %d, want %d", tc.a, tc.b, got, tc.want)
+		}
+	}
+}
