@@ -4,12 +4,13 @@ import IchorCore
 /// Rolling a Helm release back to an older revision: what would change, each change dry-run on
 /// the API server first (nothing has changed yet), then the confirm button. A Flux-managed
 /// release is said to be suspended first; a blocker (a missing revision, the demo cluster…)
-/// keeps the button disabled.
+/// keeps the button disabled. The options (wait, replace, keep the last N revisions) are
+/// helm rollback's flags; with Wait on, the sheet then follows the release's workloads.
 struct HelmRollbackSheet: View {
     let namespace: String
     let name: String
     let revision: Int
-    /// After a successful rollback, before the sheet dismisses.
+    /// After a successful rollback (the wait, if any, comes after), before the sheet dismisses.
     let rolledBack: () -> Void
     /// Reads the release again (after a failed rollback: something may have moved).
     let reload: () async -> Void
@@ -17,36 +18,65 @@ struct HelmRollbackSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var state: LoadState<HelmRollbackPlan> = .loading
+    @State private var options = HelmRollbackOptions()
+    /// The plan is read again after an option changed; the older one stays on screen.
+    @State private var planning = false
     @State private var running = false
     @State private var failure: String?
+    /// The rollback is done but the old revisions were not deleted: said once, then on as usual.
+    @State private var pruneWarning: String?
+    /// The rollback is done and the sheet follows its workloads.
+    @State private var waiting = false
+    @State private var follow: HelmRollbackFollowHandle?
+    @State private var waitProgress: HelmRollbackFollowProgress?
+    @State private var waitOutcome: FollowOutcome?
 
     var body: some View {
         NavigationStack {
             Group {
-                switch state {
-                case .loading:
-                    VStack(spacing: 12) {
-                        ProgressView()
-                        Text("Checking what would change…").note()
+                if waiting {
+                    List {
+                        HelmRollbackWaitSection(progress: waitProgress, outcome: waitOutcome, leave: leave)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                case .failed:
-                    LoadStateView(state: state, retry: load) { _ in EmptyView() }
-                case .loaded(let plan, _, _):
-                    content(plan)
+                    .themedBackground()
+                } else {
+                    planView
                 }
             }
             .navigationTitle(Text("Roll back to revision \(String(revision))"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }.disabled(running)
+                    if !waiting {
+                        Button("Cancel") { dismiss() }.disabled(running)
+                    }
                 }
             }
         }
         .interactiveDismissDisabled(running)
-        .task { await load() }
+        .alert("Warnings", isPresented: $pruneWarning.isPresent()) {
+            Button("OK") { if !waiting { dismiss() } }
+        } message: {
+            Text(verbatim: pruneWarning ?? "")
+        }
+        .task(id: options.planKey) { await load() }
+        .onDisappear { follow?.cancel() }
         .loadsKubeActionAccess(namespace: namespace)
+    }
+
+    @ViewBuilder private var planView: some View {
+        switch state {
+        case .loading:
+            VStack(spacing: 12) {
+                ProgressView()
+                Text("Checking what would change…").note()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .failed:
+            LoadStateView(state: state, retry: load) { _ in EmptyView() }
+        case .loaded(let plan, _, _):
+            content(plan)
+        }
     }
 
     private func content(_ plan: HelmRollbackPlan) -> some View {
@@ -75,6 +105,7 @@ struct HelmRollbackSheet: View {
                     Text("Cannot roll back")
                 }
             }
+            HelmRollbackOptionsSection(plan: plan, options: $options, planning: planning, disabled: running)
             Section {
                 if plan.changes.isEmpty {
                     Text("No object changes: only the release record moves back.").note()
@@ -114,7 +145,7 @@ struct HelmRollbackSheet: View {
 
     private func confirmButton(_ plan: HelmRollbackPlan) -> some View {
         Button(role: .destructive) {
-            Task { await rollBack() }
+            Task { await rollBack(plan) }
         } label: {
             Group {
                 if running {
@@ -128,7 +159,7 @@ struct HelmRollbackSheet: View {
         .buttonStyle(.borderedProminent)
         .tint(.red)
         .controlSize(.large)
-        .disabled(!plan.canRun || running)
+        .disabled(!plan.canRun || running || planning)
         .kubeGated(.helmRollback)
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets())
@@ -140,29 +171,66 @@ struct HelmRollbackSheet: View {
         return ["#\(number)", chart, app].filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
+    /// The plan for the current options; after an option changed the older plan stays on
+    /// screen until the new one is read, and a read for older options is dropped.
     private func load() async {
         guard let client = model.client else { return }
-        state = .loading
+        let asked = options
+        if case .loaded = state { planning = true } else { state = .loading }
         let fetched: LoadState<HelmRollbackPlan> = await .from {
-            try await client.helmRollbackPlan(namespace: namespace, name: name, revision: revision)
+            try await client.helmRollbackPlan(namespace: namespace, name: name, revision: revision, options: asked)
         }
+        guard !Task.isCancelled, asked.planKey == options.planKey else { return }
+        planning = false
         state = fetched
     }
 
-    private func rollBack() async {
+    private func rollBack(_ plan: HelmRollbackPlan) async {
         guard let client = model.client, !running else { return }
         running = true
         failure = nil
         do {
-            try await client.helmRollback(namespace: namespace, name: name, revision: revision)
+            try await client.helmRollback(namespace: namespace, name: name, revision: revision, options: options)
+            running = false
+            // The rollback is done: the release screen says so whenever the sheet goes.
+            rolledBack()
+            if options.wait && plan.canWait {
+                await followWorkloads(client)
+            } else {
+                dismiss()
+            }
+        } catch where isHelmHistoryNotPruned(error.localizedDescription) {
+            // Done, only the old revisions are still there: as a success, with the warning.
             running = false
             rolledBack()
-            dismiss()
+            pruneWarning = error.localizedDescription
+            if options.wait && plan.canWait {
+                await followWorkloads(client)
+            }
         } catch {
             failure = error.localizedDescription
             running = false
             await reload()
         }
+    }
+
+    /// helm rollback --wait: the release's workloads until they are ready, fail or 5 minutes pass.
+    private func followWorkloads(_ client: TalosClient) async {
+        waiting = true
+        let handle = client.startHelmRollbackFollow(namespace: namespace, name: name)
+        follow = handle
+        for await event in handle.events {
+            switch event {
+            case .progress(let progress): waitProgress = progress
+            case .done(let result, let error): waitOutcome = .helmWait(result: result, error: error)
+            }
+        }
+    }
+
+    /// Stop following (the rollback stays done), or Done once the wait ended.
+    private func leave() {
+        follow?.cancel()
+        dismiss()
     }
 }
 
@@ -191,6 +259,7 @@ private struct HelmRollbackChangeRow: View {
         switch change.action {
         case "create": String(localized: "create")
         case "update": String(localized: "update")
+        case "replace": String(localized: "replace")
         case "delete": String(localized: "delete")
         case "keep": String(localized: "kept")
         default: change.action
@@ -200,7 +269,7 @@ private struct HelmRollbackChangeRow: View {
     private var actionColor: Color? {
         switch change.action {
         case "create": Color.statusOK
-        case "update": Color.statusWarn
+        case "update", "replace": Color.statusWarn
         case "delete": Color.statusBad
         default: nil
         }

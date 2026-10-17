@@ -189,27 +189,34 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
-	{name: "helm-rollback-plan", args: "NAMESPACE NAME [REVISION]", run: func(e env) (out string, err error) {
-		// helm-rollback-plan NAMESPACE NAME [REVISION]: what a rollback would change, dry-run only.
+	{name: "helm-rollback-plan", args: "NAMESPACE NAME [REVISION] [OPTIONS_JSON]", run: func(e env) (out string, err error) {
+		// helm-rollback-plan NAMESPACE NAME [REVISION] [OPTIONS_JSON]: what a rollback would
+		// change, dry-run only, e.g. `web site 1 '{"force":true,"historyMax":2}'`.
 		revision, err := helmRevisionArg(flag.Arg(3))
 		if err == nil {
-			out, err = ichorgo.KubeHelmRollbackPlan(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), revision)
+			out, err = ichorgo.KubeHelmRollbackPlan(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), revision, flag.Arg(4))
 		}
 
 		return out, err
 	}},
-	{name: "helm-rollback", args: "NAMESPACE NAME [REVISION]", run: func(e env) (out string, err error) {
-		// helm-rollback NAMESPACE NAME [REVISION]: rolls the release back (0 or none: the previous revision).
+	{name: "helm-rollback", args: "NAMESPACE NAME [REVISION] [OPTIONS_JSON]", run: func(e env) (out string, err error) {
+		// helm-rollback NAMESPACE NAME [REVISION] [OPTIONS_JSON]: rolls the release back (0 or
+		// none: the previous revision), with {"force","historyMax"}.
 		revision, err := helmRevisionArg(flag.Arg(3))
 		if err != nil {
 			return "", err
 		}
 
-		if err = ichorgo.KubeHelmRollback(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), revision); err == nil {
+		if err = ichorgo.KubeHelmRollback(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), revision, flag.Arg(4)); err == nil {
 			out = "rolled back"
 		}
 
 		return out, err
+	}},
+	{name: "helm-rollback-follow", args: "NAMESPACE NAME", run: func(e env) (string, error) {
+		// helm-rollback-follow NAMESPACE NAME, after helm-rollback: prints the workloads'
+		// progress to stderr until they are ready, one failed, or 5 minutes passed.
+		return helmRollbackFollowRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2)), nil
 	}},
 	{name: "audit", args: "[MINUTES]", run: func(e env) (out string, err error) {
 		// audit [MINUTES]: reads the control planes' audit logs (os:admin), 15 minutes by default.

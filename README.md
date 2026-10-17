@@ -51,7 +51,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   meanwhile is never overwritten), apply pasted manifests like `kubectl apply --server-side`
   (each object previewed as a diff first; a field another manager owns is refused, never taken
   over), list Helm releases and roll one back to an earlier revision
-  (a dry-run plan first; a release Flux manages is suspended first), follow a pod's log and
+  (a dry-run plan first; a release Flux manages is suspended first; optionally waiting for its
+  workloads to be ready, replacing objects instead of patching them, and keeping only the last N
+  revisions), follow a pod's log and
   port-forward to it on the phone (127.0.0.1 only); see what gives LoadBalancer Services their
   address (MetalLB and Cilium pools with their free addresses, MetalLB advertisements and BGP
   peers, kube-vip ranges and leases) and why one has none; or export a kubeconfig.

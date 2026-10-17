@@ -158,7 +158,8 @@ public func sortHelmReleases(_ releases: [HelmReleaseSummary]) -> [HelmReleaseSu
 /// One object of a rollback (KubeHelmRollbackPlan): what happens to it, and the dry run's
 /// error when the API server refused the change.
 public struct HelmRollbackChange: Decodable, Equatable, Hashable, Identifiable, Sendable {
-    /// create, update, delete or keep (helm.sh/resource-policy: keep, left in place).
+    /// create, update, replace (Replace objects on: written whole), delete or keep
+    /// (helm.sh/resource-policy: keep, left in place).
     public let action: String
     public let kind: String
     public let namespace: String
@@ -213,10 +214,18 @@ public struct HelmRollbackPlan: Decodable, Equatable, Sendable {
     public let fluxOwner: String
     /// Why the rollback cannot run; empty when it can.
     public let blockers: [String]
+    /// The options the plan was made with (HelmRollbackOptions).
+    public let force: Bool
+    public let historyMax: Int
+    /// Revisions whose record the rollback deletes afterwards (history max), oldest first.
+    public let prune: [Int]
+    /// Deployments, StatefulSets and DaemonSets of the older revision: what a wait follows.
+    public let workloads: Int
 
     public init(namespace: String = "", name: String = "", from: Int = 0, to: Int = 0, fromChart: String = "",
                 toChart: String = "", fromAppVersion: String = "", toAppVersion: String = "",
-                changes: [HelmRollbackChange] = [], unchanged: Int = 0, fluxOwner: String = "", blockers: [String] = []) {
+                changes: [HelmRollbackChange] = [], unchanged: Int = 0, fluxOwner: String = "", blockers: [String] = [],
+                force: Bool = false, historyMax: Int = 0, prune: [Int] = [], workloads: Int = 0) {
         self.namespace = namespace
         self.name = name
         self.from = from
@@ -229,10 +238,15 @@ public struct HelmRollbackPlan: Decodable, Equatable, Sendable {
         self.unchanged = unchanged
         self.fluxOwner = fluxOwner
         self.blockers = blockers
+        self.force = force
+        self.historyMax = historyMax
+        self.prune = prune
+        self.workloads = workloads
     }
 
     private enum CodingKeys: String, CodingKey {
         case namespace, name, from, to, fromChart, toChart, fromAppVersion, toAppVersion, changes, unchanged, fluxOwner, blockers
+        case force, historyMax, prune, workloads
     }
 
     public init(from decoder: Decoder) throws {
@@ -249,6 +263,10 @@ public struct HelmRollbackPlan: Decodable, Equatable, Sendable {
         unchanged = try c.field(.unchanged, 0)
         fluxOwner = try c.field(.fluxOwner, "")
         blockers = try c.field(.blockers, [])
+        force = try c.field(.force, false)
+        historyMax = try c.field(.historyMax, 0)
+        prune = try c.field(.prune, [])
+        workloads = try c.field(.workloads, 0)
     }
 
     /// Nothing stops it: the confirm button is enabled.
@@ -256,4 +274,12 @@ public struct HelmRollbackPlan: Decodable, Equatable, Sendable {
 
     /// Some object is marked helm.sh/resource-policy: keep.
     public var keepsObjects: Bool { changes.contains { $0.action == "keep" } }
+
+    /// Some workload can be followed after the rollback: the Wait option is shown.
+    public var canWait: Bool { workloads > 0 }
+
+    /// "1, 2": the revisions history max deletes, nil when none.
+    public var pruneList: String? {
+        prune.isEmpty ? nil : prune.map { String($0) }.joined(separator: ", ")
+    }
 }

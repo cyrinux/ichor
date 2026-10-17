@@ -443,3 +443,13 @@ func (l maskedFluxReconcileListener) OnProgress(json string) {
 func (l maskedFluxReconcileListener) OnDone(result, errMessage string) {
 	l.FluxReconcileListener.OnDone(result, privacy.maskPlain(errMessage))
 }
+
+type maskedHelmRollbackListener struct{ HelmRollbackListener }
+
+func (l maskedHelmRollbackListener) OnProgress(json string) {
+	l.HelmRollbackListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedHelmRollbackListener) OnDone(result, errMessage string) {
+	l.HelmRollbackListener.OnDone(result, privacy.maskPlain(errMessage))
+}

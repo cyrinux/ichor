@@ -33,3 +33,12 @@ func fluxFollowRun(cfg, contextName, kubeServer, kind, namespace, name string) s
 
 	return (&netPerfProbe{done: p.done}).wait(run.Cancel)
 }
+
+// helmRollbackFollowRun waits for the workloads of the Helm release namespace/name after a
+// rollback, 5 minutes at most; Ctrl-C stops following.
+func helmRollbackFollowRun(cfg, contextName, kubeServer, namespace, name string) string {
+	p := &followProbe{done: make(chan string, 1)}
+	run := ichorgo.StartHelmRollbackFollow(cfg, contextName, kubeServer, namespace, name, p)
+
+	return (&netPerfProbe{done: p.done}).wait(run.Cancel)
+}
