@@ -215,8 +215,8 @@ struct OverviewView: View {
                 ClusterLiveStore.shared.clear()
                 return
             }
-            guard visible, scenePhase == .active, !fromMonitor, case .loaded(let overview, _, _) = state, overview.outage == nil,
-                  let client = model.client else { return }
+            guard visible, scenePhase == .active, !fromMonitor, case .loaded(let overview, _, _) = state, !overview.partial,
+                  overview.outage == nil, let client = model.client else { return }
             await ClusterLiveStore.shared.poll(with: client, key: loadID, nodes: overview.nodes.count)
         }
         .onAppear { visible = true }
@@ -324,6 +324,7 @@ struct OverviewView: View {
                 ClusterSummaryCard(
                     name: model.activeLabel,
                     summary: ClusterSummary(nodes: overview.nodes),
+                    answered: overview.answered(of: overviewNodeTargets),
                     live: liveStats ? ClusterLiveStore.shared.live(for: loadID) : nil
                 )
                 NavigationLink(value: Route.insights) { Label("Cluster insights", systemImage: "magnifyingglass") }
@@ -431,7 +432,7 @@ struct OverviewView: View {
     /// Restarts (or stops) the live sampling when one of its conditions changes.
     private var liveID: String {
         var nodes = -1
-        if !fromMonitor, case .loaded(let overview, _, _) = state, overview.outage == nil { nodes = overview.nodes.count }
+        if !fromMonitor, case .loaded(let overview, _, _) = state, !overview.partial, overview.outage == nil { nodes = overview.nodes.count }
         return "\(loadID)|\(liveStats)|\(visible)|\(scenePhase == .active)|\(nodes)"
     }
 
@@ -542,10 +543,11 @@ struct OverviewView: View {
         // end after the new one's, and must not replace it.
         let id = loadID
         let target = model.lastKnownTarget
-        let fetched: LoadState<ClusterOverview> = await .from { try await client.overview() }
+        let fetched = await streamOverview(with: client, id: id)
         guard id == loadID else { return }
         let loaded = merged(fetched, for: target)
-        state = state.refreshed(with: loaded)
+        // Only the complete overview reaches merged (and so remember) and the rest below.
+        state = state.finished(with: loaded)
         if case .loaded = loaded { fromMonitor = false }
         if case .loaded = state { StartupTrace.markOnce("overview first Loaded", detail: "(fresh)") }
         if case .loaded(let overview, _, _) = loaded {
@@ -564,6 +566,40 @@ struct OverviewView: View {
             // Discovery asks the nodes too: pointless while none answers.
             if overview.outage == nil { await discover(with: client, id: id) }
         }
+    }
+
+    /// The overview node by node: each node on screen as it answers while nothing else is
+    /// (a refresh or a cluster switch keeps the rows shown, see showingPartial), the complete
+    /// one returned. Not cancelled with the calling task (like the one-shot call before it);
+    /// it stops once the screen moved to another cluster.
+    private func streamOverview(with client: TalosClient, id: String) async -> LoadState<ClusterOverview> {
+        let context = model.activeSummary?.name ?? model.activeContext
+        let targets = overviewNodeTargets
+        return await Task { @MainActor in
+            await LoadState<ClusterOverview>.from {
+                var assembly = OverviewAssembly(context: context, targets: targets)
+                for try await part in client.overviewStream() {
+                    switch part {
+                    case .node(let node):
+                        guard id == loadID else { throw CancellationError() }
+                        assembly = assembly.adding(node)
+                        if let shown = state.showingPartial(assembly.overview) {
+                            state = shown
+                            StartupTrace.markOnce("overview first Loaded", detail: "(first node)")
+                        }
+                    case .done(let overview):
+                        return overview
+                    }
+                }
+                throw CancellationError()
+            }
+        }.value
+    }
+
+    /// The nodes the overview asks (as Go picks them): the total of "7 of 8 nodes answered".
+    private var overviewNodeTargets: [String] {
+        guard let context = model.activeSummary else { return [] }
+        return overviewTargets(nodes: context.nodes, endpoints: context.endpoints, omni: context.omni)
     }
 
     /// Whether the Talos update section has something to show: a newer release, not skipped.
@@ -587,10 +623,11 @@ struct OverviewView: View {
         guard case .loaded(let overview, let at, _) = fetched else { return fetched }
         var previous: ClusterOverview?
         var previousAt = at
-        // The background check's seed is not the cluster's data: nothing to fill nodes in from.
-        if !fromMonitor, case .loaded(let shown, let shownAt, _) = state {
-            previous = shown
-            previousAt = shownAt
+        // The background check's seed is not the cluster's data: nothing to fill nodes in from
+        // (nor are this load's own partial nodes).
+        if !fromMonitor, let shown = state.completeOverview {
+            previous = shown.overview
+            previousAt = shown.at
         }
         let result = mergeLastKnown(current: overview, previous: previous, previousAt: previousAt)
         if let target, result.outage == nil, let json = try? JSONEncoder().encode(result) {

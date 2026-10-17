@@ -90,6 +90,7 @@ import name.levis.ichor.util.daysUntil
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.clusterSummary
 import name.levis.ichor.model.outage
+import name.levis.ichor.model.nodesAnswered
 import name.levis.ichor.model.ClusterOutage
 import name.levis.ichor.model.hasLastKnown
 import name.levis.ichor.model.lacksPublicIps
@@ -141,14 +142,20 @@ class OverviewViewModel(
     override val restores get() = talos.restores
     override suspend fun fetch(): ClusterOverview {
         StartupTrace.markOnce("overview fetch start")
-        return talos.overview()
+        // Each node as it answers while nothing is on screen; a refresh keeps the old rows (L12).
+        return talos.overview(onPartial = ::showPartial)
     }
 
     init {
         // The first data on the home, the last known one or the fresh one.
         viewModelScope.launch {
             val loaded = state.first { it is UiState.Loaded } as UiState.Loaded<*>
-            StartupTrace.markOnce("overview first Loaded", if (loaded.refreshing) "(last known)" else "(fresh)")
+            val kind = when {
+                (loaded.data as? ClusterOverview)?.partial == true -> "(partial)"
+                loaded.refreshing -> "(last known)"
+                else -> "(fresh)"
+            }
+            StartupTrace.markOnce("overview first Loaded", kind)
         }
     }
 }
@@ -377,7 +384,8 @@ fun OverviewScreen(
     val liveEnabled by app.uiPreferences.liveClusterStats.collectAsStateWithLifecycle()
     val liveState by liveVm.state.collectAsStateWithLifecycle()
     // Live stats and discovery only make sense once a node answers (not on the background check's seed).
-    val loaded = (state as? UiState.Loaded)?.fromMonitor == false && outage == null
+    // Not on a partial overview either: its node count still grows.
+    val loaded = (state as? UiState.Loaded)?.let { !it.fromMonitor && !it.data.partial } == true && outage == null
     // Live CPU and memory only while the overview is on screen, once it loaded, and if not turned off.
     // Fewer samples on a large cluster: each one asks every node.
     val nodeCount = (state as? UiState.Loaded)?.data?.nodes?.size ?: 0
@@ -674,8 +682,9 @@ private fun NodeList(
 ) {
     var sheetFor by remember { mutableStateOf<NodeOverview?>(null) }
     val wakeOnLan = rememberWakeOnLan(fingerprint)
-    val publicIps = rememberPublicIpDetection(fingerprint, canDetectPublicIps && overview.lacksPublicIps())
-    RecordNodeMacs(fingerprint, overview.nodes)
+    // A partial overview lacks the public IPs only peers see, and its nodes still come in.
+    val publicIps = rememberPublicIpDetection(fingerprint, canDetectPublicIps && !overview.partial && overview.lacksPublicIps())
+    RecordNodeMacs(fingerprint, if (overview.partial) emptyList() else overview.nodes)
     sheetFor?.let { node ->
         NodeActionsSheet(
             node = node,
@@ -755,6 +764,7 @@ private fun NodeList(
                         clusterName ?: overview.context,
                         clusterSummary(overview.nodes),
                         live,
+                        overview.nodesAnswered,
                         onInsights,
                         onCapacity,
                         Modifier.longPressToCustomize(onCustomize),

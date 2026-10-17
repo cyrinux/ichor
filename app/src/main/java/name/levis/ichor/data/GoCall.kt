@@ -27,6 +27,9 @@ class GoCall(
 
     private fun stored(): StoredConfig = pinned?.let(configs::forCall) ?: configs.forCall()
 
+    /** The talosconfig and context a Talos call goes to now (see [talos]); for the streams started outside a call. */
+    fun talosTarget(): StoredConfig = stored()
+
     suspend fun <T : Any> remember(
         key: String,
         persistable: (T) -> Boolean = { true },

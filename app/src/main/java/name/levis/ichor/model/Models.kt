@@ -148,6 +148,13 @@ val ContextSummary.accessLabel: Int
 data class ClusterOverview(
     val context: String,
     val nodes: List<NodeOverview>,
+    /**
+     * Set by the app, never kept: the nodes that answered so far of a streamed overview (see
+     * [partialOverview]). Never cached, persisted or given to the monitor; no [outage] yet.
+     */
+    @Transient val partial: Boolean = false,
+    /** While [partial]: how many nodes the talosconfig context lists, 0 when unknown (Omni). */
+    @Transient val expectedNodes: Int = 0,
 )
 
 @Serializable

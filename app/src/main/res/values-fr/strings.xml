@@ -108,6 +108,8 @@
         <item quantity="other">%d nœuds</item>
     </plurals>
     <string name="overview_stat_nodes">Nœuds</string>
+    <string name="overview_nodes_answered">%1$d nœuds sur %2$d ont répondu</string>
+    <string name="overview_nodes_answered_unknown">Nœuds ayant répondu : %1$d</string>
     <string name="overview_nodes_unplaced">Hors de la carte</string>
     <string name="overview_nodes_open_all">Voir tous les nœuds</string>
     <string name="nodes_search">Rechercher par nom d\'hôte ou adresse</string>

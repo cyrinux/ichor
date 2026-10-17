@@ -11,6 +11,7 @@ import name.levis.ichorgo.ConfigTryListener
 import name.levis.ichorgo.MaintenanceListener
 import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.Ichorgo
+import name.levis.ichorgo.OverviewListener
 import name.levis.ichor.util.StartupTrace
 import name.levis.ichor.model.ConfigApplyEvent
 import name.levis.ichor.model.MaintenanceInspection
@@ -106,12 +107,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.model.withLastKnown
+import name.levis.ichor.model.OverviewPart
+import name.levis.ichor.model.NodeOverview
+import name.levis.ichor.model.collectOverview
+import name.levis.ichor.model.overviewTargets
 import name.levis.ichor.model.outage
 
 class NoConfigException : LocalizedException(UiText.Res(R.string.common_no_config))
@@ -421,6 +427,49 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
         val previous = last()
         fresh.withLastKnown(previous?.value, previous?.at ?: 0L)
     }
+
+    /**
+     * [overview] node by node: [onPartial] gets the nodes that answered so far (a
+     * [ClusterOverview.partial] one, never kept), the complete overview is returned and kept as
+     * [overview] keeps it, so the cache, the offline file and the monitor only see complete ones.
+     */
+    suspend fun overview(onPartial: (ClusterOverview) -> Unit): ClusterOverview =
+        remember(OVERVIEW, persistable = { it.outage == null && !it.partial }) { last ->
+            val target = go.talosTarget()
+            val targets = target.activeSummary?.overviewTargets().orEmpty()
+            val fresh = overviewStream(target).collectOverview(target.activeContext, targets, onPartial)
+            val previous = last()
+            fresh.withLastKnown(previous?.value, previous?.at ?: 0L)
+        }
+
+    /** StartClusterOverview: each node as it answers, then the complete overview; closing the flow stops it. */
+    fun overviewStream(): Flow<OverviewPart> = overviewStream(go.talosTarget())
+
+    private fun overviewStream(target: StoredConfig): Flow<OverviewPart> = callbackFlow {
+        StartupTrace.markOnce("go clusterOverview start")
+        val run = Ichorgo.startClusterOverview(
+            target.yaml,
+            target.activeContext,
+            object : OverviewListener {
+                override fun onNode(json: String) {
+                    runCatching { TalosJson.decodeFromString(NodeOverview.serializer(), json) }
+                        .onSuccess { trySend(OverviewPart.Node(it)) }
+                }
+
+                override fun onDone(overviewJSON: String, errMessage: String) {
+                    StartupTrace.markOnce("go clusterOverview end")
+                    if (errMessage.isNotEmpty()) {
+                        close(Exception(errMessage))
+                        return
+                    }
+                    runCatching { TalosJson.decodeFromString(ClusterOverview.serializer(), overviewJSON) }
+                        .onSuccess { trySend(OverviewPart.Done(it)); close() }
+                        .onFailure { close(it) }
+                }
+            },
+        )
+        awaitClose { run.stop() }
+    }.buffer(Channel.UNLIMITED).flowOn(Dispatchers.IO)
 
     private suspend fun overviewUncached(): ClusterOverview = call { cfg, ctx ->
         StartupTrace.markOnce("go clusterOverview start")
