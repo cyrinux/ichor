@@ -4914,6 +4914,7 @@
     <string name="capacity_loss_pending_title">Restent Pending</string>
     <string name="capacity_loss_pending_cpu">pas assez de CPU</string>
     <string name="capacity_loss_pending_memory">pas assez de mémoire</string>
+    <string name="capacity_loss_pending_ephemeral">pas assez de stockage éphémère</string>
     <string name="capacity_loss_pending_pods">plus de place de pod</string>
     <string name="capacity_loss_suggestions_title">Pour faire de la place, réduire</string>
     <string name="capacity_loss_suggestion">Passer %1$s de %2$s à %3$s</string>

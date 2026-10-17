@@ -48,6 +48,7 @@ fun QosClass.label(): String = when (this) {
 fun pendingReasonText(reason: String): String = when (reason) {
     "cpu" -> stringResource(R.string.capacity_loss_pending_cpu)
     "memory" -> stringResource(R.string.capacity_loss_pending_memory)
+    "ephemeral" -> stringResource(R.string.capacity_loss_pending_ephemeral)
     else -> stringResource(R.string.capacity_loss_pending_pods)
 }
 

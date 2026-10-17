@@ -19,9 +19,10 @@ const systemPriority = 1_000_000_000
 
 // Why a pod stays Pending: the first resource no remaining node has room for.
 const (
-	pendingPods   = "pods"
-	pendingMemory = "memory"
-	pendingCPU    = "cpu"
+	pendingPods      = "pods"
+	pendingMemory    = "memory"
+	pendingEphemeral = "ephemeral"
+	pendingCPU       = "cpu"
 )
 
 // nodeLossAssumptions say what the simulation leaves out, for the apps to word it as an estimate.
@@ -79,7 +80,7 @@ type nodeLossPending struct {
 	Priority          int32  `json:"priority"`
 	PriorityClassName string `json:"priorityClassName"`
 	QoS               string `json:"qos"`
-	Reason            string `json:"reason"` // cpu, memory or pods
+	Reason            string `json:"reason"` // pods, memory, ephemeral or cpu
 }
 
 // nodeLossSuggestion: scale Kind/Namespace/Name from Replicas to ScaleTo. PDBBlocks: its
@@ -575,15 +576,18 @@ func (b disruptionBudget) take(e simPod) bool {
 	return allowed <= 0
 }
 
-// pendingReason is the first resource no remaining node has: a pod slot, then memory, then CPU.
+// pendingReason is the first resource no remaining node has: a pod slot, then memory, then
+// ephemeral storage (only on nodes that say theirs, for a pod that requests some), then CPU.
 func pendingReason(room []simNode, p simPod) string {
-	slot, memory := false, false
+	slot, memory, ephemeral := false, false, false
 
 	for _, n := range room {
-		if n.slots > 0 {
-			slot = true
-			memory = memory || n.memory >= p.Memory
+		if n.slots > 0 && n.memory >= p.Memory {
+			memory = true
+			ephemeral = ephemeral || !n.ephemeralKnown || p.Ephemeral <= 0 || n.ephemeral >= p.Ephemeral
 		}
+
+		slot = slot || n.slots > 0
 	}
 
 	switch {
@@ -591,6 +595,8 @@ func pendingReason(room []simNode, p simPod) string {
 		return pendingPods
 	case !memory:
 		return pendingMemory
+	case !ephemeral:
+		return pendingEphemeral
 	default:
 		return pendingCPU
 	}
