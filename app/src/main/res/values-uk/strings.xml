@@ -4731,6 +4731,7 @@
     <string name="imagescan_system_unavailable">Системні образи потребують ролі os:admin: %1$s</string>
     <string name="imagescan_system_hint">Перевіряє за digest образи, які Talos запускає на цьому вузлі (kubelet, etcd, площина керування), на відомі вразливості за допомогою %1$s. Працює як Job у просторі імен %2$s, який потім видаляє себе.</string>
     <string name="imagescan_system_scan">Перевірити системні образи</string>
+    <string name="imagescan_object_refs_note">Скановано за посиланнями на образи зі специфікації цього навантаження: знахідки стосуються цих тегів, а не обов\'язково того, що працює зараз.</string>
     <string name="images_kubernetes_title">Образи Kubernetes</string>
     <string name="alert_action_wake">Розбудити</string>
     <string name="alert_action_silence_hour">Заглушити на 1 год</string>

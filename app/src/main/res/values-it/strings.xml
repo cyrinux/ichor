@@ -4498,6 +4498,7 @@
     <string name="imagescan_system_unavailable">Le immagini di sistema richiedono il ruolo os:admin: %1$s</string>
     <string name="imagescan_system_hint">Controlla con %1$s, per digest, le vulnerabilità note delle immagini che Talos esegue su questo nodo (kubelet, etcd, il control plane). Viene eseguito come Job nel namespace %2$s, che poi si elimina.</string>
     <string name="imagescan_system_scan">Analizza le immagini di sistema</string>
+    <string name="imagescan_object_refs_note">Analisi per i riferimenti alle immagini nella spec di questo carico: i risultati riguardano quei tag, non per forza ciò che è in esecuzione ora.</string>
     <string name="images_kubernetes_title">Immagini Kubernetes</string>
     <string name="alert_action_wake">Risveglia</string>
     <string name="alert_action_silence_hour">Silenzia 1 h</string>

@@ -1,6 +1,41 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Scanned by the image references in this workload's spec: the findings are for those tags, not necessarily what runs right now." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gescannt nach den Image-Referenzen in der Spec dieser Workload: Die Funde gelten für diese Tags, nicht unbedingt für das, was gerade läuft."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Análisis por las referencias de imagen de la spec de esta carga: los hallazgos son de esas etiquetas, no necesariamente de lo que se ejecuta ahora."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyse par les références d'image de la spec de cette charge : les résultats portent sur ces tags, pas forcément sur ce qui tourne en ce moment."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analisi per i riferimenti alle immagini nella spec di questo carico: i risultati riguardano quei tag, non per forza ciò che è in esecuzione ora."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скановано за посиланнями на образи зі специфікації цього навантаження: знахідки стосуються цих тегів, а не обов'язково того, що працює зараз."
+          }
+        }
+      }
+    },
     "Also reached as" : {
       "extractionState" : "manual",
       "localizations" : {

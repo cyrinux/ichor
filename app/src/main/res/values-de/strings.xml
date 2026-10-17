@@ -4489,6 +4489,7 @@
     <string name="imagescan_system_unavailable">System-Images erfordern die Rolle os:admin: %1$s</string>
     <string name="imagescan_system_hint">Prüft die Images, die Talos auf diesem Knoten ausführt (kubelet, etcd, die Control Plane), per Digest mit %1$s auf bekannte Schwachstellen. Läuft als Job im Namespace %2$s, der sich danach selbst löscht.</string>
     <string name="imagescan_system_scan">System-Images prüfen</string>
+    <string name="imagescan_object_refs_note">Gescannt nach den Image-Referenzen in der Spec dieser Workload: Die Funde gelten für diese Tags, nicht unbedingt für das, was gerade läuft.</string>
     <string name="images_kubernetes_title">Kubernetes-Images</string>
     <string name="alert_action_wake">Wecken</string>
     <string name="alert_action_silence_hour">1 Std. stummschalten</string>
