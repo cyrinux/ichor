@@ -61,9 +61,16 @@ Loading is strict:
 ### Data services
 
 A data service is one of three forms:
-* `aggregate` alone, over resources: `count(res)`, `count(res, pred)`, `sum(res, expr)`, `min`, `max`, and `worst(res.health)`, with `health` for the data service's own health;
-* `from` + `groupBy` + `aggregate`: one element per group, where `count()`, `count(pred)` and `sum(expr)` run over the group's objects and `$.key` is the group's key;
-* `from` + `where` + `select`: one element per kept object, with the selected names.
+* `aggregate` alone, over resources: `count(res)`, `count(res, pred)`, `sum(res, expr)`, `min(res, expr)`, `max(res, expr)`, and `worst(res.health)` (or `worst(res, expr)`), with `health` for the data service's own health. It is a map of the aggregates, plus `health`;
+* `from` + `groupBy` + `aggregate`: one element per group, sorted by key, where `count()`, `count(pred)`, `sum(expr)`, `min(expr)`, `max(expr)` and `worst(expr)` run over the group's objects and `$.key` is the group's key;
+* `from` + `where` + `select`: one element per kept object, with the selected names; a card row of it still opens its object.
+
+The predicate or expression of an aggregation is evaluated once per object, with that object
+as `$` and its `fields` and `health`. `count` counts the objects it holds for, `sum` adds the
+numbers (an int while every one is), `min` and `max` are null without a number, and `worst`
+is the worst tone (`ok` < `idle` < `info` < `unknown` < `warning` < `critical`; `ok` when
+there is none). Given a value instead of a resource (`count([…])`, `worst([dataServices.a.health,
+dataServices.b.health])`), they read its elements.
 
 ### Row details
 
@@ -94,6 +101,70 @@ An expression is a YAML scalar, so YAML reads it first:
 
 Problems are reported as `file:line`, and with the column when the expression sits on one
 line.
+
+## Render tree
+
+`KubePluginData(config, context, kubeServer, pluginID, scope, locale)` reads the plugin's
+resources (a namespace `scope`, `""` for all; cluster-scoped resources ignore it) and returns
+one JSON tree; the apps draw it and evaluate nothing. The demo context renders the
+`samples`. `KubePluginDetect(config, context, kubeServer, hints)` lists every plugin as
+`{id, name, icon, category, screen, active, detectedVia, summary}`, the summary being the
+tile below for an active plugin and `null` otherwise. Examples: the goldens in
+`go/plugin/testdata/render/` (`kube-green-cluster.json` is read from a fake API server,
+`*-samples.json` and `widgets-fr.json` from samples).
+
+```json
+{
+  "plugin": {"id": "kube-green", "name": "kube-green", "icon": "kube-green", "category": "data-services", "version": "v1alpha1", "screen": "", "website": "…"},
+  "active": true, "detectedVia": "api", "apiVersion": "v1alpha1",
+  "health": "warning",
+  "summary": {"title": "2 sleep schedules", "health": "warning", "badges": [{"label": "asleep", "value": "1", "tone": "info"}]},
+  "cards": [{"id": "list", "type": "list", "empty": "No sleep schedules.", "rows": [
+    {"ref": {"group": "kube-green.com", "version": "v1alpha1", "resource": "sleepinfos", "namespace": "demo-lab", "name": "weekend"},
+     "title": "weekend", "subtitle": "demo-lab", "status": {"tone": "warning", "text": "Asleep"}, "trailing": {"text": "never"},
+     "health": {"tone": "warning", "reason": "asleep-no-wakeup", "message": "asleep until changed by hand"},
+     "detail": [{"type": "keyValues", "items": [{"label": "Sleep at", "value": "00:00"}]}]}
+  ]}],
+  "findings": [{"id": "asleep-no-wakeup", "severity": "warning", "title": "…", "detail": "…", "ref": {"…": "…"}, "opens": "list"}],
+  "errors": [{"resource": "secrets", "message": "Kubernetes API: permission denied: forbidden"}]
+}
+```
+
+* `detectedVia` is `api`, `pods`, `services`, `inventory` (the hints) or `demo`; `""` when
+  the product is not there (`active: false`, nothing is listed, the cards are empty).
+* `apiVersion` is the version read for the first detected group (`preferred` resolved).
+* `health` is the summary's health: its `health` expression, else the worst object's.
+* An object's health is the first matching rule's. An object of a resource without rules
+  gets the object summary's reading of its conditions and phase; one that no rule matches is
+  `ok`. Rows of objects carry `ref` and `health`. Without `status.tone`, a row's status tone
+  is its health.
+* Rows of a data service carry no `health`, and carry a `ref` only for a `select`.
+* `sort` orders `health` by severity, numbers by value, the rest as text (null first).
+* Booleans read `yes`/`no`, numbers keep at most two decimals, lists join with `, `.
+* Section payloads:
+
+  | type | payload |
+  | -- | -- |
+  | `keyValues` | `items[{label, value, tone?, mono?}]` |
+  | `badges` | `items[{label, value?, tone}]`; `on` lights a badge (`ok`, or its `tone`) or dims it (`idle`) |
+  | `gauge` | `{label, value, max, unit, tone, text}`; without `text`, the two values in `unit` (`bytes`, `percent` or a word) |
+  | `conditions` | `items[{type, status, reason, message, tone, lastTransition}]`; left out when the object has none |
+  | `relations` | `items[{label, ref, text?}]`; an absent object is left out, and so is the section when none is left |
+  | `table` | `columns[{label}]`, `rows[[cell]]` |
+  | `text` | `{text, tone?, mono?}` |
+  | `actions` | `items[{id, label, enabled, confirm, disabledReason?, params[]}]`; `allowed` comes with the actions step |
+
+* `i18n`: the locale's map (`pt-BR` falls back to `pt`) translates labels, `empty`, the
+  summary's `one`/`other`, action labels, templates (health messages, finding texts,
+  `disabledReason`) and a row's `status.text`. Values read from objects are never
+  translated.
+* Reads: each resource is listed page by page with its selectors, at most `list.limit`
+  objects (500 by default); more is an `errors` entry ("showing the first N …"). A
+  resource that cannot be read (forbidden, not served) is an `errors` entry with the
+  resource named, and the rest still renders. Secrets are masked unless `reveal`.
+* A value that fails to evaluate reads empty and is reported once in `errors` with `where`
+  (`fields.widget.size`).
+* `just probe plugin-render ID [-scope NS] [-locale xx] -context CTX` prints the tree.
 
 ## Expressions
 

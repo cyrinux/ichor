@@ -1,6 +1,7 @@
 package expr
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"time"
@@ -451,6 +452,10 @@ func (e *evaluator) evalCall(n *call) (Value, error) {
 		return nil, e.errorf(n, "%s takes %s, got %d", n.fn, fn.arity(), len(n.args))
 	}
 
+	if fn.Lazy != nil {
+		return e.evalLazy(n, fn)
+	}
+
 	args := make([]Value, len(n.args))
 	for i, a := range n.args {
 		v, err := e.eval(a)
@@ -477,6 +482,26 @@ func (e *evaluator) evalCall(n *call) (Value, error) {
 
 	if s, ok := v.(string); ok && len(s) > MaxStringLen {
 		return nil, e.errorf(n, "%s returns a string longer than 64 KiB", n.fn)
+	}
+
+	return v, e.charge(n, v)
+}
+
+// evalLazy calls a Lazy function with its arguments unevaluated.
+func (e *evaluator) evalLazy(n *call, fn Func) (Value, error) {
+	args := make([]Arg, len(n.args))
+	for i, a := range n.args {
+		args[i] = Arg{n: a, e: e}
+	}
+
+	v, err := fn.Lazy(Ctx{Env: e.env, Now: e.clock()}, args)
+	if err != nil {
+		var exprErr *Error
+		if errors.As(err, &exprErr) {
+			return nil, err
+		}
+
+		return nil, e.errorf(n, "%s: %v", n.fn, err)
 	}
 
 	return v, e.charge(n, v)

@@ -1,0 +1,234 @@
+{
+  "plugin": {
+    "id": "kube-green",
+    "name": "kube-green",
+    "icon": "kube-green",
+    "category": "data-services",
+    "version": "v1alpha1",
+    "screen": "",
+    "website": "https://kube-green.dev"
+  },
+  "active": true,
+  "detectedVia": "api",
+  "apiVersion": "v1alpha1",
+  "health": "warning",
+  "summary": {
+    "title": "2 sleep schedules",
+    "health": "warning",
+    "badges": [
+      {
+        "label": "asleep",
+        "value": "1",
+        "tone": "info"
+      },
+      {
+        "label": "warnings",
+        "value": "1",
+        "tone": "warning"
+      }
+    ]
+  },
+  "cards": [
+    {
+      "id": "list",
+      "type": "list",
+      "empty": "Aucun horaire de veille.",
+      "rows": [
+        {
+          "ref": {
+            "group": "kube-green.com",
+            "version": "v1alpha1",
+            "resource": "sleepinfos",
+            "namespace": "demo-lab",
+            "name": "weekend"
+          },
+          "title": "weekend",
+          "subtitle": "demo-lab",
+          "status": {
+            "tone": "warning",
+            "text": "Endormi"
+          },
+          "trailing": {
+            "text": "never"
+          },
+          "health": {
+            "tone": "warning",
+            "reason": "asleep-no-wakeup",
+            "message": "asleep until changed by hand"
+          },
+          "detail": [
+            {
+              "type": "keyValues",
+              "items": [
+                {
+                  "label": "Weekdays",
+                  "value": "6,0"
+                },
+                {
+                  "label": "Sleep at",
+                  "value": "00:00"
+                },
+                {
+                  "label": "Wake up at"
+                },
+                {
+                  "label": "Time zone",
+                  "value": "UTC"
+                },
+                {
+                  "label": "Last run",
+                  "value": "5d ago"
+                }
+              ]
+            },
+            {
+              "type": "badges",
+              "items": [
+                {
+                  "label": "Deployments",
+                  "tone": "ok"
+                },
+                {
+                  "label": "StatefulSets",
+                  "tone": "ok"
+                },
+                {
+                  "label": "CronJobs",
+                  "tone": "idle"
+                }
+              ]
+            },
+            {
+              "type": "actions",
+              "items": [
+                {
+                  "id": "wakeNow",
+                  "label": "Réveiller maintenant",
+                  "enabled": true,
+                  "confirm": "plain"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": {
+            "group": "kube-green.com",
+            "version": "v1alpha1",
+            "resource": "sleepinfos",
+            "namespace": "demo-shop",
+            "name": "nightly"
+          },
+          "title": "nightly",
+          "subtitle": "demo-shop",
+          "status": {
+            "tone": "ok",
+            "text": "Awake"
+          },
+          "trailing": {
+            "text": "in 3d"
+          },
+          "health": {
+            "tone": "ok"
+          },
+          "detail": [
+            {
+              "type": "keyValues",
+              "items": [
+                {
+                  "label": "Weekdays",
+                  "value": "1-5"
+                },
+                {
+                  "label": "Sleep at",
+                  "value": "20:00"
+                },
+                {
+                  "label": "Wake up at",
+                  "value": "08:00"
+                },
+                {
+                  "label": "Time zone",
+                  "value": "Europe/Paris"
+                },
+                {
+                  "label": "Last run",
+                  "value": "30h ago"
+                }
+              ]
+            },
+            {
+              "type": "badges",
+              "items": [
+                {
+                  "label": "Deployments",
+                  "tone": "ok"
+                },
+                {
+                  "label": "StatefulSets",
+                  "tone": "ok"
+                },
+                {
+                  "label": "CronJobs",
+                  "tone": "idle"
+                }
+              ]
+            },
+            {
+              "type": "actions",
+              "items": [
+                {
+                  "id": "wakeNow",
+                  "label": "Réveiller maintenant",
+                  "enabled": false,
+                  "confirm": "plain",
+                  "disabledReason": "not asleep"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "namespaces",
+      "type": "list",
+      "rows": [
+        {
+          "title": "demo-lab",
+          "trailing": {
+            "text": "1"
+          }
+        },
+        {
+          "title": "demo-shop",
+          "trailing": {
+            "text": "1"
+          }
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "asleep-no-wakeup",
+      "severity": "warning",
+      "title": "weekend sleeps with no wake-up time",
+      "detail": "demo-lab/weekend: asleep until changed by hand",
+      "ref": {
+        "group": "kube-green.com",
+        "version": "v1alpha1",
+        "resource": "sleepinfos",
+        "namespace": "demo-lab",
+        "name": "weekend"
+      },
+      "opens": "list"
+    }
+  ],
+  "errors": [
+    {
+      "resource": "secrets",
+      "message": "Kubernetes API: permission denied: forbidden"
+    }
+  ]
+}

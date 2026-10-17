@@ -1,0 +1,433 @@
+{
+  "plugin": {
+    "id": "demo-widgets",
+    "name": "Demo Widgets",
+    "icon": "",
+    "category": "workloads",
+    "version": "v1alpha1",
+    "screen": ""
+  },
+  "active": true,
+  "detectedVia": "demo",
+  "apiVersion": "v2",
+  "health": "critical",
+  "summary": {
+    "title": "3 widgets",
+    "health": "critical",
+    "badges": [
+      {
+        "label": "replicas",
+        "value": "6",
+        "tone": "info"
+      },
+      {
+        "label": "gadgets",
+        "value": "2",
+        "tone": "idle"
+      }
+    ]
+  },
+  "cards": [
+    {
+      "id": "widgets",
+      "type": "list",
+      "empty": "Aucun widget.",
+      "rows": [
+        {
+          "ref": {
+            "group": "widgets.example.com",
+            "version": "v2",
+            "resource": "widgets",
+            "namespace": "demo-shop",
+            "name": "beta"
+          },
+          "title": "beta",
+          "subtitle": "demo-shop",
+          "status": {
+            "tone": "critical",
+            "text": "Failed"
+          },
+          "trailing": {
+            "text": "512 MiB"
+          },
+          "health": {
+            "tone": "critical",
+            "reason": "failed",
+            "message": "disk full"
+          },
+          "detail": [
+            {
+              "type": "gauge",
+              "label": "Utilisé",
+              "value": 0,
+              "max": 536870912,
+              "unit": "bytes",
+              "tone": "ok",
+              "text": "0 B / 512 MiB"
+            },
+            {
+              "type": "gauge",
+              "label": "Replicas",
+              "value": 1,
+              "max": 10,
+              "tone": "ok",
+              "text": "1 / 10"
+            },
+            {
+              "type": "text",
+              "tone": "info",
+              "text": "beta has 1 replicas",
+              "mono": true
+            },
+            {
+              "type": "conditions",
+              "items": [
+                {
+                  "type": "Ready",
+                  "status": "False",
+                  "reason": "DiskFull",
+                  "message": "no space left",
+                  "tone": "critical",
+                  "lastTransition": 0
+                }
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                {
+                  "label": "Namespace"
+                },
+                {
+                  "label": "Widgets"
+                }
+              ],
+              "rows": [
+                [
+                  "demo-lab",
+                  "1"
+                ],
+                [
+                  "demo-shop",
+                  "2"
+                ]
+              ]
+            },
+            {
+              "type": "keyValues",
+              "items": [
+                {
+                  "label": "Broken"
+                },
+                {
+                  "label": "Ready",
+                  "value": "non",
+                  "tone": "critical",
+                  "mono": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": {
+            "group": "widgets.example.com",
+            "version": "v2",
+            "resource": "widgets",
+            "namespace": "demo-lab",
+            "name": "gamma"
+          },
+          "title": "gamma",
+          "subtitle": "demo-lab",
+          "status": {
+            "tone": "warning",
+            "text": "Pending"
+          },
+          "trailing": {
+            "text": "2 GiB"
+          },
+          "health": {
+            "tone": "warning",
+            "reason": "not-ready"
+          },
+          "detail": [
+            {
+              "type": "gauge",
+              "label": "Utilisé",
+              "value": 0,
+              "max": 2147483648,
+              "unit": "bytes",
+              "tone": "ok",
+              "text": "0 B / 2 GiB"
+            },
+            {
+              "type": "gauge",
+              "label": "Replicas",
+              "value": 3,
+              "max": 10,
+              "tone": "ok",
+              "text": "3 / 10"
+            },
+            {
+              "type": "text",
+              "tone": "info",
+              "text": "gamma has 3 replicas",
+              "mono": true
+            },
+            {
+              "type": "conditions",
+              "items": [
+                {
+                  "type": "Ready",
+                  "status": "False",
+                  "reason": "",
+                  "message": "",
+                  "tone": "critical",
+                  "lastTransition": 0
+                }
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                {
+                  "label": "Namespace"
+                },
+                {
+                  "label": "Widgets"
+                }
+              ],
+              "rows": [
+                [
+                  "demo-lab",
+                  "1"
+                ],
+                [
+                  "demo-shop",
+                  "2"
+                ]
+              ]
+            },
+            {
+              "type": "keyValues",
+              "items": [
+                {
+                  "label": "Broken"
+                },
+                {
+                  "label": "Ready",
+                  "value": "non",
+                  "tone": "critical",
+                  "mono": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": {
+            "group": "widgets.example.com",
+            "version": "v2",
+            "resource": "widgets",
+            "namespace": "demo-shop",
+            "name": "alpha"
+          },
+          "title": "alpha",
+          "subtitle": "demo-shop",
+          "status": {
+            "tone": "ok",
+            "text": "En marche"
+          },
+          "trailing": {
+            "text": "1 GiB"
+          },
+          "health": {
+            "tone": "ok"
+          },
+          "detail": [
+            {
+              "type": "gauge",
+              "label": "Utilisé",
+              "value": 1048576000,
+              "max": 1073741824,
+              "unit": "bytes",
+              "tone": "warning",
+              "text": "1000 MiB / 1 GiB"
+            },
+            {
+              "type": "gauge",
+              "label": "Replicas",
+              "value": 2,
+              "max": 10,
+              "tone": "ok",
+              "text": "2 / 10"
+            },
+            {
+              "type": "text",
+              "tone": "info",
+              "text": "alpha has 2 replicas",
+              "mono": true
+            },
+            {
+              "type": "conditions",
+              "items": [
+                {
+                  "type": "Ready",
+                  "status": "True",
+                  "reason": "",
+                  "message": "",
+                  "tone": "ok",
+                  "lastTransition": 1792058400000
+                }
+              ]
+            },
+            {
+              "type": "relations",
+              "items": [
+                {
+                  "label": "Gadget",
+                  "ref": {
+                    "group": "widgets.example.com",
+                    "version": "v1",
+                    "resource": "gadgets",
+                    "namespace": "",
+                    "name": "hub"
+                  },
+                  "text": "HUB"
+                }
+              ]
+            },
+            {
+              "type": "table",
+              "columns": [
+                {
+                  "label": "Namespace"
+                },
+                {
+                  "label": "Widgets"
+                }
+              ],
+              "rows": [
+                [
+                  "demo-lab",
+                  "1"
+                ],
+                [
+                  "demo-shop",
+                  "2"
+                ]
+              ]
+            },
+            {
+              "type": "keyValues",
+              "items": [
+                {
+                  "label": "Broken"
+                },
+                {
+                  "label": "Ready",
+                  "value": "oui",
+                  "tone": "ok",
+                  "mono": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "failing",
+      "type": "list",
+      "rows": [
+        {
+          "ref": {
+            "group": "widgets.example.com",
+            "version": "v2",
+            "resource": "widgets",
+            "namespace": "demo-shop",
+            "name": "beta"
+          },
+          "title": "beta",
+          "status": {
+            "tone": "critical",
+            "text": "Failed"
+          }
+        },
+        {
+          "ref": {
+            "group": "widgets.example.com",
+            "version": "v2",
+            "resource": "widgets",
+            "namespace": "demo-lab",
+            "name": "gamma"
+          },
+          "title": "gamma",
+          "status": {
+            "tone": "critical",
+            "text": "Pending"
+          }
+        }
+      ]
+    },
+    {
+      "id": "gadgets",
+      "type": "list",
+      "rows": [
+        {
+          "ref": {
+            "group": "widgets.example.com",
+            "version": "v1",
+            "resource": "gadgets",
+            "namespace": "",
+            "name": "hub"
+          },
+          "title": "hub",
+          "health": {
+            "tone": "ok"
+          }
+        },
+        {
+          "ref": {
+            "group": "widgets.example.com",
+            "version": "v1",
+            "resource": "gadgets",
+            "namespace": "",
+            "name": "spoke"
+          },
+          "title": "spoke",
+          "health": {
+            "tone": "critical",
+            "message": "Failed"
+          }
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "widget-failed",
+      "severity": "critical",
+      "title": "beta failed",
+      "detail": "demo-shop/beta: disk full (failed)",
+      "ref": {
+        "group": "widgets.example.com",
+        "version": "v2",
+        "resource": "widgets",
+        "namespace": "demo-shop",
+        "name": "beta"
+      },
+      "opens": "widgets"
+    }
+  ],
+  "errors": [
+    {
+      "resource": "gadgets",
+      "message": "forbidden"
+    },
+    {
+      "where": "fields.widget.broken",
+      "message": "1:17: cannot apply - to int and string (in \"fields.replicas - $.metadata.name\")"
+    }
+  ]
+}

@@ -321,6 +321,16 @@ func toString(v Value) string {
 	}
 }
 
+// Display is a value's display form, as a template writes it: "" for null, a list's
+// elements joined by ", ", JSON for a map.
+func Display(v Value) string { return toString(v) }
+
+// Truthy is how a condition reads a value: null, false, 0, "" and empty lists and maps are false.
+func Truthy(v Value) bool { return truthy(normalize(v)) }
+
+// Normalize maps a decoded value onto the Value set (integral numbers are int64).
+func Normalize(v any) Value { return normalize(v) }
+
 // joinBounded joins the elements' display forms and stops once past MaxStringLen: the caller
 // sees a string over the limit and reports it, without the whole string being built.
 func joinBounded(list []any, sep string) string {

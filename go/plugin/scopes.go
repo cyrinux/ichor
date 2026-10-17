@@ -10,16 +10,11 @@ import (
 // functions it may use. Fields are evaluated in file order (a field sees the earlier ones),
 // health after the fields, data services after the objects, cards and findings last.
 
-// Aggregations exist only in data services: over a resource (count(res), count(res, pred),
-// sum(res, expr), min, max, worst(res.health)), or over a group (count(), count(pred), …).
-// The runtime defines what they do; here they only have to be known with their arity.
-var aggregations = map[string]expr.Func{
-	"count": {Min: 0, Max: 2, Returns: expr.KindNumber},
-	"sum":   {Min: 1, Max: 2, Returns: expr.KindNumber},
-	"min":   {Min: 1, Max: 2, Returns: expr.KindNumber},
-	"max":   {Min: 1, Max: 2, Returns: expr.KindNumber},
-	"worst": {Min: 1, Max: 1, Returns: expr.KindString},
-}
+// Aggregations exist only in data services (aggregate.go).
+
+// relationJoin is join(resource, predicate) in a field: it returns an object, not the string
+// join(list, separator) of the library.
+var relationJoin = map[string]expr.Func{"join": {Min: 2, Max: 2, Returns: expr.KindUnknown}}
 
 // fieldScope: one object, the fields declared before this one, and the resources by key for
 // join(resource, predicate), whose predicate sees left (the object) and $ (a candidate).
@@ -28,6 +23,7 @@ func fieldScope(resources, earlier []string) expr.Scope {
 		Names:  []string{"fields", "conditions", "now", "left"},
 		Fields: nonNil(earlier),
 		Vars:   resources,
+		Funcs:  relationJoin,
 	}
 }
 

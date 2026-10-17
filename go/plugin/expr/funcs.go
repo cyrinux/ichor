@@ -38,7 +38,50 @@ type Func struct {
 	Min, Max int  // arity; Max < 0 is variadic
 	Returns  Kind // for Check; KindUnknown when it depends on the arguments
 	Call     func(ctx Ctx, args []Value) (Value, error)
+	// Lazy, when set, replaces Call and receives its arguments unevaluated: an aggregation
+	// evaluates a predicate once per object, with that object's Env.
+	Lazy func(ctx Ctx, args []Arg) (Value, error)
 }
+
+// Arg is an argument of a Lazy function, not evaluated yet.
+type Arg struct {
+	n node
+	e *evaluator // the call's: its Env, @ and step budget
+}
+
+// Value evaluates the argument where the call is written, as an eager argument would be.
+func (a Arg) Value() (Value, error) { return a.e.eval(a.n) }
+
+// Eval evaluates the argument with env (one object of an aggregation, a join candidate…),
+// @ still the element of an enclosing filter, with a budget of its own: the caller's loop
+// is bounded by its data, not by the expression.
+func (a Arg) Eval(env Env) (Value, error) {
+	e := evaluator{env: &env, src: a.e.src, at: append([]any(nil), a.e.at...), now: a.e.now}
+
+	return e.eval(a.n)
+}
+
+// Path is the argument's names when it is a bare name or a chain of keys on one
+// (sleepinfo, sleepinfo.health), nil otherwise.
+func (a Arg) Path() []string {
+	var keys []string
+
+	n := a.n
+	for {
+		switch x := n.(type) {
+		case *name:
+			return append([]string{x.id}, keys...)
+		case *member:
+			keys = append([]string{x.key}, keys...)
+			n = x.x
+		default:
+			return nil
+		}
+	}
+}
+
+// String is the argument's source position, for error messages.
+func (a Arg) String() string { return a.n.pos().String() }
 
 func (f Func) accepts(n int) bool { return n >= f.Min && (f.Max < 0 || n <= f.Max) }
 
@@ -61,6 +104,13 @@ var registry = map[string]Func{}
 // Register adds or replaces a function. Call it from an init function: the registry is not
 // safe for writes concurrent with evaluation.
 func Register(name string, fn Func) { registry[name] = fn }
+
+// Library is the library function name (not a Scope's own).
+func Library(name string) (Func, bool) {
+	fn, ok := registry[name]
+
+	return fn, ok
+}
 
 // lookup finds a function among the local ones (a Scope's or an Env's Funcs) first, then the
 // library.

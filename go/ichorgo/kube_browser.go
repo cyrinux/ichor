@@ -353,24 +353,7 @@ func objectYAML(obj map[string]any, ref resourceRef, reveal bool) (string, error
 	}
 
 	if ref.group == "" && ref.resource == "secrets" && !reveal {
-		for _, field := range []string{"data", "stringData"} {
-			values, ok := obj[field].(map[string]any)
-			if !ok {
-				continue
-			}
-
-			for key, v := range values {
-				s, _ := v.(string)
-				values[key] = fmt.Sprintf("<hidden, %d characters>", len(s))
-			}
-		}
-
-		if meta, ok := obj["metadata"].(map[string]any); ok {
-			if annotations, ok := meta["annotations"].(map[string]any); ok {
-				// kubectl apply keeps the whole Secret, values included, in this annotation.
-				delete(annotations, "kubectl.kubernetes.io/last-applied-configuration")
-			}
-		}
+		maskSecretValues(obj)
 	}
 
 	data, err := yaml.Marshal(obj)
@@ -379,6 +362,28 @@ func objectYAML(obj map[string]any, ref resourceRef, reveal bool) (string, error
 	}
 
 	return string(data), nil
+}
+
+// maskSecretValues replaces a Secret's values by their size, in place.
+func maskSecretValues(obj map[string]any) {
+	for _, field := range []string{"data", "stringData"} {
+		values, ok := obj[field].(map[string]any)
+		if !ok {
+			continue
+		}
+
+		for key, v := range values {
+			s, _ := v.(string)
+			values[key] = fmt.Sprintf("<hidden, %d characters>", len(s))
+		}
+	}
+
+	if meta, ok := obj["metadata"].(map[string]any); ok {
+		if annotations, ok := meta["annotations"].(map[string]any); ok {
+			// kubectl apply keeps the whole Secret, values included, in this annotation.
+			delete(annotations, "kubectl.kubernetes.io/last-applied-configuration")
+		}
+	}
 }
 
 func demoAPIResources() kubeBrowserResourceList {
