@@ -91,11 +91,12 @@ internal fun CronJobCard(
             val access = rememberKubeActionAccess(cronJob.namespace)
             val suspendDenial = access?.denial(KubeAction.SUSPEND_CRON_JOB)
             val runDenial = access?.denial(KubeAction.TRIGGER_CRON_JOB)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    RunHistoryStrip(cronJob.runs)
-                    LastRunText(cronJob.runs.firstOrNull())
-                }
+            // On its own line: beside five actions the text had about 40dp and broke after every word.
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                RunHistoryStrip(cronJob.runs)
+                LastRunText(cronJob.runs.firstOrNull())
+            }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
                 PinButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), cronJob.name)
                 ShareLinkButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), icon = Icons.Outlined.Link)
                 AddToHomeButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), cronJob.name)
@@ -154,7 +155,8 @@ private fun CronJobTiming(cronJob: KubeCronJob) {
             cronJob.suspended -> MetaChip(Icons.Outlined.PauseCircle, stringResource(R.string.cronjobs_suspended), LocalStatusColors.current.warn)
             // Not from cached data that has gone by.
             cronJob.nextRun > System.currentTimeMillis() -> {
-                val next = timeAgo(cronJob.nextRun)
+                // Mid-sentence: "next in 3 minutes", not the "In 3 minutes" the platform gives.
+                val next = timeAgo(cronJob.nextRun).replaceFirstChar { it.lowercase() }
                 MetaChip(Icons.Outlined.Update, stringResource(R.string.cronjobs_next_run, next))
             }
         }
