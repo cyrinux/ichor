@@ -35,6 +35,23 @@ data class FluxDiff(
     val newRevision: Boolean get() = revision.isNotEmpty() && applied.isNotEmpty() && revision != applied
 }
 
+/**
+ * The changed objects of [refs] (an Argo CD selective sync), or all of them when [refs] is
+ * empty. Core kinds may come with an empty group or "core" on either side: then kind,
+ * namespace and name decide. Cluster-scoped objects have an empty namespace on both.
+ */
+fun FluxDiff.forResources(refs: List<ArgoResourceRef>): List<KubeDiffResource> {
+    if (refs.isEmpty()) return changed
+    return changed.filter { r -> refs.any { it.matches(r) } }
+}
+
+private fun ArgoResourceRef.matches(r: KubeDiffResource): Boolean {
+    if (kind != r.kind || namespace != r.namespace || name != r.name) return false
+    val a = group.takeUnless { it == "core" }.orEmpty()
+    val b = r.group.takeUnless { it == "core" }.orEmpty()
+    return a.isEmpty() || b.isEmpty() || a == b
+}
+
 /** One object of a diff. */
 @Serializable
 data class KubeDiffResource(

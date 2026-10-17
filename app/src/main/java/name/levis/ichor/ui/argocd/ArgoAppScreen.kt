@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -64,6 +65,8 @@ import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.shortRevision
 import name.levis.ichor.model.waveSteps
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.uiStateOf
+import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.node.HostnameConfirmDialog
@@ -192,9 +195,15 @@ private fun AppDetail(
     }
 
     if (sheet) {
+        // Loaded once per opening, cancelled when the sheet closes; the sheet never waits for it.
+        val diff by produceState<UiState<FluxDiff>>(UiState.Loading, app.namespace, app.name) {
+            value = uiStateOf { talos.gitOpsRepository.argoDiff(app.namespace, app.name) }
+        }
         ArgoSyncSheet(
             app,
             resources = if (selecting) chosen else emptyList(),
+            diff = diff,
+            onFullDiff = onDiff?.let { open -> { sheet = false; open() } },
             onSync = { options ->
                 sheet = false
                 selecting = false
