@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -37,13 +38,16 @@ fun <A : Enum<A>> ActionBarActions(
     offered: (A) -> Boolean = { true },
     enabled: (A) -> Boolean = { true },
     refusal: (A) -> String? = { null },
+    /** Marks where an action is (its icon, else the ⋮ button its menu is behind), for a coach mark. */
+    marker: (A) -> Modifier = { Modifier },
 ) {
     bar.icons.filter(offered).forEach { action ->
-        TooltipIconButton(look.icon(action), look.label(action), onClick = { onClick(action) }, enabled = enabled(action) && refusal(action) == null)
+        TooltipIconButton(look.icon(action), look.label(action), onClick = { onClick(action) }, modifier = marker(action), enabled = enabled(action) && refusal(action) == null)
     }
     var open by remember { mutableStateOf(false) }
+    val inMenu = bar.menu.filter(offered).fold<A, Modifier>(Modifier) { acc, action -> acc.then(marker(action)) }
     Box {
-        TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { open = true })
+        TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { open = true }, modifier = inMenu)
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             val close = { open = false }
             val menu = bar.menu.filter(offered)

@@ -129,6 +129,12 @@ jobs:
             suffix=""; [[ "$file" == *unsigned* ]] && suffix="-unsigned"
             cp "$apk" "dist/ichor-v${version}-${abi}${suffix}.apk"
           done
+          # The Wear OS tile (no ABI suffix, so the in-app updater never picks it). Its file
+          # name does not say whether it is signed (v2+ only, minSdk 30): look for the block.
+          for apk in wear/build/outputs/apk/release/wear-release*.apk; do
+            suffix=""; LC_ALL=C grep -qaF "APK Sig Block 42" "$apk" || suffix="-unsigned"
+            cp "$apk" "dist/ichor-wear-v${version}${suffix}.apk"
+          done
           # Published with the release, so installed apps can show what an update brings.
           scripts/changelog.py --limit 30 -o dist/changelog.json
           ls -l dist

@@ -6,18 +6,14 @@ import name.levis.ichor.monitor.MonitorState
 import name.levis.ichor.monitor.clusterFingerprints
 import name.levis.ichor.monitor.monitorKeyOf
 
-/** A snapshot older than this is shown dimmed, with its time instead of the status row. */
-const val WIDGET_STALE_AFTER_MS = 60 * 60 * 1000L
+// WIDGET_STALE_AFTER_MS, StatusItem and the counts-based rules live in :core-widget, shared
+// with the Wear OS tile.
 
-/** One dot + label in the widget's status row. */
-sealed interface StatusItem {
-    data class NotReady(val count: Int) : StatusItem
-    data class Unreachable(val count: Int) : StatusItem
-    data object AllReady : StatusItem
-    data class Etcd(val alarms: Int) : StatusItem
-}
+/** [s]'s node and etcd counts, all the widget and the watch show of it. */
+fun nodeCounts(s: ClusterSnapshot): NodeCounts =
+    NodeCounts(s.nodes.size, s.readyCount, s.notReadyCount, s.unreachableCount, s.etcdChecked, s.etcdAlarms.size)
 
-fun isStale(s: ClusterSnapshot?, now: Long): Boolean = s == null || now - s.takenAt > WIDGET_STALE_AFTER_MS
+fun isStale(s: ClusterSnapshot?, now: Long): Boolean = isStaleAt(s?.takenAt, now)
 
 /**
  * How long until [s] turns stale, or null when it already is: nothing redraws the widget by
@@ -27,15 +23,7 @@ fun staleInMillis(s: ClusterSnapshot?, now: Long): Long? =
     if (s == null || isStale(s, now)) null else s.takenAt + WIDGET_STALE_AFTER_MS - now + 1
 
 /** Problems first, then etcd (only when it was checked); at most [max] items. */
-fun statusItems(s: ClusterSnapshot, max: Int = 2): List<StatusItem> {
-    val health = buildList {
-        if (s.notReadyCount > 0) add(StatusItem.NotReady(s.notReadyCount))
-        if (s.unreachableCount > 0) add(StatusItem.Unreachable(s.unreachableCount))
-        if (isEmpty() && s.nodes.isNotEmpty() && s.readyCount == s.nodes.size) add(StatusItem.AllReady)
-    }
-    val etcd = if (s.etcdChecked) listOf(StatusItem.Etcd(s.etcdAlarms.size)) else emptyList()
-    return (health + etcd).take(max)
-}
+fun statusItems(s: ClusterSnapshot, max: Int = 2): List<StatusItem> = statusItems(nodeCounts(s), max)
 
 /**
  * Where a widget's snapshot is kept, likeliest first: its [choice] (a context fingerprint), else
@@ -54,6 +42,10 @@ fun widgetKeys(choice: String?, summary: ConfigSummary?, activeContext: String?,
  */
 fun widgetClusterId(choice: String?, summary: ConfigSummary?): String? =
     choice?.let { fingerprint -> summary?.contexts?.firstOrNull { monitorKeyOf(it) == fingerprint } }?.clusterId?.takeIf { it.isNotBlank() }
+
+/** The name the user gave [s]'s cluster, as in the app, except in screenshot mode ([masked]); else its context. */
+fun widgetLabel(s: ClusterSnapshot, names: Map<String, String>, masked: Boolean): String =
+    names[s.fingerprint].takeIf { !masked && s.fingerprint.isNotBlank() } ?: s.context
 
 /** The snapshot of the first of [keys] the monitor has one for. */
 fun widgetSnapshot(state: MonitorState, keys: List<String>): ClusterSnapshot? = keys.firstNotNullOfOrNull { state.clusters[it] }

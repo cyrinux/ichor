@@ -17,6 +17,12 @@ import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.NewReleases
+import androidx.compose.material.icons.outlined.Tour
+import android.widget.Toast
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+import name.levis.ichor.ui.userMessage
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,8 +47,15 @@ import name.levis.ichor.ui.components.SectionTitle
 private const val LICENSE_PATH = "/blob/main/LICENSE"
 
 @Composable
-fun AboutSection(onChangelog: () -> Unit, onLicenses: () -> Unit, onSupportedIntegrations: () -> Unit, onFunding: () -> Unit) {
+fun AboutSection(
+    onChangelog: () -> Unit,
+    onLicenses: () -> Unit,
+    onSupportedIntegrations: () -> Unit,
+    onFunding: () -> Unit,
+    onReplayTour: suspend () -> Unit,
+) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var donating by rememberSaveable { mutableStateOf<Donation?>(null) }
     donating?.let { DonateDialog(it) { donating = null } }
     SectionTitle(stringResource(R.string.about_section))
@@ -58,6 +71,17 @@ fun AboutSection(onChangelog: () -> Unit, onLicenses: () -> Unit, onSupportedInt
             Link(Icons.Outlined.Gavel, stringResource(R.string.about_license)) { openUrl(context, REPO_URL_BASE + BuildConfig.UPDATE_REPO + LICENSE_PATH) }
             Link(Icons.Outlined.Description, stringResource(R.string.about_licenses), onLicenses)
             Link(Icons.Outlined.Extension, stringResource(R.string.supported_integrations_title), onSupportedIntegrations)
+            Link(Icons.Outlined.Tour, stringResource(R.string.tour_replay)) {
+                scope.launch {
+                    try {
+                        onReplayTour()
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Toast.makeText(context, e.userMessage(), Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
             Link(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.about_website)) { openUrl(context, ICHOR_WEBSITE_URL) }
             if (BuildConfig.FEATURE_FUNDING) Link(Icons.Outlined.FavoriteBorder, stringResource(R.string.funding_title), onFunding)
             if (BuildConfig.DONATIONS) {

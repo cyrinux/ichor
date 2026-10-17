@@ -45,6 +45,8 @@ class SettingsActions(
     val onSupportedIntegrations: () -> Unit,
     val onFunding: () -> Unit,
     val onCleared: () -> Unit,
+    /** Shows the demo tour again on the Talos demo home (adding the demo if it was removed). */
+    val onReplayTour: suspend () -> Unit,
 )
 
 /** What a settings page reads and writes: the same stores the single Settings screen used. */
@@ -81,7 +83,7 @@ fun SettingsPageScreen(page: SettingsPage, stores: SettingsStores, actions: Sett
             SettingsPage.SUPPORT ->
                 SupportSection(summary, actions.onSupportBundle, actions.onActivity, actions.onIntegrations)
             SettingsPage.ABOUT -> {
-                AboutSection(actions.onChangelog, actions.onLicenses, actions.onSupportedIntegrations, actions.onFunding)
+                AboutSection(actions.onChangelog, actions.onLicenses, actions.onSupportedIntegrations, actions.onFunding, actions.onReplayTour)
                 UpdatesSection { app.updateManager }
             }
         }

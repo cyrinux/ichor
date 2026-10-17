@@ -322,6 +322,8 @@ struct ImportView: View {
                     onImported()
                 } else {
                     await save(try await TalosClient.demoConfig(), replacingSameCluster: true)
+                    // The first time: its tour on the demo's overview (none for the Kubernetes demo).
+                    if model.activeSummary?.demo == true { DemoTour.offerOnce() }
                 }
             } catch {
                 self.error = error.localizedDescription

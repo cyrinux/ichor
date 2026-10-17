@@ -95,6 +95,8 @@ fun NodesCard(
     val sharedVersion = remember(all) { all.sharedVersion() }
     val total = all.size
     val dense = isDenseCluster(total)
+    // The demo tour points at the first node in trouble, as listed.
+    val degraded = remember(groups) { groups.firstDegraded() }
     Card(Modifier.fillMaxWidth().animateContentSize()) {
         SectionHeader(
             stringResource(R.string.overview_stat_nodes),
@@ -123,11 +125,11 @@ fun NodesCard(
             )
             // The unreachable nodes first, so the one in trouble is the first one read.
             val nodes = group.nodes.sortedBy { it.status != NodeStatus.UNREACHABLE }
-            if (!expanded && total <= FEW_NODES) NodeLines(nodes, onNode, onLive, onMore)
-            else if (!expanded) NodeChips(nodes, onNode, onLive, onMore)
+            if (!expanded && total <= FEW_NODES) NodeLines(nodes, onNode, onLive, onMore, degraded)
+            else if (!expanded) NodeChips(nodes, onNode, onLive, onMore, degraded)
             else nodes.forEachIndexed { i, node ->
                 if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                SwipeableNodeRow(node, publicIps, sharedVersion, onNode, onLive, onMore)
+                Box(Modifier.degradedAnchor(node, degraded)) { SwipeableNodeRow(node, publicIps, sharedVersion, onNode, onLive, onMore) }
             }
         }
         Spacer(Modifier.height(4.dp))
@@ -169,13 +171,18 @@ private fun NodeChips(
     onNode: (NodeOverview) -> Unit,
     onLive: (NodeOverview) -> Unit,
     onMore: (NodeOverview) -> Unit,
+    degraded: NodeOverview?,
 ) {
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
-        nodes.forEach { node -> NodeChip(node, onClick = { onNode(node) }, onLongClick = { onMore(node) }, onLive = { onLive(node) }) }
+        nodes.forEach { node ->
+            Box(Modifier.degradedAnchor(node, degraded)) {
+                NodeChip(node, onClick = { onNode(node) }, onLongClick = { onMore(node) }, onLive = { onLive(node) })
+            }
+        }
     }
 }
 
