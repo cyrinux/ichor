@@ -121,10 +121,14 @@ func sanitizeCandidate(obj podObject, now time.Time) (sanitizePod, bool) {
 // from KubeSanitizePreview, each like `kubectl delete pod` with its own grace period. With
 // a namespace, every pod must be in it; a malformed or out-of-scope line refuses the whole
 // sweep before anything is deleted. A pod that cannot be deleted does not stop the others:
-// {"deleted":n,"failed":[{name,error}]}. One audit entry for the sweep. Refused in the demo.
+// {"deleted":n,"failed":[{name,error}]}. One audit entry for the sweep: ok when every pod
+// went, partial ("k of n pods not deleted") when some did not, failed when the sweep was
+// refused or could not run; a partial sweep still returns its result with a nil error.
+// Refused in the demo.
 // Needs delete on pods. kubeServer: see KubePods.
 func KubeSanitize(configYAML, contextName, kubeServer, namespace, names string) (out string, err error) {
 	defer maskResult(&out, &err)
+	defer clearPartial(&err)
 
 	contextName = unmaskContext(configYAML, contextName)
 	namespace = privacy.revealNamespace(strings.TrimSpace(namespace))
@@ -150,7 +154,13 @@ func KubeSanitize(configYAML, contextName, kubeServer, namespace, names string) 
 		return "", err
 	}
 
-	return toJSON(res)
+	out, err = toJSON(res)
+	if err == nil && len(res.Failed) > 0 {
+		// Only once the sweep ran: recordAction sees the partial marker, clearPartial drops it.
+		err = partialOutcome{fmt.Sprintf("%d of %d pods not deleted", len(res.Failed), len(pods))}
+	}
+
+	return out, err
 }
 
 // podRef is a pod's namespace and name.

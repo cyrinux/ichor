@@ -27,9 +27,26 @@ const (
 	auditRetention  = 90 * 24 * time.Hour
 	auditMaxEntries = 2000
 
-	auditOK     = "ok"
-	auditFailed = "failed"
+	auditOK      = "ok"
+	auditPartial = "partial"
+	auditFailed  = "failed"
 )
+
+// partialOutcome is the error an entry point hands recordAction for an action that ran but
+// did only part of its work (a sweep where some pods could not be deleted): the entry is
+// recorded as partial with msg, not as failed. The entry point still returns nil itself
+// (see clearPartial).
+type partialOutcome struct{ msg string }
+
+func (p partialOutcome) Error() string { return p.msg }
+
+// clearPartial turns a partialOutcome back into nil once recordAction has recorded it (use
+// with defer, before defer recordAction, so it runs after). Any other error is kept.
+func clearPartial(err *error) {
+	if _, ok := (*err).(partialOutcome); ok {
+		*err = nil
+	}
+}
 
 // auditEntry is one recorded action. At is unix ms; Object is "Kind/name".
 type auditEntry struct {
@@ -108,7 +125,9 @@ func recordOutcome(configYAML, contextName string, a auditAction, err error) {
 		Demo:      configYAML != "" && isDemoContext(configYAML, contextName),
 	}
 
-	if err != nil {
+	if p, ok := err.(partialOutcome); ok {
+		e.Outcome, e.Error = auditPartial, redactSecrets(p.msg)
+	} else if err != nil {
 		e.Outcome, e.Error = auditFailed, redactSecrets(err.Error())
 	}
 
@@ -127,7 +146,8 @@ func recordOutcome(configYAML, contextName string, a auditAction, err error) {
 }
 
 // AuditLog lists the recorded actions, newest first, as a JSON array of {at (unix ms),
-// cluster, node, namespace, object, action, params, outcome ("ok" or "failed"), error, demo}.
+// cluster, node, namespace, object, action, params, outcome ("ok", "partial" or
+// "failed"), error, demo}.
 // cluster and action filter it when not empty.
 func AuditLog(cluster, action string) (out string, err error) {
 	defer maskResult(&out, &err)

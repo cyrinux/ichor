@@ -118,8 +118,42 @@ func TestKubeSanitizeDeletesAndCarriesOn(t *testing.T) {
 
 	audit := readAudit(t, "", "")
 	if len(audit) != 1 || audit[0].Action != "sanitize-pods" || audit[0].Object != "Pod×3" || audit[0].Namespace != "web" ||
-		audit[0].Params != "pods=3" || audit[0].Outcome != auditOK {
+		audit[0].Params != "pods=3" || audit[0].Outcome != auditPartial || audit[0].Error != "1 of 3 pods not deleted" {
 		t.Errorf("audit %+v", audit)
+	}
+}
+
+func TestKubeSanitizeAuditOutcome(t *testing.T) {
+	cases := map[string]struct {
+		names, outcome, auditErr string
+		wantErr                  bool
+	}{
+		"one pod gone":  {names: "web/done\nweb/gone", outcome: auditPartial, auditErr: "1 of 2 pods not deleted"},
+		"all deleted":   {names: "web/done\nweb/crashing", outcome: auditOK},
+		"refused parse": {names: "web/done\ndone", outcome: auditFailed, wantErr: true},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			withDataDir(t)
+			withAuditClock(t, time.Now())
+
+			f := newFakeKubeAPI(t, map[string]string{
+				"DELETE /api/v1/namespaces/web/pods/done":     `{"kind":"Pod"}`,
+				"DELETE /api/v1/namespaces/web/pods/crashing": `{"kind":"Pod"}`,
+			})
+
+			out, err := KubeSanitize(kubeStoreFor(t, f), "admin@test", "", "web", tc.names)
+			if (err != nil) != tc.wantErr || (!tc.wantErr && out == "") {
+				t.Fatalf("out %q, err %v", out, err)
+			}
+
+			audit := readAudit(t, "", "sanitize-pods")
+			if len(audit) != 1 || audit[0].Outcome != tc.outcome || (tc.auditErr != "" && audit[0].Error != tc.auditErr) ||
+				(tc.outcome == auditOK && audit[0].Error != "") {
+				t.Errorf("audit %+v", audit)
+			}
+		})
 	}
 }
 

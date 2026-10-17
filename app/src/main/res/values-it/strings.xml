@@ -4325,6 +4325,7 @@
     <string name="activity_empty_filtered">Nessuna azione corrisponde a questi filtri.</string>
     <string name="activity_filter_all">Tutte</string>
     <string name="activity_filter_failed">Non riuscite</string>
+    <string name="activity_outcome_partial">Fatto in parte</string>
     <string name="activity_share">Condividi l\'attività</string>
     <string name="activity_clear">Cancella</string>
     <string name="activity_clear_title">Cancellare il registro attività?</string>

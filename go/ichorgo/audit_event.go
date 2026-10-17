@@ -95,7 +95,7 @@ func auditEventBody(e auditEntry, now time.Time) map[string]any {
 	}
 }
 
-// auditEventMessage: "Ichor: scale replicas=3 (ok)", or "... failed: <error>".
+// auditEventMessage: "Ichor: scale replicas=3 (ok)", or "... failed: <error>" (or partial).
 func auditEventMessage(e auditEntry) string {
 	var b strings.Builder
 
@@ -107,8 +107,8 @@ func auditEventMessage(e auditEntry) string {
 		b.WriteString(e.Params)
 	}
 
-	if e.Outcome == auditFailed {
-		b.WriteString(" failed")
+	if e.Outcome == auditFailed || e.Outcome == auditPartial {
+		b.WriteString(" " + e.Outcome)
 
 		if e.Error != "" {
 			b.WriteString(": ")

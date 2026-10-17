@@ -115,7 +115,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   edit goes straight to the review and pull request. For routine bumps, Flux image automation or
   Argo CD Image Updater can open these changes for you.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
-  rollbacks…) is kept 90 days on the phone, encrypted, with its outcome. Optionally
+  rollbacks…) is kept 90 days on the phone, encrypted, with its outcome: ok, partial (a pod sweep where
+  some pods could not be deleted) or failed. Optionally
   (Settings → Privacy, off by default) each Kubernetes object the app changes also gets a
   Kubernetes Event, reason `IchorAction`, so the cluster's own history shows what the phone
   did (`kubectl get events`, the Argo CD timeline); node reboots and Talos changes have no

@@ -32,6 +32,11 @@ func TestAuditEventBodyAndMessage(t *testing.T) {
 		t.Fatalf("failed message %q", got)
 	}
 
+	partial := auditEntry{Action: "sanitize-pods", Params: "pods=2", Outcome: auditPartial, Error: "1 of 2 pods not deleted"}
+	if got := auditEventMessage(partial); got != "Ichor: sanitize-pods pods=2 partial: 1 of 2 pods not deleted" {
+		t.Fatalf("partial message %q", got)
+	}
+
 	long := auditEntry{Action: "edit", Params: strings.Repeat("x", 2000), Outcome: auditOK}
 	if got := auditEventMessage(long); len(got) > 1024 {
 		t.Fatalf("message not clipped: %d bytes", len(got))
