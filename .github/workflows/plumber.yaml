@@ -16,5 +16,5 @@ jobs:
   plumber:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
-      - uses: getplumber/plumber@a7fa2feca21bd02c21c2e45d87e352b5ff7e7f28 # v0.3.43
+      - uses: actions/checkout@v7
+      - uses: getplumber/plumber@bdac4bb86e112220f05aaaa52264b9a25e21a9f5 # v0.6.3
