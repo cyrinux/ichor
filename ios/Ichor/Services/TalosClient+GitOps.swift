@@ -99,6 +99,17 @@ extension TalosClient {
         try await json { IchorgoTextDiff(before, after, name, $0) }
     }
 
+    /// The images and replicas content sets, for the quick edits (pure, no cluster).
+    static func quickEditTargets(_ content: String) async throws -> QuickEditTargets {
+        try await json { IchorgoGitOpsQuickEditTargets(content, $0) }
+    }
+
+    /// content with edit applied, comments and formatting kept (pure, no cluster).
+    static func quickEdit(_ content: String, _ edit: QuickEdit) async throws -> QuickEditResult {
+        let editJSON = try edit.json()
+        return try await json { IchorgoGitOpsQuickEdit(content, editJSON, $0) }
+    }
+
     /// The prefilled pull request for a change of path deployed by app, on cluster ("" for none).
     static func proposalDefaults(app: GitOpsAppRef, path: String, cluster: String) async throws -> GitProposalDefaults {
         try await json { IchorgoGitOpsProposalDefaults(app.tool, app.kind, app.namespace, app.name, path, cluster, $0) }

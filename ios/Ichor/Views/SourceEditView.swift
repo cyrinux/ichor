@@ -14,16 +14,21 @@ struct SourceEditBase {
 /// (ProposeSheet): the change lands in Git and the controller applies it after merge, the
 /// tracked branch is never pushed to. Always through the Git host with its token, also for a
 /// Flux source read from its artifact. The draft lives here, never in a route.
+/// A quick edit (an image tag, the replicas) is applied to the file as read here, at the
+/// branch, and opens straight at the review with its own title.
 struct SourceEditView: View {
     let source: GitSource
     let path: String
     let app: GitOpsAppRef
+    /// The quick edit to apply once the file is read, nil for the plain editor.
+    let quickEdit: QuickEdit?
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(source: GitSource, path: String, app: GitOpsAppRef) {
+    init(source: GitSource, path: String, app: GitOpsAppRef, quickEdit: QuickEdit? = nil) {
         self.source = source
         self.path = path
         self.app = app
+        self.quickEdit = quickEdit
         _target = State(initialValue: proposalBaseRef(for: source) ?? "main")
     }
 
@@ -42,6 +47,10 @@ struct SourceEditView: View {
     @State private var missingHost: String?
     /// The branch the pull request goes to, as last named in the sheet.
     @State private var target: String
+    /// The file as the quick edit rewrote it: its title holds while the draft is that.
+    @State private var quickContent: String?
+    /// Why the quick edit was not applied: the editor stays, with the file as read.
+    @State private var quickFailure: String?
 
     private var demo: Bool { model.activeSummary?.demo == true }
 
@@ -53,6 +62,12 @@ struct SourceEditView: View {
     }
 
     private var changed: Bool { base.map { !sameSourceText($0.file.content, draft) } ?? false }
+
+    /// The quick edit's pull request title, while the draft is what it wrote.
+    private var quickTitle: String? {
+        guard let quickEdit, let quickContent, sameSourceText(quickContent, draft) else { return nil }
+        return quickEditTitle(quickEdit)
+    }
 
     var body: some View {
         NavigationStack {
@@ -80,7 +95,7 @@ struct SourceEditView: View {
             .navigationDestination(isPresented: $reviewing) {
                 if let base {
                     SourceEditReview(source: source, path: path, app: app, base: base, edited: draft, target: target,
-                                     onReload: reload(at:), onDone: { dismiss() })
+                                     defaultTitle: quickTitle, onReload: reload(at:), onDone: { dismiss() })
                 }
             }
             .sheet(item: $help) { request in
@@ -99,6 +114,9 @@ struct SourceEditView: View {
                 Button("Keep editing", role: .cancel) {}
             } message: {
                 Text("Your edits to this file are lost.")
+            }
+            .alert(quickFailure ?? "", isPresented: $quickFailure.isPresent()) {
+                Button("OK") {}
             }
         }
         .interactiveDismissDisabled(changed)
@@ -136,6 +154,24 @@ struct SourceEditView: View {
     /// The first read: at the branch the app follows, else at what it follows (a tag, a commit).
     private func load() async {
         await read(at: proposalBaseRef(for: source) ?? source.ref)
+        await applyQuickEdit()
+    }
+
+    /// The quick edit on the file as read at the branch, then the review; once.
+    private func applyQuickEdit() async {
+        guard let quickEdit, quickContent == nil, let base else { return }
+        do {
+            let result = try await TalosClient.quickEdit(base.file.content, quickEdit)
+            guard result.changed else {
+                quickFailure = String(localized: "This value is already set.")
+                return
+            }
+            quickContent = result.content
+            draft = result.content
+            reviewing = true
+        } catch {
+            quickFailure = error.localizedDescription
+        }
     }
 
     /// The file changed on branch since it was read: read it there again, the edits dropped
@@ -177,6 +213,8 @@ private struct SourceEditReview: View {
     let base: SourceEditBase
     let edited: String
     let target: String
+    /// The quick edit's pull request title, nil for the Go core's.
+    let defaultTitle: String?
     let onReload: (String) -> Void
     let onDone: () -> Void
 
@@ -220,7 +258,7 @@ private struct SourceEditReview: View {
         .task { await load() }
         .sheet(isPresented: $proposing) {
             ProposeSheet(source: source, path: path, app: app, base: base, content: edited, target: target,
-                         onReload: onReload, onDone: onDone)
+                         defaultTitle: defaultTitle, onReload: onReload, onDone: onDone)
         }
     }
 

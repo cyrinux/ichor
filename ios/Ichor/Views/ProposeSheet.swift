@@ -18,10 +18,13 @@ struct ProposeSheet: View {
     let onReload: (String) -> Void
     /// The request is open and its result closed: the editor closes too.
     let onDone: () -> Void
+    /// The title and commit message of a quick edit ("Bump podinfo to 6.7.0"), nil for the Go
+    /// core's.
+    let defaultTitle: String?
 
     // Explicit: the private @State properties make the memberwise init private.
     init(source: GitSource, path: String, app: GitOpsAppRef, base: SourceEditBase, content: String, target: String,
-         onReload: @escaping (String) -> Void, onDone: @escaping () -> Void) {
+         defaultTitle: String? = nil, onReload: @escaping (String) -> Void, onDone: @escaping () -> Void) {
         self.source = source
         self.path = path
         self.app = app
@@ -29,6 +32,7 @@ struct ProposeSheet: View {
         self.content = content
         self.onReload = onReload
         self.onDone = onDone
+        self.defaultTitle = defaultTitle
         _target = State(initialValue: target)
     }
 
@@ -165,6 +169,10 @@ struct ProposeSheet: View {
     private func loadDefaults() async {
         guard !defaultsAsked else { return }
         defaultsAsked = true
+        if let defaultTitle {
+            title = defaultTitle
+            message = defaultTitle
+        }
         let cluster = model.activeSummary?.name ?? ""
         guard let defaults = try? await TalosClient.proposalDefaults(app: app, path: path, cluster: cluster) else { return }
         if title.isEmpty { title = defaults.title }

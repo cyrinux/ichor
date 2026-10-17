@@ -1,0 +1,16 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: app
+  namespace: apps
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: app
+      version: ">=1.0.0"
+  values:
+    image:
+      repository: ghcr.io/example-org/app
+      tag: 1.4.1 # the chart's default is older
+    replicaCount: 2

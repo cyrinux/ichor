@@ -7,6 +7,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.decodeQuickEdit
+import name.levis.ichor.model.encodeQuickEdit
 import name.levis.ichor.ui.argocd.ArgoAppScreen
 import name.levis.ichor.ui.argocd.ArgoListDetail
 import name.levis.ichor.ui.argocd.ArgoWindowsScreen
@@ -174,17 +176,20 @@ private fun NavGraphBuilder.sourceGraph(nav: NavHostController) {
             onBack = { nav.popBackStack() },
             onAddToken = onAddToken,
             onEdit = { nav.navigate(Routes.gitOpsEdit(t.tool, t.kind, t.namespace, t.name, t.index, path)) },
+            onQuickEdit = { edit -> nav.navigate(Routes.gitOpsEdit(t.tool, t.kind, t.namespace, t.name, t.index, path, encodeQuickEdit(edit))) },
         )
     }
     composable(
         Routes.GITOPS_EDIT,
-        arguments = targetArgs + navArgument("path") { type = NavType.StringType; defaultValue = "" },
+        arguments = targetArgs + navArgument("path") { type = NavType.StringType; defaultValue = "" } +
+            navArgument("quick") { type = NavType.StringType; defaultValue = "" },
     ) { entry ->
         SourceEditScreen(
             target = target(entry.arguments),
             path = entry.arguments?.getString("path").orEmpty(),
             onBack = { nav.popBackStack() },
             onAddToken = onAddToken,
+            quick = decodeQuickEdit(entry.arguments?.getString("quick")),
         )
     }
 }

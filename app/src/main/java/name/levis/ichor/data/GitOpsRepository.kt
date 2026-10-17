@@ -24,6 +24,12 @@ import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.GitTree
 import name.levis.ichor.model.KubeDiffResource
 import name.levis.ichor.model.ProposeBlock
+import name.levis.ichor.model.QuickEdit
+import name.levis.ichor.model.QuickEditResult
+import name.levis.ichor.model.QuickEditTargets
+import name.levis.ichor.model.decodeQuickEditResult
+import name.levis.ichor.model.decodeQuickEditTargets
+import name.levis.ichor.model.quickEditJson
 import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.gitHostJsonLacksToken
 import name.levis.ichor.model.gitProposalJson
@@ -203,6 +209,16 @@ class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) :
     /** The review of an edit: [before] → [after] of the file [name], as a one-file [FluxDiff]. */
     suspend fun textDiff(before: String, after: String, name: String): FluxDiff = withContext(Dispatchers.IO) {
         TalosJson.decodeFromString(FluxDiff.serializer(), Ichorgo.textDiff(before, after, name))
+    }
+
+    /** What [content] offers to quick edits: its workloads' containers and replicas, a kustomization's images. No network. */
+    suspend fun quickEditTargets(content: String): QuickEditTargets = withContext(Dispatchers.Default) {
+        decodeQuickEditTargets(Ichorgo.gitOpsQuickEditTargets(content))
+    }
+
+    /** [content] with [edit] applied, comments and formatting kept (pure Go, no network). Throws when the target is not in the file. */
+    suspend fun quickEdit(content: String, edit: QuickEdit): QuickEditResult = withContext(Dispatchers.Default) {
+        decodeQuickEditResult(Ichorgo.gitOpsQuickEdit(content, quickEditJson(edit)))
     }
 
     /**

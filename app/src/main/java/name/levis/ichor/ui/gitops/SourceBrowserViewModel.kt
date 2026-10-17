@@ -15,6 +15,8 @@ import name.levis.ichor.model.GitFile
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.GitTree
 import name.levis.ichor.model.ProposeBlock
+import name.levis.ichor.model.QuickEditTargets
+import name.levis.ichor.model.isYamlPath
 import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.cleanSourceDir
 import name.levis.ichor.ui.LocalizedException
@@ -140,12 +142,20 @@ data class SourceFileState(
     val file: UiState<SourceFileView> = UiState.Loading,
     val missingHost: String? = null,
     val editBlock: ProposeBlock? = null,
+    /** What the file offers to quick edits, null when nothing (or not a YAML file). */
+    val quick: QuickEditTargets? = null,
 )
 
-/** One file of an app's source, read once per [load] key, again on refresh. */
+/**
+ * One file of an app's source, read once per [load] key, again on refresh; its quick edits
+ * through [quick].
+ */
 class SourceFileViewModel(private val gitOps: GitOpsRepository) : ViewModel() {
     private val _state = MutableStateFlow(SourceFileState())
     val state: StateFlow<SourceFileState> = _state.asStateFlow()
+
+    /** The quick edit sheets of the file on screen. */
+    val quick = QuickEditController(gitOps, viewModelScope) { (_state.value.file as? UiState.Loaded)?.data?.file?.content }
     private var key: Any? = null
     private var target: SourceTarget? = null
     private var path: String = ""
@@ -156,6 +166,7 @@ class SourceFileViewModel(private val gitOps: GitOpsRepository) : ViewModel() {
         this.key = key
         this.target = target
         this.path = path
+        quick.target = target
         refresh()
     }
 
@@ -169,7 +180,12 @@ class SourceFileViewModel(private val gitOps: GitOpsRepository) : ViewModel() {
                 val src = gitOps.sourceOf(t)
                 val file = gitOps.file(src, path)
                 val block = cancellableCatching { gitOps.proposeBlockOf(src) }.getOrDefault(ProposeBlock.NotEditable)
-                SourceFileState(UiState.Loaded(SourceFileView(src, file)), editBlock = block)
+                val quick = if (block == null && !file.truncated && isYamlPath(path)) {
+                    cancellableCatching { gitOps.quickEditTargets(file.content) }.getOrNull()?.takeUnless { it.isEmpty }
+                } else {
+                    null
+                }
+                SourceFileState(UiState.Loaded(SourceFileView(src, file)), editBlock = block, quick = quick)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: GitHostMissing) {

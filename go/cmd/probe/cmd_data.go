@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -315,6 +316,39 @@ var dataCommands = []command{
 		}
 
 		return ichorgo.TextDiff(string(before), string(after), flag.Arg(3))
+	}},
+	{name: "gitops-quickedit", args: "FILE EDITJSON", noConfig: true, run: func(e env) (string, error) {
+		// gitops-quickedit FILE EDITJSON: the file rewritten by a quick edit (image, replicas, path).
+		content, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		out, err := ichorgo.GitOpsQuickEdit(string(content), flag.Arg(2))
+		if err != nil {
+			return "", err
+		}
+
+		var res struct {
+			Content string `json:"content"`
+			Changed bool   `json:"changed"`
+			Line    int    `json:"line"`
+		}
+		if err := json.Unmarshal([]byte(out), &res); err != nil {
+			return "", err
+		}
+
+		fmt.Fprintf(os.Stderr, "changed=%t line=%d\n", res.Changed, res.Line)
+
+		return res.Content, nil
+	}},
+	{name: "gitops-quickedit-targets", args: "FILE", noConfig: true, run: func(e env) (string, error) {
+		content, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.GitOpsQuickEditTargets(string(content))
 	}},
 	{name: "gitops-proposal-defaults", args: "TOOL KIND NAMESPACE NAME PATH CLUSTER", noConfig: true, run: func(e env) (string, error) {
 		return ichorgo.GitOpsProposalDefaults(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6))
