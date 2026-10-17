@@ -44,6 +44,10 @@ type kubeRolloutStatus struct {
 	// restart replaces none on its own.
 	Manual bool             `json:"manual"`
 	Pods   []kubeRolloutPod `json:"pods"`
+	// Stale: the controller has not observed the latest spec yet (status.observedGeneration
+	// < metadata.generation), so Done and Failed may still describe the previous one. Not
+	// sent to the apps.
+	Stale bool `json:"-"`
 }
 
 // KubeRolloutStatus is the rollout state of one Deployment, StatefulSet or DaemonSet and its
@@ -81,12 +85,15 @@ func rolloutStatus(ctx context.Context, k *kubeClient, wk workloadKind, namespac
 	}
 
 	w := mapWorkload(wk.kind, obj)
+	// Until the controller sees the restart, the revision it reports is still the old one.
+	stale := obj.Status.ObservedGeneration < obj.Metadata.Generation
 	st := kubeRolloutStatus{
 		Workload: w,
 		Done:     w.State == workloadReady || w.State == workloadScaledDown,
 		Failed:   progressDeadlineExceeded(obj),
 		Manual:   manualUpdates(wk.kind, obj),
 		Pods:     []kubeRolloutPod{},
+		Stale:    stale,
 	}
 
 	selector, ok := selectorQuery(obj.Spec.Selector)
@@ -105,9 +112,6 @@ func rolloutStatus(ctx context.Context, k *kubeClient, wk workloadKind, namespac
 	if err := getList(ctx, k, scopedPath("/api/v1", namespace, "pods")+query, &pods); err != nil {
 		return kubeRolloutStatus{}, err
 	}
-
-	// Until the controller sees the restart, the revision it reports is still the old one.
-	stale := obj.Status.ObservedGeneration < obj.Metadata.Generation
 
 	for _, p := range pods.Items {
 		if owns(p) {

@@ -3,6 +3,8 @@ package ichorgo
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"net/http"
 	"reflect"
 	"strings"
 	"testing"
@@ -176,7 +178,7 @@ func TestHelmRollbackPlanAndRun(t *testing.T) {
 	f.mu.Unlock()
 
 	now := time.Date(2026, 10, 7, 12, 0, 0, 0, time.UTC)
-	if err := runHelmRollback(context.Background(), k, rb, now); err != nil {
+	if _, err := runHelmRollback(context.Background(), k, rb, now); err != nil {
 		t.Fatal(err)
 	}
 
@@ -284,7 +286,7 @@ func TestHelmRollbackBlockers(t *testing.T) {
 		t.Fatalf("blockers %v", rb.plan.Blockers)
 	}
 
-	if err := runHelmRollback(context.Background(), k, rb, time.Now()); err == nil {
+	if _, err := runHelmRollback(context.Background(), k, rb, time.Now()); err == nil {
 		t.Fatal("ran with a blocker")
 	}
 
@@ -468,7 +470,7 @@ func helmRollbackWrites(t *testing.T, f *fakeKubeAPI, optionsJSON string) (helmR
 	f.requests = nil
 	f.mu.Unlock()
 
-	runErr := runHelmRollback(context.Background(), k, rb, time.Date(2026, 10, 7, 12, 0, 0, 0, time.UTC))
+	pruneErr, runErr := runHelmRollback(context.Background(), k, rb, time.Date(2026, 10, 7, 12, 0, 0, 0, time.UTC))
 
 	var writes []fakeKubeRequest
 
@@ -478,7 +480,7 @@ func helmRollbackWrites(t *testing.T, f *fakeKubeAPI, optionsJSON string) (helmR
 		}
 	}
 
-	return rb.plan, writes, runErr
+	return rb.plan, writes, errors.Join(runErr, pruneErr)
 }
 
 func writeKeys(writes []fakeKubeRequest) []string {
@@ -699,7 +701,7 @@ func TestHelmRollbackFailedKeepsHistory(t *testing.T) {
 	f.requests = nil
 	f.mu.Unlock()
 
-	if err := runHelmRollback(context.Background(), k, rb, time.Now()); err == nil {
+	if _, err := runHelmRollback(context.Background(), k, rb, time.Now()); err == nil {
 		t.Fatal("no error")
 	}
 
@@ -736,5 +738,85 @@ func TestKubeHelmRollbackDemoOptions(t *testing.T) {
 
 	if err := KubeHelmRollback(cfg, "", "", "ingress-nginx", "ingress-nginx", 6, `{"historyMax":2}`); err == nil {
 		t.Fatal("demo rolled back")
+	}
+}
+
+// Through the exported call: kubeDo unwraps an error to the API's, so a prune refused must
+// keep its prefix past it, and the rollback is still deployed.
+func TestKubeHelmRollbackPruneRefusedKeepsPrefix(t *testing.T) {
+	v1 := helmTestSecrets + "/sh.helm.release.v1.site.v1"
+
+	f := helmRollbackAPI(t, nil)
+	f.answerWith("DELETE "+v1, 403, `{"kind":"Status","status":"Failure","reason":"Forbidden","code":403,"message":"secrets \"sh.helm.release.v1.site.v1\" is forbidden"}`)
+
+	err := KubeHelmRollback(f.kubeconfigFor(f.URL), "admin@test", "", "web", "site", 0, `{"historyMax":2}`)
+	if err == nil || !strings.HasPrefix(err.Error(), helmPrunePrefix) || !strings.Contains(err.Error(), "revision 1") {
+		t.Fatalf("err %v", err)
+	}
+
+	deployed := false
+
+	for _, r := range f.recorded() {
+		if r.method == "PUT" && strings.HasSuffix(r.path, ".v3") && strings.Contains(r.body, `"status":"deployed"`) {
+			deployed = true
+		}
+	}
+
+	if !deployed {
+		t.Fatal("the rollback was not recorded as deployed")
+	}
+}
+
+// A replace reads the object again before its PUT: the resourceVersion bumped since the
+// plan is the one sent, and a conflict is retried once on another fresh read.
+func TestHelmRollbackForceReadsLiveAgain(t *testing.T) {
+	f := helmRollbackAPI(t, nil)
+	f.answerWith("PUT "+helmTestCM, 200, `{}`)
+	f.answerWith("PUT "+helmTestDeploy, 200, `{}`)
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rb, err := prepareHelmRollback(context.Background(), k, "web", "site", 0, helmRollbackOptions{Force: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cm := func(rv string) string {
+		return `{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"site","namespace":"web","resourceVersion":"` + rv +
+			`","annotations":{"meta.helm.sh/release-name":"site"}},"data":{"a":"2","b":"x"}}`
+	}
+
+	// Bumped between the plan and the run; the first PUT then conflicts with a write made
+	// right after its read.
+	f.answerWith("GET "+helmTestCM, 200, cm("6"))
+	f.answerWith("PUT "+helmTestCM, 409, `{"kind":"Status","reason":"Conflict","code":409,"message":"the object has been modified"}`)
+	f.beforeAnswer = func(r *http.Request) {
+		if r.Method == http.MethodPut && r.URL.Path == helmTestCM {
+			f.answerWith("GET "+helmTestCM, 200, cm("7"))
+			f.answerWith("PUT "+helmTestCM, 200, `{}`)
+		}
+	}
+
+	f.mu.Lock()
+	f.requests = nil
+	f.mu.Unlock()
+
+	if pruneErr, err := runHelmRollback(context.Background(), k, rb, time.Now()); err != nil || pruneErr != nil {
+		t.Fatal(err, pruneErr)
+	}
+
+	var puts []string
+
+	for _, r := range f.recorded() {
+		if r.method == "PUT" && r.path == helmTestCM {
+			puts = append(puts, r.body)
+		}
+	}
+
+	if len(puts) != 2 || !strings.Contains(puts[0], `"resourceVersion":"6"`) || !strings.Contains(puts[1], `"resourceVersion":"7"`) {
+		t.Fatalf("configmap PUTs %v", puts)
 	}
 }

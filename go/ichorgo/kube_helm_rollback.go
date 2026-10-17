@@ -192,14 +192,28 @@ func KubeHelmRollback(configYAML, contextName, kubeServer, namespace, name strin
 	ctx, cancel := context.WithTimeout(context.Background(), helmRollbackTimeout)
 	defer cancel()
 
-	return kubeMutationError(kubeDo(ctx, target, func(ctx context.Context, k *kubeClient) error {
+	// The prune's error stays out of kubeDo: it would unwrap it to the API error and drop
+	// the prefix that tells the apps the rollback itself is done.
+	var pruneErr error
+
+	err = kubeMutationError(kubeDo(ctx, target, func(ctx context.Context, k *kubeClient) error {
 		rb, err := prepareHelmRollback(ctx, k, namespace, name, revision, opts)
 		if err != nil {
 			return err
 		}
 
-		return runHelmRollback(ctx, k, rb, time.Now())
+		var runErr error
+
+		pruneErr, runErr = runHelmRollback(ctx, k, rb, time.Now())
+
+		return runErr
 	}))
+	if err != nil {
+		return errors.Join(err, pruneErr)
+	}
+
+	// Rolled back: the audit entry and the apps get "history not pruned: ..." alone.
+	return pruneErr
 }
 
 func validateHelmRollback(namespace, name string, revision int) error {
@@ -594,6 +608,10 @@ func applyHelmStep(ctx context.Context, k *kubeClient, s helmStep, dryRun bool) 
 
 		return k.do(ctx, http.MethodPatch, s.obj.Path+"?"+q.Encode(), "application/merge-patch+json", body, nil)
 	case helmChangeReplace:
+		if !dryRun {
+			return replaceHelmObject(ctx, k, s.obj, s.obj.Path+"?"+q.Encode())
+		}
+
 		body, err := json.Marshal(s.body)
 		if err != nil {
 			return err
@@ -615,16 +633,17 @@ func applyHelmStep(ctx context.Context, k *kubeClient, s helmStep, dryRun bool) 
 
 // runHelmRollback runs a prepared rollback: Flux suspended, revision N+1 recorded as
 // pending-rollback, every change made, then N+1 deployed and the others superseded, then
-// the revisions beyond the history max deleted (a failed rollback leaves them all).
-func runHelmRollback(ctx context.Context, k *kubeClient, rb *helmRollback, now time.Time) error {
+// the revisions beyond the history max deleted (a failed rollback leaves them all). A delete
+// refused comes back as pruneErr with err nil: the rollback itself is done.
+func runHelmRollback(ctx context.Context, k *kubeClient, rb *helmRollback, now time.Time) (pruneErr, err error) {
 	if len(rb.plan.Blockers) > 0 {
-		return errors.New(strings.Join(rb.plan.Blockers, "; "))
+		return nil, errors.New(strings.Join(rb.plan.Blockers, "; "))
 	}
 
 	if owner := rb.plan.FluxOwner; owner != "" {
 		ns, name, _ := strings.Cut(owner, "/")
 		if err := fluxAction(ctx, k, "HelmRelease", ns, name, fluxActionSuspend, now); err != nil {
-			return fmt.Errorf("suspend the HelmRelease %s first: %w", owner, err)
+			return nil, fmt.Errorf("suspend the HelmRelease %s first: %w", owner, err)
 		}
 	}
 
@@ -632,7 +651,7 @@ func runHelmRollback(ctx context.Context, k *kubeClient, rb *helmRollback, now t
 	description := fmt.Sprintf("Rollback to %d", rb.plan.To)
 
 	if err := createHelmRevision(ctx, k, rb, next, description, now); err != nil {
-		return fmt.Errorf("record revision %d: %w", next, err)
+		return nil, fmt.Errorf("record revision %d: %w", next, err)
 	}
 
 	// How it ended is recorded even when the rollback ran out of time: a revision left
@@ -648,7 +667,7 @@ func runHelmRollback(ctx context.Context, k *kubeClient, rb *helmRollback, now t
 			failure := fmt.Sprintf("Rollback %q failed: %s", rb.plan.Name, err)
 
 			// As Helm: the current revision superseded, the new one failed.
-			return errors.Join(
+			return nil, errors.Join(
 				fmt.Errorf("rollback stopped, revision %d recorded as failed: %w", next, err),
 				setHelmStatus(record, k, ns, rb.current.ref.secret, helmStatusSuperseded, "", now),
 				setHelmStatus(record, k, ns, nextSecret, helmStatusFailed, failure, now),
@@ -666,8 +685,8 @@ func runHelmRollback(ctx context.Context, k *kubeClient, rb *helmRollback, now t
 	}
 
 	if err := errors.Join(append(errs, setHelmStatus(record, k, ns, nextSecret, helmStatusDeployed, description, now))...); err != nil {
-		return err
+		return nil, err
 	}
 
-	return pruneHelmHistory(record, k, rb.prune)
+	return pruneHelmHistory(record, k, rb.prune), nil
 }

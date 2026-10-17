@@ -138,6 +138,30 @@ func TestHelmRollbackFollowFailed(t *testing.T) {
 	}
 }
 
+// A progress deadline exceeded that the controller reported before seeing the rollback's
+// spec is the previous rollout's: it waits, as `kubectl rollout status`.
+func TestHelmRollbackFollowStaleNotFailed(t *testing.T) {
+	fastHelmFollow(t, time.Minute)
+
+	stale := strings.Replace(helmFollowDeployment(1, true), `"generation":2`, `"generation":3`, 1)
+	cfg := newHelmFollowAPI(t, "deployed", []string{stale, helmFollowDeployment(2, false)})
+
+	rec := newFollowRecorder()
+	StartHelmRollbackFollow(cfg, "admin@test", "", "web", "site", rec)
+
+	if done := rec.wait(t); done != [2]string{helmWaitSucceeded, ""} {
+		t.Fatalf("done %q", done)
+	}
+
+	want := []string{
+		"Running 0/1 Deployment/web/site 1/2",
+		"Succeeded 1/1 Deployment/web/site 2/2",
+	}
+	if got := helmFollowSteps(t, rec); strings.Join(got, "|") != strings.Join(want, "|") {
+		t.Fatalf("progress %v", got)
+	}
+}
+
 func TestHelmRollbackFollowTimeout(t *testing.T) {
 	fastHelmFollow(t, 60*time.Millisecond)
 

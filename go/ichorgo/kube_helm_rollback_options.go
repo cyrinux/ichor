@@ -136,6 +136,33 @@ func helmReplaceBody(obj helmObject, live map[string]any) map[string]any {
 	return body
 }
 
+// replaceHelmObject PUTs obj's target rendering to path (with its query) built on a fresh
+// read of the live object: the plan's read may be minutes old, and a controller or the
+// status writer bumps the resourceVersion meanwhile. A conflict (written between that read
+// and the PUT) is retried once on another fresh read.
+func replaceHelmObject(ctx context.Context, k *kubeClient, obj helmObject, path string) error {
+	var err error
+
+	for range 2 {
+		var live map[string]any
+		if err = k.get(ctx, obj.Path, &live); err != nil {
+			return err
+		}
+
+		body, mErr := json.Marshal(helmReplaceBody(obj, live))
+		if mErr != nil {
+			return mErr
+		}
+
+		err = k.do(ctx, http.MethodPut, path, "application/json", body, nil)
+		if kubeCode(err) != http.StatusConflict {
+			return err
+		}
+	}
+
+	return err
+}
+
 // cloneMap is a shallow copy of v when it is an object, an empty one otherwise.
 func cloneMap(v any) map[string]any {
 	m, _ := v.(map[string]any)

@@ -234,10 +234,12 @@ func readHelmWorkloads(ctx context.Context, k *kubeClient, workloads []helmObjec
 			return helmRollbackProgress{}, fmt.Errorf("%s: %w", o.label(), err)
 		}
 
+		// As `kubectl rollout status`: until the controller observed the latest spec, its
+		// status (a progress deadline exceeded included) is the previous rollout's.
 		p.Workloads = append(p.Workloads, helmRollbackWorkload{
 			Kind: wk.kind, Namespace: o.Namespace, Name: o.Name,
 			Ready: int(st.Workload.Ready), Desired: int(st.Workload.Desired),
-			Done: st.Done, Failed: st.Failed, Manual: st.Manual,
+			Done: st.Done && !st.Stale, Failed: st.Failed && !st.Stale, Manual: st.Manual,
 		})
 	}
 

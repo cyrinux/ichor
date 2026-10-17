@@ -78,8 +78,11 @@ data class HelmRollbackState(
     val follow: HelmRollbackFollowState? = null,
 )
 
-/** How a rollback ended, for a toast: [error] null when it succeeded. */
-data class HelmRollbackResult(val revision: Int, val error: UiText? = null)
+/**
+ * How a rollback ended, for a toast: [error] null when it succeeded; [warning] what went
+ * wrong after a rollback that is done (old revisions not pruned).
+ */
+data class HelmRollbackResult(val revision: Int, val error: UiText? = null, val warning: UiText? = null)
 
 /**
  * Plans and runs the rollback of one release in its view model's [scope], so neither dies
@@ -98,7 +101,8 @@ class HelmRollbackController(
     private val _results = Channel<HelmRollbackResult>(Channel.BUFFERED)
     val results: Flow<HelmRollbackResult> = _results.receiveAsFlow()
     private var planJob: Job? = null
-    private var followHandle: HelmRollbackFollowHandle? = null
+    // Read and cleared from the scope's completion handler, on whatever thread ends it.
+    @Volatile private var followHandle: HelmRollbackFollowHandle? = null
     private val followIds = AtomicLong()
 
     init {
@@ -126,9 +130,18 @@ class HelmRollbackController(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
-                current.copy(loading = false, error = e.uiText())
+                // The plan read for other options must not be confirmed: retry reads it again.
+                current.copy(plan = null, loading = false, error = e.uiText())
             }
-            _state.update { if (it?.revision == current.revision && !it.running && it.options == current.options) next else it }
+            // Wait changed meanwhile does not change the dry run: the result stands, with the
+            // options as they are now. Force or history max changed: a newer read is coming.
+            _state.update {
+                if (it?.revision == current.revision && !it.running && it.follow == null && !it.options.changesPlan(current.options)) {
+                    next.copy(options = it.options)
+                } else {
+                    it
+                }
+            }
         }
     }
 
@@ -175,7 +188,7 @@ class HelmRollbackController(
                 error == null && shown != null && options.wait && plan.workloads > 0 -> startFollow(shown, revision, warning)
                 error == null -> {
                     if (shown != null) _state.value = null
-                    _results.send(HelmRollbackResult(revision, warning))
+                    _results.send(HelmRollbackResult(revision, warning = warning))
                 }
                 shown != null -> _state.value = shown.copy(running = false, error = error)
                 else -> _results.send(HelmRollbackResult(revision, error))
@@ -239,8 +252,10 @@ fun HelmRollbackHost(controller: HelmRollbackController, state: HelmRollbackStat
     val context = LocalContext.current
     LaunchedEffect(controller) {
         controller.results.collect { r ->
-            val text = r.error?.resolve(context) ?: context.getString(R.string.helm_rollback_done, r.revision.toString())
-            Toast.makeText(context, text, if (r.error != null) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
+            val done = context.getString(R.string.helm_rollback_done, r.revision.toString())
+            val text = r.error?.resolve(context) ?: listOfNotNull(done, r.warning?.resolve(context)).joinToString("\n")
+            val long = r.error != null || r.warning != null
+            Toast.makeText(context, text, if (long) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
         }
     }
     if (state != null) {

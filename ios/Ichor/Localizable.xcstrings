@@ -249,34 +249,40 @@
     "Revisions %@ will be deleted" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisions %1$@ will be deleted"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Revisionen %@ werden gelöscht"
+            "value" : "Revisionen %1$@ werden gelöscht"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Se eliminarán las revisiones %@"
+            "value" : "Se eliminarán las revisiones %1$@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les révisions %@ seront supprimées"
+            "value" : "Les révisions %1$@ seront supprimées"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le revisioni %@ verranno eliminate"
+            "value" : "Le revisioni %1$@ verranno eliminate"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ревізії %@ буде видалено"
+            "value" : "Ревізії %1$@ буде видалено"
           }
         }
       }
@@ -389,34 +395,40 @@
     "%@ did not become ready" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ did not become ready"
+          }
+        },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ wurde nicht bereit"
+            "value" : "%1$@ wurde nicht bereit"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ no llegó a estar listo"
+            "value" : "%1$@ no llegó a estar listo"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ n'est pas devenu prêt"
+            "value" : "%1$@ n'est pas devenu prêt"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ non è diventato pronto"
+            "value" : "%1$@ non è diventato pronto"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ не став готовим"
+            "value" : "%1$@ не став готовим"
           }
         }
       }
