@@ -868,7 +868,7 @@ private fun CertificateBanner(summary: ContextSummary, onIssueConfig: () -> Unit
  * ones. A small icon rather than a label, so it stays out of the way in the screenshots.
  */
 @Composable
-internal fun ScreenshotModeIcon() {
+internal fun ScreenshotModeIcon(modifier: Modifier = Modifier.padding(end = 4.dp).size(14.dp)) {
     val prefs = (LocalContext.current.applicationContext as TalosApp).uiPreferences
     val mask by prefs.privacyMask.collectAsStateWithLifecycle()
     if (!mask.enabled) return
@@ -876,7 +876,7 @@ internal fun ScreenshotModeIcon() {
         Icons.Outlined.VisibilityOff,
         contentDescription = stringResource(R.string.settings_screenshot_mode),
         tint = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(end = 4.dp).size(14.dp),
+        modifier = modifier,
     )
 }
 

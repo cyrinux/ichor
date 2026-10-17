@@ -799,6 +799,17 @@ enum BackgroundMonitor {
         try? await UNUserNotificationCenter.current().add(request)
     }
 
+    /// The screenshot mode turned on: the delivered alerts (and Wake-on-LAN answers) name nodes
+    /// and clusters, so they go; the jobs' and the freeze reminders' stay.
+    static func removeDeliveredAlerts() async {
+        let center = UNUserNotificationCenter.current()
+        let ids = await center.deliveredNotifications()
+            .map(\.request)
+            .filter { notificationNamesClusters(category: $0.content.categoryIdentifier, identifier: $0.identifier) }
+            .map(\.identifier)
+        if !ids.isEmpty { center.removeDeliveredNotifications(withIdentifiers: ids) }
+    }
+
     /// Registers a category per alert kind and set of actions (alertActionSets), plain and
     /// ".private": the private ones keep their previews hidden until the device is unlocked. The
     /// title is hidden with the body (no `.hiddenPreviewsShowTitle`): it names the node. The ones

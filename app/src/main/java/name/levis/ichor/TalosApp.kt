@@ -53,6 +53,8 @@ import name.levis.ichor.data.RoadmapRepository
 import name.levis.ichor.data.createFeatureStore
 import name.levis.ichor.data.createGoogleNativeSignIn
 import name.levis.ichor.data.PrivacyMask
+import name.levis.ichor.data.MaskSwitcher
+import name.levis.ichor.data.MaskEpoch
 import name.levis.ichor.data.UiPreferences
 import name.levis.ichor.data.PinStore
 import androidx.glance.appwidget.updateAll
@@ -71,6 +73,7 @@ import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.data.realFingerprint
 import name.levis.ichor.monitor.clusterFingerprints
 import name.levis.ichor.monitor.canPostNotifications
+import name.levis.ichor.monitor.cancelPostedAlerts
 import name.levis.ichor.monitor.syncMonitoring
 import name.levis.ichor.security.AppLock
 import name.levis.ichor.security.SecurityKeyPrompts
@@ -122,6 +125,7 @@ import name.levis.ichor.shortcuts.ShortcutSpec
 import name.levis.ichor.shortcuts.clusterShortcutIds
 import name.levis.ichor.shortcuts.clusterShortcuts
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -152,7 +156,7 @@ class TalosApp : Application() {
     }
     val kubeAuthRepository by lazy { KubeAuthRepository(configRepository) }
     /** The Go core's credentials and the results cache, shared by the repositories below. */
-    private val goCall by lazy { GoCall(configRepository, kubeServers, offlineCache) }
+    private val goCall by lazy { GoCall(configRepository, kubeServers, offlineCache, idle = maskSwitcher::awaitIdle) }
     val talosRepository by lazy { TalosRepository(goCall) }
     val kubeRepository by lazy { KubeRepository(goCall) }
     val gitOpsRepository by lazy { GitOpsRepository(goCall, gitHostStore) }
@@ -532,27 +536,61 @@ class TalosApp : Application() {
     }
 
     /**
+     * Switches screenshot mode (see [MaskSwitcher]); the screens show a placeholder meanwhile
+     * and every repository call waits, so no name read under one setting is drawn under the other.
+     */
+    val maskSwitcher: MaskSwitcher by lazy {
+        MaskSwitcher(
+            current = { uiPreferences.privacyMask.value },
+            dropReadData = {
+                // Kept under the previous setting: masked and real names must never mix.
+                talosRepository.invalidate()
+                withContext(Dispatchers.IO) {
+                    offlineCache.clear()
+                    // Keys differ masked vs unmasked: diffing across the switch would alert on every node.
+                    monitorStore.clearSnapshots()
+                    uiPreferences.clearRecentSearches()
+                }
+            },
+            apply = { mask ->
+                withContext(Dispatchers.IO) {
+                    applyPrivacyMask(mask)
+                    uiPreferences.setPrivacyMask(mask)
+                }
+            },
+            // The config summary (context names, endpoints) is masked too, and the Go side
+            // forgets its previous mapping: re-read it before anything reloads.
+            reread = { runCatching { configRepository.reparse() } },
+            // What a call in flight before the switch cached meanwhile goes too; the screens
+            // reload once the switch is over (their calls wait for it).
+            reload = { talosRepository.invalidate() },
+            epochs = MaskEpoch.counter,
+        )
+    }
+
+    /** True while screenshot mode switches: the root navigation covers every screen. */
+    val maskTransition: StateFlow<Boolean> get() = maskSwitcher.transition
+
+    /**
      * Turns screenshot mode on or off. Everything fetched under the previous setting is
      * dropped (in-memory results, the monitor snapshot behind the widget) and refetched,
      * so no real name or address lingers on screen or on the home screen.
      */
     fun setPrivacyMask(mask: PrivacyMask) {
         if (mask == uiPreferences.privacyMask.value) return
-        uiPreferences.setPrivacyMask(mask)
-        applyPrivacyMask(mask)
-        // Keys differ masked vs unmasked: diffing across the switch would alert on every node.
-        monitorStore.clearSnapshots()
         ProcessLifecycleOwner.get().lifecycleScope.launch {
-            // The config summary (context names, endpoints) is masked too, and the Go side
-            // forgets its previous mapping: re-read it, then reload with the new names.
-            runCatching { configRepository.reparse() }
-            // Kept under the previous setting: masked and real names must never mix.
-            offlineCache.clear()
-            uiPreferences.clearRecentSearches()
-            talosRepository.invalidate()
+            if (!maskSwitcher.switch(mask)) return@launch
+            // What was posted with real names goes; a running operation is shown again masked.
+            if (mask.enabled) cancelNamedNotifications()
             ClusterWidget().updateAll(this@TalosApp)
             syncMonitoring(this@TalosApp, runNow = true)
         }
+    }
+
+    private fun cancelNamedNotifications() {
+        cancelPostedAlerts(this)
+        val manager = androidx.core.app.NotificationManagerCompat.from(this)
+        name.levis.ichor.ui.operations.OperationKind.entries.forEach { manager.cancel(it.resultId) }
     }
 
     private fun applyPrivacyMask(mask: PrivacyMask) = Ichorgo.setPrivacyMask(mask.enabled, mask.words)

@@ -96,6 +96,12 @@ struct RootView: View {
         ZStack {
             if everUnlocked || !model.lock.locked {
                 content
+                    // Under the cover below: VoiceOver must not read the old names either.
+                    .accessibilityHidden(model.maskTransition)
+            }
+            // The screenshot mode switching: no screen shows until its names are the new ones.
+            if model.maskTransition {
+                MaskTransitionCover()
             }
             if model.lock.locked {
                 LockView()
@@ -134,6 +140,27 @@ struct RootView: View {
             LockOnboardingView()
         } else {
             MainNavigation()
+        }
+    }
+}
+
+/// Over the screens while the screenshot mode is turned on or off (AppModel.maskTransition):
+/// its icon and a progress indicator, and no name.
+private struct MaskTransitionCover: View {
+    var body: some View {
+        ZStack {
+            Color(.systemBackground).ignoresSafeArea()
+            VStack(spacing: 16) {
+                Image(systemName: "eye.slash")
+                    .font(.system(size: 44))
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+                ProgressView()
+                Text("Switching names…")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+            }
+            .accessibilityElement(children: .combine)
         }
     }
 }
@@ -364,6 +391,15 @@ struct MainNavigation: View {
         }
         // Wake-on-LAN settings and results, for the node menus of every screen.
         .wakeOnLanPresenter()
+        // The screenshot mode switching (under its cover): the screens pushed with the old names
+        // go, the settings pages the switch was flipped on stay.
+        .onChange(of: model.maskTransition) { _, switching in
+            guard switching else { return }
+            path = pathKeptOnMaskSwitch(path) { route in
+                if case .settingsPage = route { return true }
+                return route == .settings
+            }
+        }
         .onChange(of: NotificationRouter.shared.pendingRenewal) { _, pending in
             if pending { openRenewal() }
         }
@@ -526,8 +562,13 @@ struct MainNavigation: View {
             linkMessage = String(localized: "This link is for a cluster that isn’t on this phone")
             return
         }
+        // Not during a screenshot mode switch, nor with a route read under the setting before it:
+        // the route carries node names (see pathKeptOnMaskSwitch).
+        guard !model.maskTransition else { return }
+        let generation = model.dataGeneration
         path = []
-        guard let route = await target.route(client: model.client, kube: model.activeIsKube) else { return }
+        guard let route = await target.route(client: model.client, kube: model.activeIsKube),
+              !model.maskTransition, generation == model.dataGeneration else { return }
         path = [actionRoute(route, for: action)]
         if action?.action != .reboot { NotificationRouter.shared.alertActionRequest = action }
     }

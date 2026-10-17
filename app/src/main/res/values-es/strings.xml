@@ -487,6 +487,7 @@
     <string name="settings_screenshot_mode_desc">Oculta las direcciones IP, los nombres de los nodos y los logotipos de las aplicaciones, p. ej. para capturas o al compartir pantalla</string>
     <string name="settings_screenshot_mode_words">Ocultar también estas palabras</string>
     <string name="settings_screenshot_mode_words_hint">Separadas por comas, p. ej. un dominio o el nombre de un cliente</string>
+    <string name="settings_screenshot_mode_switching">Cambiando los nombres…</string>
     <string name="settings_kube_section">Kubernetes</string>
     <string name="settings_kube_auth">Exportar kubeconfig</string>
     <string name="settings_kube_desc">Exporta un kubeconfig de administrador (requiere un talosconfig os:admin). Cualquiera que tenga este archivo tiene acceso total al clúster de Kubernetes: mantenlo en privado.</string>

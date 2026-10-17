@@ -483,6 +483,7 @@
     <string name="settings_screenshot_mode_desc">Hide IP addresses, node names and app logos, e.g. for screenshots or screen sharing</string>
     <string name="settings_screenshot_mode_words">Also hide these words</string>
     <string name="settings_screenshot_mode_words_hint">Comma-separated, e.g. a domain or a customer name</string>
+    <string name="settings_screenshot_mode_switching">Switching names…</string>
     <string name="settings_kube_section">Kubernetes</string>
     <string name="settings_kube_auth">Export kubeconfig</string>
     <string name="settings_kube_desc">Export an admin kubeconfig (needs an os:admin talosconfig). Anyone with this file has full access to the Kubernetes cluster: keep it private.</string>

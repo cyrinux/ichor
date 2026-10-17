@@ -238,6 +238,11 @@ struct KubeHomeView: View {
             argoRollouts = nil
             alerts = nil
             whoAmI = nil
+            top = [:]
+        }
+        // The screenshot mode switching: the Kubernetes screen pushed from here holds old names.
+        .onChange(of: model.maskTransition) { _, switching in
+            if switching { screen = nil }
         }
         // A new network (VPN connected, back on Wi-Fi) is the likely fix: try again at once.
         .task {

@@ -99,7 +99,8 @@ struct PodLogsSheet: View {
                     }
                 }
             }
-            .task(id: "\(container)/\(previous)/\(refreshes)/\(following)") {
+            // The screenshot mode's generation too: the log is read again under the new names.
+            .task(id: "\(container)/\(previous)/\(refreshes)/\(following)/\(model.dataGeneration)") {
                 if following { await follow() } else { await load() }
             }
             // A previous run's log has no new lines.

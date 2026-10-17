@@ -65,7 +65,8 @@ struct EventsView: View {
                 }
             }
         }
-        .task(id: runID) { await stream() }
+        // Restarts with the screenshot mode too: stream() drops the rows read under the old names.
+        .task(id: "\(runID)#\(model.dataGeneration)") { await stream() }
     }
 
     private func hostname(_ address: String) -> String {

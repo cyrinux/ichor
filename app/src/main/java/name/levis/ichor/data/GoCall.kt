@@ -10,17 +10,20 @@ import name.levis.ichorgo.Ichorgo
  * The JSON boundary to the Go core shared by [TalosRepository], [KubeRepository],
  * [GitOpsRepository] and [DataServicesRepository]: which credentials a call runs with, and the
  * results they keep. Every Go call blocks, so they run on IO. With a [pinned] context, every
- * call goes to that cluster whichever is on screen (the background monitor's reads).
+ * call goes to that cluster whichever is on screen (the background monitor's reads). Every call
+ * first waits for [idle]: none runs while screenshot mode switches (see [MaskSwitcher]).
  */
 class GoCall(
     val configs: ConfigRepository,
     val kubeServers: KubeServers,
     offline: OfflineCache? = null,
     private val pinned: String? = null,
+    private val idle: suspend () -> Unit = {},
 ) {
     val results = ResultCache(
         offline,
-        scope = { "${configs.generation.value}|${pinned ?: configs.config.value?.activeContext}|" },
+        // The mask switch too: a call that ran across one writes where nothing reads any more.
+        scope = { "${MaskEpoch.value.value}|${configs.generation.value}|${pinned ?: configs.config.value?.activeContext}|" },
         // Never the demo's: its results stay in memory.
         cluster = { configs.config.value?.realFingerprint },
     )
@@ -38,6 +41,7 @@ class GoCall(
 
     /** A Talos API call with the active (or pinned) talosconfig context. */
     suspend fun <T> talos(block: (config: String, context: String) -> T): T {
+        idle()
         val stored = stored()
         return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext) }
     }
@@ -47,6 +51,7 @@ class GoCall(
      * kubeconfig's), through the cluster's Kubernetes access when set (K5, see [kubeTarget]).
      */
     suspend fun <T> kube(block: (config: String, context: String, kubeServer: String) -> T): T {
+        idle()
         val target = kubeTarget()
         return withContext(Dispatchers.IO) { block(target.yaml, target.context, target.server) }
     }
@@ -56,6 +61,7 @@ class GoCall(
 
     /** A call that needs both Talos and Kubernetes (maintenance, the admin kubeconfig): always the Talos path. */
     suspend fun <T> talosKube(block: (config: String, context: String, kubeServer: String) -> T): T {
+        idle()
         val stored = stored()
         val server = kubeServers.serverFor(stored)
         return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext, server) }

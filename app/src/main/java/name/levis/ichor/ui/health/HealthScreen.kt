@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.health
 
+import name.levis.ichor.data.MaskScoped
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.share.AddToHomeButton
@@ -99,6 +100,16 @@ class HealthViewModel(
     private val _explain = MutableStateFlow(ExplainState())
     val explain: StateFlow<ExplainState> = _explain.asStateFlow()
     private var explainJob: Job? = null
+
+    // A run started under the previous screenshot mode setting stops, its lines dropped.
+    init {
+        MaskScoped().watch(viewModelScope) {
+            job?.cancel()
+            explainJob?.cancel()
+            _explain.value = ExplainState()
+            _state.value = HealthState()
+        }
+    }
 
     fun start() {
         job?.cancel()

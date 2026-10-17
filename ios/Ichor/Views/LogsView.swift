@@ -139,7 +139,8 @@ struct LogsView: View {
             }
         }
         // Follows while toggled on and visible: the task is cancelled on toggle off or disappear.
-        .task(id: following) {
+        // And again with the screenshot mode, so no line read under the old names stays.
+        .task(id: "\(following)#\(model.dataGeneration)") {
             if following {
                 guard let client = model.client else { return }
                 await follower.run(client, node: node, service: service, containerID: container?.id)

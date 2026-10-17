@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.workloads
 
+import name.levis.ichor.data.MaskScoped
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,8 +57,16 @@ class PodLogFollowViewModel(private val browser: KubeBrowserRepository) : ViewMo
     private val _state = MutableStateFlow(PodFollowState())
     val state: StateFlow<PodFollowState> = _state.asStateFlow()
 
-    /** Starts over with the last lines of [container] ("" for the only one); runs until cancelled or the log ends. */
-    suspend fun follow(namespace: String, pod: String, container: String) {
+    private val mask = MaskScoped()
+
+    /**
+     * Starts over with the last lines of [container] ("" for the only one); runs until cancelled
+     * or the log ends, and starts over after a screenshot mode switch.
+     */
+    suspend fun follow(namespace: String, pod: String, container: String) =
+        mask.run(clear = ::clear) { followOnce(namespace, pod, container) }
+
+    private suspend fun followOnce(namespace: String, pod: String, container: String) {
         _state.value = PodFollowState(streaming = true)
         try {
             coroutineScope {
