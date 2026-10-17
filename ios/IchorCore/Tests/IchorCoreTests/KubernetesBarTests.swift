@@ -5,14 +5,14 @@ final class KubernetesBarTests: XCTestCase {
     func testDefaultKeepsThreeIconsSoTheTitleFits() {
         let bar = KubernetesBar()
         XCTAssertEqual(bar.icons, [.checkup, .networkPolicies, .share])
-        XCTAssertEqual(bar.menu, [.apiHealth, .flows, .resources, .helm, .events, .apiAddress, .capacity, .admissionPolicies, .autoscaling, .virtualMachines])
+        XCTAssertEqual(bar.menu, [.apiHealth, .flows, .resources, .helm, .events, .apiAddress, .capacity, .admissionPolicies, .autoscaling, .virtualMachines, .cleanUpPods])
         XCTAssertTrue(bar.isDefault)
         XCTAssertEqual(KubernetesBar.storageKey, "kubernetes.bar")
     }
 
     func testEncodeMatchesAndroid() {
         let bar = KubernetesBar().toBar(.flows).toMenu(.checkup)
-        XCTAssertEqual(bar.encoded, "NETWORK_POLICIES,SHARE,FLOWS|CHECKUP,API_HEALTH,RESOURCES,HELM,EVENTS,API_ADDRESS,CAPACITY,POLICIES,AUTOSCALING,VIRTUAL_MACHINES")
+        XCTAssertEqual(bar.encoded, "NETWORK_POLICIES,SHARE,FLOWS|CHECKUP,API_HEALTH,RESOURCES,HELM,EVENTS,API_ADDRESS,CAPACITY,POLICIES,AUTOSCALING,VIRTUAL_MACHINES,CLEAN_UP_PODS")
         XCTAssertEqual(KubernetesBar.parse(bar.encoded), bar)
         XCTAssertFalse(bar.isDefault)
     }

@@ -52,6 +52,9 @@ public enum KubernetesAction: String, BarAction {
     case autoscaling = "AUTOSCALING"
     /// KubeVirt (and Harvester) virtual machines; last, so the saved bars keep theirs.
     case virtualMachines = "VIRTUAL_MACHINES"
+    /// Clean up the listed namespace's dead pods (k9s sanitize), on the pods tab; last, so the
+    /// saved bars keep theirs.
+    case cleanUpPods = "CLEAN_UP_PODS"
 
     public var id: String { rawValue }
     public static let barStorageKey = "kubernetes.bar"

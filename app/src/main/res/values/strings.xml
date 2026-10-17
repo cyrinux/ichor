@@ -5364,4 +5364,26 @@
     <string name="sa_help_copy_yaml">Copy YAML</string>
     <string name="panes_pick_node">Pick a node to see its details</string>
     <string name="panes_pick_app">Pick an application to see its details</string>
+    <string name="sanitize_title">Clean up dead pods</string>
+    <string name="sanitize_subtitle_namespace">Done or stuck pods in %1$s, as k9s sanitize picks them</string>
+    <string name="sanitize_subtitle_all">Done or stuck pods in every namespace, as k9s sanitize picks them</string>
+    <string name="sanitize_empty">Nothing to clean up</string>
+    <string name="sanitize_truncated">More pods than one page: only the first page was checked. Pick a namespace to see the rest.</string>
+    <string name="sanitize_group">%1$s · %2$d</string>
+    <string name="sanitize_age">Age %1$s</string>
+    <string name="sanitize_recreated_by">recreated by %1$s %2$s</string>
+    <string name="sanitize_fresh_pending">Pending for under 2 minutes: may still be scheduling, left unchecked</string>
+    <string name="sanitize_confirm_text">Pods a controller owns come back as new ones; the others are gone for good.</string>
+    <plurals name="sanitize_delete">
+        <item quantity="one">Delete %1$d pod</item>
+        <item quantity="other">Delete %1$d pods</item>
+    </plurals>
+    <plurals name="sanitize_confirm_title">
+        <item quantity="one">Delete %1$d pod?</item>
+        <item quantity="other">Delete %1$d pods?</item>
+    </plurals>
+    <plurals name="sanitize_done">
+        <item quantity="one">%1$d pod deleted</item>
+        <item quantity="other">%1$d pods deleted</item>
+    </plurals>
 </resources>

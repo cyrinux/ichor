@@ -107,7 +107,7 @@ final class KubeAccessTests: XCTestCase {
     func testEveryActionHasItsCoreName() {
         XCTAssertEqual(KubeAction.allCases.map(\.rawValue), [
             "createVolumeSnapshot", "restartWorkload", "restartStatefulSet", "restartDaemonSet", "scale", "scaleStatefulSet",
-            "deletePod", "execPod", "debugPod", "debugNode", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync",
+            "deletePod", "sanitizePods", "execPod", "debugPod", "debugNode", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync",
             "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
             "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode", "editNodeMeta",
             "alertmanagerSilence", "alertmanagerExpire", "cnpgPromote", "cnpgRestartPrimary", "cnpgHibernate", "longhornSalvage", "longhornAttachment", "longhornSnapshot", "longhornReplicas", "longhornNode",

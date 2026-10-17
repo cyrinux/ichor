@@ -5615,4 +5615,32 @@
     <string name="sa_help_copy_yaml">Копіювати YAML</string>
     <string name="panes_pick_node">Виберіть вузол, щоб побачити його деталі</string>
     <string name="panes_pick_app">Виберіть застосунок, щоб побачити його деталі</string>
+    <string name="sanitize_title">Прибрати мертві поди</string>
+    <string name="sanitize_subtitle_namespace">Завершені або завислі поди в %1$s, вибрані як у k9s sanitize</string>
+    <string name="sanitize_subtitle_all">Завершені або завислі поди в усіх просторах імен, вибрані як у k9s sanitize</string>
+    <string name="sanitize_empty">Нічого прибирати</string>
+    <string name="sanitize_truncated">Подів більше, ніж на одну сторінку: перевірено лише першу. Виберіть простір імен, щоб побачити решту.</string>
+    <string name="sanitize_group">%1$s · %2$d</string>
+    <string name="sanitize_age">Вік %1$s</string>
+    <string name="sanitize_recreated_by">створить знову %1$s %2$s</string>
+    <string name="sanitize_fresh_pending">Pending менше 2 хвилин: можливо, ще планується, не позначено</string>
+    <string name="sanitize_confirm_text">Поди, якими володіє контролер, повернуться як нові; решта зникне назавжди.</string>
+    <plurals name="sanitize_delete">
+        <item quantity="one">Видалити %1$d под</item>
+        <item quantity="few">Видалити %1$d поди</item>
+        <item quantity="many">Видалити %1$d подів</item>
+        <item quantity="other">Видалити %1$d поду</item>
+    </plurals>
+    <plurals name="sanitize_confirm_title">
+        <item quantity="one">Видалити %1$d под?</item>
+        <item quantity="few">Видалити %1$d поди?</item>
+        <item quantity="many">Видалити %1$d подів?</item>
+        <item quantity="other">Видалити %1$d поду?</item>
+    </plurals>
+    <plurals name="sanitize_done">
+        <item quantity="one">Видалено %1$d под</item>
+        <item quantity="few">Видалено %1$d поди</item>
+        <item quantity="many">Видалено %1$d подів</item>
+        <item quantity="other">Видалено %1$d поду</item>
+    </plurals>
 </resources>
