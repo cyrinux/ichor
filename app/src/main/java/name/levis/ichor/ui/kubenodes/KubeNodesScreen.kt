@@ -8,11 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -28,7 +26,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
@@ -41,6 +38,11 @@ import name.levis.ichor.model.filterKubeNodes
 import name.levis.ichor.model.kubeHealthCounts
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.CardListPadding
+import name.levis.ichor.ui.components.RowCard
+import name.levis.ichor.ui.components.RowPosition
+import name.levis.ichor.ui.components.cardGroupTitle
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
@@ -93,12 +95,14 @@ fun KubeNodesScreen(
                 val nodes = s.data.nodes
                 val groups = remember(nodes, query, filter) { nodes.filterKubeNodes(query, filter).byStatus() }
                 val counts = remember(nodes) { nodes.kubeHealthCounts() }
+                // The health summary in its own card, like the home's.
+                RowCard(RowPosition.ONLY, Modifier.padding(top = 8.dp)) {
+                    Text(healthSummary(counts), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp))
+                }
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(healthSummary(counts), style = MaterialTheme.typography.labelLarge)
                     SearchField(query, { query = it }, stringResource(R.string.nodes_search), Modifier.fillMaxWidth())
                     FilterChips(filter) { filter = it }
                 }
-                HorizontalDivider()
                 PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
                     if (groups.isEmpty()) {
                         EmptyText(emptyOrNoMatch(query, R.string.nodes_none, R.string.nodes_no_match))
@@ -113,25 +117,14 @@ fun KubeNodesScreen(
     }
 }
 
-/** The nodes under a header per status, so a scroll lands on the problems first. */
+/** The nodes as one titled card per status, so a scroll lands on the problems first. */
 @Composable
 private fun NodeList(groups: List<KubeStatusGroup>, row: @Composable (KubeNodeInfo) -> Unit) {
-    LazyColumn(Modifier.fillMaxSize()) {
-        groups.forEach { group ->
-            item(key = "status:${group.status}") {
-                Text(
-                    "${statusLabel(group.status)}  ·  ${group.nodes.size}",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
-                )
-            }
-            items(group.nodes, key = { "node:${it.name}" }) { node ->
-                row(node)
-                HorizontalDivider()
-            }
+    val titles = groups.map { "${statusLabel(it.status)}  ·  ${it.nodes.size}" }
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
+        groups.forEachIndexed { i, group ->
+            cardGroupTitle("status:${group.status}", titles[i])
+            cardRows(group.nodes, key = { "node:${it.name}" }) { row(it) }
         }
     }
 }

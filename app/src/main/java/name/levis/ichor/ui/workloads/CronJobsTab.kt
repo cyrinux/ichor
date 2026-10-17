@@ -226,7 +226,7 @@ fun CronJobsTab(
                 LazyColumn(
                     Modifier.fillMaxSize(),
                     state = listState,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                    contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     items(rows, key = { it.key }) { c ->
