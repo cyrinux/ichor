@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -54,6 +55,84 @@ func TestDriftUsesRolesAndSkipsUnknownFields(t *testing.T) {
 	old, _ := toJSON(baseline)
 	if _, err := CompareDrift(old, raw); err == nil {
 		t.Fatal("cross-cluster baseline accepted")
+	}
+}
+func TestDiffSettingItemisesListValues(t *testing.T) {
+	cases := []struct {
+		name, before, after string
+		added, removed      []string
+		changed             []driftPair
+	}{
+		{name: "extensions",
+			before:  "iscsi-tools=v0.2.0, qemu-guest-agent=10.0.2, schematic=0123abcd, util-linux-tools=2.41.1",
+			after:   "btrfs=v1.14.1, iscsi-tools=v0.2.0, schematic=4567cdef, util-linux-tools=2.41.2",
+			added:   []string{"btrfs=v1.14.1"},
+			removed: []string{"qemu-guest-agent=10.0.2"},
+			changed: []driftPair{{Name: "schematic", Before: "0123abcd", After: "4567cdef"}, {Name: "util-linux-tools", Before: "2.41.1", After: "2.41.2"}}},
+		{name: "mtu renamed interface", before: "ens3=1500, eth1=9000", after: "enp1s0=1500, eth1=9000",
+			added: []string{"enp1s0=1500"}, removed: []string{"ens3=1500"}, changed: []driftPair{}},
+		{name: "servers", before: "192.0.2.1, 192.0.2.2", after: "192.0.2.2, 192.0.2.3",
+			added: []string{"192.0.2.3"}, removed: []string{"192.0.2.1"}, changed: []driftPair{}},
+		{name: "scalar", before: "true", after: "false",
+			added: []string{"false"}, removed: []string{"true"}, changed: []driftPair{}},
+		{name: "from empty", before: "", after: "a=1",
+			added: []string{"a=1"}, removed: []string{}, changed: []driftPair{}},
+	}
+	for _, c := range cases {
+		added, removed, changed := diffSetting(c.before, c.after)
+		if !reflect.DeepEqual(added, c.added) || !reflect.DeepEqual(removed, c.removed) || !reflect.DeepEqual(changed, c.changed) {
+			t.Errorf("%s: got +%v -%v ~%v", c.name, added, removed, changed)
+		}
+	}
+}
+func TestCompareDriftItemisesListKeysOnly(t *testing.T) {
+	current := driftSnapshot{Scope: "cluster", Nodes: []driftNode{
+		{Node: "192.0.2.20", Hostname: "worker-a", Role: "worker", Values: map[string]string{"mtu": "ens3=1500", "secureBoot": "true"}},
+		{Node: "192.0.2.21", Hostname: "worker-b", Role: "worker", Values: map[string]string{"mtu": "enp1s0=1500", "secureBoot": "false"}},
+	}}
+	raw, _ := toJSON(current)
+	out, err := CompareDrift("", raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := `[{"node":"192.0.2.21","reference":"192.0.2.20","nodeName":"worker-b","referenceName":"worker-a","key":"mtu","before":"ens3=1500","after":"enp1s0=1500","added":["enp1s0=1500"],"removed":["ens3=1500"],"changed":[]},` +
+		`{"node":"192.0.2.21","reference":"192.0.2.20","nodeName":"worker-b","referenceName":"worker-a","key":"secureBoot","before":"true","after":"false","added":[],"removed":[],"changed":[]}]`
+	if strings.TrimSpace(out) != want {
+		t.Fatalf("unexpected drift JSON:\n%s", out)
+	}
+}
+func TestDemoDriftShowsSampleDifferences(t *testing.T) {
+	config, err := DemoConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := ClusterDriftSnapshot(config, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := CompareDrift("", snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var changes []driftChange
+	if err = json.Unmarshal([]byte(raw), &changes); err != nil {
+		t.Fatal(err)
+	}
+	keys := map[string]driftChange{}
+	for _, c := range changes {
+		if c.NodeName != "demo-worker-2" || c.ReferenceName != "demo-worker-1" {
+			t.Fatalf("unexpected demo drift on %s: %+v", c.NodeName, c)
+		}
+		keys[c.Key] = c
+	}
+	if ext := keys["extensions"]; len(ext.Added) != 1 || len(ext.Removed) != 1 || len(ext.Changed) != 2 {
+		t.Fatalf("extensions: %+v", ext)
+	}
+	if mtu := keys["mtu"]; len(mtu.Added) != 1 || len(mtu.Removed) != 1 || len(mtu.Changed) != 0 {
+		t.Fatalf("mtu: %+v", mtu)
+	}
+	if sb := keys["secureBoot"]; sb.Before != "true" || sb.After != "false" || len(keys) != 3 {
+		t.Fatalf("secureBoot or extra keys: %+v", keys)
 	}
 }
 func TestIncidentBoundsDeduplicationAndIsolation(t *testing.T) {
