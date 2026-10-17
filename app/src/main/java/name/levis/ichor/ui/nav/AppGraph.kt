@@ -23,6 +23,7 @@ import name.levis.ichor.ui.settings.SettingsScreen
 import name.levis.ichor.ui.settings.SettingsStores
 import name.levis.ichor.ui.settings.SupportedIntegrationsScreen
 import name.levis.ichor.ui.support.SupportBundleScreen
+import name.levis.ichor.ui.tour.replayDemoTour
 
 /**
  * The app's own screens: settings, diagnosis, changelog, licenses, funding, support, and the
@@ -92,5 +93,9 @@ private fun settingsActions(nav: NavHostController, app: TalosApp) = SettingsAct
     onCleared = {
         app.launchSync(runNow = true)
         nav.resetTo(Routes.IMPORT)
+    },
+    onReplayTour = {
+        replayDemoTour(app.configRepository, app.uiPreferences, app::selectCluster)
+        nav.resetTo(Routes.OVERVIEW)
     },
 )

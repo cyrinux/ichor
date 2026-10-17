@@ -12,6 +12,7 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.NodeGroup
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.NodeStatus
 import name.levis.ichor.model.ServiceHealth
@@ -20,6 +21,8 @@ import name.levis.ichor.ui.components.ResourceRow
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.tour.TourAnchor
+import name.levis.ichor.ui.tour.tourAnchor
 
 /** Up to this many nodes, the collapsed Nodes card lists them as rows; past it, as chips. */
 internal const val FEW_NODES = 4
@@ -52,6 +55,8 @@ internal fun NodeLines(
     onNode: (NodeOverview) -> Unit,
     onLive: (NodeOverview) -> Unit,
     onMore: (NodeOverview) -> Unit,
+    /** The node the demo tour points at, if listed here. */
+    degraded: NodeOverview? = null,
 ) {
     val liveLabel = stringResource(R.string.overview_action_live_graphs)
     val actionsLabel = stringResource(R.string.overview_node_actions)
@@ -61,7 +66,7 @@ internal fun NodeLines(
             ResourceRow(
                 status.serviceHealth,
                 node.hostname,
-                Modifier.combinedClickable(
+                Modifier.degradedAnchor(node, degraded).combinedClickable(
                     onClick = { onNode(node) },
                     onLongClick = { onMore(node) },
                     onLongClickLabel = actionsLabel,
@@ -76,6 +81,14 @@ internal fun NodeLines(
         }
     }
 }
+
+/** The first node not ready, in the order the card lists them (unreachable first in each group). */
+internal fun List<NodeGroup>.firstDegraded(): NodeOverview? =
+    asSequence().flatMap { g -> g.nodes.sortedBy { it.status != NodeStatus.UNREACHABLE } }.firstOrNull { it.status != NodeStatus.READY }
+
+/** Marks [node] as the demo tour's degraded node when it is [degraded]. */
+internal fun Modifier.degradedAnchor(node: NodeOverview, degraded: NodeOverview?): Modifier =
+    if (node == degraded) tourAnchor(TourAnchor.DegradedNode) else this
 
 private val NodeStatus.serviceHealth: ServiceHealth
     get() = when (this) {

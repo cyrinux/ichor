@@ -36,6 +36,8 @@ struct IchorApp: App {
         OperationActivities.start()
         // The Apple Watch's link: ready before a background run sends it the last check.
         WatchLink.shared.activate()
+        // TipKit, for the demo tour's coach marks (DemoTour).
+        DemoTour.configure()
         StartupTrace.markOnce("app.init end")
     }
 
@@ -411,6 +413,11 @@ struct MainNavigation: View {
         }
         .onChange(of: NotificationRouter.shared.pendingCluster) { _, pending in
             if pending != nil { openCluster() }
+        }
+        .onChange(of: NotificationRouter.shared.pendingHome) { _, pending in
+            guard pending else { return }
+            NotificationRouter.shared.pendingHome = false
+            path = []
         }
         .onChange(of: NotificationRouter.shared.pendingArgoWindows) { _, pending in
             if pending { openArgoWindows() }

@@ -53,6 +53,8 @@ struct OverviewView: View {
     @State private var visible = false
     /// "Since you last looked" (the history ring).
     @State private var look = HistoryLook()
+    /// The demo tour's first coach mark (inline, see DemoTourSwitcherTip) shows now.
+    @State private var tourShowsSwitcher = false
 
     var body: some View {
         Group {
@@ -81,6 +83,9 @@ struct OverviewView: View {
                                     Text("Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.")
                                         .font(.callout).foregroundStyle(.secondary)
                                 }
+                            }
+                            if tourActive, tourShowsSwitcher {
+                                Section { DemoTourSwitcherTip() }
                             }
                             HistorySinceSection(look: look)
                             if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
@@ -178,11 +183,13 @@ struct OverviewView: View {
                     Button { path.append(Route.diagnosis(note: "")) } label: { Label("AI diagnosis", systemImage: "sparkles") }
                 }
                 // As arranged: the bar's icons, the rest behind ⋯ (with the arrangement itself).
-                ForEach(bar.icons.filter(offered)) { action in
+                ForEach(barIcons) { action in
                     Button { path.append(route(action)) } label: {
                         Label { action.title } icon: { Image(systemName: action.systemImage) }
                     }
                     .disabled(!enabled(action))
+                    .demoTourTip(action == .settings ? .settings : .actions,
+                                 active: tourActive && (action == .settings || action == tourActionsAnchor))
                 }
                 Menu {
                     let menu = bar.menu.filter(offered)
@@ -198,6 +205,8 @@ struct OverviewView: View {
                     Image(systemName: "ellipsis.circle")
                 }
                 .accessibilityLabel(Text("More"))
+                // Settings sits in this menu unless it was made an icon.
+                .demoTourTip(.settings, active: tourActive && !barIcons.contains(.settings))
             }
         }
         .sheet(isPresented: $customizing) { OverviewEditorSheet(OverviewCard.self, OverviewAction.self, title: "Customize overview", absent: absentCards) }
@@ -223,6 +232,15 @@ struct OverviewView: View {
         }
         .onAppear { visible = true }
         .onDisappear { visible = false }
+        // The demo tour: on to the next coach mark as each one is closed (DemoTour.follow).
+        .task(id: tourID) {
+            guard tourActive, let available = tourAvailable else { return }
+            await DemoTour.follow(available: available)
+        }
+        .task(id: tourID) {
+            guard tourActive else { return }
+            await DemoTour.watchSwitcher { tourShowsSwitcher = $0 }
+        }
         .alert("Find the public IPs?", isPresented: $confirmDetectIPs) {
             Button("Find") { detectPublicIPs() }
             Button("Cancel", role: .cancel) {}
@@ -379,12 +397,14 @@ struct OverviewView: View {
                 ForEach(groups) { group in
                     // Site headers only when there is more than one: a single site says nothing.
                     if groups.count > 1 { SiteHeader(title: group.title) }
-                    NodeGroupRows(nodes: group.nodes, expanded: nodesExpanded, sharedVersion: version, path: $path)
+                    NodeGroupRows(nodes: group.nodes, expanded: nodesExpanded, sharedVersion: version,
+                                  tourNode: tourActive ? tourDegradedNode(overview)?.node : nil, path: $path)
                 }
             }
         } header: {
             HStack {
                 Text("Nodes")
+                    .demoTourTip(.nodes, active: tourActive)
                 Spacer()
                 if model.isDetectingPublicIPs || canDetectIPs(overview) {
                     DetectPublicIPsButton(running: model.isDetectingPublicIPs) { confirmDetectIPs = true }
@@ -407,6 +427,44 @@ struct OverviewView: View {
             }
         }
     }
+
+    /// The demo tour runs here: the Talos demo's overview on screen, with neither the lock nor
+    /// the screenshot mode's switching cover over it.
+    private var tourActive: Bool {
+        DemoTourSteps.runs(demo: model.activeSummary?.demo == true, kube: model.activeIsKube)
+            && visible && scenePhase == .active && !model.maskTransition && !model.lock.locked
+    }
+
+    /// The coach marks whose anchor is on screen; nil until the overview is loaded.
+    private var tourAvailable: Set<DemoTourStep>? {
+        guard case .loaded(let overview, _, _) = state, overview.outage == nil, !fromMonitor else { return nil }
+        var available: Set<DemoTourStep> = [.switcher, .settings]
+        if layout.visible.contains(.nodes) {
+            available.insert(.nodes)
+            if tourDegradedNode(overview) != nil { available.insert(.degradedNode) }
+        }
+        if tourActionsAnchor != nil { available.insert(.actions) }
+        return available
+    }
+
+    /// Restarts the tour's tasks when what it shows on changes.
+    private var tourID: String {
+        let available = tourAvailable.map { $0.map(\.rawValue).sorted().joined(separator: ",") } ?? "-"
+        return "\(loadID)|\(tourActive)|\(available)|\(DemoTour.generation)"
+    }
+
+    /// The node the tour's third coach mark points at: the first one not ready, with a row or
+    /// chip of its own (not on a large cluster's counts).
+    private func tourDegradedNode(_ overview: ClusterOverview) -> NodeOverview? {
+        guard !isDenseCluster(overview.nodes.count) else { return nil }
+        return overview.nodes.overviewOrder.first { $0.status != .ready }
+    }
+
+    /// The toolbar's icons as offered.
+    private var barIcons: [OverviewAction] { bar.icons.filter(offered) }
+
+    /// The icon the tour's action bar coach mark points at: the first one, Settings aside.
+    private var tourActionsAnchor: OverviewAction? { barIcons.first { $0 != .settings } }
 
     /// Address → hostname of the loaded nodes, for the events timeline.
     private var hostnames: [String: String] {
@@ -796,18 +854,22 @@ private struct NodeGroupRows: View {
     let nodes: [NodeOverview]
     let expanded: Bool
     let sharedVersion: String?
+    /// The node the demo tour's coach mark points at (its address), if any.
+    var tourNode: String?
     @Binding var path: [Route]
 
     var body: some View {
         if expanded {
             ForEach(nodes) { node in
                 NodeListRow(node: node, sharedVersion: sharedVersion, path: $path)
+                    .demoTourTip(.degradedNode, active: node.node == tourNode)
             }
         } else {
             ChipFlow(spacing: 8) {
                 ForEach(nodes) { node in
                     NodeChip(node: node) { path.append(.node(node.ref)) }
                         .contextMenu { NodeMenu(node: node, path: $path) }
+                        .demoTourTip(.degradedNode, active: node.node == tourNode)
                 }
             }
             .buttonStyle(.borderless)
