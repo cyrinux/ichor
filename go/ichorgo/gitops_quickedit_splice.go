@@ -83,6 +83,10 @@ func minEditLine(edits []textEdit) int {
 
 func targetEdit(content string, starts []int, t quickEditTarget) (textEdit, bool, error) {
 	if t.node != nil {
+		if t.node.Anchor != "" {
+			return textEdit{}, false, fmt.Errorf("the value on line %d has an anchor (&%s) that other values may repeat: edit it in the editor", t.node.Line, t.node.Anchor)
+		}
+
 		start, end, err := scalarSpan(content, starts, t.node)
 		if err != nil {
 			return textEdit{}, false, err
@@ -243,7 +247,20 @@ func renderScalar(style yaml.Style, value, tag string) (string, error) {
 	return "", fmt.Errorf("%q cannot be written as a %s", value, strings.TrimPrefix(tag, "!!"))
 }
 
+// yaml11Words read as a boolean or null in YAML 1.1 (Helm's parser) whatever a YAML 1.2
+// parser says: a string with this text is quoted.
+var yaml11Words = []string{
+	"y", "Y", "yes", "Yes", "YES", "n", "N", "no", "No", "NO",
+	"on", "On", "ON", "off", "Off", "OFF",
+	"true", "True", "TRUE", "false", "False", "FALSE",
+	"null", "Null", "NULL", "~",
+}
+
 func plainReadsAs(value, tag string) bool {
+	if tag == "!!str" && slices.Contains(yaml11Words, value) {
+		return false
+	}
+
 	var doc yaml.Node
 	if yaml.Unmarshal([]byte("v: "+value+"\n"), &doc) != nil || len(doc.Content) == 0 {
 		return false

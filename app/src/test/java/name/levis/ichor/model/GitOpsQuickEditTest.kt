@@ -59,21 +59,29 @@ class GitOpsQuickEditTest {
 
     @Test
     fun theEditJsonCarriesOnlyItsOpKeys() {
-        val image = Json.parseToJsonElement(quickEditJson(QuickEdit.image(1, "app", "ghcr.io/example-org/app:2"))).jsonObject
-        assertEquals(setOf("op", "documentIndex", "container", "image"), image.keys)
+        val image = Json.parseToJsonElement(quickEditJson(QuickEdit.image(1, "app", "ghcr.io/example-org/app:2", "Deployment", "web"))).jsonObject
+        assertEquals(setOf("op", "documentIndex", "kind", "name", "container", "image"), image.keys)
         assertEquals(1, image.getValue("documentIndex").jsonPrimitive.int)
-        val replicas = Json.parseToJsonElement(quickEditJson(QuickEdit.replicas(0, "app", 4))).jsonObject
-        assertEquals(setOf("op", "documentIndex", "replicas"), replicas.keys)
+        assertEquals("Deployment", image.getValue("kind").jsonPrimitive.content)
+        assertEquals("web", image.getValue("name").jsonPrimitive.content)
+        val replicas = Json.parseToJsonElement(quickEditJson(QuickEdit.replicas(0, "app", 4, kind = "StatefulSet"))).jsonObject
+        assertEquals(setOf("op", "documentIndex", "kind", "name", "replicas"), replicas.keys)
+        assertEquals("app", replicas.getValue("name").jsonPrimitive.content)
+        val bare = Json.parseToJsonElement(quickEditJson(QuickEdit.replicas(0, "app", 4))).jsonObject
+        assertEquals(setOf("op", "documentIndex", "replicas"), bare.keys)
         val kustomize = Json.parseToJsonElement(quickEditJson(QuickEdit.kustomize(0, "ghcr.io/example-org/app", "2"))).jsonObject
         assertEquals(setOf("op", "documentIndex", "kustomizeImage", "image"), kustomize.keys)
         assertEquals("2", kustomize.getValue("image").jsonPrimitive.content)
         val kReplicas = Json.parseToJsonElement(quickEditJson(QuickEdit.replicas(0, "web", 2, kustomizeReplica = "web"))).jsonObject
         assertEquals(setOf("op", "documentIndex", "kustomizeReplica", "replicas"), kReplicas.keys)
+        // A kustomization entry never carries a workload's kind and name.
+        val kReplicasKind = Json.parseToJsonElement(quickEditJson(QuickEdit.replicas(0, "web", 2, kustomizeReplica = "web", kind = "Deployment"))).jsonObject
+        assertEquals(setOf("op", "documentIndex", "kustomizeReplica", "replicas"), kReplicasKind.keys)
     }
 
     @Test
     fun aRouteEditRoundTrips() {
-        val edit = QuickEdit.replicas(2, "web", 5)
+        val edit = QuickEdit.replicas(2, "web", 5, kind = "Deployment")
         assertEquals(edit, decodeQuickEdit(encodeQuickEdit(edit)))
         val kustomize = QuickEdit.kustomize(0, "ghcr.io/example-org/app", "3")
         assertEquals(kustomize, decodeQuickEdit(encodeQuickEdit(kustomize)))
@@ -113,7 +121,11 @@ class GitOpsQuickEditTest {
         assertTrue(choices[0].isKustomize)
         assertEquals("ghcr.io/example-org/web:1", choices[0].image)
         assertEquals(QuickEdit.kustomize(2, "ghcr.io/example-org/web", "2"), choices[0].edit(" 2"))
-        assertEquals(QuickEdit.image(1, "app", "ghcr.io/example-org/api:2"), choices[2].edit("2"))
+        assertEquals(QuickEdit.image(1, "app", "ghcr.io/example-org/api:2", "Deployment", "api"), choices[2].edit("2"))
+        val json = Json.parseToJsonElement(quickEditJson(choices[2].edit("2"))).jsonObject
+        assertEquals(setOf("op", "documentIndex", "kind", "name", "container", "image"), json.keys)
+        assertEquals("api", json.getValue("name").jsonPrimitive.content)
+        assertEquals(setOf("op", "documentIndex", "kind", "name", "replicas"), Json.parseToJsonElement(quickEditJson(quickReplicaChoices(targets)[1].edit(3))).jsonObject.keys)
     }
 
     @Test

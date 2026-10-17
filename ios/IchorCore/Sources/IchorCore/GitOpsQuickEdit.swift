@@ -80,15 +80,18 @@ public struct QuickEditKustomizeImage: Decodable, Hashable, Sendable {
     public let name: String
     public let newName: String
     public let newTag: String
+    /// Pinned by digest ("" for none): left to the editor.
+    public let digest: String
 
-    public init(documentIndex: Int = 0, name: String, newName: String = "", newTag: String = "") {
+    public init(documentIndex: Int = 0, name: String, newName: String = "", newTag: String = "", digest: String = "") {
         self.documentIndex = documentIndex
         self.name = name
         self.newName = newName
         self.newTag = newTag
+        self.digest = digest
     }
 
-    enum CodingKeys: String, CodingKey { case documentIndex, name, newName, newTag }
+    enum CodingKeys: String, CodingKey { case documentIndex, name, newName, newTag, digest }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -96,6 +99,7 @@ public struct QuickEditKustomizeImage: Decodable, Hashable, Sendable {
         name = try c.field(.name, "")
         newName = try c.field(.newName, "")
         newTag = try c.field(.newTag, "")
+        digest = try c.field(.digest, "")
     }
 
     /// The image the entry makes the manifests run.
@@ -152,18 +156,19 @@ public struct QuickEditTargets: Decodable, Hashable, Sendable {
     }
 
     /// Every image the file sets: the kustomization's entries first (they win over the
-    /// manifests), then each container whose image no entry of the file replaces.
+    /// manifests; one pinned by digest is left to the editor), then each named container whose
+    /// image no entry of the file replaces.
     public var images: [QuickEditImageTarget] {
         let several = documents.filter { !$0.containers.isEmpty }.count > 1
-        let kustomize = kustomizeImages.map { entry in
+        let kustomize = kustomizeImages.filter { !$0.name.isEmpty && $0.digest.isEmpty }.map { entry in
             QuickEditImageTarget(place: .kustomize(documentIndex: entry.documentIndex, name: entry.name),
                                  label: shortImageName(entry.name), image: entry.image)
         }
         let containers = documents.flatMap { document in
-            document.containers.filter { $0.overriddenBy.isEmpty }.map { container in
+            document.containers.filter { !$0.name.isEmpty && $0.overriddenBy.isEmpty }.map { container in
                 QuickEditImageTarget(place: .container(documentIndex: document.index, name: container.name),
                                      label: several ? "\(container.name) (\(document.kind) \(document.name))" : container.name,
-                                     image: container.image)
+                                     image: container.image, workloadKind: document.kind, workloadName: document.name)
             }
         }
         return kustomize + containers
@@ -177,7 +182,7 @@ public struct QuickEditTargets: Decodable, Hashable, Sendable {
         }
         let workloads = documents.filter(\.scalable).map { document in
             QuickEditReplicaTarget(place: .document(index: document.index), label: "\(document.kind) \(document.name)",
-                                   current: document.currentReplicas, name: document.name)
+                                   current: document.currentReplicas, name: document.name, workloadKind: document.kind)
         }
         return kustomize + workloads
     }
@@ -200,13 +205,18 @@ public struct QuickEditImageTarget: Hashable, Identifiable, Sendable {
     public let label: String
     /// The image as the file sets it now.
     public let image: String
+    /// A container's workload document: its kind and metadata.name ("" for a kustomize entry).
+    public let workloadKind: String
+    public let workloadName: String
 
     public var id: QuickEditImagePlace { place }
 
-    public init(place: QuickEditImagePlace, label: String, image: String) {
+    public init(place: QuickEditImagePlace, label: String, image: String, workloadKind: String = "", workloadName: String = "") {
         self.place = place
         self.label = label
         self.image = image
+        self.workloadKind = workloadKind
+        self.workloadName = workloadName
     }
 
     public var isKustomize: Bool {
@@ -228,8 +238,8 @@ public struct QuickEditImageTarget: Hashable, Identifiable, Sendable {
         let tag = tag.trimmingCharacters(in: .whitespacesAndNewlines)
         switch place {
         case .container(let index, let name):
-            return QuickEdit(op: .image, documentIndex: index, container: name, image: imageWithTag(image, tag: tag),
-                             label: titleName)
+            return QuickEdit(op: .image, documentIndex: index, kind: nonEmpty(workloadKind), name: nonEmpty(workloadName),
+                             container: name, image: imageWithTag(image, tag: tag), label: titleName)
         case .kustomize(let index, let name):
             return QuickEdit(op: .image, documentIndex: index, image: tag, kustomizeImage: name, label: titleName)
         }
@@ -252,14 +262,17 @@ public struct QuickEditReplicaTarget: Hashable, Identifiable, Sendable {
     public let current: Int
     /// The workload's name, for the pull request's title.
     public let name: String
+    /// The workload's kind ("" for a kustomize entry): with name, what the Go core checks.
+    public let workloadKind: String
 
     public var id: QuickEditReplicaPlace { place }
 
-    public init(place: QuickEditReplicaPlace, label: String, current: Int, name: String? = nil) {
+    public init(place: QuickEditReplicaPlace, label: String, current: Int, name: String? = nil, workloadKind: String = "") {
         self.place = place
         self.label = label
         self.current = current
         self.name = name ?? label
+        self.workloadKind = workloadKind
     }
 
     public var isKustomize: Bool {
@@ -271,7 +284,9 @@ public struct QuickEditReplicaTarget: Hashable, Identifiable, Sendable {
     public func edit(replicas: Int) -> QuickEdit {
         switch place {
         case .document(let index):
-            return QuickEdit(op: .replicas, documentIndex: index, replicas: replicas, label: name)
+            let kind = nonEmpty(workloadKind)
+            return QuickEdit(op: .replicas, documentIndex: index, kind: kind, name: kind == nil ? nil : nonEmpty(name),
+                             replicas: replicas, label: name)
         case .kustomize(let index, let entry):
             return QuickEdit(op: .replicas, documentIndex: index, replicas: replicas, kustomizeReplica: entry, label: name)
         }
@@ -286,6 +301,10 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
 
     public let op: Op
     public let documentIndex: Int
+    /// The kind and metadata.name of the workload document a container or workload replicas
+    /// edit targets: the Go core checks documentIndex still holds it (else finds it by them).
+    public let kind: String?
+    public let name: String?
     public let container: String?
     /// The whole reference for a container, the tag alone for a kustomize entry.
     public let image: String?
@@ -297,10 +316,13 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
     /// The container, image or workload the title names; not sent.
     public let label: String
 
-    public init(op: Op, documentIndex: Int, container: String? = nil, image: String? = nil, replicas: Int? = nil,
-                kustomizeImage: String? = nil, kustomizeReplica: String? = nil, label: String) {
+    public init(op: Op, documentIndex: Int, kind: String? = nil, name: String? = nil, container: String? = nil,
+                image: String? = nil, replicas: Int? = nil, kustomizeImage: String? = nil, kustomizeReplica: String? = nil,
+                label: String) {
         self.op = op
         self.documentIndex = documentIndex
+        self.kind = kind
+        self.name = name
         self.container = container
         self.image = image
         self.replicas = replicas
@@ -309,12 +331,16 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
         self.label = label
     }
 
-    enum CodingKeys: String, CodingKey { case op, documentIndex, container, image, replicas, kustomizeImage, kustomizeReplica }
+    enum CodingKeys: String, CodingKey {
+        case op, documentIndex, kind, name, container, image, replicas, kustomizeImage, kustomizeReplica
+    }
 
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(op, forKey: .op)
         try c.encode(documentIndex, forKey: .documentIndex)
+        try c.encodeIfPresent(kind, forKey: .kind)
+        try c.encodeIfPresent(name, forKey: .name)
         try c.encodeIfPresent(container, forKey: .container)
         try c.encodeIfPresent(image, forKey: .image)
         try c.encodeIfPresent(replicas, forKey: .replicas)
@@ -387,6 +413,20 @@ public func imageWithTag(_ image: String, tag: String) -> String {
     let repository = imageRepository(image)
     return tag.isEmpty ? repository : "\(repository):\(tag)"
 }
+
+/// Whether tag is an image tag (a digest is changed in the editor): no spaces, slashes or
+/// colons, at most 128 characters, not starting with "." or "-". Same rule as Android.
+public func isValidImageTag(_ tag: String) -> Bool {
+    let tag = tag.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard let first = tag.unicodeScalars.first, tag.unicodeScalars.count <= 128 else { return false }
+    func allowed(_ c: Unicode.Scalar) -> Bool {
+        c.isASCII && (("a"..."z").contains(c) || ("A"..."Z").contains(c) || ("0"..."9").contains(c) || c == "_")
+    }
+    return allowed(first) && tag.unicodeScalars.dropFirst().allSatisfy { allowed($0) || $0 == "." || $0 == "-" }
+}
+
+/// nil for "", for the optional keys of the edit JSON.
+private func nonEmpty(_ s: String) -> String? { s.isEmpty ? nil : s }
 
 /// "ghcr.io/example-org/app" → "app".
 public func shortImageName(_ image: String) -> String {

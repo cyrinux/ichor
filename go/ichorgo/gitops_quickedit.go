@@ -24,9 +24,14 @@ import (
 //	{"op":"replicas","documentIndex":0,"replicas":3}
 //	{"op":"replicas","documentIndex":0,"kustomizeReplica":"app","replicas":3}
 //	{"op":"path","documentIndex":0,"path":"spec.values.image.tag","value":"1.2.3"}
+//
+// kind and name, when set, say which object documentIndex meant: when the file moved since
+// the targets were read, the one document of that kind and name is edited instead.
 type quickEdit struct {
 	Op               string          `json:"op"`
 	DocumentIndex    int             `json:"documentIndex"`
+	Kind             string          `json:"kind"`
+	Name             string          `json:"name"`
 	Container        string          `json:"container"`
 	KustomizeImage   string          `json:"kustomizeImage"`
 	KustomizeReplica string          `json:"kustomizeReplica"`
@@ -136,6 +141,10 @@ func parseQuickEdit(editJSON string) (quickEdit, error) {
 
 	if err := dec.Decode(&e); err != nil {
 		return quickEdit{}, fmt.Errorf("the quick edit is not valid: %w", err)
+	}
+
+	if strings.TrimSpace(editJSON[dec.InputOffset():]) != "" {
+		return quickEdit{}, errors.New("the quick edit is not valid: data after the JSON object")
 	}
 
 	if e.DocumentIndex < 0 {

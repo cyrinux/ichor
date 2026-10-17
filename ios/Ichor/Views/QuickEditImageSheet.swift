@@ -105,7 +105,7 @@ struct QuickEditImageSheet: View {
                         Text("Review change")
                     }
                 }
-                .disabled(checking || trimmedTag.isEmpty)
+                .disabled(checking || !isValidImageTag(trimmedTag))
             } footer: {
                 Text("For routine bumps, Flux image automation or Argo CD Image Updater can open these changes for you.")
             }

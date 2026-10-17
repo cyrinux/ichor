@@ -73,13 +73,14 @@ func verifyQuickEdit(out string, count int, e quickEdit) error {
 }
 
 func quickEditLocate(docs []*yaml.Node, e quickEdit) ([]quickEditTarget, error) {
-	if e.DocumentIndex >= len(docs) {
-		return nil, fmt.Errorf("document %d is not in the file (it has %d)", e.DocumentIndex, len(docs))
+	index, err := quickEditDocIndex(docs, e)
+	if err != nil {
+		return nil, err
 	}
 
-	root := docs[e.DocumentIndex]
+	root := docs[index]
 	if root == nil || root.Kind != yaml.MappingNode {
-		return nil, fmt.Errorf("document %d is not a manifest", e.DocumentIndex)
+		return nil, fmt.Errorf("document %d is not a manifest", index)
 	}
 
 	switch e.Op {
@@ -96,6 +97,53 @@ func quickEditLocate(docs []*yaml.Node, e quickEdit) ([]quickEditTarget, error) 
 	}
 
 	return nil, fmt.Errorf("unknown quick edit %q: image, replicas or path", e.Op)
+}
+
+// quickEditDocIndex is the document the edit applies to: documentIndex, unless the edit names
+// its object (kind, name) and that document is another one; then the one document of the
+// file with that kind and name.
+func quickEditDocIndex(docs []*yaml.Node, e quickEdit) (int, error) {
+	if e.Kind == "" && e.Name == "" {
+		if e.DocumentIndex >= len(docs) {
+			return 0, fmt.Errorf("document %d is not in the file (it has %d)", e.DocumentIndex, len(docs))
+		}
+
+		return e.DocumentIndex, nil
+	}
+
+	if e.DocumentIndex < len(docs) && isObject(docs[e.DocumentIndex], e.Kind, e.Name) {
+		return e.DocumentIndex, nil
+	}
+
+	label := strings.TrimSpace(e.Kind + " " + e.Name)
+	found := -1
+
+	for i, root := range docs {
+		if !isObject(root, e.Kind, e.Name) {
+			continue
+		}
+
+		if found >= 0 {
+			return 0, fmt.Errorf("%s is in this file more than once: reload, or edit it in the editor", label)
+		}
+
+		found = i
+	}
+
+	if found < 0 {
+		return 0, fmt.Errorf("%s is not in this file any more: reload", label)
+	}
+
+	return found, nil
+}
+
+// isObject: root has this kind and metadata.name (an empty one matches any).
+func isObject(root *yaml.Node, kind, name string) bool {
+	if root == nil || root.Kind != yaml.MappingNode {
+		return false
+	}
+
+	return (kind == "" || scalarAt(root, "kind") == kind) && (name == "" || scalarAt(mapValue(root, "metadata"), "name") == name)
 }
 
 func objectLabel(root *yaml.Node) string {

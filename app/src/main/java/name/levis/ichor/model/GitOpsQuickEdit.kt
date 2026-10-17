@@ -82,19 +82,32 @@ data class QuickEdit(
     val kustomizeReplica: String = "",
     /** What the pull request's title names (not sent to the core). */
     val name: String = "",
+    /**
+     * The kind and metadata.name of the workload document a container or workload replicas
+     * edit targets: the core checks [documentIndex] still holds it (else finds it by them).
+     */
+    val targetKind: String = "",
+    val targetName: String = "",
 ) {
     companion object {
         const val OP_IMAGE = "image"
         const val OP_REPLICAS = "replicas"
 
-        fun image(documentIndex: Int, container: String, image: String) = QuickEdit(OP_IMAGE, documentIndex, container = container, image = image)
+        /** [container] of the workload [kind]/[workload] (document [documentIndex]) at [image]. */
+        fun image(documentIndex: Int, container: String, image: String, kind: String = "", workload: String = "") =
+            QuickEdit(OP_IMAGE, documentIndex, container = container, image = image, targetKind = kind, targetName = workload)
 
         /** The kustomization entry [entry] of document [documentIndex] at [tag] (a bare tag: the core sets `newTag`). */
         fun kustomize(documentIndex: Int, entry: String, tag: String) =
             QuickEdit(OP_IMAGE, documentIndex, image = tag, kustomizeImage = entry, name = imageRepository(entry).substringAfterLast('/'))
 
-        fun replicas(documentIndex: Int, name: String, replicas: Int, kustomizeReplica: String = "") =
-            QuickEdit(OP_REPLICAS, documentIndex, replicas = replicas, kustomizeReplica = kustomizeReplica, name = name)
+        /** The workload of [kind] named [name] scaled to [replicas]; with [kustomizeReplica], that kustomization entry instead. */
+        fun replicas(documentIndex: Int, name: String, replicas: Int, kustomizeReplica: String = "", kind: String = "") =
+            QuickEdit(
+                OP_REPLICAS, documentIndex, replicas = replicas, kustomizeReplica = kustomizeReplica, name = name,
+                targetKind = if (kustomizeReplica.isEmpty()) kind else "",
+                targetName = if (kustomizeReplica.isEmpty() && kind.isNotEmpty()) name else "",
+            )
     }
 }
 
@@ -108,10 +121,17 @@ private val QuickJson = Json {
     coerceInputValues = true
 }
 
-/** `GitOpsQuickEdit`'s editJSON for [edit]: only the keys of its op (the core refuses unknown ones). */
+/**
+ * `GitOpsQuickEdit`'s editJSON for [edit]: only the keys of its op (the core refuses unknown
+ * ones), plus the target workload's kind and name for a container or workload replicas edit.
+ */
 fun quickEditJson(edit: QuickEdit): String = buildJsonObject {
     put("op", edit.op)
     put("documentIndex", edit.documentIndex)
+    if (edit.kustomizeImage.isEmpty() && edit.kustomizeReplica.isEmpty()) {
+        if (edit.targetKind.isNotEmpty()) put("kind", edit.targetKind)
+        if (edit.targetName.isNotEmpty()) put("name", edit.targetName)
+    }
     when {
         edit.op == QuickEdit.OP_REPLICAS -> {
             if (edit.kustomizeReplica.isNotEmpty()) put("kustomizeReplica", edit.kustomizeReplica)
@@ -220,12 +240,19 @@ data class QuickImageChoice(
     val documentIndex: Int = 0,
     val container: String = "",
     val kustomizeImage: String = "",
+    /** The container's workload document: its kind and metadata.name. */
+    val kind: String = "",
+    val workload: String = "",
 ) {
     val isKustomize: Boolean get() = kustomizeImage.isNotEmpty()
 
     /** The edit that sets [tag] on it. */
     fun edit(tag: String): QuickEdit =
-        if (isKustomize) QuickEdit.kustomize(documentIndex, kustomizeImage, tag.trim()) else QuickEdit.image(documentIndex, container, imageWithTag(image, tag))
+        if (isKustomize) {
+            QuickEdit.kustomize(documentIndex, kustomizeImage, tag.trim())
+        } else {
+            QuickEdit.image(documentIndex, container, imageWithTag(image, tag), kind, workload)
+        }
 }
 
 /**
@@ -244,6 +271,8 @@ fun quickImageChoices(targets: QuickEditTargets): List<QuickImageChoice> {
                 image = c.image,
                 documentIndex = doc.index,
                 container = c.name,
+                kind = doc.kind,
+                workload = doc.name,
             )
         }
     }
@@ -257,14 +286,16 @@ data class QuickReplicaChoice(
     val current: Int,
     val documentIndex: Int,
     val kustomizeReplica: String = "",
+    /** The workload's kind ("" for a kustomization entry). */
+    val kind: String = "",
 ) {
-    fun edit(replicas: Int): QuickEdit = QuickEdit.replicas(documentIndex, name, replicas, kustomizeReplica)
+    fun edit(replicas: Int): QuickEdit = QuickEdit.replicas(documentIndex, name, replicas, kustomizeReplica, kind)
 }
 
 /** The replica counts of [targets]: each scalable workload (1 when unset), then each kustomization `replicas:` entry. */
 fun quickReplicaChoices(targets: QuickEditTargets): List<QuickReplicaChoice> {
     val workloads = targets.documents.filter { it.scalable }
-        .map { QuickReplicaChoice("${it.kind}/${it.name}", it.name, it.replicas ?: 1, it.index) }
+        .map { QuickReplicaChoice("${it.kind}/${it.name}", it.name, it.replicas ?: 1, it.index, kind = it.kind) }
     val kustomize = targets.kustomizeReplicas.filter { it.name.isNotEmpty() }
         .map { QuickReplicaChoice(it.name, it.name, it.count ?: 1, it.documentIndex, kustomizeReplica = it.name) }
     return workloads + kustomize

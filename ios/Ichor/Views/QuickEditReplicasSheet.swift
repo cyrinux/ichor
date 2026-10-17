@@ -85,7 +85,7 @@ struct QuickEditReplicasSheet: View {
                         Text("Review change")
                     }
                 }
-                .disabled(checking)
+                .disabled(checking || replicas == target.current)
             }
         }
         .themedBackground()

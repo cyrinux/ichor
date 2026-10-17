@@ -74,13 +74,58 @@ final class GitOpsQuickEditTests: XCTestCase {
         XCTAssertEqual(image["documentIndex"] as? Int, 1)
         XCTAssertEqual(image["container"] as? String, "podinfo")
         XCTAssertEqual(image["image"] as? String, "ghcr.io/example-org/podinfo:6.7.0")
+        // The workload the edit means, so the core can find it if the file moved.
+        XCTAssertEqual(image["kind"] as? String, "Deployment")
+        XCTAssertEqual(image["name"] as? String, "podinfo")
         // Only the keys the Go core knows: it refuses unknown ones.
-        XCTAssertEqual(Set(image.keys), ["op", "documentIndex", "container", "image"])
+        XCTAssertEqual(Set(image.keys), ["op", "documentIndex", "kind", "name", "container", "image"])
 
         let scale = try object(try XCTUnwrap(targets.replicas.first).edit(replicas: 3).json())
-        XCTAssertEqual(Set(scale.keys), ["op", "documentIndex", "replicas"])
+        XCTAssertEqual(Set(scale.keys), ["op", "documentIndex", "kind", "name", "replicas"])
         XCTAssertEqual(scale["op"] as? String, "replicas")
+        XCTAssertEqual(scale["kind"] as? String, "Deployment")
+        XCTAssertEqual(scale["name"] as? String, "podinfo")
         XCTAssertEqual(scale["replicas"] as? Int, 3)
+
+        // A target built without its workload sends neither key.
+        let bare = QuickEditImageTarget(place: .container(documentIndex: 0, name: "app"), label: "app", image: "app:1")
+        XCTAssertEqual(Set(try object(try bare.edit(tag: "2").json()).keys), ["op", "documentIndex", "container", "image"])
+    }
+
+    func testKustomizeEditsCarryNoWorkload() throws {
+        let targets = QuickEditTargets(kustomizeImages: [QuickEditKustomizeImage(name: "ghcr.io/example-org/app", newTag: "1")],
+                                       kustomizeReplicas: [QuickEditKustomizeReplica(name: "app", count: 2)])
+        let image = try object(try XCTUnwrap(targets.images.first).edit(tag: "2").json())
+        XCTAssertEqual(Set(image.keys), ["op", "documentIndex", "kustomizeImage", "image"])
+        let scale = try object(try XCTUnwrap(targets.replicas.first).edit(replicas: 3).json())
+        XCTAssertEqual(Set(scale.keys), ["op", "documentIndex", "kustomizeReplica", "replicas"])
+    }
+
+    func testDigestEntriesAndUnnamedContainersAreNotOffered() throws {
+        let targets = try TalosJSON.decode(QuickEditTargets.self, from: #"""
+        {"documents":[{"index":0,"kind":"Deployment","name":"web","scalable":true,
+          "containers":[{"name":"","image":"ghcr.io/example-org/web:1"},{"name":"web","image":"ghcr.io/example-org/web:1"}]}],
+         "kustomizeImages":[{"documentIndex":1,"name":"ghcr.io/example-org/pinned","digest":"sha256:abc"},
+          {"documentIndex":1,"name":"ghcr.io/example-org/api","newTag":"2"}]}
+        """#)
+        XCTAssertEqual(targets.kustomizeImages[0].digest, "sha256:abc")
+        XCTAssertEqual(targets.kustomizeImages[1].digest, "")
+        XCTAssertEqual(targets.images.map(\.label), ["api", "web"])
+    }
+
+    func testImageTagsAreValidated() {
+        XCTAssertTrue(isValidImageTag("6.7.0"))
+        XCTAssertTrue(isValidImageTag("v1.2.3-rc.1_build"))
+        XCTAssertTrue(isValidImageTag(" 1.0 "))
+        XCTAssertTrue(isValidImageTag(String(repeating: "a", count: 128)))
+        XCTAssertFalse(isValidImageTag(String(repeating: "a", count: 129)))
+        XCTAssertFalse(isValidImageTag(""))
+        XCTAssertFalse(isValidImageTag("a/b"))
+        XCTAssertFalse(isValidImageTag("1 2"))
+        XCTAssertFalse(isValidImageTag(".hidden"))
+        XCTAssertFalse(isValidImageTag("-x"))
+        XCTAssertFalse(isValidImageTag("é1"))
+        XCTAssertFalse(isValidImageTag("sha256:" + String(repeating: "0", count: 64)))
     }
 
     func testTitles() throws {
