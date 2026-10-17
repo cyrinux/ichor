@@ -14,6 +14,17 @@ extension TalosClient {
         }
     }
 
+    func longhornEngineUpgradePreview(namespace: String, name: String) async throws -> LonghornEngineUpgradePreview {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] in
+            IchorgoKubeLonghornEngineUpgradePreview(config, context, server, namespace, name, $0)
+        }
+    }
+    func longhornEngineUpgrade(namespace: String, name: String, image: String) async throws {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeLonghornEngineUpgrade(config, context, server, namespace, name, image, error)
+        }
+    }
+
     func longhornSalvagePreview(namespace: String, name: String) async throws -> LonghornSalvagePreview {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, server = self.kubeAPIServer] in
             IchorgoKubeLonghornSalvagePreview(config, context, server, namespace, name, $0)

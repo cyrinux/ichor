@@ -84,6 +84,15 @@ var kubeActionChecks = map[string][]accessNeed{
 		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy", Name: lhManagerService}, true},
 		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
 	},
+	// A volume's engine upgrade: Longhorn's API, and what the preview reads to check its rules
+	// (the replicas tell the nodes an engine image must be deployed on).
+	"longhornEngineUpgrade": {
+		{ssarAttributes{Verb: "create", Resource: "services", Subresource: "proxy", Name: lhManagerService}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},
+		{ssarAttributes{Verb: "list", Group: groupLonghorn, Resource: "engineimages"}, true},
+		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "settings"}, true},
+		{ssarAttributes{Verb: "list", Group: groupLonghorn, Resource: "replicas"}, true},
+	},
 	"longhornReplicas": {
 		{ssarAttributes{Verb: "patch", Group: groupLonghorn, Resource: "volumes"}, true},
 		{ssarAttributes{Verb: "get", Group: groupLonghorn, Resource: "volumes"}, true},

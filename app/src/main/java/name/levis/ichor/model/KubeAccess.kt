@@ -37,6 +37,8 @@ enum class KubeAction(val wire: String) {
     CNPG_HIBERNATE("cnpgHibernate"),
     LONGHORN_SALVAGE("longhornSalvage"),
     LONGHORN_ATTACHMENT("longhornAttachment"),
+    /** Upgrade a Longhorn volume's engine image. */
+    LONGHORN_ENGINE_UPGRADE("longhornEngineUpgrade"),
     /** Take, back up or delete a Longhorn snapshot. */
     LONGHORN_SNAPSHOT("longhornSnapshot"),
     /** A Longhorn volume's replica count. */

@@ -41,6 +41,7 @@ func demoDataServices(now time.Time) dataServices {
 		BackupTargets: []longhornBackupTarget{{Name: "default", URL: "s3://longhorn-backups@garage/", Available: true}},
 	}
 	addDemoLonghornSnapshots(longhorn.Volumes, ms)
+	addDemoLonghornEngines(longhorn)
 
 	garage := &garageStatus{Instances: []garageInstance{
 		{

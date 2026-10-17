@@ -22,6 +22,12 @@ var dataCommands = []command{
 		}
 		return "requested", ichorgo.KubeLonghornAttachment(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), attach)
 	}},
+	{name: "longhorn-engine-preview", args: "NAMESPACE VOLUME", run: func(e env) (string, error) {
+		return ichorgo.KubeLonghornEngineUpgradePreview(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+	}},
+	{name: "longhorn-engine-upgrade", args: "NAMESPACE VOLUME IMAGE", run: func(e env) (string, error) {
+		return "requested", ichorgo.KubeLonghornEngineUpgrade(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+	}},
 	{name: "longhorn-salvage-preview", args: "NAMESPACE VOLUME", run: func(e env) (string, error) {
 		return ichorgo.KubeLonghornSalvagePreview(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
 	}},

@@ -2,7 +2,7 @@ import SwiftUI
 import IchorCore
 
 /// Longhorn volumes (problems first), the backup targets and each node's disks, with the volume
-/// actions (backup, trim, replica count, snapshots, attach or detach, salvage) and the node ones
+/// actions (backup, trim, replica count, snapshots, attach or detach, salvage, engine upgrade) and the node ones
 /// (scheduling, eviction) in each row's context menu and swipe actions: none sits in a row.
 struct LonghornList: View {
     let status: LonghornStatus
@@ -13,6 +13,7 @@ struct LonghornList: View {
     @State private var query = ""
     @State private var attachmentTarget: LonghornAttachmentTarget?
     @State private var salvageTarget: LonghornVolume?
+    @State private var engineTarget: LonghornVolume?
     @State private var snapshotsFor: LonghornVolumeName?
     @State private var replicasFor: LonghornVolume?
     @State private var confirmEvict: LonghornNode?
@@ -27,6 +28,16 @@ struct LonghornList: View {
             if !status.error.isEmpty { Section { ErrorLine(error: status.error) } }
             if !status.backupTargets.isEmpty {
                 Section { ForEach(status.backupTargets) { LonghornBackupTargetRow(target: $0) } }
+            }
+            if status.outdatedEngineVolumes > 0 {
+                Section {
+                    Label {
+                        Text("Volumes on an old engine: \(String(status.outdatedEngineVolumes))")
+                    } icon: {
+                        Image(systemName: "arrow.up.circle")
+                    }
+                    .foregroundStyle(.secondary)
+                }
             }
             Section {
                 Picker(selection: Binding(get: { current }, set: { filter = $0 })) {
@@ -99,6 +110,12 @@ struct LonghornList: View {
                 Task { await salvage(volume, names: names) }
             }.loadsKubeActionAccess(namespace: volume.namespace)
         }
+        .sheet(item: $engineTarget) { volume in
+            LonghornEngineSheet(volume: volume) { image in
+                engineTarget = nil
+                Task { await engineUpgrade(volume, image: image) }
+            }.loadsKubeActionAccess(namespace: volume.namespace)
+        }
         .sheet(item: $attachmentTarget) { target in
             LonghornAttachmentSheet(target: target) { node in
                 attachmentTarget = nil
@@ -118,9 +135,10 @@ struct LonghornList: View {
             LonghornVolumeSheetButtons(volume: volume, busy: busy, inMenu: inMenu,
                                        onSnapshots: { snapshotsFor = LonghornVolumeName(id: volume.name) },
                                        onSalvage: { salvageTarget = volume },
-                                       onAttachment: { attach in attachmentTarget = LonghornAttachmentTarget(volume: volume, attach: attach) })
+                                       onAttachment: { attach in attachmentTarget = LonghornAttachmentTarget(volume: volume, attach: attach) },
+                                       onEngineUpgrade: { engineTarget = volume })
         }
-        return LonghornVolumeRow(volume: volume, busy: busy) { snapshotsFor = LonghornVolumeName(id: volume.name) }
+        return LonghornVolumeRow(volume: volume, busy: busy, availableEngine: status.defaultEngineVersion) { snapshotsFor = LonghornVolumeName(id: volume.name) }
             .swipeActions(edge: .leading) { sheets(false) }
             .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, namespace: volume.namespace, onAction: act) }
             .contextMenu {
@@ -168,6 +186,18 @@ struct LonghornList: View {
         } catch { resultMessage = String(localized: "Could not change volume attachment: \(error.localizedDescription)") }
     }
 
+    private func engineUpgrade(_ volume: LonghornVolume, image: String) async {
+        let key = LonghornRequest.key(namespace: volume.namespace, name: volume.name, node: false)
+        guard let client = model.client, !running.contains(key) else { return }
+        running.insert(key)
+        defer { running.remove(key) }
+        do {
+            try await client.longhornEngineUpgrade(namespace: volume.namespace, name: volume.name, image: image)
+            resultMessage = String(localized: "Engine upgrade requested")
+            await refresh()
+        } catch { resultMessage = String(localized: "Could not upgrade the engine: \(error.localizedDescription)") }
+    }
+
     private func run(_ request: LonghornRequest) async {
         guard let client = model.client, !running.contains(request.id) else { return }
         running.insert(request.id)
@@ -188,7 +218,8 @@ private struct LonghornVolumeName: Identifiable {
 }
 
 /// What a volume opens a sheet for, in its context menu and leading swipe actions: its snapshots
-/// and backups, then salvage when it is faulted, else attach or detach. The sheets confirm. None
+/// and backups, then salvage when it is faulted, else attach or detach, and in the menu an engine
+/// upgrade when the volume lags the default engine. The sheets confirm. None
 /// while an action on the volume runs, but the snapshots.
 private struct LonghornVolumeSheetButtons: View {
     let volume: LonghornVolume
@@ -197,6 +228,7 @@ private struct LonghornVolumeSheetButtons: View {
     let onSnapshots: () -> Void
     let onSalvage: () -> Void
     let onAttachment: (_ attach: Bool) -> Void
+    let onEngineUpgrade: () -> Void
 
     private var faulted: Bool { volume.robustness == "faulted" }
     private var detached: Bool { volume.state == "detached" }
@@ -226,6 +258,11 @@ private struct LonghornVolumeSheetButtons: View {
                     .tint(.blue)
                     .kubeGated(.longhornAttachment, in: volume.namespace)
             }
+        }
+        // Menu only: the leading swipe already holds two buttons.
+        if !busy && inMenu && volume.engineUpgradable {
+            KubeGatedMenuButton(String(localized: "Upgrade engine"), systemImage: "arrow.up.circle",
+                                action: .longhornEngineUpgrade, in: volume.namespace, perform: onEngineUpgrade)
         }
     }
 }
