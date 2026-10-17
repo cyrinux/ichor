@@ -2,8 +2,8 @@ import SwiftUI
 import IchorCore
 
 /// Longhorn volumes (problems first), the backup targets and each node's disks, with the volume
-/// actions (backup, trim, replica count) and the node ones (scheduling, eviction) in each row's
-/// context menu and swipe actions.
+/// actions (backup, trim, replica count, snapshots, attach or detach, salvage) and the node ones
+/// (scheduling, eviction) in each row's context menu and swipe actions: none sits in a row.
 struct LonghornList: View {
     let status: LonghornStatus
     let refresh: () async -> Void
@@ -52,7 +52,17 @@ struct LonghornList: View {
                 ForEach(rows) { volumeRow($0) }
             }
             if !status.nodes.isEmpty {
-                Section("Nodes") { ForEach(status.nodes) { nodeRow($0) } }
+                let sharedPath = longhornSharedDiskPath(status.nodes)
+                Section {
+                    ForEach(status.nodes) { nodeRow($0, sharedPath: sharedPath) }
+                } header: {
+                    Text("Nodes")
+                } footer: {
+                    // Said once when every disk sits on it, not on each node.
+                    if let sharedPath {
+                        Label { Text(verbatim: sharedPath).monospaced() } icon: { Image(systemName: "internaldrive") }
+                    }
+                }
             }
         }
         .searchable(text: $query, prompt: Text("Filter by namespace or name"))
@@ -104,35 +114,30 @@ struct LonghornList: View {
         let act = { (action: LonghornAction) in
             if action == .replicas { replicasFor = volume } else { Task { await run(LonghornRequest(volume: volume, action: action)) } }
         }
-        return VStack(alignment: .leading) {
-            LonghornVolumeRow(volume: volume, busy: busy)
-            LonghornProtectionLine(volume: volume) { snapshotsFor = LonghornVolumeName(id: volume.name) }
-                .padding(.leading, 26)
-            if volume.state == "attached" || (volume.state == "detached" && volume.robustness != "faulted") {
-                Button { attachmentTarget = LonghornAttachmentTarget(volume: volume, attach: volume.state == "detached") } label: {
-                    if volume.state == "detached" { Text("Attach volume") } else { Text("Detach volume") }
-                }.disabled(busy).kubeGated(.longhornAttachment, in: volume.namespace)
-                KubeDeniedNote(.longhornAttachment, in: volume.namespace)
-            }
-            if volume.robustness == "faulted" {
-                Button { salvageTarget = volume } label: { Text("Salvage volume") }
-                    .disabled(busy).kubeGated(.longhornSalvage, in: volume.namespace)
-                KubeDeniedNote(.longhornSalvage, in: volume.namespace)
-            }
+        let sheets = { (inMenu: Bool) in
+            LonghornVolumeSheetButtons(volume: volume, busy: busy, inMenu: inMenu,
+                                       onSnapshots: { snapshotsFor = LonghornVolumeName(id: volume.name) },
+                                       onSalvage: { salvageTarget = volume },
+                                       onAttachment: { attach in attachmentTarget = LonghornAttachmentTarget(volume: volume, attach: attach) })
         }
+        return LonghornVolumeRow(volume: volume, busy: busy) { snapshotsFor = LonghornVolumeName(id: volume.name) }
+            .swipeActions(edge: .leading) { sheets(false) }
             .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, namespace: volume.namespace, onAction: act) }
-            .contextMenu { LonghornActionButtons(actions: actions, namespace: volume.namespace, inMenu: true, onAction: act) }
+            .contextMenu {
+                sheets(true)
+                LonghornActionButtons(actions: actions, namespace: volume.namespace, inMenu: true, onAction: act)
+            }
             // Last: the buttons above read the access it loads.
             .loadsKubeActionAccess(namespace: volume.namespace)
     }
 
-    private func nodeRow(_ node: LonghornNode) -> some View {
+    private func nodeRow(_ node: LonghornNode, sharedPath: String?) -> some View {
         let busy = running.contains(LonghornRequest.key(namespace: node.namespace, name: node.name, node: true))
         let actions = busy ? [] : node.actions
         let act = { (action: LonghornAction) in
             if action == .evict { confirmEvict = node } else { Task { await run(LonghornRequest(node: node, action: action)) } }
         }
-        return LonghornNodeRow(node: node, busy: busy)
+        return LonghornNodeRow(node: node, busy: busy, sharedPath: sharedPath)
             .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, namespace: node.namespace, onAction: act) }
             .contextMenu { LonghornActionButtons(actions: actions, namespace: node.namespace, inMenu: true, onAction: act) }
             .loadsKubeActionAccess(namespace: node.namespace)
@@ -180,4 +185,47 @@ struct LonghornList: View {
 /// The volume the snapshots sheet shows, by name.
 private struct LonghornVolumeName: Identifiable {
     let id: String
+}
+
+/// What a volume opens a sheet for, in its context menu and leading swipe actions: its snapshots
+/// and backups, then salvage when it is faulted, else attach or detach. The sheets confirm. None
+/// while an action on the volume runs, but the snapshots.
+private struct LonghornVolumeSheetButtons: View {
+    let volume: LonghornVolume
+    let busy: Bool
+    let inMenu: Bool
+    let onSnapshots: () -> Void
+    let onSalvage: () -> Void
+    let onAttachment: (_ attach: Bool) -> Void
+
+    private var faulted: Bool { volume.robustness == "faulted" }
+    private var detached: Bool { volume.state == "detached" }
+    /// Attach a detached volume that is not faulted, detach an attached one.
+    private var attachmentChange: Bool { volume.state == "attached" || (detached && !faulted) }
+
+    var body: some View {
+        Button(action: onSnapshots) { Label("Snapshots & backups", systemImage: "camera") }
+            .tint(.indigo)
+        if !busy && faulted {
+            if inMenu {
+                KubeGatedMenuButton(String(localized: "Salvage volume"), systemImage: "cross.case",
+                                    action: .longhornSalvage, in: volume.namespace, perform: onSalvage)
+            } else {
+                Button(action: onSalvage) { Label("Salvage volume", systemImage: "cross.case") }
+                    .tint(.orange)
+                    .kubeGated(.longhornSalvage, in: volume.namespace)
+            }
+        }
+        if !busy && attachmentChange {
+            let title = detached ? String(localized: "Attach volume") : String(localized: "Detach volume")
+            let icon = detached ? "link" : "eject"
+            if inMenu {
+                KubeGatedMenuButton(title, systemImage: icon, action: .longhornAttachment, in: volume.namespace) { onAttachment(detached) }
+            } else {
+                Button { onAttachment(detached) } label: { Label(title, systemImage: icon) }
+                    .tint(.blue)
+                    .kubeGated(.longhornAttachment, in: volume.namespace)
+            }
+        }
+    }
 }

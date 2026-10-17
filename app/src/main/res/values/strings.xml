@@ -2107,7 +2107,7 @@
     <string name="garage_status_unknown">Unknown</string>
     <string name="garage_storage_nodes">Storage nodes</string>
     <string name="garage_up_of">%1$d/%2$d up</string>
-    <string name="garage_partitions_replicated">Fully replicated</string>
+    <string name="garage_partitions_replicated">Replicated partitions</string>
     <string name="garage_partitions_quorum">Write quorum</string>
     <string name="garage_resync_queue">Resync queue</string>
     <string name="garage_resync_errors">Blocks failing to resync</string>
@@ -2153,7 +2153,12 @@
     <string name="garage_repair_nothing">Nothing to repair</string>
     <string name="garage_repair_failed">Repair failed: %1$s</string>
     <string name="garage_tranquility_full">resync at full speed</string>
-    <string name="garage_tranquility_value">resync tranquility %1$d</string>
+    <string name="garage_details">Details</string>
+    <string name="garage_meter_data">data</string>
+    <string name="garage_resync_failing">Resync queue %1$s · failing %2$s</string>
+    <string name="garage_resync_tag">resync %1$s</string>
+    <string name="data_services_tab_snapshots">Snapshots</string>
+    <string name="data_services_tab_backup_jobs">Backup jobs</string>
     <string name="garage_tranquility_set_full">Resync at full speed</string>
     <string name="garage_tranquility_set_default">Default resync speed</string>
     <string name="garage_tranquility_full_title">Resync %1$s at full speed?</string>

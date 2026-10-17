@@ -222,6 +222,13 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             onObject = kubeLinks.onObject,
             onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
             onRequestIntegration = { nav.navigate(Routes.INTEGRATIONS) },
+            // The nodes lists share the home's data: they open only with the home below.
+            onNodes = {
+                if (runCatching { nav.getBackStackEntry(Routes.OVERVIEW) }.isSuccess) {
+                    val kube = app.configRepository.config.value?.activeIsKube == true
+                    nav.navigate(if (kube) Routes.kubeNodes(NodeFilter.NOT_READY) else Routes.nodes(NodeFilter.NOT_READY))
+                }
+            },
         )
     }
 }

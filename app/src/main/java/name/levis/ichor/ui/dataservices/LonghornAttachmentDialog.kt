@@ -18,14 +18,13 @@ data class LonghornAttachmentResult(val error: UiText?)
 fun LonghornAttachmentToasts(results: Flow<LonghornAttachmentResult>) = ResultToasts(results) { context, r ->
     (r.error?.resolve(context)?.let { context.getString(R.string.longhorn_attachment_failed, it) } ?: context.getString(R.string.longhorn_attachment_requested)) to (r.error != null)
 }
-@Composable
-fun LonghornAttachmentButton(volume: LonghornVolume, busy: Boolean, onAction: (Boolean) -> Unit) {
-    if (volume.state != "attached" && (volume.state != "detached" || volume.robustness == "faulted")) return
-    val attach = volume.state == "detached"
-    val denial = rememberKubeDenial(KubeAction.LONGHORN_ATTACHMENT, volume.namespace)
-    OutlinedButton(onClick = { onAction(attach) }, enabled = !busy && denial == null) { Text(stringResource(if (attach) R.string.longhorn_attach else R.string.longhorn_detach)) }
-    denial?.let { KubeDenialNote(it) }
-}
+/** What the row's menu offers: true to attach a detached volume, false to detach, null for neither. */
+val LonghornVolume.attachmentChoice: Boolean?
+    get() = when {
+        state == "attached" -> false
+        state == "detached" && robustness != "faulted" -> true
+        else -> null
+    }
 @Composable
 fun LonghornAttachmentDialog(volume: LonghornVolume, attach: Boolean, actions: LonghornActions, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     var preview by remember(volume.namespace, volume.name) { mutableStateOf<LonghornAttachmentPreview?>(null) }
