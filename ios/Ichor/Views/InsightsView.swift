@@ -27,8 +27,8 @@ private struct InsightsContent: View {
     }
     private var picker: some View {
         Picker("Cluster insights", selection: $tab) {
-            Text("Configuration drift").tag(0)
-            Text("Incident recorder").tag(1)
+            Text("Drift").tag(0)
+            Text("Recorder").tag(1)
             Text("Network").tag(2)
         }.pickerStyle(.segmented)
     }
@@ -98,29 +98,152 @@ private struct InsightsContent: View {
     }
     @ViewBuilder private var recorder: some View {
         Section {
-            Text("Record up to 10 minutes while this screen is in the foreground. Health, services, links and metrics are sampled, with live Talos events. No raw logs or credentials. The latest session is encrypted locally; starting replaces it. Keep up to 600 entries. Event timestamps use node clocks; ordering does not prove causation.")
-                .font(.caption)
-            if session.recording {
-                Button("Stop recording") { session.stop() }
-                ProgressView()
-            } else {
-                Button("Start recording") { if let client = model.client { session.start(client: client) } }
+            // Borderless and bordered styles keep the two buttons separate inside one list row.
+            HStack(spacing: 12) {
+                if session.recording {
+                    Button("Stop recording") { session.stop() }
+                        .buttonStyle(.borderedProminent)
+                    ProgressView()
+                } else {
+                    Button("Start recording") { if let client = model.client { session.start(client: client) } }
+                        .buttonStyle(.borderedProminent)
+                }
+                Button("Delete", role: .destructive) { session.deleteRecording() }
+                    .buttonStyle(.borderless)
+                    .disabled(session.recording || session.document == nil)
+                Spacer(minLength: 0)
             }
-            Button("Delete", role: .destructive) { session.deleteRecording() }
-                .disabled(session.recording || session.document == nil)
+        } header: {
+            HStack(spacing: 4) {
+                Text("Incident recorder")
+                InfoHint(title: Text("Incident recorder"), text: Text(Self.recordNote))
+            }
         }
         if let doc = session.document {
             Section {
-                Text(verbatim: "\(time(doc.startedAt)) — \(time(doc.updatedAt))").font(.caption)
-                if doc.dropped > 0 { Text("Older entries discarded: \(doc.dropped)") }
-                Toggle("Show metric samples", isOn: $showMetrics)
-            }
-            Section {
-                ForEach(doc.entries.reversed().filter { showMetrics || $0.kind != "metrics" }) { entry in
-                    IncidentEvidenceCard(entry: entry, timestamp: time(entry.at))
+                ForEach(incidentTimeline(doc.entries.reversed().filter { showMetrics || $0.kind != "metrics" })) { item in
+                    IncidentTimelineRow(item: item, startedAt: doc.startedAt, time: time)
                 }
+            } header: {
+                SectionHeader(title: String(localized: "Timeline"), subtitle: recordingLine(doc), pill: timelineMenu)
             }
         } else { Text("No saved recording.") }
+    }
+    private static let recordNote: LocalizedStringKey = "Record up to 10 minutes while this screen is in the foreground. Health, services, links and metrics are sampled, with live Talos events. No raw logs or credentials. The latest session is encrypted locally; starting replaces it. Keep up to 600 entries. Event timestamps use node clocks; ordering does not prove causation."
+    /// The recorded range and the count of discarded entries, on one muted line.
+    private func recordingLine(_ doc: IncidentDocument) -> String {
+        let range = "\(time(doc.startedAt)) — \(time(doc.updatedAt))"
+        guard doc.dropped > 0 else { return range }
+        return range + " · " + String(localized: "Older entries discarded: \(doc.dropped)")
+    }
+    private var timelineMenu: some View {
+        Menu {
+            Toggle("Show metric samples", isOn: $showMetrics)
+        } label: {
+            Image(systemName: "line.3.horizontal.decrease.circle")
+        }
+        .accessibilityLabel(Text("Filter"))
+    }
+}
+
+/// A timeline row: one entry, or a run of healthy entries that expands to them.
+private struct IncidentTimelineRow: View {
+    let item: IncidentTimelineItem
+    let startedAt: Int64
+    let time: (Int64) -> String
+
+    var body: some View {
+        switch item {
+        case .entry(let entry):
+            IncidentEntryRow(entry: entry, startedAt: startedAt, time: time)
+        case .healthyRun(let entries):
+            DisclosureGroup {
+                ForEach(entries) { entry in
+                    IncidentEntryRow(entry: entry, startedAt: startedAt, time: time)
+                }
+            } label: {
+                ResourceRow(
+                    health: .ok,
+                    title: String(localized: "\(entries.count) services healthy"),
+                    subtitle: runSubtitle(entries),
+                    mono: false
+                )
+            }
+        }
+    }
+
+    /// The node and the span of the run (newest first, as the timeline is).
+    private func runSubtitle(_ entries: [IncidentEntry]) -> String {
+        guard let first = entries.first, let last = entries.last else { return "" }
+        let span = incidentOffset(at: last.at, startedAt: startedAt) + " – " + incidentOffset(at: first.at, startedAt: startedAt)
+        return [first.node, span].filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+}
+
+/// One entry: its dot, the subject and "kind · state · +mm:ss"; it expands to the evidence.
+private struct IncidentEntryRow: View {
+    let entry: IncidentEntry
+    let startedAt: Int64
+    let time: (Int64) -> String
+
+    var body: some View {
+        DisclosureGroup {
+            IncidentEvidenceCard(entry: entry, timestamp: time(entry.at))
+        } label: {
+            ResourceRow(
+                health: entry.timelineHealth,
+                title: entry.subject.isEmpty ? entry.node : entry.subject,
+                subtitle: subtitle
+            )
+        }
+    }
+
+    private var subtitle: String {
+        [incidentKindLabel(entry.kind), incidentState(entry), incidentOffset(at: entry.at, startedAt: startedAt)]
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
+    }
+}
+
+/// A row's kind, the first part of its subtitle. Keyed: "Service" and "Link" mean other
+/// things elsewhere in the app.
+private func incidentKindLabel(_ kind: String) -> String {
+    switch kind {
+    case "status": return String(localized: "insights.kind.status", defaultValue: "Node")
+    case "service": return String(localized: "insights.kind.service", defaultValue: "Service")
+    case "metrics": return String(localized: "insights.kind.metrics", defaultValue: "Metrics")
+    case "link": return String(localized: "insights.kind.link", defaultValue: "Link")
+    case "error": return String(localized: "insights.kind.error", defaultValue: "Error")
+    case "recovered": return String(localized: "insights.kind.recovered", defaultValue: "Recovered")
+    default: return String(localized: "insights.kind.event", defaultValue: "Event")
+    }
+}
+
+/// The entry's state in a word: the node status, the service state, the new link state.
+private func incidentState(_ entry: IncidentEntry) -> String {
+    let detail = entry.evidenceDetail ?? [:]
+    switch entry.kind {
+    case "status":
+        let ready = detail["ready"] as? Bool
+        let reachable = detail["reachable"] as? Bool
+        if reachable == false { return String(localized: "Unreachable") }
+        if ready == true && reachable == true { return String(localized: "Ready") }
+        if ready == false { return String(localized: "Not ready") }
+        return String(localized: "Unknown")
+    case "service":
+        let state = detail["state"] as? String ?? ""
+        return state.isEmpty ? incidentServiceHealth(detail["health"] as? String ?? "") : state
+    case "link": return detail["after"] as? String ?? ""
+    case "error": return String(localized: "Evidence unavailable")
+    default: return ""
+    }
+}
+
+private func incidentServiceHealth(_ health: String) -> String {
+    switch health {
+    case "healthy": return String(localized: "Healthy")
+    case "unhealthy": return String(localized: "Unhealthy")
+    default: return String(localized: "Unknown")
     }
 }
 
@@ -155,11 +278,7 @@ private struct IncidentEvidenceCard: View {
     }
     private var title: String {
         switch entry.kind {
-        case "status":
-            if reachable == false { return String(localized: "Unreachable") }
-            if ready == true && reachable == true { return String(localized: "Ready") }
-            if ready == false { return String(localized: "Not ready") }
-            return String(localized: "Unknown")
+        case "status": return incidentState(entry)
         case "metrics": return String(localized: "Bottleneck metrics")
         case "service": return String(localized: "Service status")
         case "link": return String(localized: "Network link changed")
@@ -204,11 +323,5 @@ private struct IncidentEvidenceCard: View {
             }
         }.padding(.vertical, 4)
     }
-    private var health: String {
-        switch value("health") {
-        case "healthy": return String(localized: "Healthy")
-        case "unhealthy": return String(localized: "Unhealthy")
-        default: return String(localized: "Unknown")
-        }
-    }
+    private var health: String { incidentServiceHealth(value("health")) }
 }

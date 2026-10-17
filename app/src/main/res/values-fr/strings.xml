@@ -1850,6 +1850,20 @@
     <string name="insights_dropped">Anciennes entrées supprimées : %1$d</string>
     <string name="insights_show_metrics">Afficher les mesures</string>
     <string name="insights_no_recording">Aucun enregistrement sauvegardé.</string>
+    <string name="insights_tab_drift">Dérive</string>
+    <string name="insights_tab_recorder">Enregistreur</string>
+    <string name="insights_tab_network">Réseau</string>
+    <string name="insights_kind_status">Nœud</string>
+    <string name="insights_kind_service">Service</string>
+    <string name="insights_kind_link">Lien</string>
+    <string name="insights_kind_metrics">Métriques</string>
+    <string name="insights_kind_error">Erreur</string>
+    <string name="insights_kind_recovered">Rétabli</string>
+    <string name="insights_kind_event">Événement</string>
+    <plurals name="insights_healthy_run">
+        <item quantity="one">%d service sain</item>
+        <item quantity="other">%d services sains</item>
+    </plurals>
     <string name="insights_record_note">Enregistrez jusqu’à 10 minutes avec cet écran au premier plan. Santé, services, interfaces et métriques sont mesurés, avec les événements Talos en direct. Aucun journal brut ni identifiant. La dernière session est chiffrée localement ; démarrer la remplace. Jusqu’à 600 entrées. Les événements utilisent les horloges des nœuds ; leur ordre ne prouve pas la causalité.</string>
     <string name="backup_desc">Enregistrez vos clusters et réglages dans un fichier chiffré par une phrase secrète, pour les restaurer sur un nouveau téléphone (Android ou iOS). Sans la phrase secrète, le fichier ne peut pas être ouvert.</string>
     <string name="backup_create">Sauvegarder clusters et réglages</string>

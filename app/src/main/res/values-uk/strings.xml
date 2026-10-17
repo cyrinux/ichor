@@ -1958,6 +1958,22 @@
     <string name="insights_dropped">Відкинуто старих записів: %1$d</string>
     <string name="insights_show_metrics">Показати виміри метрик</string>
     <string name="insights_no_recording">Збережених записів немає.</string>
+    <string name="insights_tab_drift">Дрейф</string>
+    <string name="insights_tab_recorder">Запис</string>
+    <string name="insights_tab_network">Мережа</string>
+    <string name="insights_kind_status">Вузол</string>
+    <string name="insights_kind_service">Служба</string>
+    <string name="insights_kind_link">Лінк</string>
+    <string name="insights_kind_metrics">Метрики</string>
+    <string name="insights_kind_error">Помилка</string>
+    <string name="insights_kind_recovered">Відновлено</string>
+    <string name="insights_kind_event">Подія</string>
+    <plurals name="insights_healthy_run">
+        <item quantity="one">%d служба справна</item>
+        <item quantity="few">%d служби справні</item>
+        <item quantity="many">%d служб справні</item>
+        <item quantity="other">%d служби справні</item>
+    </plurals>
     <string name="insights_record_note">Записуйте до 10 хвилин, поки цей екран на передньому плані. Вимірюються стан, служби, інтерфейси та метрики з подіями Talos наживо. Без сирих журналів або облікових даних. Останній сеанс зашифровано локально; новий запис його замінює. До 600 записів. Події використовують годинники вузлів; порядок не доводить причинності.</string>
     <string name="backup_desc">Збережіть кластери та налаштування у файл, зашифрований парольною фразою, щоб відновити їх на новому телефоні (Android або iOS). Без парольної фрази файл не відкрити.</string>
     <string name="backup_create">Створити резервну копію кластерів і налаштувань</string>

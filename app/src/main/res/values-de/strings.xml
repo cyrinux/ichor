@@ -1842,6 +1842,20 @@
     <string name="insights_dropped">Verworfene ältere Einträge: %1$d</string>
     <string name="insights_show_metrics">Messwerte anzeigen</string>
     <string name="insights_no_recording">Keine gespeicherte Aufzeichnung.</string>
+    <string name="insights_tab_drift">Drift</string>
+    <string name="insights_tab_recorder">Rekorder</string>
+    <string name="insights_tab_network">Netzwerk</string>
+    <string name="insights_kind_status">Node</string>
+    <string name="insights_kind_service">Dienst</string>
+    <string name="insights_kind_link">Link</string>
+    <string name="insights_kind_metrics">Metriken</string>
+    <string name="insights_kind_error">Fehler</string>
+    <string name="insights_kind_recovered">Wiederhergestellt</string>
+    <string name="insights_kind_event">Ereignis</string>
+    <plurals name="insights_healthy_run">
+        <item quantity="one">%d Dienst fehlerfrei</item>
+        <item quantity="other">%d Dienste fehlerfrei</item>
+    </plurals>
     <string name="insights_record_note">Bis zu 10 Minuten aufzeichnen, während dieser Bildschirm im Vordergrund ist. Zustand, Dienste, Schnittstellen und Metriken werden zusammen mit Talos-Ereignissen erfasst. Keine Rohprotokolle oder Zugangsdaten. Die letzte Sitzung wird lokal verschlüsselt; ein neuer Start ersetzt sie. Bis zu 600 Einträge. Ereignisse verwenden Knoten-Uhren; die Reihenfolge beweist keine Ursache.</string>
     <string name="backup_desc">Speichere deine Cluster und Einstellungen in einer mit einer Passphrase verschlüsselten Datei, um sie auf einem neuen Telefon (Android oder iOS) wiederherzustellen. Ohne die Passphrase lässt sich die Datei nicht öffnen.</string>
     <string name="backup_create">Cluster und Einstellungen sichern</string>

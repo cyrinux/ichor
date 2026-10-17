@@ -1850,6 +1850,20 @@
     <string name="insights_dropped">Voci precedenti scartate: %1$d</string>
     <string name="insights_show_metrics">Mostra campioni delle metriche</string>
     <string name="insights_no_recording">Nessuna registrazione salvata.</string>
+    <string name="insights_tab_drift">Deriva</string>
+    <string name="insights_tab_recorder">Registratore</string>
+    <string name="insights_tab_network">Rete</string>
+    <string name="insights_kind_status">Nodo</string>
+    <string name="insights_kind_service">Servizio</string>
+    <string name="insights_kind_link">Collegamento</string>
+    <string name="insights_kind_metrics">Metriche</string>
+    <string name="insights_kind_error">Errore</string>
+    <string name="insights_kind_recovered">Ripristinato</string>
+    <string name="insights_kind_event">Evento</string>
+    <plurals name="insights_healthy_run">
+        <item quantity="one">%d servizio integro</item>
+        <item quantity="other">%d servizi integri</item>
+    </plurals>
     <string name="insights_record_note">Registra fino a 10 minuti con questa schermata in primo piano. Stato, servizi, interfacce e metriche vengono campionati con gli eventi Talos in tempo reale. Senza log grezzi o credenziali. Ultima sessione cifrata localmente; una nuova la sostituisce. Fino a 600 voci. Gli eventi usano gli orologi dei nodi; l’ordine non prova causalità.</string>
     <string name="backup_desc">Salva i tuoi cluster e le impostazioni in un file cifrato con una passphrase, per ripristinarli su un nuovo telefono (Android o iOS). Senza la passphrase il file non può essere aperto.</string>
     <string name="backup_create">Backup di cluster e impostazioni</string>

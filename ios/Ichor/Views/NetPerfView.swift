@@ -148,11 +148,25 @@ struct NetPerfView: View {
         return figures.isEmpty ? nil : figures.joined(separator: " · ")
     }
 
+    /// Up to three nodes fit side by side; more go in a menu that lists every hostname.
+    @ViewBuilder
     private func nodePicker(_ title: LocalizedStringKey, nodes: [NetPerfNode], selection: Binding<String>) -> some View {
-        Picker(title, selection: selection) {
-            ForEach(nodes) { node in
-                Text(verbatim: node.name).font(.callout.monospaced()).tag(node.name)
+        if nodes.count > 3 {
+            Picker(title, selection: selection) { nodeOptions(nodes) }
+                .pickerStyle(.menu)
+        } else {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title)
+                Picker(title, selection: selection) { nodeOptions(nodes) }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
             }
+        }
+    }
+
+    private func nodeOptions(_ nodes: [NetPerfNode]) -> some View {
+        ForEach(nodes) { node in
+            Text(verbatim: node.name).font(.callout.monospaced()).tag(node.name)
         }
     }
 

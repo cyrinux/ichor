@@ -2,19 +2,15 @@ package name.levis.ichor.ui.workloads
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -123,13 +119,13 @@ private fun NetPerfSetupForm(nodes: List<NetPerfNode>, setup: NetPerfSetup, onCh
         Text(stringResource(R.string.netperf_no_nodes), color = muted, modifier = gutter)
         return
     }
-    NodeChips(
+    NodePicker(
         stringResource(R.string.netperf_client),
         nodes,
         setup.client,
         hint = { InfoHint(stringResource(R.string.netperf_hint_nodes_title), stringResource(R.string.netperf_hint_nodes)) },
     ) { name -> onChange { it.copy(client = name) } }
-    NodeChips(stringResource(R.string.netperf_server), nodes, setup.server) { name -> onChange { it.copy(server = name) } }
+    NodePicker(stringResource(R.string.netperf_server), nodes, setup.server) { name -> onChange { it.copy(server = name) } }
     if (setup.ready && setup.server == setup.client) {
         Text(stringResource(R.string.netperf_same_node), style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.warn, modifier = gutter)
     }
@@ -155,32 +151,6 @@ private fun NetPerfSetupForm(nodes: List<NetPerfNode>, setup: NetPerfSetup, onCh
         }
     }
     Button(onClick = onStart, enabled = setup.ready, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_start)) }
-}
-
-@Composable
-private fun NodeChips(
-    label: String,
-    nodes: List<NetPerfNode>,
-    selected: String,
-    hint: @Composable () -> Unit = {},
-    onSelect: (String) -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(label, style = MaterialTheme.typography.labelLarge)
-            hint()
-        }
-        LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(nodes, key = { it.name }) { node ->
-                FilterChip(
-                    selected = node.name == selected,
-                    onClick = { onSelect(node.name) },
-                    enabled = node.ready,
-                    label = { Text(node.name, fontFamily = FontFamily.Monospace) },
-                )
-            }
-        }
-    }
 }
 
 @Composable
