@@ -323,6 +323,7 @@ struct OverviewView: View {
             Section {
                 ClusterSummaryCard(
                     name: model.activeLabel,
+                    context: model.activeSummary,
                     summary: ClusterSummary(nodes: overview.nodes),
                     answered: overview.answered(of: overviewNodeTargets),
                     live: liveStats ? ClusterLiveStore.shared.live(for: loadID) : nil

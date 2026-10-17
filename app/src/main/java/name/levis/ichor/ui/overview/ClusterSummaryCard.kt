@@ -39,8 +39,11 @@ import name.levis.ichor.R
 import name.levis.ichor.model.ClusterStatus
 import name.levis.ichor.model.ClusterSummary
 import name.levis.ichor.model.ClusterUsage
+import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.NodesAnswered
+import name.levis.ichor.model.clusterLogo
 import name.levis.ichor.model.displayVersion
+import name.levis.ichor.ui.components.BundledLogo
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatTile
 import name.levis.ichor.ui.components.StatTileRow
@@ -71,12 +74,16 @@ fun ClusterSummaryCard(
     answered: NodesAnswered?,
     onInsights: () -> Unit,
     onCapacity: () -> Unit,
+    /** The active context, for the provider logo before the name; none: no logo. */
+    context: ContextSummary? = null,
     modifier: Modifier = Modifier,
 ) {
     val troubles = troubles(summary)
     Card(modifier = modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                // A fixed box, so the name does not shift once the logo has loaded.
+                context?.let { BundledLogo(clusterLogo(it), Modifier.padding(end = 8.dp).size(24.dp)) }
                 Column(Modifier.weight(1f)) {
                     Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     // One trouble reads in the headline; two get their own line below it.
