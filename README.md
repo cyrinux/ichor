@@ -1473,10 +1473,14 @@ Wake-on-LAN, privacy label and manifest, export compliance, review notes) is in
 
 ## CI (GitHub Actions)
 
-- **`.github/workflows/android.yml`** (Ubuntu, Nix flake): `./build.sh check`, then the debug
-  and release APKs.
-- **`.github/workflows/ios.yml`** (macOS 26): core tests, simulator build, unsigned IPA; on
-  `v*` tags, the App Store upload (see [iOS](#ios)).
+- **`.github/workflows/android.yml`** (Ubuntu, Nix flake): four parallel jobs, `./build.sh check`
+  and the debug, release and Play builds (`ICHOR_SKIP_TESTS=1`, the check job runs the tests).
+- **`.github/workflows/ios.yml`** (macOS 26): two parallel jobs, core tests with the simulator
+  build, and the unsigned IPA; on `v*` tags, the App Store upload (see [iOS](#ios)).
+
+The Nix store, Gradle user home, Go module and build caches and the Swift package checkouts
+are restored from the Actions cache (`.github/actions/*-toolchain`); only the check and test
+jobs write them, on `main`.
 
 Both run on pushes to `main` and on pull requests. Release APKs are named
 `ichor-v<version>-<abi>.apk`, or `…-unsigned.apk` when no keystore secrets are set;
