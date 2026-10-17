@@ -243,3 +243,119 @@ func TestTargetNodesDedupes(t *testing.T) {
 		t.Errorf("targetNodes = %s", got)
 	}
 }
+
+func TestConfigDigestIsTheCacheKey(t *testing.T) {
+	cfg := testConfig(t, time.Now().Add(time.Hour))
+
+	digest := ConfigDigest(cfg) // not cached yet: hashed directly
+	if digest != configs.get(cfg).hash || ConfigDigest(strings.Clone(cfg)) != digest {
+		t.Fatal("digest differs from the config cache's key")
+	}
+
+	if len(digest) != 64 || ConfigDigest(cfg+" ") == digest {
+		t.Fatalf("digest %q is not a content hash", digest)
+	}
+}
+
+func TestParseConfigIfChanged(t *testing.T) {
+	cfg := testConfig(t, time.Now().Add(time.Hour))
+	digest := ConfigDigest(cfg)
+	before := configParses.Load()
+
+	if out, err := ParseConfigIfChanged(cfg, digest); err != nil || out != "" {
+		t.Fatalf("known digest: %q, %v; want \"\"", out, err)
+	}
+
+	if got := configParses.Load() - before; got != 0 {
+		t.Fatalf("parsed %d times on a known digest", got)
+	}
+
+	want, err := ParseConfig(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, known := range []string{"", "stale"} {
+		if out, err := ParseConfigIfChanged(strings.Clone(cfg), known); err != nil || out != want {
+			t.Fatalf("digest %q: %q, %v; want the summary", known, out, err)
+		}
+	}
+
+	if _, err := ParseConfigIfChanged("", "stale"); err == nil {
+		t.Fatal("empty config accepted")
+	}
+}
+
+func TestParseKubeconfigIfChanged(t *testing.T) {
+	kube := testKubeconfigAllAuth(t)
+	before := kubeconfigParses.Load()
+
+	if out, err := ParseKubeconfigIfChanged(kube, ConfigDigest(kube)); err != nil || out != "" {
+		t.Fatalf("known digest: %q, %v; want \"\"", out, err)
+	}
+
+	if got := kubeconfigParses.Load() - before; got != 0 {
+		t.Fatalf("parsed %d times on a known digest", got)
+	}
+
+	want, err := ParseKubeconfig(kube)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out, err := ParseKubeconfigIfChanged(kube, "stale"); err != nil || out != want {
+		t.Fatalf("stale digest: %q, %v; want the summary", out, err)
+	}
+}
+
+func TestParseConfigIfChangedIsMasked(t *testing.T) {
+	cfg := testConfig(t, time.Now().Add(time.Hour))
+	enableMask(t, "")
+
+	out, err := ParseConfigIfChanged(cfg, "stale")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if strings.Contains(out, "example.org") || strings.Contains(out, "10.1.0.1") {
+		t.Fatalf("summary not masked: %s", out)
+	}
+
+	if want, _ := ParseConfig(cfg); out != want {
+		t.Fatalf("masked differently from ParseConfig:\n%s\n%s", out, want)
+	}
+}
+
+func TestPrivacyGenerationFollowsTheMask(t *testing.T) {
+	t.Cleanup(func() { SetPrivacyMask(false, "") })
+	SetPrivacyMask(false, "")
+
+	if got := PrivacyGeneration(); got != 0 {
+		t.Fatalf("mask off: generation %d, want 0", got)
+	}
+
+	SetPrivacyMask(true, "")
+
+	on := PrivacyGeneration()
+	if on == 0 {
+		t.Fatal("mask on: generation 0")
+	}
+
+	if SetPrivacyMask(true, ""); PrivacyGeneration() != on {
+		t.Fatal("same mask: generation changed")
+	}
+
+	if SetPrivacyMask(true, "word"); PrivacyGeneration() == on {
+		t.Fatal("new words: generation kept")
+	}
+
+	words := PrivacyGeneration()
+
+	if SetPrivacyMask(false, ""); PrivacyGeneration() != 0 {
+		t.Fatal("mask off again: generation not 0")
+	}
+
+	if SetPrivacyMask(true, "word"); PrivacyGeneration() == on || PrivacyGeneration() == words {
+		t.Fatal("mask on again: an earlier generation came back")
+	}
+}

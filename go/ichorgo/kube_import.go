@@ -61,6 +61,11 @@ const (
 func ParseKubeconfig(configYAML string) (out string, err error) {
 	defer maskResult(&out, &err)
 
+	return kubeconfigSummaryJSON(configYAML)
+}
+
+// kubeconfigSummaryJSON is ParseKubeconfig before masking.
+func kubeconfigSummaryJSON(configYAML string) (string, error) {
 	start := time.Now()
 
 	privacy.learnConfig(configYAML)

@@ -71,8 +71,7 @@ func (c *configCache) get(text string) *parsedConfig {
 		return p
 	}
 
-	sum := sha256.Sum256([]byte(text))
-	hash := hex.EncodeToString(sum[:])
+	hash := contentHash(text)
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -95,6 +94,14 @@ func (c *configCache) get(text string) *parsedConfig {
 	}
 
 	return p
+}
+
+// contentHash is the key of a config text: the hex SHA-256 of its bytes. ConfigDigest hands
+// the same value to the apps.
+func contentHash(text string) string {
+	sum := sha256.Sum256([]byte(text))
+
+	return hex.EncodeToString(sum[:])
 }
 
 // peek returns the entry of text if it is cached. A new copy of a cached text (each call

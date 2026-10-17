@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"sync/atomic"
 
 	"go.yaml.in/yaml/v4"
 )
@@ -124,10 +125,15 @@ func IsKubeconfig(configYAML string) bool {
 	return isKubeconfig(configYAML)
 }
 
+// kubeconfigParses counts kubeconfig parses, for the tests.
+var kubeconfigParses atomic.Int64
+
 func loadKubeconfigDoc(configYAML string) (*kubeconfigDoc, error) {
 	if strings.TrimSpace(configYAML) == "" {
 		return nil, errors.New("kubeconfig is empty")
 	}
+
+	kubeconfigParses.Add(1)
 
 	var doc kubeconfigDoc
 	if err := yaml.Unmarshal([]byte(configYAML), &doc); err != nil {
