@@ -40,6 +40,7 @@ import name.levis.ichor.ui.netpol.NetworkPoliciesScreen
 import name.levis.ichor.ui.overview.KubeHomeViewModel
 import name.levis.ichor.ui.autoscaling.AutoscalingScreen
 import name.levis.ichor.ui.vms.VirtualMachinesScreen
+import name.levis.ichor.ui.argorollouts.ArgoRolloutsScreen
 import name.levis.ichor.ui.policies.PoliciesScreen
 
 /** The Kubernetes screens: nodes, workloads, events, apps, metrics, the checkup, flows, data services, pod shells. */
@@ -164,6 +165,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             },
         )
     }
+    composable(Routes.ARGO_ROLLOUTS) { ArgoRolloutsScreen(onBack = { nav.popBackStack() }) }
     composable(
         Routes.VM_CONSOLE,
         arguments = listOf("ctx", "ns", "vm").map { navArgument(it) { type = NavType.StringType; defaultValue = "" } },

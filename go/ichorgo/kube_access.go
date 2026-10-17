@@ -113,6 +113,13 @@ var kubeActionChecks = map[string][]accessNeed{
 	"autoscale": {
 		{ssarAttributes{Verb: "patch", Group: "autoscaling", Resource: "horizontalpodautoscalers"}, true},
 	},
+	// An Argo Rollout's promote, abort, retry and pause: its spec, and its status subresource
+	// (promote, abort and retry write the status).
+	"argoRollout": {
+		{ssarAttributes{Verb: "patch", Group: groupArgo, Resource: "rollouts"}, true},
+		{ssarAttributes{Verb: "patch", Group: groupArgo, Resource: "rollouts", Subresource: "status"}, true},
+		{ssarAttributes{Verb: "get", Group: groupArgo, Resource: "rollouts"}, true},
+	},
 	"autoscaleKeda": {
 		{ssarAttributes{Verb: "patch", Group: groupKEDA, Resource: "scaledobjects"}, true},
 	},

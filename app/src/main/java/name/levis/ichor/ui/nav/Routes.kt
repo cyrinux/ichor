@@ -89,6 +89,8 @@ internal object Routes {
     const val AUTOSCALING = "autoscaling"
     /** KubeVirt (and Harvester) virtual machines and their actions. */
     const val VIRTUAL_MACHINES = "vms"
+    /** Argo Rollouts (canary and blue-green) and their promote/abort/retry/pause actions. */
+    const val ARGO_ROLLOUTS = "argo-rollouts"
 
     /** The cluster's Kubernetes events, live. */
     const val KUBE_EVENTS = "kube-events"

@@ -21,6 +21,8 @@ public enum KubeAction: String, CaseIterable, Sendable {
     case vmConsole
     /// An HPA's min and max; a KEDA ScaledObject's pause and resume.
     case autoscale, autoscaleKeda
+    /// An Argo Rollout's promote, promote fully, abort, retry and pause.
+    case argoRollout
 
     /// Asked in a namespace; the node actions are cluster-wide whatever the namespace.
     public var isNamespaced: Bool {

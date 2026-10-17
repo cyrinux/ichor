@@ -219,6 +219,17 @@ var dataCommands = []command{
 
 		return out, err
 	}},
+	{name: "argo-rollouts", args: "", run: func(e env) (string, error) {
+		return ichorgo.KubeArgoRollouts(e.cfg, e.context, e.kubeServer)
+	}},
+	{name: "argo-rollout-action", args: "NAMESPACE NAME ACTION", run: func(e env) (out string, err error) {
+		// ACTION: promote, promoteFull, abort, retry or pause.
+		if err = ichorgo.KubeArgoRolloutAction(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3)); err == nil {
+			out = "requested"
+		}
+
+		return out, err
+	}},
 	{name: "argocd-action", args: "NAMESPACE NAME ACTION [OPTIONS]", run: func(e env) (out string, err error) {
 		// argocd-action NAMESPACE NAME ACTION [OPTIONS_JSON], e.g. "argocd web refresh"
 		if err = ichorgo.KubeArgoAction(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4)); err == nil {
