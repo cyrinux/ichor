@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"os"
 	"strconv"
 
 	"github.com/cyrinux/ichor/go/ichorgo"
@@ -294,6 +295,23 @@ var dataCommands = []command{
 		out, err = ichorgo.KubeArgoDiff(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
 
 		return out, err
+	}},
+	{name: "text-diff", args: "BEFORE_FILE AFTER_FILE NAME", noConfig: true, run: func(e env) (string, error) {
+		// text-diff BEFORE_FILE AFTER_FILE NAME: the review diff of an edited source file.
+		before, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		after, err := os.ReadFile(flag.Arg(2))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.TextDiff(string(before), string(after), flag.Arg(3))
+	}},
+	{name: "gitops-proposal-defaults", args: "TOOL KIND NAMESPACE NAME PATH CLUSTER", noConfig: true, run: func(e env) (string, error) {
+		return ichorgo.GitOpsProposalDefaults(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6))
 	}},
 	{name: "cilium", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.KubeCilium(e.cfg, e.context, e.kubeServer)

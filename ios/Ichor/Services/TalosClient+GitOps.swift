@@ -52,6 +52,44 @@ extension TalosClient {
         }
     }
 
+    /// The file path of source as its Git host has it at ref (a branch, or what the app
+    /// follows), with the sha a proposal names: what the editor starts from, also for a Flux
+    /// source read from its artifact. Throws GitHostMissing without a token.
+    func forgeFile(_ source: GitSource, path: String, ref: String, hosts: GitHostStore, demo: Bool) async throws -> GitFile {
+        let json = try await Self.proposalHost(source, hosts: hosts, demo: demo)
+        let repo = source.repoURL
+        return try await Self.json { IchorgoGitForgeFile(json, repo, ref, path, $0) }
+    }
+
+    /// Commits the proposal's file on a new branch and opens a pull (merge) request, with the
+    /// token saved for source's Git host. Recorded in the audit log; the demo and screenshot
+    /// mode refuse it (the Go core's message).
+    func propose(_ proposal: GitProposal, on source: GitSource, hosts: GitHostStore, demo: Bool) async throws -> GitProposalResult {
+        let json = try await Self.proposalHost(source, hosts: hosts, demo: demo)
+        let options = try proposal.optionsJSON()
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext] in
+            IchorgoGitForgePropose(config, context, json, options, $0)
+        }
+    }
+
+    /// The unified diff of a file from before to after (one "file" resource), for the review.
+    static func textDiff(before: String, after: String, name: String) async throws -> FluxDiff {
+        try await json { IchorgoTextDiff(before, after, name, $0) }
+    }
+
+    /// The prefilled pull request for a change of path deployed by app, on cluster ("" for none).
+    static func proposalDefaults(app: GitOpsAppRef, path: String, cluster: String) async throws -> GitProposalDefaults {
+        try await json { IchorgoGitOpsProposalDefaults(app.tool, app.kind, app.namespace, app.name, path, cluster, $0) }
+    }
+
+    /// The host argument of the forge a change of source is proposed through.
+    private static func proposalHost(_ source: GitSource, hosts: GitHostStore, demo: Bool) async throws -> String {
+        guard let host = source.proposalHost else {
+            throw TalosError(message: String(localized: "This file cannot be edited here: open it in the browser."))
+        }
+        return try await forgeHost(host, hosts: hosts, demo: demo)
+    }
+
     /// The host argument with the token saved for host; the demo's needs none.
     private static func forgeHost(_ host: String, hosts: GitHostStore, demo: Bool) async throws -> String {
         if demo { return gitHostDemoJSON }

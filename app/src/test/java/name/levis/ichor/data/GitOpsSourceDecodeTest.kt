@@ -1,5 +1,8 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.model.DiffChange
+import name.levis.ichor.model.DiffLine
+import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.FluxRef
 import name.levis.ichor.model.SourceReadPath
 import org.junit.Assert.assertEquals
@@ -49,5 +52,39 @@ class GitOpsSourceDecodeTest {
     @Test
     fun aTreeWithoutEntriesIsEmpty() {
         assertEquals(emptyList<Any>(), decodeGitTree("""{"ref":"main","entries":null}""").entries)
+    }
+
+    @Test
+    fun aProposalResultDecodes() {
+        val result = decodeGitProposalResult(
+            """{"url":"https://github.com/example-org/platform/pull/7","number":7,"branch":"ichor/podinfo-deployment-1a2b","commit":"9f8e7d6","forge":"github"}""",
+        )
+
+        assertEquals("https://github.com/example-org/platform/pull/7", result.url)
+        assertEquals(7, result.number)
+        assertEquals("ichor/podinfo-deployment-1a2b", result.branch)
+        assertEquals("github", result.forge)
+    }
+
+    @Test
+    fun theProposalDefaultsDecode() {
+        val defaults = decodeGitProposalDefaults(
+            """{"title":"Update apps/podinfo/deployment.yaml","message":"Update apps/podinfo/deployment.yaml","branch":"ichor/podinfo-deployment-1a2b","body":"Proposed from Ichor for Argo CD Application argocd/podinfo on lab."}""",
+        )
+
+        assertEquals("Update apps/podinfo/deployment.yaml", defaults.title)
+        assertEquals("ichor/podinfo-deployment-1a2b", defaults.branch)
+        assertTrue(defaults.body.startsWith("Proposed from Ichor"))
+    }
+
+    @Test
+    fun aTextDiffDecodesAsAOneFileDiff() {
+        val json = """{"kind":"file","name":"apps/podinfo/deployment.yaml","resources":[{"kind":"file","name":"apps/podinfo/deployment.yaml","change":"changed","diff":"--- a/x\n+++ b/x\n@@ -1 +1 @@\n-replicas: 1\n+replicas: 2\n"}],"warnings":[]}"""
+
+        val diff = TalosJson.decodeFromString(FluxDiff.serializer(), json)
+
+        val file = diff.resources.single()
+        assertEquals(DiffChange.CHANGED, file.change)
+        assertEquals(listOf(DiffLine.Kind.HUNK, DiffLine.Kind.REMOVED, DiffLine.Kind.ADDED), file.lines.map { it.kind })
     }
 }

@@ -38,16 +38,7 @@ struct KubeObjectEditView: View {
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                         if let saveDenial { KubeDeniedLine(text: saveDenial.deniedText) }
-                        HStack(spacing: 16) {
-                            Button { openHelp(.explain) } label: {
-                                Label("Explain field", systemImage: "questionmark.circle")
-                            }
-                            Button { openHelp(.add) } label: {
-                                Label("Add field", systemImage: "plus.circle")
-                            }
-                        }
-                        .font(.footnote)
-                        .buttonStyle(.borderless)
+                        YamlSchemaHelpButtons(open: openHelp)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)

@@ -8,10 +8,13 @@ import IchorCore
 /// Without a token for an Argo CD source's Git host, says so with a way to add one.
 struct SourceBrowserView: View {
     let source: GitSource
+    /// The app deploying it, for the defaults of a pull request opened from a file.
+    let app: GitOpsAppRef
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(source: GitSource, dir: String) {
+    init(source: GitSource, dir: String, app: GitOpsAppRef) {
         self.source = source
+        self.app = app
         _dir = State(initialValue: cleanSourcePath(dir))
     }
 
@@ -62,13 +65,13 @@ struct SourceBrowserView: View {
                 }
                 ForEach(entries) { entry in
                     if entry.isDir {
-                        NavigationLink { SourceBrowserView(source: source, dir: entry.path) } label: {
+                        NavigationLink { SourceBrowserView(source: source, dir: entry.path, app: app) } label: {
                             Label { Text(verbatim: entry.name).font(.callout.monospaced()) } icon: {
                                 Image(systemName: "folder").foregroundStyle(.tint)
                             }
                         }
                     } else {
-                        NavigationLink { SourceFileView(source: source, path: entry.path) } label: {
+                        NavigationLink { SourceFileView(source: source, path: entry.path, app: app) } label: {
                             HStack {
                                 Label { Text(verbatim: entry.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle) } icon: {
                                     Image(systemName: "doc.text").foregroundStyle(.secondary)

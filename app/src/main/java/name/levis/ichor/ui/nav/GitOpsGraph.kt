@@ -17,6 +17,7 @@ import name.levis.ichor.ui.flux.FluxScreen
 import name.levis.ichor.ui.gitops.SOURCE_TOOL_ARGO
 import name.levis.ichor.ui.gitops.SOURCE_TOOL_FLUX
 import name.levis.ichor.ui.gitops.SourceBrowserScreen
+import name.levis.ichor.ui.gitops.SourceEditScreen
 import name.levis.ichor.ui.gitops.SourceFileScreen
 import name.levis.ichor.ui.gitops.SourceTarget
 import name.levis.ichor.ui.kubebrowser.KubeLinks
@@ -154,7 +155,21 @@ private fun NavGraphBuilder.sourceGraph(nav: NavHostController) {
         Routes.GITOPS_FILE,
         arguments = targetArgs + navArgument("path") { type = NavType.StringType; defaultValue = "" },
     ) { entry ->
+        val t = target(entry.arguments)
+        val path = entry.arguments?.getString("path").orEmpty()
         SourceFileScreen(
+            target = t,
+            path = path,
+            onBack = { nav.popBackStack() },
+            onAddToken = onAddToken,
+            onEdit = { nav.navigate(Routes.gitOpsEdit(t.tool, t.kind, t.namespace, t.name, t.index, path)) },
+        )
+    }
+    composable(
+        Routes.GITOPS_EDIT,
+        arguments = targetArgs + navArgument("path") { type = NavType.StringType; defaultValue = "" },
+    ) { entry ->
+        SourceEditScreen(
             target = target(entry.arguments),
             path = entry.arguments?.getString("path").orEmpty(),
             onBack = { nav.popBackStack() },

@@ -413,12 +413,7 @@ public struct KubeEditPreview: Decodable, Equatable, Sendable {
     public var lines: [DiffLine] { parseDiffLines(diff) }
 
     /// Lines added and removed.
-    public var counts: (added: Int, removed: Int) {
-        lines.reduce(into: (0, 0)) { counts, line in
-            if line.kind == .added { counts.0 += 1 }
-            if line.kind == .removed { counts.1 += 1 }
-        }
-    }
+    public var counts: (added: Int, removed: Int) { diffLineCounts(lines) }
 }
 
 /// How KubeObjectYAML hides a Secret's values ("<hidden, 12 characters>"): such YAML cannot

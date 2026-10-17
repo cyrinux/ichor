@@ -68,6 +68,8 @@ fun KubeYamlEditor(
     onRetryHelp: () -> Unit,
     onCloseHelp: () -> Unit,
     modifier: Modifier = Modifier,
+    /** False for a text with no schema to ask (a kustomization, a values file): no Explain nor Add field. */
+    schemaHelp: Boolean = true,
 ) {
     // The field owns its text and cursor while on screen: feeding the view model's draft
     // back would lose what is typed in between.
@@ -94,7 +96,7 @@ fun KubeYamlEditor(
     }
 
     Column(modifier.fillMaxSize().imePadding()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (schemaHelp) Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             TextButton(onClick = { onOpenHelp(field.text, field.selection.start, SchemaHelpMode.EXPLAIN) }) {
                 Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.kb_explain_field), Modifier.padding(start = 6.dp))

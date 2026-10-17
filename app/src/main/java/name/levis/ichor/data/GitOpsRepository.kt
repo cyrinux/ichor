@@ -16,10 +16,16 @@ import name.levis.ichor.model.GitHost
 import name.levis.ichor.model.GitHostCheck
 import name.levis.ichor.model.GitFile
 import name.levis.ichor.model.GitOpsSource
+import name.levis.ichor.model.GitProposal
+import name.levis.ichor.model.GitProposalDefaults
+import name.levis.ichor.model.GitProposalResult
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.GitTree
+import name.levis.ichor.model.ProposeBlock
 import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.gitHostJsonLacksToken
+import name.levis.ichor.model.gitProposalJson
+import name.levis.ichor.model.proposeBlock
 import name.levis.ichor.R
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
@@ -143,6 +149,48 @@ class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) :
         SourceReadPath.NONE -> throw LocalizedException(UiText.Res(R.string.gitops_source_not_browsable))
     }
 
+    /**
+     * The file [path] of [src] at [ref], always through the Git host's API with its saved token,
+     * even for a Flux source read from its artifact: a proposal needs the forge's sha of the
+     * file. Throws [GitHostMissing] without a token.
+     */
+    suspend fun forgeFile(src: GitSource, ref: String, path: String): GitFile {
+        val host = forgeHost(src)
+        return withContext(Dispatchers.IO) { decodeGitFile(Ichorgo.gitForgeFile(host, src.repoURL, ref, path)) }
+    }
+
+    /** What stops proposing a change to [src]'s files (no Git host, no token), null when nothing does. */
+    suspend fun proposeBlockOf(src: GitSource): ProposeBlock? {
+        val blocked = proposeBlock(src, lacksToken = false)
+        if (blocked != null) return blocked
+        val store = gitHosts ?: return ProposeBlock.NotEditable
+        val entry = store.hosts.value.firstOrNull { it.host == src.host } ?: GitHost(src.host)
+        return proposeBlock(src, lacksToken = gitHostJsonLacksToken(store.hostJson(entry)))
+    }
+
+    /** The review of an edit: [before] → [after] of the file [name], as a one-file [FluxDiff]. */
+    suspend fun textDiff(before: String, after: String, name: String): FluxDiff = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(FluxDiff.serializer(), Ichorgo.textDiff(before, after, name))
+    }
+
+    /**
+     * The prefilled pull request for a change of [path] deployed by [tool]'s [kind]
+     * [namespace]/[name] on the active cluster. No network.
+     */
+    suspend fun proposalDefaults(tool: String, kind: String, namespace: String, name: String, path: String): GitProposalDefaults =
+        go.kube { _, ctx, _ -> decodeGitProposalDefaults(Ichorgo.gitOpsProposalDefaults(tool, kind, namespace, name, path, ctx)) }
+
+    /**
+     * Commits [proposal] on a new branch of [src]'s repository and opens a pull (merge) request,
+     * with the host's saved token; recorded in the active cluster's audit log, refused in the
+     * demo context and in screenshot mode. Throws [GitHostMissing] without a token.
+     */
+    suspend fun propose(src: GitSource, proposal: GitProposal): GitProposalResult {
+        val host = forgeHost(src)
+        val options = gitProposalJson(src.repoURL, proposal)
+        return go.kube { cfg, ctx, _ -> decodeGitProposalResult(Ichorgo.gitForgePropose(cfg, ctx, host, options)) }
+    }
+
     /** The forge argument for [src]'s host, with its saved token; [GitHostMissing] without one. */
     private suspend fun forgeHost(src: GitSource): String {
         val store = checkNotNull(gitHosts) { "No Git host store" }
@@ -214,5 +262,11 @@ internal fun decodeGitTree(json: String): GitTree = TalosJson.decodeFromString(G
 /** The answer of `GitForgeFile` and `FluxSourceFile`. */
 internal fun decodeGitFile(json: String): GitFile = TalosJson.decodeFromString(GitFile.serializer(), json)
 
-/** No token is saved for the Git host [host]: the source browser offers to add one in Settings. */
+/** The answer of `GitForgePropose`. */
+internal fun decodeGitProposalResult(json: String): GitProposalResult = TalosJson.decodeFromString(GitProposalResult.serializer(), json)
+
+/** The answer of `GitOpsProposalDefaults`. */
+internal fun decodeGitProposalDefaults(json: String): GitProposalDefaults = TalosJson.decodeFromString(GitProposalDefaults.serializer(), json)
+
+/** No token is saved for the Git host [host]:the source browser offers to add one in Settings. */
 class GitHostMissing(val host: String) : LocalizedException(UiText.Res(R.string.gitops_source_no_token, host))

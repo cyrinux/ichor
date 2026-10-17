@@ -94,6 +94,11 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   app deploys from, at the revision the cluster runs, with read-only files (YAML highlighted on
   Android). Flux apps need no token (the files come from the source-controller's artifact);
   Argo CD apps use the Git host token, and without one the screen says which host to add.
+- **Edit and open a pull request:** Edit on a source file opens the YAML editor, Review shows
+  the diff, and **Open pull request** commits it on a new branch and opens a pull or merge
+  request (GitHub, GitLab, Gitea). The tracked branch is never pushed to: Argo CD or Flux
+  applies the change once someone merges it. A file changed upstream in the meantime is
+  refused, with Reload to start from the new version.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome. Optionally
   (Settings → Privacy, off by default) each Kubernetes object the app changes also gets a

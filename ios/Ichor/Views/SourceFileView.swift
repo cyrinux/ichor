@@ -5,14 +5,19 @@ import IchorCore
 /// One file of an app's source, read only, at the commit the cluster runs: numbered monospace
 /// lines, built lazily so a 20k-line values file scrolls, selectable, scrolling sideways rather
 /// than wrapping. Copy, and the file's page in the browser; a file over 1 MiB only says so.
+/// Edit opens SourceEditView, which turns a change into a pull request through the Git host
+/// (with its token); without a token, or off a forge, a bar says why it is not offered.
 struct SourceFileView: View {
     let source: GitSource
     let path: String
+    /// The app deploying it, for the defaults of the pull request.
+    let app: GitOpsAppRef
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(source: GitSource, path: String) {
+    init(source: GitSource, path: String, app: GitOpsAppRef) {
         self.source = source
         self.path = path
+        self.app = app
     }
 
     @Environment(AppModel.self) private var model
@@ -20,6 +25,9 @@ struct SourceFileView: View {
     @State private var state: LoadState<SourceFileText> = .loading
     @State private var missingHost: String?
     @State private var copied = false
+    @State private var editing = false
+    /// Why Edit is not offered, nil when it is.
+    @State private var editBlock: SourceEditBlock?
 
     private var demo: Bool { model.activeSummary?.demo == true }
 
@@ -42,7 +50,16 @@ struct SourceFileView: View {
         .onChange(of: hosts.hosts) { _, _ in Task { await load() } }
         .navigationTitle(Text(verbatim: name))
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $editing) {
+            SourceEditView(source: source, path: path, app: app)
+        }
         .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                if case .loaded(let file, _, _) = state, !file.file.truncated {
+                    Button { editing = true } label: { Label("Edit", systemImage: "pencil") }
+                        .disabled(editBlock != nil)
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 if case .loaded(let file, _, _) = state, !file.file.truncated {
                     Button { copy(file.file.content) } label: {
@@ -91,6 +108,9 @@ struct SourceFileView: View {
             }
             .refreshable { await load() }
             .themedBackground()
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if let editBlock { SourceEditBlockBar(block: editBlock) }
+            }
         }
     }
 
@@ -99,6 +119,8 @@ struct SourceFileView: View {
         do {
             let file = try await client.sourceFile(source, path: path, hosts: hosts, demo: demo)
             missingHost = nil
+            let saved = source.proposalHost.map { hosts.hasToken($0) } ?? false
+            editBlock = sourceEditBlock(source, demo: demo, hasToken: saved)
             state = .loaded(SourceFileText(file: file), at: Date())
         } catch let missing as GitHostMissing {
             missingHost = missing.host
@@ -116,6 +138,30 @@ struct SourceFileView: View {
             try? await Task.sleep(for: .seconds(2))
             copied = false
         }
+    }
+}
+
+/// Why the file cannot be edited into a pull request, with the shortcut to add the Git host's
+/// token when that is what is missing.
+private struct SourceEditBlockBar: View {
+    let block: SourceEditBlock
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            switch block {
+            case .noForge:
+                Label("This file cannot be edited here: open it in the browser.", systemImage: "pencil.slash")
+            case .noToken(let host):
+                Label("Add a token for \(host) to open pull requests.", systemImage: "key")
+                NavigationLink { SettingsPageView(page: .gitHosts) } label: { Text("Add a token") }
+            }
+        }
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(.bar)
     }
 }
 

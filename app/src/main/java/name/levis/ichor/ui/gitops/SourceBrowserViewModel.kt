@@ -14,11 +14,13 @@ import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.model.GitFile
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.GitTree
+import name.levis.ichor.model.ProposeBlock
 import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.cleanSourceDir
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.refreshFailed
 import name.levis.ichor.ui.uiText
 
@@ -130,8 +132,15 @@ class SourceBrowserViewModel(private val gitOps: GitOpsRepository) : ViewModel()
 /** A file of a source, with the source it was read from (for its links). */
 data class SourceFileView(val source: GitSource, val file: GitFile)
 
-/** The file on screen; [missingHost]: no token is saved for that Git host. */
-data class SourceFileState(val file: UiState<SourceFileView> = UiState.Loading, val missingHost: String? = null)
+/**
+ * The file on screen; [missingHost]: no token is saved for that Git host. [editBlock]: why
+ * Edit is disabled (no token to propose with, no forge), null when it is offered.
+ */
+data class SourceFileState(
+    val file: UiState<SourceFileView> = UiState.Loading,
+    val missingHost: String? = null,
+    val editBlock: ProposeBlock? = null,
+)
 
 /** One file of an app's source, read once per [load] key, again on refresh. */
 class SourceFileViewModel(private val gitOps: GitOpsRepository) : ViewModel() {
@@ -158,7 +167,9 @@ class SourceFileViewModel(private val gitOps: GitOpsRepository) : ViewModel() {
         job = viewModelScope.launch {
             _state.value = try {
                 val src = gitOps.sourceOf(t)
-                SourceFileState(UiState.Loaded(SourceFileView(src, gitOps.file(src, path))))
+                val file = gitOps.file(src, path)
+                val block = cancellableCatching { gitOps.proposeBlockOf(src) }.getOrDefault(ProposeBlock.NotEditable)
+                SourceFileState(UiState.Loaded(SourceFileView(src, file)), editBlock = block)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: GitHostMissing) {

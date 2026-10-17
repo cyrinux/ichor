@@ -136,6 +136,11 @@ internal object Routes {
     const val GITOPS_FILE = "gitops-file?tool={tool}&kind={kind}&ns={ns}&name={name}&idx={idx}&path={path}"
     fun gitOpsFile(tool: String, kind: String, namespace: String, name: String, idx: Int, path: String) =
         "gitops-file?tool=${Uri.encode(tool)}&kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&idx=$idx&path=${Uri.encode(path)}"
+
+    /** The editor of the file [path] of source [idx]: the draft stays in its view model, never here. */
+    const val GITOPS_EDIT = "gitops-edit?tool={tool}&kind={kind}&ns={ns}&name={name}&idx={idx}&path={path}"
+    fun gitOpsEdit(tool: String, kind: String, namespace: String, name: String, idx: Int, path: String) =
+        "gitops-edit?tool=${Uri.encode(tool)}&kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&idx=$idx&path=${Uri.encode(path)}"
     const val DEBUG = "debug?addr={addr}&host={host}&ctx={ctx}"
     const val POD_SHELL = "pod-shell?ctx={ctx}&ns={ns}&pod={pod}&c={c}"
     const val KUBE_NODE_DEBUG = "kube-node-debug?ctx={ctx}&node={node}&ns={ns}"

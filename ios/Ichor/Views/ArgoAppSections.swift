@@ -124,11 +124,13 @@ struct ArgoHero: View {
 /// runs; a packaged Helm chart only names itself. Nothing until read, nor when it cannot be.
 struct GitOpsSourceSection: View {
     let sources: GitOpsSource?
+    /// The app, for the defaults of a pull request opened from a file.
+    let app: GitOpsAppRef
 
     var body: some View {
         if let sources, !sources.rows.isEmpty {
             Section {
-                ForEach(sources.rows, id: \.index) { row in GitSourceRow(source: row.source) }
+                ForEach(sources.rows, id: \.index) { row in GitSourceRow(source: row.source, app: app) }
             } footer: {
                 if !sources.note.isEmpty { Text(verbatim: sources.note) }
             }
@@ -140,13 +142,14 @@ struct GitOpsSourceSection: View {
 /// when the app can read the files.
 struct GitSourceRow: View {
     let source: GitSource
+    let app: GitOpsAppRef
 
     var body: some View {
         if source.isChart {
             row(Text("Helm chart \(source.chart.isEmpty ? source.repoURL : source.chart) · \(source.ref)"), symbol: "shippingbox")
                 .accessibilityElement(children: .combine)
         } else if source.canOpen {
-            NavigationLink { SourceBrowserView(source: source, dir: source.startDir) } label: {
+            NavigationLink { SourceBrowserView(source: source, dir: source.startDir, app: app) } label: {
                 row(Text(verbatim: sourceRowLabel(source)), symbol: "folder")
             }
         } else {
