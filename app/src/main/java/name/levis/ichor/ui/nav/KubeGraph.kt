@@ -227,11 +227,6 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
 }
 
 /**
- * Where an alert's labels lead: a pod or a namespace on the Kubernetes screen (focused as a
- * share link focuses it), a node on its screen (Talos), or its object (a cluster added from a
- * kubeconfig, which has no node screen).
- */
-/**
  * Where a pod's pull problem leads on a Talos cluster: its node's network tools, or its machine
  * config on the registry mirror snippet for the registry. Null for a cluster added from a
  * kubeconfig, which has no node screens.
@@ -250,6 +245,11 @@ private fun podPullLinks(nav: NavHostController, app: TalosApp): PodPullLinks? =
 /** The config snippet (go/ichorgo/configsnippets.go) a registry's pull limit is lifted with. */
 private const val REGISTRY_MIRROR_SNIPPET = "registry_mirror"
 
+/**
+ * Where an alert's labels lead: a pod or a namespace on the Kubernetes screen (focused as a
+ * share link focuses it), a node on its screen (Talos), or its object (a cluster added from a
+ * kubeconfig, which has no node screen).
+ */
 private fun alertLinks(nav: NavHostController, app: TalosApp) = AlertObjectLinks(
     onPod = { ns, pod -> ShareTarget.pod(ns, pod).kubeFocus?.let { nav.navigate(Routes.workloads(it)) } },
     onNamespace = { ns -> nav.navigate(Routes.workloads(KubeFocus(0, namespace = ns))) },

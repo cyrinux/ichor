@@ -17,9 +17,12 @@ func TestExplainPull(t *testing.T) {
 		{"tls", "ErrImagePull", `failed to do request: Head "https://registry.example.test/v2/app/manifests/1": tls: failed to verify certificate: x509: certificate signed by unknown authority`, "registry.example.test/app:1", pullTLS},
 		{"dns", "ErrImagePull", `failed to do request: Head "https://registry.example.test/v2/app/manifests/1": dial tcp: lookup registry.example.test on 10.96.0.10:53: no such host`, "registry.example.test/app:1", pullNetwork},
 		{"timeout", "ImagePullBackOff", `failed to do request: Head "https://quay.io/v2/x/manifests/1": dial tcp 192.0.2.4:443: i/o timeout`, "quay.io/x:1", pullNetwork},
-		{"platform", "ErrImagePull", `failed to pull and unpack image "docker.io/library/app:1": no match for platform in manifest: not found`, "app:1", pullNotFound},
+		{"platform", "ErrImagePull", `failed to pull and unpack image "docker.io/library/app:1": no match for platform in manifest: not found`, "app:1", pullPlatform},
 		{"platform alone", "ErrImagePull", `no matching manifest for linux/arm64 in the manifest list entries`, "app:1", pullPlatform},
 		{"invalid name", "InvalidImageName", `Failed to apply default image tag "Bad:Name": couldn't parse image reference`, "Bad:Name", pullInvalidName},
+		// A digest holding "401" stays a rate limit.
+		{"rate limited, digest", "ErrImagePull", `failed to copy: httpReadSeeker: failed open: unexpected status code https://registry-1.docker.io/v2/library/app/manifests/sha256:9f40140a4011: 429 Too Many Requests - Server message: toomanyrequests: You have reached your pull rate limit.`, "app:1", pullRateLimited},
+		{"forbidden", "ErrImagePull", `failed to resolve reference "registry.example.test/team/app:1": unexpected status from HEAD request: 403 Forbidden`, "registry.example.test/team/app:1", pullUnauthorized},
 		{"unknown", "ErrImagePull", `something new happened`, "app:1", pullUnknown},
 	}
 
