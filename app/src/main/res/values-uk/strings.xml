@@ -560,6 +560,8 @@
     <string name="security_key_moving">Перенесення ключа в захищений чип…</string>
     <string name="security_key_moved">Ключ тепер у захищеному чипі</string>
     <string name="security_key_move_refused">Чип знову відмовив, нічого не змінилося</string>
+    <string name="security_key_move_partial">Один ключ перенесено в захищений чип; інший досі в TEE. Спробуйте ще раз.</string>
+    <string name="security_key_move_needs_key">Ваші конфігурації запечатано ключем безпеки: спершу розблокуйте ним, потім спробуйте ще раз.</string>
     <string name="settings_delete_config">Видалити збережений talosconfig</string>
     <string name="settings_delete_title">Видалити talosconfig?</string>
     <string name="settings_delete_body">Зашифровану конфігурацію всіх кластерів разом із їхніми клієнтськими ключами буде вилучено з цього пристрою.</string>

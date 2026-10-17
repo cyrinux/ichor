@@ -513,6 +513,8 @@
     <string name="security_key_moving">Spostamento della chiave nel chip sicuro…</string>
     <string name="security_key_moved">La chiave ora è nel chip sicuro</string>
     <string name="security_key_move_refused">Il chip ha rifiutato di nuovo, non è cambiato nulla</string>
+    <string name="security_key_move_partial">Una chiave è passata nel chip sicuro; l\'altra è ancora nel TEE. Riprova.</string>
+    <string name="security_key_move_needs_key">Le configurazioni sono sigillate con una chiave di sicurezza: sblocca prima con essa, poi riprova.</string>
     <string name="settings_delete_config">Elimina il talosconfig salvato</string>
     <string name="settings_delete_title">Eliminare il talosconfig?</string>
     <string name="settings_delete_body">La configurazione crittografata di tutti i cluster, con le loro chiavi client, verrà rimossa da questo dispositivo.</string>

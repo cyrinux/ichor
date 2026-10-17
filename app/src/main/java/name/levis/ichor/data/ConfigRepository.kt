@@ -78,8 +78,13 @@ class ConfigRepository(
         if (upgraded > 0) StartupTrace.markOnce("config migrated v1→v2", "$upgraded files")
     }
 
-    /** Where the key protecting the stored config lives (null before the first import). */
-    fun keyProtection(): KeyProtection? = runCatching { store.protection() ?: kubeStore.protection() }.getOrNull()
+    /**
+     * Where the keys protecting the stored configs live: the weakest of the two stores, so the
+     * TEE notice stays while either is out of the chip (null before the first import). A store
+     * whose level cannot be read is left out.
+     */
+    fun keyProtection(): KeyProtection? =
+        weakest(listOf(store, kubeStore).map { runCatching { it.protection() }.getOrNull() })
     private val prefs = context.getSharedPreferences("ichor", Context.MODE_PRIVATE)
 
     /**
@@ -95,20 +100,21 @@ class ConfigRepository(
     }
 
     /**
-     * Moves the key of each store still in the TEE into StrongBox, keeping the configs (see
-     * SecureStore.rekeyToStrongBox); the user asks for it from the TEE notice. True when every
-     * stored config is then under a StrongBox key, which also clears the notice. The configs
-     * themselves do not change, so nothing is reloaded.
+     * Moves the key of each store not in StrongBox into the chip, keeping the configs (see
+     * SecureStore.rekeyToStrongBox and [moveKeys]); the user asks for it from the TEE notice.
+     * Once both are in StrongBox the notice clears, and the summary cache is dropped so its next
+     * write makes its key in the chip too (it is only a cache: the next load parses again). The
+     * configs themselves do not change, so nothing is reloaded.
      */
-    suspend fun moveKeyToStrongBox(): Boolean = writing {
-        val stores = listOf(store, kubeStore)
-        stores.filter { runCatching { it.protection() }.getOrNull() == KeyProtection.TEE }
-            .forEach { it.rekeyToStrongBox() }
-        val moved = stores.all {
-            runCatching { it.protection() }.getOrNull().let { level -> level == null || level == KeyProtection.STRONGBOX }
+    suspend fun moveKeyToStrongBox(): KeyMoveResult = writing {
+        val result = moveKeys(
+            listOf(store, kubeStore).map { target -> MovableKey(target::protection) { target.rekeyToStrongBox() } },
+        )
+        if (result == KeyMoveResult.MOVED) {
+            summaryCache.clear()
+            dismissKeyFallback()
         }
-        if (moved) dismissKeyFallback()
-        moved
+        result
     }
 
     /** Hides the TEE notice for good (a later fallback shows it again). */
@@ -245,7 +251,7 @@ class ConfigRepository(
         val removed = current.summary.indexOf(name)
         if (removed < 0) return@writing true
         if (current.summary.contexts.size == 1) {
-            clear()
+            clearStored()
             return@writing false
         }
         val (talos, kube) = withoutContext(current, name, current.summary.contexts[removed].isKube)
@@ -421,7 +427,11 @@ class ConfigRepository(
 
     private fun savedIndex(): Int = prefs.getInt(KEY_CONTEXT_INDEX, -1)
 
-    suspend fun clear() = withContext(Dispatchers.IO) {
+    /** Deletes every stored config, its keys and the app preferences; one change at a time ([writing]). */
+    suspend fun clear() = writing { clearStored() }
+
+    /** [clear] for a caller already inside [writing] (the mutex is not reentrant). */
+    private fun clearStored() {
         store.clear()
         kubeStore.clear()
         summaryCache.clear()

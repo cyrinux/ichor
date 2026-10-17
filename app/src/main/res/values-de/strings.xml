@@ -506,6 +506,8 @@
     <string name="security_key_moving">Schlüssel wird in den Sicherheitschip verschoben…</string>
     <string name="security_key_moved">Der Schlüssel liegt jetzt im Sicherheitschip</string>
     <string name="security_key_move_refused">Der Chip hat erneut abgelehnt, nichts wurde geändert</string>
+    <string name="security_key_move_partial">Ein Schlüssel ist jetzt im Sicherheitschip, der andere noch im TEE. Versuchen Sie es erneut.</string>
+    <string name="security_key_move_needs_key">Ihre Konfigurationen sind mit einem Sicherheitsschlüssel versiegelt: Entsperren Sie zuerst damit und versuchen Sie es dann erneut.</string>
     <string name="settings_delete_config">Gespeicherte talosconfig löschen</string>
     <string name="settings_delete_title">talosconfig löschen?</string>
     <string name="settings_delete_body">Die verschlüsselte Konfiguration aller Cluster wird samt ihren Client-Schlüsseln von diesem Gerät entfernt.</string>

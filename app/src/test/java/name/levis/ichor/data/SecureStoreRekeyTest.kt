@@ -222,6 +222,26 @@ class SecureStoreRekeyTest {
     }
 
     @Test
+    fun aKeyWithoutAFileIsDroppedAndCountsAsDone() {
+        storedInTee()
+        assertTrue(rekey(store()))
+        file.delete()
+        keys.generate("talosconfig", strongBox = false)
+        assertTrue(rekey(store()))
+        assertEquals(emptySet<String>(), keys.entries.keys)
+        assertEquals(emptyList<String>(), files())
+        assertEquals(null, store().read())
+    }
+
+    @Test
+    fun aSealedFileWithoutTheSecurityKeyThrowsBeforeAnyChange() {
+        storedInTee(outer = Dek(ByteArray(32) { it.toByte() }))
+        assertThrows(SecurityKeyRequiredException::class.java) { rekey(store(outer = Dek(null))) }
+        assertEquals(setOf("talosconfig"), keys.entries.keys)
+        assertEquals(listOf("talosconfig.enc"), files())
+    }
+
+    @Test
     fun clearDropsBothKeysAndTheMarker() {
         storedInTee()
         assertThrows(Kill::class.java) { rekey(store { if (it == RekeyStep.DELETE_OLD_KEY) throw Kill() }) }

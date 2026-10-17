@@ -234,12 +234,17 @@ class SecureStore internal constructor(
      * the other, so the file reads whichever of the old key and the marker went first. A chip
      * that keeps refusing (tried again after each of [delays], ms) gives false, and one that
      * refuses the parameters ([StrongBoxUnavailableException]) false at once: nothing changed.
+     *
+     * No stored file: nothing to move, and a key left without one is dropped with the marker
+     * (true). A sealed file with no security key tapped this run throws
+     * [SecurityKeyRequiredException] before anything changed.
      */
     suspend fun rekeyToStrongBox(
         delays: List<Long> = CHIP_RETRY_DELAYS,
         pause: suspend (Long) -> Unit = { delay(it) },
     ): Boolean {
-        if (!strongBoxAvailable || !file.exists()) return false
+        if (!file.exists()) return dropStrayKeys()
+        if (!strongBoxAvailable) return false
         return try {
             beforeStep(RekeyStep.READ)
             val raw = file.readBytes()
@@ -254,9 +259,23 @@ class SecureStore internal constructor(
             }
         } catch (e: CancellationException) {
             throw e
+        } catch (e: SecurityKeyRequiredException) {
+            // Thrown by the read, before any change: the caller asks for the key, not the chip.
+            throw e
         } catch (_: Exception) {
             false
         }
+    }
+
+    /** No file to protect: its keys and marker go, so the next write makes a fresh key. */
+    private fun dropStrayKeys(): Boolean = try {
+        aliasFile.delete()
+        nextFile.delete()
+        keys.delete(keyAlias)
+        keys.delete(nextAlias)
+        true
+    } catch (_: Exception) {
+        false
     }
 
     private suspend fun moveKey(
@@ -323,8 +342,9 @@ class SecureStore internal constructor(
         return true
     }
 
-    /** Protection level of the existing key, or null before the first write. */
+    /** Protection level of the key of the stored file, or null when nothing is stored. */
     fun protection(): KeyProtection? {
+        if (!file.exists()) return null
         val key = existingKey() ?: return null
         val info = javax.crypto.SecretKeyFactory.getInstance(key.algorithm, ANDROID_KEYSTORE)
             .getKeySpec(key, KeyInfo::class.java) as KeyInfo

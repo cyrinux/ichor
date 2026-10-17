@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.data.ConfigRepository
+import name.levis.ichor.data.KeyMoveResult
 import name.levis.ichor.data.KeyProtection
 
 /**
@@ -63,14 +64,15 @@ fun KeyFallbackNotice(configs: ConfigRepository, snackbar: SnackbarHostState) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(
                     enabled = !moving,
-                    onClick = {
+                    onClick = click@{
+                        // A second tap before the button shows disabled: one move at a time.
+                        if (moving) return@click
                         moving = true
                         scope.launch {
-                            // Fails only by cancellation: the move itself returns false on any error.
-                            val moved = configs.moveKeyToStrongBox()
+                            // Fails only by cancellation: the move reports any error in its result.
+                            val result = configs.moveKeyToStrongBox()
                             moving = false
-                            val message = if (moved) R.string.security_key_moved else R.string.security_key_move_refused
-                            snackbar.showSnackbar(context.getString(message))
+                            snackbar.showSnackbar(context.getString(result.message))
                         }
                     },
                 ) { Text(stringResource(R.string.security_key_move)) }
@@ -79,3 +81,12 @@ fun KeyFallbackNotice(configs: ConfigRepository, snackbar: SnackbarHostState) {
         }
     }
 }
+
+/** The snackbar after a move of the config keys. */
+private val KeyMoveResult.message: Int
+    get() = when (this) {
+        KeyMoveResult.MOVED -> R.string.security_key_moved
+        KeyMoveResult.PARTIAL -> R.string.security_key_move_partial
+        KeyMoveResult.REFUSED -> R.string.security_key_move_refused
+        KeyMoveResult.SECURITY_KEY_REQUIRED -> R.string.security_key_move_needs_key
+    }
