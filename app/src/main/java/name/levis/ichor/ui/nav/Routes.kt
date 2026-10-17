@@ -127,6 +127,15 @@ internal object Routes {
     const val FLUX_DIFF = "flux-diff?kind={kind}&ns={ns}&name={name}"
     fun fluxDiff(kind: String, namespace: String, name: String) =
         "flux-diff?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
+    /** The files of source [idx] of an Argo CD or Flux app ([tool] "argocd" or "flux"), at [dir] ("" for the source's path). */
+    const val GITOPS_SOURCE = "gitops-source?tool={tool}&kind={kind}&ns={ns}&name={name}&idx={idx}&dir={dir}"
+    fun gitOpsSource(tool: String, kind: String, namespace: String, name: String, idx: Int, dir: String = "") =
+        "gitops-source?tool=${Uri.encode(tool)}&kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&idx=$idx&dir=${Uri.encode(dir)}"
+
+    /** One file of source [idx] of an Argo CD or Flux app; [path] from the repository root. */
+    const val GITOPS_FILE = "gitops-file?tool={tool}&kind={kind}&ns={ns}&name={name}&idx={idx}&path={path}"
+    fun gitOpsFile(tool: String, kind: String, namespace: String, name: String, idx: Int, path: String) =
+        "gitops-file?tool=${Uri.encode(tool)}&kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&idx=$idx&path=${Uri.encode(path)}"
     const val DEBUG = "debug?addr={addr}&host={host}&ctx={ctx}"
     const val POD_SHELL = "pod-shell?ctx={ctx}&ns={ns}&pod={pod}&c={c}"
     const val KUBE_NODE_DEBUG = "kube-node-debug?ctx={ctx}&node={node}&ns={ns}"

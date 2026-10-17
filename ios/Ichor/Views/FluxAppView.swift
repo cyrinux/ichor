@@ -27,6 +27,8 @@ struct FluxAppView: View {
     @State private var busy = false
     @State private var message: String?
     @State private var succeeded = 0
+    /// Where the object's files are (the Source rows); nil until read.
+    @State private var gitSources: GitOpsSource?
 
     private var store: FluxStore { .shared }
 
@@ -70,6 +72,7 @@ struct FluxAppView: View {
                     Text("What a reconcile would change now, compared in the cluster without changing anything.")
                 }
             }
+            FluxSourceSection(sources: gitSources)
             FluxConditionsSection(app: app)
             if !app.unhealthyPods.isEmpty { ArgoPodsSection(pods: app.unhealthyPods, downNodes: downNodes) }
             let children = status.children(of: app)
@@ -80,6 +83,8 @@ struct FluxAppView: View {
         }
         .refreshable { await load() }
         .themedBackground()
+        // Again once another revision is applied.
+        .task(id: app.revision) { await loadSources(app) }
         .confirmationDialog(confirm.map { $0.title(for: app.name) } ?? "",
                             isPresented: $confirm.isPresent(),
                             titleVisibility: .visible, presenting: confirm) { action in
@@ -114,6 +119,14 @@ struct FluxAppView: View {
             try await store.load(with: client, key: key)
         }
         takeAlertAction()
+    }
+
+    /// The Source rows: left out when the sources cannot be read, the rest of the screen stands alone.
+    private func loadSources(_ app: FluxApp) async {
+        guard let client = model.client else { return }
+        if let read = try? await client.gitOpsSource(tool: "flux", kind: app.kind, namespace: app.namespace, name: app.name) {
+            gitSources = read
+        }
     }
 
     /// Reconcile chosen on this object's alert: asked first here (the hero's button runs it at

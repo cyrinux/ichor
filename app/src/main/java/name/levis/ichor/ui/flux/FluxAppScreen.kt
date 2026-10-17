@@ -55,6 +55,8 @@ import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.gitops.GitOpsSourceSection
+import name.levis.ichor.ui.gitops.SOURCE_TOOL_FLUX
 import name.levis.ichor.ui.workloads.KubeEventsList
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
@@ -81,6 +83,8 @@ fun FluxAppScreen(
     /** Opens another Kustomization or HelmRelease (a link of the dependsOn tree). */
     onApp: ((FluxApp) -> Unit)? = null,
     initialReconcile: Boolean = false,
+    /** Opens the source browser on the app's source at that index. */
+    onSource: ((Int) -> Unit)? = null,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
     val vm: FluxViewModel = viewModel(factory = factory { FluxViewModel(talos.gitOpsRepository, talos.kubeRepository) })
@@ -119,7 +123,7 @@ fun FluxAppScreen(
             } else {
                 val overview = remember(data) { talos.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value }
                 val tree = remember(data, app) { data.dependencyTree(app) }
-                AppDetail(app, tree, app.key in busy, vm, overview, onNode, onDiff, onApp, initialReconcile)
+                AppDetail(app, tree, app.key in busy, vm, overview, onNode, onDiff, onApp, initialReconcile, onSource)
             }
         }
     }
@@ -136,6 +140,7 @@ private fun AppDetail(
     onDiff: (() -> Unit)?,
     onApp: ((FluxApp) -> Unit)?,
     initialReconcile: Boolean,
+    onSource: ((Int) -> Unit)?,
 ) {
     var confirm by remember { mutableStateOf<FluxConfirm?>(null) }
     // Asked from an alert: the confirmation once (not again on rotation).
@@ -185,6 +190,9 @@ private fun AppDetail(
             ) { action ->
                 confirm = FluxConfirm(action, app.kind, app.namespace, app.name, owner = app.ownerKey)
             }
+        }
+        item(key = "source") {
+            GitOpsSourceSection(SOURCE_TOOL_FLUX, app.kind, app.namespace, app.name, app.revision, onSource)
         }
         // What it waits for comes before its conditions: the link that is not Ready explains them.
         if (!tree.isEmpty) {

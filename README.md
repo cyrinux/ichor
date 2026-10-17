@@ -90,6 +90,10 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   write, on those repositories); **Check** says who the token signs in as. The token stays on
   the phone, encrypted (Android Keystore, iOS Keychain), is never shown again, and is only sent
   to its own host over https.
+- **Source:** an Argo CD or Flux app's detail lists its Git sources; each opens the folder the
+  app deploys from, at the revision the cluster runs, with read-only files (YAML highlighted on
+  Android). Flux apps need no token (the files come from the source-controller's artifact);
+  Argo CD apps use the Git host token, and without one the screen says which host to add.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome. Optionally
   (Settings → Privacy, off by default) each Kubernetes object the app changes also gets a

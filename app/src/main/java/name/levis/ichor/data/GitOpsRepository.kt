@@ -14,6 +14,15 @@ import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.GitHost
 import name.levis.ichor.model.GitHostCheck
+import name.levis.ichor.model.GitFile
+import name.levis.ichor.model.GitOpsSource
+import name.levis.ichor.model.GitSource
+import name.levis.ichor.model.GitTree
+import name.levis.ichor.model.SourceReadPath
+import name.levis.ichor.model.gitHostJsonLacksToken
+import name.levis.ichor.R
+import name.levis.ichor.ui.LocalizedException
+import name.levis.ichor.ui.UiText
 import name.levis.ichorgo.ArgoSyncListener
 import name.levis.ichorgo.FluxReconcileListener
 import name.levis.ichorgo.Ichorgo
@@ -97,6 +106,54 @@ class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) :
     }
 
     /**
+     * Where the files of an app are (os:admin, read only): [tool] "argocd" (kind Application)
+     * or "flux" (Kustomization, HelmRelease), one entry per source. Not cached.
+     */
+    suspend fun source(tool: String, kind: String, namespace: String, name: String): GitOpsSource = go.kube { cfg, ctx, server ->
+        decodeGitOpsSource(Ichorgo.gitOpsSource(cfg, ctx, server, tool, kind, namespace, name))
+    }
+
+    /**
+     * The directory [dir] ("" for the root) of [src] at the revision the cluster runs: from the
+     * Flux artifact (no token) or through the Git host's API with its saved token. Throws
+     * [GitHostMissing] when the host has no token, and when [src] cannot be read at all.
+     */
+    suspend fun tree(src: GitSource, dir: String): GitTree = when (src.readPath) {
+        SourceReadPath.FLUX -> {
+            val ref = checkNotNull(src.fluxSource)
+            go.kube { cfg, ctx, server -> decodeGitTree(Ichorgo.fluxSourceTree(cfg, ctx, server, ref.kind, ref.namespace, ref.name, dir)) }
+        }
+        SourceReadPath.FORGE -> {
+            val host = forgeHost(src)
+            withContext(Dispatchers.IO) { decodeGitTree(Ichorgo.gitForgeTree(host, src.repoURL, src.ref, dir)) }
+        }
+        SourceReadPath.NONE -> throw LocalizedException(UiText.Res(R.string.gitops_source_not_browsable))
+    }
+
+    /** The file [path] of [src], read the way [tree] reads its directories. */
+    suspend fun file(src: GitSource, path: String): GitFile = when (src.readPath) {
+        SourceReadPath.FLUX -> {
+            val ref = checkNotNull(src.fluxSource)
+            go.kube { cfg, ctx, server -> decodeGitFile(Ichorgo.fluxSourceFile(cfg, ctx, server, ref.kind, ref.namespace, ref.name, path)) }
+        }
+        SourceReadPath.FORGE -> {
+            val host = forgeHost(src)
+            withContext(Dispatchers.IO) { decodeGitFile(Ichorgo.gitForgeFile(host, src.repoURL, src.ref, path)) }
+        }
+        SourceReadPath.NONE -> throw LocalizedException(UiText.Res(R.string.gitops_source_not_browsable))
+    }
+
+    /** The forge argument for [src]'s host, with its saved token; [GitHostMissing] without one. */
+    private suspend fun forgeHost(src: GitSource): String {
+        val store = checkNotNull(gitHosts) { "No Git host store" }
+        val host = src.host
+        val entry = store.hosts.value.firstOrNull { it.host == host } ?: GitHost(host)
+        val json = store.hostJson(entry)
+        if (gitHostJsonLacksToken(json)) throw GitHostMissing(host)
+        return json
+    }
+
+    /**
      * StartArgoSyncFollow: follows the sync of the Application [namespace]/[name] the phone just
      * started (os:admin, reads only); returns at once, the follow reports to [onProgress] and
      * [onDone] (once). See [GitOpsOperationManager].
@@ -147,3 +204,15 @@ class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) :
 
 /** The answer of `GitForgeCheck`: login, host, scopesOK, missing. */
 internal fun decodeGitHostCheck(json: String): GitHostCheck = TalosJson.decodeFromString(GitHostCheck.serializer(), json)
+
+/** The answer of `GitOpsSource`. */
+internal fun decodeGitOpsSource(json: String): GitOpsSource = TalosJson.decodeFromString(GitOpsSource.serializer(), json)
+
+/** The answer of `GitForgeTree` and `FluxSourceTree`. */
+internal fun decodeGitTree(json: String): GitTree = TalosJson.decodeFromString(GitTree.serializer(), json)
+
+/** The answer of `GitForgeFile` and `FluxSourceFile`. */
+internal fun decodeGitFile(json: String): GitFile = TalosJson.decodeFromString(GitFile.serializer(), json)
+
+/** No token is saved for the Git host [host]: the source browser offers to add one in Settings. */
+class GitHostMissing(val host: String) : LocalizedException(UiText.Res(R.string.gitops_source_no_token, host))

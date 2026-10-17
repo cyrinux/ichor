@@ -20,6 +20,17 @@ final class GitHostStore {
 
     func hasToken(_ host: String) -> Bool { token(host) != nil }
 
+    /// The kind saved for `host`, auto when it is not listed.
+    func kind(of host: String) -> GitHostKind {
+        hosts.first { $0.host == host }?.kind ?? .auto
+    }
+
+    /// The Go core's host argument for `host` with its saved token; nil without a token.
+    func hostJSON(for host: String) -> String? {
+        guard let token = token(host) else { return nil }
+        return gitHostJSON(host: host, kind: kind(of: host), token: token)
+    }
+
     /// Adds or updates `host`. An empty `token` keeps the saved one; a new token forgets the
     /// login of the old one, unless `login` is what a check of the new token answered.
     func save(_ host: GitHost, token: String, login: String?) throws {

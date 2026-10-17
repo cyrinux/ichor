@@ -25,7 +25,7 @@ import name.levis.ichor.ui.components.rememberTwoPanes
  * The Argo CD apps. On a phone (or a folded foldable) it is [ArgoAppsScreen] alone and a tap
  * opens the app through [onOpenApp]. On a tablet or an unfolded foldable the picked app shows
  * next to the list, which stays; both read this back-stack entry's ArgoViewModel, so one
- * refresh serves both. The app's back arrow clears the pick; its diff opens full-screen.
+ * refresh serves both. The app's back arrow clears the pick; its diff and source open full-screen.
  */
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -35,6 +35,7 @@ fun ArgoListDetail(
     onWindows: () -> Unit,
     onNode: (NodeOverview, Int) -> Unit,
     onDiff: (ns: String, name: String) -> Unit,
+    onSource: ((ns: String, name: String, index: Int) -> Unit)? = null,
 ) {
     if (!rememberTwoPanes()) {
         ArgoAppsScreen(onBack = onBack, onApp = onOpenApp, onWindows = onWindows)
@@ -68,6 +69,7 @@ fun ArgoListDetail(
                             onNode = onNode,
                             onWindows = onWindows,
                             onDiff = { onDiff(ns, name) },
+                            onSource = onSource?.let { open -> { index: Int -> open(ns, name, index) } },
                         )
                     }
                 }
