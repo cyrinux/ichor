@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
+	"strings"
 	"testing"
 )
 
@@ -485,6 +487,10 @@ func TestSimulateNodeLossCascadeWithTwoLostNodesEnds(t *testing.T) {
 	if p := pendingNames(plan); len(p) != 2 || p[0] != "a-0" || p[1] != "b-0" {
 		t.Errorf("pending %v", p)
 	}
+
+	// The identity the demo plans are held to (TestDemoKubeNodeLossAddsUp).
+	assertNodeLossCounts(t, plan)
+	assertNodeLossSuggestions(t, plan)
 }
 
 func TestDemoKubeNodeLoss(t *testing.T) {
@@ -522,7 +528,8 @@ func TestDemoKubeNodeLossBothWorkers(t *testing.T) {
 		t.Errorf("both %+v", both)
 	}
 
-	if len(both.Suggestions) != 3 || both.Covered {
+	// Every scalable workload has a Pending pod: the suggester proposes none of them.
+	if len(both.Pending) != 11 || len(both.Suggestions) != 0 || both.Covered {
 		t.Errorf("suggestions %+v covered %v", both.Suggestions, both.Covered)
 	}
 
@@ -536,5 +543,113 @@ func TestDemoKubeNodeLossBothWorkers(t *testing.T) {
 	unknown := demoKubeNodeLoss([]string{"demo-worker-1", "demo-cp-1"})
 	if !unknown.WorstCase || unknown.Node != "demo-worker-1" {
 		t.Errorf("unknown %+v", unknown)
+	}
+}
+
+// Every demo plan adds up as the real planner's do: each lost or preempted pod ends up placed
+// or Pending exactly once, the lost requests are the demo workloads', and no suggestion
+// names a workload with a Pending pod (nor a system class).
+func TestDemoKubeNodeLossAddsUp(t *testing.T) {
+	requests := map[string][2]float64{}
+	for _, w := range demoKubeCapacity().Workloads {
+		requests[w.Kind+"/"+w.Name] = [2]float64{w.CPURequest, w.MemoryRequest}
+	}
+
+	selections := [][]string{nil, {"demo-worker-1"}, {"demo-worker-2"}, {"demo-worker-1", "demo-worker-2"}, {"demo-worker-2", "demo-worker-1"}}
+	for _, nodes := range selections {
+		plan := demoKubeNodeLoss(nodes)
+		assertNodeLossCounts(t, plan)
+		assertNodeLossRequests(t, plan, requests)
+		assertNodeLossSuggestions(t, plan)
+	}
+}
+
+// assertNodeLossCounts: lost + preempted == placed + Pending, each pod ending once.
+func assertNodeLossCounts(t *testing.T, plan nodeLossPlan) {
+	t.Helper()
+
+	if plan.PodsLost+len(plan.Preempted) != len(plan.Placed)+len(plan.Pending) {
+		t.Errorf("%s: %d lost + %d preempted != %d placed + %d pending",
+			plan.Node, plan.PodsLost, len(plan.Preempted), len(plan.Placed), len(plan.Pending))
+	}
+
+	ended := map[string]int{}
+	for _, p := range plan.Placed {
+		ended[p.Namespace+"/"+p.Name]++
+	}
+
+	for _, p := range plan.Pending {
+		ended[p.Namespace+"/"+p.Name]++
+	}
+
+	for pod, n := range ended {
+		if n != 1 {
+			t.Errorf("%s: %s ends %d times", plan.Node, pod, n)
+		}
+	}
+
+	for _, p := range plan.Preempted {
+		if ended[p.Namespace+"/"+p.Name] != 1 {
+			t.Errorf("%s: preempted %s/%s is neither placed nor Pending", plan.Node, p.Namespace, p.Name)
+		}
+	}
+}
+
+// assertNodeLossRequests: the lost requests are those of the lost (not preempted) pods' workloads.
+func assertNodeLossRequests(t *testing.T, plan nodeLossPlan, requests map[string][2]float64) {
+	t.Helper()
+
+	preempted := map[string]bool{}
+	for _, p := range plan.Preempted {
+		preempted[p.Namespace+"/"+p.Name] = true
+	}
+
+	lost := map[string]string{}
+	for _, p := range plan.Placed {
+		lost[p.Namespace+"/"+p.Name] = p.Workload
+	}
+
+	for _, p := range plan.Pending {
+		lost[p.Namespace+"/"+p.Name] = p.Workload
+	}
+
+	var cpu, memory float64
+
+	for pod, workload := range lost {
+		if preempted[pod] {
+			continue
+		}
+
+		r, ok := requests[workload]
+		if !ok {
+			t.Errorf("%s: %s of unknown workload %s", plan.Node, pod, workload)
+		}
+
+		cpu, memory = cpu+r[0], memory+r[1]
+	}
+
+	if math.Abs(cpu-plan.CPULost) > 1e-9 || math.Abs(memory-plan.MemoryLost) > 1 {
+		t.Errorf("%s: lost %g cores %g bytes, the pods ask %g cores %g bytes", plan.Node, plan.CPULost, plan.MemoryLost, cpu, memory)
+	}
+}
+
+// assertNodeLossSuggestions: as the suggester, never a Pending pod's workload nor a system class.
+func assertNodeLossSuggestions(t *testing.T, plan nodeLossPlan) {
+	t.Helper()
+
+	blocked := map[string]bool{}
+	for _, p := range plan.Pending {
+		kind, name, _ := strings.Cut(p.Workload, "/")
+		blocked[kind+"/"+p.Namespace+"/"+name] = true
+	}
+
+	for _, s := range plan.Suggestions {
+		if blocked[s.Kind+"/"+s.Namespace+"/"+s.Name] || s.Priority >= systemPriority || strings.HasPrefix(s.PriorityClassName, "system-") {
+			t.Errorf("%s: suggestion %s/%s/%s has a Pending pod or a system class", plan.Node, s.Kind, s.Namespace, s.Name)
+		}
+	}
+
+	if len(plan.Pending) == 0 && !plan.Covered {
+		t.Errorf("%s: nothing Pending but not covered", plan.Node)
 	}
 }
