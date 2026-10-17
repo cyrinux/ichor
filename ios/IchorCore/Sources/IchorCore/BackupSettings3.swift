@@ -95,3 +95,29 @@ public func restoredGitHosts(_ payload: BackupPayload) -> [(host: GitHost, token
     }
     return out
 }
+
+/// What a restore applies of a backup's AI settings, for the providers the Go core lists.
+public struct RestoredAI: Equatable, Sendable {
+    public var enabled: Bool?
+    public var anonymize: Bool?
+    public var provider: String?
+    public var models: [String: String] = [:]
+    /// Only for providers in `keys`.
+    public var baseURLs: [String: String] = [:]
+    public var keys: [String: String] = [:]
+}
+
+/// The AI settings to restore. A server URL applies only with that provider's key from the
+/// same backup, and anonymize off only when the backup brings keys: otherwise a crafted file
+/// could send this device's own key, and unmasked cluster data, to another server.
+public func restoredAI(_ ai: BackupAI?, keys: [String: String]?, known: Set<String>) -> RestoredAI {
+    let keys = (keys ?? [:]).filter {
+        known.contains($0.key) && !$0.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    var out = RestoredAI(enabled: ai?.enabled, keys: keys)
+    if let anonymize = ai?.anonymize, anonymize || !keys.isEmpty { out.anonymize = anonymize }
+    if let id = ai?.provider, known.contains(id) { out.provider = id }
+    out.models = (ai?.models ?? [:]).filter { known.contains($0.key) }
+    out.baseURLs = (ai?.baseUrls ?? [:]).filter { keys[$0.key] != nil }
+    return out
+}

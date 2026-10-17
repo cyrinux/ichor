@@ -85,14 +85,21 @@ fun restoredGitHosts(hosts: List<BackupGitHost>?): List<GitHost> = hosts.orEmpty
 fun backupAi(settings: AiSettings): BackupAi =
     BackupAi(settings.enabled, settings.provider, settings.models, settings.baseUrls, settings.anonymize)
 
-/** [ai] over [current], narrowed to the [providers] this app knows; null when the backup has no AI settings. */
-fun restoredAi(ai: BackupAi?, providers: List<String>, current: AiSettings): AiSettings? = ai?.let {
+/**
+ * [ai] over [current], narrowed to the [providers] this app knows; null when the backup has no
+ * AI settings. A file must not send this device's keys or data elsewhere: a provider's base
+ * URL is taken only with that provider's key from [secrets] (else this device's stays), and
+ * anonymize off only when [secrets] brings keys at all.
+ */
+fun restoredAi(ai: BackupAi?, providers: List<String>, current: AiSettings, secrets: BackupSecrets? = null): AiSettings? = ai?.let {
+    val keyed = restoredAiKeys(secrets, providers).keys
+    val urls = it.baseUrls.filter { (p, u) -> p in keyed && u.isNotBlank() }.mapValues { (_, u) -> u.trim() }
     AiSettings(
         enabled = it.enabled,
         provider = it.provider.takeIf { p -> p in providers } ?: current.provider,
         models = it.models.filter { (p, m) -> p in providers && m.isNotBlank() }.mapValues { (_, m) -> m.trim() },
-        baseUrls = it.baseUrls.filter { (p, u) -> p in providers && u.isNotBlank() }.mapValues { (_, u) -> u.trim() },
-        anonymize = it.anonymize,
+        baseUrls = current.baseUrls.filterKeys { p -> p !in keyed } + urls,
+        anonymize = it.anonymize || keyed.isEmpty(),
     )
 }
 

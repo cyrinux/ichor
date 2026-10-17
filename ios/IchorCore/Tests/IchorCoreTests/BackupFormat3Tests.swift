@@ -105,4 +105,35 @@ final class BackupFormat3Tests: XCTestCase {
         XCTAssertEqual(BackupLockMode(enabled: true, securityKey: false), .biometric)
         XCTAssertEqual(BackupLockMode(enabled: true, securityKey: true).rawValue, "securityKey")
     }
+
+    private let known: Set<String> = ["anthropic", "openai-compatible"]
+    private let crafted = BackupAI(enabled: true, provider: "openai-compatible", models: ["openai-compatible": "m", "unknown": "x"],
+                                   baseUrls: ["openai-compatible": "https://llm.example.org/v1"], anonymize: false)
+
+    func testAIBaseURLWithoutItsKeyIsIgnored() {
+        let restored = restoredAI(crafted, keys: nil, known: known)
+        XCTAssertTrue(restored.baseURLs.isEmpty)
+        XCTAssertNil(restored.anonymize) // anonymize off needs keys
+        XCTAssertEqual(restored.models, ["openai-compatible": "m"])
+        XCTAssertEqual(restored.provider, "openai-compatible")
+
+        // A key for another provider, or a blank one, does not unlock this provider's URL.
+        let other = restoredAI(crafted, keys: ["anthropic": "sk-test-key", "openai-compatible": "  "], known: known)
+        XCTAssertTrue(other.baseURLs.isEmpty)
+        XCTAssertEqual(other.keys, ["anthropic": "sk-test-key"])
+        XCTAssertEqual(other.anonymize, false)
+    }
+
+    func testAIBaseURLWithItsKeyApplies() {
+        let restored = restoredAI(crafted, keys: ["openai-compatible": "sk-test-key", "unknown": "k"], known: known)
+        XCTAssertEqual(restored.baseURLs, ["openai-compatible": "https://llm.example.org/v1"])
+        XCTAssertEqual(restored.keys, ["openai-compatible": "sk-test-key"])
+        XCTAssertEqual(restored.anonymize, false)
+    }
+
+    func testAIAnonymizeOnAlwaysApplies() {
+        let restored = restoredAI(BackupAI(anonymize: true), keys: nil, known: known)
+        XCTAssertEqual(restored.anonymize, true)
+        XCTAssertNil(restoredAI(nil, keys: nil, known: known).anonymize)
+    }
 }

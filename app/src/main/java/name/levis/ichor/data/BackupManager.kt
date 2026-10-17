@@ -114,7 +114,12 @@ class BackupManager(
     suspend fun restore(file: ByteArray, passphrase: String): RestoreOutcome {
         val payload = withContext(Dispatchers.Default) {
             val json = backupCall { Ichorgo.decryptBackup(file, passphrase) }
-            TalosJson.decodeFromString(BackupPayload.serializer(), json)
+            // Never the parser's message: it can quote the payload, secrets included.
+            try {
+                TalosJson.decodeFromString(BackupPayload.serializer(), json)
+            } catch (_: IllegalArgumentException) {
+                throw LocalizedException(UiText.Res(R.string.backup_err_invalid))
+            }
         }
         val settings = payload.settings
         // The config first: on failure nothing else changed. Screenshot mode comes after it,
@@ -175,7 +180,7 @@ class BackupManager(
         val tokens = restoredGitTokens(payload.secrets, hosts)
         // No token in the backup: "" keeps the one this device has for the host.
         hosts.forEach { gitHosts.set(it.host, it.kind, tokens[it.host].orEmpty(), it.aliases) }
-        restoredAi(payload.ai, ai.providerIds, ai.settings.value)?.let(ai::update)
+        restoredAi(payload.ai, ai.providerIds, ai.settings.value, payload.secrets)?.let(ai::update)
         restoredAiKeys(payload.secrets, ai.providerIds).forEach { (provider, key) -> ai.setApiKey(provider, key) }
     }
 

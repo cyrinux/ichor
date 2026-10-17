@@ -92,30 +92,31 @@ final class AISettings {
         return (settings, keys)
     }
 
-    /// Applies a backup's AI settings and keys; provider ids the Go core does not list are dropped,
-    /// a provider without a key in the backup keeps the one this device has.
+    /// Applies a backup's AI settings and keys as `restoredAI` decides (unknown providers dropped,
+    /// a server URL only with its key from the same backup, anonymize off only with keys); a
+    /// provider without a key in the backup keeps the one this device has.
     func restore(_ backup: BackupAI?, keys: [String: String]) async {
         await loadProviders()
-        let known = Set(providers.map(\.id))
-        if let on = backup?.enabled { enabled = on }
-        if let hide = backup?.anonymize { anonymize = hide }
-        if let id = backup?.provider, known.contains(id) { select(id) }
+        let restored = restoredAI(backup, keys: keys, known: Set(providers.map(\.id)))
+        if let on = restored.enabled { enabled = on }
+        if let hide = restored.anonymize { anonymize = hide }
+        if let id = restored.provider { select(id) }
         let defaults = UserDefaults.standard
-        for (id, model) in backup?.models ?? [:] where known.contains(id) {
+        for (id, model) in restored.models {
             perProvider[id, default: AIProviderSettings()].model = model
             defaults.set(model, forKey: AIKeys.model(id))
         }
-        for (id, url) in backup?.baseUrls ?? [:] where known.contains(id) {
-            perProvider[id, default: AIProviderSettings()].baseURL = url
-            defaults.set(url, forKey: AIKeys.baseURL(id))
-        }
-        for (id, key) in keys where known.contains(id) && !key.isEmpty {
-            // A key the Keychain refuses is left out; the user can type it again.
+        for (id, key) in restored.keys {
+            // A key the Keychain refuses is left out, and its server URL with it.
             do {
                 try Keychain.write(Data(key.utf8), account: AIKeys.keychainAccount(id))
                 perProvider[id, default: AIProviderSettings()].apiKey = key
             } catch {
                 continue
+            }
+            if let url = restored.baseURLs[id] {
+                perProvider[id, default: AIProviderSettings()].baseURL = url
+                defaults.set(url, forKey: AIKeys.baseURL(id))
             }
         }
     }

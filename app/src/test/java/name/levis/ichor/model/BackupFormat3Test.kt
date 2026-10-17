@@ -52,7 +52,8 @@ class BackupFormat3Test {
         assertTrue("\"kind\":\"gitea\"" in json)
         assertEquals(mapOf("aaaa" to listOf(nodePin)), restoredPins(decoded.pins, listOf("aaaa")))
         assertEquals(hosts, restoredGitHosts(decoded.gitHosts))
-        assertEquals(ai, restoredAi(decoded.ai, providers, AiSettings()))
+        // No key for openai-compatible in the file: its base URL is not taken.
+        assertEquals(ai.copy(baseUrls = emptyMap()), restoredAi(decoded.ai, providers, AiSettings(), decoded.secrets))
         assertEquals(mapOf("anthropic" to aiKey), restoredAiKeys(decoded.secrets, providers))
         assertEquals(mapOf("git.example.org" to gitToken), restoredGitTokens(decoded.secrets, hosts))
         assertEquals(BackupLockMode.BIOMETRIC, decoded.settings.appLockMode)
@@ -71,9 +72,39 @@ class BackupFormat3Test {
         assertNull(decoded.secrets)
         assertEquals(emptyMap<String, String>(), restoredAiKeys(decoded.secrets, providers))
         assertEquals(emptyMap<String, String>(), restoredGitTokens(decoded.secrets, hosts))
-        // The settings still travel.
+        // The settings still travel, but neither a base URL nor anonymize off without keys.
         assertEquals(hosts, restoredGitHosts(decoded.gitHosts))
-        assertEquals(ai, restoredAi(decoded.ai, providers, AiSettings()))
+        assertEquals(ai.copy(baseUrls = emptyMap(), anonymize = true), restoredAi(decoded.ai, providers, AiSettings(), decoded.secrets))
+    }
+
+    @Test
+    fun aBaseUrlWithoutItsKeyKeepsTheDevicesOne() {
+        val saved = BackupAi(enabled = true, baseUrls = mapOf("anthropic" to "https://evil.example.org"))
+        val current = AiSettings(baseUrls = mapOf("anthropic" to "https://llm.example.org/v1"))
+
+        val restored = restoredAi(saved, providers, current, BackupSecrets(aiKeys = mapOf("openai-compatible" to aiKey)))!!
+
+        assertEquals(mapOf("anthropic" to "https://llm.example.org/v1"), restored.baseUrls)
+    }
+
+    @Test
+    fun aBaseUrlWithItsKeyIsApplied() {
+        val saved = BackupAi(baseUrls = mapOf("anthropic" to " https://llm.example.org/v2 "))
+        val current = AiSettings(baseUrls = mapOf("anthropic" to "https://llm.example.org/v1", "openai-compatible" to "https://other.example.org"))
+
+        val restored = restoredAi(saved, providers, current, BackupSecrets(aiKeys = mapOf("anthropic" to aiKey)))!!
+
+        assertEquals(mapOf("anthropic" to "https://llm.example.org/v2", "openai-compatible" to "https://other.example.org"), restored.baseUrls)
+    }
+
+    @Test
+    fun anonymizeOffNeedsKeysInTheFile() {
+        val saved = BackupAi(enabled = true, anonymize = false)
+
+        assertTrue(restoredAi(saved, providers, AiSettings(), secrets = null)!!.anonymize)
+        assertTrue(restoredAi(saved, providers, AiSettings(), BackupSecrets(aiKeys = mapOf("anthropic" to " ")))!!.anonymize)
+        assertFalse(restoredAi(saved, providers, AiSettings(), BackupSecrets(aiKeys = mapOf("anthropic" to aiKey)))!!.anonymize)
+        assertTrue(restoredAi(saved.copy(anonymize = true), providers, AiSettings(anonymize = false))!!.anonymize)
     }
 
     @Test
