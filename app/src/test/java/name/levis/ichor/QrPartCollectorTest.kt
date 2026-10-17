@@ -5,6 +5,9 @@ import name.levis.ichor.ui.importconfig.QrPartCollector
 import name.levis.ichor.ui.importconfig.QrPartError
 import name.levis.ichor.ui.importconfig.QrPartOutcome
 import name.levis.ichor.ui.importconfig.QrPartSet
+import name.levis.ichor.ui.importconfig.QrScanFeedback
+import name.levis.ichor.ui.importconfig.QrScanNotice
+import name.levis.ichor.ui.importconfig.QrScanStep
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -101,5 +104,75 @@ class QrPartCollectorTest {
     fun toStringNeverShowsAChunk() {
         assertFalse(QrPart(1, 2, "secretchunk").toString().contains("secretchunk"))
         assertFalse(QrPartSet(2, mapOf(1 to "secretchunk")).toString().contains("secretchunk"))
+    }
+
+    @Test
+    fun toStringNeverShowsTheJoinedConfig() {
+        assertFalse(QrPartOutcome.Complete("ichor-config:secret").toString().contains("secret"))
+        assertFalse(QrScanStep.Deliver("ichor-config:secret", null).toString().contains("secret"))
+    }
+
+    /** Ichorgo.qrPart for `ichor:<i>/<n>:<chunk>`; "" for anything else. */
+    private fun decode(text: String): String {
+        if (!text.startsWith("ichor:")) return ""
+        val (position, chunk) = text.removePrefix("ichor:").split(":", limit = 2)
+        val (index, total) = position.split("/")
+        return """{"index":$index,"total":$total,"chunk":"$chunk"}"""
+    }
+
+    private fun update(step: QrScanStep): QrScanStep.Update = step as QrScanStep.Update
+
+    @Test
+    fun oneCodeConfigIsDeliveredWhenNoSetIsCollected() {
+        assertEquals(QrScanStep.Deliver("context: a", null), collector.scan(QrPartSet.EMPTY, "context: a", ::decode))
+    }
+
+    @Test
+    fun oneCodeConfigIsIgnoredWithANoticeWhileASetIsCollected() {
+        val set = update(collector.scan(QrPartSet.EMPTY, "ichor:1/3:aaa", ::decode)).set
+        val step = update(collector.scan(set, "context: a", ::decode))
+        assertEquals(set, step.set)
+        assertEquals(QrScanNotice.FINISH_FIRST, step.notice)
+    }
+
+    @Test
+    fun newPartAndCompletionPlaySuccess() {
+        val first = update(collector.scan(QrPartSet.EMPTY, "ichor:1/2:aaa", ::decode))
+        assertEquals(QrScanFeedback.SUCCESS, first.feedback)
+        assertNull(first.notice)
+        assertEquals(QrScanStep.Ignore, collector.scan(first.set, "ichor:1/2:aaa", ::decode))
+        assertEquals(
+            QrScanStep.Deliver("ichor-config:joined", QrScanFeedback.SUCCESS),
+            collector.scan(first.set, "ichor:2/2:bbb", ::decode),
+        )
+    }
+
+    @Test
+    fun failedJoinDropsTheSetShowsWhyAndKeepsScanning() {
+        val failing = QrPartCollector { throw Exception("qr-parts-invalid: gzip") }
+        val set = update(failing.scan(QrPartSet.EMPTY, "ichor:1/2:aaa", ::decode)).set
+        val failed = update(failing.scan(set, "ichor:2/2:bbb", ::decode))
+        assertEquals(QrPartSet.EMPTY, failed.set)
+        assertEquals(QrScanNotice.INVALID, failed.notice)
+        assertEquals(QrScanFeedback.WARNING, failed.feedback)
+        // Scanning goes on: the next part starts a new set.
+        val next = update(failing.scan(failed.set, "ichor:1/2:aaa", ::decode))
+        assertEquals(1, next.set.received)
+    }
+
+    @Test
+    fun anotherSetResetsWithAWarning() {
+        val set = update(collector.scan(QrPartSet.EMPTY, "ichor:1/3:aaa", ::decode)).set
+        val step = update(collector.scan(set, "ichor:1/2:zzz", ::decode))
+        assertEquals(QrScanNotice.RESET, step.notice)
+        assertEquals(QrScanFeedback.WARNING, step.feedback)
+    }
+
+    @Test
+    fun malformedPartKeepsTheSet() {
+        val set = update(collector.scan(QrPartSet.EMPTY, "ichor:1/3:aaa", ::decode)).set
+        val step = update(collector.scan(set, "ichor:x", { throw Exception("qr-parts-invalid: bad") }))
+        assertEquals(set, step.set)
+        assertEquals(QrScanNotice.INVALID, step.notice)
     }
 }

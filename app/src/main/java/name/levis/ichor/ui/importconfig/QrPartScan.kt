@@ -48,11 +48,19 @@ internal class ScanGate {
 }
 
 @get:StringRes
-private val QrPartError.message: Int
+private val QrScanNotice.message: Int
     get() = when (this) {
-        QrPartError.MISMATCH -> R.string.qr_parts_mismatch
-        QrPartError.MISSING -> R.string.qr_parts_missing
-        QrPartError.INVALID -> R.string.qr_parts_invalid
+        QrScanNotice.FINISH_FIRST -> R.string.qr_parts_finish_first
+        QrScanNotice.RESET -> R.string.qr_parts_reset
+        QrScanNotice.MISMATCH -> R.string.qr_parts_mismatch
+        QrScanNotice.MISSING -> R.string.qr_parts_missing
+        QrScanNotice.INVALID -> R.string.qr_parts_invalid
+    }
+
+private val QrScanFeedback.haptic: HapticFeedbackType
+    get() = when (this) {
+        QrScanFeedback.SUCCESS -> HapticFeedbackType.Confirm
+        QrScanFeedback.WARNING -> HapticFeedbackType.Reject
     }
 
 /**
@@ -67,56 +75,31 @@ internal fun QrPartScan(onScanned: (String) -> Unit, modifier: Modifier = Modifi
     val haptics = LocalHapticFeedback.current
     val callback by rememberUpdatedState(onScanned)
     var parts by remember { mutableStateOf(QrPartSet.EMPTY) }
-    var notice by remember { mutableStateOf<Int?>(null) }
-    var failed by remember { mutableStateOf(false) }
-
-    fun deliver(text: String) {
-        gate.stopped.set(true)
-        callback(text)
-    }
-
-    fun warn(@StringRes message: Int, blocking: Boolean) {
-        notice = message
-        failed = blocking
-        haptics.performHapticFeedback(HapticFeedbackType.Reject)
-    }
+    var notice by remember { mutableStateOf<QrScanNotice?>(null) }
 
     fun startOver() {
         parts = QrPartSet.EMPTY
         notice = null
-        failed = false
         gate.last.set(null)
     }
 
+    // The rules live in QrPartCollector.scan (unit-tested): a one-code config while a set is
+    // being collected is ignored with a notice; a set that fails to join is dropped, its
+    // reason shown, and scanning goes on.
     fun onText(text: String) {
-        if (gate.stopped.get() || failed) return
-        val json = try {
-            Ichorgo.qrPart(text)
-        } catch (e: Exception) {
-            warn(QrPartError.fromMessage(e.message).message, blocking = false)
-            return
-        }
-        if (json.isEmpty()) {
-            // A one-code config, as before; ignored while a split one is being collected.
-            if (parts.isEmpty) deliver(text)
-            return
-        }
-        val part = QrPartCollector.parse(json) ?: return warn(QrPartError.INVALID.message, blocking = false)
-        when (val outcome = collector.add(parts, part)) {
-            is QrPartOutcome.Progress -> if (outcome.isNew) {
-                parts = outcome.set
-                notice = null
-                haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+        if (gate.stopped.get()) return
+        when (val step = collector.scan(parts, text, Ichorgo::qrPart)) {
+            is QrScanStep.Deliver -> {
+                step.feedback?.let { haptics.performHapticFeedback(it.haptic) }
+                gate.stopped.set(true)
+                callback(step.text)
             }
-            is QrPartOutcome.Reset -> {
-                parts = outcome.set
-                warn(R.string.qr_parts_reset, blocking = false)
+            is QrScanStep.Update -> {
+                parts = step.set
+                notice = step.notice
+                step.feedback?.let { haptics.performHapticFeedback(it.haptic) }
             }
-            is QrPartOutcome.Complete -> {
-                haptics.performHapticFeedback(HapticFeedbackType.Confirm)
-                deliver(outcome.text)
-            }
-            is QrPartOutcome.Failed -> warn(outcome.error.message, blocking = true)
+            QrScanStep.Ignore -> Unit
         }
     }
 
@@ -137,7 +120,7 @@ internal fun QrPartScan(onScanned: (String) -> Unit, modifier: Modifier = Modifi
 @Composable
 private fun QrPartProgress(
     parts: QrPartSet,
-    @StringRes notice: Int?,
+    notice: QrScanNotice?,
     onStartOver: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -172,7 +155,7 @@ private fun QrPartProgress(
                     }
                 }
                 if (notice != null) {
-                    Text(stringResource(notice), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(notice.message), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
                 }
             }
             TextButton(onClick = onStartOver) { Text(stringResource(R.string.qr_parts_start_over)) }

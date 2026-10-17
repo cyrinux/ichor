@@ -75,10 +75,21 @@ def join(texts):
     return gzip.decompress(base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4)))
 
 
-def qrencode(args):
+def qrencode(args, text):
+    """Runs qrencode with the part on stdin, so no chunk shows up in the process list."""
     if shutil.which("qrencode") is None:
         sys.exit("qrencode is not installed")
-    subprocess.run(["qrencode", "-l", "L", *args], check=True)
+    subprocess.run(["qrencode", "-l", "L", *args], input=text.encode("ascii"), check=True)
+
+
+def write_png(path, text):
+    """Writes one code as a PNG only the owner can read (it holds part of the key)."""
+    old = os.umask(0o077)
+    try:
+        qrencode(["-o", path], text)
+    finally:
+        os.umask(old)
+    os.chmod(path, 0o600)
 
 
 def main():
@@ -100,13 +111,13 @@ def main():
         if args.text:
             print(text)
         elif args.out:
-            os.makedirs(args.out, exist_ok=True)
+            os.makedirs(args.out, mode=0o700, exist_ok=True)
             path = os.path.join(args.out, f"part-{i}-of-{n}.png")
-            qrencode(["-o", path, text])
+            write_png(path, text)
             print(path)
         else:
             print(f"Code {i} of {n}:")
-            qrencode(["-t", "ansiutf8", text])
+            qrencode(["-t", "ansiutf8"], text)
             if i < n and sys.stdin.isatty():
                 input("Press Enter for the next code...")
 

@@ -112,6 +112,41 @@
         }
       }
     },
+    "Finish this set or start over first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminez d'abord cette série ou recommencez."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Termina primero esta serie o empieza de nuevo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schließe zuerst diesen Satz ab oder beginne neu."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completa prima questa serie o ricomincia."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спершу завершіть цей набір або почніть знову."
+          }
+        }
+      }
+    },
     "This code belongs to another set: started again from it." : {
       "extractionState" : "manual",
       "localizations" : {

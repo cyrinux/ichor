@@ -158,10 +158,10 @@ func TestQRPartsJoinTooLarge(t *testing.T) {
 	}
 }
 
-// testdata/qr_parts/parts.txt is scripts/qr-parts.py's output for talosconfig.yaml
+// testdata/qr_parts/parts.txt is scripts/qr-parts.py's output for sample-config.yaml
 // (--chunk 800); scripts/test_qr_parts.py checks the same files from the Python side.
 func TestQRPartsJoinScriptOutput(t *testing.T) {
-	config, err := os.ReadFile("testdata/qr_parts/talosconfig.yaml")
+	config, err := os.ReadFile("testdata/qr_parts/sample-config.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}

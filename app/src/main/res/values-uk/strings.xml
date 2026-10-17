@@ -747,13 +747,14 @@
     <string name="import_import">Імпортувати</string>
     <string name="import_camera_needed">Для сканування QR-коду talosconfig потрібен дозвіл на доступ до камери.</string>
     <string name="import_grant_camera">Надати доступ до камери</string>
-    <string name="qr_parts_progress">%1$d з %2$d кодів</string>
-    <string name="qr_parts_still_missing">Ще відскануйте: %1$s</string>
+    <string name="qr_parts_progress">Відскановано %1$d з %2$d кодів</string>
+    <string name="qr_parts_still_missing">Бракує: %1$s</string>
     <string name="qr_parts_start_over">Почати знову</string>
-    <string name="qr_parts_reset">Цей код з іншого набору: почали знову з нього.</string>
-    <string name="qr_parts_mismatch">Ці коди не з однієї конфігурації. Почніть знову й відскануйте один набір.</string>
-    <string name="qr_parts_missing">Бракує коду. Почніть знову й відскануйте всі коди.</string>
-    <string name="qr_parts_invalid">Цей код не вдалося прочитати як частину конфігурації. Почніть знову.</string>
+    <string name="qr_parts_finish_first">Спершу завершіть цей набір або почніть знову.</string>
+    <string name="qr_parts_reset">Цей код з іншого набору: почато знову з нього.</string>
+    <string name="qr_parts_mismatch">Ці коди з різних наборів. Почніть знову та скануйте один набір.</string>
+    <string name="qr_parts_missing">Бракує деяких кодів. Почніть знову та скануйте всі.</string>
+    <string name="qr_parts_invalid">Ці коди не утворюють конфігурацію. Почніть знову та скануйте їх ще раз.</string>
 
     <!-- Help: creating a talosconfig -->
     <string name="help_title">Створіть talosconfig для цього телефона</string>
@@ -4196,7 +4197,7 @@
     <string name="kube_problem_no_credentials">Немає облікових даних: додайте клієнтський сертифікат або токен.</string>
     <string name="kube_problem_invalid">Цей контекст не вдається прочитати.</string>
     <string name="help_qr_compressed">Завеликий для одного QR-коду (kubeconfig із сертифікатом)? Спершу стисніть його:</string>
-    <string name="help_qr_parts">Все ще завеликий? У вихідному коді Ichor розбийте його на кілька кодів і скануйте їх у будь-якому порядку:</string>
+    <string name="help_qr_parts">Досі завеликий? У репозиторії Ichor розділіть його на кілька кодів і скануйте їх у будь-якому порядку:</string>
     <string name="help_kube_title">З kubeconfig</string>
     <string name="help_kube_body">Kubeconfig із клієнтським сертифікатом або токеном теж підходить: застосунок тоді показує Kubernetes-бік цього кластера (робочі навантаження, вузли, Argo CD, Flux…), без Talos.</string>
     <string name="help_kube_flatten">Зробіть його самодостатнім (сертифікати всередині, лише поточний контекст), а потім перенесіть як talosconfig:</string>

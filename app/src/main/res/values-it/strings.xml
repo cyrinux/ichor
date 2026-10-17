@@ -692,13 +692,14 @@
     <string name="import_import">Importa</string>
     <string name="import_camera_needed">Serve l\'autorizzazione della fotocamera per scansionare il codice QR di un talosconfig.</string>
     <string name="import_grant_camera">Consenti accesso alla fotocamera</string>
-    <string name="qr_parts_progress">%1$d di %2$d codici</string>
-    <string name="qr_parts_still_missing">Da scansionare: %1$s</string>
+    <string name="qr_parts_progress">%1$d di %2$d codici scansionati</string>
+    <string name="qr_parts_still_missing">Mancanti: %1$s</string>
     <string name="qr_parts_start_over">Ricomincia</string>
-    <string name="qr_parts_reset">Quel codice è di un\'altra serie: ripartito da lì.</string>
-    <string name="qr_parts_mismatch">Questi codici non sono della stessa config. Ricomincia e scansiona una sola serie.</string>
-    <string name="qr_parts_missing">Manca un codice. Ricomincia e scansiona tutti i codici.</string>
-    <string name="qr_parts_invalid">Questo codice non si legge come parte di una config. Ricomincia.</string>
+    <string name="qr_parts_finish_first">Completa prima questa serie o ricomincia.</string>
+    <string name="qr_parts_reset">Questo codice appartiene a un\'altra serie: ripartito da questo.</string>
+    <string name="qr_parts_mismatch">Questi codici vengono da serie diverse. Ricomincia e scansiona una sola serie.</string>
+    <string name="qr_parts_missing">Mancano dei codici. Ricomincia e scansionali tutti.</string>
+    <string name="qr_parts_invalid">Questi codici non formano una configurazione. Ricomincia e scansionali di nuovo.</string>
 
     <!-- Help: creating a talosconfig -->
     <string name="help_title">Crea un talosconfig per questo telefono</string>
@@ -3979,7 +3980,7 @@
     <string name="kube_problem_no_credentials">Non ha credenziali: aggiungi un certificato client o un token.</string>
     <string name="kube_problem_invalid">Impossibile leggere questo contesto.</string>
     <string name="help_qr_compressed">Troppo grande per un solo codice QR (un kubeconfig con certificato)? Comprimilo prima:</string>
-    <string name="help_qr_parts">Ancora troppo grande? Dai sorgenti di Ichor, dividilo in più codici e scansionali in qualsiasi ordine:</string>
+    <string name="help_qr_parts">Ancora troppo grande? Dal repository di Ichor, dividilo su più codici e scansionali in qualsiasi ordine:</string>
     <string name="help_kube_title">Da un kubeconfig</string>
     <string name="help_kube_body">Funziona anche un kubeconfig con un certificato client o un token: l\'app mostra allora il lato Kubernetes di quel cluster (workload, nodi, Argo CD, Flux…), senza Talos.</string>
     <string name="help_kube_flatten">Rendilo autonomo (certificati inclusi, solo il contesto corrente), poi trasferiscilo come un talosconfig:</string>

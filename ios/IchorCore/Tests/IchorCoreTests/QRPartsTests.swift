@@ -63,6 +63,38 @@ final class QRPartsTests: XCTestCase {
         XCTAssertFalse(collector.isCollecting)
     }
 
+    func testOneCodeScanWhileCollectingIsIgnoredAndKeepsTheSet() {
+        var collector = QRPartCollector()
+        _ = add("ichor:1/3:aa", to: &collector)
+        XCTAssertEqual(add("ichor-config:H4sI", to: &collector), .notPartWhileCollecting)
+        XCTAssertEqual(collector.received, 1)
+        XCTAssertEqual(collector.missing, [2, 3])
+        collector.reset()
+        XCTAssertEqual(add("ichor-config:H4sI", to: &collector), .notPart)
+    }
+
+    func testFailedJoinLetsScanningGoOn() {
+        var collector = QRPartCollector()
+        _ = add("ichor:1/2:aa", to: &collector)
+        XCTAssertEqual(add("ichor:2/2:bad", to: &collector), .failed(.invalid))
+        XCTAssertEqual(collector.missing, [])
+        XCTAssertEqual(add("ichor:1/2:aa", to: &collector), .added)
+        XCTAssertEqual(add("ichor:2/2:bb", to: &collector), .complete("ichor-config:aabb"))
+    }
+
+    func testDescriptionsNeverShowChunksOrTheConfig() {
+        let part = QRPart(index: 1, total: 2, chunk: "secretchunk")
+        XCTAssertFalse(String(describing: part).contains("secret"))
+        XCTAssertFalse(String(reflecting: part).contains("secret"))
+        let outcome = QRPartOutcome.complete("ichor-config:secret")
+        XCTAssertFalse(String(describing: outcome).contains("secret"))
+        XCTAssertFalse(String(reflecting: outcome).contains("secret"))
+        var collector = QRPartCollector()
+        _ = add("ichor:1/2:secretchunk", to: &collector)
+        XCTAssertFalse(String(describing: collector).contains("secret"))
+        XCTAssertFalse(String(reflecting: collector).contains("secret"))
+    }
+
     func testDifferentTotalRestartsFromTheNewPart() {
         var collector = QRPartCollector()
         _ = add("ichor:1/3:aa", to: &collector)

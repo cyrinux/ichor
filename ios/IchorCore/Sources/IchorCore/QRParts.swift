@@ -15,6 +15,12 @@ public struct QRPart: Codable, Equatable, Sendable {
     }
 }
 
+extension QRPart: CustomStringConvertible, CustomDebugStringConvertible {
+    /// Never the chunk: it is a piece of a credential.
+    public var description: String { "QRPart(\(index)/\(total))" }
+    public var debugDescription: String { description }
+}
+
 /// A multi-part QR error of the Go core, whose messages start with a code (qr_parts.go).
 public enum QRPartsError: Error, Equatable, Sendable {
     /// Parts of different sets (a different count, or another chunk for an index).
@@ -37,8 +43,10 @@ public enum QRPartsError: Error, Equatable, Sendable {
 
 /// What scanning one code did to the collected set.
 public enum QRPartOutcome: Equatable, Sendable {
-    /// Not a part: the scanner keeps its one-code path.
+    /// Not a part, and no set is being collected: the scanner keeps its one-code path.
     case notPart
+    /// Not a part, while a set is being collected: ignored (finish the set or start over).
+    case notPartWhileCollecting
     /// A part already collected (the camera sees the same code again).
     case duplicate
     /// A new part; the set still lacks some.
@@ -48,8 +56,26 @@ public enum QRPartOutcome: Equatable, Sendable {
     case restarted
     /// The last part: the import text, as a one-code scan gives it.
     case complete(String)
-    /// The part or the set is unusable; the collector is empty again.
+    /// A malformed part (the set is kept), or a complete set that does not join (the
+    /// collector is empty again, so scanning goes on).
     case failed(QRPartsError)
+}
+
+extension QRPartOutcome: CustomStringConvertible, CustomDebugStringConvertible {
+    /// Never the joined config: it holds a credential.
+    public var description: String {
+        switch self {
+        case .notPart: "notPart"
+        case .notPartWhileCollecting: "notPartWhileCollecting"
+        case .duplicate: "duplicate"
+        case .added: "added"
+        case .restarted: "restarted"
+        case .complete(let text): "complete(\(text.count) chars)"
+        case .failed(let error): "failed(\(error))"
+        }
+    }
+
+    public var debugDescription: String { description }
 }
 
 /// Collects the parts of a multi-part QR import in any order (Go QRPart / QRPartsJoin are
@@ -86,7 +112,7 @@ public struct QRPartCollector: Sendable {
         let parsed: QRPart
         do {
             let json = try part(text)
-            if json.isEmpty { return .notPart }
+            if json.isEmpty { return isCollecting ? .notPartWhileCollecting : .notPart }
             guard let decoded = try? JSONDecoder().decode(QRPart.self, from: Data(json.utf8)),
                   decoded.total > 0, (1...decoded.total).contains(decoded.index)
             else { return .failed(.invalid) }
@@ -128,4 +154,10 @@ public struct QRPartCollector: Sendable {
         let message = (error as? LocalizedError)?.errorDescription ?? ""
         return QRPartsError(coreMessage: message) ?? .invalid
     }
+}
+
+extension QRPartCollector: CustomStringConvertible, CustomDebugStringConvertible {
+    /// Counts only: the chunks are pieces of a credential.
+    public var description: String { "QRPartCollector(\(received)/\(total))" }
+    public var debugDescription: String { description }
 }

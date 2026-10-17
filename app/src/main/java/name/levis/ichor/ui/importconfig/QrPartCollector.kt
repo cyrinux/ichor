@@ -56,8 +56,10 @@ sealed interface QrPartOutcome {
     /** The part belongs to another set: collection restarted from it. */
     data class Reset(val set: QrPartSet) : QrPartOutcome
 
-    /** Every part is in: [text] is what a one-code scan would have given. */
-    data class Complete(val text: String) : QrPartOutcome
+    /** Every part is in: [text] is what a one-code scan would have given. A credential: never logged. */
+    data class Complete(val text: String) : QrPartOutcome {
+        override fun toString(): String = "Complete(${text.length} chars)"
+    }
 
     /** The complete set could not be joined. */
     data class Failed(val error: QrPartError) : QrPartOutcome
@@ -91,11 +93,74 @@ class QrPartCollector(private val join: (String) -> String) {
             QrPartOutcome.Failed(QrPartError.fromMessage(e.message))
         }
 
+    /**
+     * What the scanner does with one scanned [text] given the [set] so far. [decode] is
+     * Ichorgo.qrPart: the part's JSON, "" for a one-code config, or a `qr-parts-*:` error.
+     */
+    fun scan(set: QrPartSet, text: String, decode: (String) -> String): QrScanStep {
+        val json = try {
+            decode(text)
+        } catch (e: Exception) {
+            // A malformed part: the set is kept.
+            return QrScanStep.Update(set, QrScanNotice.of(QrPartError.fromMessage(e.message)), QrScanFeedback.WARNING)
+        }
+        if (json.isEmpty()) {
+            // A one-code config imports as before, but not over a set being collected.
+            return if (set.isEmpty) QrScanStep.Deliver(text, feedback = null) else QrScanStep.Update(set, QrScanNotice.FINISH_FIRST, null)
+        }
+        val part = parse(json)
+            ?: return QrScanStep.Update(set, QrScanNotice.INVALID, QrScanFeedback.WARNING)
+        return when (val outcome = add(set, part)) {
+            is QrPartOutcome.Progress ->
+                if (outcome.isNew) QrScanStep.Update(outcome.set, null, QrScanFeedback.SUCCESS) else QrScanStep.Ignore
+            is QrPartOutcome.Reset -> QrScanStep.Update(outcome.set, QrScanNotice.RESET, QrScanFeedback.WARNING)
+            is QrPartOutcome.Complete -> QrScanStep.Deliver(outcome.text, QrScanFeedback.SUCCESS)
+            // The set cannot be imported: drop it and keep scanning, with the reason shown.
+            is QrPartOutcome.Failed ->
+                QrScanStep.Update(QrPartSet.EMPTY, QrScanNotice.of(outcome.error), QrScanFeedback.WARNING)
+        }
+    }
+
     companion object {
         /** The part in [json] (QRPart's output), or null when it is not one. */
         fun parse(json: String): QrPart? =
             if (json.isBlank()) null else runCatching { JSON.decodeFromString<QrPart>(json) }.getOrNull()
     }
+}
+
+/** The message under the progress ring. */
+enum class QrScanNotice {
+    FINISH_FIRST,
+    RESET,
+    MISMATCH,
+    MISSING,
+    INVALID,
+    ;
+
+    companion object {
+        fun of(error: QrPartError): QrScanNotice = when (error) {
+            QrPartError.MISMATCH -> MISMATCH
+            QrPartError.MISSING -> MISSING
+            QrPartError.INVALID -> INVALID
+        }
+    }
+}
+
+/** The haptic of a scan step: success on a new part or the import, warning on a reset or failure. */
+enum class QrScanFeedback { SUCCESS, WARNING }
+
+/** What the scanner does with one scanned text. */
+sealed interface QrScanStep {
+    /** Import [text] (a one-code config, or a completed set with [feedback]): a credential, never logged. */
+    data class Deliver(val text: String, val feedback: QrScanFeedback?) : QrScanStep {
+        override fun toString(): String = "Deliver(${text.length} chars)"
+    }
+
+    /** Show [set] and [notice] (null clears it), playing [feedback] when not null. */
+    data class Update(val set: QrPartSet, val notice: QrScanNotice?, val feedback: QrScanFeedback?) : QrScanStep
+
+    /** Nothing changed (a part already collected). */
+    data object Ignore : QrScanStep
 }
 
 private val JSON = Json { ignoreUnknownKeys = true }
