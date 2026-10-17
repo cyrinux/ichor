@@ -1849,6 +1849,20 @@
     <string name="insights_dropped">Older entries discarded: %1$d</string>
     <string name="insights_show_metrics">Show metric samples</string>
     <string name="insights_no_recording">No saved recording.</string>
+    <string name="insights_tab_drift">Drift</string>
+    <string name="insights_tab_recorder">Recorder</string>
+    <string name="insights_tab_network">Network</string>
+    <string name="insights_kind_status">Node</string>
+    <string name="insights_kind_service">Service</string>
+    <string name="insights_kind_link">Link</string>
+    <string name="insights_kind_metrics">Metrics</string>
+    <string name="insights_kind_error">Error</string>
+    <string name="insights_kind_recovered">Recovered</string>
+    <string name="insights_kind_event">Event</string>
+    <plurals name="insights_healthy_run">
+        <item quantity="one">%d service healthy</item>
+        <item quantity="other">%d services healthy</item>
+    </plurals>
     <string name="insights_record_note">Record up to 10 minutes while this screen is in the foreground. Health, services, links and metrics are sampled, with live Talos events. No raw logs or credentials. The latest session is encrypted locally; starting replaces it. Keep up to 600 entries. Event timestamps use node clocks; ordering does not prove causation.</string>
     <string name="backup_desc">Save your clusters and settings to a file encrypted with a passphrase, to restore them on a new phone (Android or iOS). Without the passphrase the file cannot be opened.</string>
     <string name="backup_create">Back up clusters and settings</string>
