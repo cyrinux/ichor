@@ -98,6 +98,10 @@ var dataCommands = []command{
 	{name: "git-file", args: "HOSTJSON REPO REF PATH", run: func(env) (string, error) {
 		return ichorgo.GitForgeFile(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
 	}},
+	// Opens a real pull or merge request: the context only names the cluster in the audit log.
+	{name: "git-propose", args: "HOSTJSON OPTIONSJSON", run: func(e env) (string, error) {
+		return ichorgo.GitForgePropose(e.cfg, e.context, flag.Arg(1), flag.Arg(2))
+	}},
 	{name: "crossplane", args: "", run: func(e env) (out string, err error) {
 		return ichorgo.KubeCrossplane(e.cfg, e.context, e.kubeServer)
 	}},

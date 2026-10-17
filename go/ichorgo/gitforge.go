@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"bytes"
 	"cmp"
 	"context"
 	"encoding/json"
@@ -95,11 +96,13 @@ type gitForgeCheck struct {
 	Missing  []string `json:"missing"`
 }
 
-// gitForge is one forge's API behind the three reads.
+// gitForge is one forge's API behind the three reads and the writes of a proposal
+// (gitforge_propose.go).
 type gitForge interface {
 	check(ctx context.Context) (gitForgeCheck, error)
 	tree(ctx context.Context, repo gitRepoRef, ref, dir string) ([]gitForgeEntry, error)
 	file(ctx context.Context, repo gitRepoRef, ref, path string) (gitForgeFile, error)
+	gitProposer
 }
 
 // GitForgeCheck tells whether hostJSON's token works: {"login","host","scopesOK","missing"}.
@@ -437,16 +440,22 @@ func (c gitForgeClient) head(ctx context.Context, path string, query url.Values)
 // (GitLab behind a proxy that strips it: PRIVATE-TOKEN on a 401); a redirect is refused,
 // never followed.
 func (c gitForgeClient) do(ctx context.Context, method, path string, query url.Values) (*http.Response, error) {
+	return c.doBody(ctx, method, path, query, nil)
+}
+
+// doBody is do with a JSON body (nil for none), sent again as is with PRIVATE-TOKEN. A
+// non-2xx answer is a gitForgeStatusError.
+func (c gitForgeClient) doBody(ctx context.Context, method, path string, query url.Values, body []byte) (*http.Response, error) {
 	target := c.api + path
 	if len(query) > 0 {
 		target += "?" + query.Encode()
 	}
 
-	resp, err := c.send(ctx, method, target, false)
+	resp, err := c.send(ctx, method, target, body, false)
 	if err == nil && resp.StatusCode == http.StatusUnauthorized && c.host.Kind == gitForgeGitLab && c.host.Token != "" {
 		resp.Body.Close() //nolint:errcheck
 
-		resp, err = c.send(ctx, method, target, true)
+		resp, err = c.send(ctx, method, target, body, true)
 	}
 
 	if err != nil {
@@ -456,16 +465,34 @@ func (c gitForgeClient) do(ctx context.Context, method, path string, query url.V
 	if err := c.status(resp); err != nil {
 		resp.Body.Close() //nolint:errcheck
 
-		return nil, err
+		return nil, gitForgeStatusError{code: resp.StatusCode, err: err}
 	}
 
 	return resp, nil
 }
 
-func (c gitForgeClient) send(ctx context.Context, method, target string, privateToken bool) (*http.Response, error) {
-	req, err := http.NewRequestWithContext(ctx, method, target, nil)
+// gitForgeStatusError is a non-2xx answer as status words it; code tells a conflict apart.
+type gitForgeStatusError struct {
+	code int
+	err  error
+}
+
+func (e gitForgeStatusError) Error() string { return e.err.Error() }
+func (e gitForgeStatusError) Unwrap() error { return e.err }
+
+func (c gitForgeClient) send(ctx context.Context, method, target string, body []byte, privateToken bool) (*http.Response, error) {
+	var reader io.Reader
+	if body != nil {
+		reader = bytes.NewReader(body)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, target, reader)
 	if err != nil {
 		return nil, err
+	}
+
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
 	}
 
 	req.Header.Set("Accept", "application/json")
