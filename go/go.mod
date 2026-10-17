@@ -5,6 +5,7 @@ go 1.26.8
 require (
 	filippo.io/age v1.3.2
 	github.com/ProtonMail/gopenpgp/v3 v3.5.2
+	github.com/SherClockHolmes/webpush-go v1.4.0
 	github.com/cosi-project/runtime v1.16.3
 	github.com/fluxcd/pkg/envsubst v1.8.0
 	github.com/gopacket/gopacket v1.7.4
@@ -53,6 +54,7 @@ require (
 	github.com/go-openapi/swag/stringutils v0.29.2 // indirect
 	github.com/go-openapi/swag/typeutils v0.29.2 // indirect
 	github.com/go-openapi/swag/yamlutils v0.29.2 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/cel-go v0.31.0 // indirect
 	github.com/google/gnostic-models v0.7.1 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
