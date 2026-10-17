@@ -4,10 +4,12 @@ import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material.icons.outlined.Computer
 import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Inventory2
@@ -17,6 +19,8 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Stream
 import androidx.compose.material.icons.outlined.Timeline
+import androidx.compose.material.icons.outlined.Upgrade
+import androidx.compose.material.icons.outlined.VpnLock
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -40,6 +44,10 @@ private fun kubernetesActionIcon(action: KubernetesAction): ImageVector = when (
     KubernetesAction.AUTOSCALING -> Icons.Outlined.Speed
     KubernetesAction.VIRTUAL_MACHINES -> Icons.Outlined.Computer
     KubernetesAction.CLEAN_UP_PODS -> Icons.Outlined.CleaningServices
+    KubernetesAction.CROSSPLANE -> Icons.Outlined.Extension
+    KubernetesAction.TAILSCALE -> Icons.Outlined.VpnLock
+    KubernetesAction.ARGO_ROLLOUTS -> Icons.Outlined.Upgrade
+    KubernetesAction.CLUSTER_LIFECYCLE -> Icons.Outlined.AccountTree
 }
 
 /** How the Kubernetes screen's actions look, in its bar and its editor. */
@@ -62,6 +70,10 @@ val kubernetesActionLook = ActionLook<KubernetesAction>(::kubernetesActionIcon) 
             KubernetesAction.AUTOSCALING -> R.string.autoscaling_title
             KubernetesAction.VIRTUAL_MACHINES -> R.string.vm_title
             KubernetesAction.CLEAN_UP_PODS -> R.string.sanitize_title
+            KubernetesAction.CROSSPLANE -> R.string.crossplane_title
+            KubernetesAction.TAILSCALE -> R.string.tailscale_title
+            KubernetesAction.ARGO_ROLLOUTS -> R.string.argo_rollouts_title
+            KubernetesAction.CLUSTER_LIFECYCLE -> R.string.cluster_lifecycle_title
         },
     )
 }
