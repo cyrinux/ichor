@@ -465,16 +465,23 @@ func (c gitForgeClient) doBody(ctx context.Context, method, path string, query u
 	if err := c.status(resp); err != nil {
 		resp.Body.Close() //nolint:errcheck
 
+		var s gitForgeStatusError
+		if errors.As(err, &s) {
+			return nil, s
+		}
+
 		return nil, gitForgeStatusError{code: resp.StatusCode, err: err}
 	}
 
 	return resp, nil
 }
 
-// gitForgeStatusError is a non-2xx answer as status words it; code tells a conflict apart.
+// gitForgeStatusError is a non-2xx answer as status words it; code and the forge's own
+// message (token scrubbed) tell a conflict apart.
 type gitForgeStatusError struct {
-	code int
-	err  error
+	code    int
+	message string
+	err     error
 }
 
 func (e gitForgeStatusError) Error() string { return e.err.Error() }
@@ -534,10 +541,10 @@ func (c gitForgeClient) status(resp *http.Response) error {
 
 	msg := c.scrub(errors.New(forgeErrorMessage(raw))).Error()
 	if msg == "" {
-		return fmt.Errorf("%s answered %s", host, resp.Status)
+		return gitForgeStatusError{code: resp.StatusCode, err: fmt.Errorf("%s answered %s", host, resp.Status)}
 	}
 
-	return fmt.Errorf("%s answered %s: %s", host, resp.Status, msg)
+	return gitForgeStatusError{code: resp.StatusCode, message: msg, err: fmt.Errorf("%s answered %s: %s", host, resp.Status, msg)}
 }
 
 // scrub removes the token from an error, wherever it came from.

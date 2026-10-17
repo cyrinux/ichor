@@ -141,20 +141,26 @@ func gitForgePropose(configYAML, contextName, hostJSON, optionsJSON string, targ
 	return res, err
 }
 
-// checkGitProposal checks a proposal and its repository against the host; the texts written
-// about masked data (content, message, title, body) get their real names back.
+// errGitProposePrivacy refuses a proposal in screenshot mode: the file was read masked, and
+// masking cannot be undone exactly, so the commit could rewrite lines nobody edited.
+var errGitProposePrivacy = errors.New("turn off screenshot mode to propose a change: the file was read with masked names")
+
+// checkGitProposal checks a proposal and its repository against the host.
 func checkGitProposal(hostJSON string, p gitProposal) (gitForgeHost, gitRepoRef, gitProposal, error) {
+	if privacy.isEnabled() {
+		return gitForgeHost{}, gitRepoRef{}, gitProposal{}, errGitProposePrivacy
+	}
+
 	h, repo, baseRef, path, err := gitForgeArgs(hostJSON, strings.TrimSpace(p.RepoURL), p.BaseRef, p.Path)
 	if err != nil {
 		return gitForgeHost{}, gitRepoRef{}, gitProposal{}, err
 	}
 
 	p.BaseRef, p.Path, p.FileSha, p.Branch = baseRef, path, strings.TrimSpace(p.FileSha), strings.TrimSpace(p.Branch)
-	p.Content, p.Body = privacy.reveal(p.Content), privacy.reveal(p.Body)
-	p.Message, p.Title = privacy.reveal(strings.TrimSpace(p.Message)), privacy.reveal(strings.TrimSpace(p.Title))
+	p.Message, p.Title = strings.TrimSpace(p.Message), strings.TrimSpace(p.Title)
 
 	switch {
-	case path == "" || pathpkg.Clean(path) != path:
+	case path == "" || path == "." || pathpkg.Clean(path) != path:
 		return gitForgeHost{}, gitRepoRef{}, gitProposal{}, fmt.Errorf("%q is not a file path in the repository", p.Path)
 	case len(p.Content) > gitForgeMaxFile:
 		return gitForgeHost{}, gitRepoRef{}, gitProposal{}, fmt.Errorf("%s is over 1 MiB: propose it from a computer", path)
@@ -259,14 +265,16 @@ func branchTaken(err error) bool {
 // more: GitHub 409, Gitea 409 or 422 "sha does not match", GitLab 400 "has changed since";
 // a new file that already exists is one too.
 func staleFile(err error) bool {
-	msg := ""
-	if err != nil {
-		msg = strings.ToLower(err.Error())
+	var s gitForgeStatusError
+	if !errors.As(err, &s) {
+		return false
 	}
 
-	switch gitForgeStatus(err) {
+	msg := strings.ToLower(s.message)
+
+	switch s.code {
 	case http.StatusConflict:
-		return true
+		return !strings.Contains(msg, "empty")
 	case http.StatusUnprocessableEntity:
 		return strings.Contains(msg, "sha") || strings.Contains(msg, "already exists")
 	case http.StatusBadRequest:

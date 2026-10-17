@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -499,6 +500,7 @@ func TestGitForgeProposeValidation(t *testing.T) {
 		"path climbs":      {func(o map[string]any) { o["path"] = "apps/../../etc/passwd" }, "leaves the repository"},
 		"path not clean":   {func(o map[string]any) { o["path"] = "apps/./podinfo.yaml" }, "is not a file path"},
 		"no path":          {func(o map[string]any) { o["path"] = "" }, "is not a file path"},
+		"path is root":     {func(o map[string]any) { o["path"] = "." }, "is not a file path"},
 		"content too big":  {func(o map[string]any) { o["content"] = strings.Repeat("a", gitForgeMaxFile+1) }, "over 1 MiB"},
 		"no message":       {func(o map[string]any) { o["message"] = " " }, "no commit message"},
 		"no title":         {func(o map[string]any) { o["title"] = "" }, "no title"},
@@ -519,6 +521,36 @@ func TestGitForgeProposeValidation(t *testing.T) {
 
 	if _, err := GitForgePropose("", "lab", host, "{"); err == nil || !strings.Contains(err.Error(), "invalid proposal") {
 		t.Errorf("bad JSON: %v", err)
+	}
+}
+
+func TestGitForgeProposePrivacy(t *testing.T) {
+	t.Cleanup(func() { SetPrivacyMask(false, "") })
+	SetPrivacyMask(true, "")
+
+	host, repo := gitHostJSON("github", "https://git.example.org"), "https://git.example.org/example-org/platform"
+	if _, err := GitForgePropose("", "lab", host, proposeOptions(t, repo, nil)); err == nil || !strings.Contains(err.Error(), "screenshot mode") {
+		t.Errorf("privacy on: %v", err)
+	}
+}
+
+// A refusal is "the file changed" by the forge's message, not by words in the host name.
+func TestStaleFile(t *testing.T) {
+	for name, tc := range map[string]struct {
+		err  error
+		want bool
+	}{
+		"github stale":         {gitForgeStatusError{code: 409, message: "is at abc but expected def", err: errors.New("x")}, true},
+		"empty repository":     {gitForgeStatusError{code: 409, message: "Git Repository is empty.", err: errors.New("x")}, false},
+		"gitea sha":            {gitForgeStatusError{code: 422, message: "sha does not match", err: errors.New("x")}, true},
+		"validation, sha host": {gitForgeStatusError{code: 422, message: "Validation Failed", err: errors.New("git.sharecode.example answered 422: Validation Failed")}, false},
+		"gitlab changed":       {gitForgeStatusError{code: 400, message: "You are attempting to update a file that has changed since you started editing it.", err: errors.New("x")}, true},
+		"gitlab other":         {gitForgeStatusError{code: 400, message: "Invalid reference name", err: errors.New("changed.example answered 400")}, false},
+		"not a status":         {errors.New("sha changed already exists"), false},
+	} {
+		if got := staleFile(tc.err); got != tc.want {
+			t.Errorf("%s: %v, want %v", name, got, tc.want)
+		}
 	}
 }
 
