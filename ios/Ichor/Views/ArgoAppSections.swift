@@ -11,6 +11,7 @@ struct ArgoHero: View {
     let sync: () -> Void
     let act: (ArgoAction) -> Void
     let terminate: () -> Void
+    @Environment(GitHostStore.self) private var hosts
 
     var body: some View {
         Section {
@@ -44,7 +45,7 @@ struct ArgoHero: View {
                 let source = app.sources[i]
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Source").font(.caption).foregroundStyle(.secondary)
-                    if let url = webURL(source.repoURL) {
+                    if let url = hosts.browserURL(source.repoURL) {
                         Link(destination: url) {
                             Label { Text(verbatim: source.repo).lineLimit(2).truncationMode(.middle) } icon: { Image(systemName: "arrow.up.forward.square") }
                                 .font(.callout.monospaced())
@@ -311,9 +312,10 @@ func webURL(_ string: String) -> URL? {
 struct RevisionLink: View {
     let label: String
     let url: String
+    @Environment(GitHostStore.self) private var hosts
 
     var body: some View {
-        if let url = webURL(url) {
+        if let url = hosts.browserURL(url) {
             Link(destination: url) {
                 HStack(spacing: 4) {
                     Text(verbatim: label)

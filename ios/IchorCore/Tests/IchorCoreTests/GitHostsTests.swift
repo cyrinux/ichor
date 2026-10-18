@@ -141,4 +141,32 @@ final class GitHostsTests: XCTestCase {
         XCTAssertEqual(GitHostKeys.keychainAccount("github.com"), "git-host:github.com")
         XCTAssertNotEqual(GitHostKeys.keychainAccount("github.com"), GitHostKeys.keychainAccount("git.example.org"))
     }
+
+    func testLinksOnAnAliasOpenOnTheGitHost() {
+        let hosts = [
+            GitHost(host: "github.com", kind: .github),
+            GitHost(host: "git.example.org", kind: .gitea,
+                    aliases: ["gitea-http.gitea.svc.cluster.local:3000", "ssh.git.example.org"]),
+            GitHost(host: "lab.example.org:8443", kind: .gitlab, aliases: ["gitlab-webservice.gitlab.svc"]),
+        ]
+        let cases: [(String, String)] = [
+            // An alias with a port matches the port-less page Argo CD's link is built as.
+            ("https://gitea-http.gitea.svc.cluster.local/org/platform", "https://git.example.org/org/platform"),
+            ("https://SSH.git.example.org/org/platform/commit/4be1d0c", "https://git.example.org/org/platform/commit/4be1d0c"),
+            ("https://ssh.git.example.org", "https://git.example.org"),
+            // GitLab's commit page is under /-/, its port kept; a /-/ link is left as it is.
+            ("https://gitlab-webservice.gitlab.svc/g/sub/p/commit/4be1d0c9f2a7", "https://lab.example.org:8443/g/sub/p/-/commit/4be1d0c9f2a7"),
+            ("https://gitlab-webservice.gitlab.svc/g/p/-/commit/4be1d0c9f2a7", "https://lab.example.org:8443/g/p/-/commit/4be1d0c9f2a7"),
+            ("https://gitlab-webservice.gitlab.svc/g/p/-/blob/main/a.yaml", "https://lab.example.org:8443/g/p/-/blob/main/a.yaml"),
+            // Already on a host, on no alias, a lookalike or not https: unchanged.
+            ("https://git.example.org/org/platform", "https://git.example.org/org/platform"),
+            ("https://github.com/org/platform/commit/4be1d0c", "https://github.com/org/platform/commit/4be1d0c"),
+            ("https://other.example.org/org/platform", "https://other.example.org/org/platform"),
+            ("https://evil.ssh.git.example.org/org/platform", "https://evil.ssh.git.example.org/org/platform"),
+            ("http://ssh.git.example.org/org/platform", "http://ssh.git.example.org/org/platform"),
+            ("", ""),
+        ]
+        for (url, want) in cases { XCTAssertEqual(hosts.webURL(url), want, url) }
+        XCTAssertEqual([GitHost]().webURL("https://ssh.git.example.org/o/r"), "https://ssh.git.example.org/o/r")
+    }
 }

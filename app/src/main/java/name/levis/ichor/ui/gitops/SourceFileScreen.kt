@@ -98,6 +98,7 @@ fun SourceFileScreen(
     line: Int? = null,
 ) {
     val context = LocalContext.current
+    val web = rememberGitWebUrl()
     val talos = context.applicationContext as TalosApp
     val vm: SourceFileViewModel = viewModel(factory = factory { SourceFileViewModel(talos.gitOpsRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
@@ -159,7 +160,7 @@ fun SourceFileScreen(
                             Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
                         })
                     }
-                    val url = view?.let { forgeFileUrl(it.source.webURL, it.source.ref, path) }.orEmpty()
+                    val url = view?.let { forgeFileUrl(web(it.source.webURL), it.source.ref, path) }.orEmpty()
                     if (url.isNotEmpty()) {
                         TooltipIconButton(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.gitops_source_open_browser), onClick = { openUrl(context, url) })
                     }
@@ -174,7 +175,7 @@ fun SourceFileScreen(
             UiState.Loading -> LoadingBox(modifier)
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
             is UiState.Loaded -> if (s.data.file.truncated) {
-                val url = forgeFileUrl(s.data.source.webURL, s.data.source.ref, path)
+                val url = forgeFileUrl(web(s.data.source.webURL), s.data.source.ref, path)
                 EmptyState(Icons.AutoMirrored.Outlined.InsertDriveFile, stringResource(R.string.gitops_source_truncated), modifier) {
                     if (url.isNotEmpty()) OpenInBrowserButton { openUrl(context, url) }
                 }

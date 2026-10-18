@@ -43,6 +43,7 @@ import name.levis.ichor.model.ArgoSource
 import name.levis.ichor.model.shortRevision
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.gitops.rememberGitWebUrl
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
@@ -129,12 +130,13 @@ private fun AutoSyncRow(app: ArgoApp, busy: Boolean, onAutoSync: (Boolean) -> Un
 @Composable
 private fun LinkedInfoRow(label: String, value: String, url: String) {
     val uri = LocalUriHandler.current
+    val web = rememberGitWebUrl()
     if (url.isEmpty()) {
         InfoRow(label, value, mono = true)
         return
     }
     Row(
-        Modifier.fillMaxWidth().clickable(onClickLabel = stringResource(R.string.argo_open_link)) { runCatching { uri.openUri(url) } }.padding(vertical = 3.dp),
+        Modifier.fillMaxWidth().clickable(onClickLabel = stringResource(R.string.argo_open_link)) { runCatching { uri.openUri(web(url)) } }.padding(vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(0.4f))
@@ -162,12 +164,13 @@ fun RevisionRow(label: String, revision: String, url: String) = LinkedInfoRow(la
 @Composable
 fun RevisionText(revision: String, url: String, style: TextStyle, color: Color, modifier: Modifier = Modifier) {
     val uri = LocalUriHandler.current
+    val web = rememberGitWebUrl()
     if (url.isEmpty()) {
         Text(shortRevision(revision), style = style, fontFamily = FontFamily.Monospace, color = color, modifier = modifier)
         return
     }
     Row(
-        modifier.clickable(onClickLabel = stringResource(R.string.argo_open_commit)) { runCatching { uri.openUri(url) } },
+        modifier.clickable(onClickLabel = stringResource(R.string.argo_open_commit)) { runCatching { uri.openUri(web(url)) } },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(shortRevision(revision), style = style, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.primary)

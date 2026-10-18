@@ -123,6 +123,33 @@ class GitHostTest {
         assertEquals(""""gitlab"""", Json.encodeToString(GitHostKindSerializer, GitHostKind.GITLAB))
     }
 
+    @Test
+    fun linksOnAnAliasOpenOnTheGitHost() {
+        val hosts = listOf(
+            GitHost("github.com", GitHostKind.GITHUB),
+            GitHost("git.example.org", GitHostKind.GITEA, listOf("gitea-http.gitea.svc.cluster.local:3000", "ssh.git.example.org")),
+            GitHost("lab.example.org:8443", GitHostKind.GITLAB, listOf("gitlab-webservice.gitlab.svc")),
+        )
+        mapOf(
+            // An alias with a port matches the port-less page Argo CD's link is built as.
+            "https://gitea-http.gitea.svc.cluster.local/org/platform" to "https://git.example.org/org/platform",
+            "https://SSH.git.example.org/org/platform/commit/4be1d0c" to "https://git.example.org/org/platform/commit/4be1d0c",
+            "https://ssh.git.example.org" to "https://git.example.org",
+            // GitLab's commit page is under /-/, its port kept; a /-/ link is left as it is.
+            "https://gitlab-webservice.gitlab.svc/g/sub/p/commit/4be1d0c9f2a7" to "https://lab.example.org:8443/g/sub/p/-/commit/4be1d0c9f2a7",
+            "https://gitlab-webservice.gitlab.svc/g/p/-/commit/4be1d0c9f2a7" to "https://lab.example.org:8443/g/p/-/commit/4be1d0c9f2a7",
+            "https://gitlab-webservice.gitlab.svc/g/p/-/blob/main/a.yaml" to "https://lab.example.org:8443/g/p/-/blob/main/a.yaml",
+            // Already on a host, on no alias, a lookalike or not https: unchanged.
+            "https://git.example.org/org/platform" to "https://git.example.org/org/platform",
+            "https://github.com/org/platform/commit/4be1d0c" to "https://github.com/org/platform/commit/4be1d0c",
+            "https://other.example.org/org/platform" to "https://other.example.org/org/platform",
+            "https://evil.ssh.git.example.org/org/platform" to "https://evil.ssh.git.example.org/org/platform",
+            "http://ssh.git.example.org/org/platform" to "http://ssh.git.example.org/org/platform",
+            "" to "",
+        ).forEach { (url, want) -> assertEquals(url, want, gitHostWebUrl(url, hosts)) }
+        assertEquals("https://ssh.git.example.org/o/r", gitHostWebUrl("https://ssh.git.example.org/o/r", emptyList()))
+    }
+
     private fun parse(json: String): JsonObject = Json.parseToJsonElement(json).jsonObject
 
     private fun JsonObject.string(key: String): String = getValue(key).jsonPrimitive.content

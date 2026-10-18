@@ -47,7 +47,7 @@ struct SourceFileView: View {
     private var name: String { path.split(separator: "/").last.map(String.init) ?? path }
 
     private var page: URL? {
-        webURL(gitWebURL(source.webURL, kind: hosts.kind(of: source.host), ref: source.ref, path: path, dir: false))
+        hosts.browserURL(gitWebURL(source.webURL, kind: hosts.kind(of: source.host), ref: source.ref, path: path, dir: false))
     }
 
     var body: some View {

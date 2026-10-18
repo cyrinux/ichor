@@ -18,6 +18,10 @@ final class GitHostStore {
         logins = defaults.dictionary(forKey: GitHostKeys.logins) as? [String: String] ?? [:]
     }
 
+    /// A forge page to open: on the listed host when an alias names its host (see
+    /// [GitHost].webURL), nil when it is not an http(s) link.
+    func browserURL(_ link: String) -> URL? { webURL(hosts.webURL(link)) }
+
     /// Whether a token is saved for the host `host` names, by its own name or an alias.
     func hasToken(_ host: String) -> Bool { token(baseHost(host)) != nil }
 

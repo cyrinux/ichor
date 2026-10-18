@@ -130,9 +130,10 @@ fun SourceBrowserScreen(
 @Composable
 private fun SourceHeader(src: GitSource, tree: GitTree?) {
     val context = LocalContext.current
+    val web = rememberGitWebUrl()
     val sha = src.revision.ifEmpty { tree?.sha.orEmpty() }
     val open = if (src.webURL.isNotEmpty()) {
-        Modifier.clickable(onClickLabel = stringResource(R.string.gitops_source_open_browser)) { openUrl(context, src.webURL) }
+        Modifier.clickable(onClickLabel = stringResource(R.string.gitops_source_open_browser)) { openUrl(context, web(src.webURL)) }
     } else {
         Modifier
     }
@@ -217,12 +218,13 @@ private fun EntryRow(entry: GitEntry, onClick: () -> Unit) {
 @Composable
 private fun NotBrowsable(src: GitSource) {
     val context = LocalContext.current
+    val web = rememberGitWebUrl()
     val text = if (src.isChart) {
         stringResource(R.string.gitops_source_chart, src.chart.ifEmpty { src.repoURL }, src.tracked)
     } else {
         stringResource(R.string.gitops_source_not_browsable)
     }
     EmptyState(Icons.Outlined.FolderOpen, text) {
-        if (src.webURL.isNotEmpty()) OpenInBrowserButton { openUrl(context, src.webURL) }
+        if (src.webURL.isNotEmpty()) OpenInBrowserButton { openUrl(context, web(src.webURL)) }
     }
 }
