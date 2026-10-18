@@ -5511,6 +5511,20 @@
     <string name="plugin_partial">Nur die ersten Objekte wurden gelesen: die Zahlen sind Mindestwerte.</string>
     <string name="plugin_not_detected">In diesem Cluster nicht gefunden.</string>
     <string name="plugin_empty">Nichts anzuzeigen.</string>
-    <string name="plugin_action_unavailable">In dieser Version noch nicht verfügbar.</string>
     <string name="plugin_action_not_allowed">Deine Zugangsdaten erlauben das nicht.</string>
+    <string name="plugin_action_disabled">Für dieses Objekt gerade nicht verfügbar.</string>
+    <string name="plugin_action_confirm_title">%1$s für %2$s?</string>
+    <string name="plugin_action_confirm_text">%1$s läuft auf %2$s mit deinen Zugangsdaten.</string>
+    <string name="plugin_action_done">%1$s an %2$s gesendet.</string>
+    <string name="plugin_action_refused">%1$s für %2$s abgelehnt: %3$s</string>
+    <string name="plugin_action_changed">%1$s hat sich seit der Prüfung geändert: neu geladen, versuch es noch einmal.</string>
+    <string name="plugin_action_param_refused">%1$s: Parameter %2$s abgelehnt: %3$s</string>
+    <string name="plugin_action_demo">Aktionen sind im Demo-Cluster nicht verfügbar.</string>
+    <string name="plugin_action_forbidden">%1$s für %2$s: deine Zugangsdaten erlauben das nicht.</string>
+    <string name="plugin_action_failed">%1$s für %2$s fehlgeschlagen: %3$s</string>
+    <string name="plugin_param_required">Erforderlich</string>
+    <string name="plugin_param_not_integer">Gib eine ganze Zahl ein.</string>
+    <string name="plugin_param_too_long">Höchstens 1.024 Bytes.</string>
+    <string name="plugin_param_pick">Wähle einen der Werte.</string>
+    <string name="plugin_param_unsupported">Die App kann diesen Wert nicht ausfüllen.</string>
 </resources>

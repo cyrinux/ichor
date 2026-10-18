@@ -5520,6 +5520,20 @@
     <string name="plugin_partial">Seuls les premiers objets ont été lus : les nombres sont des minimums.</string>
     <string name="plugin_not_detected">Introuvable sur ce cluster.</string>
     <string name="plugin_empty">Rien à afficher.</string>
-    <string name="plugin_action_unavailable">Pas encore disponible dans cette version.</string>
     <string name="plugin_action_not_allowed">Vos identifiants ne le permettent pas.</string>
+    <string name="plugin_action_disabled">Indisponible pour cet objet pour le moment.</string>
+    <string name="plugin_action_confirm_title">%1$s sur %2$s ?</string>
+    <string name="plugin_action_confirm_text">%1$s s\'exécute sur %2$s avec vos identifiants.</string>
+    <string name="plugin_action_done">%1$s envoyé à %2$s.</string>
+    <string name="plugin_action_refused">%1$s refusé sur %2$s : %3$s</string>
+    <string name="plugin_action_changed">%1$s a changé depuis la vérification : rechargé, réessayez.</string>
+    <string name="plugin_action_param_refused">%1$s : paramètre %2$s refusé : %3$s</string>
+    <string name="plugin_action_demo">Les actions sont indisponibles dans le cluster de démo.</string>
+    <string name="plugin_action_forbidden">%1$s sur %2$s : vos identifiants ne le permettent pas.</string>
+    <string name="plugin_action_failed">%1$s a échoué sur %2$s : %3$s</string>
+    <string name="plugin_param_required">Obligatoire</string>
+    <string name="plugin_param_not_integer">Saisissez un nombre entier.</string>
+    <string name="plugin_param_too_long">1 024 octets au maximum.</string>
+    <string name="plugin_param_pick">Choisissez l\'une des valeurs.</string>
+    <string name="plugin_param_unsupported">L\'app ne sait pas remplir cette valeur.</string>
 </resources>

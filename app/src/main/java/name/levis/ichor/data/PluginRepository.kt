@@ -16,8 +16,8 @@ fun pluginDataKey(pluginId: String, scope: String, locale: String) = "plugin|$pl
 
 /**
  * The CRD plugins (docs/plugins.md): which ones the cluster runs, and each one's render tree,
- * resolved and translated by the Go core. In the demo context Go renders the plugins' samples.
- * Actions (KubePluginAction) come with the actions step: there is no call for them yet.
+ * resolved and translated by the Go core, and their actions. In the demo context Go renders the
+ * plugins' samples and refuses every action.
  */
 class PluginRepository(go: GoCall) : GoRepository(go) {
     /**
@@ -38,5 +38,15 @@ class PluginRepository(go: GoCall) : GoRepository(go) {
     /** The built-in plugins and the resources each one reads (no cluster call). */
     suspend fun catalog(): PluginCatalog = go.remember(PLUGIN_CATALOG) { last ->
         last()?.value ?: go.kube { _, _, _ -> TalosJson.decodeFromString(PluginCatalog.serializer(), Ichorgo.pluginCatalog()) }
+    }
+
+    /**
+     * Runs action [actionId] of plugin [pluginId] on the object [namespace]/[name] ("" for a
+     * cluster-scoped one) with [paramsJson], a JSON object of its params ("" for none). Go reads
+     * the object first and refuses when the action does not apply to it any more; the params
+     * go to the audit log only, never to this app's logs. Nothing is cached.
+     */
+    suspend fun action(pluginId: String, actionId: String, namespace: String, name: String, paramsJson: String) {
+        go.kube { cfg, ctx, server -> Ichorgo.kubePluginAction(cfg, ctx, server, pluginId, actionId, namespace, name, paramsJson) }
     }
 }

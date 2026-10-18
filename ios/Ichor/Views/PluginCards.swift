@@ -78,7 +78,7 @@ struct PluginRowView: View {
             // A DisclosureGroup: VoiceOver says whether it is expanded.
             DisclosureGroup(isExpanded: $expanded) {
                 ForEach(Array(row.detail.enumerated()), id: \.offset) { _, section in
-                    PluginSectionView(section: section, kindOf: kindOf)
+                    PluginSectionView(section: section, kindOf: kindOf, target: row.ref)
                 }
                 if let extra { extra }
             } label: {
@@ -121,6 +121,8 @@ struct PluginRowView: View {
 struct PluginSectionView: View {
     let section: PluginSection
     let kindOf: (PluginRef) -> String
+    /// The row's object, which its action buttons run on.
+    var target: PluginRef?
 
     var body: some View {
         switch section {
@@ -159,7 +161,7 @@ struct PluginSectionView: View {
                 .textSelection(.enabled)
         case .actions(let items):
             ForEach(Array(items.enumerated()), id: \.offset) { _, action in
-                PluginActionButton(action: action)
+                PluginActionButton(action: action, target: target)
             }
         case .unknown:
             EmptyView()
@@ -274,29 +276,5 @@ private struct PluginTableCell: View {
         .padding(.vertical, 3)
         .background(Color(.tertiarySystemFill), in: Capsule())
         .accessibilityElement(children: .combine)
-    }
-}
-
-/// A plugin's button. Running a plugin action needs the actions step of the Go core
-/// (KubePluginAction), not in this build: every button stays off, with the plugin's reason
-/// when it gives one, else why.
-private struct PluginActionButton: View {
-    let action: PluginActionItem
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Button {} label: { Text(verbatim: action.label) }
-                .buttonStyle(.bordered)
-                .disabled(true)
-            Text(note).font(.caption).foregroundStyle(.secondary)
-        }
-    }
-
-    private var note: String {
-        switch action.note {
-        case .reason(let reason): reason
-        case .notAllowed: String(localized: "Your credentials may not do this.")
-        case .unavailable: String(localized: "Not available in this version yet.")
-        }
     }
 }

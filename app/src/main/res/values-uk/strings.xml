@@ -4669,7 +4669,7 @@
     <string name="alerts_silence_hours">Години</string>
     <string name="alerts_silence_hours_hint">Від 1 до 720 годин (30 днів)</string>
     <string name="alerts_silence_comment">Коментар</string>
-    <string name="alerts_silence_comment_hint">Обов\'язково: поясни чому, для тих, хто побачить заглушення.</string>
+    <string name="alerts_silence_comment_hint">Обов’язково: поясни чому, для тих, хто побачить заглушення.</string>
     <string name="alerts_expire_title">Завершити це заглушення?</string>
     <string name="alerts_expire_text">Сповіщення, які воно глушить, знову надсилатимуться: %1$s</string>
     <string name="alerts_expire">Завершити</string>
@@ -5540,7 +5540,7 @@
         <item quantity="one">%1$d об\'єкт</item>
         <item quantity="few">%1$d об\'єкти</item>
         <item quantity="many">%1$d об\'єктів</item>
-        <item quantity="other">%1$d об\'єкта</item>
+        <item quantity="other">%1$d об’єкта</item>
     </plurals>
     <plurals name="velero_restore_volumes">
         <item quantity="one">%1$d знімок тому</item>
@@ -5549,7 +5549,7 @@
         <item quantity="other">%1$d знімка томів</item>
     </plurals>
     <plurals name="velero_restore_progress">
-        <item quantity="one">%1$d з %2$d об\'єкта</item>
+        <item quantity="one">%1$d з %2$d об’єкта</item>
         <item quantity="few">%1$d з %2$d об\'єктів</item>
         <item quantity="many">%1$d з %2$d об\'єктів</item>
         <item quantity="other">%1$d з %2$d об\'єктів</item>
@@ -5785,6 +5785,20 @@
     <string name="plugin_partial">Прочитано лише перші об’єкти: кількості є мінімальними.</string>
     <string name="plugin_not_detected">Не знайдено в цьому кластері.</string>
     <string name="plugin_empty">Нічого показати.</string>
-    <string name="plugin_action_unavailable">У цій версії ще недоступно.</string>
     <string name="plugin_action_not_allowed">Ваші облікові дані цього не дозволяють.</string>
+    <string name="plugin_action_disabled">Зараз недоступно для цього об’єкта.</string>
+    <string name="plugin_action_confirm_title">%1$s для %2$s?</string>
+    <string name="plugin_action_confirm_text">%1$s виконується для %2$s з вашими обліковими даними.</string>
+    <string name="plugin_action_done">%1$s надіслано до %2$s.</string>
+    <string name="plugin_action_refused">%1$s відхилено для %2$s: %3$s</string>
+    <string name="plugin_action_changed">%1$s змінився після перевірки: перезавантажено, спробуйте ще раз.</string>
+    <string name="plugin_action_param_refused">%1$s: параметр %2$s відхилено: %3$s</string>
+    <string name="plugin_action_demo">Дії недоступні в демонстраційному кластері.</string>
+    <string name="plugin_action_forbidden">%1$s для %2$s: ваші облікові дані цього не дозволяють.</string>
+    <string name="plugin_action_failed">%1$s не вдалося для %2$s: %3$s</string>
+    <string name="plugin_param_required">Обов’язково</string>
+    <string name="plugin_param_not_integer">Введіть ціле число.</string>
+    <string name="plugin_param_too_long">Не більше 1024 байтів.</string>
+    <string name="plugin_param_pick">Виберіть одне зі значень.</string>
+    <string name="plugin_param_unsupported">Застосунок не може заповнити це значення.</string>
 </resources>

@@ -8,6 +8,7 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -223,7 +224,7 @@ data class PluginAction(
     /** none, plain or typedName. */
     val confirm: String = "",
     val disabledReason: String = "",
-    /** The can-I answer; null until the actions step sets it. */
+    /** The can-I answer; null when unknown (the API server still decides). */
     val allowed: Boolean? = null,
     val params: List<PluginParam> = emptyList(),
 ) {
@@ -238,6 +239,8 @@ data class PluginParam(
     /** string, int, bool or enum. */
     val type: String = "",
     val values: List<String> = emptyList(),
+    /** The value used when none is given, of the param's type; null: the param is required. */
+    val default: JsonElement? = null,
 )
 
 @Serializable

@@ -143,7 +143,7 @@ final class PluginTests: XCTestCase {
         XCTAssertEqual(tree.summary.badges.map(\.text), ["1 asleep", "1 warnings"])
     }
 
-    func testActionsStayOffWithTheirReason() throws {
+    func testActionsOnUnlessOffWithTheirReason() throws {
         let tree = try golden("kube-green-cluster")
         let actions = tree.cards[0].rows.map { row -> PluginActionItem? in
             for section in row.detail { if case .actions(let items) = section { return items.first } }
@@ -152,9 +152,10 @@ final class PluginTests: XCTestCase {
         let wake = try XCTUnwrap(actions[0])
         XCTAssertEqual(wake.id, "wakeNow")
         XCTAssertEqual(wake.confirm, "plain")
+        XCTAssertEqual(wake.confirmation, .plain)
         XCTAssertTrue(wake.usable)
-        // No KubePluginAction in this build: an enabled action is still off, said as such.
-        XCTAssertEqual(wake.note, .unavailable)
+        // On, with nothing said under it.
+        XCTAssertNil(wake.note)
         let awake = try XCTUnwrap(actions[1])
         XCTAssertFalse(awake.usable)
         XCTAssertEqual(awake.note, .reason("not asleep"))
