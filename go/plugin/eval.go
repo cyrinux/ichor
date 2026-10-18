@@ -33,6 +33,8 @@ type object struct {
 	health  string
 	reason  string
 	message string
+	// rule is the 1-based index of the health rule that matched, 0 when none did (Lint).
+	rule int
 }
 
 // renderer is one Render: the objects by resource, the data services computed so far, and
@@ -125,7 +127,7 @@ func (r *renderer) evalHealth(o *object) {
 			continue
 		}
 
-		o.health, o.reason = rule.Health, rule.Reason
+		o.health, o.reason, o.rule = rule.Health, rule.Reason, i+1
 		o.message = r.template(where+".message", rule.Message, env)
 
 		return

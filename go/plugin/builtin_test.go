@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"regexp"
 	"slices"
 	"testing"
 )
@@ -53,84 +52,5 @@ func TestBuiltinsTranslated(t *testing.T) {
 	}
 }
 
-var (
-	quoted = regexp.MustCompile(`"([^"\\]*)"`)
-	// templateHole is a {{ … }} of a template: what is left outside them is words to translate.
-	templateHole = regexp.MustCompile(`\{\{[^}]*\}\}`)
-	letter       = regexp.MustCompile(`\pL`)
-)
-
-// translatableTexts are the labels, titles and messages the render passes through i18n, and the
-// string literals of the row status texts.
-func translatableTexts(p *Plugin) []string {
-	var out []string
-
-	add := func(s string) {
-		if s != "" && letter.MatchString(templateHole.ReplaceAllString(s, "")) && !slices.Contains(out, s) {
-			out = append(out, s)
-		}
-	}
-
-	addItems := func(items []Item) {
-		for _, it := range items {
-			add(it.Label)
-		}
-	}
-
-	for _, card := range p.Cards {
-		if card.Title != nil {
-			add(card.Title.One)
-			add(card.Title.Other)
-		}
-
-		add(card.Empty)
-		addItems(card.Badges)
-
-		if card.Row == nil {
-			continue
-		}
-
-		if card.Row.Status != nil {
-			for _, m := range quoted.FindAllStringSubmatch(card.Row.Status.Text.Src, -1) {
-				add(m[1])
-			}
-		}
-
-		for _, s := range card.Row.Detail {
-			add(s.Label)
-			addItems(s.Items)
-
-			if s.Type == "text" {
-				add(s.Text.Src)
-			}
-
-			for _, col := range s.Columns {
-				add(col.Label)
-			}
-		}
-	}
-
-	for _, rules := range p.Health {
-		for _, r := range rules {
-			add(r.Message.Src)
-		}
-	}
-
-	for _, a := range p.Actions {
-		add(a.Label)
-		add(a.DisabledReason.Src)
-
-		for _, prm := range a.Params {
-			add(prm.Label)
-		}
-	}
-
-	for _, f := range p.Findings {
-		add(f.Title.Src)
-		add(f.Detail.Src)
-	}
-
-	slices.Sort(out)
-
-	return out
-}
+// translatableTexts are the distinct texts the render passes through i18n (see labelRefs).
+func translatableTexts(p *Plugin) []string { return uniqueTexts(labelRefs(p)) }

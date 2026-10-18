@@ -57,6 +57,8 @@ func readPluginDetect(ctx context.Context, k *kubeClient, hints hintSet) (plugin
 		return pluginDetectList{}, err
 	}
 
+	probe.allowReveal = true // the catalog's plugins are installed
+
 	items := make([]pluginDetectItem, len(plugins))
 
 	var wg sync.WaitGroup
@@ -114,14 +116,37 @@ func KubePluginData(configYAML, contextName, kubeServer, pluginID, scope, locale
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
-	scope = privacy.reveal(strings.TrimSpace(scope))
-
-	if err := validateNamespace(scope); err != nil {
-		return "", err
-	}
 
 	c, err := findPlugin(strings.TrimSpace(pluginID))
 	if err != nil {
+		return "", err
+	}
+
+	return kubePluginTree(configYAML, contextName, kubeServer, c, scope, locale, true)
+}
+
+// KubePluginPreview is KubePluginData for a plugin file that is not installed (the probe's
+// plugin-render FILE, and an import screen's preview): pluginYAML is loaded, validated and
+// compiled first, and a plugin that does not compile is an error with its file:line problems.
+// A Secret's values stay masked whatever its reveal says: the plugin is not installed.
+func KubePluginPreview(configYAML, contextName, kubeServer, pluginYAML, scope, locale string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName = unmaskContext(configYAML, contextName)
+
+	c, err := plugin.CompileSource("plugin.yaml", []byte(pluginYAML))
+	if err != nil {
+		return "", err
+	}
+
+	return kubePluginTree(configYAML, contextName, kubeServer, c, scope, locale, false)
+}
+
+// kubePluginTree renders c; contextName is already unmasked. allowReveal: see pluginProbe.
+func kubePluginTree(configYAML, contextName, kubeServer string, c *plugin.Compiled, scope, locale string, allowReveal bool) (string, error) {
+	scope = privacy.reveal(strings.TrimSpace(scope))
+
+	if err := validateNamespace(scope); err != nil {
 		return "", err
 	}
 
@@ -132,7 +157,7 @@ func KubePluginData(configYAML, contextName, kubeServer, pluginID, scope, locale
 	}
 
 	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demo, func(ctx context.Context, k *kubeClient) (plugin.Tree, error) {
-		in, err := fetchPluginInput(ctx, k, c, scope)
+		in, err := fetchPluginInput(ctx, k, c, scope, allowReveal)
 		if err != nil {
 			return plugin.Tree{}, err
 		}
