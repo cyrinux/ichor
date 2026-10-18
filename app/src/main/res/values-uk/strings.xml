@@ -1860,7 +1860,7 @@
     <string name="git_host_remove">Вилучити</string>
     <string name="git_host_remove_title">Вилучити %1$s?</string>
     <string name="git_host_remove_text">Його токен буде видалено з цього телефона.</string>
-    <string name="git_hosts_explainer">Надавайте лише те, що потрібно Ichor. Детальний токен GitHub: Contents і Pull requests, читання й запис, на репозиторіях, з яких ви розгортаєте. GitLab: api, або read_repository і write_repository. Gitea: repository читання й запис, і issue запис. Токен залишається на цьому телефоні, зашифрований, і надсилається лише на свій хост.</string>
+    <string name="git_hosts_explainer">Надавайте лише те, що потрібно Ichor. Детальний токен GitHub: Contents і Pull requests, читання й запис, на репозиторіях, з яких ви розгортаєте. GitLab: api, або read_repository і write_repository. Gitea/Forgejo: repository читання й запис, і issue запис. Токен залишається на цьому телефоні, зашифрований, і надсилається лише на свій хост.</string>
     <string name="git_host_field_aliases">Також доступний як</string>
     <string name="git_host_aliases_hint">Інші імена, якими Argo CD чи Flux звертаються до цього сервера, як-от SSH- або внутрішньокластерна адреса. Розділяйте комами. Токен і далі надсилається лише на хост вище.</string>
     <string name="git_host_aliases_line">Також %1$s</string>

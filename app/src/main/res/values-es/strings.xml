@@ -1759,7 +1759,7 @@
     <string name="git_host_remove">Quitar</string>
     <string name="git_host_remove_title">¿Quitar %1$s?</string>
     <string name="git_host_remove_text">Su token se elimina de este teléfono.</string>
-    <string name="git_hosts_explainer">Concede solo lo que Ichor necesita. Token detallado de GitHub: Contents y Pull requests, lectura y escritura, en los repositorios desde los que despliegas. GitLab: api, o read_repository y write_repository. Gitea: repository lectura y escritura, e issue escritura. El token se queda en este teléfono, cifrado, y solo se envía a su propio host.</string>
+    <string name="git_hosts_explainer">Concede solo lo que Ichor necesita. Token detallado de GitHub: Contents y Pull requests, lectura y escritura, en los repositorios desde los que despliegas. GitLab: api, o read_repository y write_repository. Gitea/Forgejo: repository lectura y escritura, e issue escritura. El token se queda en este teléfono, cifrado, y solo se envía a su propio host.</string>
     <string name="git_host_field_aliases">También accesible como</string>
     <string name="git_host_aliases_hint">Otros nombres que Argo CD o Flux usan para este servidor, como una dirección SSH o interna del clúster. Sepáralos con comas. El token solo se envía al host de arriba.</string>
     <string name="git_host_aliases_line">También %1$s</string>

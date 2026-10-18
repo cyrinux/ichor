@@ -16,7 +16,7 @@ enum class GitHostKind(val wire: String, val label: String?) {
     AUTO("auto", null),
     GITHUB("github", "GitHub"),
     GITLAB("gitlab", "GitLab"),
-    GITEA("gitea", "Gitea"),
+    GITEA("gitea", "Gitea/Forgejo"),
     ;
 
     companion object {

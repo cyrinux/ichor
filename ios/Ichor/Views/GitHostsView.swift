@@ -1,7 +1,7 @@
 import SwiftUI
 import IchorCore
 
-/// Settings → Git hosts: a token per host (github.com, a GitLab or Gitea instance) to read and
+/// Settings → Git hosts: a token per host (github.com, a GitLab, Gitea or Forgejo instance) to read and
 /// change the repositories Argo CD and Flux deploy from. Tap a host to change its kind or token,
 /// swipe to remove it. The tokens are never shown again once saved.
 struct GitHostsView: View {
@@ -116,7 +116,7 @@ struct GitHostKindLabel: View {
         case .auto: Text("Auto")
         case .github: Text(verbatim: "GitHub")
         case .gitlab: Text(verbatim: "GitLab")
-        case .gitea: Text(verbatim: "Gitea")
+        case .gitea: Text(verbatim: "Gitea/Forgejo")
         }
     }
 }
