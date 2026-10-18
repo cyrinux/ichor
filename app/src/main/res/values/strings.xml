@@ -301,6 +301,7 @@
     <string name="power_controlplane_warning">Control-plane node: it leaves etcd while down. Make sure the other members are healthy, or the cluster can lose quorum.</string>
     <string name="power_shutdown_stays_off">It stays off until someone powers it on (Wake-on-LAN, IPMI or physically).</string>
     <string name="power_type_to_confirm">Type %1$s to confirm:</string>
+    <string name="power_type_end_to_confirm">Type %1$s, the end of %2$s, to confirm:</string>
     <string name="power_mode_label">Mode (talosctl reboot -m)</string>
     <string name="power_force_label">Force (--force)</string>
     <string name="power_force_desc">Skip the Kubernetes cordon/drain, e.g. when the Kubernetes API is down. Pods and services are still stopped.</string>

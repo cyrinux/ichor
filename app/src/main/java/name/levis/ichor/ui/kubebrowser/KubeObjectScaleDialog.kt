@@ -39,6 +39,7 @@ import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.node.TypedConfirmPrompt
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
@@ -78,7 +79,7 @@ fun KubeObjectScaleDialog(
                     is UiState.Loaded -> ScaleStepper(ref, s.data, target, scale.applying, onTarget)
                 }
                 if (toZero) {
-                    Text(stringResource(R.string.power_type_to_confirm, ref.name), style = MaterialTheme.typography.bodyMedium)
+                    TypedConfirmPrompt(ref.name)
                     OutlinedTextField(
                         value = typed,
                         onValueChange = { typed = it },

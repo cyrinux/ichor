@@ -41,7 +41,7 @@ struct ScaledObjectPauseSheet: View {
                         Text(AutoscaleText.pauseZero(row.target.label.isEmpty ? row.name : row.target.label))
                             .foregroundStyle(.statusWarn)
                     }
-                    Section("Type \(row.name) to confirm") {
+                    Section(typedConfirmationPrompt(row.name)) {
                         TextField("Name", text: $typed, prompt: Text(verbatim: row.name))
                             .font(.body.monospaced())
                             .autocorrectionDisabled()

@@ -299,6 +299,7 @@
     <string name="power_controlplane_warning">Control-Plane-Knoten: Er verlässt etcd, solange er nicht läuft. Stelle sicher, dass die anderen Mitglieder fehlerfrei sind, sonst kann der Cluster das Quorum verlieren.</string>
     <string name="power_shutdown_stays_off">Er bleibt aus, bis ihn jemand einschaltet (Wake-on-LAN, IPMI oder physisch).</string>
     <string name="power_type_to_confirm">Zum Bestätigen %1$s eingeben:</string>
+    <string name="power_type_end_to_confirm">Zum Bestätigen %1$s eingeben, das Ende von %2$s:</string>
     <string name="power_mode_label">Modus (talosctl reboot -m)</string>
     <string name="power_force_label">Erzwingen (--force)</string>
     <string name="power_force_desc">Kubernetes-Cordon/-Drain überspringen, z. B. wenn die Kubernetes-API nicht erreichbar ist. Pods und Dienste werden trotzdem gestoppt.</string>

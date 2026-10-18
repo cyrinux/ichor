@@ -106,7 +106,7 @@ struct KubeObjectDeleteSheet: View {
                 propagationDescription(propagation)
             }
             if preview.needsTypedName {
-                Section("Type \(name) to confirm") {
+                Section(typedConfirmationPrompt(name)) {
                     TextField("Name", text: $typed, prompt: Text(verbatim: name))
                         .font(.body.monospaced())
                         .autocorrectionDisabled()

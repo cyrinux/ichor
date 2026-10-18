@@ -335,6 +335,7 @@
     <string name="power_controlplane_warning">Вузол панелі керування: поки він вимкнений, він не бере участі в etcd. Переконайтеся, що інші учасники справні, інакше кластер може втратити кворум.</string>
     <string name="power_shutdown_stays_off">Вузол залишатиметься вимкненим, доки його не ввімкнуть (Wake-on-LAN, IPMI або фізично).</string>
     <string name="power_type_to_confirm">Введіть %1$s для підтвердження:</string>
+    <string name="power_type_end_to_confirm">Введіть %1$s, кінець %2$s, для підтвердження:</string>
     <string name="power_mode_label">Режим (talosctl reboot -m)</string>
     <string name="power_force_label">Примусово (--force)</string>
     <string name="power_force_desc">Пропустити cordon/drain у Kubernetes, наприклад, коли API Kubernetes недоступний. Поди й сервіси все одно зупиняються.</string>

@@ -129,9 +129,17 @@ public func etcdRemovalNode(memberId: String, statuses: [EtcdNodeStatus]) -> Str
 }
 
 /// Whether what the user typed confirms a risky action on `token` (a hostname, or a member
-/// id when there is no hostname). A blank token confirms nothing: an empty field must never
-/// be enough.
+/// id when there is no hostname): the whole token or, when it is long, its
+/// `typedConfirmationCode`. A blank token confirms nothing: an empty field must never be enough.
 public func typedConfirmationMatches(_ typed: String, token: String) -> Bool {
     let wanted = token.trimmingCharacters(in: .whitespaces)
-    return !wanted.isEmpty && typed.trimmingCharacters(in: .whitespaces) == wanted
+    let given = typed.trimmingCharacters(in: .whitespaces)
+    return !wanted.isEmpty && (given == wanted || given == typedConfirmationCode(token))
+}
+
+/// What the user types to confirm an action on `token`: the name itself, or only its last 5
+/// characters past 12, where typing it all is a chore (a Longhorn `pvc-<uuid>` volume).
+public func typedConfirmationCode(_ token: String) -> String {
+    let name = token.trimmingCharacters(in: .whitespaces)
+    return name.count > 12 ? String(name.suffix(5)) : name
 }
