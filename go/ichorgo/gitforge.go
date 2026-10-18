@@ -313,7 +313,7 @@ func parseGitForgeHost(hostJSON string) (gitForgeHost, error) {
 	switch h.Kind {
 	case gitForgeGitHub, gitForgeGitLab, gitForgeGitea:
 	default:
-		return gitForgeHost{}, fmt.Errorf("unknown Git host kind %q: pick GitHub, GitLab or Gitea in Settings", h.Kind)
+		return gitForgeHost{}, fmt.Errorf("unknown Git host kind %q: pick GitHub, GitLab or Gitea/Forgejo in Settings", h.Kind)
 	}
 
 	return h, nil
@@ -355,7 +355,7 @@ func gitForgeKindOf(host string) (string, error) {
 		return gitForgeGitea, nil
 	}
 
-	return "", fmt.Errorf("unknown Git host %s: pick GitHub, GitLab or Gitea in Settings", host)
+	return "", fmt.Errorf("unknown Git host %s: pick GitHub, GitLab or Gitea/Forgejo in Settings", host)
 }
 
 // gitForgeRepo splits a repository URL (https, ssh or scp-like, with or without .git) into
