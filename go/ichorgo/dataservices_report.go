@@ -28,7 +28,7 @@ func dataServiceSections(ds dataServices) []dsSection {
 	adapters := []func(dataServices) (dsSection, bool){
 		sealedSecretsSection, snapshotsSection, backupJobsSection, longhornSection, garageSection,
 		cnpgSection, dragonflySection, mariadbSection, perconaSection, certManagerSection,
-		veleroSection, externalDNSSection, kubeGreenSection, cephSection, castAISection,
+		veleroSection, externalDNSSection, cephSection, castAISection,
 	}
 
 	var out []dsSection
@@ -426,20 +426,6 @@ func externalDNSSection(ds dataServices) (dsSection, bool) {
 	}
 
 	return sec, true
-}
-
-func kubeGreenSection(ds dataServices) (dsSection, bool) {
-	s := ds.KubeGreen
-	if s == nil {
-		return dsSection{}, false
-	}
-
-	items := make([]dsIssue, 0, len(s.SleepInfos))
-	for _, si := range s.SleepInfos {
-		items = append(items, dsIssue{health: si.Health, key: nsName(si.Namespace, si.Name), detail: details(strings.Join(si.Reasons, ", "))})
-	}
-
-	return newDSSection("kube-green", "SleepInfos", s.Error, items), true
 }
 
 func cephSection(ds dataServices) (dsSection, bool) {

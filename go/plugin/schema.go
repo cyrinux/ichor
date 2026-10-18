@@ -84,6 +84,8 @@ type Resource struct {
 	Watch bool `yaml:"watch,omitempty" json:"watch,omitempty"`
 	// Reveal shows a Secret's data; it stays masked otherwise.
 	Reveal bool `yaml:"reveal,omitempty" json:"reveal,omitempty"`
+	// Optional is a resource the plugin does without (a decorative relation): forbidden or not served, it reads as empty with no error.
+	Optional bool `yaml:"optional,omitempty" json:"optional,omitempty"`
 	// Source is native:<id> to read through a Go reader instead of a list call.
 	Source string `yaml:"source,omitempty" json:"source,omitempty" schema:"pattern=^native:[A-Za-z0-9_-]+$"`
 }

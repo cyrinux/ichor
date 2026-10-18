@@ -516,6 +516,10 @@
           ],
           "description": "List narrows and pages the list call."
         },
+        "optional": {
+          "description": "Optional is a resource the plugin does without (a decorative relation): forbidden or not served, it reads as empty with no error.",
+          "type": "boolean"
+        },
         "resource": {
           "description": "Resource is the plural resource name (sleepinfos).",
           "type": "string"

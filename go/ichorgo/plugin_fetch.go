@@ -50,28 +50,36 @@ func detectsBy(plugins []*plugin.Compiled, match func(plugin.Detect) bool) bool 
 
 // detect is the first of the plugin's detections the cluster matches.
 func (p *pluginProbe) detect(ctx context.Context, k *kubeClient, c *plugin.Compiled) plugin.Detection {
+	f := p.detection(ctx, k, c)
+
+	return plugin.Detection{Active: f.via != "", Via: f.via}
+}
+
+// detection is detect with what Settings shows of it: the version of the matching group, or
+// where the matching pods or Services run.
+func (p *pluginProbe) detection(ctx context.Context, k *kubeClient, c *plugin.Compiled) detection {
 	for _, d := range c.Plugin.Detect {
 		switch {
 		case d.Group != "":
 			if version, ok := p.groups[d.Group]; ok && (d.Resource == "" || p.serves(ctx, k, d.Group, version, d.Resource)) {
-				return plugin.Detection{Active: true, Via: detectedByAPI}
+				return detection{via: detectedByAPI, version: version}
 			}
 		case d.Pods != "":
-			if _, ok := p.apps[d.Pods]; ok {
-				return plugin.Detection{Active: true, Via: detectedByPods}
+			if f, ok := p.apps[d.Pods]; ok {
+				return f
 			}
 
 			if p.apps == nil && p.hints[d.Pods] {
-				return plugin.Detection{Active: true, Via: detectedByInventory}
+				return detection{via: detectedByInventory}
 			}
 		case d.Service != "":
-			if _, ok := p.services[d.Service]; ok {
-				return plugin.Detection{Active: true, Via: detectedByServices}
+			if f, ok := p.services[d.Service]; ok {
+				return f
 			}
 		}
 	}
 
-	return plugin.Detection{}
+	return detection{}
 }
 
 // serves asks the group version for its resources, once per resource.
@@ -93,6 +101,9 @@ func (p *pluginProbe) serves(ctx context.Context, k *kubeClient, group, version,
 	return served
 }
 
+// errPluginNotServed is a resource of a group the cluster does not serve.
+var errPluginNotServed = errors.New("the cluster does not serve")
+
 // fetchPluginInput detects c on the cluster and, when it is there, lists its resources in
 // scope (a namespace, "" for all; cluster-scoped resources ignore it).
 func fetchPluginInput(ctx context.Context, k *kubeClient, c *plugin.Compiled, scope string) (plugin.Input, error) {
@@ -105,7 +116,8 @@ func fetchPluginInput(ctx context.Context, k *kubeClient, c *plugin.Compiled, sc
 }
 
 // fetch lists every resource of c at once. A resource that cannot be read (forbidden, not
-// served) is an entry of the input's errors: the plugin still renders what it could read.
+// served) is an entry of the input's errors, unless it is optional: the plugin still renders
+// what it could read.
 func (p *pluginProbe) fetch(ctx context.Context, k *kubeClient, c *plugin.Compiled, scope string) plugin.Input {
 	in := plugin.Input{
 		Objects: map[string][]map[string]any{}, APIVersions: map[string]string{},
@@ -145,6 +157,8 @@ func (p *pluginProbe) fetch(ctx context.Context, k *kubeClient, c *plugin.Compil
 			in.Objects[key] = objs
 
 			switch {
+			case err != nil && decl.Optional && (isForbidden(err) || isNotFound(err) || errors.Is(err, errPluginNotServed)):
+				// An optional resource the account may not read, or the cluster does not serve: nothing to say.
 			case err != nil:
 				in.Errors = append(in.Errors, plugin.TreeError{Resource: resourceLabel(decl), Message: kubeError(err).Error()})
 			case note != "":
@@ -189,7 +203,7 @@ var errPluginListFull = errors.New("plugin list holds its limit")
 // the resource reveals them.
 func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource, version, scope string) ([]map[string]any, string, error) {
 	if version == "" {
-		return nil, "", fmt.Errorf("the cluster does not serve %s", decl.Group)
+		return nil, "", fmt.Errorf("%w %s", errPluginNotServed, decl.Group)
 	}
 
 	ref, err := newResourceRef(decl.Group, version, decl.Resource)

@@ -168,7 +168,7 @@ func TestIntegrationsDemoSorted(t *testing.T) {
 
 	for _, fam := range d.Families {
 		for _, g := range fam.Groups {
-			if integrationSupported[g.Name] || isBuiltinGroup(g.Name) || integrationFamilyOf(g.Name) != fam.ID {
+			if integrationSupported()[g.Name] || isBuiltinGroup(g.Name) || integrationFamilyOf(g.Name) != fam.ID {
 				t.Errorf("demo group %s in %s", g.Name, fam.ID)
 			}
 		}

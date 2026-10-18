@@ -1,7 +1,6 @@
 package ichorgo
 
 import (
-	"context"
 	"fmt"
 	"slices"
 	"strings"
@@ -9,20 +8,19 @@ import (
 )
 
 // kube-green puts a namespace's Deployments, StatefulSets and CronJobs to sleep on a schedule
-// (SleepInfo, kube-green.com/v1alpha1) and wakes them up later. The reader lists every
-// SleepInfo and computes the next sleep and wake-up in the schedule's time zone; what the
-// controller did last comes from status, never from its Secret.
+// (SleepInfo, kube-green.com/v1alpha1) and wakes them up later. The Data services list is the
+// built-in plugin go/plugin/builtin/kube-green.yaml; this mapping computes the next sleep and
+// wake-up of one SleepInfo in its schedule's time zone for the workload rows
+// (KubeGreenNamespace) and the schedule edit (KubeGreenSetSchedule). What the controller did
+// last comes from status, never from its Secret. plugin_kubegreen_test.go holds the plugin
+// and this mapping to the same answers.
 
 const (
 	groupKubeGreen   = "kube-green.com"
 	kubeGreenVersion = "v1alpha1"
+	// kubeGreenGrace is how late the controller may run before its schedule is overdue.
+	kubeGreenGrace = 10 * time.Minute
 )
-
-type kubeGreenStatus struct {
-	Version    string               `json:"version"` // the controller's image tag, "" when unreadable
-	Error      string               `json:"error"`
-	SleepInfos []kubeGreenSleepInfo `json:"sleepInfos"`
-}
 
 type kubeGreenSleepInfo struct {
 	Namespace string `json:"namespace"`
@@ -94,50 +92,15 @@ type sleepInfoObject struct {
 	} `json:"status"`
 }
 
-// readKubeGreen lists every SleepInfo and reads the controller's image tag; both best
-// effort, the section carries its error.
-func readKubeGreen(ctx context.Context, k *kubeClient, now time.Time) *kubeGreenStatus {
-	var list kubeList[sleepInfoObject]
-	err := getList(ctx, k, "/apis/"+groupKubeGreen+"/"+kubeGreenVersion+"/sleepinfos", &list)
-
-	out := mapKubeGreen(list.Items, now)
-	out.Version = kubeGreenControllerVersion(ctx, k)
-	out.Error = sectionError(err)
-
-	return out
-}
-
-// kubeGreenControllerVersion is the tag of the controller Deployment's first image, ""
-// when it cannot be read (a restricted kubeconfig, or kube-green elsewhere).
-func kubeGreenControllerVersion(ctx context.Context, k *kubeClient) string {
-	var d struct {
-		Spec struct {
-			Template struct {
-				Spec struct {
-					Containers []struct {
-						Image string `json:"image"`
-					} `json:"containers"`
-				} `json:"spec"`
-			} `json:"template"`
-		} `json:"spec"`
-	}
-
-	if err := k.get(ctx, "/apis/apps/v1/namespaces/kube-green/deployments/kube-green-controller-manager", &d); err != nil ||
-		len(d.Spec.Template.Spec.Containers) == 0 {
-		return ""
-	}
-
-	return parseImageRef(d.Spec.Template.Spec.Containers[0].Image).Tag
-}
-
-func mapKubeGreen(objs []sleepInfoObject, now time.Time) *kubeGreenStatus {
-	out := &kubeGreenStatus{SleepInfos: []kubeGreenSleepInfo{}}
+// mapKubeGreen maps the SleepInfos, worst health first.
+func mapKubeGreen(objs []sleepInfoObject, now time.Time) []kubeGreenSleepInfo {
+	out := make([]kubeGreenSleepInfo, 0, len(objs))
 
 	for _, obj := range objs {
-		out.SleepInfos = append(out.SleepInfos, mapKubeGreenSleepInfo(obj, now))
+		out = append(out, mapKubeGreenSleepInfo(obj, now))
 	}
 
-	slices.SortFunc(out.SleepInfos, byHealthThenKey(func(x kubeGreenSleepInfo) (string, string) {
+	slices.SortFunc(out, byHealthThenKey(func(x kubeGreenSleepInfo) (string, string) {
 		return x.Health, x.Namespace + "/" + x.Name
 	}))
 
@@ -192,14 +155,16 @@ func mapKubeGreenSleepInfo(obj sleepInfoObject, now time.Time) kubeGreenSleepInf
 		return s
 	}
 
-	// The controller missed its last expected run (either cron): it is not running.
-	prevSleep, prevWake := kubeGreenPrevRun(sleep, true, inZone), kubeGreenPrevRun(wake, s.WakeUpAt != "", inZone)
+	// The controller missed its last run expected at least 10 minutes ago (either cron), by
+	// more than 10 minutes: it is not running. A run due a minute ago is not late yet.
+	due := inZone.Add(-kubeGreenGrace)
+	prevSleep, prevWake := kubeGreenPrevRun(sleep, true, due), kubeGreenPrevRun(wake, s.WakeUpAt != "", due)
 	expected := prevSleep
 	if prevWake.After(prevSleep) {
 		expected = prevWake
 	}
 
-	if !expected.IsZero() && time.UnixMilli(s.LastScheduleAt).Before(expected.Add(-10*time.Minute)) {
+	if !expected.IsZero() && time.UnixMilli(s.LastScheduleAt).Before(expected.Add(-kubeGreenGrace)) {
 		s.Reasons = append(s.Reasons, kubeGreenReasonOverdue)
 	}
 

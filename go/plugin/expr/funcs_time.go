@@ -13,6 +13,7 @@ var timeBuiltins = map[string]Func{
 	"age":          {Min: 1, Max: 1, Returns: KindNumber, Call: fnAge},
 	"relativeTime": {Min: 1, Max: 1, Returns: KindString, Call: fnRelativeTime},
 	"cronNext":     {Min: 1, Max: 3, Returns: KindNumber, Call: fnCronNext},
+	"cronPrev":     {Min: 1, Max: 4, Returns: KindNumber, Call: fnCronPrev},
 }
 
 // unixMilli reads an RFC 3339 timestamp; a number is already unix ms; 0 otherwise.
@@ -87,6 +88,45 @@ func fnRelativeTime(c Ctx, a []Value) (Value, error) {
 // kube-green schedules; at may also be a whole 5-field cron or a macro (@daily), then
 // weekdays is ignored. 0 when the schedule or the zone does not parse.
 func fnCronNext(c Ctx, a []Value) (Value, error) {
+	cron, loc, ok := dailyCron(a)
+	if !ok {
+		return int64(0), nil
+	}
+
+	next := cron.next(c.Now.In(loc))
+	if next.IsZero() {
+		return int64(0), nil // never runs (Feb 31)
+	}
+
+	return next.UnixMilli(), nil
+}
+
+// fnCronPrev mirrors cronNext: the last run strictly before now, or before the time of a
+// fourth argument (a timestamp or unix ms: now - 600000 is "10 minutes ago"), in unix ms; 0
+// when the schedule or the zone does not parse, or when it did not run in the 8 years before.
+func fnCronPrev(c Ctx, a []Value) (Value, error) {
+	cron, loc, ok := dailyCron(a)
+	if !ok {
+		return int64(0), nil
+	}
+
+	before := c.Now
+	if len(a) > 3 {
+		if ms := unixMilli(a[3]); ms != 0 {
+			before = time.UnixMilli(ms)
+		}
+	}
+
+	prev := cron.prev(before.In(loc))
+	if prev.IsZero() {
+		return int64(0), nil
+	}
+
+	return prev.UnixMilli(), nil
+}
+
+// dailyCron reads the arguments of cronNext and cronPrev: (at, weekdays, tz).
+func dailyCron(a []Value) (cronSchedule, *time.Location, bool) {
 	at := strings.TrimSpace(toString(a[0]))
 
 	weekdays, zone := "*", "UTC"
@@ -102,7 +142,7 @@ func fnCronNext(c Ctx, a []Value) (Value, error) {
 	if !strings.ContainsAny(at, " @") {
 		hh, mm, ok := strings.Cut(at, ":")
 		if !ok {
-			return int64(0), nil
+			return cronSchedule{}, nil, false
 		}
 
 		spec = mm + " " + hh + " * * " + weekdays
@@ -110,18 +150,13 @@ func fnCronNext(c Ctx, a []Value) (Value, error) {
 
 	cron, err := parseCronSchedule(spec)
 	if err != nil {
-		return int64(0), nil
+		return cronSchedule{}, nil, false
 	}
 
 	loc, err := time.LoadLocation(zone)
 	if err != nil {
-		return int64(0), nil
+		return cronSchedule{}, nil, false
 	}
 
-	next := cron.next(c.Now.In(loc))
-	if next.IsZero() {
-		return int64(0), nil // never runs (Feb 31)
-	}
-
-	return next.UnixMilli(), nil
+	return cron, loc, true
 }

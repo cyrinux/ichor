@@ -1,6 +1,9 @@
 package plugin
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 // The render tree is what KubePluginData returns and the apps draw (Plan §6, docs/plugins.md
 // "Render tree"): every value is resolved, every tone is a word, every label is translated.
@@ -211,11 +214,12 @@ type Heuristics interface {
 	ConditionTone(cond map[string]any) string
 }
 
-// SamplesInput is the demo input: every resource's samples, detected as demo.
-func SamplesInput(c *Compiled, locale string, h Heuristics) Input {
+// SamplesInput is the demo input: every resource's samples, detected as demo, their relative
+// times ("now-6h") resolved against now (see sampleTimes).
+func SamplesInput(c *Compiled, locale string, h Heuristics, now time.Time) Input {
 	objects := make(map[string][]map[string]any, len(c.Plugin.Samples))
 	for res, list := range c.Plugin.Samples {
-		objects[res] = list
+		objects[res] = sampleTimes(list, now)
 	}
 
 	return Input{Objects: objects, Detected: Detection{Active: true, Via: "demo"}, Locale: locale, Heuristics: h}
