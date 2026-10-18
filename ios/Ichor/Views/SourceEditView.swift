@@ -51,6 +51,8 @@ struct SourceEditView: View {
     @State private var quickContent: String?
     /// Why the quick edit was not applied: the editor stays, with the file as read.
     @State private var quickFailure: String?
+    /// The live values a keep edit left, because the file does not set them; named on the review.
+    @State private var quickSkipped: String?
 
     private var demo: Bool { model.activeSummary?.demo == true }
 
@@ -95,7 +97,8 @@ struct SourceEditView: View {
             .navigationDestination(isPresented: $reviewing) {
                 if let base {
                     SourceEditReview(source: source, path: path, app: app, base: base, edited: draft, target: target,
-                                     defaultTitle: quickTitle, onReload: reload(at:), onDone: { dismiss() })
+                                     defaultTitle: quickTitle, notice: quickTitle == nil ? nil : quickSkipped,
+                                     onReload: reload(at:), onDone: { dismiss() })
                 }
             }
             .sheet(item: $help) { request in
@@ -168,6 +171,9 @@ struct SourceEditView: View {
             }
             quickContent = result.content
             draft = result.content
+            if !result.skipped.isEmpty {
+                quickSkipped = String(localized: "Not kept, set elsewhere: \(result.skipped.joined(separator: "; "))")
+            }
             reviewing = true
         } catch {
             quickFailure = error.localizedDescription
@@ -215,6 +221,8 @@ private struct SourceEditReview: View {
     let target: String
     /// The quick edit's pull request title, nil for the Go core's.
     let defaultTitle: String?
+    /// What the quick edit left out, shown above the diff.
+    var notice: String?
     let onReload: (String) -> Void
     let onDone: () -> Void
 
@@ -225,6 +233,9 @@ private struct SourceEditReview: View {
         LoadStateView(state: state, retry: load) { diff in
             let file = diff.resources.first
             List {
+                if let notice {
+                    Section { Text(verbatim: notice).font(.caption).foregroundStyle(.secondary) }
+                }
                 if let file, file.change == .changed {
                     Section {
                         DiffLinesView(lines: file.lines)

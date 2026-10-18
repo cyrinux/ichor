@@ -36,6 +36,7 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.KubeDiffResource
+import name.levis.ichor.model.QuickEdit
 import name.levis.ichor.model.isFindableChange
 import name.levis.ichor.model.shortFluxRevision
 import name.levis.ichor.model.shortRevisions
@@ -58,6 +59,8 @@ import name.levis.ichor.ui.theme.LocalStatusColors
  * unfolded), and the unchanged ones folded. Built in the cluster with a server-side dry run:
  * nothing is written. [onOpenSource]: each object gets "Open source file" when the app has a
  * readable Git source, opening the file of source `index` that declares it at `line`.
+ * [onKeepLive]: an object changed by hand in the cluster gets "Keep in Git", opening the editor
+ * of its manifest with the live values written, reviewed, then proposed as a pull request.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +71,7 @@ fun FluxDiffScreen(
     onBack: () -> Unit,
     tool: DiffTool = DiffTool.FLUX,
     onOpenSource: ((index: Int, path: String, line: Int) -> Unit)? = null,
+    onKeepLive: ((index: Int, path: String, edit: QuickEdit) -> Unit)? = null,
     onAddToken: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
@@ -85,7 +89,7 @@ fun FluxDiffScreen(
     val generation by talos.configRepository.generation.collectAsStateWithLifecycle()
     LaunchedEffect(config?.activeContext, generation) {
         vm.load(kind, namespace, name, config?.activeContext to generation)
-        if (onOpenSource != null) finder.load(config?.activeContext to generation)
+        if (onOpenSource != null || onKeepLive != null) finder.load(config?.activeContext to generation)
     }
     val refresh = { vm.refresh(kind, namespace, name) }
     val snackbar = remember { SnackbarHostState() }
@@ -93,7 +97,8 @@ fun FluxDiffScreen(
     LaunchedEffect(outcome) {
         when (val o = outcome) {
             is SourceFindOutcome.Open -> {
-                onOpenSource?.invoke(o.index, o.path, o.line)
+                if (o.keep != null) onKeepLive?.invoke(o.index, o.path, QuickEdit.keep(o.documentIndex, o.keep))
+                else onOpenSource?.invoke(o.index, o.path, o.line)
                 finder.consumed()
             }
             is SourceFindOutcome.Message -> {
@@ -111,12 +116,14 @@ fun FluxDiffScreen(
             choose.matches,
             onPick = { m ->
                 finder.consumed()
-                onOpenSource?.invoke(choose.index, m.path, m.line)
+                if (choose.keep != null) onKeepLive?.invoke(choose.index, m.path, QuickEdit.keep(m.documentIndex, choose.keep))
+                else onOpenSource?.invoke(choose.index, m.path, m.line)
             },
             onDismiss = finder::consumed,
         )
     }
-    val find: ((KubeDiffResource) -> Unit)? = if (onOpenSource != null && sourceIndex != null) finder::find else null
+    val find: ((KubeDiffResource) -> Unit)? = if (onOpenSource != null && sourceIndex != null) ({ finder.find(it) }) else null
+    val keep: ((KubeDiffResource) -> Unit)? = if (onKeepLive != null && sourceIndex != null) ({ finder.find(it, keep = true) }) else null
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -135,7 +142,7 @@ fun FluxDiffScreen(
     ) { padding ->
         val modifier = Modifier.padding(padding)
         Loaded(state, refresh, modifier, freshness = true) { data ->
-            DiffBody(data, tool, find, searching)
+            DiffBody(data, tool, find, keep, searching)
         }
     }
 }
@@ -144,7 +151,7 @@ fun FluxDiffScreen(
 private const val UNFOLDED_AT_FIRST = 3
 
 @Composable
-private fun DiffBody(diff: FluxDiff, tool: DiffTool, onFind: ((KubeDiffResource) -> Unit)?, searching: String?) {
+private fun DiffBody(diff: FluxDiff, tool: DiffTool, onFind: ((KubeDiffResource) -> Unit)?, onKeep: ((KubeDiffResource) -> Unit)?, searching: String?) {
     val colors = LocalStatusColors.current
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val changed = remember(diff) { diff.changed }
@@ -175,6 +182,7 @@ private fun DiffBody(diff: FluxDiff, tool: DiffTool, onFind: ((KubeDiffResource)
                 open,
                 onToggle = { expanded[r.key] = !open },
                 onOpenSource = if (onFind != null && isFindableChange(r.change)) ({ onFind(r) }) else null,
+                onKeepLive = if (onKeep != null && r.liveChanges.isNotEmpty()) ({ onKeep(r) }) else null,
                 searching = searching == r.key,
             )
         }

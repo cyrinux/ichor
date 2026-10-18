@@ -77,6 +77,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             onBack = { nav.popBackStack() },
             tool = DiffTool.ARGO,
             onOpenSource = { idx, path, line -> nav.navigate(Routes.gitOpsFile(SOURCE_TOOL_ARGO, "Application", ns, name, idx, path, line)) },
+            onKeepLive = { idx, path, edit -> nav.navigate(Routes.gitOpsEdit(SOURCE_TOOL_ARGO, "Application", ns, name, idx, path, encodeQuickEdit(edit))) },
             onAddToken = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
         )
     }
@@ -124,6 +125,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             name = name,
             onBack = { nav.popBackStack() },
             onOpenSource = { idx, path, line -> nav.navigate(Routes.gitOpsFile(SOURCE_TOOL_FLUX, kind, ns, name, idx, path, line)) },
+            onKeepLive = { idx, path, edit -> nav.navigate(Routes.gitOpsEdit(SOURCE_TOOL_FLUX, kind, ns, name, idx, path, encodeQuickEdit(edit))) },
             onAddToken = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
         )
     }

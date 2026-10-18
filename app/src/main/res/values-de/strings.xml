@@ -3429,6 +3429,9 @@
     <string name="gitops_propose_not_editable">Diese Datei kann hier nicht bearbeitet werden: Öffnen Sie sie im Browser.</string>
     <string name="gitops_find_open">Quelldatei öffnen</string>
     <string name="gitops_find_searching">Datei wird gesucht…</string>
+    <string name="gitops_keep_live">Live-Werte in Git übernehmen</string>
+    <string name="gitops_keep_live_values">Im Cluster geändert: %1$s</string>
+    <string name="gitops_keep_skipped">Nicht übernommen, anderswo gesetzt: %1$s</string>
     <string name="gitops_find_choose">In mehreren Dateien definiert</string>
     <string name="gitops_find_none">Keine Datei der Quelle deklariert %1$s %2$s.</string>
     <string name="gitops_find_defined_in">Definiert in %1$s, Zeile %2$s</string>

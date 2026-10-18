@@ -92,7 +92,7 @@ public struct DiffCount: Equatable, Hashable, Sendable {
 }
 
 /// One object of a diff.
-public struct KubeDiffResource: Decodable, Equatable, Identifiable, Sendable {
+public struct KubeDiffResource: Decodable, Hashable, Identifiable, Sendable {
     public let group: String
     public let version: String
     public let kind: String
@@ -105,11 +105,14 @@ public struct KubeDiffResource: Decodable, Equatable, Identifiable, Sendable {
     public let truncated: Bool
     /// Why the API server refused the dry run, for `.error`.
     public let error: String
+    /// The plain values changed in the cluster by hand, which "Keep in Git" writes to the manifest.
+    public let liveChanges: [DiffLiveChange]
 
     public var id: String { "\(group)/\(kind)/\(namespace)/\(name)" }
 
     public init(group: String = "", version: String = "v1", kind: String, namespace: String = "", name: String,
-                change: DiffChange, diff: String = "", truncated: Bool = false, error: String = "") {
+                change: DiffChange, diff: String = "", truncated: Bool = false, error: String = "",
+                liveChanges: [DiffLiveChange] = []) {
         self.group = group
         self.version = version
         self.kind = kind
@@ -119,6 +122,7 @@ public struct KubeDiffResource: Decodable, Equatable, Identifiable, Sendable {
         self.diff = diff
         self.truncated = truncated
         self.error = error
+        self.liveChanges = liveChanges
     }
 
     public init(from decoder: Decoder) throws {
@@ -132,15 +136,46 @@ public struct KubeDiffResource: Decodable, Equatable, Identifiable, Sendable {
         diff = try c.field(.diff, "")
         truncated = try c.field(.truncated, false)
         error = try c.field(.error, "")
+        liveChanges = try c.field(.liveChanges, [DiffLiveChange]())
     }
 
-    private enum CodingKeys: String, CodingKey { case group, version, kind, namespace, name, change, diff, truncated, error }
+    private enum CodingKeys: String, CodingKey { case group, version, kind, namespace, name, change, diff, truncated, error, liveChanges }
 
     /// The diff's lines without its "---"/"+++" header.
     public var lines: [DiffLine] { parseDiffLines(diff) }
 
     /// Lines added and removed.
     public var counts: (added: Int, removed: Int) { diffLineCounts(lines) }
+}
+
+/// One plain value an object has live but not as its GitOps tool would apply it: label shown
+/// ("spec.template.spec.containers[app].image"), wanted and live as YAML writes them, type the
+/// live value's tag (str, int, float, bool). path is the Go core's own, sent back as is.
+public struct DiffLiveChange: Codable, Hashable, Sendable {
+    public let path: [String]
+    public let label: String
+    public let wanted: String
+    public let live: String
+    public let type: String
+
+    public init(path: [String], label: String, wanted: String, live: String, type: String) {
+        self.path = path
+        self.label = label
+        self.wanted = wanted
+        self.live = live
+        self.type = type
+    }
+
+    enum CodingKeys: String, CodingKey { case path, label, wanted, live, type }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        path = try c.field(.path, [String]())
+        label = try c.field(.label, "")
+        wanted = try c.field(.wanted, "")
+        live = try c.field(.live, "")
+        type = try c.field(.type, "")
+    }
 }
 
 /// How an object would change, in the order the screen lists them.

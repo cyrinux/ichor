@@ -60,6 +60,8 @@ struct FluxDiffView: View {
     @State private var opened: SourceFileTarget?
     /// Several files declare the object: the user picks one.
     @State private var choosing: SourceFileChoice?
+    /// The manifest opened in the editor with an object's live values written ("Keep in Git").
+    @State private var keeping: SourceKeepTarget?
     @State private var message: String?
     /// Per object id: what the user folded or unfolded survives a refresh.
     @State private var expanded: [String: Bool] = [:]
@@ -75,11 +77,19 @@ struct FluxDiffView: View {
             .navigationDestination(item: $opened) { file in
                 SourceFileView(source: file.source, path: file.path, app: file.app, line: file.line)
             }
+            .navigationDestination(item: $keeping) { file in
+                SourceEditView(source: file.source, path: file.path, app: file.app, quickEdit: file.edit)
+            }
             .confirmationDialog(String(localized: "Defined in several files"), isPresented: $choosing.isPresent(),
                                 titleVisibility: .visible, presenting: choosing) { choice in
                 ForEach(choice.matches) { match in
                     Button(String(localized: "Defined in \(match.path), line \(String(match.line))")) {
-                        opened = SourceFileTarget(source: choice.source, path: match.path, app: target.app, line: match.line)
+                        if let kept = choice.keep {
+                            keeping = SourceKeepTarget(source: choice.source, path: match.path, app: target.app,
+                                                       edit: .keep(documentIndex: match.documentIndex, resource: kept))
+                        } else {
+                            opened = SourceFileTarget(source: choice.source, path: match.path, app: target.app, line: match.line)
+                        }
                     }
                 }
                 Button("Cancel", role: .cancel) {}
@@ -131,7 +141,8 @@ struct FluxDiffView: View {
                 Section {
                     ForEach(Array(changed.enumerated()), id: \.element.id) { index, resource in
                         DiffResourceRow(resource: resource, expanded: binding(for: resource, at: index),
-                                        openSource: openSource(for: resource), searching: searching == resource.id)
+                                        openSource: openSource(for: resource), searching: searching == resource.id,
+                                        keepLive: keepLive(for: resource))
                     }
                 }
             }
@@ -182,7 +193,15 @@ struct FluxDiffView: View {
         return { Task { await findSource(of: resource, in: browsable.source, index: browsable.index) } }
     }
 
-    private func findSource(of resource: KubeDiffResource, in source: GitSource, index: Int) async {
+    /// "Keep live values in Git", when the object has values changed by hand and the app a
+    /// browsable Git source to find its manifest in.
+    private func keepLive(for resource: KubeDiffResource) -> (() -> Void)? {
+        guard let browsable = gitSources?.firstBrowsable, !resource.liveChanges.isEmpty else { return nil }
+        return { Task { await findSource(of: resource, in: browsable.source, index: browsable.index, keep: true) } }
+    }
+
+    /// keep: the search is for "Keep in Git" (the editor opens) rather than to open the file.
+    private func findSource(of resource: KubeDiffResource, in source: GitSource, index: Int, keep: Bool = false) async {
         guard let client = model.client, searching == nil else { return }
         searching = resource.id
         defer { searching = nil }
@@ -192,10 +211,13 @@ struct FluxDiffView: View {
                                                     resNamespace: resource.namespace, resName: resource.name,
                                                     hosts: hosts, demo: demo)
             switch found.outcome {
+            case .open(let match) where keep:
+                keeping = SourceKeepTarget(source: source, path: match.path, app: app,
+                                           edit: .keep(documentIndex: match.documentIndex, resource: resource))
             case .open(let match):
                 opened = SourceFileTarget(source: source, path: match.path, app: app, line: match.line)
             case .choose(let matches):
-                choosing = SourceFileChoice(source: source, matches: matches)
+                choosing = SourceFileChoice(source: source, matches: matches, keep: keep ? resource : nil)
             case .none(let note):
                 message = note.isEmpty ? String(localized: "No file of the source declares \(resource.kind) \(resource.name).") : note
             }
@@ -238,8 +260,18 @@ struct SourceFileTarget: Hashable {
     let line: Int
 }
 
-/// The files declaring an object, when there are several.
+/// A manifest opened in the editor with an object's live values written by edit.
+struct SourceKeepTarget: Hashable {
+    let source: GitSource
+    let path: String
+    let app: GitOpsAppRef
+    let edit: QuickEdit
+}
+
+/// The files declaring an object, when there are several; keep: the object whose live values
+/// go to the one picked.
 struct SourceFileChoice: Hashable {
     let source: GitSource
     let matches: [ManifestMatch]
+    var keep: KubeDiffResource?
 }

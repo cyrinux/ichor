@@ -139,6 +139,27 @@ final class GitOpsQuickEditTests: XCTestCase {
         XCTAssertEqual(target.edit(tag: "7.4").image, "docker.io/library/redis:7.4")
     }
 
+    func testAKeepEditSendsTheLiveChangesOfItsObject() throws {
+        let resource = try TalosJSON.decode(KubeDiffResource.self, from: #"""
+        {"kind":"Deployment","name":"web","change":"changed",
+         "liveChanges":[{"path":["spec","replicas"],"label":"spec.replicas","wanted":"2","live":"5","type":"int"}]}
+        """#)
+        XCTAssertEqual(resource.liveChanges, [DiffLiveChange(path: ["spec", "replicas"], label: "spec.replicas", wanted: "2", live: "5", type: "int")])
+        XCTAssertEqual(try TalosJSON.decode(KubeDiffResource.self, from: #"{"kind":"Service","name":"web","change":"changed"}"#).liveChanges, [])
+
+        let edit = QuickEdit.keep(documentIndex: 1, resource: resource)
+        XCTAssertEqual(quickEditTitle(edit), "Keep live changes of Deployment web")
+        let json = try object(try edit.json())
+        XCTAssertEqual(Set(json.keys), ["op", "documentIndex", "kind", "name", "changes"])
+        XCTAssertEqual(json["op"] as? String, "keep")
+        XCTAssertEqual(json["documentIndex"] as? Int, 1)
+        let change = try XCTUnwrap((json["changes"] as? [[String: Any]])?.first)
+        XCTAssertEqual(Set(change.keys), ["path", "label", "wanted", "live", "type"])
+
+        let result = try TalosJSON.decode(QuickEditResult.self, from: #"{"content":"x","changed":true,"skipped":["a: not set in this file"]}"#)
+        XCTAssertEqual(result.skipped, ["a: not set in this file"])
+    }
+
     func testDecodesTheResult() throws {
         let result = try TalosJSON.decode(QuickEditResult.self, from: #"{"content":"kind: Deployment\n","changed":true,"line":27}"#)
         XCTAssertTrue(result.changed)

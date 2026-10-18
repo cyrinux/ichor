@@ -3437,6 +3437,9 @@
     <string name="gitops_propose_not_editable">Ce fichier ne peut pas être modifié ici : ouvrez-le dans le navigateur.</string>
     <string name="gitops_find_open">Ouvrir le fichier source</string>
     <string name="gitops_find_searching">Recherche du fichier…</string>
+    <string name="gitops_keep_live">Garder les valeurs du cluster dans Git</string>
+    <string name="gitops_keep_live_values">Modifié dans le cluster : %1$s</string>
+    <string name="gitops_keep_skipped">Non gardé, défini ailleurs : %1$s</string>
     <string name="gitops_find_choose">Défini dans plusieurs fichiers</string>
     <string name="gitops_find_none">Aucun fichier de la source ne déclare %1$s %2$s.</string>
     <string name="gitops_find_defined_in">Défini dans %1$s, ligne %2$s</string>

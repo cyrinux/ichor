@@ -29,6 +29,10 @@ func gitOpsQuickEdit(content string, e quickEdit) (quickEditResult, error) {
 		return quickEditResult{}, err
 	}
 
+	if e.Op == "keep" {
+		return keepLiveEdit(content, docs, e)
+	}
+
 	targets, err := quickEditLocate(docs, e)
 	if err != nil {
 		return quickEditResult{}, err
@@ -48,6 +52,39 @@ func gitOpsQuickEdit(content string, e quickEdit) (quickEditResult, error) {
 	}
 
 	return quickEditResult{Content: out, Changed: true, Line: line}, nil
+}
+
+// keepLiveEdit writes the live values of e.Changes the document holds (see keepTargets).
+func keepLiveEdit(content string, docs []*yaml.Node, e quickEdit) (quickEditResult, error) {
+	index, err := quickEditDocIndex(docs, e)
+	if err != nil {
+		return quickEditResult{}, err
+	}
+
+	root := docs[index]
+	if root == nil || root.Kind != yaml.MappingNode {
+		return quickEditResult{}, fmt.Errorf("document %d is not a manifest", index)
+	}
+
+	targets, applied, skipped, err := keepTargets(root, e)
+	if err != nil {
+		return quickEditResult{}, err
+	}
+
+	out, line, err := spliceTargets(content, targets)
+	if err != nil {
+		return quickEditResult{}, err
+	}
+
+	if out == content {
+		return quickEditResult{Content: content, Line: line, Skipped: skipped}, nil
+	}
+
+	if err := verifyKeep(out, len(docs), e, applied); err != nil {
+		return quickEditResult{}, err
+	}
+
+	return quickEditResult{Content: out, Changed: true, Line: line, Skipped: skipped}, nil
 }
 
 // verifyQuickEdit parses the rewritten file again: same documents, and every target now
@@ -96,7 +133,7 @@ func quickEditLocate(docs []*yaml.Node, e quickEdit) ([]quickEditTarget, error) 
 		return pathTargets(root, e)
 	}
 
-	return nil, fmt.Errorf("unknown quick edit %q: image, replicas or path", e.Op)
+	return nil, fmt.Errorf("unknown quick edit %q: image, replicas, path or keep", e.Op)
 }
 
 // quickEditDocIndex is the document the edit applies to: documentIndex, unless the edit names
