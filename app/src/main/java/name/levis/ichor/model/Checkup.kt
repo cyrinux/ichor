@@ -121,6 +121,8 @@ object CheckupKind {
     const val SEALING_KEY_MISSING = "sealingKeyMissing"
     /** A sealing key the controller keeps out of use (namespace, name: the key's Secret). */
     const val SEALING_KEY_COMPROMISED = "sealingKeyCompromised"
+    /** A Flux Kustomization that cannot decrypt its SOPS files (extra: its decryption secretRef, "" when not configured; reason, message: its Ready condition's). */
+    const val SOPS_DECRYPTION_FAILED = "sopsDecryptionFailed"
     /** A certificate a route's host serves (read by TLS handshake) that expired (namespace, name: its Secret; extra: the route; reason: the host). */
     const val ROUTE_CERT_EXPIRED = "routeCertExpired"
     /** One expiring within 14 days (count: days left). */
@@ -258,15 +260,25 @@ val CheckupRelease.inTrouble: Boolean get() = status == "failed" || status.start
 val DATA_SERVICE_ALERTED_KINDS = setOf(CheckupKind.SEALED_SECRET_NOT_SYNCED, CheckupKind.SEALING_KEY_MISSING)
 
 /**
+ * Checkup finding kinds whose problem the GitOps alert already raises when it is on (monitor
+ * gitopsIssuesWithGaps): a Kustomization that cannot decrypt its SOPS files is Ready=False, a
+ * Flux app the GitOps track notifies about.
+ */
+val GITOPS_ALERTED_KINDS = setOf(CheckupKind.SOPS_DECRYPTION_FAILED)
+
+/**
  * The findings worth a background alert, keyed "section|kind|subject" and valued by severity
  * ("critical" or "warning"): everything but the notes and the events, which only describe, and
- * the kinds the data services already alert on ([DATA_SERVICE_ALERTED_KINDS]).
+ * the kinds the data services already alert on ([DATA_SERVICE_ALERTED_KINDS]), and, when the
+ * GitOps apps are watched too ([gitopsWatched]), the kinds that track already alerts on
+ * ([GITOPS_ALERTED_KINDS]).
  */
-fun CheckupReport.alertIssues(): Map<String, String> = buildMap {
+fun CheckupReport.alertIssues(gitopsWatched: Boolean = false): Map<String, String> = buildMap {
+    val skipped = if (gitopsWatched) DATA_SERVICE_ALERTED_KINDS + GITOPS_ALERTED_KINDS else DATA_SERVICE_ALERTED_KINDS
     sections.forEach { section ->
         if (section.id == CheckupSectionId.EVENTS) return@forEach
         section.findings.forEach { f ->
-            if (f.level != CheckupSeverity.INFO && f.kind !in DATA_SERVICE_ALERTED_KINDS) put("${section.id}|${f.kind}|${f.subject}", f.severity)
+            if (f.level != CheckupSeverity.INFO && f.kind !in skipped) put("${section.id}|${f.kind}|${f.subject}", f.severity)
         }
     }
 }

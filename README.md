@@ -175,7 +175,8 @@ tour** shows it again.
   without an address (and why), empty MetalLB or Cilium pools, MetalLB pools nothing advertises,
   a refused MetalLB configuration and BGP sessions down, namespaces, pods and claims stuck in Terminating,
   certificate requests nobody approved, web address certificates (not cert-manager's) expired,
-  expiring or naming other hosts, External Secrets that do not sync, Helm releases
+  expiring or naming other hosts, External Secrets that do not sync, Flux Kustomizations whose
+  SOPS decryption fails, Helm releases
   failed or stuck, and Crossplane: managed resources that cannot sync, unhealthy providers. Every finding says what to change. Read-only; the critical ones can also
   notify in the background (Settings → Alerts). A pod's log sheet and a workload's sheet show
   the object's Kubernetes events, like the end of `kubectl describe`. See

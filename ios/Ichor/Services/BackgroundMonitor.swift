@@ -461,7 +461,9 @@ enum BackgroundMonitor {
         let fingerprint = context.fingerprint
         async let dataRead = ifWatched(watchData, within: left) { try? await client.dataServices(hints: "") }
         async let gitopsRead = ifWatched(watchGitOps, within: left) { await readGitOps(client, known: known) }
-        async let checkupRead = ifWatched(watchCheckup, within: left) { await readCheckup(client, known: knownCheckup) }
+        async let checkupRead = ifWatched(watchCheckup, within: left) {
+            await readCheckup(client, known: knownCheckup, gitopsWatched: watchGitOps)
+        }
         async let alertmanagerRead = ifWatched(watchAlertmanager, within: left) {
             await readAlertmanager(client, fingerprint: fingerprint, known: knownAlertmanager)
         }
@@ -564,10 +566,11 @@ enum BackgroundMonitor {
     }
 
     /// The checkup's findings worth an alert; nil when it could not be read. A section that could
-    /// not be read keeps what the last snapshot knew of it.
-    private static func readCheckup(_ client: TalosClient, known: [String: String]) async -> [String: String]? {
+    /// not be read keeps what the last snapshot knew of it. With GitOps watched, what that alert
+    /// already raises is left to it.
+    private static func readCheckup(_ client: TalosClient, known: [String: String], gitopsWatched: Bool) async -> [String: String]? {
         guard let report = try? await client.checkup() else { return nil }
-        return checkupIssuesWithGaps(report, known: known)
+        return checkupIssuesWithGaps(report, known: known, gitopsWatched: gitopsWatched)
     }
 
     /// The Alertmanager's alerts worth a notification; nil when it could not be read (or none was

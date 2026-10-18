@@ -3903,9 +3903,15 @@
     <string name="checkup_sealedSecretNotSynced">Could not be unsealed</string>
     <string name="checkup_sealingKeyMissing">No sealing key in %1$s: nothing can be unsealed</string>
     <string name="checkup_sealingKeyCompromised">Key %1$s marked compromised</string>
+    <string name="checkup_sopsDecryptionFailed">Cannot decrypt its SOPS secrets with key %1$s</string>
+    <string name="checkup_sopsDecryptionNotConfigured">Holds SOPS-encrypted files but has no decryption configured</string>
+    <string name="checkup_sopsDecryptionFailedNoKey">Cannot decrypt its SOPS secrets</string>
     <string name="checkup_sealedSecretNotSynced_fix">The controller could not decrypt it into a Secret: it was sealed for another cluster, name or namespace, or with a key the controller no longer has. Seal it again with kubeseal against this cluster’s certificate.</string>
     <string name="checkup_sealingKeyMissing_fix">The controller has no key to decrypt with. Restore the key backup (a Secret labelled sealedsecrets.bitnami.com/sealed-secrets-key) into its namespace, then restart the controller.</string>
     <string name="checkup_sealingKeyCompromised_fix">The controller no longer seals with it, but what it sealed can still be read with it. Seal those SealedSecrets again with kubeseal, then delete the key.</string>
+    <string name="checkup_sopsDecryptionFailed_fix">Nothing in this Kustomization is applied until it decrypts. Check that the Secret named in spec.decryption.secretRef holds the age or PGP key the files were encrypted with.</string>
+    <string name="checkup_sopsDecryptionFailedNoKey_fix">Nothing in this Kustomization is applied until it decrypts. Without a secretRef, kustomize-controller decrypts through a cloud KMS or Vault: check that its identity (or spec.decryption.serviceAccountName) may use the key the files were encrypted with.</string>
+    <string name="checkup_sopsDecryptionNotConfigured_fix">Nothing in this Kustomization is applied while it holds encrypted Secrets. Add spec.decryption with provider sops and a secretRef to the Secret holding the age or PGP key, or a cloud KMS the controller can use.</string>
     <string name="route_cert_expired">Certificate expired</string>
     <string name="route_cert_expiring">Certificate expires in %1$d days</string>
     <string name="route_cert_host_mismatch">Certificate does not cover this host</string>

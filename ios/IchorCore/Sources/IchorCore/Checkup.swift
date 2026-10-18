@@ -56,6 +56,9 @@ public enum CheckupKind: String, Sendable {
     /// A SealedSecret the controller could not decrypt, the controller without a key (extra: its
     /// namespace), a sealing key kept out of use (namespace, name: the key's Secret).
     case sealedSecretNotSynced, sealingKeyMissing, sealingKeyCompromised
+    /// A Flux Kustomization that cannot decrypt its SOPS files (extra: its decryption secretRef,
+    /// "" when not configured; reason, message: its Ready condition's).
+    case sopsDecryptionFailed
     /// A certificate a route's host serves (read by TLS handshake) that expired, expires within
     /// 14 days (count: days left) or does not name the host (message: the names it covers).
     /// Namespace, name: its Secret; extra: the route; reason: the host.
@@ -94,10 +97,15 @@ public struct CheckupReport: Decodable, Equatable, Sendable {
     /// The findings worth a background alert, keyed "section|kind|subject" and valued by
     /// severity: everything but the notes and the events, which only describe, and the kinds the
     /// data services already alert on (`dataServiceAlertedKinds`).
-    public var alertIssues: [String: String] {
+    public var alertIssues: [String: String] { alertIssues(gitopsWatched: false) }
+
+    /// `alertIssues`, leaving out as well the kinds the GitOps alert already raises
+    /// (`gitopsAlertedKinds`) when that track is watched.
+    public func alertIssues(gitopsWatched: Bool) -> [String: String] {
+        let skipped = gitopsWatched ? dataServiceAlertedKinds.union(gitopsAlertedKinds) : dataServiceAlertedKinds
         var issues: [String: String] = [:]
         for section in sections where section.id != CheckupSectionID.events.rawValue {
-            for finding in section.findings where finding.severity != .info && !dataServiceAlertedKinds.contains(finding.kindName) {
+            for finding in section.findings where finding.severity != .info && !skipped.contains(finding.kindName) {
                 issues["\(section.id)|\(finding.kindName)|\(finding.subject)"] = finding.severity.rawValue
             }
         }
@@ -180,7 +188,8 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
                                              .crossplaneSyncFailed, .crossplaneProviderUnhealthy, .crossplaneNotReady,
                                              .crossplaneDefinitionNotEstablished, .tailscaleConnectorNotReady,
                                              .tailscaleProxyGroupDown, .tailscaleProxyClassNotReady, .capiClusterFailed,
-                                             .capiClusterProvisioning, .capiMachineFailed, .capiMachineStuck, .sealedSecretNotSynced]
+                                             .capiClusterProvisioning, .capiMachineFailed, .capiMachineStuck, .sealedSecretNotSynced,
+                                             .sopsDecryptionFailed]
         let shownReason = kind.map(reasonKinds.contains) == true ? reason : ""
         return [shownReason, message].filter { !$0.isEmpty }.joined(separator: ": ")
     }
@@ -376,12 +385,18 @@ public struct CheckupSubject: Equatable, Sendable {
 /// and no active sealing key alert from the Sealed Secrets section.
 public let dataServiceAlertedKinds: Set<String> = [CheckupKind.sealedSecretNotSynced.rawValue, CheckupKind.sealingKeyMissing.rawValue]
 
+/// Checkup finding kinds whose problem the GitOps alert already raises when it is on
+/// (`gitopsIssuesWithGaps`): a Kustomization that cannot decrypt its SOPS files is Ready=False, a
+/// Flux app the GitOps track notifies about.
+public let gitopsAlertedKinds: Set<String> = [CheckupKind.sopsDecryptionFailed.rawValue]
+
 /// The checkup findings worth a notification, for a report where a section could not be read:
 /// that section keeps the issues `known` had for it, so they neither clear falsely nor come back
-/// as new once it reads again.
-public func checkupIssuesWithGaps(_ report: CheckupReport, known: [String: String]) -> [String: String] {
+/// as new once it reads again. With `gitopsWatched`, the kinds the GitOps alert already raises
+/// are left to it.
+public func checkupIssuesWithGaps(_ report: CheckupReport, known: [String: String], gitopsWatched: Bool = false) -> [String: String] {
     let unread = report.sections.filter { !$0.error.isEmpty }.map { "\($0.id)|" }
-    var issues = report.alertIssues
+    var issues = report.alertIssues(gitopsWatched: gitopsWatched)
     for (key, value) in known where issues[key] == nil && unread.contains(where: key.hasPrefix) {
         issues[key] = value
     }

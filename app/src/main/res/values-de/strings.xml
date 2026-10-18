@@ -3894,9 +3894,15 @@
     <string name="checkup_sealedSecretNotSynced">Konnte nicht entsiegelt werden</string>
     <string name="checkup_sealingKeyMissing">Kein Siegelschlüssel in %1$s: nichts kann entsiegelt werden</string>
     <string name="checkup_sealingKeyCompromised">Schlüssel %1$s als kompromittiert markiert</string>
+    <string name="checkup_sopsDecryptionFailed">Kann ihre SOPS-Secrets mit Schlüssel %1$s nicht entschlüsseln</string>
+    <string name="checkup_sopsDecryptionNotConfigured">Enthält SOPS-verschlüsselte Dateien, aber keine Entschlüsselung ist konfiguriert</string>
+    <string name="checkup_sopsDecryptionFailedNoKey">Kann ihre SOPS-Secrets nicht entschlüsseln</string>
     <string name="checkup_sealedSecretNotSynced_fix">Der Controller konnte es nicht zu einem Secret entschlüsseln: es wurde für einen anderen Cluster, Namen oder Namespace versiegelt oder mit einem Schlüssel, den der Controller nicht mehr hat. Versiegeln Sie es erneut mit kubeseal und dem Zertifikat dieses Clusters.</string>
     <string name="checkup_sealingKeyMissing_fix">Der Controller hat keinen Schlüssel zum Entschlüsseln. Stellen Sie die Schlüsselsicherung (ein Secret mit dem Label sealedsecrets.bitnami.com/sealed-secrets-key) in seinem Namespace wieder her und starten Sie den Controller neu.</string>
     <string name="checkup_sealingKeyCompromised_fix">Der Controller versiegelt nicht mehr damit, aber was damit versiegelt wurde, ist damit noch lesbar. Versiegeln Sie diese SealedSecrets erneut mit kubeseal und löschen Sie dann den Schlüssel.</string>
+    <string name="checkup_sopsDecryptionFailed_fix">Nichts in dieser Kustomization wird angewendet, bis sie entschlüsselt werden kann. Prüfen Sie, ob das in spec.decryption.secretRef genannte Secret den age- oder PGP-Schlüssel enthält, mit dem die Dateien verschlüsselt wurden.</string>
+    <string name="checkup_sopsDecryptionFailedNoKey_fix">Nichts in dieser Kustomization wird angewendet, bis sie entschlüsselt werden kann. Ohne secretRef entschlüsselt kustomize-controller über ein Cloud-KMS oder Vault: Prüfen Sie, ob seine Identität (oder spec.decryption.serviceAccountName) den Schlüssel verwenden darf, mit dem die Dateien verschlüsselt wurden.</string>
+    <string name="checkup_sopsDecryptionNotConfigured_fix">Nichts in dieser Kustomization wird angewendet, solange sie verschlüsselte Secrets enthält. Fügen Sie spec.decryption mit dem Provider sops und einem secretRef auf das Secret mit dem age- oder PGP-Schlüssel hinzu, oder ein Cloud-KMS, das der Controller verwenden kann.</string>
     <string name="route_cert_expired">Zertifikat abgelaufen</string>
     <string name="route_cert_expiring">Zertifikat läuft in %1$d Tagen ab</string>
     <string name="route_cert_host_mismatch">Zertifikat deckt diesen Host nicht ab</string>

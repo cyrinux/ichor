@@ -182,6 +182,26 @@ final class CheckupTests: XCTestCase {
         XCTAssertEqual(dataServiceAlertedKinds, ["sealedSecretNotSynced", "sealingKeyMissing"])
     }
 
+    // The demo checkup's SOPS finding (go/ichorgo/kube_checkup_demo.go): worded with its
+    // reason, and the monitor alerts on it.
+    func testSopsDecryptionFailedDecodesAndAlerts() throws {
+        let r = try TalosJSON.decode(CheckupReport.self, from: #"""
+        {"status":"critical","sections":[{"id":"secrets","status":"critical","checked":12,"findings":[
+          {"kind":"sopsDecryptionFailed","severity":"critical","namespace":"flux-system","name":"apps","extra":"sops-age","reason":"BuildFailed","message":"error decrypting sources: failed to decrypt: no key could decrypt the data"}]}]}
+        """#)
+        let f = try XCTUnwrap(r.shownSections.first?.findings.first)
+        XCTAssertEqual(f.kind, .sopsDecryptionFailed)
+        XCTAssertEqual(f.extra, "sops-age")
+        XCTAssertEqual(f.detail, "BuildFailed: error decrypting sources: failed to decrypt: no key could decrypt the data")
+        let issue = ["secrets|sopsDecryptionFailed|flux-system/apps": "critical"]
+        XCTAssertEqual(r.alertIssues, issue)
+        XCTAssertEqual(checkupIssuesWithGaps(r, known: [:], gitopsWatched: false), issue)
+        // With GitOps watched, the Kustomization's Ready=False already alerts there.
+        XCTAssertEqual(r.alertIssues(gitopsWatched: true), [:])
+        XCTAssertEqual(checkupIssuesWithGaps(r, known: [:], gitopsWatched: true), [:])
+        XCTAssertEqual(gitopsAlertedKinds, ["sopsDecryptionFailed"])
+    }
+
     // The demo checkup's route certificate findings (go/ichorgo/kube_checkup_demo.go).
     func testRouteCertKindsDecode() throws {
         let r = try TalosJSON.decode(CheckupReport.self, from: #"""

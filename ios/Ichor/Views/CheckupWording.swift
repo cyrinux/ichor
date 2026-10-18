@@ -200,6 +200,9 @@ extension CheckupFinding {
         case .sealedSecretNotSynced: return CheckupText.checkupSealedSecretNotSynced
         case .sealingKeyMissing: return CheckupText.checkupSealingKeyMissing(f.extra.isEmpty ? f.namespace : f.extra)
         case .sealingKeyCompromised: return CheckupText.checkupSealingKeyCompromised(f.name)
+        case .sopsDecryptionFailed where f.reason == "ReconciliationFailed": return CheckupText.checkupSopsDecryptionNotConfigured
+        case .sopsDecryptionFailed:
+            return f.extra.isEmpty ? CheckupText.checkupSopsDecryptionFailedNoKey : CheckupText.checkupSopsDecryptionFailed(f.extra)
         case .routeCertExpired: return CheckupText.checkupRouteCertExpired(f.reason.isEmpty ? "-" : f.reason)
         case .routeCertExpiring: return CheckupText.checkupRouteCertExpiring("\(f.count)", f.reason.isEmpty ? "-" : f.reason)
         case .routeCertHostMismatch: return CheckupText.checkupRouteCertHostMismatch(f.reason.isEmpty ? "-" : f.reason)
@@ -292,6 +295,9 @@ extension CheckupFinding {
         case .sealedSecretNotSynced: return CheckupText.checkupSealedSecretNotSyncedFix
         case .sealingKeyMissing: return CheckupText.checkupSealingKeyMissingFix
         case .sealingKeyCompromised: return CheckupText.checkupSealingKeyCompromisedFix
+        case .sopsDecryptionFailed where reason == "ReconciliationFailed": return CheckupText.checkupSopsDecryptionNotConfiguredFix
+        case .sopsDecryptionFailed:
+            return extra.isEmpty ? CheckupText.checkupSopsDecryptionFailedNoKeyFix : CheckupText.checkupSopsDecryptionFailedFix
         case .routeCertExpired: return CheckupText.checkupRouteCertExpiredFix
         case .routeCertExpiring: return CheckupText.checkupRouteCertExpiringFix
         case .routeCertHostMismatch: return CheckupText.checkupRouteCertHostMismatchFix

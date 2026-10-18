@@ -87,6 +87,7 @@ func TestCheckupSealedSecretsDemo(t *testing.T) {
 
 	want := []string{
 		"sealedSecretNotSynced:critical:legacy-cert",
+		"sopsDecryptionFailed:critical:apps",
 		"externalSecretFailed:warning:database-credentials",
 		"sealingKeyCompromised:warning:sealed-secrets-key-rotated",
 	}

@@ -1,6 +1,216 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Cannot decrypt its SOPS secrets" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kann ihre SOPS-Secrets nicht entschlüsseln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No puede descifrar sus secretos SOPS"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne peut pas déchiffrer ses secrets SOPS"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile decifrare i suoi segreti SOPS"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не може розшифрувати свої SOPS-секрети"
+          }
+        }
+      }
+    },
+    "Nothing in this Kustomization is applied until it decrypts. Without a secretRef, kustomize-controller decrypts through a cloud KMS or Vault: check that its identity (or spec.decryption.serviceAccountName) may use the key the files were encrypted with." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts in dieser Kustomization wird angewendet, bis sie entschlüsselt werden kann. Ohne secretRef entschlüsselt kustomize-controller über ein Cloud-KMS oder Vault: Prüfen Sie, ob seine Identität (oder spec.decryption.serviceAccountName) den Schlüssel verwenden darf, mit dem die Dateien verschlüsselt wurden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada de esta Kustomization se aplica hasta que se descifre. Sin secretRef, kustomize-controller descifra mediante un KMS en la nube o Vault: comprueba que su identidad (o spec.decryption.serviceAccountName) puede usar la clave con la que se cifraron los archivos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien dans cette Kustomization n’est appliqué tant qu’elle ne se déchiffre pas. Sans secretRef, kustomize-controller déchiffre via un KMS cloud ou Vault : vérifiez que son identité (ou spec.decryption.serviceAccountName) peut utiliser la clé avec laquelle les fichiers ont été chiffrés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nulla in questa Kustomization viene applicato finché non si decifra. Senza secretRef, kustomize-controller decifra tramite un KMS cloud o Vault: controlla che la sua identità (o spec.decryption.serviceAccountName) possa usare la chiave con cui sono stati cifrati i file."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нічого з цієї Kustomization не застосовується, доки її не вдасться розшифрувати. Без secretRef kustomize-controller розшифровує через хмарний KMS або Vault: перевірте, що його ідентичність (або spec.decryption.serviceAccountName) може використовувати ключ, яким зашифровано файли."
+          }
+        }
+      }
+    },
+    "Nothing in this Kustomization is applied while it holds encrypted Secrets. Add spec.decryption with provider sops and a secretRef to the Secret holding the age or PGP key, or a cloud KMS the controller can use." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts in dieser Kustomization wird angewendet, solange sie verschlüsselte Secrets enthält. Fügen Sie spec.decryption mit dem Provider sops und einem secretRef auf das Secret mit dem age- oder PGP-Schlüssel hinzu, oder ein Cloud-KMS, das der Controller verwenden kann."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada de esta Kustomization se aplica mientras contenga Secrets cifrados. Añade spec.decryption con el provider sops y un secretRef al Secret que contiene la clave age o PGP, o un KMS en la nube que el controlador pueda usar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien dans cette Kustomization n’est appliqué tant qu’elle contient des Secrets chiffrés. Ajoutez spec.decryption avec le provider sops et un secretRef vers le Secret qui contient la clé age ou PGP, ou un KMS cloud que le contrôleur peut utiliser."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nulla in questa Kustomization viene applicato finché contiene Secret cifrati. Aggiungi spec.decryption con il provider sops e un secretRef al Secret che contiene la chiave age o PGP, oppure un KMS cloud che il controller può usare."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нічого з цієї Kustomization не застосовується, поки вона містить зашифровані Secrets. Додайте spec.decryption з provider sops і secretRef на Secret із ключем age або PGP, або хмарний KMS, який може використовувати контролер."
+          }
+        }
+      }
+    },
+    "Cannot decrypt its SOPS secrets with key %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kann ihre SOPS-Secrets mit Schlüssel %@ nicht entschlüsseln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No puede descifrar sus secretos SOPS con la clave %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne peut pas déchiffrer ses secrets SOPS avec la clé %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile decifrare i suoi segreti SOPS con la chiave %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не може розшифрувати свої SOPS-секрети ключем %@"
+          }
+        }
+      }
+    },
+    "Holds SOPS-encrypted files but has no decryption configured" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enthält SOPS-verschlüsselte Dateien, aber keine Entschlüsselung ist konfiguriert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contiene archivos cifrados con SOPS pero no tiene descifrado configurado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contient des fichiers chiffrés par SOPS mais aucun déchiffrement n’est configuré"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contiene file cifrati con SOPS ma nessuna decifratura è configurata"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Містить файли, зашифровані SOPS, але розшифрування не налаштовано"
+          }
+        }
+      }
+    },
+    "Nothing in this Kustomization is applied until it decrypts. Check that the Secret named in spec.decryption.secretRef holds the age or PGP key the files were encrypted with." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts in dieser Kustomization wird angewendet, bis sie entschlüsselt werden kann. Prüfen Sie, ob das in spec.decryption.secretRef genannte Secret den age- oder PGP-Schlüssel enthält, mit dem die Dateien verschlüsselt wurden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada de esta Kustomization se aplica hasta que se descifre. Comprueba que el Secret indicado en spec.decryption.secretRef contiene la clave age o PGP con la que se cifraron los archivos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien dans cette Kustomization n’est appliqué tant qu’elle ne se déchiffre pas. Vérifiez que le Secret nommé dans spec.decryption.secretRef contient la clé age ou PGP avec laquelle les fichiers ont été chiffrés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nulla in questa Kustomization viene applicato finché non si decifra. Controlla che il Secret indicato in spec.decryption.secretRef contenga la chiave age o PGP con cui sono stati cifrati i file."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нічого з цієї Kustomization не застосовується, доки її не вдасться розшифрувати. Перевірте, що Secret, вказаний у spec.decryption.secretRef, містить ключ age або PGP, яким зашифровано файли."
+          }
+        }
+      }
+    },
     "Plugin" : {
       "extractionState" : "manual",
       "localizations" : {
