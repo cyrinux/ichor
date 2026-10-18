@@ -1,0 +1,4 @@
+• Export app backups as age files with a passphrase or age public keys, readable with the age CLI, on both apps
+• A Talos cluster's Kubernetes screen offers Crossplane, Tailscale, Argo Rollouts and Cluster lifecycle when the cluster runs them
+• App backups keep pins, Git hosts, AI settings and the rest of the settings, with API keys and Git tokens only when you include them
+• A plugin list cut at its limit marks the tree and its tile partial, never plainly ok
