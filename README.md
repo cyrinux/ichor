@@ -219,7 +219,8 @@ tour** shows it again.
   elsewhere, or that no controller owns, stands out. Sealed Secrets shows the controller, the
   sealing keys and whether each SealedSecret unsealed, by name only. When the garage-operator
   manages Garage, its clusters, buckets (size, quota, website), keys and node declarations show
-  next to the live Garage state.
+  next to the live Garage state. Integrations are declarative plugins; see
+  [docs/plugins.md](docs/plugins.md).
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,

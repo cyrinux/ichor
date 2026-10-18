@@ -12,9 +12,195 @@ loads, validates and compiles every one of them, renders their samples, and chec
 every label, title and message has a translation in each of the apps' languages. A built-in
 plugin's detect entries also give its row in Settings, Supported integrations.
 
+## Example: kube-green
+
+The built-in `go/plugin/builtin/kube-green.yaml`, with its translations cut to a few lines.
+Every key is described in "File format" below; the expressions in "Expressions".
+
+```yaml
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# kube-green puts a namespace's Deployments, StatefulSets and CronJobs to sleep on a schedule
+# (SleepInfo, kube-green.com/v1alpha1) and wakes them up later. Each SleepInfo shows when it
+# sleeps and wakes up next, in its own time zone, and what the controller did last (its
+# status, never its state Secret's data). A sleeping namespace is never critical.
+# go/ichorgo/plugin_kubegreen_test.go holds it to the reader the apps used before (the
+# workload rows still use that reader: kube_kubegreen_namespace.go).
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: kube-green
+name: kube-green
+website: https://kube-green.dev
+icon: kube-green
+category: data-services
+catalogId: kube-green
+
+detect:
+  - group: kube-green.com
+    resource: sleepinfos
+
+resources:
+  sleepinfo:
+    group: kube-green.com
+    version: v1alpha1
+    resource: sleepinfos
+    kind: SleepInfo
+    scope: Namespaced
+  # The Secret the controller keeps per SleepInfo ("sleepinfo-<name>", labelled with its
+  # manager): only its name is shown, as a link; its data stays masked. Optional: an account
+  # that may not list Secrets sees the schedules without the link, and no error.
+  stateSecret:
+    group: ""
+    version: v1
+    resource: secrets
+    kind: Secret
+    scope: Namespaced
+    list: { labelSelector: "app.kubernetes.io/managed-by=kube-green" }
+    optional: true
+
+fields:
+  sleepinfo:
+    weekdays: $.spec.weekdays | default("")
+    sleepAt: $.spec.sleepAt | default("")
+    wakeUpAt: $.spec.wakeUpAt | default("")
+    timeZone: $.spec.timeZone | default("UTC")
+    # Absent means true for Deployments and StatefulSets, false for CronJobs (upstream defaults).
+    suspendDeployments: $.spec.suspendDeployments | default(true)
+    suspendStatefulSets: $.spec.suspendStatefulSets | default(true)
+    suspendCronJobs: $.spec.suspendCronJobs | default(false)
+    excludeCount: len($.spec.excludeRef)
+    includeCount: len($.spec.includeRef)
+    patchCount: len($.spec.patches)
+    # What the controller did last: SLEEP, WAKE_UP, "" before its first run.
+    operation: $.status.operation | default("")
+    asleep: fields.operation == "SLEEP"
+    lastScheduleAt: $.status.lastScheduleTime | time()
+    # The schedule is "minute hour * * weekdays" per time; one part that does not parse (or an
+    # unknown zone) makes it invalid: no next runs at all.
+    sleepRun: cronNext(fields.sleepAt, fields.weekdays, fields.timeZone)
+    wakeUpRun: 'fields.wakeUpAt == "" ? 0 : cronNext(fields.wakeUpAt, fields.weekdays, fields.timeZone)'
+    validSchedule: 'fields.sleepRun != 0 && (fields.wakeUpAt == "" || fields.wakeUpRun != 0)'
+    nextSleepAt: 'fields.validSchedule ? fields.sleepRun : 0'
+    nextWakeUpAt: 'fields.validSchedule ? fields.wakeUpRun : 0'
+    # The controller's last run expected at least 10 minutes ago (either time); missed by more
+    # than 10 minutes, the controller is not running. A run due a minute ago is not late yet.
+    lastSleepRun: 'fields.validSchedule ? cronPrev(fields.sleepAt, fields.weekdays, fields.timeZone, now - 600000) : 0'
+    lastWakeUpRun: 'fields.validSchedule && fields.wakeUpAt != "" ? cronPrev(fields.wakeUpAt, fields.weekdays, fields.timeZone, now - 600000) : 0'
+    expectedRunAt: 'fields.lastWakeUpRun > fields.lastSleepRun ? fields.lastWakeUpRun : fields.lastSleepRun'
+    overdue: 'fields.expectedRunAt != 0 && fields.lastScheduleAt != 0 && fields.lastScheduleAt < fields.expectedRunAt - 600000'
+    state: join(stateSecret, $.metadata.namespace == left.metadata.namespace && $.metadata.name == "sleepinfo-" + left.metadata.name)
+
+health:
+  sleepinfo:
+    - when: "!fields.validSchedule"
+      health: warning
+      reason: invalidSchedule
+      message: "invalid schedule"
+    - when: fields.lastScheduleAt == 0
+      health: idle
+      reason: neverRan
+      message: "never ran yet"
+    - when: fields.overdue
+      health: warning
+      reason: overdue
+      message: "controller missed its last run"
+    - when: fields.wakeUpAt == ""
+      health: warning
+      reason: noWakeUp
+      message: "no wake-up time"
+
+dataServices:
+  summary:
+    aggregate:
+      total: count(sleepinfo)
+      asleep: count(sleepinfo, fields.asleep)
+      warnings: count(sleepinfo, health == "warning")
+    health: worst(sleepinfo.health)
+
+cards:
+  summary:
+    title: { count: dataServices.summary.total, one: "%d sleep schedule", other: "%d sleep schedules" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "asleep", value: dataServices.summary.asleep, tone: info, hideWhenZero: true }
+      - { label: "warnings", value: dataServices.summary.warnings, tone: warning, hideWhenZero: true }
+  list:
+    from: sleepinfo
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No sleep schedules."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: 'fields.asleep ? "Asleep" : "Awake"'
+      # Asleep: when it wakes up ("never" without a wake-up time); awake: when it sleeps.
+      trailing: { text: "relativeTime(fields.asleep ? fields.nextWakeUpAt : fields.nextSleepAt)" }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Weekdays", value: fields.weekdays, mono: true }
+            - { label: "Sleeps at", value: fields.sleepAt, mono: true }
+            - { label: "Wakes up at", value: 'fields.wakeUpAt == "" ? "–" : fields.wakeUpAt', mono: true }
+            - { label: "Time zone", value: fields.timeZone, mono: true }
+            - { label: "Last run", value: fields.lastScheduleAt | relativeTime() }
+        - type: badges
+          items:
+            - { label: "Deployments", on: fields.suspendDeployments }
+            - { label: "StatefulSets", on: fields.suspendStatefulSets }
+            - { label: "CronJobs", on: fields.suspendCronJobs }
+        - type: badges
+          items:
+            - { label: "excluded", value: fields.excludeCount, tone: info, hideWhenZero: true }
+            - { label: "included", value: fields.includeCount, tone: info, hideWhenZero: true }
+            - { label: "patches", value: fields.patchCount, tone: info, hideWhenZero: true }
+        - type: relations
+          items:
+            - { label: "State secret", ref: fields.state }
+
+findings:
+  - id: schedule-warning
+    from: sleepinfo
+    when: health == "warning"
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: list
+
+# Invented names. demo-shop sleeps on weekday nights, demo-lab sleeps on weekends with no
+# wake-up time, demo-preview's schedule never ran yet. The last runs are relative to the
+# clock (now-4m): a fixed date would read "controller missed its last run" a day later.
+samples:
+  sleepinfo:
+    - metadata: { name: nightly, namespace: demo-shop }
+      spec: { weekdays: "1-5", sleepAt: "20:00", wakeUpAt: "08:00", timeZone: Europe/Paris }
+      status: { operation: WAKE_UP, lastScheduleTime: now-4m }
+    - metadata: { name: weekend, namespace: demo-lab }
+      spec: { weekdays: "6,0", sleepAt: "00:00" }
+      status: { operation: SLEEP, lastScheduleTime: now-9m }
+    - metadata: { name: previews, namespace: demo-preview }
+      spec:
+        weekdays: "*"
+        sleepAt: "22:30"
+        wakeUpAt: "06:00"
+        suspendStatefulSets: false
+        suspendCronJobs: true
+        excludeRef: [{ apiVersion: apps/v1, kind: Deployment, name: gateway }]
+  stateSecret:
+    - metadata: { name: sleepinfo-weekend, namespace: demo-lab, labels: { app.kubernetes.io/managed-by: kube-green } }
+      type: Opaque
+
+# The apps' former kube-green strings (kubegreen_* in app/src/main/res/values-*/strings.xml).
+i18n:
+  fr:
+    "%d sleep schedule": "%d planning de veille"
+    "%d sleep schedules": "%d plannings de veille"
+    "No sleep schedules.": "Aucun planning de veille."
+    # … every label, in fr, de, es, it and uk
+```
+
 ## File format
 
-A complete example is `go/plugin/testdata/plugins/valid.yaml` (kube-green).
+Other examples: `go/plugin/testdata/plugins/valid.yaml` (an older kube-green) and
+`go/plugin/testdata/plugins/widgets.yaml` (every section type and aggregation).
 
 Loading is strict:
 * an unknown key is an error at its line;
@@ -169,7 +355,8 @@ tile below for an active plugin and `null` otherwise. Examples: the goldens in
   resource named, and the rest still renders. Secrets are masked unless `reveal`.
 * A value that fails to evaluate reads empty and is reported once in `errors` with `where`
   (`fields.widget.size`).
-* `just probe plugin-render ID [-scope NS] [-locale xx] -context CTX` prints the tree.
+* `just probe plugin-render FILE|ID [-scope NS] [-locale xx] -context CTX` prints the tree
+  (see "Command line").
 
 ## Expressions
 
@@ -304,3 +491,81 @@ column. The plugin compiler also reports, without evaluating:
 * a non-literal `matches` pattern;
 * `"a" + 1`-style type errors;
 * a condition (`when`) that is not a boolean.
+
+## Command line
+
+The probe checks and renders plugin files from the desktop. Paths are relative to where
+`just` runs. Every command but `plugin-render` against a cluster reads no talosconfig and
+no kubeconfig.
+
+| Command | Does | Output | Exit |
+| -- | -- | -- | -- |
+| `just probe plugin-validate FILE...` | loads, validates and compiles each file, then renders its samples in English and in each `i18n` language | per valid file, one JSON line on stdout: `{"ok":true,"id":"kube-green","cards":2,"findings":1,"resources":2,"actions":0}`; per problem, `FILE:LINE: path: message` on stderr | 0 when every file is valid, 1 otherwise |
+| `just probe plugin-lint FILE [-crd MANIFEST] [-strict]` | `plugin-validate`, then the warnings below | the JSON line with `"warnings":n` on stdout; `FILE:LINE: warning: path: message` on stderr | 0 with warnings; 1 on an error, or on any warning with `-strict` |
+| `just probe plugin-render FILE\|ID [-scope NS] [-locale xx] [-demo]` | the render tree of a file or of a built-in plugin id, read from the cluster (`-context CTX`) or from the samples (`-demo`) | the tree as JSON | 0, or 1 with the error (a file that does not validate: its `FILE:LINE` problems) |
+| `just probe plugin-list` | the built-in plugins | one JSON line each: `{id, name, version, category, resources, cards, actions, findings, file}` | 0 |
+| `just plugin-check [DIR]` | `plugin-validate` on every `*.yaml` of `DIR` (default `go/plugin/builtin`); `./build.sh check` runs it on the built-ins | as `plugin-validate` | as `plugin-validate` |
+
+A value that fails to evaluate on a sample (`"a" + 1` reached at run time, a bad `time()`
+input) is an error of `plugin-validate`, at the line of what it evaluates: the samples are the
+plugin's tests.
+
+`plugin-lint` warns (and `-strict` fails) when:
+* a label, title or message has no translation in a language the plugin translates to, or the
+  plugin has no `i18n` at all (one warning);
+* a resource is read but no card shows it: no card or `table` names it in `from`, no data
+  service reads it, no field joins it;
+* a `health` rule matches no sample (rules are first-match: a rule an earlier one always
+  shadows counts as untriggered), so neither the tests nor the demo show it;
+* a list card has no `empty` text;
+* with `-crd MANIFEST` (a CustomResourceDefinition, YAML or JSON, as `kubectl get crd NAME -o
+  yaml` prints it or as an operator's `config/crd/bases/` ships it), for the plugin resource
+  with the CRD's group and plural, at its declared version (`preferred`: the storage version):
+  * an `additionalPrinterColumns` `jsonPath` that no expression reads (`.spec.sleepAt` is read
+    by `$.spec.sleepAt`);
+  * a condition type named in the schema (the `enum` of `status.conditions[].type`) that no
+    health rule of the resource names (`conditions.Ready`, `condition("Ready")`);
+  * a `scale` subresource and no action with `verb: subresource`, `subresource: scale`;
+  * a `kind` or `scope` that differs from the CRD's, a version the CRD does not declare, or no
+    resource reading the CRD at all.
+
+An action without `rbac` is an error of `plugin-validate`, not a warning.
+
+RBAC: `plugin-render` against a cluster needs `list` on the plugin's resources (and reads
+`/apis` for detection); the other commands need nothing.
+
+## Writing a plugin from a CRD
+
+A converter (the `/ichor-crd-plugin` Claude Code skill, or a person) turns a CRD into a
+plugin draft, then runs `just probe plugin-validate FILE` and `just probe plugin-lint FILE
+-crd MANIFEST` until both pass. Editors and generators can check drafts against
+`go/plugin/schema/plugin.schema.json`. The exit codes are the contract; problems are
+`FILE:LINE: message` lines on stderr.
+
+What it reads from the CRD (`go/plugin/crd.go` decodes these):
+
+| CRD | Plugin |
+| -- | -- |
+| `spec.group`, `spec.names.plural` | `detect[0]: {group, resource}` and the resource's `group`, `resource` |
+| `spec.names.kind`, `spec.names.singular` | the resource's `kind`; its key (`singular`, in camel case) |
+| `spec.scope` | the resource's `scope` |
+| `spec.versions[]`: the one with `storage: true`, else the newest served | the resource's `version` |
+| `schema.openAPIV3Schema.properties.spec` | `fields`: scalars at depth ≤ 2, with `default(…)` from the schema's defaults and each `description` kept as a YAML comment |
+| `properties.status` | status scalars as `fields` (`phase`, `operation`…); `status.conditions` → a `conditions` section |
+| `status.conditions[].type` `enum` (`Ready`, `Available`, `Healthy`, `Synced`…) | `health` rules on `!conditions.<Type>` |
+| `status.phase` `enum` | `health` rules: values with `Fail`, `Error`, `Degraded` → `critical`; `Pending`, `Progressing` → `info`; `Ready`, `Running`, `Succeeded`, `Bound` → `ok` |
+| `additionalPrinterColumns[]` (`name`, `jsonPath`, `type`, `priority`) | `cards.list.row`: the name → `title`; the first other column with `priority: 0` → `status.text`; a `date` column → `trailing` with `relativeTime()`; the rest → a `keyValues` section |
+| `subresources.scale` | an action `{verb: subresource, subresource: scale, rbac: {verbs: [patch], resource: <plural>/scale}, confirm: plain}` |
+
+What it writes:
+* the file `go/plugin/builtin/<id>.yaml` for a built-in (or any file for a user plugin), with
+  `schemaVersion: ichor.dev/plugin/v1alpha1` and the first line
+  `# yaml-language-server: $schema=../schema/plugin.schema.json`;
+* `cards.summary` with a `{count, one, other}` title over a `dataServices.summary` count, and a
+  `health: worst(<resource>.health)`;
+* `empty` on every list card;
+* `samples`: at least two objects per resource, one healthy and one failing, that together
+  trigger every `health` rule, namespaced per `scope`, with invented names (`demo-shop`,
+  `demo-lab`; never a real cluster's or company's) and relative times (`now-4m`);
+* `i18n` for the apps' languages (`fr`, `de`, `es`, `it`, `uk`) when the plugin is built in:
+  the test suite requires every label of a built-in plugin translated.

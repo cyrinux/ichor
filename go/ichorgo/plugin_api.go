@@ -114,14 +114,36 @@ func KubePluginData(configYAML, contextName, kubeServer, pluginID, scope, locale
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
-	scope = privacy.reveal(strings.TrimSpace(scope))
-
-	if err := validateNamespace(scope); err != nil {
-		return "", err
-	}
 
 	c, err := findPlugin(strings.TrimSpace(pluginID))
 	if err != nil {
+		return "", err
+	}
+
+	return kubePluginTree(configYAML, contextName, kubeServer, c, scope, locale)
+}
+
+// KubePluginPreview is KubePluginData for a plugin file that is not installed (the probe's
+// plugin-render FILE, and an import screen's preview): pluginYAML is loaded, validated and
+// compiled first, and a plugin that does not compile is an error with its file:line problems.
+func KubePluginPreview(configYAML, contextName, kubeServer, pluginYAML, scope, locale string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName = unmaskContext(configYAML, contextName)
+
+	c, err := plugin.CompileSource("plugin.yaml", []byte(pluginYAML))
+	if err != nil {
+		return "", err
+	}
+
+	return kubePluginTree(configYAML, contextName, kubeServer, c, scope, locale)
+}
+
+// kubePluginTree renders c; contextName is already unmasked.
+func kubePluginTree(configYAML, contextName, kubeServer string, c *plugin.Compiled, scope, locale string) (string, error) {
+	scope = privacy.reveal(strings.TrimSpace(scope))
+
+	if err := validateNamespace(scope); err != nil {
 		return "", err
 	}
 
