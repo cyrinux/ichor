@@ -10,9 +10,9 @@ import (
 	"github.com/cyrinux/ichor/go/plugin"
 )
 
-// knownPlugins are every plugin the cluster calls know: the built-ins (user plugins join
-// them once they can be imported). A variable so that the tests give their own.
-var knownPlugins = plugin.Builtins
+// knownPlugins are every plugin the cluster calls know: the built-ins and the enabled user
+// plugins (installedPlugins). A variable so that the tests give their own.
+var knownPlugins = installedPlugins
 
 // pluginNow is the render's clock (now, age(), relativeTime()).
 var pluginNow = time.Now

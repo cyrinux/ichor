@@ -286,13 +286,19 @@ data class PluginDetectItem(
     val nativeScreen: String? get() = nativePluginScreen(screen)
 }
 
-/** PluginCatalog: what each built-in plugin reads, for the kinds of the objects its rows open. */
+/**
+ * PluginCatalog: what each installed plugin (the built-ins, then the enabled imported ones)
+ * reads and can do, for the kinds of the objects its rows open and the Settings list.
+ */
 @Serializable
 data class PluginCatalog(val items: List<PluginCatalogItem> = emptyList()) {
     /** The kind of [ref]'s resource as plugin [pluginId] declares it; "" when it does not. */
     fun kindOf(pluginId: String, ref: PluginRef): String =
         items.firstOrNull { it.id == pluginId }?.resources
             ?.firstOrNull { it.group == ref.group && it.resource == ref.resource }?.kind.orEmpty()
+
+    /** The built-in plugins: the app's own, read-only in Settings. */
+    val builtins: List<PluginCatalogItem> get() = items.filterNot { it.user }
 }
 
 @Serializable
@@ -300,11 +306,34 @@ data class PluginCatalogItem(
     val id: String = "",
     val name: String = "",
     val category: String = "",
+    val website: String = "",
+    val version: String = "",
     val resources: List<PluginCatalogResource> = emptyList(),
+    val actions: List<PluginCatalogAction> = emptyList(),
+    /** Imported by the user (PluginUserImport), not a built-in. */
+    val user: Boolean = false,
 )
 
 @Serializable
-data class PluginCatalogResource(val group: String = "", val version: String = "", val resource: String = "", val kind: String = "")
+data class PluginCatalogResource(
+    val group: String = "",
+    val version: String = "",
+    val resource: String = "",
+    val kind: String = "",
+    /** A Secret's data is shown in clear instead of masked. */
+    val reveal: Boolean = false,
+)
+
+/** An action a plugin declares: its [verb], and the Kubernetes [rbac] verbs it needs on [rbacResource]. */
+@Serializable
+data class PluginCatalogAction(
+    val id: String = "",
+    val label: String = "",
+    val verb: String = "",
+    val rbac: List<String> = emptyList(),
+    val rbacResource: String = "",
+    val confirm: String = "",
+)
 
 const val PLUGIN_CATEGORY_DATA_SERVICES = "data-services"
 

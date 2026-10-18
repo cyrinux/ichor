@@ -228,6 +228,14 @@ tour** shows it again.
   in the Data services card and its own tab (kube-green is the first), drawn from the tree the
   Go core renders; a plugin of another kind (networking, policies…) is a tool on the
   Kubernetes home. Plugin actions show, off, until the app can run them.
+- **Plugins of your own:** Settings → Plugins lists the built-in plugins and the ones you
+  imported. Import a plugin file (one `/ichor-crd-plugin` or `just probe plugin-lint` checked,
+  for an operator Ichor does not know) by pasting it, picking it in Files, or from an https URL
+  (1 MiB at most). It is validated first, with the line of each problem; then a consent sheet
+  shows what it reads (a Secret whose values it shows in clear is flagged in red) and what it can
+  change, with which verbs, before you enable it. It renders like a built-in, with your own
+  Kubernetes access, through the resources it declares only; switch it off or remove it there.
+  The file stays on the phone, encrypted. Format: [docs/plugins.md](docs/plugins.md#user-plugins).
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,

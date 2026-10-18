@@ -662,7 +662,8 @@ public struct PluginDetectItem: Decodable, Equatable, Sendable, Identifiable {
     public var dataServiceKind: DataServiceKind? { DataServiceKind(rawValue: icon.isEmpty ? id : icon) }
 }
 
-/// PluginCatalog: what each built-in plugin reads, for the kinds of the objects its rows open.
+/// PluginCatalog: what each installed plugin (the built-ins, then the enabled imported ones)
+/// reads, for the kinds of the objects its rows open and the Settings list.
 public struct PluginCatalog: Decodable, Equatable, Sendable {
     public let items: [PluginCatalogItem]
 
@@ -681,6 +682,9 @@ public struct PluginCatalog: Decodable, Equatable, Sendable {
     public func kindOf(_ pluginID: String, _ ref: PluginRef) -> String {
         items.first { $0.id == pluginID }?.resources.first { $0.group == ref.group && $0.resource == ref.resource }?.kind ?? ""
     }
+
+    /// The built-in plugins: the app's own, read-only in Settings.
+    public var builtins: [PluginCatalogItem] { items.filter { !$0.user } }
 }
 
 public struct PluginCatalogItem: Decodable, Equatable, Sendable {
@@ -688,8 +692,10 @@ public struct PluginCatalogItem: Decodable, Equatable, Sendable {
     public let name: String
     public let category: String
     public let resources: [PluginCatalogResource]
+    /// Imported by the user (PluginUserImport), not a built-in.
+    public let user: Bool
 
-    private enum CodingKeys: String, CodingKey { case id, name, category, resources }
+    private enum CodingKeys: String, CodingKey { case id, name, category, resources, user }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -697,6 +703,7 @@ public struct PluginCatalogItem: Decodable, Equatable, Sendable {
         name = try c.field(.name, "")
         category = try c.field(.category, "")
         resources = try c.field(.resources, [])
+        user = try c.field(.user, false)
     }
 }
 
@@ -705,8 +712,10 @@ public struct PluginCatalogResource: Decodable, Equatable, Sendable {
     public let version: String
     public let resource: String
     public let kind: String
+    /// A Secret's data is shown in clear instead of masked.
+    public let reveal: Bool
 
-    private enum CodingKeys: String, CodingKey { case group, version, resource, kind }
+    private enum CodingKeys: String, CodingKey { case group, version, resource, kind, reveal }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -714,6 +723,7 @@ public struct PluginCatalogResource: Decodable, Equatable, Sendable {
         version = try c.field(.version, "")
         resource = try c.field(.resource, "")
         kind = try c.field(.kind, "")
+        reveal = try c.field(.reveal, false)
     }
 }
 

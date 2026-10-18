@@ -343,18 +343,19 @@ func readWhoAmI(ctx context.Context, k *kubeClient) kubeWhoAmI {
 	return kubeWhoAmI{User: review.Status.UserInfo.Username, Groups: review.Status.UserInfo.Groups}
 }
 
-// readActionAccess asks every review of kubeActionChecks for namespace, at once.
+// readActionAccess asks every review of actionChecks for namespace, at once.
 func readActionAccess(ctx context.Context, k *kubeClient, namespace string) kubeActionAccess {
 	type answer struct {
 		name   string
 		access kubeAccess
 	}
 
-	answers := make(chan answer, len(kubeActionChecks))
+	checks := actionChecks()
+	answers := make(chan answer, len(checks))
 
 	var wg sync.WaitGroup
 
-	for name, needs := range kubeActionChecks {
+	for name, needs := range checks {
 		wg.Go(func() {
 			answers <- answer{name, needsAccess(ctx, k, namespace, needs)}
 		})
@@ -363,7 +364,7 @@ func readActionAccess(ctx context.Context, k *kubeClient, namespace string) kube
 	wg.Wait()
 	close(answers)
 
-	out := kubeActionAccess{Namespace: namespace, Actions: make(map[string]kubeAccess, len(kubeActionChecks))}
+	out := kubeActionAccess{Namespace: namespace, Actions: make(map[string]kubeAccess, len(checks))}
 	for a := range answers {
 		out.Actions[a.name] = a.access
 	}
@@ -425,8 +426,9 @@ func canDo(ctx context.Context, k *kubeClient, attrs ssarAttributes) (kubeAccess
 
 // allowAll is the demo's answer: everything offered (the demo refuses the actions itself).
 func allowAll(namespace string) kubeActionAccess {
-	out := kubeActionAccess{Namespace: namespace, Actions: make(map[string]kubeAccess, len(kubeActionChecks))}
-	for name := range kubeActionChecks {
+	checks := actionChecks()
+	out := kubeActionAccess{Namespace: namespace, Actions: make(map[string]kubeAccess, len(checks))}
+	for name := range checks {
 		out.Actions[name] = kubeAccess{Allowed: true}
 	}
 
@@ -460,6 +462,14 @@ var actionAccess = newAccessCache(accessCacheTTL)
 
 func newAccessCache(ttl time.Duration) *accessCache {
 	return &accessCache{ttl: ttl, now: time.Now, entries: map[string]accessEntry{}}
+}
+
+// clear drops every answer: the actions to check changed (a user plugin turned on or off).
+func (c *accessCache) clear() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	clear(c.entries)
 }
 
 func (c *accessCache) get(key string, fetch func() (kubeActionAccess, error)) (kubeActionAccess, error) {
