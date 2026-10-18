@@ -40,7 +40,7 @@ struct LonghornSalvageSheet: View {
                         }
                     }
                 }
-                Section("Type \(volume.name) to confirm") {
+                Section(typedConfirmationPrompt(volume.name)) {
                     TextField("Volume name", text: $typed).autocorrectionDisabled().textInputAutocapitalization(.never)
                     Button { onConfirm(selection) } label: { Text("Salvage volume") }
                         .disabled(preview?.accepts(selection) != true || !typedConfirmationMatches(typed, token: volume.name) || denial != nil)

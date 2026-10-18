@@ -55,7 +55,7 @@ struct NodeResetSheet: View {
             }
             if plan.allowed {
                 options(plan, chosen: chosen)
-                Section("Type \(hostname) to confirm") {
+                Section(typedConfirmationPrompt(hostname)) {
                     TextField("Hostname", text: $typed, prompt: Text(verbatim: hostname))
                         .font(.body.monospaced())
                         .autocorrectionDisabled()

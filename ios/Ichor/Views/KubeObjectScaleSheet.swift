@@ -77,7 +77,7 @@ struct KubeObjectScaleSheet: View {
                     Text("Every pod of \(name) stops: what it serves is down until it is scaled up again.")
                         .foregroundStyle(.statusWarn)
                 }
-                Section("Type \(name) to confirm") {
+                Section(typedConfirmationPrompt(name)) {
                     TextField("Name", text: $typed, prompt: Text(verbatim: name))
                         .font(.body.monospaced())
                         .autocorrectionDisabled()
