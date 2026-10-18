@@ -200,6 +200,8 @@ extension CheckupFinding {
         case .sealedSecretNotSynced: return CheckupText.checkupSealedSecretNotSynced
         case .sealingKeyMissing: return CheckupText.checkupSealingKeyMissing(f.extra.isEmpty ? f.namespace : f.extra)
         case .sealingKeyCompromised: return CheckupText.checkupSealingKeyCompromised(f.name)
+        case .sopsDecryptionFailed:
+            return f.extra.isEmpty ? CheckupText.checkupSopsDecryptionNotConfigured : CheckupText.checkupSopsDecryptionFailed(f.extra)
         case .routeCertExpired: return CheckupText.checkupRouteCertExpired(f.reason.isEmpty ? "-" : f.reason)
         case .routeCertExpiring: return CheckupText.checkupRouteCertExpiring("\(f.count)", f.reason.isEmpty ? "-" : f.reason)
         case .routeCertHostMismatch: return CheckupText.checkupRouteCertHostMismatch(f.reason.isEmpty ? "-" : f.reason)
@@ -292,6 +294,7 @@ extension CheckupFinding {
         case .sealedSecretNotSynced: return CheckupText.checkupSealedSecretNotSyncedFix
         case .sealingKeyMissing: return CheckupText.checkupSealingKeyMissingFix
         case .sealingKeyCompromised: return CheckupText.checkupSealingKeyCompromisedFix
+        case .sopsDecryptionFailed: return CheckupText.checkupSopsDecryptionFailedFix
         case .routeCertExpired: return CheckupText.checkupRouteCertExpiredFix
         case .routeCertExpiring: return CheckupText.checkupRouteCertExpiringFix
         case .routeCertHostMismatch: return CheckupText.checkupRouteCertHostMismatchFix

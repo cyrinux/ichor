@@ -121,6 +121,8 @@ object CheckupKind {
     const val SEALING_KEY_MISSING = "sealingKeyMissing"
     /** A sealing key the controller keeps out of use (namespace, name: the key's Secret). */
     const val SEALING_KEY_COMPROMISED = "sealingKeyCompromised"
+    /** A Flux Kustomization that cannot decrypt its SOPS files (extra: its decryption secretRef, "" when not configured; reason, message: its Ready condition's). */
+    const val SOPS_DECRYPTION_FAILED = "sopsDecryptionFailed"
     /** A certificate a route's host serves (read by TLS handshake) that expired (namespace, name: its Secret; extra: the route; reason: the host). */
     const val ROUTE_CERT_EXPIRED = "routeCertExpired"
     /** One expiring within 14 days (count: days left). */

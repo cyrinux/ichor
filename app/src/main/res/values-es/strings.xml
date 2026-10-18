@@ -3902,9 +3902,12 @@
     <string name="checkup_sealedSecretNotSynced">No se pudo desellar</string>
     <string name="checkup_sealingKeyMissing">Ninguna clave de sellado en %1$s: no se puede desellar nada</string>
     <string name="checkup_sealingKeyCompromised">Clave %1$s marcada como comprometida</string>
+    <string name="checkup_sopsDecryptionFailed">No puede descifrar sus secretos SOPS con la clave %1$s</string>
+    <string name="checkup_sopsDecryptionNotConfigured">Contiene archivos cifrados con SOPS pero no tiene descifrado configurado</string>
     <string name="checkup_sealedSecretNotSynced_fix">El controlador no pudo descifrarlo en un Secret: se selló para otro clúster, nombre o namespace, o con una clave que el controlador ya no tiene. Séllalo de nuevo con kubeseal y el certificado de este clúster.</string>
     <string name="checkup_sealingKeyMissing_fix">El controlador no tiene ninguna clave para descifrar. Restaura la copia de la clave (un Secret con la etiqueta sealedsecrets.bitnami.com/sealed-secrets-key) en su namespace y reinicia el controlador.</string>
     <string name="checkup_sealingKeyCompromised_fix">El controlador ya no sella con ella, pero lo que selló aún se puede leer con ella. Vuelve a sellar esos SealedSecrets con kubeseal y luego borra la clave.</string>
+    <string name="checkup_sopsDecryptionFailed_fix">Nada de esta Kustomization se aplica hasta que se descifre. Comprueba que el Secret indicado en spec.decryption.secretRef contiene la clave age o PGP con la que se cifraron los archivos.</string>
     <string name="route_cert_expired">Certificado caducado</string>
     <string name="route_cert_expiring">El certificado caduca en %1$d días</string>
     <string name="route_cert_host_mismatch">El certificado no cubre este host</string>

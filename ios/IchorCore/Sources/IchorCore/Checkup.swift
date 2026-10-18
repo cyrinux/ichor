@@ -56,6 +56,9 @@ public enum CheckupKind: String, Sendable {
     /// A SealedSecret the controller could not decrypt, the controller without a key (extra: its
     /// namespace), a sealing key kept out of use (namespace, name: the key's Secret).
     case sealedSecretNotSynced, sealingKeyMissing, sealingKeyCompromised
+    /// A Flux Kustomization that cannot decrypt its SOPS files (extra: its decryption secretRef,
+    /// "" when not configured; reason, message: its Ready condition's).
+    case sopsDecryptionFailed
     /// A certificate a route's host serves (read by TLS handshake) that expired, expires within
     /// 14 days (count: days left) or does not name the host (message: the names it covers).
     /// Namespace, name: its Secret; extra: the route; reason: the host.
@@ -180,7 +183,8 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
                                              .crossplaneSyncFailed, .crossplaneProviderUnhealthy, .crossplaneNotReady,
                                              .crossplaneDefinitionNotEstablished, .tailscaleConnectorNotReady,
                                              .tailscaleProxyGroupDown, .tailscaleProxyClassNotReady, .capiClusterFailed,
-                                             .capiClusterProvisioning, .capiMachineFailed, .capiMachineStuck, .sealedSecretNotSynced]
+                                             .capiClusterProvisioning, .capiMachineFailed, .capiMachineStuck, .sealedSecretNotSynced,
+                                             .sopsDecryptionFailed]
         let shownReason = kind.map(reasonKinds.contains) == true ? reason : ""
         return [shownReason, message].filter { !$0.isEmpty }.joined(separator: ": ")
     }

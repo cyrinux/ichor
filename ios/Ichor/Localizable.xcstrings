@@ -1,6 +1,111 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Cannot decrypt its SOPS secrets with key %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kann ihre SOPS-Secrets mit Schlüssel %@ nicht entschlüsseln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No puede descifrar sus secretos SOPS con la clave %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne peut pas déchiffrer ses secrets SOPS avec la clé %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile decifrare i suoi segreti SOPS con la chiave %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не може розшифрувати свої SOPS-секрети ключем %@"
+          }
+        }
+      }
+    },
+    "Holds SOPS-encrypted files but has no decryption configured" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enthält SOPS-verschlüsselte Dateien, aber keine Entschlüsselung ist konfiguriert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contiene archivos cifrados con SOPS pero no tiene descifrado configurado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contient des fichiers chiffrés par SOPS mais aucun déchiffrement n’est configuré"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contiene file cifrati con SOPS ma nessuna decifratura è configurata"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Містить файли, зашифровані SOPS, але розшифрування не налаштовано"
+          }
+        }
+      }
+    },
+    "Nothing in this Kustomization is applied until it decrypts. Check that the Secret named in spec.decryption.secretRef holds the age or PGP key the files were encrypted with." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts in dieser Kustomization wird angewendet, bis sie entschlüsselt werden kann. Prüfen Sie, ob das in spec.decryption.secretRef genannte Secret den age- oder PGP-Schlüssel enthält, mit dem die Dateien verschlüsselt wurden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada de esta Kustomization se aplica hasta que se descifre. Comprueba que el Secret indicado en spec.decryption.secretRef contiene la clave age o PGP con la que se cifraron los archivos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien dans cette Kustomization n’est appliqué tant qu’elle ne se déchiffre pas. Vérifiez que le Secret nommé dans spec.decryption.secretRef contient la clé age ou PGP avec laquelle les fichiers ont été chiffrés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nulla in questa Kustomization viene applicato finché non si decifra. Controlla che il Secret indicato in spec.decryption.secretRef contenga la chiave age o PGP con cui sono stati cifrati i file."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нічого з цієї Kustomization не застосовується, доки її не вдасться розшифрувати. Перевірте, що Secret, вказаний у spec.decryption.secretRef, містить ключ age або PGP, яким зашифровано файли."
+          }
+        }
+      }
+    },
     "Plugin" : {
       "extractionState" : "manual",
       "localizations" : {

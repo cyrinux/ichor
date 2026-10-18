@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -87,10 +88,101 @@ func TestCheckupSealedSecretsDemo(t *testing.T) {
 
 	want := []string{
 		"sealedSecretNotSynced:critical:legacy-cert",
+		"sopsDecryptionFailed:critical:apps",
 		"externalSecretFailed:warning:database-credentials",
 		"sealingKeyCompromised:warning:sealed-secrets-key-rotated",
 	}
 	if got := findingKinds(secrets); !reflect.DeepEqual(got, want) {
 		t.Fatalf("secrets %v, want %v", got, want)
+	}
+}
+
+// The secrets section, Flux side: a Kustomization whose SOPS decryption fails, not one that
+// fails its build for another reason.
+func TestCheckupSopsDecryption(t *testing.T) {
+	const path = "GET /apis/kustomize.toolkit.fluxcd.io/v1/kustomizations"
+
+	ks := func(name, spec, reason, status, message string) string {
+		return `{"metadata":{"name":"` + name + `","namespace":"flux-system"},"spec":` + spec +
+			`,"status":{"conditions":[{"type":"Ready","status":"` + status + `","reason":"` + reason + `","message":"` + message + `"}]}}`
+	}
+
+	const (
+		withKey   = `{"decryption":{"provider":"sops","secretRef":{"name":"sops-age"}}}`
+		noDecrypt = `{}`
+		suspended = `{"suspend":true,"decryption":{"provider":"sops","secretRef":{"name":"sops-age"}}}`
+	)
+
+	long := strings.Repeat("x", 2*sopsMessageLimit)
+	flux := map[string]string{groupFluxKustomize: "v1"}
+
+	for _, tt := range []struct {
+		name   string
+		groups map[string]string
+		items  []string
+		want   []string
+		extra  string
+		status string
+	}{
+		{
+			name: "wrong key", groups: flux,
+			items: []string{ks("apps", withKey, "BuildFailed", "False", "error decrypting sources: failed to decrypt: no key could decrypt the data")},
+			want:  []string{"sopsDecryptionFailed:critical:apps"}, extra: "sops-age", status: healthCritical,
+		},
+		{
+			name: "resource decryption", groups: flux,
+			items: []string{ks("apps", withKey, "BuildFailed", "False", "Decryption failed for 'Secret/db': "+long)},
+			want:  []string{"sopsDecryptionFailed:critical:apps"}, extra: "sops-age", status: healthCritical,
+		},
+		{
+			name: "kustomize error", groups: flux,
+			items: []string{ks("apps", withKey, "BuildFailed", "False", "kustomize build failed: accumulating resources: missing file")},
+			want:  []string{}, status: healthOK,
+		},
+		{
+			name: "decryption not configured", groups: flux,
+			items: []string{ks("apps", noDecrypt, "ReconciliationFailed", "False", "Secret/apps/db is SOPS encrypted, configuring decryption is required for this secret to be reconciled")},
+			want:  []string{"sopsDecryptionFailed:critical:apps"}, extra: "", status: healthCritical,
+		},
+		{
+			name: "suspended", groups: flux,
+			items: []string{ks("apps", suspended, "BuildFailed", "False", "error decrypting sources: no key")},
+			want:  []string{}, status: healthOK,
+		},
+		{
+			name: "ready", groups: flux,
+			items: []string{ks("apps", withKey, "ReconciliationSucceeded", "True", "Applied revision: main@sha1:abc")},
+			want:  []string{}, status: healthOK,
+		},
+		{name: "flux absent", groups: map[string]string{}, want: []string{}, status: checkAbsent},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			f := newFakeKubeAPI(t, map[string]string{path: `{"items":[` + strings.Join(tt.items, ",") + `]}`})
+
+			k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			in := checkupInput{now: fixtureNow, groups: tt.groups}
+			if part := checkupSopsDecryption(context.Background(), k, in); part.served != (len(tt.groups) > 0) {
+				t.Fatalf("served %v", part.served)
+			}
+
+			got := checkupSecrets(context.Background(), k, in)
+			if got.Status != tt.status {
+				t.Fatalf("status %q (error %q), want %q", got.Status, got.Error, tt.status)
+			}
+
+			if kinds := findingKinds(got); !reflect.DeepEqual(kinds, tt.want) {
+				t.Fatalf("findings %v, want %v", kinds, tt.want)
+			}
+
+			if len(got.Findings) == 1 {
+				if f := got.Findings[0]; f.Extra != tt.extra || f.Namespace != "flux-system" || len(f.Message) > sopsMessageLimit+len("…") {
+					t.Fatalf("finding %+v", f)
+				}
+			}
+		})
 	}
 }
