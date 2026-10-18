@@ -25,7 +25,6 @@ const (
 	dsStepSealedSecrets = "sealedsecrets"
 	dsStepVelero        = "velero"
 	dsStepExternalDNS   = "externaldns"
-	dsStepKubeGreen     = "kubegreen"
 	dsStepCeph          = "ceph"
 	dsStepCastAI        = "castai"
 	dsStepGarage        = "garage"
@@ -187,11 +186,6 @@ func dataServiceReaders(ctx context.Context, k *kubeClient, in *dsInput, listPod
 		out.ExternalDNS = readExternalDNSSection(ctx, k, in)
 
 		return sectionFailed(out.ExternalDNS, func(s *externalDNSStatus) string { return s.Error })
-	})
-	add(dsStepKubeGreen, served(groupKubeGreen), func(out *dataServices) bool {
-		out.KubeGreen = readKubeGreen(ctx, k, now)
-
-		return sectionFailed(out.KubeGreen, func(s *kubeGreenStatus) string { return s.Error })
 	})
 	add(dsStepCeph, served(groupCeph), func(out *dataServices) bool {
 		out.Ceph = readCeph(ctx, k, groups[groupCeph])

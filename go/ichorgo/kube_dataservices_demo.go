@@ -260,52 +260,7 @@ func demoDataServices(now time.Time) dataServices {
 	}
 
 	snapshots := demoVolumeSnapshots(now)
-	return dataServices{SealedSecrets: demoSealedSecrets(now), Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, ExternalDNS: demoExternalDNS(now), KubeGreen: demoKubeGreen(now), Ceph: ceph, CastAI: demoCastAI(now)}
-}
-
-// demoKubeGreen is the demo cluster's sleep schedules, built through the real mapping so
-// the statuses stay consistent with the clock: staging sleeps on weekday nights (asleep
-// now when the demo runs at night), preview every night, and sandbox has no wake-up time.
-func demoKubeGreen(now time.Time) *kubeGreenStatus {
-	obj := func(ns, name, weekdays, sleepAt, wakeUpAt, timeZone, operation string, lastSchedule time.Time) sleepInfoObject {
-		var o sleepInfoObject
-		o.Metadata.Namespace, o.Metadata.Name = ns, name
-		o.Spec.Weekdays, o.Spec.SleepTime, o.Spec.WakeUpTime, o.Spec.TimeZone = weekdays, sleepAt, wakeUpAt, timeZone
-		o.Status.Operation = operation
-		if !lastSchedule.IsZero() {
-			o.Status.LastScheduleTime = lastSchedule.Format(time.RFC3339)
-		}
-
-		return o
-	}
-
-	// What a healthy controller's status says: the last expected run of either cron, and
-	// which one it was.
-	lastRun := func(sleepAt, wakeUpAt, weekdays, timeZone string) (string, time.Time) {
-		loc, _ := time.LoadLocation(orDefault(timeZone, "UTC"))
-		inZone := now.In(loc)
-		sleep, _ := kubeGreenCron(sleepAt, weekdays)
-		wake, _ := kubeGreenCron(wakeUpAt, weekdays)
-		prevSleep, prevWake := kubeGreenPrevRun(sleep, true, inZone), kubeGreenPrevRun(wake, true, inZone)
-		if prevWake.After(prevSleep) {
-			return "WAKE_UP", prevWake
-		}
-
-		return "SLEEP", prevSleep
-	}
-
-	stagingOp, stagingAt := lastRun("20:00", "07:00", "1-5", "Europe/Rome")
-	previewOp, previewAt := lastRun("22:30", "06:00", "*", "")
-	sandboxOp, sandboxAt := lastRun("19:00", "", "1-5", "")
-
-	out := mapKubeGreen([]sleepInfoObject{
-		obj("staging", "nights", "1-5", "20:00", "07:00", "Europe/Rome", stagingOp, stagingAt),
-		obj("preview", "every-night", "*", "22:30", "06:00", "", previewOp, previewAt),
-		obj("sandbox", "until-changed", "1-5", "19:00", "", "", sandboxOp, sandboxAt),
-	}, now)
-	out.Version = "v0.7.1"
-
-	return out
+	return dataServices{SealedSecrets: demoSealedSecrets(now), Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, ExternalDNS: demoExternalDNS(now), Ceph: ceph, CastAI: demoCastAI(now)}
 }
 
 // demoKubeGreenNamespace is the demo cluster's kube-green state for one namespace: staging is

@@ -80,7 +80,7 @@ func golden(t *testing.T, name string, got Tree) {
 func TestRenderSamples(t *testing.T) {
 	c := compileFixture(t, "valid.yaml")
 
-	tree, errs := Render(c, SamplesInput(c, "", stubHeuristics{}), renderNow)
+	tree, errs := Render(c, SamplesInput(c, "", stubHeuristics{}, renderNow), renderNow)
 	if len(errs) > 0 {
 		t.Fatalf("errors %v", errs)
 	}
@@ -90,7 +90,7 @@ func TestRenderSamples(t *testing.T) {
 
 func TestRenderWidgetsFrench(t *testing.T) {
 	c := compileFixture(t, "widgets.yaml")
-	in := SamplesInput(c, "fr-CA", stubHeuristics{})
+	in := SamplesInput(c, "fr-CA", stubHeuristics{}, renderNow)
 	in.APIVersions = map[string]string{"widget": "v2"}
 	in.Errors = []TreeError{{Resource: "gadgets", Message: "forbidden"}}
 
@@ -169,7 +169,7 @@ func TestAggregations(t *testing.T) {
 
 func TestAggregationOverAValue(t *testing.T) {
 	c := compileFixture(t, "widgets.yaml")
-	r := newRenderer(c, SamplesInput(c, "", nil), renderNow)
+	r := newRenderer(c, SamplesInput(c, "", nil, renderNow), renderNow)
 	r.indexObjects()
 	r.evalObjects()
 

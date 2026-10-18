@@ -61,11 +61,11 @@ func readKubeGreenNamespace(ctx context.Context, k *kubeClient, namespace string
 
 // mapKubeGreenNamespace folds the SleepInfos of one namespace into what a row has to show.
 func mapKubeGreenNamespace(objs []sleepInfoObject, now time.Time) kubeGreenNamespace {
-	status := mapKubeGreen(objs, now)
+	infos := mapKubeGreen(objs, now)
 
-	out := kubeGreenNamespace{Installed: true, SleepInfos: status.SleepInfos}
+	out := kubeGreenNamespace{Installed: true, SleepInfos: infos}
 
-	for _, s := range status.SleepInfos {
+	for _, s := range infos {
 		out.Asleep = out.Asleep || s.Asleep
 		out.SleepsDeployments = out.SleepsDeployments || s.SuspendDeployments
 		out.SleepsStatefulSets = out.SleepsStatefulSets || s.SuspendStatefulSets

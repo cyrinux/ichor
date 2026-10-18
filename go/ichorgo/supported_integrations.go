@@ -1,9 +1,13 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
+	"slices"
 	"sync"
 	"time"
+
+	"github.com/cyrinux/ichor/go/plugin"
 )
 
 // integrationSpec is a project the app reads through the Kubernetes API, and how to tell the
@@ -32,9 +36,48 @@ type integrationSpec struct {
 }
 
 // integrationSpecs lists every project the app integrates with, in the order Settings shows
-// them. A reader that asks a new API group adds it here: TestIntegrationsCoverEveryGroup fails
-// otherwise.
-var integrationSpecs = []integrationSpec{
+// them: the native readers', then one per built-in plugin (pluginSpecs).
+var integrationSpecs = sync.OnceValue(func() []integrationSpec {
+	return slices.Concat(nativeIntegrationSpecs, pluginSpecs(plugin.Builtins()))
+})
+
+// pluginSpecs derives a plugin's row from its detect entries: its API groups (any of them
+// detects it, the first one's resource must be served too), else its pods or its Services.
+func pluginSpecs(compiled []*plugin.Compiled) []integrationSpec {
+	out := make([]integrationSpec, 0, len(compiled))
+
+	for _, c := range compiled {
+		p := c.Plugin
+		s := integrationSpec{ID: cmp.Or(p.CatalogID, p.ID), Name: p.Name, Website: p.Website}
+
+		var pods bool
+
+		for _, d := range p.Detect {
+			switch {
+			case d.Group != "" && !slices.Contains(s.Groups, d.Group):
+				if len(s.Groups) == 0 {
+					s.Resource = d.Resource
+				}
+
+				s.Groups = append(s.Groups, d.Group)
+			case d.Pods != "":
+				pods = true
+			case d.Service != "" && s.ServiceKind == "":
+				s.ServiceKind = d.Service
+			}
+		}
+
+		s.AnyGroup = len(s.Groups) > 1
+		s.PodsFallback = pods && len(s.Groups) > 0
+		out = append(out, s)
+	}
+
+	return out
+}
+
+// nativeIntegrationSpecs are the projects read by Go readers. A reader that asks a new API
+// group adds it here: TestIntegrationsCoverEveryGroup fails otherwise.
+var nativeIntegrationSpecs = []integrationSpec{
 	{ID: "argo-cd", Name: "Argo CD", Website: "https://argo-cd.readthedocs.io", Groups: []string{groupArgo}, Resource: "applications"},
 	{ID: "flux", Name: "Flux", Website: "https://fluxcd.io", Groups: []string{groupFluxKustomize, groupFluxHelm, groupFluxSource}},
 	{ID: "cloudnative-pg", Name: "CloudNativePG", Website: "https://cloudnative-pg.io", Groups: []string{groupCNPG, groupBarmanPlug}},
@@ -46,7 +89,6 @@ var integrationSpecs = []integrationSpec{
 	// Garage: the garage-operator's CRDs when it runs, else its pods (the Helm chart).
 	{ID: "garage", Name: "Garage", Website: "https://garagehq.deuxfleurs.fr", Groups: []string{groupGarageOperator}, PodsFallback: true},
 	{ID: "velero", Name: "Velero", Website: "https://velero.io", Groups: []string{groupVelero}},
-	{ID: "kube-green", Name: "kube-green", Website: "https://kube-green.dev", Groups: []string{groupKubeGreen}},
 	{ID: "cert-manager", Name: "cert-manager", Website: "https://cert-manager.io", Groups: []string{groupCertManager, groupACME}},
 	{ID: "castai", Name: "CAST AI", Website: "https://cast.ai", Groups: []string{groupCastAI}},
 	{ID: "cilium", Name: "Cilium", Website: "https://cilium.io", Groups: []string{groupCilium}},
@@ -177,7 +219,7 @@ func readSupportedIntegrations(ctx context.Context, k *kubeClient, hints hintSet
 	// Shared groups: ask whether the project's own resource is served, in parallel.
 	var mu sync.Mutex
 
-	for _, s := range integrationSpecs {
+	for _, s := range integrationSpecs() {
 		if version, ok := groups[firstGroup(s)]; ok && s.Resource != "" {
 			wg.Go(func() {
 				served := servesResource(ctx, k, s.Groups[0], version, s.Resource)
@@ -328,9 +370,9 @@ func servesResource(ctx context.Context, k *kubeClient, group, version, resource
 // integrationList builds the items, detect telling how each one was found.
 func integrationList(detect func(integrationSpec) detection) []supportedIntegration {
 	catalog := loadAppCatalog()
-	out := make([]supportedIntegration, 0, len(integrationSpecs))
+	out := make([]supportedIntegration, 0, len(integrationSpecs()))
 
-	for _, s := range integrationSpecs {
+	for _, s := range integrationSpecs() {
 		// Bundled icons are named after the catalog id, as in the inventory.
 		icon := ""
 		if app := catalog.byName[s.ID]; app != nil && app.ID == s.ID && app.hasIcon() {
@@ -369,6 +411,11 @@ func demoSupportedIntegrations() supportedIntegrations {
 		"gateway-api":         true,
 		"crossplane":          true,
 		"prometheus-operator": demoPromOperator().Installed,
+	}
+
+	// The demo renders every plugin from its samples (demoPluginDetect).
+	for _, s := range pluginSpecs(plugin.Builtins()) {
+		api[s.ID] = true
 	}
 
 	services := map[string]detection{}

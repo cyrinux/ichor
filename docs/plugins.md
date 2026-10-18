@@ -8,7 +8,9 @@ draw the result. This page is the reference. The format's Go types are in
 `# yaml-language-server: $schema=../schema/plugin.schema.json`.
 
 Built-in plugins live in `go/plugin/builtin/`, one file per integration. The test suite
-loads, validates and compiles every one of them.
+loads, validates and compiles every one of them, renders their samples, and checks that
+every label, title and message has a translation in each of the apps' languages. A built-in
+plugin's detect entries also give its row in Settings, Supported integrations.
 
 ## File format
 
@@ -40,7 +42,7 @@ Loading is strict:
 | `cards.<name>` | no | card | `from` (a resource or `dataServices.<name>`), `sort[]` (expressions, each optionally followed by `asc` or `desc`), `empty`, `row{title, subtitle, status{tone, text}, trailing{text}, detail[]}` |
 | `actions.<id>` | no | map | `label`, `on` (a resource), `verb`, `body`, `subresource` (with `verb: subresource`), `rbac{verbs, group, resource}` (required), `confirm`, `audit` (required), `enabledWhen`, `disabledReason`, `params[]`. `verb` is `mergePatch`, `jsonPatch`, `subresource`, `delete`, `annotate` or `create`; `confirm` is `none`, `plain` or `typedName`; each param is `{name, label, type, values[], default}` with `type` one of `string`, `int`, `bool` or `enum` |
 | `findings[]` | no | list | `{id, from, when, severity, title, detail, opens}`. `severity` is `info`, `warning` or `critical`; `opens` names a card |
-| `samples.<resource>[]` | yes, for every resource | list | demo objects in the API's shape. The demo context and the tests render them; invent names such as `demo-shop` |
+| `samples.<resource>[]` | yes, for every resource | list | demo objects in the API's shape. The demo context and the tests render them; invent names such as `demo-shop`. A string `now`, `now-6h` or `now+2d` (units `s`, `m`, `h`, `d`) becomes that time, so that the demo stays consistent with the clock |
 | `i18n.<locale>` | no | map | English label → translation; a missing label stays English |
 
 ### Which names an expression sees
@@ -279,6 +281,7 @@ Parenthesise to pipe only a part: `c ? a : (b | upper())`.
 | `age(t)` | milliseconds since `t` (a timestamp or unix ms); `null` when absent |
 | `relativeTime(t)` | `"5m ago"`, `"in 3h"`, `"2d ago"`, `"now"`; `"never"` when absent |
 | `cronNext(at, weekdays, tz)` | the next run in unix ms of the daily time `at` (`"20:00"`, each part cron syntax) on the cron `weekdays` (`"1-5"`, default every day) in the IANA zone `tz` (default UTC). `at` may also be a whole 5-field cron or a macro (`@daily`), then `weekdays` is ignored. 0 when it does not parse |
+| `cronPrev(at, weekdays, tz)` | the same schedule's last run strictly before now, in unix ms; 0 when it does not parse or did not run in the last 8 years |
 | `condition("Type")` | the object's condition of that type (a map with `type`, `status`, `reason`, `message`…), `null` when absent; `condition(obj, "Type")` reads another object |
 
 ### Templates

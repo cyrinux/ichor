@@ -26,16 +26,16 @@ var integrationsSteps = []string{integrationsStepAPI, integrationsStepKinds}
 
 // integrationSupported are the API groups Ichor reads: every group of integrationSpecs, the
 // list Settings shows.
-var integrationSupported = func() map[string]bool {
+var integrationSupported = sync.OnceValue(func() map[string]bool {
 	out := map[string]bool{}
-	for _, s := range integrationSpecs {
+	for _, s := range integrationSpecs() {
 		for _, g := range s.Groups {
 			out[g] = true
 		}
 	}
 
 	return out
-}()
+})
 
 // integrationSharedDomains host groups of unrelated projects: a family keeps one more label.
 var integrationSharedDomains = map[string]bool{"x-k8s.io": true, "github.io": true, "github.com": true, "gitlab.io": true}
@@ -98,7 +98,7 @@ func readIntegrations(ctx context.Context, k *kubeClient) (integrationReport, er
 
 	for name, version := range groups {
 		switch {
-		case integrationSupported[name]:
+		case integrationSupported()[name]:
 			report.Supported = append(report.Supported, name)
 		case !isBuiltinGroup(name):
 			unknown = append(unknown, integrationGroup{Name: name, Version: version, Kinds: []string{}})

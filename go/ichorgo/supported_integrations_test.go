@@ -21,7 +21,7 @@ func TestIntegrationsCoverEveryGroup(t *testing.T) {
 	}
 
 	listed := map[string]bool{}
-	for _, s := range integrationSpecs {
+	for _, s := range integrationSpecs() {
 		for _, g := range s.Groups {
 			listed[g] = true
 		}
@@ -82,7 +82,7 @@ func TestIntegrationSpecs(t *testing.T) {
 	catalog := loadAppCatalog()
 	seen := map[string]bool{}
 
-	for _, s := range integrationSpecs {
+	for _, s := range integrationSpecs() {
 		if seen[s.ID] {
 			t.Errorf("%s listed twice", s.ID)
 		}
@@ -110,7 +110,7 @@ func TestSupportedIntegrationsStatic(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if res.Checked || len(res.Items) != len(integrationSpecs) {
+	if res.Checked || len(res.Items) != len(integrationSpecs()) {
 		t.Fatalf("got %+v", res)
 	}
 

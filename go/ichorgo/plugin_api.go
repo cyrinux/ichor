@@ -156,7 +156,7 @@ func findPlugin(id string) (*plugin.Compiled, error) {
 
 // demoPluginInput is the plugin's samples, the namespaced ones kept to scope when set.
 func demoPluginInput(c *plugin.Compiled, scope, locale string) plugin.Input {
-	in := plugin.SamplesInput(c, locale, coreHeuristics{})
+	in := plugin.SamplesInput(c, locale, coreHeuristics{}, pluginNow())
 	if scope == "" {
 		return in
 	}
