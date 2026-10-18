@@ -5499,4 +5499,12 @@
         <item quantity="one">%1$d Pod gelöscht</item>
         <item quantity="other">%1$d Pods gelöscht</item>
     </plurals>
+    <!-- CRD plugins: the generic screen's chrome (labels come translated from the plugin) -->
+    <string name="plugin_screen_title">Plugin</string>
+    <string name="plugin_errors_title">Nicht alles konnte gelesen werden:</string>
+    <string name="plugin_partial">Nur die ersten Objekte wurden gelesen: die Zahlen sind Mindestwerte.</string>
+    <string name="plugin_not_detected">In diesem Cluster nicht gefunden.</string>
+    <string name="plugin_empty">Nichts anzuzeigen.</string>
+    <string name="plugin_action_unavailable">In dieser Version noch nicht verfügbar.</string>
+    <string name="plugin_action_not_allowed">Deine Zugangsdaten erlauben das nicht.</string>
 </resources>

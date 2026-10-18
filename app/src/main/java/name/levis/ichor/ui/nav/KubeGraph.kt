@@ -224,9 +224,11 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
         Routes.DATA_SERVICES,
         arguments = listOf(navArgument("kind") { type = NavType.StringType; defaultValue = "" }),
     ) { entry ->
-        val kind = entry.arguments?.getString("kind")?.let { k -> DataServiceKind.entries.firstOrNull { it.name == k } }
+        val arg = entry.arguments?.getString("kind").orEmpty()
+        val kind = DataServiceKind.entries.firstOrNull { it.name == arg }
         name.levis.ichor.ui.dataservices.DataServicesScreen(
             initial = kind,
+            initialPlugin = arg.takeIf { it.startsWith(Routes.DATA_SERVICES_PLUGIN_PREFIX) }?.removePrefix(Routes.DATA_SERVICES_PLUGIN_PREFIX),
             onBack = { nav.popBackStack() },
             onObject = kubeLinks.onObject,
             onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },

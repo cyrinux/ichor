@@ -311,6 +311,7 @@ fun Navigation(
                     onMetrics = { nav.navigate(Routes.metrics()) },
                     onAlerts = { nav.navigate(Routes.alerts()) },
                     onDataServices = { nav.navigate(Routes.dataServices(it)) },
+                    onPlugin = { nav.navigate(name.levis.ichor.ui.plugins.pluginRoute(it)) },
                     onArgoCD = { nav.navigate(Routes.ARGO_CD) },
                     onFlux = { nav.navigate(Routes.FLUX) },
                     onHealth = { nav.navigate(Routes.HEALTH) },

@@ -57,6 +57,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.PluginDetectItem
 import name.levis.ichor.ui.components.SectionCard
 
 /** One screen the tools card opens. */
@@ -85,8 +86,10 @@ internal fun KubeToolsCard(
     tailscale: Boolean = false,
     clusterLifecycle: Boolean = false,
     argoRollouts: Boolean = false,
+    /** The active CRD plugins of other categories than Data services, each a tool in its family. */
+    plugins: List<PluginDetectItem> = emptyList(),
 ) {
-    val groups = kubeToolGroups(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts)
+    val groups = kubeToolGroups(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, plugins = plugins)
     val labelStyle = MaterialTheme.typography.bodyLarge
     SectionCard(stringResource(R.string.common_kind_kubernetes)) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -169,6 +172,31 @@ private fun KubeToolRow(tool: KubeTool, labelStyle: TextStyle, modifier: Modifie
 /** Every tools-card screen in its family; the conditional ones only when the cluster serves them. */
 @Composable
 private fun kubeToolGroups(
+    nav: KubeHomeNavigation,
+    crossplane: Boolean,
+    tailscale: Boolean,
+    clusterLifecycle: Boolean,
+    argoRollouts: Boolean,
+    plugins: List<PluginDetectItem>,
+): List<KubeToolGroup> = kubeToolGroupsNative(nav, crossplane, tailscale, clusterLifecycle, argoRollouts).mapIndexed { index, group ->
+    val extra = plugins.filter { pluginToolGroup(it.category) == index }.map { KubeTool(it.name, Icons.Outlined.Extension) { nav.onPlugin(it) } }
+    if (extra.isEmpty()) group else group.copy(tools = group.tools + extra)
+}
+
+/**
+ * Which family a plugin's tool joins, by index in the families above: workloads (0), networking
+ * (1), observe (3), else browse (4). Storage (2) gets none: data services plugins are tabs of
+ * the Data services screen instead.
+ */
+private fun pluginToolGroup(category: String): Int = when (category) {
+    "workloads", "compute" -> 0
+    "networking" -> 1
+    "policies", "security" -> 3
+    else -> 4
+}
+
+@Composable
+private fun kubeToolGroupsNative(
     nav: KubeHomeNavigation,
     crossplane: Boolean,
     tailscale: Boolean,

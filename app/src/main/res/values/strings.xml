@@ -5513,4 +5513,12 @@
         <item quantity="one">%1$d pod deleted</item>
         <item quantity="other">%1$d pods deleted</item>
     </plurals>
+    <!-- CRD plugins: the generic screen's chrome (labels come translated from the plugin) -->
+    <string name="plugin_screen_title">Plugin</string>
+    <string name="plugin_errors_title">Not everything could be read:</string>
+    <string name="plugin_partial">Only the first objects were read: the counts are a lower bound.</string>
+    <string name="plugin_not_detected">Not found on this cluster.</string>
+    <string name="plugin_empty">Nothing to show.</string>
+    <string name="plugin_action_unavailable">Not available in this version yet.</string>
+    <string name="plugin_action_not_allowed">Your credentials may not do this.</string>
 </resources>

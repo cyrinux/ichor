@@ -220,7 +220,10 @@ tour** shows it again.
   sealing keys and whether each SealedSecret unsealed, by name only. When the garage-operator
   manages Garage, its clusters, buckets (size, quota, website), keys and node declarations show
   next to the live Garage state. Integrations are declarative plugins; see
-  [docs/plugins.md](docs/plugins.md).
+  [docs/plugins.md](docs/plugins.md). On Android, each plugin the cluster runs gets its tile
+  in the Data services card and its own tab (kube-green is the first), drawn from the tree the
+  Go core renders; a plugin of another kind (networking, policies…) is a tool on the
+  Kubernetes home. Plugin actions show, off, until the app can run them.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
 - **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,
