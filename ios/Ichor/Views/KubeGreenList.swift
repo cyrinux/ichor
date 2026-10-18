@@ -91,7 +91,7 @@ private struct SleepInfoRow: View {
 }
 
 /// "Edit schedule", off with the reason when the credentials may not patch the SleepInfo.
-private struct KubeGreenEditButton: View {
+struct KubeGreenEditButton: View {
     let info: KubeGreenSleepInfo
     let onEdit: () -> Void
     @Environment(AppModel.self) private var model

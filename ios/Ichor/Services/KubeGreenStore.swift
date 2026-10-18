@@ -43,6 +43,11 @@ final class KubeGreenStore {
         return value
     }
 
+    /// Drops what was read for the namespace: after a schedule saved, the next read is the new one.
+    func forget(namespace: String, key: String) {
+        entries[Self.id(namespace, key)] = nil
+    }
+
     private static func id(_ namespace: String, _ key: String) -> String { "\(namespace)#\(key)" }
 }
 
