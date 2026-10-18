@@ -26,7 +26,7 @@ fun rememberClusterLabels(): ClusterLabels {
 @Composable
 fun cloudDetail(cloud: CloudContext): String {
     val owner = if (cloud.provider == CloudContext.EKS) R.string.kube_eks_account else R.string.kube_gke_project
-    return listOf(cloud.provider, cloud.location, stringResource(owner, cloud.shortOwner)).joinToString(" · ")
+    return listOfNotNull(cloud.provider, cloud.location, cloud.shortOwner.takeIf { it.isNotEmpty() }?.let { stringResource(owner, it) }).joinToString(" · ")
 }
 
 /** A cluster list section's title: "Talos", "AWS · account 12…12", "Omni · ops@example.com". */
