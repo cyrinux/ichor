@@ -187,6 +187,9 @@ enum CheckupText {
     static var checkupSealingKeyCompromisedFix: String { String(localized: "The controller no longer seals with it, but what it sealed can still be read with it. Seal those SealedSecrets again with kubeseal, then delete the key.") }
     static func checkupSopsDecryptionFailed(_ a: String) -> String { String(localized: "Cannot decrypt its SOPS secrets with key \(a)") }
     static var checkupSopsDecryptionNotConfigured: String { String(localized: "Holds SOPS-encrypted files but has no decryption configured") }
+    static var checkupSopsDecryptionFailedNoKey: String { String(localized: "Cannot decrypt its SOPS secrets") }
+    static var checkupSopsDecryptionFailedNoKeyFix: String { String(localized: "Nothing in this Kustomization is applied until it decrypts. Without a secretRef, kustomize-controller decrypts through a cloud KMS or Vault: check that its identity (or spec.decryption.serviceAccountName) may use the key the files were encrypted with.") }
+    static var checkupSopsDecryptionNotConfiguredFix: String { String(localized: "Nothing in this Kustomization is applied while it holds encrypted Secrets. Add spec.decryption with provider sops and a secretRef to the Secret holding the age or PGP key, or a cloud KMS the controller can use.") }
     static var checkupSopsDecryptionFailedFix: String { String(localized: "Nothing in this Kustomization is applied until it decrypts. Check that the Secret named in spec.decryption.secretRef holds the age or PGP key the files were encrypted with.") }
     static func checkupRouteCertExpired(_ a: String) -> String { String(localized: "Certificate expired at \(a)") }
     static func checkupRouteCertExpiring(_ a: String, _ b: String) -> String { String(localized: "Certificate expires in \(a) days at \(b)") }

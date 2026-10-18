@@ -3905,10 +3905,13 @@
     <string name="checkup_sealingKeyCompromised">Chiave %1$s segnata come compromessa</string>
     <string name="checkup_sopsDecryptionFailed">Impossibile decifrare i suoi segreti SOPS con la chiave %1$s</string>
     <string name="checkup_sopsDecryptionNotConfigured">Contiene file cifrati con SOPS ma nessuna decifratura è configurata</string>
+    <string name="checkup_sopsDecryptionFailedNoKey">Impossibile decifrare i suoi segreti SOPS</string>
     <string name="checkup_sealedSecretNotSynced_fix">Il controller non è riuscito a decifrarlo in un Secret: è stato sigillato per un altro cluster, nome o namespace, o con una chiave che il controller non ha più. Sigillalo di nuovo con kubeseal e il certificato di questo cluster.</string>
     <string name="checkup_sealingKeyMissing_fix">Il controller non ha alcuna chiave per decifrare. Ripristina il backup della chiave (un Secret con l’etichetta sealedsecrets.bitnami.com/sealed-secrets-key) nel suo namespace, poi riavvia il controller.</string>
     <string name="checkup_sealingKeyCompromised_fix">Il controller non sigilla più con essa, ma ciò che ha sigillato è ancora leggibile con essa. Sigilla di nuovo quei SealedSecret con kubeseal, poi elimina la chiave.</string>
     <string name="checkup_sopsDecryptionFailed_fix">Nulla in questa Kustomization viene applicato finché non si decifra. Controlla che il Secret indicato in spec.decryption.secretRef contenga la chiave age o PGP con cui sono stati cifrati i file.</string>
+    <string name="checkup_sopsDecryptionFailedNoKey_fix">Nulla in questa Kustomization viene applicato finché non si decifra. Senza secretRef, kustomize-controller decifra tramite un KMS cloud o Vault: controlla che la sua identità (o spec.decryption.serviceAccountName) possa usare la chiave con cui sono stati cifrati i file.</string>
+    <string name="checkup_sopsDecryptionNotConfigured_fix">Nulla in questa Kustomization viene applicato finché contiene Secret cifrati. Aggiungi spec.decryption con il provider sops e un secretRef al Secret che contiene la chiave age o PGP, oppure un KMS cloud che il controller può usare.</string>
     <string name="route_cert_expired">Certificato scaduto</string>
     <string name="route_cert_expiring">Il certificato scade tra %1$d giorni</string>
     <string name="route_cert_host_mismatch">Il certificato non copre questo host</string>

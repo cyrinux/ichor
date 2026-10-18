@@ -193,7 +193,13 @@ final class CheckupTests: XCTestCase {
         XCTAssertEqual(f.kind, .sopsDecryptionFailed)
         XCTAssertEqual(f.extra, "sops-age")
         XCTAssertEqual(f.detail, "BuildFailed: error decrypting sources: failed to decrypt: no key could decrypt the data")
-        XCTAssertEqual(r.alertIssues, ["secrets|sopsDecryptionFailed|flux-system/apps": "critical"])
+        let issue = ["secrets|sopsDecryptionFailed|flux-system/apps": "critical"]
+        XCTAssertEqual(r.alertIssues, issue)
+        XCTAssertEqual(checkupIssuesWithGaps(r, known: [:], gitopsWatched: false), issue)
+        // With GitOps watched, the Kustomization's Ready=False already alerts there.
+        XCTAssertEqual(r.alertIssues(gitopsWatched: true), [:])
+        XCTAssertEqual(checkupIssuesWithGaps(r, known: [:], gitopsWatched: true), [:])
+        XCTAssertEqual(gitopsAlertedKinds, ["sopsDecryptionFailed"])
     }
 
     // The demo checkup's route certificate findings (go/ichorgo/kube_checkup_demo.go).

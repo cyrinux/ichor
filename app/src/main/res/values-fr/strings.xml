@@ -3904,10 +3904,13 @@
     <string name="checkup_sealingKeyCompromised">Clé %1$s marquée compromise</string>
     <string name="checkup_sopsDecryptionFailed">Ne peut pas déchiffrer ses secrets SOPS avec la clé %1$s</string>
     <string name="checkup_sopsDecryptionNotConfigured">Contient des fichiers chiffrés par SOPS mais aucun déchiffrement n’est configuré</string>
+    <string name="checkup_sopsDecryptionFailedNoKey">Ne peut pas déchiffrer ses secrets SOPS</string>
     <string name="checkup_sealedSecretNotSynced_fix">Le contrôleur n’a pas pu le déchiffrer en Secret : il a été scellé pour un autre cluster, nom ou namespace, ou avec une clé que le contrôleur n’a plus. Scellez-le de nouveau avec kubeseal et le certificat de ce cluster.</string>
     <string name="checkup_sealingKeyMissing_fix">Le contrôleur n’a aucune clé pour déchiffrer. Restaurez la sauvegarde de la clé (un Secret avec le label sealedsecrets.bitnami.com/sealed-secrets-key) dans son namespace, puis redémarrez le contrôleur.</string>
     <string name="checkup_sealingKeyCompromised_fix">Le contrôleur ne scelle plus avec elle, mais ce qu’elle a scellé reste lisible avec elle. Scellez de nouveau ces SealedSecrets avec kubeseal, puis supprimez la clé.</string>
     <string name="checkup_sopsDecryptionFailed_fix">Rien dans cette Kustomization n’est appliqué tant qu’elle ne se déchiffre pas. Vérifiez que le Secret nommé dans spec.decryption.secretRef contient la clé age ou PGP avec laquelle les fichiers ont été chiffrés.</string>
+    <string name="checkup_sopsDecryptionFailedNoKey_fix">Rien dans cette Kustomization n’est appliqué tant qu’elle ne se déchiffre pas. Sans secretRef, kustomize-controller déchiffre via un KMS cloud ou Vault : vérifiez que son identité (ou spec.decryption.serviceAccountName) peut utiliser la clé avec laquelle les fichiers ont été chiffrés.</string>
+    <string name="checkup_sopsDecryptionNotConfigured_fix">Rien dans cette Kustomization n’est appliqué tant qu’elle contient des Secrets chiffrés. Ajoutez spec.decryption avec le provider sops et un secretRef vers le Secret qui contient la clé age ou PGP, ou un KMS cloud que le contrôleur peut utiliser.</string>
     <string name="route_cert_expired">Certificat expiré</string>
     <string name="route_cert_expiring">Le certificat expire dans %1$d jours</string>
     <string name="route_cert_host_mismatch">Le certificat ne couvre pas cet hôte</string>

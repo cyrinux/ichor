@@ -103,7 +103,7 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
     val watchCheckup = store.checkupWatched.value && workloads
     val checkupIssues = if (watchCheckup) {
         runCatching { reads.kube.checkup() }.getOrNull()
-            ?.let { checkupIssuesWithGaps(it, known = knownCheckupIssues(prev, name)) }
+            ?.let { checkupIssuesWithGaps(it, known = knownCheckupIssues(prev, name), gitopsWatched = watchGitops) }
     } else {
         null
     }

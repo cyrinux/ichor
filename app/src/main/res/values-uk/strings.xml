@@ -4122,10 +4122,13 @@
     <string name="checkup_sealingKeyCompromised">Ключ %1$s позначено скомпрометованим</string>
     <string name="checkup_sopsDecryptionFailed">Не може розшифрувати свої SOPS-секрети ключем %1$s</string>
     <string name="checkup_sopsDecryptionNotConfigured">Містить файли, зашифровані SOPS, але розшифрування не налаштовано</string>
+    <string name="checkup_sopsDecryptionFailedNoKey">Не може розшифрувати свої SOPS-секрети</string>
     <string name="checkup_sealedSecretNotSynced_fix">Контролер не зміг розшифрувати його в Secret: його запечатано для іншого кластера, імені чи namespace або ключем, якого контролер більше не має. Запечатайте його знову за допомогою kubeseal і сертифіката цього кластера.</string>
     <string name="checkup_sealingKeyMissing_fix">Контролер не має ключа для розшифрування. Відновіть резервну копію ключа (Secret з міткою sealedsecrets.bitnami.com/sealed-secrets-key) у його namespace, потім перезапустіть контролер.</string>
     <string name="checkup_sealingKeyCompromised_fix">Контролер більше не запечатує ним, але запечатане ним досі можна прочитати. Запечатайте ці SealedSecrets знову за допомогою kubeseal, потім видаліть ключ.</string>
     <string name="checkup_sopsDecryptionFailed_fix">Нічого з цієї Kustomization не застосовується, доки її не вдасться розшифрувати. Перевірте, що Secret, вказаний у spec.decryption.secretRef, містить ключ age або PGP, яким зашифровано файли.</string>
+    <string name="checkup_sopsDecryptionFailedNoKey_fix">Нічого з цієї Kustomization не застосовується, доки її не вдасться розшифрувати. Без secretRef kustomize-controller розшифровує через хмарний KMS або Vault: перевірте, що його ідентичність (або spec.decryption.serviceAccountName) може використовувати ключ, яким зашифровано файли.</string>
+    <string name="checkup_sopsDecryptionNotConfigured_fix">Нічого з цієї Kustomization не застосовується, поки вона містить зашифровані Secrets. Додайте spec.decryption з provider sops і secretRef на Secret із ключем age або PGP, або хмарний KMS, який може використовувати контролер.</string>
     <string name="route_cert_expired">Сертифікат прострочено</string>
     <string name="route_cert_expiring">Сертифікат спливає через %1$d дн.</string>
     <string name="route_cert_host_mismatch">Сертифікат не покриває цей хост</string>

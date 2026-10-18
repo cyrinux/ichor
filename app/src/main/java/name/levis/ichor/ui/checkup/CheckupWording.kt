@@ -172,9 +172,11 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
         CheckupKind.SEALED_SECRET_NOT_SYNCED -> stringResource(R.string.checkup_sealedSecretNotSynced)
         CheckupKind.SEALING_KEY_MISSING -> stringResource(R.string.checkup_sealingKeyMissing, f.extra.ifEmpty { f.namespace })
         CheckupKind.SEALING_KEY_COMPROMISED -> stringResource(R.string.checkup_sealingKeyCompromised, f.name)
-        CheckupKind.SOPS_DECRYPTION_FAILED ->
-            if (f.extra.isEmpty()) stringResource(R.string.checkup_sopsDecryptionNotConfigured)
-            else stringResource(R.string.checkup_sopsDecryptionFailed, f.extra)
+        CheckupKind.SOPS_DECRYPTION_FAILED -> when {
+            f.reason == FLUX_RECONCILIATION_FAILED -> stringResource(R.string.checkup_sopsDecryptionNotConfigured)
+            f.extra.isEmpty() -> stringResource(R.string.checkup_sopsDecryptionFailedNoKey)
+            else -> stringResource(R.string.checkup_sopsDecryptionFailed, f.extra)
+        }
         CheckupKind.ROUTE_CERT_EXPIRED -> stringResource(R.string.checkup_routeCertExpired, f.reason.ifEmpty { "-" })
         CheckupKind.ROUTE_CERT_EXPIRING -> stringResource(R.string.checkup_routeCertExpiring, f.count.toString(), f.reason.ifEmpty { "-" })
         CheckupKind.ROUTE_CERT_HOST_MISMATCH -> stringResource(R.string.checkup_routeCertHostMismatch, f.reason.ifEmpty { "-" })
@@ -184,10 +186,11 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
 
 /**
  * What to do about it; 0 for a kind without advice (an event) or one this version does not know.
- * [reason]: the finding's, which narrows the advice of some kinds (the cause of a failed pull).
+ * [reason]: the finding's, which narrows the advice of some kinds (the cause of a failed pull);
+ * [extra] too (a SOPS failure with or without a key Secret).
  */
 @StringRes
-fun checkupFix(kind: String, reason: String = ""): Int = when (kind) {
+fun checkupFix(kind: String, reason: String = "", extra: String = ""): Int = when (kind) {
     CheckupKind.POD_CRASH_LOOP -> R.string.checkup_podCrashLoop_fix
     CheckupKind.POD_IMAGE_PULL -> pullCheckupFix(reason) ?: R.string.checkup_podImagePull_fix
     CheckupKind.POD_UNSCHEDULABLE -> R.string.checkup_podUnschedulable_fix
@@ -254,12 +257,19 @@ fun checkupFix(kind: String, reason: String = ""): Int = when (kind) {
     CheckupKind.SEALED_SECRET_NOT_SYNCED -> R.string.checkup_sealedSecretNotSynced_fix
     CheckupKind.SEALING_KEY_MISSING -> R.string.checkup_sealingKeyMissing_fix
     CheckupKind.SEALING_KEY_COMPROMISED -> R.string.checkup_sealingKeyCompromised_fix
-    CheckupKind.SOPS_DECRYPTION_FAILED -> R.string.checkup_sopsDecryptionFailed_fix
+    CheckupKind.SOPS_DECRYPTION_FAILED -> when {
+        reason == FLUX_RECONCILIATION_FAILED -> R.string.checkup_sopsDecryptionNotConfigured_fix
+        extra.isEmpty() -> R.string.checkup_sopsDecryptionFailedNoKey_fix
+        else -> R.string.checkup_sopsDecryptionFailed_fix
+    }
     CheckupKind.ROUTE_CERT_EXPIRED -> R.string.checkup_routeCertExpired_fix
     CheckupKind.ROUTE_CERT_EXPIRING -> R.string.checkup_routeCertExpiring_fix
     CheckupKind.ROUTE_CERT_HOST_MISMATCH -> R.string.checkup_routeCertHostMismatch_fix
     else -> 0
 }
+
+/** Flux's Ready reason for an encrypted Secret in a Kustomization without spec.decryption. */
+private const val FLUX_RECONCILIATION_FAILED = "ReconciliationFailed"
 
 /** The Tailscale operator's reason for a Connector or ProxyGroup naming a ProxyClass that does not exist. */
 private const val TAILSCALE_PROXY_CLASS_MISSING = "ProxyClassMissing"

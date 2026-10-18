@@ -2,6 +2,7 @@ package name.levis.ichor.model
 
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosJson
+import name.levis.ichor.monitor.checkupIssuesWithGaps
 import name.levis.ichor.ui.checkup.checkupFix
 import name.levis.ichor.ui.checkup.detail
 import org.junit.Assert.assertEquals
@@ -15,6 +16,7 @@ class SopsCheckupTest {
     """.trimIndent()
 
     private val report get() = TalosJson.decodeFromString(CheckupReport.serializer(), raw)
+    private val issue = mapOf("secrets|sopsDecryptionFailed|flux-system/apps" to "critical")
 
     @Test fun theDemoFindingDecodes() {
         val f = report.shownSections.single().findings.single()
@@ -23,11 +25,21 @@ class SopsCheckupTest {
         assertEquals("BuildFailed: error decrypting sources: failed to decrypt: no key could decrypt the data", f.detail)
     }
 
-    @Test fun itHasAFix() {
-        assertEquals(R.string.checkup_sopsDecryptionFailed_fix, checkupFix(CheckupKind.SOPS_DECRYPTION_FAILED))
+    @Test fun theFixFollowsTheReasonAndTheKey() {
+        val kind = CheckupKind.SOPS_DECRYPTION_FAILED
+        assertEquals(R.string.checkup_sopsDecryptionFailed_fix, checkupFix(kind, "BuildFailed", "sops-age"))
+        assertEquals(R.string.checkup_sopsDecryptionFailedNoKey_fix, checkupFix(kind, "BuildFailed", ""))
+        assertEquals(R.string.checkup_sopsDecryptionNotConfigured_fix, checkupFix(kind, "ReconciliationFailed", ""))
     }
 
-    @Test fun theMonitorAlertsOnIt() {
-        assertEquals(mapOf("secrets|sopsDecryptionFailed|flux-system/apps" to "critical"), report.alertIssues())
+    @Test fun theMonitorAlertsOnItWithoutGitOpsWatching() {
+        assertEquals(issue, report.alertIssues())
+        assertEquals(issue, checkupIssuesWithGaps(report, known = emptyMap(), gitopsWatched = false))
+    }
+
+    @Test fun theGitOpsAlertRaisesItWhenWatched() {
+        assertEquals(emptyMap<String, String>(), report.alertIssues(gitopsWatched = true))
+        assertEquals(emptyMap<String, String>(), checkupIssuesWithGaps(report, known = emptyMap(), gitopsWatched = true))
+        assertEquals(setOf("sopsDecryptionFailed"), GITOPS_ALERTED_KINDS)
     }
 }
