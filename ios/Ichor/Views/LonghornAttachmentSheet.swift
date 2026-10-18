@@ -39,7 +39,7 @@ struct LonghornAttachmentSheet: View {
                         } else { Text("Currently attached to: \(p.node)") }
                     }
                 }
-                Section("Type \(target.volume.name) to confirm") {
+                Section(typedConfirmationPrompt(target.volume.name)) {
                     TextField("Volume name", text: $typed).autocorrectionDisabled().textInputAutocapitalization(.never)
                     Button { onConfirm(selected) } label: { if target.attach { Text("Attach volume") } else { Text("Detach volume") } }
                         .disabled(preview?.accepts(selected, attach: target.attach) != true || !typedConfirmationMatches(typed, token: target.volume.name) || denial != nil)

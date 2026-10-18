@@ -21,7 +21,7 @@ struct PowerSheet: View {
     }
 
     private var request: PowerRequest { PowerRequest(action: action, rebootMode: mode, forceShutdown: forceShutdown) }
-    private var matches: Bool { typed.trimmingCharacters(in: .whitespaces) == hostname }
+    private var matches: Bool { typedConfirmationMatches(typed, token: hostname) }
 
     var body: some View {
         NavigationStack {
@@ -60,7 +60,7 @@ struct PowerSheet: View {
                             .foregroundStyle(.statusWarn)
                     }
                 }
-                Section("Type \(hostname) to confirm") {
+                Section(typedConfirmationPrompt(hostname)) {
                     TextField("Hostname", text: $typed, prompt: Text(verbatim: hostname))
                         .font(.body.monospaced())
                         .autocorrectionDisabled()

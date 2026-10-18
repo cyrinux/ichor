@@ -527,6 +527,47 @@
         }
       }
     },
+    "Type %@, the end of %@, to confirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zum Bestätigen %1$@ eingeben, das Ende von %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type %1$@, the end of %2$@, to confirm"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escribe %1$@, el final de %2$@, para confirmar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez %1$@, la fin de %2$@, pour confirmer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digita %1$@, la parte finale di %2$@, per confermare"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть %1$@, кінець %2$@, для підтвердження"
+          }
+        }
+      }
+    },
     "Cannot decrypt its SOPS secrets" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -908,6 +949,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Нічого показати."
+          }
+        }
+      }
+    },
+    "Not available in this version yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas encore disponible dans cette version."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no disponible en esta versión."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In dieser Version noch nicht verfügbar."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non ancora disponibile in questa versione."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У цій версії ще недоступно."
           }
         }
       }

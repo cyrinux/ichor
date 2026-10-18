@@ -101,6 +101,16 @@ final class EtcdMembersTests: XCTestCase {
         // A blank token is never confirmed, least of all by an empty field.
         XCTAssertFalse(typedConfirmationMatches("", token: ""))
         XCTAssertFalse(typedConfirmationMatches("  ", token: " "))
+        // A long name is confirmed by its end, or whole.
+        let volume = "pvc-0b8e6a1c-4d2f-4a7e-9b3c-7f1e2d9c0e1a"
+        XCTAssertEqual(typedConfirmationCode(volume), "c0e1a")
+        XCTAssertTrue(typedConfirmationMatches(" c0e1a ", token: volume))
+        XCTAssertTrue(typedConfirmationMatches(volume, token: volume))
+        XCTAssertFalse(typedConfirmationMatches("0e1a", token: volume))
+        XCTAssertFalse(typedConfirmationMatches("C0E1A", token: volume))
+        // A short one is typed whole.
+        XCTAssertEqual(typedConfirmationCode("worker-12345"), "worker-12345")
+        XCTAssertFalse(typedConfirmationMatches("12345", token: "worker-12345"))
         // A member without hostname is confirmed by its id.
         let gate = EtcdRemovalGate(plan: EtcdMemberPlan(member: .init(id: "c3", hostname: " ")))
         XCTAssertEqual(gate.confirmationName, "c3")

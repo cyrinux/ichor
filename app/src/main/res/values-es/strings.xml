@@ -304,6 +304,7 @@
     <string name="power_controlplane_warning">Nodo del plano de control: sale de etcd mientras está caído. Asegúrate de que los demás miembros están en buen estado o el clúster podría perder el quórum.</string>
     <string name="power_shutdown_stays_off">Seguirá apagado hasta que alguien lo encienda (Wake-on-LAN, IPMI o físicamente).</string>
     <string name="power_type_to_confirm">Escribe %1$s para confirmar:</string>
+    <string name="power_type_end_to_confirm">Escribe %1$s, el final de %2$s, para confirmar:</string>
     <string name="power_mode_label">Modo (talosctl reboot -m)</string>
     <string name="power_force_label">Forzar (--force)</string>
     <string name="power_force_desc">Omite el cordon/drain de Kubernetes, por ejemplo si la API de Kubernetes no responde. Los pods y servicios se detienen igualmente.</string>

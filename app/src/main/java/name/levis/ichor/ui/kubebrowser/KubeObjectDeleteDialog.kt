@@ -37,6 +37,7 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.node.TypedConfirmPrompt
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
@@ -79,7 +80,7 @@ fun KubeObjectDeleteDialog(
                     is UiState.Loaded -> DeletePreviewContent(p.data, delete.propagation, onPropagation)
                 }
                 if (preview?.needsTypedName == true) {
-                    Text(stringResource(R.string.power_type_to_confirm, ref.name), style = MaterialTheme.typography.bodyMedium)
+                    TypedConfirmPrompt(ref.name)
                     OutlinedTextField(
                         value = typed,
                         onValueChange = { typed = it },
