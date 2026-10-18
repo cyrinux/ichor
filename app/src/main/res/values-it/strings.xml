@@ -5509,4 +5509,12 @@
         <item quantity="one">%1$d pod eliminato</item>
         <item quantity="other">%1$d pod eliminati</item>
     </plurals>
+    <!-- CRD plugins: the generic screen's chrome (labels come translated from the plugin) -->
+    <string name="plugin_screen_title">Plugin</string>
+    <string name="plugin_errors_title">Non è stato possibile leggere tutto:</string>
+    <string name="plugin_partial">Sono stati letti solo i primi oggetti: i conteggi sono un minimo.</string>
+    <string name="plugin_not_detected">Non trovato su questo cluster.</string>
+    <string name="plugin_empty">Niente da mostrare.</string>
+    <string name="plugin_action_unavailable">Non ancora disponibile in questa versione.</string>
+    <string name="plugin_action_not_allowed">Le tue credenziali non lo consentono.</string>
 </resources>

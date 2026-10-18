@@ -29,6 +29,9 @@ object KubeBrowserRoutes {
     const val CLUSTER_LIFECYCLE = "kube-cluster-lifecycle"
     const val LOAD_BALANCING = "kube-load-balancing"
     const val JOBS = "kube-jobs"
+
+    /** A CRD plugin of another category than Data services, as a screen of its own. */
+    private const val PLUGIN = "kube-plugin/{id}"
     private const val HELM_RELEASE = "kube-helm-release?ns={ns}&name={name}"
     private const val FORWARD = "kube-forward?ns={ns}&pod={pod}"
 
@@ -42,6 +45,8 @@ object KubeBrowserRoutes {
     fun obj(o: KubeObjectRef, openScale: Boolean = false) =
         "kube-object?g=${e(o.group)}&v=${e(o.version)}&r=${e(o.resource)}&k=${e(o.kind)}&ns=${e(o.namespace)}&name=${e(o.name)}&edit=${o.editable}&scale=${o.scalable}" +
             if (openScale) "&openScale=true" else ""
+
+    fun plugin(id: String) = "kube-plugin/${e(id)}"
 
     fun helmRelease(namespace: String, name: String) = "kube-helm-release?ns=${e(namespace)}&name=${e(name)}"
 
@@ -124,6 +129,9 @@ object KubeBrowserRoutes {
         }
         composable(JOBS) {
             JobsScreen(onBack = { nav.popBackStack() }, onObject = links.onObject)
+        }
+        composable(PLUGIN, arguments = strings("id")) { entry ->
+            name.levis.ichor.ui.plugins.PluginScreen(entry.arguments.str("id"), onBack = { nav.popBackStack() }, onObject = links.onObject)
         }
         composable(HELM) {
             HelmReleasesScreen(onBack = { nav.popBackStack() }, onRelease = { nav.navigate(helmRelease(it.namespace, it.name)) })

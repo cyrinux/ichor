@@ -115,6 +115,8 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.apps.AppsViewModel
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.DataServiceKind
+import name.levis.ichor.model.PluginDetectItem
+import name.levis.ichor.ui.plugins.PluginDetectViewModel
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.dataServiceHints
 import name.levis.ichor.model.ARGO_CD_CATALOG_ID
@@ -179,6 +181,8 @@ fun OverviewScreen(
     onMetrics: () -> Unit,
     onAlerts: () -> Unit,
     onDataServices: (DataServiceKind?) -> Unit,
+    /** A CRD plugin's tile (see [name.levis.ichor.ui.plugins.pluginRoute]). */
+    onPlugin: (PluginDetectItem) -> Unit,
     onArgoCD: () -> Unit,
     onFlux: () -> Unit,
     onHealth: () -> Unit,
@@ -247,6 +251,7 @@ fun OverviewScreen(
     argoVm: ArgoViewModel = viewModel(key = "overview-argocd", factory = factory { ArgoViewModel(app.gitOpsRepository, app.kubeRepository, freezeReminderHook(app)) }),
     fluxVm: FluxViewModel = viewModel(key = "overview-flux", factory = factory { FluxViewModel(app.gitOpsRepository, app.kubeRepository) }),
     alertsVm: AlertsCardViewModel = viewModel(key = "overview-alerts", factory = factory { alertsCardViewModel(app) }),
+    pluginsVm: PluginDetectViewModel = viewModel(key = "overview-plugins", factory = factory { PluginDetectViewModel(app.pluginRepository) }),
 ) {
     SideEffect { StartupTrace.markOnce("overviewScreen first composition") }
     // A cluster added from a kubeconfig has no Talos overview: its Kubernetes home instead,
@@ -269,6 +274,7 @@ fun OverviewScreen(
                 onArgoCD = onArgoCD,
                 onFlux = onFlux,
                 onDataServices = onDataServices,
+                onPlugin = onPlugin,
                 onSettings = onSettings,
                 onFunding = onFunding,
                 onAddCluster = onAddCluster,
@@ -330,8 +336,12 @@ fun OverviewScreen(
     LaunchedEffect(config?.activeContext, generation, invalidations, dataHints) {
         // Another cluster without hints: forgotten, so coming back loads again instead of showing the old result.
         if (dataHints.isNotEmpty()) dataVm.load(listOf(config?.activeContext, generation, invalidations, dataHints), dataHints) else dataVm.forget()
+        // The CRD plugins (kube-green...) with them: their tiles join the card.
+        if (dataHints.isNotEmpty()) pluginsVm.load(listOf(config?.activeContext, generation, invalidations), dataHints) else pluginsVm.forget()
     }
     val dataServices by dataVm.state.collectAsStateWithLifecycle()
+    val plugins by pluginsVm.state.collectAsStateWithLifecycle()
+    val dataPlugins = (plugins as? UiState.Loaded)?.data?.dataServicePlugins.orEmpty()
     // Argo CD likewise, when the inventory shows it.
     val argoHinted = config?.activeSummary?.allows(Feature.WORKLOADS) == true &&
         (apps as? UiState.Loaded)?.data?.hasArgoCD == true
@@ -588,6 +598,7 @@ fun OverviewScreen(
                         timeVm.refresh()
                         appsVm.refresh()
                         if (dataHints.isNotEmpty()) dataVm.refresh()
+                        if (dataHints.isNotEmpty()) pluginsVm.refresh()
                         if (alertsAllowed) alertsVm.refresh()
                         scope.launch { discoveryVm.discover() }
                     },
@@ -621,6 +632,8 @@ fun OverviewScreen(
                         dataServices = dataServices.takeIf { dataHints.isNotEmpty() },
                         dataHints = dataHints,
                         onDataServices = onDataServices,
+                        dataPlugins = dataPlugins,
+                        onPlugin = onPlugin,
                         argo = argo.takeIf { argoHinted },
                         onArgoCD = onArgoCD,
                         flux = flux.takeIf { fluxHinted },
@@ -676,6 +689,8 @@ private fun NodeList(
     dataServices: UiState<DataServices>?,
     dataHints: String,
     onDataServices: (DataServiceKind?) -> Unit,
+    dataPlugins: List<PluginDetectItem>,
+    onPlugin: (PluginDetectItem) -> Unit,
     argo: UiState<ArgoStatus>?,
     onArgoCD: () -> Unit,
     flux: UiState<FluxStatus>?,
@@ -819,7 +834,7 @@ private fun NodeList(
                     val inventory = (apps as? UiState.Loaded)?.data
                     val appsById = remember(inventory) { inventory?.apps.orEmpty().associateBy { it.id } }
                     val hinted = remember(dataHints) { DataServiceKind.entries.filter { it.catalogId in dataHints.split(',') } }
-                    Box(Modifier.longPressToCustomize(onCustomize)) { DataServicesCard(dataServices, hinted, appsById, onDataServices) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { DataServicesCard(dataServices, hinted, appsById, onDataServices, dataPlugins, onPlugin) }
                 }
                 OverviewCard.ARGO_CD -> if (argo != null) item(key = card.name) {
                     val argoTile = (apps as? UiState.Loaded)?.data?.apps?.firstOrNull { it.id == ARGO_CD_CATALOG_ID }

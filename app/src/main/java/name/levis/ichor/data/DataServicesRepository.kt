@@ -72,6 +72,9 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
         }
     }
 
+    /** Drops [namespace]'s kube-green state kept for a minute: the next read asks the cluster. */
+    fun forgetKubeGreenNamespace(namespace: String) = go.results.forget(kubeGreenNamespaceKey(namespace))
+
     /** What the blocks failing to resync in a Garage cluster are, run in its ready pod (os:admin). Never cached. */
     suspend fun garageBlockErrors(instance: GarageInstance): GarageBlockReport = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(GarageBlockReport.serializer(), Ichorgo.kubeGarageBlockErrors(cfg, ctx, server, instance.namespace, instance.pod))

@@ -36,7 +36,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.DataServicesRepository
@@ -75,6 +78,9 @@ class KubeGreenActions(
     /** Labels of the SleepInfos with a save in flight. */
     val busy: StateFlow<Set<String>> get() = actions.busy
     val results: Flow<KubeGreenScheduleResult> get() = actions.results
+    private val _saved = MutableStateFlow(0)
+    /** Bumped after each save that went through: what shows a schedule reads it again. */
+    val saved: StateFlow<Int> = _saved.asStateFlow()
 
     fun setSchedule(info: KubeGreenSleepInfo, schedule: KubeGreenSchedule) {
         val key = info.label
@@ -82,7 +88,12 @@ class KubeGreenActions(
             key,
             { dataServices.setKubeGreenSchedule(info.namespace, info.name, schedule.weekdays, schedule.sleepAt, schedule.wakeUpAt, schedule.timeZone) },
             { KubeGreenScheduleResult(key, it.exceptionOrNull()?.uiText()) },
-        ) { onChanged() }
+        ) {
+            // The next sheet starts from the new schedule, not the one kept for a minute.
+            dataServices.forgetKubeGreenNamespace(info.namespace)
+            _saved.update { it + 1 }
+            onChanged()
+        }
     }
 }
 

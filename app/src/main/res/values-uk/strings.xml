@@ -5773,4 +5773,12 @@
         <item quantity="many">Видалено %1$d подів</item>
         <item quantity="other">Видалено %1$d поду</item>
     </plurals>
+    <!-- CRD plugins: the generic screen's chrome (labels come translated from the plugin) -->
+    <string name="plugin_screen_title">Плагін</string>
+    <string name="plugin_errors_title">Не все вдалося прочитати:</string>
+    <string name="plugin_partial">Прочитано лише перші об’єкти: кількості є мінімальними.</string>
+    <string name="plugin_not_detected">Не знайдено в цьому кластері.</string>
+    <string name="plugin_empty">Нічого показати.</string>
+    <string name="plugin_action_unavailable">У цій версії ще недоступно.</string>
+    <string name="plugin_action_not_allowed">Ваші облікові дані цього не дозволяють.</string>
 </resources>

@@ -113,6 +113,12 @@ internal object Routes {
 
     /** [kind] opens on that system's tab; null on the first. */
     fun dataServices(kind: DataServiceKind? = null) = "data-services?kind=${kind?.name.orEmpty()}"
+
+    /** The `kind` of a plugin's tab: "plugin:<id>". */
+    const val DATA_SERVICES_PLUGIN_PREFIX = "plugin:"
+
+    /** Data services on the tab of the CRD plugin [pluginId]. */
+    fun dataServicesPlugin(pluginId: String) = "data-services?kind=${Uri.encode(DATA_SERVICES_PLUGIN_PREFIX + pluginId)}"
     const val ARGO_CD = "argocd"
     const val ARGO_APP = "argocd-app?ns={ns}&name={name}&sync={sync}"
     const val ARGO_WINDOWS = "argocd-windows"

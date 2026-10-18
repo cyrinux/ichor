@@ -16,6 +16,7 @@ import name.levis.ichor.data.CaptureRepository
 import name.levis.ichor.data.CiliumRepository
 import name.levis.ichor.data.AutoscalingRepository
 import name.levis.ichor.data.PolicyRepository
+import name.levis.ichor.data.PluginRepository
 import name.levis.ichor.data.VirtualMachineRepository
 import name.levis.ichor.data.ArgoRolloutsRepository
 import name.levis.ichor.data.NetPerfHistory
@@ -189,6 +190,7 @@ class TalosApp : Application() {
         )
     }
     val dataServicesRepository by lazy { DataServicesRepository(goCall) }
+    val pluginRepository by lazy { PluginRepository(goCall) }
     val alertmanagerRepository by lazy { AlertmanagerRepository(goCall) }
 
     /** Last known cluster data on disk, only while "Keep last known state" is on (Settings → Privacy). */
