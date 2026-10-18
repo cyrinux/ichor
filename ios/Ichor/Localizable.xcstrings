@@ -1,6 +1,146 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Custom icon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icône personnalisée"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icono personalizado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Власний значок"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigenes Symbol"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icona personalizzata"
+          }
+        }
+      }
+    },
+    "Documentation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документація"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumentation"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentazione"
+          }
+        }
+      }
+    },
+    "Give a CronJob its own icon with the ichor.levis.name/icon label or annotation, set to a Dashboard Icons name such as postgresql. The ichor.levis.name/title and ichor.levis.name/description annotations set its name and a line of description.\n\nkubectl label cronjob db-backup ichor.levis.name/icon=postgresql\n\nWithout one, Ichor picks the icon of the app its image belongs to, else a clock." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Donnez à un CronJob sa propre icône avec le label ou l’annotation ichor.levis.name/icon, au nom d’une icône Dashboard Icons comme postgresql. Les annotations ichor.levis.name/title et ichor.levis.name/description lui donnent un nom et une ligne de description.\n\nkubectl label cronjob db-backup ichor.levis.name/icon=postgresql\n\nSans elle, Ichor reprend l’icône de l’application à laquelle appartient son image, sinon une horloge."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da a un CronJob su propio icono con la etiqueta o la anotación ichor.levis.name/icon, con el nombre de un icono de Dashboard Icons como postgresql. Las anotaciones ichor.levis.name/title e ichor.levis.name/description le dan un nombre y una línea de descripción.\n\nkubectl label cronjob db-backup ichor.levis.name/icon=postgresql\n\nSin ella, Ichor usa el icono de la aplicación a la que pertenece su imagen o, si no, un reloj."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Задайте CronJob власний значок міткою або анотацією ichor.levis.name/icon з назвою значка Dashboard Icons, наприклад postgresql. Анотації ichor.levis.name/title та ichor.levis.name/description задають назву й рядок опису.\n\nkubectl label cronjob db-backup ichor.levis.name/icon=postgresql\n\nБез неї Ichor бере значок застосунку, до якого належить образ, інакше годинник."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib einem CronJob mit dem Label oder der Annotation ichor.levis.name/icon ein eigenes Symbol, als Dashboard-Icons-Name wie postgresql. Die Annotationen ichor.levis.name/title und ichor.levis.name/description geben ihm einen Namen und eine Zeile Beschreibung.\n\nkubectl label cronjob db-backup ichor.levis.name/icon=postgresql\n\nOhne sie nimmt Ichor das Symbol der App, zu der sein Image gehört, sonst eine Uhr."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dai a un CronJob la sua icona con l’etichetta o l’annotazione ichor.levis.name/icon, con il nome di un’icona di Dashboard Icons come postgresql. Le annotazioni ichor.levis.name/title e ichor.levis.name/description gli danno un nome e una riga di descrizione.\n\nkubectl label cronjob db-backup ichor.levis.name/icon=postgresql\n\nSenza, Ichor usa l’icona dell’app a cui appartiene la sua immagine, altrimenti un orologio."
+          }
+        }
+      }
+    },
+    "An app Ichor does not recognise can bring its own logo with the ichor.levis.name/icon annotation: a Dashboard Icons name, an https link to a PNG or WebP (downloaded only when icon downloads are on) or the image itself, inline in base64. A label holds a Dashboard Icons name only.\n\nkubectl -n argocd annotate application my-site ichor.levis.name/icon=grafana" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une application qu’Ichor ne reconnaît pas peut apporter son propre logo avec l’annotation ichor.levis.name/icon : un nom Dashboard Icons, un lien https vers un PNG ou un WebP (téléchargé seulement si les téléchargements d’icônes sont activés) ou l’image elle-même, en base64. Un label ne contient qu’un nom Dashboard Icons.\n\nkubectl -n argocd annotate application my-site ichor.levis.name/icon=grafana"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una aplicación que Ichor no reconoce puede traer su propio logo con la anotación ichor.levis.name/icon: un nombre de Dashboard Icons, un enlace https a un PNG o WebP (descargado solo si las descargas de iconos están activadas) o la propia imagen, en base64. Una etiqueta solo admite un nombre de Dashboard Icons.\n\nkubectl -n argocd annotate application my-site ichor.levis.name/icon=grafana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застосунок, який Ichor не розпізнає, може мати власний логотип в анотації ichor.levis.name/icon: назва Dashboard Icons, посилання https на PNG або WebP (завантажується, лише коли завантаження значків увімкнено) або саме зображення в base64. Мітка містить лише назву Dashboard Icons.\n\nkubectl -n argocd annotate application my-site ichor.levis.name/icon=grafana"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine App, die Ichor nicht erkennt, kann mit der Annotation ichor.levis.name/icon ihr eigenes Logo mitbringen: einen Dashboard-Icons-Namen, einen https-Link zu einem PNG oder WebP (nur geladen, wenn Symbol-Downloads erlaubt sind) oder das Bild selbst, inline in Base64. Ein Label nimmt nur einen Dashboard-Icons-Namen auf.\n\nkubectl -n argocd annotate application my-site ichor.levis.name/icon=grafana"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un’app che Ichor non riconosce può portare il proprio logo con l’annotazione ichor.levis.name/icon: un nome di Dashboard Icons, un link https a un PNG o WebP (scaricato solo se i download delle icone sono attivi) o l’immagine stessa, in base64. Un’etichetta accetta solo un nome di Dashboard Icons.\n\nkubectl -n argocd annotate application my-site ichor.levis.name/icon=grafana"
+          }
+        }
+      }
+    },
     "Line %lld is not an age public key (age1…)." : {
       "extractionState" : "manual",
       "localizations" : {

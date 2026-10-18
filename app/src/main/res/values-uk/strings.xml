@@ -2928,6 +2928,10 @@
     <string name="netperf_latency_values">p50 %1$s · p90 %2$s · p99 %3$s</string>
     <string name="netperf_round_trips">%1$s обмінів/с</string>
     <string name="common_more_info">Докладніше</string>
+    <string name="custom_icon_hint">Власний значок</string>
+    <string name="common_documentation">Документація</string>
+    <string name="cronjobs_icon_hint">Задайте CronJob власний значок міткою або анотацією ichor.levis.name/icon з назвою значка Dashboard Icons, наприклад postgresql. Анотації ichor.levis.name/title та ichor.levis.name/description задають назву й рядок опису.\n\nkubectl label cronjob db-backup ichor.levis.name/icon=postgresql\n\nБез неї Ichor бере значок застосунку, до якого належить образ, інакше годинник.</string>
+    <string name="argo_icon_hint">Застосунок, який Ichor не розпізнає, може мати власний логотип в анотації ichor.levis.name/icon: назва Dashboard Icons, посилання https на PNG або WebP (завантажується, лише коли завантаження значків увімкнено) або саме зображення в base64. Мітка містить лише назву Dashboard Icons.\n\nkubectl -n argocd annotate application my-site ichor.levis.name/icon=grafana</string>
     <string name="netperf_hint_nodes_title">Клієнт і сервер</string>
     <string name="netperf_hint_nodes">Вузол-сервер запускає netserver і чекає. Вузол-клієнт запускає netperf, який підключається до нього й надсилає дані: пропускна здатність вимірюється від клієнта до сервера.\n\nПоміняйте вузли місцями, щоб виміряти інший напрямок. Той самий вузол двічі вимірює власний мережевий стек, а не з’єднання.</string>
     <string name="netperf_hint_paths_title">Мережеві шляхи</string>

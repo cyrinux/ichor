@@ -56,6 +56,12 @@ struct ArgoAppsList: View {
                     if grouping != .none { groupHeader(group) }
                 }
             }
+            if !status.apps.isEmpty {
+                Section {
+                    CustomIconHint(text: CustomIconHint.argo, link: CustomIconHint.argoDocs)
+                        .listRowBackground(Color.clear)
+                }
+            }
         }
         .overlay {
             if shown.isEmpty {

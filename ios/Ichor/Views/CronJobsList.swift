@@ -49,6 +49,12 @@ struct CronJobsList: View {
                 if load.hasMore && query.isEmpty {
                     Section { LoadMoreRow { list.loadMore(model: model) } }
                 }
+                if !shown.isEmpty {
+                    Section {
+                        CustomIconHint(text: CustomIconHint.cronJobs, link: CustomIconHint.cronJobsDocs)
+                            .listRowBackground(Color.clear)
+                    }
+                }
             }
             .listSectionSpacing(.compact)
             .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No CronJobs", systemImage: "clock.arrow.circlepath") }

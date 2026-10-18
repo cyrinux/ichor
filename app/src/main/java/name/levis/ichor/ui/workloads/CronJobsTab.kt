@@ -46,7 +46,9 @@ import name.levis.ichor.model.filteredCronJobs
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.cancellableCatching
+import name.levis.ichor.ui.components.CRONJOBS_DOCS_URL
 import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.components.CustomIconHint
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ResultToasts
@@ -242,6 +244,7 @@ fun CronJobsTab(
                             onSuspend = { confirmSuspend = c },
                         )
                     }
+                    item(key = "icon-hint") { CustomIconHint(stringResource(R.string.cronjobs_icon_hint), CRONJOBS_DOCS_URL) }
                 }
             }
         }
