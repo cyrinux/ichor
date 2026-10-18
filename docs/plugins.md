@@ -226,7 +226,7 @@ Loading is strict:
 | `dataServices.<name>` | no | map | see "Data services" below |
 | `cards.summary` | yes | card | `title` (an expression, or `{count, one, other}` with `%d`), `health`, `badges[]`. It sees `dataServices` and `now` only |
 | `cards.<name>` | no | card | `from` (a resource or `dataServices.<name>`), `sort[]` (expressions, each optionally followed by `asc` or `desc`), `empty`, `row{title, subtitle, status{tone, text}, trailing{text}, detail[]}` |
-| `actions.<id>` | no | map | `label`, `on` (a resource), `verb`, `body`, `subresource` (with `verb: subresource`), `rbac{verbs, group, resource}` (required), `confirm`, `audit` (required), `enabledWhen`, `disabledReason`, `params[]`. `verb` is `mergePatch`, `jsonPatch`, `subresource`, `delete`, `annotate` or `create`; `confirm` is `none`, `plain` or `typedName`; each param is `{name, label, type, values[], default}` with `type` one of `string`, `int`, `bool` or `enum` |
+| `actions.<id>` | no | map | `label`, `on` (a resource), `verb`, `body`, `subresource` and `method` (with `verb: subresource`), `propagationPolicy` (with `verb: delete`), `rbac{verbs, group, resource}` (required), `confirm`, `audit` (required), `enabledWhen`, `disabledReason`, `params[]`. `verb` is `mergePatch`, `jsonPatch`, `subresource`, `delete`, `annotate` or `create`; `confirm` is `none`, `plain` or `typedName`; each param is `{name, label, type, values[], default}` with `type` one of `string`, `int`, `bool` or `enum`. See "Actions" below |
 | `findings[]` | no | list | `{id, from, when, severity, title, detail, opens}`. `severity` is `info`, `warning` or `critical`; `opens` names a card |
 | `samples.<resource>[]` | yes, for every resource | list | demo objects in the API's shape. The demo context and the tests render them; invent names such as `demo-shop`. A string `now`, `now-6h` or `now+2d` (units `s`, `m`, `h`, `d`; at most a century) becomes that time, so that the demo stays consistent with the clock |
 | `i18n.<locale>` | no | map | English label → translation; a missing label stays English |
@@ -277,6 +277,79 @@ Each entry of `detail[]` is a section with a `type`, and only that type's keys:
 
 A `tone` is a tone word (`ok`, `idle`, `info`, `warning`, `critical`, `unknown`) or an
 expression that gives one, such as `health`.
+
+### Actions
+
+An action is one request on one object, declared rather than coded: the app shows it as a
+button in an `actions` section of a row of its `on` resource, and runs it with
+`KubePluginAction(config, context, kubeServer, pluginID, actionID, namespace, name,
+paramsJSON)` (namespace `""` for a cluster-scoped resource; `paramsJSON` a JSON object, `""`
+for none). It returns an error only. Only an installed plugin's actions run (today the
+built-in ones): a plugin file only previewed (`KubePluginPreview`, `plugin-render FILE`) gets
+`allowed: false` on every button and has no way to run them.
+
+| `verb` | Request | `body` |
+| -- | -- | -- |
+| `mergePatch` | `PATCH …/<resource>/<name>`, `application/merge-patch+json` | a map: the merge patch |
+| `jsonPatch` | `PATCH …/<resource>/<name>`, `application/json-patch+json` | a list of `{op, path, value}` (RFC 6902; `op` is `add`, `remove`, `replace`, `move`, `copy` or `test`) |
+| `annotate` | `PATCH …/<resource>/<name>`, merge patch of `metadata.annotations` | a map of annotation → string, or `null` to remove one |
+| `subresource` | `PUT …/<name>/<subresource>` (`method: PUT`, the default, as virtctl does), `POST`, or `PATCH` as a merge patch (`method: PATCH`, as kubectl scale does) | a map, or none (`{}` is sent) |
+| `delete` | `DELETE …/<resource>/<name>` with `DeleteOptions`: `propagationPolicy` (`Foreground`, `Background` or `Orphan`) when set, and the uid of the object just read as a precondition | none |
+| `create` | `POST …/<resource>` (the collection, in the object's namespace), `application/json` | a map: the new object |
+
+Each call:
+1. checks the plugin, the action, the namespace and the name (Kubernetes names: no `/`, no
+   `..`; a cluster-scoped resource takes no namespace) and the params, before any request;
+2. refuses in the demo context ("unavailable in the demo cluster");
+3. reads the object (`GET …/<name>`, at the declared version, `preferred` resolved from
+   `/apis`) and evaluates its fields and health. When `enabledWhen` or `disabledReason`
+   reads a data service, or a field of the resource joins another object, the plugin's
+   resources are listed in the object's namespace too;
+4. refuses, with a 409 whose message is `disabledReason`, when `enabledWhen` does not hold on
+   the object as the cluster has it now (one that fails to evaluate refuses too, as a 422):
+   the app's disabled button is not the gate;
+5. renders the body and sends the one request. The API server's refusal (403, 404, 409…) is
+   the error as it said it.
+
+Body templates: every string of `body` is a template that sees `$` (the object as just
+read), `fields`, `params`, `now`, `name` and `namespace`. A string that is one hole and
+nothing else (`"{{ params.replicas }}"`) keeps its value's type, so an `int` parameter
+reaches the API as a number; any other string is text. Values under `metadata.annotations`
+and `metadata.labels`, and every value of an `annotate` body, are always text. Keys are
+never templates.
+
+Params: `type` is `string` (at most 1,024 bytes), `int` (a JSON number with no fraction),
+`bool` or `enum` (one of `values`). A param with no `default` is required; a `default` must
+have the param's type (`plugin-validate` checks it). An undeclared param, a missing one or a
+value of the wrong type refuses the call with an error that names the param
+(`parameter "size": want an integer, got "big"`).
+
+Security rules (what a plugin cannot do):
+* The path is built only from the plugin's resource (`group`, `version`, `resource`,
+  `scope`), the `namespace` and `name` given, each checked, and the YAML's `subresource`
+  (lowercase letters, digits and dashes). A param or a template only ever writes the body:
+  `"../../secrets"` in a param stays a string in the body.
+* `verb`, `method`, `subresource` and `propagationPolicy` are fixed by the file; a body's
+  shape is checked when the plugin loads (a map, a list of operations, no body for
+  `delete`).
+* The account's own rights decide: the request goes out with the cluster's credentials, and
+  the API server refuses what its role does not allow.
+
+Can-I: each action is a row of `KubeActionAccess` under the key `plugin:<id>:<action>`: one
+SelfSubjectAccessReview per `rbac.verbs` entry on `rbac.group` and `rbac.resource`
+(`resource/subresource` asks for the subresource), plus a `get` on the `on` resource, in the
+namespace asked about for a namespaced resource. `KubePluginData` fills each button's
+`allowed` from the same answers (cached a few minutes per cluster and namespace): `false`
+when a review is denied, `true` otherwise (and when the review cannot be asked: the API
+server still decides).
+
+Audit: every call, refused or not, is an entry of the audit log with `action`
+`plugin:<id>:<action>`, the namespace, the object as `Kind/name`, the params as compact
+JSON, and the outcome. `audit` in the YAML names the action for people reading the file.
+
+Confirmation is the apps': `confirm: typedName` for what cannot be undone (`delete`, a
+`stop` or `reset` subresource), `plain` (the default) for the rest, `none` for a harmless
+annotation.
 
 ### Writing expressions in YAML
 
@@ -340,7 +413,7 @@ tile below for an active plugin and `null` otherwise. Examples: the goldens in
   | `relations` | `items[{label, ref, text?}]`; an absent object is left out, and so is the section when none is left |
   | `table` | `columns[{label}]`, `rows[[cell]]` |
   | `text` | `{text, tone?, mono?}` |
-  | `actions` | `items[{id, label, enabled, confirm, disabledReason?, params[]}]`; `allowed` comes with the actions step |
+  | `actions` | `items[{id, label, enabled, confirm, disabledReason?, allowed?, params[]}]`; `allowed` is the can-I answer (see "Actions") |
 
 * `i18n`: the locale's map (`pt-BR` falls back to `pt`) translates labels, `empty`, the
   summary's `one`/`other`, action labels, templates (health messages, finding texts,
@@ -508,6 +581,7 @@ validated first, before any config is read.
 | `just probe plugin-validate FILE...` | loads, validates and compiles each file, then renders its samples in English and in each `i18n` language | per valid file, one JSON line on stdout: `{"ok":true,"id":"kube-green","cards":2,"findings":1,"resources":2,"actions":0}`; per problem, `FILE:LINE: path: message` on stderr | 0 when every file is valid, 1 otherwise |
 | `just probe plugin-lint FILE [-crd MANIFEST] [-strict]` | `plugin-validate`, then the warnings below | the JSON line with `"warnings":n` on stdout; `FILE:LINE: warning: path: message` on stderr, and on failure a last line `plugin-lint: N errors, M warnings` | 0 with warnings; 1 on an error, or on any warning with `-strict` |
 | `just probe plugin-render FILE\|ID [-scope NS] [-locale xx] [-demo]` | the render tree of a file or of a built-in plugin id, read from the cluster (`-context CTX`) or from the samples (`-demo`) | the tree as JSON | 0, or 1 with the error (a file that does not validate: its `FILE:LINE` problems) |
+| `just probe plugin-action ID ACTION NAMESPACE NAME [PARAMS_JSON]` | runs a built-in plugin's action on one object (`KubePluginAction`; `""` as `NAMESPACE` for a cluster-scoped resource), `-context CTX`. It changes the cluster | `done` | 0, or 1 with the error |
 | `just probe plugin-list` | the built-in plugins | one JSON line each: `{id, name, version, category, resources, cards, actions, findings, file}` | 0 |
 | `just plugin-check [DIR]` | `plugin-validate` on every `*.yaml` of `DIR` (default `go/plugin/builtin`); `./build.sh check` runs it on the built-ins | as `plugin-validate` | as `plugin-validate` |
 
@@ -523,6 +597,10 @@ plugin's tests.
 * a `health` rule matches no sample (rules are first-match: a rule an earlier one always
   shadows counts as untriggered), so neither the tests nor the demo show it;
 * a list card has no `empty` text;
+* an action's `rbac` does not ask for what its request needs (`patch` on the resource for
+  the patches, `update`, `create` or `patch` on `resource/subresource` for `subresource` with
+  `PUT`, `POST` or `PATCH`, `delete` or `create` on the resource), in the resource's group:
+  the can-I row would answer for another request;
 * with `-crd MANIFEST` (a CustomResourceDefinition, YAML or JSON, as `kubectl get crd NAME -o
   yaml` prints it or as an operator's `config/crd/bases/` ships it; in a file of several
   documents or a `List`, the first CRD, other documents skipped), for the plugin resource with
@@ -541,7 +619,8 @@ plugin's tests.
 An action without `rbac` is an error of `plugin-validate`, not a warning.
 
 RBAC: `plugin-render` against a cluster needs `list` on the plugin's resources (and reads
-`/apis` for detection); the other commands need nothing.
+`/apis` for detection); `plugin-action` needs the action's `rbac` and `get` on its object;
+the other commands need nothing.
 
 ## Writing a plugin from a CRD
 

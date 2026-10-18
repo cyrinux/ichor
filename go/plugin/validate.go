@@ -613,6 +613,7 @@ func (v *validator) actions() {
 
 		v.rbac(path+".rbac", a.RBAC)
 		v.enum(path+".confirm", a.Confirm, Action{}, "Confirm")
+		v.actionRequest(path, a, onOK)
 
 		if a.Audit == "" {
 			v.errorf(path+".audit", "is missing: name the audit entry (%s.%s)", v.p.ID, id)
@@ -676,6 +677,8 @@ func (v *validator) params(path string, params []Param) []string {
 		if prm.Type == "enum" && len(prm.Values) == 0 {
 			v.errorf(ppath+".values", "an enum parameter lists its values")
 		}
+
+		v.paramDefault(ppath, prm)
 	}
 
 	return names

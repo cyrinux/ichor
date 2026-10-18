@@ -77,3 +77,30 @@ func TestTemplateCheckAndEvalErrors(t *testing.T) {
 		t.Fatal("rendering an unknown name succeeds")
 	}
 }
+
+// TestTemplateValue: a template that is one hole keeps its value's type; any other is text.
+func TestTemplateValue(t *testing.T) {
+	tests := []struct {
+		src  string
+		want any
+	}{
+		{"{{ $.spec.replicas }}", int64(3)},
+		{"{{ $.spec.replicas > 1 }}", true},
+		{"{{ $.nope }}", nil},
+		{" {{ $.spec.replicas }}", " 3"},
+		{"{{ $.spec.replicas }}x", "3x"},
+		{"plain", "plain"},
+	}
+
+	for _, tc := range tests {
+		tpl, err := ParseTemplate(tc.src)
+		if err != nil {
+			t.Fatalf("%q: %v", tc.src, err)
+		}
+
+		got, err := tpl.Value(fixtureEnv(t))
+		if err != nil || got != tc.want {
+			t.Errorf("%q = %#v, %v; want %#v", tc.src, got, err, tc.want)
+		}
+	}
+}

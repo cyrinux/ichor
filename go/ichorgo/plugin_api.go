@@ -142,7 +142,8 @@ func KubePluginPreview(configYAML, contextName, kubeServer, pluginYAML, scope, l
 	return kubePluginTree(configYAML, contextName, kubeServer, c, scope, locale, false)
 }
 
-// kubePluginTree renders c; contextName is already unmasked. allowReveal: see pluginProbe.
+// kubePluginTree renders c; contextName is already unmasked. allowReveal (an installed
+// plugin): see pluginProbe; it also gates the action buttons' allowed.
 func kubePluginTree(configYAML, contextName, kubeServer string, c *plugin.Compiled, scope, locale string, allowReveal bool) (string, error) {
 	scope = privacy.reveal(strings.TrimSpace(scope))
 
@@ -152,11 +153,14 @@ func kubePluginTree(configYAML, contextName, kubeServer string, c *plugin.Compil
 
 	demo := func() plugin.Tree {
 		tree, _ := plugin.Render(c, demoPluginInput(c, scope, locale), pluginNow()) //nolint:errcheck // errors are in the tree
+		setAllPluginAllowed(&tree, allowReveal)
 
 		return tree
 	}
 
-	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demo, func(ctx context.Context, k *kubeClient) (plugin.Tree, error) {
+	target := kubeTarget{configYAML, contextName, kubeServer}
+
+	return kubeReadJSON(target, demo, func(ctx context.Context, k *kubeClient) (plugin.Tree, error) {
 		in, err := fetchPluginInput(ctx, k, c, scope, allowReveal)
 		if err != nil {
 			return plugin.Tree{}, err
@@ -164,6 +168,13 @@ func kubePluginTree(configYAML, contextName, kubeServer string, c *plugin.Compil
 
 		in.Locale = locale
 		tree, _ := plugin.Render(c, in, pluginNow()) //nolint:errcheck // errors are in the tree
+
+		// The buttons' can-I answers: a plugin only previewed cannot run its actions.
+		if allowReveal {
+			setPluginAllowed(ctx, k, target, c, &tree, scope)
+		} else {
+			setAllPluginAllowed(&tree, false)
+		}
 
 		return tree, nil
 	})

@@ -201,7 +201,7 @@ func (r *renderer) source(from string) (res, ds string) {
 }
 
 // actionItems are the buttons: enabled by enabledWhen, with the reason when not. Whether the
-// account may run them is the action step's (KubePluginAction).
+// account may run them is set afterwards (Tree.SetAllowed).
 func (r *renderer) actionItems(items []Item, env expr.Env) []TreeAction {
 	out := make([]TreeAction, 0, len(items))
 

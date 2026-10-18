@@ -1,0 +1,159 @@
+# yaml-language-server: $schema=../../schema/plugin.schema.json
+# An actions fixture: one action per verb (mergePatch, jsonPatch, subresource with PUT and
+# with PATCH, delete, annotate, create) on a namespaced resource, a delete on a
+# cluster-scoped one, typed parameters with and without defaults, an enabledWhen on the
+# object alone and one that reads a data service. Invented names only.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: demo-actions
+name: Demo Actions
+category: workloads
+
+detect:
+  - group: actions.example.com
+
+resources:
+  widget:
+    group: actions.example.com
+    version: v1
+    resource: widgets
+    kind: Widget
+    scope: Namespaced
+  pool:
+    group: actions.example.com
+    version: v1
+    resource: pools
+    kind: Pool
+    scope: Cluster
+
+fields:
+  widget:
+    paused: $.spec.paused | default(false)
+    size: $.spec.size | default(0)
+
+dataServices:
+  summary:
+    aggregate:
+      total: count(widget)
+      pools: count(pool)
+
+cards:
+  summary:
+    title: { count: dataServices.summary.total, one: "%d widget", other: "%d widgets" }
+  widgets:
+    from: widget
+    empty: "No widgets."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      detail:
+        - type: actions
+          items: [pause, resize, restart, scale, remove, tag, clone, rebalance]
+  pools:
+    from: pool
+    empty: "No pools."
+    row:
+      title: $.metadata.name
+      detail:
+        - type: actions
+          items: [retire]
+
+actions:
+  pause:
+    label: "Pause"
+    on: widget
+    verb: mergePatch
+    body: { spec: { paused: true, reason: "{{ params.reason }}", by: "{{ namespace }}/{{ name }}" } }
+    rbac: { verbs: [patch], group: actions.example.com, resource: widgets }
+    confirm: plain
+    audit: demo-actions.pause
+    enabledWhen: "!fields.paused"
+    disabledReason: "{{ $.metadata.name }} is already paused"
+    params:
+      - { name: reason, label: "Reason", type: string, default: "manual" }
+  resize:
+    label: "Resize"
+    on: widget
+    verb: jsonPatch
+    body:
+      - { op: test, path: /spec/size, value: "{{ fields.size }}" }
+      - { op: replace, path: /spec/size, value: "{{ params.size }}" }
+    rbac: { verbs: [patch], group: actions.example.com, resource: widgets }
+    audit: demo-actions.resize
+    params:
+      - { name: size, label: "Size", type: int }
+  restart:
+    label: "Restart"
+    on: widget
+    verb: subresource
+    subresource: restart
+    rbac: { verbs: [update], group: actions.example.com, resource: widgets/restart }
+    confirm: typedName
+    audit: demo-actions.restart
+  scale:
+    label: "Scale"
+    on: widget
+    verb: subresource
+    subresource: scale
+    method: PATCH
+    body: { spec: { replicas: "{{ params.replicas }}" } }
+    rbac: { verbs: [patch], group: actions.example.com, resource: widgets/scale }
+    audit: demo-actions.scale
+    params:
+      - { name: replicas, label: "Replicas", type: int, default: 1 }
+  remove:
+    label: "Delete"
+    on: widget
+    verb: delete
+    propagationPolicy: Foreground
+    rbac: { verbs: [delete], group: actions.example.com, resource: widgets }
+    confirm: typedName
+    audit: demo-actions.remove
+  tag:
+    label: "Tag"
+    on: widget
+    verb: annotate
+    body:
+      "actions.example.com/touched-at": "{{ now }}"
+      "actions.example.com/mode": "{{ params.mode }}"
+      "actions.example.com/stale": null
+    rbac: { verbs: [patch], group: actions.example.com, resource: widgets }
+    confirm: none
+    audit: demo-actions.tag
+    params:
+      - { name: mode, label: "Mode", type: enum, values: [fast, slow], default: fast }
+  clone:
+    label: "Clone"
+    on: widget
+    verb: create
+    body:
+      apiVersion: actions.example.com/v1
+      kind: Widget
+      metadata: { name: "{{ name }}-copy", namespace: "{{ namespace }}", labels: { "actions.example.com/copy-of": "{{ name }}" } }
+      spec: { size: "{{ fields.size }}", paused: "{{ params.paused }}" }
+    rbac: { verbs: [create], group: actions.example.com, resource: widgets }
+    audit: demo-actions.clone
+    params:
+      - { name: paused, label: "Paused", type: bool, default: false }
+  rebalance:
+    label: "Rebalance"
+    on: widget
+    verb: mergePatch
+    body: { spec: { rebalance: true } }
+    rbac: { verbs: [patch], group: actions.example.com, resource: widgets }
+    audit: demo-actions.rebalance
+    enabledWhen: dataServices.summary.total > 1
+    disabledReason: "only one widget"
+  retire:
+    label: "Retire"
+    on: pool
+    verb: delete
+    rbac: { verbs: [delete], group: actions.example.com, resource: pools }
+    confirm: typedName
+    audit: demo-actions.retire
+
+samples:
+  widget:
+    - { metadata: { name: alpha, namespace: demo-shop, uid: 1b0e7c52-0000-4000-8000-000000000001 }, spec: { size: 3, paused: false } }
+    - { metadata: { name: beta, namespace: demo-shop }, spec: { size: 5, paused: true } }
+  pool:
+    - { metadata: { name: shared } }

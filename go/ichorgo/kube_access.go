@@ -259,7 +259,8 @@ type accessNeed struct {
 // fluxReconcileGitRepository, fluxReconcileOCIRepository, fluxReconcileHelmRepository,
 // fluxReconcileBucket), cordonNode, drainNode, autoscale, autoscaleKeda, cnpgPromote, createVolumeSnapshot,
 // veleroBackupNow, veleroDeleteBackup, veleroRestore, vmStart, vmStop, vmRestart,
-// vmMigrate, vmPause, vmUnpause, vmConsole. Answers are cached a few minutes.
+// vmMigrate, vmPause, vmUnpause, vmConsole, and plugin:<id>:<action> for each action of a
+// built-in plugin (plugin_action.go). Answers are cached a few minutes.
 // kubeServer: see KubePods.
 func KubeActionAccess(configYAML, contextName, kubeServer, namespace string) (out string, err error) {
 	defer maskResult(&out, &err)

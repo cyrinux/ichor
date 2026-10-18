@@ -236,7 +236,12 @@ type Action struct {
 	// Body is the patch or object; its strings are templates (now, name, namespace, params.*).
 	Body any `yaml:"body,omitempty" json:"body,omitempty"`
 	// Subresource is the subresource of verb subresource (start, scale…).
-	Subresource string `yaml:"subresource,omitempty" json:"subresource,omitempty"`
+	Subresource string `yaml:"subresource,omitempty" json:"subresource,omitempty" schema:"pattern=^[a-z][a-z0-9-]*$"`
+	// Method is how verb subresource calls it: PUT (the default, as virtctl does), POST, or
+	// PATCH (a merge patch, as kubectl scale does).
+	Method string `yaml:"method,omitempty" json:"method,omitempty" schema:"enum=PUT|POST|PATCH"`
+	// PropagationPolicy is verb delete's: what happens to the object's dependents.
+	PropagationPolicy string `yaml:"propagationPolicy,omitempty" json:"propagationPolicy,omitempty" schema:"enum=Foreground|Background|Orphan"`
 	// RBAC is what the account needs; it becomes a can-I check.
 	RBAC *RBAC `yaml:"rbac" json:"rbac" schema:"required"`
 	// Confirm is how the app confirms: none, plain, or the object's name typed.

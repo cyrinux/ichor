@@ -23,6 +23,8 @@ Do the same on Android and iOS:
   ("Restart kubelet on cp-1?"). Examples: service start/stop/restart, Argo CD terminate,
   rollout restart.
 - When a safer way out exists (a backup before deleting), offer it in the dialog.
+- Plugin actions declare theirs: `confirm: typedName` for destructive verbs (`delete`, a
+  `stop` or `reset` subresource), `plain` for the rest (docs/plugins.md "Actions").
 
 ## UI components
 

@@ -242,3 +242,20 @@ func TestLintConditionThroughAField(t *testing.T) {
 		}
 	}
 }
+
+// TestLintActionRBAC: an action's rbac should ask for its request's verb and resource.
+func TestLintActionRBAC(t *testing.T) {
+	src := string(fixture(t, "actions.yaml"))
+
+	if got := lintMessages(lintOf(t, src, "")); strings.Contains(got, "the request needs") {
+		t.Errorf("fixture warns:\n%s", got)
+	}
+
+	src = strings.Replace(src, "rbac: { verbs: [update], group: actions.example.com, resource: widgets/restart }",
+		"rbac: { verbs: [patch], group: actions.example.com, resource: widgets }", 1)
+
+	got := lintMessages(lintOf(t, src, ""))
+	if !strings.Contains(got, "actions.restart.rbac: the request needs update on widgets/restart") {
+		t.Errorf("got\n%s", got)
+	}
+}
