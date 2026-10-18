@@ -39,6 +39,15 @@
         "label": {
           "type": "string"
         },
+        "method": {
+          "description": "Method is how verb subresource calls it: PUT (the default, as virtctl does), POST, or PATCH (a merge patch, as kubectl scale does).",
+          "enum": [
+            "PUT",
+            "POST",
+            "PATCH"
+          ],
+          "type": "string"
+        },
         "on": {
           "description": "On is the resource the action applies to.",
           "type": "string"
@@ -50,6 +59,15 @@
           },
           "type": "array"
         },
+        "propagationPolicy": {
+          "description": "PropagationPolicy is verb delete's: what happens to the object's dependents.",
+          "enum": [
+            "Foreground",
+            "Background",
+            "Orphan"
+          ],
+          "type": "string"
+        },
         "rbac": {
           "allOf": [
             {
@@ -60,6 +78,7 @@
         },
         "subresource": {
           "description": "Subresource is the subresource of verb subresource (start, scale…).",
+          "pattern": "^[a-z][a-z0-9-]*$",
           "type": "string"
         },
         "verb": {

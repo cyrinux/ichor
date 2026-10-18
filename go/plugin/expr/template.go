@@ -129,6 +129,23 @@ func (t *Template) Render(env Env) (string, error) {
 	return b.String(), nil
 }
 
+// Value is a template's value: a template that is one hole and nothing else
+// ("{{ params.replicas }}") keeps its value's type (an int stays an int, a list a list);
+// any other template renders as a string, as Render does. Action bodies use it, so that a
+// typed parameter reaches the API as a number or a bool.
+func (t *Template) Value(env Env) (Value, error) {
+	if len(t.parts) != 1 || t.parts[0].expr == nil {
+		return t.Render(env)
+	}
+
+	v, err := t.parts[0].expr.Eval(env)
+	if err != nil {
+		return nil, err
+	}
+
+	return normalize(v), nil
+}
+
 // Check checks every hole; Scope.Bool does not apply to a template.
 func (t *Template) Check(scope Scope) []Problem {
 	scope.Bool = false

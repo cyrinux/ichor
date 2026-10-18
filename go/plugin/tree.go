@@ -140,8 +140,8 @@ type TreeCondItem struct {
 	LastTransition int64  `json:"lastTransition"`
 }
 
-// TreeAction is a button. Allowed (the can-I answer) is set by KubePluginAction's step, not
-// by the render.
+// TreeAction is a button. Allowed (the can-I answer of its action's rbac) is not the
+// render's: KubePluginData sets it (Tree.SetAllowed); absent, the answer is unknown.
 type TreeAction struct {
 	ID             string      `json:"id"`
 	Label          string      `json:"label"`

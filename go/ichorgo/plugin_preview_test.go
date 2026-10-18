@@ -11,7 +11,8 @@ import (
 )
 
 // KubePluginPreview renders a plugin file that is not installed, from the cluster or from its
-// samples, exactly as KubePluginData renders an installed one.
+// samples, exactly as KubePluginData renders an installed one, except that its action buttons
+// say allowed:false: a plugin only previewed cannot run them.
 func TestKubePluginPreview(t *testing.T) {
 	usePlugins(t, "valid.yaml")
 
@@ -28,7 +29,11 @@ func TestKubePluginPreview(t *testing.T) {
 	}
 
 	preview, err := KubePluginPreview("cfg", "ctx", "", string(src), "", "fr")
-	if err != nil || preview != installed {
+	if strings.Count(preview, `"allowed":false`) != 2 || strings.Contains(installed, `"allowed":false`) {
+		t.Errorf("preview buttons:\n%s\ninstalled:\n%s", preview, installed)
+	}
+
+	if preview = strings.ReplaceAll(preview, `,"allowed":false`, ""); err != nil || preview != installed {
 		t.Errorf("preview differs from the installed render (%v):\n%s\n%s", err, preview, installed)
 	}
 }

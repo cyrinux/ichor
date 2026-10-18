@@ -162,6 +162,7 @@ func TestLintScaleActionAndConditionRules(t *testing.T) {
     on: gadget
     verb: subresource
     subresource: scale
+    method: PATCH
     rbac: { verbs: [patch], group: demo.example.com, resource: gadgets/scale }
     audit: demo-gadgets.scale
 cards:

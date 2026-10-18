@@ -16,7 +16,8 @@ import (
 // an empty text and, given the CRD the plugin reads (crd may be nil), printer columns no
 // field or card uses, condition types of the schema no health rule names, a kind or scope
 // that differs from the CRD's, and a scale subresource without a scale action. An action
-// without rbac is not a warning: Validate refuses it. A plugin that does not validate gets
+// without rbac, or whose rbac does not ask for what its request needs, is not a warning:
+// Validate refuses it. A plugin that does not validate gets
 // Validate's problems instead, so a broken plugin never lints clean. Sorted by line.
 func Lint(p *Plugin, crd *CRDManifest) []Problem {
 	c, err := Compile(p)

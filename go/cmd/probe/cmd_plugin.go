@@ -38,6 +38,19 @@ var pluginCommands = []command{
 		// plugin-list: the built-in plugins, one JSON line each.
 		return pluginList()
 	}},
+	{name: "plugin-action", args: "ID ACTION NAMESPACE NAME [PARAMS_JSON]", run: func(e env) (string, error) {
+		// plugin-action ID ACTION NAMESPACE NAME [PARAMS_JSON]: KubePluginAction on a built-in plugin's
+		// object; NAMESPACE "" for a cluster-scoped resource. It changes the cluster.
+		if flag.NArg() < 5 || flag.NArg() > 6 {
+			return "", errors.New("usage: plugin-action ID ACTION NAMESPACE NAME [PARAMS_JSON]")
+		}
+
+		if err := ichorgo.KubePluginAction(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5)); err != nil {
+			return "", err
+		}
+
+		return "done", nil
+	}},
 }
 
 // pluginReport is plugin-validate's line for a plugin that passes.
