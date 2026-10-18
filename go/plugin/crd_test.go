@@ -113,3 +113,40 @@ func TestLoadCRDRefuses(t *testing.T) {
 		}
 	}
 }
+
+// A document of another shape before the CRD (a ConfigMap whose spec is a list) is skipped.
+func TestLoadCRDSkipsUnrelatedDocuments(t *testing.T) {
+	src := "apiVersion: v1\nkind: ConfigMap\nmetadata: { name: x }\nspec: [1, 2]\n---\nkind: [odd]\n---\n" +
+		gadgetCRD[strings.Index(gadgetCRD, "apiVersion: apiextensions"):]
+
+	crd, err := LoadCRD([]byte(src))
+	if err != nil || crd.Spec.Names.Plural != "gadgets" {
+		t.Fatalf("%v %+v", err, crd)
+	}
+}
+
+// kubectl get crd -o yaml prints a List: its first CRD is read.
+func TestLoadCRDUnwrapsAList(t *testing.T) {
+	src := `apiVersion: v1
+kind: List
+items:
+  - apiVersion: v1
+    kind: ConfigMap
+    spec: [1, 2]
+  - apiVersion: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    spec: { group: a.example.com, names: { kind: A, plural: as }, scope: Namespaced, versions: [{ name: v1, served: true, storage: true }] }
+  - apiVersion: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    spec: { group: b.example.com, names: { kind: B, plural: bs }, scope: Cluster, versions: [{ name: v1, served: true, storage: true }] }
+`
+
+	crd, err := LoadCRD([]byte(src))
+	if err != nil || crd.Spec.Group != "a.example.com" || crd.StorageVersion().Name != "v1" {
+		t.Fatalf("%v %+v", err, crd)
+	}
+
+	if _, err := LoadCRD([]byte("kind: List\nitems: []\n")); err == nil || !strings.Contains(err.Error(), "no CustomResourceDefinition") {
+		t.Errorf("an empty list: %v", err)
+	}
+}

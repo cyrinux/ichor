@@ -120,21 +120,22 @@ func TestPluginLint(t *testing.T) {
 		fail     bool
 		warnings int
 		stderr   []string
+		summary  string
 	}{
 		{"with the CRD", []string{strippedPlugin, "-crd", sleepInfoCRD}, false, 4, []string{
 			strippedPlugin + ":13: warning: resources.sleepinfo: printer column \"Wake Up At\" (.spec.wakeUpAt) is not used",
 			"printer column \"Last Schedule\" (.status.lastScheduleTime)",
 			"no i18n: the 5 labels stay English",
 			"card list has no empty text",
-		}},
-		{"flags first", []string{"--crd", sleepInfoCRD, strippedPlugin}, false, 4, []string{"Wake Up At"}},
-		{"without the CRD", []string{strippedPlugin}, false, 2, []string{"no i18n"}},
-		{"strict", []string{strippedPlugin, "--strict"}, true, 2, []string{"no empty text"}},
+		}, ""},
+		{"flags first", []string{"--crd", sleepInfoCRD, strippedPlugin}, false, 4, []string{"Wake Up At"}, ""},
+		{"without the CRD", []string{strippedPlugin}, false, 2, []string{"no i18n"}, ""},
+		{"strict", []string{strippedPlugin, "--strict"}, true, 2, []string{"no empty text"}, "plugin-lint: 0 errors, 2 warnings (-strict)"},
 		// The built-in plugin shows every printer column; two of its rules have no sample yet.
-		{"built-in", []string{builtinKubeGreen, "-crd", sleepInfoCRD}, false, 2, []string{"health.sleepinfo[0]: no sample triggers this rule"}},
-		{"broken", []string{broken}, true, -1, []string{"unknown fields.operaton"}},
-		{"bad CRD", []string{strippedPlugin, "-crd", strippedPlugin}, true, -1, nil},
-		{"no file", []string{"-strict"}, true, -1, nil},
+		{"built-in", []string{builtinKubeGreen, "-crd", sleepInfoCRD}, false, 2, []string{"health.sleepinfo[0]: no sample triggers this rule"}, ""},
+		{"broken", []string{broken}, true, -1, []string{"unknown fields.operaton"}, "plugin-lint: 1 error, 0 warnings"},
+		{"bad CRD", []string{strippedPlugin, "-crd", strippedPlugin}, true, -1, nil, ""},
+		{"no file", []string{"-strict"}, true, -1, nil, ""},
 	}
 
 	for _, tc := range cases {
@@ -144,6 +145,10 @@ func TestPluginLint(t *testing.T) {
 			err := lintPluginFile(tc.args, &stdout, &stderr)
 			if (err != nil) != tc.fail {
 				t.Fatalf("error %v, stderr %q", err, stderr.String())
+			}
+
+			if err != nil && tc.summary != "" && err.Error() != tc.summary {
+				t.Errorf("summary %q, want %q", err, tc.summary)
 			}
 
 			if tc.warnings >= 0 {
@@ -183,8 +188,11 @@ func TestPluginRenderDemo(t *testing.T) {
 		}
 	}
 
-	if _, err := pluginRender(e, []string{broken, "-demo"}); err == nil || !strings.Contains(err.Error(), broken+":"+strconv.Itoa(line)+": unknown key") {
-		t.Errorf("a broken file: %v", err)
+	// Validated before any config is read, with or without -demo.
+	for _, args := range [][]string{{broken, "-demo"}, {broken}} {
+		if _, err := pluginRender(e, args); err == nil || !strings.Contains(err.Error(), broken+":"+strconv.Itoa(line)+": unknown key") {
+			t.Errorf("a broken file %v: %v", args, err)
+		}
 	}
 
 	if _, err := pluginRender(e, []string{"-demo"}); err == nil {

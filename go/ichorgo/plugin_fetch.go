@@ -19,6 +19,9 @@ type pluginProbe struct {
 	apps     map[string]detection
 	services map[string]detection
 	hints    hintSet
+	// allowReveal lets a resource's reveal show a Secret's values: an installed plugin, outside
+	// screenshot mode. A plugin previewed before it is installed never reveals.
+	allowReveal bool
 
 	mu     sync.Mutex
 	served map[string]bool // group/version/resource → served
@@ -105,12 +108,15 @@ func (p *pluginProbe) serves(ctx context.Context, k *kubeClient, group, version,
 var errPluginNotServed = errors.New("the cluster does not serve")
 
 // fetchPluginInput detects c on the cluster and, when it is there, lists its resources in
-// scope (a namespace, "" for all; cluster-scoped resources ignore it).
-func fetchPluginInput(ctx context.Context, k *kubeClient, c *plugin.Compiled, scope string) (plugin.Input, error) {
+// scope (a namespace, "" for all; cluster-scoped resources ignore it). allowReveal: see
+// pluginProbe.
+func fetchPluginInput(ctx context.Context, k *kubeClient, c *plugin.Compiled, scope string, allowReveal bool) (plugin.Input, error) {
 	probe, err := newPluginProbe(ctx, k, []*plugin.Compiled{c}, nil)
 	if err != nil {
 		return plugin.Input{}, err
 	}
+
+	probe.allowReveal = allowReveal
 
 	return probe.fetch(ctx, k, c, scope), nil
 }
@@ -146,7 +152,7 @@ func (p *pluginProbe) fetch(ctx context.Context, k *kubeClient, c *plugin.Compil
 
 			// A panic here must not reach gomobile: it is this resource's error.
 			err := safeCall(func() (err error) {
-				objs, note, err = listPluginResource(ctx, k, decl, version, scope)
+				objs, note, err = listPluginResource(ctx, k, decl, version, scope, p.allowReveal)
 
 				return err
 			})
@@ -200,8 +206,8 @@ var errPluginListFull = errors.New("plugin list holds its limit")
 
 // listPluginResource reads at most list.limit objects (500 by default) of decl, page by page
 // with the declared selectors; note says when more are left out. Secrets are masked unless
-// the resource reveals them.
-func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource, version, scope string) ([]map[string]any, string, error) {
+// the resource reveals them and allowReveal (see tidyPluginObject).
+func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource, version, scope string, allowReveal bool) ([]map[string]any, string, error) {
 	if version == "" {
 		return nil, "", fmt.Errorf("%w %s", errPluginNotServed, decl.Group)
 	}
@@ -249,7 +255,7 @@ func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource
 	}
 
 	for _, obj := range items {
-		tidyPluginObject(obj, decl)
+		tidyPluginObject(obj, decl, allowReveal)
 	}
 
 	if more {
@@ -259,13 +265,17 @@ func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource
 	return items, "", nil
 }
 
-// tidyPluginObject drops managedFields and masks a Secret's values unless revealed.
-func tidyPluginObject(obj map[string]any, decl plugin.Resource) {
+// tidyPluginObject drops managedFields and masks a Secret's values. They show only when the
+// resource reveals them, the plugin is installed (allowReveal) and screenshot mode is off:
+// as for KubeConfigData (errSecretRevealScreenshot), a value in clear has no place in a
+// screenshot, and masking would alter it.
+func tidyPluginObject(obj map[string]any, decl plugin.Resource, allowReveal bool) {
 	if meta, ok := obj["metadata"].(map[string]any); ok {
 		delete(meta, "managedFields")
 	}
 
-	if decl.Group == "" && decl.Resource == "secrets" && !decl.Reveal {
+	reveal := decl.Reveal && allowReveal && !privacy.isEnabled()
+	if decl.Group == "" && decl.Resource == "secrets" && !reveal {
 		maskSecretValues(obj)
 	}
 }

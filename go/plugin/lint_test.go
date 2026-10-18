@@ -90,7 +90,6 @@ func TestLint(t *testing.T) {
 
 	for _, want := range []string{
 		`warning 13: resources.config: resource config is read but no card shows it`,
-		`warning 7: resources.gadget: printer column "Ready" (.status.conditions[?(@.type=="Ready")].status) is not used`,
 		`warning 7: resources.gadget: printer column "Age" (.metadata.creationTimestamp) is not used`,
 		`warning 7: resources.gadget: condition Degraded (in the CRD's schema) has no health rule`,
 		`warning 7: resources.gadget: the CRD has a scale subresource but no action scales gadget`,
@@ -103,7 +102,8 @@ func TestLint(t *testing.T) {
 		}
 	}
 
-	for _, unwanted := range []string{`"Size"`, `condition Ready`, `health.gadget[0]`, `"Big"`, "error"} {
+	// The Ready column is read by the !conditions.Ready rule.
+	for _, unwanted := range []string{`"Size"`, `printer column "Ready"`, `condition Ready`, `health.gadget[0]`, `"Big"`, "error"} {
 		if strings.Contains(got, unwanted) {
 			t.Errorf("unexpected %q in\n%s", unwanted, got)
 		}
@@ -201,11 +201,44 @@ func TestUsesPath(t *testing.T) {
 		{"$.spec.sizeLimit+$.spec.size", ".spec.size", true},
 		{"$.spec.size.value", ".spec.size", true},
 		{`$.status.conditions[?(@.type=="Ready")].status`, `.status.conditions[?(@.type == "Ready")].status`, true},
+		{`$.status.conditions[?(@.type == 'Ready')].status | first()`, `.status.conditions[?(@.type=="Ready")].status`, true},
+		{`$.status.conditions[?(@.type=="Ready")].reason`, `.status.conditions[?(@.type=="Ready")].status`, false},
 	}
 
 	for _, tc := range cases {
 		if got := usesPath(tc.src, tc.path); got != tc.want {
 			t.Errorf("usesPath(%q, %q) = %v", tc.src, tc.path, got)
+		}
+	}
+}
+
+// A resource read only by a finding is used.
+func TestLintFindingUsesAResource(t *testing.T) {
+	src := strings.Replace(gadgetPlugin, "samples:\n", `findings:
+  - id: no-config
+    from: config
+    when: len($.data) == 0
+    severity: info
+    title: "{{ name }} is empty"
+samples:
+`, 1)
+
+	if got := lintMessages(lintOf(t, src, "")); strings.Contains(got, "resource config") || strings.Contains(got, "error") {
+		t.Errorf("got\n%s", got)
+	}
+}
+
+// A condition read through a field, in either quote style, covers both its health rule and
+// the printer column that filters on it.
+func TestLintConditionThroughAField(t *testing.T) {
+	src := strings.Replace(gadgetPlugin, "    size: $.spec.size | default(0)\n",
+		"    size: $.spec.size | default(0)\n    ready: condition('Ready').status == \"True\"\n    degraded: conditions.Degraded\n", 1)
+	src = strings.Replace(src, `- when: "!conditions.Ready"`, `- when: "!fields.ready || fields.degraded"`, 1)
+
+	got := lintMessages(lintOf(t, src, gadgetCRD))
+	for _, unwanted := range []string{`printer column "Ready"`, "condition Ready", "condition Degraded", "error"} {
+		if strings.Contains(got, unwanted) {
+			t.Errorf("unexpected %q in\n%s", unwanted, got)
 		}
 	}
 }

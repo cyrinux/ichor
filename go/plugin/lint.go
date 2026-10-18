@@ -88,8 +88,8 @@ func (l *linter) labels() {
 	}
 }
 
-// unusedResources: a resource no card, data service or field (a join) names is read for
-// nothing.
+// unusedResources: a resource no card, data service, finding or expression (a join in a
+// field, a finding or an action) names is read for nothing.
 func (l *linter) unusedResources() {
 	p := l.p
 
@@ -109,9 +109,13 @@ func (l *linter) unusedResources() {
 		froms = append(froms, ds.From)
 	}
 
-	sources = exprSources(sources, reflect.ValueOf(p.Cards))
-	sources = exprSources(sources, reflect.ValueOf(p.DataServices))
-	sources = exprSources(sources, reflect.ValueOf(p.Fields))
+	for _, f := range p.Findings {
+		froms = append(froms, f.From)
+	}
+
+	for _, part := range []any{p.Cards, p.DataServices, p.Fields, p.Findings, p.Actions} {
+		sources = exprSources(sources, reflect.ValueOf(part))
+	}
 
 	for _, res := range l.c.Resources {
 		if slices.Contains(froms, res) {
@@ -120,7 +124,7 @@ func (l *linter) unusedResources() {
 
 		name := identifier(res)
 		if !slices.ContainsFunc(sources, name.MatchString) {
-			l.warn("resources."+res, "resource %s is read but no card shows it (a card's from, a data service, or a join in a field)", res)
+			l.warn("resources."+res, "resource %s is read but no card shows it (a card's or a finding's from, a data service, or a join)", res)
 		}
 	}
 }
@@ -210,21 +214,41 @@ func (l *linter) printerColumns(path string, v *CRDVersion) {
 		sources = exprSources(sources, reflect.ValueOf(part))
 	}
 
-	for i := range sources {
-		sources[i] = strings.Join(strings.Fields(sources[i]), "")
-	}
-
 	for _, col := range v.AdditionalPrinterColumns {
-		if !slices.ContainsFunc(sources, func(src string) bool { return usesPath(src, col.JSONPath) }) {
+		used := func(src string) bool { return usesPath(src, col.JSONPath) }
+
+		// A column of a condition ([?(@.type=="Ready")]) is read as conditions.Ready too.
+		if m := conditionFilter.FindStringSubmatch(normalizeQuotes(strings.Join(strings.Fields(col.JSONPath), ""))); m != nil {
+			byName := conditionRef(m[1])
+			used = func(src string) bool { return usesPath(src, col.JSONPath) || byName.MatchString(src) }
+		}
+
+		if !slices.ContainsFunc(sources, used) {
 			l.warn(path, "printer column %q (%s) is not used by any field or card", col.Name, col.JSONPath)
 		}
 	}
 }
 
+// conditionFilter is a jsonPath's filter on a condition type: [?(@.type=="Ready")].
+var conditionFilter = regexp.MustCompile(`conditions\[\?\(@\.type=="([^"]+)"\)\]`)
+
+// conditionRef matches an expression that names the condition type t: conditions.t, or t as
+// a string in either quote style (condition("t"), @.type == 't').
+func conditionRef(t string) *regexp.Regexp {
+	q := regexp.QuoteMeta(t)
+
+	return regexp.MustCompile(`conditions\.` + q + `\b|"` + q + `"|'` + q + `'`)
+}
+
+// normalizeQuotes writes single-quoted strings with double quotes, so that jsonPaths and
+// expressions compare whatever quotes they use.
+func normalizeQuotes(s string) string { return strings.ReplaceAll(s, "'", `"`) }
+
 // usesPath reports whether src reads the printer column's jsonPath (.spec.x) as $.spec.x,
-// not as a prefix of a longer name.
+// not as a prefix of a longer name. Spaces and quote styles do not matter.
 func usesPath(src, jsonPath string) bool {
-	want := "$" + strings.Join(strings.Fields(jsonPath), "")
+	src = normalizeQuotes(strings.Join(strings.Fields(src), ""))
+	want := "$" + normalizeQuotes(strings.Join(strings.Fields(jsonPath), ""))
 
 	for i := 0; ; {
 		j := strings.Index(src[i:], want)
@@ -245,14 +269,15 @@ func isIdentByte(b byte) bool {
 	return b == '_' || b >= '0' && b <= '9' || b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z'
 }
 
-// conditionTypes: a condition the CRD names is one a health rule should read.
+// conditionTypes: a condition the CRD names is one a health rule should read, directly or
+// through a field.
 func (l *linter) conditionTypes(key string, v *CRDVersion) {
 	var sources []string
 	sources = exprSources(sources, reflect.ValueOf(l.p.Health[key]))
+	sources = exprSources(sources, reflect.ValueOf(l.p.Fields[key]))
 
 	for _, t := range v.ConditionTypes() {
-		byName := regexp.MustCompile(`conditions\.` + regexp.QuoteMeta(t) + `\b|"` + regexp.QuoteMeta(t) + `"|'` + regexp.QuoteMeta(t) + `'`)
-		if !slices.ContainsFunc(sources, byName.MatchString) {
+		if !slices.ContainsFunc(sources, conditionRef(t).MatchString) {
 			l.warn("resources."+key, "condition %s (in the CRD's schema) has no health rule: read it as conditions.%s", t, t)
 		}
 	}

@@ -352,7 +352,9 @@ tile below for an active plugin and `null` otherwise. Examples: the goldens in
   and its `summary`, whose counts are then a lower bound and whose health is at least
   `unknown` (the apps show "N+" and say so). A
   resource that cannot be read (forbidden, not served) is an `errors` entry with the
-  resource named, and the rest still renders. Secrets are masked unless `reveal`.
+  resource named, and the rest still renders. Secrets are masked unless `reveal`, and always
+  in screenshot mode and for a plugin that is not installed (a preview,
+  `plugin-render FILE`).
 * A value that fails to evaluate reads empty and is reported once in `errors` with `where`
   (`fields.widget.size`).
 * `just probe plugin-render FILE|ID [-scope NS] [-locale xx] -context CTX` prints the tree
@@ -496,12 +498,14 @@ column. The plugin compiler also reports, without evaluating:
 
 The probe checks and renders plugin files from the desktop. Paths are relative to where
 `just` runs. Every command but `plugin-render` against a cluster reads no talosconfig and
-no kubeconfig.
+no kubeconfig. `plugin-render` takes a file when its argument has a `.` or a `/`
+(`kube-green.yaml`, `./draft`), and a built-in plugin id otherwise (`kube-green`); a file is
+validated first, before any config is read.
 
 | Command | Does | Output | Exit |
 | -- | -- | -- | -- |
 | `just probe plugin-validate FILE...` | loads, validates and compiles each file, then renders its samples in English and in each `i18n` language | per valid file, one JSON line on stdout: `{"ok":true,"id":"kube-green","cards":2,"findings":1,"resources":2,"actions":0}`; per problem, `FILE:LINE: path: message` on stderr | 0 when every file is valid, 1 otherwise |
-| `just probe plugin-lint FILE [-crd MANIFEST] [-strict]` | `plugin-validate`, then the warnings below | the JSON line with `"warnings":n` on stdout; `FILE:LINE: warning: path: message` on stderr | 0 with warnings; 1 on an error, or on any warning with `-strict` |
+| `just probe plugin-lint FILE [-crd MANIFEST] [-strict]` | `plugin-validate`, then the warnings below | the JSON line with `"warnings":n` on stdout; `FILE:LINE: warning: path: message` on stderr, and on failure a last line `plugin-lint: N errors, M warnings` | 0 with warnings; 1 on an error, or on any warning with `-strict` |
 | `just probe plugin-render FILE\|ID [-scope NS] [-locale xx] [-demo]` | the render tree of a file or of a built-in plugin id, read from the cluster (`-context CTX`) or from the samples (`-demo`) | the tree as JSON | 0, or 1 with the error (a file that does not validate: its `FILE:LINE` problems) |
 | `just probe plugin-list` | the built-in plugins | one JSON line each: `{id, name, version, category, resources, cards, actions, findings, file}` | 0 |
 | `just plugin-check [DIR]` | `plugin-validate` on every `*.yaml` of `DIR` (default `go/plugin/builtin`); `./build.sh check` runs it on the built-ins | as `plugin-validate` | as `plugin-validate` |
@@ -513,18 +517,22 @@ plugin's tests.
 `plugin-lint` warns (and `-strict` fails) when:
 * a label, title or message has no translation in a language the plugin translates to, or the
   plugin has no `i18n` at all (one warning);
-* a resource is read but no card shows it: no card or `table` names it in `from`, no data
-  service reads it, no field joins it;
+* a resource is read but nothing uses it: no card, `table`, data service or finding names it
+  in `from`, and no expression (a `join` in a field, a finding or an action) names it;
 * a `health` rule matches no sample (rules are first-match: a rule an earlier one always
   shadows counts as untriggered), so neither the tests nor the demo show it;
 * a list card has no `empty` text;
 * with `-crd MANIFEST` (a CustomResourceDefinition, YAML or JSON, as `kubectl get crd NAME -o
-  yaml` prints it or as an operator's `config/crd/bases/` ships it), for the plugin resource
-  with the CRD's group and plural, at its declared version (`preferred`: the storage version):
+  yaml` prints it or as an operator's `config/crd/bases/` ships it; in a file of several
+  documents or a `List`, the first CRD, other documents skipped), for the plugin resource with
+  the CRD's group and plural, at its declared version (`preferred`: the storage version, else
+  the last served one in list order):
   * an `additionalPrinterColumns` `jsonPath` that no expression reads (`.spec.sleepAt` is read
-    by `$.spec.sleepAt`);
+    by `$.spec.sleepAt`; spaces and quote styles do not matter). A column that filters on a
+    condition (`.status.conditions[?(@.type=="Ready")].status`) is also read by
+    `conditions.Ready` or `condition('Ready')`;
   * a condition type named in the schema (the `enum` of `status.conditions[].type`) that no
-    health rule of the resource names (`conditions.Ready`, `condition("Ready")`);
+    health rule or field of the resource names (`conditions.Ready`, `condition("Ready")`);
   * a `scale` subresource and no action with `verb: subresource`, `subresource: scale`;
   * a `kind` or `scope` that differs from the CRD's, a version the CRD does not declare, or no
     resource reading the CRD at all.
@@ -549,7 +557,7 @@ What it reads from the CRD (`go/plugin/crd.go` decodes these):
 | `spec.group`, `spec.names.plural` | `detect[0]: {group, resource}` and the resource's `group`, `resource` |
 | `spec.names.kind`, `spec.names.singular` | the resource's `kind`; its key (`singular`, in camel case) |
 | `spec.scope` | the resource's `scope` |
-| `spec.versions[]`: the one with `storage: true`, else the newest served | the resource's `version` |
+| `spec.versions[]`: the one with `storage: true`, else the last served one in list order | the resource's `version` |
 | `schema.openAPIV3Schema.properties.spec` | `fields`: scalars at depth ≤ 2, with `default(…)` from the schema's defaults and each `description` kept as a YAML comment |
 | `properties.status` | status scalars as `fields` (`phase`, `operation`…); `status.conditions` → a `conditions` section |
 | `status.conditions[].type` `enum` (`Ready`, `Available`, `Healthy`, `Synced`…) | `health` rules on `!conditions.<Type>` |

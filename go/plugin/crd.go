@@ -83,8 +83,8 @@ type CRDScale struct {
 }
 
 // LoadCRD reads a CRD manifest in YAML or JSON (kubectl get crd NAME -o yaml, or an upstream
-// config/crd/bases file). A file of several documents gives its first
-// CustomResourceDefinition.
+// config/crd/bases file). A file of several documents, or a List (kubectl get crd -o yaml),
+// gives its first CustomResourceDefinition; other documents are skipped whatever their shape.
 func LoadCRD(src []byte) (*CRDManifest, error) {
 	if len(src) > 4*MaxSize {
 		return nil, errors.New("the CRD manifest is larger than 4 MiB")
@@ -96,9 +96,9 @@ func LoadCRD(src []byte) (*CRDManifest, error) {
 	}
 
 	for {
-		var crd CRDManifest
+		var doc yaml.Node
 
-		err := dec.Load(&crd)
+		err := dec.Load(&doc)
 		if errors.Is(err, io.EOF) {
 			return nil, errors.New("no CustomResourceDefinition in the manifest")
 		}
@@ -107,8 +107,32 @@ func LoadCRD(src []byte) (*CRDManifest, error) {
 			return nil, fmt.Errorf("the CRD manifest does not parse: %w", err)
 		}
 
-		if crd.Kind != "CustomResourceDefinition" {
-			continue
+		crd, err := crdOf(&doc, true)
+		if err != nil || crd != nil {
+			return crd, err
+		}
+	}
+}
+
+// crdHead is what LoadCRD reads of every document before decoding it.
+type crdHead struct {
+	Kind  string      `yaml:"kind"`
+	Items []yaml.Node `yaml:"items"`
+}
+
+// crdOf decodes n when it is a CustomResourceDefinition, or the first one of a List (when
+// list); nil for anything else.
+func crdOf(n *yaml.Node, list bool) (*CRDManifest, error) {
+	var head crdHead
+	if err := n.Load(&head); err != nil {
+		return nil, nil //nolint:nilerr // not a CRD: kind or items of another shape
+	}
+
+	switch {
+	case head.Kind == "CustomResourceDefinition":
+		var crd CRDManifest
+		if err := n.Load(&crd); err != nil {
+			return nil, fmt.Errorf("the CustomResourceDefinition does not decode: %w", err)
 		}
 
 		if err := crd.check(); err != nil {
@@ -116,7 +140,15 @@ func LoadCRD(src []byte) (*CRDManifest, error) {
 		}
 
 		return &crd, nil
+	case list && (head.Kind == "List" || head.Kind == "CustomResourceDefinitionList"):
+		for i := range head.Items {
+			if crd, err := crdOf(&head.Items[i], false); err != nil || crd != nil {
+				return crd, err
+			}
+		}
 	}
+
+	return nil, nil
 }
 
 func (c *CRDManifest) check() error {

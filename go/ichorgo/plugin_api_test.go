@@ -390,17 +390,38 @@ func TestPluginListStopsAtItsLimit(t *testing.T) {
 func TestPluginSecretsAreMasked(t *testing.T) {
 	obj := map[string]any{"metadata": map[string]any{"name": "s", "managedFields": []any{}}, "data": map[string]any{"k": "c2VjcmV0"}}
 
-	tidyPluginObject(obj, plugin.Resource{Resource: "secrets"})
+	tidyPluginObject(obj, plugin.Resource{Resource: "secrets"}, true)
 
 	if obj["data"].(map[string]any)["k"] != "<hidden, 8 characters>" || mapAt(obj, "metadata")["managedFields"] != nil {
 		t.Fatalf("not masked %+v", obj)
 	}
 
 	revealed := map[string]any{"data": map[string]any{"k": "c2VjcmV0"}}
-	tidyPluginObject(revealed, plugin.Resource{Resource: "secrets", Reveal: true})
+	tidyPluginObject(revealed, plugin.Resource{Resource: "secrets", Reveal: true}, true)
 
 	if revealed["data"].(map[string]any)["k"] != "c2VjcmV0" {
 		t.Fatalf("reveal masked %+v", revealed)
+	}
+
+	// A plugin that is not installed (a preview) never reveals.
+	preview := map[string]any{"data": map[string]any{"k": "c2VjcmV0"}}
+	tidyPluginObject(preview, plugin.Resource{Resource: "secrets", Reveal: true}, false)
+
+	if preview["data"].(map[string]any)["k"] != "<hidden, 8 characters>" {
+		t.Fatalf("a preview revealed %+v", preview)
+	}
+}
+
+// Screenshot mode masks a Secret's values even when the resource reveals them.
+func TestPluginSecretsAreMaskedInScreenshotMode(t *testing.T) {
+	SetPrivacyMask(true, "")
+	t.Cleanup(func() { SetPrivacyMask(false, "") })
+
+	obj := map[string]any{"data": map[string]any{"k": "c2VjcmV0"}}
+	tidyPluginObject(obj, plugin.Resource{Resource: "secrets", Reveal: true}, true)
+
+	if obj["data"].(map[string]any)["k"] != "<hidden, 8 characters>" {
+		t.Fatalf("revealed in screenshot mode %+v", obj)
 	}
 }
 

@@ -52,14 +52,28 @@ type pluginReport struct {
 	Warnings *int `json:"warnings,omitempty"`
 }
 
-// errProblems is returned once the problems are printed: main prints only this summary,
-// which has no FILE:LINE: prefix.
-func errProblems(n int) error {
-	if n == 1 {
-		return errors.New("plugin-lint: 1 problem")
+// errProblems is returned once the problems are printed: main prints only this summary
+// ("plugin-lint: 2 errors, 1 warning"), which has no FILE:LINE: prefix.
+func errProblems(problems []plugin.Problem) error {
+	var errs, warnings int
+
+	for _, p := range problems {
+		if p.Severity == plugin.SeverityError {
+			errs++
+		} else {
+			warnings++
+		}
 	}
 
-	return fmt.Errorf("plugin-lint: %d problems", n)
+	return fmt.Errorf("plugin-lint: %s, %s", plural(errs, "error"), plural(warnings, "warning"))
+}
+
+func plural(n int, word string) string {
+	if n == 1 {
+		return "1 " + word
+	}
+
+	return fmt.Sprintf("%d %ss", n, word)
 }
 
 // validatePluginFiles checks each file and prints its report to stdout, or its problems to
@@ -217,7 +231,7 @@ func lintPluginFile(args []string, stdout, stderr io.Writer) error {
 	if plugin.HasErrors(problems) {
 		printProblems(stderr, file, problems)
 
-		return errProblems(len(problems))
+		return errProblems(problems)
 	}
 
 	warnings := append(problems, plugin.Lint(p, crd)...)
@@ -232,7 +246,7 @@ func lintPluginFile(args []string, stdout, stderr io.Writer) error {
 	}
 
 	if *strict && n > 0 {
-		return fmt.Errorf("plugin-lint: %d warnings (-strict)", n)
+		return fmt.Errorf("%w (-strict)", errProblems(warnings))
 	}
 
 	return nil
@@ -293,6 +307,19 @@ func pluginRender(e env, args []string) (string, error) {
 		return "", fmt.Errorf("%w\nusage: plugin-render FILE|ID [-scope NS] [-locale xx] [-demo]", err)
 	}
 
+	// A file is validated before any config is read: its problems are FILE:LINE lines.
+	var src []byte
+
+	if isPluginFile(target) {
+		if src, err = os.ReadFile(argPath(target)); err != nil {
+			return "", err
+		}
+
+		if _, err := plugin.CompileSource(target, src); err != nil {
+			return "", err
+		}
+	}
+
 	cfg, contextName := "", e.context
 
 	if *demo {
@@ -309,18 +336,7 @@ func pluginRender(e env, args []string) (string, error) {
 		return ichorgo.KubePluginData(cfg, contextName, e.kubeServer, target, *scope, *locale)
 	}
 
-	src, err := os.ReadFile(argPath(target))
-	if err != nil {
-		return "", err
-	}
-
-	out, err := ichorgo.KubePluginPreview(cfg, contextName, e.kubeServer, string(src), *scope, *locale)
-	if err != nil {
-		// The problems name plugin.yaml: name the file instead.
-		return "", errors.New(strings.ReplaceAll(err.Error(), "plugin.yaml:", target+":"))
-	}
-
-	return out, nil
+	return ichorgo.KubePluginPreview(cfg, contextName, e.kubeServer, string(src), *scope, *locale)
 }
 
 // pluginListItem is one built-in plugin.
