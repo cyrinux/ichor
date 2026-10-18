@@ -210,14 +210,17 @@ tour** shows it again.
   Google library, so they send nothing to a watch.
 - **Data services:** the storage and database operators the cluster runs (Longhorn, Garage,
   CloudNativePG, Dragonfly, MariaDB, Percona, cert-manager, Velero, ExternalDNS, Sealed Secrets,
-  Rook Ceph, CAST AI, CSI VolumeSnapshots, backup CronJobs) on one tabbed screen, each with its
+  External Secrets, Rook Ceph, CAST AI, CSI VolumeSnapshots, backup CronJobs) on one tabbed screen, each with its
   health and what needs a look; kube-green's sleep schedules say which namespaces sleep on a
   schedule, when they wake up, and whether they are asleep right now, and a schedule can be moved
   from the phone (days, sleep and wake-up times, time zone). ExternalDNS shows the
   hostnames it manages, where each comes from, and the controller's settings; it can resolve
   every hostname from the phone and compare it with the record's targets, so a name that points
   elsewhere, or that no controller owns, stands out. Sealed Secrets shows the controller, the
-  sealing keys and whether each SealedSecret unsealed, by name only. When the garage-operator
+  sealing keys and whether each SealedSecret unsealed, by name only. External Secrets shows
+  whether each ExternalSecret syncs, from which store, how often and when it last refreshed,
+  flags one that stopped refreshing, and whether its SecretStore or ClusterSecretStore can reach
+  its backend; its target Secret is a link, by name only. When the garage-operator
   manages Garage, its clusters, buckets (size, quota, website), keys and node declarations show
   next to the live Garage state. Integrations are declarative plugins; see
   [docs/plugins.md](docs/plugins.md). On Android, each plugin the cluster runs gets its tile
@@ -289,6 +292,7 @@ reads those roles and explains up front when a feature needs more.
 | **Edit a kube-green schedule** | `Kubeconfig`, then the Kubernetes API (merge patch of sleepinfos.kube-green.com: `patch` in its namespace; the button is off with the reason without it) | **`os:admin`** |
 | **Data services: ExternalDNS hostnames and controllers** | `Kubeconfig`, then the Kubernetes API (deployments, ingresses, services, optional dnsendpoints.externaldns.k8s.io and httproutes/gateways) | **`os:admin`** |
 | **Data services: Sealed Secrets status and sealing keys** | `Kubeconfig`, then the Kubernetes API (sealedsecrets.bitnami.com, deployments, secrets metadata with the sealing-key label) | **`os:admin`** |
+| **Data services: External Secrets sync status and stores** | `Kubeconfig`, then the Kubernetes API (`list` on externalsecrets.external-secrets.io; optional secretstores, clustersecretstores and secrets with the `reconcile.external-secrets.io/managed=true` label, values masked) | **`os:admin`** |
 | **App web addresses (Ingress, HTTPRoute, GRPCRoute, TLSRoute, Traefik IngressRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, grpcroutes, tlsroutes, gateways, ingressroutes, ingressroutetcps) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |

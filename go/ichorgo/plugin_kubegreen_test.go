@@ -81,25 +81,7 @@ func kubeGreenPrimaryReason(reasons []string) string {
 func kubeGreenBuiltin(t *testing.T, now time.Time) *plugin.Compiled {
 	t.Helper()
 
-	var c *plugin.Compiled
-
-	for _, b := range plugin.Builtins() {
-		if b.Plugin.ID == "kube-green" {
-			c = b
-		}
-	}
-
-	if c == nil {
-		t.Fatal("no kube-green built-in plugin")
-	}
-
-	savedPlugins, savedNow := knownPlugins, pluginNow
-	knownPlugins = func() []*plugin.Compiled { return []*plugin.Compiled{c} }
-	pluginNow = func() time.Time { return now }
-
-	t.Cleanup(func() { knownPlugins, pluginNow = savedPlugins, savedNow })
-
-	return c
+	return useBuiltinPlugin(t, "kube-green", now)
 }
 
 // kubeGreenNative maps the parity SleepInfos as the former Data services reader did.

@@ -65,7 +65,6 @@ var nativeIntegrationSpecs = []integrationSpec{
 	// Calico's CRDs come with the Kubernetes datastore; with the etcd one only its API server tells.
 	{ID: "calico", Name: "Calico", Website: "https://docs.tigera.io/calico/latest/about/", Groups: []string{groupCalicoCRD, groupCalico}, AnyGroup: true},
 	{ID: "crossplane", Name: "Crossplane", Website: "https://www.crossplane.io", Groups: []string{groupCrossplanePkg, groupCrossplaneAPIExt}, AnyGroup: true},
-	{ID: "external-secrets", Name: "External Secrets Operator", Website: "https://external-secrets.io", Groups: []string{groupExternalSecrets}},
 	// Kyverno is read through its policies and the (standard) policy reports it writes.
 	{ID: "kyverno", Name: "Kyverno", Website: "https://kyverno.io", Groups: []string{groupKyverno, groupPolicyReport}, Resource: "clusterpolicies", FallbackVersion: kyvernoPoliciesVersion},
 	// Gatekeeper: its constraint kinds are only served once a template is created.
