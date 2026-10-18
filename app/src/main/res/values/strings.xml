@@ -4932,6 +4932,8 @@
     <string name="capacity_tile_memory_free">Memory free</string>
     <string name="capacity_tile_pods">Pod slots</string>
     <string name="capacity_tile_ephemeral_free">Ephemeral storage free</string>
+    <string name="capacity_tile_disk_free">Disk free</string>
+    <string name="capacity_tile_disk_free_partial">Disk free, %1$s of %2$s nodes</string>
     <string name="capacity_workload_replicas">%1$s × %2$s CPU</string>
     <string name="capacity_kind_deployment_short">Deploy</string>
     <string name="capacity_kind_statefulset_short">STS</string>

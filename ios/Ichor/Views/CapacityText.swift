@@ -21,6 +21,8 @@ enum CapacityText {
     static var capacityTileMemoryFree: String { String(localized: "Memory free") }
     static var capacityTilePods: String { String(localized: "Pod slots") }
     static var capacityTileEphemeralFree: String { String(localized: "Ephemeral storage free") }
+    static var capacityTileDiskFree: String { String(localized: "Disk free") }
+    static func capacityTileDiskFreePartial(_ a: String, _ b: String) -> String { String(localized: "Disk free, \(a) of \(b) nodes") }
     static func capacityWorkloadReplicas(_ a: String, _ b: String) -> String { String(localized: "\(a) × \(b) CPU") }
     static var capacityKindDeploymentShort: String { String(localized: "Deploy") }
     static var capacityKindStatefulsetShort: String { String(localized: "STS") }
