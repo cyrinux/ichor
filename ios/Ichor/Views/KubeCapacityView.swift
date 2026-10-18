@@ -129,7 +129,7 @@ private struct CapacityHeader: View {
         .padding(.vertical, 4)
     }
 
-    /// Three tiles in a row; four (ephemeral storage reported) in two rows of two.
+    /// Three tiles in a row; four (disk measured, else ephemeral storage reported) in two rows of two.
     @ViewBuilder
     private func tiles(_ t: CapacityTotals) -> some View {
         let cpu = FreeTile(free: formatCPU(t.cpuFree), of: formatCPU(t.cpuAllocatable), label: CapacityText.capacityTileCpuFree,
@@ -139,8 +139,21 @@ private struct CapacityHeader: View {
                               used: freeFraction(t.memoryRequests, of: t.memoryAllocatable))
         let pods = FreeTile(free: "\(t.podsFree)", of: "\(t.podCapacity)", label: CapacityText.capacityTilePods,
                             used: freeFraction(Double(t.pods), of: Double(t.podCapacity)))
-        // No allocatable ephemeral storage reported (old kubelets, some managed clusters): unknown, not full.
-        if t.ephemeralAllocatable > 0 {
+        // Few pods request ephemeral storage, so allocatable minus requests reads as an empty disk:
+        // the kubelets' nodefs says what is really left.
+        if t.diskMeasuredNodes > 0 {
+            let disk = FreeTile(free: formatBytes(Int64(t.diskAvailable)), of: formatBytes(Int64(t.diskCapacity)),
+                                label: t.diskMeasuredNodes < t.nodes
+                                    ? CapacityText.capacityTileDiskFreePartial("\(t.diskMeasuredNodes)", "\(t.nodes)")
+                                    : CapacityText.capacityTileDiskFree,
+                                used: 1 - t.diskFreeFraction)
+            Grid(alignment: .topLeading, horizontalSpacing: 12, verticalSpacing: 10) {
+                GridRow { cpu; memory }
+                GridRow { pods; disk }
+            }
+        } else if t.ephemeralAllocatable > 0 {
+            // Unmeasured disk: fall back to requests. No allocatable reported (old kubelets, some
+            // managed clusters): unknown, not full.
             let ephemeral = FreeTile(free: formatBytes(Int64(t.ephemeralFree)), of: formatBytes(Int64(t.ephemeralAllocatable)),
                                      label: CapacityText.capacityTileEphemeralFree,
                                      used: freeFraction(t.ephemeralRequests, of: t.ephemeralAllocatable))

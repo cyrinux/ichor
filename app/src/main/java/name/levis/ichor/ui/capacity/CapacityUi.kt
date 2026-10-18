@@ -46,8 +46,8 @@ private const val NODE_WARN_AT = 0.8f
 private val PILL_MAX_WIDTH = 160.dp
 
 /**
- * The N+1 verdict, the cluster's free room as tiles (CPU, memory, pod slots, and ephemeral
- * storage when the nodes report it: then two rows of two), what is missing to read, and
+ * The N+1 verdict, the cluster's free room as tiles (CPU, memory, pod slots, and the kubelets'
+ * disk, else ephemeral storage requests, when known: then two rows of two), what is missing to read, and
  * "What if a node goes down".
  */
 @Composable
@@ -77,7 +77,25 @@ fun CapacityHeader(capacity: KubeCapacity, onWhatIf: () -> Unit) {
         val pods: @Composable (Modifier) -> Unit = {
             FreeTile(t.podsFree.toString(), t.podCapacity.toString(), stringResource(R.string.capacity_tile_pods), freeFraction(t.pods.toDouble(), t.podCapacity.toDouble()), it)
         }
-        if (t.ephemeralAllocatable > 0) {
+        if (t.diskMeasuredNodes > 0) {
+            // Few pods request ephemeral storage, so allocatable minus requests reads as an empty
+            // disk: the kubelets' nodefs says what is really left.
+            val disk: @Composable (Modifier) -> Unit = {
+                FreeTile(
+                    memoryText(t.diskAvailable),
+                    memoryText(t.diskCapacity),
+                    if (t.diskMeasuredNodes < t.nodes) {
+                        stringResource(R.string.capacity_tile_disk_free_partial, t.diskMeasuredNodes.toString(), t.nodes.toString())
+                    } else {
+                        stringResource(R.string.capacity_tile_disk_free)
+                    },
+                    1f - t.diskFreeFraction,
+                    it,
+                )
+            }
+            StatTileRow(Modifier, cpu, memory)
+            StatTileRow(Modifier, pods, disk)
+        } else if (t.ephemeralAllocatable > 0) {
             val ephemeral: @Composable (Modifier) -> Unit = {
                 FreeTile(
                     memoryText(t.ephemeralFree),

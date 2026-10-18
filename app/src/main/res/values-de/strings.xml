@@ -4918,6 +4918,8 @@
     <string name="capacity_tile_memory_free">Speicher frei</string>
     <string name="capacity_tile_pods">Pod-Plätze</string>
     <string name="capacity_tile_ephemeral_free">Flüchtiger Speicher frei</string>
+    <string name="capacity_tile_disk_free">Festplatte frei</string>
+    <string name="capacity_tile_disk_free_partial">Festplatte frei, %1$s von %2$s Nodes</string>
     <string name="capacity_workload_replicas">%1$s × %2$s CPU</string>
     <string name="capacity_kind_deployment_short">Deploy</string>
     <string name="capacity_kind_statefulset_short">STS</string>

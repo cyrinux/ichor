@@ -4927,6 +4927,8 @@
     <string name="capacity_tile_memory_free">Memoria libera</string>
     <string name="capacity_tile_pods">Slot per pod</string>
     <string name="capacity_tile_ephemeral_free">Storage effimero libero</string>
+    <string name="capacity_tile_disk_free">Disco libero</string>
+    <string name="capacity_tile_disk_free_partial">Disco libero, %1$s nodi su %2$s</string>
     <string name="capacity_workload_replicas">%1$s × %2$s CPU</string>
     <string name="capacity_kind_deployment_short">Deploy</string>
     <string name="capacity_kind_statefulset_short">STS</string>

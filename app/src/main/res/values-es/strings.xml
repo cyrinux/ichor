@@ -4926,6 +4926,8 @@
     <string name="capacity_tile_memory_free">Memoria libre</string>
     <string name="capacity_tile_pods">Huecos de pods</string>
     <string name="capacity_tile_ephemeral_free">Almacenamiento efímero libre</string>
+    <string name="capacity_tile_disk_free">Disco libre</string>
+    <string name="capacity_tile_disk_free_partial">Disco libre, %1$s de %2$s nodos</string>
     <string name="capacity_workload_replicas">%1$s × %2$s CPU</string>
     <string name="capacity_kind_deployment_short">Deploy</string>
     <string name="capacity_kind_statefulset_short">STS</string>
