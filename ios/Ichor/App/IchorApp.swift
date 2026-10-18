@@ -231,6 +231,12 @@ enum Route: Hashable {
     /// inventory, downNodes: hostnames Talos reports not ready, for the likely cause; kind: the
     /// system to open on (nil: the first).
     case dataServices(hints: String, downNodes: Set<String>, kind: DataServiceKind? = nil)
+    /// The Data services screen on a CRD plugin's tab (a plugin tile); hints and downNodes as
+    /// for dataServices.
+    case dataServicesPlugin(hints: String, downNodes: Set<String>, plugin: String)
+    /// A CRD plugin of another category than Data services, on a screen of its own (a tile of
+    /// the Kubernetes home).
+    case plugin(id: String)
     /// Argo CD Applications (os:admin); downNodes as for dataServices; selected: the app shown
     /// beside the list on an iPad (a link to an app).
     case argoCD(downNodes: Set<String>, selected: ArgoAppRoute? = nil)
@@ -365,6 +371,8 @@ struct MainNavigation: View {
                     case .kubernetes(let focus): KubernetesView(focus: focus)
                     case .networkTest: KubernetesView(networkTest: true)
                     case .dataServices(let hints, let downNodes, let kind): DataServicesView(hints: hints, downNodes: downNodes, selected: kind)
+                    case .dataServicesPlugin(let hints, let downNodes, let plugin): DataServicesView(hints: hints, downNodes: downNodes, plugin: plugin)
+                    case .plugin(let id): PluginView(pluginID: id)
                     case .argoCD(let downNodes, let selected): ArgoCDView(downNodes: downNodes, selected: selected)
                     case .argoWindows: ArgoWindowsView()
                     case .argoApp(let namespace, let name): ArgoAppView(namespace: namespace, name: name, downNodes: [])

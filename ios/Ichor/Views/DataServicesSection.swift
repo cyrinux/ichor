@@ -103,6 +103,8 @@ struct DataServicesSection: View {
     let hints: String
     let apps: [String: InventoryApp]
     let downNodes: Set<String>
+    /// The active CRD plugins of Data services (kube-green...), each a line after the native systems.
+    var plugins: [PluginDetectItem] = []
 
     private var hinted: [DataServiceKind] { DataServiceKind.allCases.filter { hints.split(separator: ",").map(String.init).contains($0.catalogID) } }
 
@@ -126,13 +128,19 @@ struct DataServicesSection: View {
                 }
             }
         case .loaded(let services, _, _):
-            if !services.detected.isEmpty {
+            if !services.detected.isEmpty || !plugins.isEmpty {
                 Section {
                     NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes)) { header(services) }
-                    // One row per system, opening the screen on its tab.
-                    ForEach(services.detected) { kind in
-                        NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes, kind: kind)) {
-                            line(kind, text: dataServiceSummary(kind, services), health: services.summary(kind)?.health)
+                    // One row per system or plugin, worst first, opening the screen on its tab
+                    // (or the native screen a plugin names).
+                    ForEach(services.cardLines(plugins: plugins)) { cardLine in
+                        switch cardLine {
+                        case .native(let kind, let health):
+                            NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes, kind: kind)) {
+                                line(kind, text: dataServiceSummary(kind, services), health: health)
+                            }
+                        case .plugin(let item):
+                            PluginTileLink(item: item, hints: hints, downNodes: downNodes) { pluginLine(item) }
                         }
                     }
                 }
@@ -144,14 +152,14 @@ struct DataServicesSection: View {
     /// it); the likely cause stays on the Data services screen, the nodes say which one is down.
     private func header(_ services: DataServices) -> some View {
         SectionHeader(title: String(localized: "Data services"),
-                      subtitle: String(localized: "\(services.detected.count) systems"), pill: pill(services))
+                      subtitle: String(localized: "\(services.detected.count + plugins.count) systems"), pill: pill(services))
             .font(.headline)
             .padding(.vertical, 4)
     }
 
     @ViewBuilder private func pill(_ services: DataServices) -> some View {
-        let worst = services.worst
-        let attention = services.detected.compactMap { services.summary($0)?.attention }.reduce(0, +)
+        let worst = ServiceHealth.worst([services.worst] + plugins.compactMap { $0.summary?.serviceHealth })
+        let attention = services.attention(plugins: plugins)
         if attention > 0 {
             StatusPill(label: String(localized: "\(attention) need a look"), color: worst.color)
         } else if worst.needsAttention {
@@ -169,6 +177,21 @@ struct DataServicesSection: View {
             Spacer()
             if let health { HealthDot(health: health) }
         }
+    }
+}
+
+/// A plugin's line: its icon, name and summary ("2 sleep schedules · 1 asleep"), its health.
+private func pluginLine(_ item: PluginDetectItem) -> some View {
+    HStack(spacing: 12) {
+        PluginIcon(item: item, size: 28)
+        VStack(alignment: .leading, spacing: 1) {
+            Text(verbatim: item.name).font(.subheadline)
+            if let line = item.summary?.line, !line.isEmpty {
+                Text(verbatim: line).font(.caption).foregroundStyle(.secondary).lineLimit(2).monospacedDigit()
+            }
+        }
+        Spacer()
+        if let summary = item.summary { HealthDot(health: summary.serviceHealth) }
     }
 }
 

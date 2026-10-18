@@ -99,6 +99,9 @@ struct KubeHomeView: View {
     @State private var argo: LoadState<ArgoStatus>?
     @State private var flux: LoadState<FluxStatus>?
     @State private var dataServices: LoadState<DataServices>?
+    /// The CRD plugins the cluster runs: Data services lines for those of that category, a tool
+    /// each for the others. Empty until they answer (a failure keeps what was shown).
+    @State private var plugins = PluginDetect()
     /// Crossplane: nil until the cluster says it runs it (the read answers "not installed" fast).
     @State private var crossplane: LoadState<Crossplane>?
     /// Tailscale: nil until the cluster says it runs the operator (the read answers fast).
@@ -232,6 +235,7 @@ struct KubeHomeView: View {
             argo = nil
             flux = nil
             dataServices = nil
+            plugins = PluginDetect()
             crossplane = nil
             tailscale = nil
             clusterLifecycle = nil
@@ -265,7 +269,8 @@ struct KubeHomeView: View {
             toolsSection
         case .dataServices:
             if let dataServices {
-                DataServicesSection(state: dataServices, hints: "", apps: [:], downNodes: notReadyNodes(overview))
+                DataServicesSection(state: dataServices, hints: "", apps: [:], downNodes: notReadyNodes(overview),
+                                    plugins: plugins.dataServicePlugins)
             }
         case .argoCD:
             if let argo {
@@ -389,6 +394,7 @@ struct KubeHomeView: View {
                     toolLabel(Text("Argo Rollouts"), systemImage: "arrow.triangle.branch")
                 }
             }
+            pluginTools(.workloads)
         } header: {
             Text("Workloads")
         }
@@ -408,6 +414,7 @@ struct KubeHomeView: View {
                     toolLabel(Text("Tailscale"), systemImage: "network.badge.shield.half.filled")
                 }
             }
+            pluginTools(.networking)
         } header: {
             Text("Networking")
         }
@@ -443,6 +450,7 @@ struct KubeHomeView: View {
             NavigationLink(value: Route.alerts) {
                 toolLabel(KubeHomeAction.alerts)
             }
+            pluginTools(.observe)
         } header: {
             Text("Observe")
         }
@@ -462,8 +470,19 @@ struct KubeHomeView: View {
                     toolLabel(Text("Cluster lifecycle"), systemImage: "server.rack")
                 }
             }
+            pluginTools(.browse)
         } header: {
             Text("Browse")
+        }
+    }
+
+    /// The active plugins of other categories than Data services joining a family of tools:
+    /// each opens its native screen, or its own.
+    private func pluginTools(_ family: PluginToolFamily) -> some View {
+        ForEach(plugins.homeTiles.filter { $0.toolFamily == family }) { item in
+            PluginTileLink(item: item) {
+                toolLabel(Text(verbatim: item.name), systemImage: "puzzlepiece.extension")
+            }
         }
     }
 
@@ -528,7 +547,9 @@ struct KubeHomeView: View {
         var absent: Set<KubeHomeCard> = []
         if case .loaded(let status, _, _)? = argo, !status.installed { absent.insert(.argoCD) }
         if case .loaded(let status, _, _)? = flux, !status.installed { absent.insert(.flux) }
-        if case .loaded(let services, _, _)? = dataServices, services.detected.isEmpty { absent.insert(.dataServices) }
+        if case .loaded(let services, _, _)? = dataServices, services.detected.isEmpty, plugins.dataServicePlugins.isEmpty {
+            absent.insert(.dataServices)
+        }
         if AlertsStore.shared.absent(for: model.alertsKey) { absent.insert(.alerts) }
         return absent
     }
@@ -565,9 +586,14 @@ struct KubeHomeView: View {
         let fluxNext = await loadFlux(with: client)
         guard id == loadID else { return }
         flux = fluxNext.map { (flux ?? .loading).refreshed(with: $0) }
-        let dataNext = await loadDataServices(with: client)
+        // The plugins with the data services: a cluster whose only data service is a plugin
+        // (kube-green) still shows the card. A failed ask keeps the plugins shown.
+        async let detected = LoadState<PluginDetect>.from { try await client.pluginDetect(hints: "") }
+        let dataRead: LoadState<DataServices> = await .from { try await client.dataServices(hints: "") }
+        let detectRead = await detected
         guard id == loadID else { return }
-        dataServices = dataNext.map { (dataServices ?? .loading).refreshed(with: $0) }
+        if case .loaded(let detect, _, _) = detectRead { plugins = detect }
+        dataServices = shownDataServices(dataRead).map { (dataServices ?? .loading).refreshed(with: $0) }
         // Crossplane: nil when the cluster does not run it (the read answers that quickly).
         let crossplaneNext = await loadCrossplane(with: client)
         guard id == loadID else { return }
@@ -618,11 +644,11 @@ struct KubeHomeView: View {
         return loaded
     }
 
-    /// The data services, nil when none of the operators is installed. The operators are found
-    /// from the API groups; Garage, which has none, from a listing of the pods (no hint, no inventory).
-    private func loadDataServices(with client: TalosClient) async -> LoadState<DataServices>? {
-        let loaded: LoadState<DataServices> = await .from { try await client.dataServices(hints: "") }
-        if case .loaded(let services, _, _) = loaded, services.detected.isEmpty { return nil }
+    /// The data services to show, nil when none of the operators is installed and no data
+    /// services plugin runs. The operators are found from the API groups; Garage, which has
+    /// none, from a listing of the pods (no hint, no inventory).
+    private func shownDataServices(_ loaded: LoadState<DataServices>) -> LoadState<DataServices>? {
+        if case .loaded(let services, _, _) = loaded, services.detected.isEmpty, plugins.dataServicePlugins.isEmpty { return nil }
         return loaded
     }
 
