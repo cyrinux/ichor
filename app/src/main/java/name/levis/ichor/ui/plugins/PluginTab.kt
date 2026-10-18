@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
@@ -41,6 +42,7 @@ import name.levis.ichor.model.PluginRef
 import name.levis.ichor.model.PluginRow
 import name.levis.ichor.model.PluginTree
 import name.levis.ichor.model.groupsByNamespace
+import name.levis.ichor.model.pluginRowKeys
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.cancellableCatching
@@ -93,9 +95,12 @@ class PluginDetectViewModel(private val plugins: PluginRepository) : LoadingView
     }
 }
 
-/** One plugin's render tree over every namespace, in the phone's language. */
+/** One plugin's render tree over every namespace, in the phone's language, and its actions. */
 class PluginTabViewModel(private val plugins: PluginRepository, private val pluginId: String) : LoadingViewModel<PluginView>() {
     private var source: Any? = null
+
+    /** The buttons' actions: the tree is read again once one went through. */
+    val actions = PluginActions(viewModelScope, plugins, pluginId, onChanged = { refresh() })
 
     override fun cached(): TalosRepository.Timed<PluginView>? =
         plugins.cached<PluginTree>(pluginDataKey(pluginId, "", pluginLocale()))?.let { t ->
@@ -154,10 +159,12 @@ fun PluginTab(
     val vm = pluginTabViewModel(pluginId)
     val state by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(reload) { vm.load(reload) }
+    PluginActionToasts(vm.actions.results)
+    val runner = rememberActionRunner(vm.actions)
     when (val s = state) {
         UiState.Loading -> LoadingBox(Modifier.fillMaxSize())
         is UiState.Failed -> ErrorBox(s.message, { vm.refresh() }, Modifier.fillMaxSize())
-        is UiState.Loaded -> PluginBody(s.data, onObject, rowExtra)
+        is UiState.Loaded -> PluginBody(s.data, onObject, rowExtra, runner)
     }
 }
 
@@ -173,6 +180,8 @@ fun PluginScreen(pluginId: String, onBack: () -> Unit, onObject: (KubeObjectRef)
     val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
     val reload = PluginReload(config?.activeContext to generation, invalidations)
     LaunchedEffect(reload) { vm.load(reload) }
+    PluginActionToasts(vm.actions.results)
+    val runner = rememberActionRunner(vm.actions)
     val title = (state as? UiState.Loaded)?.data?.tree?.plugin?.name?.takeIf { it.isNotEmpty() } ?: stringResource(R.string.plugin_screen_title)
     Scaffold(
         topBar = {
@@ -188,14 +197,26 @@ fun PluginScreen(pluginId: String, onBack: () -> Unit, onObject: (KubeObjectRef)
             UiState.Loading -> LoadingBox(rest)
             is UiState.Failed -> ErrorBox(s.message, { vm.refresh() }, rest)
             is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = { vm.refresh() }, modifier = rest) {
-                PluginBody(s.data, onObject, rowExtra = { null })
+                PluginBody(s.data, onObject, rowExtra = { null }, runner)
             }
         }
     }
 }
 
+/** The buttons' runner over [actions], new only when the actions in flight change. */
 @Composable
-private fun PluginBody(view: PluginView, onObject: (KubeObjectRef) -> Unit, rowExtra: (PluginRow) -> (@Composable () -> Unit)?) {
+private fun rememberActionRunner(actions: PluginActions): PluginActionRunner {
+    val busy by actions.busy.collectAsStateWithLifecycle()
+    return remember(actions, busy) { PluginActionRunner(busy, actions::run) }
+}
+
+@Composable
+private fun PluginBody(
+    view: PluginView,
+    onObject: (KubeObjectRef) -> Unit,
+    rowExtra: (PluginRow) -> (@Composable () -> Unit)?,
+    runner: PluginActionRunner,
+) {
     val tree = view.tree
     var expanded by rememberSaveable(tree.plugin.id) { mutableStateOf(setOf<String>()) }
     val open: (PluginRef) -> Unit = { ref -> onObject(ref.objectRef(view.catalog.kindOf(tree.plugin.id, ref))) }
@@ -217,7 +238,7 @@ private fun PluginBody(view: PluginView, onObject: (KubeObjectRef) -> Unit, rowE
         if (cards.isEmpty()) item(key = "empty") { EmptyText(stringResource(R.string.plugin_empty)) }
         cards.forEachIndexed { index, layout ->
             if (index > 0) item(key = "gap:${layout.card.id}") { Spacer(Modifier.height(12.dp)) }
-            pluginCard(layout, expanded, { k -> expanded = if (k in expanded) expanded - k else expanded + k }, open, rowExtra)
+            pluginCard(layout, expanded, { k -> expanded = if (k in expanded) expanded - k else expanded + k }, open, rowExtra, runner)
         }
     }
 }
@@ -226,12 +247,19 @@ private fun PluginBody(view: PluginView, onObject: (KubeObjectRef) -> Unit, rowE
  * A card ready to draw: its rows (with their index, for stable keys) in one group, or one group
  * per namespace (its title) when they are objects of several namespaces.
  */
-private class CardLayout(val card: PluginCard, val grouped: Boolean, val groups: List<Pair<String, List<IndexedValue<PluginRow>>>>)
+private class CardLayout(
+    val card: PluginCard,
+    val grouped: Boolean,
+    val groups: List<Pair<String, List<IndexedValue<PluginRow>>>>,
+    /** Per row index: its list key, by its object (see [pluginRowKeys]). */
+    val keys: List<String>,
+)
 
 private fun layoutOf(card: PluginCard): CardLayout {
     val grouped = card.groupsByNamespace()
     val rows = card.rows.withIndex().toList()
-    return CardLayout(card, grouped, if (grouped) groupInOrder(rows) { it.value.ref?.namespace.orEmpty() } else listOf("" to rows))
+    val groups = if (grouped) groupInOrder(rows) { it.value.ref?.namespace.orEmpty() } else listOf("" to rows)
+    return CardLayout(card, grouped, groups, pluginRowKeys(card.rows))
 }
 
 private fun PluginRow.expandKey(card: PluginCard, index: Int): String = "${card.id}|${ref?.key ?: "$index:$title"}"
@@ -243,6 +271,7 @@ private fun LazyListScope.pluginCard(
     onToggle: (String) -> Unit,
     onObject: (PluginRef) -> Unit,
     rowExtra: (PluginRow) -> (@Composable () -> Unit)?,
+    runner: PluginActionRunner,
 ) {
     val card = layout.card
     if (card.rows.isEmpty()) {
@@ -252,7 +281,8 @@ private fun LazyListScope.pluginCard(
     // Keys per plugin card: several cards can list the same namespaces.
     layout.groups.forEach { (namespace, group) ->
         if (layout.grouped) cardGroupTitle("group:${card.id}:$namespace", namespace)
-        cardRows(group, key = { "row:${card.id}:${it.index}" }) { (index, row) ->
+        // Keyed by the row's object: its state (an open action dialog) follows it across a reload.
+        cardRows(group, key = { "row:${card.id}:${layout.keys[it.index]}" }) { (index, row) ->
             val key = row.expandKey(card, index)
             PluginRowContent(
                 row,
@@ -262,6 +292,7 @@ private fun LazyListScope.pluginCard(
                 // The namespace is the card's title when grouped.
                 showSubtitle = !layout.grouped || row.subtitle != row.ref?.namespace,
                 extra = rowExtra(row),
+                actions = runner,
             )
         }
     }

@@ -34,11 +34,16 @@ struct PluginList: View {
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<PluginTreeData> = .loading
     @State private var loaded: PluginReload?
-    /// Changes made from the tab (a kube-green schedule saved): each one reads in place.
+    /// Changes made from the tab (a kube-green schedule saved, a plugin action run): each one
+    /// reads in place.
     @State private var changes = 0
     @State private var expanded: Set<String> = []
     /// Bumped by each read: only the latest one's answer is shown.
     @State private var sequence = 0
+    /// How the last plugin action ended, as an alert.
+    @State private var actionMessage: String?
+    /// Bumped by each action that went through, for the success feedback.
+    @State private var actionsDone = 0
 
     /// The reload asked for, with the changes made from the tab: both only grow, so their sum
     /// changes whenever one does.
@@ -78,6 +83,14 @@ struct PluginList: View {
         }
         .refreshable { await load(current, refresh: true) }
         .themedBackground()
+        .environment(\.pluginActions, PluginActionContext(pluginID: pluginID) { outcome in
+            actionMessage = outcome.message
+            if outcome.succeeded { actionsDone += 1 }
+            // A change made, or rows the cluster no longer agrees with: read in place.
+            if outcome.reload { changes += 1 }
+        })
+        .messageAlert($actionMessage)
+        .sensoryFeedback(.success, trigger: actionsDone)
     }
 
     /// A card as one section, or one per namespace (its header) when its rows span several.
@@ -89,7 +102,8 @@ struct PluginList: View {
             let grouped = card.groupsByNamespace
             ForEach(card.rowGroups, id: \.namespace) { group in
                 Section {
-                    ForEach(group.rows, id: \.index) { item in
+                    // By object: a row's state (an open confirmation) never passes to another one.
+                    ForEach(group.rows, id: \.id) { item in
                         let key = item.row.expandKey(card: card.id, index: item.index)
                         PluginRowView(
                             row: item.row,
