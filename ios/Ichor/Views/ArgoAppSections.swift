@@ -191,6 +191,12 @@ struct ArgoConditionsSection: View {
                     banner(condition.message, title: condition.type,
                            symbol: condition.isError ? "exclamationmark.octagon.fill" : "exclamationmark.triangle.fill",
                            color: condition.isError ? .red : attentionColor)
+                    // A sync or comparison error: the diff names the objects, each with its file in Git.
+                    if condition.isError {
+                        NavigationLink { FluxDiffView(argo: app.namespace, name: app.name) } label: {
+                            Text("Compare with Git").font(.callout)
+                        }
+                    }
                 }
             }
         }
@@ -212,6 +218,8 @@ struct ArgoConditionsSection: View {
 struct ArgoOperationSection: View {
     let operation: ArgoOperation
     let canTerminate: Bool
+    /// The Application, for "Compare with Git" on a resource that failed; nil hides it.
+    var app: (namespace: String, name: String)?
     let terminate: () -> Void
 
     var body: some View {
@@ -249,6 +257,13 @@ struct ArgoOperationSection: View {
                     }
                     if !failed.message.isEmpty {
                         Text(verbatim: failed.message).font(.caption).foregroundStyle(.statusBad).textSelection(.enabled)
+                    }
+                    if let app, !failed.name.isEmpty {
+                        NavigationLink {
+                            FluxDiffView(argo: app.namespace, name: app.name, focus: "\(failed.kind)/\(failed.namespace)/\(failed.name)")
+                        } label: {
+                            Text("Compare with Git").font(.caption)
+                        }
                     }
                 }
             }

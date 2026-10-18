@@ -110,6 +110,9 @@ public struct KubeDiffResource: Decodable, Hashable, Identifiable, Sendable {
 
     public var id: String { "\(group)/\(kind)/\(namespace)/\(name)" }
 
+    /// What a diff's focus names it by ("kind/namespace/name"): an object page knows no group alias.
+    public var focusKey: String { "\(kind)/\(namespace)/\(name)" }
+
     public init(group: String = "", version: String = "v1", kind: String, namespace: String = "", name: String,
                 change: DiffChange, diff: String = "", truncated: Bool = false, error: String = "",
                 liveChanges: [DiffLiveChange] = []) {

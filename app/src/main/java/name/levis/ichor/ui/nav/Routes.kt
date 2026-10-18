@@ -120,17 +120,19 @@ internal object Routes {
     /** [sync]: open its sync sheet (from an alert's button). */
     fun argoApp(namespace: String, name: String, sync: Boolean = false) =
         "argocd-app?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&sync=$sync"
-    const val ARGO_DIFF = "argocd-diff?ns={ns}&name={name}"
-    fun argoDiff(namespace: String, name: String) = "argocd-diff?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
+    /** [focus]: the object ("kind/namespace/name") the diff scrolls to and unfolds, "" for none. */
+    const val ARGO_DIFF = "argocd-diff?ns={ns}&name={name}&focus={focus}"
+    fun argoDiff(namespace: String, name: String, focus: String = "") =
+        "argocd-diff?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&focus=${Uri.encode(focus)}"
     const val FLUX = "flux"
     const val FLUX_APP = "flux-app?kind={kind}&ns={ns}&name={name}&reconcile={reconcile}"
 
     /** [reconcile]: open its reconcile confirmation (from an alert's button). */
     fun fluxApp(kind: String, namespace: String, name: String, reconcile: Boolean = false) =
         "flux-app?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&reconcile=$reconcile"
-    const val FLUX_DIFF = "flux-diff?kind={kind}&ns={ns}&name={name}"
-    fun fluxDiff(kind: String, namespace: String, name: String) =
-        "flux-diff?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
+    const val FLUX_DIFF = "flux-diff?kind={kind}&ns={ns}&name={name}&focus={focus}"
+    fun fluxDiff(kind: String, namespace: String, name: String, focus: String = "") =
+        "flux-diff?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&focus=${Uri.encode(focus)}"
     /** The files of source [idx] of an Argo CD or Flux app ([tool] "argocd" or "flux"), at [dir] ("" for the source's path). */
     const val GITOPS_SOURCE = "gitops-source?tool={tool}&kind={kind}&ns={ns}&name={name}&idx={idx}&dir={dir}"
     fun gitOpsSource(tool: String, kind: String, namespace: String, name: String, idx: Int, dir: String = "") =

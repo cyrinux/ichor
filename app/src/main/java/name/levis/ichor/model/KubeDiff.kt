@@ -72,6 +72,9 @@ data class KubeDiffResource(
 ) {
     val key: String get() = "$group/$kind/$namespace/$name"
 
+    /** What a diff's focus names it by ("kind/namespace/name"): the object page knows no group alias. */
+    val focusKey: String get() = "$kind/$namespace/$name"
+
     /** The diff's lines without its "---"/"+++" header. */
     val lines: List<DiffLine> get() = parseDiffLines(diff)
 }

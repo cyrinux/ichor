@@ -3440,6 +3440,8 @@
     <string name="gitops_keep_live">Guardar los valores del clúster en Git</string>
     <string name="gitops_keep_live_values">Cambiado en el clúster: %1$s</string>
     <string name="gitops_keep_skipped">No guardado, definido en otro lugar: %1$s</string>
+    <string name="gitops_focus_in_sync">%1$s %2$s coincide con lo que Git aplicaría: nada que guardar.</string>
+    <string name="gitops_compare_with_git">Comparar con Git</string>
     <string name="gitops_find_choose">Definido en varios archivos</string>
     <string name="gitops_find_none">Ningún archivo del origen declara %1$s %2$s.</string>
     <string name="gitops_find_defined_in">Definido en %1$s, línea %2$s</string>

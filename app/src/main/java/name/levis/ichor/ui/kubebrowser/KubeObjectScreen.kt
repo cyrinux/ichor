@@ -51,6 +51,7 @@ import name.levis.ichor.model.KubeObjectAction
 import name.levis.ichor.model.KubeObjectBar
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubePermission
+import name.levis.ichor.model.ObjectOwner
 import name.levis.ichor.model.hasConfigData
 import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.SecureWhile
@@ -100,6 +101,8 @@ fun KubeObjectScreen(
     openScale: Boolean = false,
     /** The vulnerability scan reports kept for a cluster (its context name). */
     onScanReports: (String) -> Unit = {},
+    /** The diff of the Argo CD or Flux app applying the object, scrolled to it ([focus] "kind/namespace/name"). */
+    onGitOpsDiff: ((owner: ObjectOwner, focus: String) -> Unit)? = null,
     vm: KubeObjectViewModel = viewModel(
         key = "kube-object-${ref.group}/${ref.resource}/${ref.namespace}/${ref.name}",
         factory = factory { KubeObjectViewModel(app.kubeBrowser, ref) },
@@ -315,6 +318,7 @@ fun KubeObjectScreen(
                             },
                             modifier = Modifier.weight(1f),
                             extra = scanExtra,
+                            onGitOpsDiff = onGitOpsDiff?.let { open -> { owner -> open(owner, "${ref.kind}/${ref.namespace}/${ref.name}") } },
                         )
                     } else {
                         if (ref.isSecret) SecretReveal(revealed, ::toggleReveal)

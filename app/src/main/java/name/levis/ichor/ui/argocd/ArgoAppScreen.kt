@@ -105,6 +105,8 @@ fun ArgoAppScreen(
     initialSync: Boolean = false,
     /** Opens the source browser on the app's source at that index. */
     onSource: ((Int) -> Unit)? = null,
+    /** Opens the diff scrolled to one object ("kind/namespace/name"): a resource whose sync failed. */
+    onDiffOf: ((focus: String) -> Unit)? = null,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
     val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(talos.gitOpsRepository, talos.kubeRepository, freezeReminderHook(talos)) })
@@ -151,7 +153,7 @@ fun ArgoAppScreen(
                         val network = NetworkContext(s.fetchedAt, downNodes, overview?.nodes.orEmpty(), onNode)
                         val project = s.data.projectOf(app)
                         val freeze = FreezeContext(s.data, project, vm.freezeBusy(busy, project), onWindows)
-                        AppDetail(app, downNodes, app.key in busy, vm, network, freeze, onDiff, initialSync, onSource)
+                        AppDetail(app, downNodes, app.key in busy, vm, network, freeze, onDiff, initialSync, onSource, onDiffOf)
                     }
                 }
                 DataFreshness(s, edgeToEdge = false)
@@ -171,6 +173,7 @@ private fun AppDetail(
     onDiff: (() -> Unit)?,
     initialSync: Boolean,
     onSource: ((Int) -> Unit)?,
+    onDiffOf: ((focus: String) -> Unit)?,
 ) {
     var selecting by rememberSaveable { mutableStateOf(false) }
     var freezeSheet by remember { mutableStateOf(false) }
@@ -310,8 +313,12 @@ private fun AppDetail(
                 onWindows = freeze.onWindows,
             )
         }
-        if (app.conditions.isNotEmpty()) item(key = "conditions") { ConditionBanners(app.conditions) }
-        app.operation?.let { op -> item(key = "operation") { ArgoOperationCard(app, op, busy || denied) { terminate = true } } }
+        if (app.conditions.isNotEmpty()) item(key = "conditions") { ConditionBanners(app.conditions, onDiff) }
+        app.operation?.let { op ->
+            item(key = "operation") {
+                ArgoOperationCard(app, op, busy || denied, onCompare = onDiffOf?.let { open -> { f -> open("${f.kind}/${f.namespace}/${f.name}") } }) { terminate = true }
+            }
+        }
         item(key = "network") {
             ArgoNetworkSection(app, network.fetchedAt, network.downNodes, network.talosNodes, network.onNode)
         }

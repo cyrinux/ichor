@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,12 +27,13 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -192,7 +194,7 @@ fun ArgoDiffButton(app: ArgoApp, onDiff: () -> Unit) {
 
 /** One warning banner per condition: SyncError, ComparisonError, OrphanedResourceWarning... */
 @Composable
-fun ConditionBanners(conditions: List<ArgoCondition>) {
+fun ConditionBanners(conditions: List<ArgoCondition>, onDiff: (() -> Unit)? = null) {
     val colors = LocalStatusColors.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         conditions.forEach { c ->
@@ -204,6 +206,10 @@ fun ConditionBanners(conditions: List<ArgoCondition>) {
                     Column {
                         Text(c.type, style = MaterialTheme.typography.labelLarge)
                         Text(c.message, style = MaterialTheme.typography.bodySmall)
+                        // A sync or comparison error: the diff names the objects, each with its file in Git.
+                        if (onDiff != null && c.type.endsWith("Error")) {
+                            TextButton(onClick = onDiff, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.gitops_compare_with_git)) }
+                        }
                     }
                 }
             }

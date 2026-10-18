@@ -3644,6 +3644,8 @@
     <string name="gitops_keep_live">Зберегти значення з кластера в Git</string>
     <string name="gitops_keep_live_values">Змінено в кластері: %1$s</string>
     <string name="gitops_keep_skipped">Не збережено, задано деінде: %1$s</string>
+    <string name="gitops_focus_in_sync">%1$s %2$s збігається з тим, що застосував би Git: нічого зберігати.</string>
+    <string name="gitops_compare_with_git">Порівняти з Git</string>
     <string name="gitops_find_choose">Визначено в кількох файлах</string>
     <string name="gitops_find_none">Жоден файл джерела не оголошує %1$s %2$s.</string>
     <string name="gitops_find_defined_in">Визначено в %1$s, рядок %2$s</string>

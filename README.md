@@ -118,6 +118,14 @@ tour** shows it again.
   entry when the file has one. Only that line changes, comments and quoting included, and the
   edit goes straight to the review and pull request. For routine bumps, Flux image automation or
   Argo CD Image Updater can open these changes for you.
+- **Keep live changes in Git:** when an object was changed by hand in the cluster (`kubectl
+  scale`, `set image`, `edit`), its card on the Argo CD or Flux diff lists the values that
+  differ and offers **Keep live values in Git**: the manifest is found as for Open source file,
+  the live values are written only where that file sets the value Git would apply (one set by
+  an overlay, a patch or a substitution is named and left), then reviewed and proposed as a
+  pull request. Never for a Secret. An object's page links to the diff of the Argo CD app or
+  Flux Kustomization applying it (**Compare with Git**), as do an Argo CD app's sync and
+  comparison errors and each resource its last sync failed on.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome: ok, partial (a pod sweep where
   some pods could not be deleted) or failed. Optionally

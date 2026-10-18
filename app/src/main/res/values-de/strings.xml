@@ -3432,6 +3432,8 @@
     <string name="gitops_keep_live">Live-Werte in Git übernehmen</string>
     <string name="gitops_keep_live_values">Im Cluster geändert: %1$s</string>
     <string name="gitops_keep_skipped">Nicht übernommen, anderswo gesetzt: %1$s</string>
+    <string name="gitops_focus_in_sync">%1$s %2$s entspricht dem, was Git anwenden würde: nichts zu übernehmen.</string>
+    <string name="gitops_compare_with_git">Mit Git vergleichen</string>
     <string name="gitops_find_choose">In mehreren Dateien definiert</string>
     <string name="gitops_find_none">Keine Datei der Quelle deklariert %1$s %2$s.</string>
     <string name="gitops_find_defined_in">Definiert in %1$s, Zeile %2$s</string>

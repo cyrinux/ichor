@@ -3441,6 +3441,8 @@
     <string name="gitops_keep_live">Mantieni in Git i valori del cluster</string>
     <string name="gitops_keep_live_values">Modificato nel cluster: %1$s</string>
     <string name="gitops_keep_skipped">Non mantenuto, impostato altrove: %1$s</string>
+    <string name="gitops_focus_in_sync">%1$s %2$s corrisponde a ciò che Git applicherebbe: niente da mantenere.</string>
+    <string name="gitops_compare_with_git">Confronta con Git</string>
     <string name="gitops_find_choose">Definito in più file</string>
     <string name="gitops_find_none">Nessun file della sorgente dichiara %1$s %2$s.</string>
     <string name="gitops_find_defined_in">Definito in %1$s, riga %2$s</string>
