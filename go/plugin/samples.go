@@ -12,6 +12,9 @@ var relativeSampleTime = regexp.MustCompile(`^now(?:([+-])(\d{1,6})([smhd]))?$`)
 
 var sampleUnits = map[string]time.Duration{"s": time.Second, "m": time.Minute, "h": time.Hour, "d": 24 * time.Hour}
 
+// maxSampleOffset bounds a relative sample time: 100 years.
+const maxSampleOffset = 100 * 365 * 24 * time.Hour
+
 // sampleTimes copies the samples with their relative times resolved; the compiled plugin's
 // samples stay as written.
 func sampleTimes(list []map[string]any, now time.Time) []map[string]any {
@@ -53,7 +56,13 @@ func resolveSampleTimes(v any, now time.Time) any {
 		if m[1] != "" {
 			n, _ := strconv.Atoi(m[2])
 
-			d := time.Duration(n) * sampleUnits[m[3]]
+			// Past a century the offset is no demo time (and 999999d overflows a Duration): kept as written.
+			unit := sampleUnits[m[3]]
+			if time.Duration(n) > maxSampleOffset/unit {
+				return x
+			}
+
+			d := time.Duration(n) * unit
 			if m[1] == "-" {
 				d = -d
 			}

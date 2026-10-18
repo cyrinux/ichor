@@ -14,6 +14,8 @@ func TestSampleTimes(t *testing.T) {
 			"lastScheduleTime": "now-6h", "next": "now+30m", "at": "now", "seconds": "now-45s",
 			"conditions": []any{map[string]any{"lastTransitionTime": "now-1h", "reason": "now"}},
 			"kept":       []any{"nowhere", "now-", "now-5w", "now - 1h", "2026-10-15T06:00:00Z", int64(3), nil},
+			// Past a century: kept as written, never an overflowed Duration.
+			"far": []any{"now+999999d", "now-999999d", "now+36501d", "now+999999h", "now+999999s"},
 		},
 	}}
 
@@ -24,6 +26,7 @@ func TestSampleTimes(t *testing.T) {
 			"lastScheduleTime": "2026-10-16T04:00:00Z", "next": "2026-10-16T10:30:00Z", "at": "2026-10-16T10:00:00Z", "seconds": "2026-10-16T09:59:15Z",
 			"conditions": []any{map[string]any{"lastTransitionTime": "2026-10-16T09:00:00Z", "reason": "2026-10-16T10:00:00Z"}},
 			"kept":       []any{"nowhere", "now-", "now-5w", "now - 1h", "2026-10-15T06:00:00Z", int64(3), nil},
+			"far":        []any{"now+999999d", "now-999999d", "now+36501d", "now+999999h", "2026-10-27T23:46:39Z"},
 		},
 	}}
 

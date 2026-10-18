@@ -58,6 +58,9 @@ var kubeGreenParityClocks = []time.Time{
 	time.Date(2026, 10, 14, 21, 0, 0, 0, time.UTC),
 	time.Date(2026, 10, 17, 10, 0, 0, 0, time.UTC),
 	fixtureNow,
+	// Just after a sleep was due (20:00 Rome), then past its grace.
+	time.Date(2026, 10, 14, 18, 0, 30, 0, time.UTC),
+	time.Date(2026, 10, 14, 18, 11, 0, 0, time.UTC),
 }
 
 // kubeGreenReasonOrder is the order of the plugin's health rules: the reason the plugin
@@ -125,29 +128,8 @@ func TestKubeGreenPluginFieldsMatchTheMapping(t *testing.T) {
 		native := kubeGreenNative(t, now)
 
 		for _, raw := range kubeGreenParitySleepInfos {
-			var obj map[string]any
-			if err := json.Unmarshal([]byte(raw), &obj); err != nil {
-				t.Fatal(err)
-			}
-
-			fields := map[string]expr.Value{}
-			env := expr.Env{Object: obj, Fields: fields, Now: now}
-
-			for _, f := range c.Fields["sleepinfo"] {
-				if f.Name == "state" { // a join: the render's own function, checked through the tree
-					continue
-				}
-
-				v, err := f.Expr.Node().Eval(env)
-				if err != nil {
-					t.Fatalf("%s: %v", f.Name, err)
-				}
-
-				fields[f.Name] = expr.Normalize(v)
-			}
-
-			meta := obj["metadata"].(map[string]any)
-			s := native[meta["namespace"].(string)+"/"+meta["name"].(string)]
+			fields, key := kubeGreenPluginFields(t, c, raw, now)
+			s := native[key]
 			want := map[string]any{
 				"weekdays": s.Weekdays, "sleepAt": s.SleepAt, "wakeUpAt": s.WakeUpAt, "timeZone": orDefault(s.TimeZone, "UTC"),
 				"suspendDeployments": s.SuspendDeployments, "suspendStatefulSets": s.SuspendStatefulSets, "suspendCronJobs": s.SuspendCronJobs,
@@ -167,6 +149,61 @@ func TestKubeGreenPluginFieldsMatchTheMapping(t *testing.T) {
 	}
 }
 
+// kubeGreenPluginFields evaluates the plugin's fields over one SleepInfo, as the render does,
+// with its namespace/name.
+func kubeGreenPluginFields(t *testing.T, c *plugin.Compiled, raw string, now time.Time) (map[string]expr.Value, string) {
+	t.Helper()
+
+	var obj map[string]any
+	if err := json.Unmarshal([]byte(raw), &obj); err != nil {
+		t.Fatal(err)
+	}
+
+	fields := map[string]expr.Value{}
+	env := expr.Env{Object: obj, Fields: fields, Now: now}
+
+	for _, f := range c.Fields["sleepinfo"] {
+		if f.Name == "state" { // a join: the render's own function, checked through the tree
+			continue
+		}
+
+		v, err := f.Expr.Node().Eval(env)
+		if err != nil {
+			t.Fatalf("%s: %v", f.Name, err)
+		}
+
+		fields[f.Name] = expr.Normalize(v)
+	}
+
+	meta := obj["metadata"].(map[string]any)
+
+	return fields, meta["namespace"].(string) + "/" + meta["name"].(string)
+}
+
+// A run due 30 seconds ago is not late yet; 11 minutes later it is, in the plugin and in the
+// mapping alike.
+func TestKubeGreenOverdueGrace(t *testing.T) {
+	// Weekdays 20:00 to 07:00 Rome, last run this morning's wake-up; the sleep is due at 18:00 UTC.
+	raw := kubeGreenParitySleepInfos[0]
+
+	for _, tc := range []struct {
+		now     time.Time
+		overdue bool
+	}{
+		{time.Date(2026, 10, 14, 18, 0, 30, 0, time.UTC), false},
+		{time.Date(2026, 10, 14, 18, 9, 0, 0, time.UTC), false},
+		{time.Date(2026, 10, 14, 18, 11, 0, 0, time.UTC), true},
+	} {
+		c := kubeGreenBuiltin(t, tc.now)
+		fields, key := kubeGreenPluginFields(t, c, raw, tc.now)
+		s := kubeGreenNative(t, tc.now)[key]
+
+		if fields["overdue"] != tc.overdue || slices.Contains(s.Reasons, kubeGreenReasonOverdue) != tc.overdue {
+			t.Errorf("%s: plugin overdue %v, mapping reasons %v, want overdue %v", tc.now.Format(time.RFC3339), fields["overdue"], s.Reasons, tc.overdue)
+		}
+	}
+}
+
 // The tree KubePluginData renders over the httptest API says what the mapping says, row by
 // row, and so do its summary and findings.
 func TestKubeGreenPluginTreeMatchesTheMapping(t *testing.T) {
@@ -174,7 +211,7 @@ func TestKubeGreenPluginTreeMatchesTheMapping(t *testing.T) {
 		for _, secretsReadable := range []bool{false, true} {
 			t.Run(fmt.Sprintf("%s secrets %v", now.Format(time.RFC3339), secretsReadable), func(t *testing.T) {
 				kubeGreenBuiltin(t, now)
-				f := kubeGreenParityAPI(t, secretsReadable)
+				f := kubeGreenParityAPI(t, map[bool]int{true: http.StatusOK, false: http.StatusForbidden}[secretsReadable])
 
 				tree := pluginData(t, "cfg", "ctx", "", "kube-green", "", "")
 				assertKubeGreenTree(t, tree, kubeGreenNative(t, now), now, secretsReadable)
@@ -189,9 +226,9 @@ func TestKubeGreenPluginTreeMatchesTheMapping(t *testing.T) {
 	}
 }
 
-// kubeGreenParityAPI serves kube-green with the parity SleepInfos; the state Secrets are
-// forbidden (a kubeconfig that may not list Secrets) or hold sleepinfo-nights.
-func kubeGreenParityAPI(t *testing.T, secretsReadable bool) *fakeKubeAPI {
+// kubeGreenParityAPI serves kube-green with the parity SleepInfos; the state Secrets answer
+// secretsStatus: 200 holds sleepinfo-nights, 403 is a kubeconfig that may not list Secrets.
+func kubeGreenParityAPI(t *testing.T, secretsStatus int) *fakeKubeAPI {
 	t.Helper()
 
 	f := newFakeKubeAPI(t, map[string]string{
@@ -200,11 +237,14 @@ func kubeGreenParityAPI(t *testing.T, secretsReadable bool) *fakeKubeAPI {
 		"GET /apis/kube-green.com/v1alpha1/sleepinfos": `{"metadata":{},"items":[` + strings.Join(kubeGreenParitySleepInfos, ",") + `]}`,
 	})
 
-	if secretsReadable {
+	switch secretsStatus {
+	case http.StatusOK:
 		f.answerWith("GET /api/v1/secrets", http.StatusOK, `{"metadata":{},"items":[{"metadata":{"name":"sleepinfo-nights","namespace":"staging",`+
 			`"labels":{"app.kubernetes.io/managed-by":"kube-green"}},"type":"Opaque","data":{"last-schedule":"c2VjcmV0"}}]}`)
-	} else {
+	case http.StatusForbidden:
 		f.answerWith("GET /api/v1/secrets", http.StatusForbidden, forbiddenStatus)
+	default:
+		f.answerWith("GET /api/v1/secrets", secretsStatus, `{"kind":"Status","status":"Failure","message":"etcd is down","code":`+strconv.Itoa(secretsStatus)+`}`)
 	}
 
 	useFakeKube(t, f)
@@ -219,7 +259,8 @@ func assertKubeGreenTree(t *testing.T, tree plugin.Tree, native map[string]kubeG
 		t.Fatalf("tree %+v", tree)
 	}
 
-	if wantErrs := map[bool]int{false: 1, true: 0}[secretsReadable]; len(tree.Errors) != wantErrs {
+	// The state Secrets are optional: forbidden, they leave no error.
+	if len(tree.Errors) != 0 {
 		t.Fatalf("errors %+v", tree.Errors)
 	}
 
@@ -371,10 +412,21 @@ func rowItems(row plugin.TreeRow, typ string) map[string]map[string]any {
 	return out
 }
 
+// An optional resource is silent when forbidden (above), not when the server fails.
+func TestKubeGreenOptionalSecretsStillReportAFailure(t *testing.T) {
+	kubeGreenBuiltin(t, kubeGreenParityClocks[0])
+	kubeGreenParityAPI(t, http.StatusInternalServerError)
+
+	tree := pluginData(t, "cfg", "ctx", "", "kube-green", "", "")
+	if len(tree.Errors) != 1 || tree.Errors[0].Resource != "secrets" || len(tree.Cards[0].Rows) != len(kubeGreenParitySleepInfos) {
+		t.Fatalf("errors %+v, %d rows", tree.Errors, len(tree.Cards[0].Rows))
+	}
+}
+
 // The French tree takes the apps' former strings.
 func TestKubeGreenPluginFrench(t *testing.T) {
 	kubeGreenBuiltin(t, kubeGreenParityClocks[0])
-	kubeGreenParityAPI(t, false)
+	kubeGreenParityAPI(t, http.StatusForbidden)
 
 	tree := pluginData(t, "cfg", "ctx", "", "kube-green", "", "fr")
 	if tree.Summary.Title != fmt.Sprintf("%d plannings de veille", len(kubeGreenParitySleepInfos)) || tree.Cards[0].Empty != "Aucun planning de veille." {

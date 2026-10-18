@@ -25,7 +25,8 @@ resources:
     kind: SleepInfo
     scope: Namespaced
   # The Secret the controller keeps per SleepInfo ("sleepinfo-<name>", labelled with its
-  # manager): only its name is shown, as a link; its data stays masked.
+  # manager): only its name is shown, as a link; its data stays masked. Optional: an account
+  # that may not list Secrets sees the schedules without the link, and no error.
   stateSecret:
     group: ""
     version: v1
@@ -33,6 +34,7 @@ resources:
     kind: Secret
     scope: Namespaced
     list: { labelSelector: "app.kubernetes.io/managed-by=kube-green" }
+    optional: true
 
 fields:
   sleepinfo:
@@ -58,10 +60,10 @@ fields:
     validSchedule: 'fields.sleepRun != 0 && (fields.wakeUpAt == "" || fields.wakeUpRun != 0)'
     nextSleepAt: 'fields.validSchedule ? fields.sleepRun : 0'
     nextWakeUpAt: 'fields.validSchedule ? fields.wakeUpRun : 0'
-    # The controller's last expected run (either time); missed by more than 10 minutes, the
-    # controller is not running.
-    lastSleepRun: 'fields.validSchedule ? cronPrev(fields.sleepAt, fields.weekdays, fields.timeZone) : 0'
-    lastWakeUpRun: 'fields.validSchedule && fields.wakeUpAt != "" ? cronPrev(fields.wakeUpAt, fields.weekdays, fields.timeZone) : 0'
+    # The controller's last run expected at least 10 minutes ago (either time); missed by more
+    # than 10 minutes, the controller is not running. A run due a minute ago is not late yet.
+    lastSleepRun: 'fields.validSchedule ? cronPrev(fields.sleepAt, fields.weekdays, fields.timeZone, now - 600000) : 0'
+    lastWakeUpRun: 'fields.validSchedule && fields.wakeUpAt != "" ? cronPrev(fields.wakeUpAt, fields.weekdays, fields.timeZone, now - 600000) : 0'
     expectedRunAt: 'fields.lastWakeUpRun > fields.lastSleepRun ? fields.lastWakeUpRun : fields.lastSleepRun'
     overdue: 'fields.expectedRunAt != 0 && fields.lastScheduleAt != 0 && fields.lastScheduleAt < fields.expectedRunAt - 600000'
     state: join(stateSecret, $.metadata.namespace == left.metadata.namespace && $.metadata.name == "sleepinfo-" + left.metadata.name)

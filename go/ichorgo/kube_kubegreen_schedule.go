@@ -18,6 +18,8 @@ import (
 const (
 	groupKubeGreen   = "kube-green.com"
 	kubeGreenVersion = "v1alpha1"
+	// kubeGreenGrace is how late the controller may run before its schedule is overdue.
+	kubeGreenGrace = 10 * time.Minute
 )
 
 type kubeGreenSleepInfo struct {
@@ -153,14 +155,16 @@ func mapKubeGreenSleepInfo(obj sleepInfoObject, now time.Time) kubeGreenSleepInf
 		return s
 	}
 
-	// The controller missed its last expected run (either cron): it is not running.
-	prevSleep, prevWake := kubeGreenPrevRun(sleep, true, inZone), kubeGreenPrevRun(wake, s.WakeUpAt != "", inZone)
+	// The controller missed its last run expected at least 10 minutes ago (either cron), by
+	// more than 10 minutes: it is not running. A run due a minute ago is not late yet.
+	due := inZone.Add(-kubeGreenGrace)
+	prevSleep, prevWake := kubeGreenPrevRun(sleep, true, due), kubeGreenPrevRun(wake, s.WakeUpAt != "", due)
 	expected := prevSleep
 	if prevWake.After(prevSleep) {
 		expected = prevWake
 	}
 
-	if !expected.IsZero() && time.UnixMilli(s.LastScheduleAt).Before(expected.Add(-10*time.Minute)) {
+	if !expected.IsZero() && time.UnixMilli(s.LastScheduleAt).Before(expected.Add(-kubeGreenGrace)) {
 		s.Reasons = append(s.Reasons, kubeGreenReasonOverdue)
 	}
 

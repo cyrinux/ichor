@@ -34,7 +34,7 @@ Loading is strict:
 | `category` | no | string | `data-services` (default), `networking`, `gitops`, `policies`, `workloads`, `compute`, `security` |
 | `screen` | no | string | `native:<route>` opens a native screen from the hub tile |
 | `detect[]` | yes | list | each sets exactly one of `group` (with an optional `resource`, for a shared group), `pods` (a catalog id) or `service`; any match activates the plugin |
-| `resources.<key>` | yes (≥ 1) | map | `group` (`""` for core), `version` (or `preferred`), `resource`, `kind`, `scope` (`Namespaced` or `Cluster`), `list{labelSelector, fieldSelector, limit}`, `watch`, `reveal`, `source: native:<id>`. The key (letters and digits) names the resource everywhere else |
+| `resources.<key>` | yes (≥ 1) | map | `group` (`""` for core), `version` (or `preferred`), `resource`, `kind`, `scope` (`Namespaced` or `Cluster`), `list{labelSelector, fieldSelector, limit}`, `watch`, `reveal`, `optional` (forbidden or not served, the resource reads as empty with no error: for a decorative relation), `source: native:<id>`. The key (letters and digits) names the resource everywhere else |
 | `fields.<resource>.<name>` | no | expression | evaluated per object in file order; a field sees the earlier ones as `fields.<name>`, `conditions`, `now`, and the resources by key for `join(<resource>, <predicate>)`, whose predicate sees `left` (the object) |
 | `health.<resource>[]` | no | rules | `{when, health, reason, message}`. The first rule whose `when` holds wins, and an object no rule matches is `ok`. `health` is `ok`, `idle`, `info`, `warning`, `critical` or `unknown`; `message` is a template |
 | `dataServices.<name>` | no | map | see "Data services" below |
@@ -42,7 +42,7 @@ Loading is strict:
 | `cards.<name>` | no | card | `from` (a resource or `dataServices.<name>`), `sort[]` (expressions, each optionally followed by `asc` or `desc`), `empty`, `row{title, subtitle, status{tone, text}, trailing{text}, detail[]}` |
 | `actions.<id>` | no | map | `label`, `on` (a resource), `verb`, `body`, `subresource` (with `verb: subresource`), `rbac{verbs, group, resource}` (required), `confirm`, `audit` (required), `enabledWhen`, `disabledReason`, `params[]`. `verb` is `mergePatch`, `jsonPatch`, `subresource`, `delete`, `annotate` or `create`; `confirm` is `none`, `plain` or `typedName`; each param is `{name, label, type, values[], default}` with `type` one of `string`, `int`, `bool` or `enum` |
 | `findings[]` | no | list | `{id, from, when, severity, title, detail, opens}`. `severity` is `info`, `warning` or `critical`; `opens` names a card |
-| `samples.<resource>[]` | yes, for every resource | list | demo objects in the API's shape. The demo context and the tests render them; invent names such as `demo-shop`. A string `now`, `now-6h` or `now+2d` (units `s`, `m`, `h`, `d`) becomes that time, so that the demo stays consistent with the clock |
+| `samples.<resource>[]` | yes, for every resource | list | demo objects in the API's shape. The demo context and the tests render them; invent names such as `demo-shop`. A string `now`, `now-6h` or `now+2d` (units `s`, `m`, `h`, `d`; at most a century) becomes that time, so that the demo stays consistent with the clock |
 | `i18n.<locale>` | no | map | English label → translation; a missing label stays English |
 
 ### Which names an expression sees
@@ -281,7 +281,7 @@ Parenthesise to pipe only a part: `c ? a : (b | upper())`.
 | `age(t)` | milliseconds since `t` (a timestamp or unix ms); `null` when absent |
 | `relativeTime(t)` | `"5m ago"`, `"in 3h"`, `"2d ago"`, `"now"`; `"never"` when absent |
 | `cronNext(at, weekdays, tz)` | the next run in unix ms of the daily time `at` (`"20:00"`, each part cron syntax) on the cron `weekdays` (`"1-5"`, default every day) in the IANA zone `tz` (default UTC). `at` may also be a whole 5-field cron or a macro (`@daily`), then `weekdays` is ignored. 0 when it does not parse |
-| `cronPrev(at, weekdays, tz)` | the same schedule's last run strictly before now, in unix ms; 0 when it does not parse or did not run in the last 8 years |
+| `cronPrev(at, weekdays, tz[, before])` | the same schedule's last run strictly before now, or before an optional fourth argument (a time: `now - 600000`), in unix ms; 0 when it does not parse or did not run in the last 8 years |
 | `condition("Type")` | the object's condition of that type (a map with `type`, `status`, `reason`, `message`…), `null` when absent; `condition(obj, "Type")` reads another object |
 
 ### Templates

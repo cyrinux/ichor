@@ -13,7 +13,7 @@ var timeBuiltins = map[string]Func{
 	"age":          {Min: 1, Max: 1, Returns: KindNumber, Call: fnAge},
 	"relativeTime": {Min: 1, Max: 1, Returns: KindString, Call: fnRelativeTime},
 	"cronNext":     {Min: 1, Max: 3, Returns: KindNumber, Call: fnCronNext},
-	"cronPrev":     {Min: 1, Max: 3, Returns: KindNumber, Call: fnCronPrev},
+	"cronPrev":     {Min: 1, Max: 4, Returns: KindNumber, Call: fnCronPrev},
 }
 
 // unixMilli reads an RFC 3339 timestamp; a number is already unix ms; 0 otherwise.
@@ -101,15 +101,23 @@ func fnCronNext(c Ctx, a []Value) (Value, error) {
 	return next.UnixMilli(), nil
 }
 
-// fnCronPrev mirrors cronNext: the last run strictly before now, in unix ms; 0 when the
-// schedule or the zone does not parse, or when it did not run in the last 8 years.
+// fnCronPrev mirrors cronNext: the last run strictly before now, or before the time of a
+// fourth argument (a timestamp or unix ms: now - 600000 is "10 minutes ago"), in unix ms; 0
+// when the schedule or the zone does not parse, or when it did not run in the 8 years before.
 func fnCronPrev(c Ctx, a []Value) (Value, error) {
 	cron, loc, ok := dailyCron(a)
 	if !ok {
 		return int64(0), nil
 	}
 
-	prev := cron.prev(c.Now.In(loc))
+	before := c.Now
+	if len(a) > 3 {
+		if ms := unixMilli(a[3]); ms != 0 {
+			before = time.UnixMilli(ms)
+		}
+	}
+
+	prev := cron.prev(before.In(loc))
 	if prev.IsZero() {
 		return int64(0), nil
 	}

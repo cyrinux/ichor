@@ -1,7 +1,6 @@
 package ichorgo
 
 import (
-	"cmp"
 	"context"
 	"slices"
 	"sync"
@@ -33,6 +32,9 @@ type integrationSpec struct {
 	// ExternalDNS (most installs publish only Ingress and Service hosts, no CRD) and Garage
 	// (the garage-operator's CRDs when it runs, else its Helm-chart pods).
 	PodsFallback bool
+	// fromPlugin is the plugin a row comes from (pluginSpecs): its detect entries decide, the
+	// fields above but Groups are unset.
+	fromPlugin *plugin.Compiled
 }
 
 // integrationSpecs lists every project the app integrates with, in the order Settings shows
@@ -40,40 +42,6 @@ type integrationSpec struct {
 var integrationSpecs = sync.OnceValue(func() []integrationSpec {
 	return slices.Concat(nativeIntegrationSpecs, pluginSpecs(plugin.Builtins()))
 })
-
-// pluginSpecs derives a plugin's row from its detect entries: its API groups (any of them
-// detects it, the first one's resource must be served too), else its pods or its Services.
-func pluginSpecs(compiled []*plugin.Compiled) []integrationSpec {
-	out := make([]integrationSpec, 0, len(compiled))
-
-	for _, c := range compiled {
-		p := c.Plugin
-		s := integrationSpec{ID: cmp.Or(p.CatalogID, p.ID), Name: p.Name, Website: p.Website}
-
-		var pods bool
-
-		for _, d := range p.Detect {
-			switch {
-			case d.Group != "" && !slices.Contains(s.Groups, d.Group):
-				if len(s.Groups) == 0 {
-					s.Resource = d.Resource
-				}
-
-				s.Groups = append(s.Groups, d.Group)
-			case d.Pods != "":
-				pods = true
-			case d.Service != "" && s.ServiceKind == "":
-				s.ServiceKind = d.Service
-			}
-		}
-
-		s.AnyGroup = len(s.Groups) > 1
-		s.PodsFallback = pods && len(s.Groups) > 0
-		out = append(out, s)
-	}
-
-	return out
-}
 
 // nativeIntegrationSpecs are the projects read by Go readers. A reader that asks a new API
 // group adds it here: TestIntegrationsCoverEveryGroup fails otherwise.
@@ -177,7 +145,7 @@ type detection struct {
 func SupportedIntegrations() (out string, err error) {
 	defer maskResult(&out, &err)
 
-	return toJSON(supportedIntegrations{Items: integrationList(func(integrationSpec) detection { return detection{} })})
+	return toJSON(supportedIntegrations{Items: integrationList(integrationSpecs(), func(integrationSpec) detection { return detection{} })})
 }
 
 // KubeSupportedIntegrations lists the projects the app integrates with and whether the cluster runs
@@ -197,6 +165,11 @@ func KubeSupportedIntegrations(configYAML, contextName, kubeServer, hints string
 }
 
 func readSupportedIntegrations(ctx context.Context, k *kubeClient, hints hintSet) (supportedIntegrations, error) {
+	return detectIntegrations(ctx, k, hints, integrationSpecs())
+}
+
+// detectIntegrations tells which of specs the cluster runs.
+func detectIntegrations(ctx context.Context, k *kubeClient, hints hintSet, specs []integrationSpec) (supportedIntegrations, error) {
 	var (
 		groups      map[string]string
 		groupsErr   error
@@ -219,8 +192,8 @@ func readSupportedIntegrations(ctx context.Context, k *kubeClient, hints hintSet
 	// Shared groups: ask whether the project's own resource is served, in parallel.
 	var mu sync.Mutex
 
-	for _, s := range integrationSpecs() {
-		if version, ok := groups[firstGroup(s)]; ok && s.Resource != "" {
+	for _, s := range specs {
+		if version, ok := groups[firstGroup(s)]; ok && s.Resource != "" && s.fromPlugin == nil {
 			wg.Go(func() {
 				served := servesResource(ctx, k, s.Groups[0], version, s.Resource)
 				if !served && s.FallbackVersion != "" && s.FallbackVersion != version {
@@ -236,7 +209,17 @@ func readSupportedIntegrations(ctx context.Context, k *kubeClient, hints hintSet
 
 	wg.Wait()
 
-	items := integrationList(func(s integrationSpec) detection {
+	// A plugin's row is detected as its tile is: by its own detect entries.
+	probe := &pluginProbe{groups: groups, services: services, hints: hints, served: map[string]bool{}}
+	if podsErr == nil {
+		probe.apps = pods
+	}
+
+	items := integrationList(specs, func(s integrationSpec) detection {
+		if s.fromPlugin != nil {
+			return probe.detection(ctx, k, s.fromPlugin)
+		}
+
 		if len(s.Groups) > 0 {
 			if version, ok := servedGroup(s, groups); ok && (s.Resource == "" || resourceFor[s.ID]) {
 				return detection{via: detectedByAPI, version: version}
@@ -368,11 +351,11 @@ func servesResource(ctx context.Context, k *kubeClient, group, version, resource
 }
 
 // integrationList builds the items, detect telling how each one was found.
-func integrationList(detect func(integrationSpec) detection) []supportedIntegration {
+func integrationList(specs []integrationSpec, detect func(integrationSpec) detection) []supportedIntegration {
 	catalog := loadAppCatalog()
-	out := make([]supportedIntegration, 0, len(integrationSpecs()))
+	out := make([]supportedIntegration, 0, len(specs))
 
-	for _, s := range integrationSpecs() {
+	for _, s := range specs {
 		// Bundled icons are named after the catalog id, as in the inventory.
 		icon := ""
 		if app := catalog.byName[s.ID]; app != nil && app.ID == s.ID && app.hasIcon() {
@@ -425,7 +408,7 @@ func demoSupportedIntegrations() supportedIntegrations {
 		}
 	}
 
-	return supportedIntegrations{Checked: true, Items: integrationList(func(s integrationSpec) detection {
+	return supportedIntegrations{Checked: true, Items: integrationList(integrationSpecs(), func(s integrationSpec) detection {
 		switch {
 		case api[s.ID]:
 			return detection{via: detectedByAPI}

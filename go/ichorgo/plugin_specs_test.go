@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"context"
+	"net/http"
 	"reflect"
 	"strings"
 	"testing"
@@ -9,23 +10,27 @@ import (
 	"github.com/cyrinux/ichor/go/plugin"
 )
 
-// The kube-green row comes from its plugin's detect entries; Settings finds it by its API group
-// and the resource it lists.
+// The kube-green row lists its plugin's group and keeps the plugin, whose detect decides.
 func TestPluginSpecs(t *testing.T) {
-	var green *integrationSpec
-
 	for _, s := range integrationSpecs() {
-		if s.ID == "kube-green" {
-			green = &s
+		if s.ID != "kube-green" {
+			continue
 		}
+
+		if s.fromPlugin == nil || s.fromPlugin.Plugin.ID != "kube-green" || !reflect.DeepEqual(s.Groups, []string{groupKubeGreen}) ||
+			s.Name != "kube-green" || s.Website != "https://kube-green.dev" {
+			t.Fatalf("kube-green row %+v", s)
+		}
+
+		return
 	}
 
-	want := integrationSpec{ID: "kube-green", Name: "kube-green", Website: "https://kube-green.dev", Groups: []string{groupKubeGreen}, Resource: "sleepinfos"}
-	if green == nil || !reflect.DeepEqual(*green, want) {
-		t.Fatalf("kube-green row %+v, want %+v", green, want)
-	}
+	t.Fatal("no kube-green row")
+}
 
-	src := `schemaVersion: ichor.dev/plugin/v1alpha1
+// demoDetectPlugin detects by its resource in a shared group, another group, its pods or a
+// Prometheus Service.
+const demoDetectPlugin = `schemaVersion: ichor.dev/plugin/v1alpha1
 id: demo-detect
 name: Demo Detect
 website: https://example.com
@@ -33,7 +38,6 @@ catalogId: demo-app
 detect:
   - { group: a.example.com, resource: things }
   - { group: b.example.com }
-  - { group: a.example.com }
   - { pods: demo-app }
   - { service: prometheus }
 resources:
@@ -44,19 +48,70 @@ samples:
   thing: [{ metadata: { name: one } }]
 `
 
-	c, err := plugin.CompileSource("detect.yaml", []byte(src))
+// Settings detects a plugin's row as the plugin's tile does: any detect entry, in order.
+func TestDetectIntegrationsUsesThePluginDetect(t *testing.T) {
+	c, err := plugin.CompileSource("detect.yaml", []byte(demoDetectPlugin))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	got := pluginSpecs([]*plugin.Compiled{c})
-	want = integrationSpec{
-		ID: "demo-app", Name: "Demo Detect", Website: "https://example.com", Groups: []string{"a.example.com", "b.example.com"},
-		AnyGroup: true, Resource: "things", ServiceKind: "prometheus", PodsFallback: true,
+	specs := pluginSpecs([]*plugin.Compiled{c})
+	if !reflect.DeepEqual(specs[0].Groups, []string{"a.example.com", "b.example.com"}) || specs[0].ID != "demo-app" {
+		t.Fatalf("spec %+v", specs[0])
 	}
 
-	if len(got) != 1 || !reflect.DeepEqual(got[0], want) {
-		t.Fatalf("spec %+v, want %+v", got, want)
+	noServices := `{"items":[]}`
+	promService := `{"items":[{"metadata":{"name":"prometheus-operated","namespace":"monitoring"},"spec":{"ports":[{"name":"web","port":9090}]}}]}`
+
+	cases := []struct {
+		name, groups, aResources, services string
+		podsForbidden                      bool
+		hints                              string
+		want                               detection
+	}{
+		{name: "the second group", groups: `{"name":"b.example.com","preferredVersion":{"version":"v2"}}`, services: noServices,
+			want: detection{via: detectedByAPI, version: "v2"}},
+		{name: "the shared group with its resource", groups: `{"name":"a.example.com","preferredVersion":{"version":"v1"}}`,
+			aResources: `{"resources":[{"name":"things"}]}`, services: noServices, want: detection{via: detectedByAPI, version: "v1"}},
+		{name: "the shared group without its resource", groups: `{"name":"a.example.com","preferredVersion":{"version":"v1"}}`,
+			aResources: `{"resources":[{"name":"others"}]}`, services: noServices},
+		{name: "a Prometheus Service", services: promService, want: detection{via: detectedByServices, namespace: "monitoring"}},
+		{name: "unlistable pods: the inventory's hint", services: noServices, podsForbidden: true, hints: "demo-app",
+			want: detection{via: detectedByInventory}},
+		{name: "nothing", services: noServices},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			answers := map[string]string{
+				"GET /apis":            `{"groups":[` + tc.groups + `]}`,
+				"GET /api/v1/pods":     `{"items":[]}`,
+				"GET /api/v1/services": tc.services,
+			}
+			if tc.aResources != "" {
+				answers["GET /apis/a.example.com/v1"] = tc.aResources
+			}
+
+			f := newFakeKubeAPI(t, answers)
+			if tc.podsForbidden {
+				f.answerWith("GET /api/v1/pods", http.StatusForbidden, forbiddenStatus)
+			}
+
+			k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			res, err := detectIntegrations(context.Background(), k, parseHints(tc.hints), specs)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			got := res.Items[0]
+			if got.Detected != (tc.want.via != "") || got.Via != tc.want.via || got.Version != tc.want.version || got.Namespace != tc.want.namespace {
+				t.Errorf("%+v, want %+v", got, tc.want)
+			}
+		})
 	}
 }
 

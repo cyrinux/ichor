@@ -215,6 +215,8 @@ func TestEval(t *testing.T) {
 		{"cronPrev every minute", `cronPrev("*:*")`, time.Date(2026, 10, 15, 11, 59, 0, 0, time.UTC).UnixMilli(), ""},
 		{"cronPrev full cron", `cronPrev("0 0 1 * *")`, time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC).UnixMilli(), ""},
 		{"cronPrev last year", `cronPrev("0 0 1 12 *")`, time.Date(2025, 12, 1, 0, 0, 0, 0, time.UTC).UnixMilli(), ""},
+		{"cronPrev before a time", `cronPrev("11:55", "*", "UTC", now - 600000)`, time.Date(2026, 10, 14, 11, 55, 0, 0, time.UTC).UnixMilli(), ""},
+		{"cronPrev before a timestamp", `cronPrev("08:00", "*", "UTC", "2026-10-15T07:00:00Z")`, time.Date(2026, 10, 14, 8, 0, 0, 0, time.UTC).UnixMilli(), ""},
 		{"cronPrev bad", `cronPrev("2000")`, int64(0), ""},
 		{"cronPrev bad zone", `cronPrev("08:00", "*", "Mars/Olympus")`, int64(0), ""},
 		{"cronPrev never", `cronPrev("0 0 31 2 *")`, int64(0), ""},
