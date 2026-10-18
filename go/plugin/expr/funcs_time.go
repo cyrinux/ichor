@@ -14,6 +14,7 @@ var timeBuiltins = map[string]Func{
 	"relativeTime": {Min: 1, Max: 1, Returns: KindString, Call: fnRelativeTime},
 	"cronNext":     {Min: 1, Max: 3, Returns: KindNumber, Call: fnCronNext},
 	"cronPrev":     {Min: 1, Max: 4, Returns: KindNumber, Call: fnCronPrev},
+	"duration":     {Min: 1, Max: 1, Returns: KindNumber, Call: fnDuration},
 }
 
 // unixMilli reads an RFC 3339 timestamp; a number is already unix ms; 0 otherwise.
@@ -43,6 +44,22 @@ func fnAge(c Ctx, a []Value) (Value, error) {
 	}
 
 	return c.Now.UnixMilli() - ms, nil
+}
+
+// fnDuration reads a Go duration string ("1h0m0s", "30m"), as controllers write intervals,
+// in milliseconds; null when it is not one.
+func fnDuration(_ Ctx, a []Value) (Value, error) {
+	s, ok := normalize(a[0]).(string)
+	if !ok {
+		return nil, nil
+	}
+
+	d, err := time.ParseDuration(strings.TrimSpace(s))
+	if err != nil {
+		return nil, nil
+	}
+
+	return d.Milliseconds(), nil
 }
 
 // fnRelativeTime words a time against now: "5m ago", "in 3h", "now"; "never" when there is

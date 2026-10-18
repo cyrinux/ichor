@@ -468,6 +468,7 @@ Parenthesise to pipe only a part: `c ? a : (b | upper())`.
 | `bytes(v)` | a size in binary units: `"1.5 GiB"`; reads a quantity string |
 | `time(s)` | an RFC 3339 timestamp in unix milliseconds; 0 when absent or invalid |
 | `age(t)` | milliseconds since `t` (a timestamp or unix ms); `null` when absent |
+| `duration(s)` | a Go duration string (`"1h0m0s"`, `"30m"`, as controllers write intervals) in milliseconds; `null` when it does not parse |
 | `relativeTime(t)` | `"5m ago"`, `"in 3h"`, `"2d ago"`, `"now"`; `"never"` when absent |
 | `cronNext(at, weekdays, tz)` | the next run in unix ms of the daily time `at` (`"20:00"`, each part cron syntax) on the cron `weekdays` (`"1-5"`, default every day) in the IANA zone `tz` (default UTC). `at` may also be a whole 5-field cron or a macro (`@daily`), then `weekdays` is ignored. 0 when it does not parse |
 | `cronPrev(at, weekdays, tz[, before])` | the same schedule's last run strictly before now, or before an optional fourth argument (a time: `now - 600000`), in unix ms; 0 when it does not parse or did not run in the last 8 years |
