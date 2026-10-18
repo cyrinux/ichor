@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"encoding/json"
 	"slices"
 	"strings"
 	"time"
@@ -264,10 +265,16 @@ func demoDataServices(now time.Time) dataServices {
 }
 
 // demoKubeGreenNamespace is the demo cluster's kube-green state for one namespace: staging is
-// asleep whenever the demo runs (a sleep at 00:00, waking at 23:59 Rome), the others are not, so
-// the asleep line and the CronJob warning always have something to show.
+// asleep whenever the demo runs (a sleep at 00:00, waking at 23:59 Rome), so the asleep line and
+// the CronJob warning always have something to show; the other namespaces hold the kube-green
+// plugin's samples (demo-shop, demo-lab, demo-preview), so that the plugin tab's rows open the
+// schedule editor on the schedules they show.
 func demoKubeGreenNamespace(namespace string, now time.Time) kubeGreenNamespace {
 	if namespace != "staging" {
+		if objs := demoKubeGreenSamples(namespace); len(objs) > 0 {
+			return mapKubeGreenNamespace(objs, now)
+		}
+
 		return kubeGreenNamespace{Installed: true, SleepInfos: []kubeGreenSleepInfo{}}
 	}
 
@@ -285,6 +292,31 @@ func demoKubeGreenNamespace(namespace string, now time.Time) kubeGreenNamespace 
 	}
 
 	return mapKubeGreenNamespace([]sleepInfoObject{o}, now)
+}
+
+// demoKubeGreenSamples are the SleepInfo samples of the kube-green plugin in namespace, their
+// relative times resolved as the plugin's demo resolves them; none without the plugin.
+func demoKubeGreenSamples(namespace string) []sleepInfoObject {
+	c, err := findPlugin("kube-green")
+	if err != nil || namespace == "" {
+		return nil
+	}
+
+	var out []sleepInfoObject
+
+	for _, obj := range demoPluginInput(c, namespace, "").Objects["sleepinfo"] {
+		raw, err := json.Marshal(obj)
+		if err != nil {
+			continue
+		}
+
+		var o sleepInfoObject
+		if json.Unmarshal(raw, &o) == nil {
+			out = append(out, o)
+		}
+	}
+
+	return out
 }
 
 // demoCastAI is the demo cluster's CAST AI recommendations: the Workload Autoscaler right-sizing

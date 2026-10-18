@@ -45,6 +45,7 @@ import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.color
+import name.levis.ichor.ui.components.expandable
 import name.levis.ichor.ui.kubebrowser.FieldChip
 import name.levis.ichor.ui.kubebrowser.ToneLabel
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -115,11 +116,13 @@ fun PluginRowContent(
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val expandable = row.detail.any { it !is PluginSection.Unknown } || extra != null
-    val click = if (expandable) Modifier.clickable(role = Role.Button, onClick = onToggle) else Modifier
-    Column(Modifier.fillMaxWidth().then(click).animateContentSize().padding(horizontal = 16.dp, vertical = 10.dp)) {
+    Column(Modifier.fillMaxWidth().expandable(open, enabled = expandable, onToggle = onToggle).animateContentSize().padding(horizontal = 16.dp, vertical = 10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            HealthDot(row.serviceHealth)
-            Spacer(Modifier.size(12.dp))
+            // A row with neither status nor health (a data service's) has no dot, not a grey "unknown" one.
+            if (row.status != null || row.health != null) {
+                HealthDot(row.serviceHealth)
+                Spacer(Modifier.size(12.dp))
+            }
             Column(Modifier.weight(1f)) {
                 Text(row.title, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 val sub = listOfNotNull(row.subtitle.takeIf { showSubtitle && it.isNotEmpty() }, row.health?.message?.takeIf { it.isNotEmpty() })

@@ -1,11 +1,16 @@
 package name.levis.ichor.model
 
-import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonContentPolymorphicSerializer
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.contentOrNull
 
 // Mirrors go/plugin/tree.go (the render tree, docs/plugins.md "Render tree") and
 // go/ichorgo/plugin_api.go / plugin_catalog.go. Everything is resolved and translated by Go:
@@ -151,20 +156,37 @@ sealed interface PluginSection {
     data class Unknown(val type: String = "") : PluginSection
 }
 
-/** Picks a section's class from its `type`; anything else is [PluginSection.Unknown]. */
-object PluginSectionSerializer : JsonContentPolymorphicSerializer<PluginSection>(PluginSection::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<PluginSection> =
-        when ((element.jsonObject["type"] as? JsonPrimitive)?.content) {
-            "keyValues" -> PluginSection.KeyValues.serializer()
-            "badges" -> PluginSection.Badges.serializer()
-            "gauge" -> PluginSection.Gauge.serializer()
-            "conditions" -> PluginSection.Conditions.serializer()
-            "relations" -> PluginSection.Relations.serializer()
-            "table" -> PluginSection.Table.serializer()
-            "text" -> PluginSection.Text.serializer()
-            "actions" -> PluginSection.Actions.serializer()
-            else -> PluginSection.Unknown.serializer()
-        }
+/**
+ * Decodes a section by its `type`, never failing: an entry that is not an object, a type this
+ * build does not know, or a known type whose fields do not decode (a newer or broken core)
+ * is [PluginSection.Unknown], and the rest of the tree still renders. Decoding only.
+ */
+object PluginSectionSerializer : KSerializer<PluginSection> {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("name.levis.ichor.model.PluginSection")
+
+    override fun deserialize(decoder: Decoder): PluginSection {
+        val input = decoder as? JsonDecoder ?: throw SerializationException("a plugin section decodes from JSON only")
+        val obj = input.decodeJsonElement() as? JsonObject ?: return PluginSection.Unknown()
+        val type = (obj["type"] as? JsonPrimitive)?.contentOrNull.orEmpty()
+        val serializer = sectionSerializer(type) ?: return PluginSection.Unknown(type)
+        return runCatching { input.json.decodeFromJsonElement(serializer, obj) }.getOrElse { PluginSection.Unknown(type) }
+    }
+
+    override fun serialize(encoder: Encoder, value: PluginSection) {
+        throw SerializationException("plugin sections are only read")
+    }
+
+    private fun sectionSerializer(type: String): KSerializer<out PluginSection>? = when (type) {
+        "keyValues" -> PluginSection.KeyValues.serializer()
+        "badges" -> PluginSection.Badges.serializer()
+        "gauge" -> PluginSection.Gauge.serializer()
+        "conditions" -> PluginSection.Conditions.serializer()
+        "relations" -> PluginSection.Relations.serializer()
+        "table" -> PluginSection.Table.serializer()
+        "text" -> PluginSection.Text.serializer()
+        "actions" -> PluginSection.Actions.serializer()
+        else -> null
+    }
 }
 
 /** A keyValues, badges or relations entry. */

@@ -61,7 +61,9 @@ import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.plugins.PluginDetectViewModel
+import name.levis.ichor.ui.plugins.PluginReload
 import name.levis.ichor.ui.plugins.PluginTab
+import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.plugins.nativePluginRoute
 
 /**
@@ -108,7 +110,7 @@ fun DataServicesScreen(
         refreshes++
     }
     // A plugin tab reads again on a refresh, another cluster, or a kube-green schedule saved.
-    val pluginReload = listOf(config?.activeContext, generation, invalidations, refreshes, kubeGreenSaved)
+    val pluginReload = PluginReload(scope = config?.activeContext to generation, bump = listOf(invalidations, refreshes, kubeGreenSaved))
     val pluginTabs = (plugins as? UiState.Loaded)?.data?.dataServicePlugins.orEmpty().filter { nativePluginRoute(it) == null }
     GarageResultToasts(vm.garage.results)
     LonghornResultToasts(vm.longhorn.results)
@@ -185,6 +187,8 @@ fun DataServicesScreen(
                 )
                 // The plugins may still name one.
                 plugins is UiState.Loading -> LoadingBox()
+                // No native system, and the plugins could not be asked: say why, not "none".
+                plugins is UiState.Failed -> ErrorBox((plugins as UiState.Failed).message, refreshAll)
                 else -> NoDataServices(onSupportedIntegrations, onRequestIntegration)
             }
         }
@@ -207,7 +211,7 @@ private fun NoDataServices(onSupportedIntegrations: () -> Unit, onRequestIntegra
 }
 
 /** A tab of the hub: a native system, or a CRD plugin drawn from its render tree. */
-private sealed interface HubTab {
+internal sealed interface HubTab {
     /** Saved across recompositions and process death: "LONGHORN", "plugin:kube-green". */
     val id: String
 
@@ -223,6 +227,9 @@ private sealed interface HubTab {
         }
     }
 }
+
+/** The pager's pages: the tabs' ids, saveable in a Bundle (a page key must be). */
+internal fun hubPages(tabs: List<HubTab>): List<String> = tabs.map { it.id }
 
 /** The actions of the native tabs, run in the screen's ViewModel. */
 private class SystemActions(
@@ -246,7 +253,7 @@ private fun Systems(
     query: String?,
     onQuery: (String) -> Unit,
     actions: SystemActions,
-    pluginReload: Any?,
+    pluginReload: PluginReload,
 ) {
     // Picked once: a system detected later, before it in the list, doesn't take its place.
     var selected by rememberSaveable { mutableStateOf(initial ?: tabs.first().id) }
@@ -271,8 +278,9 @@ private fun Systems(
                 }
             }
         }
-        SwipeTabPager(tabs, tab, onSelect = { selected = it.id }) { page ->
-            when (page) {
+        // Paged by id: the pager keeps its page keys in a Bundle, which takes a String, not a HubTab.
+        SwipeTabPager(hubPages(tabs), tab.id, onSelect = { selected = it }) { id ->
+            when (val page = tabs.firstOrNull { it.id == id } ?: tab) {
                 is HubTab.Native -> NativeTab(page.kind, services, actions, onObject, query) { selected = HubTab.Native(DataServiceKind.GARAGE).id }
                 is HubTab.Plugin -> PluginTab(
                     page.pluginId,

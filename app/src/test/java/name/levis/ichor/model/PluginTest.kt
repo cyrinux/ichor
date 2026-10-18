@@ -136,6 +136,23 @@ class PluginTest {
     }
 
     @Test
+    fun aBrokenSectionIsSkippedNotFatal() {
+        // A known type whose field has the wrong shape, a wrongly typed scalar, and entries that are not objects.
+        val json = golden("kube-green-samples.json").replaceFirst(
+            "\"detail\": [",
+            "\"detail\": [{\"type\": \"keyValues\", \"items\": \"oops\"}, {\"type\": \"gauge\", \"value\": {\"a\": 1}}, 42, \"text\", [1],",
+        )
+        val weekend = decode(json).cards.first().rows.first { it.title == "weekend" }
+        assertEquals(PluginSection.Unknown("keyValues"), weekend.detail[0])
+        assertEquals(PluginSection.Unknown("gauge"), weekend.detail[1])
+        (2..4).forEach { assertEquals(PluginSection.Unknown(), weekend.detail[it]) }
+        // The rest still renders.
+        assertEquals(9, weekend.detail.size)
+        assertTrue(weekend.detail[5] is PluginSection.KeyValues)
+        assertTrue(weekend.detail.last() is PluginSection.Actions)
+    }
+
+    @Test
     fun tonesMapToServiceHealth() {
         assertEquals(ServiceHealth.OK, pluginHealth("ok"))
         assertEquals(ServiceHealth.IDLE, pluginHealth("idle"))

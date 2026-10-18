@@ -183,7 +183,11 @@ private fun kubeToolGroups(
     if (extra.isEmpty()) group else group.copy(tools = group.tools + extra)
 }
 
-/** Which family a plugin's tool joins: workloads, networking, storage, observe, or browse (the rest). */
+/**
+ * Which family a plugin's tool joins, by index in the families above: workloads (0), networking
+ * (1), observe (3), else browse (4). Storage (2) gets none: data services plugins are tabs of
+ * the Data services screen instead.
+ */
 private fun pluginToolGroup(category: String): Int = when (category) {
     "workloads", "compute" -> 0
     "networking" -> 1

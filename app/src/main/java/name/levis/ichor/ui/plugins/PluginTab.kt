@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -59,6 +60,12 @@ import java.util.Locale
 
 /** The labels' language Go translates the tree into. */
 fun pluginLocale(): String = Locale.getDefault().language
+
+/**
+ * When a plugin tab reads again: [scope] (the cluster and its config generation) starts over,
+ * [bump] (refreshes, invalidations, a change made from the tab) reads in place.
+ */
+data class PluginReload(val scope: Any?, val bump: Any?)
 
 /** A plugin's tree and the catalog that names the kinds its rows open. */
 data class PluginView(val tree: PluginTree, val catalog: PluginCatalog = PluginCatalog())
@@ -104,10 +111,25 @@ class PluginTabViewModel(private val plugins: PluginRepository, private val plug
         return PluginView(tree, catalog)
     }
 
-    fun load(key: Any?) {
-        if (key == source && state.value !is UiState.Failed) return
-        source = key
-        refresh()
+    private var bump: Any? = null
+
+    /**
+     * Reads for [reload]: from scratch when its scope (the cluster, the config) changed, so
+     * another cluster's rows never show; in place, keeping the rows, when only its bump did
+     * (a refresh, an invalidation, a schedule saved), or after a failure.
+     */
+    fun load(reload: PluginReload) {
+        when {
+            source == null || reload.scope != source -> {
+                source = reload.scope
+                bump = reload.bump
+                refresh(reset = true)
+            }
+            reload.bump != bump || state.value is UiState.Failed -> {
+                bump = reload.bump
+                refresh()
+            }
+        }
     }
 }
 
@@ -125,7 +147,7 @@ private fun pluginTabViewModel(pluginId: String): PluginTabViewModel {
 @Composable
 fun PluginTab(
     pluginId: String,
-    reload: Any?,
+    reload: PluginReload,
     onObject: (KubeObjectRef) -> Unit,
     rowExtra: (PluginRow) -> (@Composable () -> Unit)? = { null },
 ) {
@@ -145,7 +167,12 @@ fun PluginTab(
 fun PluginScreen(pluginId: String, onBack: () -> Unit, onObject: (KubeObjectRef) -> Unit) {
     val vm = pluginTabViewModel(pluginId)
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(pluginId) { vm.load(pluginId) }
+    val app = LocalContext.current.applicationContext as TalosApp
+    val config by app.configRepository.config.collectAsStateWithLifecycle()
+    val generation by app.configRepository.generation.collectAsStateWithLifecycle()
+    val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
+    val reload = PluginReload(config?.activeContext to generation, invalidations)
+    LaunchedEffect(reload) { vm.load(reload) }
     val title = (state as? UiState.Loaded)?.data?.tree?.plugin?.name?.takeIf { it.isNotEmpty() } ?: stringResource(R.string.plugin_screen_title)
     Scaffold(
         topBar = {
@@ -172,12 +199,14 @@ private fun PluginBody(view: PluginView, onObject: (KubeObjectRef) -> Unit, rowE
     val tree = view.tree
     var expanded by rememberSaveable(tree.plugin.id) { mutableStateOf(setOf<String>()) }
     val open: (PluginRef) -> Unit = { ref -> onObject(ref.objectRef(view.catalog.kindOf(tree.plugin.id, ref))) }
+    // Worked out once per tree, not on every recomposition.
+    val cards = remember(tree) { tree.cards.filter { it.rows.isNotEmpty() || it.empty.isNotEmpty() }.map(::layoutOf) }
+    val errorLines = remember(tree) { tree.errors.map { e -> listOf(e.subject, e.message).filter { it.isNotEmpty() }.joinToString(": ") } }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         item(key = "summary") { PluginSummaryHeader(tree.summary, Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) }
-        if (tree.errors.isNotEmpty()) item(key = "errors") {
-            val lines = tree.errors.map { e -> listOf(e.subject, e.message).filter { it.isNotEmpty() }.joinToString(": ") }
+        if (errorLines.isNotEmpty()) item(key = "errors") {
             WarnBanner(
-                (listOf(stringResource(R.string.plugin_errors_title)) + lines).joinToString("\n"),
+                (listOf(stringResource(R.string.plugin_errors_title)) + errorLines).joinToString("\n"),
                 Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
@@ -185,36 +214,44 @@ private fun PluginBody(view: PluginView, onObject: (KubeObjectRef) -> Unit, rowE
             item(key = "inactive") { EmptyText(stringResource(R.string.plugin_not_detected)) }
             return@LazyColumn
         }
-        val shown = tree.cards.filter { it.rows.isNotEmpty() || it.empty.isNotEmpty() }
-        if (shown.isEmpty()) item(key = "empty") { EmptyText(stringResource(R.string.plugin_empty)) }
-        shown.forEachIndexed { index, card ->
-            if (index > 0) item(key = "gap:${card.id}") { Spacer(Modifier.height(12.dp)) }
-            pluginCard(card, expanded, { k -> expanded = if (k in expanded) expanded - k else expanded + k }, open, rowExtra)
+        if (cards.isEmpty()) item(key = "empty") { EmptyText(stringResource(R.string.plugin_empty)) }
+        cards.forEachIndexed { index, layout ->
+            if (index > 0) item(key = "gap:${layout.card.id}") { Spacer(Modifier.height(12.dp)) }
+            pluginCard(layout, expanded, { k -> expanded = if (k in expanded) expanded - k else expanded + k }, open, rowExtra)
         }
     }
+}
+
+/**
+ * A card ready to draw: its rows (with their index, for stable keys) in one group, or one group
+ * per namespace (its title) when they are objects of several namespaces.
+ */
+private class CardLayout(val card: PluginCard, val grouped: Boolean, val groups: List<Pair<String, List<IndexedValue<PluginRow>>>>)
+
+private fun layoutOf(card: PluginCard): CardLayout {
+    val grouped = card.groupsByNamespace()
+    val rows = card.rows.withIndex().toList()
+    return CardLayout(card, grouped, if (grouped) groupInOrder(rows) { it.value.ref?.namespace.orEmpty() } else listOf("" to rows))
 }
 
 private fun PluginRow.expandKey(card: PluginCard, index: Int): String = "${card.id}|${ref?.key ?: "$index:$title"}"
 
 /** A card's rows as one grouped card, or one per namespace when they span several. */
 private fun LazyListScope.pluginCard(
-    card: PluginCard,
+    layout: CardLayout,
     expanded: Set<String>,
     onToggle: (String) -> Unit,
     onObject: (PluginRef) -> Unit,
     rowExtra: (PluginRow) -> (@Composable () -> Unit)?,
 ) {
+    val card = layout.card
     if (card.rows.isEmpty()) {
         item(key = "empty:${card.id}") { EmptyText(card.empty) }
         return
     }
-    val grouped = card.groupsByNamespace()
-    val rows = card.rows.withIndex().toList()
-    // All namespaces: one card per namespace, its name as the card's title (keys per plugin card,
-    // as several cards can list the same namespaces).
-    val groups = if (grouped) groupInOrder(rows) { it.value.ref?.namespace.orEmpty() } else listOf("" to rows)
-    groups.forEach { (namespace, group) ->
-        if (grouped) cardGroupTitle("group:${card.id}:$namespace", namespace)
+    // Keys per plugin card: several cards can list the same namespaces.
+    layout.groups.forEach { (namespace, group) ->
+        if (layout.grouped) cardGroupTitle("group:${card.id}:$namespace", namespace)
         cardRows(group, key = { "row:${card.id}:${it.index}" }) { (index, row) ->
             val key = row.expandKey(card, index)
             PluginRowContent(
@@ -223,7 +260,7 @@ private fun LazyListScope.pluginCard(
                 onToggle = { onToggle(key) },
                 onObject = onObject,
                 // The namespace is the card's title when grouped.
-                showSubtitle = !grouped || row.subtitle != row.ref?.namespace,
+                showSubtitle = !layout.grouped || row.subtitle != row.ref?.namespace,
                 extra = rowExtra(row),
             )
         }
