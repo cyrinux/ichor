@@ -16,8 +16,9 @@ public func keepClusterNames(saved: [String: String], fingerprints: [String]) ->
     return saved.filter { known.contains($0.key) }
 }
 
-/// A managed cluster as its cloud's CLI names its context: `provider` (`eks`, `gke`), the
-/// region or zone, the `owner` (AWS account ID, GCP project) and the cluster's own name.
+/// A managed cluster as its cloud's CLI (or the app's discovery) names its context: `provider`
+/// (`eks`, `gke`), the region or zone, the `owner` (AWS account ID, GCP project; "" when the
+/// name does not say) and the cluster's own name.
 public struct CloudContext: Equatable, Sendable {
     public static let eks = "EKS"
     public static let gke = "GKE"
@@ -38,6 +39,11 @@ public func parseCloudContext(_ name: String) -> CloudContext? {
     // aws eks update-kubeconfig: the cluster ARN.
     if case let (region, account, cluster)? = match(#"^arn:aws(?:-[a-z]+)*:eks:([a-z0-9-]+):([0-9]+):cluster/(.+)$"#, name) {
         return CloudContext(provider: CloudContext.eks, location: region, owner: account, cluster: cluster)
+    }
+    // The app's EKS discovery: <cluster>.<region>.eks, with .<account> before .eks when the
+    // sign-in reached several accounts. EKS cluster names have no dot.
+    if case let (cluster, region, account)? = match(#"^([A-Za-z0-9][A-Za-z0-9_-]*)\.([a-z]{2}(?:-[a-z]+)+-[0-9]+)((?:\.[0-9]{12})?)\.eks$"#, name) {
+        return CloudContext(provider: CloudContext.eks, location: region, owner: String(account.dropFirst()), cluster: cluster)
     }
     // gcloud container clusters get-credentials: gke_<project>_<location>_<cluster>. Neither
     // part has an underscore (a domain-scoped project is example.com:name).

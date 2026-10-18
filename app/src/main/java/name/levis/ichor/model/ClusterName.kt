@@ -14,8 +14,9 @@ fun keepClusterNames(saved: Map<String, String>, fingerprints: List<String>): Ma
 }
 
 /**
- * A managed cluster as its cloud's CLI names its context: [provider] ([EKS], [GKE]), the
- * region or zone, the [owner] (AWS account ID, GCP project) and the cluster's own name.
+ * A managed cluster as its cloud's CLI (or the app's discovery) names its context: [provider]
+ * ([EKS], [GKE]), the region or zone, the [owner] (AWS account ID, GCP project; "" when the
+ * name does not say) and the cluster's own name.
  */
 data class CloudContext(val provider: String, val location: String, val owner: String, val cluster: String) {
     /** The owner for a list row: an AWS account ID shortened (123456789012 becomes 12…12), a GCP project whole. */
@@ -30,6 +31,10 @@ data class CloudContext(val provider: String, val location: String, val owner: S
 // aws eks update-kubeconfig: the cluster ARN.
 private val eksArnPattern = Regex("""arn:aws(?:-[a-z]+)*:eks:([a-z0-9-]+):(\d+):cluster/(.+)""")
 
+// The app's EKS discovery: <cluster>.<region>.eks, with .<account> before .eks when the
+// sign-in reached several accounts. EKS cluster names have no dot.
+private val eksDiscoveryPattern = Regex("""([A-Za-z0-9][A-Za-z0-9_-]*)\.([a-z]{2}(?:-[a-z]+)+-\d+)(?:\.(\d{12}))?\.eks""")
+
 // gcloud container clusters get-credentials: gke_<project>_<location>_<cluster>. Neither
 // part has an underscore (a domain-scoped project is example.com:name).
 private val gkePattern = Regex("""gke_([a-z0-9.:-]+)_([a-z0-9-]+)_([a-z0-9-]+)""")
@@ -37,6 +42,7 @@ private val gkePattern = Regex("""gke_([a-z0-9.:-]+)_([a-z0-9-]+)_([a-z0-9-]+)""
 /** [name] as an EKS or GKE context name, null when it is neither. */
 fun parseCloudContext(name: String): CloudContext? =
     eksArnPattern.matchEntire(name)?.destructured?.let { (region, account, cluster) -> CloudContext(CloudContext.EKS, region, account, cluster) }
+        ?: eksDiscoveryPattern.matchEntire(name)?.destructured?.let { (cluster, region, account) -> CloudContext(CloudContext.EKS, region, account, cluster) }
         ?: gkePattern.matchEntire(name)?.destructured?.let { (project, location, cluster) -> CloudContext(CloudContext.GKE, location, project, cluster) }
 
 /**
