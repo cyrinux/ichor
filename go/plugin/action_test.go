@@ -35,19 +35,19 @@ func TestActionBodyPerVerb(t *testing.T) {
 		body        string
 	}{
 		{"pause", alpha(), map[string]any{"reason": "maintenance"}, "PATCH", widget + "/alpha", contentMergePatch,
-			`{"spec":{"by":"demo-shop/alpha","paused":true,"reason":"maintenance"}}`},
+			`{"metadata":{"resourceVersion":"41"},"spec":{"by":"demo-shop/alpha","paused":true,"reason":"maintenance"}}`},
 		{"resize", alpha(), map[string]any{"size": json.Number("7")}, "PATCH", widget + "/alpha", contentJSONPatch,
-			`[{"op":"test","path":"/spec/size","value":3},{"op":"replace","path":"/spec/size","value":7}]`},
+			`[{"op":"test","path":"/metadata/resourceVersion","value":"41"},{"op":"test","path":"/spec/size","value":3},{"op":"replace","path":"/spec/size","value":7}]`},
 		{"restart", alpha(), nil, "PUT", widget + "/alpha/restart", contentJSON, `{}`},
 		{"scale", alpha(), map[string]any{"replicas": json.Number("4")}, "PATCH", widget + "/alpha/scale", contentMergePatch,
-			`{"spec":{"replicas":4}}`},
+			`{"metadata":{"resourceVersion":"41"},"spec":{"replicas":4}}`},
 		{"remove", alpha(), nil, "DELETE", widget + "/alpha", contentJSON,
 			`{"apiVersion":"v1","kind":"DeleteOptions","preconditions":{"uid":"1b0e7c52-0000-4000-8000-000000000001"},"propagationPolicy":"Foreground"}`},
 		{"tag", alpha(), map[string]any{"mode": "slow"}, "PATCH", widget + "/alpha", contentMergePatch,
-			`{"metadata":{"annotations":{"actions.example.com/mode":"slow","actions.example.com/stale":null,"actions.example.com/touched-at":"` + itoa(now) + `"}}}`},
-		{"clone", alpha(), map[string]any{"paused": true}, "POST", widget, contentJSON,
-			`{"apiVersion":"actions.example.com/v1","kind":"Widget","metadata":{"labels":{"actions.example.com/copy-of":"alpha"},"name":"alpha-copy","namespace":"demo-shop"},"spec":{"paused":true,"size":3}}`},
-		{"rebalance", alpha(), nil, "PATCH", widget + "/alpha", contentMergePatch, `{"spec":{"rebalance":true}}`},
+			`{"metadata":{"annotations":{"actions.example.com/mode":"slow","actions.example.com/size.v1":"3","actions.example.com/stale":null,"actions.example.com/touched-at":"` + itoa(now) + `"}}}`},
+		{"clone", alpha(), map[string]any{"paused": true, "copies": json.Number("2")}, "POST", widget, contentJSON,
+			`{"apiVersion":"actions.example.com/v1","kind":"Widget","metadata":{"labels":{"actions.example.com/copies.v1":"2","actions.example.com/copy-of":"alpha"},"name":"alpha-copy","namespace":"demo-shop"},"spec":{"paused":true,"size":3}}`},
+		{"rebalance", alpha(), nil, "PATCH", widget + "/alpha", contentMergePatch, `{"metadata":{"resourceVersion":"41"},"spec":{"rebalance":true}}`},
 		{"retire", ActionTarget{Version: "v1", Name: "shared"}, nil, "DELETE", "/apis/actions.example.com/v1/pools/shared", contentJSON,
 			`{"apiVersion":"v1","kind":"DeleteOptions"}`},
 	}
@@ -79,7 +79,7 @@ func TestActionDefaultsFillIn(t *testing.T) {
 
 	for action, want := range map[string]string{
 		"pause": `"reason":"manual"`,
-		"scale": `{"spec":{"replicas":1}}`,
+		"scale": `"spec":{"replicas":1}`,
 		"tag":   `"actions.example.com/mode":"fast"`,
 		"clone": `"paused":false`,
 	} {
@@ -279,6 +279,15 @@ func TestValidateActionShapes(t *testing.T) {
 		{"type: int, default: 1 }", `type: int, default: "one" }`, `actions.scale.params[0].default: want an integer`},
 		{"values: [fast, slow], default: fast }", "values: [fast, slow], default: turbo }", "actions.tag.params[0].default: want one of fast, slow"},
 		{"resource: widgets/scale }", "resource: widgets/scale/x }", "actions.scale.rbac.resource"},
+		{"op: replace, path: /spec/size,", `op: replace, path: "/spec/{{ params.size }}",`, "actions.resize.body[1].path: is literal"},
+		{"op: replace, path: /spec/size,", `op: "{{ params.size }}", path: /spec/size,`, "actions.resize.body[1].op"},
+		{"op: replace, path: /spec/size,", "op: move, path: /spec/size,", "actions.resize.body[1].from: a literal JSON pointer"},
+		{"op: replace, path: /spec/size,", `op: copy, from: "/spec/{{ params.size }}", path: /spec/size,`, "actions.resize.body[1].from: is literal"},
+		{"op: replace, path: /spec/size,", "op: replace, path: /spec/~2size,", "actions.resize.body[1].path: a literal JSON pointer"},
+		{"rbac: { verbs: [update], group: actions.example.com, resource: widgets/restart }", "rbac: { verbs: [patch], group: actions.example.com, resource: widgets }",
+			"actions.restart.rbac: the request needs update on widgets/restart"},
+		{"rbac: { verbs: [delete], group: actions.example.com, resource: pools }", "rbac: { verbs: [delete], group: other.example.com, resource: pools }",
+			`actions.retire.rbac: the request needs delete on pools (group "actions.example.com")`},
 	}
 
 	for _, tc := range tests {
@@ -294,6 +303,94 @@ func TestValidateActionShapes(t *testing.T) {
 		got := Validate(p)
 		if !strings.Contains(listProblems(got), tc.want) {
 			t.Errorf("want %q in\n%s", tc.want, listProblems(got))
+		}
+	}
+}
+
+// TestActionPinsTheCheckedObject: with an enabledWhen, the patches carry the checked
+// object's resourceVersion (Pinned); without one, or for a PUT or a create, nothing is added.
+func TestActionPinsTheCheckedObject(t *testing.T) {
+	c, in := actionInput(t)
+
+	given := map[string]map[string]any{"resize": {"size": json.Number("1")}}
+
+	for action, want := range map[string]bool{"pause": true, "resize": true, "scale": true, "rebalance": true, "tag": false, "restart": false, "clone": false, "remove": false} {
+		params, err := c.ActionParams(action, given[action])
+		if err != nil {
+			t.Fatalf("%s: %v", action, err)
+		}
+
+		req, err := c.ActionBody(action, alpha(), in, params, renderNow)
+		if err != nil {
+			t.Fatalf("%s: %v", action, err)
+		}
+
+		if req.Pinned != want || strings.Contains(string(req.Body), `"41"`) != want {
+			t.Errorf("%s: pinned %v %s, want %v", action, req.Pinned, req.Body, want)
+		}
+	}
+}
+
+// TestActionNullIsLiteralOnly: a hole that reads null is an error, never a null sent (which
+// would delete a field); a literal null of the YAML is sent.
+func TestActionNullIsLiteralOnly(t *testing.T) {
+	src := string(fixture(t, "actions.yaml"))
+
+	for _, tc := range []struct{ from, to, action string }{
+		{`reason: "{{ params.reason }}"`, `reason: "{{ $.spec.nope }}"`, "pause"},
+		{`"actions.example.com/mode": "{{ params.mode }}"`, `"actions.example.com/mode": "{{ $.spec.nope }}"`, "tag"},
+		{`size: "{{ fields.size }}", paused`, `size: "{{ $.metadata.labels.nope }}", paused`, "clone"},
+	} {
+		if !strings.Contains(src, tc.from) {
+			t.Fatalf("fixture lacks %q", tc.from)
+		}
+
+		c, err := CompileSource(tc.action+"-null.yaml", []byte(strings.Replace(src, tc.from, tc.to, 1)))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		params, err := c.ActionParams(tc.action, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req, err := c.ActionBody(tc.action, alpha(), SamplesInput(c, "", nil, renderNow), params, renderNow)
+		if err == nil || !strings.Contains(err.Error(), "is null") {
+			t.Errorf("%s: %v %s", tc.action, err, req.Body)
+		}
+	}
+}
+
+// TestActionCreateMatchesTheTarget: a created object's apiVersion, kind and namespace are the
+// resource's and the target's; absent apiVersion and kind are filled in.
+func TestActionCreateMatchesTheTarget(t *testing.T) {
+	src := string(fixture(t, "actions.yaml"))
+
+	for _, tc := range []struct{ from, to, want string }{
+		{"      kind: Widget\n", "      kind: Secret\n", "kind is Secret"},
+		{"      apiVersion: actions.example.com/v1\n", "      apiVersion: v1\n", "apiVersion is v1"},
+		{`namespace: "{{ namespace }}", labels`, `namespace: kube-system, labels`, "metadata.namespace is kube-system"},
+		{"      apiVersion: actions.example.com/v1\n      kind: Widget\n", "", ""},
+	} {
+		if !strings.Contains(src, tc.from) {
+			t.Fatalf("fixture lacks %q", tc.from)
+		}
+
+		c, err := CompileSource("create.yaml", []byte(strings.Replace(src, tc.from, tc.to, 1)))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		params, _ := c.ActionParams("clone", nil)
+
+		req, err := c.ActionBody("clone", alpha(), SamplesInput(c, "", nil, renderNow), params, renderNow)
+
+		switch {
+		case tc.want == "" && (err != nil || !strings.Contains(string(req.Body), `"apiVersion":"actions.example.com/v1","kind":"Widget"`)):
+			t.Errorf("filled in: %v %s", err, req.Body)
+		case tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)):
+			t.Errorf("%s: %v %s", tc.want, err, req.Body)
 		}
 	}
 }

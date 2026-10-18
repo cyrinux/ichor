@@ -19,7 +19,7 @@ const (
 	actAlpha   = actWidgets + "/alpha"
 	actPool    = "/apis/actions.example.com/v1/pools/shared"
 	actGroups  = `{"groups":[{"name":"actions.example.com","preferredVersion":{"version":"v1"}}]}`
-	actAlphaJS = `{"apiVersion":"actions.example.com/v1","kind":"Widget","metadata":{"name":"alpha","namespace":"demo-shop","uid":"0c6f9a1e-0000-4000-8000-00000000000a"},"spec":{"size":3,"paused":false}}`
+	actAlphaJS = `{"apiVersion":"actions.example.com/v1","kind":"Widget","metadata":{"name":"alpha","namespace":"demo-shop","uid":"0c6f9a1e-0000-4000-8000-00000000000a","resourceVersion":"812"},"spec":{"size":3,"paused":false}}`
 	actBetaJS  = `{"apiVersion":"actions.example.com/v1","kind":"Widget","metadata":{"name":"beta","namespace":"demo-shop"},"spec":{"size":5,"paused":true}}`
 )
 
@@ -74,17 +74,17 @@ func TestKubePluginActionPerVerb(t *testing.T) {
 		method, path, contentType, body string
 	}{
 		{"pause", "demo-shop", "alpha", `{"reason":"maintenance"}`, "PATCH", actAlpha, "application/merge-patch+json",
-			`{"spec":{"by":"demo-shop/alpha","paused":true,"reason":"maintenance"}}`},
+			`{"metadata":{"resourceVersion":"812"},"spec":{"by":"demo-shop/alpha","paused":true,"reason":"maintenance"}}`},
 		{"resize", "demo-shop", "alpha", `{"size":7}`, "PATCH", actAlpha, "application/json-patch+json",
-			`[{"op":"test","path":"/spec/size","value":3},{"op":"replace","path":"/spec/size","value":7}]`},
+			`[{"op":"test","path":"/metadata/resourceVersion","value":"812"},{"op":"test","path":"/spec/size","value":3},{"op":"replace","path":"/spec/size","value":7}]`},
 		{"restart", "demo-shop", "alpha", "", "PUT", actAlpha + "/restart", "application/json", `{}`},
-		{"scale", "demo-shop", "alpha", `{"replicas":4}`, "PATCH", actAlpha + "/scale", "application/merge-patch+json", `{"spec":{"replicas":4}}`},
+		{"scale", "demo-shop", "alpha", `{"replicas":4}`, "PATCH", actAlpha + "/scale", "application/merge-patch+json", `{"metadata":{"resourceVersion":"812"},"spec":{"replicas":4}}`},
 		{"remove", "demo-shop", "alpha", "{}", "DELETE", actAlpha, "application/json",
 			`{"apiVersion":"v1","kind":"DeleteOptions","preconditions":{"uid":"0c6f9a1e-0000-4000-8000-00000000000a"},"propagationPolicy":"Foreground"}`},
 		{"tag", "demo-shop", "alpha", `{"mode":"slow"}`, "PATCH", actAlpha, "application/merge-patch+json",
-			`{"metadata":{"annotations":{"actions.example.com/mode":"slow","actions.example.com/stale":null,"actions.example.com/touched-at":"` + now + `"}}}`},
+			`{"metadata":{"annotations":{"actions.example.com/mode":"slow","actions.example.com/size.v1":"3","actions.example.com/stale":null,"actions.example.com/touched-at":"` + now + `"}}}`},
 		{"clone", "demo-shop", "alpha", `{"paused":true}`, "POST", actWidgets, "application/json",
-			`{"apiVersion":"actions.example.com/v1","kind":"Widget","metadata":{"labels":{"actions.example.com/copy-of":"alpha"},"name":"alpha-copy","namespace":"demo-shop"},"spec":{"paused":true,"size":3}}`},
+			`{"apiVersion":"actions.example.com/v1","kind":"Widget","metadata":{"labels":{"actions.example.com/copies.v1":"1","actions.example.com/copy-of":"alpha"},"name":"alpha-copy","namespace":"demo-shop"},"spec":{"paused":true,"size":3}}`},
 		{"retire", "", "shared", "", "DELETE", actPool, "application/json", `{"apiVersion":"v1","kind":"DeleteOptions"}`},
 	}
 
@@ -138,7 +138,7 @@ func TestKubePluginActionEnabledWhen(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got := mutation(t, f); got.path != actAlpha || got.body != `{"spec":{"rebalance":true}}` {
+	if got := mutation(t, f); got.path != actAlpha || got.body != `{"metadata":{"resourceVersion":"812"},"spec":{"rebalance":true}}` {
 		t.Errorf("rebalance %+v", got)
 	}
 

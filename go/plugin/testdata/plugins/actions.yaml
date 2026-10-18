@@ -2,7 +2,8 @@
 # An actions fixture: one action per verb (mergePatch, jsonPatch, subresource with PUT and
 # with PATCH, delete, annotate, create) on a namespaced resource, a delete on a
 # cluster-scoped one, typed parameters with and without defaults, an enabledWhen on the
-# object alone and one that reads a data service. Invented names only.
+# object alone (which pins the patches to the object's resourceVersion) and one that reads a
+# data service, dotted annotation and label keys with typed values. Invented names only.
 schemaVersion: ichor.dev/plugin/v1alpha1
 id: demo-actions
 name: Demo Actions
@@ -79,6 +80,7 @@ actions:
       - { op: replace, path: /spec/size, value: "{{ params.size }}" }
     rbac: { verbs: [patch], group: actions.example.com, resource: widgets }
     audit: demo-actions.resize
+    enabledWhen: fields.size > 0
     params:
       - { name: size, label: "Size", type: int }
   restart:
@@ -98,6 +100,7 @@ actions:
     body: { spec: { replicas: "{{ params.replicas }}" } }
     rbac: { verbs: [patch], group: actions.example.com, resource: widgets/scale }
     audit: demo-actions.scale
+    enabledWhen: "!fields.paused"
     params:
       - { name: replicas, label: "Replicas", type: int, default: 1 }
   remove:
@@ -116,6 +119,7 @@ actions:
       "actions.example.com/touched-at": "{{ now }}"
       "actions.example.com/mode": "{{ params.mode }}"
       "actions.example.com/stale": null
+      "actions.example.com/size.v1": "{{ fields.size }}"
     rbac: { verbs: [patch], group: actions.example.com, resource: widgets }
     confirm: none
     audit: demo-actions.tag
@@ -128,12 +132,13 @@ actions:
     body:
       apiVersion: actions.example.com/v1
       kind: Widget
-      metadata: { name: "{{ name }}-copy", namespace: "{{ namespace }}", labels: { "actions.example.com/copy-of": "{{ name }}" } }
+      metadata: { name: "{{ name }}-copy", namespace: "{{ namespace }}", labels: { "actions.example.com/copy-of": "{{ name }}", "actions.example.com/copies.v1": "{{ params.copies }}" } }
       spec: { size: "{{ fields.size }}", paused: "{{ params.paused }}" }
     rbac: { verbs: [create], group: actions.example.com, resource: widgets }
     audit: demo-actions.clone
     params:
       - { name: paused, label: "Paused", type: bool, default: false }
+      - { name: copies, label: "Copies", type: int, default: 1 }
   rebalance:
     label: "Rebalance"
     on: widget
@@ -153,7 +158,7 @@ actions:
 
 samples:
   widget:
-    - { metadata: { name: alpha, namespace: demo-shop, uid: 1b0e7c52-0000-4000-8000-000000000001 }, spec: { size: 3, paused: false } }
+    - { metadata: { name: alpha, namespace: demo-shop, uid: 1b0e7c52-0000-4000-8000-000000000001, resourceVersion: "41" }, spec: { size: 3, paused: false } }
     - { metadata: { name: beta, namespace: demo-shop }, spec: { size: 5, paused: true } }
   pool:
     - { metadata: { name: shared } }

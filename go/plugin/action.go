@@ -2,7 +2,9 @@ package plugin
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -35,6 +37,9 @@ type ActionRequest struct {
 	Path        string
 	ContentType string
 	Body        []byte
+	// Pinned: the request carries the checked object's resourceVersion; a conflict means the
+	// object changed since enabledWhen was checked.
+	Pinned bool
 }
 
 // Content types of the requests.
@@ -233,7 +238,10 @@ func (c *Compiled) ActionNeedsContext(id string) bool {
 // and health are evaluated, enabledWhen must hold (else an *ActionDisabledError with the
 // disabledReason), and the body's templates render with the object, its fields, params
 // (from ActionParams), name, namespace and now. Values under metadata.annotations and
-// metadata.labels are always strings; elsewhere a template that is one hole keeps its type.
+// metadata.labels are always strings; elsewhere a template that is one hole keeps its type,
+// and one that reads null is an error. With an enabledWhen, a patch is pinned to the
+// object's resourceVersion (see pinned). A create's apiVersion, kind and namespace must be
+// the resource's and the target's.
 func (c *Compiled) ActionBody(id string, target ActionTarget, in Input, params map[string]any, now time.Time) (ActionRequest, error) {
 	a, err := c.action(id)
 	if err != nil {
@@ -266,12 +274,23 @@ func (c *Compiled) ActionBody(id string, target ActionTarget, in Input, params m
 		Vars: map[string]expr.Value{"name": target.Name, "namespace": target.Namespace},
 	}
 
-	body, err := renderBody(a.Body, env, "")
+	body, err := renderActionBody(a, env)
 	if err != nil {
 		return ActionRequest{}, fmt.Errorf("actions.%s.body: %w", id, err)
 	}
 
-	return actionRequest(a, collection, target.Name, body, o.raw)
+	if a.Verb == "create" {
+		if body, err = createBody(body, decl, target); err != nil {
+			return ActionRequest{}, fmt.Errorf("actions.%s.body: %w", id, err)
+		}
+	}
+
+	req, err := actionRequest(a, collection, target.Name, body, o.raw)
+	if err != nil || a.EnabledWhen.IsZero() {
+		return req, err
+	}
+
+	return pinned(req, o.raw)
 }
 
 func objectName(t ActionTarget) string {
@@ -359,28 +378,38 @@ func (r *renderer) checkEnabled(id string, a Action, o *object) error {
 	return &ActionDisabledError{Action: id, Reason: reason}
 }
 
-// renderBody renders every string of body as a template; path is where body sits ("" for
-// the root), for the strings-only maps (annotations, labels).
-func renderBody(body any, env expr.Env, path string) (any, error) {
+// renderActionBody renders the body's templates. An annotate body is the annotations map
+// itself, so its values are strings as under metadata.annotations.
+func renderActionBody(a Action, env expr.Env) (any, error) {
+	var at []string
+	if a.Verb == "annotate" {
+		at = []string{"metadata", "annotations"}
+	}
+
+	return renderBody(a.Body, env, at, a.Verb == "jsonPatch")
+}
+
+// renderBody renders every string of body as a template. at are the map keys from the root
+// down to body ("[]" for a list element), each kept whole (an annotation key holds dots),
+// for the strings-only maps: a value of metadata.annotations or metadata.labels is a string.
+// In a jsonPatch body, an operation's op, path and from are literal (Validate refuses holes
+// there). A template that is one hole and evaluates to null is an error: a null in the body
+// (which deletes a field in a merge patch) is only ever a literal null of the YAML.
+func renderBody(body any, env expr.Env, at []string, jsonPatch bool) (any, error) {
 	switch b := body.(type) {
 	case string:
-		tpl, err := expr.ParseTemplate(b)
-		if err != nil {
-			return nil, err
+		if jsonPatch && len(at) == 2 && at[0] == "[]" && slices.Contains(jsonPatchLiteral, at[1]) {
+			return b, nil
 		}
 
-		if stringsOnly(path) {
-			return tpl.Render(env)
-		}
-
-		return tpl.Value(env)
+		return renderString(b, env, stringsOnly(at))
 	case map[string]any:
 		out := make(map[string]any, len(b))
 
 		for k, v := range b {
-			rendered, err := renderBody(v, env, joinPath(path, k))
+			rendered, err := renderBody(v, env, append(slices.Clip(at), k), jsonPatch)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s: %w", k, err)
 			}
 
 			out[k] = rendered
@@ -391,9 +420,9 @@ func renderBody(body any, env expr.Env, path string) (any, error) {
 		out := make([]any, len(b))
 
 		for i, v := range b {
-			rendered, err := renderBody(v, env, path+"[]")
+			rendered, err := renderBody(v, env, append(slices.Clip(at), "[]"), jsonPatch)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("[%d]: %w", i, err)
 			}
 
 			out[i] = rendered
@@ -405,19 +434,114 @@ func renderBody(body any, env expr.Env, path string) (any, error) {
 	}
 }
 
-func joinPath(path, key string) string {
-	if path == "" {
-		return key
+// jsonPatchLiteral are the keys of a JSON patch operation that say where it applies.
+var jsonPatchLiteral = []string{"op", "path", "from"}
+
+// renderString renders one template: its typed value, or its text when strs.
+func renderString(src string, env expr.Env, strs bool) (any, error) {
+	tpl, err := expr.ParseTemplate(src)
+	if err != nil {
+		return nil, err
 	}
 
-	return path + "." + key
+	v, err := tpl.Value(env)
+	if err != nil {
+		return nil, err
+	}
+
+	if v == nil {
+		return nil, fmt.Errorf("%s is null: write a literal null in the YAML to send one", src)
+	}
+
+	if strs {
+		return expr.Display(v), nil
+	}
+
+	return v, nil
 }
 
-// stringsOnly: a value of an annotation or a label is a string (path is the value's own).
-func stringsOnly(path string) bool {
-	parent := path[:max(strings.LastIndexByte(path, '.'), 0)]
+// stringsOnly: at is the place of a value of metadata.annotations or metadata.labels.
+func stringsOnly(at []string) bool {
+	n := len(at)
 
-	return parent == "metadata.annotations" || parent == "metadata.labels"
+	return n >= 3 && at[n-3] == "metadata" && (at[n-2] == "annotations" || at[n-2] == "labels")
+}
+
+// createBody checks a new object against the target: its apiVersion, kind and namespace,
+// when written, are the resource's and the target's; absent, apiVersion and kind are set.
+func createBody(body any, decl Resource, t ActionTarget) (any, error) {
+	m, ok := body.(map[string]any)
+	if !ok {
+		return nil, errors.New("verb create takes a map")
+	}
+
+	apiVersion := t.Version
+	if decl.Group != "" {
+		apiVersion = decl.Group + "/" + t.Version
+	}
+
+	out := maps.Clone(m)
+
+	for _, kv := range [][2]string{{"apiVersion", apiVersion}, {"kind", decl.Kind}} {
+		got, present := m[kv[0]]
+
+		switch {
+		case !present:
+			out[kv[0]] = kv[1]
+		case got != kv[1]:
+			return nil, fmt.Errorf("%s is %v: the action creates a %s (%s)", kv[0], got, decl.Kind, apiVersion)
+		}
+	}
+
+	meta, _ := m["metadata"].(map[string]any)
+	if ns, present := meta["namespace"]; present && ns != t.Namespace {
+		return nil, fmt.Errorf("metadata.namespace is %v: the object is created in %q", ns, t.Namespace)
+	}
+
+	return out, nil
+}
+
+// pinned ties a patch to the version of the object enabledWhen was checked on, so that an
+// object changed in between is refused by the API server (a 409, or a failed test
+// operation) rather than changed on a stale check: a merge patch carries
+// metadata.resourceVersion, a JSON patch starts with a test of it. A delete has its uid
+// precondition; a subresource PUT or POST and a create have no object version to carry.
+func pinned(req ActionRequest, obj map[string]any) (ActionRequest, error) {
+	meta, _ := obj["metadata"].(map[string]any)
+
+	rv, _ := meta["resourceVersion"].(string)
+	if rv == "" || req.Method != http.MethodPatch {
+		return req, nil
+	}
+
+	var body any
+	if err := json.Unmarshal(req.Body, &body); err != nil {
+		return ActionRequest{}, fmt.Errorf("pin the body: %w", err)
+	}
+
+	switch b := body.(type) {
+	case []any:
+		test := map[string]any{"op": "test", "path": "/metadata/resourceVersion", "value": rv}
+		body = append([]any{test}, b...)
+	case map[string]any:
+		m := maps.Clone(b)
+
+		md, _ := m["metadata"].(map[string]any)
+		md = maps.Clone(md)
+
+		if md == nil {
+			md = map[string]any{}
+		}
+
+		md["resourceVersion"] = rv
+		m["metadata"] = md
+		body = m
+	}
+
+	out, err := jsonRequest(req.Method, req.Path, req.ContentType, body)
+	out.Pinned = err == nil
+
+	return out, err
 }
 
 // actionRequest is the request of verb a.Verb: collection is the resource's collection path,
@@ -431,7 +555,7 @@ func actionRequest(a Action, collection, name string, body any, obj map[string]a
 	case "jsonPatch":
 		return jsonRequest(http.MethodPatch, objectPath, contentJSONPatch, body)
 	case "annotate":
-		return jsonRequest(http.MethodPatch, objectPath, contentMergePatch, map[string]any{"metadata": map[string]any{"annotations": annotationsOf(body)}})
+		return jsonRequest(http.MethodPatch, objectPath, contentMergePatch, map[string]any{"metadata": map[string]any{"annotations": body}})
 	case "subresource":
 		return subresourceRequest(a, objectPath, body)
 	case "delete":
@@ -441,23 +565,6 @@ func actionRequest(a Action, collection, name string, body any, obj map[string]a
 	default:
 		return ActionRequest{}, fmt.Errorf("unknown verb %q", a.Verb)
 	}
-}
-
-// annotationsOf is an annotate body's map, its values rendered as strings (null removes one).
-func annotationsOf(body any) any {
-	m, _ := body.(map[string]any)
-	out := make(map[string]any, len(m))
-
-	for k, v := range m {
-		switch x := v.(type) {
-		case nil, string:
-			out[k] = x
-		default:
-			out[k] = expr.Display(x)
-		}
-	}
-
-	return out
 }
 
 func subresourceRequest(a Action, objectPath string, body any) (ActionRequest, error) {

@@ -291,15 +291,17 @@ built-in ones): a plugin file only previewed (`KubePluginPreview`, `plugin-rende
 | `verb` | Request | `body` |
 | -- | -- | -- |
 | `mergePatch` | `PATCH …/<resource>/<name>`, `application/merge-patch+json` | a map: the merge patch |
-| `jsonPatch` | `PATCH …/<resource>/<name>`, `application/json-patch+json` | a list of `{op, path, value}` (RFC 6902; `op` is `add`, `remove`, `replace`, `move`, `copy` or `test`) |
+| `jsonPatch` | `PATCH …/<resource>/<name>`, `application/json-patch+json` | a list of `{op, path, from, value}` (RFC 6902; `op` is `add`, `remove`, `replace`, `move`, `copy` or `test`; `from` for `move` and `copy`). `op`, `path` and `from` are literal: no template, and `path` and `from` are JSON pointers |
 | `annotate` | `PATCH …/<resource>/<name>`, merge patch of `metadata.annotations` | a map of annotation → string, or `null` to remove one |
 | `subresource` | `PUT …/<name>/<subresource>` (`method: PUT`, the default, as virtctl does), `POST`, or `PATCH` as a merge patch (`method: PATCH`, as kubectl scale does) | a map, or none (`{}` is sent) |
 | `delete` | `DELETE …/<resource>/<name>` with `DeleteOptions`: `propagationPolicy` (`Foreground`, `Background` or `Orphan`) when set, and the uid of the object just read as a precondition | none |
-| `create` | `POST …/<resource>` (the collection, in the object's namespace), `application/json` | a map: the new object |
+| `create` | `POST …/<resource>` (the collection, in the object's namespace), `application/json` | a map: the new object. Its `apiVersion`, `kind` and `metadata.namespace`, when written, must be the resource's and the object's (else the call is refused before any request); absent, `apiVersion` and `kind` are filled in |
 
 Each call:
 1. checks the plugin, the action, the namespace and the name (Kubernetes names: no `/`, no
-   `..`; a cluster-scoped resource takes no namespace) and the params, before any request;
+   `..`; a cluster-scoped resource takes no namespace) and the params (at most 16 KiB of
+   JSON), before any request. An action on a core Secret is refused in screenshot mode: the
+   Secret would be read masked;
 2. refuses in the demo context ("unavailable in the demo cluster");
 3. reads the object (`GET …/<name>`, at the declared version, `preferred` resolved from
    `/apis`) and evaluates its fields and health. When `enabledWhen` or `disabledReason`
@@ -311,12 +313,21 @@ Each call:
 5. renders the body and sends the one request. The API server's refusal (403, 404, 409…) is
    the error as it said it.
 
+With an `enabledWhen`, a patch is pinned to the object it was checked on: a merge patch
+(`mergePatch`, `annotate`, `subresource` with `PATCH`) carries the object's
+`metadata.resourceVersion`, a `jsonPatch` starts with a `test` of `/metadata/resourceVersion`.
+An object changed in between is then refused by the API server, and the error reads
+"Kind name changed since it was checked: refresh and try again". A `delete` always carries
+the object's uid as a precondition.
+
 Body templates: every string of `body` is a template that sees `$` (the object as just
 read), `fields`, `params`, `now`, `name` and `namespace`. A string that is one hole and
 nothing else (`"{{ params.replicas }}"`) keeps its value's type, so an `int` parameter
 reaches the API as a number; any other string is text. Values under `metadata.annotations`
-and `metadata.labels`, and every value of an `annotate` body, are always text. Keys are
-never templates.
+and `metadata.labels` (whatever their key, dots included), and every value of an `annotate`
+body, are always text. Keys are never templates. A one-hole string that evaluates to null is
+an error, never a null sent (which would delete a field in a merge patch): a null is only ever
+a literal `null` in the YAML.
 
 Params: `type` is `string` (at most 1,024 bytes), `int` (a JSON number with no fraction),
 `bool` or `enum` (one of `values`). A param with no `default` is required; a `default` must
@@ -330,8 +341,10 @@ Security rules (what a plugin cannot do):
   (lowercase letters, digits and dashes). A param or a template only ever writes the body:
   `"../../secrets"` in a param stays a string in the body.
 * `verb`, `method`, `subresource` and `propagationPolicy` are fixed by the file; a body's
-  shape is checked when the plugin loads (a map, a list of operations, no body for
-  `delete`).
+  shape is checked when the plugin loads (a map, a list of operations with literal `op`,
+  `path` and `from`, no body for `delete`).
+* `rbac` must ask for what the request needs (see "Command line"), so the can-I row answers
+  for the request sent.
 * The account's own rights decide: the request goes out with the cluster's credentials, and
   the API server refuses what its role does not allow.
 
@@ -340,12 +353,15 @@ SelfSubjectAccessReview per `rbac.verbs` entry on `rbac.group` and `rbac.resourc
 (`resource/subresource` asks for the subresource), plus a `get` on the `on` resource, in the
 namespace asked about for a namespaced resource. `KubePluginData` fills each button's
 `allowed` from the same answers (cached a few minutes per cluster and namespace): `false`
-when a review is denied, `true` otherwise (and when the review cannot be asked: the API
-server still decides).
+when a review is denied, `true` when all are allowed, and absent (unknown) when a review
+cannot be asked: the button stays, and the API server still decides.
 
 Audit: every call, refused or not, is an entry of the audit log with `action`
 `plugin:<id>:<action>`, the namespace, the object as `Kind/name`, the params as compact
 JSON, and the outcome. `audit` in the YAML names the action for people reading the file.
+Param values are written to the audit log, and to the Kubernetes Event the entry may get
+(audit events on): never declare a param for a secret value. Params over 16 KiB are recorded
+by size only.
 
 Confirmation is the apps': `confirm: typedName` for what cannot be undone (`delete`, a
 `stop` or `reset` subresource), `plain` (the default) for the rest, `none` for a harmless
@@ -597,10 +613,6 @@ plugin's tests.
 * a `health` rule matches no sample (rules are first-match: a rule an earlier one always
   shadows counts as untriggered), so neither the tests nor the demo show it;
 * a list card has no `empty` text;
-* an action's `rbac` does not ask for what its request needs (`patch` on the resource for
-  the patches, `update`, `create` or `patch` on `resource/subresource` for `subresource` with
-  `PUT`, `POST` or `PATCH`, `delete` or `create` on the resource), in the resource's group:
-  the can-I row would answer for another request;
 * with `-crd MANIFEST` (a CustomResourceDefinition, YAML or JSON, as `kubectl get crd NAME -o
   yaml` prints it or as an operator's `config/crd/bases/` ships it; in a file of several
   documents or a `List`, the first CRD, other documents skipped), for the plugin resource with
@@ -616,7 +628,11 @@ plugin's tests.
   * a `kind` or `scope` that differs from the CRD's, a version the CRD does not declare, or no
     resource reading the CRD at all.
 
-An action without `rbac` is an error of `plugin-validate`, not a warning.
+An action without `rbac` is an error of `plugin-validate`, not a warning, and so is an
+action whose `rbac` does not ask for what its request needs, in the resource's group:
+`patch` on the resource for `mergePatch`, `jsonPatch` and `annotate`; `update`, `create` or
+`patch` on `resource/subresource` for `subresource` with `PUT`, `POST` or `PATCH`; `delete`
+or `create` on the resource. Otherwise the can-I row would answer for another request.
 
 RBAC: `plugin-render` against a cluster needs `list` on the plugin's resources (and reads
 `/apis` for detection); `plugin-action` needs the action's `rbac` and `get` on its object;

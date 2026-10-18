@@ -23,6 +23,10 @@ import (
 // pluginActionKey is an action's key in kubeActionChecks and in the audit log.
 func pluginActionKey(pluginID, actionID string) string { return "plugin:" + pluginID + ":" + actionID }
 
+// maxPluginParams caps paramsJSON before it is recorded or decoded: params are a few short
+// values, never a document.
+const maxPluginParams = 16 << 10
+
 // errPluginActionInvalid is the API server's answer shape for a request the plugin cannot
 // build: a 422, so that it reads as a refusal and keeps the client.
 func errPluginActionInvalid(err error) error {
@@ -64,6 +68,12 @@ func KubePluginAction(configYAML, contextName, kubeServer, pluginID, actionID, n
 		return err
 	}
 
+	// A Secret read in screenshot mode is masked: an action would be judged, and its body
+	// written, from the masked values.
+	if decl.Group == "" && decl.Resource == "secrets" && privacy.isEnabled() {
+		return errors.New("actions on Secrets are off in screenshot mode")
+	}
+
 	given, err := decodeParams(paramsJSON)
 	if err != nil {
 		return err
@@ -95,8 +105,12 @@ func pluginActionObject(pluginID, actionID, name string) string {
 }
 
 // compactParams is the params as the audit log keeps them: compact JSON, or as given when
-// they are not JSON (the call is refused then).
+// they are not JSON (the call is refused then); past maxPluginParams, only their size.
 func compactParams(paramsJSON string) string {
+	if len(paramsJSON) > maxPluginParams {
+		return fmt.Sprintf("(%d bytes, over 16 KiB)", len(paramsJSON))
+	}
+
 	var b bytes.Buffer
 	if err := json.Compact(&b, []byte(strings.TrimSpace(paramsJSON))); err != nil {
 		return strings.TrimSpace(paramsJSON)
@@ -129,6 +143,10 @@ func validatePluginTarget(decl plugin.Resource, namespace, name string) error {
 
 // decodeParams reads paramsJSON as an object, its numbers kept exact.
 func decodeParams(paramsJSON string) (map[string]any, error) {
+	if len(paramsJSON) > maxPluginParams {
+		return nil, fmt.Errorf("the parameters are %d bytes: at most 16 KiB", len(paramsJSON))
+	}
+
 	paramsJSON = strings.TrimSpace(paramsJSON)
 	if paramsJSON == "" {
 		return nil, nil
@@ -195,7 +213,32 @@ func runPluginAction(ctx context.Context, k *kubeClient, c *plugin.Compiled, act
 		return errPluginActionInvalid(fmt.Errorf("the request path %q is not the object's", req.Path))
 	}
 
-	return k.do(ctx, req.Method, req.Path, req.ContentType, req.Body, nil)
+	err = k.do(ctx, req.Method, req.Path, req.ContentType, req.Body, nil)
+	if req.Pinned && changedSinceChecked(err, a.Verb) {
+		return &kubeAPIError{
+			Code: http.StatusConflict, Reason: "Conflict",
+			Message: fmt.Sprintf("%s %s changed since it was checked: refresh and try again", decl.Kind, name),
+		}
+	}
+
+	return err
+}
+
+// changedSinceChecked: the pinned request was refused because the object's resourceVersion
+// moved (a 409, or a JSON patch whose test of it failed).
+func changedSinceChecked(err error, verb string) bool {
+	var apiErr *kubeAPIError
+	if !errors.As(err, &apiErr) {
+		return false
+	}
+
+	if apiErr.Code == http.StatusConflict {
+		return true
+	}
+
+	msg := strings.ToLower(apiErr.Message)
+
+	return verb == "jsonPatch" && apiErr.Code >= 400 && (strings.Contains(msg, "test") || strings.Contains(msg, "resourceversion"))
 }
 
 // onObjectPath: create posts to the collection; every other verb targets the object, or one
@@ -328,8 +371,8 @@ func setPluginAllowed(ctx context.Context, k *kubeClient, target kubeTarget, c *
 
 	tree.SetAllowed(func(action string) *bool {
 		a, ok := access.Actions[pluginActionKey(c.Plugin.ID, action)]
-		if !ok {
-			return nil
+		if !ok || a.Unknown {
+			return nil // unknown: the button stays, the API server decides
 		}
 
 		allowed := a.Allowed
