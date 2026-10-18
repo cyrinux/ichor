@@ -28,7 +28,8 @@ extension TalosClient {
     }
 }
 
-/// The language Go translates a plugin's labels into: the phone's ("fr"), "" for English.
+/// The language Go translates a plugin's labels into: the one the app runs in ("fr"), so the
+/// tree matches the app's chrome; Go reads "en" or a language it lacks as English.
 func pluginLocale() -> String {
-    Locale.current.language.languageCode?.identifier ?? ""
+    Bundle.main.preferredLocalizations.first ?? ""
 }

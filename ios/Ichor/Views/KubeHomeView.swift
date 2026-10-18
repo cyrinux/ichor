@@ -586,12 +586,14 @@ struct KubeHomeView: View {
         let fluxNext = await loadFlux(with: client)
         guard id == loadID else { return }
         flux = fluxNext.map { (flux ?? .loading).refreshed(with: $0) }
-        // The plugins first: a cluster whose only data service is a plugin (kube-green) still shows the card.
-        if let detect = try? await client.pluginDetect(hints: ""), id == loadID { plugins = detect }
+        // The plugins with the data services: a cluster whose only data service is a plugin
+        // (kube-green) still shows the card. A failed ask keeps the plugins shown.
+        async let detected = LoadState<PluginDetect>.from { try await client.pluginDetect(hints: "") }
+        let dataRead: LoadState<DataServices> = await .from { try await client.dataServices(hints: "") }
+        let detectRead = await detected
         guard id == loadID else { return }
-        let dataNext = await loadDataServices(with: client)
-        guard id == loadID else { return }
-        dataServices = dataNext.map { (dataServices ?? .loading).refreshed(with: $0) }
+        if case .loaded(let detect, _, _) = detectRead { plugins = detect }
+        dataServices = shownDataServices(dataRead).map { (dataServices ?? .loading).refreshed(with: $0) }
         // Crossplane: nil when the cluster does not run it (the read answers that quickly).
         let crossplaneNext = await loadCrossplane(with: client)
         guard id == loadID else { return }
@@ -642,10 +644,10 @@ struct KubeHomeView: View {
         return loaded
     }
 
-    /// The data services, nil when none of the operators is installed. The operators are found
-    /// from the API groups; Garage, which has none, from a listing of the pods (no hint, no inventory).
-    private func loadDataServices(with client: TalosClient) async -> LoadState<DataServices>? {
-        let loaded: LoadState<DataServices> = await .from { try await client.dataServices(hints: "") }
+    /// The data services to show, nil when none of the operators is installed and no data
+    /// services plugin runs. The operators are found from the API groups; Garage, which has
+    /// none, from a listing of the pods (no hint, no inventory).
+    private func shownDataServices(_ loaded: LoadState<DataServices>) -> LoadState<DataServices>? {
         if case .loaded(let services, _, _) = loaded, services.detected.isEmpty, plugins.dataServicePlugins.isEmpty { return nil }
         return loaded
     }

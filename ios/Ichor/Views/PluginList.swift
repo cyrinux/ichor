@@ -37,6 +37,8 @@ struct PluginList: View {
     /// Changes made from the tab (a kube-green schedule saved): each one reads in place.
     @State private var changes = 0
     @State private var expanded: Set<String> = []
+    /// Bumped by each read: only the latest one's answer is shown.
+    @State private var sequence = 0
 
     /// The reload asked for, with the changes made from the tab: both only grow, so their sum
     /// changes whenever one does.
@@ -121,12 +123,15 @@ struct PluginList: View {
         )
     }
 
-    /// Reads for `next`: from scratch when its scope changed (or nothing was read), in place when
-    /// only its bump did, or when `refresh` (pull to refresh, retry). A read for a scope the
-    /// screen moved away from meanwhile is dropped.
+    /// Reads for `next`: from scratch when its scope changed, nothing was read, or nothing is
+    /// shown (a retry after a failed first read shows the loading state); in place when only its
+    /// bump did, or on `refresh` (pull to refresh). Only the latest read's answer is shown: an
+    /// older one, or one for a scope the screen moved away from, is dropped.
     private func load(_ next: PluginReload, refresh: Bool) async {
         guard let client = model.client else { return }
-        let change: PluginReload.Change = refresh && loaded?.scope == next.scope ? .refresh : next.change(from: loaded)
+        let showsData: Bool = { if case .loaded = state { return true } else { return false } }()
+        var change: PluginReload.Change = refresh && loaded?.scope == next.scope ? .refresh : next.change(from: loaded)
+        if change == .refresh && !showsData { change = .reset }
         switch change {
         case .none: return
         case .reset:
@@ -135,13 +140,15 @@ struct PluginList: View {
         case .refresh: break
         }
         loaded = next
+        sequence += 1
+        let mine = sequence
         let read: LoadState<PluginTreeData> = await .from {
             let tree = try await client.pluginData(id: pluginID)
             // Only the kinds of the objects its rows open: the rows show without it.
             let catalog = await PluginCatalogCache.load(with: client)
             return PluginTreeData(tree: tree, catalog: catalog)
         }
-        guard loaded?.scope == next.scope else { return }
+        guard mine == sequence, loaded?.scope == next.scope else { return }
         state = state.refreshed(with: read)
         if case .loaded(let data, _, _) = read, !data.tree.plugin.name.isEmpty { onName?(data.tree.plugin.name) }
     }
@@ -149,7 +156,7 @@ struct PluginList: View {
 
 /// "Edit schedule" for a SleepInfo shown by the kube-green plugin, with the existing schedule
 /// sheet: the SleepInfo as written is read the way the workload sheets read it
-/// (KubeGreenNamespace). Nothing when it cannot be read (refused, or gone).
+/// (KubeGreenStore, kept a minute). Nothing when it cannot be read (refused, or gone).
 struct KubeGreenPluginEdit: View {
     let ref: PluginRef
     /// After a save: the tab reads again.
@@ -182,7 +189,9 @@ struct KubeGreenPluginEdit: View {
 
     private func read() async {
         guard let client = model.client else { return }
-        let found = try? await client.kubeGreenNamespace(ref.namespace).sleepInfos.first { $0.name == ref.name }
+        // The one-minute cache the workload sheets share; forgotten after a save.
+        let namespace = await KubeGreenStore.shared.load(namespace: ref.namespace, key: model.kubeGreenKey, with: client)
+        let found = namespace?.sleepInfos.first { $0.name == ref.name }
         info = found
         failed = found == nil
     }

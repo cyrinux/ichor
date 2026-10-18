@@ -10,6 +10,9 @@ struct LoadStateView<T, Content: View>: View {
     var stepLabel: ((String) -> String)?
     /// The data is only what the last background check saw (a seed): the footer says so.
     var fromMonitor = false
+    /// False when the content shows its own freshness footer (a Data services plugin tab, its
+    /// own LoadStateView inside): one footer, never two stacked.
+    var showsFooter = true
     @ViewBuilder let content: (T) -> Content
     @Environment(AppModel.self) private var model: AppModel?
 
@@ -42,7 +45,9 @@ struct LoadStateView<T, Content: View>: View {
             }
         case .loaded(let value, let at, let refreshError):
             content(value)
-                .safeAreaInset(edge: .bottom, spacing: 0) { FreshnessFooter(at: at, refreshError: refreshError, fromMonitor: fromMonitor) }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if showsFooter { FreshnessFooter(at: at, refreshError: refreshError, fromMonitor: fromMonitor) }
+                }
         }
     }
 }

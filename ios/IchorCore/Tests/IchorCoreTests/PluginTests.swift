@@ -300,6 +300,21 @@ final class PluginTests: XCTestCase {
         XCTAssertEqual(clusterScoped.version, "v1")
     }
 
+    func testCardLinesWorstFirstWithPluginsCounted() {
+        let summaries: [DataServiceKind: ServiceSummary] = [
+            .longhorn: ServiceSummary(total: 4, attention: 0, health: .ok),
+            .cnpg: ServiceSummary(total: 2, attention: 2, health: .critical),
+        ]
+        let warn = PluginDetectItem(id: "kube-green", summary: PluginSummary(title: "t", health: "warning"))
+        let calm = PluginDetectItem(id: "calm", summary: PluginSummary(title: "t", health: "ok"))
+        let untold = PluginDetectItem(id: "untold")
+        let lines = DataServicesCardLine.lines(natives: [.longhorn, .cnpg], summary: { summaries[$0] }, plugins: [calm, untold, warn])
+        XCTAssertEqual(lines.map(\.id), ["cloudnative-pg", "plugin:kube-green", "plugin:untold", "longhorn", "plugin:calm"])
+        XCTAssertNil(lines[2].health)
+        XCTAssertEqual(DataServicesCardLine.attention(natives: [.longhorn, .cnpg], summary: { summaries[$0] }, plugins: [calm, untold, warn]), 3)
+        XCTAssertEqual(DataServicesCardLine.attention(natives: [], summary: { _ in nil }, plugins: []), 0)
+    }
+
     func testReloadResetsOnAnotherScopeAndRefreshesInPlaceOtherwise() {
         let first = PluginReload(scope: "ctx-a#1", bump: 0)
         XCTAssertEqual(first.change(from: nil), .reset)

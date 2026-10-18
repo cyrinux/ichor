@@ -822,3 +822,58 @@ public struct PluginReload: Hashable, Sendable {
         return previous.bump == bump ? .none : .refresh
     }
 }
+
+/// A line of the Data services card: a native system, or a CRD plugin with its summary tile.
+public enum DataServicesCardLine: Equatable, Sendable, Identifiable {
+    case native(DataServiceKind, health: ServiceHealth?)
+    case plugin(PluginDetectItem)
+
+    public var id: String {
+        switch self {
+        case .native(let kind, _): kind.rawValue
+        case .plugin(let item): "plugin:\(item.id)"
+        }
+    }
+
+    /// Nil when nothing says (a system not read yet, a plugin without its tile).
+    public var health: ServiceHealth? {
+        switch self {
+        case .native(_, let health): health
+        case .plugin(let item): item.summary?.serviceHealth
+        }
+    }
+
+    /// Worst first (critical, warning, then the calm levels; no health counts as unknown), as on
+    /// Android; equal ones keep their order, the native systems before the plugins.
+    public static func lines(natives: [DataServiceKind], summary: (DataServiceKind) -> ServiceSummary?,
+                             plugins: [PluginDetectItem]) -> [DataServicesCardLine] {
+        let all = natives.map { DataServicesCardLine.native($0, health: summary($0)?.health) } + plugins.map { .plugin($0) }
+        return all.enumerated()
+            .sorted { a, b in
+                let ha = a.element.health ?? .unknown
+                let hb = b.element.health ?? .unknown
+                return ha == hb ? a.offset < b.offset : ha < hb
+            }
+            .map(\.element)
+    }
+
+    /// "N need a look": what each native system counts, plus one per plugin whose tile needs
+    /// attention (a tile has no count of its own).
+    public static func attention(natives: [DataServiceKind], summary: (DataServiceKind) -> ServiceSummary?,
+                                 plugins: [PluginDetectItem]) -> Int {
+        natives.compactMap { summary($0)?.attention }.reduce(0, +)
+            + plugins.filter { $0.summary?.serviceHealth.needsAttention == true }.count
+    }
+}
+
+public extension DataServices {
+    /// The card's lines: these systems and `plugins`, worst first.
+    func cardLines(plugins: [PluginDetectItem]) -> [DataServicesCardLine] {
+        DataServicesCardLine.lines(natives: detected, summary: { summary($0) }, plugins: plugins)
+    }
+
+    /// The card's "N need a look", plugins included.
+    func attention(plugins: [PluginDetectItem]) -> Int {
+        DataServicesCardLine.attention(natives: detected, summary: { summary($0) }, plugins: plugins)
+    }
+}

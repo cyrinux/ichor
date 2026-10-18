@@ -35,7 +35,8 @@ struct DataServicesView: View {
     }
 
     var body: some View {
-        LoadStateView(state: state, retry: refresh, progress: progress, stepLabel: Self.stepLabel) { services in
+        LoadStateView(state: state, retry: refresh, progress: progress, stepLabel: Self.stepLabel,
+                      showsFooter: !pluginTabShown) { services in
             let tabs = DataServicesTab.tabs(detected: services.detected, plugins: loadedPlugins)
             if tabs.isEmpty {
                 switch plugins {
@@ -55,7 +56,7 @@ struct DataServicesView: View {
                     noDataServices
                 }
             } else {
-                let tab = tabs.first { $0.id == selected } ?? tabs[0]
+                let tab = Self.tab(in: tabs, selected: selected)
                 Group {
                     switch tab {
                     case .native(let kind): nativeList(kind, services)
@@ -116,6 +117,19 @@ struct DataServicesView: View {
         case .castai: CastAIList(status: services.castai!, refresh: refresh)
         case .kubeGreen: KubeGreenList(status: services.kubeGreen!, refresh: refresh)
         }
+    }
+
+    /// The tab shown: the one picked, else the first.
+    private static func tab(in tabs: [DataServicesTab], selected: DataServicesTab.ID?) -> DataServicesTab {
+        tabs.first { $0.id == selected } ?? tabs[0]
+    }
+
+    /// A plugin tab is on screen: its own list shows the freshness footer, the screen's does not.
+    private var pluginTabShown: Bool {
+        guard case .loaded(let services, _, _) = state else { return false }
+        let tabs = DataServicesTab.tabs(detected: services.detected, plugins: loadedPlugins)
+        guard !tabs.isEmpty, case .plugin = Self.tab(in: tabs, selected: selected) else { return false }
+        return true
     }
 
     /// Which plugins run, once asked (nil while asking, or when it failed).

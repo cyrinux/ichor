@@ -131,15 +131,17 @@ struct DataServicesSection: View {
             if !services.detected.isEmpty || !plugins.isEmpty {
                 Section {
                     NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes)) { header(services) }
-                    // One row per system, opening the screen on its tab.
-                    ForEach(services.detected) { kind in
-                        NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes, kind: kind)) {
-                            line(kind, text: dataServiceSummary(kind, services), health: services.summary(kind)?.health)
+                    // One row per system or plugin, worst first, opening the screen on its tab
+                    // (or the native screen a plugin names).
+                    ForEach(services.cardLines(plugins: plugins)) { cardLine in
+                        switch cardLine {
+                        case .native(let kind, let health):
+                            NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes, kind: kind)) {
+                                line(kind, text: dataServiceSummary(kind, services), health: health)
+                            }
+                        case .plugin(let item):
+                            PluginTileLink(item: item, hints: hints, downNodes: downNodes) { pluginLine(item) }
                         }
-                    }
-                    // One row per plugin, opening its tab (or the native screen it names).
-                    ForEach(plugins) { item in
-                        PluginTileLink(item: item, hints: hints, downNodes: downNodes) { pluginLine(item) }
                     }
                 }
             }
@@ -157,7 +159,7 @@ struct DataServicesSection: View {
 
     @ViewBuilder private func pill(_ services: DataServices) -> some View {
         let worst = ServiceHealth.worst([services.worst] + plugins.compactMap { $0.summary?.serviceHealth })
-        let attention = services.detected.compactMap { services.summary($0)?.attention }.reduce(0, +)
+        let attention = services.attention(plugins: plugins)
         if attention > 0 {
             StatusPill(label: String(localized: "\(attention) need a look"), color: worst.color)
         } else if worst.needsAttention {
