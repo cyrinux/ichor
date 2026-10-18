@@ -47,6 +47,7 @@ import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.ProposeBlock
 import name.levis.ichor.model.QuickEdit
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
@@ -157,7 +158,7 @@ fun SourceEditScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
                     val e = s.data
                     when {
                         e.result != null -> ProposeResult(e.result, target.tool, onDone = onBack, modifier = modifier)
-                        e.review != null -> EditReview(e.review, onBack = vm::backToEditor, onContinue = vm::openForm, onRetry = vm::review, modifier = modifier)
+                        e.review != null -> EditReview(e.review, onBack = vm::backToEditor, onContinue = vm::openForm, onRetry = vm::review, modifier = modifier, notice = e.notice)
                         else -> Column(modifier) {
                             // A quick edit that did not apply to the branch's file says why.
                             e.notice?.let { notice ->
@@ -187,7 +188,14 @@ fun SourceEditScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
 
 /** What the draft changes, as a unified diff; Continue opens the pull request sheet. */
 @Composable
-private fun EditReview(review: UiState<FluxDiff>, onBack: () -> Unit, onContinue: () -> Unit, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+private fun EditReview(
+    review: UiState<FluxDiff>,
+    onBack: () -> Unit,
+    onContinue: () -> Unit,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+    notice: UiText? = null,
+) {
     when (review) {
         UiState.Loading -> Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
             CircularProgressIndicator()
@@ -210,6 +218,7 @@ private fun EditReview(review: UiState<FluxDiff>, onBack: () -> Unit, onContinue
             }
             Column(modifier.fillMaxSize().imePadding()) {
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)) {
+                    notice?.let { MutedText(it.asString(), Modifier.padding(bottom = 8.dp)) }
                     DiffLines(file.lines)
                     if (file.truncated) MutedText(stringResource(R.string.diff_truncated), Modifier.padding(top = 4.dp))
                 }

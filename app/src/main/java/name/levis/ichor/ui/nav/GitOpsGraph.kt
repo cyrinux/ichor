@@ -59,6 +59,7 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
             onDiff = { nav.navigate(Routes.argoDiff(ns, name)) },
             onSource = { idx -> nav.navigate(Routes.gitOpsSource(SOURCE_TOOL_ARGO, "Application", ns, name, idx)) },
+            onDiffOf = { focus -> nav.navigate(Routes.argoDiff(ns, name, focus)) },
         )
     }
     composable(
@@ -66,17 +67,20 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
         arguments = listOf(
             navArgument("ns") { type = NavType.StringType; defaultValue = "" },
             navArgument("name") { type = NavType.StringType; defaultValue = "" },
+            navArgument("focus") { type = NavType.StringType; defaultValue = "" },
         ),
     ) { entry ->
         val ns = entry.arguments?.getString("ns").orEmpty()
         val name = entry.arguments?.getString("name").orEmpty()
         FluxDiffScreen(
+            focus = entry.arguments?.getString("focus").orEmpty(),
             kind = "Application",
             namespace = ns,
             name = name,
             onBack = { nav.popBackStack() },
             tool = DiffTool.ARGO,
             onOpenSource = { idx, path, line -> nav.navigate(Routes.gitOpsFile(SOURCE_TOOL_ARGO, "Application", ns, name, idx, path, line)) },
+            onKeepLive = { idx, path, edit -> nav.navigate(Routes.gitOpsEdit(SOURCE_TOOL_ARGO, "Application", ns, name, idx, path, encodeQuickEdit(edit))) },
             onAddToken = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
         )
     }
@@ -113,17 +117,20 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
             navArgument("kind") { type = NavType.StringType; defaultValue = "" },
             navArgument("ns") { type = NavType.StringType; defaultValue = "" },
             navArgument("name") { type = NavType.StringType; defaultValue = "" },
+            navArgument("focus") { type = NavType.StringType; defaultValue = "" },
         ),
     ) { entry ->
         val kind = entry.arguments?.getString("kind").orEmpty()
         val ns = entry.arguments?.getString("ns").orEmpty()
         val name = entry.arguments?.getString("name").orEmpty()
         FluxDiffScreen(
+            focus = entry.arguments?.getString("focus").orEmpty(),
             kind = kind,
             namespace = ns,
             name = name,
             onBack = { nav.popBackStack() },
             onOpenSource = { idx, path, line -> nav.navigate(Routes.gitOpsFile(SOURCE_TOOL_FLUX, kind, ns, name, idx, path, line)) },
+            onKeepLive = { idx, path, edit -> nav.navigate(Routes.gitOpsEdit(SOURCE_TOOL_FLUX, kind, ns, name, idx, path, encodeQuickEdit(edit))) },
             onAddToken = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
         )
     }

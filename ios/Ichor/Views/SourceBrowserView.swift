@@ -45,7 +45,7 @@ struct SourceBrowserView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                if let url = webURL(gitWebURL(source.webURL, kind: hosts.kind(of: source.host), ref: source.ref, path: dir, dir: true)) {
+                if let url = hosts.browserURL(gitWebURL(source.webURL, kind: hosts.kind(of: source.host), ref: source.ref, path: dir, dir: true)) {
                     Link(destination: url) { Label("Open in browser", systemImage: "safari") }
                 }
             }
@@ -136,10 +136,11 @@ struct SourceHeader: View {
     let source: GitSource
     /// The commit the host read, "" when it did not say (the source's revision then).
     let sha: String
+    @Environment(GitHostStore.self) private var hosts
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            if let url = webURL(source.webURL) {
+            if let url = hosts.browserURL(source.webURL) {
                 Link(destination: url) {
                     Label { Text(verbatim: source.repoURL).lineLimit(2).truncationMode(.middle) } icon: {
                         Image(systemName: "arrow.up.forward.square")
@@ -166,6 +167,7 @@ struct GitHostMissingView: View {
     let host: String
     /// The repository's page, "" without one.
     let page: String
+    @Environment(GitHostStore.self) private var hosts
 
     var body: some View {
         ContentUnavailableView {
@@ -175,7 +177,7 @@ struct GitHostMissingView: View {
         } actions: {
             NavigationLink { SettingsPageView(page: .gitHosts) } label: { Text("Add a token") }
                 .buttonStyle(.borderedProminent)
-            if let url = webURL(page) {
+            if let url = hosts.browserURL(page) {
                 Link(destination: url) { Text("Open in browser") }
             }
         }

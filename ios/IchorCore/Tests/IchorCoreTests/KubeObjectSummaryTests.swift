@@ -47,4 +47,19 @@ final class KubeObjectSummaryTests: XCTestCase {
         XCTAssertEqual(summaryTone("warn"), .warn)
         XCTAssertEqual(summaryTone("purple"), .neutral)
     }
+
+    func testOnlyAnArgoApplicationOrAFluxKustomizationOffersItsDiff() throws {
+        func owner(_ via: String, _ kind: String, _ namespace: String) throws -> ObjectOwner {
+            try TalosJSON.decode(ObjectOwner.self, from: #"{"via":"\#(via)","kind":"\#(kind)","namespace":"\#(namespace)","name":"web"}"#)
+        }
+        XCTAssertTrue(try owner("argocd", "Application", "argocd").hasGitOpsDiff)
+        XCTAssertTrue(try owner("flux", "Kustomization", "flux-system").hasGitOpsDiff)
+        // Its namespace unknown, a HelmRelease, a Helm release or a plain owner: no diff to open.
+        XCTAssertFalse(try owner("argocd", "Application", "").hasGitOpsDiff)
+        XCTAssertFalse(try owner("flux", "HelmRelease", "web").hasGitOpsDiff)
+        XCTAssertFalse(try owner("helm", "Release", "web").hasGitOpsDiff)
+        XCTAssertFalse(try owner("owner", "ReplicaSet", "web").hasGitOpsDiff)
+        XCTAssertEqual(KubeDiffResource(group: "apps", kind: "Deployment", namespace: "web", name: "app", change: .changed).focusKey,
+                       "Deployment/web/app")
+    }
 }

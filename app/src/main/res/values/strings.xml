@@ -3438,6 +3438,11 @@
     <string name="gitops_propose_not_editable">This file cannot be edited here: open it in the browser.</string>
     <string name="gitops_find_open">Open source file</string>
     <string name="gitops_find_searching">Looking for the file…</string>
+    <string name="gitops_keep_live">Keep live values in Git</string>
+    <string name="gitops_keep_live_values">Changed in the cluster: %1$s</string>
+    <string name="gitops_keep_skipped">Not kept, set elsewhere: %1$s</string>
+    <string name="gitops_focus_in_sync">%1$s %2$s matches what Git would apply: nothing to keep.</string>
+    <string name="gitops_compare_with_git">Compare with Git</string>
     <string name="gitops_find_choose">Defined in several files</string>
     <string name="gitops_find_none">No file of the source declares %1$s %2$s.</string>
     <string name="gitops_find_defined_in">Defined in %1$s, line %2$s</string>

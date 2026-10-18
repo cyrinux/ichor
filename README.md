@@ -99,7 +99,8 @@ tour** shows it again.
   the phone, encrypted (Android Keystore, iOS Keychain), is never shown again, and is only sent
   to its own host over https. When Argo CD or Flux reach the same server by another name (an SSH
   or in-cluster address such as `gitea-http.gitea.svc:3000`), list it under **Also reached as**:
-  those repositories then use the host's token, and requests still go only to the saved host.
+  those repositories then use the host's token, requests still go only to the saved host, and
+  their repository, commit and file links open on the saved host instead of the internal name.
 - **Source:** an Argo CD or Flux app's detail lists its Git sources; each opens the folder the
   app deploys from, at the revision the cluster runs, with read-only files (YAML highlighted on
   Android). Flux apps need no token (the files come from the source-controller's artifact);
@@ -117,6 +118,14 @@ tour** shows it again.
   entry when the file has one. Only that line changes, comments and quoting included, and the
   edit goes straight to the review and pull request. For routine bumps, Flux image automation or
   Argo CD Image Updater can open these changes for you.
+- **Keep live changes in Git:** when an object was changed by hand in the cluster (`kubectl
+  scale`, `set image`, `edit`), its card on the Argo CD or Flux diff lists the values that
+  differ and offers **Keep live values in Git**: the manifest is found as for Open source file,
+  the live values are written only where that file sets the value Git would apply (one set by
+  an overlay, a patch or a substitution is named and left), then reviewed and proposed as a
+  pull request. Never for a Secret. An object's page links to the diff of the Argo CD app or
+  Flux Kustomization applying it (**Compare with Git**), as do an Argo CD app's sync and
+  comparison errors and each resource its last sync failed on.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome: ok, partial (a pod sweep where
   some pods could not be deleted) or failed. Optionally

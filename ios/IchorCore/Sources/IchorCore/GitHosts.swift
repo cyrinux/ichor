@@ -184,4 +184,26 @@ public extension Array where Element == GitHost {
     func removing(_ host: String) -> [GitHost] {
         filter { $0.host != host }
     }
+
+    /// `url`, a repository, commit or file page built from a source's address, on the web
+    /// address of the listed host whose alias names its host: Argo CD or Flux often reach the
+    /// server by an in-cluster or SSH name a browser cannot open. A commit link gets GitLab's
+    /// "/-/commit/" when the host is GitLab. Unchanged when it is not an https link, already on
+    /// a listed host, or no alias names it. Same rule as Android's gitHostWebUrl.
+    func webURL(_ url: String) -> String {
+        let prefix = "https://"
+        guard url.hasPrefix(prefix) else { return url }
+        let rest = url.dropFirst(prefix.count)
+        let end = rest.firstIndex(of: "/") ?? rest.endIndex
+        let name = gitHostName(normalizedGitHost(String(rest[..<end])))
+        guard !name.isEmpty, !contains(where: { gitHostName(normalizedGitHost($0.host)) == name }),
+              let host = first(where: { $0.matches(name) }) else { return url }
+        let base = normalizedGitHost(host.host)
+        var path = String(rest[end...])
+        if host.kind == .gitlab || host.kind == .auto && base.contains("gitlab") {
+            path = path.replacingOccurrences(of: #"(?<!/-)/commit/([0-9a-f]{7,64})$"#, with: "/-/commit/$1",
+                                             options: .regularExpression)
+        }
+        return prefix + base + path
+    }
 }

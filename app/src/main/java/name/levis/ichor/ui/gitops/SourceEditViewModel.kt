@@ -61,7 +61,7 @@ data class ProposeForm(
  * the proposal's lock), the [draft] typed, then the [review] diff, the [form] of the pull
  * request (kept when its sheet closes: [formOpen]) and its [result]. A quick edit leaves its
  * [quick] draft and title (the request's default while the draft is still that one), or a
- * [notice] when it did not apply to the file read here.
+ * [notice] when it did not apply to the file read here (or, kept live values, which it left).
  */
 data class SourceEdit(
     val source: GitSource,
@@ -168,7 +168,9 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
         if (!result.changed) return edit.copy(notice = UiText.Res(R.string.gitops_quick_unchanged))
         val review = cancellableCatching { gitOps.textDiff(edit.original, result.content, edit.path) }
             .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
-        return edit.copy(draft = result.content, review = review, quick = QuickDraft(result.content, quickEditTitle(quick)))
+        // Live values the file does not set (an overlay or a patch does) are named on the review.
+        val skipped = result.skipped.takeIf { it.isNotEmpty() }?.let { UiText.Res(R.string.gitops_keep_skipped, it.joinToString("; ")) }
+        return edit.copy(draft = result.content, review = review, quick = QuickDraft(result.content, quickEditTitle(quick)), notice = skipped)
     }
 
     private fun updateEdit(transform: (SourceEdit) -> SourceEdit) = _state.update { s ->

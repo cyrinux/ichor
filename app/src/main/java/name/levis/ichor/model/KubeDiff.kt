@@ -67,12 +67,31 @@ data class KubeDiffResource(
     val truncated: Boolean = false,
     /** Why the API server refused the dry run, for [DiffChange.ERROR]. */
     val error: String = "",
+    /** The plain values changed in the cluster by hand, which "Keep in Git" writes to the manifest. */
+    val liveChanges: List<DiffLiveChange> = emptyList(),
 ) {
     val key: String get() = "$group/$kind/$namespace/$name"
+
+    /** What a diff's focus names it by ("kind/namespace/name"): the object page knows no group alias. */
+    val focusKey: String get() = "$kind/$namespace/$name"
 
     /** The diff's lines without its "---"/"+++" header. */
     val lines: List<DiffLine> get() = parseDiffLines(diff)
 }
+
+/**
+ * One plain value an object has live but not as its GitOps tool would apply it: [label] shown
+ * ("spec.template.spec.containers[app].image"), [wanted] and [live] as YAML writes them, [type]
+ * the live value's tag (str, int, float, bool). [path] is the core's own, sent back as is.
+ */
+@Serializable
+data class DiffLiveChange(
+    val path: List<String> = emptyList(),
+    val label: String = "",
+    val wanted: String = "",
+    val live: String = "",
+    val type: String = "",
+)
 
 /** How an object would change, in the order the screen lists them. */
 @Serializable

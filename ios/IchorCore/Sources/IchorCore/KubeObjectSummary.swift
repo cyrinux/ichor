@@ -112,6 +112,13 @@ public struct ObjectOwner: Decodable, Equatable, Hashable, Sendable {
 
     public var isHelmRelease: Bool { via == Self.viaHelm }
 
+    /// An Argo CD Application (its namespace known) or a Flux Kustomization that applies the
+    /// object: its diff can show what the object changed by hand, to keep in Git.
+    public var hasGitOpsDiff: Bool {
+        !name.isEmpty && !namespace.isEmpty
+            && (via == Self.viaArgo && kind == "Application" || via == Self.viaFlux && kind == "Kustomization")
+    }
+
     /// The browser's resource for it, nil when discovery did not know its kind (or for a
     /// Helm release, which has a screen of its own).
     public var apiResource: KubeAPIResource? {

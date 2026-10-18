@@ -24,6 +24,19 @@ struct KubeObjectSummarySections: View {
             Section {
                 ForEach(Array(summary.owners.enumerated()), id: \.offset) { _, owner in
                     OwnerLink(owner: owner)
+                    if owner.hasGitOpsDiff {
+                        // The app's diff at this object: what it changed by hand, to keep in Git.
+                        let focus = "\(summary.kind)/\(summary.namespace)/\(summary.name)"
+                        NavigationLink {
+                            if owner.via == ObjectOwner.viaArgo {
+                                FluxDiffView(argo: owner.namespace, name: owner.name, focus: focus)
+                            } else {
+                                FluxDiffView(target: FluxRef(kind: owner.kind, namespace: owner.namespace, name: owner.name), focus: focus)
+                            }
+                        } label: {
+                            Text("Compare with Git").font(.callout)
+                        }
+                    }
                 }
             } header: {
                 Text(verbatim: SummaryText.owners)

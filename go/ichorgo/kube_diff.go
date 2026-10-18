@@ -74,6 +74,9 @@ type kubeDiffResource struct {
 	Diff      string `json:"diff"`
 	Truncated bool   `json:"truncated"`
 	Error     string `json:"error"`
+	// LiveChanges are the plain values changed in the cluster, for "Keep in Git"
+	// (gitops_keep_live.go); absent when there are none.
+	LiveChanges []diffLiveChange `json:"liveChanges,omitempty"`
 }
 
 func (r kubeDiffResource) less(o kubeDiffResource) bool {
@@ -351,6 +354,10 @@ func diffObjects(r *kubeDiffResource, live, wanted map[string]any, masker *kubeD
 	}
 
 	r.Diff = d
+
+	if r.Change == diffChangeChanged {
+		r.LiveChanges = diffLiveChanges(live, wanted, masker)
+	}
 }
 
 // diffRenderRaw renders an object as sorted YAML without stripping anything: for a change

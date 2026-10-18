@@ -2,6 +2,7 @@ package name.levis.ichor.ui.argocd
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,6 +18,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -31,6 +33,7 @@ import kotlinx.coroutines.delay
 import name.levis.ichor.R
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoOperation
+import name.levis.ichor.model.ArgoResult
 import name.levis.ichor.model.shortRevision
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.localizedDuration
@@ -38,10 +41,11 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
  * The running or last sync: phase, message, how long it ran, "5 / 9 resources" with a bar, the
- * resources that failed with Argo CD's message, and Terminate while it runs.
+ * resources that failed with Argo CD's message ([onCompare]: each opens the diff at it, to fix
+ * its manifest in Git), and Terminate while it runs.
  */
 @Composable
-fun ArgoOperationCard(app: ArgoApp, op: ArgoOperation, busy: Boolean, onTerminate: () -> Unit) {
+fun ArgoOperationCard(app: ArgoApp, op: ArgoOperation, busy: Boolean, onCompare: ((ArgoResult) -> Unit)? = null, onTerminate: () -> Unit) {
     val colors = LocalStatusColors.current
     val (icon, color) = when {
         op.isRunning -> Icons.Outlined.Sync to MaterialTheme.colorScheme.primary
@@ -67,6 +71,9 @@ fun ArgoOperationCard(app: ArgoApp, op: ArgoOperation, busy: Boolean, onTerminat
                 Column(Modifier.padding(top = 2.dp)) {
                     Text("${f.kind}/${f.name}", style = MaterialTheme.typography.labelLarge, fontFamily = FontFamily.Monospace, color = colors.bad)
                     if (f.message.isNotEmpty()) MutedText(f.message)
+                    if (onCompare != null && f.name.isNotEmpty()) {
+                        TextButton(onClick = { onCompare(f) }, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.gitops_compare_with_git)) }
+                    }
                 }
             }
             if (op.phase == "Running") {

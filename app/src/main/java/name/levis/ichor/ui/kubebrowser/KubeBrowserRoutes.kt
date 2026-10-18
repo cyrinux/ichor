@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import name.levis.ichor.model.ApiResource
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.ObjectOwner
 
 /** Routes of the resource browser, Helm and port-forward screens. */
 object KubeBrowserRoutes {
@@ -87,6 +88,12 @@ object KubeBrowserRoutes {
                 onOwner = links.onObject,
                 onHelmRelease = { ns, name -> nav.navigate(helmRelease(ns, name)) },
                 onScanReports = { cluster -> nav.navigate(Routes.scanReports(cluster)) },
+                onGitOpsDiff = { owner, focus ->
+                    nav.navigate(
+                        if (owner.via == ObjectOwner.VIA_ARGO) Routes.argoDiff(owner.namespace, owner.name, focus)
+                        else Routes.fluxDiff(owner.kind, owner.namespace, owner.name, focus),
+                    )
+                },
                 onDeleted = {
                     nav.previousBackStackEntry?.savedStateHandle?.set(DELETED, System.currentTimeMillis())
                     nav.popBackStack()
