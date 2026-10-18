@@ -40,7 +40,8 @@ fun HostnameConfirmDialog(
     enabled: Boolean = true,
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
-    var typed by remember { mutableStateOf("") }
+    // Per hostname: a dialog reused for another object starts empty.
+    var typed by remember(hostname) { mutableStateOf("") }
     // [enabled] false: something forbids the action whatever is typed (e.g. a blocker).
     val matches = enabled && confirmationMatches(typed, hostname)
     val colors = LocalStatusColors.current

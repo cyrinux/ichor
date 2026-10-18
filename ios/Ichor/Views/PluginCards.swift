@@ -160,7 +160,8 @@ struct PluginSectionView: View {
                 .foregroundStyle(text.tone.isEmpty ? Color.primary : pluginToneColor(text.tone))
                 .textSelection(.enabled)
         case .actions(let items):
-            ForEach(Array(items.enumerated()), id: \.offset) { _, action in
+            // By action: a button's pending run stays with its action.
+            ForEach(items, id: \.id) { action in
                 PluginActionButton(action: action, target: target)
             }
         case .unknown:

@@ -10,6 +10,8 @@ import name.levis.ichor.data.PluginRepository
 import name.levis.ichor.model.PluginAction
 import name.levis.ichor.model.PluginActionFailure
 import name.levis.ichor.model.PluginRef
+import name.levis.ichor.model.displayName
+import name.levis.ichor.model.paramLabel
 import name.levis.ichor.model.pluginActionFailure
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
@@ -28,7 +30,8 @@ data class PluginActionOutcome(val label: String, val target: String, val failur
 /**
  * Runs plugin [pluginId]'s actions in [scope] (the tab's ViewModel's), off the main thread
  * (GoCall runs on IO). [onChanged] reloads the tab: after an action went through, and after
- * one refused because the object changed since the tab read it.
+ * one refused because the object is not as the tab showed it (changed since read, or the
+ * action no longer applies to it).
  */
 class PluginActions(
     private val scope: CoroutineScope,
@@ -44,15 +47,18 @@ class PluginActions(
 
     /** Runs [action] on [ref] with [paramsJson] (see [name.levis.ichor.model.encodeParams]). */
     fun run(ref: PluginRef, action: PluginAction, paramsJson: String) {
-        val target = listOf(ref.namespace, ref.name).filter { it.isNotEmpty() }.joinToString("/")
+        val target = ref.displayName
         actions.launch(
             pluginActionKey(ref, action.id),
             { plugins.action(pluginId, action.id, ref.namespace, ref.name, paramsJson) },
             { outcome ->
                 val e = outcome.exceptionOrNull()
-                val failure = e?.let { pluginActionFailure(it.message.orEmpty()) }
+                val failure = e?.let { pluginActionFailure(it.message.orEmpty()) }?.let { f ->
+                    // The toast names the param as the form labelled it.
+                    if (f is PluginActionFailure.Param) f.copy(param = action.paramLabel(f.param)) else f
+                }
                 // The tab shows the object as it was: read it again so that a retry sees it now.
-                if (failure == PluginActionFailure.Changed) onChanged()
+                if (failure == PluginActionFailure.Changed || failure is PluginActionFailure.Disabled) onChanged()
                 PluginActionOutcome(action.label, target, failure, e?.uiText())
             },
             onChanged,

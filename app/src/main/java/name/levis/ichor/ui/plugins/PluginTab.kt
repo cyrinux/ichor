@@ -42,6 +42,7 @@ import name.levis.ichor.model.PluginRef
 import name.levis.ichor.model.PluginRow
 import name.levis.ichor.model.PluginTree
 import name.levis.ichor.model.groupsByNamespace
+import name.levis.ichor.model.pluginRowKeys
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.cancellableCatching
@@ -246,12 +247,19 @@ private fun PluginBody(
  * A card ready to draw: its rows (with their index, for stable keys) in one group, or one group
  * per namespace (its title) when they are objects of several namespaces.
  */
-private class CardLayout(val card: PluginCard, val grouped: Boolean, val groups: List<Pair<String, List<IndexedValue<PluginRow>>>>)
+private class CardLayout(
+    val card: PluginCard,
+    val grouped: Boolean,
+    val groups: List<Pair<String, List<IndexedValue<PluginRow>>>>,
+    /** Per row index: its list key, by its object (see [pluginRowKeys]). */
+    val keys: List<String>,
+)
 
 private fun layoutOf(card: PluginCard): CardLayout {
     val grouped = card.groupsByNamespace()
     val rows = card.rows.withIndex().toList()
-    return CardLayout(card, grouped, if (grouped) groupInOrder(rows) { it.value.ref?.namespace.orEmpty() } else listOf("" to rows))
+    val groups = if (grouped) groupInOrder(rows) { it.value.ref?.namespace.orEmpty() } else listOf("" to rows)
+    return CardLayout(card, grouped, groups, pluginRowKeys(card.rows))
 }
 
 private fun PluginRow.expandKey(card: PluginCard, index: Int): String = "${card.id}|${ref?.key ?: "$index:$title"}"
@@ -273,7 +281,8 @@ private fun LazyListScope.pluginCard(
     // Keys per plugin card: several cards can list the same namespaces.
     layout.groups.forEach { (namespace, group) ->
         if (layout.grouped) cardGroupTitle("group:${card.id}:$namespace", namespace)
-        cardRows(group, key = { "row:${card.id}:${it.index}" }) { (index, row) ->
+        // Keyed by the row's object: its state (an open action dialog) follows it across a reload.
+        cardRows(group, key = { "row:${card.id}:${layout.keys[it.index]}" }) { (index, row) ->
             val key = row.expandKey(card, index)
             PluginRowContent(
                 row,

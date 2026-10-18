@@ -102,7 +102,8 @@ struct PluginList: View {
             let grouped = card.groupsByNamespace
             ForEach(card.rowGroups, id: \.namespace) { group in
                 Section {
-                    ForEach(group.rows, id: \.index) { item in
+                    // By object: a row's state (an open confirmation) never passes to another one.
+                    ForEach(group.rows, id: \.id) { item in
                         let key = item.row.expandKey(card: card.id, index: item.index)
                         PluginRowView(
                             row: item.row,

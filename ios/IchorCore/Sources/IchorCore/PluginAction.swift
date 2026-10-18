@@ -75,6 +75,31 @@ public enum PluginActionConfirm: Equatable, Sendable {
     }
 }
 
+/// A run asked for, from the moment its form or confirmation opens: the object it was asked on,
+/// captured then, and the params (JSON, "" for none). It runs on that object only, and is
+/// dropped when its row now shows another object or its button turned off.
+public struct PluginActionRun: Identifiable, Equatable, Sendable {
+    public let id: UUID
+    public let target: PluginRef
+    public let paramsJSON: String
+
+    public init(target: PluginRef, paramsJSON: String = "", id: UUID = UUID()) {
+        self.id = id
+        self.target = target
+        self.paramsJSON = paramsJSON
+    }
+
+    /// The same request with its params filled in.
+    public func with(paramsJSON: String) -> PluginActionRun {
+        PluginActionRun(target: target, paramsJSON: paramsJSON, id: id)
+    }
+
+    /// Whether it may still run from a row showing `current` with its button `usable`.
+    public func applies(to current: PluginRef?, usable: Bool) -> Bool {
+        usable && current == target
+    }
+}
+
 /// A param's value as it crosses in paramsJSON: a JSON string, integer or boolean.
 public enum PluginParamValue: Equatable, Sendable, Encodable {
     case string(String)

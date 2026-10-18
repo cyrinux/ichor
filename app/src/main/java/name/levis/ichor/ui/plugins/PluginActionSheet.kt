@@ -22,10 +22,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,12 +39,15 @@ import name.levis.ichor.model.PLUGIN_PARAM_ENUM
 import name.levis.ichor.model.PLUGIN_PARAM_INT
 import name.levis.ichor.model.PLUGIN_PARAM_STRING
 import name.levis.ichor.model.PluginAction
+import name.levis.ichor.model.PluginActionPending
 import name.levis.ichor.model.PluginParam
 import name.levis.ichor.model.PluginParamProblem
 import name.levis.ichor.model.PluginRef
+import name.levis.ichor.model.displayName
 import name.levis.ichor.model.encodeParams
 import name.levis.ichor.model.initialParamValues
 import name.levis.ichor.model.paramProblems
+import name.levis.ichor.model.pendingAction
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.node.HostnameConfirmDialog
@@ -63,7 +66,8 @@ private const val CONFIRM_TYPED_NAME = "typedName"
  */
 @Composable
 fun PluginActionButtons(items: List<PluginAction>, ref: PluginRef?, runner: PluginActionRunner?) {
-    var pending by rememberSaveable { mutableStateOf<String?>(null) }
+    // Bound to the object the dialog was opened on (captured at the tap), not to this row's.
+    var pending by remember { mutableStateOf<PluginActionPending?>(null) }
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         items.forEach { a ->
             val target = if (runner != null && a.usable) ref else null
@@ -71,8 +75,9 @@ fun PluginActionButtons(items: List<PluginAction>, ref: PluginRef?, runner: Plug
             OutlinedButton(
                 onClick = {
                     when {
-                        a.params.isNotEmpty() || a.confirm != CONFIRM_NONE -> pending = a.id
-                        target != null -> runner?.run(target, a, "")
+                        target == null -> Unit
+                        a.params.isNotEmpty() || a.confirm != CONFIRM_NONE -> pending = PluginActionPending(target, a.id)
+                        else -> runner?.run(target, a, "")
                     }
                 },
                 enabled = target != null && !busy,
@@ -86,16 +91,18 @@ fun PluginActionButtons(items: List<PluginAction>, ref: PluginRef?, runner: Plug
             actionNote(a, runnable = target != null)?.let { MutedText(it) }
         }
     }
-    // A reload that turned the action off closes its dialog.
-    val action = items.firstOrNull { it.id == pending && it.usable }
-    if (action != null && ref != null && runner != null) {
+    // A reload that put another object in this row, or turned the action off, closes the dialog.
+    val opened = pending
+    val action = pendingAction(opened, ref, items)
+    if (opened != null && action == null) LaunchedEffect(opened) { pending = null }
+    if (opened != null && action != null && runner != null) {
         PluginActionDialog(
             action,
-            objectName = ref.name,
+            target = opened.ref,
             onDismiss = { pending = null },
             onRun = { json ->
                 pending = null
-                runner.run(ref, action, json)
+                runner.run(opened.ref, action, json)
             },
         )
     }
@@ -113,19 +120,22 @@ private fun actionNote(a: PluginAction, runnable: Boolean): String? = when {
 /**
  * Collects [action]'s params and confirms it per its `confirm`: the object's name typed for
  * typedName (with the form above it), the form's run button for the rest, a plain question
- * when there is no param. [onRun] gets the encoded params, checked first.
+ * when there is no param. The title names [target] with its namespace; the name typed is
+ * matched against [target]'s name, the object the run goes to. [onRun] gets the encoded
+ * params, checked first.
  */
 @Composable
-private fun PluginActionDialog(action: PluginAction, objectName: String, onDismiss: () -> Unit, onRun: (String) -> Unit) {
-    var values by remember(action.id) { mutableStateOf(initialParamValues(action.params)) }
+private fun PluginActionDialog(action: PluginAction, target: PluginRef, onDismiss: () -> Unit, onRun: (String) -> Unit) {
+    var values by remember(target.key, action.id) { mutableStateOf(initialParamValues(action.params)) }
     val problems = paramProblems(action.params, values)
+    val objectName = target.displayName
     val title = stringResource(R.string.plugin_action_confirm_title, action.label, objectName)
     val run = { if (problems.isEmpty()) onRun(encodeParams(action.params, values)) }
     val form: @Composable () -> Unit = { ParamsForm(action.params, values, problems) { name, v -> values = values + (name to v) } }
     when {
         action.confirm == CONFIRM_TYPED_NAME -> HostnameConfirmDialog(
             title = title,
-            hostname = objectName,
+            hostname = target.name,
             confirmLabel = action.label,
             onConfirm = run,
             onDismiss = onDismiss,
@@ -149,7 +159,10 @@ private fun PluginActionDialog(action: PluginAction, objectName: String, onDismi
     }
 }
 
-/** One field per param, its problem under it ("Required" stays quiet until something is typed). */
+/**
+ * One field per param, its problem under it. "Required" shows as a plain hint, never in the
+ * error colour: an empty required field is not a mistake yet, only why the run button is off.
+ */
 @Composable
 private fun ParamsForm(params: List<PluginParam>, values: Map<String, String>, problems: Map<String, PluginParamProblem>, onChange: (String, String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

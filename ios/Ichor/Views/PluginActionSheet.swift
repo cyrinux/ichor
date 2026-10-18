@@ -32,12 +32,6 @@ extension EnvironmentValues {
     }
 }
 
-/// One run asked for: the params to send, as JSON ("" for none).
-struct PluginActionRun: Identifiable {
-    let id = UUID()
-    let paramsJSON: String
-}
-
 /// A plugin's button on its row's object: on when the plugin enables it and the credentials are
 /// not known to be refused (an unknown answer keeps it on, the API server still decides).
 struct PluginActionButton: View {
@@ -47,7 +41,8 @@ struct PluginActionButton: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.pluginActions) private var context
-    @State private var showsForm = false
+    /// The pending run of each step, each holding the object captured when it opened.
+    @State private var form: PluginActionRun?
     @State private var plain: PluginActionRun?
     @State private var typed: PluginActionRun?
     @State private var running = false
@@ -64,17 +59,25 @@ struct PluginActionButton: View {
             }
             if let note { Text(note).font(.caption).foregroundStyle(.secondary) }
         }
-        .modifier(PluginActionConfirmation(action: action, target: target ?? PluginRef(), plain: $plain, typed: $typed) { run in
+        .modifier(PluginActionConfirmation(action: action, plain: $plain, typed: $typed) { run in
             Task { await execute(run) }
         })
-        .sheet(isPresented: $showsForm) {
-            if let target {
-                PluginActionFormSheet(action: action, target: target) { run in
-                    showsForm = false
-                    Task { await execute(run) }
-                }
+        .sheet(item: $form) { request in
+            PluginActionFormSheet(action: action, request: request) { run in
+                form = nil
+                Task { await execute(run) }
             }
         }
+        // A reload that shows another object in this row, or turns the button off, closes
+        // what was open for the old one.
+        .onChange(of: target) { dropStale() }
+        .onChange(of: action.usable) { dropStale() }
+    }
+
+    private func dropStale() {
+        if let form, !form.applies(to: target, usable: action.usable) { self.form = nil }
+        if let plain, !plain.applies(to: target, usable: action.usable) { self.plain = nil }
+        if let typed, !typed.applies(to: target, usable: action.usable) { self.typed = nil }
     }
 
     private var note: String? {
@@ -87,13 +90,14 @@ struct PluginActionButton: View {
     }
 
     /// The form when the action has params, else the confirmation it asks for.
+    /// The object is captured here: every later step runs on it, never on what the row shows then.
     private func start() {
-        guard runnable else { return }
+        guard runnable, let target else { return }
+        let run = PluginActionRun(target: target)
         if !action.params.isEmpty {
-            showsForm = true
+            form = run
             return
         }
-        let run = PluginActionRun(paramsJSON: "")
         switch action.confirmation {
         case .none: Task { await execute(run) }
         case .plain: plain = run
@@ -101,8 +105,10 @@ struct PluginActionButton: View {
         }
     }
 
+    /// Runs on `run.target` only, and only while the row still shows it with the button on.
     private func execute(_ run: PluginActionRun) async {
-        guard let client = model.client, let target, let context, !running else { return }
+        guard let client = model.client, let context, !running, run.applies(to: target, usable: action.usable) else { return }
+        let target = run.target
         running = true
         defer { running = false }
         do {
@@ -136,28 +142,28 @@ func pluginActionFailureText(_ failure: PluginActionFailure, action: PluginActio
     }
 }
 
-/// Asks before a run as the plugin says: a plain question, or the object's name typed.
+/// Asks before a run as the plugin says: a plain question, or the object's name typed. Both say
+/// and confirm the object the run captured.
 private struct PluginActionConfirmation: ViewModifier {
     let action: PluginActionItem
-    let target: PluginRef
     @Binding var plain: PluginActionRun?
     @Binding var typed: PluginActionRun?
     let run: (PluginActionRun) -> Void
 
     func body(content: Content) -> some View {
         content
-            .confirmationDialog(String(localized: "\(action.label) on \(target.label)?"),
+            .confirmationDialog(plain.map { String(localized: "\(action.label) on \($0.target.label)?") } ?? "",
                                 isPresented: $plain.isPresent(),
                                 titleVisibility: .visible,
                                 presenting: plain) { request in
                 Button { run(request) } label: { Text(verbatim: action.label) }
                 Button("Cancel", role: .cancel) {}
-            } message: { _ in
-                Text(verbatim: pluginActionExplanation(action, target: target))
+            } message: { request in
+                Text(verbatim: pluginActionExplanation(action, target: request.target))
             }
             .sheet(item: $typed) { request in
-                HostnameConfirmationSheet(title: action.label, message: pluginActionExplanation(action, target: target),
-                                          hostname: target.name, actionTitle: action.label) {
+                HostnameConfirmationSheet(title: action.label, message: pluginActionExplanation(action, target: request.target),
+                                          hostname: request.target.name, actionTitle: action.label) {
                     typed = nil
                     run(request)
                 }
@@ -174,7 +180,8 @@ private func pluginActionExplanation(_ action: PluginActionItem, target: PluginR
 /// for typedName, once the object's name is typed in it too, as in HostnameConfirmationSheet.
 struct PluginActionFormSheet: View {
     let action: PluginActionItem
-    let target: PluginRef
+    /// The run asked for, with the object captured when the form opened.
+    let request: PluginActionRun
     let onRun: (PluginActionRun) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -182,12 +189,15 @@ struct PluginActionFormSheet: View {
     @State private var typed = ""
 
     // Explicit: the private @State makes the memberwise init private.
-    init(action: PluginActionItem, target: PluginRef, onRun: @escaping (PluginActionRun) -> Void) {
+    init(action: PluginActionItem, request: PluginActionRun, onRun: @escaping (PluginActionRun) -> Void) {
         self.action = action
-        self.target = target
+        self.request = request
         self.onRun = onRun
         _form = State(initialValue: PluginActionForm(params: action.params))
     }
+
+    /// The object the form runs on: the captured one, never what the row shows later.
+    private var target: PluginRef { request.target }
 
     private var asksName: Bool { action.confirmation == .typedName }
 
@@ -284,6 +294,6 @@ struct PluginActionFormSheet: View {
     /// Run is the confirmation: no second question after it.
     private func submit() {
         guard confirmed, let json = form.paramsJSON else { return }
-        onRun(PluginActionRun(paramsJSON: json))
+        onRun(request.with(paramsJSON: json))
     }
 }

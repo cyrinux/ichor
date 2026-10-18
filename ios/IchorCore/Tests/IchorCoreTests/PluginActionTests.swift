@@ -149,6 +149,45 @@ final class PluginActionTests: XCTestCase {
         XCTAssertTrue(PluginActionForm(params: []).isValid)
     }
 
+    // MARK: - Pending runs and row identity
+
+    func testRunStaysOnTheObjectItWasAskedOn() {
+        let weekend = PluginRef(group: "kube-green.com", resource: "sleepinfos", namespace: "demo-lab", name: "weekend")
+        let elsewhere = PluginRef(group: "kube-green.com", resource: "sleepinfos", namespace: "demo-shop", name: "weekend")
+        let run = PluginActionRun(target: weekend)
+        XCTAssertTrue(run.applies(to: weekend, usable: true))
+        // The same name in another namespace is another object.
+        XCTAssertFalse(run.applies(to: elsewhere, usable: true))
+        XCTAssertFalse(run.applies(to: nil, usable: true))
+        // A button turned off drops it.
+        XCTAssertFalse(run.applies(to: weekend, usable: false))
+        let filled = run.with(paramsJSON: #"{"n":1}"#)
+        XCTAssertEqual(filled.id, run.id)
+        XCTAssertEqual(filled.target, weekend)
+        XCTAssertEqual(filled.paramsJSON, #"{"n":1}"#)
+        XCTAssertEqual(run.paramsJSON, "")
+    }
+
+    func testRowsAreKeyedByTheirObject() throws {
+        let card = try TalosJSON.decode(PluginCard.self, from: #"""
+        {"id":"list","type":"list","rows":[
+          {"title":"a","ref":{"resource":"widgets","namespace":"demo-lab","name":"a"}},
+          {"title":"note"},
+          {"title":"a again","ref":{"resource":"widgets","namespace":"demo-lab","name":"a"}},
+          {"title":"b","ref":{"resource":"widgets","namespace":"demo-lab","name":"b"}}]}
+        """#)
+        let ids = card.rowGroups.flatMap(\.rows).map(\.id)
+        XCTAssertEqual(ids, ["/widgets/demo-lab/a", "#1", "#2", "/widgets/demo-lab/b"])
+        XCTAssertEqual(Set(ids).count, ids.count)
+        // Rows that move keep their id.
+        let moved = try TalosJSON.decode(PluginCard.self, from: #"""
+        {"id":"list","type":"list","rows":[
+          {"title":"b","ref":{"resource":"widgets","namespace":"demo-lab","name":"b"}},
+          {"title":"a","ref":{"resource":"widgets","namespace":"demo-lab","name":"a"}}]}
+        """#)
+        XCTAssertEqual(moved.rowGroups.flatMap(\.rows).map(\.id), ["/widgets/demo-lab/b", "/widgets/demo-lab/a"])
+    }
+
     // MARK: - Refusals
 
     func testDisabledIsThePluginsReason() {
