@@ -1,7 +1,6 @@
 package name.levis.ichor.ui.dataservices
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -10,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.PhotoCamera
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,11 +23,13 @@ import name.levis.ichor.model.SnapshotClass
 import name.levis.ichor.model.SnapshotContent
 import name.levis.ichor.model.VolumeSnapshot
 import name.levis.ichor.model.VolumeSnapshots
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.EmptyState
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.ResourceRow
-import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.Tag
+import name.levis.ichor.ui.components.cardGroupTitle
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.util.timeAgo
 
 private val rowPadding = Modifier.padding(horizontal = 16.dp)
@@ -37,17 +37,14 @@ private val rowPadding = Modifier.padding(horizontal = 16.dp)
 /** The VolumeSnapshots, then the claims watched for a recent one, the classes and the contents. */
 @Composable
 fun SnapshotsTab(status: VolumeSnapshots) {
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         items(listOf(status.error, status.contentsError, status.classesError, status.claimsError).filter { it.isNotEmpty() }) {
             InlineError(stringResource(R.string.data_services_unreadable, it), Modifier.padding(16.dp))
         }
         if (status.snapshots.isEmpty() && status.error.isEmpty()) {
             item { EmptyState(Icons.Outlined.PhotoCamera, stringResource(R.string.snapshot_empty)) }
         }
-        items(status.snapshots, key = { it.key }) { s ->
-            SnapshotRow(s)
-            HorizontalDivider()
-        }
+        cardRows(status.snapshots, key = { it.key }) { SnapshotRow(it) }
         section(R.string.snapshot_section_claims, status.claims.filter { it.watched }, { "claim|${it.namespace}/${it.name}" }) { ClaimRow(it) }
         section(R.string.snapshot_section_classes, status.classes, { "class|${it.name}" }) { ClassRow(it) }
         section(R.string.snapshot_section_contents, status.contents, { "content|${it.name}" }) { ContentRow(it) }
@@ -56,11 +53,8 @@ fun SnapshotsTab(status: VolumeSnapshots) {
 
 private fun <T> LazyListScope.section(title: Int, rows: List<T>, key: (T) -> String, row: @Composable (T) -> Unit) {
     if (rows.isEmpty()) return
-    item(key = "title|$title") { SectionTitle(stringResource(title), Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
-    items(rows, key = key) {
-        row(it)
-        HorizontalDivider()
-    }
+    cardGroupTitle("title|$title", title)
+    cardRows(rows, key = key, content = row)
 }
 
 /** Critical with an error, a warning while not ready yet. */

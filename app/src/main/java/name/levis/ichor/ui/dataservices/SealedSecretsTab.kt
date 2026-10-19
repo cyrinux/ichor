@@ -3,7 +3,6 @@ package name.levis.ichor.ui.dataservices
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,11 +28,17 @@ import name.levis.ichor.model.SealedSecretsReason
 import name.levis.ichor.model.SealedSecretsStatus
 import name.levis.ichor.model.SealingKey
 import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
+import name.levis.ichor.ui.components.RowCard
+import name.levis.ichor.ui.components.RowPosition
 import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.components.cardGap
+import name.levis.ichor.ui.components.cardGroupTitle
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.color
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
@@ -47,38 +50,25 @@ import name.levis.ichor.util.timeAgo
  */
 @Composable
 fun SealedSecretsTab(status: SealedSecretsStatus, onObject: (KubeObjectRef) -> Unit) {
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
-        item(key = "controller") { ControllerCard(status.controller, status.reasonList) }
+        item(key = "controller") { RowCard(RowPosition.ONLY) { ControllerCard(status.controller, status.reasonList) } }
         if (status.keys.isNotEmpty()) {
-            item(key = "keys-title") { SectionLabel(stringResource(R.string.sealedsecrets_keys)) }
-            items(status.keys, key = { "k:${it.namespace}/${it.name}" }) { KeyRow(it) }
+            cardGroupTitle("keys-title", R.string.sealedsecrets_keys)
+            cardRows(status.keys, key = { "k:${it.namespace}/${it.name}" }) { KeyRow(it) }
         }
-        item(key = "keys-end") { HorizontalDivider() }
+        cardGap("keys-end")
         if (status.items.isEmpty()) item { EmptyText(stringResource(R.string.sealedsecrets_empty)) }
         if (status.truncated) item {
             Text(
                 pluralStringResource(R.plurals.sealedsecrets_truncated, status.secretCount, status.items.size, status.secretCount),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
             )
         }
-        items(status.items, key = { "s:${it.label}" }) { s ->
-            SealedSecretRow(s, onObject)
-            HorizontalDivider()
-        }
+        cardRows(status.items, key = { "s:${it.label}" }) { SealedSecretRow(it, onObject) }
     }
-}
-
-@Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
-    )
 }
 
 /** The controller's replicas, then the section's own reasons (controller down, keys). */

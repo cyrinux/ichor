@@ -89,7 +89,7 @@ fun GarageTab(status: GarageStatus, actions: GarageActions, onObject: (KubeObjec
     }
     sheet?.let { GarageBlocksSheet(it, onReload = actions::reload, onRepair = actions::repair, onDismiss = actions::closeReport) }
 
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error)) }
         if (status.hasOperator) item(key = "operator") { OperatorCard(status, onObject) }
         items(status.instances, key = { it.label }) { inst ->

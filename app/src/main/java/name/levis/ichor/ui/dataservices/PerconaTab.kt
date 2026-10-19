@@ -2,13 +2,10 @@ package name.levis.ichor.ui.dataservices
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,20 +17,19 @@ import name.levis.ichor.model.PerconaCluster
 import name.levis.ichor.model.PerconaPod
 import name.levis.ichor.model.PerconaReason
 import name.levis.ichor.model.PerconaStatus
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.util.timeAgo
 
 /** Every Percona XtraDB cluster (problems first) with its members, its proxy and its backups. */
 @Composable
 fun PerconaTab(status: PerconaStatus) {
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
         if (status.clusters.isEmpty()) item { EmptyText(stringResource(R.string.percona_empty)) }
-        items(status.clusters, key = { it.label }) { c ->
-            ClusterRow(c)
-            HorizontalDivider()
-        }
+        cardRows(status.clusters, key = { it.label }) { ClusterRow(it) }
     }
 }
 

@@ -1,7 +1,6 @@
 package name.levis.ichor.ui.dataservices
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -9,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -18,37 +16,36 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
-import java.time.format.TextStyle
-import java.util.Locale
 import name.levis.ichor.R
 import name.levis.ichor.model.BackupCronJob
 import name.levis.ichor.model.BackupJobStatus
 import name.levis.ichor.model.CronShape
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.describeCron
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.EmptyState
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.ResourceRow
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.Tag
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.color
 import name.levis.ichor.util.timeAgo
+import java.time.format.TextStyle
+import java.util.Locale
 
 /** The backup CronJobs, failing first: their last success, failure streak and schedule. */
 @Composable
 fun BackupJobsTab(status: BackupJobStatus) {
     val now = System.currentTimeMillis()
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         items(listOf(status.error, status.jobsError).filter { it.isNotEmpty() }) {
             InlineError(stringResource(R.string.data_services_unreadable, it), Modifier.padding(16.dp))
         }
         if (status.jobs.isEmpty() && status.error.isEmpty()) {
             item { EmptyState(Icons.Outlined.Schedule, stringResource(R.string.backup_empty)) }
         }
-        items(status.jobs, key = { it.label }) { j ->
-            BackupJobRow(j, now)
-            HorizontalDivider()
-        }
+        cardRows(status.jobs, key = { it.label }) { BackupJobRow(it, now) }
     }
 }
 

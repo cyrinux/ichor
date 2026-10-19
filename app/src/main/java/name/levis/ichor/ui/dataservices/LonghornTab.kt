@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -32,17 +31,20 @@ import name.levis.ichor.model.LonghornNode
 import name.levis.ichor.model.LonghornStatus
 import name.levis.ichor.model.LonghornVolume
 import name.levis.ichor.model.VolumeFilter
-import name.levis.ichor.model.filtered
 import name.levis.ichor.model.defaultEngineVersion
+import name.levis.ichor.model.filtered
 import name.levis.ichor.model.longhornActionKey
 import name.levis.ichor.model.oldEngineVolumes
 import name.levis.ichor.model.replicaChoices
 import name.levis.ichor.model.sharedDiskPath
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.cardGroupTitle
+import name.levis.ichor.ui.components.cardRows
 
 /**
  * Longhorn volumes (problems first, matching the top bar's [query]), the backup targets and
@@ -109,20 +111,15 @@ fun LonghornTab(status: LonghornStatus, actions: LonghornActions, garageDetected
         if (action == LonghornAction.EVICT) evicting = n else actions.run(n.key, n.namespace, n.name, n.name, action)
     }
 
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (status.error.isNotEmpty()) item {
             InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp))
         }
         if (oldEngines > 0) item(key = "old-engines") {
             MutedText(stringResource(R.string.longhorn_engine_old_count, oldEngines.toString()), Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         }
-        status.backupTargets.forEach { target ->
-            item(key = "bt:${target.name}|${target.url}") { BackupTargetRow(target, garageDetected, onGarage) }
-        }
-        item(key = "filters") {
-            VolumeFilterRow(filter, onSelect = { filter = it })
-            HorizontalDivider()
-        }
+        cardRows(status.backupTargets, key = { "bt:${it.name}|${it.url}" }) { BackupTargetRow(it, garageDetected, onGarage) }
+        item(key = "filters") { VolumeFilterRow(filter, onSelect = { filter = it }) }
         if (rows.isEmpty()) item(key = "empty") {
             EmptyText(
                 when {
@@ -132,23 +129,22 @@ fun LonghornTab(status: LonghornStatus, actions: LonghornActions, garageDetected
                 },
             )
         }
-        items(rows, key = { "v:${it.name}" }) { v ->
+        cardRows(rows, key = { "v:${it.name}" }) { v ->
             VolumeRow(
                 v, v.key in busy || v.key in salvageBusy || v.key in attachmentBusy || v.key in engineBusy,
                 defaultEngineVersion = defaultEngineVersion,
                 onAttachment = { attachmentTarget = v to it }, onSalvage = { salvageTarget = v }, onEngine = { engineTarget = v },
                 onSnapshots = { snapshotsOf = v.name }, onAction = { onVolume(v, it) },
             )
-            HorizontalDivider()
         }
-        if (status.nodes.isNotEmpty()) item(key = "nodes") {
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+        if (status.nodes.isNotEmpty()) item(key = "nodes", contentType = "cardGroupTitle") {
+            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp)) {
                 SectionTitle(stringResource(R.string.longhorn_nodes))
                 // The mount every node shares, once rather than on each row.
                 sharedPath?.let { MutedText(it) }
             }
         }
-        items(status.nodes, key = { "n:${it.name}" }) { n -> LonghornNodeRow(n, n.key in busy, showPath = sharedPath == null) { onNode(n, it) } }
+        cardRows(status.nodes, key = { "n:${it.name}" }) { n -> LonghornNodeRow(n, n.key in busy, showPath = sharedPath == null) { onNode(n, it) } }
     }
 }
 

@@ -2,13 +2,10 @@ package name.levis.ichor.ui.dataservices
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,19 +17,18 @@ import name.levis.ichor.model.DragonflyInstance
 import name.levis.ichor.model.DragonflyPod
 import name.levis.ichor.model.DragonflyReason
 import name.levis.ichor.model.DragonflyStatus
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
+import name.levis.ichor.ui.components.cardRows
 
 /** Every Dragonfly instance (problems first) with its pods and their master/replica role. */
 @Composable
 fun DragonflyTab(status: DragonflyStatus) {
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
         if (status.instances.isEmpty()) item { EmptyText(stringResource(R.string.dragonfly_empty)) }
-        items(status.instances, key = { it.label }) { inst ->
-            InstanceRow(inst)
-            HorizontalDivider()
-        }
+        cardRows(status.instances, key = { it.label }) { InstanceRow(it) }
     }
 }
 

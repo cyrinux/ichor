@@ -2,7 +2,6 @@ package name.levis.ichor.ui.dataservices
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,8 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,11 +26,13 @@ import name.levis.ichor.model.CephPool
 import name.levis.ichor.model.CephReason
 import name.levis.ichor.model.CephStatus
 import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.InlineError
-import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.UsageBar
+import name.levis.ichor.ui.components.cardGroupTitle
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.color
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
@@ -44,21 +43,18 @@ import name.levis.ichor.util.formatPercent
 fun CephTab(status: CephStatus) {
     // The namespace only tells OSDs apart when Rook runs more than one cluster.
     val manyClusters = status.osds.map { it.namespace }.distinct().size > 1
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
         if (status.clusters.isEmpty()) item { EmptyText(stringResource(R.string.ceph_empty)) }
-        items(status.clusters, key = { "c:${it.label}" }) { c ->
-            ClusterRow(c)
-            HorizontalDivider()
+        cardRows(status.clusters, key = { "c:${it.label}" }) { ClusterRow(it) }
+        if (status.osds.isNotEmpty()) {
+            cardGroupTitle("osds", R.string.ceph_osds_title)
+            cardRows(status.osds, key = { "o:${it.namespace}/${it.pod}" }) { OsdLine(it, manyClusters) }
         }
-        if (status.osds.isNotEmpty()) item(key = "osds") {
-            SectionTitle(stringResource(R.string.ceph_osds_title), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+        if (status.pools.isNotEmpty()) {
+            cardGroupTitle("pools", R.string.ceph_pools_title)
+            cardRows(status.pools, key = { "p:${it.kind}/${it.label}" }) { PoolRow(it) }
         }
-        items(status.osds, key = { "o:${it.namespace}/${it.pod}" }) { OsdLine(it, manyClusters) }
-        if (status.pools.isNotEmpty()) item(key = "pools") {
-            SectionTitle(stringResource(R.string.ceph_pools_title), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-        }
-        items(status.pools, key = { "p:${it.kind}/${it.label}" }) { PoolRow(it) }
     }
 }
 
