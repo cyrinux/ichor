@@ -99,6 +99,8 @@ struct KubeHomeView: View {
     @State private var argo: LoadState<ArgoStatus>?
     @State private var flux: LoadState<FluxStatus>?
     @State private var dataServices: LoadState<DataServices>?
+    /// The systems read with Data services, for those the tools file in another family.
+    @State private var toolServices: DataServices?
     /// The CRD plugins the cluster runs: Data services lines for those of that category, a tool
     /// each for the others. Empty until they answer (a failure keeps what was shown).
     @State private var plugins = PluginDetect()
@@ -235,6 +237,7 @@ struct KubeHomeView: View {
             argo = nil
             flux = nil
             dataServices = nil
+            toolServices = nil
             plugins = PluginDetect()
             crossplane = nil
             tailscale = nil
@@ -270,7 +273,7 @@ struct KubeHomeView: View {
         case .dataServices:
             if let dataServices {
                 DataServicesSection(state: dataServices, hints: "", apps: [:], downNodes: notReadyNodes(overview),
-                                    plugins: plugins.dataServicePlugins)
+                                    plugins: plugins.dataServicePlugins, families: [.data])
             }
         case .argoCD:
             if let argo {
@@ -394,6 +397,7 @@ struct KubeHomeView: View {
                     toolLabel(Text("Argo Rollouts"), systemImage: "arrow.triangle.branch")
                 }
             }
+            serviceTools(.workloads)
             pluginTools(.workloads)
         } header: {
             Text("Workloads")
@@ -414,6 +418,7 @@ struct KubeHomeView: View {
                     toolLabel(Text("Tailscale"), systemImage: "network.badge.shield.half.filled")
                 }
             }
+            serviceTools(.networking)
             pluginTools(.networking)
         } header: {
             Text("Networking")
@@ -427,6 +432,15 @@ struct KubeHomeView: View {
             }
         } header: {
             Text("Storage")
+        }
+        // Certificates and secrets: only the systems and plugins that join it, shown when one does.
+        if !(toolServices?.detected(.security) ?? []).isEmpty || plugins.homeTiles.contains(where: { $0.toolFamily == .security }) {
+            Section {
+                serviceTools(.security)
+                pluginTools(.security)
+            } header: {
+                Text("Security")
+            }
         }
         Section {
             NavigationLink { KubeLiveEventsView() } label: {
@@ -450,7 +464,6 @@ struct KubeHomeView: View {
             NavigationLink(value: Route.alerts) {
                 toolLabel(KubeHomeAction.alerts)
             }
-            pluginTools(.observe)
         } header: {
             Text("Observe")
         }
@@ -473,6 +486,25 @@ struct KubeHomeView: View {
             pluginTools(.browse)
         } header: {
             Text("Browse")
+        }
+    }
+
+    /// The systems read with Data services that `family` files (ExternalDNS, cert-manager, CAST
+    /// AI…): each opens alone, with a dot when it needs a look.
+    @ViewBuilder
+    private func serviceTools(_ family: ServiceFamily) -> some View {
+        if let services = toolServices {
+            ForEach(services.detected(family)) { kind in
+                NavigationLink(value: Route.dataServices(hints: "", downNodes: loadedNotReadyNodes, kind: kind, solo: true)) {
+                    HStack {
+                        toolLabel(Text(verbatim: kind.title), systemImage: kind.symbol)
+                        if let summary = services.summary(kind), summary.attention > 0 {
+                            Spacer()
+                            HealthDot(health: summary.health)
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -593,6 +625,7 @@ struct KubeHomeView: View {
         let detectRead = await detected
         guard id == loadID else { return }
         if case .loaded(let detect, _, _) = detectRead { plugins = detect }
+        if case .loaded(let services, _, _) = dataRead { toolServices = services }
         dataServices = shownDataServices(dataRead).map { (dataServices ?? .loading).refreshed(with: $0) }
         // Crossplane: nil when the cluster does not run it (the read answers that quickly).
         let crossplaneNext = await loadCrossplane(with: client)
@@ -648,7 +681,8 @@ struct KubeHomeView: View {
     /// services plugin runs. The operators are found from the API groups; Garage, which has
     /// none, from a listing of the pods (no hint, no inventory).
     private func shownDataServices(_ loaded: LoadState<DataServices>) -> LoadState<DataServices>? {
-        if case .loaded(let services, _, _) = loaded, services.detected.isEmpty, plugins.dataServicePlugins.isEmpty { return nil }
+        // The card lists storage, databases and backups; the other systems are tools in their family.
+        if case .loaded(let services, _, _) = loaded, services.detected(.data).isEmpty, plugins.dataServicePlugins.isEmpty { return nil }
         return loaded
     }
 

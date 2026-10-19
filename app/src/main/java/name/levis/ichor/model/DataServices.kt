@@ -131,6 +131,32 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.BACKUP_JOBS.takeIf { backupJobs != null },
     )
 
+/** Where a system opens from on a Kubernetes cluster: the Data services hub, or a family of the home's tools. */
+enum class ServiceFamily { DATA, NETWORKING, SECURITY, WORKLOADS }
+
+/** Storage, databases and backups stay in Data services; the others join the family a plugin of their kind would. */
+val DataServiceKind.family: ServiceFamily
+    get() = when (this) {
+        DataServiceKind.EXTERNAL_DNS -> ServiceFamily.NETWORKING
+        DataServiceKind.CERT_MANAGER, DataServiceKind.SEALED_SECRETS -> ServiceFamily.SECURITY
+        DataServiceKind.CASTAI -> ServiceFamily.WORKLOADS
+        DataServiceKind.LONGHORN, DataServiceKind.GARAGE, DataServiceKind.CNPG, DataServiceKind.DRAGONFLY,
+        DataServiceKind.MARIADB, DataServiceKind.PERCONA, DataServiceKind.VELERO, DataServiceKind.CEPH,
+        DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> ServiceFamily.DATA
+    }
+
+/** A link to a system filed outside Data services (an alert, a share link) opens it alone, as its tool does. */
+val DataServiceKind.opensAlone: Boolean get() = family != ServiceFamily.DATA
+
+/** The installed systems of [families], in display order. */
+fun DataServices.detected(families: Set<ServiceFamily>): List<DataServiceKind> = detected.filter { it.family in families }
+
+/** The installed systems of [family], in display order. */
+fun DataServices.detected(family: ServiceFamily): List<DataServiceKind> = detected(setOf(family))
+
+/** Every family: a Talos cluster, which has no tools card yet, reaches them all from Data services. */
+val AllServiceFamilies: Set<ServiceFamily> = ServiceFamily.entries.toSet()
+
 /**
  * One system at a glance: [total] items (volumes, Garage clusters, Postgres clusters), how many
  * need attention, its worst health, and the error when it could not be read.

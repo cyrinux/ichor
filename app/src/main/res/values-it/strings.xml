@@ -4564,6 +4564,7 @@
     <string name="kube_tools_group_workloads">Workload</string>
     <string name="kube_tools_group_networking">Rete</string>
     <string name="kube_tools_group_storage">Archiviazione</string>
+    <string name="kube_tools_group_security">Sicurezza</string>
     <string name="kube_tools_group_observe">Osserva</string>
     <string name="kube_tools_group_browse">Sfoglia</string>
     <string name="kube_jobs_search">Cerca job, CronJob o motivi</string>

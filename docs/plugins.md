@@ -217,7 +217,7 @@ Loading is strict:
 | `id` | yes | string | `[a-z0-9-]+`, unique across built-in and user plugins |
 | `name` | yes | string | the product name, never translated |
 | `website`, `icon`, `catalogId` | no | string | `icon` and `catalogId` are app catalog ids |
-| `category` | no | string | `data-services` (default), `networking`, `gitops`, `policies`, `workloads`, `compute`, `security` |
+| `category` | no | string | where the plugin shows on the Kubernetes home: `data-services` (default; a line of the Data services card and a tab of its screen), `networking`, `workloads` or `compute` (a tool in that family), `policies` or `security` (a tool in Security), `gitops` (a tool in Browse) |
 | `screen` | no | string | `native:<route>` opens a native screen from the hub tile |
 | `detect[]` | yes | list | each sets exactly one of `group` (with an optional `resource`, for a shared group), `pods` (a catalog id) or `service`; any match activates the plugin |
 | `resources.<key>` | yes (≥ 1) | map | `group` (`""` for core), `version` (or `preferred`), `resource`, `kind`, `scope` (`Namespaced` or `Cluster`), `list{labelSelector, fieldSelector, limit}`, `watch`, `reveal`, `optional` (forbidden or not served, the resource reads as empty with no error: for a decorative relation), `source: native:<id>`. The key (letters and digits) names the resource everywhere else |

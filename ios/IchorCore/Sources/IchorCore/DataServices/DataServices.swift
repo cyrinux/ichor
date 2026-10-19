@@ -141,6 +141,26 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     }
 }
 
+/// Where a system opens from on a Kubernetes cluster: the Data services hub, or a family of the home's tools.
+public enum ServiceFamily: Sendable, CaseIterable, Hashable {
+    case data, networking, security, workloads
+}
+
+public extension DataServiceKind {
+    /// Storage, databases and backups stay in Data services; the others join the family a plugin of their kind would.
+    var family: ServiceFamily {
+        switch self {
+        case .externalDns: .networking
+        case .certManager, .sealedSecrets: .security
+        case .castai: .workloads
+        case .longhorn, .garage, .cnpg, .dragonfly, .mariadb, .percona, .velero, .ceph, .snapshots, .backupJobs: .data
+        }
+    }
+
+    /// A link to a system filed outside Data services (an alert, a share link) opens it alone, as its tool does.
+    var opensAlone: Bool { family != .data }
+}
+
 /// The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs.
 public func dataServiceHints(_ inventory: ClusterInventory) -> String {
     let ids = Set(inventory.apps.map(\.id))
@@ -183,6 +203,26 @@ public extension DataServices {
          sealedSecrets != nil ? .sealedSecrets : nil,
          ceph != nil ? .ceph : nil, castai != nil ? .castai : nil, snapshots != nil ? .snapshots : nil,
          backupJobs != nil ? .backupJobs : nil].compactMap { $0 }
+    }
+
+    /// The installed systems of `families`, in display order.
+    func detected(_ families: Set<ServiceFamily>) -> [DataServiceKind] {
+        detected.filter { families.contains($0.family) }
+    }
+
+    /// The installed systems of `family`, in display order.
+    func detected(_ family: ServiceFamily) -> [DataServiceKind] { detected([family]) }
+
+    /// The sections of `families` only, the others read as not installed: the Kubernetes home's
+    /// Data services card lists storage alone, its tools card files the rest.
+    func only(_ families: Set<ServiceFamily>) -> DataServices {
+        func keep<T>(_ kind: DataServiceKind, _ value: T?) -> T? { families.contains(kind.family) ? value : nil }
+        return DataServices(longhorn: keep(.longhorn, longhorn), garage: keep(.garage, garage), cnpg: keep(.cnpg, cnpg),
+                            dragonfly: keep(.dragonfly, dragonfly), mariadb: keep(.mariadb, mariadb), percona: keep(.percona, percona),
+                            certManager: keep(.certManager, certManager), velero: keep(.velero, velero),
+                            externalDns: keep(.externalDns, externalDns), sealedSecrets: keep(.sealedSecrets, sealedSecrets),
+                            ceph: keep(.ceph, ceph), castai: keep(.castai, castai), snapshots: keep(.snapshots, snapshots),
+                            backupJobs: keep(.backupJobs, backupJobs))
     }
 
     func summary(_ kind: DataServiceKind) -> ServiceSummary? {

@@ -180,7 +180,8 @@ fun OverviewScreen(
     onWorkloads: () -> Unit,
     onMetrics: () -> Unit,
     onAlerts: () -> Unit,
-    onDataServices: (DataServiceKind?) -> Unit,
+    /** Data services on one system (null: the first); alone (solo) for a system the Kubernetes home files elsewhere. */
+    onDataServices: (DataServiceKind?, Boolean) -> Unit,
     /** A CRD plugin's tile (see [name.levis.ichor.ui.plugins.pluginRoute]). */
     onPlugin: (PluginDetectItem) -> Unit,
     onArgoCD: () -> Unit,
@@ -631,7 +632,7 @@ fun OverviewScreen(
                         onApps = onApps,
                         dataServices = dataServices.takeIf { dataHints.isNotEmpty() },
                         dataHints = dataHints,
-                        onDataServices = onDataServices,
+                        onDataServices = { onDataServices(it, false) },
                         dataPlugins = dataPlugins,
                         onPlugin = onPlugin,
                         argo = argo.takeIf { argoHinted },

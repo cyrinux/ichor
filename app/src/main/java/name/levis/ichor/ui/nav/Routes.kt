@@ -109,10 +109,10 @@ internal object Routes {
 
     /** Empty [namespace] for all of them; [pod] narrows to one of [namespace]. */
     fun flows(namespace: String?, pod: String?) = "flows?ns=${Uri.encode(namespace.orEmpty())}&pod=${Uri.encode(pod.orEmpty())}"
-    const val DATA_SERVICES = "data-services?kind={kind}"
+    const val DATA_SERVICES = "data-services?kind={kind}&solo={solo}"
 
-    /** [kind] opens on that system's tab; null on the first. */
-    fun dataServices(kind: DataServiceKind? = null) = "data-services?kind=${kind?.name.orEmpty()}"
+    /** [kind] opens on that system's tab; null on the first. [solo]: that system alone, no tab row. */
+    fun dataServices(kind: DataServiceKind? = null, solo: Boolean = false) = "data-services?kind=${kind?.name.orEmpty()}&solo=$solo"
 
     /** The `kind` of a plugin's tab: "plugin:<id>". */
     const val DATA_SERVICES_PLUGIN_PREFIX = "plugin:"

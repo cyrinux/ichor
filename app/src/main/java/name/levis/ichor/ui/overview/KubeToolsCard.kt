@@ -57,11 +57,20 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.PluginDetectItem
+import name.levis.ichor.model.ServiceFamily
+import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.model.detected
+import name.levis.ichor.model.family
+import name.levis.ichor.model.summary
+import name.levis.ichor.model.title
+import name.levis.ichor.ui.components.HealthDot
 import name.levis.ichor.ui.components.SectionCard
+import name.levis.ichor.ui.dataservices.fallbackIcon
 
-/** One screen the tools card opens. */
-private data class KubeTool(val label: String, val icon: ImageVector, val onClick: () -> Unit)
+/** One screen the tools card opens; [health] is a dot for a system that needs a look. */
+private data class KubeTool(val label: String, val icon: ImageVector, val onClick: () -> Unit, val health: ServiceHealth? = null)
 
 /** A heading over the screens of one family. */
 private data class KubeToolGroup(val title: String, val tools: List<KubeTool>)
@@ -88,8 +97,10 @@ internal fun KubeToolsCard(
     argoRollouts: Boolean = false,
     /** The active CRD plugins of other categories than Data services, each a tool in its family. */
     plugins: List<PluginDetectItem> = emptyList(),
+    /** The integrations read with Data services: those outside storage open from their family. */
+    dataServices: DataServices? = null,
 ) {
-    val groups = kubeToolGroups(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, plugins = plugins)
+    val groups = kubeToolGroups(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, plugins = plugins, dataServices = dataServices)
     val labelStyle = MaterialTheme.typography.bodyLarge
     SectionCard(stringResource(R.string.common_kind_kubernetes)) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -159,6 +170,10 @@ private fun KubeToolRow(tool: KubeTool, labelStyle: TextStyle, modifier: Modifie
         }
         Spacer(Modifier.width(TileGap))
         Text(tool.label, style = labelStyle, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+        tool.health?.let {
+            Spacer(Modifier.width(RowPadding))
+            HealthDot(it)
+        }
         Spacer(Modifier.width(RowPadding))
         Icon(
             Icons.AutoMirrored.Outlined.KeyboardArrowRight,
@@ -178,21 +193,41 @@ private fun kubeToolGroups(
     clusterLifecycle: Boolean,
     argoRollouts: Boolean,
     plugins: List<PluginDetectItem>,
+    dataServices: DataServices?,
 ): List<KubeToolGroup> = kubeToolGroupsNative(nav, crossplane, tailscale, clusterLifecycle, argoRollouts).mapIndexed { index, group ->
-    val extra = plugins.filter { pluginToolGroup(it.category) == index }.map { KubeTool(it.name, Icons.Outlined.Extension) { nav.onPlugin(it) } }
-    if (extra.isEmpty()) group else group.copy(tools = group.tools + extra)
-}
+    val systems = dataServices?.let { services ->
+        services.detected.filter { serviceToolGroup(it.family) == index }.map { kind ->
+            val health = services.summary(kind)?.takeIf { it.attention > 0 }?.health
+            KubeTool(kind.title, kind.fallbackIcon, { nav.onDataServices(kind, true) }, health)
+        }
+    }.orEmpty()
+    val extra = plugins.filter { pluginToolGroup(it.category) == index }.map { KubeTool(it.name, Icons.Outlined.Extension, { nav.onPlugin(it) }) }
+    group.copy(tools = group.tools + systems + extra)
+}.filter { it.tools.isNotEmpty() }
+
+// The families' indexes in kubeToolGroupsNative.
+private const val WORKLOADS = 0
+private const val NETWORKING = 1
+private const val SECURITY = 3
+private const val BROWSE = 5
 
 /**
- * Which family a plugin's tool joins, by index in the families above: workloads (0), networking
- * (1), observe (3), else browse (4). Storage (2) gets none: data services plugins are tabs of
- * the Data services screen instead.
+ * Which family a plugin's tool joins: workloads, networking, security, else browse. Storage gets
+ * none: data services plugins are tabs of the Data services screen instead.
  */
 private fun pluginToolGroup(category: String): Int = when (category) {
-    "workloads", "compute" -> 0
-    "networking" -> 1
-    "policies", "security" -> 3
-    else -> 4
+    "workloads", "compute" -> WORKLOADS
+    "networking" -> NETWORKING
+    "policies", "security" -> SECURITY
+    else -> BROWSE
+}
+
+/** Which family a system read with Data services joins; none (-1) for storage, which stays there. */
+private fun serviceToolGroup(family: ServiceFamily): Int = when (family) {
+    ServiceFamily.WORKLOADS -> WORKLOADS
+    ServiceFamily.NETWORKING -> NETWORKING
+    ServiceFamily.SECURITY -> SECURITY
+    ServiceFamily.DATA -> -1
 }
 
 @Composable
@@ -229,9 +264,11 @@ private fun kubeToolGroupsNative(
         stringResource(R.string.kube_tools_group_storage),
         listOf(
             KubeTool(stringResource(R.string.storage_title), Icons.Outlined.Storage, nav.onStorage),
-            KubeTool(stringResource(R.string.data_services_title), Icons.Outlined.Dataset) { nav.onDataServices(null) },
+            KubeTool(stringResource(R.string.data_services_title), Icons.Outlined.Dataset, { nav.onDataServices(null, false) }),
         ),
     ),
+    // Certificates and secrets: only the systems and plugins that join it, shown when one does.
+    KubeToolGroup(stringResource(R.string.kube_tools_group_security), emptyList()),
     KubeToolGroup(
         stringResource(R.string.kube_tools_group_observe),
         listOf(

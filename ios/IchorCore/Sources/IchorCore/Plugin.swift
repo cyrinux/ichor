@@ -718,13 +718,13 @@ public func nativePluginScreen(_ screen: String) -> String? {
 /// The family of the Kubernetes home's tools a plugin of another category joins; storage gets
 /// none: data services plugins are tabs of the Data services screen instead.
 public enum PluginToolFamily: Sendable, CaseIterable {
-    case workloads, networking, observe, browse
+    case workloads, networking, security, browse
 
     public init(category: String) {
         switch category {
         case "workloads", "compute": self = .workloads
         case "networking": self = .networking
-        case "policies", "security": self = .observe
+        case "policies", "security": self = .security
         default: self = .browse
         }
     }
@@ -758,6 +758,14 @@ public enum DataServicesTab: Hashable, Sendable, Identifiable {
     /// The native systems first, then one tab per plugin without a native screen.
     public static func tabs(detected: [DataServiceKind], plugins: PluginDetect?) -> [DataServicesTab] {
         detected.map { .native($0) } + (plugins?.dataServiceTabs ?? []).map { .plugin(id: $0.id, name: $0.name) }
+    }
+
+    /// The hub's tabs: `solo`'s alone when it runs; else, on a Kubernetes cluster (whose home
+    /// files the other systems in their families), storage, databases and backups; on a Talos
+    /// cluster, which has no tools card yet, every system. The plugins follow, except with `solo`.
+    public static func hubTabs(_ services: DataServices, plugins: PluginDetect?, kube: Bool, solo: DataServiceKind?) -> [DataServicesTab] {
+        if let solo { return services.detected.contains(solo) ? [.native(solo)] : [] }
+        return tabs(detected: services.detected(kube ? [.data] : Set(ServiceFamily.allCases)), plugins: plugins)
     }
 }
 

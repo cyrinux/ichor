@@ -19,11 +19,14 @@ struct DataServicesView: View {
     @State private var refreshes = 0
     /// How far the first read got, while there is nothing else to show.
     @State private var progress: ReadProgress?
+    /// The one system shown, without the picker: one the Kubernetes home files in another family.
+    private let solo: DataServiceKind?
 
-    /// [selected]: the system to open on; nil (or not found) for the first.
-    init(hints: String, downNodes: Set<String>, selected: DataServiceKind? = nil) {
+    /// [selected]: the system to open on; nil (or not found) for the first. [solo]: that system alone.
+    init(hints: String, downNodes: Set<String>, selected: DataServiceKind? = nil, solo: Bool = false) {
         self.hints = hints
         self.downNodes = downNodes
+        self.solo = solo ? selected : nil
         _selected = State(initialValue: selected.map { DataServicesTab.native($0).id })
     }
 
@@ -31,13 +34,14 @@ struct DataServicesView: View {
     init(hints: String, downNodes: Set<String>, plugin: String) {
         self.hints = hints
         self.downNodes = downNodes
+        solo = nil
         _selected = State(initialValue: DataServicesTab.plugin(id: plugin, name: "").id)
     }
 
     var body: some View {
         LoadStateView(state: state, retry: refresh, progress: progress, stepLabel: Self.stepLabel,
                       showsFooter: !pluginTabShown) { services in
-            let tabs = DataServicesTab.tabs(detected: services.detected, plugins: loadedPlugins)
+            let tabs = hubTabs(services)
             if tabs.isEmpty {
                 switch plugins {
                 case .loading:
@@ -80,7 +84,7 @@ struct DataServicesView: View {
         .task { await load() }
         // A new API address (set on the Kubernetes screen): read again through it.
         .id(model.client?.kubeServer)
-        .navigationTitle(Text("Data services"))
+        .navigationTitle(solo.map { Text(verbatim: $0.title) } ?? Text("Data services"))
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -118,6 +122,12 @@ struct DataServicesView: View {
         }
     }
 
+    /// The tabs: storage, databases and backups on a Kubernetes cluster, whose home files the
+    /// others in their families; every system on a Talos cluster; `solo` alone.
+    private func hubTabs(_ services: DataServices) -> [DataServicesTab] {
+        DataServicesTab.hubTabs(services, plugins: loadedPlugins, kube: model.activeIsKube, solo: solo)
+    }
+
     /// The tab shown: the one picked, else the first.
     private static func tab(in tabs: [DataServicesTab], selected: DataServicesTab.ID?) -> DataServicesTab {
         tabs.first { $0.id == selected } ?? tabs[0]
@@ -126,7 +136,7 @@ struct DataServicesView: View {
     /// A plugin tab is on screen: its own list shows the freshness footer, the screen's does not.
     private var pluginTabShown: Bool {
         guard case .loaded(let services, _, _) = state else { return false }
-        let tabs = DataServicesTab.tabs(detected: services.detected, plugins: loadedPlugins)
+        let tabs = hubTabs(services)
         guard !tabs.isEmpty, case .plugin = Self.tab(in: tabs, selected: selected) else { return false }
         return true
     }

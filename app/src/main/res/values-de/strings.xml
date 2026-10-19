@@ -4556,6 +4556,7 @@
     <string name="kube_tools_group_workloads">Workloads</string>
     <string name="kube_tools_group_networking">Netzwerk</string>
     <string name="kube_tools_group_storage">Speicher</string>
+    <string name="kube_tools_group_security">Sicherheit</string>
     <string name="kube_tools_group_observe">Beobachten</string>
     <string name="kube_tools_group_browse">Durchsuchen</string>
     <string name="kube_jobs_search">Jobs, CronJobs oder Gründe suchen</string>
