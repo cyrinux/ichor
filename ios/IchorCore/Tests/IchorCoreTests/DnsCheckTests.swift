@@ -27,6 +27,21 @@ final class DnsCheckTests: XCTestCase {
         XCTAssertEqual(r.results[3].message, "lookup failed")
     }
 
+    func testAWildcardCarriesTheNameItWasCheckedAs() throws {
+        let wire = #"""
+        {"results":[
+         {"dnsName":"*.cdn.example.com","probed":"ichor-dns-check.cdn.example.com","status":"match","answers":["203.0.113.10"]},
+         {"dnsName":"app.example.com","status":"match"}],
+         "resolver":"system"}
+        """#
+        let r = try TalosJSON.decode(DnsCheckResult.self, from: wire)
+        // The verdict stays keyed by the wildcard; probed is the sample label actually resolved.
+        XCTAssertEqual(r.results[0].dnsName, "*.cdn.example.com")
+        XCTAssertEqual(r.results[0].probed, "ichor-dns-check.cdn.example.com")
+        // An older core sends no probed field: a plain name reads "".
+        XCTAssertEqual(r.results[1].probed, "")
+    }
+
     func testAStatusFromANewerCoreReadsAsNoVerdict() throws {
         let wire = #"{"results":[{"dnsName":"a.example.com","status":"someday"}],"resolver":"system"}"#
         let r = try TalosJSON.decode(DnsCheckResult.self, from: wire)
