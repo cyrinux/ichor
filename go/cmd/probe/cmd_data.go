@@ -339,6 +339,34 @@ var dataCommands = []command{
 
 		return ichorgo.TextDiff(string(before), string(after), flag.Arg(3))
 	}},
+	{name: "talos-patch-from", args: "BASE_FILE DRAFT_FILE", noConfig: true, run: func(e env) (string, error) {
+		// talos-patch-from BASE_FILE DRAFT_FILE: the patch that turns a redacted config into an edited one.
+		base, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		draft, err := os.ReadFile(flag.Arg(2))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.TalosConfigPatchFrom(string(base), string(draft))
+	}},
+	{name: "talos-writeback", args: "FILE PATCH_FILE [OPTIONSJSON]", noConfig: true, run: func(e env) (string, error) {
+		// talos-writeback FILE PATCH_FILE [OPTIONSJSON]: a node's file with the patch written into it.
+		content, err := os.ReadFile(flag.Arg(1))
+		if err != nil && !os.IsNotExist(err) {
+			return "", err
+		}
+
+		patch, err := os.ReadFile(flag.Arg(2))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.TalosRepoWriteBack(string(content), string(patch), flag.Arg(3))
+	}},
 	{name: "gitops-quickedit", args: "FILE EDITJSON", noConfig: true, run: func(e env) (string, error) {
 		// gitops-quickedit FILE EDITJSON: the file rewritten by a quick edit (image, replicas, path).
 		content, err := os.ReadFile(flag.Arg(1))
