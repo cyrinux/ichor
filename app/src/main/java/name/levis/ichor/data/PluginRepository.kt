@@ -1,14 +1,18 @@
 package name.levis.ichor.data
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import name.levis.ichor.model.PluginCatalog
 import name.levis.ichor.model.PluginDetect
 import name.levis.ichor.model.PluginTree
+import name.levis.ichor.model.PluginUserItem
+import name.levis.ichor.model.PluginUserList
 import name.levis.ichorgo.Ichorgo
 
 /** What KubePluginDetect answered, per hints. */
 const val PLUGINS_DETECT = "plugins"
 
-/** The built-in plugin catalog: the same for every cluster. */
+/** The installed plugin catalog: the same for every cluster, until a user plugin is turned on or off. */
 const val PLUGIN_CATALOG = "plugincatalog"
 
 /** One plugin's render tree, per namespace scope and locale. */
@@ -35,7 +39,7 @@ class PluginRepository(go: GoCall) : GoRepository(go) {
         }
     }
 
-    /** The built-in plugins and the resources each one reads (no cluster call). */
+    /** The installed plugins (built-ins, then enabled imported ones) and what each one reads (no cluster call). */
     suspend fun catalog(): PluginCatalog = go.remember(PLUGIN_CATALOG) { last ->
         last()?.value ?: go.kube { _, _, _ -> TalosJson.decodeFromString(PluginCatalog.serializer(), Ichorgo.pluginCatalog()) }
     }
@@ -49,4 +53,41 @@ class PluginRepository(go: GoCall) : GoRepository(go) {
     suspend fun action(pluginId: String, actionId: String, namespace: String, name: String, paramsJson: String) {
         go.kube { cfg, ctx, server -> Ichorgo.kubePluginAction(cfg, ctx, server, pluginId, actionId, namespace, name, paramsJson) }
     }
+
+    /** The plugins the user imported, kept on this phone by the core (no cluster call). */
+    suspend fun userPlugins(): PluginUserList = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(PluginUserList.serializer(), Ichorgo.pluginUserList())
+    }
+
+    /**
+     * Validates [yaml] without storing it: the answer is what the consent sheet shows. A file
+     * that does not validate throws its `plugin.yaml:<line>: …` problems.
+     */
+    suspend fun check(yaml: String): PluginUserItem = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(PluginUserItem.serializer(), Ichorgo.pluginUserCheck(yaml))
+    }
+
+    /** Stores [yaml], on: the consent sheet's Enable, after [check]. The same id again replaces it. */
+    suspend fun import(yaml: String): PluginUserItem = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(PluginUserItem.serializer(), Ichorgo.pluginUserImport(yaml))
+    }.also { forgetPlugins() }
+
+    suspend fun setEnabled(id: String, enabled: Boolean) {
+        withContext(Dispatchers.IO) { Ichorgo.pluginUserSetEnabled(id, enabled) }
+        forgetPlugins()
+    }
+
+    suspend fun remove(id: String) {
+        withContext(Dispatchers.IO) { Ichorgo.pluginUserRemove(id) }
+        forgetPlugins()
+    }
+
+    /** A plugin file at an https URL, at most 1 MiB (the core refuses http and more). */
+    suspend fun download(url: String): String = withContext(Dispatchers.IO) { Ichorgo.pluginFetchURL(url) }
+
+    /**
+     * The hub, the home tile and the catalog read the installed plugins again, for every
+     * cluster: the keys [PLUGINS_DETECT], [PLUGIN_CATALOG] and [pluginDataKey] all start with "plugin".
+     */
+    private fun forgetPlugins() = go.results.forgetContaining("plugin")
 }

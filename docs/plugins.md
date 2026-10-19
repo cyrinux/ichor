@@ -584,6 +584,45 @@ column. The plugin compiler also reports, without evaluating:
 * `"a" + 1`-style type errors;
 * a condition (`when`) that is not a boolean.
 
+## User plugins
+
+A plugin file of your own runs on the phone like a built-in: Settings → Plugins → Import a
+plugin, then paste it, pick it in Files, or give an https URL (no plain http, not even through
+a redirect; 1 MiB at most). The core (`go/ichorgo/plugin_store.go`) checks it as
+`plugin-validate` does and refuses, with each `plugin.yaml:LINE: message`:
+
+* a file that does not load or validate (an unknown key, another `schemaVersion`, more than
+  1 MiB, a YAML bomb);
+* an `id` a built-in plugin uses: give your copy another one (`id: kube-green-copy`);
+* an `id` the store cannot name a file by (more than 63 characters, or starting with `-`);
+* a 65th plugin: at most 64 are kept.
+
+Nothing is stored before the consent sheet, which lists every declared resource
+(`group/resource`; a core Secret with `reveal: true`, whose values it shows in clear, in red),
+every action with its verb and the Kubernetes verbs its `rbac` asks for, and whether it replaces
+an imported plugin of the same `id`. Only its Enable imports the file, on; Cancel leaves the
+stored plugins as they were. So every stored plugin was shown as it is stored: switching one
+off and on again in the list asks nothing. Enabled, it joins the built-ins in every call (`KubePluginDetect`,
+`KubePluginData`, `KubePluginAction`, the can-I rows of its actions) and reads with your own
+Kubernetes access, through its declared resources only; a plugin has no network access of its
+own.
+
+The file is kept in the app's private data directory, `plugins/<id>.yaml`, encrypted with the
+app's key like the scan reports, with an index of each file's sha256 and whether it is on. Each
+launch checks every stored file again: one this app no longer reads (another `schemaVersion`
+after an update, a built-in that now has its id, a file changed on disk) is listed off with the
+reason and never loaded. Plugins are not in the app backup yet.
+
+| Call (gomobile) | Does |
+| -- | -- |
+| `PluginUserCheck(yaml)` | validates the file and stores nothing; the answer is its consent entry, `replaces` when an imported plugin has its id |
+| `PluginUserImport(yaml)` | the consent sheet's Enable: validates again and stores the file, on (the same id is replaced) |
+| `PluginUserList()` | the imported plugins, sorted by id, with `enabled` and `error` |
+| `PluginUserSetEnabled(id, enabled)` | switches one on (refused while it has an `error`) or off |
+| `PluginUserRemove(id)` | deletes it and its file |
+| `PluginFetchURL(url)` | downloads a file for the import screen: https only, 1 MiB, 20 s |
+| `PluginCatalog()` | the installed plugins: the built-ins, then the enabled imported ones (`"user": true`) |
+
 ## Command line
 
 The probe checks and renders plugin files from the desktop. Paths are relative to where

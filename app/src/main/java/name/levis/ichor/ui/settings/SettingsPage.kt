@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.NotificationsActive
@@ -26,6 +27,7 @@ enum class SettingsPage(val route: String, @StringRes val title: Int, @StringRes
     ALERTS("alerts", R.string.monitor_section, R.string.settings_page_alerts_summary, Icons.Outlined.NotificationsActive),
     AI("ai", R.string.ai_title, R.string.settings_page_ai_summary, Icons.Outlined.AutoAwesome),
     GIT_HOSTS("git-hosts", R.string.git_hosts_title, R.string.git_hosts_desc, Icons.Outlined.Code),
+    PLUGINS("plugins", R.string.plugins_title, R.string.settings_page_plugins_summary, Icons.Outlined.Extension),
     KUBERNETES("kubernetes", R.string.settings_kube_section, R.string.settings_page_kubernetes_summary, Icons.Outlined.Terminal),
     CLUSTERS("clusters", R.string.settings_section_clusters, R.string.settings_page_clusters_summary, Icons.Outlined.Storage),
     SUPPORT("support", R.string.settings_section_support, R.string.settings_page_support_summary, Icons.AutoMirrored.Outlined.HelpOutline),

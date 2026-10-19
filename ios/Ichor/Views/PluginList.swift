@@ -7,10 +7,13 @@ struct PluginTreeData {
     let catalog: PluginCatalog
 }
 
-/// The built-in plugin catalog: the same for every cluster, read once.
+/// The installed plugin catalog: the same for every cluster, read once until an imported
+/// plugin is turned on or off (reset).
 @MainActor
 enum PluginCatalogCache {
     private static var value: PluginCatalog?
+
+    static func reset() { value = nil }
 
     /// The catalog; an empty one when it cannot be read (only the kinds of the opened objects miss it).
     static func load(with client: TalosClient) async -> PluginCatalog {

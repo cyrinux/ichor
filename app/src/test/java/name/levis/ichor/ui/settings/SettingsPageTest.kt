@@ -12,7 +12,7 @@ class SettingsPageTest {
     @Test
     fun pagesKeepTheSettingsOrder() {
         assertEquals(
-            listOf("appearance", "security", "privacy", "alerts", "ai", "git-hosts", "kubernetes", "clusters", "support", "about"),
+            listOf("appearance", "security", "privacy", "alerts", "ai", "git-hosts", "plugins", "kubernetes", "clusters", "support", "about"),
             SettingsPage.entries.map { it.route },
         )
     }
@@ -26,8 +26,8 @@ class SettingsPageTest {
         assertFalse(SettingsPage.KUBERNETES.visible(reader))
         assertTrue(SettingsPage.KUBERNETES.visible(admin))
         assertTrue(SettingsPage.KUBERNETES.visible(kube))
-        assertEquals(9, visibleSettingsPages(reader).size)
-        assertEquals(10, visibleSettingsPages(admin).size)
+        assertEquals(10, visibleSettingsPages(reader).size)
+        assertEquals(11, visibleSettingsPages(admin).size)
     }
 
     @Test

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/url"
 	"strings"
@@ -349,6 +350,20 @@ func pluginActionChecks(compiled []*plugin.Compiled) map[string][]accessNeed {
 			out[pluginActionKey(c.Plugin.ID, a.Name)] = needs
 		}
 	}
+
+	return out
+}
+
+// actionChecks are kubeActionChecks and the enabled user plugins' actions: those come and go
+// at run time, so they are never written into the shared table.
+func actionChecks() map[string][]accessNeed {
+	user := pluginActionChecks(enabledUserPlugins())
+	if len(user) == 0 {
+		return kubeActionChecks
+	}
+
+	out := maps.Clone(kubeActionChecks)
+	maps.Copy(out, user)
 
 	return out
 }

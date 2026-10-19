@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"errors"
+	"slices"
 
 	"github.com/cyrinux/ichor/go/plugin"
 )
@@ -23,6 +24,8 @@ type pluginCatalogItem struct {
 	Version   string                  `json:"version"`
 	Resources []pluginCatalogResource `json:"resources"`
 	Actions   []pluginCatalogAction   `json:"actions"`
+	// User is an imported plugin (PluginUserImport), not a built-in.
+	User bool `json:"user"`
 }
 
 type pluginCatalogResource struct {
@@ -30,27 +33,40 @@ type pluginCatalogResource struct {
 	Version  string `json:"version"`
 	Resource string `json:"resource"`
 	Kind     string `json:"kind"`
+	// Reveal shows a Secret's data instead of masking it: the consent sheet flags it.
+	Reveal bool `json:"reveal"`
 }
 
 type pluginCatalogAction struct {
 	ID    string `json:"id"`
 	Label string `json:"label"`
 	Verb  string `json:"verb"`
+	// RBAC are the Kubernetes verbs the action needs on RBACResource; Confirm is how the app
+	// confirms it (none, plain, typedName).
+	RBAC         []string `json:"rbac"`
+	RBACResource string   `json:"rbacResource"`
+	Confirm      string   `json:"confirm"`
 }
 
-// PluginCatalog lists the built-in plugins:
-// {"items":[{id,name,icon,website,category,screen,version,resources:[…],actions:[…]}]}.
+// PluginCatalog lists the installed plugins, the built-ins then the enabled user plugins:
+// {"items":[{id,name,icon,website,category,screen,version,resources:[…],actions:[…],user}]}.
 func PluginCatalog() (out string, err error) {
 	defer maskResult(&out, &err)
 
-	return toJSON(pluginCatalogOf(plugin.Builtins()))
+	return toJSON(pluginCatalogOf(plugin.Builtins(), enabledUserPlugins()))
 }
 
-func pluginCatalogOf(compiled []*plugin.Compiled) pluginCatalog {
-	out := pluginCatalog{Items: make([]pluginCatalogItem, 0, len(compiled))}
+func pluginCatalogOf(builtins, user []*plugin.Compiled) pluginCatalog {
+	out := pluginCatalog{Items: make([]pluginCatalogItem, 0, len(builtins)+len(user))}
 
-	for _, c := range compiled {
+	for _, c := range builtins {
 		out.Items = append(out.Items, pluginCatalogItemOf(c))
+	}
+
+	for _, c := range user {
+		item := pluginCatalogItemOf(c)
+		item.User = true
+		out.Items = append(out.Items, item)
 	}
 
 	return out
@@ -66,11 +82,17 @@ func pluginCatalogItemOf(c *plugin.Compiled) pluginCatalogItem {
 
 	for _, key := range c.Resources {
 		r := p.Resources[key]
-		item.Resources = append(item.Resources, pluginCatalogResource{Group: r.Group, Version: r.Version, Resource: r.Resource, Kind: r.Kind})
+		item.Resources = append(item.Resources, pluginCatalogResource{Group: r.Group, Version: r.Version, Resource: r.Resource, Kind: r.Kind, Reveal: r.Reveal})
 	}
 
 	for _, a := range c.Actions {
-		item.Actions = append(item.Actions, pluginCatalogAction{ID: a.Name, Label: a.Label, Verb: a.Verb})
+		action := pluginCatalogAction{ID: a.Name, Label: a.Label, Verb: a.Verb, RBAC: []string{}, Confirm: orDefault(a.Confirm, "plain")}
+		if a.RBAC != nil {
+			action.RBAC = slices.Clone(a.RBAC.Verbs)
+			action.RBACResource = a.RBAC.Resource
+		}
+
+		item.Actions = append(item.Actions, action)
 	}
 
 	return item

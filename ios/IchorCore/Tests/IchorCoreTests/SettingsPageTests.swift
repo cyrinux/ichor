@@ -5,14 +5,14 @@ final class SettingsPageTests: XCTestCase {
     func testPagesKeepTheSettingsOrder() {
         XCTAssertEqual(
             SettingsPage.allCases.map(\.rawValue),
-            ["appearance", "security", "privacy", "alerts", "ai", "gitHosts", "kubernetes", "clusters", "support", "about"]
+            ["appearance", "security", "privacy", "alerts", "ai", "gitHosts", "plugins", "kubernetes", "clusters", "support", "about"]
         )
     }
 
     func testKubernetesNeedsTheKubeconfigFeature() {
         XCTAssertEqual(SettingsPage.visible(kubeconfig: true), SettingsPage.allCases)
         let without = SettingsPage.visible(kubeconfig: false)
-        XCTAssertEqual(without.count, 9)
+        XCTAssertEqual(without.count, 10)
         XCTAssertFalse(without.contains(.kubernetes))
     }
 

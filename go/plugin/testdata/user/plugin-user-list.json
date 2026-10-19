@@ -1,0 +1,62 @@
+{
+  "items": [
+    {
+      "id": "old-format",
+      "name": "old-format",
+      "icon": "",
+      "website": "",
+      "category": "",
+      "screen": "",
+      "version": "",
+      "resources": [],
+      "actions": [],
+      "user": true,
+      "enabled": false,
+      "error": "plugin.yaml:8: schemaVersion \"ichor.dev/plugin/v2\" is not supported: this app reads ichor.dev/plugin/v1alpha1",
+      "sha256": "a3e700fe6d3ad4c88e40cc157159a0e07839b9fd6bc819477e08475d057dc3b5",
+      "importedAt": 1792324800000
+    },
+    {
+      "id": "sleep-copy",
+      "name": "kube-green",
+      "icon": "kube-green",
+      "website": "https://kube-green.dev",
+      "category": "data-services",
+      "screen": "",
+      "version": "ichor.dev/plugin/v1alpha1",
+      "resources": [
+        {
+          "group": "kube-green.com",
+          "version": "v1alpha1",
+          "resource": "sleepinfos",
+          "kind": "SleepInfo",
+          "reveal": false
+        },
+        {
+          "group": "",
+          "version": "v1",
+          "resource": "secrets",
+          "kind": "Secret",
+          "reveal": true
+        }
+      ],
+      "actions": [
+        {
+          "id": "wakeNow",
+          "label": "Wake up now",
+          "verb": "mergePatch",
+          "rbac": [
+            "patch"
+          ],
+          "rbacResource": "sleepinfos",
+          "confirm": "plain"
+        }
+      ],
+      "user": true,
+      "enabled": true,
+      "error": "",
+      "sha256": "2e08688690c390d6868d36336957d877ca959a651da4075999729c278d4865ab",
+      "importedAt": 1792324800000
+    }
+  ]
+}
