@@ -5573,4 +5573,13 @@
     <string name="repo_check_can_push">This token can push: edits open pull requests.</string>
     <string name="repo_check_read_only">This token can read only: pull requests will be refused.</string>
     <string name="repo_edits_are_proposals">Edits are never committed to the branch: each one opens a pull or merge request.</string>
+    <string name="source_search">Find in repository</string>
+    <string name="source_search_field">Text to find</string>
+    <string name="source_search_close">Close the search</string>
+    <string name="source_search_hint">Every line of the repository that holds the text, file by file.</string>
+    <string name="source_search_running">Searching… The first search of a commit downloads the repository (up to 48 MiB).</string>
+    <string name="source_search_none">No line holds “%1$s”.</string>
+    <string name="source_search_summary">Matches: %1$d · files searched: %2$d</string>
+    <string name="source_search_truncated">More lines match: refine the search.</string>
+    <string name="source_search_open_line">Open the file at this line</string>
 </resources>

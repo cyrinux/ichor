@@ -106,6 +106,8 @@ type gitForge interface {
 	tree(ctx context.Context, repo gitRepoRef, ref, dir string) ([]gitForgeEntry, error)
 	file(ctx context.Context, repo gitRepoRef, ref, path string) (gitForgeFile, error)
 	gitRepoReader
+	gitArchiver
+	gitCommitResolver
 	gitProposer
 }
 
@@ -496,6 +498,11 @@ func (e gitForgeStatusError) Error() string { return e.err.Error() }
 func (e gitForgeStatusError) Unwrap() error { return e.err }
 
 func (c gitForgeClient) send(ctx context.Context, method, target string, body []byte, privateToken bool) (*http.Response, error) {
+	return c.sendVia(ctx, gitForgeHTTP, method, target, body, privateToken)
+}
+
+// sendVia is send through client (an archive download takes longer than an API call).
+func (c gitForgeClient) sendVia(ctx context.Context, client *http.Client, method, target string, body []byte, privateToken bool) (*http.Response, error) {
 	var reader io.Reader
 	if body != nil {
 		reader = bytes.NewReader(body)
@@ -521,7 +528,7 @@ func (c gitForgeClient) send(ctx context.Context, method, target string, body []
 		}
 	}
 
-	return gitForgeHTTP.Do(req)
+	return client.Do(req)
 }
 
 // status words a non-2xx answer: never with the token in it.

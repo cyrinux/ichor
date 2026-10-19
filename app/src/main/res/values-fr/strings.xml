@@ -5568,4 +5568,13 @@
     <string name="repo_check_can_push">Ce jeton peut pousser : les modifications ouvrent des pull requests.</string>
     <string name="repo_check_read_only">Ce jeton peut seulement lire : les pull requests seront refusées.</string>
     <string name="repo_edits_are_proposals">Les modifications ne sont jamais commitées sur la branche : chacune ouvre une pull ou merge request.</string>
+    <string name="source_search">Rechercher dans le dépôt</string>
+    <string name="source_search_field">Texte à chercher</string>
+    <string name="source_search_close">Fermer la recherche</string>
+    <string name="source_search_hint">Chaque ligne du dépôt qui contient le texte, fichier par fichier.</string>
+    <string name="source_search_running">Recherche… La première recherche d’un commit télécharge le dépôt (48 Mio au plus).</string>
+    <string name="source_search_none">Aucune ligne ne contient « %1$s ».</string>
+    <string name="source_search_summary">Résultats : %1$d · fichiers parcourus : %2$d</string>
+    <string name="source_search_truncated">D’autres lignes correspondent : affinez la recherche.</string>
+    <string name="source_search_open_line">Ouvrir le fichier à cette ligne</string>
 </resources>

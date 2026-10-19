@@ -26,6 +26,10 @@ struct SourceBrowserView: View {
     @State private var loadedDir: String?
     /// The Git host has no token saved.
     @State private var missingHost: String?
+    /// Find in repository: the text typed, and the answer for the text submitted (nil: the listing).
+    @State private var query = ""
+    @State private var searched: LoadState<GitRepoSearch>?
+    @State private var searchedText = ""
 
     private var demo: Bool { model.activeSummary?.demo == true }
 
@@ -34,9 +38,17 @@ struct SourceBrowserView: View {
             if let missingHost {
                 GitHostMissingView(host: missingHost, page: source.webURL)
                     .themedBackground()
+            } else if let searched {
+                searchResults(searched)
             } else {
                 LoadStateView(state: state, retry: load) { tree in content(tree) }
             }
+        }
+        .modifier(SourceSearchable(enabled: source.read != .unreadable, query: $query) {
+            Task { await search() }
+        })
+        .onChange(of: query) { _, text in
+            if text.isEmpty { searched = nil }
         }
         .task(id: dir) { await load() }
         // A token added in Settings (the shortcut below): read again on the way back.
@@ -111,6 +123,68 @@ struct SourceBrowserView: View {
         }
     }
 
+    @ViewBuilder
+    private func searchResults(_ state: LoadState<GitRepoSearch>) -> some View {
+        switch state {
+        case .loading:
+            VStack(spacing: 12) {
+                ProgressView()
+                Text("Searching… The first search of a commit downloads the repository (up to 48 MiB).")
+                    .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .themedBackground()
+        case .failed(let message):
+            ContentUnavailableView {
+                Label("Search failed", systemImage: "exclamationmark.magnifyingglass")
+            } description: {
+                Text(verbatim: message)
+            } actions: {
+                Button("Retry") { Task { await search() } }
+            }
+            .themedBackground()
+        case .loaded(let result, _, _):
+            if result.hits.isEmpty {
+                ContentUnavailableView.search(text: searchedText).themedBackground()
+            } else {
+                List {
+                    Section {
+                        ForEach(result.byFile, id: \.path) { group in
+                            ForEach(group.hits) { hit in
+                                NavigationLink { SourceFileView(source: source, path: hit.path, app: app, line: hit.line) } label: {
+                                    SourceHitRow(hit: hit)
+                                }
+                            }
+                        }
+                    } footer: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Matches: \(result.hits.count) · files searched: \(result.searched)")
+                            if result.truncated { Text("More lines match: refine the search.") }
+                        }
+                    }
+                }
+                .themedBackground()
+            }
+        }
+    }
+
+    /// Finds the text typed across the whole repository.
+    private func search() async {
+        let text = query.trimmingCharacters(in: .whitespaces)
+        guard !text.isEmpty, let client = model.client else { return }
+        searchedText = text
+        searched = .loading
+        do {
+            let result = try await client.repoSearch(source, query: text, hosts: hosts, demo: demo)
+            guard searchedText == text else { return }
+            searched = .loaded(result, at: Date())
+        } catch {
+            guard searchedText == text else { return }
+            searched = .failed(error.localizedDescription)
+        }
+    }
+
     private func load() async {
         guard let client = model.client else { return }
         let wanted = dir
@@ -127,6 +201,39 @@ struct SourceBrowserView: View {
             guard wanted == dir else { return }
             missingHost = nil
             state = state.refreshed(with: .failed(error.localizedDescription))
+        }
+    }
+}
+
+/// One Find in repository hit: its file and line, then the line's text.
+private struct SourceHitRow: View {
+    let hit: GitSearchHit
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: "\(hit.path):\(hit.line)")
+                .font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+            Text(verbatim: hit.text).font(.callout.monospaced()).lineLimit(2)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// .searchable for the sources whose whole repository can be read, nothing for the others.
+private struct SourceSearchable: ViewModifier {
+    let enabled: Bool
+    @Binding var query: String
+    let submit: () -> Void
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content
+                .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: Text("Find in repository"))
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .onSubmit(of: .search, submit)
+        } else {
+            content
         }
     }
 }

@@ -52,6 +52,25 @@ extension TalosClient {
         }
     }
 
+    /// The lines of source's whole repository that hold query (case-insensitive): from the Flux
+    /// artifact (no token), else from a snapshot of the repository at the source's revision,
+    /// downloaded once per commit (up to 48 MiB) with the Git host's token (GitHostMissing
+    /// without one).
+    func repoSearch(_ source: GitSource, query: String, hosts: GitHostStore, demo: Bool) async throws -> GitRepoSearch {
+        switch source.read {
+        case .flux(let ref):
+            return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+                IchorgoFluxSourceSearch(config, context, kubeServer, ref.kind, ref.namespace, ref.name, query, 0, $0)
+            }
+        case .forge(let host, let ref):
+            let json = try await Self.forgeHost(host, hosts: hosts, demo: demo)
+            let repo = source.repoURL
+            return try await Self.json { IchorgoGitRepoSearch(json, repo, ref, query, 0, $0) }
+        case .unreadable:
+            throw TalosError(message: String(localized: "This source is not a Git repository the app can read."))
+        }
+    }
+
     /// The files of app's source number sourceIndex (in GitOpsSource.sources) that declare the
     /// resource resKind resNamespace/resName, with the line of its metadata.name: from the
     /// Flux artifact (no token), else through the Git host with its token (GitHostMissing

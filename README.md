@@ -138,6 +138,13 @@ tour** shows it again.
   pull or merge requests on a new branch, never commits to the branch itself. Nothing is
   cloned: each directory and file is one call to the forge's API. The demo cluster has a sample
   repository built in.
+- **Find in repository:** the search in a source browser (an Argo CD or Flux app's source, or
+  the cluster repository) lists every line of the whole repository that holds the text, by
+  file, and opens the file at that line. It downloads the repository once per commit as one
+  archive (up to 48 MiB; a bigger one is refused, browse it file by file) and keeps it on the
+  phone, encrypted, for the next searches (the last 5 commits, 200 MiB at most). A Flux source
+  is searched in its artifact, with no token. Files over 1 MiB and binaries are skipped, a SOPS
+  file is searched by its keys only, and Git LFS files and submodules are not in an archive.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome: ok, partial (a pod sweep where
   some pods could not be deleted) or failed. Optionally
