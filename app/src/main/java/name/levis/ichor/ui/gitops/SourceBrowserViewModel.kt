@@ -7,11 +7,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.GitHostMissing
 import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.model.GitFile
+import name.levis.ichor.model.GitRepoSearch
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.GitTree
 import name.levis.ichor.model.ProposeBlock
@@ -39,6 +41,16 @@ sealed interface SourceTarget {
         override val tool: String = ""
     }
 }
+
+/**
+ * Find in repository: [open] shows the field; [query] the text searched for [result] (null
+ * before the first search).
+ */
+data class SourceSearch(
+    val open: Boolean = false,
+    val query: String = "",
+    val result: UiState<GitRepoSearch>? = null,
+)
 
 /** The directory on screen; [missingHost]: no token is saved for that Git host. */
 data class SourceListing(
@@ -73,8 +85,11 @@ class SourceBrowserViewModel(private val gitOps: GitOpsRepository) : ViewModel()
     val trail: StateFlow<List<String>> = _trail.asStateFlow()
     private var key: Any? = null
     private var target: SourceTarget? = null
+    private val _search = MutableStateFlow(SourceSearch())
+    val search: StateFlow<SourceSearch> = _search.asStateFlow()
     private var sourceJob: Job? = null
     private var listJob: Job? = null
+    private var searchJob: Job? = null
 
     /** [startDir]: where to open, null for the source's own path. */
     fun load(target: SourceTarget, startDir: String?, key: Any) {
@@ -82,7 +97,32 @@ class SourceBrowserViewModel(private val gitOps: GitOpsRepository) : ViewModel()
         this.key = key
         this.target = target
         _trail.value = emptyList()
+        closeSearch()
         fetchSource(startDir)
+    }
+
+    fun openSearch() {
+        _search.update { it.copy(open = true) }
+    }
+
+    /** Back to the directory listing; a search running stops. */
+    fun closeSearch() {
+        searchJob?.cancel()
+        _search.value = SourceSearch()
+    }
+
+    /** Finds [query] across the whole repository of the source on screen. */
+    fun search(query: String) {
+        val src = (_source.value as? UiState.Loaded)?.data ?: return
+        val text = query.trim()
+        if (text.isEmpty()) return
+        searchJob?.cancel()
+        _search.value = SourceSearch(open = true, query = text, result = UiState.Loading)
+        searchJob = viewModelScope.launch {
+            val result = cancellableCatching { gitOps.repoSearch(src, text) }
+                .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
+            _search.update { it.copy(result = result) }
+        }
     }
 
     /** Opens [dir], remembering the one on screen for back. */

@@ -24,6 +24,7 @@ import name.levis.ichor.model.GitProposal
 import name.levis.ichor.model.GitProposalDefaults
 import name.levis.ichor.model.GitProposalResult
 import name.levis.ichor.model.GitRepoInfo
+import name.levis.ichor.model.GitRepoSearch
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.GitTree
 import name.levis.ichor.model.KubeDiffResource
@@ -207,6 +208,26 @@ class GitOpsRepository(
         }
     }
 
+    /**
+     * The lines of [src]'s whole repository that hold [query] (case-insensitive): from the Flux
+     * artifact (no token), else from a snapshot of the repository at [src]'s revision,
+     * downloaded once per commit (up to 48 MiB) with the Git host's saved token. Throws
+     * [GitHostMissing] without a token.
+     */
+    suspend fun repoSearch(src: GitSource, query: String): GitRepoSearch = when (src.readPath) {
+        SourceReadPath.FLUX -> {
+            val ref = checkNotNull(src.fluxSource)
+            go.kube { cfg, ctx, server ->
+                decodeGitRepoSearch(Ichorgo.fluxSourceSearch(cfg, ctx, server, ref.kind, ref.namespace, ref.name, query, 0L))
+            }
+        }
+        SourceReadPath.FORGE -> {
+            val host = forgeHost(src)
+            withContext(Dispatchers.IO) { decodeGitRepoSearch(Ichorgo.gitRepoSearch(host, src.repoURL, src.ref, query, 0L)) }
+        }
+        SourceReadPath.NONE -> throw LocalizedException(UiText.Res(R.string.gitops_source_not_browsable))
+    }
+
     /** What stops proposing a change to [src]'s files (no Git host, no token), null when nothing does. */
     suspend fun proposeBlockOf(src: GitSource): ProposeBlock? {
         val blocked = proposeBlock(src, lacksToken = false)
@@ -346,6 +367,9 @@ internal fun decodeGitOpsSource(json: String): GitOpsSource = TalosJson.decodeFr
 
 /** The answer of `GitForgeTree` and `FluxSourceTree`. */
 internal fun decodeGitTree(json: String): GitTree = TalosJson.decodeFromString(GitTree.serializer(), json)
+
+/** The answer of `GitRepoSearch` and `FluxSourceSearch`. */
+internal fun decodeGitRepoSearch(json: String): GitRepoSearch = TalosJson.decodeFromString(GitRepoSearch.serializer(), json)
 
 /** The answer of `GitForgeFile` and `FluxSourceFile`. */
 internal fun decodeGitFile(json: String): GitFile = TalosJson.decodeFromString(GitFile.serializer(), json)

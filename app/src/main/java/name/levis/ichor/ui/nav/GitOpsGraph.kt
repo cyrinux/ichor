@@ -196,6 +196,7 @@ private fun NavGraphBuilder.sourceScreens(
             onBack = { nav.popBackStack() },
             onFile = { path -> nav.navigate(sourceFileRoute(t, path)) },
             onAddToken = onAddToken,
+            onHit = { path, line -> nav.navigate(sourceFileRoute(t, path, line)) },
         )
     }
     composable(

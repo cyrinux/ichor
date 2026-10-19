@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -76,16 +77,20 @@ fun SourceBrowserScreen(
     onBack: () -> Unit,
     onFile: (String) -> Unit,
     onAddToken: (() -> Unit)?,
+    /** A Find in repository hit: the file at that line. */
+    onHit: (String, Int) -> Unit = { path, _ -> onFile(path) },
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
     val vm: SourceBrowserViewModel = viewModel(factory = factory { SourceBrowserViewModel(talos.gitOpsRepository) })
     val source by vm.source.collectAsStateWithLifecycle()
     val listing by vm.listing.collectAsStateWithLifecycle()
     val trail by vm.trail.collectAsStateWithLifecycle()
+    val search by vm.search.collectAsStateWithLifecycle()
     val config by talos.configRepository.config.collectAsStateWithLifecycle()
     val generation by talos.configRepository.generation.collectAsStateWithLifecycle()
     LaunchedEffect(config?.activeContext, generation) { vm.load(target, startDir, config?.activeContext to generation) }
-    BackHandler(enabled = trail.isNotEmpty()) { vm.back() }
+    BackHandler(enabled = trail.isNotEmpty() && !search.open) { vm.back() }
+    BackHandler(enabled = search.open) { vm.closeSearch() }
     // Back from Settings with a token: read again.
     val missingHost by rememberUpdatedState(listing.missingHost)
     LifecycleResumeEffect(Unit) {
@@ -104,8 +109,22 @@ fun SourceBrowserScreen(
                         Text(subtitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                     }
                 },
-                navigationIcon = { BackButton { if (trail.isNotEmpty()) vm.back() else onBack() } },
-                actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = vm::refresh) },
+                navigationIcon = {
+                    BackButton {
+                        when {
+                            search.open -> vm.closeSearch()
+                            trail.isNotEmpty() -> vm.back()
+                            else -> onBack()
+                        }
+                    }
+                },
+                actions = {
+                    val searchable = (source as? UiState.Loaded)?.data?.readPath?.let { it != SourceReadPath.NONE } == true
+                    if (searchable && !search.open) {
+                        TooltipIconButton(Icons.Outlined.Search, stringResource(R.string.source_search), onClick = vm::openSearch)
+                    }
+                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = vm::refresh)
+                },
             )
         },
     ) { padding ->
@@ -119,6 +138,9 @@ fun SourceBrowserScreen(
                 SourceHeader(src, (listing.tree as? UiState.Loaded)?.data)
                 if (src.readPath == SourceReadPath.NONE) {
                     NotBrowsable(src)
+                } else if (search.open) {
+                    HorizontalDivider()
+                    SourceSearchPane(search, onSearch = vm::search, onClose = vm::closeSearch, onHit = onHit)
                 } else {
                     Breadcrumb(listing.dir, vm::open)
                     HorizontalDivider()

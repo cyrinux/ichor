@@ -5831,4 +5831,13 @@
     <string name="repo_check_can_push">Цей токен може робити push: зміни відкривають pull request.</string>
     <string name="repo_check_read_only">Цей токен може лише читати: pull request буде відхилено.</string>
     <string name="repo_edits_are_proposals">Зміни ніколи не комітяться в гілку: кожна відкриває pull або merge request.</string>
+    <string name="source_search">Шукати в репозиторії</string>
+    <string name="source_search_field">Текст для пошуку</string>
+    <string name="source_search_close">Закрити пошук</string>
+    <string name="source_search_hint">Кожен рядок репозиторію з цим текстом, файл за файлом.</string>
+    <string name="source_search_running">Пошук… Перший пошук у коміті завантажує репозиторій (до 48 МіБ).</string>
+    <string name="source_search_none">Жоден рядок не містить «%1$s».</string>
+    <string name="source_search_summary">Збігів: %1$d · переглянуто файлів: %2$d</string>
+    <string name="source_search_truncated">Збігається більше рядків: уточніть пошук.</string>
+    <string name="source_search_open_line">Відкрити файл на цьому рядку</string>
 </resources>

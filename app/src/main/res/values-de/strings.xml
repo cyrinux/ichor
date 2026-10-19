@@ -5559,4 +5559,13 @@
     <string name="repo_check_can_push">Dieses Token darf pushen: Änderungen öffnen Pull Requests.</string>
     <string name="repo_check_read_only">Dieses Token darf nur lesen: Pull Requests werden abgelehnt.</string>
     <string name="repo_edits_are_proposals">Änderungen werden nie auf den Branch committet: Jede öffnet einen Pull- oder Merge-Request.</string>
+    <string name="source_search">Im Repository suchen</string>
+    <string name="source_search_field">Gesuchter Text</string>
+    <string name="source_search_close">Suche schließen</string>
+    <string name="source_search_hint">Jede Zeile des Repositorys, die den Text enthält, Datei für Datei.</string>
+    <string name="source_search_running">Suche läuft… Die erste Suche in einem Commit lädt das Repository herunter (bis zu 48 MiB).</string>
+    <string name="source_search_none">Keine Zeile enthält „%1$s“.</string>
+    <string name="source_search_summary">Treffer: %1$d · durchsuchte Dateien: %2$d</string>
+    <string name="source_search_truncated">Weitere Zeilen passen: Suche verfeinern.</string>
+    <string name="source_search_open_line">Datei an dieser Zeile öffnen</string>
 </resources>
