@@ -75,6 +75,8 @@ type gatewayObject struct {
 	Metadata struct {
 		Name      string `json:"name"`
 		Namespace string `json:"namespace"`
+		// Annotations: the ExternalDNS reader reads the target one.
+		Annotations map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {
 		GatewayClassName string            `json:"gatewayClassName"`
@@ -219,37 +221,54 @@ func routeParents(r gatewayRouteObject, gateways []gatewayObject) ([]gatewayList
 	)
 
 	for _, ref := range r.Spec.ParentRefs {
-		if !isGatewayRef(ref) {
+		gw, ok := parentGateway(r, ref, gateways)
+		if !ok {
 			continue
 		}
 
-		ns := orDefault(ref.Namespace, r.Metadata.Namespace)
-		i := slices.IndexFunc(gateways, func(g gatewayObject) bool {
-			return g.Metadata.Namespace == ns && g.Metadata.Name == ref.Name
-		})
-
-		if i < 0 {
-			continue
-		}
-
-		for _, l := range gateways[i].Spec.Listeners {
-			if (ref.SectionName == "" || ref.SectionName == l.Name) && (ref.Port == 0 || ref.Port == l.Port) {
-				if public, ok := gateways[i].publicPorts[l.Port]; ok {
+		for _, l := range gw.Spec.Listeners {
+			if refSelects(ref, l) {
+				if public, ok := gw.publicPorts[l.Port]; ok {
 					l.Port = public
 				}
 
-				l.namespace = gateways[i].Metadata.Namespace
+				l.namespace = gw.Metadata.Namespace
 
 				listeners = append(listeners, l)
 			}
 		}
 
-		for _, a := range gateways[i].Status.Addresses {
+		for _, a := range gw.Status.Addresses {
 			addresses = append(addresses, a.Value)
 		}
 	}
 
 	return listeners, addresses
+}
+
+// parentGateway finds the Gateway a parent ref of r names; a ref without a namespace is in
+// the route's.
+func parentGateway(r gatewayRouteObject, ref gatewayParentRef, gateways []gatewayObject) (gatewayObject, bool) {
+	if !isGatewayRef(ref) {
+		return gatewayObject{}, false
+	}
+
+	ns := orDefault(ref.Namespace, r.Metadata.Namespace)
+	i := slices.IndexFunc(gateways, func(g gatewayObject) bool {
+		return g.Metadata.Namespace == ns && g.Metadata.Name == ref.Name
+	})
+
+	if i < 0 {
+		return gatewayObject{}, false
+	}
+
+	return gateways[i], true
+}
+
+// refSelects tells whether a parent ref attaches to listener l: its sectionName and port,
+// when set, narrow the Gateway's listeners.
+func refSelects(ref gatewayParentRef, l gatewayListener) bool {
+	return (ref.SectionName == "" || ref.SectionName == l.Name) && (ref.Port == 0 || ref.Port == l.Port)
 }
 
 // gatewayRouteHosts are the route's hostnames a browser can open, else its listeners', else
