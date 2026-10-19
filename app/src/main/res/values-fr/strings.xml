@@ -5598,4 +5598,17 @@
     <string name="talos_git_kind_shared">Partagé</string>
     <string name="talos_git_kind_talconfig">talconfig</string>
     <string name="talos_git_kind_secrets">Secrets</string>
+    <string name="talos_writeback_action">Proposer dans Git</string>
+    <string name="talos_writeback_action_desc">Écrit ce changement dans le fichier du nœud du dépôt du cluster, en pull request.</string>
+    <string name="talos_writeback_title">Proposer dans Git</string>
+    <string name="talos_writeback_changes">Valeurs modifiées</string>
+    <string name="talos_writeback_from_to">%1$s → %2$s</string>
+    <string name="talos_writeback_removed">Retiré sur le nœud : retirez-le du dépôt à la main.</string>
+    <string name="talos_writeback_into">Écrit dans %1$s</string>
+    <string name="talos_writeback_create">Crée %1$s : le dépôt n\'a pas de fichier pour ce nœud.</string>
+    <string name="talos_writeback_nothing">Chaque valeur modifiée est définie par un patch partagé : modifiez plutôt ces fichiers.</string>
+    <string name="talos_writeback_review">Vérifier la pull request</string>
+    <string name="talos_writeback_secret">Ce changement touche un secret : les secrets ne sont jamais écrits dans le dépôt.</string>
+    <string name="talos_writeback_live">Proposer les valeurs du nœud dans Git</string>
+    <string name="talos_writeback_live_desc">Écrit ce que le nœud exécute dans son fichier du dépôt, en pull request.</string>
 </resources>

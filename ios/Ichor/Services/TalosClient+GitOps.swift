@@ -151,6 +151,21 @@ extension TalosClient {
         return try await Self.json { IchorgoTalosRepoFiles(json, url, branch, dir, hostname, role, $0) }
     }
 
+    /// The patch that turns base into draft (both redacted configs), its values and whether one
+    /// is a secret's. Local.
+    static func talosConfigPatchFrom(base: String, draft: String) async throws -> TalosConfigPatch {
+        try await json { IchorgoTalosConfigPatchFrom(base, draft, $0) }
+    }
+
+    /// Where patch goes in repo for the node hostname of role: its file (or a new one), with the
+    /// values a shared patch sets left out. Throws GitHostMissing without a token.
+    static func talosWriteBackPlan(_ repo: ClusterRepo, hostname: String, role: String, patch: String,
+                                   hosts: GitHostStore, demo: Bool) async throws -> TalosWriteBackPlan {
+        let json = try await forgeHost(repo.host, hosts: hosts, demo: demo)
+        let url = repo.repoURL, branch = repo.branch, dir = repo.talosDir
+        return try await Self.json { IchorgoTalosRepoWriteBackPlan(json, url, branch, dir, hostname, role, patch, $0) }
+    }
+
     /// Applies repo's files paths (in that order) at commit sha onto node's live config and says
     /// what differs (os:admin; only a dry run reaches the node).
     func talosRepoCompare(_ repo: ClusterRepo, node: String, hostname: String, sha: String, paths: [String],

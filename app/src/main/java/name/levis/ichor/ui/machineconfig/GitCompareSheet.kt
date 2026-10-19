@@ -67,6 +67,8 @@ fun GitCompareSheet(
     onOpenFile: (path: String, line: Int) -> Unit,
     onEditDraft: (String) -> Unit,
     onDismiss: () -> Unit,
+    /** The node's live values proposed into the repository, from Git's version (redacted). */
+    onProposeLive: ((String) -> Unit)? = null,
 ) {
     val scope = rememberCoroutineScope()
     var files by remember { mutableStateOf<UiState<TalosRepoFiles>>(UiState.Loading) }
@@ -125,7 +127,7 @@ fun GitCompareSheet(
                 null -> Unit
                 UiState.Loading -> CircularProgressIndicator(Modifier.padding(vertical = 24.dp))
                 is UiState.Failed -> InlineError(c.message.asString())
-                is UiState.Loaded -> CompareResult(c.data, onEditDraft)
+                is UiState.Loaded -> CompareResult(c.data, onEditDraft, onProposeLive)
             }
         }
     }
@@ -149,7 +151,7 @@ private fun FileRow(file: TalosRepoFile, checked: Boolean, onCheck: (Boolean) ->
 
 /** "Same as Git", or the diff, the reboot it needs, the files skipped and Edit from this diff. */
 @Composable
-private fun CompareResult(result: TalosRepoCompare, onEditDraft: (String) -> Unit) {
+private fun CompareResult(result: TalosRepoCompare, onEditDraft: (String) -> Unit, onProposeLive: ((String) -> Unit)?) {
     val colors = LocalStatusColors.current
     result.skipped.forEach { InlineError(stringResource(R.string.talos_git_skipped, it.path, it.why)) }
     if (result.same) {
@@ -165,6 +167,12 @@ private fun CompareResult(result: TalosRepoCompare, onEditDraft: (String) -> Uni
         Text(stringResource(R.string.talos_git_edit_from_diff))
     }
     MutedText(stringResource(R.string.talos_git_edit_from_diff_desc))
+    onProposeLive?.let { propose ->
+        OutlinedButton(onClick = { propose(result.draft) }, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.talos_writeback_live))
+        }
+        MutedText(stringResource(R.string.talos_writeback_live_desc))
+    }
 }
 
 private fun TalosRepoFileKind.label(): Int = when (this) {

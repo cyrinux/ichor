@@ -84,7 +84,7 @@ struct MachineConfigView: View {
         }
         .sheet(isPresented: $comparingGit) {
             if let repo = model.activeClusterRepo {
-                GitCompareSheet(repo: repo, node: node, hostname: hostname, role: configRole(loadedYAML ?? "")) { git in
+                GitCompareSheet(repo: repo, node: node, hostname: hostname, role: configRole(loadedYAML ?? ""), live: loadedYAML) { git in
                     Task { await editFrom(git) }
                 }
             }
