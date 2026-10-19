@@ -346,5 +346,66 @@ func TestExternalDNSRecordReasons(t *testing.T) {
 	}
 }
 
+// ExternalDNS v0.22 reads external-dns.kubernetes.io/: those annotations count like the
+// legacy alpha ones, and the current prefix wins when an object carries both.
+func TestExternalDNSAnnotationPrefixes(t *testing.T) {
+	var ingresses []ingressObject
+	if err := json.Unmarshal([]byte(`[
+	  {"metadata": {"name": "web", "namespace": "demo",
+	                "annotations": {"external-dns.kubernetes.io/hostname": "extra.example.com",
+	                                "external-dns.kubernetes.io/target": "lb.example.net",
+	                                "external-dns.kubernetes.io/ttl": "120"}},
+	   "spec": {"rules": [{"host": "web.example.com"}]},
+	   "status": {"loadBalancer": {"ingress": [{"ip": "203.0.113.10"}]}}},
+	  {"metadata": {"name": "other", "namespace": "demo",
+	                "annotations": {"external-dns.kubernetes.io/controller": "other"}},
+	   "spec": {"rules": [{"host": "other.example.com"}]}}
+	]`), &ingresses); err != nil {
+		t.Fatal(err)
+	}
+
+	var services []serviceListObject
+	if err := json.Unmarshal([]byte(`[
+	  {"metadata": {"name": "shop", "namespace": "demo",
+	                "annotations": {"external-dns.kubernetes.io/hostname": "shop.example.com",
+	                                "external-dns.alpha.kubernetes.io/hostname": "old.example.com",
+	                                "external-dns.alpha.kubernetes.io/ttl": "60"}},
+	   "spec": {"type": "LoadBalancer"},
+	   "status": {"loadBalancer": {"ingress": [{"ip": "203.0.113.20"}]}}},
+	  {"metadata": {"name": "internal", "namespace": "demo",
+	                "annotations": {"external-dns.kubernetes.io/internal-hostname": "internal.example.com"}},
+	   "spec": {"type": "LoadBalancer", "externalIPs": ["203.0.113.80"]}},
+	  {"metadata": {"name": "skipped", "namespace": "demo",
+	                "annotations": {"external-dns.kubernetes.io/hostname": "skipped.example.com",
+	                                "external-dns.kubernetes.io/controller": "other"}},
+	   "spec": {"type": "LoadBalancer"}}
+	]`), &services); err != nil {
+		t.Fatal(err)
+	}
+
+	byName := map[string]extDNSRawRecord{}
+	for _, r := range extDNSRawRecords(nil, ingresses, services, nil, nil, "") {
+		byName[r.dnsName] = r
+	}
+
+	if len(byName) != 4 {
+		t.Fatalf("records: %+v", byName)
+	}
+
+	for _, host := range []string{"web.example.com", "extra.example.com"} {
+		if r := byName[host]; !slices.Equal(r.targets, []string{"lb.example.net"}) || r.ttl != 120 || r.recordType != "CNAME" {
+			t.Errorf("%s: %+v", host, r)
+		}
+	}
+
+	if r := byName["shop.example.com"]; !slices.Equal(r.targets, []string{"203.0.113.20"}) || r.ttl != 60 {
+		t.Errorf("shop: %+v", r)
+	}
+
+	if r := byName["internal.example.com"]; !slices.Equal(r.targets, []string{"203.0.113.80"}) {
+		t.Errorf("internal: %+v", r)
+	}
+}
+
 // The demo clock keeps the fixture times stable.
 var _ = time.Now
