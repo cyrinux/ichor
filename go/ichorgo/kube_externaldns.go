@@ -437,7 +437,7 @@ func extDNSRawRecords(endpoints []dnsEndpointObject, ingresses []ingressObject, 
 // serving Gateway's target annotation, which replaces its status addresses (the annotation is
 // read on the Gateway; on a route it is ignored).
 func extDNSRouteRecords(r gatewayRouteObject, gateways []gatewayObject) (hosts, targets []string) {
-	routeHosts := append(slices.Clone(r.Spec.Hostnames), splitCSV(r.Metadata.Annotations[extDNSAnnHostname])...)
+	routeHosts := append(slices.Clone(r.Spec.Hostnames), splitCSV(extDNSAnnValue(r.Metadata.Annotations, extDNSAnnHostname))...)
 	if len(routeHosts) == 0 {
 		routeHosts = []string{""} // the listeners' hostnames
 	}
