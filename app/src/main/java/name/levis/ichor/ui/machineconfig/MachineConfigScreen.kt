@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Commit
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
@@ -56,6 +57,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.model.DriftFix
+import name.levis.ichor.model.configRole
 import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ConfigApplyMode
@@ -97,6 +99,8 @@ fun MachineConfigScreen(
     fix: DriftFix? = null,
     /** A snippet from another screen: the screen opens a draft and the picker on it, prefilled. */
     snippet: SnippetPrefill? = null,
+    /** A file of the cluster repository, at a line (the Git comparison's files). */
+    onRepoFile: (path: String, line: Int) -> Unit = { _, _ -> },
     vm: MachineConfigViewModel = viewModel(
         key = "machineconfig-$node",
         factory = factory { MachineConfigViewModel(app.talosRepository, node, hostname, app.configTryManager, app.configMultiManager) },
@@ -140,6 +144,7 @@ fun MachineConfigScreen(
     var confirmingTry by rememberSaveable { mutableStateOf<Int?>(null) }
     var confirmingApply by rememberSaveable { mutableStateOf<ConfigApplyMode?>(null) }
     var confirmingMulti by rememberSaveable { mutableStateOf<ConfigApplyMode?>(null) }
+    var comparingGit by rememberSaveable { mutableStateOf(false) }
 
     SecureWhile(revealed)
 
@@ -233,6 +238,13 @@ fun MachineConfigScreen(
                             },
                         )
                         TooltipIconButton(Icons.Outlined.Edit, stringResource(R.string.machine_config_edit), enabled = loaded != null, onClick = vm::startEditing)
+                        TooltipIconButton(Icons.Outlined.Commit, stringResource(R.string.talos_git_action), enabled = loaded != null, onClick = {
+                            if (app.gitOpsRepository.activeClusterRepo() != null) {
+                                comparingGit = true
+                            } else {
+                                scope.launch { snackbar.showSnackbar(context.getString(R.string.repo_none), withDismissAction = true) }
+                            }
+                        })
                     }
                     if (browsing && editor.editing) {
                         TooltipIconButton(Icons.Outlined.AutoAwesome, stringResource(R.string.machine_config_snippets), enabled = !editor.busy, onClick = {
@@ -341,6 +353,24 @@ fun MachineConfigScreen(
                 }
             }
         }
+    }
+
+    if (comparingGit) {
+        GitCompareSheet(
+            app.gitOpsRepository,
+            node = node,
+            hostname = hostname,
+            role = remember(loaded) { loaded?.let(::configRole).orEmpty() },
+            onOpenFile = { path, line ->
+                comparingGit = false
+                onRepoFile(path, line)
+            },
+            onEditDraft = { draft ->
+                comparingGit = false
+                vm.editFrom(draft)
+            },
+            onDismiss = { comparingGit = false },
+        )
     }
 
     if (pickingSnippet) {

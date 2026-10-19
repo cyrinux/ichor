@@ -51,6 +51,7 @@ struct MachineConfigView: View {
     /// The snippet the picker opens on, until it closes once.
     @State private var pendingSnippet: SnippetRequest?
     @State private var snippetOpened = false
+    @State private var comparingGit = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -80,6 +81,13 @@ struct MachineConfigView: View {
         }
         .fullScreenCover(isPresented: $followingTry, onDismiss: { Task { await finishTry() } }) {
             ConfigTryView(node: node, hostname: hostname, request: nil) { _ in }
+        }
+        .sheet(isPresented: $comparingGit) {
+            if let repo = model.activeClusterRepo {
+                GitCompareSheet(repo: repo, node: node, hostname: hostname, role: configRole(loadedYAML ?? "")) { git in
+                    Task { await editFrom(git) }
+                }
+            }
         }
         .sheet(isPresented: $pickingSnippet, onDismiss: { pendingSnippet = nil }) {
             SnippetPickerSheet(initial: pendingSnippet) { id, params in
@@ -196,6 +204,16 @@ struct MachineConfigView: View {
                 .disabled(loadedYAML == nil)
                 Button { Task { await startEditing() } } label: {
                     Label("Edit", systemImage: "pencil")
+                }
+                .disabled(loadedYAML == nil)
+                Button {
+                    if model.activeClusterRepo != nil {
+                        comparingGit = true
+                    } else {
+                        message = String(localized: "No repository is saved for this cluster: add one from its menu in the cluster list (Cluster repository).")
+                    }
+                } label: {
+                    Label("Compare with Git", systemImage: "arrow.triangle.branch")
                 }
                 .disabled(loadedYAML == nil)
             }
@@ -355,6 +373,17 @@ struct MachineConfigView: View {
         draft = yaml
         edits = []
         replayable = true
+    }
+
+    /// A draft that is Git's version of this node's config (redacted): the review then shows
+    /// what applying it changes.
+    private func editFrom(_ git: String) async {
+        await startEditing()
+        guard draft != nil else { return }
+        draft = git
+        edits = []
+        replayable = false
+        await describe()
     }
 
     private func requestDiscard() {

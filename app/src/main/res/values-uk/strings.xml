@@ -5840,4 +5840,24 @@
     <string name="source_search_summary">Збігів: %1$d · переглянуто файлів: %2$d</string>
     <string name="source_search_truncated">Збігається більше рядків: уточніть пошук.</string>
     <string name="source_search_open_line">Відкрити файл на цьому рядку</string>
+    <string name="talos_git_action">Порівняти з Git</string>
+    <string name="talos_git_title">Вузол і Git</string>
+    <string name="talos_git_at">Репозиторій на %1$s</string>
+    <string name="talos_git_generator">Упорядковано для %1$s</string>
+    <string name="talos_git_none">Жоден файл репозиторію не налаштовує цей вузол.</string>
+    <string name="talos_git_order">Позначені файли застосовуються до конфігурації вузла в цьому порядку, як це робить ваш генератор.</string>
+    <string name="talos_git_compare">Порівняти</string>
+    <string name="talos_git_open_file">Відкрити файл</string>
+    <string name="talos_git_skipped">%1$s пропущено: %2$s</string>
+    <string name="talos_git_same">Як у Git</string>
+    <string name="talos_git_same_desc">Застосування цих файлів до конфігурації вузла нічого не змінює: вузол відповідає репозиторію.</string>
+    <string name="talos_git_differs">Що Git змінив би на вузлі</string>
+    <string name="talos_git_reboot">Потрібне перезавантаження</string>
+    <string name="talos_git_edit_from_diff">Редагувати з цього diff</string>
+    <string name="talos_git_edit_from_diff_desc">Відкриває редактор із версією з Git як чернеткою: перегляньте, потім спробуйте або застосуйте.</string>
+    <string name="talos_git_hide_secrets">Спершу приховайте секрети: чернетка ніколи їх не містить.</string>
+    <string name="talos_git_kind_node">Вузол</string>
+    <string name="talos_git_kind_shared">Спільний</string>
+    <string name="talos_git_kind_talconfig">talconfig</string>
+    <string name="talos_git_kind_secrets">Секрети</string>
 </resources>

@@ -411,13 +411,13 @@ func TestSearchRepoFilesBounds(t *testing.T) {
 }
 
 func TestGitRepoSearchDemo(t *testing.T) {
-	out, err := GitRepoSearch(`{"kind":"demo"}`, demoClusterRepoURL, demoClusterRepoHead, "worker-a", 0)
+	out, err := GitRepoSearch(`{"kind":"demo"}`, demoClusterRepoURL, demoClusterRepoHead, "demo-worker-1", 0)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	res := searchHits(t, out)
-	if res.SHA != demoClusterRepoHead || len(res.Hits) < 2 || res.Hits[0].Path != "talos/nodes/worker-a.yaml" && res.Hits[0].Path != "talos/talconfig.yaml" {
+	if res.SHA != demoClusterRepoHead || len(res.Hits) < 2 || res.Hits[0].Path != "talos/nodes/demo-worker-1.yaml" && res.Hits[0].Path != "talos/talconfig.yaml" {
 		t.Errorf("demo %+v", res)
 	}
 

@@ -148,6 +148,18 @@ tour** shows it again.
   phone, encrypted, for the next searches (the last 5 commits, 200 MiB at most). A Flux source
   is searched in its artifact, with no token. Files over 1 MiB and binaries are skipped, a SOPS
   file is searched by its keys only, and Git LFS files and submodules are not in an archive.
+- **Talos nodes: Git compared with the node:** **Compare with Git** on a node's machine config
+  lists the files of the cluster repository (under its Talos directory) that configure that
+  node, with the rule that matched each: its own patch (the file that sets its hostname, or is
+  named after it), the shared patches, talhelper's `talconfig.yaml` and the patches it lists in
+  its order (global, then the role's, then the node's, inline ones included), and the secrets
+  files, greyed (never read into a comparison). **Compare** applies the files checked onto the
+  node's live config with Talos's own patcher, as `talosctl gen config --config-patch` or
+  `talhelper genconfig` would: **Same as Git**, or the diff (secrets redacted) with whether
+  applying it needs a reboot, the node checking it with a dry run (os:admin). **Edit from this
+  diff** opens the editor with Git's version as the draft, to review, try or apply it. A patch
+  holding a `${...}` substitution or setting a secret is skipped with the reason; talconfig's
+  node fields (installDisk, ipAddress…) are not compared, only its patches.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome: ok, partial (a pod sweep where
   some pods could not be deleted) or failed. Optionally

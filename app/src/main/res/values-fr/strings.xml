@@ -5577,4 +5577,24 @@
     <string name="source_search_summary">Résultats : %1$d · fichiers parcourus : %2$d</string>
     <string name="source_search_truncated">D’autres lignes correspondent : affinez la recherche.</string>
     <string name="source_search_open_line">Ouvrir le fichier à cette ligne</string>
+    <string name="talos_git_action">Comparer avec Git</string>
+    <string name="talos_git_title">Nœud et Git</string>
+    <string name="talos_git_at">Dépôt à %1$s</string>
+    <string name="talos_git_generator">Organisé pour %1$s</string>
+    <string name="talos_git_none">Aucun fichier du dépôt ne configure ce nœud.</string>
+    <string name="talos_git_order">Les fichiers cochés sont appliqués à la config du nœud dans cet ordre, comme le fait votre générateur.</string>
+    <string name="talos_git_compare">Comparer</string>
+    <string name="talos_git_open_file">Ouvrir le fichier</string>
+    <string name="talos_git_skipped">%1$s ignoré : %2$s</string>
+    <string name="talos_git_same">Identique à Git</string>
+    <string name="talos_git_same_desc">Appliquer ces fichiers à la config du nœud ne change rien : le nœud correspond au dépôt.</string>
+    <string name="talos_git_differs">Ce que Git changerait sur le nœud</string>
+    <string name="talos_git_reboot">Nécessite un redémarrage</string>
+    <string name="talos_git_edit_from_diff">Modifier à partir de ce diff</string>
+    <string name="talos_git_edit_from_diff_desc">Ouvre l\'éditeur avec la version de Git comme brouillon : vérifiez-la, puis essayez-la ou appliquez-la.</string>
+    <string name="talos_git_hide_secrets">Masquez d\'abord les secrets : un brouillon ne les contient jamais.</string>
+    <string name="talos_git_kind_node">Nœud</string>
+    <string name="talos_git_kind_shared">Partagé</string>
+    <string name="talos_git_kind_talconfig">talconfig</string>
+    <string name="talos_git_kind_secrets">Secrets</string>
 </resources>

@@ -75,48 +75,41 @@ Secrets are encrypted with SOPS and age (see .sops.yaml).
     encrypted_regex: ^(data|stringData)$
     age: age1examplerecipient0000000000000000000000000000000000000000
 `,
-	"talos/talconfig.yaml": `clusterName: lab
+	// The demo nodes' patches: demo-cp-1's config matches them but for its install disk.
+	"talos/talconfig.yaml": `clusterName: ichor-demo
 talosVersion: v1.11.2
 kubernetesVersion: v1.34.1
-endpoint: https://10.0.0.10:6443
+endpoint: https://192.0.2.10:6443
 patches:
   - "@./patches/network.yaml"
 nodes:
-  - hostname: cp-1
-    ipAddress: 10.0.0.11
+  - hostname: demo-cp-1
+    ipAddress: 192.0.2.10
     controlPlane: true
-    installDisk: /dev/sda
-    patches:
-      - "@./nodes/cp-1.yaml"
-  - hostname: worker-a
-    ipAddress: 10.0.0.21
-    controlPlane: false
     installDisk: /dev/nvme0n1
     patches:
-      - "@./nodes/worker-a.yaml"
+      - "@./nodes/demo-cp-1.yaml"
+  - hostname: demo-worker-1
+    ipAddress: 192.0.2.20
+    controlPlane: false
+    installDisk: /dev/sda
+    patches:
+      - "@./nodes/demo-worker-1.yaml"
 `,
 	"talos/patches/network.yaml": `machine:
   network:
     nameservers:
-      - 10.0.0.1
-  time:
-    servers:
-      - time.cloudflare.com
+      - 192.0.2.1
 `,
-	"talos/nodes/cp-1.yaml": `machine:
+	"talos/nodes/demo-cp-1.yaml": `machine:
   network:
-    hostname: cp-1
-    interfaces:
-      - interface: eth0
-        dhcp: false
-        addresses:
-          - 10.0.0.11/24
-        vip:
-          ip: 10.0.0.10
+    hostname: demo-cp-1
+  install:
+    disk: /dev/nvme0n1
 `,
-	"talos/nodes/worker-a.yaml": `machine:
+	"talos/nodes/demo-worker-1.yaml": `machine:
   network:
-    hostname: worker-a
+    hostname: demo-worker-1
   kubelet:
     extraArgs:
       max-pods: "150"

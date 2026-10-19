@@ -5577,4 +5577,24 @@
     <string name="source_search_summary">Corrispondenze: %1$d · file cercati: %2$d</string>
     <string name="source_search_truncated">Altre righe corrispondono: affina la ricerca.</string>
     <string name="source_search_open_line">Apri il file a questa riga</string>
+    <string name="talos_git_action">Confronta con Git</string>
+    <string name="talos_git_title">Nodo e Git</string>
+    <string name="talos_git_at">Repository a %1$s</string>
+    <string name="talos_git_generator">Organizzato per %1$s</string>
+    <string name="talos_git_none">Nessun file del repository configura questo nodo.</string>
+    <string name="talos_git_order">I file selezionati vengono applicati alla config del nodo in quest\'ordine, come fa il tuo generatore.</string>
+    <string name="talos_git_compare">Confronta</string>
+    <string name="talos_git_open_file">Apri il file</string>
+    <string name="talos_git_skipped">%1$s saltato: %2$s</string>
+    <string name="talos_git_same">Uguale a Git</string>
+    <string name="talos_git_same_desc">Applicare questi file alla config del nodo non cambia nulla: il nodo corrisponde al repository.</string>
+    <string name="talos_git_differs">Cosa cambierebbe Git sul nodo</string>
+    <string name="talos_git_reboot">Richiede un riavvio</string>
+    <string name="talos_git_edit_from_diff">Modifica da questo diff</string>
+    <string name="talos_git_edit_from_diff_desc">Apre l\'editor con la versione di Git come bozza: rivedila, poi provala o applicala.</string>
+    <string name="talos_git_hide_secrets">Nascondi prima i segreti: una bozza non li contiene mai.</string>
+    <string name="talos_git_kind_node">Nodo</string>
+    <string name="talos_git_kind_shared">Condiviso</string>
+    <string name="talos_git_kind_talconfig">talconfig</string>
+    <string name="talos_git_kind_secrets">Segreti</string>
 </resources>

@@ -181,6 +181,19 @@ class MachineConfigViewModel(
         _editor.update { it.copy(base = loaded, draft = loaded, review = null, run = null, edits = emptyList(), replayable = true) }
     }
 
+    /**
+     * Starts a draft that is [draft] (Git's version of this node's config, redacted): the review
+     * then shows what applying it changes. Refused while the secrets are shown.
+     */
+    fun editFrom(draft: String) {
+        if (_revealed.value) {
+            _messages.tryEmit(UiText.Res(R.string.talos_git_hide_secrets))
+            return
+        }
+        startEditing()
+        setDraft(draft)
+    }
+
     /** Drops the draft; the node was not changed. */
     fun discard() {
         describing?.cancel()

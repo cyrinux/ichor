@@ -143,6 +143,26 @@ extension TalosClient {
         return try await Self.json { IchorgoGitForgeRepo(json, url, branch, $0) }
     }
 
+    /// The files of repo (under its Talos directory) that configure the node hostname of role,
+    /// at its branch head. Throws GitHostMissing without a token.
+    static func talosRepoFiles(_ repo: ClusterRepo, hostname: String, role: String, hosts: GitHostStore, demo: Bool) async throws -> TalosRepoFiles {
+        let json = try await forgeHost(repo.host, hosts: hosts, demo: demo)
+        let url = repo.repoURL, branch = repo.branch, dir = repo.talosDir
+        return try await Self.json { IchorgoTalosRepoFiles(json, url, branch, dir, hostname, role, $0) }
+    }
+
+    /// Applies repo's files paths (in that order) at commit sha onto node's live config and says
+    /// what differs (os:admin; only a dry run reaches the node).
+    func talosRepoCompare(_ repo: ClusterRepo, node: String, hostname: String, sha: String, paths: [String],
+                          hosts: GitHostStore, demo: Bool) async throws -> TalosRepoCompare {
+        let json = try await Self.forgeHost(repo.host, hosts: hosts, demo: demo)
+        let pathsJSON = (try? TalosJSON.encode(paths)) ?? "[]"
+        let url = repo.repoURL
+        return try await Self.json { [config, context] in
+            IchorgoTalosRepoCompare(config, context, json, url, sha, node, hostname, pathsJSON, $0)
+        }
+    }
+
     /// The prefilled pull request for a change of path in the cluster repository repoURL, on
     /// cluster ("" for none).
     static func repoProposalDefaults(repoURL: String, path: String, cluster: String) async throws -> GitProposalDefaults {
