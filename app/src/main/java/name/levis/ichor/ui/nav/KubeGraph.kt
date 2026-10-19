@@ -160,6 +160,7 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
                 onTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
                 onArgoRollouts = { nav.navigate(Routes.ARGO_ROLLOUTS) },
                 onClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },
+                onDataServices = { kind, solo -> nav.navigate(Routes.dataServices(kind, solo)) },
                 pullLinks = podPullLinks(nav, app),
             )
         }

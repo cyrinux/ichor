@@ -8,6 +8,7 @@ import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.CleaningServices
 import androidx.compose.material.icons.outlined.Computer
+import androidx.compose.material.icons.outlined.Dataset
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Gavel
@@ -24,8 +25,11 @@ import androidx.compose.material.icons.outlined.VpnLock
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
+import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.KubernetesAction
+import name.levis.ichor.model.title
 import name.levis.ichor.ui.components.ActionLook
+import name.levis.ichor.ui.dataservices.fallbackIcon
 
 private fun kubernetesActionIcon(action: KubernetesAction): ImageVector = when (action) {
     KubernetesAction.CHECKUP -> Icons.Outlined.HealthAndSafety
@@ -48,11 +52,25 @@ private fun kubernetesActionIcon(action: KubernetesAction): ImageVector = when (
     KubernetesAction.TAILSCALE -> Icons.Outlined.VpnLock
     KubernetesAction.ARGO_ROLLOUTS -> Icons.Outlined.Upgrade
     KubernetesAction.CLUSTER_LIFECYCLE -> Icons.Outlined.AccountTree
+    KubernetesAction.DATA_SERVICES -> Icons.Outlined.Dataset
+    KubernetesAction.EXTERNAL_DNS, KubernetesAction.CERT_MANAGER, KubernetesAction.SEALED_SECRETS, KubernetesAction.CASTAI ->
+        action.dataServiceKind!!.fallbackIcon
 }
+
+/** The system read with Data services an action opens alone; null for the others. */
+val KubernetesAction.dataServiceKind: DataServiceKind?
+    get() = when (this) {
+        KubernetesAction.EXTERNAL_DNS -> DataServiceKind.EXTERNAL_DNS
+        KubernetesAction.CERT_MANAGER -> DataServiceKind.CERT_MANAGER
+        KubernetesAction.SEALED_SECRETS -> DataServiceKind.SEALED_SECRETS
+        KubernetesAction.CASTAI -> DataServiceKind.CASTAI
+        else -> null
+    }
 
 /** How the Kubernetes screen's actions look, in its bar and its editor. */
 val kubernetesActionLook = ActionLook<KubernetesAction>(::kubernetesActionIcon) { action ->
-    stringResource(
+    // Product names: never translated.
+    action.dataServiceKind?.title ?: stringResource(
         when (action) {
             KubernetesAction.CHECKUP -> R.string.checkup_title
             KubernetesAction.NETWORK_POLICIES -> R.string.netpol_title
@@ -74,6 +92,9 @@ val kubernetesActionLook = ActionLook<KubernetesAction>(::kubernetesActionIcon) 
             KubernetesAction.TAILSCALE -> R.string.tailscale_title
             KubernetesAction.ARGO_ROLLOUTS -> R.string.argo_rollouts_title
             KubernetesAction.CLUSTER_LIFECYCLE -> R.string.cluster_lifecycle_title
+            KubernetesAction.DATA_SERVICES -> R.string.data_services_title
+            // Named by their product above.
+            KubernetesAction.EXTERNAL_DNS, KubernetesAction.CERT_MANAGER, KubernetesAction.SEALED_SECRETS, KubernetesAction.CASTAI -> R.string.data_services_title
         },
     )
 }
