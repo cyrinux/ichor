@@ -84,6 +84,11 @@ public struct TalosRepoSkip: Decodable, Hashable, Sendable {
     public let path: String
     public let why: String
 
+    public init(path: String, why: String) {
+        self.path = path
+        self.why = why
+    }
+
     enum CodingKeys: String, CodingKey { case path, why }
 
     public init(from decoder: Decoder) throws {

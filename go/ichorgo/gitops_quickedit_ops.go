@@ -24,6 +24,10 @@ type quickEditTarget struct {
 }
 
 func gitOpsQuickEdit(content string, e quickEdit) (quickEditResult, error) {
+	if e.Op == "talos" {
+		return talosQuickEdit(content, e)
+	}
+
 	docs, err := parseQuickEditDocs(content)
 	if err != nil {
 		return quickEditResult{}, err

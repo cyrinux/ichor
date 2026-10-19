@@ -22,6 +22,7 @@ import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.ManifestType
 import name.levis.ichor.model.ProposeBlock
+import name.levis.ichor.model.GitFile
 import name.levis.ichor.model.QuickEdit
 import name.levis.ichor.model.isStaleFileError
 import name.levis.ichor.model.manifestType
@@ -140,7 +141,9 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
         val src = gitOps.sourceOf(t)
         gitOps.proposeBlockOf(src)?.let { return SourceEditState(UiState.Loading, it) }
         val readRef = proposalBaseRef(src.tracked) ?: src.ref
-        val file = gitOps.forgeFile(src, readRef, path)
+        // A node file the write-back creates: proposed as a new file (no sha).
+        val creating = quick.let { it?.op == QuickEdit.OP_TALOS && it.create }
+        val file = if (creating) GitFile(path = path) else gitOps.forgeFile(src, readRef, path)
         if (file.truncated) throw LocalizedException(UiText.Res(R.string.gitops_source_truncated))
         val defaults = cancellableCatching {
             when (t) {

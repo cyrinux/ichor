@@ -5860,4 +5860,17 @@
     <string name="talos_git_kind_shared">Спільний</string>
     <string name="talos_git_kind_talconfig">talconfig</string>
     <string name="talos_git_kind_secrets">Секрети</string>
+    <string name="talos_writeback_action">Запропонувати в Git</string>
+    <string name="talos_writeback_action_desc">Записує цю зміну у файл вузла в репозиторії кластера як pull request.</string>
+    <string name="talos_writeback_title">Запропонувати в Git</string>
+    <string name="talos_writeback_changes">Змінені значення</string>
+    <string name="talos_writeback_from_to">%1$s → %2$s</string>
+    <string name="talos_writeback_removed">Вилучено на вузлі: вилучіть це з репозиторію вручну.</string>
+    <string name="talos_writeback_into">Записується в %1$s</string>
+    <string name="talos_writeback_create">Створює %1$s: у репозиторії немає файлу для цього вузла.</string>
+    <string name="talos_writeback_nothing">Кожне змінене значення задає спільний патч: редагуйте натомість ці файли.</string>
+    <string name="talos_writeback_review">Переглянути pull request</string>
+    <string name="talos_writeback_secret">Ця зміна стосується секрету: секрети ніколи не записуються в репозиторій.</string>
+    <string name="talos_writeback_live">Запропонувати значення вузла в Git</string>
+    <string name="talos_writeback_live_desc">Записує те, що виконує вузол, у його файл репозиторію як pull request.</string>
 </resources>

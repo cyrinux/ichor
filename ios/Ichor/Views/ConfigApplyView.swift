@@ -60,6 +60,7 @@ struct ConfigApplyView: View {
         } else {
             Image(systemName: "checkmark.seal.fill").font(.system(size: 56)).foregroundStyle(.statusOK)
             Text(doneText).font(.headline).multilineTextAlignment(.center)
+            ProposeInGitButton(base: base, draft: draft, hostname: hostname)
         }
         Button { dismiss() } label: {
             Text("Done").frame(maxWidth: .infinity)

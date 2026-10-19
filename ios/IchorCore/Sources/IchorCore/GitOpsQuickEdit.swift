@@ -296,8 +296,9 @@ public struct QuickEditReplicaTarget: Hashable, Identifiable, Sendable {
 /// One edit as GitOpsQuickEdit takes it.
 public struct QuickEdit: Encodable, Hashable, Sendable {
     public enum Op: String, Encodable, Sendable {
-        /// keep: the live values of a diff written where the file holds the wanted ones.
-        case image, replicas, keep
+        /// keep: the live values of a diff written where the file holds the wanted ones;
+        /// talos: a machine config patch written into a node's file of the cluster repository.
+        case image, replicas, keep, talos
     }
 
     public let op: Op
@@ -316,12 +317,18 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
     public let kustomizeReplica: String?
     /// The live values a keep edit writes.
     public let changes: [DiffLiveChange]?
-    /// The container, image or workload the title names; not sent.
+    /// The container, image or workload the title names (talos: the first changed path); not sent.
     public let label: String
+    /// talos: the patch, the node, whether the file is new, and the values left to shared patches.
+    public let patch: String?
+    public let hostname: String?
+    public let create: Bool?
+    public let skipped: [String]?
 
     public init(op: Op, documentIndex: Int, kind: String? = nil, name: String? = nil, container: String? = nil,
                 image: String? = nil, replicas: Int? = nil, kustomizeImage: String? = nil, kustomizeReplica: String? = nil,
-                changes: [DiffLiveChange]? = nil, label: String) {
+                changes: [DiffLiveChange]? = nil, label: String, patch: String? = nil, hostname: String? = nil,
+                create: Bool? = nil, skipped: [String]? = nil) {
         self.op = op
         self.documentIndex = documentIndex
         self.kind = kind
@@ -333,6 +340,16 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
         self.kustomizeReplica = kustomizeReplica
         self.changes = changes
         self.label = label
+        self.patch = patch
+        self.hostname = hostname
+        self.create = create
+        self.skipped = skipped
+    }
+
+    /// A kept machine config change of hostname written into its file: plan says where and what.
+    public static func talos(hostname: String, plan: TalosWriteBackPlan, firstPath: String) -> QuickEdit {
+        QuickEdit(op: .talos, documentIndex: 0, label: firstPath, patch: plan.patch, hostname: hostname, create: plan.create,
+                  skipped: plan.skipped.map { "\($0.path): \($0.why)" })
     }
 
     /// The live values of resource (document documentIndex of its manifest) kept in Git.
@@ -343,6 +360,7 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case op, documentIndex, kind, name, container, image, replicas, kustomizeImage, kustomizeReplica, changes
+        case patch, hostname, create, skipped
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -357,6 +375,10 @@ public struct QuickEdit: Encodable, Hashable, Sendable {
         try c.encodeIfPresent(kustomizeImage, forKey: .kustomizeImage)
         try c.encodeIfPresent(kustomizeReplica, forKey: .kustomizeReplica)
         try c.encodeIfPresent(changes, forKey: .changes)
+        try c.encodeIfPresent(patch, forKey: .patch)
+        try c.encodeIfPresent(hostname, forKey: .hostname)
+        try c.encodeIfPresent(create, forKey: .create)
+        try c.encodeIfPresent(skipped, forKey: .skipped)
     }
 
     /// The JSON GitOpsQuickEdit takes.
@@ -404,6 +426,9 @@ public func quickEditTitle(_ edit: QuickEdit) -> String {
         return "Scale \(edit.label) to \(edit.replicas ?? 0)"
     case .keep:
         return "Keep live changes of \(edit.label)"
+    case .talos:
+        let node = edit.hostname ?? ""
+        return edit.label.isEmpty ? "Keep \(node)'s config change in Git" : "Keep \(node)'s config change in Git: \(edit.label)"
     }
 }
 

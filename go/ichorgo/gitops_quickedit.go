@@ -43,6 +43,11 @@ type quickEdit struct {
 	Path             string           `json:"path"`
 	Value            json.RawMessage  `json:"value"`
 	Changes          []diffLiveChange `json:"changes"`
+	// The "talos" op: a machine config patch written into a node's file (talos_writeback_plan.go).
+	Patch    string   `json:"patch"`
+	Hostname string   `json:"hostname"`
+	Create   bool     `json:"create"`
+	Skipped  []string `json:"skipped"`
 }
 
 // quickEditResult is GitOpsQuickEdit's answer; line is 1-based (the first changed line,

@@ -2,6 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -92,11 +93,25 @@ data class QuickEdit(
     val targetName: String = "",
     /** The live values [OP_KEEP] writes. */
     val changes: List<DiffLiveChange> = emptyList(),
+    /** [OP_TALOS]: the machine config patch written into a node's file, the node, a new file, the values left to shared patches. */
+    val patch: String = "",
+    val hostname: String = "",
+    val create: Boolean = false,
+    val skipped: List<String> = emptyList(),
+    /** [OP_TALOS]: the first changed path, for the title (not sent to the core). */
+    val firstPath: String = "",
 ) {
     companion object {
         const val OP_IMAGE = "image"
         const val OP_REPLICAS = "replicas"
         const val OP_KEEP = "keep"
+        const val OP_TALOS = "talos"
+
+        /** A kept machine config change of [hostname] written into its file: [plan] says where and what. */
+        fun talos(hostname: String, plan: TalosWriteBackPlan, firstPath: String) = QuickEdit(
+            OP_TALOS, name = hostname, patch = plan.patch, hostname = hostname, create = plan.create,
+            skipped = plan.skipped.map { "${it.path}: ${it.why}" }, firstPath = firstPath,
+        )
 
         /** The live values of [resource] (document [documentIndex] of its manifest) kept in Git. */
         fun keep(documentIndex: Int, resource: KubeDiffResource) = QuickEdit(
@@ -147,6 +162,12 @@ fun quickEditJson(edit: QuickEdit): String = buildJsonObject {
         if (edit.targetName.isNotEmpty()) put("name", edit.targetName)
     }
     when {
+        edit.op == QuickEdit.OP_TALOS -> {
+            put("patch", edit.patch)
+            put("hostname", edit.hostname)
+            put("create", edit.create)
+            put("skipped", QuickJson.encodeToJsonElement(ListSerializer(String.serializer()), edit.skipped))
+        }
         edit.op == QuickEdit.OP_KEEP -> put("changes", QuickJson.encodeToJsonElement(ListSerializer(DiffLiveChange.serializer()), edit.changes))
         edit.op == QuickEdit.OP_REPLICAS -> {
             if (edit.kustomizeReplica.isNotEmpty()) put("kustomizeReplica", edit.kustomizeReplica)
@@ -170,7 +191,10 @@ fun encodeQuickEdit(edit: QuickEdit): String = QuickJson.encodeToString(QuickEdi
 fun decodeQuickEdit(json: String?): QuickEdit? {
     if (json.isNullOrBlank()) return null
     return runCatching { QuickJson.decodeFromString(QuickEdit.serializer(), json) }.getOrNull()
-        ?.takeIf { it.op == QuickEdit.OP_IMAGE || it.op == QuickEdit.OP_REPLICAS || it.op == QuickEdit.OP_KEEP && it.changes.isNotEmpty() }
+        ?.takeIf {
+            it.op == QuickEdit.OP_IMAGE || it.op == QuickEdit.OP_REPLICAS || it.op == QuickEdit.OP_KEEP && it.changes.isNotEmpty() ||
+                it.op == QuickEdit.OP_TALOS && it.patch.isNotBlank()
+        }
 }
 
 fun decodeQuickEditTargets(json: String): QuickEditTargets = QuickJson.decodeFromString(QuickEditTargets.serializer(), json)
@@ -182,6 +206,7 @@ fun decodeQuickEditResult(json: String): QuickEditResult = QuickJson.decodeFromS
  * the app): "Bump podinfo to 6.7.0", "Scale podinfo to 3".
  */
 fun quickEditTitle(edit: QuickEdit): String = when (edit.op) {
+    QuickEdit.OP_TALOS -> "Keep ${edit.hostname}'s config change in Git: ${edit.firstPath}".trimEnd(' ', ':')
     QuickEdit.OP_KEEP -> "Keep live changes of ${edit.targetKind.ifEmpty { "object" }} ${edit.name}".trimEnd()
     QuickEdit.OP_REPLICAS -> "Scale ${edit.name.ifEmpty { "workload" }} to ${edit.replicas}"
     else -> {

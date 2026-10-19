@@ -154,7 +154,7 @@ private val ConfigApplyMode.description: Int
 
 /** A change being applied for good: its phase, then how it ended. */
 @Composable
-fun ConfigApplyContent(run: ConfigApplyState, onDone: () -> Unit, modifier: Modifier = Modifier) {
+fun ConfigApplyContent(run: ConfigApplyState, onDone: () -> Unit, modifier: Modifier = Modifier, onProposeInGit: (() -> Unit)? = null) {
     val status = LocalStatusColors.current
     when (run) {
         is ConfigApplyState.Running -> Waiting(
@@ -179,6 +179,7 @@ fun ConfigApplyContent(run: ConfigApplyState, onDone: () -> Unit, modifier: Modi
             ),
             onDone,
             modifier,
+            onProposeInGit = onProposeInGit,
         )
         is ConfigApplyState.Failed -> Ended(
             Icons.Outlined.ErrorOutline,
@@ -243,7 +244,15 @@ internal fun Waiting(text: String, modifier: Modifier = Modifier) {
 
 /** A change being tried on the node: the countdown to its automatic revert, then how it ended. */
 @Composable
-fun ConfigTryContent(run: ConfigTryState, onKeep: () -> Unit, onRevert: () -> Unit, onDone: () -> Unit, modifier: Modifier = Modifier) {
+fun ConfigTryContent(
+    run: ConfigTryState,
+    onKeep: () -> Unit,
+    onRevert: () -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** Writes the kept change into the cluster repository; null without one. */
+    onProposeInGit: (() -> Unit)? = null,
+) {
     val status = LocalStatusColors.current
     when (run) {
         is ConfigTryState.Running -> when (run.phase) {
@@ -252,7 +261,7 @@ fun ConfigTryContent(run: ConfigTryState, onKeep: () -> Unit, onRevert: () -> Un
             ConfigTryState.REVERTING -> Waiting(stringResource(R.string.machine_config_try_reverting), modifier)
             else -> Waiting(stringResource(R.string.machine_config_try_applying), modifier)
         }
-        ConfigTryState.Kept -> Ended(Icons.Outlined.CheckCircle, status.ok, stringResource(R.string.machine_config_kept), onDone, modifier)
+        ConfigTryState.Kept -> Ended(Icons.Outlined.CheckCircle, status.ok, stringResource(R.string.machine_config_kept), onDone, modifier, onProposeInGit = onProposeInGit)
         ConfigTryState.Reverted -> Ended(Icons.Outlined.Restore, status.muted, stringResource(R.string.machine_config_reverted), onDone, modifier)
         is ConfigTryState.Failed -> Ended(
             Icons.Outlined.ErrorOutline,
@@ -295,6 +304,7 @@ private fun Ended(
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
     @StringRes done: Int = R.string.machine_config_done,
+    onProposeInGit: (() -> Unit)? = null,
 ) {
     Column(
         modifier.fillMaxSize().padding(32.dp),
@@ -304,5 +314,14 @@ private fun Ended(
         Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(56.dp))
         Text(text, textAlign = TextAlign.Center)
         Button(onClick = onDone) { Text(stringResource(done)) }
+        onProposeInGit?.let {
+            OutlinedButton(onClick = it) { Text(stringResource(R.string.talos_writeback_action)) }
+            Text(
+                stringResource(R.string.talos_writeback_action_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }

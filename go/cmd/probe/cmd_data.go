@@ -353,6 +353,14 @@ var dataCommands = []command{
 
 		return ichorgo.TalosConfigPatchFrom(string(base), string(draft))
 	}},
+	{name: "talos-writeback-plan", args: "HOSTJSON REPO REF DIR HOSTNAME ROLE PATCH_FILE", run: func(env) (string, error) {
+		patch, err := os.ReadFile(flag.Arg(7))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.TalosRepoWriteBackPlan(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6), string(patch))
+	}},
 	{name: "talos-writeback", args: "FILE PATCH_FILE [OPTIONSJSON]", noConfig: true, run: func(e env) (string, error) {
 		// talos-writeback FILE PATCH_FILE [OPTIONSJSON]: a node's file with the patch written into it.
 		content, err := os.ReadFile(flag.Arg(1))
