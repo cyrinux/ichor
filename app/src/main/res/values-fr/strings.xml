@@ -5551,4 +5551,21 @@
     <string name="plugins_consent_note">Il lit avec votre propre accès Kubernetes et n\'appelle jamais rien d\'autre que l\'API Kubernetes. Désactivez-le ou supprimez-le à tout moment dans Réglages → Plugins.</string>
     <string name="plugins_replaces">Il remplace le plugin importé qui a le même id.</string>
     <string name="plugins_enable">Activer</string>
+    <string name="repo_title">Dépôt</string>
+    <string name="repo_none">Aucun dépôt n’est enregistré pour ce cluster : ajoutez-en un depuis son menu dans la liste des clusters (Dépôt du cluster).</string>
+    <string name="repo_propose_applies">Rien ne change sur le cluster tant qu’elle n’est pas fusionnée et appliquée.</string>
+    <string name="repo_settings_title">Dépôt du cluster</string>
+    <string name="repo_settings_body">Le dépôt Git qui contient la configuration de %1$s. Ichor le lit avec le jeton de son hôte Git ; rien n’est cloné.</string>
+    <string name="repo_field_url">Adresse du dépôt</string>
+    <string name="repo_host">Hôte Git : %1$s</string>
+    <string name="repo_no_git_host">Aucun jeton n’est enregistré pour %1$s : ajoutez-le dans Réglages → Hôtes Git.</string>
+    <string name="repo_open_git_hosts">Ouvrir les hôtes Git</string>
+    <string name="repo_field_branch">Branche</string>
+    <string name="repo_branch_hint">Vide pour la branche par défaut</string>
+    <string name="repo_field_talos_dir">Dossier Talos</string>
+    <string name="repo_field_kubernetes_dir">Dossier Kubernetes</string>
+    <string name="repo_check_ok">%1$s (branche par défaut : %2$s)</string>
+    <string name="repo_check_can_push">Ce jeton peut pousser : les modifications ouvrent des pull requests.</string>
+    <string name="repo_check_read_only">Ce jeton peut seulement lire : les pull requests seront refusées.</string>
+    <string name="repo_edits_are_proposals">Les modifications ne sont jamais commitées sur la branche : chacune ouvre une pull ou merge request.</string>
 </resources>

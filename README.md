@@ -126,6 +126,18 @@ tour** shows it again.
   pull request. Never for a Secret. An object's page links to the diff of the Argo CD app or
   Flux Kustomization applying it (**Compare with Git**), as do an Argo CD app's sync and
   comparison errors and each resource its last sync failed on.
+- **Cluster repository:** the repository that holds a cluster's own configuration (its Talos
+  patches, its Kubernetes tree, its `.sops.yaml`) is a setting of that cluster: **Cluster
+  repository** in its menu of the cluster list stores the address, a branch (blank for the
+  default one) and the Talos and Kubernetes directories, and **Check** asks the forge for the
+  default branch and whether the token can push. Only those four fields are stored (and backed
+  up); the token is the Git host's, from Settings → Git hosts, and is only used to read the
+  repository and open pull requests on it. **Repository** on the cluster home then lists the
+  repository from its root at the branch head (`main @ 1a2b3c4`); any text file opens
+  read-only, and Edit, Review and **Open pull request** work as for an app's source: edits are
+  pull or merge requests on a new branch, never commits to the branch itself. Nothing is
+  cloned: each directory and file is one call to the forge's API. The demo cluster has a sample
+  repository built in.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome: ok, partial (a pod sweep where
   some pods could not be deleted) or failed. Optionally
@@ -1126,7 +1138,7 @@ a fresh install. Backups move between Android and iOS.
 
 - **What it holds:** the talosconfig (every cluster's credentials), the cluster on screen,
   theme, language, screenshot mode, monitoring and its storage thresholds, "Allow screenshots",
-  each cluster's name, color, VPN-only setting, Wake-on-LAN targets and pins, your Git hosts,
+  each cluster's name, color, VPN-only setting, Wake-on-LAN targets, pins and repository, your Git hosts,
   the AI diagnosis settings, and whether an app lock was on. API keys and Git tokens only
   when you turn on **Include API keys and Git tokens** while backing up (off by default:
   anyone with the file and its passphrase can use them).

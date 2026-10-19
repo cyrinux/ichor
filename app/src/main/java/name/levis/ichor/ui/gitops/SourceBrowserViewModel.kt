@@ -26,8 +26,19 @@ import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.refreshFailed
 import name.levis.ichor.ui.uiText
 
-/** The app whose source is browsed: [index] picks the source among `GitOpsSource`'s. */
-data class SourceTarget(val tool: String, val kind: String, val namespace: String, val name: String, val index: Int)
+/** Whose files are browsed: an Argo CD or Flux app's source, or the active cluster's own repository. */
+sealed interface SourceTarget {
+    /** The GitOps tool that applies the files ("argocd", "flux"), "" for the cluster repository. */
+    val tool: String
+
+    /** The app's source [index] among `GitOpsSource`'s. */
+    data class App(override val tool: String, val kind: String, val namespace: String, val name: String, val index: Int) : SourceTarget
+
+    /** The repository saved for the active cluster, from its root at the branch head. */
+    data object Repo : SourceTarget {
+        override val tool: String = ""
+    }
+}
 
 /** The directory on screen; [missingHost]: no token is saved for that Git host. */
 data class SourceListing(
@@ -36,10 +47,15 @@ data class SourceListing(
     val missingHost: String? = null,
 )
 
-/** The source [index] of [target]'s, or a localized error when the app has no such source. */
-internal suspend fun GitOpsRepository.sourceOf(target: SourceTarget): GitSource =
-    source(target.tool, target.kind, target.namespace, target.name).sources.getOrNull(target.index)
+/**
+ * The source [index] of an app [target]'s, or the active cluster's repository at its branch
+ * head; a localized error when the app has no such source or the cluster no repository.
+ */
+internal suspend fun GitOpsRepository.sourceOf(target: SourceTarget): GitSource = when (target) {
+    is SourceTarget.App -> source(target.tool, target.kind, target.namespace, target.name).sources.getOrNull(target.index)
         ?: throw LocalizedException(UiText.Res(R.string.gitops_source_not_browsable))
+    SourceTarget.Repo -> clusterRepoSource()
+}
 
 /**
  * The source browser: the app's source read once per [load] key (the context and config
@@ -102,6 +118,10 @@ class SourceBrowserViewModel(private val gitOps: GitOpsRepository) : ViewModel()
                 if (src.readPath != SourceReadPath.NONE) list(cleanSourceDir(startDir ?: src.path))
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: GitHostMissing) {
+                // The cluster repository asks its forge before any directory: no token, no source.
+                _source.value = UiState.Failed(e.uiText())
+                _listing.value = SourceListing(missingHost = e.host)
             } catch (e: Throwable) {
                 _source.value = _source.value.refreshFailed(e.uiText())
             }

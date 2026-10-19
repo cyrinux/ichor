@@ -12,6 +12,7 @@ import name.levis.ichor.model.KubeHomeAction.METRICS
 import name.levis.ichor.model.KubeHomeAction.NETWORK_POLICIES
 import name.levis.ichor.model.KubeHomeAction.RESOURCES
 import name.levis.ichor.model.KubeHomeAction.SEARCH
+import name.levis.ichor.model.KubeHomeAction.REPOSITORY
 import name.levis.ichor.model.KubeHomeAction.SETTINGS
 import name.levis.ichor.model.KubeHomeAction.TAILSCALE
 import name.levis.ichor.model.KubeHomeAction.WORKLOADS
@@ -26,14 +27,14 @@ class KubeHomeBarTest {
     fun defaultKeepsFourIconsWithGitOps() {
         val bar = KubeHomeAction.bar.default
         assertEquals(listOf(WORKLOADS, RESOURCES, GITOPS, METRICS), bar.icons)
-        assertEquals(listOf(ALERTS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SEARCH, SETTINGS, CROSSPLANE, TAILSCALE, CLUSTER_LIFECYCLE), bar.menu)
+        assertEquals(listOf(ALERTS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SEARCH, SETTINGS, CROSSPLANE, TAILSCALE, CLUSTER_LIFECYCLE, REPOSITORY), bar.menu)
         assertTrue(bar.isDefault)
     }
 
     @Test
     fun encodeRoundTrips() {
         val bar = KubeHomeAction.bar.default.toBar(DATA_SERVICES).toMenu(RESOURCES)
-        assertEquals("WORKLOADS,GITOPS,METRICS,DATA_SERVICES|RESOURCES,ALERTS,HELM,CHECKUP,API_HEALTH,NETWORK_POLICIES,SEARCH,SETTINGS,CROSSPLANE,TAILSCALE,CLUSTER_LIFECYCLE", bar.encode())
+        assertEquals("WORKLOADS,GITOPS,METRICS,DATA_SERVICES|RESOURCES,ALERTS,HELM,CHECKUP,API_HEALTH,NETWORK_POLICIES,SEARCH,SETTINGS,CROSSPLANE,TAILSCALE,CLUSTER_LIFECYCLE,REPOSITORY", bar.encode())
         assertEquals(bar, KubeHomeAction.bar.parse(bar.encode()))
         assertFalse(bar.isDefault)
     }
@@ -42,7 +43,7 @@ class KubeHomeBarTest {
     fun aBarSavedBeforeGitOpsKeepsItsArrangement() {
         val bar = KubeHomeAction.bar.parse("WORKLOADS,RESOURCES,METRICS|HELM,DATA_SERVICES,CHECKUP,API_HEALTH,NETWORK_POLICIES,SETTINGS")
         assertEquals(listOf(WORKLOADS, RESOURCES, METRICS), bar.icons)
-        assertEquals(listOf(HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SETTINGS, GITOPS, ALERTS, SEARCH, CROSSPLANE, TAILSCALE, CLUSTER_LIFECYCLE), bar.menu)
+        assertEquals(listOf(HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SETTINGS, GITOPS, ALERTS, SEARCH, CROSSPLANE, TAILSCALE, CLUSTER_LIFECYCLE, REPOSITORY), bar.menu)
         assertFalse(bar.isDefault)
     }
 

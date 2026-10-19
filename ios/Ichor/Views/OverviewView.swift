@@ -363,6 +363,10 @@ struct OverviewView: View {
                         Label { Text(verbatim: CapacityText.capacityTitle) } icon: { Image(systemName: "gauge.with.dots.needle.33percent") }
                     }
                 }
+                // The cluster's own Git repository, once one is saved (the demo has one).
+                ClusterRepoToolLink {
+                    Label { Text("Repository") } icon: { Image(systemName: "folder.badge.gearshape") }
+                }
             } header: {
                 if let access = model.activeSummary?.localizedAccessLabel { Text(access) }
             }

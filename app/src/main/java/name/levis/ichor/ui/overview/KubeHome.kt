@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.ui.gitops.hasClusterRepo
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -133,6 +134,10 @@ class KubeHomeNavigation(
     val onClusterLifecycle: () -> Unit,
     /** The load balancer controllers, their pools and peers, and why a Service has no address. */
     val onLoadBalancing: () -> Unit,
+    /** The cluster's own Git repository, from its root. */
+    val onRepository: () -> Unit,
+    /** Settings → Git hosts. */
+    val onGitHosts: () -> Unit,
     /** The Jobs, failures first. */
     val onJobs: () -> Unit,
     /** The cluster's events, live. */
@@ -269,7 +274,7 @@ fun KubeHomeScreen(
                     }
                 },
                 actions = {
-                    KubeHomeActions(bar, nav, argo = argoShown != null, flux = fluxShown != null, crossplane = crossplaneShown != null, tailscale = tailscaleShown != null, clusterLifecycle = lifecycleShown != null, onCustomize = { customizing = true })
+                    KubeHomeActions(bar, nav, argo = argoShown != null, flux = fluxShown != null, crossplane = crossplaneShown != null, tailscale = tailscaleShown != null, clusterLifecycle = lifecycleShown != null, repository = hasClusterRepo(), onCustomize = { customizing = true })
                 },
             )
         },
@@ -283,6 +288,7 @@ fun KubeHomeScreen(
                 onAddCluster = nav.onAddCluster,
                 onClustersCleared = nav.onClustersCleared,
                 onActivity = { nav.onActivity(it.name) },
+                onGitHosts = nav.onGitHosts,
             )
         }
         val refresh = {

@@ -5,8 +5,8 @@ import Foundation
 // (go/ichorgo/gitforge_propose.go, textdiff.go). Ichor never commits to the tracked branch.
 // Same records as Android (model/GitOpsSource.kt).
 
-/// The Argo CD Application or Flux object whose source is browsed: what the pull request's
-/// defaults name.
+/// The Argo CD Application or Flux object whose source is browsed (or `.repository`, the
+/// cluster's own repository): what the pull request's defaults name.
 public struct GitOpsAppRef: Hashable, Sendable {
     /// "argocd" or "flux", as GitOpsSource and GitOpsProposalDefaults take it.
     public let tool: String
@@ -28,6 +28,12 @@ public struct GitOpsAppRef: Hashable, Sendable {
     public static func flux(kind: String, namespace: String, name: String) -> GitOpsAppRef {
         GitOpsAppRef(tool: "flux", kind: kind, namespace: namespace, name: name)
     }
+
+    /// The active cluster's own repository, browsed from its root: no app, no controller.
+    public static let repository = GitOpsAppRef(tool: "", kind: "", namespace: "", name: "")
+
+    /// Whether the files are the cluster repository's, not an app's.
+    public var isRepository: Bool { tool.isEmpty }
 
     /// The controller, as a product name (not translated).
     public var toolLabel: String { tool == "flux" ? "Flux" : "Argo CD" }

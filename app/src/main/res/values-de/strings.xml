@@ -5542,4 +5542,21 @@
     <string name="plugins_consent_note">Es liest mit deinem eigenen Kubernetes-Zugang und ruft nie etwas anderes als die Kubernetes-API auf. Du kannst es jederzeit unter Einstellungen → Plugins ausschalten oder entfernen.</string>
     <string name="plugins_replaces">Es ersetzt das importierte Plugin mit derselben ID.</string>
     <string name="plugins_enable">Aktivieren</string>
+    <string name="repo_title">Repository</string>
+    <string name="repo_none">Für diesen Cluster ist kein Repository gespeichert: Fügen Sie eines über sein Menü in der Clusterliste hinzu (Cluster-Repository).</string>
+    <string name="repo_propose_applies">Am Cluster ändert sich nichts, bis sie zusammengeführt und angewendet ist.</string>
+    <string name="repo_settings_title">Cluster-Repository</string>
+    <string name="repo_settings_body">Das Git-Repository mit der Konfiguration von %1$s. Ichor liest es mit dem Token seines Git-Hosts; nichts wird geklont.</string>
+    <string name="repo_field_url">Repository-Adresse</string>
+    <string name="repo_host">Git-Host: %1$s</string>
+    <string name="repo_no_git_host">Für %1$s ist kein Token gespeichert: Fügen Sie es unter Einstellungen → Git-Hosts hinzu.</string>
+    <string name="repo_open_git_hosts">Git-Hosts öffnen</string>
+    <string name="repo_field_branch">Branch</string>
+    <string name="repo_branch_hint">Leer für den Standard-Branch</string>
+    <string name="repo_field_talos_dir">Talos-Verzeichnis</string>
+    <string name="repo_field_kubernetes_dir">Kubernetes-Verzeichnis</string>
+    <string name="repo_check_ok">%1$s (Standard-Branch: %2$s)</string>
+    <string name="repo_check_can_push">Dieses Token darf pushen: Änderungen öffnen Pull Requests.</string>
+    <string name="repo_check_read_only">Dieses Token darf nur lesen: Pull Requests werden abgelehnt.</string>
+    <string name="repo_edits_are_proposals">Änderungen werden nie auf den Branch committet: Jede öffnet einen Pull- oder Merge-Request.</string>
 </resources>

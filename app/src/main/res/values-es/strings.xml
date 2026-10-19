@@ -5551,4 +5551,21 @@
     <string name="plugins_consent_note">Lee con tu propio acceso a Kubernetes y nunca llama a nada más que a la API de Kubernetes. Desactívalo o elimínalo cuando quieras en Ajustes → Plugins.</string>
     <string name="plugins_replaces">Sustituye al plugin importado con el mismo id.</string>
     <string name="plugins_enable">Activar</string>
+    <string name="repo_title">Repositorio</string>
+    <string name="repo_none">No hay ningún repositorio guardado para este clúster: añade uno desde su menú en la lista de clústeres (Repositorio del clúster).</string>
+    <string name="repo_propose_applies">Nada cambia en el clúster hasta que se fusione y se aplique.</string>
+    <string name="repo_settings_title">Repositorio del clúster</string>
+    <string name="repo_settings_body">El repositorio Git que contiene la configuración de %1$s. Ichor lo lee con el token de su host Git; no se clona nada.</string>
+    <string name="repo_field_url">Dirección del repositorio</string>
+    <string name="repo_host">Host Git: %1$s</string>
+    <string name="repo_no_git_host">No hay ningún token guardado para %1$s: añádelo en Ajustes → Hosts Git.</string>
+    <string name="repo_open_git_hosts">Abrir los hosts Git</string>
+    <string name="repo_field_branch">Rama</string>
+    <string name="repo_branch_hint">Vacío para la rama predeterminada</string>
+    <string name="repo_field_talos_dir">Directorio de Talos</string>
+    <string name="repo_field_kubernetes_dir">Directorio de Kubernetes</string>
+    <string name="repo_check_ok">%1$s (rama predeterminada: %2$s)</string>
+    <string name="repo_check_can_push">Este token puede hacer push: los cambios abren pull requests.</string>
+    <string name="repo_check_read_only">Este token solo puede leer: las pull requests se rechazarán.</string>
+    <string name="repo_edits_are_proposals">Los cambios nunca se confirman en la rama: cada uno abre una pull o merge request.</string>
 </resources>

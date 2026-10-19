@@ -8,6 +8,9 @@ import name.levis.ichor.model.ArgoFreezeAction
 import name.levis.ichor.model.ArgoFreezeOptions
 import name.levis.ichor.model.ArgoNetwork
 import name.levis.ichor.model.ArgoStatus
+import name.levis.ichor.model.ClusterRepo
+import name.levis.ichor.model.DEMO_CLUSTER_REPO
+import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.ArgoSyncOptions
 import name.levis.ichor.model.FluxAction
 import name.levis.ichor.model.FluxDiff
@@ -20,6 +23,7 @@ import name.levis.ichor.model.GitOpsSourceFind
 import name.levis.ichor.model.GitProposal
 import name.levis.ichor.model.GitProposalDefaults
 import name.levis.ichor.model.GitProposalResult
+import name.levis.ichor.model.GitRepoInfo
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.GitTree
 import name.levis.ichor.model.KubeDiffResource
@@ -30,6 +34,8 @@ import name.levis.ichor.model.QuickEditTargets
 import name.levis.ichor.model.decodeQuickEditResult
 import name.levis.ichor.model.decodeQuickEditTargets
 import name.levis.ichor.model.quickEditJson
+import name.levis.ichor.model.decodeGitRepoInfo
+import name.levis.ichor.model.repoSource
 import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.gitHostJsonLacksToken
 import name.levis.ichor.model.gitProposalJson
@@ -42,7 +48,11 @@ import name.levis.ichorgo.FluxReconcileListener
 import name.levis.ichorgo.Ichorgo
 
 /** Argo CD and Flux through their custom resources, on the Kubernetes API of the active cluster. */
-class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) : GoRepository(go) {
+class GitOpsRepository(
+    go: GoCall,
+    private val gitHosts: GitHostStore? = null,
+    private val clusterRepos: ClusterRepoStore? = null,
+) : GoRepository(go) {
     /**
      * Who [host]'s token signs in as and the scopes it lacks, asked of the forge (the demo
      * context answers without network). [token] checks a typed one before it is saved, else the
@@ -239,10 +249,40 @@ class GitOpsRepository(go: GoCall, private val gitHosts: GitHostStore? = null) :
         return go.kube { cfg, ctx, _ -> decodeGitProposalResult(Ichorgo.gitForgePropose(cfg, ctx, host, options)) }
     }
 
+    /** The repository saved for the active cluster; the demo cluster's built-in one; null without one. */
+    fun activeClusterRepo(): ClusterRepo? {
+        val active = go.configs.config.value?.activeSummary ?: return null
+        if (active.isDemo) return DEMO_CLUSTER_REPO
+        return clusterRepos?.repos?.value?.get(active.fingerprint)
+    }
+
+    /**
+     * What the forge tells of [repo] with its host's saved token: the default branch, the head
+     * of the branch read, whether the token can push. Throws [GitHostMissing] without a token.
+     */
+    suspend fun repoInfo(repo: ClusterRepo): GitRepoInfo {
+        val host = forgeHost(repo.host)
+        return withContext(Dispatchers.IO) { decodeGitRepoInfo(Ichorgo.gitForgeRepo(host, repo.repoURL, repo.branch)) }
+    }
+
+    /** The active cluster's repository as a source of the source browser, at its branch head. */
+    suspend fun clusterRepoSource(): GitSource {
+        val repo = activeClusterRepo() ?: throw LocalizedException(UiText.Res(R.string.repo_none))
+        return repoSource(repo, repoInfo(repo))
+    }
+
+    /** The prefilled pull request for a change of [path] in the cluster repository [repoURL], naming the active cluster. No network. */
+    suspend fun repoProposalDefaults(repoURL: String, path: String): GitProposalDefaults {
+        val cluster = go.configs.config.value?.activeSummary?.name.orEmpty()
+        return withContext(Dispatchers.Default) { decodeGitProposalDefaults(Ichorgo.gitForgeRepoProposalDefaults(repoURL, path, cluster)) }
+    }
+
     /** The forge argument for [src]'s host, with its saved token; [GitHostMissing] without one. */
-    private suspend fun forgeHost(src: GitSource): String {
+    private suspend fun forgeHost(src: GitSource): String = forgeHost(src.host)
+
+    /** The forge argument for [host], with its saved token; [GitHostMissing] without one. */
+    private suspend fun forgeHost(host: String): String {
         val store = checkNotNull(gitHosts) { "No Git host store" }
-        val host = src.host
         val entry = store.hostFor(host)
         val json = store.hostJson(entry)
         if (gitHostJsonLacksToken(json)) throw GitHostMissing(host)

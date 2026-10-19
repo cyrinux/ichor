@@ -103,6 +103,9 @@ var dataCommands = []command{
 	{name: "git-tree", args: "HOSTJSON REPO REF DIR", run: func(env) (string, error) {
 		return ichorgo.GitForgeTree(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
 	}},
+	{name: "git-repo", args: "HOSTJSON REPO [BRANCH]", run: func(env) (string, error) {
+		return ichorgo.GitForgeRepo(flag.Arg(1), flag.Arg(2), flag.Arg(3))
+	}},
 	{name: "git-file", args: "HOSTJSON REPO REF PATH", run: func(env) (string, error) {
 		return ichorgo.GitForgeFile(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
 	}},

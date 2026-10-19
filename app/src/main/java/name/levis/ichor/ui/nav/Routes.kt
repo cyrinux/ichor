@@ -159,6 +159,18 @@ internal object Routes {
     const val GITOPS_EDIT = "gitops-edit?tool={tool}&kind={kind}&ns={ns}&name={name}&idx={idx}&path={path}&quick={quick}"
     fun gitOpsEdit(tool: String, kind: String, namespace: String, name: String, idx: Int, path: String, quick: String = "") =
         "gitops-edit?tool=${Uri.encode(tool)}&kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}&idx=$idx&path=${Uri.encode(path)}&quick=${Uri.encode(quick)}"
+
+    /** The active cluster's repository (its Cluster repository setting), at [dir] ("" for the root). */
+    const val REPO_SOURCE = "repo-source?dir={dir}"
+    fun repoSource(dir: String = "") = "repo-source?dir=${Uri.encode(dir)}"
+
+    /** One file of the active cluster's repository, at the branch head; [line] as in [GITOPS_FILE]. */
+    const val REPO_FILE = "repo-file?path={path}&line={line}"
+    fun repoFile(path: String, line: Int = 0) = "repo-file?path=${Uri.encode(path)}&line=$line"
+
+    /** The editor of the file [path] of the active cluster's repository; [quick] as in [GITOPS_EDIT]. */
+    const val REPO_EDIT = "repo-edit?path={path}&quick={quick}"
+    fun repoEdit(path: String, quick: String = "") = "repo-edit?path=${Uri.encode(path)}&quick=${Uri.encode(quick)}"
     const val DEBUG = "debug?addr={addr}&host={host}&ctx={ctx}"
     const val POD_SHELL = "pod-shell?ctx={ctx}&ns={ns}&pod={pod}&c={c}"
     const val KUBE_NODE_DEBUG = "kube-node-debug?ctx={ctx}&node={node}&ns={ns}"

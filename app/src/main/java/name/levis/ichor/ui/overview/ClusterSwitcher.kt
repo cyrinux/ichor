@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.FolderCopy
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.MoreVert
@@ -258,6 +259,7 @@ fun ClusterSheet(
     onActivity: ((ContextSummary) -> Unit)? = null,
     unwatched: Set<String> = emptySet(),
     onWatch: ((ContextSummary, Boolean) -> Unit)? = null,
+    onRepository: ((ContextSummary) -> Unit)? = null,
 ) {
     var removing by remember { mutableStateOf<ContextSummary?>(null) }
     var renaming by remember { mutableStateOf<ContextSummary?>(null) }
@@ -301,6 +303,8 @@ fun ClusterSheet(
                     account = onAccount?.let { open -> clusterAccount(context, contexts)?.let { it to { open(context) } } },
                     beingRemoved = context.name in removingNames,
                     onActivity = onActivity?.let { open -> { open(context) } },
+                    // The demo's repository is built in.
+                    onRepository = onRepository?.let { open -> { open(context) } }?.takeIf { context.fingerprint.isNotBlank() && !context.demo },
                 )
             }
             if (groups == null) {
@@ -405,6 +409,7 @@ private fun ClusterRow(
     account: Pair<Int, () -> Unit>?,
     beingRemoved: Boolean,
     onActivity: (() -> Unit)?,
+    onRepository: (() -> Unit)?,
 ) {
     val label = labels.of(context)
     ListItem(
@@ -456,6 +461,7 @@ private fun ClusterRow(
                 onEndpoints = onEndpoints,
                 account = account,
                 onActivity = onActivity,
+                onRepository = onRepository,
                 onRemove = onRemove,
             )
         },
@@ -483,6 +489,7 @@ private fun ClusterRowMenu(
     onEndpoints: (() -> Unit)?,
     account: Pair<Int, () -> Unit>?,
     onActivity: (() -> Unit)?,
+    onRepository: (() -> Unit)?,
     onRemove: () -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
@@ -544,6 +551,13 @@ private fun ClusterRowMenu(
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.clusters_menu_activity)) },
                     leadingIcon = { Icon(Icons.Outlined.History, contentDescription = null) },
+                    onClick = item(it),
+                )
+            }
+            onRepository?.let {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.repo_settings_title)) },
+                    leadingIcon = { Icon(Icons.Outlined.FolderCopy, contentDescription = null) },
                     onClick = item(it),
                 )
             }

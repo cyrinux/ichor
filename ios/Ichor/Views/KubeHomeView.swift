@@ -483,6 +483,9 @@ struct KubeHomeView: View {
                     toolLabel(Text("Cluster lifecycle"), systemImage: "server.rack")
                 }
             }
+            ClusterRepoToolLink {
+                toolLabel(Text("Repository"), systemImage: "folder.badge.gearshape")
+            }
             pluginTools(.browse)
         } header: {
             Text("Browse")

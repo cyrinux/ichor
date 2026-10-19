@@ -85,7 +85,12 @@ data class BackupCluster(
     val kubeServer: String? = null,
     /** A Talos cluster's Kubernetes access: the fingerprint of the kubeconfig cluster it goes through. */
     val kubeAccess: String? = null,
+    /** The cluster's own Git repository (Settings → cluster → Cluster repository); never a token. */
+    val repository: BackupClusterRepo? = null,
 )
+
+@Serializable
+data class BackupClusterRepo(val repoURL: String, val branch: String = "", val talosDir: String = "", val kubernetesDir: String = "")
 
 @Serializable
 data class BackupWolTarget(val mac: String, val broadcast: String = "", val port: Int = WOL_DEFAULT_PORT)
@@ -108,6 +113,7 @@ fun backupClusters(
     wakeOnLan: Map<String, WolTarget>,
     kubeServers: Map<String, String>,
     kubeAccess: Map<String, String> = emptyMap(),
+    repos: Map<String, ClusterRepo> = emptyMap(),
 ): Map<String, BackupCluster> = fingerprints.filter { it.isNotBlank() }.distinct().associateWith { fp ->
     BackupCluster(
         name = names[fp],
@@ -118,6 +124,7 @@ fun backupClusters(
             .mapValues { (_, t) -> BackupWolTarget(t.mac, t.broadcast, t.port) },
         kubeServer = kubeServers[fp],
         kubeAccess = kubeAccess[fp],
+        repository = repos[fp]?.let { BackupClusterRepo(it.repoURL, it.branch, it.talosDir, it.kubernetesDir) },
     )
 }
 
@@ -132,6 +139,8 @@ data class RestoredClusters(
     val kubeServers: Map<String, String>,
     /** Only links between two restored clusters. */
     val kubeAccess: Map<String, String> = emptyMap(),
+    /** Normalized; one without an address is dropped. */
+    val repos: Map<String, ClusterRepo> = emptyMap(),
 )
 
 /** [clusters] narrowed to [fingerprints] (the restored config's) and validated. */
@@ -149,6 +158,9 @@ fun restoredClusters(clusters: Map<String, BackupCluster>, fingerprints: List<St
         }.toMap(),
         kubeServers = known.mapNotNull { (fp, c) -> c.kubeServer?.trim()?.takeIf { it.isNotEmpty() }?.let { fp to it } }.toMap(),
         kubeAccess = known.mapNotNull { (fp, c) -> c.kubeAccess?.takeIf { it != fp && it in fingerprints }?.let { fp to it } }.toMap(),
+        repos = known.mapNotNull { (fp, c) ->
+            c.repository?.let { normalizeClusterRepo(ClusterRepo(it.repoURL, it.branch, it.talosDir, it.kubernetesDir)) }?.let { fp to it }
+        }.toMap(),
     )
 }
 

@@ -5556,4 +5556,21 @@
     <string name="plugins_consent_note">It reads with your own Kubernetes access and never calls anything but the Kubernetes API. Turn it off or remove it at any time in Settings → Plugins.</string>
     <string name="plugins_replaces">It replaces the imported plugin with the same id.</string>
     <string name="plugins_enable">Enable</string>
+    <string name="repo_title">Repository</string>
+    <string name="repo_none">No repository is saved for this cluster: add one from its menu in the cluster list (Cluster repository).</string>
+    <string name="repo_propose_applies">Nothing changes on the cluster until it is merged and applied.</string>
+    <string name="repo_settings_title">Cluster repository</string>
+    <string name="repo_settings_body">The Git repository that holds %1$s’s configuration. Ichor reads it with the token of its Git host; nothing is cloned.</string>
+    <string name="repo_field_url">Repository address</string>
+    <string name="repo_host">Git host: %1$s</string>
+    <string name="repo_no_git_host">No token is saved for %1$s: add it in Settings → Git hosts.</string>
+    <string name="repo_open_git_hosts">Open Git hosts</string>
+    <string name="repo_field_branch">Branch</string>
+    <string name="repo_branch_hint">Blank for the default branch</string>
+    <string name="repo_field_talos_dir">Talos directory</string>
+    <string name="repo_field_kubernetes_dir">Kubernetes directory</string>
+    <string name="repo_check_ok">%1$s (default branch: %2$s)</string>
+    <string name="repo_check_can_push">This token can push: edits open pull requests.</string>
+    <string name="repo_check_read_only">This token can read only: pull requests will be refused.</string>
+    <string name="repo_edits_are_proposals">Edits are never committed to the branch: each one opens a pull or merge request.</string>
 </resources>
