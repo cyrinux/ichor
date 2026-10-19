@@ -2433,6 +2433,7 @@
     <string name="externaldns_check_missing">Not found</string>
     <string name="externaldns_check_error">Could not check</string>
     <string name="externaldns_check_owner_other">owned by %1$s</string>
+    <string name="externaldns_check_probed">checked as %1$s</string>
     <string name="externaldns_check_mismatch_hint">A name that points elsewhere may be split-horizon DNS at home, a change still propagating, or another ExternalDNS owning it.</string>
     <plurals name="externaldns_check_summary">
         <item quantity="one">%1$d of %2$d name points at this cluster</item>

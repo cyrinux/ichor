@@ -39,6 +39,9 @@ public enum DnsCheckStatus: String, Sendable {
 /// the app says "owner unknown" rather than "not ours".
 public struct DnsCheckEntry: Decodable, Equatable, Sendable {
     public let dnsName: String
+    /// The name actually resolved when it differs from `dnsName` (a wildcard's sample
+    /// label), "" otherwise.
+    public let probed: String
     /// The wire value of `DnsCheckStatus`.
     public let status: String
     public let answers: [String]
@@ -56,6 +59,7 @@ public struct DnsCheckEntry: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         dnsName = try c.field(.dnsName, "")
+        probed = try c.field(.probed, "")
         status = try c.field(.status, "")
         answers = try c.field(.answers, [])
         owner = try c.field(.owner, "")
@@ -65,7 +69,7 @@ public struct DnsCheckEntry: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case dnsName, status, answers, owner, ownerMatch, ms, message
+        case dnsName, probed, status, answers, owner, ownerMatch, ms, message
     }
 }
 

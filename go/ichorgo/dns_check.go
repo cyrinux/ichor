@@ -22,6 +22,15 @@ const dnsCheckConcurrency = 8
 // dnsCheckDefaultTimeout bounds the whole call when the app sends 0.
 const dnsCheckDefaultTimeout = 10 * time.Second
 
+// dnsProbeLabel is the label a wildcard name is resolved through: "*" is not a valid label,
+// and any name under a wildcard with no record of its own answers what the wildcard answers
+// (RFC 4592). Plain letters and a hyphen, so getaddrinfo on Android and iOS accepts it.
+const dnsProbeLabel = "ichor-dns-check"
+
+// errDNSWildcardDepth is a "*" anywhere but the first label, which the DNS does not treat as
+// a wildcard and no resolver can be asked about.
+var errDNSWildcardDepth = errors.New("a wildcard can only be the first label")
+
 // dnsCheckOwnerTimeout bounds the ownership check on its own: a resolver that cannot serve
 // TXT (the Android Go resolver often cannot) must not delay the verdict.
 const dnsCheckOwnerTimeout = 2 * time.Second
@@ -47,9 +56,11 @@ type dnsCheckRequest struct {
 }
 
 // dnsCheckEntry is one hostname's verdict. OwnerMatch is null when no TXT record was
-// readable, so the apps can say "owner unknown" rather than "not ours".
+// readable, so the apps can say "owner unknown" rather than "not ours". Probed is the name
+// actually resolved when it differs from DNSName (a wildcard's sample label), "" otherwise.
 type dnsCheckEntry struct {
 	DNSName    string   `json:"dnsName"`
+	Probed     string   `json:"probed"`
 	Status     string   `json:"status"`
 	Answers    []string `json:"answers"`
 	Owner      string   `json:"owner"`
@@ -144,7 +155,24 @@ func checkDNSRecord(ctx context.Context, resolver dnsChecker, record dnsCheckReq
 
 	entry := dnsCheckEntry{DNSName: record.DNSName, Answers: []string{}}
 
-	answers, err := lookupDNSAnswers(ctx, resolver, record)
+	probe, err := dnsProbeName(record.DNSName)
+	if err != nil {
+		entry.Status = dnsStatusError
+		entry.Message = err.Error()
+		entry.MS = time.Since(start).Milliseconds()
+
+		return entry
+	}
+
+	wildcard := probe != record.DNSName
+	if wildcard {
+		entry.Probed = probe
+	}
+
+	probed := record
+	probed.DNSName = probe
+
+	answers, err := lookupDNSAnswers(ctx, resolver, probed)
 	if answers != nil {
 		entry.Answers = answers
 	}
@@ -162,14 +190,33 @@ func checkDNSRecord(ctx context.Context, resolver dnsChecker, record dnsCheckReq
 	}
 
 	// Ownership only says something about a name that resolves: a missing one has no
-	// registry record to read, and a failed lookup leaves no budget to read it with.
-	if entry.Status == dnsStatusMatch || entry.Status == dnsStatusMismatch {
+	// registry record to read, and a failed lookup leaves no budget to read it with. A
+	// wildcard's registry record only exists under --txt-wildcard-replacement, which the
+	// check cannot see, so its owner stays unknown.
+	if !wildcard && (entry.Status == dnsStatusMatch || entry.Status == dnsStatusMismatch) {
 		entry.Owner, entry.OwnerMatch = dnsCheckOwner(ctx, resolver, record)
 	}
 
 	entry.MS = time.Since(start).Milliseconds()
 
 	return entry
+}
+
+// dnsProbeName is the name the resolver is asked about: a leading "*." becomes the sample
+// label, any other name is unchanged. A "*" deeper than the first label is refused.
+func dnsProbeName(dnsName string) (string, error) {
+	name := strings.TrimSpace(dnsName)
+
+	rest, wildcard := strings.CutPrefix(name, "*.")
+	if strings.Contains(rest, "*") || (!wildcard && name == "*") {
+		return "", errDNSWildcardDepth
+	}
+
+	if !wildcard {
+		return dnsName, nil
+	}
+
+	return dnsProbeLabel + "." + rest, nil
 }
 
 // lookupDNSAnswers resolves one record the way its type asks: A and AAAA through the address
@@ -354,16 +401,23 @@ func normalizeDNSName(name string) string {
 
 // demoDNSCheckEntries is the demo's canned verdicts: most names resolve to their targets,
 // one points elsewhere, one is gone and one cannot be checked, so every chip is visible
-// offline.
+// offline. A wildcard resolves through its sample label, as the real check does.
 func demoDNSCheckEntries(records []dnsCheckRequest) []dnsCheckEntry {
 	out := make([]dnsCheckEntry, 0, len(records))
 
 	for i, record := range records {
 		entry := dnsCheckEntry{DNSName: record.DNSName, Answers: []string{}, MS: int64(3 + i)}
 
+		if probe, err := dnsProbeName(record.DNSName); err == nil && probe != record.DNSName {
+			entry.Probed = probe
+		}
+
 		switch {
-		case len(record.Targets) == 0 || strings.HasPrefix(record.DNSName, "*."):
+		case len(record.Targets) == 0:
 			entry.Status = dnsStatusMissing
+		case entry.Probed != "":
+			entry.Status = dnsStatusMatch
+			entry.Answers = []string{record.Targets[0]}
 		case i%4 == 3:
 			entry.Status = dnsStatusMismatch
 			entry.Answers = []string{"198.51.100.7"}
@@ -375,7 +429,7 @@ func demoDNSCheckEntries(records []dnsCheckRequest) []dnsCheckEntry {
 			entry.Answers = []string{record.Targets[0]}
 		}
 
-		if record.OwnerID != "" {
+		if record.OwnerID != "" && entry.Probed == "" {
 			owner, match := record.OwnerID, true
 			if entry.Status == dnsStatusMismatch {
 				owner, match = "other-cluster", false

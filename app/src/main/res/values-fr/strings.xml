@@ -2433,6 +2433,7 @@
     <string name="externaldns_check_missing">Introuvable</string>
     <string name="externaldns_check_error">Vérification impossible</string>
     <string name="externaldns_check_owner_other">appartient à %1$s</string>
+    <string name="externaldns_check_probed">vérifié via %1$s</string>
     <string name="externaldns_check_mismatch_hint">Un nom qui pointe ailleurs peut être du DNS split-horizon à la maison, un changement encore en propagation, ou un autre ExternalDNS qui le possède.</string>
     <plurals name="externaldns_check_summary">
         <item quantity="one">%1$d nom sur %2$d pointe vers ce cluster</item>

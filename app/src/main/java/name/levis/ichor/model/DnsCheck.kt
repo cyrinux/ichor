@@ -44,6 +44,8 @@ enum class DnsCheckStatus(val wire: String) {
 @Serializable
 data class DnsCheckEntry(
     val dnsName: String = "",
+    /** The name actually resolved when it differs from [dnsName] (a wildcard's sample label), "" otherwise. */
+    val probed: String = "",
     /** Wire value of [DnsCheckStatus]. */
     val status: String = "",
     val answers: List<String> = emptyList(),
