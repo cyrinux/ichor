@@ -19,6 +19,9 @@ data class Roadmap(
 ) {
     /** Every product to price in Play: tips first, then the fundable features' in display order. */
     val productIds: List<String> get() = (tips + features.filter { it.fundable }.flatMap { it.products }).distinct()
+
+    /** False when every feature has shipped (or sells nothing): only the tips are left to buy. */
+    val anyFundable: Boolean get() = features.any { it.fundable }
 }
 
 @Serializable

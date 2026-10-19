@@ -7,6 +7,60 @@
   ],
   "features": [
     {
+      "id": "push-relay",
+      "title": {
+        "en": "Instant alert push",
+        "fr": "Alertes poussées instantanément",
+        "de": "Sofortige Alarm-Push-Nachrichten",
+        "es": "Alertas push al instante",
+        "it": "Avvisi push istantanei",
+        "uk": "Миттєві push-сповіщення"
+      },
+      "description": {
+        "en": "An optional in-cluster relay receives Alertmanager's webhook and pushes firing alerts to your phone within seconds (UnifiedPush on Android, ntfy on iOS), instead of waiting for the next background check.",
+        "fr": "Un relais optionnel dans le cluster reçoit le webhook d'Alertmanager et pousse les alertes vers le téléphone en quelques secondes (UnifiedPush sur Android, ntfy sur iOS), au lieu d'attendre la prochaine vérification en arrière-plan.",
+        "de": "Ein optionales Relay im Cluster empfängt den Webhook von Alertmanager und schickt ausgelöste Alarme in Sekunden aufs Handy (UnifiedPush unter Android, ntfy unter iOS), statt auf die nächste Hintergrundprüfung zu warten.",
+        "es": "Un relé opcional dentro del clúster recibe el webhook de Alertmanager y envía las alertas activas al móvil en segundos (UnifiedPush en Android, ntfy en iOS), sin esperar a la siguiente comprobación en segundo plano.",
+        "it": "Un relay opzionale nel cluster riceve il webhook di Alertmanager e invia gli avvisi attivi al telefono in pochi secondi (UnifiedPush su Android, ntfy su iOS), senza attendere il prossimo controllo in background.",
+        "uk": "Необов'язковий ретранслятор у кластері отримує вебхук Alertmanager і за лічені секунди надсилає активні сповіщення на телефон (UnifiedPush на Android, ntfy на iOS), не чекаючи наступної фонової перевірки."
+      },
+      "goal": 400,
+      "raised": 0,
+      "status": "open",
+      "products": [
+        "fund_relay_2",
+        "fund_relay_5",
+        "fund_relay_10"
+      ]
+    },
+    {
+      "id": "crd-plugins",
+      "title": {
+        "en": "Plugins for your own CRDs",
+        "fr": "Plugins pour vos propres CRD",
+        "de": "Plugins für eigene CRDs",
+        "es": "Plugins para tus propios CRD",
+        "it": "Plugin per i tuoi CRD",
+        "uk": "Плагіни для власних CRD"
+      },
+      "description": {
+        "en": "Describe a custom resource in one YAML file (fields, health, cards, actions) and import it on the phone: any operator gets its own screen without waiting for an app release.",
+        "fr": "Décrire une ressource personnalisée dans un seul fichier YAML (champs, santé, cartes, actions) et l'importer sur le téléphone : chaque opérateur obtient son écran sans attendre une nouvelle version de l'app.",
+        "de": "Eine eigene Ressource in einer YAML-Datei beschreiben (Felder, Zustand, Karten, Aktionen) und auf dem Handy importieren: jeder Operator bekommt eine eigene Ansicht, ohne auf ein App-Update zu warten.",
+        "es": "Describir un recurso personalizado en un solo archivo YAML (campos, estado, tarjetas, acciones) e importarlo en el móvil: cualquier operador tiene su propia pantalla sin esperar a una nueva versión de la app.",
+        "it": "Descrivere una risorsa personalizzata in un unico file YAML (campi, stato, schede, azioni) e importarla sul telefono: ogni operatore ha la sua schermata senza attendere un aggiornamento dell'app.",
+        "uk": "Опишіть власний ресурс в одному YAML-файлі (поля, стан, картки, дії) та імпортуйте його на телефоні: кожен оператор отримує власний екран без очікування нової версії застосунку."
+      },
+      "goal": 300,
+      "raised": 0,
+      "status": "open",
+      "products": [
+        "fund_plugins_2",
+        "fund_plugins_5",
+        "fund_plugins_10"
+      ]
+    },
+    {
       "id": "data-services-actions",
       "title": {
         "en": "Act on data services",
@@ -31,7 +85,8 @@
         "fund_data_actions_2",
         "fund_data_actions_5",
         "fund_data_actions_10"
-      ]
+      ],
+      "shippedIn": "1.29.0"
     },
     {
       "id": "more-data-services",
@@ -58,7 +113,8 @@
         "fund_data_more_2",
         "fund_data_more_5",
         "fund_data_more_10"
-      ]
+      ],
+      "shippedIn": "1.29.0"
     }
   ]
 }
