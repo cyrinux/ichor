@@ -28,9 +28,6 @@ class DataServicesViewModel(private val dataServices: DataServicesRepository) : 
     /** Longhorn volume and node actions; their progress shows in a fresh reading. */
     val longhorn = LonghornActions(viewModelScope, dataServices, onChanged = { refresh() })
 
-    /** kube-green schedule changes; the next sleep and wake-up show in a fresh reading. */
-    val kubeGreen = KubeGreenActions(viewModelScope, dataServices, onChanged = { refresh() })
-
     /** Certificate details and forced renewals; an issuance shows in a fresh reading. */
     val certificates = CertificateActions(viewModelScope, dataServices, onChanged = { refresh() })
 

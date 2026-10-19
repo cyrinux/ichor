@@ -245,7 +245,8 @@ final class PluginTests: XCTestCase {
         XCTAssertEqual(PluginNativeScreen(screen: "native:argocd"), .argoCD)
         XCTAssertEqual(PluginNativeScreen(screen: "native:cluster-lifecycle"), .clusterLifecycle)
         XCTAssertEqual(PluginNativeScreen(screen: "native:longhorn"), .dataService(.longhorn))
-        XCTAssertEqual(PluginNativeScreen(screen: "native:kube-green"), .dataService(.kubeGreen))
+        // kube-green is a plugin, no native data service: its name opens nothing native.
+        XCTAssertNil(PluginNativeScreen(screen: "native:kube-green"))
         // Anything else is the generic screen: a plugin can never send the app elsewhere.
         XCTAssertNil(PluginNativeScreen(screen: "native:settings"))
         XCTAssertNil(PluginNativeScreen(screen: "native:https://example.org"))
@@ -267,7 +268,7 @@ final class PluginTests: XCTestCase {
         XCTAssertEqual(detect.homeTiles.map(\.id), ["widgets"])
         XCTAssertEqual(detect.items[0].summary?.line, "2 sleep schedules · 1 asleep")
         XCTAssertEqual(detect.items[0].summary?.serviceHealth, .warning)
-        XCTAssertEqual(detect.items[0].dataServiceKind, .kubeGreen)
+        XCTAssertNil(detect.items[0].dataServiceKind)
         XCTAssertNil(detect.items[1].summary)
         XCTAssertEqual(detect.items[1].nativeScreen, .dataService(.cnpg))
         XCTAssertEqual(detect.items[2].toolFamily, .networking)

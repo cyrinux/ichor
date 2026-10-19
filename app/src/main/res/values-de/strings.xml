@@ -2460,16 +2460,8 @@
         <item quantity="one">Die ersten %1$d von %2$d SealedSecrets.</item>
         <item quantity="other">Die ersten %1$d von %2$d SealedSecrets.</item>
     </plurals>
-    <string name="kubegreen_empty">Keine Schlafpläne.</string>
-    <string name="kubegreen_state_asleep">Schlafend</string>
-    <string name="kubegreen_state_awake">Wach</string>
     <string name="kubegreen_wakes">wacht %1$s auf</string>
-    <string name="kubegreen_sleeps">schläft %1$s</string>
     <string name="kubegreen_until_changed">bis von Hand geändert</string>
-    <string name="kubegreen_reason_no_wake_up">keine Aufwachzeit</string>
-    <string name="kubegreen_reason_invalid_schedule">ungültiger Plan</string>
-    <string name="kubegreen_reason_overdue">der Controller hat den letzten Lauf verpasst</string>
-    <string name="kubegreen_reason_never_ran">noch nie gelaufen</string>
     <string name="kubegreen_weekdays">Tage</string>
     <string name="kubegreen_edit_schedule">Zeitplan bearbeiten</string>
     <string name="kubegreen_schedule_title">Zeitplan von %1$s</string>
@@ -2484,22 +2476,7 @@
     <string name="kubegreen_save">Speichern</string>
     <string name="kubegreen_saved">Zeitplan von %1$s gespeichert</string>
     <string name="kubegreen_save_failed">Zeitplan von %1$s konnte nicht gespeichert werden: %2$s</string>
-    <string name="kubegreen_schedule">Zeiten</string>
     <string name="kubegreen_time_zone">Zeitzone</string>
-    <string name="kubegreen_suspends">Hält an</string>
-    <string name="kubegreen_deployments">Deployments</string>
-    <string name="kubegreen_statefulsets">StatefulSets</string>
-    <string name="kubegreen_cronjobs">CronJobs</string>
-    <string name="kubegreen_nothing">nichts</string>
-    <string name="kubegreen_scope">Umfang</string>
-    <string name="kubegreen_excluded">%1$d ausgeschlossen</string>
-    <string name="kubegreen_included">%1$d eingeschlossen</string>
-    <string name="kubegreen_patches">%1$d Patches</string>
-    <string name="kubegreen_last_run">Letzter Lauf</string>
-    <plurals name="kubegreen_schedules">
-        <item quantity="one">%1$d Schlafplan</item>
-        <item quantity="other">%1$d Schlafpläne</item>
-    </plurals>
     <string name="kubegreen_resumes">läuft %1$s wieder an</string>
     <string name="kubegreen_asleep_note">Schlafend: kube-green hat diesen Namespace schlafen gelegt (SleepInfo %1$s), %2$s</string>
     <string name="kubegreen_asleep_note_maybe">Schlafend: kube-green hat diesen Namespace möglicherweise schlafen gelegt (SleepInfo %1$s), %2$s</string>

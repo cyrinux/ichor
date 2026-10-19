@@ -10,7 +10,7 @@ id: kube-green
 name: kube-green
 website: https://kube-green.dev
 icon: kube-green
-category: data-services
+category: workloads
 catalogId: kube-green
 
 detect:

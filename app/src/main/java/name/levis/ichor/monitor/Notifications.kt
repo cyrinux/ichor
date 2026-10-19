@@ -320,7 +320,8 @@ private fun gitopsAlertText(context: Context, alert: Alert): String {
 private fun dataAlertText(context: Context, alert: Alert): String {
     if (alert.problem && alert.detail.substringBefore('|') == "snapshots") return context.getString(R.string.snapshot_stale).replaceFirstChar { it.titlecase() }
     if (alert.problem && alert.detail.substringBefore('|') == "backupjobs") return context.resources.getQuantityString(R.plurals.backup_failures_in_row, 3, 3).replaceFirstChar { it.titlecase() }
-    val system = dataServiceKindOf(alert.detail.substringBefore('|')).title
+    val key = alert.detail.substringBefore('|')
+    val system = dataServiceKindOf(key)?.title ?: key
     if (!alert.problem) return system
     val severity = when (alert.detail.substringAfter('|')) {
         DATA_CRITICAL -> context.getString(R.string.data_services_health_critical)

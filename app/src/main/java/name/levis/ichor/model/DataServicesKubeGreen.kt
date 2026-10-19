@@ -2,15 +2,8 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/ichorgo/kube_kubegreen.go.
-
-@Serializable
-data class KubeGreenStatus(
-    val version: String = "",
-    val error: String = "",
-    /** Problems first. */
-    val sleepInfos: List<KubeGreenSleepInfo> = emptyList(),
-)
+// Mirrors the SleepInfo rows of go/ichorgo/kube_kubegreen_namespace.go; kube-green's own
+// screen is the built-in plugin (go/plugin/builtin/kube-green.yaml).
 
 @Serializable
 data class KubeGreenSleepInfo(
@@ -42,9 +35,7 @@ data class KubeGreenSleepInfo(
     val health: String = "",
     val reasons: List<String> = emptyList(),
 ) {
-    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
     val label: String get() = "$namespace/$name"
-    val reasonList: List<KubeGreenReason> get() = reasons.mapNotNull(KubeGreenReason::from)
 }
 
 /**
@@ -96,26 +87,6 @@ enum class KubeGreenWarn { ASLEEP, SLEEPS_SOON }
 
 /** A day, the window in which the Go core also warns: see `kubeGreenWarningText`. */
 private const val KUBE_GREEN_SOON_MILLIS = 24 * 60 * 60 * 1000L
-
-/** Why a SleepInfo is not ok, as the Go core names it. */
-enum class KubeGreenReason(val wire: String) {
-    NO_WAKE_UP("noWakeUp"),
-    INVALID_SCHEDULE("invalidSchedule"),
-    OVERDUE("overdue"),
-    NEVER_RAN("neverRan"),
-    ;
-
-    companion object {
-        fun from(wire: String): KubeGreenReason? = entries.firstOrNull { it.wire == wire }
-    }
-}
-
-/** Sleep schedules are the items; one that needs a look is a warning, never critical. */
-fun KubeGreenStatus.summary(): ServiceSummary {
-    if (error.isNotEmpty() && sleepInfos.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
-    val healths = sleepInfos.map { it.serviceHealth }
-    return ServiceSummary(sleepInfos.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
-}
 
 // The schedule editor's values, checked the way the SleepInfo CRD and the Go core check them,
 // so a bad one is refused in the sheet before any request.

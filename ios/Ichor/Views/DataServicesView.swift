@@ -11,7 +11,7 @@ struct DataServicesView: View {
 
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<DataServices> = .loading
-    /// The CRD plugins of the data-services category (kube-green...): one tab each, after the
+    /// The CRD plugins of the data-services category: one tab each, after the
     /// native systems.
     @State private var plugins: LoadState<PluginDetect> = .loading
     @State private var selected: DataServicesTab.ID?
@@ -115,7 +115,6 @@ struct DataServicesView: View {
         case .snapshots: SnapshotsList(status: services.snapshots!)
         case .backupJobs: BackupJobsList(status: services.backupJobs!)
         case .castai: CastAIList(status: services.castai!, refresh: refresh)
-        case .kubeGreen: KubeGreenList(status: services.kubeGreen!, refresh: refresh)
         }
     }
 
@@ -190,7 +189,6 @@ struct DataServicesView: View {
         case "sealedsecrets": .sealedSecrets
         case "velero": .velero
         case "externaldns": .externalDns
-        case "kubegreen": .kubeGreen
         case "ceph": .ceph
         case "castai": .castai
         case "garage": .garage

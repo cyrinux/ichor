@@ -2468,16 +2468,8 @@
         <item quantity="one">Visualizzati i primi %1$d di %2$d SealedSecret.</item>
         <item quantity="other">Visualizzati i primi %1$d di %2$d SealedSecret.</item>
     </plurals>
-    <string name="kubegreen_empty">Nessuna pianificazione di sospensione.</string>
-    <string name="kubegreen_state_asleep">Addormentato</string>
-    <string name="kubegreen_state_awake">Sveglio</string>
     <string name="kubegreen_wakes">si sveglia %1$s</string>
-    <string name="kubegreen_sleeps">si addormenta %1$s</string>
     <string name="kubegreen_until_changed">finché non viene modificato a mano</string>
-    <string name="kubegreen_reason_no_wake_up">nessun orario di risveglio</string>
-    <string name="kubegreen_reason_invalid_schedule">pianificazione non valida</string>
-    <string name="kubegreen_reason_overdue">il controller ha perso la sua ultima esecuzione</string>
-    <string name="kubegreen_reason_never_ran">mai eseguito</string>
     <string name="kubegreen_weekdays">Giorni</string>
     <string name="kubegreen_edit_schedule">Modifica la pianificazione</string>
     <string name="kubegreen_schedule_title">Pianificazione di %1$s</string>
@@ -2492,23 +2484,7 @@
     <string name="kubegreen_save">Salva</string>
     <string name="kubegreen_saved">Pianificazione di %1$s salvata</string>
     <string name="kubegreen_save_failed">Impossibile salvare la pianificazione di %1$s: %2$s</string>
-    <string name="kubegreen_schedule">Orari</string>
     <string name="kubegreen_time_zone">Fuso orario</string>
-    <string name="kubegreen_suspends">Sospende</string>
-    <string name="kubegreen_deployments">Deployment</string>
-    <string name="kubegreen_statefulsets">StatefulSet</string>
-    <string name="kubegreen_cronjobs">CronJob</string>
-    <string name="kubegreen_nothing">niente</string>
-    <string name="kubegreen_scope">Ambito</string>
-    <string name="kubegreen_excluded">%1$d esclusi</string>
-    <string name="kubegreen_included">%1$d inclusi</string>
-    <string name="kubegreen_patches">%1$d patch</string>
-    <string name="kubegreen_last_run">Ultima esecuzione</string>
-    <plurals name="kubegreen_schedules">
-        <item quantity="one">%1$d pianificazione di sospensione</item>
-        <item quantity="many">%1$d pianificazioni di sospensione</item>
-        <item quantity="other">%1$d pianificazioni di sospensione</item>
-    </plurals>
     <string name="kubegreen_resumes">riprende %1$s</string>
     <string name="kubegreen_asleep_note">Addormentato: kube-green ha messo in sospensione questo namespace (SleepInfo %1$s), %2$s</string>
     <string name="kubegreen_asleep_note_maybe">Addormentato: kube-green potrebbe aver messo in sospensione questo namespace (SleepInfo %1$s), %2$s</string>

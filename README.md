@@ -212,9 +212,7 @@ tour** shows it again.
 - **Data services:** the storage and database operators the cluster runs (Longhorn, Garage,
   CloudNativePG, Dragonfly, MariaDB, Percona, cert-manager, Velero, ExternalDNS, Sealed Secrets,
   External Secrets, Rook Ceph, CAST AI, CSI VolumeSnapshots, backup CronJobs) on one tabbed screen, each with its
-  health and what needs a look; kube-green's sleep schedules say which namespaces sleep on a
-  schedule, when they wake up, and whether they are asleep right now, and a schedule can be moved
-  from the phone (days, sleep and wake-up times, time zone). ExternalDNS shows the
+  health and what needs a look. ExternalDNS shows the
   hostnames it manages, where each comes from, and the controller's settings; it can resolve
   every hostname from the phone and compare it with the record's targets, so a name that points
   elsewhere, or that no controller owns, stands out. Sealed Secrets shows the controller, the
@@ -225,9 +223,11 @@ tour** shows it again.
   manages Garage, its clusters, buckets (size, quota, website), keys and node declarations show
   next to the live Garage state. Integrations are declarative plugins; see
   [docs/plugins.md](docs/plugins.md). On Android and iOS, each plugin the cluster runs gets its tile
-  in the Data services card and its own tab (kube-green is the first), drawn from the tree the
-  Go core renders; a plugin of another kind (networking, policies…) is a tool on the
-  Kubernetes home. Plugin actions show, off, until the app can run them.
+  in the Data services card and its own tab, drawn from the tree the Go core renders; a plugin
+  of another kind (workloads, networking, policies…) is a tool in that family of the Kubernetes
+  home. kube-green is one: Workloads → kube-green says which namespaces sleep on a schedule, when
+  they wake up, and whether they are asleep right now, and a schedule can be moved from the phone
+  (days, sleep and wake-up times, time zone). Plugin actions run from their buttons.
 - **Plugins of your own:** Settings → Plugins lists the built-in plugins and the ones you
   imported. Import a plugin file (one `/ichor-crd-plugin` or `just probe plugin-lint` checked,
   for an operator Ichor does not know) by pasting it, picking it in Files, or from an https URL
@@ -453,7 +453,7 @@ time) and warns before scaling a workload or resuming a CronJob, since kube-gree
 replicas it saved at the next wake-up and re-suspends the CronJob at the next sleep; a cluster
 without kube-green shows nothing new.
 
-**Data services → kube-green → a schedule → Edit schedule** moves it: the days, the sleep and
+**Kubernetes → Workloads → kube-green → a schedule → Edit schedule** moves it: the days, the sleep and
 wake-up times ("HH:mm", cron syntax kept) and the time zone the times are in, written with them
 so a time is never saved without its zone. "No wake-up" (sleep until changed by hand) is an
 explicit switch, off by default. Values are checked on the phone before anything is sent; an

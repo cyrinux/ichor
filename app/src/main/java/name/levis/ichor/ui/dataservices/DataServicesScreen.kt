@@ -97,7 +97,6 @@ fun DataServicesScreen(
     val pluginsVm: PluginDetectViewModel = viewModel(key = "data-services-plugins", factory = factory { PluginDetectViewModel(app.pluginRepository) })
     val plugins by pluginsVm.state.collectAsStateWithLifecycle()
     var refreshes by rememberSaveable { mutableIntStateOf(0) }
-    val kubeGreenSaved by vm.kubeGreen.saved.collectAsStateWithLifecycle()
 
     LaunchedEffect(config?.activeContext, generation, invalidations) {
         val key = Triple(config?.activeContext, generation, invalidations)
@@ -109,8 +108,8 @@ fun DataServicesScreen(
         pluginsVm.refresh()
         refreshes++
     }
-    // A plugin tab reads again on a refresh, another cluster, or a kube-green schedule saved.
-    val pluginReload = PluginReload(scope = config?.activeContext to generation, bump = listOf(invalidations, refreshes, kubeGreenSaved))
+    // A plugin tab reads again on a refresh or another cluster.
+    val pluginReload = PluginReload(scope = config?.activeContext to generation, bump = listOf(invalidations, refreshes))
     val pluginTabs = (plugins as? UiState.Loaded)?.data?.dataServicePlugins.orEmpty().filter { nativePluginRoute(it) == null }
     GarageResultToasts(vm.garage.results)
     LonghornResultToasts(vm.longhorn.results)
@@ -119,7 +118,6 @@ fun DataServicesScreen(
     LonghornEngineToasts(vm.longhorn.engineResults)
     LonghornSnapshotToasts(vm.longhorn.snapshotResults)
     CertificateRenewToasts(vm.certificates.results)
-    KubeGreenScheduleToasts(vm.kubeGreen.results)
     CnpgBackupToasts(vm.cnpg.results)
     CnpgPromoteToasts(vm.cnpg.promoteResults)
     CnpgLifecycleToasts(vm.cnpg.lifecycleResults)
@@ -182,7 +180,7 @@ fun DataServicesScreen(
             when {
                 tabs.isNotEmpty() -> Systems(
                     data, tabs, downNodes, first, onObject, onNodes, query.takeIf { searching }, { query = it },
-                    SystemActions(vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero, vm.externalDns, vm.kubeGreen),
+                    SystemActions(vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero, vm.externalDns),
                     pluginReload,
                 )
                 // The plugins may still name one.
@@ -239,7 +237,6 @@ private class SystemActions(
     val cnpg: CnpgActions,
     val velero: VeleroActions,
     val externalDns: ExternalDnsActions,
-    val kubeGreen: KubeGreenActions,
 )
 
 @Composable
@@ -282,12 +279,7 @@ private fun Systems(
         SwipeTabPager(hubPages(tabs), tab.id, onSelect = { selected = it }) { id ->
             when (val page = tabs.firstOrNull { it.id == id } ?: tab) {
                 is HubTab.Native -> NativeTab(page.kind, services, actions, onObject, query) { selected = HubTab.Native(DataServiceKind.GARAGE).id }
-                is HubTab.Plugin -> PluginTab(
-                    page.pluginId,
-                    pluginReload,
-                    onObject,
-                    rowExtra = { row -> if (page.pluginId == KUBE_GREEN_PLUGIN) kubeGreenRowExtra(row, actions.kubeGreen) else null },
-                )
+                is HubTab.Plugin -> PluginTab(page.pluginId, pluginReload, onObject)
             }
         }
     }
@@ -310,6 +302,5 @@ private fun NativeTab(kind: DataServiceKind, services: DataServices, actions: Sy
         DataServiceKind.SNAPSHOTS -> SnapshotsTab(services.snapshots!!)
         DataServiceKind.BACKUP_JOBS -> BackupJobsTab(services.backupJobs!!)
         DataServiceKind.CASTAI -> CastAITab(services.castai!!)
-        DataServiceKind.KUBE_GREEN -> KubeGreenTab(services.kubeGreen!!, actions.kubeGreen)
     }
 }
