@@ -15,14 +15,48 @@ import (
 // (v1alpha1): most installs publish only the Ingress and Service hosts they are given.
 const groupExternalDNS = "externaldns.k8s.io"
 
-// The annotations and values the ExternalDNS sources share.
+// The annotation prefixes ExternalDNS reads: v0.22 renamed the alpha one, still honoured
+// with --enable-legacy-annotation-prefix. Both are read, the current one first, since a
+// cluster upgrading its controller carries both for a while.
 const (
-	extDNSAnnPrefix     = "external-dns.alpha.kubernetes.io/"
-	extDNSAnnHostname   = extDNSAnnPrefix + "hostname"
-	extDNSAnnInternal   = extDNSAnnPrefix + "internal-hostname"
-	extDNSAnnTarget     = extDNSAnnPrefix + "target"
-	extDNSAnnTTL        = extDNSAnnPrefix + "ttl"
-	extDNSAnnController = extDNSAnnPrefix + "controller"
+	extDNSAnnPrefix       = "external-dns.kubernetes.io/"
+	extDNSAnnLegacyPrefix = "external-dns.alpha.kubernetes.io/"
+)
+
+// extDNSAnnKey is one ExternalDNS annotation under both prefixes, built once so the
+// lookup in the per-object loops does not concatenate.
+type extDNSAnnKey struct{ current, legacy string }
+
+func newExtDNSAnnKey(name string) extDNSAnnKey {
+	return extDNSAnnKey{current: extDNSAnnPrefix + name, legacy: extDNSAnnLegacyPrefix + name}
+}
+
+// The annotations the ExternalDNS sources share.
+var (
+	extDNSAnnHostname   = newExtDNSAnnKey("hostname")
+	extDNSAnnInternal   = newExtDNSAnnKey("internal-hostname")
+	extDNSAnnTarget     = newExtDNSAnnKey("target")
+	extDNSAnnTTL        = newExtDNSAnnKey("ttl")
+	extDNSAnnController = newExtDNSAnnKey("controller")
+)
+
+// extDNSAnn reads an ExternalDNS annotation, the current prefix winning over the legacy one.
+func extDNSAnn(annotations map[string]string, key extDNSAnnKey) (string, bool) {
+	if v, ok := annotations[key.current]; ok {
+		return v, true
+	}
+
+	v, ok := annotations[key.legacy]
+	return v, ok
+}
+
+// extDNSAnnValue is extDNSAnn without the presence flag: "" when absent.
+func extDNSAnnValue(annotations map[string]string, key extDNSAnnKey) string {
+	v, _ := extDNSAnn(annotations, key)
+	return v
+}
+
+const (
 	// The value marking an object as this controller's: another value (a second ExternalDNS)
 	// leaves the object out.
 	extDNSControllerName = "dns-controller"
@@ -367,7 +401,7 @@ func extDNSRawRecords(endpoints []dnsEndpointObject, ingresses []ingressObject, 
 			continue
 		}
 
-		hosts := splitCSV(orDefault(svc.Metadata.Annotations[extDNSAnnHostname], svc.Metadata.Annotations[extDNSAnnInternal]))
+		hosts := splitCSV(orDefault(extDNSAnnValue(svc.Metadata.Annotations, extDNSAnnHostname), extDNSAnnValue(svc.Metadata.Annotations, extDNSAnnInternal)))
 		if len(hosts) == 0 {
 			continue
 		}
@@ -403,7 +437,7 @@ func extDNSRawRecords(endpoints []dnsEndpointObject, ingresses []ingressObject, 
 // serving Gateway's target annotation, which replaces its status addresses (the annotation is
 // read on the Gateway; on a route it is ignored).
 func extDNSRouteRecords(r gatewayRouteObject, gateways []gatewayObject) (hosts, targets []string) {
-	routeHosts := append(slices.Clone(r.Spec.Hostnames), splitCSV(r.Metadata.Annotations[extDNSAnnHostname])...)
+	routeHosts := append(slices.Clone(r.Spec.Hostnames), splitCSV(extDNSAnnValue(r.Metadata.Annotations, extDNSAnnHostname))...)
 	if len(routeHosts) == 0 {
 		routeHosts = []string{""} // the listeners' hostnames
 	}
@@ -482,7 +516,7 @@ func extDNSMatchingHost(route, listener string) (string, bool) {
 
 // extDNSForeign tells whether another ExternalDNS owns the object.
 func extDNSForeign(annotations map[string]string) bool {
-	v, ok := annotations[extDNSAnnController]
+	v, ok := extDNSAnn(annotations, extDNSAnnController)
 	return ok && v != extDNSControllerName
 }
 
@@ -495,7 +529,7 @@ func extDNSIngressHosts(ing ingressObject) []string {
 		}
 	}
 
-	return append(hosts, splitCSV(ing.Metadata.Annotations[extDNSAnnHostname])...)
+	return append(hosts, splitCSV(extDNSAnnValue(ing.Metadata.Annotations, extDNSAnnHostname))...)
 }
 
 // extDNSLBAddresses flattens a load balancer's ingress entries.
@@ -520,7 +554,7 @@ func extDNSLBAddresses(ingress []struct {
 // extDNSAnnTargets are the target annotation's values; override tells whether it was set
 // (it replaces the source's own addresses).
 func extDNSAnnTargets(annotations map[string]string) (targets []string, override bool) {
-	if t := annotations[extDNSAnnTarget]; t != "" {
+	if t := extDNSAnnValue(annotations, extDNSAnnTarget); t != "" {
 		return splitCSV(t), true
 	}
 
@@ -529,7 +563,7 @@ func extDNSAnnTargets(annotations map[string]string) (targets []string, override
 
 // extDNSAnnTTLValue is the ttl annotation in seconds, 0 when absent or unparsable.
 func extDNSAnnTTLValue(annotations map[string]string) int {
-	ttl, _ := strconv.Atoi(annotations[extDNSAnnTTL])
+	ttl, _ := strconv.Atoi(extDNSAnnValue(annotations, extDNSAnnTTL))
 	return ttl
 }
 
