@@ -5577,4 +5577,24 @@
     <string name="source_search_summary">Coincidencias: %1$d · archivos buscados: %2$d</string>
     <string name="source_search_truncated">Hay más líneas que coinciden: afina la búsqueda.</string>
     <string name="source_search_open_line">Abrir el archivo en esta línea</string>
+    <string name="talos_git_action">Comparar con Git</string>
+    <string name="talos_git_title">Nodo y Git</string>
+    <string name="talos_git_at">Repositorio en %1$s</string>
+    <string name="talos_git_generator">Organizado para %1$s</string>
+    <string name="talos_git_none">Ningún archivo del repositorio configura este nodo.</string>
+    <string name="talos_git_order">Los archivos marcados se aplican a la config del nodo en este orden, como lo hace su generador.</string>
+    <string name="talos_git_compare">Comparar</string>
+    <string name="talos_git_open_file">Abrir el archivo</string>
+    <string name="talos_git_skipped">%1$s omitido: %2$s</string>
+    <string name="talos_git_same">Igual que Git</string>
+    <string name="talos_git_same_desc">Aplicar estos archivos a la config del nodo no cambia nada: el nodo coincide con el repositorio.</string>
+    <string name="talos_git_differs">Lo que Git cambiaría en el nodo</string>
+    <string name="talos_git_reboot">Necesita un reinicio</string>
+    <string name="talos_git_edit_from_diff">Editar a partir de este diff</string>
+    <string name="talos_git_edit_from_diff_desc">Abre el editor con la versión de Git como borrador: revísela y luego pruébela o aplíquela.</string>
+    <string name="talos_git_hide_secrets">Oculte primero los secretos: un borrador nunca los contiene.</string>
+    <string name="talos_git_kind_node">Nodo</string>
+    <string name="talos_git_kind_shared">Compartido</string>
+    <string name="talos_git_kind_talconfig">talconfig</string>
+    <string name="talos_git_kind_secrets">Secretos</string>
 </resources>

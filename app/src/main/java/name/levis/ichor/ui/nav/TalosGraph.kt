@@ -137,7 +137,14 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             DriftFix(it, args?.getString("before").orEmpty(), args?.getString("after").orEmpty())
         }
         val snippet = SnippetPrefill.decode(args?.getString("snippet").orEmpty(), args?.getString("snippetParams").orEmpty())
-        MachineConfigScreen(node = addr, hostname = args?.getString("host") ?: addr, onBack = { nav.popBackStack() }, fix = fix, snippet = snippet)
+        MachineConfigScreen(
+            node = addr,
+            hostname = args?.getString("host") ?: addr,
+            onBack = { nav.popBackStack() },
+            fix = fix,
+            snippet = snippet,
+            onRepoFile = { path, line -> nav.navigate(Routes.repoFile(path, line)) },
+        )
     }
     composable(Routes.NETWORK, arguments = nodeArguments()) { entry ->
         val addr = entry.arguments?.getString("addr").orEmpty()

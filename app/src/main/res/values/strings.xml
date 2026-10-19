@@ -5582,4 +5582,24 @@
     <string name="source_search_summary">Matches: %1$d · files searched: %2$d</string>
     <string name="source_search_truncated">More lines match: refine the search.</string>
     <string name="source_search_open_line">Open the file at this line</string>
+    <string name="talos_git_action">Compare with Git</string>
+    <string name="talos_git_title">Node and Git</string>
+    <string name="talos_git_at">Repository at %1$s</string>
+    <string name="talos_git_generator">Laid out for %1$s</string>
+    <string name="talos_git_none">No file of the repository configures this node.</string>
+    <string name="talos_git_order">The files checked are applied onto the node\'s config in this order, as your generator does.</string>
+    <string name="talos_git_compare">Compare</string>
+    <string name="talos_git_open_file">Open file</string>
+    <string name="talos_git_skipped">%1$s skipped: %2$s</string>
+    <string name="talos_git_same">Same as Git</string>
+    <string name="talos_git_same_desc">Applying these files onto the node\'s config changes nothing: the node matches the repository.</string>
+    <string name="talos_git_differs">What Git would change on the node</string>
+    <string name="talos_git_reboot">Needs a reboot</string>
+    <string name="talos_git_edit_from_diff">Edit from this diff</string>
+    <string name="talos_git_edit_from_diff_desc">Opens the editor with Git\'s version as the draft: review it, then try or apply it.</string>
+    <string name="talos_git_hide_secrets">Hide the secrets first: a draft never holds them.</string>
+    <string name="talos_git_kind_node">Node</string>
+    <string name="talos_git_kind_shared">Shared</string>
+    <string name="talos_git_kind_talconfig">talconfig</string>
+    <string name="talos_git_kind_secrets">Secrets</string>
 </resources>

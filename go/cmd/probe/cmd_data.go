@@ -112,6 +112,13 @@ var dataCommands = []command{
 	{name: "git-search", args: "HOSTJSON REPO REF QUERY", run: func(env) (string, error) {
 		return ichorgo.GitRepoSearch(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), 0)
 	}},
+	{name: "talos-repo-files", args: "HOSTJSON REPO REF DIR HOSTNAME ROLE", run: func(env) (string, error) {
+		return ichorgo.TalosRepoFiles(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6))
+	}},
+	// Reads NODE's config with its secrets (os:admin); only a dry run reaches the node.
+	{name: "talos-repo-compare", args: "HOSTJSON REPO REF NODE HOSTNAME PATHSJSON", run: func(e env) (string, error) {
+		return ichorgo.TalosRepoCompare(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6))
+	}},
 	{name: "git-file", args: "HOSTJSON REPO REF PATH", run: func(env) (string, error) {
 		return ichorgo.GitForgeFile(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
 	}},

@@ -5568,4 +5568,24 @@
     <string name="source_search_summary">Treffer: %1$d · durchsuchte Dateien: %2$d</string>
     <string name="source_search_truncated">Weitere Zeilen passen: Suche verfeinern.</string>
     <string name="source_search_open_line">Datei an dieser Zeile öffnen</string>
+    <string name="talos_git_action">Mit Git vergleichen</string>
+    <string name="talos_git_title">Knoten und Git</string>
+    <string name="talos_git_at">Repository bei %1$s</string>
+    <string name="talos_git_generator">Aufgebaut für %1$s</string>
+    <string name="talos_git_none">Keine Datei des Repositorys konfiguriert diesen Knoten.</string>
+    <string name="talos_git_order">Die markierten Dateien werden in dieser Reihenfolge auf die Konfiguration des Knotens angewendet, wie Ihr Generator es tut.</string>
+    <string name="talos_git_compare">Vergleichen</string>
+    <string name="talos_git_open_file">Datei öffnen</string>
+    <string name="talos_git_skipped">%1$s übersprungen: %2$s</string>
+    <string name="talos_git_same">Wie in Git</string>
+    <string name="talos_git_same_desc">Diese Dateien auf die Konfiguration des Knotens anzuwenden ändert nichts: Der Knoten entspricht dem Repository.</string>
+    <string name="talos_git_differs">Was Git am Knoten ändern würde</string>
+    <string name="talos_git_reboot">Erfordert einen Neustart</string>
+    <string name="talos_git_edit_from_diff">Aus diesem Diff bearbeiten</string>
+    <string name="talos_git_edit_from_diff_desc">Öffnet den Editor mit der Version aus Git als Entwurf: prüfen, dann testen oder anwenden.</string>
+    <string name="talos_git_hide_secrets">Blenden Sie zuerst die Geheimnisse aus: Ein Entwurf enthält sie nie.</string>
+    <string name="talos_git_kind_node">Knoten</string>
+    <string name="talos_git_kind_shared">Gemeinsam</string>
+    <string name="talos_git_kind_talconfig">talconfig</string>
+    <string name="talos_git_kind_secrets">Geheimnisse</string>
 </resources>

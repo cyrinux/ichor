@@ -25,6 +25,10 @@ import name.levis.ichor.model.GitProposalDefaults
 import name.levis.ichor.model.GitProposalResult
 import name.levis.ichor.model.GitRepoInfo
 import name.levis.ichor.model.GitRepoSearch
+import name.levis.ichor.model.TalosRepoCompare
+import name.levis.ichor.model.TalosRepoFiles
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.GitTree
 import name.levis.ichor.model.KubeDiffResource
@@ -290,6 +294,31 @@ class GitOpsRepository(
     suspend fun clusterRepoSource(): GitSource {
         val repo = activeClusterRepo() ?: throw LocalizedException(UiText.Res(R.string.repo_none))
         return repoSource(repo, repoInfo(repo))
+    }
+
+    /**
+     * The files of the active cluster's repository (under its Talos directory) that configure
+     * the node [hostname] of [role], at its branch head. Throws without a repository or token.
+     */
+    suspend fun talosRepoFiles(hostname: String, role: String): TalosRepoFiles {
+        val repo = activeClusterRepo() ?: throw LocalizedException(UiText.Res(R.string.repo_none))
+        val host = forgeHost(repo.host)
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(TalosRepoFiles.serializer(), Ichorgo.talosRepoFiles(host, repo.repoURL, repo.branch, repo.talosDir, hostname, role))
+        }
+    }
+
+    /**
+     * Applies the repository files [paths] (in that order) at commit [sha] onto [node]'s live
+     * config and says what differs (os:admin; only a dry run reaches the node).
+     */
+    suspend fun talosRepoCompare(node: String, hostname: String, sha: String, paths: List<String>): TalosRepoCompare {
+        val repo = activeClusterRepo() ?: throw LocalizedException(UiText.Res(R.string.repo_none))
+        val host = forgeHost(repo.host)
+        val pathsJson = TalosJson.encodeToString(ListSerializer(String.serializer()), paths)
+        return go.talos { cfg, ctx ->
+            TalosJson.decodeFromString(TalosRepoCompare.serializer(), Ichorgo.talosRepoCompare(cfg, ctx, host, repo.repoURL, sha, node, hostname, pathsJson))
+        }
     }
 
     /** The prefilled pull request for a change of [path] in the cluster repository [repoURL], naming the active cluster. No network. */
