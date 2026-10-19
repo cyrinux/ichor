@@ -389,12 +389,95 @@ func extDNSRawRecords(endpoints []dnsEndpointObject, ingresses []ingressObject, 
 			continue
 		}
 
-		_, addresses := routeParents(r, gateways)
-		out = extDNSAppend(out, r.Spec.Hostnames, addresses, extDNSAnnTTLValue(r.Metadata.Annotations), "HTTPRoute", r.Metadata.Namespace, r.Metadata.Name,
+		hosts, targets := extDNSRouteRecords(r, gateways)
+		out = extDNSAppend(out, hosts, targets, extDNSAnnTTLValue(r.Metadata.Annotations), "HTTPRoute", r.Metadata.Namespace, r.Metadata.Name,
 			groupGatewayAPI, "v1", "httproutes")
 	}
 
 	return out
+}
+
+// extDNSRouteRecords are the hostnames ExternalDNS publishes for an HTTPRoute and their
+// targets. Hosts: the route's hostnames and hostname annotation (else its listeners'), kept
+// only where an attached listener serves them, the more specific name winning. Targets: each
+// serving Gateway's target annotation, which replaces its status addresses (the annotation is
+// read on the Gateway; on a route it is ignored).
+func extDNSRouteRecords(r gatewayRouteObject, gateways []gatewayObject) (hosts, targets []string) {
+	routeHosts := append(slices.Clone(r.Spec.Hostnames), splitCSV(r.Metadata.Annotations[extDNSAnnHostname])...)
+	if len(routeHosts) == 0 {
+		routeHosts = []string{""} // the listeners' hostnames
+	}
+
+	for _, ref := range r.Spec.ParentRefs {
+		gw, ok := parentGateway(r, ref, gateways)
+		if !ok {
+			continue
+		}
+
+		served := false
+
+		for _, l := range gw.Spec.Listeners {
+			if !refSelects(ref, l) {
+				continue
+			}
+
+			for _, h := range routeHosts {
+				if host, ok := extDNSMatchingHost(h, l.Hostname); ok && host != "" {
+					hosts, served = append(hosts, host), true
+				}
+			}
+		}
+
+		if !served {
+			continue
+		}
+
+		gwTargets, override := extDNSAnnTargets(gw.Metadata.Annotations)
+		if !override {
+			for _, a := range gw.Status.Addresses {
+				gwTargets = append(gwTargets, a.Value)
+			}
+		}
+
+		targets = append(targets, gwTargets...)
+	}
+
+	slices.Sort(hosts)
+	slices.Sort(targets)
+
+	return slices.Compact(hosts), slices.Compact(targets)
+}
+
+// extDNSMatchingHost matches a route hostname with a listener's (ExternalDNS's
+// gwMatchingHost): an empty one matches anything, a "*." wildcard matches the names below
+// it (not its own domain), and the more specific of the two is the one published.
+func extDNSMatchingHost(route, listener string) (string, bool) {
+	route = strings.ToLower(strings.TrimSuffix(route, "."))
+	listener = strings.ToLower(strings.TrimSuffix(listener, "."))
+
+	switch {
+	case route == "":
+		return listener, true
+	case listener == "":
+		return route, true
+	}
+
+	routeWild, listenerWild := strings.HasPrefix(route, "*."), strings.HasPrefix(listener, "*.")
+
+	switch {
+	case routeWild && listenerWild:
+		if strings.HasSuffix(route, listener[1:]) {
+			return route, true
+		}
+
+		return listener, strings.HasSuffix(listener, route[1:])
+	case listenerWild:
+		return route, strings.HasSuffix(route, listener[1:])
+	case routeWild:
+		return listener, strings.HasSuffix(listener, route[1:])
+	default:
+		return route, route == listener
+	}
 }
 
 // extDNSForeign tells whether another ExternalDNS owns the object.
