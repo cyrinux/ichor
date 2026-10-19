@@ -118,7 +118,7 @@ private fun FundingList(roadmap: Roadmap, store: StoreState, backed: Set<String>
             )
         }
         if (store == StoreState.Unavailable) item { InfoNotice(stringResource(R.string.funding_unavailable)) }
-        if (roadmap.features.isEmpty()) item { InfoNotice(stringResource(R.string.funding_empty)) }
+        if (!roadmap.anyFundable) item { InfoNotice(stringResource(R.string.funding_empty)) }
         items(roadmap.features, key = { it.id }) { feature ->
             FeatureCard(
                 feature = feature,
