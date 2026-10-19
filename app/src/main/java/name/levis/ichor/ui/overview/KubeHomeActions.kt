@@ -73,7 +73,7 @@ fun KubeHomeNavigation.open(action: KubeHomeAction, flux: Boolean = false): () -
     KubeHomeAction.METRICS -> onMetrics
     KubeHomeAction.ALERTS -> onAlerts
     KubeHomeAction.HELM -> onHelm
-    KubeHomeAction.DATA_SERVICES -> { { onDataServices(null) } }
+    KubeHomeAction.DATA_SERVICES -> { { onDataServices(null, false) } }
     KubeHomeAction.CHECKUP -> onCheckup
     KubeHomeAction.API_HEALTH -> onApiHealth
     KubeHomeAction.NETWORK_POLICIES -> onNetworkPolicies

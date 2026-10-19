@@ -4798,6 +4798,7 @@
     <string name="kube_tools_group_workloads">Робочі навантаження</string>
     <string name="kube_tools_group_networking">Мережа</string>
     <string name="kube_tools_group_storage">Сховище</string>
+    <string name="kube_tools_group_security">Безпека</string>
     <string name="kube_tools_group_observe">Спостереження</string>
     <string name="kube_tools_group_browse">Перегляд</string>
     <string name="kube_jobs_search">Шукати завдання, CronJob або причини</string>

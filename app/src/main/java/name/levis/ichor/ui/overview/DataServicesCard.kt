@@ -18,13 +18,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.AllServiceFamilies
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.PluginDetectItem
 import name.levis.ichor.model.line
 import name.levis.ichor.ui.plugins.PluginIcon
+import name.levis.ichor.model.ServiceFamily
 import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.model.family
 import name.levis.ichor.model.detected
 import name.levis.ichor.model.summary
 import name.levis.ichor.model.title
@@ -55,10 +58,15 @@ fun DataServicesCard(
     /** The active CRD plugins of Data services, each a line after (or among) the native systems. */
     plugins: List<PluginDetectItem> = emptyList(),
     onPlugin: (PluginDetectItem) -> Unit = {},
+    /**
+     * The families listed: storage alone on the Kubernetes home, whose tools card files the others;
+     * every one on a Talos cluster, which has no tools card yet.
+     */
+    families: Set<ServiceFamily> = AllServiceFamilies,
 ) {
     when (state) {
         UiState.Loading -> Frame(count = null, levels = emptyList(), { onOpen(null) }) {
-            hinted.forEach { kind -> Line(kind, apps, text = null, health = null) }
+            hinted.filter { it.family in families }.forEach { kind -> Line(kind, apps, text = null, health = null) }
         }
         is UiState.Failed -> Frame(count = null, levels = emptyList(), { onOpen(null) }) {
             MutedText(
@@ -70,8 +78,8 @@ fun DataServicesCard(
         is UiState.Loaded -> {
             val services = state.data
             // Worst first: ServiceHealth lists CRITICAL, then WARNING, before the calm levels.
-            val lines = remember(services, plugins) {
-                (services.detected.map { CardLine.Native(it, services.summary(it)?.health) } + plugins.map { CardLine.Plugin(it) })
+            val lines = remember(services, plugins, families) {
+                (services.detected(families).map { CardLine.Native(it, services.summary(it)?.health) } + plugins.map { CardLine.Plugin(it) })
                     .sortedBy { (it.health ?: ServiceHealth.UNKNOWN).ordinal }
             }
             if (lines.isEmpty()) return

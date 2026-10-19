@@ -281,7 +281,8 @@ final class PluginTests: XCTestCase {
     func testToolFamilies() {
         XCTAssertEqual(PluginToolFamily(category: "compute"), .workloads)
         XCTAssertEqual(PluginToolFamily(category: "networking"), .networking)
-        XCTAssertEqual(PluginToolFamily(category: "security"), .observe)
+        XCTAssertEqual(PluginToolFamily(category: "security"), .security)
+        XCTAssertEqual(PluginToolFamily(category: "policies"), .security)
         XCTAssertEqual(PluginToolFamily(category: "anything"), .browse)
     }
 

@@ -24,6 +24,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.model.DataServiceKind
+import name.levis.ichor.model.opensAlone
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.NodeOverview
@@ -310,7 +311,7 @@ fun Navigation(
                     onWorkloads = { nav.navigate(Routes.workloads()) },
                     onMetrics = { nav.navigate(Routes.metrics()) },
                     onAlerts = { nav.navigate(Routes.alerts()) },
-                    onDataServices = { nav.navigate(Routes.dataServices(it)) },
+                    onDataServices = { kind, solo -> nav.navigate(Routes.dataServices(kind, solo)) },
                     onPlugin = { nav.navigate(name.levis.ichor.ui.plugins.pluginRoute(it)) },
                     onArgoCD = { nav.navigate(Routes.ARGO_CD) },
                     onFlux = { nav.navigate(Routes.FLUX) },
@@ -439,7 +440,7 @@ private suspend fun ShareTarget.talosRoute(app: TalosApp, action: AlertActionReq
     ShareTarget.HARDWARE -> clusterNode(app)?.let { n -> Routes.hardware(n.node, n.hostname) }
     ShareTarget.ARGO_APP -> Routes.argoApp(namespace, name, sync = action?.action == AlertAction.SYNC)
     ShareTarget.FLUX_APP -> Routes.fluxApp(kind, namespace, name, reconcile = action?.action == AlertAction.RECONCILE)
-    ShareTarget.DATA -> Routes.dataServices(DataServiceKind.entries.firstOrNull { it.catalogId == kind })
+    ShareTarget.DATA -> DataServiceKind.entries.firstOrNull { it.catalogId == kind }.let { Routes.dataServices(it, solo = it?.opensAlone == true) }
     ShareTarget.CHECKUP -> Routes.CHECKUP
     ShareTarget.ALERTS -> Routes.alerts(silence = action?.takeIf { it.action == AlertAction.SILENCE }?.target.orEmpty())
     else -> kubeFocus?.let { Routes.workloads(it) }

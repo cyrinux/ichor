@@ -4564,6 +4564,7 @@
     <string name="kube_tools_group_workloads">Cargas de trabajo</string>
     <string name="kube_tools_group_networking">Redes</string>
     <string name="kube_tools_group_storage">Almacenamiento</string>
+    <string name="kube_tools_group_security">Seguridad</string>
     <string name="kube_tools_group_observe">Observar</string>
     <string name="kube_tools_group_browse">Explorar</string>
     <string name="kube_jobs_search">Buscar jobs, CronJobs o motivos</string>

@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.plugins
 
 import name.levis.ichor.model.DataServiceKind
+import name.levis.ichor.model.opensAlone
 import name.levis.ichor.model.PLUGIN_CATEGORY_DATA_SERVICES
 import name.levis.ichor.model.PluginDetectItem
 import name.levis.ichor.ui.kubebrowser.KubeBrowserRoutes
@@ -33,7 +34,7 @@ private val NATIVE_ROUTES: Map<String, String> = mapOf(
 fun nativePluginRoute(item: PluginDetectItem): String? {
     val name = item.nativeScreen ?: return null
     return NATIVE_ROUTES[name]
-        ?: DataServiceKind.entries.firstOrNull { it.catalogId == name }?.let { Routes.dataServices(it) }
+        ?: DataServiceKind.entries.firstOrNull { it.catalogId == name }?.let { Routes.dataServices(it, solo = it.opensAlone) }
 }
 
 /**

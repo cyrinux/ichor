@@ -222,13 +222,17 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
     }
     composable(
         Routes.DATA_SERVICES,
-        arguments = listOf(navArgument("kind") { type = NavType.StringType; defaultValue = "" }),
+        arguments = listOf(
+            navArgument("kind") { type = NavType.StringType; defaultValue = "" },
+            navArgument("solo") { type = NavType.BoolType; defaultValue = false },
+        ),
     ) { entry ->
         val arg = entry.arguments?.getString("kind").orEmpty()
         val kind = DataServiceKind.entries.firstOrNull { it.name == arg }
         name.levis.ichor.ui.dataservices.DataServicesScreen(
             initial = kind,
             initialPlugin = arg.takeIf { it.startsWith(Routes.DATA_SERVICES_PLUGIN_PREFIX) }?.removePrefix(Routes.DATA_SERVICES_PLUGIN_PREFIX),
+            solo = entry.arguments?.getBoolean("solo") == true && kind != null,
             onBack = { nav.popBackStack() },
             onObject = kubeLinks.onObject,
             onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },

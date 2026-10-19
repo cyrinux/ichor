@@ -201,4 +201,29 @@ final class DataServicesTests: XCTestCase {
         XCTAssertEqual(filterClusters(clusters, problemsOnly: true, query: "").map(\.name), ["down-db"])
         XCTAssertEqual(filterClusters(clusters, problemsOnly: false, query: "ok").map(\.name), ["ok-db"])
     }
+
+    func testFilesEachSystemUnderItsFamily() {
+        XCTAssertEqual(DataServiceKind.longhorn.family, .data)
+        XCTAssertEqual(DataServiceKind.backupJobs.family, .data)
+        XCTAssertEqual(DataServiceKind.externalDns.family, .networking)
+        XCTAssertEqual(DataServiceKind.certManager.family, .security)
+        XCTAssertEqual(DataServiceKind.sealedSecrets.family, .security)
+        XCTAssertEqual(DataServiceKind.castai.family, .workloads)
+        // Ten systems stay in Data services: storage, databases and backups.
+        XCTAssertEqual(DataServiceKind.allCases.filter { $0.family == .data }.count, 10)
+        XCTAssertTrue(DataServiceKind.certManager.opensAlone)
+        XCTAssertFalse(DataServiceKind.velero.opensAlone)
+    }
+
+    func testHubTabsByClusterKind() throws {
+        let mixed = try TalosJSON.decode(DataServices.self, from: #"{"longhorn":{},"certManager":{},"velero":{},"castai":{}}"#)
+        XCTAssertEqual(mixed.detected(.data), [.longhorn, .velero])
+        XCTAssertEqual(mixed.detected([.security, .workloads]), [.certManager, .castai])
+        XCTAssertEqual(mixed.only([.data]).detected, [.longhorn, .velero])
+        // A Kubernetes cluster's hub keeps storage and backups; a Talos cluster's keeps every system.
+        XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: nil), [.native(.longhorn), .native(.velero)])
+        XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: false, solo: nil).count, 4)
+        XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: .certManager), [.native(.certManager)])
+        XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: .externalDns), [])
+    }
 }

@@ -41,6 +41,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.DataServiceKind
+import name.levis.ichor.model.ServiceFamily
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.KubeHomeCard
@@ -109,8 +110,8 @@ class KubeHomeNavigation(
     val onArgoRollouts: () -> Unit,
     val onArgoCD: () -> Unit,
     val onFlux: () -> Unit,
-    /** The Data services screen, on one system's tab (null: the first). */
-    val onDataServices: (DataServiceKind?) -> Unit,
+    /** The Data services screen, on one system's tab (null: the first), or that system alone (solo). */
+    val onDataServices: (DataServiceKind?, Boolean) -> Unit,
     /** A CRD plugin's tile: its native screen, its Data services tab or its own screen. */
     val onPlugin: (PluginDetectItem) -> Unit,
     val onSettings: () -> Unit,
@@ -226,7 +227,8 @@ fun KubeHomeScreen(
     val fluxShown = flux.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val plugins = (pluginsVm.state.collectAsStateWithLifecycle().value as? UiState.Loaded)?.data ?: PluginDetect()
     val dataPlugins = plugins.dataServicePlugins
-    val dataShown = dataServices.takeIf { (it as? UiState.Loaded)?.data?.detected?.isNotEmpty() == true || dataPlugins.isNotEmpty() && it is UiState.Loaded }
+    // The card lists storage, databases and backups; the other systems are tools in their family.
+    val dataShown = dataServices.takeIf { (it as? UiState.Loaded)?.data?.detected(ServiceFamily.DATA)?.isNotEmpty() == true || dataPlugins.isNotEmpty() && it is UiState.Loaded }
     val crossplaneShown = crossplane.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val tailscaleShown = tailscale.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
     val lifecycleShown = lifecycle.takeIf { (it as? UiState.Loaded)?.data?.installed == true }
@@ -325,6 +327,7 @@ fun KubeHomeScreen(
                     argo = argoShown,
                     flux = fluxShown,
                     dataServices = dataShown,
+                    toolServices = (dataServices as? UiState.Loaded)?.data,
                     plugins = plugins,
                     crossplane = crossplaneShown != null,
                     tailscale = tailscaleShown != null,
@@ -354,6 +357,8 @@ private fun KubeHomeList(
     argo: UiState<ArgoStatus>?,
     flux: UiState<FluxStatus>?,
     dataServices: UiState<DataServices>?,
+    /** The systems read with Data services, for those the tools card files in another family. */
+    toolServices: DataServices?,
     plugins: PluginDetect,
     crossplane: Boolean,
     tailscale: Boolean,
@@ -394,11 +399,11 @@ private fun KubeHomeList(
                     Box(Modifier.longPressToCustomize(onCustomize)) { KubeNodesCard(nodes, onNode, nav.onAllNodes) }
                 }
                 KubeHomeCard.TOOLS -> item(key = card.name) {
-                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeToolsCard(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, plugins = plugins.homeTiles) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { KubeToolsCard(nav, crossplane = crossplane, tailscale = tailscale, clusterLifecycle = clusterLifecycle, argoRollouts = argoRollouts, plugins = plugins.homeTiles, dataServices = toolServices) }
                 }
                 KubeHomeCard.DATA_SERVICES -> if (dataServices != null) item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) {
-                        DataServicesCard(dataServices, hinted = emptyList(), apps = emptyMap(), onOpen = nav.onDataServices, plugins = plugins.dataServicePlugins, onPlugin = nav.onPlugin)
+                        DataServicesCard(dataServices, hinted = emptyList(), apps = emptyMap(), onOpen = { nav.onDataServices(it, false) }, plugins = plugins.dataServicePlugins, onPlugin = nav.onPlugin, families = setOf(ServiceFamily.DATA))
                     }
                 }
                 KubeHomeCard.ARGO_CD -> if (argo != null) item(key = card.name) {

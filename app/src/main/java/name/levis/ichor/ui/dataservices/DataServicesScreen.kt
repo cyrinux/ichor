@@ -43,9 +43,13 @@ import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.data.realFingerprint
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeNodesOverview
+import name.levis.ichor.model.AllServiceFamilies
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.PluginDetectItem
+import name.levis.ichor.model.ServiceFamily
+import name.levis.ichor.model.title
 import name.levis.ichor.model.detected
 import name.levis.ichor.model.likelyCauses
 import name.levis.ichor.model.notReadyNames
@@ -78,6 +82,8 @@ fun DataServicesScreen(
     initial: DataServiceKind? = null,
     /** A plugin's tab to open on instead (its id), for a plugin tile. */
     initialPlugin: String? = null,
+    /** [initial] alone, titled by its name: a system the Kubernetes home files in another family. */
+    solo: Boolean = false,
     onBack: () -> Unit,
     onObject: (KubeObjectRef) -> Unit,
     onSupportedIntegrations: () -> Unit,
@@ -149,7 +155,7 @@ fun DataServicesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.data_services_title)) },
+                title = { Text(initial?.takeIf { solo }?.title ?: stringResource(R.string.data_services_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
                     if (searchable) {
@@ -175,7 +181,7 @@ fun DataServicesScreen(
                 if (kube) app.talosRepository.cached<KubeNodesOverview>(KUBE_NODES)?.value?.notReadyNames().orEmpty()
                 else app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
             }
-            val tabs = remember(data, pluginTabs) { data.detected.map { HubTab.Native(it) } + pluginTabs.map { HubTab.Plugin(it.id, it.name) } }
+            val tabs = remember(data, pluginTabs, kube, solo, initial) { hubTabs(data, pluginTabs, kube, initial?.takeIf { solo }) }
             val first = initialPlugin?.let { HubTab.Plugin.idOf(it) } ?: initial?.let { HubTab.Native(it).id }
             when {
                 tabs.isNotEmpty() -> Systems(
@@ -224,6 +230,17 @@ internal sealed interface HubTab {
             fun idOf(pluginId: String) = "plugin:$pluginId"
         }
     }
+}
+
+/**
+ * The hub's tabs: [solo]'s alone when it runs; else, on a Kubernetes cluster (whose home files
+ * the other systems in their families), storage, databases and backups; on a Talos cluster, which
+ * has no tools card yet, every system. The data-services plugins follow, except with [solo].
+ */
+internal fun hubTabs(services: DataServices, plugins: List<PluginDetectItem>, kube: Boolean, solo: DataServiceKind?): List<HubTab> {
+    if (solo != null) return listOfNotNull(HubTab.Native(solo).takeIf { solo in services.detected })
+    val families = if (kube) setOf(ServiceFamily.DATA) else AllServiceFamilies
+    return services.detected(families).map { HubTab.Native(it) } + plugins.map { HubTab.Plugin(it.id, it.name) }
 }
 
 /** The pager's pages: the tabs' ids, saveable in a Bundle (a page key must be). */

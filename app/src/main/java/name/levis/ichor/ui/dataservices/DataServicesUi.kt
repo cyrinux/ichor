@@ -92,7 +92,7 @@ val DataServiceKind.tabTitle: String
         else -> title
     }
 
-private val DataServiceKind.fallbackIcon: ImageVector
+internal val DataServiceKind.fallbackIcon: ImageVector
     get() = when (this) {
         DataServiceKind.LONGHORN -> Icons.Outlined.Storage
         DataServiceKind.GARAGE -> Icons.Outlined.Cloud

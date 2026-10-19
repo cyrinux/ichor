@@ -209,10 +209,12 @@ tour** shows it again.
   over the Wear OS Data Layer: counts and the cluster's name only (masked in screenshot mode), no
   talosconfig or kubeconfig on the watch. Google Play build only: the open-source APKs carry no
   Google library, so they send nothing to a watch.
-- **Data services:** the storage and database operators the cluster runs (Longhorn, Garage,
-  CloudNativePG, Dragonfly, MariaDB, Percona, cert-manager, Velero, ExternalDNS, Sealed Secrets,
-  External Secrets, Rook Ceph, CAST AI, CSI VolumeSnapshots, backup CronJobs) on one tabbed screen, each with its
-  health and what needs a look. ExternalDNS shows the
+- **Data services:** the storage, database and backup operators the cluster runs (Longhorn, Garage,
+  CloudNativePG, Dragonfly, MariaDB, Percona, Velero, Rook Ceph, CSI VolumeSnapshots, backup
+  CronJobs) on one tabbed screen, each with its health and what needs a look. The other
+  integrations open from their family of the Kubernetes home, with a dot when one needs a look:
+  ExternalDNS under Networking, cert-manager, Sealed Secrets and External Secrets under Security,
+  CAST AI under Workloads (on a Talos cluster they stay tabs of Data services). ExternalDNS shows the
   hostnames it manages, where each comes from, and the controller's settings; it can resolve
   every hostname from the phone and compare it with the record's targets, so a name that points
   elsewhere, or that no controller owns, stands out. Sealed Secrets shows the controller, the

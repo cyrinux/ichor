@@ -104,8 +104,13 @@ struct DataServicesSection: View {
     let downNodes: Set<String>
     /// The active CRD plugins of Data services, each a line after the native systems.
     var plugins: [PluginDetectItem] = []
+    /// The families listed: storage alone on the Kubernetes home, whose tools file the others;
+    /// every one on a Talos cluster, which has no tools card yet.
+    var families: Set<ServiceFamily> = Set(ServiceFamily.allCases)
 
-    private var hinted: [DataServiceKind] { DataServiceKind.allCases.filter { hints.split(separator: ",").map(String.init).contains($0.catalogID) } }
+    private var hinted: [DataServiceKind] {
+        DataServiceKind.allCases.filter { families.contains($0.family) && hints.split(separator: ",").map(String.init).contains($0.catalogID) }
+    }
 
     var body: some View {
         switch state {
@@ -126,7 +131,8 @@ struct DataServicesSection: View {
                     }
                 }
             }
-        case .loaded(let services, _, _):
+        case .loaded(let all, _, _):
+            let services = all.only(families)
             if !services.detected.isEmpty || !plugins.isEmpty {
                 Section {
                     NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes)) { header(services) }
@@ -204,7 +210,7 @@ struct KindIcon: View {
         if let app {
             AppIconView(app: app, size: size)
         } else {
-            Image(systemName: symbol)
+            Image(systemName: kind.symbol)
                 .font(.system(size: size * 0.5))
                 .foregroundStyle(.secondary)
                 .frame(width: size, height: size)
@@ -212,8 +218,12 @@ struct KindIcon: View {
         }
     }
 
-    private var symbol: String {
-        switch kind {
+}
+
+extension DataServiceKind {
+    /// The generic symbol of a system without its app's icon.
+    var symbol: String {
+        switch self {
         case .longhorn: "externaldrive"
         case .garage: "cloud"
         case .cnpg: "cylinder.split.1x2"

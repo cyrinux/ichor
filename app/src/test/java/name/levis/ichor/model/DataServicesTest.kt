@@ -136,4 +136,25 @@ class DataServicesTest {
         assertEquals(listOf("ok-db"), clusters.filtered(problemsOnly = false, query = "ok").map { it.name })
         assertFalse(clusters.filtered(problemsOnly = false, query = "").isEmpty())
     }
+
+    @Test
+    fun filesEachSystemUnderItsFamily() {
+        assertEquals(ServiceFamily.DATA, DataServiceKind.LONGHORN.family)
+        assertEquals(ServiceFamily.DATA, DataServiceKind.BACKUP_JOBS.family)
+        assertEquals(ServiceFamily.NETWORKING, DataServiceKind.EXTERNAL_DNS.family)
+        assertEquals(ServiceFamily.SECURITY, DataServiceKind.CERT_MANAGER.family)
+        assertEquals(ServiceFamily.SECURITY, DataServiceKind.SEALED_SECRETS.family)
+        assertEquals(ServiceFamily.WORKLOADS, DataServiceKind.CASTAI.family)
+        // Ten systems stay in Data services: storage, databases and backups.
+        assertEquals(10, DataServiceKind.entries.count { it.family == ServiceFamily.DATA })
+    }
+
+    @Test
+    fun detectedByFamilyKeepsTheDisplayOrder() {
+        val mixed = services.copy(certManager = CertManagerStatus(), externalDns = ExternalDnsStatus(), castai = CastAIStatus())
+        assertEquals(listOf(DataServiceKind.LONGHORN, DataServiceKind.GARAGE, DataServiceKind.CNPG), mixed.detected(ServiceFamily.DATA))
+        assertEquals(listOf(DataServiceKind.CERT_MANAGER), mixed.detected(ServiceFamily.SECURITY))
+        assertEquals(listOf(DataServiceKind.EXTERNAL_DNS, DataServiceKind.CASTAI), mixed.detected(setOf(ServiceFamily.NETWORKING, ServiceFamily.WORKLOADS)))
+        assertEquals(mixed.detected, mixed.detected(AllServiceFamilies))
+    }
 }
