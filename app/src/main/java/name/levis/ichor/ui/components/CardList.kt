@@ -1,9 +1,12 @@
 package name.levis.ichor.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -15,6 +18,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 
 /** Where a row sits in its card: decides which corners round and whether a divider follows it. */
@@ -84,9 +88,20 @@ fun <T> LazyListScope.cardRows(
 
 /** A title above a card, aligned with the card's content. [key] must differ from every row key. */
 fun LazyListScope.cardGroupTitle(key: Any, text: String) {
-    item(key = key, contentType = "cardGroupTitle") {
-        SectionTitle(text, Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp))
-    }
+    item(key = key, contentType = "cardGroupTitle") { SectionTitle(text, CardTitleInset) }
+}
+
+/** [cardGroupTitle] with the title from a string resource. */
+fun LazyListScope.cardGroupTitle(key: Any, @StringRes text: Int) {
+    item(key = key, contentType = "cardGroupTitle") { SectionTitle(stringResource(text), CardTitleInset) }
+}
+
+/** A card title's inset: aligned with the card's content, a little room above. */
+private val CardTitleInset = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp)
+
+/** The space between two cards with no title between them. [key] must differ from every row key. */
+fun LazyListScope.cardGap(key: Any) {
+    item(key = key, contentType = "cardGap") { Spacer(Modifier.height(10.dp)) }
 }
 
 /**

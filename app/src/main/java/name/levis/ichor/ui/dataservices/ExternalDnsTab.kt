@@ -3,7 +3,6 @@ package name.levis.ichor.ui.dataservices
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,9 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -37,12 +34,15 @@ import name.levis.ichor.model.ExternalDnsStatus
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.CardListPadding
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.HealthDot
-import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.InfoRow
+import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.components.cardGap
+import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.color
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -57,23 +57,22 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 fun ExternalDnsTab(status: ExternalDnsStatus, onObject: (KubeObjectRef) -> Unit, actions: ExternalDnsActions) {
     val check by actions.state.collectAsStateWithLifecycle()
     val verdicts = check?.byName.orEmpty()
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
         if (status.controllers.isEmpty() && status.records.isEmpty()) item { EmptyText(stringResource(R.string.externaldns_empty)) }
-        items(status.controllers, key = { "c:${it.label}" }) { ControllerRow(it) }
-        if (status.controllers.isNotEmpty()) item(key = "controllers-end") { HorizontalDivider() }
+        cardRows(status.controllers, key = { "c:${it.label}" }) { ControllerRow(it) }
+        if (status.controllers.isNotEmpty()) cardGap("controllers-end")
         if (status.truncated) item {
             Text(
                 pluralStringResource(R.plurals.externaldns_truncated, status.recordCount, status.records.size, status.recordCount),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
             )
         }
         if (status.records.isNotEmpty()) item(key = "dns-check") { DnsCheckHeader(status, check, actions) }
-        items(status.records, key = { "${it.dnsName}/${it.sourceKind}/${it.sourceNamespace}/${it.sourceName}" }) { r ->
+        cardRows(status.records, key = { "${it.dnsName}/${it.sourceKind}/${it.sourceNamespace}/${it.sourceName}" }) { r ->
             RecordRow(r, onObject, verdicts[r.dnsName])
-            HorizontalDivider()
         }
     }
 }
