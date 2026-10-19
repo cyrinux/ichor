@@ -142,7 +142,12 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
         val readRef = proposalBaseRef(src.tracked) ?: src.ref
         val file = gitOps.forgeFile(src, readRef, path)
         if (file.truncated) throw LocalizedException(UiText.Res(R.string.gitops_source_truncated))
-        val defaults = cancellableCatching { gitOps.proposalDefaults(t.tool, t.kind, t.namespace, t.name, path) }.getOrDefault(GitProposalDefaults())
+        val defaults = cancellableCatching {
+            when (t) {
+                is SourceTarget.App -> gitOps.proposalDefaults(t.tool, t.kind, t.namespace, t.name, path)
+                SourceTarget.Repo -> gitOps.repoProposalDefaults(src.repoURL, path)
+            }
+        }.getOrDefault(GitProposalDefaults())
         val edit = SourceEdit(
             source = src,
             path = path,

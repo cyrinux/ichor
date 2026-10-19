@@ -5814,4 +5814,21 @@
     <string name="plugins_consent_note">Він читає з вашим власним доступом до Kubernetes і ніколи не звертається ні до чого, крім API Kubernetes. Вимкніть або видаліть його будь-коли в Налаштування → Плагіни.</string>
     <string name="plugins_replaces">Він замінює імпортований плагін з тим самим id.</string>
     <string name="plugins_enable">Увімкнути</string>
+    <string name="repo_title">Репозиторій</string>
+    <string name="repo_none">Для цього кластера не збережено репозиторій: додайте його з меню кластера в списку (Репозиторій кластера).</string>
+    <string name="repo_propose_applies">На кластері нічого не зміниться, доки зміну не буде злито й застосовано.</string>
+    <string name="repo_settings_title">Репозиторій кластера</string>
+    <string name="repo_settings_body">Git-репозиторій з конфігурацією %1$s. Ichor читає його з токеном його Git-хоста; нічого не клонується.</string>
+    <string name="repo_field_url">Адреса репозиторію</string>
+    <string name="repo_host">Git-хост: %1$s</string>
+    <string name="repo_no_git_host">Для %1$s не збережено токен: додайте його в Параметри → Git-хости.</string>
+    <string name="repo_open_git_hosts">Відкрити Git-хости</string>
+    <string name="repo_field_branch">Гілка</string>
+    <string name="repo_branch_hint">Порожньо для типової гілки</string>
+    <string name="repo_field_talos_dir">Каталог Talos</string>
+    <string name="repo_field_kubernetes_dir">Каталог Kubernetes</string>
+    <string name="repo_check_ok">%1$s (типова гілка: %2$s)</string>
+    <string name="repo_check_can_push">Цей токен може робити push: зміни відкривають pull request.</string>
+    <string name="repo_check_read_only">Цей токен може лише читати: pull request буде відхилено.</string>
+    <string name="repo_edits_are_proposals">Зміни ніколи не комітяться в гілку: кожна відкриває pull або merge request.</string>
 </resources>

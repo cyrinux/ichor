@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.nav
 
 import android.os.Bundle
+import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -137,17 +138,32 @@ internal fun NavGraphBuilder.gitOpsGraph(nav: NavHostController, app: TalosApp, 
     sourceGraph(nav)
 }
 
-/** The source browser of an Argo CD or Flux app and its file view. */
+/** The route of the file [path] of [t]'s files, [line] highlighted (0 for none). */
+private fun sourceFileRoute(t: SourceTarget, path: String, line: Int = 0): String = when (t) {
+    is SourceTarget.App -> Routes.gitOpsFile(t.tool, t.kind, t.namespace, t.name, t.index, path, line)
+    SourceTarget.Repo -> Routes.repoFile(path, line)
+}
+
+/** The route of the editor of [t]'s file [path], with a [quick] edit's JSON ("" for none). */
+private fun sourceEditRoute(t: SourceTarget, path: String, quick: String = ""): String = when (t) {
+    is SourceTarget.App -> Routes.gitOpsEdit(t.tool, t.kind, t.namespace, t.name, t.index, path, quick)
+    SourceTarget.Repo -> Routes.repoEdit(path, quick)
+}
+
+/**
+ * The source browser, file view and editor, for an Argo CD or Flux app's source and for the
+ * active cluster's repository.
+ */
 private fun NavGraphBuilder.sourceGraph(nav: NavHostController) {
-    val targetArgs = listOf(
+    val appArgs = listOf(
         navArgument("tool") { type = NavType.StringType; defaultValue = "" },
         navArgument("kind") { type = NavType.StringType; defaultValue = "" },
         navArgument("ns") { type = NavType.StringType; defaultValue = "" },
         navArgument("name") { type = NavType.StringType; defaultValue = "" },
         navArgument("idx") { type = NavType.IntType; defaultValue = 0 },
     )
-    val target = { args: Bundle? ->
-        SourceTarget(
+    val app = { args: Bundle? ->
+        SourceTarget.App(
             tool = args?.getString("tool").orEmpty(),
             kind = args?.getString("kind").orEmpty(),
             namespace = args?.getString("ns").orEmpty(),
@@ -155,9 +171,22 @@ private fun NavGraphBuilder.sourceGraph(nav: NavHostController) {
             index = args?.getInt("idx") ?: 0,
         )
     }
+    sourceScreens(nav, Routes.GITOPS_SOURCE, Routes.GITOPS_FILE, Routes.GITOPS_EDIT, appArgs, app)
+    sourceScreens(nav, Routes.REPO_SOURCE, Routes.REPO_FILE, Routes.REPO_EDIT, emptyList()) { SourceTarget.Repo }
+}
+
+/** The three screens of one kind of [SourceTarget], read from the routes' [targetArgs]. */
+private fun NavGraphBuilder.sourceScreens(
+    nav: NavHostController,
+    sourceRoute: String,
+    fileRoute: String,
+    editRoute: String,
+    targetArgs: List<NamedNavArgument>,
+    target: (Bundle?) -> SourceTarget,
+) {
     val onAddToken = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) }
     composable(
-        Routes.GITOPS_SOURCE,
+        sourceRoute,
         arguments = targetArgs + navArgument("dir") { type = NavType.StringType; defaultValue = "" },
     ) { entry ->
         val t = target(entry.arguments)
@@ -165,12 +194,12 @@ private fun NavGraphBuilder.sourceGraph(nav: NavHostController) {
             target = t,
             startDir = entry.arguments?.getString("dir")?.takeIf { it.isNotEmpty() },
             onBack = { nav.popBackStack() },
-            onFile = { path -> nav.navigate(Routes.gitOpsFile(t.tool, t.kind, t.namespace, t.name, t.index, path)) },
+            onFile = { path -> nav.navigate(sourceFileRoute(t, path)) },
             onAddToken = onAddToken,
         )
     }
     composable(
-        Routes.GITOPS_FILE,
+        fileRoute,
         arguments = targetArgs + navArgument("path") { type = NavType.StringType; defaultValue = "" } +
             navArgument("line") { type = NavType.IntType; defaultValue = 0 },
     ) { entry ->
@@ -182,12 +211,12 @@ private fun NavGraphBuilder.sourceGraph(nav: NavHostController) {
             line = entry.arguments?.getInt("line")?.takeIf { it > 0 },
             onBack = { nav.popBackStack() },
             onAddToken = onAddToken,
-            onEdit = { nav.navigate(Routes.gitOpsEdit(t.tool, t.kind, t.namespace, t.name, t.index, path)) },
-            onQuickEdit = { edit -> nav.navigate(Routes.gitOpsEdit(t.tool, t.kind, t.namespace, t.name, t.index, path, encodeQuickEdit(edit))) },
+            onEdit = { nav.navigate(sourceEditRoute(t, path)) },
+            onQuickEdit = { edit -> nav.navigate(sourceEditRoute(t, path, encodeQuickEdit(edit))) },
         )
     }
     composable(
-        Routes.GITOPS_EDIT,
+        editRoute,
         arguments = targetArgs + navArgument("path") { type = NavType.StringType; defaultValue = "" } +
             navArgument("quick") { type = NavType.StringType; defaultValue = "" },
     ) { entry ->

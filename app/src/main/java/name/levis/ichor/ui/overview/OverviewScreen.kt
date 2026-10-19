@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.ui.gitops.hasClusterRepo
 import name.levis.ichor.ui.share.rememberClusterPins
 import name.levis.ichor.ui.share.ClusterPins
 import name.levis.ichor.model.needsAttention
@@ -223,6 +224,10 @@ fun OverviewScreen(
     onHelm: () -> Unit,
     onStorage: () -> Unit,
     onServices: () -> Unit,
+    /** The cluster's own Git repository (its Cluster repository setting), from its root. */
+    onRepository: () -> Unit,
+    /** Settings → Git hosts. */
+    onGitHosts: () -> Unit,
     /** Crossplane's packages, definitions and resources (from the Kubernetes home). */
     onCrossplane: () -> Unit,
     /** The Tailscale operator's connectors and proxies (from the Kubernetes home). */
@@ -289,6 +294,8 @@ fun OverviewScreen(
                 onTailscale = onTailscale,
                 onClusterLifecycle = onClusterLifecycle,
                 onLoadBalancing = onLoadBalancing,
+                onRepository = onRepository,
+                onGitHosts = onGitHosts,
                 onJobs = onJobs,
                 onEvents = onKubeEvents,
                 onDrain = onDrain,
@@ -517,12 +524,14 @@ fun OverviewScreen(
                                 onEtcd = onEtcd,
                                 onSettings = onSettings,
                                 onSearch = onSearch,
+                                onRepository = onRepository,
                             ),
                             reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node },
                             health = config?.activeSummary?.allows(Feature.HEALTH) == true,
                             workloads = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
                             gitOps = argoHinted || fluxHinted,
                             onCustomize = { customizing = true },
+                            repository = hasClusterRepo(),
                         )
                     },
                 )
@@ -538,6 +547,7 @@ fun OverviewScreen(
                     onClustersCleared = onClustersCleared,
                     onEndpoints = { editingEndpoints = it.name },
                     onActivity = { onActivity(it.name) },
+                    onGitHosts = onGitHosts,
                 )
             }
             config?.let { stored ->

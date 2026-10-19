@@ -49,6 +49,7 @@ import name.levis.ichor.ui.share.parseShareLink
 import name.levis.ichor.ui.nav.Routes
 import name.levis.ichor.ui.nav.appGraph
 import name.levis.ichor.ui.nav.gitOpsGraph
+import name.levis.ichor.ui.settings.SettingsPage
 import name.levis.ichor.ui.nav.kubeGraph
 import name.levis.ichor.ui.nav.openNodeAction
 import name.levis.ichor.ui.nav.navMaskMark
@@ -344,6 +345,8 @@ fun Navigation(
                     onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
                     onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
                     onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
+                    onRepository = { nav.navigate(Routes.repoSource()) },
+                    onGitHosts = { nav.navigate(Routes.settingsPage(SettingsPage.GIT_HOSTS)) },
                     onCrossplane = { nav.navigate(KubeBrowserRoutes.CROSSPLANE) },
                     onTailscale = { nav.navigate(KubeBrowserRoutes.TAILSCALE) },
                     onClusterLifecycle = { nav.navigate(KubeBrowserRoutes.CLUSTER_LIFECYCLE) },

@@ -105,6 +105,7 @@ type gitForge interface {
 	check(ctx context.Context) (gitForgeCheck, error)
 	tree(ctx context.Context, repo gitRepoRef, ref, dir string) ([]gitForgeEntry, error)
 	file(ctx context.Context, repo gitRepoRef, ref, path string) (gitForgeFile, error)
+	gitRepoReader
 	gitProposer
 }
 

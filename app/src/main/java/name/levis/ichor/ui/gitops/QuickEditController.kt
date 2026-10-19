@@ -99,7 +99,7 @@ class QuickEditController(
      * the "Previous tag" chip has no source yet: [QuickSuggestions.revisions] stays empty.
      */
     private fun loadSuggestions() {
-        val t = target ?: return
+        val t = target as? SourceTarget.App ?: return
         if (t.tool != SOURCE_TOOL_ARGO) return
         scope.launch {
             val app = cancellableCatching { gitOps.argoCD().apps.firstOrNull { it.namespace == t.namespace && it.name == t.name } }.getOrNull()

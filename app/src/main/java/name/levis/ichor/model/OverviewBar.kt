@@ -5,7 +5,9 @@ package name.levis.ichor.model
  * Flux) and etcd one tap away when the cluster has them. Saved by name: a bar arranged before
  * keeps its order, an action it lacks goes last in its menu.
  */
-enum class OverviewAction { HEALTH, WORKLOADS, GITOPS, ETCD, EVENTS, METRICS, ALERTS, KUBESPAN, SEARCH, SETTINGS;
+enum class OverviewAction { HEALTH, WORKLOADS, GITOPS, ETCD, EVENTS, METRICS, ALERTS, KUBESPAN, SEARCH, SETTINGS,
+    /** The cluster's own Git repository, once one is saved; last, so the saved bars keep theirs. */
+    REPOSITORY;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 4)
@@ -20,7 +22,9 @@ typealias OverviewBar = ActionBar<OverviewAction>
  * Kubernetes screens that work with its credentials alone, no Talos one. GitOps (Argo CD, else
  * Flux) is one tap away when the cluster has it.
  */
-enum class KubeHomeAction { WORKLOADS, RESOURCES, GITOPS, METRICS, ALERTS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SEARCH, SETTINGS, CROSSPLANE, TAILSCALE, CLUSTER_LIFECYCLE;
+enum class KubeHomeAction { WORKLOADS, RESOURCES, GITOPS, METRICS, ALERTS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SEARCH, SETTINGS, CROSSPLANE, TAILSCALE, CLUSTER_LIFECYCLE,
+    /** The cluster's own Git repository, once one is saved; last, so the saved bars keep theirs. */
+    REPOSITORY;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 4)

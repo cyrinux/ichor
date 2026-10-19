@@ -83,6 +83,8 @@ struct ClustersView: View {
     @State private var newName = ""
     @State private var error: String?
     @State private var editingEndpoints: ContextSummary?
+    /// The cluster whose repository sheet is open.
+    @State private var editingRepo: ContextSummary?
     /// The cluster whose action audit log is open.
     @State private var activityOf: String?
     @State private var scanning = false
@@ -131,6 +133,9 @@ struct ClustersView: View {
         }
         .endpointTools(editing: $editingEndpoints, scanning: $scanning)
         .sheet(item: $signingIn) { KubeSignInSheet(target: $0) }
+        .sheet(item: $editingRepo) { context in
+            ClusterRepoSheet(context: context, label: model.labels.of(context), saved: model.clusterRepos[context.fingerprint])
+        }
         .sheet(isPresented: $showingServiceAccountHelp) { ServiceAccountHelpSheet() }
         .navigationDestination(item: $activityOf) { ActivityLogView(cluster: $0) }
         .task(id: "\(model.summary?.contexts.map(\.fingerprint) ?? [])#\(model.dataGeneration)") { await loadSignIns() }
@@ -266,6 +271,10 @@ struct ClustersView: View {
         }
         if !model.labels.masked && !context.fingerprint.isEmpty {
             Button { startRenaming(context) } label: { Label("Rename", systemImage: "pencil") }
+        }
+        // The demo's repository is built in.
+        if !context.demo && !context.fingerprint.isEmpty {
+            Button { editingRepo = context } label: { Label("Cluster repository", systemImage: "folder.badge.gearshape") }
         }
         // An Omni cluster's Kubernetes goes through Omni, with its sign-in: no link.
         if !context.isKube && !context.demo && !context.omni && !context.fingerprint.isEmpty && !model.kubeContexts.isEmpty {

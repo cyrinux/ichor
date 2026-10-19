@@ -100,6 +100,10 @@ final class AppModel {
     /// does not try them (screens say to connect it, background checks wait). Only on this device.
     private(set) var vpnOnly: Set<String>
 
+    /// The Git repository saved for each cluster (its Talos and Kubernetes config), by context
+    /// fingerprint; no token in it. Only on this device, and in backups.
+    private(set) var clusterRepos: [String: ClusterRepo]
+
     /// The clusters turned off with "Watch in the background", by context fingerprint: the
     /// background checks skip them (on by default). Only on this device.
     private(set) var monitorUnwatched: Set<String>
@@ -152,6 +156,7 @@ final class AppModel {
         snapshotKeys = UserDefaults.standard.dictionary(forKey: Keys.snapshotKeys) as? [String: String] ?? [:]
         skippedTalosUpdates = UserDefaults.standard.dictionary(forKey: Keys.skippedTalosUpdates) as? [String: String] ?? [:]
         vpnOnly = Set(UserDefaults.standard.stringArray(forKey: Keys.vpnOnly) ?? [])
+        clusterRepos = ClusterRepoStore.decode(UserDefaults.standard.data(forKey: ClusterRepoStore.key))
         monitorUnwatched = Set(UserDefaults.standard.stringArray(forKey: BackgroundMonitor.unwatchedKey) ?? [])
         VpnMonitor.shared.onConnect = { [weak self] in self?.reloadIfHeldBack() }
     }
@@ -478,12 +483,14 @@ final class AppModel {
 
     /// Restored names (all of them) and colors (the others keep the one just assigned) of the stored clusters.
     func restoreClusterSettings(names: [String: String], colors: [String: Int], kubeServers servers: [String: String],
-                                vpnOnly restoredVpnOnly: Set<String> = [], kubeAccess links: [String: String] = [:]) {
+                                vpnOnly restoredVpnOnly: Set<String> = [], kubeAccess links: [String: String] = [:],
+                                repos: [String: ClusterRepo] = [:]) {
         storeColors(clusterColors.merging(colors) { _, new in new })
         storeNames(names)
         storeKubeServers(servers)
         storeVpnOnly(restoredVpnOnly)
         storeKubeAccess(links)
+        storeClusterRepos(repos)
     }
 
     /// Removes the cluster `name` (a context and its credentials) from the store it is in,
@@ -612,6 +619,26 @@ final class AppModel {
         guard !context.fingerprint.isEmpty else { return }
         storeVpnOnly(on ? vpnOnly.union([context.fingerprint]) : vpnOnly.subtracting([context.fingerprint]))
         if context.fingerprint == activeSummary?.fingerprint { dataGeneration += 1 }
+    }
+
+    /// The repository of the cluster on screen: the one saved, the demo's built-in one, nil without.
+    var activeClusterRepo: ClusterRepo? {
+        guard let active = activeSummary else { return nil }
+        return active.demo ? .demo : clusterRepos[active.fingerprint]
+    }
+
+    /// Saves `repo` for `fingerprint`'s cluster; nil, or one without an address, forgets it.
+    func setClusterRepo(_ repo: ClusterRepo?, for fingerprint: String) {
+        guard !fingerprint.isEmpty else { return }
+        var repos = clusterRepos
+        repos[fingerprint] = repo.flatMap(normalizeClusterRepo)
+        storeClusterRepos(repos)
+    }
+
+    private func storeClusterRepos(_ repos: [String: ClusterRepo]) {
+        guard repos != clusterRepos else { return }
+        clusterRepos = repos
+        UserDefaults.standard.set(ClusterRepoStore.encode(repos), forKey: ClusterRepoStore.key)
     }
 
     private func storeVpnOnly(_ fingerprints: Set<String>) {
@@ -840,6 +867,7 @@ final class AppModel {
         storeSnapshotKeys(keepClusterNames(saved: snapshotKeys, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeSkippedTalosUpdates(keepClusterNames(saved: skippedTalosUpdates, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeVpnOnly(keepVpnOnly(saved: vpnOnly, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        storeClusterRepos(ClusterRepoStore.keep(clusterRepos, fingerprints: newSummary.contexts.map(\.fingerprint)))
         // Sign-ins and Kubernetes access links go with their clusters.
         let kubeFingerprints = newKubeSummary?.contexts.map(\.fingerprint) ?? []
         storeKubeAccess(keepKubeAccess(kubeAccess, talos: newTalosSummary?.contexts.map(\.fingerprint) ?? [], kube: kubeFingerprints))

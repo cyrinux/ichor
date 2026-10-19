@@ -115,6 +115,21 @@ extension TalosClient {
         try await json { IchorgoGitOpsProposalDefaults(app.tool, app.kind, app.namespace, app.name, path, cluster, $0) }
     }
 
+    /// What the forge tells of repo with its host's saved token: the default branch, the head
+    /// of the branch read, whether the token can push. Throws GitHostMissing without a token.
+    static func repoInfo(_ repo: ClusterRepo, hosts: GitHostStore, demo: Bool) async throws -> GitRepoInfo {
+        let json = try await forgeHost(repo.host, hosts: hosts, demo: demo)
+        let url = repo.repoURL
+        let branch = repo.branch
+        return try await Self.json { IchorgoGitForgeRepo(json, url, branch, $0) }
+    }
+
+    /// The prefilled pull request for a change of path in the cluster repository repoURL, on
+    /// cluster ("" for none).
+    static func repoProposalDefaults(repoURL: String, path: String, cluster: String) async throws -> GitProposalDefaults {
+        try await json { IchorgoGitForgeRepoProposalDefaults(repoURL, path, cluster, $0) }
+    }
+
     /// The host argument of the forge a change of source is proposed through.
     private static func proposalHost(_ source: GitSource, hosts: GitHostStore, demo: Bool) async throws -> String {
         guard let host = source.proposalHost else {

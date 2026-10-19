@@ -98,8 +98,10 @@ fun SourceBrowserScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(stringResource(R.string.gitops_source_title), maxLines = 1)
-                        Text(target.name, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                        val app = target as? SourceTarget.App
+                        Text(stringResource(if (app != null) R.string.gitops_source_title else R.string.repo_title), maxLines = 1)
+                        val subtitle = app?.name ?: (source as? UiState.Loaded)?.data?.let { repoLabel(it) }.orEmpty()
+                        Text(subtitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                     }
                 },
                 navigationIcon = { BackButton { if (trail.isNotEmpty()) vm.back() else onBack() } },
@@ -110,7 +112,8 @@ fun SourceBrowserScreen(
         val modifier = Modifier.pageContent(padding)
         when (val s = source) {
             UiState.Loading -> LoadingBox(modifier)
-            is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
+            is UiState.Failed -> listing.missingHost?.let { GitHostMissingBox(it, "", onAddToken, modifier) }
+                ?: ErrorBox(s.message, vm::refresh, modifier)
             is UiState.Loaded -> Column(modifier.fillMaxSize()) {
                 val src = s.data
                 SourceHeader(src, (listing.tree as? UiState.Loaded)?.data)

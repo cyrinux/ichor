@@ -41,7 +41,7 @@ struct SourceBrowserView: View {
         .task(id: dir) { await load() }
         // A token added in Settings (the shortcut below): read again on the way back.
         .onChange(of: hosts.hosts) { _, _ in Task { await load() } }
-        .navigationTitle("Source")
+        .navigationTitle(app.isRepository ? String(localized: "Repository") : String(localized: "Source"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

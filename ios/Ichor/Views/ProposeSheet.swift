@@ -174,7 +174,13 @@ struct ProposeSheet: View {
             message = defaultTitle
         }
         let cluster = model.activeSummary?.name ?? ""
-        guard let defaults = try? await TalosClient.proposalDefaults(app: app, path: path, cluster: cluster) else { return }
+        let loaded: GitProposalDefaults?
+        if app.isRepository {
+            loaded = try? await TalosClient.repoProposalDefaults(repoURL: source.repoURL, path: path, cluster: cluster)
+        } else {
+            loaded = try? await TalosClient.proposalDefaults(app: app, path: path, cluster: cluster)
+        }
+        guard let defaults = loaded else { return }
         if title.isEmpty { title = defaults.title }
         if message.isEmpty { message = defaults.message }
         if details.isEmpty { details = defaults.body }
@@ -230,7 +236,13 @@ private struct ProposalResultView: View {
                 } icon: {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(.statusOK)
                 }
-                Text("\(app.toolLabel) applies it once it is merged, at its next reconcile.")
+                Group {
+                    if app.isRepository {
+                        Text("Nothing changes on the cluster until it is merged and applied.")
+                    } else {
+                        Text("\(app.toolLabel) applies it once it is merged, at its next reconcile.")
+                    }
+                }
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

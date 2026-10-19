@@ -51,6 +51,7 @@ class BackupManager(
     private val pins: PinStore,
     private val gitHosts: GitHostStore,
     private val ai: AiPreferences,
+    private val clusterRepos: ClusterRepoStore,
     /** This device's [name.levis.ichor.model.BackupLockMode]; a restore never sets the lock. */
     private val lockMode: () -> String,
     private val setPrivacyMask: (PrivacyMask) -> Unit,
@@ -97,6 +98,7 @@ class BackupManager(
                     wakeOnLan.targets.value,
                     kubeServers.servers.value,
                     kubeAccess.links.value,
+                    clusterRepos.repos.value,
                 ),
                 kubeAuth = backupKubeAuth(signInKeys(stored.summary.contexts), kubeAuth.all(), Ichorgo::kubeAuthForBackup),
                 // The real scope only (pinScope with screenshot mode off): masked pins hold made-up names.
@@ -158,6 +160,7 @@ class BackupManager(
             // Checked like a typed one: an address the Go core refuses is dropped.
             kubeServers.set(fp, restored.kubeServers[fp]?.let { runCatching { Ichorgo.normalizeKubeServer(it) }.getOrNull() }.orEmpty())
             kubeAccess.set(fp, restored.kubeAccess[fp])
+            clusterRepos.set(fp, restored.repos[fp])
         }
         configs.relink()
         (wakeOnLan.targets.value.keys - restored.wakeOnLan.keys)
