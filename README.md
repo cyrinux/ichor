@@ -60,7 +60,10 @@ tour** shows it again.
   policies), follow a pod's log and
   port-forward to it on the phone (127.0.0.1 only); see what gives LoadBalancer Services their
   address (MetalLB and Cilium pools with their free addresses, MetalLB advertisements and BGP
-  peers, kube-vip ranges and leases) and why one has none; or export a kubeconfig.
+  peers, kube-vip ranges and leases) and why one has none; or export a kubeconfig. On a Talos
+  cluster the Kubernetes screen's ⋯ menu also leads to Data services and, when the cluster runs
+  them, to the ExternalDNS, cert-manager, Sealed Secrets and CAST AI lists (any of them can be
+  moved to the bar).
 - **Argo CD:** when the cluster runs it, list its Applications with their health and sync state,
   follow a sync wave by wave, and sync (with prune, dry run, selected resources…), refresh,
   terminate a sync, pause or resume auto-sync, or roll back to an earlier deployment. A sync,

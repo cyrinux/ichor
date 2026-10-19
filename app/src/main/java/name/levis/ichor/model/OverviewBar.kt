@@ -46,7 +46,10 @@ enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOW
     CLEAN_UP_PODS,
     /** Crossplane, the Tailscale operator, Argo Rollouts and Cluster API / Sidero Metal, each offered
      *  when the cluster runs it (as on the Kubernetes home); last, so the saved bars keep theirs. */
-    CROSSPLANE, TAILSCALE, ARGO_ROLLOUTS, CLUSTER_LIFECYCLE;
+    CROSSPLANE, TAILSCALE, ARGO_ROLLOUTS, CLUSTER_LIFECYCLE,
+    /** Data services, and the systems the Kubernetes home files in another family (ExternalDNS,
+     *  cert-manager, Sealed Secrets, CAST AI), each offered when the cluster runs it; last, so the saved bars keep theirs. */
+    DATA_SERVICES, EXTERNAL_DNS, CERT_MANAGER, SEALED_SECRETS, CASTAI;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 3)

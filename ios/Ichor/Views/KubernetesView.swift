@@ -36,6 +36,8 @@ struct KubernetesView: View {
         case tailscale
         case argoRollouts
         case clusterLifecycle
+        /// Data services on one system (nil: the hub), alone (solo) for one the Kubernetes home files elsewhere.
+        case dataServices(kind: DataServiceKind?, solo: Bool)
     }
 
     @Environment(AppModel.self) private var model
@@ -75,6 +77,8 @@ struct KubernetesView: View {
     /// Tailscale operator, Argo Rollouts and Cluster API / Sidero Metal (each read answers
     /// "not installed" quickly). Unknown or unreadable: not offered.
     @State private var operators = KubeOperators()
+    /// The systems Data services reads here, to offer those filed outside it; empty until read or when unreadable.
+    @State private var dataKinds: Set<DataServiceKind> = []
     @State private var netScreen: NetScreen?
     /// The namespace a share link scoped the lists to, not kept, until another is picked.
     @State private var linkedNamespace: String?
@@ -126,6 +130,7 @@ struct KubernetesView: View {
         case .tailscale: operators.tailscale
         case .argoRollouts: operators.argoRollouts
         case .clusterLifecycle: operators.clusterLifecycle
+        case .externalDns, .certManager, .sealedSecrets, .castai: action.dataServiceKind.map(dataKinds.contains) ?? false
         default: true
         }
     }
@@ -157,6 +162,8 @@ struct KubernetesView: View {
         case .tailscale: netScreen = .tailscale
         case .argoRollouts: netScreen = .argoRollouts
         case .clusterLifecycle: netScreen = .clusterLifecycle
+        case .dataServices: netScreen = .dataServices(kind: nil, solo: false)
+        case .externalDns, .certManager, .sealedSecrets, .castai: netScreen = .dataServices(kind: action.dataServiceKind, solo: true)
         // The namespace listed; every namespace when none is picked.
         case .cleanUpPods: sanitizing = true
         case .apiAddress:
@@ -233,12 +240,14 @@ struct KubernetesView: View {
             case .tailscale: TailscaleView()
             case .argoRollouts: ArgoRolloutsView()
             case .clusterLifecycle: ClusterLifecycleView()
+            case .dataServices(let kind, let solo): DataServicesView(hints: "", downNodes: [], selected: kind, solo: solo)
             }
         }
         .task(id: model.client?.kubeServer) {
             guard let client = model.client else { return }
             cilium = try? await client.cilium()
             operators = await KubeOperators.read(with: client)
+            dataKinds = Set((try? await client.dataServices(hints: ""))?.detected ?? [])
         }
         .task(id: "\(model.activeContext)|\(model.client?.kubeServer ?? "")|\(model.dataGeneration)") {
             await loadNamespaces()
@@ -534,6 +543,8 @@ extension KubernetesAction: BarActionLook {
         case .tailscale: "network.badge.shield.half.filled"
         case .argoRollouts: "arrow.triangle.branch"
         case .clusterLifecycle: "server.rack"
+        case .dataServices: "externaldrive.connected.to.line.below"
+        case .externalDns, .certManager, .sealedSecrets, .castai: dataServiceKind?.symbol ?? "externaldrive"
         }
     }
 
@@ -557,6 +568,9 @@ extension KubernetesAction: BarActionLook {
         case .tailscale: Text("Tailscale")
         case .argoRollouts: Text("Argo Rollouts")
         case .clusterLifecycle: Text("Cluster lifecycle")
+        case .dataServices: Text("Data services")
+        // Product names: never translated.
+        case .externalDns, .certManager, .sealedSecrets, .castai: Text(verbatim: dataServiceKind?.title ?? "")
         }
     }
 }
