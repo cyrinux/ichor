@@ -231,6 +231,10 @@ private struct VerdictRow: View {
                     StatusPill(label: String(localized: "owned by \(entry.owner)"), color: attentionColor)
                 }
             }
+            if !entry.probed.isEmpty {
+                Text(String(localized: "checked as \(entry.probed)"))
+                    .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            }
             if !entry.answers.isEmpty, entry.verdict != .error {
                 Text(verbatim: entry.answers.joined(separator: ", "))
                     .font(.caption).foregroundStyle(.secondary).lineLimit(2)

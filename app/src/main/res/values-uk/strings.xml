@@ -2583,6 +2583,7 @@
     <string name="externaldns_check_missing">Не знайдено</string>
     <string name="externaldns_check_error">Не вдалося перевірити</string>
     <string name="externaldns_check_owner_other">належить %1$s</string>
+    <string name="externaldns_check_probed">перевірено як %1$s</string>
     <string name="externaldns_check_mismatch_hint">Ім\'я, що вказує в інше місце, може бути split-horizon DNS вдома, зміною, що ще поширюється, або іншим ExternalDNS, який ним володіє.</string>
     <plurals name="externaldns_check_summary">
         <item quantity="one">%1$d з %2$d імені вказує на цей кластер</item>

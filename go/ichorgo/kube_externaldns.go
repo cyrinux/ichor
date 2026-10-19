@@ -15,14 +15,48 @@ import (
 // (v1alpha1): most installs publish only the Ingress and Service hosts they are given.
 const groupExternalDNS = "externaldns.k8s.io"
 
-// The annotations and values the ExternalDNS sources share.
+// The annotation prefixes ExternalDNS reads: v0.22 renamed the alpha one, still honoured
+// with --enable-legacy-annotation-prefix. Both are read, the current one first, since a
+// cluster upgrading its controller carries both for a while.
 const (
-	extDNSAnnPrefix     = "external-dns.alpha.kubernetes.io/"
-	extDNSAnnHostname   = extDNSAnnPrefix + "hostname"
-	extDNSAnnInternal   = extDNSAnnPrefix + "internal-hostname"
-	extDNSAnnTarget     = extDNSAnnPrefix + "target"
-	extDNSAnnTTL        = extDNSAnnPrefix + "ttl"
-	extDNSAnnController = extDNSAnnPrefix + "controller"
+	extDNSAnnPrefix       = "external-dns.kubernetes.io/"
+	extDNSAnnLegacyPrefix = "external-dns.alpha.kubernetes.io/"
+)
+
+// extDNSAnnKey is one ExternalDNS annotation under both prefixes, built once so the
+// lookup in the per-object loops does not concatenate.
+type extDNSAnnKey struct{ current, legacy string }
+
+func newExtDNSAnnKey(name string) extDNSAnnKey {
+	return extDNSAnnKey{current: extDNSAnnPrefix + name, legacy: extDNSAnnLegacyPrefix + name}
+}
+
+// The annotations the ExternalDNS sources share.
+var (
+	extDNSAnnHostname   = newExtDNSAnnKey("hostname")
+	extDNSAnnInternal   = newExtDNSAnnKey("internal-hostname")
+	extDNSAnnTarget     = newExtDNSAnnKey("target")
+	extDNSAnnTTL        = newExtDNSAnnKey("ttl")
+	extDNSAnnController = newExtDNSAnnKey("controller")
+)
+
+// extDNSAnn reads an ExternalDNS annotation, the current prefix winning over the legacy one.
+func extDNSAnn(annotations map[string]string, key extDNSAnnKey) (string, bool) {
+	if v, ok := annotations[key.current]; ok {
+		return v, true
+	}
+
+	v, ok := annotations[key.legacy]
+	return v, ok
+}
+
+// extDNSAnnValue is extDNSAnn without the presence flag: "" when absent.
+func extDNSAnnValue(annotations map[string]string, key extDNSAnnKey) string {
+	v, _ := extDNSAnn(annotations, key)
+	return v
+}
+
+const (
 	// The value marking an object as this controller's: another value (a second ExternalDNS)
 	// leaves the object out.
 	extDNSControllerName = "dns-controller"
@@ -367,7 +401,7 @@ func extDNSRawRecords(endpoints []dnsEndpointObject, ingresses []ingressObject, 
 			continue
 		}
 
-		hosts := splitCSV(orDefault(svc.Metadata.Annotations[extDNSAnnHostname], svc.Metadata.Annotations[extDNSAnnInternal]))
+		hosts := splitCSV(orDefault(extDNSAnnValue(svc.Metadata.Annotations, extDNSAnnHostname), extDNSAnnValue(svc.Metadata.Annotations, extDNSAnnInternal)))
 		if len(hosts) == 0 {
 			continue
 		}
@@ -389,17 +423,100 @@ func extDNSRawRecords(endpoints []dnsEndpointObject, ingresses []ingressObject, 
 			continue
 		}
 
-		_, addresses := routeParents(r, gateways)
-		out = extDNSAppend(out, r.Spec.Hostnames, addresses, extDNSAnnTTLValue(r.Metadata.Annotations), "HTTPRoute", r.Metadata.Namespace, r.Metadata.Name,
+		hosts, targets := extDNSRouteRecords(r, gateways)
+		out = extDNSAppend(out, hosts, targets, extDNSAnnTTLValue(r.Metadata.Annotations), "HTTPRoute", r.Metadata.Namespace, r.Metadata.Name,
 			groupGatewayAPI, "v1", "httproutes")
 	}
 
 	return out
 }
 
+// extDNSRouteRecords are the hostnames ExternalDNS publishes for an HTTPRoute and their
+// targets. Hosts: the route's hostnames and hostname annotation (else its listeners'), kept
+// only where an attached listener serves them, the more specific name winning. Targets: each
+// serving Gateway's target annotation, which replaces its status addresses (the annotation is
+// read on the Gateway; on a route it is ignored).
+func extDNSRouteRecords(r gatewayRouteObject, gateways []gatewayObject) (hosts, targets []string) {
+	routeHosts := append(slices.Clone(r.Spec.Hostnames), splitCSV(extDNSAnnValue(r.Metadata.Annotations, extDNSAnnHostname))...)
+	if len(routeHosts) == 0 {
+		routeHosts = []string{""} // the listeners' hostnames
+	}
+
+	for _, ref := range r.Spec.ParentRefs {
+		gw, ok := parentGateway(r, ref, gateways)
+		if !ok {
+			continue
+		}
+
+		served := false
+
+		for _, l := range gw.Spec.Listeners {
+			if !refSelects(ref, l) {
+				continue
+			}
+
+			for _, h := range routeHosts {
+				if host, ok := extDNSMatchingHost(h, l.Hostname); ok && host != "" {
+					hosts, served = append(hosts, host), true
+				}
+			}
+		}
+
+		if !served {
+			continue
+		}
+
+		gwTargets, override := extDNSAnnTargets(gw.Metadata.Annotations)
+		if !override {
+			for _, a := range gw.Status.Addresses {
+				gwTargets = append(gwTargets, a.Value)
+			}
+		}
+
+		targets = append(targets, gwTargets...)
+	}
+
+	slices.Sort(hosts)
+	slices.Sort(targets)
+
+	return slices.Compact(hosts), slices.Compact(targets)
+}
+
+// extDNSMatchingHost matches a route hostname with a listener's (ExternalDNS's
+// gwMatchingHost): an empty one matches anything, a "*." wildcard matches the names below
+// it (not its own domain), and the more specific of the two is the one published.
+func extDNSMatchingHost(route, listener string) (string, bool) {
+	route = strings.ToLower(strings.TrimSuffix(route, "."))
+	listener = strings.ToLower(strings.TrimSuffix(listener, "."))
+
+	switch {
+	case route == "":
+		return listener, true
+	case listener == "":
+		return route, true
+	}
+
+	routeWild, listenerWild := strings.HasPrefix(route, "*."), strings.HasPrefix(listener, "*.")
+
+	switch {
+	case routeWild && listenerWild:
+		if strings.HasSuffix(route, listener[1:]) {
+			return route, true
+		}
+
+		return listener, strings.HasSuffix(listener, route[1:])
+	case listenerWild:
+		return route, strings.HasSuffix(route, listener[1:])
+	case routeWild:
+		return listener, strings.HasSuffix(listener, route[1:])
+	default:
+		return route, route == listener
+	}
+}
+
 // extDNSForeign tells whether another ExternalDNS owns the object.
 func extDNSForeign(annotations map[string]string) bool {
-	v, ok := annotations[extDNSAnnController]
+	v, ok := extDNSAnn(annotations, extDNSAnnController)
 	return ok && v != extDNSControllerName
 }
 
@@ -412,7 +529,7 @@ func extDNSIngressHosts(ing ingressObject) []string {
 		}
 	}
 
-	return append(hosts, splitCSV(ing.Metadata.Annotations[extDNSAnnHostname])...)
+	return append(hosts, splitCSV(extDNSAnnValue(ing.Metadata.Annotations, extDNSAnnHostname))...)
 }
 
 // extDNSLBAddresses flattens a load balancer's ingress entries.
@@ -437,7 +554,7 @@ func extDNSLBAddresses(ingress []struct {
 // extDNSAnnTargets are the target annotation's values; override tells whether it was set
 // (it replaces the source's own addresses).
 func extDNSAnnTargets(annotations map[string]string) (targets []string, override bool) {
-	if t := annotations[extDNSAnnTarget]; t != "" {
+	if t := extDNSAnnValue(annotations, extDNSAnnTarget); t != "" {
 		return splitCSV(t), true
 	}
 
@@ -446,7 +563,7 @@ func extDNSAnnTargets(annotations map[string]string) (targets []string, override
 
 // extDNSAnnTTLValue is the ttl annotation in seconds, 0 when absent or unparsable.
 func extDNSAnnTTLValue(annotations map[string]string) int {
-	ttl, _ := strconv.Atoi(annotations[extDNSAnnTTL])
+	ttl, _ := strconv.Atoi(extDNSAnnValue(annotations, extDNSAnnTTL))
 	return ttl
 }
 

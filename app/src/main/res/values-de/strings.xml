@@ -2425,6 +2425,7 @@
     <string name="externaldns_check_missing">Nicht gefunden</string>
     <string name="externaldns_check_error">Konnte nicht geprüft werden</string>
     <string name="externaldns_check_owner_other">gehört %1$s</string>
+    <string name="externaldns_check_probed">geprüft als %1$s</string>
     <string name="externaldns_check_mismatch_hint">Ein Name, der woandershin zeigt, kann Split-Horizon-DNS zu Hause sein, eine noch laufende Änderung oder ein anderer ExternalDNS, dem er gehört.</string>
     <plurals name="externaldns_check_summary">
         <item quantity="one">%1$d von %2$d Namen zeigt auf diesen Cluster</item>

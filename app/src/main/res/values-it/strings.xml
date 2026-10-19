@@ -2433,6 +2433,7 @@
     <string name="externaldns_check_missing">Non trovato</string>
     <string name="externaldns_check_error">Impossibile controllare</string>
     <string name="externaldns_check_owner_other">di proprietà di %1$s</string>
+    <string name="externaldns_check_probed">verificato come %1$s</string>
     <string name="externaldns_check_mismatch_hint">Un nome che punta altrove può essere DNS split-horizon a casa, una modifica ancora in propagazione, o un altro ExternalDNS che lo possiede.</string>
     <plurals name="externaldns_check_summary">
         <item quantity="one">%1$d di %2$d nome punta a questo cluster</item>

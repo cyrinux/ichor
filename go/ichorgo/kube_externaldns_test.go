@@ -66,15 +66,15 @@ func TestReadExternalDNS(t *testing.T) {
 		t.Errorf("main controller: %+v", l)
 	}
 
-	// Ten records: three warnings first, then the ok ones by name.
+	// Thirteen records: four warnings first, then the ok ones by name.
 	names := make([]string, 0, len(out.Records))
 	for _, r := range out.Records {
 		names = append(names, r.DNSName)
 	}
 
-	want := []string{"*.example.net", "db.example.com", "status.example.com",
-		"api.example.com", "app.example.com", "extra.example.com", "extra2.example.com",
-		"internal.example.com", "override.example.com", "shop.example.com"}
+	want := []string{"*.example.net", "db.example.com", "pending.example.com", "status.example.com",
+		"*.apps.example.com", "api.example.com", "app.example.com", "extra.example.com", "extra2.example.com",
+		"internal.example.com", "override.example.com", "shop.example.com", "web.apps.example.com"}
 	if !slices.Equal(names, want) {
 		t.Fatalf("records %v, want %v", names, want)
 	}
@@ -124,6 +124,26 @@ func TestReadExternalDNS(t *testing.T) {
 		t.Errorf("httproute record: %+v", r)
 	}
 
+	// The Gateway's target annotation replaces its addresses: a CNAME to the load balancer.
+	if r := byName["web.apps.example.com"]; r.SourceName != "web" || !slices.Equal(r.Targets, []string{"lb.example.net"}) ||
+		r.RecordType != "CNAME" || r.Health != healthOK || len(r.Reasons) != 0 {
+		t.Errorf("gateway target annotation: %+v", r)
+	}
+
+	// A route without hostnames takes its listener's; one no listener serves is left out.
+	if r := byName["*.apps.example.com"]; r.SourceName != "catchall" || !slices.Equal(r.Targets, []string{"lb.example.net"}) {
+		t.Errorf("listener hostname: %+v", r)
+	}
+
+	if _, ok := byName["other.example.net"]; ok {
+		t.Error("hostname no listener serves kept")
+	}
+
+	// A Gateway with neither the annotation nor addresses has nothing to point at yet.
+	if r := byName["pending.example.com"]; r.Health != healthWarning || !slices.Equal(r.Reasons, []string{extDNSReasonNoTarget}) {
+		t.Errorf("gateway without address: %+v", r)
+	}
+
 	// The wildcard target set and the foreign-owned DNSEndpoint are left out.
 	if _, ok := byName["wild.example.com"]; ok {
 		t.Error("wildcard target kept")
@@ -133,7 +153,7 @@ func TestReadExternalDNS(t *testing.T) {
 		t.Error("foreign DNSEndpoint kept")
 	}
 
-	if out.RecordCount != 10 || out.Truncated {
+	if out.RecordCount != 13 || out.Truncated {
 		t.Errorf("count %d truncated %v", out.RecordCount, out.Truncated)
 	}
 }
@@ -151,7 +171,7 @@ func TestReadExternalDNSCRDAbsent(t *testing.T) {
 		}
 	}
 
-	if out.RecordCount != 9 {
+	if out.RecordCount != 12 {
 		t.Errorf("count %d", out.RecordCount)
 	}
 }
@@ -238,6 +258,29 @@ func TestExternalDNSFilterCovers(t *testing.T) {
 	for _, c := range cases {
 		if got := extDNSFilterCovers(c.filter, c.host); got != c.want {
 			t.Errorf("extDNSFilterCovers(%q, %q) = %v", c.filter, c.host, got)
+		}
+	}
+}
+
+func TestExtDNSMatchingHost(t *testing.T) {
+	for _, c := range []struct {
+		route, listener, want string
+		ok                    bool
+	}{
+		{"app.example.com", "", "app.example.com", true},
+		{"", "*.example.com", "*.example.com", true},
+		{"App.Example.com", "app.example.com", "app.example.com", true},
+		{"app.example.com", "*.example.com", "app.example.com", true},
+		{"*.example.com", "app.example.com", "app.example.com", true},
+		{"*.apps.example.com", "*.example.com", "*.apps.example.com", true},
+		{"*.example.com", "*.apps.example.com", "*.apps.example.com", true},
+		{"example.com", "*.example.com", "", false},
+		{"app.example.net", "*.example.com", "", false},
+		{"app.example.com", "web.example.com", "", false},
+	} {
+		got, ok := extDNSMatchingHost(c.route, c.listener)
+		if ok != c.ok || (ok && got != c.want) {
+			t.Errorf("extDNSMatchingHost(%q, %q) = %q, %v", c.route, c.listener, got, ok)
 		}
 	}
 }
@@ -343,6 +386,67 @@ func TestExternalDNSRecordReasons(t *testing.T) {
 	if len(records) != 1 || records[0].Health != healthWarning ||
 		!slices.Equal(records[0].Reasons, []string{extDNSReasonUnmanaged, extDNSReasonNoTarget}) {
 		t.Errorf("records: %+v", records)
+	}
+}
+
+// ExternalDNS v0.22 reads external-dns.kubernetes.io/: those annotations count like the
+// legacy alpha ones, and the current prefix wins when an object carries both.
+func TestExternalDNSAnnotationPrefixes(t *testing.T) {
+	var ingresses []ingressObject
+	if err := json.Unmarshal([]byte(`[
+	  {"metadata": {"name": "web", "namespace": "demo",
+	                "annotations": {"external-dns.kubernetes.io/hostname": "extra.example.com",
+	                                "external-dns.kubernetes.io/target": "lb.example.net",
+	                                "external-dns.kubernetes.io/ttl": "120"}},
+	   "spec": {"rules": [{"host": "web.example.com"}]},
+	   "status": {"loadBalancer": {"ingress": [{"ip": "203.0.113.10"}]}}},
+	  {"metadata": {"name": "other", "namespace": "demo",
+	                "annotations": {"external-dns.kubernetes.io/controller": "other"}},
+	   "spec": {"rules": [{"host": "other.example.com"}]}}
+	]`), &ingresses); err != nil {
+		t.Fatal(err)
+	}
+
+	var services []serviceListObject
+	if err := json.Unmarshal([]byte(`[
+	  {"metadata": {"name": "shop", "namespace": "demo",
+	                "annotations": {"external-dns.kubernetes.io/hostname": "shop.example.com",
+	                                "external-dns.alpha.kubernetes.io/hostname": "old.example.com",
+	                                "external-dns.alpha.kubernetes.io/ttl": "60"}},
+	   "spec": {"type": "LoadBalancer"},
+	   "status": {"loadBalancer": {"ingress": [{"ip": "203.0.113.20"}]}}},
+	  {"metadata": {"name": "internal", "namespace": "demo",
+	                "annotations": {"external-dns.kubernetes.io/internal-hostname": "internal.example.com"}},
+	   "spec": {"type": "LoadBalancer", "externalIPs": ["203.0.113.80"]}},
+	  {"metadata": {"name": "skipped", "namespace": "demo",
+	                "annotations": {"external-dns.kubernetes.io/hostname": "skipped.example.com",
+	                                "external-dns.kubernetes.io/controller": "other"}},
+	   "spec": {"type": "LoadBalancer"}}
+	]`), &services); err != nil {
+		t.Fatal(err)
+	}
+
+	byName := map[string]extDNSRawRecord{}
+	for _, r := range extDNSRawRecords(nil, ingresses, services, nil, nil, "") {
+		byName[r.dnsName] = r
+	}
+
+	if len(byName) != 4 {
+		t.Fatalf("records: %+v", byName)
+	}
+
+	for _, host := range []string{"web.example.com", "extra.example.com"} {
+		if r := byName[host]; !slices.Equal(r.targets, []string{"lb.example.net"}) || r.ttl != 120 || r.recordType != "CNAME" {
+			t.Errorf("%s: %+v", host, r)
+		}
+	}
+
+	if r := byName["shop.example.com"]; !slices.Equal(r.targets, []string{"203.0.113.20"}) || r.ttl != 60 {
+		t.Errorf("shop: %+v", r)
+	}
+
+	if r := byName["internal.example.com"]; !slices.Equal(r.targets, []string{"203.0.113.80"}) {
+		t.Errorf("internal: %+v", r)
 	}
 }
 

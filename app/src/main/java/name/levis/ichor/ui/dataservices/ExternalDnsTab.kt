@@ -192,6 +192,9 @@ private fun VerdictRow(entry: DnsCheckEntry) {
             }
             if (entry.ownerMatch == false) StatusPill(stringResource(R.string.externaldns_check_owner_other, entry.owner), colors.warn)
         }
+        if (entry.probed.isNotEmpty()) {
+            MutedText(stringResource(R.string.externaldns_check_probed, entry.probed), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
         if (entry.answers.isNotEmpty() && entry.verdict != DnsCheckStatus.ERROR) {
             MutedText(entry.answers.joinToString(", "), maxLines = 2, overflow = TextOverflow.Ellipsis)
         }

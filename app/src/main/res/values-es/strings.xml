@@ -2433,6 +2433,7 @@
     <string name="externaldns_check_missing">No encontrado</string>
     <string name="externaldns_check_error">No se pudo comprobar</string>
     <string name="externaldns_check_owner_other">pertenece a %1$s</string>
+    <string name="externaldns_check_probed">comprobado como %1$s</string>
     <string name="externaldns_check_mismatch_hint">Un nombre que apunta a otro sitio puede ser DNS split-horizon en casa, un cambio aún propagándose, u otro ExternalDNS que lo posee.</string>
     <plurals name="externaldns_check_summary">
         <item quantity="one">%1$d de %2$d nombre apunta a este clúster</item>
