@@ -18,7 +18,6 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,7 +31,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.InventoryApp
-import name.levis.ichor.model.PluginAction
 import name.levis.ichor.model.PluginCondition
 import name.levis.ichor.model.PluginItem
 import name.levis.ichor.model.PluginRef
@@ -103,7 +101,8 @@ fun PluginSummaryHeader(summary: PluginSummary, modifier: Modifier = Modifier) {
 /**
  * A row of a plugin card, inside a grouped card: its health dot, title, subtitle (left out
  * when [showSubtitle] is false: the card's title says it), status and trailing text; it opens
- * on its detail sections when it has any. [extra] adds a native control under them.
+ * on its detail sections when it has any. [extra] adds a native control under them; [actions]
+ * runs the buttons of its actions sections (null: they stay off).
  */
 @Composable
 fun PluginRowContent(
@@ -113,6 +112,7 @@ fun PluginRowContent(
     onObject: (PluginRef) -> Unit,
     showSubtitle: Boolean = true,
     extra: (@Composable () -> Unit)? = null,
+    actions: PluginActionRunner? = null,
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val expandable = row.detail.any { it !is PluginSection.Unknown } || extra != null
@@ -147,16 +147,16 @@ fun PluginRowContent(
         }
         if (open) {
             Column(Modifier.padding(start = 22.dp, top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                row.detail.forEach { PluginSectionView(it, onObject) }
+                row.detail.forEach { PluginSectionView(it, onObject, row.ref, actions) }
                 extra?.invoke()
             }
         }
     }
 }
 
-/** One detail section; an unknown type draws nothing. */
+/** One detail section of the row on [ref]; an unknown type draws nothing. [actions]: see [PluginActionButtons]. */
 @Composable
-fun PluginSectionView(section: PluginSection, onObject: (PluginRef) -> Unit) {
+fun PluginSectionView(section: PluginSection, onObject: (PluginRef) -> Unit, ref: PluginRef? = null, actions: PluginActionRunner? = null) {
     when (section) {
         is PluginSection.KeyValues -> KeyValues(section.items)
         is PluginSection.Badges -> PluginBadgeRow(section.items.map { b -> listOf(b.value, b.label).filter { it.isNotEmpty() }.joinToString(" ") to b.tone })
@@ -170,7 +170,7 @@ fun PluginSectionView(section: PluginSection, onObject: (PluginRef) -> Unit) {
             fontFamily = if (section.mono) FontFamily.Monospace else null,
             color = valueColor(section.tone),
         )
-        is PluginSection.Actions -> Actions(section.items)
+        is PluginSection.Actions -> PluginActionButtons(section.items, ref, actions)
         is PluginSection.Unknown -> Unit
     }
 }
@@ -257,26 +257,4 @@ private fun Table(t: PluginSection.Table) {
             }
         }
     }
-}
-
-/**
- * The plugin's buttons. Running a plugin action needs the actions step of the Go core
- * (KubePluginAction), not in this build: every button stays off, with the plugin's reason
- * when it gives one, else a note that the action is not available yet.
- */
-@Composable
-private fun Actions(items: List<PluginAction>) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        items.forEach { a ->
-            OutlinedButton(onClick = {}, enabled = false) { Text(a.label) }
-            MutedText(actionNote(a))
-        }
-    }
-}
-
-@Composable
-private fun actionNote(a: PluginAction): String = when {
-    !a.enabled && a.disabledReason.isNotEmpty() -> a.disabledReason
-    a.allowed == false -> stringResource(R.string.plugin_action_not_allowed)
-    else -> stringResource(R.string.plugin_action_unavailable)
 }

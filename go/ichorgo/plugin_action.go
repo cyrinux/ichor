@@ -226,7 +226,9 @@ func runPluginAction(ctx context.Context, k *kubeClient, c *plugin.Compiled, act
 }
 
 // changedSinceChecked: the pinned request was refused because the object's resourceVersion
-// moved (a 409, or a JSON patch whose test of it failed).
+// moved (a 409, or a JSON patch whose test of it failed: a 422 that says so). Any other
+// refusal (a 403, a 422 about something else, a namespace named "test") stays the API
+// server's.
 func changedSinceChecked(err error, verb string) bool {
 	var apiErr *kubeAPIError
 	if !errors.As(err, &apiErr) {
@@ -237,9 +239,19 @@ func changedSinceChecked(err error, verb string) bool {
 		return true
 	}
 
-	msg := strings.ToLower(apiErr.Message)
+	return verb == "jsonPatch" && apiErr.Code == http.StatusUnprocessableEntity && failedResourceVersionTest(apiErr.Message)
+}
 
-	return verb == "jsonPatch" && apiErr.Code >= 400 && (strings.Contains(msg, "test") || strings.Contains(msg, "resourceversion"))
+// failedResourceVersionTest: msg is the API server's for a JSON patch whose test operation on
+// /metadata/resourceVersion failed ("testing value /metadata/resourceVersion failed: test
+// failed" from json-patch, "the test operation on /metadata/resourceVersion failed").
+func failedResourceVersionTest(msg string) bool {
+	msg = strings.ToLower(msg)
+	if !strings.Contains(msg, "/metadata/resourceversion") {
+		return false
+	}
+
+	return strings.Contains(msg, "test operation") || strings.Contains(msg, "testing value") || strings.Contains(msg, "test failed")
 }
 
 // onObjectPath: create posts to the collection; every other verb targets the object, or one

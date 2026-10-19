@@ -165,10 +165,15 @@ public struct PluginCard: Decodable, Equatable, Sendable, Identifiable {
         return !namespaces.contains("") && namespaces.count > 1
     }
 
-    /// The rows to draw, with their index (for stable ids): one group per namespace, in the order
-    /// they first appear, when `groupsByNamespace`; else one group titled "".
+    /// The rows to draw, with their index and id: one group per namespace, in the order they first
+    /// appear, when `groupsByNamespace`; else one group titled "".
     public var rowGroups: [PluginRowGroup] {
-        let indexed = rows.enumerated().map { PluginIndexedRow(index: $0.offset, row: $0.element) }
+        var seen: Set<String> = []
+        let indexed = rows.enumerated().map { offset, row in
+            let id = row.rowID(index: offset, taken: seen)
+            seen.insert(id)
+            return PluginIndexedRow(index: offset, id: id, row: row)
+        }
         guard groupsByNamespace else { return [PluginRowGroup(namespace: "", rows: indexed)] }
         var order: [String] = []
         var byNamespace: [String: [PluginIndexedRow]] = [:]
@@ -183,6 +188,10 @@ public struct PluginCard: Decodable, Equatable, Sendable, Identifiable {
 
 public struct PluginIndexedRow: Equatable, Sendable {
     public let index: Int
+    /// The row's identity across reads: its object's key, so that a row's state (an open
+    /// confirmation, a running action) never passes to another object when rows move; its
+    /// index when it has no object, or when another row already has that object.
+    public let id: String
     public let row: PluginRow
 }
 
@@ -280,6 +289,12 @@ public struct PluginRow: Decodable, Equatable, Sendable {
     }
 
     /// The key of its expanded state, unique within the tree.
+    /// See PluginIndexedRow.id; `taken` are the ids of the rows before it.
+    func rowID(index: Int, taken: Set<String>) -> String {
+        if let key = ref?.key, !taken.contains(key) { return key }
+        return "#\(index)"
+    }
+
     public func expandKey(card: String, index: Int) -> String {
         "\(card)|\(ref?.key ?? "\(index):\(title)")"
     }
@@ -475,72 +490,6 @@ public struct PluginCondition: Decodable, Equatable, Sendable {
         message = try c.field(.message, "")
         tone = try c.field(.tone, "")
         lastTransition = try c.field(.lastTransition, 0)
-    }
-}
-
-/// A declared action's button.
-public struct PluginActionItem: Decodable, Equatable, Sendable {
-    public let id: String
-    public let label: String
-    public let enabled: Bool
-    /// none, plain or typedName.
-    public let confirm: String
-    public let disabledReason: String
-    /// The can-I answer; nil until the actions step sets it.
-    public let allowed: Bool?
-    public let params: [PluginParam]
-
-    /// Whether the button may be pressed, as far as the tree says.
-    public var usable: Bool { enabled && allowed != false }
-
-    /// Why the button is off. Running a plugin action needs the actions step of the Go core
-    /// (KubePluginAction), not in this build: every button stays off, with the plugin's reason
-    /// when it gives one.
-    public var note: PluginActionNote {
-        if !enabled && !disabledReason.isEmpty { return .reason(disabledReason) }
-        if allowed == false { return .notAllowed }
-        return .unavailable
-    }
-
-    private enum CodingKeys: String, CodingKey { case id, label, enabled, confirm, disabledReason, allowed, params }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.field(.id, "")
-        label = try c.field(.label, "")
-        enabled = try c.field(.enabled, false)
-        confirm = try c.field(.confirm, "")
-        disabledReason = try c.field(.disabledReason, "")
-        allowed = try c.decodeIfPresent(Bool.self, forKey: .allowed)
-        params = try c.field(.params, [])
-    }
-}
-
-/// What an action button says under it while it is off.
-public enum PluginActionNote: Equatable, Sendable {
-    /// The plugin's own reason ("not asleep").
-    case reason(String)
-    /// The credentials may not do it.
-    case notAllowed
-    /// This build cannot run plugin actions yet.
-    case unavailable
-}
-
-public struct PluginParam: Decodable, Equatable, Sendable {
-    public let name: String
-    public let label: String
-    /// string, int, bool or enum.
-    public let type: String
-    public let values: [String]
-
-    private enum CodingKeys: String, CodingKey { case name, label, type, values }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        name = try c.field(.name, "")
-        label = try c.field(.label, "")
-        type = try c.field(.type, "")
-        values = try c.field(.values, [])
     }
 }
 

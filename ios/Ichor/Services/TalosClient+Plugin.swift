@@ -4,9 +4,9 @@ import Ichorgo
 
 /// The CRD plugins (docs/plugins.md): which ones the cluster runs, and each one's render tree,
 /// resolved and translated by the Go core. In the demo context Go renders the plugins' samples.
-/// Actions (KubePluginAction) come with the actions step of the core: there is no call for
-/// them yet, so the plugin screens show their buttons off. Imported plugins (Settings → Plugins)
-/// are kept by the core on this phone; enabled, they join the built-ins in every call.
+/// A plugin's buttons run its declared actions (KubePluginAction). Imported plugins
+/// (Settings → Plugins) are kept by the core on this phone; enabled, they join the built-ins
+/// in every call.
 extension TalosClient {
     /// Every plugin with whether the cluster runs it and, when it does, its summary tile.
     /// hints: catalog ids seen in the inventory (see dataServiceHints), "" for none.
@@ -20,6 +20,15 @@ extension TalosClient {
     func pluginData(id: String, scope: String = "", locale: String = pluginLocale()) async throws -> PluginTree {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubePluginData(config, context, kubeServer, id, scope, locale, $0)
+        }
+    }
+
+    /// Runs action `action` of plugin `id` on `namespace`/`name` (namespace "" for a
+    /// cluster-scoped object) with `paramsJSON`, a JSON object of its params ("" for none). Go
+    /// checks the object again and refuses (PluginActionFailure reads why). Never log the params.
+    func pluginAction(id: String, action: String, namespace: String, name: String, paramsJSON: String) async throws {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubePluginAction(config, context, kubeServer, id, action, namespace, name, paramsJSON, error)
         }
     }
 
