@@ -25,26 +25,20 @@ class KubeGreenTest {
            "health":"idle","reasons":["neverRan"]}]}}
     """.trimIndent()
 
+    // A last known state an older app kept, with the native kube-green section it read then.
     private val services = TalosJson.decodeFromString(DataServices.serializer(), json)
 
     @Test
-    fun decodesSleepInfos() {
-        val k = services.kubeGreen!!
-        assertEquals("v0.7.1", k.version)
-        assertEquals(4, k.sleepInfos.size)
-        val nights = k.sleepInfos[0]
-        assertTrue(nights.asleep)
-        assertEquals(listOf(KubeGreenReason.NO_WAKE_UP), k.sleepInfos[1].reasonList)
-        assertEquals(0, k.sleepInfos[1].nextWakeUpAt)
-        assertEquals(listOf(KubeGreenReason.INVALID_SCHEDULE), k.sleepInfos[2].reasonList)
-        assertEquals(ServiceHealth.IDLE, k.sleepInfos[3].serviceHealth)
-        assertEquals(listOf(DataServiceKind.KUBE_GREEN), services.detected)
+    fun anOldKubeGreenSectionIsIgnored() {
+        // kube-green is a plugin now (go/plugin/builtin/kube-green.yaml): nothing native to show.
+        assertTrue(services.detected.isEmpty())
     }
 
     @Test
-    fun summaryCountsSchedules() {
-        // 4 schedules, the two warnings need a look.
-        assertEquals(ServiceSummary(total = 4, attention = 2, health = ServiceHealth.WARNING), services.summary(DataServiceKind.KUBE_GREEN))
+    fun anOldKubeGreenAlertKeyIsNoKind() {
+        // A stored "kubegreen|…" alert must not crash, nor read as another system.
+        assertEquals(null, dataServiceKindOf("kubegreen"))
+        assertEquals(DataServiceKind.CNPG, dataServiceKindOf("cnpg"))
     }
 
     // What a workload or CronJob row reads: one namespace, asleep.

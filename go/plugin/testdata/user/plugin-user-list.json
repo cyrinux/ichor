@@ -13,7 +13,7 @@
       "user": true,
       "enabled": false,
       "error": "plugin.yaml:8: schemaVersion \"ichor.dev/plugin/v2\" is not supported: this app reads ichor.dev/plugin/v1alpha1",
-      "sha256": "a3e700fe6d3ad4c88e40cc157159a0e07839b9fd6bc819477e08475d057dc3b5",
+      "sha256": "09a2df6c8c5ae9e210ab73ce45f7423e19c71379213ff0388ac472eacfd7e270",
       "importedAt": 1792324800000
     },
     {

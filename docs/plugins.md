@@ -30,7 +30,7 @@ id: kube-green
 name: kube-green
 website: https://kube-green.dev
 icon: kube-green
-category: data-services
+category: workloads
 catalogId: kube-green
 
 detect:
@@ -392,7 +392,7 @@ tile below for an active plugin and `null` otherwise. Examples: the goldens in
 
 ```json
 {
-  "plugin": {"id": "kube-green", "name": "kube-green", "icon": "kube-green", "category": "data-services", "version": "v1alpha1", "screen": "", "website": "…"},
+  "plugin": {"id": "kube-green", "name": "kube-green", "icon": "kube-green", "category": "workloads", "version": "v1alpha1", "screen": "", "website": "…"},
   "active": true, "detectedVia": "api", "apiVersion": "v1alpha1",
   "health": "warning",
   "summary": {"title": "2 sleep schedules", "health": "warning", "badges": [{"label": "asleep", "value": "1", "tone": "info"}]},

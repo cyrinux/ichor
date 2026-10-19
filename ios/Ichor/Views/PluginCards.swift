@@ -16,7 +16,8 @@ func pluginToneColor(_ tone: String) -> Color {
     }
 }
 
-/// The plugin's symbol: the data service's when its icon names one (kube-green), else a generic one.
+/// The plugin's symbol: the data service's when its icon names one (longhorn), kube-green's
+/// moon, else a generic one.
 struct PluginIcon: View {
     let item: PluginDetectItem
     var size: CGFloat = 28
@@ -25,7 +26,7 @@ struct PluginIcon: View {
         if let kind = item.dataServiceKind {
             KindIcon(kind: kind, app: nil, size: size)
         } else {
-            Image(systemName: "puzzlepiece.extension")
+            Image(systemName: item.id == kubeGreenPluginID ? "moon.zzz" : "puzzlepiece.extension")
                 .font(.system(size: size * 0.5))
                 .foregroundStyle(.secondary)
                 .frame(width: size, height: size)

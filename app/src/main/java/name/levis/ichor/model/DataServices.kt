@@ -18,7 +18,6 @@ data class DataServices(
     val velero: VeleroStatus? = null,
     val externalDns: ExternalDnsStatus? = null,
     val sealedSecrets: SealedSecretsStatus? = null,
-    val kubeGreen: KubeGreenStatus? = null,
     val ceph: CephStatus? = null,
     val castai: CastAIStatus? = null,
     val snapshots: VolumeSnapshots? = null,
@@ -60,7 +59,6 @@ enum class DataServiceKind(val catalogId: String) {
     CASTAI("castai"),
     SNAPSHOTS("kubernetes-csi"),
     BACKUP_JOBS("backup-cronjobs"),
-    KUBE_GREEN("kube-green"),
 }
 
 /** Product names: never translated. */
@@ -80,7 +78,6 @@ val DataServiceKind.title: String
         DataServiceKind.SNAPSHOTS -> "CSI VolumeSnapshots"
         DataServiceKind.BACKUP_JOBS -> "Backup CronJobs"
         DataServiceKind.CASTAI -> "CAST AI"
-        DataServiceKind.KUBE_GREEN -> "kube-green"
     }
 
 /** The system a data alert's "system|label" key names (monitor dataIssuesOf). */
@@ -100,12 +97,14 @@ val DataServiceKind.alertSystem: String
         DataServiceKind.SNAPSHOTS -> "snapshots"
         DataServiceKind.BACKUP_JOBS -> "backupjobs"
         DataServiceKind.CASTAI -> "castai"
-        DataServiceKind.KUBE_GREEN -> "kubegreen"
     }
 
-/** The kind behind a data alert's system name; CloudNativePG for one an older snapshot wrote. */
-fun dataServiceKindOf(alertSystem: String): DataServiceKind =
-    DataServiceKind.entries.firstOrNull { it.alertSystem == alertSystem } ?: DataServiceKind.CNPG
+/**
+ * The kind behind a data alert's system name; null for one this app no longer has (an older
+ * snapshot's "kubegreen", now a plugin), which the caller shows by its key.
+ */
+fun dataServiceKindOf(alertSystem: String): DataServiceKind? =
+    DataServiceKind.entries.firstOrNull { it.alertSystem == alertSystem }
 
 /** The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs. */
 fun Inventory.dataServiceHints(): String {
@@ -130,7 +129,6 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.CASTAI.takeIf { castai != null },
         DataServiceKind.SNAPSHOTS.takeIf { snapshots != null },
         DataServiceKind.BACKUP_JOBS.takeIf { backupJobs != null },
-        DataServiceKind.KUBE_GREEN.takeIf { kubeGreen != null },
     )
 
 /**
@@ -154,7 +152,6 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.SNAPSHOTS -> snapshots?.summary()
     DataServiceKind.BACKUP_JOBS -> backupJobs?.summary()
     DataServiceKind.CASTAI -> castai?.summary()
-    DataServiceKind.KUBE_GREEN -> kubeGreen?.summary()
 }
 
 /**

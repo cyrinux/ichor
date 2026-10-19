@@ -29,6 +29,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.data.PLUGIN_CATALOG
 import name.levis.ichor.data.PLUGINS_DETECT
 import name.levis.ichor.data.PluginRepository
@@ -56,7 +57,11 @@ import name.levis.ichor.ui.components.cardGroupTitle
 import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.groupInOrder
 import name.levis.ichor.ui.components.pageContent
+import name.levis.ichor.ui.dataservices.KUBE_GREEN_PLUGIN
+import name.levis.ichor.ui.dataservices.KubeGreenActions
+import name.levis.ichor.ui.dataservices.KubeGreenScheduleToasts
 import name.levis.ichor.ui.dataservices.WarnBanner
+import name.levis.ichor.ui.dataservices.kubeGreenRowExtra
 import name.levis.ichor.ui.factory
 import java.util.Locale
 
@@ -96,11 +101,19 @@ class PluginDetectViewModel(private val plugins: PluginRepository) : LoadingView
 }
 
 /** One plugin's render tree over every namespace, in the phone's language, and its actions. */
-class PluginTabViewModel(private val plugins: PluginRepository, private val pluginId: String) : LoadingViewModel<PluginView>() {
+class PluginTabViewModel(
+    private val plugins: PluginRepository,
+    private val pluginId: String,
+    dataServices: DataServicesRepository,
+) : LoadingViewModel<PluginView>() {
     private var source: Any? = null
 
     /** The buttons' actions: the tree is read again once one went through. */
     val actions = PluginActions(viewModelScope, plugins, pluginId, onChanged = { refresh() })
+
+    /** kube-green's native schedule editor, under its SleepInfo rows; null for any other plugin. */
+    val kubeGreen: KubeGreenActions? =
+        KubeGreenActions(viewModelScope, dataServices, onChanged = { refresh() }).takeIf { pluginId == KUBE_GREEN_PLUGIN }
 
     override fun cached(): TalosRepository.Timed<PluginView>? =
         plugins.cached<PluginTree>(pluginDataKey(pluginId, "", pluginLocale()))?.let { t ->
@@ -141,7 +154,7 @@ class PluginTabViewModel(private val plugins: PluginRepository, private val plug
 @Composable
 private fun pluginTabViewModel(pluginId: String): PluginTabViewModel {
     val app = LocalContext.current.applicationContext as TalosApp
-    return viewModel(key = "plugin-$pluginId", factory = factory { PluginTabViewModel(app.pluginRepository, pluginId) })
+    return viewModel(key = "plugin-$pluginId", factory = factory { PluginTabViewModel(app.pluginRepository, pluginId, app.dataServicesRepository) })
 }
 
 /**
@@ -181,6 +194,7 @@ fun PluginScreen(pluginId: String, onBack: () -> Unit, onObject: (KubeObjectRef)
     val reload = PluginReload(config?.activeContext to generation, invalidations)
     LaunchedEffect(reload) { vm.load(reload) }
     PluginActionToasts(vm.actions.results)
+    vm.kubeGreen?.let { KubeGreenScheduleToasts(it.results) }
     val runner = rememberActionRunner(vm.actions)
     val title = (state as? UiState.Loaded)?.data?.tree?.plugin?.name?.takeIf { it.isNotEmpty() } ?: stringResource(R.string.plugin_screen_title)
     Scaffold(
@@ -197,7 +211,7 @@ fun PluginScreen(pluginId: String, onBack: () -> Unit, onObject: (KubeObjectRef)
             UiState.Loading -> LoadingBox(rest)
             is UiState.Failed -> ErrorBox(s.message, { vm.refresh() }, rest)
             is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = { vm.refresh() }, modifier = rest) {
-                PluginBody(s.data, onObject, rowExtra = { null }, runner)
+                PluginBody(s.data, onObject, rowExtra = { row -> vm.kubeGreen?.let { kubeGreenRowExtra(row, it) } }, runner)
             }
         }
     }

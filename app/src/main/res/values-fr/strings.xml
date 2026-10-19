@@ -2468,16 +2468,8 @@
         <item quantity="one">Affichage des %1$d premiers SealedSecrets sur %2$d.</item>
         <item quantity="other">Affichage des %1$d premiers SealedSecrets sur %2$d.</item>
     </plurals>
-    <string name="kubegreen_empty">Aucun planning de veille.</string>
-    <string name="kubegreen_state_asleep">Endormi</string>
-    <string name="kubegreen_state_awake">Éveillé</string>
     <string name="kubegreen_wakes">se réveille %1$s</string>
-    <string name="kubegreen_sleeps">s\'endort %1$s</string>
     <string name="kubegreen_until_changed">jusqu\'à modification manuelle</string>
-    <string name="kubegreen_reason_no_wake_up">pas d\'heure de réveil</string>
-    <string name="kubegreen_reason_invalid_schedule">planning invalide</string>
-    <string name="kubegreen_reason_overdue">le contrôleur a manqué son dernier passage</string>
-    <string name="kubegreen_reason_never_ran">jamais exécuté</string>
     <string name="kubegreen_weekdays">Jours</string>
     <string name="kubegreen_edit_schedule">Modifier le planning</string>
     <string name="kubegreen_schedule_title">Planning de %1$s</string>
@@ -2492,22 +2484,7 @@
     <string name="kubegreen_save">Enregistrer</string>
     <string name="kubegreen_saved">Planning de %1$s enregistré</string>
     <string name="kubegreen_save_failed">Impossible d’enregistrer le planning de %1$s : %2$s</string>
-    <string name="kubegreen_schedule">Horaires</string>
     <string name="kubegreen_time_zone">Fuseau horaire</string>
-    <string name="kubegreen_suspends">Suspend</string>
-    <string name="kubegreen_deployments">Deployments</string>
-    <string name="kubegreen_statefulsets">StatefulSets</string>
-    <string name="kubegreen_cronjobs">CronJobs</string>
-    <string name="kubegreen_nothing">rien</string>
-    <string name="kubegreen_scope">Portée</string>
-    <string name="kubegreen_excluded">%1$d exclus</string>
-    <string name="kubegreen_included">%1$d inclus</string>
-    <string name="kubegreen_patches">%1$d patchs</string>
-    <string name="kubegreen_last_run">Dernier passage</string>
-    <plurals name="kubegreen_schedules">
-        <item quantity="one">%1$d planning de veille</item>
-        <item quantity="other">%1$d plannings de veille</item>
-    </plurals>
     <string name="kubegreen_resumes">reprend %1$s</string>
     <string name="kubegreen_asleep_note">Endormi : kube-green a mis ce namespace en veille (SleepInfo %1$s), %2$s</string>
     <string name="kubegreen_asleep_note_maybe">Endormi : kube-green a peut-être mis ce namespace en veille (SleepInfo %1$s), %2$s</string>
