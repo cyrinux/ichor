@@ -299,8 +299,11 @@ func buildBounded(build func() buildBoth) (buildBoth, error) {
 	done := make(chan buildBoth, 1)
 
 	go func() {
-		defer func() { <-editCheckBusy }()
-		done <- build()
+		// Free the slot before handing the result back: a caller that has its result can
+		// start the next check at once and must not find this one still holding it.
+		b := build()
+		<-editCheckBusy
+		done <- b
 	}()
 
 	select {
