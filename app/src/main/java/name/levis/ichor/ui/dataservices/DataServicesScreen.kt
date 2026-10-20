@@ -186,7 +186,7 @@ fun DataServicesScreen(
             when {
                 tabs.isNotEmpty() -> Systems(
                     data, tabs, downNodes, first, onObject, onNodes, query.takeIf { searching }, { query = it },
-                    SystemActions(vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero, vm.externalDns),
+                    SystemActions(vm.garage, vm.longhorn, vm.certificates, vm.cnpg, vm.velero),
                     pluginReload,
                 )
                 // The plugins may still name one.
@@ -253,7 +253,6 @@ private class SystemActions(
     val certificates: CertificateActions,
     val cnpg: CnpgActions,
     val velero: VeleroActions,
-    val externalDns: ExternalDnsActions,
 )
 
 @Composable
@@ -313,7 +312,6 @@ private fun NativeTab(kind: DataServiceKind, services: DataServices, actions: Sy
         DataServiceKind.PERCONA -> PerconaTab(services.percona!!)
         DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!, actions.certificates)
         DataServiceKind.VELERO -> VeleroTab(services.velero!!, actions.velero)
-        DataServiceKind.EXTERNAL_DNS -> ExternalDnsTab(services.externalDns!!, onObject, actions.externalDns)
         DataServiceKind.SNAPSHOTS -> SnapshotsTab(services.snapshots!!)
         DataServiceKind.BACKUP_JOBS -> BackupJobsTab(services.backupJobs!!)
         DataServiceKind.CASTAI -> CastAITab(services.castai!!)

@@ -2401,50 +2401,6 @@
         <item quantity="one">%1$d warning</item>
         <item quantity="other">%1$d warnings</item>
     </plurals>
-    <string name="externaldns_empty">No ExternalDNS controllers or records.</string>
-    <string name="externaldns_provider">Provider</string>
-    <string name="externaldns_owner">Owner id</string>
-    <string name="externaldns_domain_filters">Domain filters</string>
-    <string name="externaldns_sources">Sources</string>
-    <string name="externaldns_interval">Interval</string>
-    <string name="externaldns_interval_value">%1$d s</string>
-    <string name="externaldns_txt">TXT prefix/suffix</string>
-    <string name="externaldns_annotation_filter">Annotation filter</string>
-    <string name="externaldns_ready">ready</string>
-    <string name="externaldns_not_ready">not ready</string>
-    <string name="externaldns_dry_run">dry-run</string>
-    <string name="externaldns_from">from %1$s</string>
-    <string name="externaldns_by">by %1$s</string>
-    <string name="externaldns_reason_not_ready">no replica ready</string>
-    <string name="externaldns_reason_dry_run">dry-run: it changes nothing</string>
-    <string name="externaldns_reason_stale">a newer version is not observed yet</string>
-    <string name="externaldns_reason_no_target">no address to point at yet</string>
-    <string name="externaldns_reason_unmanaged">outside every controller\u2019s domain filters</string>
-    <plurals name="externaldns_records">
-        <item quantity="one">%1$d hostname</item>
-        <item quantity="other">%1$d hostnames</item>
-    </plurals>
-    <plurals name="externaldns_truncated">
-        <item quantity="one">Showing the first %1$d of %2$d hostnames.</item>
-        <item quantity="other">Showing the first %1$d of %2$d hostnames.</item>
-    </plurals>
-    <string name="externaldns_check_names">Check names</string>
-    <string name="externaldns_check_hint">Resolves every hostname from this phone and compares it with the record\'s targets. The names go to your DNS resolver.</string>
-    <string name="externaldns_check_match">Resolves here</string>
-    <string name="externaldns_check_mismatch">Points elsewhere</string>
-    <string name="externaldns_check_missing">Not found</string>
-    <string name="externaldns_check_error">Could not check</string>
-    <string name="externaldns_check_owner_other">owned by %1$s</string>
-    <string name="externaldns_check_probed">checked as %1$s</string>
-    <string name="externaldns_check_mismatch_hint">A name that points elsewhere may be split-horizon DNS at home, a change still propagating, or another ExternalDNS owning it.</string>
-    <string name="externaldns_check_not_run">Not checked yet</string>
-    <string name="externaldns_check_running">Checking…</string>
-    <string name="externaldns_check_unverified">Resolves, nothing to compare</string>
-    <string name="externaldns_check_unverified_count">%1$d could not be compared</string>
-    <plurals name="externaldns_check_summary">
-        <item quantity="one">%1$d of %2$d name points at this cluster</item>
-        <item quantity="other">%1$d of %2$d names point at this cluster</item>
-    </plurals>
     <string name="kubegreen_wakes">wakes up %1$s</string>
     <string name="kubegreen_until_changed">until changed by hand</string>
     <string name="kubegreen_weekdays">Weekdays</string>
@@ -5455,6 +5411,9 @@
     <string name="plugin_partial">Only the first objects were read: the counts are a lower bound.</string>
     <string name="plugin_not_detected">Not found on this cluster.</string>
     <string name="plugin_empty">Nothing to show.</string>
+    <string name="plugin_tool_running">Running %1$s…</string>
+    <string name="plugin_tool_result_empty">No result.</string>
+    <string name="plugin_tool_failed">%1$s failed: %2$s</string>
     <string name="plugin_action_not_allowed">Your credentials may not do this.</string>
     <string name="plugin_action_disabled">Not available for this object now.</string>
     <string name="plugin_action_confirm_title">%1$s on %2$s?</string>

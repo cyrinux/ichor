@@ -205,7 +205,6 @@ final class DataServicesTests: XCTestCase {
     func testFilesEachSystemUnderItsFamily() {
         XCTAssertEqual(DataServiceKind.longhorn.family, .data)
         XCTAssertEqual(DataServiceKind.backupJobs.family, .data)
-        XCTAssertEqual(DataServiceKind.externalDns.family, .networking)
         XCTAssertEqual(DataServiceKind.certManager.family, .security)
         XCTAssertEqual(DataServiceKind.castai.family, .workloads)
         // Nine native systems stay in Data services (storage, databases and backups); Rook Ceph is a plugin.
@@ -223,6 +222,6 @@ final class DataServicesTests: XCTestCase {
         XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: nil), [.native(.longhorn), .native(.velero)])
         XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: false, solo: nil).count, 4)
         XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: .certManager), [.native(.certManager)])
-        XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: .externalDns), [])
+        XCTAssertEqual(DataServicesTab.hubTabs(mixed, plugins: nil, kube: true, solo: .garage), [])
     }
 }

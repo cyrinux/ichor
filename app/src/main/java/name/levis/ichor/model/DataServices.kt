@@ -16,7 +16,6 @@ data class DataServices(
     val percona: PerconaStatus? = null,
     val certManager: CertManagerStatus? = null,
     val velero: VeleroStatus? = null,
-    val externalDns: ExternalDnsStatus? = null,
     val castai: CastAIStatus? = null,
     val snapshots: VolumeSnapshots? = null,
     val backupJobs: BackupJobStatus? = null,
@@ -51,7 +50,6 @@ enum class DataServiceKind(val catalogId: String) {
     PERCONA("percona-xtradb"),
     CERT_MANAGER("cert-manager"),
     VELERO("velero"),
-    EXTERNAL_DNS("external-dns"),
     CASTAI("castai"),
     SNAPSHOTS("kubernetes-csi"),
     BACKUP_JOBS("backup-cronjobs"),
@@ -68,7 +66,6 @@ val DataServiceKind.title: String
         DataServiceKind.PERCONA -> "Percona XtraDB Cluster"
         DataServiceKind.CERT_MANAGER -> "cert-manager"
         DataServiceKind.VELERO -> "Velero"
-        DataServiceKind.EXTERNAL_DNS -> "ExternalDNS"
         DataServiceKind.SNAPSHOTS -> "CSI VolumeSnapshots"
         DataServiceKind.BACKUP_JOBS -> "Backup CronJobs"
         DataServiceKind.CASTAI -> "CAST AI"
@@ -85,7 +82,6 @@ val DataServiceKind.alertSystem: String
         DataServiceKind.PERCONA -> "percona"
         DataServiceKind.CERT_MANAGER -> "certmanager"
         DataServiceKind.VELERO -> "velero"
-        DataServiceKind.EXTERNAL_DNS -> "externaldns"
         DataServiceKind.SNAPSHOTS -> "snapshots"
         DataServiceKind.BACKUP_JOBS -> "backupjobs"
         DataServiceKind.CASTAI -> "castai"
@@ -115,7 +111,6 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.PERCONA.takeIf { percona != null },
         DataServiceKind.CERT_MANAGER.takeIf { certManager != null },
         DataServiceKind.VELERO.takeIf { velero != null },
-        DataServiceKind.EXTERNAL_DNS.takeIf { externalDns != null },
         DataServiceKind.CASTAI.takeIf { castai != null },
         DataServiceKind.SNAPSHOTS.takeIf { snapshots != null },
         DataServiceKind.BACKUP_JOBS.takeIf { backupJobs != null },
@@ -127,7 +122,6 @@ enum class ServiceFamily { DATA, NETWORKING, SECURITY, WORKLOADS }
 /** Storage, databases and backups stay in Data services; the others join the family a plugin of their kind would. */
 val DataServiceKind.family: ServiceFamily
     get() = when (this) {
-        DataServiceKind.EXTERNAL_DNS -> ServiceFamily.NETWORKING
         DataServiceKind.CERT_MANAGER -> ServiceFamily.SECURITY
         DataServiceKind.CASTAI -> ServiceFamily.WORKLOADS
         DataServiceKind.LONGHORN, DataServiceKind.GARAGE, DataServiceKind.CNPG, DataServiceKind.DRAGONFLY,
@@ -162,7 +156,6 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.PERCONA -> percona?.summary()
     DataServiceKind.CERT_MANAGER -> certManager?.summary()
     DataServiceKind.VELERO -> velero?.summary()
-    DataServiceKind.EXTERNAL_DNS -> externalDns?.summary()
     DataServiceKind.SNAPSHOTS -> snapshots?.summary()
     DataServiceKind.BACKUP_JOBS -> backupJobs?.summary()
     DataServiceKind.CASTAI -> castai?.summary()
@@ -204,16 +197,6 @@ fun VeleroStatus.summary(): ServiceSummary {
     if (error.isNotEmpty() && schedules.isEmpty() && locations.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
     val healths = schedules.map { it.serviceHealth } + locations.map { it.serviceHealth } + adhoc.map { it.serviceHealth }
     return ServiceSummary(schedules.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
-}
-
-/**
- * The records are the items; a controller with no ready replica (or a dry-run one) needs a
- * look as much as a record without a target or outside every domain filter.
- */
-fun ExternalDnsStatus.summary(): ServiceSummary {
-    if (error.isNotEmpty() && controllers.isEmpty() && records.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
-    val healths = controllers.map { it.serviceHealth } + records.map { it.serviceHealth }
-    return ServiceSummary(recordCount, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
 }
 
 fun DragonflyStatus.summary(): ServiceSummary {

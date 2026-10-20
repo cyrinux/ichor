@@ -2393,50 +2393,6 @@
         <item quantity="one">%1$d Warnung</item>
         <item quantity="other">%1$d Warnungen</item>
     </plurals>
-    <string name="externaldns_empty">Keine ExternalDNS-Controller oder Einträge.</string>
-    <string name="externaldns_provider">Provider</string>
-    <string name="externaldns_owner">Owner-ID</string>
-    <string name="externaldns_domain_filters">Domain-Filter</string>
-    <string name="externaldns_sources">Quellen</string>
-    <string name="externaldns_interval">Intervall</string>
-    <string name="externaldns_interval_value">%1$d s</string>
-    <string name="externaldns_txt">TXT-Präfix/-Suffix</string>
-    <string name="externaldns_annotation_filter">Annotation-Filter</string>
-    <string name="externaldns_ready">bereit</string>
-    <string name="externaldns_not_ready">nicht bereit</string>
-    <string name="externaldns_dry_run">dry-run</string>
-    <string name="externaldns_from">von %1$s</string>
-    <string name="externaldns_by">durch %1$s</string>
-    <string name="externaldns_reason_not_ready">kein Replikat bereit</string>
-    <string name="externaldns_reason_dry_run">Dry-Run: er ändert nichts</string>
-    <string name="externaldns_reason_stale">eine neuere Version wurde noch nicht beobachtet</string>
-    <string name="externaldns_reason_no_target">noch keine Zieladresse</string>
-    <string name="externaldns_reason_unmanaged">außerhalb der Domain-Filter aller Controller</string>
-    <plurals name="externaldns_records">
-        <item quantity="one">%1$d Hostname</item>
-        <item quantity="other">%1$d Hostnamen</item>
-    </plurals>
-    <plurals name="externaldns_truncated">
-        <item quantity="one">Die ersten %1$d von %2$d Hostnamen werden angezeigt.</item>
-        <item quantity="other">Die ersten %1$d von %2$d Hostnamen werden angezeigt.</item>
-    </plurals>
-    <string name="externaldns_check_names">Namen prüfen</string>
-    <string name="externaldns_check_hint">Löst jeden Hostnamen von diesem Telefon aus auf und vergleicht ihn mit den Zielen des Eintrags. Die Namen gehen an deinen DNS-Resolver.</string>
-    <string name="externaldns_check_match">Löst hier auf</string>
-    <string name="externaldns_check_mismatch">Zeigt woandershin</string>
-    <string name="externaldns_check_missing">Nicht gefunden</string>
-    <string name="externaldns_check_error">Konnte nicht geprüft werden</string>
-    <string name="externaldns_check_owner_other">gehört %1$s</string>
-    <string name="externaldns_check_probed">geprüft als %1$s</string>
-    <string name="externaldns_check_mismatch_hint">Ein Name, der woandershin zeigt, kann Split-Horizon-DNS zu Hause sein, eine noch laufende Änderung oder ein anderer ExternalDNS, dem er gehört.</string>
-    <string name="externaldns_check_not_run">Noch nicht geprüft</string>
-    <string name="externaldns_check_running">Wird geprüft…</string>
-    <string name="externaldns_check_unverified">Löst auf, nichts zu vergleichen</string>
-    <string name="externaldns_check_unverified_count">%1$d konnten nicht verglichen werden</string>
-    <plurals name="externaldns_check_summary">
-        <item quantity="one">%1$d von %2$d Namen zeigt auf diesen Cluster</item>
-        <item quantity="other">%1$d von %2$d Namen zeigen auf diesen Cluster</item>
-    </plurals>
     <string name="kubegreen_wakes">wacht %1$s auf</string>
     <string name="kubegreen_until_changed">bis von Hand geändert</string>
     <string name="kubegreen_weekdays">Tage</string>
@@ -5441,6 +5397,9 @@
     <string name="plugin_partial">Nur die ersten Objekte wurden gelesen: die Zahlen sind Mindestwerte.</string>
     <string name="plugin_not_detected">In diesem Cluster nicht gefunden.</string>
     <string name="plugin_empty">Nichts anzuzeigen.</string>
+    <string name="plugin_tool_running">%1$s läuft…</string>
+    <string name="plugin_tool_result_empty">Kein Ergebnis.</string>
+    <string name="plugin_tool_failed">%1$s fehlgeschlagen: %2$s</string>
     <string name="plugin_action_not_allowed">Deine Zugangsdaten erlauben das nicht.</string>
     <string name="plugin_action_disabled">Für dieses Objekt gerade nicht verfügbar.</string>
     <string name="plugin_action_confirm_title">%1$s für %2$s?</string>

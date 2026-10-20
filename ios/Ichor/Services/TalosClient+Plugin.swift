@@ -32,6 +32,15 @@ extension TalosClient {
         }
     }
 
+    /// Runs tool `tool` of plugin `id` over what it reads in `scope` (a namespace, "" for all), its
+    /// words in `locale`. Never cached: a tool runs only when tapped. The demo context runs the
+    /// tool's canned demo over the samples.
+    func pluginTool(id: String, tool: String, scope: String = "", locale: String = pluginLocale()) async throws -> PluginToolResult {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubePluginTool(config, context, kubeServer, id, tool, scope, locale, $0)
+        }
+    }
+
     /// Every active plugin's findings in one bounded call (10 s), for the background monitor: a
     /// plugin that could not be read is an `errors` entry and hides none of the others. Titles and
     /// details in `locale` ("" for English). hints: see pluginDetect.

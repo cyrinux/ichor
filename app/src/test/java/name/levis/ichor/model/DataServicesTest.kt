@@ -141,7 +141,6 @@ class DataServicesTest {
     fun filesEachSystemUnderItsFamily() {
         assertEquals(ServiceFamily.DATA, DataServiceKind.LONGHORN.family)
         assertEquals(ServiceFamily.DATA, DataServiceKind.BACKUP_JOBS.family)
-        assertEquals(ServiceFamily.NETWORKING, DataServiceKind.EXTERNAL_DNS.family)
         assertEquals(ServiceFamily.SECURITY, DataServiceKind.CERT_MANAGER.family)
         assertEquals(ServiceFamily.WORKLOADS, DataServiceKind.CASTAI.family)
         // Nine native systems stay in Data services (storage, databases and backups); Rook Ceph is a plugin.
@@ -150,10 +149,10 @@ class DataServicesTest {
 
     @Test
     fun detectedByFamilyKeepsTheDisplayOrder() {
-        val mixed = services.copy(certManager = CertManagerStatus(), externalDns = ExternalDnsStatus(), castai = CastAIStatus())
+        val mixed = services.copy(certManager = CertManagerStatus(), castai = CastAIStatus())
         assertEquals(listOf(DataServiceKind.LONGHORN, DataServiceKind.GARAGE, DataServiceKind.CNPG), mixed.detected(ServiceFamily.DATA))
         assertEquals(listOf(DataServiceKind.CERT_MANAGER), mixed.detected(ServiceFamily.SECURITY))
-        assertEquals(listOf(DataServiceKind.EXTERNAL_DNS, DataServiceKind.CASTAI), mixed.detected(setOf(ServiceFamily.NETWORKING, ServiceFamily.WORKLOADS)))
+        assertEquals(listOf(DataServiceKind.CASTAI), mixed.detected(setOf(ServiceFamily.NETWORKING, ServiceFamily.WORKLOADS)))
         assertEquals(mixed.detected, mixed.detected(AllServiceFamilies))
     }
 }

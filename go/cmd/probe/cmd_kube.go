@@ -25,20 +25,6 @@ var kubeCommands = []command{
 	}},
 	{name: "search", args: "QUERY", run: probeSearch},
 	{name: "discover", args: "PROVIDER SECRETS_JSON", noConfig: true, run: probeDiscover},
-	{name: "dns-check", args: "RECORDS_JSON [TIMEOUT_MS]", noConfig: true, run: func(e env) (out string, err error) {
-		// dns-check '[{"dnsName":"app.example.com","recordType":"A","targets":["203.0.113.10"]}]':
-		// resolves the names from this machine's resolver, no cluster needed.
-		timeout := 0
-		if flag.Arg(2) != "" {
-			if timeout, err = strconv.Atoi(flag.Arg(2)); err != nil {
-				return "", err
-			}
-		}
-
-		out, err = ichorgo.DNSCheck(flag.Arg(1), timeout)
-
-		return out, err
-	}},
 	{name: "workloads", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.KubeWorkloads(e.cfg, e.context, e.kubeServer)
 

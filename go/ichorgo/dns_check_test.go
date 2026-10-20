@@ -563,7 +563,7 @@ func TestDemoDNSCheckWildcardResolves(t *testing.T) {
 }
 
 func TestDNSCheckInvalidJSON(t *testing.T) {
-	if _, err := DNSCheck("{not json", 0); err == nil {
+	if _, err := dnsCheckWith(stubDNS{}, "{not json", 0); err == nil {
 		t.Fatal("invalid JSON must fail the whole call")
 	}
 }
@@ -608,27 +608,8 @@ func TestDemoDNSCheckShowsEveryChip(t *testing.T) {
 		{DNSName: "status.example.com", RecordType: "A", OwnerID: "homelab"},
 	}
 
-	raw, err := json.Marshal(records)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	out, err := DemoDNSCheck(string(raw))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var result dnsCheckResult
-	if err := json.Unmarshal([]byte(out), &result); err != nil {
-		t.Fatal(err)
-	}
-
-	if result.Resolver != "demo" {
-		t.Errorf("resolver = %q, want demo", result.Resolver)
-	}
-
 	seen := map[string]bool{}
-	for _, entry := range result.Results {
+	for _, entry := range demoDNSCheckEntries(records) {
 		seen[entry.Status] = true
 	}
 

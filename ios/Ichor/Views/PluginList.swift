@@ -76,11 +76,13 @@ struct PluginList: View {
             }
             if !tree.active {
                 Section { Text("Not found on this cluster.").note() }
-            } else if tree.shownCards.isEmpty {
-                Section { Text("Nothing to show.").note() }
             } else {
+                if !tree.tools.isEmpty {
+                    PluginToolsView(pluginID: pluginID, tools: tree.tools, reads: sequence) { data.catalog.kindOf(tree.plugin.id, $0) }
+                }
+                if tree.shownCards.isEmpty { Section { Text("Nothing to show.").note() } }
                 ForEach(Array(tree.shownCards.enumerated()), id: \.offset) { _, card in
-                    cardSections(card, tree: tree, catalog: data.catalog)
+                    PluginCardSections(card: card, expanded: $expanded, kindOf: { data.catalog.kindOf(tree.plugin.id, $0) }, rowExtra: rowExtra)
                 }
             }
         }
@@ -96,48 +98,11 @@ struct PluginList: View {
         .sensoryFeedback(.success, trigger: actionsDone)
     }
 
-    /// A card as one section, or one per namespace (its header) when its rows span several.
-    @ViewBuilder
-    private func cardSections(_ card: PluginCard, tree: PluginTree, catalog: PluginCatalog) -> some View {
-        if card.rows.isEmpty {
-            Section { Text(verbatim: card.empty).note() }
-        } else {
-            let grouped = card.groupsByNamespace
-            ForEach(card.rowGroups, id: \.namespace) { group in
-                Section {
-                    // By object: a row's state (an open confirmation) never passes to another one.
-                    ForEach(group.rows, id: \.id) { item in
-                        let key = item.row.expandKey(card: card.id, index: item.index)
-                        PluginRowView(
-                            row: item.row,
-                            // The namespace is the section's header when grouped.
-                            showSubtitle: !grouped || item.row.subtitle != item.row.ref?.namespace,
-                            expanded: expandedBinding(key),
-                            kindOf: { catalog.kindOf(tree.plugin.id, $0) },
-                            extra: rowExtra(item.row)
-                        )
-                    }
-                } header: {
-                    if grouped { Text(verbatim: group.namespace) }
-                }
-            }
-        }
-    }
-
     /// The native "Edit schedule" under a kube-green plugin row of a SleepInfo, until plugin
     /// actions can carry a form; nil for any other row.
     private func rowExtra(_ row: PluginRow) -> AnyView? {
         guard pluginID == kubeGreenPluginID, let ref = row.ref, ref.isKubeGreenSleepInfo else { return nil }
         return AnyView(KubeGreenPluginEdit(ref: ref) { changes += 1 })
-    }
-
-    private func expandedBinding(_ key: String) -> Binding<Bool> {
-        Binding(
-            get: { expanded.contains(key) },
-            set: { open in
-                if open { expanded.insert(key) } else { expanded.remove(key) }
-            }
-        )
     }
 
     /// Reads for `next`: from scratch when its scope changed, nothing was read, or nothing is
@@ -168,6 +133,50 @@ struct PluginList: View {
         guard mine == sequence, loaded?.scope == next.scope else { return }
         state = state.refreshed(with: read)
         if case .loaded(let data, _, _) = read, !data.tree.plugin.name.isEmpty { onName?(data.tree.plugin.name) }
+    }
+}
+
+/// A card as one section, or one per namespace (its header) when its rows span several: the
+/// tree's cards and a tool's result alike. `rowExtra` adds a native control under a row.
+struct PluginCardSections: View {
+    let card: PluginCard
+    @Binding var expanded: Set<String>
+    /// The kind of an object a row opens, from the ref or the plugin catalog.
+    let kindOf: (PluginRef) -> String
+    var rowExtra: (PluginRow) -> AnyView? = { _ in nil }
+
+    var body: some View {
+        if card.rows.isEmpty {
+            Section { Text(verbatim: card.empty).note() }
+        } else {
+            let grouped = card.groupsByNamespace
+            ForEach(card.rowGroups, id: \.namespace) { group in
+                Section {
+                    // By object: a row's state (an open confirmation) never passes to another one.
+                    ForEach(group.rows, id: \.id) { item in
+                        PluginRowView(
+                            row: item.row,
+                            // The namespace is the section's header when grouped.
+                            showSubtitle: !grouped || item.row.subtitle != item.row.ref?.namespace,
+                            expanded: expandedBinding(item.expandKey(card: card.id)),
+                            kindOf: kindOf,
+                            extra: rowExtra(item.row)
+                        )
+                    }
+                } header: {
+                    if grouped { Text(verbatim: group.namespace) }
+                }
+            }
+        }
+    }
+
+    private func expandedBinding(_ key: String) -> Binding<Bool> {
+        Binding(
+            get: { expanded.contains(key) },
+            set: { open in
+                if open { expanded.insert(key) } else { expanded.remove(key) }
+            }
+        )
     }
 }
 

@@ -62,8 +62,7 @@ tour** shows it again.
   address (MetalLB and Cilium pools with their free addresses, MetalLB advertisements and BGP
   peers, kube-vip ranges and leases) and why one has none; or export a kubeconfig. On a Talos
   cluster the Kubernetes screen's ⋯ menu also leads to Data services and, when the cluster runs
-  them, to the ExternalDNS, cert-manager, Sealed Secrets and CAST AI lists (any of them can be
-  moved to the bar).
+  them, to the cert-manager and CAST AI lists (any of them can be moved to the bar).
 - **Argo CD:** when the cluster runs it, list its Applications with their health and sync state,
   follow a sync wave by wave, and sync (with prune, dry run, selected resources…), refresh,
   terminate a sync, pause or resume auto-sync, or roll back to an earlier deployment. A sync,
@@ -292,9 +291,9 @@ tour** shows it again.
   integrations open from their family of the Kubernetes home, with a dot when one needs a look:
   ExternalDNS under Networking, cert-manager, Sealed Secrets and External Secrets under Security,
   CAST AI under Workloads (on a Talos cluster they stay tabs of Data services). ExternalDNS shows the
-  hostnames it manages, where each comes from, and the controller's settings; it can resolve
-  every hostname from the phone and compare it with the record's targets, so a name that points
-  elsewhere, or that no controller owns, stands out. Sealed Secrets shows the controller, the
+  hostnames it manages, where each comes from, and the controller's settings; its screen's
+  "Check names" button resolves every hostname from the phone and compares it with the record's
+  targets, so a name that points elsewhere, or that no controller owns, stands out. Sealed Secrets shows the controller, the
   sealing keys and whether each SealedSecret unsealed, by name only. External Secrets shows
   whether each ExternalSecret syncs, from which store, how often and when it last refreshed,
   flags one that stopped refreshing, and whether its SecretStore or ClusterSecretStore can reach

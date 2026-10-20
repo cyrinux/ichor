@@ -113,7 +113,6 @@ struct DataServicesView: View {
         case .percona: PerconaList(status: services.percona!, refresh: refresh)
         case .certManager: CertificatesList(status: services.certManager!, refresh: refresh)
         case .velero: VeleroList(status: services.velero!, refresh: refresh)
-        case .externalDns: ExternalDnsList(status: services.externalDns!, refresh: refresh)
         case .snapshots: SnapshotsList(status: services.snapshots!)
         case .backupJobs: BackupJobsList(status: services.backupJobs!)
         case .castai: CastAIList(status: services.castai!, refresh: refresh)
@@ -195,7 +194,6 @@ struct DataServicesView: View {
         case "percona": .percona
         case "certmanager": .certManager
         case "velero": .velero
-        case "externaldns": .externalDns
         case "castai": .castai
         case "garage": .garage
         default: nil

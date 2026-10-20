@@ -33,8 +33,27 @@ data class PluginTree(
     val cards: List<PluginCard> = emptyList(),
     val findings: List<PluginFinding> = emptyList(),
     val errors: List<PluginError> = emptyList(),
+    /** The plugin's tool buttons (KubePluginTool runs one), in id order; empty when it has none. */
+    val tools: List<PluginTool> = emptyList(),
 ) {
     val serviceHealth: ServiceHealth get() = pluginHealth(health)
+}
+
+/** A tool's button: [label] and [hint] are translated by Go. */
+@Serializable
+data class PluginTool(val id: String = "", val label: String = "", val hint: String = "")
+
+/** What a tool returned: a [title] toned by [health], and cards drawn as the tree's are. */
+@Serializable
+data class PluginToolResult(
+    val title: String = "",
+    val health: String = "",
+    val cards: List<PluginCard> = emptyList(),
+) {
+    val serviceHealth: ServiceHealth get() = pluginHealth(health)
+
+    /** The cards with something to draw: rows, or an empty text. */
+    val shownCards: List<PluginCard> get() = cards.filter { it.rows.isNotEmpty() || it.empty.isNotEmpty() }
 }
 
 @Serializable
