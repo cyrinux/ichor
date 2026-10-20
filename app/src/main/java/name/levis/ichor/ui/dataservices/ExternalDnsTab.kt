@@ -41,6 +41,7 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.components.Tag
 import name.levis.ichor.ui.components.cardGap
 import name.levis.ichor.ui.components.cardRows
 import name.levis.ichor.ui.components.color
@@ -60,6 +61,8 @@ fun ExternalDnsTab(status: ExternalDnsStatus, onObject: (KubeObjectRef) -> Unit,
     LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
         if (status.controllers.isEmpty() && status.records.isEmpty()) item { EmptyText(stringResource(R.string.externaldns_empty)) }
+        // The check leads the tab: below the controller cards it was scrolled out of sight.
+        if (status.records.isNotEmpty()) item(key = "dns-check") { DnsCheckHeader(status, check, actions) }
         cardRows(status.controllers, key = { "c:${it.label}" }) { ControllerRow(it) }
         if (status.controllers.isNotEmpty()) cardGap("controllers-end")
         if (status.truncated) item {
@@ -70,7 +73,6 @@ fun ExternalDnsTab(status: ExternalDnsStatus, onObject: (KubeObjectRef) -> Unit,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
             )
         }
-        if (status.records.isNotEmpty()) item(key = "dns-check") { DnsCheckHeader(status, check, actions) }
         cardRows(status.records, key = { "${it.dnsName}/${it.sourceKind}/${it.sourceNamespace}/${it.sourceName}" }) { r ->
             RecordRow(r, onObject, verdicts[r.dnsName])
         }
@@ -78,8 +80,9 @@ fun ExternalDnsTab(status: ExternalDnsStatus, onObject: (KubeObjectRef) -> Unit,
 }
 
 /**
- * The "Check names" button, what it does, and the last check's summary. The names go to the
- * phone's DNS resolver: that is the feature, and the hint says so.
+ * The "Check names" button, whether a check ran, what it does, and the last check's summary.
+ * The names go to the phone's DNS resolver: that is the feature, and the hint says so. Names
+ * with no target to compare with are counted apart: they are neither pointing here nor away.
  */
 @Composable
 private fun DnsCheckHeader(status: ExternalDnsStatus, check: DnsCheckState?, actions: ExternalDnsActions) {
@@ -91,10 +94,15 @@ private fun DnsCheckHeader(status: ExternalDnsStatus, check: DnsCheckState?, act
             }
             if (check?.running == true) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
         }
+        when {
+            check?.running == true -> MutedText(stringResource(R.string.externaldns_check_running))
+            check == null -> MutedText(stringResource(R.string.externaldns_check_not_run))
+        }
         MutedText(stringResource(R.string.externaldns_check_hint))
         check?.error?.let { InlineError(it.asString()) }
         check?.result?.let { result ->
             val pointing = result.results.count { it.verdict == DnsCheckStatus.MATCH }
+            val unverified = result.results.count { it.verdict == DnsCheckStatus.UNVERIFIED }
             Text(
                 pluralStringResource(R.plurals.externaldns_check_summary, result.results.size, pointing, result.results.size),
                 style = MaterialTheme.typography.bodyMedium,
@@ -104,6 +112,7 @@ private fun DnsCheckHeader(status: ExternalDnsStatus, check: DnsCheckState?, act
                     else -> colors.warn
                 },
             )
+            if (unverified > 0) MutedText(stringResource(R.string.externaldns_check_unverified_count, unverified))
             if (result.results.any { it.verdict == DnsCheckStatus.MISMATCH }) {
                 MutedText(stringResource(R.string.externaldns_check_mismatch_hint))
             }
@@ -155,7 +164,7 @@ private fun RecordRow(r: ExternalDnsRecord, onObject: (KubeObjectRef) -> Unit, v
             HealthDot(r.serviceHealth)
             Spacer(Modifier.size(12.dp))
             Text(r.dnsName, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            StatusPill(r.recordType, muted)
+            Tag(r.recordType, mono = true)
         }
         Text(
             listOfNotNull(
@@ -187,6 +196,7 @@ private fun VerdictRow(entry: DnsCheckEntry) {
                 DnsCheckStatus.MATCH -> StatusPill(stringResource(R.string.externaldns_check_match), colors.ok)
                 DnsCheckStatus.MISMATCH -> StatusPill(stringResource(R.string.externaldns_check_mismatch), colors.warn)
                 DnsCheckStatus.MISSING -> StatusPill(stringResource(R.string.externaldns_check_missing), colors.bad)
+                DnsCheckStatus.UNVERIFIED -> StatusPill(stringResource(R.string.externaldns_check_unverified), muted)
                 DnsCheckStatus.ERROR -> StatusPill(stringResource(R.string.externaldns_check_error), muted)
                 null -> {}
             }

@@ -18,6 +18,8 @@ struct ExternalDnsList: View {
     var body: some View {
         List {
             if !status.error.isEmpty { Section { ErrorLine(error: status.error) } }
+            // The check leads the list: below the controllers it was scrolled out of sight.
+            if !status.records.isEmpty { checkSection }
             Section {
                 if status.controllers.isEmpty && status.records.isEmpty {
                     Text("No ExternalDNS controllers or records.").foregroundStyle(.secondary)
@@ -32,7 +34,6 @@ struct ExternalDnsList: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
-            if !status.records.isEmpty { checkSection }
             Section {
                 ForEach(status.records) { record in
                     RecordRow(record: record, verdict: verdicts[record.dnsName])
@@ -48,9 +49,10 @@ struct ExternalDnsList: View {
         Dictionary(result?.results.map { ($0.dnsName, $0) } ?? [], uniquingKeysWith: { _, newest in newest })
     }
 
-    /// The "Check names" button, what it does, and the last check's summary. The names go to the
-    /// phone's DNS resolver: that is the feature, and the hint says so. Nothing runs without the
-    /// tap; the verdicts stay on screen until the next check.
+    /// The "Check names" button, whether a check ran, what it does, and the last check's summary.
+    /// The names go to the phone's DNS resolver: that is the feature, and the hint says so.
+    /// Nothing runs without the tap; the verdicts stay on screen until the next check. Names with
+    /// no target to compare with are counted apart.
     private var checkSection: some View {
         Section {
             HStack(spacing: 12) {
@@ -59,6 +61,11 @@ struct ExternalDnsList: View {
                 }
                 .disabled(running)
                 if running { ProgressView() }
+            }
+            if running {
+                Text(String(localized: "Checking…")).font(.caption).foregroundStyle(.secondary)
+            } else if result == nil && errorMessage == nil {
+                Text(String(localized: "Not checked yet")).font(.caption).foregroundStyle(.secondary)
             }
             Text(String(localized: "Resolves every hostname from this phone and compares it with the record's targets. The names go to your DNS resolver."))
                 .font(.caption).foregroundStyle(.secondary)
@@ -69,6 +76,11 @@ struct ExternalDnsList: View {
                 Text(verbatim: summary(result))
                     .font(.subheadline)
                     .foregroundStyle(summaryColor(result))
+                let unverified = result.results.filter { $0.verdict == .unverified }.count
+                if unverified > 0 {
+                    Text(String(localized: "\(unverified) could not be compared"))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 if result.results.contains(where: { $0.verdict == .mismatch }) {
                     Text(String(localized: "A name that points elsewhere may be split-horizon DNS at home, a change still propagating, or another ExternalDNS owning it."))
                         .font(.caption).foregroundStyle(.secondary)
@@ -222,6 +234,8 @@ private struct VerdictRow: View {
                     StatusPill(label: String(localized: "Points elsewhere"), color: attentionColor)
                 case .missing:
                     StatusPill(label: String(localized: "Not found"), color: .red)
+                case .unverified:
+                    StatusPill(label: String(localized: "Resolves, nothing to compare"), color: .secondary)
                 case .error:
                     StatusPill(label: String(localized: "Could not check"), color: .secondary)
                 case nil:

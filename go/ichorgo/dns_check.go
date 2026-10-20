@@ -42,13 +42,15 @@ const dnsCheckCNAMETimeout = 3 * time.Second
 const dnsCheckOwnerTimeout = 2 * time.Second
 
 // The verdicts a name can get. missing is a name that does not resolve, mismatch one that
-// resolves elsewhere (split-horizon DNS, propagation, or another controller owning it), and
-// error a resolver that could not answer at all.
+// resolves elsewhere (split-horizon DNS, propagation, or another controller owning it),
+// unverified one that resolves while its record has no target to compare the answers with,
+// and error a resolver that could not answer at all.
 const (
-	dnsStatusMatch    = "match"
-	dnsStatusMismatch = "mismatch"
-	dnsStatusMissing  = "missing"
-	dnsStatusError    = "error"
+	dnsStatusMatch      = "match"
+	dnsStatusMismatch   = "mismatch"
+	dnsStatusMissing    = "missing"
+	dnsStatusUnverified = "unverified"
+	dnsStatusError      = "error"
 )
 
 // dnsCheckRequest is one hostname to check, as the apps send it: the record ExternalDNS is
@@ -190,6 +192,8 @@ func checkDNSRecord(ctx context.Context, resolver dnsChecker, record dnsCheckReq
 		entry.Message = dnsLookupMessage(err)
 	case len(answers) == 0:
 		entry.Status = dnsStatusMissing
+	case len(record.Targets) == 0:
+		entry.Status = dnsStatusUnverified
 	case dnsAnswersMatch(ctx, resolver, answers, record.Targets):
 		entry.Status = dnsStatusMatch
 	default:
@@ -200,7 +204,7 @@ func checkDNSRecord(ctx context.Context, resolver dnsChecker, record dnsCheckReq
 	// registry record to read, and a failed lookup leaves no budget to read it with. A
 	// wildcard's registry record only exists under --txt-wildcard-replacement, which the
 	// check cannot see, so its owner stays unknown.
-	if !wildcard && (entry.Status == dnsStatusMatch || entry.Status == dnsStatusMismatch) {
+	if !wildcard && entry.Status != dnsStatusMissing && entry.Status != dnsStatusError {
 		entry.Owner, entry.OwnerMatch = dnsCheckOwner(ctx, resolver, record)
 	}
 
@@ -492,8 +496,9 @@ func normalizeDNSName(name string) string {
 }
 
 // demoDNSCheckEntries is the demo's canned verdicts: most names resolve to their targets,
-// one points elsewhere, one is gone and one cannot be checked, so every chip is visible
-// offline. A wildcard resolves through its sample label, as the real check does.
+// one points elsewhere, one is gone, one cannot be checked and a record with no targets
+// resolves with nothing to compare, so every chip is visible offline. A wildcard resolves
+// through its sample label, as the real check does.
 func demoDNSCheckEntries(records []dnsCheckRequest) []dnsCheckEntry {
 	out := make([]dnsCheckEntry, 0, len(records))
 
@@ -506,14 +511,17 @@ func demoDNSCheckEntries(records []dnsCheckRequest) []dnsCheckEntry {
 
 		switch {
 		case len(record.Targets) == 0:
-			entry.Status = dnsStatusMissing
+			entry.Status = dnsStatusUnverified
+			entry.Answers = []string{"203.0.113.99"}
 		case entry.Probed != "":
 			entry.Status = dnsStatusMatch
 			entry.Answers = []string{record.Targets[0]}
-		case i%4 == 3:
+		case i%5 == 4:
+			entry.Status = dnsStatusMissing
+		case i%5 == 3:
 			entry.Status = dnsStatusMismatch
 			entry.Answers = []string{"198.51.100.7"}
-		case i%4 == 2:
+		case i%5 == 2:
 			entry.Status = dnsStatusError
 			entry.Message = "the resolver could not answer"
 		default:
