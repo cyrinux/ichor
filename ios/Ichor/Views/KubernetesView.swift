@@ -130,7 +130,7 @@ struct KubernetesView: View {
         case .tailscale: operators.tailscale
         case .argoRollouts: operators.argoRollouts
         case .clusterLifecycle: operators.clusterLifecycle
-        case .externalDns, .certManager, .sealedSecrets, .castai: action.dataServiceKind.map(dataKinds.contains) ?? false
+        case .externalDns, .certManager, .castai: action.dataServiceKind.map(dataKinds.contains) ?? false
         default: true
         }
     }
@@ -163,7 +163,7 @@ struct KubernetesView: View {
         case .argoRollouts: netScreen = .argoRollouts
         case .clusterLifecycle: netScreen = .clusterLifecycle
         case .dataServices: netScreen = .dataServices(kind: nil, solo: false)
-        case .externalDns, .certManager, .sealedSecrets, .castai: netScreen = .dataServices(kind: action.dataServiceKind, solo: true)
+        case .externalDns, .certManager, .castai: netScreen = .dataServices(kind: action.dataServiceKind, solo: true)
         // The namespace listed; every namespace when none is picked.
         case .cleanUpPods: sanitizing = true
         case .apiAddress:
@@ -544,7 +544,7 @@ extension KubernetesAction: BarActionLook {
         case .argoRollouts: "arrow.triangle.branch"
         case .clusterLifecycle: "server.rack"
         case .dataServices: "externaldrive.connected.to.line.below"
-        case .externalDns, .certManager, .sealedSecrets, .castai: dataServiceKind?.symbol ?? "externaldrive"
+        case .externalDns, .certManager, .castai: dataServiceKind?.symbol ?? "externaldrive"
         }
     }
 
@@ -570,7 +570,7 @@ extension KubernetesAction: BarActionLook {
         case .clusterLifecycle: Text("Cluster lifecycle")
         case .dataServices: Text("Data services")
         // Product names: never translated.
-        case .externalDns, .certManager, .sealedSecrets, .castai: Text(verbatim: dataServiceKind?.title ?? "")
+        case .externalDns, .certManager, .castai: Text(verbatim: dataServiceKind?.title ?? "")
         }
     }
 }

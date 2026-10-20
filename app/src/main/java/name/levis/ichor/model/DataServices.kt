@@ -17,7 +17,6 @@ data class DataServices(
     val certManager: CertManagerStatus? = null,
     val velero: VeleroStatus? = null,
     val externalDns: ExternalDnsStatus? = null,
-    val sealedSecrets: SealedSecretsStatus? = null,
     val castai: CastAIStatus? = null,
     val snapshots: VolumeSnapshots? = null,
     val backupJobs: BackupJobStatus? = null,
@@ -53,7 +52,6 @@ enum class DataServiceKind(val catalogId: String) {
     CERT_MANAGER("cert-manager"),
     VELERO("velero"),
     EXTERNAL_DNS("external-dns"),
-    SEALED_SECRETS("sealed-secrets"),
     CASTAI("castai"),
     SNAPSHOTS("kubernetes-csi"),
     BACKUP_JOBS("backup-cronjobs"),
@@ -71,7 +69,6 @@ val DataServiceKind.title: String
         DataServiceKind.CERT_MANAGER -> "cert-manager"
         DataServiceKind.VELERO -> "Velero"
         DataServiceKind.EXTERNAL_DNS -> "ExternalDNS"
-        DataServiceKind.SEALED_SECRETS -> "Sealed Secrets"
         DataServiceKind.SNAPSHOTS -> "CSI VolumeSnapshots"
         DataServiceKind.BACKUP_JOBS -> "Backup CronJobs"
         DataServiceKind.CASTAI -> "CAST AI"
@@ -89,7 +86,6 @@ val DataServiceKind.alertSystem: String
         DataServiceKind.CERT_MANAGER -> "certmanager"
         DataServiceKind.VELERO -> "velero"
         DataServiceKind.EXTERNAL_DNS -> "externaldns"
-        DataServiceKind.SEALED_SECRETS -> "sealedsecrets"
         DataServiceKind.SNAPSHOTS -> "snapshots"
         DataServiceKind.BACKUP_JOBS -> "backupjobs"
         DataServiceKind.CASTAI -> "castai"
@@ -120,7 +116,6 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.CERT_MANAGER.takeIf { certManager != null },
         DataServiceKind.VELERO.takeIf { velero != null },
         DataServiceKind.EXTERNAL_DNS.takeIf { externalDns != null },
-        DataServiceKind.SEALED_SECRETS.takeIf { sealedSecrets != null },
         DataServiceKind.CASTAI.takeIf { castai != null },
         DataServiceKind.SNAPSHOTS.takeIf { snapshots != null },
         DataServiceKind.BACKUP_JOBS.takeIf { backupJobs != null },
@@ -133,7 +128,7 @@ enum class ServiceFamily { DATA, NETWORKING, SECURITY, WORKLOADS }
 val DataServiceKind.family: ServiceFamily
     get() = when (this) {
         DataServiceKind.EXTERNAL_DNS -> ServiceFamily.NETWORKING
-        DataServiceKind.CERT_MANAGER, DataServiceKind.SEALED_SECRETS -> ServiceFamily.SECURITY
+        DataServiceKind.CERT_MANAGER -> ServiceFamily.SECURITY
         DataServiceKind.CASTAI -> ServiceFamily.WORKLOADS
         DataServiceKind.LONGHORN, DataServiceKind.GARAGE, DataServiceKind.CNPG, DataServiceKind.DRAGONFLY,
         DataServiceKind.MARIADB, DataServiceKind.PERCONA, DataServiceKind.VELERO,
@@ -168,7 +163,6 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.CERT_MANAGER -> certManager?.summary()
     DataServiceKind.VELERO -> velero?.summary()
     DataServiceKind.EXTERNAL_DNS -> externalDns?.summary()
-    DataServiceKind.SEALED_SECRETS -> sealedSecrets?.summary()
     DataServiceKind.SNAPSHOTS -> snapshots?.summary()
     DataServiceKind.BACKUP_JOBS -> backupJobs?.summary()
     DataServiceKind.CASTAI -> castai?.summary()
@@ -220,16 +214,6 @@ fun ExternalDnsStatus.summary(): ServiceSummary {
     if (error.isNotEmpty() && controllers.isEmpty() && records.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
     val healths = controllers.map { it.serviceHealth } + records.map { it.serviceHealth }
     return ServiceSummary(recordCount, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
-}
-
-/**
- * The SealedSecrets are the items; a controller that is not running and a missing, compromised or
- * stale sealing key (the section's own reasons) each need a look too.
- */
-fun SealedSecretsStatus.summary(): ServiceSummary {
-    if (error.isNotEmpty() && items.isEmpty() && keys.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
-    val healths = items.map { it.serviceHealth } + listOfNotNull(serviceHealth.takeIf { reasonList.isNotEmpty() })
-    return ServiceSummary(secretCount, items.count { it.serviceHealth.needsAttention } + reasonList.size, ServiceHealth.worst(healths), error)
 }
 
 fun DragonflyStatus.summary(): ServiceSummary {

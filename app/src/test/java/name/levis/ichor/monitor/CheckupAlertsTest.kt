@@ -74,22 +74,6 @@ class CheckupAlertsTest {
     }
 
     @Test
-    fun findingsTheDataServicesAlertOnAreShownButNotAlertedTwice() {
-        val sealed = TalosJson.decodeFromString(
-            CheckupReport.serializer(),
-            """
-                {"status":"critical","sections":[{"id":"secrets","status":"critical","checked":3,"findings":[
-                  {"kind":"sealedSecretNotSynced","severity":"critical","namespace":"shop","name":"legacy-cert"},
-                  {"kind":"sealingKeyMissing","severity":"critical","name":"sealed-secrets-key","extra":"kube-system"},
-                  {"kind":"externalSecretFailed","severity":"critical","namespace":"shop","name":"db"}]}]}
-            """.trimIndent(),
-        )
-        // Still counted and shown on the checkup screen.
-        assertEquals(3, sealed.count(CheckupSeverity.CRITICAL))
-        assertEquals(mapOf("secrets|externalSecretFailed|shop/db" to DATA_CRITICAL), sealed.alertIssues())
-    }
-
-    @Test
     fun anUnreadSectionKeepsWhatWasKnown() {
         val known = mapOf("storage|volumeFull|shop/data" to DATA_CRITICAL, "workloads|podCrashLoop|shop/gone" to DATA_CRITICAL)
         val issues = checkupIssuesWithGaps(report, known)

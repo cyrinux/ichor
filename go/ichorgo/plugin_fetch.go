@@ -131,7 +131,7 @@ func fetchPluginInput(ctx context.Context, k *kubeClient, c *plugin.Compiled, sc
 // what it could read.
 func (p *pluginProbe) fetch(ctx context.Context, k *kubeClient, c *plugin.Compiled, scope string) plugin.Input {
 	in := plugin.Input{
-		Objects: map[string][]map[string]any{}, APIVersions: map[string]string{},
+		Objects: map[string][]map[string]any{}, APIVersions: map[string]string{}, Unread: map[string]bool{},
 		Detected: p.detect(ctx, k, c), Heuristics: coreHeuristics{},
 	}
 
@@ -166,6 +166,9 @@ func (p *pluginProbe) fetch(ctx context.Context, k *kubeClient, c *plugin.Compil
 			defer mu.Unlock()
 
 			in.Objects[key] = objs
+			if err != nil {
+				in.Unread[key] = true
+			}
 
 			switch {
 			case err != nil && decl.Optional && (isForbidden(err) || isNotFound(err) || errors.Is(err, errPluginNotServed)):
@@ -235,10 +238,17 @@ func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource
 
 	q := pageQuery{}
 	if decl.List != nil {
-		q = pageQuery{limit: decl.List.Limit, labelSelector: decl.List.LabelSelector, fieldSelector: decl.List.FieldSelector}
+		q = pageQuery{
+			limit: decl.List.Limit, labelSelector: decl.List.LabelSelector, fieldSelector: decl.List.FieldSelector,
+			metadataOnly: decl.List.MetadataOnly,
+		}
 	}
 
 	q.limit = clampPageLimit(q.limit)
+
+	if decl.Source != "" {
+		return listNativeResource(ctx, k, decl, ref.path(namespace), q.limit, allowReveal)
+	}
 
 	var (
 		items []map[string]any
@@ -274,6 +284,26 @@ func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource
 	}
 
 	return items, "", nil
+}
+
+// listNativeResource is listPluginResource for a resource its Go reader selects (source:
+// native:<id>, see plugin_native.go): at most limit of the objects it keeps.
+func listNativeResource(ctx context.Context, k *kubeClient, decl plugin.Resource, path string, limit int, allowReveal bool) ([]map[string]any, string, error) {
+	items, err := readNativeSource(ctx, k, decl.Source, path)
+	if err != nil {
+		return nil, "", err
+	}
+
+	note := ""
+	if len(items) > limit {
+		items, note = items[:limit], fmt.Sprintf("%s%d %s", partialNotePrefix, limit, decl.Resource)
+	}
+
+	for _, obj := range items {
+		tidyPluginObject(obj, decl, allowReveal)
+	}
+
+	return items, note, nil
 }
 
 // tidyPluginObject drops managedFields and masks a Secret's values. They show only when the

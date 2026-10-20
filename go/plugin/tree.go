@@ -196,6 +196,9 @@ type Input struct {
 	APIVersions map[string]string
 	// Errors are the read errors, carried into the tree.
 	Errors []TreeError
+	// Unread are the resource keys that could not be listed (forbidden, not served, failed),
+	// optional ones included: readable() is false for them.
+	Unread map[string]bool
 	// Partial: a list stopped at its limit (see Tree.Partial).
 	Partial bool
 	// Locale picks the i18n map ("fr", "pt-BR"); "" or a missing one is English.

@@ -55,9 +55,6 @@ public enum CheckupKind: String, Sendable {
     /// count: that many more).
     case capiClusterFailed, capiClusterProvisioning, capiMachineFailed, capiMachineStuck, capiWorkersShort
     case sideroServerOff, sideroServerUnaccepted
-    /// A SealedSecret the controller could not decrypt, the controller without a key (extra: its
-    /// namespace), a sealing key kept out of use (namespace, name: the key's Secret).
-    case sealedSecretNotSynced, sealingKeyMissing, sealingKeyCompromised
     /// A Flux Kustomization that cannot decrypt its SOPS files (extra: its decryption secretRef,
     /// "" when not configured; reason, message: its Ready condition's).
     case sopsDecryptionFailed
@@ -100,15 +97,14 @@ public struct CheckupReport: Decodable, Equatable, Sendable {
     }
 
     /// The findings worth a background alert, keyed "section|kind|subject" and valued by
-    /// severity: everything but the notes and the events, which only describe, and the kinds the
-    /// data services already alert on (`dataServiceAlertedKinds`).
+    /// severity: everything but the notes and the events, which only describe.
     public var alertIssues: [String: String] { alertIssues(gitopsWatched: false) }
 
     /// `alertIssues`, leaving out as well the kinds the GitOps alert already raises
     /// (`gitopsAlertedKinds`) when that track is watched, and the plugin findings when the
     /// plugins' own track (pluginIssuesOf) is watched.
     public func alertIssues(gitopsWatched: Bool, pluginsWatched: Bool = false) -> [String: String] {
-        var skipped = gitopsWatched ? dataServiceAlertedKinds.union(gitopsAlertedKinds) : dataServiceAlertedKinds
+        var skipped: Set<String> = gitopsWatched ? gitopsAlertedKinds : []
         if pluginsWatched { skipped.insert(CheckupKind.plugin.rawValue) }
         var issues: [String: String] = [:]
         for section in sections where section.id != CheckupSectionID.events.rawValue {
@@ -207,7 +203,7 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
                                              .crossplaneSyncFailed, .crossplaneProviderUnhealthy, .crossplaneNotReady,
                                              .crossplaneDefinitionNotEstablished, .tailscaleConnectorNotReady,
                                              .tailscaleProxyGroupDown, .tailscaleProxyClassNotReady, .capiClusterFailed,
-                                             .capiClusterProvisioning, .capiMachineFailed, .capiMachineStuck, .sealedSecretNotSynced,
+                                             .capiClusterProvisioning, .capiMachineFailed, .capiMachineStuck,
                                              .sopsDecryptionFailed]
         let shownReason = kind.map(reasonKinds.contains) == true ? reason : ""
         return [shownReason, message].filter { !$0.isEmpty }.joined(separator: ": ")
@@ -398,11 +394,6 @@ public struct CheckupSubject: Equatable, Sendable {
         subject = parts.count > 2 ? parts[2] : ""
     }
 }
-
-/// Checkup finding kinds whose problem the data services alert already raises (`dataIssuesOf`):
-/// shown on the checkup screen, never notified a second time. A SealedSecret that failed to unseal
-/// and no active sealing key alert from the Sealed Secrets section.
-public let dataServiceAlertedKinds: Set<String> = [CheckupKind.sealedSecretNotSynced.rawValue, CheckupKind.sealingKeyMissing.rawValue]
 
 /// Checkup finding kinds whose problem the GitOps alert already raises when it is on
 /// (`gitopsIssuesWithGaps`): a Kustomization that cannot decrypt its SOPS files is Ready=False, a

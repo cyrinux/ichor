@@ -26,7 +26,7 @@ type dsIssue struct {
 // dataServiceSections maps the installed services, in the order of dataServices' fields.
 func dataServiceSections(ds dataServices) []dsSection {
 	adapters := []func(dataServices) (dsSection, bool){
-		sealedSecretsSection, snapshotsSection, backupJobsSection, longhornSection, garageSection,
+		snapshotsSection, backupJobsSection, longhornSection, garageSection,
 		cnpgSection, dragonflySection, mariadbSection, perconaSection, certManagerSection,
 		veleroSection, externalDNSSection, castAISection,
 	}
@@ -97,32 +97,6 @@ func readyOf(ready, total int, what string) string {
 	}
 
 	return fmt.Sprintf("%d/%d %s", ready, total, what)
-}
-
-func sealedSecretsSection(ds dataServices) (dsSection, bool) {
-	s := ds.SealedSecrets
-	if s == nil {
-		return dsSection{}, false
-	}
-
-	items := make([]dsIssue, 0, len(s.Items))
-	for _, it := range s.Items {
-		items = append(items, dsIssue{health: it.Health, key: nsName(it.Namespace, it.Name), detail: details(strings.Join(it.Reasons, ", "), it.Message)})
-	}
-
-	sec := newDSSection("Sealed Secrets", "sealed secrets", s.Error, items)
-
-	if c := s.Controller; c != nil {
-		sec.issues = append(sec.issues, dsIssue{
-			health: c.Health, key: "controller " + nsName(c.Namespace, c.Name),
-			detail: details(strings.Join(c.Reasons, ", "), readyOf(c.ReadyReplicas, c.Replicas, "replicas ready")),
-		})
-	} else if s.Health == healthCritical || s.Health == healthWarning {
-		// No key, no controller, a compromised or stale key: the section's own verdict.
-		sec.issues = append(sec.issues, dsIssue{health: s.Health, key: "controller", detail: strings.Join(s.Reasons, ", ")})
-	}
-
-	return sec, true
 }
 
 func snapshotsSection(ds dataServices) (dsSection, bool) {

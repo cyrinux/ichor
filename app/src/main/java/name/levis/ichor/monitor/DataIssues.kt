@@ -7,7 +7,6 @@ import name.levis.ichor.model.DragonflyReason
 import name.levis.ichor.model.GarageState
 import name.levis.ichor.model.MariaDbReason
 import name.levis.ichor.model.PerconaReason
-import name.levis.ichor.model.SealedSecretsReason
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.VeleroReason
 
@@ -33,8 +32,7 @@ private val VELERO_ALERT_REASONS = setOf(VeleroReason.STALE, VeleroReason.PARTIA
  * resync) and failing Postgres backups or archiving are warnings. An expired certificate (or one not
  * ready a week before it expires) is critical; one expiring, overdue or not ready, or an issuer not
  * ready, is a warning. A Velero schedule whose last backup failed or whose storage location is
- * unavailable is critical, a stale, partially failed or invalid one a warning. A SealedSecret that failed to
- * unseal, its controller down or no active sealing key is critical.
+ * unavailable is critical, a stale, partially failed or invalid one a warning.
  * The garage-operator's layer alerts like the Garage instances: a failed or degraded cluster, a
  * failed bucket and a disconnected or roleless node declaration.
  */
@@ -61,16 +59,6 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
     out.flag("velero", services.velero?.locations, { "BackupStorageLocation/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
     // A controller that cannot run publishes nothing: critical like a down storage location.
     out.flag("externaldns", services.externalDns?.controllers, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
-    // A SealedSecret that failed to unseal leaves its workload without the Secret; a controller
-    // that cannot run or no active sealing key stops every one of them. A Secret it does not own
-    // (unmanaged) or a stale key is shown, not alerted.
-    services.sealedSecrets?.let { sealed ->
-        out.flag("sealedsecrets", sealed.items, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
-        out.flag("sealedsecrets", listOfNotNull(sealed.controller), { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
-        if (SealedSecretsReason.NO_KEYS in sealed.reasonList) {
-            out["sealedsecrets|${sealed.controller?.namespace?.let { "$it/" }.orEmpty()}sealed-secrets-key"] = DATA_CRITICAL
-        }
-    }
     // A recommendation CAST AI cannot apply is critical; a read-only or HPA one was chosen: shown, not alerted.
     out.flag("castai", services.castai?.recommendations, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
     if (services.snapshots?.error.isNullOrEmpty()) out.flag("snapshots", services.snapshots?.claims, { "${it.namespace}/${it.name}" }, { false }, { it.watched && it.stale })

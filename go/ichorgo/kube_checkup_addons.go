@@ -46,7 +46,7 @@ type externalSecretObject struct {
 // External Secrets, from Sealed Secrets and from Flux's SOPS decryption, each reader keeping
 // its own call path.
 func checkupSecrets(ctx context.Context, k *kubeClient, in checkupInput) checkupSection {
-	return sectionFromParts(checkSecrets, checkupExternalSecrets(ctx, k, in), checkupSealedSecrets(ctx, k, in), checkupSopsDecryption(ctx, k, in))
+	return sectionFromParts(checkSecrets, checkupExternalSecrets(ctx, k, in), checkupSopsDecryption(ctx, k, in))
 }
 
 // checkupExternalSecrets finds the ExternalSecrets that do not sync and the stores that

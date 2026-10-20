@@ -143,7 +143,6 @@ class DataServicesTest {
         assertEquals(ServiceFamily.DATA, DataServiceKind.BACKUP_JOBS.family)
         assertEquals(ServiceFamily.NETWORKING, DataServiceKind.EXTERNAL_DNS.family)
         assertEquals(ServiceFamily.SECURITY, DataServiceKind.CERT_MANAGER.family)
-        assertEquals(ServiceFamily.SECURITY, DataServiceKind.SEALED_SECRETS.family)
         assertEquals(ServiceFamily.WORKLOADS, DataServiceKind.CASTAI.family)
         // Nine native systems stay in Data services (storage, databases and backups); Rook Ceph is a plugin.
         assertEquals(9, DataServiceKind.entries.count { it.family == ServiceFamily.DATA })

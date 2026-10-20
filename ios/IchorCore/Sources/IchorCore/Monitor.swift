@@ -436,16 +436,6 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     for c in services.externalDns?.controllers ?? [] where c.health == .critical {
         out["externaldns|\(c.label)"] = dataCritical
     }
-    // A SealedSecret that failed to unseal leaves its workload without the Secret; a controller
-    // that cannot run or no active sealing key stops every one of them. A Secret it does not own
-    // (unmanaged) or a stale key is shown, not alerted.
-    if let sealed = services.sealedSecrets {
-        for s in sealed.items where s.health == .critical { out["sealedsecrets|\(s.label)"] = dataCritical }
-        if let c = sealed.controller, c.health == .critical { out["sealedsecrets|\(c.label)"] = dataCritical }
-        if sealed.reasons.contains(.noKeys) {
-            out["sealedsecrets|\(sealed.controller.map { "\($0.namespace)/" } ?? "")sealed-secrets-key"] = dataCritical
-        }
-    }
     // A recommendation CAST AI cannot apply is critical; a read-only or HPA one was chosen: shown, not alerted.
     for r in services.castai?.recommendations ?? [] where r.health == .critical { out["castai|\(r.label)"] = dataCritical }
     if services.snapshots?.error.isEmpty != false {
@@ -469,7 +459,7 @@ public func dataSystemTitle(_ key: String) -> String {
     case "certmanager": "cert-manager"
     case "velero": "Velero"
     case "externaldns": "ExternalDNS"
-    case "sealedsecrets": "Sealed Secrets"
+    case "sealedsecrets": "Sealed Secrets" // an older snapshot's, now a plugin's
     case "ceph": "Rook Ceph"
     case "snapshots": "CSI VolumeSnapshots"
     case "backupjobs": "Backup CronJobs"

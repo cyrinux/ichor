@@ -451,6 +451,10 @@
           "maximum": 5000,
           "minimum": 0,
           "type": "integer"
+        },
+        "metadataOnly": {
+          "description": "MetadataOnly reads each object's metadata alone (PartialObjectMetadata): a Secret's values, or a large spec, never leave the API server.",
+          "type": "boolean"
         }
       },
       "type": "object"

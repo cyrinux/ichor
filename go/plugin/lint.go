@@ -433,6 +433,10 @@ func labelRow(path string, row *Row, add func(path, s string), addItems func(pat
 
 		if s.Type == "text" {
 			add(spath+".text", s.Text.Src)
+
+			for _, m := range quotedText.FindAllStringSubmatch(s.Text.Src, -1) {
+				add(spath+".text", m[1])
+			}
 		}
 
 		for j, col := range s.Columns {
