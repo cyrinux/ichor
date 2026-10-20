@@ -35,6 +35,9 @@ type fakeKubeAPI struct {
 	// answerFunc, when set, answers a request from its body (a SelfSubjectAccessReview per
 	// verb); ok false falls back to answers.
 	answerFunc func(method, path, body string) (answer string, ok bool)
+	// answerQuery, when set, answers a GET from its path and query (a list by label
+	// selector); ok false falls back to answers.
+	answerQuery func(path, query string) (answer string, ok bool)
 }
 
 // answerWith makes f answer key ("GET /path") with status and body.
@@ -64,8 +67,14 @@ func newFakeKubeAPI(t *testing.T, answers map[string]string) *fakeKubeAPI {
 		f.requests = append(f.requests, fakeKubeRequest{r.Method, r.URL.Path, r.Header.Get("Content-Type"), r.Header.Get("Authorization"), string(body), r.URL.RawQuery})
 		answer, ok := f.answers[r.Method+" "+r.URL.Path]
 		status := f.statuses[r.Method+" "+r.URL.Path]
-		answerFunc := f.answerFunc
+		answerFunc, answerQuery := f.answerFunc, f.answerQuery
 		f.mu.Unlock()
+
+		if answerQuery != nil && r.Method == http.MethodGet {
+			if a, found := answerQuery(r.URL.Path, r.URL.RawQuery); found {
+				answer, ok, status = a, true, 0
+			}
+		}
 
 		if answerFunc != nil {
 			if a, found := answerFunc(r.Method, r.URL.Path, string(body)); found {

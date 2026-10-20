@@ -1,0 +1,468 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# Rook runs Ceph in Kubernetes (ceph.rook.io). Each CephCluster shows Ceph's own health and
+# checks, Rook's phase, the raw capacity, and its OSD and mon pods (Rook runs a cluster's
+# daemons in its namespace, labelled app=rook-ceph-osd and app=rook-ceph-mon); block pools,
+# filesystems and object stores show their phase. An external cluster's daemons run elsewhere:
+# none of its own pods are counted.
+# go/ichorgo/plugin_rookceph_test.go holds it to the reader the apps used before.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: rook
+name: Rook Ceph
+website: https://rook.io
+icon: ceph
+category: data-services
+catalogId: rook
+
+detect:
+  - group: ceph.rook.io
+    resource: cephclusters
+
+resources:
+  cephCluster:
+    group: ceph.rook.io
+    version: preferred
+    resource: cephclusters
+    kind: CephCluster
+    scope: Namespaced
+  blockPool:
+    group: ceph.rook.io
+    version: preferred
+    resource: cephblockpools
+    kind: CephBlockPool
+    scope: Namespaced
+  filesystem:
+    group: ceph.rook.io
+    version: preferred
+    resource: cephfilesystems
+    kind: CephFilesystem
+    scope: Namespaced
+  objectStore:
+    group: ceph.rook.io
+    version: preferred
+    resource: cephobjectstores
+    kind: CephObjectStore
+    scope: Namespaced
+  osdPod:
+    group: ""
+    version: v1
+    resource: pods
+    kind: Pod
+    scope: Namespaced
+    list: { labelSelector: "app=rook-ceph-osd" }
+  # A canary only tries a mon's placement: it is not a mon of the quorum.
+  monPod:
+    group: ""
+    version: v1
+    resource: pods
+    kind: Pod
+    scope: Namespaced
+    list: { labelSelector: "app=rook-ceph-mon,mon_canary!=true" }
+
+fields:
+  cephCluster:
+    external: $.spec.external.enable | default(false)
+    phase: $.status.phase | default("")
+    message: $.status.message | default("")
+    # HEALTH_OK, HEALTH_WARN or HEALTH_ERR; "" before Ceph reported.
+    cephHealth: $.status.ceph.health | default("")
+    version: $.status.version.version | default("")
+    bytesTotal: $.status.ceph.capacity.bytesTotal | default(0)
+    bytesUsed: $.status.ceph.capacity.bytesUsed | default(0)
+    used: 'fields.bytesTotal > 0 ? fields.bytesUsed / fields.bytesTotal : 0'
+    # Ceph's checks, errors first, each in key order.
+    checks: 'join($.status.ceph.details[?(@.severity == "HEALTH_ERR")].message + $.status.ceph.details[?(@.severity != "HEALTH_ERR")].message, "\n")'
+    # A pod is ready when it runs and every container is ready.
+    osdsTotal: 'fields.external ? 0 : len(osdPod[?(@.metadata.namespace == $.metadata.namespace)])'
+    osdsUp: |
+      fields.external ? 0 : len(osdPod[?(@.metadata.namespace == $.metadata.namespace && @.status.phase == "Running"
+        && len(@.status.containerStatuses) > 0 && len(@.status.containerStatuses[?(@.ready != true)]) == 0)])
+    monsTotal: 'fields.external ? 0 : len(monPod[?(@.metadata.namespace == $.metadata.namespace)])'
+    monsReady: |
+      fields.external ? 0 : len(monPod[?(@.metadata.namespace == $.metadata.namespace && @.status.phase == "Running"
+        && len(@.status.containerStatuses) > 0 && len(@.status.containerStatuses[?(@.ready != true)]) == 0)])
+    osdsDown: fields.osdsTotal - fields.osdsUp
+    monsDown: fields.monsTotal - fields.monsReady
+    # Ceph's own default ratios: nearfull at 85%, full (writes blocked) at 95%.
+    healthErr: fields.cephHealth == "HEALTH_ERR"
+    failure: fields.phase == "Failure"
+    full: fields.used > 0.95
+    noOSD: fields.osdsTotal > 0 && fields.osdsUp == 0
+    # Without a majority of mons Ceph stops answering, and its last reported health goes stale.
+    noQuorum: fields.monsTotal > 0 && fields.monsReady * 2 <= fields.monsTotal
+    healthWarn: fields.cephHealth == "HEALTH_WARN"
+    nearFull: fields.used > 0.85 && fields.used <= 0.95
+    osdsPartlyDown: fields.osdsUp > 0 && fields.osdsUp < fields.osdsTotal
+    monsPartlyDown: fields.monsReady * 2 > fields.monsTotal && fields.monsReady < fields.monsTotal
+    # Rook's phase only matters when nothing else is wrong.
+    notReady: |
+      fields.phase != "" && fields.phase != "Ready" && fields.phase != "Connected" && !fields.healthErr && !fields.failure
+        && !fields.full && !fields.noOSD && !fields.noQuorum && !fields.healthWarn && !fields.nearFull
+        && !fields.osdsPartlyDown && !fields.monsPartlyDown
+    # Rook's message only says something when Ceph has not (a cluster being set up, a failure).
+    note: 'fields.checks == "" && fields.phase != "Ready" && fields.phase != "Connected" ? fields.message : ""'
+  blockPool:
+    phase: $.status.phase | default("")
+  filesystem:
+    phase: $.status.phase | default("")
+  objectStore:
+    phase: $.status.phase | default("")
+  osdPod:
+    id: $.metadata.labels["ceph-osd-id"] | default("")
+    number: int(fields.id) | default(0)
+    ready: '$.status.phase == "Running" && len($.status.containerStatuses) > 0 && len($.status.containerStatuses[?(@.ready != true)]) == 0'
+
+# The first rule that holds is the cluster's reason: the worst one, in the reader's order.
+health:
+  cephCluster:
+    - { when: fields.healthErr, health: critical, reason: healthErr, message: "Ceph reports errors" }
+    - { when: fields.failure, health: critical, reason: failure, message: "Rook reports a failure" }
+    - { when: fields.full, health: critical, reason: full, message: "full" }
+    - { when: fields.noOSD, health: critical, reason: noOSD, message: "no OSD up" }
+    - { when: fields.noQuorum, health: critical, reason: noQuorum, message: "mon quorum lost" }
+    - { when: fields.healthWarn, health: warning, reason: healthWarn, message: "Ceph reports warnings" }
+    - { when: fields.nearFull, health: warning, reason: nearFull, message: "nearly full" }
+    - { when: fields.osdsPartlyDown, health: warning, reason: osds, message: "OSDs down" }
+    - { when: fields.monsPartlyDown, health: warning, reason: mons, message: "mons down" }
+    - { when: fields.notReady, health: warning, reason: notReady, message: "operator: {{ fields.phase }}" }
+  # Failure is critical, anything but Ready (Connected for an external one) a warning.
+  blockPool:
+    - { when: fields.phase == "Failure", health: critical, reason: failure, message: "Rook reports a failure" }
+    - { when: 'fields.phase != "Ready" && fields.phase != "Connected"', health: warning, reason: notReady, message: "operator: {{ fields.phase }}" }
+  filesystem:
+    - { when: fields.phase == "Failure", health: critical, reason: failure, message: "Rook reports a failure" }
+    - { when: 'fields.phase != "Ready" && fields.phase != "Connected"', health: warning, reason: notReady, message: "operator: {{ fields.phase }}" }
+  objectStore:
+    - { when: fields.phase == "Failure", health: critical, reason: failure, message: "Rook reports a failure" }
+    - { when: 'fields.phase != "Ready" && fields.phase != "Connected"', health: warning, reason: notReady, message: "operator: {{ fields.phase }}" }
+  osdPod:
+    - { when: "!fields.ready", health: critical, reason: notReady, message: "Not ready" }
+
+dataServices:
+  summary:
+    aggregate:
+      total: count(cephCluster)
+      osdsDown: sum(cephCluster, fields.osdsDown)
+      monsDown: sum(cephCluster, fields.monsDown)
+    health: worst([worst(cephCluster.health), worst(blockPool.health), worst(filesystem.health), worst(objectStore.health)])
+
+cards:
+  summary:
+    title: { count: dataServices.summary.total, one: "%d Ceph cluster", other: "%d Ceph clusters" }
+    health: dataServices.summary.health
+    badges:
+      - { label: "OSDs down", value: dataServices.summary.osdsDown, tone: warning, hideWhenZero: true }
+      - { label: "mons down", value: dataServices.summary.monsDown, tone: warning, hideWhenZero: true }
+  clusters:
+    from: cephCluster
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No Ceph clusters."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: 'fields.cephHealth != "" ? fields.cephHealth : fields.phase'
+      trailing: { text: fields.version }
+      detail:
+        - type: gauge
+          label: "Capacity"
+          value: fields.bytesUsed
+          max: fields.bytesTotal
+          unit: bytes
+          tone: 'fields.full ? "critical" : (fields.nearFull ? "warning" : "ok")'
+        - type: text
+          text: "{{ fields.checks }}"
+          tone: 'fields.healthErr ? "critical" : "warning"'
+        - type: text
+          text: "{{ fields.note }}"
+        - type: badges
+          items:
+            - { label: "OSDs down", value: fields.osdsDown, tone: 'fields.noOSD ? "critical" : "warning"', hideWhenZero: true }
+            - { label: "mons down", value: fields.monsDown, tone: 'fields.noQuorum ? "critical" : "warning"', hideWhenZero: true }
+        - type: keyValues
+          items:
+            - { label: "Phase", value: fields.phase }
+            - { label: "OSDs up", value: 'string(fields.osdsUp) + "/" + string(fields.osdsTotal)' }
+            - { label: "Mons ready", value: 'string(fields.monsReady) + "/" + string(fields.monsTotal)' }
+            - { label: "Ceph version", value: fields.version, mono: true }
+        - type: conditions
+  osds:
+    from: osdPod
+    sort: [$.metadata.namespace, fields.number, $.metadata.name]
+    empty: "No OSD pods."
+    row:
+      title: '"osd." + fields.id'
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: 'fields.ready ? "Ready" : "Not ready"'
+      trailing: { text: $.spec.nodeName | default("") }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Node", value: $.spec.nodeName | default(""), mono: true }
+            - { label: "Phase", value: $.status.phase | default("") }
+            - { label: "Pod", value: $.metadata.name, mono: true }
+  blockPools:
+    from: blockPool
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No block pools."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status: { tone: health, text: '"block pool"' }
+      trailing: { text: fields.phase }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Phase", value: fields.phase }
+  filesystems:
+    from: filesystem
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No filesystems."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status: { tone: health, text: '"filesystem"' }
+      trailing: { text: fields.phase }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Phase", value: fields.phase }
+  objectStores:
+    from: objectStore
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No object stores."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status: { tone: health, text: '"object store"' }
+      trailing: { text: fields.phase }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Phase", value: fields.phase }
+
+# The monitor's former Ceph alerts: a cluster when critical, or on HEALTH_WARN, near-full
+# capacity or an OSD down (a mon down or a reconcile in progress shows in Ceph's health
+# anyway); a pool, filesystem or object store only when Rook reports it failed.
+findings:
+  - { id: cluster-critical, from: cephCluster, when: health == "critical", severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: clusters }
+  - id: cluster-warning
+    from: cephCluster
+    when: 'health == "warning" && (fields.healthWarn || fields.nearFull || fields.osdsPartlyDown)'
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: clusters
+  - { id: pool-failed, from: blockPool, when: health == "critical", severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: blockPools }
+  - { id: filesystem-failed, from: filesystem, when: health == "critical", severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: filesystems }
+  - { id: object-store-failed, from: objectStore, when: health == "critical", severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: objectStores }
+
+# The former demo: a nearly full cluster with an OSD down, one object store still progressing.
+samples:
+  cephCluster:
+    - metadata: { name: rook-ceph, namespace: rook-ceph }
+      spec: { external: {} }
+      status:
+        phase: Ready
+        message: Cluster created successfully
+        ceph:
+          health: HEALTH_WARN
+          details:
+            OSD_DOWN: { severity: HEALTH_WARN, message: "1 osds down" }
+            POOL_NEARFULL: { severity: HEALTH_WARN, message: "2 pool(s) nearfull" }
+            PG_DEGRADED: { severity: HEALTH_WARN, message: "Degraded data redundancy: 45/135 objects degraded (33.333%), 12 pgs degraded" }
+          capacity: { bytesTotal: 3298534883328, bytesUsed: 2869725348741 }
+        version: { version: 19.2.3-0 }
+    - metadata: { name: archive, namespace: demo-lab }
+      spec: { external: { enable: true } }
+      status:
+        phase: Connected
+        ceph: { health: HEALTH_ERR, details: { OSD_FULL: { severity: HEALTH_ERR, message: "1 full osd(s)" } }, capacity: { bytesTotal: 1000000000000, bytesUsed: 970000000000 } }
+    - metadata: { name: scratch, namespace: demo-shop }
+      status: { phase: Progressing, message: Configuring Ceph Mons }
+  blockPool:
+    - metadata: { name: ceph-blockpool, namespace: rook-ceph }
+      status: { phase: Ready }
+    - metadata: { name: replicas-old, namespace: demo-lab }
+      status: { phase: Failure }
+  filesystem:
+    - metadata: { name: ceph-filesystem, namespace: rook-ceph }
+      status: { phase: Ready }
+  objectStore:
+    - metadata: { name: ceph-objectstore, namespace: rook-ceph }
+      status: { phase: Progressing }
+  osdPod:
+    - metadata: { name: rook-ceph-osd-0-6d8f9c7b5-x2k4p, namespace: rook-ceph, labels: { app: rook-ceph-osd, ceph-osd-id: "0" } }
+      spec: { nodeName: demo-worker-1 }
+      status: { phase: Running, containerStatuses: [{ name: osd, ready: true }] }
+    - metadata: { name: rook-ceph-osd-1-7c9b8d6f4-q8m2d, namespace: rook-ceph, labels: { app: rook-ceph-osd, ceph-osd-id: "1" } }
+      spec: { nodeName: demo-worker-2 }
+      status: { phase: Running, containerStatuses: [{ name: osd, ready: true }] }
+    - metadata: { name: rook-ceph-osd-2-5f7d6c8b9-r4t7n, namespace: rook-ceph, labels: { app: rook-ceph-osd, ceph-osd-id: "2" } }
+      spec: { nodeName: demo-worker-3 }
+      status: { phase: Running, containerStatuses: [{ name: osd, ready: false }] }
+  monPod:
+    - metadata: { name: rook-ceph-mon-a-7b9c4d8f6-k2m4p, namespace: rook-ceph, labels: { app: rook-ceph-mon } }
+      spec: { nodeName: demo-worker-1 }
+      status: { phase: Running, containerStatuses: [{ name: mon, ready: true }] }
+    - metadata: { name: rook-ceph-mon-b-5c8d7f9b4-p3n6q, namespace: rook-ceph, labels: { app: rook-ceph-mon } }
+      spec: { nodeName: demo-worker-2 }
+      status: { phase: Running, containerStatuses: [{ name: mon, ready: true }] }
+    - metadata: { name: rook-ceph-mon-c-9d6f8b7c5-r5t8w, namespace: rook-ceph, labels: { app: rook-ceph-mon } }
+      spec: { nodeName: demo-worker-3 }
+      status: { phase: Running, containerStatuses: [{ name: mon, ready: true }] }
+
+# The apps' former Ceph strings (ceph_* in app/src/main/res/values-*/strings.xml).
+i18n:
+  fr:
+    "%d Ceph cluster": "%d cluster Ceph"
+    "%d Ceph clusters": "%d clusters Ceph"
+    "No Ceph clusters.": "Aucun cluster Ceph."
+    "Ceph reports errors": "Ceph signale des erreurs"
+    "Rook reports a failure": "Rook signale un échec"
+    "full": "plein"
+    "no OSD up": "aucun OSD actif"
+    "mon quorum lost": "quorum des mons perdu"
+    "Ceph reports warnings": "Ceph signale des avertissements"
+    "nearly full": "presque plein"
+    "OSDs down": "OSD hors service"
+    "mons down": "mons hors service"
+    "operator: {{ fields.phase }}": "opérateur : {{ fields.phase }}"
+    "Capacity": "Capacité"
+    "Phase": "Phase"
+    "OSDs up": "OSD actifs"
+    "Mons ready": "Mons prêts"
+    "Ceph version": "Version de Ceph"
+    "Node": "Nœud"
+    "Pod": "Pod"
+    "Ready": "Prêt"
+    "Not ready": "Pas prêt"
+    "block pool": "pool de blocs"
+    "filesystem": "système de fichiers"
+    "object store": "stockage objet"
+    "No OSD pods.": "Aucun pod OSD."
+    "No block pools.": "Aucun pool de blocs."
+    "No filesystems.": "Aucun système de fichiers."
+    "No object stores.": "Aucun stockage objet."
+  de:
+    "%d Ceph cluster": "%d Ceph-Cluster"
+    "%d Ceph clusters": "%d Ceph-Cluster"
+    "No Ceph clusters.": "Keine Ceph-Cluster."
+    "Ceph reports errors": "Ceph meldet Fehler"
+    "Rook reports a failure": "Rook meldet einen Ausfall"
+    "full": "voll"
+    "no OSD up": "kein OSD aktiv"
+    "mon quorum lost": "Mon-Quorum verloren"
+    "Ceph reports warnings": "Ceph meldet Warnungen"
+    "nearly full": "fast voll"
+    "OSDs down": "OSDs ausgefallen"
+    "mons down": "Mons ausgefallen"
+    "operator: {{ fields.phase }}": "Operator: {{ fields.phase }}"
+    "Capacity": "Kapazität"
+    "Phase": "Phase"
+    "OSDs up": "OSDs aktiv"
+    "Mons ready": "Mons bereit"
+    "Ceph version": "Ceph-Version"
+    "Node": "Knoten"
+    "Pod": "Pod"
+    "Ready": "Bereit"
+    "Not ready": "Nicht bereit"
+    "block pool": "Block-Pool"
+    "filesystem": "Dateisystem"
+    "object store": "Objektspeicher"
+    "No OSD pods.": "Keine OSD-Pods."
+    "No block pools.": "Keine Block-Pools."
+    "No filesystems.": "Keine Dateisysteme."
+    "No object stores.": "Keine Objektspeicher."
+  es:
+    "%d Ceph cluster": "%d clúster de Ceph"
+    "%d Ceph clusters": "%d clústeres de Ceph"
+    "No Ceph clusters.": "Sin clústeres de Ceph."
+    "Ceph reports errors": "Ceph informa de errores"
+    "Rook reports a failure": "Rook informa de un fallo"
+    "full": "lleno"
+    "no OSD up": "ningún OSD activo"
+    "mon quorum lost": "quórum de mons perdido"
+    "Ceph reports warnings": "Ceph informa de advertencias"
+    "nearly full": "casi lleno"
+    "OSDs down": "OSD caídos"
+    "mons down": "mons caídos"
+    "operator: {{ fields.phase }}": "operador: {{ fields.phase }}"
+    "Capacity": "Capacidad"
+    "Phase": "Fase"
+    "OSDs up": "OSD activos"
+    "Mons ready": "Mons listos"
+    "Ceph version": "Versión de Ceph"
+    "Node": "Nodo"
+    "Pod": "Pod"
+    "Ready": "Listo"
+    "Not ready": "No listo"
+    "block pool": "pool de bloques"
+    "filesystem": "sistema de archivos"
+    "object store": "almacén de objetos"
+    "No OSD pods.": "Sin pods de OSD."
+    "No block pools.": "Sin pools de bloques."
+    "No filesystems.": "Sin sistemas de archivos."
+    "No object stores.": "Sin almacenes de objetos."
+  it:
+    "%d Ceph cluster": "%d cluster Ceph"
+    "%d Ceph clusters": "%d cluster Ceph"
+    "No Ceph clusters.": "Nessun cluster Ceph."
+    "Ceph reports errors": "Ceph segnala errori"
+    "Rook reports a failure": "Rook segnala un guasto"
+    "full": "pieno"
+    "no OSD up": "nessun OSD attivo"
+    "mon quorum lost": "quorum dei mon perso"
+    "Ceph reports warnings": "Ceph segnala avvisi"
+    "nearly full": "quasi pieno"
+    "OSDs down": "OSD non attivi"
+    "mons down": "mon non attivi"
+    "operator: {{ fields.phase }}": "operatore: {{ fields.phase }}"
+    "Capacity": "Capacità"
+    "Phase": "Fase"
+    "OSDs up": "OSD attivi"
+    "Mons ready": "Mon pronti"
+    "Ceph version": "Versione di Ceph"
+    "Node": "Nodo"
+    "Pod": "Pod"
+    "Ready": "Pronto"
+    "Not ready": "Non pronto"
+    "block pool": "pool di blocchi"
+    "filesystem": "file system"
+    "object store": "archivio oggetti"
+    "No OSD pods.": "Nessun pod OSD."
+    "No block pools.": "Nessun pool di blocchi."
+    "No filesystems.": "Nessun file system."
+    "No object stores.": "Nessun archivio oggetti."
+  uk:
+    "%d Ceph cluster": "%d кластер Ceph"
+    "%d Ceph clusters": "%d кластерів Ceph"
+    "No Ceph clusters.": "Немає кластерів Ceph."
+    "Ceph reports errors": "Ceph повідомляє про помилки"
+    "Rook reports a failure": "Rook повідомляє про збій"
+    "full": "заповнено"
+    "no OSD up": "жоден OSD не працює"
+    "mon quorum lost": "кворум mon втрачено"
+    "Ceph reports warnings": "Ceph повідомляє про попередження"
+    "nearly full": "майже заповнено"
+    "OSDs down": "OSD не працюють"
+    "mons down": "mon не працюють"
+    "operator: {{ fields.phase }}": "оператор: {{ fields.phase }}"
+    "Capacity": "Ємність"
+    "Phase": "Фаза"
+    "OSDs up": "OSD працюють"
+    "Mons ready": "Mon готові"
+    "Ceph version": "Версія Ceph"
+    "Node": "Вузол"
+    "Pod": "Под"
+    "Ready": "Готово"
+    "Not ready": "Не готово"
+    "block pool": "блоковий пул"
+    "filesystem": "файлова система"
+    "object store": "об’єктне сховище"
+    "No OSD pods.": "Немає подів OSD."
+    "No block pools.": "Немає блокових пулів."
+    "No filesystems.": "Немає файлових систем."
+    "No object stores.": "Немає об’єктних сховищ."

@@ -423,12 +423,12 @@ tile below for an active plugin and `null` otherwise. Examples: the goldens in
   | type | payload |
   | -- | -- |
   | `keyValues` | `items[{label, value, tone?, mono?}]` |
-  | `badges` | `items[{label, value?, tone}]`; `on` lights a badge (`ok`, or its `tone`) or dims it (`idle`) |
+  | `badges` | `items[{label, value?, tone}]`; `on` lights a badge (`ok`, or its `tone`) or dims it (`idle`); the section is left out when every badge is hidden |
   | `gauge` | `{label, value, max, unit, tone, text}`; without `text`, the two values in `unit` (`bytes`, `percent` or a word) |
   | `conditions` | `items[{type, status, reason, message, tone, lastTransition}]`; left out when the object has none |
   | `relations` | `items[{label, ref, text?}]`; an absent object is left out, and so is the section when none is left |
   | `table` | `columns[{label}]`, `rows[[cell]]` |
-  | `text` | `{text, tone?, mono?}` |
+  | `text` | `{text, tone?, mono?}`; left out when the text is empty |
   | `actions` | `items[{id, label, enabled, confirm, disabledReason?, allowed?, params[]}]`; `allowed` is the can-I answer (see "Actions") |
 
 * `i18n`: the locale's map (`pt-BR` falls back to `pt`) translates labels, `empty`, the

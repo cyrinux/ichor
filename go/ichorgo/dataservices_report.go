@@ -28,7 +28,7 @@ func dataServiceSections(ds dataServices) []dsSection {
 	adapters := []func(dataServices) (dsSection, bool){
 		sealedSecretsSection, snapshotsSection, backupJobsSection, longhornSection, garageSection,
 		cnpgSection, dragonflySection, mariadbSection, perconaSection, certManagerSection,
-		veleroSection, externalDNSSection, cephSection, castAISection,
+		veleroSection, externalDNSSection, castAISection,
 	}
 
 	var out []dsSection
@@ -423,42 +423,6 @@ func externalDNSSection(ds dataServices) (dsSection, bool) {
 			health: rec.Health, key: rec.RecordType + " " + rec.DNSName,
 			detail: details(strings.Join(rec.Reasons, ", "), rec.SourceKind+" "+nsName(rec.SourceNamespace, rec.SourceName)),
 		})
-	}
-
-	return sec, true
-}
-
-func cephSection(ds dataServices) (dsSection, bool) {
-	s := ds.Ceph
-	if s == nil {
-		return dsSection{}, false
-	}
-
-	items := make([]dsIssue, 0, len(s.Clusters))
-
-	for _, c := range s.Clusters {
-		checks := make([]string, 0, len(c.Checks))
-		for _, ch := range c.Checks {
-			checks = append(checks, ch.Name+": "+ch.Message)
-		}
-
-		items = append(items, dsIssue{
-			health: c.Health, key: nsName(c.Namespace, c.Name), nodes: c.NotReadyNodes,
-			detail: details(c.CephHealth, c.Phase, strings.Join(c.Reasons, ", "), readyOf(c.OSDsUp, c.OSDsTotal, "OSDs up"),
-				readyOf(c.MonsReady, c.MonsTotal, "mons ready"), c.Message, strings.Join(checks, "; ")),
-		})
-	}
-
-	sec := newDSSection("Rook Ceph", "clusters", s.Error, items)
-
-	for _, p := range s.Pools {
-		sec.issues = append(sec.issues, dsIssue{health: p.Health, key: p.Kind + " " + nsName(p.Namespace, p.Name), detail: details(p.Phase)})
-	}
-
-	for _, o := range s.OSDs {
-		if !o.Ready {
-			sec.issues = append(sec.issues, dsIssue{health: healthWarning, key: "OSD " + o.ID, detail: details(o.Phase, "pod "+o.Pod), nodes: nonEmpty([]string{o.Node})})
-		}
 	}
 
 	return sec, true
