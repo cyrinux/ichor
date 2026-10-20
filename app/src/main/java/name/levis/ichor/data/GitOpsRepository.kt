@@ -18,6 +18,7 @@ import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.GitHost
 import name.levis.ichor.model.GitHostCheck
 import name.levis.ichor.model.GitFile
+import name.levis.ichor.model.GitOpsEditCheck
 import name.levis.ichor.model.GitOpsSource
 import name.levis.ichor.model.GitOpsSourceFind
 import name.levis.ichor.model.GitProposal
@@ -251,6 +252,18 @@ class GitOpsRepository(
     /** The review of an edit: [before] → [after] of the file [name], as a one-file [FluxDiff]. */
     suspend fun textDiff(before: String, after: String, name: String): FluxDiff = withContext(Dispatchers.IO) {
         TalosJson.decodeFromString(FluxDiff.serializer(), Ichorgo.textDiff(before, after, name))
+    }
+
+    /**
+     * [content] at [path] of [src] (read at [ref]) checked before it is proposed: the nearest
+     * kustomization built before and after on the repository's snapshot, or [fluxSpec]'s path
+     * (a Flux app's), and the rendered objects that change. Downloads the snapshot once per commit.
+     */
+    suspend fun editCheck(src: GitSource, ref: String, path: String, content: String, fluxSpec: String = ""): GitOpsEditCheck {
+        val host = forgeHost(src)
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(GitOpsEditCheck.serializer(), Ichorgo.gitOpsEditCheck(host, src.repoURL, ref, path, content, fluxSpec))
+        }
     }
 
     /** What [content] offers to quick edits: its workloads' containers and replicas, a kustomization's images. No network. */

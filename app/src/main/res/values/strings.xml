@@ -5643,4 +5643,15 @@
     <string name="talos_patch_review">Review on this node</string>
     <string name="talos_patch_same">The node already has what this patch sets.</string>
     <string name="talos_patch_one_node">For this node only: %1$s</string>
+    <string name="gitops_check_title">Build check</string>
+    <string name="gitops_check_running">Building the kustomization with your change…</string>
+    <string name="gitops_check_failed">Could not check the build: %1$s</string>
+    <string name="gitops_check_builds">Builds</string>
+    <string name="gitops_check_valid_yaml">Valid YAML</string>
+    <string name="gitops_check_fails">Build fails</string>
+    <string name="gitops_check_not_checked">Not checked</string>
+    <string name="gitops_check_dir">Built from %1$s</string>
+    <string name="gitops_check_objects">Objects that change: %1$d · unchanged: %2$d</string>
+    <string name="gitops_check_no_objects">No rendered object changes.</string>
+    <string name="gitops_check_at">%1$s, line %2$d</string>
 </resources>

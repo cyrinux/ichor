@@ -44,6 +44,7 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.DiffChange
 import name.levis.ichor.model.FluxDiff
+import name.levis.ichor.model.GitOpsEditCheck
 import name.levis.ichor.model.ProposeBlock
 import name.levis.ichor.model.QuickEdit
 import name.levis.ichor.ui.UiState
@@ -61,6 +62,7 @@ import name.levis.ichor.ui.diff.DiffLines
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.kubebrowser.ErrorCard
 import name.levis.ichor.ui.kubebrowser.KubeYamlEditor
+import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
  * Edits one file of an app's source ([path] from the repository root) and opens a pull request
@@ -158,7 +160,16 @@ fun SourceEditScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
                     val e = s.data
                     when {
                         e.result != null -> ProposeResult(e.result, target.tool, onDone = onBack, modifier = modifier)
-                        e.review != null -> EditReview(e.review, onBack = vm::backToEditor, onContinue = vm::openForm, onRetry = vm::review, modifier = modifier, notice = e.notice)
+                        e.review != null -> EditReview(
+                            e.review,
+                            onBack = vm::backToEditor,
+                            onContinue = vm::openForm,
+                            onRetry = vm::review,
+                            modifier = modifier,
+                            notice = e.notice,
+                            check = e.check,
+                            onRetryCheck = vm::check,
+                        )
                         else -> Column(modifier) {
                             // A quick edit that did not apply to the branch's file says why.
                             e.notice?.let { notice ->
@@ -195,6 +206,8 @@ private fun EditReview(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     notice: UiText? = null,
+    check: UiState<GitOpsEditCheck>? = null,
+    onRetryCheck: () -> Unit = {},
 ) {
     when (review) {
         UiState.Loading -> Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -221,6 +234,7 @@ private fun EditReview(
                     notice?.let { MutedText(it.asString(), Modifier.padding(bottom = 8.dp)) }
                     DiffLines(file.lines)
                     if (file.truncated) MutedText(stringResource(R.string.diff_truncated), Modifier.padding(top = 4.dp))
+                    check?.let { EditCheckSection(it, onRetry = onRetryCheck, modifier = Modifier.padding(top = 16.dp)) }
                 }
                 Row(
                     Modifier.padding(16.dp).navigationBarsPadding(),
@@ -229,6 +243,10 @@ private fun EditReview(
                 ) {
                     OutlinedButton(onClick = onBack) { Text(stringResource(R.string.kb_back_to_editor)) }
                     Button(onClick = onContinue) { Text(stringResource(R.string.gitops_edit_continue)) }
+                    // The pull request can still be opened: the person decides.
+                    if ((check as? UiState.Loaded)?.data?.ok == false) {
+                        Text(stringResource(R.string.gitops_check_fails), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.labelLarge)
+                    }
                 }
             }
         }

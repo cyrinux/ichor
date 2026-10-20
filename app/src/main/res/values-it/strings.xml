@@ -5638,4 +5638,15 @@
     <string name="talos_patch_review">Rivedi su questo nodo</string>
     <string name="talos_patch_same">Il nodo ha già ciò che imposta questa patch.</string>
     <string name="talos_patch_one_node">Solo per questo nodo: %1$s</string>
+    <string name="gitops_check_title">Verifica della build</string>
+    <string name="gitops_check_running">Build della kustomization con la tua modifica…</string>
+    <string name="gitops_check_failed">Impossibile verificare la build: %1$s</string>
+    <string name="gitops_check_builds">Si compila</string>
+    <string name="gitops_check_valid_yaml">YAML valido</string>
+    <string name="gitops_check_fails">La build non riesce</string>
+    <string name="gitops_check_not_checked">Non verificato</string>
+    <string name="gitops_check_dir">Build da %1$s</string>
+    <string name="gitops_check_objects">Oggetti che cambiano: %1$d · invariati: %2$d</string>
+    <string name="gitops_check_no_objects">Nessun oggetto generato cambia.</string>
+    <string name="gitops_check_at">%1$s, riga %2$d</string>
 </resources>

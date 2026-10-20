@@ -113,6 +113,16 @@ extension TalosClient {
         }
     }
 
+    /// content at path of source (read at ref) checked before it is proposed: the nearest
+    /// kustomization built before and after on the repository's snapshot, or fluxSpec's path
+    /// (a Flux app's), and the rendered objects that change. Downloads the snapshot once per commit.
+    func editCheck(_ source: GitSource, ref: String, path: String, content: String, fluxSpec: String,
+                   hosts: GitHostStore, demo: Bool) async throws -> GitOpsEditCheck {
+        let json = try await Self.proposalHost(source, hosts: hosts, demo: demo)
+        let repo = source.repoURL
+        return try await Self.json { IchorgoGitOpsEditCheck(json, repo, ref, path, content, fluxSpec, $0) }
+    }
+
     /// The unified diff of a file from before to after (one "file" resource), for the review.
     static func textDiff(before: String, after: String, name: String) async throws -> FluxDiff {
         try await json { IchorgoTextDiff(before, after, name, $0) }

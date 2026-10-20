@@ -115,7 +115,14 @@ tour** shows it again.
   the diff, and **Open pull request** commits it on a new branch and opens a pull or merge
   request (GitHub, GitLab, Gitea). The tracked branch is never pushed to: Argo CD or Flux
   applies the change once someone merges it. A file changed upstream in the meantime is
-  refused, with Reload to start from the new version. The phone remembers each request it
+  refused, with Reload to start from the new version. Review also checks the build on the
+  phone, `kustomize build` before the push: the edited file is laid over the repository at
+  that commit (downloaded once, as for Find in repository), the nearest kustomization (a Flux
+  app's path, with its settings) is built before and after, and the review lists the rendered
+  objects that change, each with its diff, Secret values masked, or **Build fails** with the
+  error and the file and line it names. A file in no kustomization is checked as YAML; a Helm
+  chart is not rendered on the phone, and a remote base is not fetched, which the check says.
+  The pull request can be opened either way. The phone remembers each request it
   opened (50 per cluster, only on this device): **Proposals** on the Argo CD or Flux app (and
   at the cluster repository's root) shows whether each is open, merged or closed on the forge
   and, once merged, whether the app runs that commit; a merged one not running yet offers
