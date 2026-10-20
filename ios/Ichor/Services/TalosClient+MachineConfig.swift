@@ -60,6 +60,22 @@ extension TalosClient {
         try await Self.json { IchorgoDriftFixEdits(draft, fix.key, fix.before, fix.after, $0) }
     }
 
+    /// Whether `content` is a Talos patch that can be tried on a node (pure, no cluster).
+    static func talosPatchDetect(_ content: String) async throws -> TalosPatchInfo {
+        try await json { IchorgoTalosPatchDetect(content, $0) }
+    }
+
+    /// `node`'s config with `patch` applied (os:admin: read with its secrets, checked with a
+    /// dry run), redacted: the draft the review shows.
+    func talosPatchDraft(node: String, patch: String) async throws -> TalosPatchDraft {
+        try await Self.json { [config, context] in IchorgoTalosPatchDraft(config, context, node, patch, $0) }
+    }
+
+    /// The field edits of `draft` that make `patch`, when it only sets values (pure).
+    func talosPatchEdits(_ draft: String, patch: String) async throws -> SnippetEdits {
+        try await Self.json { IchorgoTalosPatchEdits(draft, patch, $0) }
+    }
+
     /// What applying `draft` would change, validated by the node with a dry run (os:admin).
     /// `base` is the config the draft was made from, secrets hidden.
     func previewMachineConfig(node: String, base: String, draft: String) async throws -> ConfigPreview {

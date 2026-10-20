@@ -5623,4 +5623,15 @@
     <string name="proposals_other_revision">Fusionada; la app ejecuta otro commit (uno más reciente, o este aún no se aplicó).</string>
     <string name="proposals_reconcile">Reconciliar ahora</string>
     <string name="proposals_forget">Olvidar esta propuesta</string>
+    <string name="talos_patch_title">Parche de Talos</string>
+    <string name="talos_patch_hint">Pruébelo en un nodo antes de fusionarlo: se revierte solo si no lo conserva.</string>
+    <string name="talos_patch_try">Probar en un nodo…</string>
+    <string name="talos_patch_cannot">No se puede probar: %1$s</string>
+    <string name="talos_patch_pick_title">¿En qué nodo probarlo?</string>
+    <string name="talos_patch_no_nodes">Ningún nodo de este clúster responde.</string>
+    <string name="talos_patch_other_node">Este parche es para %1$s: otro nodo recibiría sus ajustes.</string>
+    <string name="talos_patch_pick_hint">La revisión muestra qué cambia en ese nodo. Si el parche solo fija valores, desde ahí puede llevarse a otros nodos.</string>
+    <string name="talos_patch_review">Revisar en este nodo</string>
+    <string name="talos_patch_same">El nodo ya tiene lo que fija este parche.</string>
+    <string name="talos_patch_one_node">Solo para este nodo: %1$s</string>
 </resources>

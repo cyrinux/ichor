@@ -5623,4 +5623,15 @@
     <string name="proposals_other_revision">Fusionnée ; l\'app exécute un autre commit (un plus récent, ou celui-ci n\'est pas encore appliqué).</string>
     <string name="proposals_reconcile">Réconcilier maintenant</string>
     <string name="proposals_forget">Oublier cette proposition</string>
+    <string name="talos_patch_title">Patch Talos</string>
+    <string name="talos_patch_hint">Essayez-le sur un nœud avant la fusion : il est annulé de lui-même si vous ne le gardez pas.</string>
+    <string name="talos_patch_try">Essayer sur un nœud…</string>
+    <string name="talos_patch_cannot">Impossible à essayer : %1$s</string>
+    <string name="talos_patch_pick_title">Essayer sur quel nœud ?</string>
+    <string name="talos_patch_no_nodes">Aucun nœud de ce cluster ne répond.</string>
+    <string name="talos_patch_other_node">Ce patch est pour %1$s : un autre nœud recevrait ses réglages.</string>
+    <string name="talos_patch_pick_hint">La revue montre ce qui change sur ce nœud. Quand le patch ne fait que fixer des valeurs, il peut être porté à d\'autres nœuds depuis là.</string>
+    <string name="talos_patch_review">Revoir sur ce nœud</string>
+    <string name="talos_patch_same">Le nœud a déjà ce que fixe ce patch.</string>
+    <string name="talos_patch_one_node">Pour ce nœud seulement : %1$s</string>
 </resources>

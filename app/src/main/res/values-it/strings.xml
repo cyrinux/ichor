@@ -5623,4 +5623,15 @@
     <string name="proposals_other_revision">Unita; l\'app esegue un altro commit (uno più recente, o questo non è ancora applicato).</string>
     <string name="proposals_reconcile">Riconcilia ora</string>
     <string name="proposals_forget">Dimentica questa proposta</string>
+    <string name="talos_patch_title">Patch Talos</string>
+    <string name="talos_patch_hint">Provalo su un nodo prima dell\'unione: si annulla da solo se non lo tieni.</string>
+    <string name="talos_patch_try">Prova su un nodo…</string>
+    <string name="talos_patch_cannot">Non si può provare: %1$s</string>
+    <string name="talos_patch_pick_title">Su quale nodo provarlo?</string>
+    <string name="talos_patch_no_nodes">Nessun nodo di questo cluster risponde.</string>
+    <string name="talos_patch_other_node">Questa patch è per %1$s: un altro nodo ne riceverebbe le impostazioni.</string>
+    <string name="talos_patch_pick_hint">La revisione mostra cosa cambia su quel nodo. Se la patch imposta solo valori, da lì si può portare ad altri nodi.</string>
+    <string name="talos_patch_review">Rivedi su questo nodo</string>
+    <string name="talos_patch_same">Il nodo ha già ciò che imposta questa patch.</string>
+    <string name="talos_patch_one_node">Solo per questo nodo: %1$s</string>
 </resources>

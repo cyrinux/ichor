@@ -145,6 +145,16 @@ tour** shows it again.
   pull or merge requests on a new branch, never commits to the branch itself. Nothing is
   cloned: each directory and file is one call to the forge's API. The demo cluster has a sample
   repository built in.
+- **Try a Talos patch from Git:** on a Talos cluster, a Talos patch file opened in the cluster
+  repository or an app's source (machine/cluster sections, or config documents such as
+  `HostnameConfig`) shows **Try on a node…**: pick the node (the one the patch sets the hostname
+  of comes first) and its machine config opens with the patch applied, on the usual review,
+  try (it reverts by itself unless kept), apply, staged and reboot. A patch that only sets
+  values can be taken to other nodes from the review; one with lists (Talos replaces some
+  wholesale and appends to others, which the diff shows), `$patch` directives, JSON patch
+  operations or a new document is tried node by node. A whole machine config, a patch setting a
+  secret or holding a talenv `${...}` cannot be tried and says why. The file in Git is not
+  changed: merge it on the forge once the try was kept.
 - **Find in repository:** the search in a source browser (an Argo CD or Flux app's source, or
   the cluster repository) lists every line of the whole repository that holds the text, by
   file, and opens the file at that line. It downloads the repository once per commit as one

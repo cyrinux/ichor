@@ -5614,4 +5614,15 @@
     <string name="proposals_other_revision">Zusammengeführt; die App führt einen anderen Commit aus (einen neueren, oder dieser ist noch nicht angewendet).</string>
     <string name="proposals_reconcile">Jetzt abgleichen</string>
     <string name="proposals_forget">Diesen Vorschlag vergessen</string>
+    <string name="talos_patch_title">Talos-Patch</string>
+    <string name="talos_patch_hint">Vor dem Zusammenführen auf einem Knoten ausprobieren: Ohne Behalten wird es von selbst zurückgesetzt.</string>
+    <string name="talos_patch_try">Auf einem Knoten ausprobieren…</string>
+    <string name="talos_patch_cannot">Kann nicht ausprobiert werden: %1$s</string>
+    <string name="talos_patch_pick_title">Auf welchem Knoten ausprobieren?</string>
+    <string name="talos_patch_no_nodes">Kein Knoten dieses Clusters antwortet.</string>
+    <string name="talos_patch_other_node">Dieser Patch ist für %1$s: Ein anderer Knoten bekäme dessen Einstellungen.</string>
+    <string name="talos_patch_pick_hint">Die Prüfung zeigt, was sich auf diesem Knoten ändert. Setzt der Patch nur Werte, lässt er sich von dort auf weitere Knoten übertragen.</string>
+    <string name="talos_patch_review">Auf diesem Knoten prüfen</string>
+    <string name="talos_patch_same">Der Knoten hat bereits, was dieser Patch setzt.</string>
+    <string name="talos_patch_one_node">Nur für diesen Knoten: %1$s</string>
 </resources>

@@ -214,6 +214,7 @@ private fun NavGraphBuilder.sourceScreens(
             onAddToken = onAddToken,
             onEdit = { nav.navigate(sourceEditRoute(t, path)) },
             onQuickEdit = { edit -> nav.navigate(sourceEditRoute(t, path, encodeQuickEdit(edit))) },
+            onTryPatch = { node, patch -> nav.navigate(Routes.machineConfig(node.node, node.hostname, patch = patch)) },
         )
     }
     composable(

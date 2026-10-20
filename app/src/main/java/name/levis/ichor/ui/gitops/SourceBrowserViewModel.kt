@@ -12,12 +12,15 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.GitHostMissing
 import name.levis.ichor.data.GitOpsRepository
+import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.GitFile
 import name.levis.ichor.model.GitRepoSearch
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.GitTree
 import name.levis.ichor.model.ProposeBlock
+import name.levis.ichor.model.MAX_PATCH_BYTES
 import name.levis.ichor.model.QuickEditTargets
+import name.levis.ichor.model.TalosPatchInfo
 import name.levis.ichor.model.isYamlPath
 import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.cleanSourceDir
@@ -204,13 +207,15 @@ data class SourceFileState(
     val editBlock: ProposeBlock? = null,
     /** What the file offers to quick edits, null when nothing (or not a YAML file). */
     val quick: QuickEditTargets? = null,
+    /** The file is a Talos patch (on a Talos cluster): whether and why it can be tried on a node. */
+    val talosPatch: TalosPatchInfo? = null,
 )
 
 /**
  * One file of an app's source, read once per [load] key, again on refresh; its quick edits
  * through [quick].
  */
-class SourceFileViewModel(private val gitOps: GitOpsRepository) : ViewModel() {
+class SourceFileViewModel(private val gitOps: GitOpsRepository, private val talos: TalosRepository) : ViewModel() {
     private val _state = MutableStateFlow(SourceFileState())
     val state: StateFlow<SourceFileState> = _state.asStateFlow()
 
@@ -219,13 +224,16 @@ class SourceFileViewModel(private val gitOps: GitOpsRepository) : ViewModel() {
     private var key: Any? = null
     private var target: SourceTarget? = null
     private var path: String = ""
+    private var talosCluster = false
     private var job: Job? = null
 
-    fun load(target: SourceTarget, path: String, key: Any) {
+    /** [talosCluster]: the cluster on screen has the Talos API, so a patch file can be tried. */
+    fun load(target: SourceTarget, path: String, key: Any, talosCluster: Boolean = false) {
         if (key == this.key) return
         this.key = key
         this.target = target
         this.path = path
+        this.talosCluster = talosCluster
         quick.target = target
         refresh()
     }
@@ -245,7 +253,12 @@ class SourceFileViewModel(private val gitOps: GitOpsRepository) : ViewModel() {
                 } else {
                     null
                 }
-                SourceFileState(UiState.Loaded(SourceFileView(src, file)), editBlock = block, quick = quick)
+                val patch = if (talosCluster && !file.truncated && isYamlPath(path) && file.content.length <= MAX_PATCH_BYTES) {
+                    cancellableCatching { talos.talosPatchDetect(file.content) }.getOrNull()?.takeIf { it.talos }
+                } else {
+                    null
+                }
+                SourceFileState(UiState.Loaded(SourceFileView(src, file)), editBlock = block, quick = quick, talosPatch = patch)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: GitHostMissing) {
