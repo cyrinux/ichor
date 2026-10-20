@@ -95,6 +95,8 @@ type fakeTalos struct {
 	// versionHold holds a node's Version answer until the channel is closed (or the call
 	// gives up): a slow node.
 	versionHold map[string]chan struct{}
+	// events answers MachineService.Events for the nodes it targets (nil: Unimplemented).
+	events func(nodes []string, req *machineapi.EventsRequest, stream grpc.ServerStreamingServer[machineapi.Event]) error
 }
 
 type fakeConfigApply struct {
@@ -809,6 +811,46 @@ func (m fakeTalosMachine) Read(req *machineapi.ReadRequest, stream grpc.ServerSt
 	}
 
 	return stream.Send(&common.Data{Bytes: []byte(content)})
+}
+
+// Copy sends the node's files entry as is: a test stores there the tar.gz Talos would send.
+func (m fakeTalosMachine) Copy(req *machineapi.CopyRequest, stream grpc.ServerStreamingServer[common.Data]) error {
+	node, err := m.f.enter(stream.Context(), "Copy")
+	if err != nil {
+		return err
+	}
+
+	m.f.mu.Lock()
+	content, ok := m.f.files[node][req.GetRootPath()]
+	m.f.mu.Unlock()
+
+	if !ok {
+		return status.Errorf(codes.Unknown, "lstat %s: no such file or directory", req.GetRootPath())
+	}
+
+	return stream.Send(&common.Data{Bytes: []byte(content)})
+}
+
+// Events hands the stream to the events script with the nodes it targets ("nodes"
+// metadata, as client.WithNodes sends, else "node").
+func (m fakeTalosMachine) Events(req *machineapi.EventsRequest, stream grpc.ServerStreamingServer[machineapi.Event]) error {
+	md, _ := metadata.FromIncomingContext(stream.Context())
+
+	nodes := md.Get("nodes")
+	if len(nodes) == 0 {
+		nodes = md.Get("node")
+	}
+
+	m.f.mu.Lock()
+	m.f.calls = append(m.f.calls, "Events "+strings.Join(nodes, ","))
+	script := m.f.events
+	m.f.mu.Unlock()
+
+	if script == nil {
+		return status.Error(codes.Unimplemented, "unknown method Events for service machine.MachineService")
+	}
+
+	return script(nodes, req, stream)
 }
 
 func (m fakeTalosMachine) ApplyConfiguration(ctx context.Context, req *machineapi.ApplyConfigurationRequest) (*machineapi.ApplyConfigurationResponse, error) {

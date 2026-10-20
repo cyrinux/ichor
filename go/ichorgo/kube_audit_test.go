@@ -7,10 +7,15 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"io"
+	"maps"
+	"path"
 	"slices"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/siderolabs/talos/pkg/machinery/config/machine"
 )
 
 // auditStart is a whole minute, so ten minutes of events fill exactly a ten-minute window.
@@ -512,5 +517,145 @@ func TestAuditSkipsOverlongLines(t *testing.T) {
 	events, err := scanAuditLines(strings.NewReader(text), newAuditWindow(5))
 	if err != nil || events != len(lines) {
 		t.Fatalf("%d events, %v", events, err)
+	}
+}
+
+// auditLogPart is a request every 30 s over [from, to) as JSON lines, and their count.
+func auditLogPart(t *testing.T, from, to time.Duration) (string, int) {
+	t.Helper()
+
+	var (
+		b     strings.Builder
+		count int
+	)
+
+	for at := from; at < to; at += 30 * time.Second {
+		l := auditLine{at: at, user: "system:serviceaccount:demo:app", agent: "app", verb: "get", resource: "configmaps", namespace: "demo", obj: "settings", code: 200}
+		for _, line := range l.lines(t) {
+			b.WriteString(line + "\n")
+			count++
+		}
+	}
+
+	return b.String(), count
+}
+
+// auditTree is a node's audit directory: logs (name -> text) are served by Copy as Talos
+// sends them, a tar.gz; raw entries are served as they are.
+func auditTree(t *testing.T, logs, raw map[string]string) map[string]string {
+	t.Helper()
+
+	tree := map[string]string{}
+	for name, text := range logs {
+		tree[path.Join(path.Dir(auditLogPath), name)] = string(tarGz(t, name, text))
+	}
+
+	for name, content := range raw {
+		tree[path.Join(path.Dir(auditLogPath), name)] = content
+	}
+
+	return tree
+}
+
+func TestKubeAuditAnalysisReadsBackupsThroughTalos(t *testing.T) {
+	const (
+		nodeA = "10.5.0.2" // current log too short: both backups read
+		nodeB = "10.5.0.3" // current log covers the window: its broken backup is not read
+		nodeC = "10.5.0.4" // current log too short, broken backup: what was read is kept
+		nodeD = "10.5.0.5" // no current log: the node fails
+	)
+
+	f := newFakeTalos()
+	for _, n := range []string{nodeA, nodeB, nodeC, nodeD} {
+		f.addNode(t, n, "v1.11.0", machine.TypeControlPlane)
+	}
+
+	current, n1 := auditLogPart(t, 8*time.Minute, 10*time.Minute)
+	newer, n2 := auditLogPart(t, 4*time.Minute, 8*time.Minute)
+	older, n3 := auditLogPart(t, 0, 4*time.Minute)
+
+	// The API server was writing its last line when the file was copied.
+	current += `{"kind":"Event","apiVersion":"audit.k8s.io/v1","stage":"Respon`
+
+	whole, nB := auditLogPart(t, 0, 18*time.Minute)
+	short, nC := auditLogPart(t, 2*time.Minute, 10*time.Minute)
+
+	const backup = "kube-apiserver-2026-10-20T10-00-00.000.log"
+
+	f.files = map[string]map[string]string{
+		nodeA: auditTree(t, map[string]string{
+			"kube-apiserver.log": current,
+			backup:               newer,
+			"kube-apiserver-2026-10-20T09-00-00.000.log": older,
+		}, map[string]string{"kube-apiserver-2026-10-20T08-00-00.000.log.gz": "compressed, not read"}),
+		nodeB: auditTree(t, map[string]string{"kube-apiserver.log": whole}, map[string]string{backup: "not a tar.gz"}),
+		nodeC: auditTree(t, map[string]string{"kube-apiserver.log": short}, map[string]string{backup: "not a tar.gz"}),
+		nodeD: auditTree(t, map[string]string{backup: older}, nil),
+	}
+
+	out, err := KubeAuditAnalysis(f.start(t, nodeA, nodeB, nodeC, nodeD), "fake", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var report auditReport
+	if err := json.Unmarshal([]byte(out), &report); err != nil {
+		t.Fatal(err)
+	}
+
+	reads := map[string]auditNodeRead{}
+	for _, r := range report.Nodes {
+		reads[r.Node] = r
+	}
+
+	for node, want := range map[string]int{nodeA: n1 + n2 + n3, nodeB: nB, nodeC: nC} {
+		if r := reads[node]; r.Events != want || r.Error != "" || r.Bytes == 0 || r.Last == 0 {
+			t.Errorf("%s read = %+v, want %d events", node, r, want)
+		}
+	}
+
+	if r := reads[nodeD]; !strings.Contains(r.Error, "no such file") || r.Events != 0 {
+		t.Errorf("%s read = %+v, want an error", nodeD, r)
+	}
+
+	copies := map[string]int{}
+	for _, c := range f.called("Copy") {
+		copies[strings.TrimPrefix(c, "Copy ")]++
+	}
+
+	if want := map[string]int{nodeA: 3, nodeB: 1, nodeC: 2, nodeD: 1}; !maps.Equal(copies, want) {
+		t.Errorf("copies = %v, want %v", copies, want)
+	}
+
+	if report.Requests == 0 || len(report.Actors) != 1 || report.Actors[0].Actor.User != "system:serviceaccount:demo:app" || report.Seconds <= 0 {
+		t.Errorf("report = %+v", report)
+	}
+}
+
+func TestKubeAuditAnalysisFailures(t *testing.T) {
+	f := newFakeTalos()
+	f.addNode(t, "10.5.0.2", "v1.11.0", machine.TypeControlPlane)
+	f.addNode(t, "10.5.0.3", "v1.11.0", machine.TypeWorker)
+
+	// The only control plane has no audit log, and its directory cannot be listed.
+	f.files = map[string]map[string]string{"10.5.0.2": {"/etc/hosts": ""}}
+
+	if _, err := KubeAuditAnalysis(f.start(t, "10.5.0.2", "10.5.0.3"), "fake", 500); err == nil || !strings.Contains(err.Error(), "no such file") {
+		t.Errorf("no log: %v", err)
+	}
+
+	workers := newFakeTalos()
+	workers.addNode(t, "10.5.0.3", "v1.11.0", machine.TypeWorker)
+
+	if _, err := KubeAuditAnalysis(workers.start(t, "10.5.0.3"), "fake", 5); err == nil || err.Error() != errNoControlPlane.Error() {
+		t.Errorf("no control plane: %v", err)
+	}
+}
+
+func TestCountingReader(t *testing.T) {
+	r := &countingReader{r: strings.NewReader("twelve bytes")}
+
+	if _, err := io.Copy(io.Discard, r); err != nil || r.n != 12 {
+		t.Fatalf("counted %d, %v", r.n, err)
 	}
 }
