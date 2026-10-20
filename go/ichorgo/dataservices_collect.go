@@ -29,6 +29,10 @@ const (
 type dataServicesState struct {
 	dataServices
 
+	// Plugins are the findings of the plugins the cluster runs (the systems that moved to a
+	// built-in plugin among them), nil when it runs none.
+	Plugins *pluginFindingsReport `json:"plugins,omitempty"`
+
 	// Note says why nothing could be read ("" when it was).
 	Note string `json:"note,omitempty"`
 }
@@ -41,24 +45,38 @@ func collectDataServices(ctx context.Context, target kubeTarget, roles []string)
 	}
 
 	if isDemoContext(target.config, target.context) {
-		return &dataServicesState{dataServices: demoDataServices(time.Now())}
+		return &dataServicesState{dataServices: demoDataServices(time.Now()), Plugins: activePluginFindings(demoPluginFindings(""))}
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, dataServicesCollectTimeout)
 	defer cancel()
 
+	// The plugins' findings are read alongside, within their own shorter budget.
+	var plugins *pluginFindingsReport
+
 	ds, err := withKubeContext(ctx, target, func(ctx context.Context, k *kubeClient) (dataServices, error) {
-		return readDataServices(ctx, k, k.exec, parseHints(""), time.Now())
+		done := make(chan struct{})
+
+		go func() {
+			defer close(done)
+
+			plugins = collectPluginFindings(ctx, k)
+		}()
+
+		ds, err := readDataServices(ctx, k, k.exec, parseHints(""), time.Now())
+		<-done
+
+		return ds, err
 	})
 	if err != nil {
 		return &dataServicesState{Note: kubeError(err).Error()}
 	}
 
-	if ds == (dataServices{}) {
+	if ds == (dataServices{}) && plugins == nil {
 		return nil
 	}
 
-	return &dataServicesState{dataServices: ds}
+	return &dataServicesState{dataServices: ds, Plugins: plugins}
 }
 
 // renderDataServices writes the DATA SERVICES section of the diagnosis: a count per service,
@@ -77,6 +95,10 @@ func renderDataServices(b *strings.Builder, s *dataServicesState) {
 	}
 
 	for _, sec := range dataServiceSections(s.dataServices) {
+		renderDataServiceSection(b, sec)
+	}
+
+	for _, sec := range pluginReportSections(s.Plugins) {
 		renderDataServiceSection(b, sec)
 	}
 

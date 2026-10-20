@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -128,6 +129,78 @@ func TestRenderDataServicesDemo(t *testing.T) {
 
 	if out := b.String(); !strings.Contains(out, "Longhorn: ") || !strings.Contains(out, "[critical]") || len(out) > 16<<10 {
 		t.Errorf("demo section:\n%s", out)
+	}
+}
+
+// The systems that moved to a built-in plugin stay in the report: one section per plugin,
+// its findings worst first, an info finding counted but not listed.
+func TestDataServicesReportThePluginsFindings(t *testing.T) {
+	cfg, err := DemoConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s := collectDataServices(context.Background(), kubeTarget{cfg, "", ""}, []string{adminRole})
+	if s == nil || s.Plugins == nil || len(s.Plugins.Findings) == 0 {
+		t.Fatalf("demo plugins %+v", s)
+	}
+
+	var b strings.Builder
+	renderDataServices(&b, s)
+	out := b.String()
+
+	for _, want := range []string{
+		"  Rook Ceph (plugin): ", "    demo-lab/archive [critical]: Ceph reports errors\n",
+		"  kube-green (plugin): ", "    demo-lab/weekend [warning]: no wake-up time\n",
+		"  External Secrets (plugin): ", "  Sealed Secrets (plugin): ", "    demo-shop/legacy-cert [critical]: failed to unseal",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("report lacks %q:\n%s", want, out)
+		}
+	}
+
+	// The unmanaged SealedSecret is an info finding: counted, not listed.
+	if strings.Contains(out, "shared-config") {
+		t.Errorf("an info finding is listed:\n%s", out)
+	}
+}
+
+func TestPluginReportSections(t *testing.T) {
+	report := &pluginFindingsReport{
+		Plugins: 2,
+		Findings: []pluginFindingItem{
+			{Severity: sevCritical, pluginFinding: pluginFinding{Plugin: "a", PluginName: "Alpha", Title: "shop/one", Detail: "down"}},
+			{Severity: "info", pluginFinding: pluginFinding{Plugin: "a", PluginName: "Alpha", Title: "shop/two"}},
+		},
+		Truncated: 3,
+		Errors:    []pluginFindingsError{{Plugin: "b", PluginName: "Beta", Resource: "widgets.example.com", Message: "forbidden"}},
+	}
+
+	var b strings.Builder
+	for _, sec := range pluginReportSections(report) {
+		renderDataServiceSection(&b, sec)
+	}
+
+	want := "  Alpha (plugin): 2 findings, 1 critical\n    shop/one [critical]: down\n" +
+		"  Beta (plugin) could not be read: widgets.example.com: forbidden\n"
+	if got := b.String(); !strings.HasPrefix(got, "  Alpha (plugin): 2 findings, 1 critical") || !strings.Contains(got, "shop/one [critical]: down") ||
+		!strings.Contains(got, "Beta (plugin) could not be read: widgets.example.com: forbidden") || !strings.Contains(got, "3 more findings left out") {
+		t.Errorf("sections:\n%s\nwant like:\n%s", got, want)
+	}
+
+	if pluginReportSections(nil) != nil || activePluginFindings(pluginFindingsReport{}) != nil {
+		t.Error("no plugin, no section")
+	}
+}
+
+// A cluster whose only system is a plugin still gets the section, read live.
+func TestCollectDataServicesReadsThePlugins(t *testing.T) {
+	kubeGreenBuiltin(t, kubeGreenParityClocks[0])
+	kubeGreenParityAPI(t, http.StatusForbidden)
+
+	s := collectDataServices(context.Background(), kubeTarget{"cfg", "ctx", ""}, []string{adminRole})
+	if s == nil || s.Note != "" || s.Plugins == nil || s.Plugins.Plugins != 1 || len(s.Plugins.Findings) == 0 {
+		t.Fatalf("got %+v", s)
 	}
 }
 
