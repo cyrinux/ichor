@@ -3,8 +3,8 @@ import IchorCore
 
 /// The PersistentVolumeClaims of the Kubernetes screens' namespace scope, problems first: lost
 /// and nearly full ones, then pending, terminating and filling ones, with their volume, class,
-/// pods and fill (kubelet stats). A claim opens its summary; one of Longhorn, Rook Ceph or
-/// CloudNativePG links to that data service.
+/// pods and fill (kubelet stats). A claim opens its summary; one of Longhorn or CloudNativePG
+/// links to that data service, one of Rook Ceph to its plugin.
 struct KubeStorageView: View {
     @Environment(AppModel.self) private var model
     @State private var scope = KubeBrowserScope()
@@ -90,6 +90,11 @@ struct KubeStorageView: View {
                 if let kind = claim.managedKind {
                     NavigationLink(value: Route.dataServices(hints: "", downNodes: [], kind: kind)) {
                         Label(String(localized: "Open in \(kind.title)"), systemImage: "externaldrive.connected.to.line.below")
+                            .font(.footnote)
+                    }
+                } else if let plugin = claim.managedPlugin {
+                    NavigationLink(value: Route.plugin(id: plugin)) {
+                        Label(String(localized: "Open in \(claim.managedName)"), systemImage: "externaldrive.connected.to.line.below")
                             .font(.footnote)
                     }
                 }

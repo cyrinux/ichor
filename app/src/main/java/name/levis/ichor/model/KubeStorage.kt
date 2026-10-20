@@ -37,6 +37,8 @@ data class StorageClaim(
     val terminating: Boolean = false,
     /** The data service the volume belongs to, by its catalog id; "" for none. */
     val managedBy: String = "",
+    /** The plugin's name when [managedBy] is a plugin's id (Rook Ceph); "" for a native data service. */
+    val managedName: String = "",
     @Serializable(with = StorageLevelSerializer::class)
     val level: StorageLevel = StorageLevel.OK,
 ) {
@@ -46,6 +48,9 @@ data class StorageClaim(
 
     /** The data service screen that manages this volume, null for none this version knows. */
     val managedKind: DataServiceKind? get() = DataServiceKind.entries.firstOrNull { it.catalogId == managedBy }
+
+    /** The plugin that shows this volume's system, null when a data service screen does (or none). */
+    val managedPlugin: String? get() = managedBy.takeIf { managedKind == null && managedName.isNotEmpty() }
 }
 
 /** How a claim is doing: ok, warning (pending, terminating, filling), critical (lost, nearly full). */

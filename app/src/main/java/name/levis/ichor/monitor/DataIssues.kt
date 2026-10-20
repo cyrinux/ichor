@@ -1,6 +1,5 @@
 package name.levis.ichor.monitor
 
-import name.levis.ichor.model.CephReason
 import name.levis.ichor.model.CertReason
 import name.levis.ichor.model.CnpgReason
 import name.levis.ichor.model.DataServices
@@ -15,9 +14,6 @@ import name.levis.ichor.model.VeleroReason
 /** Severities of a data-service issue in a snapshot. */
 const val DATA_CRITICAL = "critical"
 const val DATA_WARNING = "warning"
-
-/** Ceph warnings worth a notification; a mon down or a reconcile in progress shows in Ceph's health anyway. */
-private val CEPH_ALERT_REASONS = setOf(CephReason.HEALTH_WARN, CephReason.NEAR_FULL, CephReason.OSDS)
 
 /** Postgres reasons worth waking someone for; a switchover or a missing replica is usually planned. */
 private val CNPG_ALERT_REASONS = setOf(CnpgReason.ARCHIVING, CnpgReason.BACKUP_FAILED, CnpgReason.BACKUP_STALE)
@@ -38,8 +34,7 @@ private val VELERO_ALERT_REASONS = setOf(VeleroReason.STALE, VeleroReason.PARTIA
  * ready a week before it expires) is critical; one expiring, overdue or not ready, or an issuer not
  * ready, is a warning. A Velero schedule whose last backup failed or whose storage location is
  * unavailable is critical, a stale, partially failed or invalid one a warning. A SealedSecret that failed to
- * unseal, its controller down or no active sealing key is critical. A Ceph cluster alerts
- * when critical, or on HEALTH_WARN, near-full capacity or an OSD down; a pool only when failed.
+ * unseal, its controller down or no active sealing key is critical.
  * The garage-operator's layer alerts like the Garage instances: a failed or degraded cluster, a
  * failed bucket and a disconnected or roleless node declaration.
  */
@@ -76,9 +71,6 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
             out["sealedsecrets|${sealed.controller?.namespace?.let { "$it/" }.orEmpty()}sealed-secrets-key"] = DATA_CRITICAL
         }
     }
-    out.flag("ceph", services.ceph?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in CEPH_ALERT_REASONS } })
-    // A pool alerts only when Rook reports it failed.
-    out.flag("ceph", services.ceph?.pools, { "${it.kind}/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
     // A recommendation CAST AI cannot apply is critical; a read-only or HPA one was chosen: shown, not alerted.
     out.flag("castai", services.castai?.recommendations, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
     if (services.snapshots?.error.isNullOrEmpty()) out.flag("snapshots", services.snapshots?.claims, { "${it.namespace}/${it.name}" }, { false }, { it.watched && it.stale })

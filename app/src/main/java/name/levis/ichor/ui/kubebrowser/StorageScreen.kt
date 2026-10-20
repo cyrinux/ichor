@@ -91,8 +91,8 @@ class StorageViewModel(private val browser: KubeBrowserRepository) : LoadingView
 /**
  * The PersistentVolumeClaims of the namespace the Kubernetes screens list, problems first:
  * lost and nearly full ones, then pending, terminating and filling ones. A tap opens the
- * claim's summary ([onClaim]); a claim of Longhorn, Rook Ceph or CloudNativePG links to that
- * data service ([onDataService]).
+ * claim's summary ([onClaim]); a claim of Longhorn or CloudNativePG links to that data service
+ * ([onDataService]), one of Rook Ceph to its plugin ([onPlugin]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,6 +100,7 @@ fun StorageScreen(
     onBack: () -> Unit,
     onClaim: (KubeObjectRef) -> Unit,
     onDataService: (DataServiceKind) -> Unit,
+    onPlugin: (String) -> Unit,
     vm: StorageViewModel = viewModel(factory = factory { StorageViewModel(app.kubeBrowser) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
@@ -176,6 +177,7 @@ fun StorageScreen(
                                     c,
                                     onClick = { onClaim(KubeObjectRef.pvc(c.namespace, c.name)) },
                                     onDataService = onDataService,
+                                    onPlugin = onPlugin,
                                     canSnapshot = !busy && config?.activeSummary?.isDemo == false && snapshots?.canCreate(c) == true,
                                     onSnapshot = { confirming = c },
                                 )
@@ -198,7 +200,14 @@ internal fun StorageLevel.color(): Color = when (this) {
 }
 
 @Composable
-private fun ClaimRow(c: StorageClaim, onClick: () -> Unit, onDataService: (DataServiceKind) -> Unit, canSnapshot: Boolean, onSnapshot: () -> Unit) {
+private fun ClaimRow(
+    c: StorageClaim,
+    onClick: () -> Unit,
+    onDataService: (DataServiceKind) -> Unit,
+    onPlugin: (String) -> Unit,
+    canSnapshot: Boolean,
+    onSnapshot: () -> Unit,
+) {
     val denial = name.levis.ichor.ui.components.rememberKubeDenial(name.levis.ichor.model.KubeAction.CREATE_VOLUME_SNAPSHOT, c.namespace)
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(
@@ -244,6 +253,9 @@ private fun ClaimRow(c: StorageClaim, onClick: () -> Unit, onDataService: (DataS
         }
         c.managedKind?.let { kind ->
             AssistChip(onClick = { onDataService(kind) }, label = { Text(stringResource(R.string.storage_kube_open, kind.title)) })
+        }
+        c.managedPlugin?.let { id ->
+            AssistChip(onClick = { onPlugin(id) }, label = { Text(stringResource(R.string.storage_kube_open, c.managedName)) })
         }
         if (canSnapshot) {
             AssistChip(onClick = onSnapshot, enabled = denial == null, label = { Text(stringResource(R.string.snapshot_create)) })

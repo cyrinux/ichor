@@ -315,7 +315,6 @@ private fun NativeTab(kind: DataServiceKind, services: DataServices, actions: Sy
         DataServiceKind.VELERO -> VeleroTab(services.velero!!, actions.velero)
         DataServiceKind.EXTERNAL_DNS -> ExternalDnsTab(services.externalDns!!, onObject, actions.externalDns)
         DataServiceKind.SEALED_SECRETS -> SealedSecretsTab(services.sealedSecrets!!, onObject)
-        DataServiceKind.CEPH -> CephTab(services.ceph!!)
         DataServiceKind.SNAPSHOTS -> SnapshotsTab(services.snapshots!!)
         DataServiceKind.BACKUP_JOBS -> BackupJobsTab(services.backupJobs!!)
         DataServiceKind.CASTAI -> CastAITab(services.castai!!)

@@ -104,7 +104,6 @@ internal val DataServiceKind.fallbackIcon: ImageVector
         DataServiceKind.VELERO -> Icons.Outlined.SettingsBackupRestore
         DataServiceKind.EXTERNAL_DNS -> Icons.Outlined.Public
         DataServiceKind.SEALED_SECRETS -> Icons.Outlined.Lock
-        DataServiceKind.CEPH -> Icons.Outlined.Storage
         DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> Icons.Outlined.SettingsBackupRestore
         DataServiceKind.CASTAI -> Icons.Outlined.Tune
     }
@@ -153,7 +152,6 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
         DataServiceKind.VELERO -> pluralStringResource(R.plurals.velero_schedules, summary.total, summary.total)
         DataServiceKind.EXTERNAL_DNS -> pluralStringResource(R.plurals.externaldns_records, summary.total, summary.total)
         DataServiceKind.SEALED_SECRETS -> pluralStringResource(R.plurals.sealedsecrets_count, summary.total, summary.total)
-        DataServiceKind.CEPH -> pluralStringResource(R.plurals.ceph_clusters, summary.total, summary.total)
         DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> stringResource(R.string.backup_items, summary.total)
         DataServiceKind.CASTAI -> {
             val saving = services.castai?.takeIf { it.compared > 0 && it.cpuDeltaMilli != 0L }

@@ -198,7 +198,6 @@ extension DataServiceKind {
         case "cnpg": self = .cnpg
         case "percona": self = .percona
         case "certmanager": self = .certManager
-        case "ceph": self = .ceph
         default: self.init(rawValue: system)
         }
     }

@@ -72,11 +72,13 @@ final class ShareTargetTests: XCTestCase {
     }
 
     func testDataAlertSystemsMapToCatalogIDs() {
-        let systems = ["longhorn", "garage", "cnpg", "dragonfly", "mariadb", "percona", "certmanager", "velero", "ceph", "castai"]
+        let systems = ["longhorn", "garage", "cnpg", "dragonfly", "mariadb", "percona", "certmanager", "velero", "castai"]
         XCTAssertEqual(systems.map { DataServiceKind(alertKey: "\($0)|x")?.catalogID },
                        ["longhorn", "garage", "cloudnative-pg", "dragonfly", "mariadb", "percona-xtradb", "cert-manager",
-                        "velero", "rook", "castai"])
+                        "velero", "castai"])
         XCTAssertNil(DataServiceKind(alertKey: "other|x"))
+        // An older snapshot's Ceph alert names a system that is a plugin now.
+        XCTAssertNil(DataServiceKind(alertKey: "ceph|rook-ceph/rook-ceph"))
     }
 
     func testAlertsOpenWhatTheyAreAbout() {
