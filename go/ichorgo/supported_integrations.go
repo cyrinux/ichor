@@ -29,8 +29,7 @@ type integrationSpec struct {
 	// ServiceKind also finds a project without API by its Services: a promMatch kind.
 	ServiceKind string
 	// PodsFallback also finds a project whose API group is optional by its running pods:
-	// ExternalDNS (most installs publish only Ingress and Service hosts, no CRD) and Garage
-	// (the garage-operator's CRDs when it runs, else its Helm-chart pods).
+	// Garage (the garage-operator's CRDs when it runs, else its Helm-chart pods).
 	PodsFallback bool
 	// fromPlugin is the plugin a row comes from (pluginSpecs): its detect entries decide, the
 	// fields above but Groups are unset.
@@ -75,8 +74,6 @@ var nativeIntegrationSpecs = []integrationSpec{
 	{ID: "gateway-api", Name: "Gateway API", Website: "https://gateway-api.sigs.k8s.io", Groups: []string{groupGatewayAPI}},
 	{ID: "kgateway", Name: "kgateway", Website: "https://kgateway.dev", Groups: []string{groupKgateway}},
 	{ID: "traefik", Name: "Traefik", Website: "https://traefik.io", Groups: []string{groupTraefik}},
-	// ExternalDNS's DNSEndpoint CRD is optional: its pods count when the group is not served.
-	{ID: "external-dns", Name: "ExternalDNS", Website: "https://kubernetes-sigs.github.io/external-dns/latest/", Groups: []string{groupExternalDNS}, PodsFallback: true},
 	{ID: "prometheus-operator", Name: "Prometheus Operator", Website: "https://prometheus-operator.dev", Groups: []string{groupMonitoring}},
 	{ID: "prometheus", Name: "Prometheus", Website: "https://prometheus.io", ServiceKind: "prometheus"},
 	{ID: "thanos", Name: "Thanos", Website: "https://thanos.io", ServiceKind: "thanos"},
@@ -382,7 +379,6 @@ func demoSupportedIntegrations() supportedIntegrations {
 		"dragonfly":           ds.Dragonfly != nil,
 		"longhorn":            ds.Longhorn != nil,
 		"velero":              ds.Velero != nil,
-		"external-dns":        ds.ExternalDNS != nil,
 		"cert-manager":        ds.CertManager != nil,
 		"castai":              ds.CastAI != nil,
 		"cilium":              demoCiliumStatus().Installed,

@@ -799,6 +799,13 @@
           "description": "Run is native:<id>, the Go function that runs the tool.",
           "pattern": "^native:[A-Za-z0-9_-]+$",
           "type": "string"
+        },
+        "texts": {
+          "description": "Texts are the English words the Go function shows in its result, translated through i18n like the labels.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [

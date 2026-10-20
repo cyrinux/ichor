@@ -165,8 +165,11 @@ func (p *pluginProbe) fetch(ctx context.Context, k *kubeClient, c *plugin.Compil
 			mu.Lock()
 			defer mu.Unlock()
 
+			// A Go reader may return what it read along with the error of what it could not
+			// (objects and an error): part was read, so the resource stays readable (readable()
+			// holds) and the error is still an entry of the tree's errors.
 			in.Objects[key] = objs
-			if err != nil {
+			if err != nil && objs == nil {
 				in.Unread[key] = true
 			}
 
@@ -174,8 +177,10 @@ func (p *pluginProbe) fetch(ctx context.Context, k *kubeClient, c *plugin.Compil
 			case err != nil && decl.Optional && (isForbidden(err) || isNotFound(err) || errors.Is(err, errPluginNotServed)):
 				// An optional resource the account may not read, or the cluster does not serve: nothing to say.
 			case err != nil:
-				in.Errors = append(in.Errors, plugin.TreeError{Resource: resourceLabel(decl), Message: kubeError(err).Error()})
-			case note != "":
+				in.Errors = append(in.Errors, plugin.TreeError{Resource: resourceLabel(decl), Message: pluginReadError(err)})
+			}
+
+			if note != "" {
 				in.Partial = true
 				in.Errors = append(in.Errors, plugin.TreeError{Resource: resourceLabel(decl), Message: note})
 			}
@@ -289,10 +294,11 @@ func listPluginResource(ctx context.Context, k *kubeClient, p *pluginProbe, decl
 }
 
 // listNativeResource is listPluginResource for a resource its Go reader selects (source:
-// native:<id>, see plugin_native.go): at most limit of the objects it keeps.
+// native:<id>, see plugin_native.go): at most limit of the objects it keeps, and its error
+// when it returned objects too (a partial read).
 func listNativeResource(ctx context.Context, k *kubeClient, p *pluginProbe, decl plugin.Resource, namespace string, limit int, allowReveal bool) ([]map[string]any, string, error) {
 	items, err := readNativeSource(ctx, k, p, decl, namespace)
-	if err != nil {
+	if err != nil && items == nil {
 		return nil, "", err
 	}
 
@@ -305,7 +311,17 @@ func listNativeResource(ctx context.Context, k *kubeClient, p *pluginProbe, decl
 		tidyPluginObject(obj, decl, allowReveal)
 	}
 
-	return items, note, nil
+	return items, note, err
+}
+
+// pluginReadError is the message of a resource's read error; the errors a Go reader joins
+// (errors.Join: several lists refused) each say theirs.
+func pluginReadError(err error) string {
+	if joined, ok := err.(interface{ Unwrap() []error }); ok {
+		return sectionError(joined.Unwrap()...)
+	}
+
+	return kubeError(err).Error()
 }
 
 // tidyPluginObject drops managedFields and masks a Secret's values. They show only when the

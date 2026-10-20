@@ -13,6 +13,8 @@ import (
 // Each is given the namespace to read ("" for all, always "" for a cluster-scoped resource)
 // and the probe (p.groups, the served API versions), reads what it needs (every page) and
 // returns the objects it selects or builds; the plugin's list.limit still caps what is kept.
+// A reader that could read only part (one of its lists refused) returns what it built (not
+// nil, possibly empty) with the error: the objects show and the error is the resource's.
 // The resource's group, version and resource need not be served: they only name it.
 type pluginNativeSource func(ctx context.Context, k *kubeClient, p *pluginProbe, decl plugin.Resource, scope string) ([]map[string]any, error)
 
@@ -21,6 +23,10 @@ var pluginNativeSources = map[string]pluginNativeSource{
 	// install renamed or relabelled by hand is still found, and a cluster of many Deployments
 	// is read whole (a list cut at its limit would miss the controller and call it down).
 	"sealed-secrets-controller": catalogDeployments("sealed-secrets"),
+	// ExternalDNS's controllers with their flags parsed, and the hostnames they are asked to
+	// publish, one per name and target family (plugin_native_externaldns.go).
+	"external-dns-controllers": readExternalDNSControllers,
+	"external-dns-records":     readExternalDNSRecords,
 }
 
 // readNativeSource runs the reader source names (native:<id>).
@@ -68,7 +74,11 @@ func catalogDeployments(app string) pluginNativeSource {
 			return nil
 		})
 
-		return out, err
+		if err != nil {
+			return nil, err
+		}
+
+		return out, nil
 	}
 }
 

@@ -103,6 +103,44 @@ func TestPluginNativeSourceOfUnservedGroup(t *testing.T) {
 	}
 }
 
+// A Go reader that read only part returns its objects with the error: the rows show, the
+// error is the resource's entry, and the resource stays readable (part was read).
+func TestPluginNativeSourcePartialRead(t *testing.T) {
+	usePlugins(t, "native-ref.yaml")
+
+	saved := pluginNativeSources
+	pluginNativeSources = map[string]pluginNativeSource{
+		"demo-records": func(context.Context, *kubeClient, *pluginProbe, plugin.Resource, string) ([]map[string]any, error) {
+			return []map[string]any{record("shop", "demo-shop", "Service", "services")}, errors.New("ingresses refused")
+		},
+	}
+
+	t.Cleanup(func() { pluginNativeSources = saved })
+	useFakeKube(t, newFakeKubeAPI(t, map[string]string{"GET /apis": recordsGroups}))
+
+	tree := pluginData(t, "cfg", "ctx", "", "demo-records", "", "")
+
+	if len(tree.Errors) != 1 || tree.Errors[0].Resource != "demorecords.ichor.dev" || !strings.Contains(tree.Errors[0].Message, "ingresses refused") {
+		t.Fatalf("errors %+v", tree.Errors)
+	}
+
+	if rows := tree.Cards[0].Rows; len(rows) != 1 || rows[0].Ref == nil || rows[0].Ref.Name != "shop-src" {
+		t.Fatalf("rows %+v", rows)
+	}
+
+	// Without objects, the error alone: no rows.
+	pluginNativeSources = map[string]pluginNativeSource{
+		"demo-records": func(context.Context, *kubeClient, *pluginProbe, plugin.Resource, string) ([]map[string]any, error) {
+			return nil, errors.New("records refused")
+		},
+	}
+
+	tree = pluginData(t, "cfg", "ctx", "", "demo-records", "", "")
+	if len(tree.Errors) != 1 || len(tree.Cards[0].Rows) != 0 {
+		t.Fatalf("errors %+v, rows %+v", tree.Errors, tree.Cards[0].Rows)
+	}
+}
+
 // The catalog says a native resource is read by Go, not by a list call.
 func TestPluginCatalogNativeSource(t *testing.T) {
 	usePlugins(t, "native-ref.yaml")

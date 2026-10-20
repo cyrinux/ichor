@@ -304,6 +304,9 @@ type Tool struct {
 	Hint string `yaml:"hint,omitempty" json:"hint,omitempty"`
 	// Run is native:<id>, the Go function that runs the tool.
 	Run string `yaml:"run" json:"run" schema:"required,pattern=^native:[A-Za-z0-9_-]+$"`
+	// Texts are the English words the Go function shows in its result, translated through
+	// i18n like the labels.
+	Texts []string `yaml:"texts,omitempty" json:"texts,omitempty"`
 }
 
 // Tones are the colors the apps know; Health order for worst(): ok < idle < info < unknown < warning < critical.
