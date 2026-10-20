@@ -65,13 +65,15 @@ final class DnsCheckTests: XCTestCase {
 
     func testTheRequestCarriesTheFieldNamesGoReads() throws {
         let encoded = try TalosJSON.encode(DnsCheckRequest(dnsName: "app.example.com", recordType: "A",
-                                                           targets: ["203.0.113.10"], ownerId: "homelab", txtPrefix: "txt."))
+                                                           targets: ["203.0.113.10"], ownerId: "homelab", txtPrefix: "txt.",
+                                                           txtSuffix: "-owner"))
         let sent = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(encoded.utf8)) as? [String: Any])
-        XCTAssertEqual(sent.keys.sorted(), ["dnsName", "ownerId", "recordType", "targets", "txtPrefix"])
+        XCTAssertEqual(sent.keys.sorted(), ["dnsName", "ownerId", "recordType", "targets", "txtPrefix", "txtSuffix"])
         XCTAssertEqual(sent["dnsName"] as? String, "app.example.com")
         XCTAssertEqual(sent["recordType"] as? String, "A")
         XCTAssertEqual(sent["ownerId"] as? String, "homelab")
         XCTAssertEqual(sent["txtPrefix"] as? String, "txt.")
+        XCTAssertEqual(sent["txtSuffix"] as? String, "-owner")
         XCTAssertTrue(encoded.contains(#""targets":["203.0.113.10"]"#))
     }
 
@@ -79,8 +81,27 @@ final class DnsCheckTests: XCTestCase {
         // An unmanaged name has no owner id or TXT prefix; the Go core skips its ownership check.
         let encoded = try TalosJSON.encode(DnsCheckRequest(dnsName: "*.example.net", recordType: "A", targets: []))
         let sent = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(encoded.utf8)) as? [String: Any])
-        XCTAssertEqual(sent.keys.sorted(), ["dnsName", "ownerId", "recordType", "targets", "txtPrefix"])
+        XCTAssertEqual(sent.keys.sorted(), ["dnsName", "ownerId", "recordType", "targets", "txtPrefix", "txtSuffix"])
         XCTAssertEqual(sent["ownerId"] as? String, "")
         XCTAssertEqual(sent["txtPrefix"] as? String, "")
+        XCTAssertEqual(sent["txtSuffix"] as? String, "")
+    }
+
+    func testTheARecordAndTheAAAARecordOfOneNameEachGetTheirOwnVerdict() throws {
+        let status = try TalosJSON.decode(ExternalDnsStatus.self, from: #"""
+        {"version":"v1alpha1","controllers":[],"records":[
+         {"dnsName":"web.example.com","recordType":"A","targets":["203.0.113.10"],"sourceKind":"Service","sourceNamespace":"demo","sourceName":"web","health":"ok","reasons":[]},
+         {"dnsName":"web.example.com","recordType":"AAAA","targets":["2001:db8::10"],"sourceKind":"Service","sourceNamespace":"demo","sourceName":"web","health":"ok","reasons":[]}],
+         "recordCount":2}
+        """#)
+        let result = try TalosJSON.decode(DnsCheckResult.self, from: #"""
+        {"results":[{"dnsName":"web.example.com","status":"match"},{"dnsName":"web.example.com","status":"missing"}],"resolver":"system"}
+        """#)
+        XCTAssertNotEqual(status.records[0].id, status.records[1].id)
+        let verdicts = result.verdicts(for: status.records)
+        XCTAssertEqual(verdicts[status.records[0].id]?.verdict, .match)
+        XCTAssertEqual(verdicts[status.records[1].id]?.verdict, .missing)
+        // Records past the checked ones have no verdict.
+        XCTAssertNil(result.verdicts(for: []).first)
     }
 }

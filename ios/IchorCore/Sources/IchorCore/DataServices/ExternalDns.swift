@@ -106,7 +106,8 @@ public struct ExternalDnsRecord: Decodable, Equatable, Identifiable, Sendable {
     public let health: ServiceHealth
     public let reasons: [ExternalDnsReason]
 
-    public var id: String { "\(dnsName)/\(sourceKind)/\(sourceNamespace)/\(sourceName)" }
+    /// One row per name, type and source: a dual-stack name has an A and an AAAA row.
+    public var id: String { "\(dnsName)/\(recordType)/\(sourceKind)/\(sourceNamespace)/\(sourceName)" }
     /// "from Ingress demo/app": where the hostname comes from.
     public var sourceLabel: String { "\(sourceKind)/\(sourceNamespace)/\(sourceName)" }
 

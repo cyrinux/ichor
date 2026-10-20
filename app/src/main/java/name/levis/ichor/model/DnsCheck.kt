@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * One hostname to check, as the Go core reads it: the record ExternalDNS is asked to publish,
- * plus the covering controller's owner id and TXT prefix for the ownership check.
+ * plus the covering controller's owner id and TXT prefix and suffix for the ownership check.
  */
 @Serializable
 data class DnsCheckRequest(
@@ -15,6 +15,7 @@ data class DnsCheckRequest(
     val targets: List<String>,
     val ownerId: String = "",
     val txtPrefix: String = "",
+    val txtSuffix: String = "",
 )
 
 /** What resolving a hostname from the phone found, as the Go core names it. */

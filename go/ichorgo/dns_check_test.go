@@ -660,3 +660,51 @@ func TestParseExternalDNSOwner(t *testing.T) {
 		}
 	}
 }
+
+// The TXT names the ownership check reads follow the registry: the lower-case type token
+// (a-, aaaa-, cname-), a prefix or suffix with %{record_type} replaced (and no type token
+// then), the suffix on the first label, and the type-less names older releases wrote.
+func TestDNSOwnerNames(t *testing.T) {
+	tests := []struct {
+		name           string
+		recordType     string
+		prefix, suffix string
+		want           []string
+	}{
+		{"plain A", "A", "", "", []string{"a-app.example.com"}},
+		{"plain AAAA", "AAAA", "", "", []string{"aaaa-app.example.com"}},
+		{"plain CNAME", "CNAME", "", "", []string{"cname-app.example.com"}},
+		{"plain prefix", "A", "_dns.", "", []string{"_dns.a-app.example.com", "_dns.app.example.com", "a-_dns.app.example.com"}},
+		{"templated prefix", "AAAA", "%{record_type}-abc-", "", []string{"aaaa-abc-app.example.com", "-abc-app.example.com"}},
+		{"templated prefix CNAME", "CNAME", "%{record_type}-", "", []string{"cname-app.example.com", "-app.example.com"}},
+		{"suffix", "A", "", "-owner", []string{"a-app-owner.example.com", "app-owner.example.com"}},
+		{"templated suffix", "CNAME", "", "-%{record_type}", []string{"app-cname.example.com", "app-.example.com"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := dnsOwnerNames(dnsCheckRequest{DNSName: "app.example.com", RecordType: tt.recordType, TxtPrefix: tt.prefix, TxtSuffix: tt.suffix})
+			if strings.Join(got, " ") != strings.Join(tt.want, " ") {
+				t.Errorf("got %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// An AAAA record's owner is read at aaaa-<name>, and the suffix travels in the request JSON.
+func TestDNSCheckOwnerAAAAWithSuffix(t *testing.T) {
+	resolver := stubDNS{
+		addresses: map[string][]string{"app.example.com": {"2001:db8::10"}},
+		txts:      map[string][]string{"aaaa-app-owner.example.com": {"heritage=external-dns,external-dns/owner=homelab"}},
+	}
+
+	var record dnsCheckRequest
+	if err := json.Unmarshal([]byte(`{"dnsName":"app.example.com","recordType":"AAAA","targets":["2001:db8::10"],"ownerId":"homelab","txtSuffix":"-owner"}`), &record); err != nil {
+		t.Fatal(err)
+	}
+
+	got := checkDNSRecord(context.Background(), resolver, record)
+	if got.Status != dnsStatusMatch || got.Owner != "homelab" || got.OwnerMatch == nil || !*got.OwnerMatch {
+		t.Errorf("got %+v", got)
+	}
+}
