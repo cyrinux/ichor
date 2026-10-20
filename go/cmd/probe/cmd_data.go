@@ -119,6 +119,24 @@ var dataCommands = []command{
 	{name: "talos-repo-compare", args: "HOSTJSON REPO REF NODE HOSTNAME PATHSJSON", run: func(e env) (string, error) {
 		return ichorgo.TalosRepoCompare(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6))
 	}},
+	{name: "sops-inspect", args: "FILE", run: func(env) (string, error) {
+		// FILE's SOPS metadata (recipients, encrypted and clear keys), never its values. Local.
+		content, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.SopsInspect(string(content))
+	}},
+	{name: "sops-rule", args: "SOPSYAML PATH", run: func(env) (string, error) {
+		// The creation rule of the .sops.yaml file SOPSYAML that covers PATH. Local.
+		rules, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.SopsRuleFor(string(rules), flag.Arg(2))
+	}},
 	{name: "gitops-check", args: "HOSTJSON REPO REF PATH FILE [FLUXSPECJSON]", run: func(env) (string, error) {
 		// The edit of PATH to FILE's content checked on the repository's snapshot. Local.
 		content, err := os.ReadFile(flag.Arg(5))

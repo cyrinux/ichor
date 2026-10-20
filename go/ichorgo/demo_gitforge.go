@@ -128,6 +128,11 @@ sops:
             -----BEGIN AGE ENCRYPTED FILE-----
             cGxhY2Vob2xkZXIgY2lwaGVydGV4dCwgbm90IGEgcmVhbCBrZXk=
             -----END AGE ENCRYPTED FILE-----
+        - recipient: age1examplebackup11111111111111111111111111111111111111111111
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            cGxhY2Vob2xkZXIgY2lwaGVydGV4dCwgbm90IGEgcmVhbCBrZXk=
+            -----END AGE ENCRYPTED FILE-----
     lastmodified: "2026-10-01T08:00:00Z"
     mac: ENC[AES256_GCM,data:bWFj,iv:aXY=,tag:dGFn,type:str]
     version: 3.10.2
