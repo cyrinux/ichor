@@ -115,7 +115,11 @@ tour** shows it again.
   the diff, and **Open pull request** commits it on a new branch and opens a pull or merge
   request (GitHub, GitLab, Gitea). The tracked branch is never pushed to: Argo CD or Flux
   applies the change once someone merges it. A file changed upstream in the meantime is
-  refused, with Reload to start from the new version.
+  refused, with Reload to start from the new version. The phone remembers each request it
+  opened (50 per cluster, only on this device): **Proposals** on the Argo CD or Flux app (and
+  at the cluster repository's root) shows whether each is open, merged or closed on the forge
+  and, once merged, whether the app runs that commit; a merged one not running yet offers
+  **Reconcile now**, which syncs or reconciles with the usual follow.
 - **Quick edits:** on a source file, **Quick edit** changes a container's image tag (with the
   running tag as a suggestion) or the replicas, through a kustomization `images:` or `replicas:`
   entry when the file has one. Only that line changes, comments and quoting included, and the

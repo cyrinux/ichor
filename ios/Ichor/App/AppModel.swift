@@ -104,6 +104,10 @@ final class AppModel {
     /// fingerprint; no token in it. Only on this device, and in backups.
     private(set) var clusterRepos: [String: ClusterRepo]
 
+    /// The pull requests opened from the phone, per cluster (context fingerprint), newest first;
+    /// no token in them. Only on this device.
+    private(set) var proposals: [String: [GitProposalRecord]]
+
     /// The clusters turned off with "Watch in the background", by context fingerprint: the
     /// background checks skip them (on by default). Only on this device.
     private(set) var monitorUnwatched: Set<String>
@@ -157,6 +161,7 @@ final class AppModel {
         skippedTalosUpdates = UserDefaults.standard.dictionary(forKey: Keys.skippedTalosUpdates) as? [String: String] ?? [:]
         vpnOnly = Set(UserDefaults.standard.stringArray(forKey: Keys.vpnOnly) ?? [])
         clusterRepos = ClusterRepoStore.decode(UserDefaults.standard.data(forKey: ClusterRepoStore.key))
+        proposals = ProposalsStore.decode(UserDefaults.standard.data(forKey: ProposalsStore.key))
         monitorUnwatched = Set(UserDefaults.standard.stringArray(forKey: BackgroundMonitor.unwatchedKey) ?? [])
         VpnMonitor.shared.onConnect = { [weak self] in self?.reloadIfHeldBack() }
     }
@@ -635,6 +640,36 @@ final class AppModel {
         storeClusterRepos(repos)
     }
 
+    /// The cluster on screen's proposals for tool's kind namespace/name ("" for the repository); the demo's samples.
+    func proposals(tool: String, kind: String, namespace: String, name: String) -> [GitProposalRecord] {
+        guard let active = activeSummary else { return [] }
+        let all = active.demo ? ProposalsStore.demo : proposals[active.fingerprint] ?? []
+        return all.filter { $0.isFor(tool: tool, kind: kind, namespace: namespace, name: name) }
+    }
+
+    /// Keeps a pull request opened from the phone for the cluster on screen (not in the demo).
+    func rememberProposal(_ record: GitProposalRecord) {
+        guard let active = activeSummary, !active.demo, !active.fingerprint.isEmpty else { return }
+        var all = proposals
+        all[active.fingerprint] = ProposalsStore.adding(record, to: all[active.fingerprint] ?? [])
+        storeProposals(all)
+    }
+
+    /// Forgets a proposal of the cluster on screen.
+    func forgetProposal(_ record: GitProposalRecord) {
+        guard let active = activeSummary else { return }
+        var all = proposals
+        all[active.fingerprint] = all[active.fingerprint]?.filter { $0.id != record.id }
+        if all[active.fingerprint]?.isEmpty == true { all[active.fingerprint] = nil }
+        storeProposals(all)
+    }
+
+    private func storeProposals(_ all: [String: [GitProposalRecord]]) {
+        guard all != proposals else { return }
+        proposals = all
+        UserDefaults.standard.set(ProposalsStore.encode(all), forKey: ProposalsStore.key)
+    }
+
     private func storeClusterRepos(_ repos: [String: ClusterRepo]) {
         guard repos != clusterRepos else { return }
         clusterRepos = repos
@@ -868,6 +903,7 @@ final class AppModel {
         storeSkippedTalosUpdates(keepClusterNames(saved: skippedTalosUpdates, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeVpnOnly(keepVpnOnly(saved: vpnOnly, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeClusterRepos(ClusterRepoStore.keep(clusterRepos, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        storeProposals(ProposalsStore.keep(proposals, fingerprints: newSummary.contexts.map(\.fingerprint)))
         // Sign-ins and Kubernetes access links go with their clusters.
         let kubeFingerprints = newKubeSummary?.contexts.map(\.fingerprint) ?? []
         storeKubeAccess(keepKubeAccess(kubeAccess, talos: newTalosSummary?.contexts.map(\.fingerprint) ?? [], kube: kubeFingerprints))

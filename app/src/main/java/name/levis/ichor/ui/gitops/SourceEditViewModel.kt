@@ -17,6 +17,7 @@ import name.levis.ichor.model.DEFAULT_PROPOSAL_BASE
 import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.GitProposal
 import name.levis.ichor.model.GitProposalDefaults
+import name.levis.ichor.model.GitProposalRecord
 import name.levis.ichor.model.GitProposalResult
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.KubeObjectRef
@@ -260,7 +261,10 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
                 )
             }
             outcome.fold(
-                onSuccess = { result -> updateEdit { it.copy(formOpen = false, review = null, result = result, original = it.draft) } },
+                onSuccess = { result ->
+                    target?.let { t -> gitOps.rememberProposal(proposalRecord(t, edit, form.title, result)) }
+                    updateEdit { it.copy(formOpen = false, review = null, result = result, original = it.draft) }
+                },
                 onFailure = { e ->
                     updateEdit { it.copy(form = it.form?.copy(sending = false, error = e.uiText(), stale = isStaleFileError(e.message))) }
                 },
@@ -337,4 +341,24 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
             _help.update { if (it?.path == help.path && it.mode == help.mode) it.copy(state = result) else it }
         }
     }
+}
+
+/** The record kept of the pull request [result] opened for [target]'s file [edit]. */
+internal fun proposalRecord(target: SourceTarget, edit: SourceEdit, title: String, result: GitProposalResult): GitProposalRecord {
+    val app = target as? SourceTarget.App
+    return GitProposalRecord(
+        tool = target.tool,
+        kind = app?.kind.orEmpty(),
+        namespace = app?.namespace.orEmpty(),
+        name = app?.name.orEmpty(),
+        repoURL = edit.source.repoURL,
+        path = edit.path,
+        title = title,
+        url = result.url,
+        number = result.number,
+        branch = result.branch,
+        commit = result.commit,
+        forge = result.forge,
+        createdAt = System.currentTimeMillis(),
+    )
 }

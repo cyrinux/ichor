@@ -88,6 +88,8 @@ struct ArgoAppView: View {
                 }
             }
             GitOpsSourceSection(sources: gitSources, app: .argo(namespace: namespace, name: name))
+            // The pull requests opened from the phone for it; a merged one not running yet syncs from here.
+            ProposalsSection(app: .argo(namespace: namespace, name: name), refresh: app.revision) { syncSheet = SyncRequest(resources: []) }
             ArgoFreezeSection(app: app, windows: windows, busy: busy || project.map { store.busyProjects.contains($0.id) } == true,
                               freeze: { freezeSheet = true },
                               extend: {

@@ -5612,4 +5612,15 @@
     <string name="talos_writeback_secret">Questa modifica tocca un segreto: i segreti non vengono mai scritti nel repository.</string>
     <string name="talos_writeback_live">Proponi i valori del nodo in Git</string>
     <string name="talos_writeback_live_desc">Scrive ciò che il nodo esegue nel suo file del repository, come pull request.</string>
+    <string name="proposals_title">Proposte</string>
+    <string name="proposals_open">Aperta</string>
+    <string name="proposals_draft">Bozza</string>
+    <string name="proposals_closed">Chiusa</string>
+    <string name="proposals_merged">Unita</string>
+    <string name="proposals_deployed">Distribuita</string>
+    <string name="proposals_unknown">Sconosciuto</string>
+    <string name="proposals_not_deployed">Unita, non ancora distribuita.</string>
+    <string name="proposals_other_revision">Unita; l\'app esegue un altro commit (uno più recente, o questo non è ancora applicato).</string>
+    <string name="proposals_reconcile">Riconcilia ora</string>
+    <string name="proposals_forget">Dimentica questa proposta</string>
 </resources>

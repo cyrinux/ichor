@@ -71,6 +71,10 @@ struct SourceBrowserView: View {
                 SourceHeader(source: source, sha: tree.sha)
                 breadcrumb
             }
+            // The cluster repository's root lists the pull requests opened from the phone on it.
+            if app.isRepository && dir.isEmpty {
+                ProposalsSection(app: .repository, refresh: tree.sha)
+            }
             Section {
                 if entries.isEmpty {
                     Text("This folder is empty.").foregroundStyle(.secondary)
