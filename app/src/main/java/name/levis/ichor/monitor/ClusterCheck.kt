@@ -11,6 +11,8 @@ import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.data.GoCall
 import name.levis.ichor.data.KubeRepository
+import name.levis.ichor.data.PluginRepository
+import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.sourceFor
 import name.levis.ichor.model.ContextSummary
@@ -37,6 +39,7 @@ private class PinnedReads(app: TalosApp, context: String) {
     val gitops = GitOpsRepository(go)
     val data = DataServicesRepository(go)
     val alertmanager = AlertmanagerRepository(go)
+    val plugins = PluginRepository(go)
 }
 
 // The Go calls block and cannot be interrupted: a check past its time is left to finish here,
@@ -84,6 +87,18 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
     // resources and runs the Garage CLI in a pod.
     val workloads = context.allows(Feature.WORKLOADS)
     val watchData = store.dataServicesWatched.value && workloads
+
+    // The CRD plugins' findings come with the data services: the same opt-in, for the same kind
+    // of integration (the plugins render custom resources, most of them a Data services tab).
+    // One call bounded by Go (10 s) reads them all, their words in the app's language, alongside
+    // the other reads so it cannot push the check past its time.
+    val watchPlugins = watchData
+    val locale = AppLocale.language(app)
+    val pluginRead = if (watchPlugins) {
+        checks.async { runCatching { reads.plugins.findings(hints = "", locale = locale) }.getOrNull() }
+    } else {
+        null
+    }
     val dataServices = if (watchData) runCatching { reads.data.dataServices(hints = "") }.getOrNull() else null
 
     // Same for Argo CD and Flux apps: each call answers installed=false quickly when absent. A
@@ -98,12 +113,20 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
         null
     }
 
-    // And for the checkup: it lists the cluster's pods and asks every kubelet. A section that
-    // could not be read keeps its known findings.
+    // The plugins' findings: a plugin that could not be read keeps its known issues, a failed
+    // call all of them. With the checkup watched, what it reports from a section of its own
+    // (External Secrets) is left to it.
     val watchCheckup = store.checkupWatched.value && workloads
+    val pluginIssues = pluginRead?.await()
+        ?.let { pluginIssuesWithGaps(it, known = knownPluginIssues(prev, name), checkupWatched = watchCheckup) }
+
+    // And for the checkup: it lists the cluster's pods and asks every kubelet. A section that
+    // could not be read keeps its known findings. Its plugins section is left to the plugin
+    // findings above when those are watched (their own words, a link to the plugin).
     val checkupIssues = if (watchCheckup) {
-        runCatching { reads.kube.checkup() }.getOrNull()
-            ?.let { checkupIssuesWithGaps(it, known = knownCheckupIssues(prev, name), gitopsWatched = watchGitops) }
+        runCatching { reads.kube.checkup(locale) }.getOrNull()?.let {
+            checkupIssuesWithGaps(it, known = knownCheckupIssues(prev, name), gitopsWatched = watchGitops, pluginsWatched = watchPlugins)
+        }
     } else {
         null
     }
@@ -174,6 +197,8 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
             amIssues = amIssues,
             storageWatched = watchStorage,
             storageIssues = storageIssues,
+            pluginWatched = watchPlugins,
+            pluginIssues = pluginIssues,
         )
         ClusterReading(snapshot, historyDetailOf(kubeNodes, nodeDisk))
     } else {
@@ -190,6 +215,8 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
             storageIssues = storageIssues,
             sensorWatched = watchSensors,
             sensorIssues = sensorIssues,
+            pluginWatched = watchPlugins,
+            pluginIssues = pluginIssues,
         )
         ClusterReading(snapshot, historyDetailOf(talos, storageHealth))
     }

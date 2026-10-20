@@ -34,6 +34,10 @@ var pluginCommands = []command{
 		// plugin-render FILE|ID [-scope NS] [-locale xx] [-demo]: KubePluginData (or KubePluginPreview for a file), read-only.
 		return pluginRender(e, flag.Args()[1:])
 	}},
+	{name: "plugin-findings", args: "[-locale xx] [-hints a,b] [-demo]", noConfig: true, run: func(e env) (string, error) {
+		// plugin-findings [-locale xx] [-hints a,b] [-demo]: KubePluginFindings, what the monitor reads, read-only.
+		return pluginFindings(e, flag.Args()[1:])
+	}},
 	{name: "plugin-list", noConfig: true, run: func(e env) (string, error) {
 		// plugin-list: the built-in plugins, one JSON line each.
 		return pluginList()
@@ -350,6 +354,32 @@ func pluginRender(e env, args []string) (string, error) {
 	}
 
 	return ichorgo.KubePluginPreview(cfg, contextName, e.kubeServer, string(src), *scope, *locale)
+}
+
+func pluginFindings(e env, args []string) (string, error) {
+	fs := flag.NewFlagSet("plugin-findings", flag.ContinueOnError)
+	locale := fs.String("locale", "", "the plugins' translations to apply (fr, de…)")
+	hints := fs.String("hints", "", "comma-separated apps known to run, for the plugins that detect by pods")
+	demo := fs.Bool("demo", false, "the plugins' samples (the demo cluster), no config needed")
+
+	if err := fs.Parse(args); err != nil || fs.NArg() > 0 {
+		return "", fmt.Errorf("usage: plugin-findings [-locale xx] [-hints a,b] [-demo] (%v %q)", err, fs.Args())
+	}
+
+	cfg, contextName := "", e.context
+
+	if *demo {
+		var err error
+		if cfg, err = ichorgo.DemoKubeconfig(); err != nil {
+			return "", err
+		}
+
+		contextName = ""
+	} else {
+		cfg = loadProbeConfig(e.configPath, e.context, false, e.mask)
+	}
+
+	return ichorgo.KubePluginFindings(cfg, contextName, e.kubeServer, *hints, *locale)
 }
 
 // pluginListItem is one built-in plugin.

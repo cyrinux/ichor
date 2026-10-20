@@ -175,11 +175,11 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
-	{name: "checkup", args: "", run: func(e env) (out string, err error) {
-		// checkup: what no other screen shows (failing pods, full volumes, dead webhooks...),
-		// with its progress on stderr every 500 ms while it reads.
+	{name: "checkup", args: "[LOCALE]", run: func(e env) (out string, err error) {
+		// checkup [LOCALE]: what no other screen shows (failing pods, full volumes, dead webhooks...),
+		// the plugins' findings worded in LOCALE, with its progress on stderr every 500 ms while it reads.
 		stop := watchReadProgress(e, "checkup")
-		out, err = ichorgo.KubeCheckup(e.cfg, e.context, e.kubeServer)
+		out, err = ichorgo.KubeCheckup(e.cfg, e.context, e.kubeServer, flag.Arg(1))
 		stop()
 
 		return out, err

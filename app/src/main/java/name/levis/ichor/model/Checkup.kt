@@ -1,5 +1,6 @@
 package name.levis.ichor.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo/kube_checkup*.go and kube_events.go.
@@ -23,6 +24,8 @@ object CheckupSectionId {
     const val CROSSPLANE = "crossplane"
     const val TAILSCALE = "tailscale"
     const val CLUSTER_API = "clusterapi"
+    /** The findings the CRD plugins the cluster runs declare (docs/plugins.md "Findings"); last. */
+    const val PLUGINS = "plugins"
 }
 
 /** What a finding is about ([CheckupFinding.kind]); CheckupWording words each one. */
@@ -129,6 +132,11 @@ object CheckupKind {
     const val ROUTE_CERT_EXPIRING = "routeCertExpiring"
     /** One that does not name the host (message: the names it covers). */
     const val ROUTE_CERT_HOST_MISMATCH = "routeCertHostMismatch"
+    /**
+     * A finding a CRD plugin declares: its words come from the plugin, already translated
+     * ([CheckupFinding.title], [CheckupFinding.pluginDetail]); namespace and name are its object's.
+     */
+    const val PLUGIN = "plugin"
 }
 
 /** A section's or the whole checkup's state, worst first. */
@@ -174,6 +182,17 @@ data class CheckupFinding(
     val count: Int = 0,
     /** Unix ms, 0 when unknown. */
     val since: Long = 0,
+    // A plugin finding ([CheckupKind.PLUGIN]) only, see [PluginFindingItem].
+    val key: String = "",
+    val plugin: String = "",
+    val pluginName: String = "",
+    val pluginIcon: String = "",
+    val id: String = "",
+    val title: String = "",
+    /** The plugin's own detail ("detail" in the JSON; the other kinds' detail is reason and message). */
+    @SerialName("detail") val pluginDetail: String = "",
+    val ref: PluginRef? = null,
+    val opens: String = "",
 )
 
 /** A node as Kubernetes sees it: requests against allocatable (cores, bytes), taints and labels. */
@@ -271,17 +290,38 @@ val GITOPS_ALERTED_KINDS = setOf(CheckupKind.SOPS_DECRYPTION_FAILED)
  * ("critical" or "warning"): everything but the notes and the events, which only describe, and
  * the kinds the data services already alert on ([DATA_SERVICE_ALERTED_KINDS]), and, when the
  * GitOps apps are watched too ([gitopsWatched]), the kinds that track already alerts on
- * ([GITOPS_ALERTED_KINDS]).
+ * ([GITOPS_ALERTED_KINDS]). A plugin finding's subject is [pluginAlertSubject]; with
+ * [pluginsWatched] (the plugin findings track reads them on its own, with their words and a
+ * link to the plugin) the plugin findings are left to it.
  */
-fun CheckupReport.alertIssues(gitopsWatched: Boolean = false): Map<String, String> = buildMap {
-    val skipped = if (gitopsWatched) DATA_SERVICE_ALERTED_KINDS + GITOPS_ALERTED_KINDS else DATA_SERVICE_ALERTED_KINDS
+fun CheckupReport.alertIssues(gitopsWatched: Boolean = false, pluginsWatched: Boolean = false): Map<String, String> = buildMap {
+    val skipped = buildSet {
+        addAll(DATA_SERVICE_ALERTED_KINDS)
+        if (gitopsWatched) addAll(GITOPS_ALERTED_KINDS)
+        if (pluginsWatched) add(CheckupKind.PLUGIN)
+    }
     sections.forEach { section ->
         if (section.id == CheckupSectionId.EVENTS) return@forEach
         section.findings.forEach { f ->
-            if (f.level != CheckupSeverity.INFO && f.kind !in skipped) put("${section.id}|${f.kind}|${f.subject}", f.severity)
+            if (f.level == CheckupSeverity.INFO || f.kind in skipped) return@forEach
+            val subject = if (f.kind == CheckupKind.PLUGIN) f.pluginAlertSubject else f.subject
+            put("${section.id}|${f.kind}|$subject", f.severity)
         }
     }
 }
+
+/**
+ * A plugin finding's alert subject: its stable key without the "plugin:" prefix,
+ * "<plugin>:<finding>:<namespace>/<name>", so that two findings of one object keep apart.
+ */
+val CheckupFinding.pluginAlertSubject: String
+    get() = key.removePrefix(PLUGIN_KEY_PREFIX).ifEmpty { "$plugin:$id:$subject" }
+
+/** The prefix of a plugin finding's key (Go pluginFindingKey). */
+const val PLUGIN_KEY_PREFIX = "plugin:"
+
+/** The object of a plugin alert subject ("<plugin>:<finding>:<object>"), "" without one. */
+fun pluginAlertObject(subject: String): String = subject.split(':', limit = 3).getOrElse(2) { "" }
 
 /** A Kubernetes event of an object, as `kubectl describe` ends with. */
 @Serializable

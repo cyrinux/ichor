@@ -56,6 +56,13 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     /// sensorIssuesOf), kept like dataIssues.
     public var sensorIssues: [String: String]
     public var sensorPending: [String]
+    /// Watching the plugins' findings was on for this check (with the data services, opt-in), and
+    /// they could be read.
+    public var pluginWatched: Bool
+    public var pluginChecked: Bool
+    /// Plugin findings (their key → PluginIssue value, see pluginIssuesOf), kept like dataIssues.
+    public var pluginIssues: [String: String]
+    public var pluginPending: [String]
     /// The cluster was added from a kubeconfig: its nodes come from the Kubernetes API (ready or
     /// not, never unreachable), there is no etcd, and `certNotAfter` is the kubeconfig's credentials.
     public var kube: Bool
@@ -72,7 +79,9 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
                 storagePending: [String] = [], storageWarn: Int = storageWarnDefault,
                 storageTrends: [String: String] = [:],
                 sensorWatched: Bool = false, sensorChecked: Bool = false, sensorIssues: [String: String] = [:],
-                sensorPending: [String] = [], kube: Bool = false) {
+                sensorPending: [String] = [],
+                pluginWatched: Bool = false, pluginChecked: Bool = false, pluginIssues: [String: String] = [:],
+                pluginPending: [String] = [], kube: Bool = false) {
         self.context = context
         self.takenAt = takenAt
         self.nodes = nodes
@@ -106,10 +115,14 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.sensorChecked = sensorChecked
         self.sensorIssues = sensorIssues
         self.sensorPending = sensorPending
+        self.pluginWatched = pluginWatched
+        self.pluginChecked = pluginChecked
+        self.pluginIssues = pluginIssues
+        self.pluginPending = pluginPending
         self.kube = kube
     }
 
-    /// Snapshots saved by older versions lack the data-service, GitOps, checkup, Alertmanager, storage and kube fields.
+    /// Snapshots saved by older versions lack the data-service, GitOps, checkup, Alertmanager, storage, plugin and kube fields.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         context = try c.decode(String.self, forKey: .context)
@@ -145,6 +158,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         sensorChecked = try c.field(.sensorChecked, false)
         sensorIssues = try c.field(.sensorIssues, [:])
         sensorPending = try c.field(.sensorPending, [])
+        pluginWatched = try c.field(.pluginWatched, false)
+        pluginChecked = try c.field(.pluginChecked, false)
+        pluginIssues = try c.field(.pluginIssues, [:])
+        pluginPending = try c.field(.pluginPending, [])
         kube = try c.field(.kube, false)
     }
 
@@ -171,6 +188,11 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     var sensorTrack: IssueTrack {
         get { IssueTrack(watched: sensorWatched, checked: sensorChecked, issues: sensorIssues, pending: sensorPending) }
         set { (sensorWatched, sensorChecked, sensorIssues, sensorPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
+    }
+
+    var pluginTrack: IssueTrack {
+        get { IssueTrack(watched: pluginWatched, checked: pluginChecked, issues: pluginIssues, pending: pluginPending) }
+        set { (pluginWatched, pluginChecked, pluginIssues, pluginPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
     }
 
     var storageTrack: IssueTrack {
@@ -209,6 +231,7 @@ public struct NodeState: Codable, Equatable, Sendable {
 /// storageWatched: watching node storage was on; storageIssues (see storageIssuesOf): nil when unreadable;
 /// storageWarn: the warning threshold they were read with.
 /// sensorWatched: watching node temperatures was on; sensorIssues (see sensorIssuesOf): nil when unreadable.
+/// pluginWatched: watching the plugins' findings was on; pluginIssues (see pluginIssuesWithGaps): nil when unreadable.
 public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNotAfter: Int64, takenAt: Date,
                        dataWatched: Bool = false, dataServices: DataServices? = nil,
                        gitopsWatched: Bool = false, gitopsIssues: [String: String]? = nil,
@@ -216,7 +239,8 @@ public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNot
                        alertmanagerWatched: Bool = false, alertmanagerIssues: [String: String]? = nil,
                        storageWatched: Bool = false, storageIssues: [String: String]? = nil,
                        storageWarn: Int = storageWarnDefault,
-                       sensorWatched: Bool = false, sensorIssues: [String: String]? = nil) -> ClusterSnapshot {
+                       sensorWatched: Bool = false, sensorIssues: [String: String]? = nil,
+                       pluginWatched: Bool = false, pluginIssues: [String: String]? = nil) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
     for n in overview.nodes {
         let reason = n.error ?? n.unmetConditions.map { "\($0.name): \($0.reason)" }.joined(separator: "; ")
@@ -248,7 +272,10 @@ public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNot
         storageWarn: storageWarn,
         sensorWatched: sensorWatched,
         sensorChecked: sensorWatched && sensorIssues != nil,
-        sensorIssues: sensorWatched ? sensorIssues ?? [:] : [:]
+        sensorIssues: sensorWatched ? sensorIssues ?? [:] : [:],
+        pluginWatched: pluginWatched,
+        pluginChecked: pluginWatched && pluginIssues != nil,
+        pluginIssues: pluginWatched ? pluginIssues ?? [:] : [:]
     )
 }
 
@@ -263,7 +290,8 @@ public func kubeSnapshotOf(_ overview: KubeNodesOverview, context: String, certN
                            checkupWatched: Bool = false, checkupIssues: [String: String]? = nil,
                            alertmanagerWatched: Bool = false, alertmanagerIssues: [String: String]? = nil,
                            storageWatched: Bool = false, storageIssues: [String: String]? = nil,
-                           storageWarn: Int = storageWarnDefault) -> ClusterSnapshot {
+                           storageWarn: Int = storageWarnDefault,
+                           pluginWatched: Bool = false, pluginIssues: [String: String]? = nil) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
     for n in overview.nodes {
         nodes[n.name] = NodeState(hostname: n.name, health: n.ready ? .ready : .notReady, reason: n.pressure.joined(separator: "; "))
@@ -289,6 +317,9 @@ public func kubeSnapshotOf(_ overview: KubeNodesOverview, context: String, certN
         storageChecked: storageWatched && storageIssues != nil,
         storageIssues: storageWatched ? storageIssues ?? [:] : [:],
         storageWarn: storageWarn,
+        pluginWatched: pluginWatched,
+        pluginChecked: pluginWatched && pluginIssues != nil,
+        pluginIssues: pluginWatched ? pluginIssues ?? [:] : [:],
         kube: true
     )
 }
@@ -459,7 +490,7 @@ public func dataSystemTitle(_ key: String) -> String {
     }
 }
 
-/// One opt-in track of issues as a snapshot carries it (data services, GitOps apps, the checkup, Alertmanager).
+/// One opt-in track of issues as a snapshot carries it (data services, GitOps apps, the checkup, Alertmanager, plugins).
 struct IssueTrack: Equatable {
     var watched: Bool
     var checked: Bool
@@ -548,6 +579,7 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
         next.amTrack = evaluateAlertmanager(previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.storageTrack = evaluateStorage(previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.sensorTrack = evaluateSensors(previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.pluginTrack = evaluatePlugins(previous: previous, current: current, comparable: comparable, alerts: &alerts)
         // The trend alerts are evaluated once the history ring has this check (evaluateStorageTrends).
         next.storageTrends = comparable && current.storageWatched ? previous?.storageTrends ?? [:] : [:]
     }

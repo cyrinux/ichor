@@ -449,6 +449,78 @@ tile below for an active plugin and `null` otherwise. Examples: the goldens in
 * `just probe plugin-render FILE|ID [-scope NS] [-locale xx] -context CTX` prints the tree
   (see "Command line").
 
+## Findings
+
+A plugin's `findings[]` reach two places without any code of their own in the apps: the
+cluster checkup and the background monitor. Both render the plugin over the whole cluster
+(scope `""`) only to evaluate its findings, one per object a finding's `when` holds for; the
+title and detail come out already translated (the caller's `locale`, see `i18n`), so the apps
+show them as they are, notifications included. Secrets are always masked for findings.
+
+Every finding carries the same fields in both places:
+
+| field | value |
+| -- | -- |
+| `key` | `plugin:<plugin id>:<finding id>:<namespace>/<name>` (`…:<name>` for a cluster-scoped object): stable from one read to the next, the monitor's dedupe key |
+| `plugin`, `pluginName`, `pluginIcon` | the plugin's `id`, `name` and `icon` |
+| `id` | the finding's `id` |
+| `severity` | `info`, `warning` or `critical`, the checkup's severities |
+| `title`, `detail` | the finding's templates, rendered and translated (`detail` may be absent) |
+| `ref` | the object, as in the render tree (`group`, `version`, `resource`, `namespace`, `name`) |
+| `opens` | the card the finding links to; the apps open the plugin's screen on it |
+
+**Checkup.** `KubeCheckup(config, context, kubeServer, locale)` has a `plugins` section (its
+progress step has the same id) whose findings have `kind: "plugin"`, the fields above, and
+`namespace` and `name` set from `ref` like every other finding. The plugins that the cluster
+does not run are skipped, and the section is `absent` when it runs none. A resource that cannot
+be read (forbidden, not served) or a plugin that does not answer within 10 s names the plugin
+in the section's `error` (`kube-green: sleepinfos: …`) and leaves the other plugins' findings
+standing. External Secrets is left out: the `secrets` section already reports it from its own
+reader. The demo shows the built-in plugins' samples.
+
+```json
+{"id": "plugins", "status": "warning", "checked": 4, "findings": [
+  {"kind": "plugin", "severity": "warning", "namespace": "demo-lab", "name": "weekend",
+   "key": "plugin:kube-green:schedule-warning:demo-lab/weekend",
+   "plugin": "kube-green", "pluginName": "kube-green", "pluginIcon": "kube-green",
+   "id": "schedule-warning", "title": "demo-lab/weekend", "detail": "no wake-up time",
+   "ref": {"group": "kube-green.com", "version": "v1alpha1", "resource": "sleepinfos", "namespace": "demo-lab", "name": "weekend"},
+   "opens": "list"}]}
+```
+
+**Monitor.** `KubePluginFindings(config, context, kubeServer, hints, locale)` returns every
+active plugin's findings in one call, External Secrets included:
+
+```json
+{"plugins": 2,
+ "findings": [{"severity": "critical", "checkupNative": true, "key": "plugin:external-secrets:target-missing:demo-lab/registry-pull",
+   "plugin": "external-secrets", "pluginName": "External Secrets", "pluginIcon": "external-secrets",
+   "id": "target-missing", "title": "demo-lab/registry-pull", "detail": "its Secret is missing",
+   "ref": {"group": "external-secrets.io", "version": "v1", "resource": "externalsecrets", "namespace": "demo-lab", "name": "registry-pull"},
+   "opens": "secrets"}],
+ "errors": [{"plugin": "demo-widgets", "pluginName": "Demo Widgets", "resource": "widgets.widgets.example.com",
+   "message": "Kubernetes API: permission denied: forbidden"}]}
+```
+
+* `plugins` counts the active plugins read; `findings` are worst first, then by `key`, one per
+  `key`, at most 200 (`truncated` counts the rest, absent when none).
+* It is bounded for a background run: one `/apis` read detects every plugin, each resource
+  is read at most at its `list.limit`, and the whole call has a 10 s budget. A plugin still
+  reading then is an `errors` entry (`resource` absent); its late answer is dropped.
+* A resource that cannot be read is an `errors` entry with `resource`; the plugin's other
+  resources, and the other plugins, still give their findings. A list cut at its limit and a
+  value that fails to evaluate are not errors here (the plugin's screen reports them).
+* The call fails only when the API server answers nothing; a panic in a plugin is that
+  plugin's `errors` entry.
+* `checkupNative: true` (absent otherwise) marks a finding of a plugin the checkup reports
+  from a section of its own (External Secrets, see "Checkup" above): an app that also alerts
+  on the checkup skips it, or the same object alerts twice.
+* The apps notify on `warning` and `critical` (an `info` finding is shown, not notified),
+  keyed by `key`: a finding seen again keeps its notification, one that is gone clears it.
+* The demo context returns the plugins' samples' findings.
+* `just probe plugin-findings [-locale xx] [-hints a,b] -context CTX` prints it (`-demo`: the
+  samples).
+
 ## Expressions
 
 Every computed value in a plugin (fields, health rules, data services, card values, action
@@ -626,8 +698,8 @@ reason and never loaded. Plugins are not in the app backup yet.
 ## Command line
 
 The probe checks and renders plugin files from the desktop. Paths are relative to where
-`just` runs. Every command but `plugin-render` against a cluster reads no talosconfig and
-no kubeconfig. `plugin-render` takes a file when its argument has a `.` or a `/`
+`just` runs. Every command but `plugin-render` and `plugin-findings` against a cluster, and
+`plugin-action`, reads no talosconfig and no kubeconfig. `plugin-render` takes a file when its argument has a `.` or a `/`
 (`kube-green.yaml`, `./draft`), and a built-in plugin id otherwise (`kube-green`); a file is
 validated first, before any config is read.
 
@@ -636,6 +708,7 @@ validated first, before any config is read.
 | `just probe plugin-validate FILE...` | loads, validates and compiles each file, then renders its samples in English and in each `i18n` language | per valid file, one JSON line on stdout: `{"ok":true,"id":"kube-green","cards":2,"findings":1,"resources":2,"actions":0}`; per problem, `FILE:LINE: path: message` on stderr | 0 when every file is valid, 1 otherwise |
 | `just probe plugin-lint FILE [-crd MANIFEST] [-strict]` | `plugin-validate`, then the warnings below | the JSON line with `"warnings":n` on stdout; `FILE:LINE: warning: path: message` on stderr, and on failure a last line `plugin-lint: N errors, M warnings` | 0 with warnings; 1 on an error, or on any warning with `-strict` |
 | `just probe plugin-render FILE\|ID [-scope NS] [-locale xx] [-demo]` | the render tree of a file or of a built-in plugin id, read from the cluster (`-context CTX`) or from the samples (`-demo`) | the tree as JSON | 0, or 1 with the error (a file that does not validate: its `FILE:LINE` problems) |
+| `just probe plugin-findings [-locale xx] [-hints a,b] [-demo]` | every active built-in plugin's findings, what the background monitor reads (`KubePluginFindings`), from the cluster (`-context CTX`) or the samples (`-demo`) | the report as JSON (see "Findings") | 0, or 1 when the API server answers nothing |
 | `just probe plugin-action ID ACTION NAMESPACE NAME [PARAMS_JSON]` | runs a built-in plugin's action on one object (`KubePluginAction`; `""` as `NAMESPACE` for a cluster-scoped resource), `-context CTX`. It changes the cluster | `done` | 0, or 1 with the error |
 | `just probe plugin-list` | the built-in plugins | one JSON line each: `{id, name, version, category, resources, cards, actions, findings, file}` | 0 |
 | `just plugin-check [DIR]` | `plugin-validate` on every `*.yaml` of `DIR` (default `go/plugin/builtin`); `./build.sh check` runs it on the built-ins | as `plugin-validate` | as `plugin-validate` |
@@ -673,8 +746,9 @@ action whose `rbac` does not ask for what its request needs, in the resource's g
 `patch` on `resource/subresource` for `subresource` with `PUT`, `POST` or `PATCH`; `delete`
 or `create` on the resource. Otherwise the can-I row would answer for another request.
 
-RBAC: `plugin-render` against a cluster needs `list` on the plugin's resources (and reads
-`/apis` for detection); `plugin-action` needs the action's `rbac` and `get` on its object;
+RBAC: `plugin-render` against a cluster needs `list` on the plugin's resources,
+`plugin-findings` on every active plugin's (a plugin it may not read is an `errors` entry;
+both read `/apis` for detection); `plugin-action` needs the action's `rbac` and `get` on its object;
 the other commands need nothing.
 
 ## Writing a plugin from a CRD

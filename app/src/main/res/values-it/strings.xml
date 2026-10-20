@@ -3931,6 +3931,9 @@
     <string name="checkup_tailscaleConnectorNotReady_plain">Connettore non pronto</string>
     <string name="checkup_tailscaleProxyClassMissing">Indica una ProxyClass che non esiste</string>
     <string name="checkup_section_clusterapi_hint">Cluster, macchine e server bare-metal bloccati, falliti o spenti</string>
+    <string name="checkup_section_plugins">Plugin</string>
+    <string name="checkup_section_plugins_hint">Ciò che segnalano i plugin delle applicazioni del cluster, con parole loro</string>
+    <string name="checkup_plugin_caption">Plugin %1$s</string>
     <string name="checkup_open_cluster_lifecycle">Apri il ciclo di vita dei cluster</string>
     <string name="checkup_capiClusterFailed">Cluster fallito</string>
     <string name="checkup_capiClusterProvisioning">Non predisposto dopo %1$s</string>

@@ -1,7 +1,10 @@
 package name.levis.ichor.monitor
 
 import name.levis.ichor.data.TalosJson
+import name.levis.ichor.model.CheckupKind
 import name.levis.ichor.model.CheckupReport
+import name.levis.ichor.model.CheckupSectionId
+import name.levis.ichor.model.pluginAlertObject
 import name.levis.ichor.model.CheckupSeverity
 import name.levis.ichor.model.CheckupStatus
 import name.levis.ichor.model.NodeHealth
@@ -124,5 +127,61 @@ class CheckupAlertsTest {
         val off = evaluate(cleared.next, snap(emptyMap(), watched = false), now)
         assertTrue(off.alerts.isEmpty())
         assertTrue(off.next.checkupIssues.isEmpty())
+    }
+
+    // The plugins section (go/ichorgo/kube_checkup_plugins.go, docs/plugins.md "Findings").
+    private val plugins = TalosJson.decodeFromString(
+        CheckupReport.serializer(),
+        """
+            {"status":"warning","sections":[{"id":"plugins","status":"warning","checked":4,"findings":[
+              {"kind":"plugin","severity":"warning","namespace":"demo-lab","name":"weekend",
+               "key":"plugin:kube-green:schedule-warning:demo-lab/weekend",
+               "plugin":"kube-green","pluginName":"kube-green","pluginIcon":"kube-green",
+               "id":"schedule-warning","title":"demo-lab/weekend","detail":"no wake-up time",
+               "ref":{"group":"kube-green.com","version":"v1alpha1","resource":"sleepinfos","namespace":"demo-lab","name":"weekend"},
+               "opens":"list"},
+              {"kind":"plugin","severity":"critical","namespace":"demo-lab","name":"weekend",
+               "key":"plugin:kube-green:no-target:demo-lab/weekend","plugin":"kube-green","pluginName":"kube-green",
+               "id":"no-target","title":"demo-lab/weekend"},
+              {"kind":"plugin","severity":"info","key":"plugin:kube-green:asleep:demo-lab/nightly","plugin":"kube-green",
+               "id":"asleep","title":"demo-lab/nightly"}]}]}
+        """.trimIndent(),
+    )
+
+    @Test
+    fun aPluginFindingDecodesWithItsPluginsWords() {
+        val f = plugins.sections.single().findings.first()
+        assertEquals(CheckupKind.PLUGIN, f.kind)
+        assertEquals(CheckupSectionId.PLUGINS, plugins.sections.single().id)
+        assertEquals("kube-green", f.plugin)
+        assertEquals("kube-green", f.pluginName)
+        assertEquals("kube-green", f.pluginIcon)
+        assertEquals("schedule-warning", f.id)
+        assertEquals("demo-lab/weekend", f.title)
+        assertEquals("no wake-up time", f.pluginDetail)
+        assertEquals("sleepinfos", f.ref?.resource)
+        assertEquals("list", f.opens)
+        assertEquals("demo-lab/weekend", f.subject)
+    }
+
+    @Test
+    fun aPluginFindingAlertsUnderItsStableKeyUnlessThePluginTrackIsWatched() {
+        val sleep = "plugins|plugin|kube-green:schedule-warning:demo-lab/weekend"
+        val target = "plugins|plugin|kube-green:no-target:demo-lab/weekend"
+        // Two findings of one object keep apart; the note is never alerted.
+        assertEquals(mapOf(sleep to DATA_WARNING, target to DATA_CRITICAL), plugins.alertIssues())
+        assertEquals("demo-lab/weekend", pluginAlertObject("kube-green:schedule-warning:demo-lab/weekend"))
+
+        // The plugin findings track reads them itself: the checkup leaves them to it, known ones included.
+        assertTrue(plugins.alertIssues(pluginsWatched = true).isEmpty())
+        val unread = plugins.copy(sections = listOf(plugins.sections.single().copy(error = "kube-green: sleepinfos: forbidden", findings = emptyList())))
+        assertEquals(mapOf(sleep to DATA_WARNING), checkupIssuesWithGaps(unread, mapOf(sleep to DATA_WARNING)))
+        assertTrue(checkupIssuesWithGaps(unread, mapOf(sleep to DATA_WARNING), pluginsWatched = true).isEmpty())
+
+        // Its alert: the key's subject, the section and kind in the detail.
+        val alert = evaluate(snap(emptyMap()), snap(mapOf(target to DATA_CRITICAL)), now).alerts.single()
+        assertEquals("checkup:$target", alert.key)
+        assertEquals("kube-green:no-target:demo-lab/weekend", alert.subject)
+        assertEquals("plugins|plugin|critical", alert.detail)
     }
 }

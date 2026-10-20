@@ -283,10 +283,11 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
 
     /**
      * The cluster checkup (os:admin): what no other screen shows, section by section. It lists the
-     * cluster's pods and asks every kubelet for its volumes: on demand, never cached.
+     * cluster's pods and asks every kubelet for its volumes: on demand, never cached. [locale]
+     * ("" for English): the language of the plugins' findings, which Go translates.
      */
-    suspend fun checkup(): CheckupReport = go.kube { cfg, ctx, server ->
-        TalosJson.decodeFromString(CheckupReport.serializer(), Ichorgo.kubeCheckup(cfg, ctx, server))
+    suspend fun checkup(locale: String): CheckupReport = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(CheckupReport.serializer(), Ichorgo.kubeCheckup(cfg, ctx, server, locale))
     }
 
     /**

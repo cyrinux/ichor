@@ -83,7 +83,7 @@ func TestCheckupSealedSecrets(t *testing.T) {
 
 // The secrets section names a SealedSecret that failed to unseal and a compromised sealing key.
 func TestCheckupSealedSecretsDemo(t *testing.T) {
-	secrets := sectionByID(t, demoCheckup(checkupNow), checkSecrets)
+	secrets := sectionByID(t, demoCheckup(checkupNow, ""), checkSecrets)
 
 	want := []string{
 		"sealedSecretNotSynced:critical:legacy-cert",

@@ -26,7 +26,7 @@ val Alert.channel: AlertChannel
         AlertKind.ETCD_ALARM, AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK, AlertKind.AM_FIRING, AlertKind.AM_RESOLVED,
         AlertKind.CLUSTER_UNREACHABLE, AlertKind.CLUSTER_REACHABLE,
         -> AlertChannel.CLUSTER
-        AlertKind.DATA_PROBLEM, AlertKind.DATA_OK -> AlertChannel.DATA
+        AlertKind.DATA_PROBLEM, AlertKind.DATA_OK, AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> AlertChannel.DATA
         AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> AlertChannel.GITOPS
         AlertKind.CERT_EXPIRING, AlertKind.CERT_EXPIRED, AlertKind.KUBECONFIG_EXPIRING, AlertKind.KUBECONFIG_EXPIRED -> AlertChannel.CERTS
     }
@@ -47,6 +47,9 @@ fun Alert.shareTarget(): ShareTarget? = when (kind) {
         ShareTarget.dataServices(DataServiceKind.entries.firstOrNull { it.alertSystem == system }?.catalogId.orEmpty())
     }
     AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> gitopsTarget()
+    // A data services link naming the plugin ("plugin-<id>"): the app opens where its tile leads (its
+    // Data services tab or its own screen); an app that does not know it, the first tab.
+    AlertKind.PLUGIN_PROBLEM, AlertKind.PLUGIN_OK -> ShareTarget.plugin(PluginIssue.parse(detail).plugin.ifEmpty { pluginOfKey(key) })
     AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK -> ShareTarget.screen(ShareTarget.CHECKUP)
     AlertKind.AM_FIRING, AlertKind.AM_RESOLVED -> ShareTarget.screen(ShareTarget.ALERTS)
     // "storage:node|volume", "storage:node|smart|device" or "storage:node|volume:trend": that node's Storage screen;

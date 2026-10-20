@@ -6,9 +6,12 @@ import Ichorgo
 /// Talos rollback.
 extension TalosClient {
     /// What no other screen shows, section by section. It lists the cluster's pods and asks every
-    /// kubelet for its volumes: on demand, never cached.
-    func checkup() async throws -> CheckupReport {
-        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeCheckup(config, context, kubeServer, $0) }
+    /// kubelet for its volumes: on demand, never cached. The plugins section's words come in
+    /// `locale` (pluginLocale, "" for English).
+    func checkup(locale: String = pluginLocale()) async throws -> CheckupReport {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeCheckup(config, context, kubeServer, locale, $0)
+        }
     }
 
     /// The events of the `kind` named `name`, newest first; with an empty `kind`, those of `name`

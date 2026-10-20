@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.plugins
 
+import name.levis.ichor.data.PluginRepository
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.opensAlone
 import name.levis.ichor.model.PLUGIN_CATEGORY_DATA_SERVICES
@@ -44,4 +45,17 @@ fun nativePluginRoute(item: PluginDetectItem): String? {
 fun pluginRoute(item: PluginDetectItem): String = nativePluginRoute(item) ?: when (item.category) {
     PLUGIN_CATEGORY_DATA_SERVICES -> Routes.dataServicesPlugin(item.id)
     else -> KubeBrowserRoutes.plugin(item.id)
+}
+
+/**
+ * Where plugin [pluginId] leads, as its tile would (a checkup finding, a notification of one):
+ * from the plugins detection, else from the catalog's category (no cluster call); null for a
+ * plugin this build does not know.
+ */
+suspend fun pluginRouteFor(plugins: PluginRepository, pluginId: String): String? {
+    if (pluginId.isEmpty()) return null
+    val detected = runCatching { plugins.detect(hints = "") }.getOrNull()?.items?.firstOrNull { it.id == pluginId }
+    if (detected != null) return pluginRoute(detected)
+    val known = runCatching { plugins.catalog() }.getOrNull()?.items?.firstOrNull { it.id == pluginId } ?: return null
+    return pluginRoute(PluginDetectItem(id = known.id, name = known.name, category = known.category.ifEmpty { PLUGIN_CATEGORY_DATA_SERVICES }))
 }

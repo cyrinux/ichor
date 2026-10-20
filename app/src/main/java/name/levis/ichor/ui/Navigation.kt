@@ -33,7 +33,9 @@ import name.levis.ichor.model.allows
 import name.levis.ichor.model.contextFor
 import name.levis.ichor.model.kubeFocus
 import name.levis.ichor.model.kubeNodeName
+import name.levis.ichor.model.linkedPlugin
 import name.levis.ichor.model.nodeTab
+import name.levis.ichor.ui.plugins.pluginRouteFor
 import name.levis.ichor.ui.workloads.NETPERF_TAB
 import name.levis.ichor.monitor.AlertAction
 import name.levis.ichor.monitor.AlertActionRequest
@@ -443,7 +445,10 @@ private suspend fun ShareTarget.talosRoute(app: TalosApp, action: AlertActionReq
     ShareTarget.HARDWARE -> clusterNode(app)?.let { n -> Routes.hardware(n.node, n.hostname) }
     ShareTarget.ARGO_APP -> Routes.argoApp(namespace, name, sync = action?.action == AlertAction.SYNC)
     ShareTarget.FLUX_APP -> Routes.fluxApp(kind, namespace, name, reconcile = action?.action == AlertAction.RECONCILE)
-    ShareTarget.DATA -> DataServiceKind.entries.firstOrNull { it.catalogId == kind }.let { Routes.dataServices(it, solo = it?.opensAlone == true) }
+    // A data service's catalog id opens its tab; "plugin-<id>" (a plugin finding's alert) where
+    // that plugin's tile leads, its own screen when this build cannot tell.
+    ShareTarget.DATA -> linkedPlugin?.let { id -> pluginRouteFor(app.pluginRepository, id) ?: KubeBrowserRoutes.plugin(id) }
+        ?: DataServiceKind.entries.firstOrNull { it.catalogId == kind }.let { Routes.dataServices(it, solo = it?.opensAlone == true) }
     ShareTarget.CHECKUP -> Routes.CHECKUP
     ShareTarget.ALERTS -> Routes.alerts(silence = action?.takeIf { it.action == AlertAction.SILENCE }?.target.orEmpty())
     else -> kubeFocus?.let { Routes.workloads(it) }

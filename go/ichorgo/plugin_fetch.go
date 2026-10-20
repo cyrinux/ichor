@@ -33,6 +33,11 @@ func newPluginProbe(ctx context.Context, k *kubeClient, plugins []*plugin.Compil
 		return nil, err
 	}
 
+	return newPluginProbeFrom(ctx, k, plugins, hints, groups), nil
+}
+
+// newPluginProbeFrom is newPluginProbe over API groups already read (the checkup's).
+func newPluginProbeFrom(ctx context.Context, k *kubeClient, plugins []*plugin.Compiled, hints hintSet, groups map[string]string) *pluginProbe {
 	p := &pluginProbe{groups: groups, hints: hints, served: map[string]bool{}}
 
 	if detectsBy(plugins, func(d plugin.Detect) bool { return d.Pods != "" }) {
@@ -44,7 +49,7 @@ func newPluginProbe(ctx context.Context, k *kubeClient, plugins []*plugin.Compil
 		p.services = queryServices(ctx, k)
 	}
 
-	return p, nil
+	return p
 }
 
 func detectsBy(plugins []*plugin.Compiled, match func(plugin.Detect) bool) bool {
@@ -201,6 +206,12 @@ func resourceLabel(decl plugin.Resource) string {
 	return decl.Resource + "." + decl.Group
 }
 
+// partialNotePrefix starts the errors entry of a list cut at its limit.
+const partialNotePrefix = "showing the first "
+
+// isPartialNote tells the entry of a list cut at its limit from a read that failed.
+func isPartialNote(message string) bool { return strings.HasPrefix(message, partialNotePrefix) }
+
 // errPluginListFull stops a list once it holds its limit.
 var errPluginListFull = errors.New("plugin list holds its limit")
 
@@ -259,7 +270,7 @@ func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource
 	}
 
 	if more {
-		return items, fmt.Sprintf("showing the first %d %s", q.limit, decl.Resource), nil
+		return items, fmt.Sprintf("%s%d %s", partialNotePrefix, q.limit, decl.Resource), nil
 	}
 
 	return items, "", nil

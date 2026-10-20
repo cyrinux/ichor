@@ -32,6 +32,15 @@ extension TalosClient {
         }
     }
 
+    /// Every active plugin's findings in one bounded call (10 s), for the background monitor: a
+    /// plugin that could not be read is an `errors` entry and hides none of the others. Titles and
+    /// details in `locale` ("" for English). hints: see pluginDetect.
+    func pluginFindings(hints: String = "", locale: String = pluginLocale()) async throws -> PluginFindingsReport {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubePluginFindings(config, context, kubeServer, hints, locale, $0)
+        }
+    }
+
     /// The installed plugins (built-ins, then enabled imported ones) and what each one reads (no cluster call).
     func pluginCatalog() async throws -> PluginCatalog {
         try await Self.installedPlugins()

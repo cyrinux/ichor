@@ -112,6 +112,23 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         target == .data ? DataServiceKind(rawValue: kind) : nil
     }
 
+    /// A `data` link's kind that names a CRD plugin rather than a data services tab: Go's share
+    /// links have no plugin target, and a version that does not know the prefix opens the data
+    /// services screen on its first tab.
+    public static let pluginKindPrefix = "plugin-"
+
+    /// The screen of CRD plugin `id` (a plugin finding's alert).
+    public static func plugin(id: String) -> ShareTarget {
+        ShareTarget(target: .data, kind: pluginKindPrefix + id)
+    }
+
+    /// The plugin a `data` link opens (see plugin(id:)); nil for a data services link.
+    public var pluginID: String? {
+        guard target == .data, kind.hasPrefix(Self.pluginKindPrefix) else { return nil }
+        let id = String(kind.dropFirst(Self.pluginKindPrefix.count))
+        return id.isEmpty ? nil : id
+    }
+
     /// The screen a background alert is about (see evaluate for its keys), a node's hostname read
     /// from `snapshot`; nil when there is none: the Talos certificate alert opens the renewal.
     public static func forAlert(key: String, snapshot: ClusterSnapshot) -> ShareTarget? {
@@ -153,6 +170,10 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
             let kept = snapshot.sensorIssues[subject].map { SensorIssue(value: $0).hostname } ?? ""
             return .hardware(address: address, hostname: kept.isEmpty ? snapshot.nodes[address]?.hostname ?? "" : kept)
         case "unreachable": return .screen(.cluster)
+        case "plugin":
+            // "plugin:<id>:<finding>:…": the plugin's screen.
+            let id = pluginIDOfFindingKey(key)
+            return id.isEmpty ? nil : .plugin(id: id)
         default: return nil
         }
     }
