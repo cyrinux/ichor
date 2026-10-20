@@ -109,6 +109,7 @@ type gitForge interface {
 	gitArchiver
 	gitCommitResolver
 	gitProposer
+	gitRequestReader
 }
 
 // GitForgeCheck tells whether hostJSON's token works: {"login","host","scopesOK","missing"}.

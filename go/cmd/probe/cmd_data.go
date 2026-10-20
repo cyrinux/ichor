@@ -119,6 +119,17 @@ var dataCommands = []command{
 	{name: "talos-repo-compare", args: "HOSTJSON REPO REF NODE HOSTNAME PATHSJSON", run: func(e env) (string, error) {
 		return ichorgo.TalosRepoCompare(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6))
 	}},
+	{name: "git-request", args: "HOSTJSON REPO NUMBER", run: func(env) (string, error) {
+		n, err := strconv.Atoi(flag.Arg(3))
+		if err != nil {
+			return "", fmt.Errorf("NUMBER: %w", err)
+		}
+
+		return ichorgo.GitForgeRequest(flag.Arg(1), flag.Arg(2), n)
+	}},
+	{name: "gitops-revision-runs", args: "TOOL KIND NAMESPACE NAME SHA", run: func(e env) (string, error) {
+		return ichorgo.GitOpsRevisionRuns(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5))
+	}},
 	{name: "git-file", args: "HOSTJSON REPO REF PATH", run: func(env) (string, error) {
 		return ichorgo.GitForgeFile(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
 	}},
