@@ -27,6 +27,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -41,6 +42,9 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.userMessage
 
+// docs/plugins.md, published by the website workflow (scripts/site-plugins.py).
+private const val PLUGIN_DOCS_URL = "https://cyrinux.github.io/ichor/plugins/"
+
 /**
  * Settings → Plugins: the built-in CRD plugins (read-only) and the ones the user imported, each
  * with a switch and Remove; Import opens [PluginImportSheet] (paste, file or https URL, then the
@@ -49,6 +53,7 @@ import name.levis.ichor.ui.userMessage
 @Composable
 fun PluginsSection(plugins: PluginRepository) {
     val scope = rememberCoroutineScope()
+    val uriHandler = LocalUriHandler.current
     var builtins by remember { mutableStateOf<List<PluginCatalogItem>>(emptyList()) }
     var imported by remember { mutableStateOf<List<PluginUserItem>>(emptyList()) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -106,6 +111,7 @@ fun PluginsSection(plugins: PluginRepository) {
         Text(stringResource(R.string.plugins_import))
     }
     MutedText(stringResource(R.string.plugins_explainer))
+    TextButton(onClick = { uriHandler.openUri(PLUGIN_DOCS_URL) }) { Text(stringResource(R.string.plugins_docs)) }
 
     Text(stringResource(R.string.plugins_builtin), style = MaterialTheme.typography.titleSmall)
     Card(Modifier.fillMaxWidth()) {
