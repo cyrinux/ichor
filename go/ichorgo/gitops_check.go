@@ -299,6 +299,8 @@ func buildBounded(build func() buildBoth) (buildBoth, error) {
 	done := make(chan buildBoth, 1)
 
 	go func() {
+		// Free the slot before handing the result back: a caller that has its result can
+		// start the next check at once and must not find this one still holding it.
 		var b buildBoth
 
 		defer func() {
@@ -307,7 +309,6 @@ func buildBounded(build func() buildBoth) (buildBoth, error) {
 				b = buildBoth{afterErr: fmt.Errorf("the build failed: %v", r)}
 			}
 
-			// Free before answering: the caller may start the next check as soon as it has this one.
 			<-editCheckBusy
 			done <- b
 		}()

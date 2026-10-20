@@ -1,0 +1,31 @@
+name: Cache prune
+description: >
+  Deletes main's Actions cache entries whose key starts with `prefix`, except `keep` (the entry
+  the job just saved), so that a cache keyed on the sources keeps one entry instead of one per
+  push until GitHub's 10 GB quota evicts them at random. Needs `actions: write` on the job.
+
+inputs:
+  prefix:
+    description: Key prefix of the entries to delete, e.g. go-Linux-.
+    required: true
+  keep:
+    description: Key of the entry to keep.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        PREFIX: ${{ inputs.prefix }}
+        KEEP: ${{ inputs.keep }}
+      # A failed delete only leaves the old entry for LRU eviction: never fail the job on it.
+      run: |
+        gh cache list --ref refs/heads/main --key "$PREFIX" --limit 100 --json id,key \
+          --jq ".[] | select(.key != env.KEEP) | \"\(.id) \(.key)\"" |
+          while read -r id key; do
+            echo "deleting $key"
+            gh cache delete "$id" || echo "::warning::could not delete cache $key"
+          done

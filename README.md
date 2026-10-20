@@ -1653,7 +1653,8 @@ Wake-on-LAN, privacy label and manifest, export compliance, review notes) is in
 
 The Nix store, Gradle user home, Go module and build caches and the Swift package checkouts
 are restored from the Actions cache (`.github/actions/*-toolchain`); only the check and test
-jobs write them, on `main`.
+jobs write them, on `main`, and they delete the Nix and Go entries they replace, to stay under
+GitHub's 10 GB per repository (`gh cache list` shows the entries and their sizes).
 
 Both run on pushes to `main` and on pull requests. Release APKs are named
 `ichor-v<version>-<abi>.apk`, or `…-unsigned.apk` when no keystore secrets are set;

@@ -33,6 +33,9 @@ jobs:
   check:
     name: Check (gofmt, vet, staticcheck, Go and Kotlin unit tests)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write # cache-prune deletes the cache entries this job replaces
     concurrency:
       group: ${{ github.workflow }}-check-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -50,7 +53,7 @@ jobs:
       - run: ./build.sh check
 
       # The Go cache is written here only, on main: pull requests read it, so the cache does
-      # not fill with one entry per push.
+      # not fill with one entry per push. The entry it replaces is deleted right after.
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: github.ref == 'refs/heads/main' && steps.toolchain.outputs.go-cache-hit != 'true'
         with:
@@ -58,6 +61,12 @@ jobs:
             ~/go/pkg/mod
             ~/.cache/go-build
           key: ${{ steps.toolchain.outputs.go-cache-key }}
+
+      - uses: ./.github/actions/cache-prune
+        if: github.ref == 'refs/heads/main' && steps.toolchain.outputs.go-cache-hit != 'true'
+        with:
+          prefix: go-${{ runner.os }}-
+          keep: ${{ steps.toolchain.outputs.go-cache-key }}
 
   debug:
     name: Debug APK

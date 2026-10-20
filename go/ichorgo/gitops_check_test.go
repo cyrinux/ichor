@@ -234,3 +234,12 @@ func TestEditCheckBuildPanic(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+// A check that has returned has freed its slot: the next one never sees "still running".
+func TestBuildBoundedReleasesBeforeReturning(t *testing.T) {
+	for i := range 2000 {
+		if _, err := buildBounded(func() buildBoth { return buildBoth{} }); err != nil {
+			t.Fatalf("check %d: %v", i, err)
+		}
+	}
+}
