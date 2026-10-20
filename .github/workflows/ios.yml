@@ -44,8 +44,9 @@ jobs:
       # simulator: built, not embedded in the IPA yet.
       - run: scripts/ios-build.sh watch
 
-      # The Go cache is written here only, on main: pull requests read it, so the cache does
-      # not fill with one entry per push. The entry it replaces is deleted right after.
+      # The Go and Swift package caches are written here only, on main: pull requests read
+      # them, so the cache does not fill with one entry per push. The entry each replaces is
+      # deleted right after.
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: github.ref == 'refs/heads/main' && steps.toolchain.outputs.go-cache-hit != 'true'
         with:
@@ -59,6 +60,18 @@ jobs:
         with:
           prefix: go-${{ runner.os }}-
           keep: ${{ steps.toolchain.outputs.go-cache-key }}
+
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.ref == 'refs/heads/main' && steps.toolchain.outputs.spm-cache-hit != 'true'
+        with:
+          path: ios/build/SourcePackages
+          key: ${{ steps.toolchain.outputs.spm-cache-key }}
+
+      - uses: ./.github/actions/cache-prune
+        if: github.ref == 'refs/heads/main' && steps.toolchain.outputs.spm-cache-hit != 'true'
+        with:
+          prefix: spm-${{ runner.os }}-
+          keep: ${{ steps.toolchain.outputs.spm-cache-key }}
 
   ipa:
     name: Unsigned IPA
