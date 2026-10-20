@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -30,6 +31,11 @@ const dnsProbeLabel = "ichor-dns-check"
 // errDNSWildcardDepth is a "*" anywhere but the first label, which the DNS does not treat as
 // a wildcard and no resolver can be asked about.
 var errDNSWildcardDepth = errors.New("a wildcard can only be the first label")
+
+// dnsCheckCNAMETimeout bounds a CNAME record's canonical-name lookup, which runs beside its
+// address lookup: a resolver that never answers a CNAME query (seen with a local stub for a
+// name that has no CNAME) must not use up the record's share of the budget.
+const dnsCheckCNAMETimeout = 3 * time.Second
 
 // dnsCheckOwnerTimeout bounds the ownership check on its own: a resolver that cannot serve
 // TXT (the Android Go resolver often cannot) must not delay the verdict.
@@ -127,6 +133,7 @@ func dnsCheckWith(resolver dnsChecker, recordsJSON string, timeoutMs int) (strin
 	defer cancel()
 
 	results := make([]dnsCheckEntry, len(records))
+	memo := newMemoDNS(resolver)
 	sem := make(chan struct{}, dnsCheckConcurrency)
 
 	var wg sync.WaitGroup
@@ -140,7 +147,7 @@ func dnsCheckWith(resolver dnsChecker, recordsJSON string, timeoutMs int) (strin
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			results[i] = checkDNSRecord(ctx, resolver, record)
+			results[i] = checkDNSRecord(ctx, memo, record)
 		}()
 	}
 
@@ -220,20 +227,11 @@ func dnsProbeName(dnsName string) (string, error) {
 }
 
 // lookupDNSAnswers resolves one record the way its type asks: A and AAAA through the address
-// lookup, CNAME through the canonical name. A name that does not exist comes back as no
+// lookup, CNAME through the canonical name and the addresses it ends at. A name that does not exist comes back as no
 // answers, not an error.
 func lookupDNSAnswers(ctx context.Context, resolver dnsChecker, record dnsCheckRequest) ([]string, error) {
 	if strings.EqualFold(strings.TrimSpace(record.RecordType), "CNAME") {
-		name, err := resolver.LookupCNAME(ctx, record.DNSName)
-		if err != nil {
-			if dnsNotFound(err) {
-				return nil, nil
-			}
-
-			return nil, err
-		}
-
-		return []string{normalizeDNSName(name)}, nil
+		return lookupCNAMEAnswers(ctx, resolver, record.DNSName)
 	}
 
 	network := "ip"
@@ -253,17 +251,111 @@ func lookupDNSAnswers(ctx context.Context, resolver dnsChecker, record dnsCheckR
 		return nil, err
 	}
 
+	return dnsAddrStrings(addrs), nil
+}
+
+// lookupCNAMEAnswers resolves a CNAME record twice, at once: its canonical name and the
+// addresses the name ends at. The addresses are what make the verdict hold when the resolver
+// flattens the CNAME (getaddrinfo answers the name itself when it has addresses but no CNAME)
+// or when a chain ends at another name than the target: they are compared with the target's
+// own. The canonical name comes first, unless it is the name itself (no CNAME seen), then the
+// addresses. The CNAME lookup has its own short deadline, since some resolvers never answer
+// a CNAME query for a name without one. No answer from both is missing; an error only when
+// neither lookup answered.
+func lookupCNAMEAnswers(ctx context.Context, resolver dnsChecker, dnsName string) ([]string, error) {
+	var (
+		canonical string
+		cnameErr  error
+		wg        sync.WaitGroup
+	)
+
+	wg.Go(func() {
+		cnameCtx, cancel := context.WithTimeout(ctx, dnsCheckCNAMETimeout)
+		defer cancel()
+
+		canonical, cnameErr = resolver.LookupCNAME(cnameCtx, dnsName)
+	})
+
+	addrs, addrErr := resolver.LookupNetIP(ctx, "ip", dnsName)
+
+	wg.Wait()
+
+	var answers []string
+
+	if name := normalizeDNSName(canonical); cnameErr == nil && name != "" && name != normalizeDNSName(dnsName) {
+		answers = append(answers, name)
+	}
+
+	if addrErr == nil {
+		answers = append(answers, dnsAddrStrings(addrs)...)
+	}
+
+	if len(answers) > 0 {
+		return answers, nil
+	}
+
+	if dnsNotFound(cnameErr) {
+		cnameErr = nil
+	}
+
+	if dnsNotFound(addrErr) {
+		addrErr = nil
+	}
+
+	return nil, cmp.Or(cnameErr, addrErr)
+}
+
+// dnsAddrStrings writes addresses the way answers carry them, IPv4-mapped ones unmapped.
+func dnsAddrStrings(addrs []netip.Addr) []string {
 	out := make([]string, 0, len(addrs))
 	for _, addr := range addrs {
 		out = append(out, addr.Unmap().String())
 	}
 
-	return out, nil
+	return out
+}
+
+// memoDNS is a dnsChecker that resolves each address lookup once per call: many records
+// share one target (a Gateway's name, a load balancer's), and each record's verdict
+// resolves its targets. Concurrent askers of the same name wait for the first answer.
+type memoDNS struct {
+	dnsChecker
+
+	mu    sync.Mutex
+	addrs map[string]*memoDNSAddrs
+}
+
+// memoDNSAddrs is one memoised address lookup.
+type memoDNSAddrs struct {
+	once  sync.Once
+	addrs []netip.Addr
+	err   error
+}
+
+func newMemoDNS(resolver dnsChecker) *memoDNS {
+	return &memoDNS{dnsChecker: resolver, addrs: map[string]*memoDNSAddrs{}}
+}
+
+func (m *memoDNS) LookupNetIP(ctx context.Context, network, host string) ([]netip.Addr, error) {
+	key := network + " " + normalizeDNSName(host)
+
+	m.mu.Lock()
+	entry, ok := m.addrs[key]
+	if !ok {
+		entry = &memoDNSAddrs{}
+		m.addrs[key] = entry
+	}
+	m.mu.Unlock()
+
+	entry.once.Do(func() { entry.addrs, entry.err = m.dnsChecker.LookupNetIP(ctx, network, host) })
+
+	return slices.Clone(entry.addrs), entry.err
 }
 
 // dnsAnswersMatch reports whether any answer is one of the targets. Addresses compare as
 // addresses, so round-robin order does not matter; a target that is itself a hostname (an
-// ELB name, a CNAME target) is resolved once and its addresses count too.
+// ELB name, a CNAME target) is resolved once and its addresses count too, which is how a
+// flattened or chained CNAME (whose answers carry the addresses) still matches its target.
 func dnsAnswersMatch(ctx context.Context, resolver dnsChecker, answers, targets []string) bool {
 	if len(targets) == 0 {
 		return false

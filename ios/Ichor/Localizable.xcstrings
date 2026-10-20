@@ -246,6 +246,41 @@
         }
       }
     },
+    "Plugin documentation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plugin-Dokumentation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentación de plugins"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentation des plugins"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentazione dei plugin"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документація плагінів"
+          }
+        }
+      }
+    },
     "Propose in Git" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2329,37 +2364,37 @@
         }
       }
     },
-    "An imported plugin reads only the resources it declares, with your own Kubernetes access, and talks to nothing but the Kubernetes API. The format is described in docs/plugins.md." : {
+    "An imported plugin reads only the resources it declares, with your own Kubernetes access, and talks to nothing but the Kubernetes API." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ein importiertes Plugin liest nur die Ressourcen, die es angibt, mit deinem eigenen Kubernetes-Zugang, und spricht mit nichts außer der Kubernetes-API. Das Format ist in docs/plugins.md beschrieben."
+            "value" : "Ein importiertes Plugin liest nur die Ressourcen, die es angibt, mit deinem eigenen Kubernetes-Zugang, und spricht mit nichts außer der Kubernetes-API."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Un plugin importado solo lee los recursos que declara, con tu propio acceso a Kubernetes, y no habla con nada más que la API de Kubernetes. El formato se describe en docs/plugins.md."
+            "value" : "Un plugin importado solo lee los recursos que declara, con tu propio acceso a Kubernetes, y no habla con nada más que la API de Kubernetes."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Un plugin importé ne lit que les ressources qu'il déclare, avec votre propre accès Kubernetes, et ne contacte rien d'autre que l'API Kubernetes. Le format est décrit dans docs/plugins.md."
+            "value" : "Un plugin importé ne lit que les ressources qu'il déclare, avec votre propre accès Kubernetes, et ne contacte rien d'autre que l'API Kubernetes."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Un plugin importato legge solo le risorse che dichiara, con il tuo accesso Kubernetes, e non comunica con nient'altro che l'API Kubernetes. Il formato è descritto in docs/plugins.md."
+            "value" : "Un plugin importato legge solo le risorse che dichiara, con il tuo accesso Kubernetes, e non comunica con nient'altro che l'API Kubernetes."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Імпортований плагін читає лише ресурси, які оголошує, з вашим власним доступом до Kubernetes, і не звертається ні до чого, крім API Kubernetes. Формат описано в docs/plugins.md."
+            "value" : "Імпортований плагін читає лише ресурси, які оголошує, з вашим власним доступом до Kubernetes, і не звертається ні до чого, крім API Kubernetes."
           }
         }
       }

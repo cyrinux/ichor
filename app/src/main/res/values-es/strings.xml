@@ -5523,6 +5523,7 @@
     <string name="plugins_imported">Importados</string>
     <string name="plugins_empty">Aún no hay plugins importados.</string>
     <string name="plugins_import">Importar un plugin</string>
+    <string name="plugins_docs">Documentación de plugins</string>
     <string name="plugins_reads">Lee %1$s</string>
     <string name="plugins_off_reason">Desactivado: %1$s</string>
     <string name="plugins_enabled">Activado</string>
@@ -5530,7 +5531,7 @@
     <string name="plugins_remove_title">¿Eliminar %1$s?</string>
     <string name="plugins_remove_text">Su archivo se elimina de este teléfono y su pestaña desaparece.</string>
     <string name="plugins_load_failed">Plugins: %1$s</string>
-    <string name="plugins_explainer">Un plugin importado solo lee los recursos que declara, con tu propio acceso a Kubernetes, y no habla con nada más que la API de Kubernetes. El formato se describe en docs/plugins.md.</string>
+    <string name="plugins_explainer">Un plugin importado solo lee los recursos que declara, con tu propio acceso a Kubernetes, y no habla con nada más que la API de Kubernetes.</string>
     <string name="plugins_source_paste">Pegar</string>
     <string name="plugins_source_file">Archivo</string>
     <string name="plugins_source_url">URL</string>

@@ -38,6 +38,8 @@ data class ExternalDnsController(
     /** --interval in seconds, 60 (its default) when unset. */
     val intervalSeconds: Int = 60,
     val annotationFilter: String = "",
+    /** --managed-record-types, upper-cased; A, AAAA, CNAME (its default) when unset. */
+    val managedRecordTypes: List<String> = emptyList(),
     val health: String = "",
     /** Wire values of [ExternalDnsReason]. */
     val reasons: List<String> = emptyList(),

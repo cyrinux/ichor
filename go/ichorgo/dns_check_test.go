@@ -196,6 +196,144 @@ func TestDNSCheckStatuses(t *testing.T) {
 	}
 }
 
+func TestDNSCheckCNAMEByAddresses(t *testing.T) {
+	resolver := stubDNS{
+		addresses: map[string][]string{
+			"infra.example.com":   {"203.0.113.50", "2001:db8::50"},
+			"flat.example.com":    {"203.0.113.50"},
+			"chain.example.com":   {"2001:db8::50"},
+			"edge.example.net":    {"203.0.113.50"},
+			"moved.example.com":   {"198.51.100.9"},
+			"partial.example.com": {"203.0.113.50"},
+		},
+		cnames: map[string]string{
+			// getaddrinfo answers the name itself when it has addresses but no CNAME.
+			"flat.example.com":  "flat.example.com.",
+			"chain.example.com": "edge.example.net.",
+			"moved.example.com": "lb.example.net.",
+		},
+		failures: map[string]error{
+			"broken.example.com": &net.DNSError{Err: "server misbehaving", Name: "broken.example.com"},
+		},
+	}
+
+	tests := []struct {
+		name    string
+		record  dnsCheckRequest
+		status  string
+		answers []string
+	}{
+		{
+			name:    "a flattened CNAME with the target's addresses matches",
+			record:  dnsCheckRequest{DNSName: "flat.example.com", RecordType: "CNAME", Targets: []string{"infra.example.com"}},
+			status:  dnsStatusMatch,
+			answers: []string{"203.0.113.50"},
+		},
+		{
+			name:    "a chain ending at another name with the same addresses matches",
+			record:  dnsCheckRequest{DNSName: "chain.example.com", RecordType: "CNAME", Targets: []string{"infra.example.com"}},
+			status:  dnsStatusMatch,
+			answers: []string{"edge.example.net", "2001:db8::50"},
+		},
+		{
+			name:    "a CNAME to a name with other addresses mismatches and shows them",
+			record:  dnsCheckRequest{DNSName: "moved.example.com", RecordType: "CNAME", Targets: []string{"infra.example.com"}},
+			status:  dnsStatusMismatch,
+			answers: []string{"lb.example.net", "198.51.100.9"},
+		},
+		{
+			name:    "a CNAME lookup that fails still counts the addresses",
+			record:  dnsCheckRequest{DNSName: "partial.example.com", RecordType: "CNAME", Targets: []string{"infra.example.com"}},
+			status:  dnsStatusMatch,
+			answers: []string{"203.0.113.50"},
+		},
+		{
+			name:    "nothing resolves is missing",
+			record:  dnsCheckRequest{DNSName: "gone.example.com", RecordType: "CNAME", Targets: []string{"infra.example.com"}},
+			status:  dnsStatusMissing,
+			answers: []string{},
+		},
+		{
+			name:    "a resolver that answers neither lookup is an error",
+			record:  dnsCheckRequest{DNSName: "broken.example.com", RecordType: "CNAME", Targets: []string{"infra.example.com"}},
+			status:  dnsStatusError,
+			answers: []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := checkDNSRecord(context.Background(), resolver, tt.record)
+
+			if got.Status != tt.status {
+				t.Errorf("status = %q, want %q", got.Status, tt.status)
+			}
+
+			if strings.Join(got.Answers, ",") != strings.Join(tt.answers, ",") {
+				t.Errorf("answers = %v, want %v", got.Answers, tt.answers)
+			}
+		})
+	}
+}
+
+// count is how many times the resolver was asked about host.
+func (r *recordingDNS) count(host string) int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	n := 0
+
+	for _, q := range r.queried {
+		if q == host {
+			n++
+		}
+	}
+
+	return n
+}
+
+func TestDNSCheckResolvesSharedTargetOnce(t *testing.T) {
+	resolver := &recordingDNS{stubDNS: stubDNS{
+		addresses: map[string][]string{
+			"infra.example.com": {"203.0.113.50"},
+			"a.example.com":     {"203.0.113.50"},
+			"b.example.com":     {"203.0.113.50"},
+			"c.example.com":     {"203.0.113.50"},
+		},
+	}}
+
+	records := []dnsCheckRequest{
+		{DNSName: "a.example.com", RecordType: "CNAME", Targets: []string{"infra.example.com"}},
+		{DNSName: "b.example.com", RecordType: "CNAME", Targets: []string{"infra.example.com"}},
+		{DNSName: "c.example.com", RecordType: "CNAME", Targets: []string{"infra.example.com"}},
+	}
+
+	raw, err := json.Marshal(records)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := dnsCheckWith(resolver, string(raw), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var result dnsCheckResult
+	if err := json.Unmarshal([]byte(out), &result); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, entry := range result.Results {
+		if entry.Status != dnsStatusMatch {
+			t.Errorf("%s = %q, want match", entry.DNSName, entry.Status)
+		}
+	}
+
+	if n := resolver.count("infra.example.com"); n != 1 {
+		t.Errorf("the shared target was resolved %d times, want once", n)
+	}
+}
+
 func TestDNSCheckOwnerUnknownWhenTXTUnreadable(t *testing.T) {
 	// A resolver that answers addresses but refuses TXT (the Android Go resolver often
 	// cannot serve TXT): the owner is unknown, never an error.
