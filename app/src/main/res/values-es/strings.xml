@@ -539,6 +539,8 @@
     <string name="monitor_background_alerts_desc">Avisa cuando un nodo cae o se recupera, ante nuevas alarmas de etcd y a diario cuando el certificado de cliente caduca en menos de %1$d días. Sin avisos mientras el clúster es inaccesible (p. ej., sin VPN).</string>
     <string name="monitor_data_services">Vigilar los servicios de datos</string>
     <string name="monitor_data_services_desc">También avisa de volúmenes de Longhorn con fallo o degradados, de un clúster de Garage degradado y de clústeres de Postgres caídos o con copias fallidas. Cada comprobación usa la API de Kubernetes (os:admin) y ejecuta la CLI de Garage en uno de sus pods.</string>
+    <string name="monitor_imported_plugins">Alertas de plugins importados</string>
+    <string name="monitor_imported_plugins_desc">Los plugins que importaste también notifican, como los integrados. Desactivado: solo los plugins integrados envían alertas.</string>
     <string name="monitor_data_problem">%1$s requiere atención</string>
     <string name="monitor_data_ok">%1$s vuelve a estar correcto</string>
     <string name="monitor_data_text">%1$s · %2$s</string>

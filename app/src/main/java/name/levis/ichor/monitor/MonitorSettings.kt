@@ -33,6 +33,19 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         _dataServicesWatched.value = watched
     }
 
+    private val _importedPluginAlerts = MutableStateFlow(prefs.getBoolean(KEY_IMPORTED_PLUGINS, false))
+
+    /**
+     * Opt-in: imported plugins' findings notify too. Off, only the built-in plugins' do: a plugin
+     * pasted in must not page anyone by itself.
+     */
+    val importedPluginAlerts: StateFlow<Boolean> = _importedPluginAlerts.asStateFlow()
+
+    fun setImportedPluginAlerts(on: Boolean) {
+        prefs.edit().putBoolean(KEY_IMPORTED_PLUGINS, on).apply()
+        _importedPluginAlerts.value = on
+    }
+
     private val _gitopsWatched = MutableStateFlow(prefs.getBoolean(KEY_GITOPS, false))
 
     /** Opt-in: also check Argo CD and Flux apps through the Kubernetes API. */
@@ -197,6 +210,7 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_INTERVAL = "interval_minutes"
         private const val KEY_SNAPSHOT = "snapshot"
         private const val KEY_DATA_SERVICES = "data_services_watched"
+        private const val KEY_IMPORTED_PLUGINS = "monitor_imported_plugins"
         private const val KEY_GITOPS = "gitops_watched"
         private const val KEY_CHECKUP = "checkup_watched"
         private const val KEY_ALERTMANAGER = "alertmanager_watched"

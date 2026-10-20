@@ -103,12 +103,14 @@ public struct CheckupReport: Decodable, Equatable, Sendable {
     /// `alertIssues`, leaving out as well the kinds the GitOps alert already raises
     /// (`gitopsAlertedKinds`) when that track is watched, and the plugin findings when the
     /// plugins' own track (pluginIssuesOf) is watched.
-    public func alertIssues(gitopsWatched: Bool, pluginsWatched: Bool = false) -> [String: String] {
+    /// An imported plugin's finding alerts only with `importedPluginsWatched`.
+    public func alertIssues(gitopsWatched: Bool, pluginsWatched: Bool = false, importedPluginsWatched: Bool = false) -> [String: String] {
         var skipped: Set<String> = gitopsWatched ? gitopsAlertedKinds : []
         if pluginsWatched { skipped.insert(CheckupKind.plugin.rawValue) }
         var issues: [String: String] = [:]
         for section in sections where section.id != CheckupSectionID.events.rawValue {
-            for finding in section.findings where finding.severity != .info && !skipped.contains(finding.kindName) {
+            for finding in section.findings where finding.severity != .info && !skipped.contains(finding.kindName)
+                && !(finding.plugin?.user == true && !importedPluginsWatched) {
                 let key = "\(section.id)|\(finding.kindName)|\(finding.alertSubject)"
                 // Two plugin findings on one object: the worst one.
                 if issues[key] == CheckupSeverity.critical.rawValue { continue }
@@ -405,9 +407,10 @@ public let gitopsAlertedKinds: Set<String> = [CheckupKind.sopsDecryptionFailed.r
 /// as new once it reads again. With `gitopsWatched`, the kinds the GitOps alert already raises
 /// are left to it; with `pluginsWatched`, the plugin findings to the plugins' track.
 public func checkupIssuesWithGaps(_ report: CheckupReport, known: [String: String], gitopsWatched: Bool = false,
-                                  pluginsWatched: Bool = false) -> [String: String] {
+                                  pluginsWatched: Bool = false, importedPluginsWatched: Bool = false) -> [String: String] {
     let unread = report.sections.filter { !$0.error.isEmpty }.map { "\($0.id)|" }
-    var issues = report.alertIssues(gitopsWatched: gitopsWatched, pluginsWatched: pluginsWatched)
+    var issues = report.alertIssues(gitopsWatched: gitopsWatched, pluginsWatched: pluginsWatched,
+                                    importedPluginsWatched: importedPluginsWatched)
     let pluginKind = "|\(CheckupKind.plugin.rawValue)|"
     for (key, value) in known where issues[key] == nil && unread.contains(where: key.hasPrefix) && !(pluginsWatched && key.contains(pluginKind)) {
         issues[key] = value

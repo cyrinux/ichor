@@ -469,6 +469,7 @@ Every finding carries the same fields in both places:
 | `title`, `detail` | the finding's templates, rendered and translated (`detail` may be absent) |
 | `ref` | the object, as in the render tree (`group`, `version`, `resource`, `namespace`, `name`) |
 | `opens` | the card the finding links to; the apps open the plugin's screen on it |
+| `user` | `true` for an imported plugin (absent for a built-in one): the apps notify on its findings only when Settings → Monitoring → "Alerts from imported plugins" is on (off by default) |
 
 **Checkup.** `KubeCheckup(config, context, kubeServer, locale)` has a `plugins` section (its
 progress step has the same id) whose findings have `kind: "plugin"`, the fields above, and

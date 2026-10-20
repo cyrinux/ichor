@@ -187,6 +187,8 @@ data class CheckupFinding(
     @SerialName("detail") val pluginDetail: String = "",
     val ref: PluginRef? = null,
     val opens: String = "",
+    /** The plugin was imported, not built in (see [PluginFindingItem.user]). */
+    val user: Boolean = false,
 )
 
 /** A node as Kubernetes sees it: requests against allocatable (cores, bytes), taints and labels. */
@@ -278,9 +280,14 @@ val GITOPS_ALERTED_KINDS = setOf(CheckupKind.SOPS_DECRYPTION_FAILED)
  * when the GitOps apps are watched too ([gitopsWatched]), the kinds that track already alerts on
  * ([GITOPS_ALERTED_KINDS]). A plugin finding's subject is [pluginAlertSubject]; with
  * [pluginsWatched] (the plugin findings track reads them on its own, with their words and a
- * link to the plugin) the plugin findings are left to it.
+ * link to the plugin) the plugin findings are left to it. An imported plugin's finding alerts
+ * only with [importedPluginsWatched].
  */
-fun CheckupReport.alertIssues(gitopsWatched: Boolean = false, pluginsWatched: Boolean = false): Map<String, String> = buildMap {
+fun CheckupReport.alertIssues(
+    gitopsWatched: Boolean = false,
+    pluginsWatched: Boolean = false,
+    importedPluginsWatched: Boolean = false,
+): Map<String, String> = buildMap {
     val skipped = buildSet {
         if (gitopsWatched) addAll(GITOPS_ALERTED_KINDS)
         if (pluginsWatched) add(CheckupKind.PLUGIN)
@@ -288,7 +295,7 @@ fun CheckupReport.alertIssues(gitopsWatched: Boolean = false, pluginsWatched: Bo
     sections.forEach { section ->
         if (section.id == CheckupSectionId.EVENTS) return@forEach
         section.findings.forEach { f ->
-            if (f.level == CheckupSeverity.INFO || f.kind in skipped) return@forEach
+            if (f.level == CheckupSeverity.INFO || f.kind in skipped || (f.user && !importedPluginsWatched)) return@forEach
             val subject = if (f.kind == CheckupKind.PLUGIN) f.pluginAlertSubject else f.subject
             put("${section.id}|${f.kind}|$subject", f.severity)
         }

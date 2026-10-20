@@ -113,6 +113,11 @@ func TestKubePluginFindingsTwoPlugins(t *testing.T) {
 		f.Opens != "widgets" || f.Ref == nil || f.Ref.Resource != "widgets" || f.Ref.Namespace != "demo-shop" || !strings.Contains(f.Detail, "disk full") {
 		t.Fatalf("finding %+v", f)
 	}
+
+	// demo-widgets is no built-in (an imported plugin, for the apps' switch); kube-green is.
+	if !r.Findings[0].User || r.Findings[1].User {
+		t.Errorf("user flags %v %v", r.Findings[0].User, r.Findings[1].User)
+	}
 }
 
 // A plugin the account may not read is an errors entry; the other plugins' findings stay.

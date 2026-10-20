@@ -21,9 +21,11 @@ public struct PluginFindingInfo: Decodable, Equatable, Sendable {
     public let ref: PluginRef?
     /// The card the finding links to.
     public let opens: String
+    /// The plugin was imported, not built in: notified only when the user said so.
+    public let user: Bool
 
     public init(key: String = "", plugin: String = "", pluginName: String = "", pluginIcon: String = "", id: String = "",
-                title: String = "", detail: String = "", ref: PluginRef? = nil, opens: String = "") {
+                title: String = "", detail: String = "", ref: PluginRef? = nil, opens: String = "", user: Bool = false) {
         self.key = key
         self.plugin = plugin
         self.pluginName = pluginName
@@ -33,9 +35,10 @@ public struct PluginFindingInfo: Decodable, Equatable, Sendable {
         self.detail = detail
         self.ref = ref
         self.opens = opens
+        self.user = user
     }
 
-    private enum CodingKeys: String, CodingKey { case key, plugin, pluginName, pluginIcon, id, title, detail, ref, opens }
+    private enum CodingKeys: String, CodingKey { case key, plugin, pluginName, pluginIcon, id, title, detail, ref, opens, user }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -47,6 +50,7 @@ public struct PluginFindingInfo: Decodable, Equatable, Sendable {
         detail = try c.field(.detail, "")
         ref = try? c.decodeIfPresent(PluginRef.self, forKey: .ref)
         opens = try c.field(.opens, "")
+        user = try c.field(.user, false)
         let sent: String = try c.field(.key, "")
         key = sent.isEmpty ? pluginFindingKey(plugin: plugin, finding: id, ref: ref) : sent
     }
@@ -189,10 +193,13 @@ public func pluginIssueSeverity(_ value: String) -> String { PluginIssue(value: 
 
 /// The plugin findings worth a notification, keyed by their `key`: warnings and critical ones
 /// (an info is shown, not notified), one per key (the worst). With `checkupWatched`, the
-/// findings the checkup reports from a section of its own (`checkupNative`) are left to it.
-public func pluginIssuesOf(_ report: PluginFindingsReport, checkupWatched: Bool) -> [String: String] {
+/// findings the checkup reports from a section of its own (`checkupNative`) are left to it. An
+/// imported plugin's findings (`user`) are notified only with `importedWatched`: a plugin pasted
+/// in does not page anyone by itself.
+public func pluginIssuesOf(_ report: PluginFindingsReport, checkupWatched: Bool, importedWatched: Bool = false) -> [String: String] {
     var out: [String: PluginIssue] = [:]
-    for finding in report.findings where finding.severity != .info && !(checkupWatched && finding.checkupNative) {
+    for finding in report.findings where finding.severity != .info && !(checkupWatched && finding.checkupNative)
+        && !(finding.info.user && !importedWatched) {
         let key = finding.info.key
         let severity = finding.severity == .critical ? dataCritical : dataWarning
         if out[key]?.severity == dataCritical { continue }
@@ -206,9 +213,10 @@ public func pluginIssuesOf(_ report: PluginFindingsReport, checkupWatched: Bool)
 /// failed (the last snapshot's issues stand); otherwise the issues read, plus those `known`
 /// (the previous snapshot's) had for a plugin in `errors` (not read in full), or for any plugin
 /// when the findings were cut (`truncated`). An unread plugin neither alerts nor clears.
-public func pluginIssuesWithGaps(_ report: PluginFindingsReport?, known: [String: String], checkupWatched: Bool) -> [String: String]? {
+public func pluginIssuesWithGaps(_ report: PluginFindingsReport?, known: [String: String], checkupWatched: Bool,
+                                 importedWatched: Bool = false) -> [String: String]? {
     guard let report else { return nil }
-    var out = pluginIssuesOf(report, checkupWatched: checkupWatched)
+    var out = pluginIssuesOf(report, checkupWatched: checkupWatched, importedWatched: importedWatched)
     let unread = Set(report.errors.map(\.plugin))
     for (key, value) in known where out[key] == nil && (report.truncated > 0 || unread.contains(pluginIDOfFindingKey(key))) {
         out[key] = value

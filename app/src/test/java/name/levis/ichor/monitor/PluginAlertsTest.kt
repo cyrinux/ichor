@@ -54,6 +54,20 @@ class PluginAlertsTest {
     )
 
     @Test
+    fun anImportedPluginNotifiesOnlyWhenTheUserSaidSo() {
+        val imported = TalosJson.decodeFromString(
+            PluginFindingsReport.serializer(),
+            """{"plugins": 1, "findings": [{"severity": "critical", "user": true, "key": "$widgetKey",
+                "plugin": "demo-widgets", "pluginName": "Demo Widgets", "id": "widget-broken", "title": "demo-lab/gear"}]}""",
+        )
+        assertTrue(imported.findings.single().user)
+        assertEquals(emptySet<String>(), pluginIssuesOf(imported, checkupWatched = false).keys)
+        assertEquals(setOf(widgetKey), pluginIssuesOf(imported, checkupWatched = false, importedWatched = true).keys)
+        // The built-in plugins' findings do not wait for the switch.
+        assertTrue(sleepKey in pluginIssuesOf(report, checkupWatched = false).keys)
+    }
+
+    @Test
     fun theGoJsonDecodes() {
         assertEquals(3, report.plugins)
         assertEquals(3, report.findings.size)

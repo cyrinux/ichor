@@ -36,6 +36,8 @@ data class PluginFindingItem(
     val detail: String = "",
     val ref: PluginRef? = null,
     val opens: String = "",
+    /** The plugin was imported, not built in: notified only when the user said so. */
+    val user: Boolean = false,
 )
 
 /** A plugin that could not be read in full ([resource] set) or at all. */

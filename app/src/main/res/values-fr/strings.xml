@@ -539,6 +539,8 @@
     <string name="monitor_background_alerts_desc">Prévient quand un nœud tombe ou redevient disponible, lors de nouvelles alarmes etcd, et chaque jour quand le certificat client expire dans moins de %1$d jours. Silencieux tant que le cluster est injoignable (par exemple hors VPN).</string>
     <string name="monitor_data_services">Surveiller les services de données</string>
     <string name="monitor_data_services_desc">Alerte aussi quand un volume Longhorn tombe en panne ou se dégrade, quand un cluster Garage est dégradé et quand un cluster Postgres tombe ou que ses sauvegardes échouent. Chaque vérification utilise l’API Kubernetes (os:admin) et lance la CLI Garage dans un de ses pods.</string>
+    <string name="monitor_imported_plugins">Alertes des plugins importés</string>
+    <string name="monitor_imported_plugins_desc">Les plugins que vous avez importés notifient aussi, comme les plugins intégrés. Désactivé : seuls les plugins intégrés envoient des alertes.</string>
     <string name="monitor_data_problem">%1$s à surveiller</string>
     <string name="monitor_data_ok">%1$s est de nouveau sain</string>
     <string name="monitor_data_text">%1$s · %2$s</string>
