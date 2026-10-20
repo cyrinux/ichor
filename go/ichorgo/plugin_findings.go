@@ -33,6 +33,9 @@ type pluginFinding struct {
 	Detail     string      `json:"detail,omitempty"`
 	Ref        *plugin.Ref `json:"ref,omitempty"`
 	Opens      string      `json:"opens,omitempty"`
+	// User: the plugin was imported (not built in). The apps notify on its findings only when
+	// the user said so: a plugin pasted in should not page anyone by itself.
+	User bool `json:"user,omitempty"`
 }
 
 // pluginFindingItem is a KubePluginFindings finding: severity info, warning or critical.
@@ -224,7 +227,7 @@ func pluginError(c *plugin.Compiled, resource, message string) pluginFindingsErr
 func pluginFindingOf(c *plugin.Compiled, f plugin.TreeFind) pluginFinding {
 	return pluginFinding{
 		Key: pluginFindingKey(c.Plugin.ID, f), Plugin: c.Plugin.ID, PluginName: c.Plugin.Name, PluginIcon: c.Plugin.Icon,
-		ID: f.ID, Title: f.Title, Detail: f.Detail, Ref: f.Ref, Opens: f.Opens,
+		ID: f.ID, Title: f.Title, Detail: f.Detail, Ref: f.Ref, Opens: f.Opens, User: !builtinIDs()[c.Plugin.ID],
 	}
 }
 

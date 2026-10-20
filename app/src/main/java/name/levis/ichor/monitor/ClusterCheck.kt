@@ -93,6 +93,8 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
     // One call bounded by Go (10 s) reads them all, their words in the app's language, alongside
     // the other reads so it cannot push the check past its time.
     val watchPlugins = watchData
+    // An imported plugin notifies only when the user turned that on (Settings, Monitoring).
+    val watchImported = store.importedPluginAlerts.value
     val locale = AppLocale.language(app)
     val pluginRead = if (watchPlugins) {
         checks.async { runCatching { reads.plugins.findings(hints = "", locale = locale) }.getOrNull() }
@@ -118,14 +120,20 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
     // (External Secrets) is left to it.
     val watchCheckup = store.checkupWatched.value && workloads
     val pluginIssues = pluginRead?.await()
-        ?.let { pluginIssuesWithGaps(it, known = knownPluginIssues(prev, name), checkupWatched = watchCheckup) }
+        ?.let { pluginIssuesWithGaps(it, known = knownPluginIssues(prev, name), checkupWatched = watchCheckup, importedWatched = watchImported) }
 
     // And for the checkup: it lists the cluster's pods and asks every kubelet. A section that
     // could not be read keeps its known findings. Its plugins section is left to the plugin
     // findings above when those are watched (their own words, a link to the plugin).
     val checkupIssues = if (watchCheckup) {
         runCatching { reads.kube.checkup(locale) }.getOrNull()?.let {
-            checkupIssuesWithGaps(it, known = knownCheckupIssues(prev, name), gitopsWatched = watchGitops, pluginsWatched = watchPlugins)
+            checkupIssuesWithGaps(
+                it,
+                known = knownCheckupIssues(prev, name),
+                gitopsWatched = watchGitops,
+                pluginsWatched = watchPlugins,
+                importedPluginsWatched = watchImported,
+            )
         }
     } else {
         null

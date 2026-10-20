@@ -59,6 +59,26 @@ final class PluginFindingsTests: XCTestCase {
         XCTAssertEqual(r.errors.first?.resource, "widgets.widgets.example.com")
     }
 
+    func testAnImportedPluginNotifiesOnlyWhenTheUserSaidSo() throws {
+        let key = "plugin:demo-widgets:widget-broken:demo-lab/gear"
+        let imported = try report(#"""
+        {"plugins": 1, "findings": [{"severity": "critical", "user": true, "key": "plugin:demo-widgets:widget-broken:demo-lab/gear",
+          "plugin": "demo-widgets", "id": "widget-broken", "title": "demo-lab/gear"}]}
+        """#)
+        XCTAssertTrue(imported.findings[0].info.user)
+        XCTAssertEqual(pluginIssuesOf(imported, checkupWatched: false), [:])
+        XCTAssertEqual(Array(pluginIssuesOf(imported, checkupWatched: false, importedWatched: true).keys), [key])
+
+        // The checkup's plugins section follows the same switch.
+        let checkup = try TalosJSON.decode(CheckupReport.self, from: #"""
+        {"status":"critical","sections":[{"id":"plugins","status":"critical","checked":1,"findings":[
+          {"kind":"plugin","severity":"critical","namespace":"demo-lab","name":"gear","user":true,
+           "key":"plugin:demo-widgets:widget-broken:demo-lab/gear","plugin":"demo-widgets","id":"widget-broken","title":"demo-lab/gear"}]}]}
+        """#)
+        XCTAssertEqual(checkup.alertIssues, [:])
+        XCTAssertEqual(checkup.alertIssues(gitopsWatched: false, importedPluginsWatched: true).count, 1)
+    }
+
     func testEmptyReport() throws {
         let r = try report("{}")
         XCTAssertEqual(r.plugins, 0)

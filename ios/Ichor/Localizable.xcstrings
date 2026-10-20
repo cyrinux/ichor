@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Alerts from imported plugins" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertes des plugins importés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnungen importierter Plugins"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertas de plugins importados"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisi dai plugin importati"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сповіщення від імпортованих плагінів"
+          }
+        }
+      }
+    },
+    "Plugins you imported notify too, like the built-in ones. Off: only built-in plugins send alerts." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les plugins que vous avez importés notifient aussi, comme les plugins intégrés. Désactivé : seuls les plugins intégrés envoient des alertes."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plugins, die du importiert hast, benachrichtigen ebenfalls, wie die integrierten. Aus: Nur integrierte Plugins senden Warnungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los plugins que importaste también notifican, como los integrados. Desactivado: solo los plugins integrados envían alertas."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anche i plugin che hai importato inviano notifiche, come quelli integrati. Disattivato: solo i plugin integrati inviano avvisi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Плагіни, які ви імпортували, теж надсилають сповіщення, як вбудовані. Вимкнено: сповіщення надсилають лише вбудовані плагіни."
+          }
+        }
+      }
+    },
     "What the plugins of the apps the cluster runs report, in their own words" : {
       "extractionState" : "manual",
       "localizations" : {

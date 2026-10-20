@@ -16,11 +16,12 @@ fun checkupIssuesWithGaps(
     known: Map<String, String>,
     gitopsWatched: Boolean = false,
     pluginsWatched: Boolean = false,
+    importedPluginsWatched: Boolean = false,
 ): Map<String, String> {
     val unread = report.sections.filter { it.error.isNotEmpty() }.map { "${it.id}|" }
     val leftToPlugins = "|${CheckupKind.PLUGIN}|"
     val kept = known.filterKeys { key -> unread.any { key.startsWith(it) } && !(pluginsWatched && leftToPlugins in key) }
-    return report.alertIssues(gitopsWatched, pluginsWatched) + kept
+    return report.alertIssues(gitopsWatched, pluginsWatched, importedPluginsWatched) + kept
 }
 
 /**

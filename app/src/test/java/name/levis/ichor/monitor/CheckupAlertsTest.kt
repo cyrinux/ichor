@@ -149,6 +149,24 @@ class CheckupAlertsTest {
     )
 
     @Test
+    fun anImportedPluginsFindingAlertsOnlyWhenTheUserSaidSo() {
+        val imported = TalosJson.decodeFromString(
+            CheckupReport.serializer(),
+            """
+                {"status":"critical","sections":[{"id":"plugins","status":"critical","checked":1,"findings":[
+                  {"kind":"plugin","severity":"critical","namespace":"demo-lab","name":"gear","user":true,
+                   "key":"plugin:demo-widgets:widget-broken:demo-lab/gear","plugin":"demo-widgets","id":"widget-broken","title":"demo-lab/gear"}]}]}
+            """.trimIndent(),
+        )
+        assertTrue(imported.sections.single().findings.single().user)
+        assertEquals(emptyMap<String, String>(), imported.alertIssues())
+        assertEquals(
+            mapOf("plugins|plugin|demo-widgets:widget-broken:demo-lab/gear" to DATA_CRITICAL),
+            imported.alertIssues(importedPluginsWatched = true),
+        )
+    }
+
+    @Test
     fun aPluginFindingDecodesWithItsPluginsWords() {
         val f = plugins.sections.single().findings.first()
         assertEquals(CheckupKind.PLUGIN, f.kind)

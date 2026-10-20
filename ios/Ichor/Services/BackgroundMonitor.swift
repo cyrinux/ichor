@@ -112,6 +112,14 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: dataServicesKey) }
     }
 
+    static let importedPluginsKey = "monitor.importedPlugins"
+    /// Opt-in: imported plugins' findings notify too. Off, only the built-in plugins' do: a plugin
+    /// pasted in must not page anyone by itself.
+    static var importedPluginAlerts: Bool {
+        get { UserDefaults.standard.bool(forKey: importedPluginsKey) }
+        set { UserDefaults.standard.set(newValue, forKey: importedPluginsKey) }
+    }
+
     static let gitopsKey = "monitor.gitops"
     /// Opt-in: also check Argo CD and Flux apps through the Kubernetes API.
     static var gitopsWatched: Bool {
@@ -466,10 +474,11 @@ enum BackgroundMonitor {
         async let dataRead = ifWatched(watchData, within: left) { try? await client.dataServices(hints: "") }
         async let gitopsRead = ifWatched(watchGitOps, within: left) { await readGitOps(client, known: known) }
         async let checkupRead = ifWatched(watchCheckup, within: left) {
-            await readCheckup(client, known: knownCheckup, gitopsWatched: watchGitOps, pluginsWatched: watchPlugins)
+            await readCheckup(client, known: knownCheckup, gitopsWatched: watchGitOps, pluginsWatched: watchPlugins,
+                              importedWatched: importedPluginAlerts)
         }
         async let pluginRead = ifWatched(watchPlugins, within: left) {
-            await readPlugins(client, known: knownPlugins, checkupWatched: watchCheckup)
+            await readPlugins(client, known: knownPlugins, checkupWatched: watchCheckup, importedWatched: importedPluginAlerts)
         }
         async let alertmanagerRead = ifWatched(watchAlertmanager, within: left) {
             await readAlertmanager(client, fingerprint: fingerprint, known: knownAlertmanager)
@@ -579,17 +588,19 @@ enum BackgroundMonitor {
     /// not be read keeps what the last snapshot knew of it. With GitOps watched, what that alert
     /// already raises is left to it; with the plugins watched, their findings to their own alert.
     private static func readCheckup(_ client: TalosClient, known: [String: String], gitopsWatched: Bool,
-                                    pluginsWatched: Bool) async -> [String: String]? {
+                                    pluginsWatched: Bool, importedWatched: Bool) async -> [String: String]? {
         guard let report = try? await client.checkup() else { return nil }
-        return checkupIssuesWithGaps(report, known: known, gitopsWatched: gitopsWatched, pluginsWatched: pluginsWatched)
+        return checkupIssuesWithGaps(report, known: known, gitopsWatched: gitopsWatched, pluginsWatched: pluginsWatched,
+                                     importedPluginsWatched: importedWatched)
     }
 
     /// The CRD plugins' findings worth an alert, in the app's language; nil when the call failed.
     /// A plugin that could not be read keeps what the last snapshot knew of it. With the checkup
     /// watched, the findings it reports from a section of its own are left to it.
-    private static func readPlugins(_ client: TalosClient, known: [String: String], checkupWatched: Bool) async -> [String: String]? {
+    private static func readPlugins(_ client: TalosClient, known: [String: String], checkupWatched: Bool,
+                                    importedWatched: Bool) async -> [String: String]? {
         guard let report = try? await client.pluginFindings() else { return nil }
-        return pluginIssuesWithGaps(report, known: known, checkupWatched: checkupWatched)
+        return pluginIssuesWithGaps(report, known: known, checkupWatched: checkupWatched, importedWatched: importedWatched)
     }
 
     /// The Alertmanager's alerts worth a notification; nil when it could not be read (or none was

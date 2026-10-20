@@ -32,11 +32,13 @@ fun pluginSeverity(value: String): String = PluginIssue.parse(value).severity
  * The plugin findings worth a notification, keyed by their stable key ("plugin:<plugin>:<finding>:
  * <namespace>/<name>") with a [PluginIssue]: warnings and critical ones (a note is shown, not
  * notified). With [checkupWatched], the findings the checkup reports from a section of its own
- * (checkupNative, External Secrets) are left to it, or the same object alerts twice.
+ * (checkupNative, External Secrets) are left to it, or the same object alerts twice. An imported
+ * plugin's findings (user) are notified only with [importedWatched]: a plugin pasted in does not
+ * page anyone by itself.
  */
-fun pluginIssuesOf(report: PluginFindingsReport, checkupWatched: Boolean): Map<String, String> = buildMap {
+fun pluginIssuesOf(report: PluginFindingsReport, checkupWatched: Boolean, importedWatched: Boolean = false): Map<String, String> = buildMap {
     report.findings.forEach { f ->
-        if (f.key.isEmpty() || (checkupWatched && f.checkupNative)) return@forEach
+        if (f.key.isEmpty() || (checkupWatched && f.checkupNative) || (f.user && !importedWatched)) return@forEach
         val severity = when (f.severity) {
             DATA_CRITICAL -> DATA_CRITICAL
             DATA_WARNING -> DATA_WARNING
@@ -51,8 +53,13 @@ fun pluginIssuesOf(report: PluginFindingsReport, checkupWatched: Boolean): Map<S
  * part) keeps the issues [known] had for it, and a truncated read keeps every known one past its
  * cut, so they neither clear falsely nor come back as new once it reads again.
  */
-fun pluginIssuesWithGaps(report: PluginFindingsReport, known: Map<String, String>, checkupWatched: Boolean): Map<String, String> {
-    val fresh = pluginIssuesOf(report, checkupWatched)
+fun pluginIssuesWithGaps(
+    report: PluginFindingsReport,
+    known: Map<String, String>,
+    checkupWatched: Boolean,
+    importedWatched: Boolean = false,
+): Map<String, String> {
+    val fresh = pluginIssuesOf(report, checkupWatched, importedWatched)
     val unread = report.errors.map { it.plugin }.toSet()
     val kept = known.filterKeys { key ->
         key !in fresh && (report.truncated > 0 || pluginOfKey(key) in unread)
