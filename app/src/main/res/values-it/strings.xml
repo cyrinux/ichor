@@ -5523,6 +5523,7 @@
     <string name="plugins_imported">Importati</string>
     <string name="plugins_empty">Nessun plugin importato.</string>
     <string name="plugins_import">Importa un plugin</string>
+    <string name="plugins_docs">Documentazione dei plugin</string>
     <string name="plugins_reads">Legge %1$s</string>
     <string name="plugins_off_reason">Disattivato: %1$s</string>
     <string name="plugins_enabled">Attivato</string>
@@ -5530,7 +5531,7 @@
     <string name="plugins_remove_title">Rimuovere %1$s?</string>
     <string name="plugins_remove_text">Il suo file viene eliminato da questo telefono e la sua scheda scompare.</string>
     <string name="plugins_load_failed">Plugin: %1$s</string>
-    <string name="plugins_explainer">Un plugin importato legge solo le risorse che dichiara, con il tuo accesso Kubernetes, e non comunica con nient\'altro che l\'API Kubernetes. Il formato è descritto in docs/plugins.md.</string>
+    <string name="plugins_explainer">Un plugin importato legge solo le risorse che dichiara, con il tuo accesso Kubernetes, e non comunica con nient\'altro che l\'API Kubernetes.</string>
     <string name="plugins_source_paste">Incolla</string>
     <string name="plugins_source_file">File</string>
     <string name="plugins_source_url">URL</string>

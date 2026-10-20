@@ -5786,6 +5786,7 @@
     <string name="plugins_imported">Імпортовані</string>
     <string name="plugins_empty">Ще немає імпортованих плагінів.</string>
     <string name="plugins_import">Імпортувати плагін</string>
+    <string name="plugins_docs">Документація плагінів</string>
     <string name="plugins_reads">Читає %1$s</string>
     <string name="plugins_off_reason">Вимкнено: %1$s</string>
     <string name="plugins_enabled">Увімкнено</string>
@@ -5793,7 +5794,7 @@
     <string name="plugins_remove_title">Видалити %1$s?</string>
     <string name="plugins_remove_text">Його файл видаляється з цього телефона, а вкладка зникає.</string>
     <string name="plugins_load_failed">Плагіни: %1$s</string>
-    <string name="plugins_explainer">Імпортований плагін читає лише ресурси, які оголошує, з вашим власним доступом до Kubernetes, і не звертається ні до чого, крім API Kubernetes. Формат описано в docs/plugins.md.</string>
+    <string name="plugins_explainer">Імпортований плагін читає лише ресурси, які оголошує, з вашим власним доступом до Kubernetes, і не звертається ні до чого, крім API Kubernetes.</string>
     <string name="plugins_source_paste">Вставити</string>
     <string name="plugins_source_file">Файл</string>
     <string name="plugins_source_url">URL</string>

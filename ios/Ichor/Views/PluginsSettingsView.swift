@@ -5,6 +5,8 @@ import IchorCore
 /// when this app no longer reads it) and Remove, Import (PluginImportSheet), then the built-in
 /// plugins, read-only. Same page as Android's PluginsScreen.kt.
 struct PluginsSettingsView: View {
+    /// docs/plugins.md, published by the website workflow (scripts/site-plugins.py).
+    private let pluginDocsURL = URL(string: "https://cyrinux.github.io/ichor/plugins/")!
     @State private var imported: [PluginUserItem] = []
     @State private var builtins: [PluginCatalogItem] = []
     @State private var failure: String?
@@ -36,10 +38,13 @@ struct PluginsSettingsView: View {
             Button { importing = true } label: {
                 Label("Import a plugin", systemImage: "square.and.arrow.down")
             }
+            Link(destination: pluginDocsURL) {
+                Label("Plugin documentation", systemImage: "book")
+            }
         } header: {
             Text("Imported")
         } footer: {
-            Text("An imported plugin reads only the resources it declares, with your own Kubernetes access, and talks to nothing but the Kubernetes API. The format is described in docs/plugins.md.")
+            Text("An imported plugin reads only the resources it declares, with your own Kubernetes access, and talks to nothing but the Kubernetes API.")
         }
         Section {
             ForEach(builtins, id: \.id) { item in
