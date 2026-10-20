@@ -303,6 +303,19 @@ final class PluginTests: XCTestCase {
         XCTAssertEqual(clusterScoped.version, "v1")
     }
 
+    func testRefKind() throws {
+        let ref = try TalosJSON.decode(PluginRef.self, from: #"""
+        {"group":"networking.k8s.io","version":"v1","resource":"ingresses","kind":"Ingress","namespace":"demo-shop","name":"shop"}
+        """#)
+        XCTAssertEqual(ref.kind, "Ingress")
+        XCTAssertEqual(PluginCatalog(items: []).kindOf("demo-records", ref), "Ingress")
+        XCTAssertEqual(ref.apiResource(kind: PluginCatalog(items: []).kindOf("demo-records", ref)).kind, "Ingress")
+        // A ref without kind decodes as before, and still compares by its fields.
+        let plain = try TalosJSON.decode(PluginRef.self, from: #"{"resource":"secrets","name":"s"}"#)
+        XCTAssertEqual(plain.kind, "")
+        XCTAssertEqual(plain, PluginRef(resource: "secrets", name: "s"))
+    }
+
     func testCardLinesWorstFirstWithPluginsCounted() {
         let summaries: [DataServiceKind: ServiceSummary] = [
             .longhorn: ServiceSummary(total: 4, attention: 0, health: .ok),

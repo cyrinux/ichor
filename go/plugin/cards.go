@@ -37,6 +37,11 @@ func (r *renderer) tree() Tree {
 	t.Findings = r.findings()
 	t.Errors = append(append([]TreeError{}, r.in.Errors...), r.tErrs...)
 
+	for _, id := range sortedKeys(p.Tools) {
+		tool := p.Tools[id]
+		t.Tools = append(t.Tools, TreeTool{ID: id, Label: r.tr(tool.Label), Hint: r.tr(tool.Hint)})
+	}
+
 	return t
 }
 

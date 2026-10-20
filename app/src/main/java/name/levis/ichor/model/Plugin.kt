@@ -80,10 +80,12 @@ data class PluginRef(
     val resource: String = "",
     val namespace: String = "",
     val name: String = "",
+    /** Set when the plugin's ref names another object than the listed one; "" otherwise. */
+    val kind: String = "",
 ) {
     val key: String get() = "$group/$resource/$namespace/$name"
 
-    /** The object screen's ref; [kind] comes from the plugin catalog ("" when unknown: only the title misses it). */
+    /** The object screen's ref; [kind] comes from the ref, else the plugin catalog ("" when unknown: only the title misses it). */
     fun objectRef(kind: String): KubeObjectRef = KubeObjectRef(group, version, resource, kind, namespace, name, editable = false)
 }
 
@@ -295,8 +297,11 @@ data class PluginDetectItem(
  */
 @Serializable
 data class PluginCatalog(val items: List<PluginCatalogItem> = emptyList()) {
-    /** The kind of [ref]'s resource as plugin [pluginId] declares it; "" when it does not. */
+    /** The kind [ref] carries, else of its resource as plugin [pluginId] declares it; "" when neither says. */
     fun kindOf(pluginId: String, ref: PluginRef): String =
+        ref.kind.ifEmpty { kindFromResources(pluginId, ref) }
+
+    private fun kindFromResources(pluginId: String, ref: PluginRef): String =
         items.firstOrNull { it.id == pluginId }?.resources
             ?.firstOrNull { it.group == ref.group && it.resource == ref.resource }?.kind.orEmpty()
 

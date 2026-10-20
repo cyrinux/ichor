@@ -211,6 +211,17 @@ class PluginTest {
     }
 
     @Test
+    fun aRefThatNamesItsKindWins() {
+        val ref = TalosJson.decodeFromString(
+            PluginRef.serializer(),
+            """{"group": "networking.k8s.io", "version": "v1", "resource": "ingresses", "kind": "Ingress", "namespace": "demo-shop", "name": "shop"}""",
+        )
+        assertEquals("Ingress", ref.kind)
+        assertEquals("Ingress", PluginCatalog().kindOf("demo-records", ref))
+        assertEquals("Ingress", ref.objectRef(PluginCatalog().kindOf("demo-records", ref)).kind)
+    }
+
+    @Test
     fun aGaugeWithoutMaximumHasNoBar() {
         assertNull(PluginSection.Gauge(value = 3.0).fraction)
         assertNull(PluginSection.Gauge(value = 3.0, max = 0.0).fraction)

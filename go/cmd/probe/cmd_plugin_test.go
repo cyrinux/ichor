@@ -42,7 +42,7 @@ func brokenCopy(t *testing.T, old, replacement string) (string, int) {
 }
 
 func TestPluginCommandsReadNoConfig(t *testing.T) {
-	for _, name := range []string{"plugin-validate", "plugin-lint", "plugin-render", "plugin-findings", "plugin-list"} {
+	for _, name := range []string{"plugin-validate", "plugin-lint", "plugin-render", "plugin-findings", "plugin-tool", "plugin-list"} {
 		if c, ok := lookup(name); !ok || !c.noConfig {
 			t.Errorf("%s: registered %v, noConfig %v", name, ok, c.noConfig)
 		}
@@ -197,6 +197,23 @@ func TestPluginRenderDemo(t *testing.T) {
 
 	if _, err := pluginRender(e, []string{"-demo"}); err == nil {
 		t.Error("no target accepted")
+	}
+}
+
+func TestPluginTool(t *testing.T) {
+	// No config is read for a built-in's unknown tool: a read of this path would exit the test binary.
+	e := env{configPath: filepath.Join(t.TempDir(), "no-talosconfig")}
+
+	for _, args := range [][]string{{"kube-green", "nothing"}, {"kube-green", "nothing", "-demo"}} {
+		if _, err := pluginTool(e, args); err == nil || !strings.Contains(err.Error(), `unknown tool "nothing"`) {
+			t.Errorf("%v: %v", args, err)
+		}
+	}
+
+	for _, args := range [][]string{{}, {"kube-green"}, {"kube-green", "check", "extra"}} {
+		if _, err := pluginTool(e, args); err == nil || !strings.Contains(err.Error(), "usage: plugin-tool") {
+			t.Errorf("%v: %v", args, err)
+		}
 	}
 }
 

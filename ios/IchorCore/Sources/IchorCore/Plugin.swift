@@ -208,16 +208,19 @@ public struct PluginRef: Decodable, Equatable, Hashable, Sendable {
     public let resource: String
     public let namespace: String
     public let name: String
+    /// Set when the plugin's ref names another object than the listed one; "" otherwise.
+    public let kind: String
 
-    public init(group: String = "", version: String = "", resource: String = "", namespace: String = "", name: String = "") {
+    public init(group: String = "", version: String = "", resource: String = "", namespace: String = "", name: String = "", kind: String = "") {
         self.group = group
         self.version = version
         self.resource = resource
         self.namespace = namespace
         self.name = name
+        self.kind = kind
     }
 
-    private enum CodingKeys: String, CodingKey { case group, version, resource, namespace, name }
+    private enum CodingKeys: String, CodingKey { case group, version, resource, namespace, name, kind }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -226,6 +229,7 @@ public struct PluginRef: Decodable, Equatable, Hashable, Sendable {
         resource = try c.field(.resource, "")
         namespace = try c.field(.namespace, "")
         name = try c.field(.name, "")
+        kind = try c.field(.kind, "")
     }
 
     public var key: String { "\(group)/\(resource)/\(namespace)/\(name)" }
@@ -233,8 +237,8 @@ public struct PluginRef: Decodable, Equatable, Hashable, Sendable {
     /// "demo-lab/weekend", or the name of a cluster-scoped object.
     public var label: String { [namespace, name].filter { !$0.isEmpty }.joined(separator: "/") }
 
-    /// The object screen's resource; `kind` comes from the plugin catalog ("" when unknown: only
-    /// the title misses it).
+    /// The object screen's resource; `kind` comes from the ref, else the plugin catalog ("" when
+    /// unknown: only the title misses it).
     public func apiResource(kind: String) -> KubeAPIResource {
         KubeAPIResource(group: group, version: version.isEmpty ? "v1" : version, resource: resource, kind: kind, namespaced: !namespace.isEmpty)
     }
@@ -627,9 +631,12 @@ public struct PluginCatalog: Decodable, Equatable, Sendable {
         items = try c.field(.items, [])
     }
 
-    /// The kind of `ref`'s resource as plugin `pluginID` declares it; "" when it does not.
+    /// The kind `ref` carries, else of its resource as plugin `pluginID` declares it; "" when
+    /// neither says.
     public func kindOf(_ pluginID: String, _ ref: PluginRef) -> String {
-        items.first { $0.id == pluginID }?.resources.first { $0.group == ref.group && $0.resource == ref.resource }?.kind ?? ""
+        if !ref.kind.isEmpty { return ref.kind }
+
+        return items.first { $0.id == pluginID }?.resources.first { $0.group == ref.group && $0.resource == ref.resource }?.kind ?? ""
     }
 
     /// The built-in plugins: the app's own, read-only in Settings.

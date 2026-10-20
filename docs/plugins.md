@@ -220,7 +220,7 @@ Loading is strict:
 | `category` | no | string | where the plugin shows on the Kubernetes home: `data-services` (default; a line of the Data services card and a tab of its screen), `networking`, `workloads` or `compute` (a tool in that family), `policies` or `security` (a tool in Security), `gitops` (a tool in Browse) |
 | `screen` | no | string | `native:<route>` opens a native screen from the hub tile |
 | `detect[]` | yes | list | each sets exactly one of `group` (with an optional `resource`, for a shared group), `pods` (a catalog id) or `service`; any match activates the plugin |
-| `resources.<key>` | yes (≥ 1) | map | `group` (`""` for core), `version` (or `preferred`), `resource`, `kind`, `scope` (`Namespaced` or `Cluster`), `list{labelSelector, fieldSelector, limit, metadataOnly}` (`metadataOnly`: each object's metadata alone, so that a Secret's values never leave the API server), `watch`, `reveal`, `optional` (forbidden or not served, the resource reads as empty with no error: for a decorative relation), `source: native:<id>` (a Go reader selects the objects instead of a list call: `native:sealed-secrets-controller`, the Deployments running the catalog's Sealed Secrets image). The key (letters and digits) names the resource everywhere else |
+| `resources.<key>` | yes (≥ 1) | map | `group` (`""` for core), `version` (or `preferred`), `resource`, `kind`, `scope` (`Namespaced` or `Cluster`), `list{labelSelector, fieldSelector, limit, metadataOnly}` (`metadataOnly`: each object's metadata alone, so that a Secret's values never leave the API server), `watch`, `reveal`, `optional` (forbidden or not served, the resource reads as empty with no error: for a decorative relation), `source: native:<id>` (a Go reader selects the objects instead of a list call: `native:sealed-secrets-controller`, the Deployments running the catalog's Sealed Secrets image; its `group`, `version` and `resource` need not be served, they only name it), `ref` (with `source` only: an expression giving the object a row, a finding or a relation of this resource opens instead of the object itself, a map of `group` (`""` for core), `version`, `resource`, `kind`, `namespace` and `name`, such as `ref: $.source`; a value without `resource` or `name` opens nothing). The key (letters and digits) names the resource everywhere else |
 | `fields.<resource>.<name>` | no | expression | evaluated per object in file order; a field sees the earlier ones as `fields.<name>`, `conditions`, `now`, and the resources by key for `join(<resource>, <predicate>)`, whose predicate sees `left` (the object) |
 | `health.<resource>[]` | no | rules | `{when, health, reason, message}`. The first rule whose `when` holds wins, and an object no rule matches is `ok`. `health` is `ok`, `idle`, `info`, `warning`, `critical` or `unknown`; `message` is a template |
 | `dataServices.<name>` | no | map | see "Data services" below |
@@ -228,6 +228,7 @@ Loading is strict:
 | `cards.<name>` | no | card | `from` (a resource or `dataServices.<name>`), `sort[]` (expressions, each optionally followed by `asc` or `desc`), `empty`, `row{title, subtitle, status{tone, text}, trailing{text}, detail[]}` |
 | `actions.<id>` | no | map | `label`, `on` (a resource), `verb`, `body`, `subresource` and `method` (with `verb: subresource`), `propagationPolicy` (with `verb: delete`), `rbac{verbs, group, resource}` (required), `confirm`, `audit` (required), `enabledWhen`, `disabledReason`, `params[]`. `verb` is `mergePatch`, `jsonPatch`, `subresource`, `delete`, `annotate` or `create`; `confirm` is `none`, `plain` or `typedName`; each param is `{name, label, type, values[], default}` with `type` one of `string`, `int`, `bool` or `enum`. See "Actions" below |
 | `findings[]` | no | list | `{id, from, when, severity, title, detail, opens}`. `severity` is `info`, `warning` or `critical`; `opens` names a card |
+| `tools.<id>` | no | map | `label` (required), `hint`, `run: native:<id>` (required): a button of the plugin screen run by Go. See "Tools" below |
 | `samples.<resource>[]` | yes, for every resource | list | demo objects in the API's shape. The demo context and the tests render them; invent names such as `demo-shop`. A string `now`, `now-6h` or `now+2d` (units `s`, `m`, `h`, `d`; at most a century) becomes that time, so that the demo stays consistent with the clock |
 | `i18n.<locale>` | no | map | English label → translation; a missing label stays English |
 
@@ -236,6 +237,7 @@ Loading is strict:
 | Where | Names | Also |
 | -- | -- | -- |
 | `fields` | `$`, `fields` (earlier ones), `conditions`, `now`, `left` | resource keys (`join`) |
+| `resources.<key>.ref` | `$`, `fields`, `health`, `conditions`, `now` | evaluated once per object |
 | `health[].when`, `message` | `$`, `fields`, `conditions`, `now` | `when` must be a bool |
 | `dataServices` `aggregate`, `health` | `fields`, `health`, `conditions`, `now`, `dataServices` (earlier ones) | resource keys; `count`, `sum`, `min`, `max`, `worst` |
 | `dataServices` `groupBy`, `where`, `select` | `$`, `fields`, `health`, `conditions`, `now`, `dataServices` | |
@@ -367,6 +369,19 @@ Confirmation is the apps': `confirm: typedName` for what cannot be undone (`dele
 `stop` or `reset` subresource), `plain` (the default) for the rest, `none` for a harmless
 annotation.
 
+### Tools
+
+A tool is a check no expression can make (resolving hostnames from the phone): `tools.<id>:
+{label, hint, run: native:<id>}` puts a button on the plugin screen, and
+`KubePluginTool(config, context, kubeServer, pluginID, toolID, scope, locale)` runs the Go
+function `run` names over what the plugin read in `scope` (the same input as the render
+tree). It returns `{title, health, cards}`, the cards as the render tree's (rows with `ref`,
+`status`, `trailing`, `detail`), so the apps draw it with the plugin card renderer. The demo
+context runs the tool's demo function over the `samples`, and says the tool is unavailable
+when it has none. An unknown tool id, or a `run` id no Go function has, is an error when the
+tool runs, not when the file is validated (as an unknown `source`). `label` and `hint` are
+translated. A tool reads only: it never changes the cluster.
+
 ### Writing expressions in YAML
 
 An expression is a YAML scalar, so YAML reads it first:
@@ -403,9 +418,16 @@ tile below for an active plugin and `null` otherwise. Examples: the goldens in
      "detail": [{"type": "keyValues", "items": [{"label": "Sleep at", "value": "00:00"}]}]}
   ]}],
   "findings": [{"id": "asleep-no-wakeup", "severity": "warning", "title": "…", "detail": "…", "ref": {"…": "…"}, "opens": "list"}],
-  "errors": [{"resource": "secrets", "message": "Kubernetes API: permission denied: forbidden"}]
+  "errors": [{"resource": "secrets", "message": "Kubernetes API: permission denied: forbidden"}],
+  "tools": [{"id": "check", "label": "Check names", "hint": "Resolve each hostname"}]
 }
 ```
+
+* `tools` are the plugin's tool buttons in id order, `label` and `hint` translated; absent
+  when it has none. Running one (`KubePluginTool`, see "Tools") returns
+  `{"title": "…", "health": "warning", "cards": [{"id": "…", "type": "list", "rows": […]}]}`.
+* A `ref` is `{group, version, resource, namespace, name}`; a resource with `ref` adds
+  `kind`, the kind of the object it names, so that the apps open it without a catalog lookup.
 
 * `detectedVia` is `api`, `pods`, `services`, `inventory` (the hints) or `demo`; `""` when
   the product is not there (`active: false`, nothing is listed, the cards are empty).
@@ -700,7 +722,7 @@ reason and never loaded. Plugins are not in the app backup yet.
 ## Command line
 
 The probe checks and renders plugin files from the desktop. Paths are relative to where
-`just` runs. Every command but `plugin-render` and `plugin-findings` against a cluster, and
+`just` runs. Every command but `plugin-render`, `plugin-findings` and `plugin-tool` against a cluster, and
 `plugin-action`, reads no talosconfig and no kubeconfig. `plugin-render` takes a file when its argument has a `.` or a `/`
 (`kube-green.yaml`, `./draft`), and a built-in plugin id otherwise (`kube-green`); a file is
 validated first, before any config is read.
@@ -712,6 +734,7 @@ validated first, before any config is read.
 | `just probe plugin-render FILE\|ID [-scope NS] [-locale xx] [-demo]` | the render tree of a file or of a built-in plugin id, read from the cluster (`-context CTX`) or from the samples (`-demo`) | the tree as JSON | 0, or 1 with the error (a file that does not validate: its `FILE:LINE` problems) |
 | `just probe plugin-findings [-locale xx] [-hints a,b] [-demo]` | every active built-in plugin's findings, what the background monitor reads (`KubePluginFindings`), from the cluster (`-context CTX`) or the samples (`-demo`) | the report as JSON (see "Findings") | 0, or 1 when the API server answers nothing |
 | `just probe plugin-action ID ACTION NAMESPACE NAME [PARAMS_JSON]` | runs a built-in plugin's action on one object (`KubePluginAction`; `""` as `NAMESPACE` for a cluster-scoped resource), `-context CTX`. It changes the cluster | `done` | 0, or 1 with the error |
+| `just probe plugin-tool ID TOOL [-scope NS] [-locale xx] [-demo]` | runs a plugin's tool (`KubePluginTool`) over what it reads from the cluster (`-context CTX`) or its samples (`-demo`); read-only | the tool's result as JSON (see "Tools") | 0, or 1 with the error (`unknown tool`, a tool with no demo under `-demo`) |
 | `just probe plugin-list` | the built-in plugins | one JSON line each: `{id, name, version, category, resources, cards, actions, findings, file}` | 0 |
 | `just plugin-check [DIR]` | `plugin-validate` on every `*.yaml` of `DIR` (default `go/plugin/builtin`); `./build.sh check` runs it on the built-ins | as `plugin-validate` | as `plugin-validate` |
 
@@ -727,6 +750,8 @@ plugin's tests.
 * a `health` rule matches no sample (rules are first-match: a rule an earlier one always
   shadows counts as untriggered), so neither the tests nor the demo show it;
 * a list card has no `empty` text;
+* a resource's `ref` gives no object (a map with `resource` and `name`) on one of its
+  samples: that row would open nothing;
 * with `-crd MANIFEST` (a CustomResourceDefinition, YAML or JSON, as `kubectl get crd NAME -o
   yaml` prints it or as an operator's `config/crd/bases/` ships it; in a file of several
   documents or a `List`, the first CRD, other documents skipped), for the plugin resource with
@@ -750,7 +775,7 @@ or `create` on the resource. Otherwise the can-I row would answer for another re
 
 RBAC: `plugin-render` against a cluster needs `list` on the plugin's resources,
 `plugin-findings` on every active plugin's (a plugin it may not read is an `errors` entry;
-both read `/apis` for detection); `plugin-action` needs the action's `rbac` and `get` on its object;
+both read `/apis` for detection); `plugin-tool` needs what `plugin-render` does, plus what its Go function reads; `plugin-action` needs the action's `rbac` and `get` on its object;
 the other commands need nothing.
 
 ## Writing a plugin from a CRD

@@ -45,6 +45,8 @@ type Plugin struct {
 	Actions map[string]Action `yaml:"actions,omitempty" json:"actions,omitempty" schema:"keys=^[a-zA-Z][a-zA-Z0-9]*$"`
 	// Findings feed the cluster checkup and the background monitor.
 	Findings []Finding `yaml:"findings,omitempty" json:"findings,omitempty"`
+	// Tools are buttons of the plugin screen, by id, each run by a Go function over what the plugin read.
+	Tools map[string]Tool `yaml:"tools,omitempty" json:"tools,omitempty" schema:"keys=^[a-zA-Z][a-zA-Z0-9]*$"`
 	// Samples are demo objects per resource, in the API's shape: the demo context and the tests render them.
 	Samples map[string][]map[string]any `yaml:"samples" json:"samples" schema:"required"`
 	// I18n maps an English label to its translation, per locale; a missing label stays English.
@@ -88,6 +90,9 @@ type Resource struct {
 	Optional bool `yaml:"optional,omitempty" json:"optional,omitempty"`
 	// Source is native:<id> to read through a Go reader instead of a list call.
 	Source string `yaml:"source,omitempty" json:"source,omitempty" schema:"pattern=^native:[A-Za-z0-9_-]+$"`
+	// Ref is the object a row of this resource opens, with source only: an expression giving
+	// a map of group, version, resource, kind, namespace and name ($.source).
+	Ref Expr `yaml:"ref,omitempty" json:"ref,omitempty"`
 }
 
 // ListOptions narrow a list call.
@@ -290,6 +295,15 @@ type Finding struct {
 	Detail Template `yaml:"detail,omitempty" json:"detail,omitempty"`
 	// Opens is the card the finding links to.
 	Opens string `yaml:"opens,omitempty" json:"opens,omitempty"`
+}
+
+// Tool is a button of the plugin screen run by Go (a check no expression can make).
+type Tool struct {
+	Label string `yaml:"label" json:"label" schema:"required"`
+	// Hint says what the tool does, under its button.
+	Hint string `yaml:"hint,omitempty" json:"hint,omitempty"`
+	// Run is native:<id>, the Go function that runs the tool.
+	Run string `yaml:"run" json:"run" schema:"required,pattern=^native:[A-Za-z0-9_-]+$"`
 }
 
 // Tones are the colors the apps know; Health order for worst(): ok < idle < info < unknown < warning < critical.

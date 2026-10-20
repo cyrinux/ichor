@@ -35,6 +35,8 @@ type pluginCatalogResource struct {
 	Kind     string `json:"kind"`
 	// Reveal shows a Secret's data instead of masking it: the consent sheet flags it.
 	Reveal bool `json:"reveal"`
+	// Source is "native" for a resource a Go reader selects (no list call of its own).
+	Source string `json:"source,omitempty"`
 }
 
 type pluginCatalogAction struct {
@@ -82,7 +84,12 @@ func pluginCatalogItemOf(c *plugin.Compiled) pluginCatalogItem {
 
 	for _, key := range c.Resources {
 		r := p.Resources[key]
-		item.Resources = append(item.Resources, pluginCatalogResource{Group: r.Group, Version: r.Version, Resource: r.Resource, Kind: r.Kind, Reveal: r.Reveal})
+		res := pluginCatalogResource{Group: r.Group, Version: r.Version, Resource: r.Resource, Kind: r.Kind, Reveal: r.Reveal}
+		if r.Source != "" {
+			res.Source = "native"
+		}
+
+		item.Resources = append(item.Resources, res)
 	}
 
 	for _, a := range c.Actions {

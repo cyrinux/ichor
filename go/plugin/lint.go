@@ -29,6 +29,7 @@ func Lint(p *Plugin, crd *CRDManifest) []Problem {
 	l.labels()
 	l.unusedResources()
 	l.untriggeredHealth(time.Now())
+	l.emptyRefs(time.Now())
 	l.emptyTexts()
 
 	if crd != nil {
@@ -152,6 +153,26 @@ func (l *linter) untriggeredHealth(now time.Time) {
 			key := res + "[" + strconv.Itoa(i) + "]"
 			if !triggered[key] {
 				l.warn("health."+key, "no sample triggers this rule (health %s): add a sample it holds for", rule.Health)
+			}
+		}
+	}
+}
+
+// emptyRefs: a resource's ref should name an object on every sample, or its rows open
+// nothing.
+func (l *linter) emptyRefs(now time.Time) {
+	r := newRenderer(l.c, SamplesInput(l.c, "", nil, now), now)
+	r.indexObjects()
+	r.evalObjects()
+
+	for _, res := range l.c.Resources {
+		if l.p.Resources[res].Ref.IsZero() {
+			continue
+		}
+
+		for i, o := range r.objects[res] {
+			if r.refOf(o.raw) == nil {
+				l.warn("resources."+res+".ref", "gives no object on sample %d (samples.%s[%d]): a map with resource and name", i, res, i)
 			}
 		}
 	}
@@ -412,6 +433,11 @@ func labelRefs(p *Plugin) []LabelRef {
 		path := "findings[" + strconv.Itoa(i) + "]"
 		add(path+".title", f.Title.Src)
 		add(path+".detail", f.Detail.Src)
+	}
+
+	for _, id := range keys(p.src, "tools", p.Tools) {
+		add("tools."+id+".label", p.Tools[id].Label)
+		add("tools."+id+".hint", p.Tools[id].Hint)
 	}
 
 	slices.SortStableFunc(out, func(a, b LabelRef) int { return cmp.Compare(p.src.line(a.Path), p.src.line(b.Path)) })
