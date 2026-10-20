@@ -438,6 +438,10 @@ func labelRefs(p *Plugin) []LabelRef {
 	for _, id := range keys(p.src, "tools", p.Tools) {
 		add("tools."+id+".label", p.Tools[id].Label)
 		add("tools."+id+".hint", p.Tools[id].Hint)
+
+		for i, text := range p.Tools[id].Texts {
+			add("tools."+id+".texts["+strconv.Itoa(i)+"]", text)
+		}
 	}
 
 	slices.SortStableFunc(out, func(a, b LabelRef) int { return cmp.Compare(p.src.line(a.Path), p.src.line(b.Path)) })

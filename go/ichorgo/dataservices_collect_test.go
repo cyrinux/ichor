@@ -254,8 +254,6 @@ func TestRenderDataServicesStatesOutsideTheLists(t *testing.T) {
 		Garage: &garageStatus{Keys: []garageOpKey{{Namespace: "storage", Name: "app-key", Health: healthCritical, Reasons: []string{"notReady"}}}},
 		Velero: &veleroStatus{Adhoc: []veleroAdhoc{{Namespace: "velero", Health: healthWarning,
 			veleroBackup: veleroBackup{Name: "before-upgrade", Phase: "Failed", FailureReason: "timed out"}}}},
-		ExternalDNS: &externalDNSStatus{Records: []externalDNSRecord{{DNSName: "app.example.org", RecordType: "A", Health: healthWarning,
-			Reasons: []string{"noController"}, SourceKind: "Ingress", SourceNamespace: "web", SourceName: "app"}}},
 		CastAI: &castAIStatus{Recommendations: []castAIRecommendation{{Namespace: "web", Name: "api", Health: healthCritical, Message: "apply failed"}}},
 	}
 
@@ -266,7 +264,6 @@ func TestRenderDataServicesStatesOutsideTheLists(t *testing.T) {
 	for _, want := range []string{
 		"    GarageKey storage/app-key [critical]: notReady\n",
 		"    backup velero/before-upgrade [warning]: Failed; timed out\n",
-		"    A app.example.org [warning]: noController; Ingress web/app\n",
 		"  CAST AI: 1 recommendations, 1 critical\n    web/api [critical]: apply failed\n",
 	} {
 		if !strings.Contains(out, want) {

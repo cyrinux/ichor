@@ -30,7 +30,7 @@ type gatewayRouteObject struct {
 	Kind     string `json:"-"`
 	Metadata struct {
 		Name string `json:"name"`
-		// Annotations: the ExternalDNS reader reads the controller and ttl ones.
+		// Annotations: the ExternalDNS plugin reads the controller and ttl ones.
 		Namespace   string            `json:"namespace"`
 		Annotations map[string]string `json:"annotations"`
 	} `json:"metadata"`
@@ -75,7 +75,7 @@ type gatewayObject struct {
 	Metadata struct {
 		Name      string `json:"name"`
 		Namespace string `json:"namespace"`
-		// Annotations: the ExternalDNS reader reads the target one.
+		// Annotations: the ExternalDNS plugin reads the target one.
 		Annotations map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {

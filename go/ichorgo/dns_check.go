@@ -125,16 +125,21 @@ func dnsCheckWith(resolver dnsChecker, recordsJSON string, timeoutMs int) (strin
 		return "", err
 	}
 
-	if len(records) > dnsCheckRecordCap {
-		records = records[:dnsCheckRecordCap]
-	}
-
 	timeout := dnsCheckDefaultTimeout
 	if timeoutMs > 0 {
 		timeout = time.Duration(timeoutMs) * time.Millisecond
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	return toJSON(dnsCheckResult{Results: dnsCheckEntries(context.Background(), resolver, records, timeout), Resolver: "system"})
+}
+
+// dnsCheckEntries checks the first dnsCheckRecordCap records at once, within timeout.
+func dnsCheckEntries(ctx context.Context, resolver dnsChecker, records []dnsCheckRequest, timeout time.Duration) []dnsCheckEntry {
+	if len(records) > dnsCheckRecordCap {
+		records = records[:dnsCheckRecordCap]
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	results := make([]dnsCheckEntry, len(records))
@@ -158,7 +163,7 @@ func dnsCheckWith(resolver dnsChecker, recordsJSON string, timeoutMs int) (strin
 
 	wg.Wait()
 
-	return toJSON(dnsCheckResult{Results: results, Resolver: "system"})
+	return results
 }
 
 // checkDNSRecord resolves one name and reads its ownership, timing the whole thing.

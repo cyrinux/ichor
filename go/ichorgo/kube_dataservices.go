@@ -55,7 +55,6 @@ type dataServices struct {
 	Percona     *perconaStatus     `json:"percona,omitempty"`
 	CertManager *certManagerStatus `json:"certManager,omitempty"`
 	Velero      *veleroStatus      `json:"velero,omitempty"`
-	ExternalDNS *externalDNSStatus `json:"externalDns,omitempty"`
 	CastAI      *castAIStatus      `json:"castai,omitempty"`
 }
 

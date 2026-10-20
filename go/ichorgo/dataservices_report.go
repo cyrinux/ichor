@@ -28,7 +28,7 @@ func dataServiceSections(ds dataServices) []dsSection {
 	adapters := []func(dataServices) (dsSection, bool){
 		snapshotsSection, backupJobsSection, longhornSection, garageSection,
 		cnpgSection, dragonflySection, mariadbSection, perconaSection, certManagerSection,
-		veleroSection, externalDNSSection, castAISection,
+		veleroSection, castAISection,
 	}
 
 	var out []dsSection
@@ -371,32 +371,6 @@ func veleroSection(ds dataServices) (dsSection, bool) {
 
 	for _, a := range s.Adhoc {
 		sec.issues = append(sec.issues, dsIssue{health: a.Health, key: "backup " + nsName(a.Namespace, a.Name), detail: details(a.Phase, a.FailureReason)})
-	}
-
-	return sec, true
-}
-
-func externalDNSSection(ds dataServices) (dsSection, bool) {
-	s := ds.ExternalDNS
-	if s == nil {
-		return dsSection{}, false
-	}
-
-	items := make([]dsIssue, 0, len(s.Controllers))
-	for _, c := range s.Controllers {
-		items = append(items, dsIssue{
-			health: c.Health, key: nsName(c.Namespace, c.Name),
-			detail: details(strings.Join(c.Reasons, ", "), readyOf(c.ReadyReplicas, c.Replicas, "replicas ready")),
-		})
-	}
-
-	sec := newDSSection("ExternalDNS", "controllers", s.Error, items)
-
-	for _, rec := range s.Records {
-		sec.issues = append(sec.issues, dsIssue{
-			health: rec.Health, key: rec.RecordType + " " + rec.DNSName,
-			detail: details(strings.Join(rec.Reasons, ", "), rec.SourceKind+" "+nsName(rec.SourceNamespace, rec.SourceName)),
-		})
 	}
 
 	return sec, true

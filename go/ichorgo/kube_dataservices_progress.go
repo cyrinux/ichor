@@ -7,8 +7,8 @@ import (
 )
 
 // The ReadProgress op of Data services and its steps: the API groups, the listing of every
-// pod (when Garage or ExternalDNS is looked for), then one step per system detected, named by
-// a fixed id (never an object name).
+// pod (when Garage is looked for), then one step per system detected, named by a fixed id
+// (never an object name).
 const (
 	dsProgressOp = "dataservices"
 
@@ -23,7 +23,6 @@ const (
 	dsStepPercona     = "percona"
 	dsStepCertManager = "certmanager"
 	dsStepVelero      = "velero"
-	dsStepExternalDNS = "externaldns"
 	dsStepCastAI      = "castai"
 	dsStepGarage      = "garage"
 )
@@ -70,10 +69,10 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 	}
 
 	in := &dsInput{groups: groups, hints: hints, run: run, now: now}
-	// One listing of every pod stands in for several: Garage's instances and, when the
-	// DNSEndpoint CRD is not served, the ExternalDNS controllers (found by their pods).
-	listPods := hints.wants("garage") || hints.wants("external-dns")
-	readers := dataServiceReaders(ctx, k, in, listPods)
+	// One listing of every pod stands in for several: Garage's instances, and CloudNativePG's
+	// when it is installed too.
+	listPods := hints.wants("garage")
+	readers := dataServiceReaders(ctx, k, in)
 
 	steps := []string{dsStepAPI}
 	if listPods {
@@ -115,7 +114,7 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 
 // dataServiceReaders is a reader per system the API groups show, in the order of their steps.
 // Readers that need the pods read in.pods when they run, after the listing.
-func dataServiceReaders(ctx context.Context, k *kubeClient, in *dsInput, listPods bool) []dsReader {
+func dataServiceReaders(ctx context.Context, k *kubeClient, in *dsInput) []dsReader {
 	groups, now := in.groups, in.now
 
 	var readers []dsReader
@@ -173,13 +172,6 @@ func dataServiceReaders(ctx context.Context, k *kubeClient, in *dsInput, listPod
 
 		return sectionFailed(out.Velero, func(s *veleroStatus) string { return s.Error })
 	})
-	// ExternalDNS runs with or without its CRD: by the API group when served, else by its
-	// running pods (only known once they are listed: the step ends at once without them).
-	add(dsStepExternalDNS, served(groupExternalDNS) || listPods, func(out *dataServices) bool {
-		out.ExternalDNS = readExternalDNSSection(ctx, k, in)
-
-		return sectionFailed(out.ExternalDNS, func(s *externalDNSStatus) string { return s.Error })
-	})
 	add(dsStepCastAI, served(groupCastAI), func(out *dataServices) bool {
 		out.CastAI = readCastAI(ctx, k)
 
@@ -206,30 +198,4 @@ func readCNPGSection(ctx context.Context, k *kubeClient, in *dsInput) *cnpgStatu
 	src := cnpgSources{version: in.groups[groupCNPG], pluginVersion: in.groups[groupBarmanPlug], pods: pods, podsErr: err}
 
 	return readCNPG(ctx, k, src, in.now)
-}
-
-// readExternalDNSSection reads ExternalDNS when its API group is served or its controllers
-// run among the pods listed; nil when neither.
-func readExternalDNSSection(ctx context.Context, k *kubeClient, in *dsInput) *externalDNSStatus {
-	version := in.groups[groupExternalDNS]
-	if _, served := in.groups[groupExternalDNS]; !served && (!in.listedAll || !runsExternalDNS(in.pods)) {
-		return nil
-	}
-
-	return readExternalDNS(ctx, k, version, in.pods, in.podsErr, in.now)
-}
-
-// runsExternalDNS tells whether one of pods runs an ExternalDNS image.
-func runsExternalDNS(pods []dsPod) bool {
-	catalog := loadAppCatalog()
-
-	for _, p := range pods {
-		for _, c := range p.Spec.Containers {
-			if id := catalog.identify(parseImageRef(c.Image)); id.app != nil && id.app.ID == "external-dns" {
-				return true
-			}
-		}
-	}
-
-	return false
 }

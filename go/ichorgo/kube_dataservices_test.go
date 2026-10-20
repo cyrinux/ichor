@@ -531,7 +531,7 @@ func TestReadDataServicesSectionErrors(t *testing.T) {
 
 	// The steps are what was detected, the failed section's step failed.
 	checkFinishedProgress(t, "test-dataservices",
-		[]string{dsStepAPI, dsStepPods, dsStepBackups, dsStepLonghorn, dsStepExternalDNS, dsStepGarage}, dsStepLonghorn)
+		[]string{dsStepAPI, dsStepPods, dsStepBackups, dsStepLonghorn, dsStepGarage}, dsStepLonghorn)
 
 	if res.Longhorn == nil || !strings.Contains(res.Longhorn.Error, "not found") || res.Garage != nil {
 		t.Fatalf("section error: %+v", res.Longhorn)

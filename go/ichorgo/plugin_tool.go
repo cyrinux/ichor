@@ -21,7 +21,10 @@ type pluginToolFuncs struct {
 }
 
 // pluginNativeTools are the tools by run id (native:<id>).
-var pluginNativeTools = map[string]pluginToolFuncs{}
+var pluginNativeTools = map[string]pluginToolFuncs{
+	// ExternalDNS's hostnames resolved from the phone (plugin_tool_dnscheck.go).
+	"dns-check": {run: runDNSCheckTool, demo: demoDNSCheckTool},
+}
 
 // KubePluginTool runs the tool toolID of the plugin pluginID over what the plugin reads in
 // scope (a namespace, "" for all) and returns its result as JSON: {title, health, cards}, the
