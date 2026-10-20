@@ -56,6 +56,7 @@ import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.gitops.GitOpsSourceSection
+import name.levis.ichor.ui.gitops.ProposalsCard
 import name.levis.ichor.ui.gitops.SOURCE_TOOL_FLUX
 import name.levis.ichor.ui.workloads.KubeEventsList
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
@@ -193,6 +194,12 @@ private fun AppDetail(
         }
         item(key = "source") {
             GitOpsSourceSection(SOURCE_TOOL_FLUX, app.kind, app.namespace, app.name, app.revision, onSource)
+        }
+        // The pull requests opened from the phone for it; a merged one not running yet reconciles with its source from here.
+        item(key = "proposals") {
+            ProposalsCard(talos.gitOpsRepository, SOURCE_TOOL_FLUX, app.kind, app.namespace, app.name, refresh = app.revision) {
+                confirm = FluxConfirm(FluxAction.RECONCILE_WITH_SOURCE, app.kind, app.namespace, app.name, owner = app.ownerKey)
+            }
         }
         // What it waits for comes before its conditions: the link that is not Ready explains them.
         if (!tree.isEmpty) {

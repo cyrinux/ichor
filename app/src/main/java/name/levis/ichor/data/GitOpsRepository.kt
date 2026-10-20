@@ -24,7 +24,11 @@ import name.levis.ichor.model.GitProposal
 import name.levis.ichor.model.GitProposalDefaults
 import name.levis.ichor.model.GitProposalResult
 import name.levis.ichor.model.GitRepoInfo
+import name.levis.ichor.model.DEMO_PROPOSALS
+import name.levis.ichor.model.GitProposalRecord
 import name.levis.ichor.model.GitRepoSearch
+import name.levis.ichor.model.GitRequestState
+import name.levis.ichor.model.RevisionRuns
 import name.levis.ichor.model.TalosConfigPatch
 import name.levis.ichor.model.TalosRepoCompare
 import name.levis.ichor.model.TalosWriteBackPlan
@@ -59,6 +63,7 @@ class GitOpsRepository(
     go: GoCall,
     private val gitHosts: GitHostStore? = null,
     private val clusterRepos: ClusterRepoStore? = null,
+    private val proposals: ProposalsStore? = null,
 ) : GoRepository(go) {
     /**
      * Who [host]'s token signs in as and the scopes it lacks, asked of the forge (the demo
@@ -274,6 +279,54 @@ class GitOpsRepository(
         val host = forgeHost(src)
         val options = gitProposalJson(src.repoURL, proposal)
         return go.kube { cfg, ctx, _ -> decodeGitProposalResult(Ichorgo.gitForgePropose(cfg, ctx, host, options)) }
+    }
+
+    /** The active cluster's proposals for tool's kind namespace/name ("" for the repository); the demo's samples. */
+    fun proposalsFor(tool: String, kind: String, namespace: String, name: String): List<GitProposalRecord> {
+        val active = go.configs.config.value?.activeSummary ?: return emptyList()
+        val all = if (active.isDemo) DEMO_PROPOSALS else proposals?.proposals?.value?.get(active.fingerprint).orEmpty()
+        return all.filter { it.isFor(tool, kind, namespace, name) }
+    }
+
+    /** The active cluster's proposals, as they change. */
+    val proposalsFlow get() = proposals?.proposals
+
+    /** Keeps the pull request [result] opened for [record]'s target on the active cluster (not in the demo). */
+    fun rememberProposal(record: GitProposalRecord) {
+        val active = go.configs.config.value?.activeSummary ?: return
+        if (!active.isDemo) proposals?.add(active.fingerprint, record)
+    }
+
+    /** Forgets [record] on the active cluster. */
+    fun forgetProposal(record: GitProposalRecord) {
+        val active = go.configs.config.value?.activeSummary ?: return
+        proposals?.remove(active.fingerprint, record)
+    }
+
+    /** The state of [record]'s request on its forge, with its host's token. */
+    suspend fun requestState(record: GitProposalRecord): GitRequestState {
+        val host = forgeHost(record.host)
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(GitRequestState.serializer(), Ichorgo.gitForgeRequest(host, record.repoURL, record.number.toLong()))
+        }
+    }
+
+    /**
+     * Whether [record]'s app runs the merged [state]: its merge commit, else its head (a squash
+     * merge's commit is a new one). Null for the repository, which no app follows here.
+     */
+    suspend fun revisionRuns(record: GitProposalRecord, state: GitRequestState): RevisionRuns? {
+        if (record.tool.isEmpty()) return null
+        suspend fun runs(sha: String) = go.kube { cfg, ctx, server ->
+            TalosJson.decodeFromString(
+                RevisionRuns.serializer(),
+                Ichorgo.gitOpsRevisionRuns(cfg, ctx, server, record.tool, record.kind, record.namespace, record.name, sha),
+            )
+        }
+        val first = state.mergeSha.ifEmpty { state.headSha }.ifEmpty { return null }
+        val merged = runs(first)
+        if (merged.runs || state.headSha.isEmpty() || state.headSha == first) return merged
+        return runs(state.headSha).takeIf { it.runs } ?: merged
     }
 
     /** The repository saved for the active cluster; the demo cluster's built-in one; null without one. */

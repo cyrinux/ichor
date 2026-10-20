@@ -198,7 +198,12 @@ struct ProposeSheet: View {
             let proposal = GitProposal(repoURL: source.repoURL, baseRef: baseRef, path: path, content: content, fileSha: sha,
                                        message: message, branch: branch.trimmingCharacters(in: .whitespacesAndNewlines),
                                        title: title, body: details, draft: draft)
-            result = try await client.propose(proposal, on: source, hosts: hosts, demo: demo)
+            let opened = try await client.propose(proposal, on: source, hosts: hosts, demo: demo)
+            result = opened
+            // Kept on the phone: the app page tells when it is merged and deployed.
+            model.rememberProposal(GitProposalRecord(tool: app.tool, kind: app.kind, namespace: app.namespace, name: app.name,
+                                                     repoURL: source.repoURL, path: path, title: title, url: opened.url,
+                                                     number: opened.number, branch: opened.branch, commit: opened.commit, forge: opened.forge))
             announce(String(localized: "Pull request opened"))
         } catch {
             failure = error.localizedDescription

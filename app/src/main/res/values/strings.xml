@@ -5621,4 +5621,15 @@
     <string name="talos_writeback_secret">This change touches a secret: secrets are never written to the repository.</string>
     <string name="talos_writeback_live">Propose the node\'s values in Git</string>
     <string name="talos_writeback_live_desc">Writes what the node runs into its file of the repository, as a pull request.</string>
+    <string name="proposals_title">Proposals</string>
+    <string name="proposals_open">Open</string>
+    <string name="proposals_draft">Draft</string>
+    <string name="proposals_closed">Closed</string>
+    <string name="proposals_merged">Merged</string>
+    <string name="proposals_deployed">Deployed</string>
+    <string name="proposals_unknown">Unknown</string>
+    <string name="proposals_not_deployed">Merged, not deployed yet.</string>
+    <string name="proposals_other_revision">Merged; the app runs another commit (a newer one, or this one is not applied yet).</string>
+    <string name="proposals_reconcile">Reconcile now</string>
+    <string name="proposals_forget">Forget this proposal</string>
 </resources>

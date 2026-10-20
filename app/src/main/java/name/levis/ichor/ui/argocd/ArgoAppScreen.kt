@@ -80,6 +80,7 @@ import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.gitops.GitOpsSourceSection
+import name.levis.ichor.ui.gitops.ProposalsCard
 import name.levis.ichor.ui.gitops.SOURCE_TOOL_ARGO
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
@@ -296,6 +297,10 @@ private fun AppDetail(
         }
         item(key = "source") {
             GitOpsSourceSection(SOURCE_TOOL_ARGO, "Application", app.namespace, app.name, app.revision, onSource)
+        }
+        // The pull requests opened from the phone for it; a merged one not running yet syncs from here.
+        item(key = "proposals") {
+            ProposalsCard(talos.gitOpsRepository, SOURCE_TOOL_ARGO, "Application", app.namespace, app.name, refresh = app.revision, onReconcile = { sheet = true })
         }
         item(key = "freeze") {
             ArgoFreezeCard(

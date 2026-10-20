@@ -151,6 +151,30 @@ extension TalosClient {
         return try await Self.json { IchorgoTalosRepoFiles(json, url, branch, dir, hostname, role, $0) }
     }
 
+    /// The state of record's request on its forge, with its host's token (GitHostMissing without).
+    static func requestState(_ record: GitProposalRecord, hosts: GitHostStore, demo: Bool) async throws -> GitRequestState {
+        let json = try await forgeHost(record.host, hosts: hosts, demo: demo)
+        let url = record.repoURL, number = record.number
+        return try await Self.json { IchorgoGitForgeRequest(json, url, number, $0) }
+    }
+
+    /// Whether record's app runs the merged state: its merge commit, else its head (a squash
+    /// merge's commit is a new one). nil for the repository, which no app follows here.
+    func revisionRuns(_ record: GitProposalRecord, state: GitRequestState) async throws -> RevisionRuns? {
+        guard !record.tool.isEmpty else { return nil }
+        func runs(_ sha: String) async throws -> RevisionRuns {
+            try await Self.json { [config = kubeConfig, context = kubeContext, server = kubeAPIServer] in
+                IchorgoGitOpsRevisionRuns(config, context, server, record.tool, record.kind, record.namespace, record.name, sha, $0)
+            }
+        }
+        let first = state.mergeSha.isEmpty ? state.headSha : state.mergeSha
+        guard !first.isEmpty else { return nil }
+        let merged = try await runs(first)
+        if merged.runs || state.headSha.isEmpty || state.headSha == first { return merged }
+        let head = try await runs(state.headSha)
+        return head.runs ? head : merged
+    }
+
     /// The patch that turns base into draft (both redacted configs), its values and whether one
     /// is a secret's. Local.
     static func talosConfigPatchFrom(base: String, draft: String) async throws -> TalosConfigPatch {
