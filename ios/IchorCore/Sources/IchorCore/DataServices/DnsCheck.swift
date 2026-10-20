@@ -31,6 +31,8 @@ public enum DnsCheckStatus: String, Sendable {
     case mismatch
     /// It does not resolve at all.
     case missing
+    /// It resolves, but the record has no target to compare the answers with.
+    case unverified
     /// The resolver could not answer.
     case error
 }

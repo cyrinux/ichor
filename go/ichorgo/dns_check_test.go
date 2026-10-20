@@ -155,12 +155,18 @@ func TestDNSCheckStatuses(t *testing.T) {
 			answers: []string{"203.0.113.30"},
 		},
 		{
-			name:       "no targets cannot match",
+			name:       "no targets resolves unverified, never mismatch",
 			record:     dnsCheckRequest{DNSName: "app.example.com", RecordType: "A", OwnerID: "homelab"},
-			status:     dnsStatusMismatch,
+			status:     dnsStatusUnverified,
 			answers:    []string{"203.0.113.10", "203.0.113.11"},
 			owner:      "homelab",
 			ownerMatch: &yes,
+		},
+		{
+			name:    "no targets and nothing resolves stays missing",
+			record:  dnsCheckRequest{DNSName: "gone.example.com", RecordType: "A"},
+			status:  dnsStatusMissing,
+			answers: []string{},
 		},
 	}
 
@@ -598,6 +604,7 @@ func TestDemoDNSCheckShowsEveryChip(t *testing.T) {
 		{DNSName: "shop.example.com", RecordType: "A", Targets: []string{"203.0.113.20"}, OwnerID: "homelab"},
 		{DNSName: "api.example.com", RecordType: "A", Targets: []string{"203.0.113.30"}, OwnerID: "homelab"},
 		{DNSName: "db.example.com", RecordType: "A", Targets: []string{"203.0.113.40"}, OwnerID: "homelab"},
+		{DNSName: "old.example.com", RecordType: "A", Targets: []string{"203.0.113.50"}, OwnerID: "homelab"},
 		{DNSName: "status.example.com", RecordType: "A", OwnerID: "homelab"},
 	}
 
@@ -625,7 +632,7 @@ func TestDemoDNSCheckShowsEveryChip(t *testing.T) {
 		seen[entry.Status] = true
 	}
 
-	for _, status := range []string{dnsStatusMatch, dnsStatusMismatch, dnsStatusMissing, dnsStatusError} {
+	for _, status := range []string{dnsStatusMatch, dnsStatusMismatch, dnsStatusMissing, dnsStatusUnverified, dnsStatusError} {
 		if !seen[status] {
 			t.Errorf("demo never shows a %q chip", status)
 		}

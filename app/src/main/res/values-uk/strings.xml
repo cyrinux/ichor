@@ -2585,6 +2585,10 @@
     <string name="externaldns_check_owner_other">належить %1$s</string>
     <string name="externaldns_check_probed">перевірено як %1$s</string>
     <string name="externaldns_check_mismatch_hint">Ім\'я, що вказує в інше місце, може бути split-horizon DNS вдома, зміною, що ще поширюється, або іншим ExternalDNS, який ним володіє.</string>
+    <string name="externaldns_check_not_run">Ще не перевірено</string>
+    <string name="externaldns_check_running">Перевірка…</string>
+    <string name="externaldns_check_unverified">Резолвиться, немає з чим порівняти</string>
+    <string name="externaldns_check_unverified_count">%1$d не вдалося порівняти</string>
     <plurals name="externaldns_check_summary">
         <item quantity="one">%1$d з %2$d імені вказує на цей кластер</item>
         <item quantity="few">%1$d з %2$d імен вказують на цей кластер</item>
