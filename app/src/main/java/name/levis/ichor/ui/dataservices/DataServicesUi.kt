@@ -16,7 +16,6 @@ import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.SettingsBackupRestore
 import androidx.compose.material.icons.outlined.Storage
-import androidx.compose.material.icons.outlined.TableChart
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material.icons.outlined.WarningAmber
@@ -95,7 +94,6 @@ internal val DataServiceKind.fallbackIcon: ImageVector
         DataServiceKind.LONGHORN -> Icons.Outlined.Storage
         DataServiceKind.GARAGE -> Icons.Outlined.Cloud
         DataServiceKind.CNPG -> Icons.Outlined.Dns
-        DataServiceKind.MARIADB -> Icons.Outlined.TableChart
         DataServiceKind.PERCONA -> Icons.Outlined.Hub
         DataServiceKind.CERT_MANAGER -> Icons.Outlined.VerifiedUser
         DataServiceKind.VELERO -> Icons.Outlined.SettingsBackupRestore
@@ -140,7 +138,6 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
     val head = when (kind) {
         DataServiceKind.LONGHORN -> pluralStringResource(R.plurals.longhorn_volumes, summary.total, summary.total)
         DataServiceKind.CNPG -> pluralStringResource(R.plurals.cnpg_clusters, summary.total, summary.total)
-        DataServiceKind.MARIADB -> pluralStringResource(R.plurals.mariadb_clusters, summary.total, summary.total)
         DataServiceKind.PERCONA -> pluralStringResource(R.plurals.percona_clusters, summary.total, summary.total)
         DataServiceKind.CERT_MANAGER -> pluralStringResource(R.plurals.certmanager_certificates, summary.total, summary.total)
         DataServiceKind.VELERO -> pluralStringResource(R.plurals.velero_schedules, summary.total, summary.total)
@@ -208,7 +205,6 @@ fun podWhere(node: String, phase: String): String = when {
 fun podRoleLabel(role: String): String? = when (role) {
     "primary" -> stringResource(R.string.cnpg_role_primary)
     "replica" -> stringResource(R.string.cnpg_role_replica)
-    "member" -> stringResource(R.string.mariadb_role_member)
     "" -> null
     else -> role
 }

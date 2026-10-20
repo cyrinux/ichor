@@ -10,7 +10,7 @@ import (
 // demoDataServices are the storage and database operators of the built-in demo cluster, in
 // every state the app shows: a degraded and a faulted volume, a Garage cluster with a node
 // down next to a healthy single-node one, Postgres clusters with failed and stale backups,
-// a MariaDB cluster whose last backup failed next to a healthy Galera one and a suspended one,
+// Percona clusters with a member missing and a late backup next to a healthy one and a paused one,
 // an expired certificate and one failing to renew,
 // Velero schedules with a failed and a partially failed backup and a storage location down.
 func demoDataServices(now time.Time) dataServices {
@@ -117,24 +117,6 @@ func demoDataServices(now time.Time) dataServices {
 			LastSuccessAt: ms(3 * 24 * time.Hour), RecoverableAt: ms(17 * 24 * time.Hour)},
 	}}
 
-	mariadb := &mariadbStatus{Version: "v1alpha1", Clusters: []mariadbCluster{
-		{Namespace: "demo", Name: "shop-db", Topology: "replication", Health: healthWarning, Reasons: []string{mariadbReasonBackupFailed},
-			Replicas: 2, ReadyPods: 2, Primary: "shop-db-0", Pods: []mariadbPod{
-				{Name: "shop-db-0", Node: "demo-worker-2", Phase: "Running", Role: "primary", Ready: true},
-				{Name: "shop-db-1", Node: "demo-worker-3", Phase: "Running", Role: "replica", Ready: true},
-			}, LastBackupAt: ms(3 * 24 * time.Hour), LastBackupFailedAt: ms(20 * time.Hour), BackupSchedule: "0 3 * * *"},
-		{Namespace: "demo", Name: "forum-db", Topology: "galera", Health: healthOK, Reasons: []string{},
-			Replicas: 3, ReadyPods: 3, Primary: "forum-db-1", Pods: []mariadbPod{
-				{Name: "forum-db-1", Node: "demo-worker-2", Phase: "Running", Role: "primary", Ready: true},
-				{Name: "forum-db-0", Node: "demo-worker-1", Phase: "Running", Role: "member", Ready: true},
-				{Name: "forum-db-2", Node: "demo-worker-3", Phase: "Running", Role: "member", Ready: true},
-			}, LastBackupAt: ms(9 * time.Hour), BackupSchedule: "0 */12 * * *"},
-		{Namespace: "demo", Name: "legacy-db", Topology: "standalone", Health: healthIdle, Reasons: []string{}, Suspended: true,
-			Replicas: 1, ReadyPods: 1, Primary: "legacy-db-0", Pods: []mariadbPod{
-				{Name: "legacy-db-0", Node: "demo-worker-1", Phase: "Running", Role: "primary", Ready: true},
-			}},
-	}}
-
 	pxcPods := func(name string, ready ...bool) []perconaPod {
 		out := []perconaPod{}
 		for i, r := range ready {
@@ -222,7 +204,7 @@ func demoDataServices(now time.Time) dataServices {
 	}
 
 	snapshots := demoVolumeSnapshots(now)
-	return dataServices{Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, CastAI: demoCastAI(now)}
+	return dataServices{Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, Percona: percona, CertManager: certManager, Velero: velero, CastAI: demoCastAI(now)}
 }
 
 // demoKubeGreenNamespace is the demo cluster's kube-green state for one namespace: staging is

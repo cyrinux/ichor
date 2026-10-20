@@ -2303,23 +2303,6 @@
     <string name="cnpg_backup_text">CloudNativePG esegue un backup di base completo con il metodo configurato per il cluster (plugin barman-cloud, object store o snapshot del volume). Carica l’istanza su cui gira e occupa spazio nello storage dei backup.</string>
     <string name="cnpg_backup_started">Backup %1$s richiesto</string>
     <string name="cnpg_backup_failed">%1$s: %2$s</string>
-    <string name="dragonfly_reason_no_ready">nessun pod pronto</string>
-    <string name="dragonfly_reason_pods">repliche mancanti</string>
-    <string name="dragonfly_reason_phase">operatore: %1$s</string>
-    <string name="mariadb_empty">Nessun cluster MariaDB.</string>
-    <string name="mariadb_role_member">membro</string>
-    <string name="mariadb_suspended">sospeso</string>
-    <string name="mariadb_topology_standalone">autonomo</string>
-    <string name="mariadb_topology_replication">replicazione</string>
-    <string name="mariadb_reason_no_primary">nessun primario</string>
-    <string name="mariadb_reason_galera_recovery">ripristino Galera in corso</string>
-    <string name="mariadb_last_backup">ultimo backup %1$s</string>
-    <string name="mariadb_last_failure">fallito %1$s</string>
-    <string name="mariadb_schedule">pianificazione %1$s</string>
-    <plurals name="mariadb_clusters">
-        <item quantity="one">%1$d cluster MariaDB</item>
-        <item quantity="other">%1$d cluster MariaDB</item>
-    </plurals>
     <string name="percona_empty">Nessun cluster Percona XtraDB.</string>
     <string name="percona_paused">in pausa</string>
     <string name="percona_reason_error">errore dell’operatore</string>

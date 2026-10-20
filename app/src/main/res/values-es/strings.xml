@@ -2303,23 +2303,6 @@
     <string name="cnpg_backup_text">CloudNativePG hace una copia base completa con el método configurado en el clúster (plugin barman-cloud, almacén de objetos o snapshot de volumen). Carga la instancia donde se ejecuta y ocupa espacio en el almacenamiento de copias.</string>
     <string name="cnpg_backup_started">Copia %1$s solicitada</string>
     <string name="cnpg_backup_failed">%1$s: %2$s</string>
-    <string name="dragonfly_reason_no_ready">ningún pod listo</string>
-    <string name="dragonfly_reason_pods">faltan réplicas</string>
-    <string name="dragonfly_reason_phase">operador: %1$s</string>
-    <string name="mariadb_empty">Sin clústeres de MariaDB.</string>
-    <string name="mariadb_role_member">miembro</string>
-    <string name="mariadb_suspended">suspendido</string>
-    <string name="mariadb_topology_standalone">independiente</string>
-    <string name="mariadb_topology_replication">replicación</string>
-    <string name="mariadb_reason_no_primary">sin primario</string>
-    <string name="mariadb_reason_galera_recovery">recuperación de Galera en curso</string>
-    <string name="mariadb_last_backup">última copia %1$s</string>
-    <string name="mariadb_last_failure">fallo %1$s</string>
-    <string name="mariadb_schedule">programación %1$s</string>
-    <plurals name="mariadb_clusters">
-        <item quantity="one">%1$d clúster de MariaDB</item>
-        <item quantity="other">%1$d clústeres de MariaDB</item>
-    </plurals>
     <string name="percona_empty">Sin clústeres de Percona XtraDB.</string>
     <string name="percona_paused">en pausa</string>
     <string name="percona_reason_error">error del operador</string>

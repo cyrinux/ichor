@@ -69,15 +69,26 @@ func dragonflyPluginAPI(t *testing.T, instances string, pods []dsPod) *fakeKubeA
 	return f
 }
 
-// podsBySelector answers a pod list with the pods its label selector matches.
+// podsBySelector answers a pod list (of every namespace or of one) with the pods its label
+// selector matches.
 func podsBySelector(t *testing.T, pods []dsPod) func(path, query string) (string, bool) {
 	return func(path, query string) (string, bool) {
+		namespace := ""
 		if path != "/api/v1/pods" {
-			return "", false
+			ns, prefixed := strings.CutPrefix(path, "/api/v1/namespaces/")
+			ns, suffixed := strings.CutSuffix(ns, "/pods")
+
+			if !prefixed || !suffixed {
+				return "", false
+			}
+
+			namespace = ns
 		}
 
 		q, _ := url.ParseQuery(query)
-		matched := slices.DeleteFunc(slices.Clone(pods), func(p dsPod) bool { return !labelsMatch(p.Metadata.Labels, q.Get("labelSelector")) })
+		matched := slices.DeleteFunc(slices.Clone(pods), func(p dsPod) bool {
+			return (namespace != "" && p.Metadata.Namespace != namespace) || !labelsMatch(p.Metadata.Labels, q.Get("labelSelector"))
+		})
 
 		out, err := json.Marshal(map[string]any{"metadata": map[string]any{}, "items": matched})
 		if err != nil {

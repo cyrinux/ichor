@@ -207,8 +207,8 @@ final class DataServicesTests: XCTestCase {
         XCTAssertEqual(DataServiceKind.backupJobs.family, .data)
         XCTAssertEqual(DataServiceKind.certManager.family, .security)
         XCTAssertEqual(DataServiceKind.castai.family, .workloads)
-        // Eight native systems stay in Data services (storage, databases and backups); Rook Ceph and Dragonfly are plugins.
-        XCTAssertEqual(DataServiceKind.allCases.filter { $0.family == .data }.count, 8)
+        // Seven native systems stay in Data services (storage, databases and backups); Rook Ceph, Dragonfly and MariaDB are plugins.
+        XCTAssertEqual(DataServiceKind.allCases.filter { $0.family == .data }.count, 7)
         XCTAssertTrue(DataServiceKind.certManager.opensAlone)
         XCTAssertFalse(DataServiceKind.velero.opensAlone)
     }

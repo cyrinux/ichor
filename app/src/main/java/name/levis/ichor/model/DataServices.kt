@@ -11,7 +11,6 @@ data class DataServices(
     val longhorn: LonghornStatus? = null,
     val garage: GarageStatus? = null,
     val cnpg: CnpgStatus? = null,
-    val mariadb: MariaDbStatus? = null,
     val percona: PerconaStatus? = null,
     val certManager: CertManagerStatus? = null,
     val velero: VeleroStatus? = null,
@@ -44,7 +43,6 @@ enum class DataServiceKind(val catalogId: String) {
     LONGHORN("longhorn"),
     GARAGE("garage"),
     CNPG("cloudnative-pg"),
-    MARIADB("mariadb"),
     PERCONA("percona-xtradb"),
     CERT_MANAGER("cert-manager"),
     VELERO("velero"),
@@ -59,7 +57,6 @@ val DataServiceKind.title: String
         DataServiceKind.LONGHORN -> "Longhorn"
         DataServiceKind.GARAGE -> "Garage"
         DataServiceKind.CNPG -> "CloudNativePG"
-        DataServiceKind.MARIADB -> "MariaDB"
         DataServiceKind.PERCONA -> "Percona XtraDB Cluster"
         DataServiceKind.CERT_MANAGER -> "cert-manager"
         DataServiceKind.VELERO -> "Velero"
@@ -74,7 +71,6 @@ val DataServiceKind.alertSystem: String
         DataServiceKind.LONGHORN -> "longhorn"
         DataServiceKind.GARAGE -> "garage"
         DataServiceKind.CNPG -> "cnpg"
-        DataServiceKind.MARIADB -> "mariadb"
         DataServiceKind.PERCONA -> "percona"
         DataServiceKind.CERT_MANAGER -> "certmanager"
         DataServiceKind.VELERO -> "velero"
@@ -102,7 +98,6 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.LONGHORN.takeIf { longhorn != null },
         DataServiceKind.GARAGE.takeIf { garage != null },
         DataServiceKind.CNPG.takeIf { cnpg != null },
-        DataServiceKind.MARIADB.takeIf { mariadb != null },
         DataServiceKind.PERCONA.takeIf { percona != null },
         DataServiceKind.CERT_MANAGER.takeIf { certManager != null },
         DataServiceKind.VELERO.takeIf { velero != null },
@@ -120,7 +115,7 @@ val DataServiceKind.family: ServiceFamily
         DataServiceKind.CERT_MANAGER -> ServiceFamily.SECURITY
         DataServiceKind.CASTAI -> ServiceFamily.WORKLOADS
         DataServiceKind.LONGHORN, DataServiceKind.GARAGE, DataServiceKind.CNPG,
-        DataServiceKind.MARIADB, DataServiceKind.PERCONA, DataServiceKind.VELERO,
+        DataServiceKind.PERCONA, DataServiceKind.VELERO,
         DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> ServiceFamily.DATA
     }
 
@@ -146,7 +141,6 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.LONGHORN -> longhorn?.summary()
     DataServiceKind.GARAGE -> garage?.summary()
     DataServiceKind.CNPG -> cnpg?.summary()
-    DataServiceKind.MARIADB -> mariadb?.summary()
     DataServiceKind.PERCONA -> percona?.summary()
     DataServiceKind.CERT_MANAGER -> certManager?.summary()
     DataServiceKind.VELERO -> velero?.summary()
@@ -165,12 +159,6 @@ fun CastAIStatus.summary(): ServiceSummary {
     val healths = recommendations.map { it.serviceHealth }
     val health = ServiceHealth.worst(healths + listOfNotNull(ServiceHealth.WARNING.takeIf { stuck.isNotEmpty() }))
     return ServiceSummary(recommendations.size, healths.count { it.needsAttention }, health, error)
-}
-
-fun MariaDbStatus.summary(): ServiceSummary {
-    if (error.isNotEmpty() && clusters.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
-    val healths = clusters.map { it.serviceHealth }
-    return ServiceSummary(clusters.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
 }
 
 fun PerconaStatus.summary(): ServiceSummary {
@@ -240,9 +228,6 @@ fun DataServices.likelyCauses(downNodes: Set<String> = emptySet()): List<LikelyC
     }
     cnpg?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { c ->
         count(c.instancePods.filter { !it.ready }.map { it.node })
-    }
-    mariadb?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { m ->
-        count(m.pods.filter { !it.ready }.map { it.node })
     }
     percona?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { c ->
         count(c.pods.filter { !it.ready }.map { it.node })

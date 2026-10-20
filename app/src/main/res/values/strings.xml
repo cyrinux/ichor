@@ -2302,23 +2302,6 @@
     <string name="cnpg_backup_text">CloudNativePG takes a full base backup with the method the cluster is set up for (barman-cloud plugin, object store or volume snapshot). It loads the instance it runs on and adds to the backup storage.</string>
     <string name="cnpg_backup_started">Backup %1$s requested</string>
     <string name="cnpg_backup_failed">%1$s: %2$s</string>
-    <string name="dragonfly_reason_no_ready">no pod ready</string>
-    <string name="dragonfly_reason_pods">replicas missing</string>
-    <string name="dragonfly_reason_phase">operator: %1$s</string>
-    <string name="mariadb_empty">No MariaDB clusters.</string>
-    <string name="mariadb_role_member">member</string>
-    <string name="mariadb_suspended">suspended</string>
-    <string name="mariadb_topology_standalone">standalone</string>
-    <string name="mariadb_topology_replication">replication</string>
-    <string name="mariadb_reason_no_primary">no primary</string>
-    <string name="mariadb_reason_galera_recovery">Galera recovery in progress</string>
-    <string name="mariadb_last_backup">last backup %1$s</string>
-    <string name="mariadb_last_failure">failed %1$s</string>
-    <string name="mariadb_schedule">schedule %1$s</string>
-    <plurals name="mariadb_clusters">
-        <item quantity="one">%1$d MariaDB cluster</item>
-        <item quantity="other">%1$d MariaDB clusters</item>
-    </plurals>
     <string name="percona_empty">No Percona XtraDB clusters.</string>
     <string name="percona_paused">paused</string>
     <string name="percona_reason_error">operator error</string>

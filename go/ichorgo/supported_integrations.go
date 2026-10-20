@@ -48,7 +48,6 @@ var nativeIntegrationSpecs = []integrationSpec{
 	{ID: "argo-cd", Name: "Argo CD", Website: "https://argo-cd.readthedocs.io", Groups: []string{groupArgo}, Resource: "applications"},
 	{ID: "flux", Name: "Flux", Website: "https://fluxcd.io", Groups: []string{groupFluxKustomize, groupFluxHelm, groupFluxSource}},
 	{ID: "cloudnative-pg", Name: "CloudNativePG", Website: "https://cloudnative-pg.io", Groups: []string{groupCNPG, groupBarmanPlug}},
-	{ID: "mariadb", Name: "MariaDB Operator", Website: "https://github.com/mariadb-operator/mariadb-operator", Groups: []string{groupMariaDB}},
 	{ID: "percona-xtradb", Name: "Percona XtraDB Cluster", Website: "https://docs.percona.com/percona-operator-for-mysql/pxc/", Groups: []string{groupPercona}},
 	{ID: "longhorn", Name: "Longhorn", Website: "https://longhorn.io", Groups: []string{groupLonghorn}},
 	// Garage: the garage-operator's CRDs when it runs, else its pods (the Helm chart).
@@ -373,7 +372,6 @@ func demoSupportedIntegrations() supportedIntegrations {
 		"argo-cd":             demoArgoCD(now).Installed,
 		"flux":                demoFlux(now).Installed,
 		"cloudnative-pg":      ds.CNPG != nil,
-		"mariadb":             ds.MariaDB != nil,
 		"percona-xtradb":      ds.Percona != nil,
 		"longhorn":            ds.Longhorn != nil,
 		"velero":              ds.Velero != nil,
