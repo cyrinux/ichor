@@ -5640,4 +5640,5 @@
     <string name="gitops_check_objects">Geänderte Objekte: %1$d · unverändert: %2$d</string>
     <string name="gitops_check_no_objects">Kein gerendertes Objekt ändert sich.</string>
     <string name="gitops_check_at">%1$s, Zeile %2$d</string>
+    <string name="gitops_check_already_broken">Schlägt bei diesem Commit bereits fehl</string>
 </resources>

@@ -132,7 +132,10 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
         _state.value = SourceEditState()
         job = viewModelScope.launch {
             _state.value = try {
-                open(t)
+                open(t).also { opened ->
+                    // A quick edit opens on its review: its build is checked as for Review.
+                    if ((opened.edit as? UiState.Loaded)?.data?.review != null) viewModelScope.launch { check() }
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: GitHostMissing) {
@@ -216,8 +219,8 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
      */
     fun check() {
         val edit = current ?: return
-        if (!edit.changed) return
         checkJob?.cancel()
+        if (!edit.changed) return updateEdit { it.copy(check = null) }
         updateEdit { it.copy(check = UiState.Loading) }
         val flux = (target as? SourceTarget.App)?.takeIf { it.tool == SOURCE_TOOL_FLUX && it.kind == "Kustomization" }?.let { fluxCheckSpec(edit.source.path) }.orEmpty()
         checkJob = viewModelScope.launch {
@@ -312,7 +315,8 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
         val edit = current ?: return
         if (edit.reloading) return
         val base = edit.form?.base?.trim().orEmpty().ifEmpty { edit.readRef }
-        updateEdit { it.copy(reloading = true) }
+        checkJob?.cancel()
+        updateEdit { it.copy(reloading = true, check = null) }
         viewModelScope.launch {
             val outcome = cancellableCatching { gitOps.forgeFile(edit.source, base, edit.path) }
             outcome.fold(

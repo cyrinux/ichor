@@ -283,7 +283,7 @@ private struct SourceEditReview: View {
     private var continueBar: some View {
         VStack(spacing: 6) {
             // The pull request can still be opened: the person decides.
-            if case .loaded(let c, _, _) = check, !c.ok {
+            if case .loaded(let c, _, _) = check, c.fails {
                 Label("Build fails", systemImage: "xmark.octagon").font(.footnote).foregroundStyle(.statusBad)
             }
             Button { proposing = true } label: {
@@ -308,11 +308,11 @@ private struct SourceEditReview: View {
     /// Builds the edit's kustomization on the repository snapshot: whether it still builds and
     /// which rendered objects change. A Flux app's source is built from its path.
     private func runCheck() async {
-        guard edited != base.file.content, let client = model.client else { return }
+        guard edited != base.file.content else { return }
         let flux = app.tool == "flux" && app.kind == "Kustomization" ? GitOpsEditCheck.fluxSpec(path: source.path) : ""
         check = .loading
         check = await .from {
-            try await client.editCheck(source, ref: base.ref, path: path, content: edited, fluxSpec: flux,
+            try await TalosClient.editCheck(source, ref: base.ref, path: path, content: edited, fluxSpec: flux,
                                        hosts: hosts, demo: model.activeSummary?.demo == true)
         }
     }

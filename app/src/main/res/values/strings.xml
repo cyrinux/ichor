@@ -5654,4 +5654,5 @@
     <string name="gitops_check_objects">Objects that change: %1$d · unchanged: %2$d</string>
     <string name="gitops_check_no_objects">No rendered object changes.</string>
     <string name="gitops_check_at">%1$s, line %2$d</string>
+    <string name="gitops_check_already_broken">Already fails at this commit</string>
 </resources>

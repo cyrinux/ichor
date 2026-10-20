@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -92,7 +93,7 @@ func TestEditCheckKinds(t *testing.T) {
 	files := checkFiles()
 
 	c := checkEdit(files, "base/deployment.yaml", "kind: Deployment\nmetadata:\n  name: [web\n", nil)
-	if c.OK || c.Kind != editCheckNone || len(c.Errors) != 1 || c.Errors[0].Path != "base/deployment.yaml" || c.Errors[0].Line == 0 {
+	if c.OK || len(c.Errors) != 1 || c.Errors[0].Path != "base/deployment.yaml" || c.Errors[0].Line == 0 {
 		t.Fatalf("bad YAML %+v", c)
 	}
 
@@ -127,6 +128,80 @@ func TestEditCheckFluxSpec(t *testing.T) {
 
 	if strings.Contains(c.Diff.Resources[0].Diff, fluxOwnerName) {
 		t.Error("owner labels in the diff")
+	}
+}
+
+func TestEditCheckReviewCases(t *testing.T) {
+	files := checkFiles()
+
+	// A chart's template is not YAML before Helm: not checked, not broken.
+	files["charts/web/templates/deploy.yaml"] = []byte("{{- if .Values.on }}\nkind: Deployment\n{{- end }}\n")
+	if c := checkEdit(files, "charts/web/templates/deploy.yaml", "{{- if .Values.off }}\nkind: Deployment\n{{- end }}\n", nil); c.Kind != editCheckHelm || !c.OK {
+		t.Fatalf("template %+v", c)
+	}
+
+	// A Flux app's path is built even for a file outside it, as the controller applies it.
+	spec := &fluxKustomizeSpec{Path: "./overlays/prod"}
+	c := checkEdit(files, "base/deployment.yaml", strings.Replace(checkDeployment, "web:1.0.0", "web:2.0.0", 1), spec)
+	if got := changes(c); c.Dir != "overlays/prod" || len(got) != 1 || got[0] != "changed Deployment prod/web" {
+		t.Fatalf("flux outside %+v", c)
+	}
+
+	// The nearest kustomization does not list the file: the one above that does is built.
+	files["a/kustomization.yaml"] = []byte("resources:\n  - sub/cm.yaml\n")
+	files["a/sub/kustomization.yaml"] = []byte("resources:\n  - other.yaml\n")
+	files["a/sub/other.yaml"] = []byte("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: other\n")
+	files["a/sub/cm.yaml"] = []byte("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: cm\ndata:\n  k: v1\n")
+	if c = checkEdit(files, "a/sub/cm.yaml", strings.Replace(string(files["a/sub/cm.yaml"]), "v1\n", "v2\n", 1), nil); c.Dir != "a" || len(changes(c)) != 1 {
+		t.Fatalf("walk up %+v", c)
+	}
+
+	// A file in no kustomization says so rather than "nothing changes".
+	if c = checkEdit(files, "base/new.yaml", "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: new\n", nil); !c.OK || !strings.Contains(c.Note, "none of the kustomizations") {
+		t.Fatalf("unlisted %+v", c)
+	}
+
+	// A new kustomization in a new directory is built as one.
+	if c = checkEdit(files, "newdir/kustomization.yaml", "resources:\n  - ../plain/config.yaml\n", nil); c.Kind != editCheckKustomize || c.Dir != "newdir" || !c.OK {
+		t.Fatalf("new kustomization %+v", c)
+	}
+}
+
+func TestEditCheckAlreadyBroken(t *testing.T) {
+	files := checkFiles()
+	files["base/kustomization.yaml"] = []byte("resources:\n  - deployment.yaml\n  - gone.yaml\n")
+
+	c := checkEdit(files, "base/deployment.yaml", strings.Replace(checkDeployment, "replicas: 1", "replicas: 2", 1), nil)
+	if c.OK || !c.Broken || len(c.Errors) != 1 || !strings.Contains(c.Note, "already fails") {
+		t.Fatalf("broken %+v", c)
+	}
+}
+
+func TestEditCheckSecretsNotInErrorsOrSOPS(t *testing.T) {
+	files := checkFiles()
+	files["gen/kustomization.yaml"] = []byte("secretGenerator:\n  - name: s\n    literals:\n      - password=gen-secret-value\n      - bad\n")
+
+	c := checkEdit(files, "gen/kustomization.yaml", string(files["gen/kustomization.yaml"])+"# edited\n", nil)
+	for _, e := range c.Errors {
+		if strings.Contains(e.Message, "gen-secret-value") {
+			t.Errorf("secret in error: %s", e.Message)
+		}
+	}
+
+	files["inline/kustomization.yaml"] = []byte("resources:\n  - ../base\n")
+	inline := "resources:\n  - ../base\npatches:\n  - patch: |\n      apiVersion: v1\n      kind: Secret\n      metadata:\n        name: web\n      stringData: [inlinepatch-secret\n"
+	c = checkEdit(files, "inline/kustomization.yaml", inline, nil)
+	for _, e := range c.Errors {
+		if strings.Contains(e.Message, "inlinepatch-secret") {
+			t.Errorf("secret in error: %s", e.Message)
+		}
+	}
+
+	sops := "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: enc\ndata:\n  k: ENC[AES256_GCM,data:abc]\nsops:\n  mac: ENC[AES256_GCM,data:mac]\n"
+	files["plain/enc.yaml"] = []byte(sops)
+	c = checkEdit(files, "plain/enc.yaml", strings.Replace(sops, "data:abc", "data:xyz", 1), nil)
+	if strings.Contains(fmt.Sprint(c.Diff), "ENC[") {
+		t.Errorf("SOPS content shown: %+v", c.Diff)
 	}
 }
 

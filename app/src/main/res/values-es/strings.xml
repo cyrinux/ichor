@@ -5649,4 +5649,5 @@
     <string name="gitops_check_objects">Objetos que cambian: %1$d · sin cambios: %2$d</string>
     <string name="gitops_check_no_objects">Ningún objeto generado cambia.</string>
     <string name="gitops_check_at">%1$s, línea %2$d</string>
+    <string name="gitops_check_already_broken">Ya falla en este commit</string>
 </resources>

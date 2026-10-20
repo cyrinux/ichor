@@ -5912,4 +5912,5 @@
     <string name="gitops_check_objects">Змінюються об’єкти: %1$d · без змін: %2$d</string>
     <string name="gitops_check_no_objects">Жоден згенерований об’єкт не змінюється.</string>
     <string name="gitops_check_at">%1$s, рядок %2$d</string>
+    <string name="gitops_check_already_broken">Уже не вдається на цьому коміті</string>
 </resources>

@@ -23,7 +23,9 @@ final class GitOpsEditCheckTests: XCTestCase {
         XCTAssertFalse(failed.built)
         XCTAssertEqual(failed.errors.first?.line, 3)
         XCTAssertTrue(failed.resources.isEmpty)
+        XCTAssertTrue(failed.fails)
         XCTAssertFalse(try decode(#"{"kind":"helm","ok":true}"#).built)
+        XCTAssertFalse(try decode(#"{"kind":"kustomize","ok":false,"broken":true}"#).fails)
     }
 
     func testTheFluxSpecQuotesItsPath() throws {

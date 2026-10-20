@@ -29,9 +29,11 @@ public struct GitOpsEditCheck: Decodable, Sendable {
     public let errors: [EditCheckError]
     public let resources: [KubeDiffResource]
     public let unchanged: Int
+    /// The build fails at the commit already, the same way: not the edit's doing.
+    public let broken: Bool
     public let note: String
 
-    private enum CodingKeys: String, CodingKey { case sha, kind, dir, ok, errors, diff, unchanged, note }
+    private enum CodingKeys: String, CodingKey { case sha, kind, dir, ok, errors, diff, unchanged, broken, note }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -42,8 +44,12 @@ public struct GitOpsEditCheck: Decodable, Sendable {
         errors = try c.field(.errors, [])
         resources = try c.decodeIfPresent(FluxDiff.self, forKey: .diff)?.resources ?? []
         unchanged = try c.field(.unchanged, 0)
+        broken = try c.field(.broken, false)
         note = try c.field(.note, "")
     }
+
+    /// The edit breaks the build: what the review warns about.
+    public var fails: Bool { !ok && !broken }
 
     /// Something was built or parsed: the objects say what changes.
     public var built: Bool { ok && (kind == "kustomize" || kind == "plain") }

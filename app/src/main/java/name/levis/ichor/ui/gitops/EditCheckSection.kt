@@ -73,6 +73,10 @@ private fun CheckResult(c: GitOpsEditCheck) {
     val colors = LocalStatusColors.current
     val live = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
     when {
+        c.broken -> {
+            Status(Icons.Outlined.Info, stringResource(R.string.gitops_check_already_broken), colors.warn, live)
+            c.errors.forEach { ErrorRow(it) }
+        }
         !c.ok -> {
             Status(Icons.Outlined.ErrorOutline, stringResource(R.string.gitops_check_fails), colors.bad, live)
             c.errors.forEach { ErrorRow(it) }
@@ -80,7 +84,7 @@ private fun CheckResult(c: GitOpsEditCheck) {
         c.built -> {
             val label = if (c.kind == EDIT_CHECK_PLAIN) R.string.gitops_check_valid_yaml else R.string.gitops_check_builds
             Status(Icons.Outlined.CheckCircle, stringResource(label), colors.ok, live)
-            if (c.dir.isNotEmpty() || c.kind != EDIT_CHECK_PLAIN) MutedText(stringResource(R.string.gitops_check_dir, c.dir.ifEmpty { "/" }))
+            if (c.kind != EDIT_CHECK_PLAIN) MutedText(stringResource(R.string.gitops_check_dir, c.dir.ifEmpty { "/" }))
             val changed = c.diff.resources
             MutedText(
                 if (changed.isEmpty()) stringResource(R.string.gitops_check_no_objects) else stringResource(R.string.gitops_check_objects, changed.size, c.unchanged),

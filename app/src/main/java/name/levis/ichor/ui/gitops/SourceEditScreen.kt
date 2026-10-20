@@ -244,7 +244,7 @@ private fun EditReview(
                     OutlinedButton(onClick = onBack) { Text(stringResource(R.string.kb_back_to_editor)) }
                     Button(onClick = onContinue) { Text(stringResource(R.string.gitops_edit_continue)) }
                     // The pull request can still be opened: the person decides.
-                    if ((check as? UiState.Loaded)?.data?.ok == false) {
+                    if ((check as? UiState.Loaded)?.data?.fails == true) {
                         Text(stringResource(R.string.gitops_check_fails), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.labelLarge)
                     }
                 }

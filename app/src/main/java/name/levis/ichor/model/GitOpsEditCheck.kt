@@ -22,8 +22,13 @@ data class GitOpsEditCheck(
     val errors: List<EditCheckError> = emptyList(),
     val diff: FluxDiff = FluxDiff(),
     val unchanged: Int = 0,
+    /** The build fails at the commit already, the same way: not the edit's doing. */
+    val broken: Boolean = false,
     val note: String = "",
 ) {
+    /** The edit breaks the build: what the review warns about. */
+    val fails: Boolean get() = !ok && !broken
+
     /** Something was built or parsed: the objects say what changes. */
     val built: Boolean get() = ok && (kind == EDIT_CHECK_KUSTOMIZE || kind == EDIT_CHECK_PLAIN)
 }

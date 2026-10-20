@@ -26,7 +26,10 @@ class GitOpsEditCheckTest {
         )
         assertFalse(failed.built)
         assertEquals(3, failed.errors.single().line)
+        assertTrue(failed.fails)
         assertFalse(TalosJson.decodeFromString(GitOpsEditCheck.serializer(), """{"kind":"helm","ok":true}""").built)
+        // Broken at the commit already: not the edit's doing, not a failure of it.
+        assertFalse(TalosJson.decodeFromString(GitOpsEditCheck.serializer(), """{"kind":"kustomize","ok":false,"broken":true}""").fails)
     }
 
     @Test

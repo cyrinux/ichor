@@ -30,9 +30,14 @@ const (
 	editCheckHelm      = "helm"
 	editCheckNone      = "none"
 
-	editCheckTimeout = 10 * time.Second
+	// editCheckTimeout bounds the two builds of one directory.
+	editCheckTimeout = 20 * time.Second
+	// editCheckCandidates bounds the kustomizations up from the file tried in turn.
+	editCheckCandidates = 4
 	// editCheckMaxDepth bounds the walk through local bases looking for a remote one.
 	editCheckMaxDepth = 16
+	// editCheckMaxError caps an error message shown.
+	editCheckMaxError = 600
 )
 
 var (
@@ -41,6 +46,9 @@ var (
 	editCheckLine = regexp.MustCompile(`line (\d+)|\bL(\d+)\.C\d+`)
 	// editCheckFile is a repository file a kustomize error names.
 	editCheckFile = regexp.MustCompile(regexp.QuoteMeta(fluxSourceRoot) + `/([^\s:'"]+)`)
+	// What a kustomize error echoes of a generator's literals and of an object.
+	editCheckLiterals = regexp.MustCompile(`literal sources \[[^\]]*\]`)
+	editCheckObject   = regexp.MustCompile(`in object \{.*\}`)
 )
 
 type editCheckError struct {
@@ -58,7 +66,9 @@ type gitOpsEditCheck struct {
 	// Diff lists the rendered objects added, changed or removed (unchanged ones are counted).
 	Diff      gitOpsDiff `json:"diff"`
 	Unchanged int        `json:"unchanged"`
-	Note      string     `json:"note,omitempty"`
+	// Broken: the build fails at the commit already, the same way: not the edit's doing.
+	Broken bool   `json:"broken"`
+	Note   string `json:"note,omitempty"`
 }
 
 // GitOpsEditCheck checks an edit of the file at path (from the repository root) of repoURL at
@@ -101,24 +111,26 @@ func GitOpsEditCheck(hostJSON, repoURL, ref, filePath, content, fluxJSON string)
 func checkEdit(files map[string][]byte, p, content string, spec *fluxKustomizeSpec) gitOpsEditCheck {
 	res := gitOpsEditCheck{Errors: []editCheckError{}, Diff: gitOpsDiff{Name: p, Resources: []kubeDiffResource{}, Warnings: []string{}}}
 
+	// The target is read with the edit in: a new kustomization is one already.
+	kind, dirs := editCheckTargets(withEdit(files, p, content), p, spec)
+	res.Kind, res.Dir = kind, dirs[0]
+
 	yamlFile := strings.HasSuffix(p, ".yaml") || strings.HasSuffix(p, ".yml")
-	if yamlFile && content != "" {
+	// A chart's templates are not YAML until Helm renders them.
+	if kind != editCheckHelm && yamlFile && content != "" {
 		if e, ok := yamlError(content, p); ok {
-			res.Kind, res.Dir = editCheckNone, path.Dir(p)
 			res.Errors = append(res.Errors, e)
 
 			return res
 		}
 	}
 
-	res.Kind, res.Dir = editCheckTarget(files, p, spec)
-
-	switch res.Kind {
+	switch kind {
 	case editCheckHelm:
 		res.OK = true
 		res.Note = "rendered by Helm: not checked on the phone"
 	case editCheckKustomize:
-		checkKustomize(files, p, content, spec, &res)
+		checkKustomize(files, p, content, dirs, spec, &res)
 	case editCheckPlain:
 		if !yamlFile {
 			res.Kind, res.OK = editCheckNone, true
@@ -130,73 +142,127 @@ func checkEdit(files map[string][]byte, p, content string, spec *fluxKustomizeSp
 		before, _ := yamlObjects(string(files[p]))
 		after, _ := yamlObjects(content)
 		res.OK = true
-		diffRendered(before, after, &res)
+		diffRendered(markEncrypted(before), markEncrypted(after), &res)
 	}
 
 	return res
 }
 
-// editCheckTarget is what builds p: the Flux Kustomization's path when p is under it, else
-// the nearest directory up from p's with a Chart.yaml (helm) or a kustomization (kustomize);
-// plain when there is none.
-func editCheckTarget(files map[string][]byte, p string, spec *fluxKustomizeSpec) (string, string) {
+// editCheckTargets is what builds p: the Flux Kustomization's path whenever there is one
+// (what the controller applies), else the kustomization directories up from p's, nearest
+// first (at most editCheckCandidates), or the chart above it (helm); plain when there is none.
+func editCheckTargets(files map[string][]byte, p string, spec *fluxKustomizeSpec) (string, []string) {
 	if spec != nil {
-		dir := strings.Trim(path.Clean("/"+spec.Path), "/")
-		if dir == "" || dir == "." || strings.HasPrefix(p, dir+"/") {
-			return editCheckKustomize, dir
-		}
+		return editCheckKustomize, []string{strings.Trim(path.Clean("/"+spec.Path), "/.")}
 	}
+
+	var dirs []string
 
 	for dir := path.Dir(p); ; dir = path.Dir(dir) {
 		if dir == "." {
 			dir = ""
 		}
 
-		if _, ok := files[path.Join(dir, "Chart.yaml")]; ok {
-			return editCheckHelm, dir
+		if _, ok := files[path.Join(dir, "Chart.yaml")]; ok && len(dirs) == 0 {
+			return editCheckHelm, []string{dir}
 		}
 
-		for _, name := range konfig.RecognizedKustomizationFileNames() {
-			if _, ok := files[path.Join(dir, name)]; ok {
-				return editCheckKustomize, dir
-			}
+		if hasKustomization(files, dir) && len(dirs) < editCheckCandidates {
+			dirs = append(dirs, dir)
 		}
 
 		if dir == "" {
-			return editCheckPlain, path.Dir(p)
+			break
 		}
+	}
+
+	if len(dirs) == 0 {
+		return editCheckPlain, []string{path.Dir(p)}
+	}
+
+	return editCheckKustomize, dirs
+}
+
+func hasKustomization(files map[string][]byte, dir string) bool {
+	for _, name := range konfig.RecognizedKustomizationFileNames() {
+		if _, ok := files[path.Join(dir, name)]; ok {
+			return true
+		}
+	}
+
+	return false
+}
+
+// checkKustomize builds the candidate directories, nearest first, before and after the edit:
+// the first whose render the edit changes (or breaks) is the one shown. A file that no
+// candidate builds says so rather than "nothing changes".
+func checkKustomize(files map[string][]byte, p, content string, dirs []string, spec *fluxKustomizeSpec, res *gitOpsEditCheck) {
+	var first *gitOpsEditCheck
+
+	for _, dir := range dirs {
+		r := *res
+		r.Dir = dir
+		r.Errors = []editCheckError{}
+		r.Diff.Resources = []kubeDiffResource{}
+		checkKustomizeDir(files, p, content, spec, &r)
+
+		if first == nil {
+			first = &r
+		}
+
+		if !r.OK || len(r.Diff.Resources) > 0 {
+			*res = r
+
+			return
+		}
+	}
+
+	*res = *first
+
+	switch {
+	case spec != nil && res.Dir != "" && !strings.HasPrefix(p, res.Dir+"/"):
+		res.Note = "this file is outside the app's path " + res.Dir + ": the app's build is shown"
+	case spec == nil && string(files[p]) != content:
+		res.Note = "no rendered object changes: this file may be in none of the kustomizations above it"
 	}
 }
 
-// checkKustomize builds res.Dir before and after the edit and diffs the rendered objects.
-func checkKustomize(files map[string][]byte, p, content string, spec *fluxKustomizeSpec, res *gitOpsEditCheck) {
-	after := withEdit(files, p, content)
-
-	if ref := remoteBase(after, res.Dir, 0); ref != "" {
+// checkKustomizeDir builds res.Dir before and after the edit and diffs the rendered objects.
+func checkKustomizeDir(files map[string][]byte, p, content string, spec *fluxKustomizeSpec, res *gitOpsEditCheck) {
+	if ref := remoteBase(withEdit(files, p, content), res.Dir, 0); ref != "" {
 		res.Errors = append(res.Errors, editCheckError{Message: "remote base " + ref + " is not fetched on the phone: the build was not checked"})
 
 		return
 	}
 
-	built, err := buildWithin(after, res.Dir, spec)
+	out, err := buildBounded(func() buildBoth { return buildBeforeAfter(files, p, content, res.Dir, spec) })
 	if err != nil {
-		res.Errors = append(res.Errors, kustomizeError(err))
+		res.Errors = append(res.Errors, editCheckError{Message: err.Error()})
 
 		return
 	}
 
-	// The commit's own build failing is not the edit's doing: everything then shows as added.
-	before, err := buildWithin(files, res.Dir, spec)
-	if err != nil {
-		before = nil
-		res.Note = "the kustomization does not build at this commit either: " + strings.ReplaceAll(err.Error(), fluxSourceRoot+"/", "")
-	}
+	switch {
+	case out.afterErr != nil && out.beforeErr != nil && cleanBuildError(out.afterErr.Error()) == cleanBuildError(out.beforeErr.Error()):
+		// Not the edit's doing: the commit does not build either.
+		res.Broken = true
+		res.Errors = append(res.Errors, kustomizeError(out.afterErr))
+		res.Note = "the kustomization already fails at this commit, before this edit"
+	case out.afterErr != nil:
+		res.Errors = append(res.Errors, kustomizeError(out.afterErr))
+	default:
+		before := out.before
+		if out.beforeErr != nil {
+			before = nil
+			res.Note = "the kustomization did not build at this commit: this edit makes it build"
+		}
 
-	res.OK = true
-	diffRendered(before, built, res)
+		res.OK = true
+		diffRendered(before, out.after, res)
+	}
 }
 
-// withEdit is files with content at p, or without p when content is "".
+// withEdit is files with content at p, or without p when content is "" (the contents shared).
 func withEdit(files map[string][]byte, p, content string) map[string][]byte {
 	out := make(map[string][]byte, len(files)+1)
 	for k, v := range files {
@@ -212,38 +278,79 @@ func withEdit(files map[string][]byte, p, content string) map[string][]byte {
 	return out
 }
 
-// buildWithin builds dir of files in a fresh in-memory tree, within editCheckTimeout.
-func buildWithin(files map[string][]byte, dir string, spec *fluxKustomizeSpec) ([]map[string]any, error) {
-	type result struct {
-		objs []map[string]any
-		err  error
+// buildBoth is a directory built at the commit and with the edit.
+type buildBoth struct {
+	before, after       []map[string]any
+	beforeErr, afterErr error
+}
+
+// editCheckBusy lets one build run at a time: krusty cannot be stopped, so a build past its
+// time keeps its tree until it ends, and a new check waits for it rather than adding one.
+var editCheckBusy = make(chan struct{}, 1)
+
+// buildBounded runs build within editCheckTimeout, one at a time.
+func buildBounded(build func() buildBoth) (buildBoth, error) {
+	select {
+	case editCheckBusy <- struct{}{}:
+	default:
+		return buildBoth{}, errors.New("a previous build check is still running: retry in a moment")
 	}
 
-	done := make(chan result, 1)
+	done := make(chan buildBoth, 1)
 
 	go func() {
-		objs, err := buildRepoDir(files, dir, spec)
-		done <- result{objs, err}
+		defer func() { <-editCheckBusy }()
+		done <- build()
 	}()
 
 	select {
-	case r := <-done:
-		return r.objs, r.err
+	case b := <-done:
+		return b, nil
 	case <-time.After(editCheckTimeout):
-		return nil, fmt.Errorf("the build took over %s", editCheckTimeout)
+		return buildBoth{}, fmt.Errorf("the build took over %s", editCheckTimeout)
 	}
 }
 
-// buildRepoDir lays files out under fluxSourceRoot and builds dir: with spec as
-// kustomize-controller does, else as `kustomize build dir`.
-func buildRepoDir(files map[string][]byte, dir string, spec *fluxKustomizeSpec) ([]map[string]any, error) {
+// buildBeforeAfter lays files out once under fluxSourceRoot, builds dir, then puts the edit
+// in (and the kustomization the Flux build rewrote back) and builds it again.
+func buildBeforeAfter(files map[string][]byte, p, content, dir string, spec *fluxKustomizeSpec) buildBoth {
 	fsys := filesys.MakeFsInMemory()
-	for p, b := range files {
-		if err := fsys.WriteFile(path.Join(fluxSourceRoot, p), b); err != nil {
-			return nil, err
+	for f, b := range files {
+		if err := fsys.WriteFile(path.Join(fluxSourceRoot, f), b); err != nil {
+			return buildBoth{beforeErr: err, afterErr: err}
 		}
 	}
 
+	var out buildBoth
+
+	out.before, out.beforeErr = buildRepoDir(fsys, dir, spec)
+
+	for _, name := range konfig.RecognizedKustomizationFileNames() {
+		k := path.Join(fluxSourceRoot, dir, name)
+		if b, ok := files[path.Join(dir, name)]; ok {
+			_ = fsys.WriteFile(k, b)
+		} else if fsys.Exists(k) {
+			_ = fsys.RemoveAll(k)
+		}
+	}
+
+	target := path.Join(fluxSourceRoot, p)
+	if content == "" {
+		_ = fsys.RemoveAll(target)
+	} else if err := fsys.WriteFile(target, []byte(content)); err != nil {
+		out.afterErr = err
+
+		return out
+	}
+
+	out.after, out.afterErr = buildRepoDir(fsys, dir, spec)
+
+	return out
+}
+
+// buildRepoDir builds dir of the tree under fluxSourceRoot: with spec as kustomize-controller
+// does, else as `kustomize build dir`.
+func buildRepoDir(fsys filesys.FileSystem, dir string, spec *fluxKustomizeSpec) ([]map[string]any, error) {
 	if spec != nil {
 		s := *spec
 		s.Path = dir
@@ -297,19 +404,25 @@ func buildRepoDir(files map[string][]byte, dir string, spec *fluxKustomizeSpec) 
 			return nil, err
 		}
 
+		objs = append(objs, obj)
+	}
+
+	return markEncrypted(objs), nil
+}
+
+// markEncrypted reduces SOPS objects to their identity, marked: never compared, never shown.
+func markEncrypted(objs []map[string]any) []map[string]any {
+	for _, obj := range objs {
 		if _, ok := obj["sops"]; ok {
-			// Encrypted: its identity only, as the Flux build keeps it.
 			for _, k := range []string{"sops", "data", "stringData", "spec"} {
 				delete(obj, k)
 			}
 
 			obj[editCheckEncrypted] = true
 		}
-
-		objs = append(objs, obj)
 	}
 
-	return objs, nil
+	return objs
 }
 
 // editCheckEncrypted marks a SOPS object in a build: never compared, never shown.
@@ -366,7 +479,7 @@ func hasDir(files map[string][]byte, dir string) bool {
 // kustomizeError is a build error with the repository file and line it names, when it does.
 func kustomizeError(err error) editCheckError {
 	msg := err.Error()
-	e := editCheckError{Message: strings.ReplaceAll(msg, fluxSourceRoot+"/", "")}
+	e := editCheckError{Message: cleanBuildError(msg)}
 
 	if m := editCheckFile.FindStringSubmatch(msg); m != nil {
 		e.Path = m[1]
@@ -375,6 +488,25 @@ func kustomizeError(err error) editCheckError {
 	e.Line = errorLine(msg)
 
 	return e
+}
+
+// cleanBuildError is a kustomize error without what it echoes of the files: a patch or a
+// generator's literals can hold a Secret's values, and the error is shown on screen.
+func cleanBuildError(msg string) string {
+	msg = strings.ReplaceAll(msg, fluxSourceRoot+"/", "")
+	// The config and what follows it echo the patch: nothing of it is kept.
+	if i := strings.Index(msg, " with config:"); i >= 0 {
+		msg = msg[:i] + " (the patch is not shown: check its YAML)"
+	}
+
+	msg = editCheckLiterals.ReplaceAllString(msg, "literal sources […]")
+	msg = editCheckObject.ReplaceAllString(msg, "in object {…}")
+
+	if len(msg) > editCheckMaxError {
+		msg = msg[:editCheckMaxError] + "…"
+	}
+
+	return msg
 }
 
 // yamlError is the first YAML error of content, with its line.

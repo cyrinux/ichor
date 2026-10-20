@@ -33,7 +33,10 @@ struct EditCheckSection: View {
     }
 
     @ViewBuilder private func result(_ c: GitOpsEditCheck) -> some View {
-        if !c.ok {
+        if c.broken {
+            Label("Already fails at this commit", systemImage: "exclamationmark.triangle").foregroundStyle(.statusWarn)
+            ForEach(Array(c.errors.enumerated()), id: \.offset) { _, e in errorRow(e) }
+        } else if !c.ok {
             Label("Build fails", systemImage: "xmark.octagon").foregroundStyle(.statusBad)
             ForEach(Array(c.errors.enumerated()), id: \.offset) { _, e in errorRow(e) }
         } else if c.built {
