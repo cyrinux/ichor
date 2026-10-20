@@ -202,7 +202,7 @@ func TestReadDataServicesMariaDB(t *testing.T) {
 		t.Fatalf("mariadb: %+v", res.MariaDB)
 	}
 
-	if res.Longhorn != nil || res.CNPG != nil || res.Garage != nil || res.Dragonfly != nil {
+	if res.Longhorn != nil || res.CNPG != nil || res.Garage != nil {
 		t.Errorf("only MariaDB is installed: %+v", res)
 	}
 

@@ -2303,17 +2303,9 @@
     <string name="cnpg_backup_text">CloudNativePG fait une sauvegarde de base complète avec la méthode configurée pour le cluster (plugin barman-cloud, stockage objet ou snapshot de volume). Elle charge l’instance qui la fait et occupe de la place dans le stockage des sauvegardes.</string>
     <string name="cnpg_backup_started">Sauvegarde %1$s demandée</string>
     <string name="cnpg_backup_failed">%1$s : %2$s</string>
-    <string name="dragonfly_empty">Aucune instance Dragonfly.</string>
-    <string name="dragonfly_role_master">maître</string>
     <string name="dragonfly_reason_no_ready">aucun pod prêt</string>
-    <string name="dragonfly_reason_no_master">aucun maître</string>
-    <string name="dragonfly_reason_masters">plusieurs maîtres</string>
     <string name="dragonfly_reason_pods">répliques manquantes</string>
     <string name="dragonfly_reason_phase">opérateur : %1$s</string>
-    <plurals name="dragonfly_instances">
-        <item quantity="one">%1$d instance Dragonfly</item>
-        <item quantity="other">%1$d instances Dragonfly</item>
-    </plurals>
     <string name="mariadb_empty">Aucun cluster MariaDB.</string>
     <string name="mariadb_role_member">membre</string>
     <string name="mariadb_suspended">suspendu</string>

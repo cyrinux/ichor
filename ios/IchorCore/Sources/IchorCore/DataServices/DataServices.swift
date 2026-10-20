@@ -8,7 +8,6 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let longhorn: LonghornStatus?
     public let garage: GarageStatus?
     public let cnpg: CnpgStatus?
-    public let dragonfly: DragonflyStatus?
     public let mariadb: MariaDbStatus?
     public let percona: PerconaStatus?
     public let certManager: CertManagerStatus?
@@ -17,14 +16,13 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let backupJobs: BackupJobStatus?
     public let castai: CastAIStatus?
 
-    public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil, dragonfly: DragonflyStatus? = nil,
+    public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil,
                 mariadb: MariaDbStatus? = nil, percona: PerconaStatus? = nil, certManager: CertManagerStatus? = nil,
                 velero: VeleroStatus? = nil,
                 castai: CastAIStatus? = nil, snapshots: VolumeSnapshots? = nil, backupJobs: BackupJobStatus? = nil) {
         self.longhorn = longhorn
         self.garage = garage
         self.cnpg = cnpg
-        self.dragonfly = dragonfly
         self.mariadb = mariadb
         self.percona = percona
         self.certManager = certManager
@@ -90,7 +88,6 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     case longhorn = "longhorn"
     case garage = "garage"
     case cnpg = "cloudnative-pg"
-    case dragonfly = "dragonfly"
     case mariadb = "mariadb"
     case percona = "percona-xtradb"
     case certManager = "cert-manager"
@@ -108,7 +105,6 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
         case .longhorn: "Longhorn"
         case .garage: "Garage"
         case .cnpg: "CloudNativePG"
-        case .dragonfly: "Dragonfly"
         case .mariadb: "MariaDB"
         case .percona: "Percona XtraDB Cluster"
         case .certManager: "cert-manager"
@@ -140,7 +136,7 @@ public extension DataServiceKind {
         switch self {
         case .certManager: .security
         case .castai: .workloads
-        case .longhorn, .garage, .cnpg, .dragonfly, .mariadb, .percona, .velero, .snapshots, .backupJobs: .data
+        case .longhorn, .garage, .cnpg, .mariadb, .percona, .velero, .snapshots, .backupJobs: .data
         }
     }
 
@@ -185,7 +181,7 @@ public extension DataServices {
     /// The installed systems, in display order.
     var detected: [DataServiceKind] {
         [longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil,
-         dragonfly != nil ? .dragonfly : nil, mariadb != nil ? .mariadb : nil, percona != nil ? .percona : nil,
+         mariadb != nil ? .mariadb : nil, percona != nil ? .percona : nil,
          certManager != nil ? .certManager : nil, velero != nil ? .velero : nil,
          castai != nil ? .castai : nil, snapshots != nil ? .snapshots : nil,
          backupJobs != nil ? .backupJobs : nil].compactMap { $0 }
@@ -204,7 +200,7 @@ public extension DataServices {
     func only(_ families: Set<ServiceFamily>) -> DataServices {
         func keep<T>(_ kind: DataServiceKind, _ value: T?) -> T? { families.contains(kind.family) ? value : nil }
         return DataServices(longhorn: keep(.longhorn, longhorn), garage: keep(.garage, garage), cnpg: keep(.cnpg, cnpg),
-                            dragonfly: keep(.dragonfly, dragonfly), mariadb: keep(.mariadb, mariadb), percona: keep(.percona, percona),
+                            mariadb: keep(.mariadb, mariadb), percona: keep(.percona, percona),
                             certManager: keep(.certManager, certManager), velero: keep(.velero, velero),
                             castai: keep(.castai, castai), snapshots: keep(.snapshots, snapshots),
                             backupJobs: keep(.backupJobs, backupJobs))
@@ -229,11 +225,6 @@ public extension DataServices {
             if !p.error.isEmpty && p.clusters.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: p.error) }
             let healths = p.clusters.map(\.health)
             return ServiceSummary(total: p.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: p.error)
-        case .dragonfly:
-            guard let d = dragonfly else { return nil }
-            if !d.error.isEmpty && d.instances.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: d.error) }
-            let healths = d.instances.map(\.health)
-            return ServiceSummary(total: d.instances.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: d.error)
         case .mariadb:
             return mariadb?.summary
         case .percona:
@@ -278,9 +269,6 @@ public extension DataServices {
         }
         for cluster in cnpg?.clusters ?? [] where cluster.health.needsAttention {
             count(cluster.instancePods.filter { !$0.ready }.map(\.node))
-        }
-        for instance in dragonfly?.instances ?? [] where instance.health.needsAttention {
-            count(instance.pods.filter { !$0.ready }.map(\.node))
         }
         for cluster in mariadb?.clusters ?? [] where cluster.health.needsAttention {
             count(cluster.pods.filter { !$0.ready }.map(\.node))

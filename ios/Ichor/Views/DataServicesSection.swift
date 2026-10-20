@@ -49,7 +49,6 @@ func dataServiceSummary(_ kind: DataServiceKind, _ services: DataServices) -> St
     switch kind {
     case .longhorn: head = String(localized: "\(summary.total) volumes")
     case .cnpg: head = String(localized: "\(summary.total) Postgres clusters")
-    case .dragonfly: head = String(localized: "\(summary.total) Dragonfly instances")
     case .mariadb: head = String(localized: "\(summary.total) MariaDB clusters")
     case .percona: head = String(localized: "\(summary.total) Percona clusters")
     case .certManager: head = String(localized: "\(summary.total) certificates")
@@ -224,7 +223,6 @@ extension DataServiceKind {
         case .longhorn: "externaldrive"
         case .garage: "cloud"
         case .cnpg: "cylinder.split.1x2"
-        case .dragonfly: "memorychip"
         case .mariadb: "tablecells"
         case .percona: "point.3.connected.trianglepath.dotted"
         case .certManager: "checkmark.seal"

@@ -27,7 +27,7 @@ type dsIssue struct {
 func dataServiceSections(ds dataServices) []dsSection {
 	adapters := []func(dataServices) (dsSection, bool){
 		snapshotsSection, backupJobsSection, longhornSection, garageSection,
-		cnpgSection, dragonflySection, mariadbSection, perconaSection, certManagerSection,
+		cnpgSection, mariadbSection, perconaSection, certManagerSection,
 		veleroSection, castAISection,
 	}
 
@@ -279,23 +279,6 @@ func cnpgSection(ds dataServices) (dsSection, bool) {
 	}
 
 	return newDSSection("CloudNativePG", "clusters", s.Error, items), true
-}
-
-func dragonflySection(ds dataServices) (dsSection, bool) {
-	s := ds.Dragonfly
-	if s == nil {
-		return dsSection{}, false
-	}
-
-	items := make([]dsIssue, 0, len(s.Instances))
-	for _, in := range s.Instances {
-		items = append(items, dsIssue{
-			health: in.Health, key: nsName(in.Namespace, in.Name),
-			detail: details(in.Phase, strings.Join(in.Reasons, ", "), readyOf(in.ReadyPods, in.Replicas, "pods ready")),
-		})
-	}
-
-	return newDSSection("Dragonfly", "instances", s.Error, items), true
 }
 
 func mariadbSection(ds dataServices) (dsSection, bool) {

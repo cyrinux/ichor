@@ -382,14 +382,6 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
             out["cnpg|\(c.label)"] = dataWarning
         }
     }
-    for d in services.dragonfly?.instances ?? [] {
-        if d.health == .critical {
-            out["dragonfly|\(d.label)"] = dataCritical
-        } else if d.reasons.contains(.pods) || d.reasons.contains(.masters) {
-            // A rolling update is planned; a replica down or two masters are not.
-            out["dragonfly|\(d.label)"] = dataWarning
-        }
-    }
     // A replica rolling out or a busy operator is usually planned; a Galera recovery or backups are not.
     let mariadbAlerting: Set<MariaDbReason> = [.galeraRecovery, .backupFailed, .backupStale]
     for m in services.mariadb?.clusters ?? [] {
@@ -449,7 +441,7 @@ public func dataSystemTitle(_ key: String) -> String {
     switch key.split(separator: "|", maxSplits: 1).first.map(String.init) ?? "" {
     case "longhorn": "Longhorn"
     case "garage": "Garage"
-    case "dragonfly": "Dragonfly"
+    case "dragonfly": "Dragonfly" // an older snapshot's, now a plugin's
     case "mariadb": "MariaDB"
     case "percona": "Percona XtraDB Cluster"
     case "certmanager": "cert-manager"

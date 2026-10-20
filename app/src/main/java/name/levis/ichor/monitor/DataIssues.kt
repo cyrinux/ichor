@@ -3,7 +3,6 @@ package name.levis.ichor.monitor
 import name.levis.ichor.model.CertReason
 import name.levis.ichor.model.CnpgReason
 import name.levis.ichor.model.DataServices
-import name.levis.ichor.model.DragonflyReason
 import name.levis.ichor.model.GarageState
 import name.levis.ichor.model.MariaDbReason
 import name.levis.ichor.model.PerconaReason
@@ -48,8 +47,6 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
     out.flag("garage", services.garage?.buckets, { "bucket/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
     out.flag("garage", services.garage?.nodes, { "node/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
     out.flag("cnpg", services.cnpg?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in CNPG_ALERT_REASONS } })
-    // A rolling update is planned; a replica down or two masters are not.
-    out.flag("dragonfly", services.dragonfly?.instances, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { d -> d.reasonList.any { it == DragonflyReason.PODS || it == DragonflyReason.MASTERS } })
     out.flag("mariadb", services.mariadb?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { m -> m.reasonList.any { it in MARIADB_ALERT_REASONS } })
     out.flag("percona", services.percona?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in PERCONA_ALERT_REASONS } })
     out.flag("certmanager", services.certManager?.certificates, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in CERT_ALERT_REASONS } })

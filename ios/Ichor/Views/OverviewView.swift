@@ -771,7 +771,7 @@ struct OverviewView: View {
         flux = (flux ?? .loading).refreshed(with: loaded)
     }
 
-    /// Only for clusters whose inventory shows Longhorn, Garage, CloudNativePG or Dragonfly, and roles
+    /// Only for clusters whose inventory shows Longhorn, Garage, CloudNativePG or another data service, and roles
     /// that may use the Kubernetes API: others make no Kubernetes call. A failed refresh keeps what was
     /// shown (with its error noted).
     private func loadDataServices(with client: TalosClient, id: String, inventory apps: ClusterInventory) async {

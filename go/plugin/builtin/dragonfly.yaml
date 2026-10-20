@@ -1,0 +1,269 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# Dragonfly (dragonflydb.io) is a Redis-compatible in-memory store, one Dragonfly object per
+# instance. The operator labels its pods app.kubernetes.io/name=dragonfly, app=<instance> and
+# role=master|replica: each instance counts its ready pods against its replicas and names its
+# master, and the pods show their role. A pod is ready when it runs and every container is ready.
+# go/ichorgo/plugin_dragonflydb_test.go holds it to the reader the apps used before.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: dragonfly
+name: Dragonfly
+website: https://www.dragonflydb.io
+icon: dragonfly
+category: data-services
+catalogId: dragonfly
+
+detect:
+  - group: dragonflydb.io
+
+resources:
+  instance:
+    group: dragonflydb.io
+    version: preferred
+    resource: dragonflies
+    kind: Dragonfly
+    scope: Namespaced
+  pod:
+    group: ""
+    version: v1
+    resource: pods
+    kind: Pod
+    scope: Namespaced
+    list: { labelSelector: "app.kubernetes.io/name=dragonfly" }
+
+fields:
+  instance:
+    # The operator's own word: Ready, or a step such as a rolling update.
+    phase: $.status.phase | default("")
+    replicas: $.spec.replicas | default(1)
+    pods: len(pod[?(@.metadata.namespace == $.metadata.namespace && @.metadata.labels.app == $.metadata.name)])
+    readyPods: |
+      len(pod[?(@.metadata.namespace == $.metadata.namespace && @.metadata.labels.app == $.metadata.name && @.status.phase == "Running"
+        && len(@.status.containerStatuses) > 0 && len(@.status.containerStatuses[?(@.ready != true)]) == 0)])
+    masters: len(pod[?(@.metadata.namespace == $.metadata.namespace && @.metadata.labels.app == $.metadata.name && @.metadata.labels.role == "master")])
+    master: pod[?(@.metadata.namespace == $.metadata.namespace && @.metadata.labels.app == $.metadata.name && @.metadata.labels.role == "master")].metadata.name | first() | default("")
+    noReady: fields.replicas > 0 && fields.readyPods == 0
+    noMaster: fields.replicas > 0 && fields.masters == 0
+    severalMasters: fields.masters > 1
+    podsMissing: fields.readyPods > 0 && fields.readyPods < fields.replicas
+    # The operator's phase only matters when nothing else is wrong (the rules' order says so).
+    notReady: fields.phase != "" && lower(fields.phase) != "ready"
+  pod:
+    instance: $.metadata.labels.app | default("")
+    role: $.metadata.labels.role | default("")
+    # The master first under its instance.
+    rank: 'fields.role == "master" ? 0 : 1'
+    ready: '$.status.phase == "Running" && len($.status.containerStatuses) > 0 && len($.status.containerStatuses[?(@.ready != true)]) == 0'
+
+# The first rule that holds is the instance's reason: the worst one, in the reader's order.
+health:
+  instance:
+    - { when: fields.noReady, health: critical, reason: noReady, message: "no pod ready" }
+    - { when: fields.noMaster, health: critical, reason: noMaster, message: "no master" }
+    - { when: fields.severalMasters, health: warning, reason: masters, message: "several masters" }
+    - { when: fields.podsMissing, health: warning, reason: pods, message: "replicas missing" }
+    - { when: fields.notReady, health: warning, reason: notReady, message: "operator: {{ fields.phase }}" }
+  pod:
+    - { when: "!fields.ready", health: critical, reason: notReady, message: "Not ready" }
+
+dataServices:
+  summary:
+    aggregate:
+      total: count(instance)
+    health: worst(instance.health)
+
+cards:
+  summary:
+    title: { count: dataServices.summary.total, one: "%d Dragonfly instance", other: "%d Dragonfly instances" }
+    health: dataServices.summary.health
+  instances:
+    from: instance
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No Dragonfly instances."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: fields.phase
+      trailing: { text: 'string(fields.readyPods) + "/" + string(fields.replicas)' }
+      detail:
+        - type: gauge
+          label: "Pods ready"
+          value: fields.readyPods
+          max: fields.replicas
+          tone: 'fields.noReady ? "critical" : (fields.readyPods < fields.replicas ? "warning" : "ok")'
+        - type: keyValues
+          items:
+            - { label: "Phase", value: fields.phase }
+            - { label: "Master", value: fields.master, mono: true }
+  pods:
+    from: pod
+    sort: [$.metadata.namespace, fields.instance, fields.rank, $.metadata.name]
+    empty: "No Dragonfly pods."
+    row:
+      title: $.metadata.name
+      subtitle: '$.metadata.namespace + "/" + fields.instance'
+      status:
+        tone: health
+        text: 'fields.role == "master" ? "master" : (fields.role == "replica" ? "replica" : (fields.ready ? "Ready" : "Not ready"))'
+      trailing: { text: $.spec.nodeName | default("") }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Node", value: $.spec.nodeName | default(""), mono: true }
+            - { label: "Phase", value: $.status.phase | default("") }
+
+# The monitor's former Dragonfly alerts: an instance when critical, or with a replica down or
+# two masters; a rolling update is planned and only shows.
+findings:
+  - { id: instance-critical, from: instance, when: health == "critical", severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: instances }
+  - id: instance-warning
+    from: instance
+    when: 'health == "warning" && (fields.severalMasters || fields.podsMissing)'
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: instances
+
+# The former demo: a session cache with a replica pending next to a healthy queue cache, plus
+# one instance per remaining state.
+samples:
+  instance:
+    - metadata: { name: session-cache, namespace: demo-shop }
+      spec: { replicas: 2 }
+      status: { phase: Ready }
+    - metadata: { name: queue-cache, namespace: demo-shop }
+      spec: { replicas: 2 }
+      status: { phase: Ready }
+    - metadata: { name: rate-limit, namespace: demo-lab }
+      spec: { replicas: 1 }
+      status: { phase: Rolling-update }
+    - metadata: { name: feature-flags, namespace: demo-lab }
+      spec: { replicas: 2 }
+      status: { phase: Ready }
+    - metadata: { name: leaderboard, namespace: demo-lab }
+      spec: { replicas: 1 }
+      status: { phase: Configuring-replication }
+    - metadata: { name: scratch, namespace: demo-lab }
+      spec: { replicas: 1 }
+      status: { phase: Ready }
+  pod:
+    - metadata: { name: session-cache-0, namespace: demo-shop, labels: { app.kubernetes.io/name: dragonfly, app: session-cache, role: master } }
+      spec: { nodeName: demo-worker-1 }
+      status: { phase: Running, containerStatuses: [{ name: dragonfly, ready: true }] }
+    - metadata: { name: session-cache-1, namespace: demo-shop, labels: { app.kubernetes.io/name: dragonfly, app: session-cache, role: replica } }
+      status: { phase: Pending }
+    - metadata: { name: queue-cache-1, namespace: demo-shop, labels: { app.kubernetes.io/name: dragonfly, app: queue-cache, role: master } }
+      spec: { nodeName: demo-worker-2 }
+      status: { phase: Running, containerStatuses: [{ name: dragonfly, ready: true }] }
+    - metadata: { name: queue-cache-0, namespace: demo-shop, labels: { app.kubernetes.io/name: dragonfly, app: queue-cache, role: replica } }
+      spec: { nodeName: demo-worker-1 }
+      status: { phase: Running, containerStatuses: [{ name: dragonfly, ready: true }] }
+    - metadata: { name: rate-limit-0, namespace: demo-lab, labels: { app.kubernetes.io/name: dragonfly, app: rate-limit, role: master } }
+      spec: { nodeName: demo-worker-3 }
+      status: { phase: Running, containerStatuses: [{ name: dragonfly, ready: true }] }
+    - metadata: { name: feature-flags-0, namespace: demo-lab, labels: { app.kubernetes.io/name: dragonfly, app: feature-flags, role: master } }
+      spec: { nodeName: demo-worker-1 }
+      status: { phase: Running, containerStatuses: [{ name: dragonfly, ready: true }] }
+    - metadata: { name: feature-flags-1, namespace: demo-lab, labels: { app.kubernetes.io/name: dragonfly, app: feature-flags, role: master } }
+      spec: { nodeName: demo-worker-2 }
+      status: { phase: Running, containerStatuses: [{ name: dragonfly, ready: true }] }
+    - metadata: { name: leaderboard-0, namespace: demo-lab, labels: { app.kubernetes.io/name: dragonfly, app: leaderboard, role: replica } }
+      spec: { nodeName: demo-worker-3 }
+      status: { phase: Running, containerStatuses: [{ name: dragonfly, ready: true }] }
+    - metadata: { name: scratch-0, namespace: demo-lab, labels: { app.kubernetes.io/name: dragonfly, app: scratch, role: master } }
+      spec: { nodeName: demo-worker-2 }
+      status: { phase: Running, containerStatuses: [{ name: dragonfly, ready: false }] }
+
+# The apps' former Dragonfly strings (dragonfly_* in app/src/main/res/values-*/strings.xml).
+i18n:
+  fr:
+    "%d Dragonfly instance": "%d instance Dragonfly"
+    "%d Dragonfly instances": "%d instances Dragonfly"
+    "No Dragonfly instances.": "Aucune instance Dragonfly."
+    "no pod ready": "aucun pod prêt"
+    "no master": "aucun maître"
+    "several masters": "plusieurs maîtres"
+    "replicas missing": "répliques manquantes"
+    "operator: {{ fields.phase }}": "opérateur : {{ fields.phase }}"
+    "Not ready": "Pas prêt"
+    "Ready": "Prêt"
+    "Pods ready": "Pods prêts"
+    "Phase": "Phase"
+    "Master": "Maître"
+    "No Dragonfly pods.": "Aucun pod Dragonfly."
+    "master": "maître"
+    "replica": "réplique"
+    "Node": "Nœud"
+  de:
+    "%d Dragonfly instance": "%d Dragonfly-Instanz"
+    "%d Dragonfly instances": "%d Dragonfly-Instanzen"
+    "No Dragonfly instances.": "Keine Dragonfly-Instanzen."
+    "no pod ready": "kein Pod bereit"
+    "no master": "kein Master"
+    "several masters": "mehrere Master"
+    "replicas missing": "Replikate fehlen"
+    "operator: {{ fields.phase }}": "Operator: {{ fields.phase }}"
+    "Not ready": "Nicht bereit"
+    "Ready": "Bereit"
+    "Pods ready": "Pods bereit"
+    "Phase": "Phase"
+    "Master": "Master"
+    "No Dragonfly pods.": "Keine Dragonfly-Pods."
+    "master": "Master"
+    "replica": "Replikat"
+    "Node": "Knoten"
+  es:
+    "%d Dragonfly instance": "%d instancia de Dragonfly"
+    "%d Dragonfly instances": "%d instancias de Dragonfly"
+    "No Dragonfly instances.": "Sin instancias de Dragonfly."
+    "no pod ready": "ningún pod listo"
+    "no master": "sin maestro"
+    "several masters": "varios maestros"
+    "replicas missing": "faltan réplicas"
+    "operator: {{ fields.phase }}": "operador: {{ fields.phase }}"
+    "Not ready": "No listo"
+    "Ready": "Listo"
+    "Pods ready": "Pods listos"
+    "Phase": "Fase"
+    "Master": "Maestro"
+    "No Dragonfly pods.": "Sin pods de Dragonfly."
+    "master": "maestro"
+    "replica": "réplica"
+    "Node": "Nodo"
+  it:
+    "%d Dragonfly instance": "%d istanza Dragonfly"
+    "%d Dragonfly instances": "%d istanze Dragonfly"
+    "No Dragonfly instances.": "Nessuna istanza Dragonfly."
+    "no pod ready": "nessun pod pronto"
+    "no master": "nessun master"
+    "several masters": "più master"
+    "replicas missing": "repliche mancanti"
+    "operator: {{ fields.phase }}": "operatore: {{ fields.phase }}"
+    "Not ready": "Non pronto"
+    "Ready": "Pronto"
+    "Pods ready": "Pod pronti"
+    "Phase": "Fase"
+    "Master": "Master"
+    "No Dragonfly pods.": "Nessun pod Dragonfly."
+    "master": "master"
+    "replica": "replica"
+    "Node": "Nodo"
+  uk:
+    "%d Dragonfly instance": "%d екземпляр Dragonfly"
+    "%d Dragonfly instances": "%d екземплярів Dragonfly"
+    "No Dragonfly instances.": "Немає екземплярів Dragonfly."
+    "no pod ready": "жоден под не готовий"
+    "no master": "немає головного"
+    "several masters": "кілька головних"
+    "replicas missing": "бракує реплік"
+    "operator: {{ fields.phase }}": "оператор: {{ fields.phase }}"
+    "Not ready": "Не готово"
+    "Ready": "Готово"
+    "Pods ready": "Поди готові"
+    "Phase": "Фаза"
+    "Master": "Головний"
+    "No Dragonfly pods.": "Немає подів Dragonfly."
+    "master": "головний"
+    "replica": "репліка"
+    "Node": "Вузол"

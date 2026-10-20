@@ -176,7 +176,7 @@ func TestReadDataServicesPercona(t *testing.T) {
 		t.Fatalf("percona: %+v", res.Percona)
 	}
 
-	if res.Longhorn != nil || res.CNPG != nil || res.Garage != nil || res.Dragonfly != nil {
+	if res.Longhorn != nil || res.CNPG != nil || res.Garage != nil {
 		t.Errorf("only Percona is installed: %+v", res)
 	}
 }

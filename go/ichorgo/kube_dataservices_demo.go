@@ -117,19 +117,6 @@ func demoDataServices(now time.Time) dataServices {
 			LastSuccessAt: ms(3 * 24 * time.Hour), RecoverableAt: ms(17 * 24 * time.Hour)},
 	}}
 
-	dragonfly := &dragonflyStatus{Version: "v1alpha1", Instances: []dragonflyInstance{
-		{Namespace: "demo", Name: "session-cache", Phase: "Ready", Health: healthWarning, Reasons: []string{dragonflyReasonPods},
-			Replicas: 2, ReadyPods: 1, Master: "session-cache-0", Pods: []dragonflyPod{
-				{Name: "session-cache-0", Node: "demo-worker-1", Phase: "Running", Role: "master", Ready: true},
-				{Name: "session-cache-1", Phase: "Pending", Role: "replica"},
-			}},
-		{Namespace: "demo", Name: "queue-cache", Phase: "Ready", Health: healthOK, Reasons: []string{},
-			Replicas: 2, ReadyPods: 2, Master: "queue-cache-1", Pods: []dragonflyPod{
-				{Name: "queue-cache-1", Node: "demo-worker-2", Phase: "Running", Role: "master", Ready: true},
-				{Name: "queue-cache-0", Node: "demo-worker-1", Phase: "Running", Role: "replica", Ready: true},
-			}},
-	}}
-
 	mariadb := &mariadbStatus{Version: "v1alpha1", Clusters: []mariadbCluster{
 		{Namespace: "demo", Name: "shop-db", Topology: "replication", Health: healthWarning, Reasons: []string{mariadbReasonBackupFailed},
 			Replicas: 2, ReadyPods: 2, Primary: "shop-db-0", Pods: []mariadbPod{
@@ -235,7 +222,7 @@ func demoDataServices(now time.Time) dataServices {
 	}
 
 	snapshots := demoVolumeSnapshots(now)
-	return dataServices{Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, CastAI: demoCastAI(now)}
+	return dataServices{Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, CastAI: demoCastAI(now)}
 }
 
 // demoKubeGreenNamespace is the demo cluster's kube-green state for one namespace: staging is

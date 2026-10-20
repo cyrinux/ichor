@@ -50,7 +50,6 @@ var nativeIntegrationSpecs = []integrationSpec{
 	{ID: "cloudnative-pg", Name: "CloudNativePG", Website: "https://cloudnative-pg.io", Groups: []string{groupCNPG, groupBarmanPlug}},
 	{ID: "mariadb", Name: "MariaDB Operator", Website: "https://github.com/mariadb-operator/mariadb-operator", Groups: []string{groupMariaDB}},
 	{ID: "percona-xtradb", Name: "Percona XtraDB Cluster", Website: "https://docs.percona.com/percona-operator-for-mysql/pxc/", Groups: []string{groupPercona}},
-	{ID: "dragonfly", Name: "Dragonfly", Website: "https://www.dragonflydb.io", Groups: []string{groupDragonfly}},
 	{ID: "longhorn", Name: "Longhorn", Website: "https://longhorn.io", Groups: []string{groupLonghorn}},
 	// Garage: the garage-operator's CRDs when it runs, else its pods (the Helm chart).
 	{ID: "garage", Name: "Garage", Website: "https://garagehq.deuxfleurs.fr", Groups: []string{groupGarageOperator}, PodsFallback: true},
@@ -376,7 +375,6 @@ func demoSupportedIntegrations() supportedIntegrations {
 		"cloudnative-pg":      ds.CNPG != nil,
 		"mariadb":             ds.MariaDB != nil,
 		"percona-xtradb":      ds.Percona != nil,
-		"dragonfly":           ds.Dragonfly != nil,
 		"longhorn":            ds.Longhorn != nil,
 		"velero":              ds.Velero != nil,
 		"cert-manager":        ds.CertManager != nil,
