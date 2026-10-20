@@ -49,6 +49,7 @@ func talosEvent(t *testing.T, node, id string, payload proto.Message) *machineap
 
 	ev := &machineapi.Event{Id: id, Data: &anypb.Any{TypeUrl: typeURL, Value: value}}
 	if node != "" {
+		//lint:ignore SA1019 apid still tags each node's events with it, and the feed reads it
 		ev.Metadata = &common.Metadata{Hostname: node}
 	}
 
@@ -274,6 +275,7 @@ func TestRunEventsDemo(t *testing.T) {
 func TestWatchEventsSkipsAndReportsNodes(t *testing.T) {
 	f, cfg := eventsFake(t)
 	f.events = func(_ []string, _ *machineapi.EventsRequest, stream grpc.ServerStreamingServer[machineapi.Event]) error {
+		//lint:ignore SA1019 apid still reports a failed node through it, and the feed reads it
 		failed := &machineapi.Event{Metadata: &common.Metadata{Hostname: eventsWorker, Error: "connection refused"}}
 		unknown := &machineapi.Event{Id: xidAt(eventsAt, 2), Data: &anypb.Any{TypeUrl: "talos/runtime/machine.FutureEvent"}}
 		anonymous := talosEvent(t, "", "not-an-xid", &machineapi.ConfigValidationErrorEvent{Error: "invalid cluster name"})
