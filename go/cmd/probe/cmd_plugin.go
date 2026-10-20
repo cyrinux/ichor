@@ -38,6 +38,10 @@ var pluginCommands = []command{
 		// plugin-findings [-locale xx] [-hints a,b] [-demo]: KubePluginFindings, what the monitor reads, read-only.
 		return pluginFindings(e, flag.Args()[1:])
 	}},
+	{name: "plugin-tool", args: "ID TOOL [-scope NS] [-locale xx] [-demo]", noConfig: true, run: func(e env) (string, error) {
+		// plugin-tool ID TOOL [-scope NS] [-locale xx] [-demo]: KubePluginTool on a plugin, read-only.
+		return pluginTool(e, flag.Args()[1:])
+	}},
 	{name: "plugin-list", noConfig: true, run: func(e env) (string, error) {
 		// plugin-list: the built-in plugins, one JSON line each.
 		return pluginList()
@@ -354,6 +358,45 @@ func pluginRender(e env, args []string) (string, error) {
 	}
 
 	return ichorgo.KubePluginPreview(cfg, contextName, e.kubeServer, string(src), *scope, *locale)
+}
+
+func pluginTool(e env, args []string) (string, error) {
+	fs := flag.NewFlagSet("plugin-tool", flag.ContinueOnError)
+	scope := fs.String("scope", "", "namespace to read (all when empty)")
+	locale := fs.String("locale", "", "the plugin's translations to apply (fr, de…)")
+	demo := fs.Bool("demo", false, "run the tool over the plugin's samples (the demo cluster), no config needed")
+
+	var ids []string
+
+	for len(args) > 0 && !strings.HasPrefix(args[0], "-") && len(ids) < 2 {
+		ids, args = append(ids, args[0]), args[1:]
+	}
+
+	if err := fs.Parse(args); err != nil || len(ids) != 2 || fs.NArg() > 0 {
+		return "", fmt.Errorf("usage: plugin-tool ID TOOL [-scope NS] [-locale xx] [-demo] (%v %q)", err, fs.Args())
+	}
+
+	// A built-in's unknown tool is said before any config is read.
+	for _, c := range plugin.Builtins() {
+		if _, ok := c.Plugin.Tools[ids[1]]; c.Plugin.ID == ids[0] && !ok {
+			return "", fmt.Errorf("unknown tool %q of plugin %s", ids[1], ids[0])
+		}
+	}
+
+	cfg, contextName := "", e.context
+
+	if *demo {
+		var err error
+		if cfg, err = ichorgo.DemoKubeconfig(); err != nil {
+			return "", err
+		}
+
+		contextName = ""
+	} else {
+		cfg = loadProbeConfig(e.configPath, e.context, false, e.mask)
+	}
+
+	return ichorgo.KubePluginTool(cfg, contextName, e.kubeServer, ids[0], ids[1], *scope, *locale)
 }
 
 func pluginFindings(e env, args []string) (string, error) {

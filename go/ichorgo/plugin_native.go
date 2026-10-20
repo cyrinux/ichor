@@ -4,13 +4,17 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	"github.com/cyrinux/ichor/go/plugin"
 )
 
 // A plugin resource declared with source: native:<id> is read by one of these Go readers
 // instead of a list call, for what no selector can pick (docs/plugins.md, "File format").
-// Each lists the resource's path itself (scope applied, every page) and keeps the objects it
-// selects, as the API serves them; the plugin's list.limit still caps what is kept.
-type pluginNativeSource func(ctx context.Context, k *kubeClient, path string) ([]map[string]any, error)
+// Each is given the namespace to read ("" for all, always "" for a cluster-scoped resource)
+// and the probe (p.groups, the served API versions), reads what it needs (every page) and
+// returns the objects it selects or builds; the plugin's list.limit still caps what is kept.
+// The resource's group, version and resource need not be served: they only name it.
+type pluginNativeSource func(ctx context.Context, k *kubeClient, p *pluginProbe, decl plugin.Resource, scope string) ([]map[string]any, error)
 
 var pluginNativeSources = map[string]pluginNativeSource{
 	// The Deployments running the Sealed Secrets controller, by the catalog's images: an
@@ -20,26 +24,36 @@ var pluginNativeSources = map[string]pluginNativeSource{
 }
 
 // readNativeSource runs the reader source names (native:<id>).
-func readNativeSource(ctx context.Context, k *kubeClient, source, path string) ([]map[string]any, error) {
-	id, _ := strings.CutPrefix(source, "native:")
+func readNativeSource(ctx context.Context, k *kubeClient, p *pluginProbe, decl plugin.Resource, scope string) ([]map[string]any, error) {
+	id, _ := strings.CutPrefix(decl.Source, "native:")
 
 	read, ok := pluginNativeSources[id]
 	if !ok {
 		return nil, fmt.Errorf("unknown native source %q", id)
 	}
 
-	return read(ctx, k, path)
+	return read(ctx, k, p, decl, scope)
 }
 
-// catalogDeployments keeps the Deployments with a container whose image the app catalog
-// identifies as app.
+// catalogDeployments keeps the Deployments of decl (apps/v1 deployments) with a container
+// whose image the app catalog identifies as app.
 func catalogDeployments(app string) pluginNativeSource {
-	return func(ctx context.Context, k *kubeClient, path string) ([]map[string]any, error) {
+	return func(ctx context.Context, k *kubeClient, p *pluginProbe, decl plugin.Resource, scope string) ([]map[string]any, error) {
+		version := p.version(decl)
+		if version == "" {
+			return nil, fmt.Errorf("%w %s", errPluginNotServed, decl.Group)
+		}
+
+		ref, err := newResourceRef(decl.Group, version, decl.Resource)
+		if err != nil {
+			return nil, err
+		}
+
 		catalog := loadAppCatalog()
 
 		var out []map[string]any
 
-		err := k.listAll(ctx, path, pageQuery{}, func() { out = nil }, func(page kubePage) error {
+		err = k.listAll(ctx, ref.path(scope), pageQuery{}, func() { out = nil }, func(page kubePage) error {
 			objs, err := decodeItems[map[string]any](page)
 			if err != nil {
 				return err

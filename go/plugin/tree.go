@@ -23,6 +23,23 @@ type Tree struct {
 	Cards    []TreeCard  `json:"cards"`
 	Findings []TreeFind  `json:"findings"`
 	Errors   []TreeError `json:"errors"`
+	// Tools are the plugin's tool buttons, in id order (KubePluginTool runs one).
+	Tools []TreeTool `json:"tools,omitempty"`
+}
+
+// TreeTool is a tool's button.
+type TreeTool struct {
+	ID    string `json:"id"`
+	Label string `json:"label"`
+	Hint  string `json:"hint,omitempty"`
+}
+
+// ToolResult is what a tool returns: a title, a health and cards, drawn as the tree's cards
+// are (rows with ref, status, trailing and detail).
+type ToolResult struct {
+	Title  string     `json:"title"`
+	Health string     `json:"health"`
+	Cards  []TreeCard `json:"cards"`
 }
 
 // TreePlugin says which plugin the tree is.
@@ -62,9 +79,12 @@ type TreeCard struct {
 
 // Ref names an object the apps can open.
 type Ref struct {
-	Group     string `json:"group"`
-	Version   string `json:"version"`
-	Resource  string `json:"resource"`
+	Group    string `json:"group"`
+	Version  string `json:"version"`
+	Resource string `json:"resource"`
+	// Kind is set when the resource's ref names another object: the apps open it without a
+	// catalog lookup.
+	Kind      string `json:"kind,omitempty"`
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
 }

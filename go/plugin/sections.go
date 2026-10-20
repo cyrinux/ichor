@@ -255,8 +255,12 @@ func (r *renderer) findings() []TreeFind {
 				continue
 			}
 
+			// name and namespace are the object's own, also when its ref opens another one.
+			meta, _ := o.raw["metadata"].(map[string]any)
+			name, _ := meta["name"].(string)
+			namespace, _ := meta["namespace"].(string)
+			env.Vars = map[string]expr.Value{"name": name, "namespace": namespace, "message": o.message, "reason": o.reason}
 			ref := r.refOf(o.raw)
-			env.Vars = map[string]expr.Value{"name": ref.Name, "namespace": ref.Namespace, "message": o.message, "reason": o.reason}
 
 			out = append(out, TreeFind{
 				ID: f.ID, Severity: f.Severity, Ref: ref, Opens: f.Opens,

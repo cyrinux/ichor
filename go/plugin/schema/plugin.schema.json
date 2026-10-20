@@ -543,6 +543,15 @@
           "description": "Optional is a resource the plugin does without (a decorative relation): forbidden or not served, it reads as empty with no error.",
           "type": "boolean"
         },
+        "ref": {
+          "description": "Ref is the object a row of this resource opens, with source only: an expression giving a map of group, version, resource, kind, namespace and name ($.source).",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
         "resource": {
           "description": "Resource is the plural resource name (sleepinfos).",
           "type": "string"
@@ -775,6 +784,29 @@
         }
       ]
     },
+    "Tool": {
+      "additionalProperties": false,
+      "description": "Tool is a button of the plugin screen run by Go (a check no expression can make).",
+      "properties": {
+        "hint": {
+          "description": "Hint says what the tool does, under its button.",
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "run": {
+          "description": "Run is native:<id>, the Go function that runs the tool.",
+          "pattern": "^native:[A-Za-z0-9_-]+$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "run"
+      ],
+      "type": "object"
+    },
     "Trailing": {
       "additionalProperties": false,
       "description": "Trailing is the text at a row's end.",
@@ -938,6 +970,16 @@
       "description": "Screen is native:<route> to open a native screen from the hub tile; empty is the generic plugin screen.",
       "pattern": "^native:[A-Za-z0-9_-]+$",
       "type": "string"
+    },
+    "tools": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Tool"
+      },
+      "description": "Tools are buttons of the plugin screen, by id, each run by a Go function over what the plugin read.",
+      "propertyNames": {
+        "pattern": "^[a-zA-Z][a-zA-Z0-9]*$"
+      },
+      "type": "object"
     },
     "website": {
       "description": "Website is the project's home page.",

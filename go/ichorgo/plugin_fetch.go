@@ -157,7 +157,7 @@ func (p *pluginProbe) fetch(ctx context.Context, k *kubeClient, c *plugin.Compil
 
 			// A panic here must not reach gomobile: it is this resource's error.
 			err := safeCall(func() (err error) {
-				objs, note, err = listPluginResource(ctx, k, decl, version, scope, p.allowReveal)
+				objs, note, err = listPluginResource(ctx, k, p, decl, version, scope, p.allowReveal)
 
 				return err
 			})
@@ -221,16 +221,7 @@ var errPluginListFull = errors.New("plugin list holds its limit")
 // listPluginResource reads at most list.limit objects (500 by default) of decl, page by page
 // with the declared selectors; note says when more are left out. Secrets are masked unless
 // the resource reveals them and allowReveal (see tidyPluginObject).
-func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource, version, scope string, allowReveal bool) ([]map[string]any, string, error) {
-	if version == "" {
-		return nil, "", fmt.Errorf("%w %s", errPluginNotServed, decl.Group)
-	}
-
-	ref, err := newResourceRef(decl.Group, version, decl.Resource)
-	if err != nil {
-		return nil, "", err
-	}
-
+func listPluginResource(ctx context.Context, k *kubeClient, p *pluginProbe, decl plugin.Resource, version, scope string, allowReveal bool) ([]map[string]any, string, error) {
 	namespace := ""
 	if decl.Scope == "Namespaced" {
 		namespace = scope
@@ -246,8 +237,19 @@ func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource
 
 	q.limit = clampPageLimit(q.limit)
 
+	// A Go reader's resource is never "not served": its group, version and resource only
+	// name it.
 	if decl.Source != "" {
-		return listNativeResource(ctx, k, decl, ref.path(namespace), q.limit, allowReveal)
+		return listNativeResource(ctx, k, p, decl, namespace, q.limit, allowReveal)
+	}
+
+	if version == "" {
+		return nil, "", fmt.Errorf("%w %s", errPluginNotServed, decl.Group)
+	}
+
+	ref, err := newResourceRef(decl.Group, version, decl.Resource)
+	if err != nil {
+		return nil, "", err
 	}
 
 	var (
@@ -288,8 +290,8 @@ func listPluginResource(ctx context.Context, k *kubeClient, decl plugin.Resource
 
 // listNativeResource is listPluginResource for a resource its Go reader selects (source:
 // native:<id>, see plugin_native.go): at most limit of the objects it keeps.
-func listNativeResource(ctx context.Context, k *kubeClient, decl plugin.Resource, path string, limit int, allowReveal bool) ([]map[string]any, string, error) {
-	items, err := readNativeSource(ctx, k, decl.Source, path)
+func listNativeResource(ctx context.Context, k *kubeClient, p *pluginProbe, decl plugin.Resource, namespace string, limit int, allowReveal bool) ([]map[string]any, string, error) {
+	items, err := readNativeSource(ctx, k, p, decl, namespace)
 	if err != nil {
 		return nil, "", err
 	}

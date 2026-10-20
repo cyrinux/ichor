@@ -1,0 +1,98 @@
+# yaml-language-server: $schema=../../schema/plugin.schema.json
+# A resource read by a Go reader whose rows open another object (ref), and a tool run by Go.
+# The records are synthetic: each names the object it comes from in source.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: demo-records
+name: Demo Records
+category: networking
+
+detect:
+  - group: records.example.com
+
+resources:
+  record:
+    group: ichor.dev
+    version: v1alpha1
+    resource: demorecords
+    kind: DemoRecord
+    scope: Namespaced
+    source: native:demo-records
+    ref: $.source
+
+fields:
+  record:
+    hostname: $.spec.hostname
+    target: $.status.target | default("")
+
+health:
+  record:
+    - when: fields.target == ""
+      health: warning
+      reason: no-target
+      message: "no target"
+
+dataServices:
+  summary:
+    aggregate: { total: count(record) }
+    health: worst(record.health)
+  byHost:
+    from: record
+    select: { hostname: fields.hostname }
+
+cards:
+  summary:
+    title: { count: dataServices.summary.total, one: "%d record", other: "%d records" }
+    health: dataServices.summary.health
+  records:
+    from: record
+    sort: [fields.hostname]
+    empty: "No records."
+    row:
+      title: fields.hostname
+      subtitle: $.metadata.namespace
+      detail:
+        - type: relations
+          items:
+            - { label: "Source", ref: $ }
+  hosts:
+    from: dataServices.byHost
+    empty: "No hosts."
+    row:
+      title: $.hostname
+
+findings:
+  - id: no-target
+    from: record
+    when: health == "warning"
+    severity: warning
+    title: "{{ name }} has no target"
+    opens: records
+
+tools:
+  check:
+    label: "Check names"
+    hint: "Resolve each hostname"
+    run: native:demo-check
+
+samples:
+  record:
+    - metadata: { name: shop-a, namespace: demo-shop }
+      spec: { hostname: shop.example.com }
+      status: { target: 192.0.2.10 }
+      source: { group: networking.k8s.io, version: v1, resource: ingresses, kind: Ingress, namespace: demo-shop, name: shop }
+    - metadata: { name: lab-a, namespace: demo-lab }
+      spec: { hostname: lab.example.com }
+      status: { target: "" }
+      source: { group: "", version: v1, resource: services, kind: Service, namespace: demo-lab, name: gateway }
+
+i18n:
+  fr:
+    "no target": "pas de cible"
+    "%d record": "%d enregistrement"
+    "%d records": "%d enregistrements"
+    "No records.": "Aucun enregistrement."
+    "No hosts.": "Aucun hôte."
+    "Source": "Source"
+    "{{ name }} has no target": "{{ name }} n'a pas de cible"
+    "Check names": "Vérifier les noms"
+    "Resolve each hostname": "Résoudre chaque nom d'hôte"

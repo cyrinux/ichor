@@ -64,6 +64,12 @@ func rowScope(fields, dataServices []string) expr.Scope {
 	}
 }
 
+// refScope: a resource's ref sees one object with its fields and health; not the data
+// services, which a ref asked for while they are computed would read half done.
+func refScope(fields []string) expr.Scope {
+	return expr.Scope{Names: []string{"fields", "health", "conditions", "now"}, Fields: nonNil(fields)}
+}
+
 // summaryScope: the summary card sees the data services only.
 func summaryScope(dataServices []string) expr.Scope {
 	return expr.Scope{Names: []string{"now", "dataServices"}, DataServices: nonNil(dataServices)}
