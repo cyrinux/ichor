@@ -19,6 +19,8 @@ public enum CheckupSeverity: String, Sendable, WireEnum {
 /// The sections of a checkup, as Go names them.
 public enum CheckupSectionID: String, Sendable {
     case workloads, events, storage, upgrade, webhooks, policies, capacity, nodes, loadbalancers, terminating, certificates, secrets, helm, monitoring, crossplane, tailscale, clusterapi
+    /// The findings the plugins of the apps the cluster runs declare (docs/plugins.md "Findings").
+    case plugins
 }
 
 /// What a finding is about, as Go names it.
@@ -63,6 +65,9 @@ public enum CheckupKind: String, Sendable {
     /// 14 days (count: days left) or does not name the host (message: the names it covers).
     /// Namespace, name: its Secret; extra: the route; reason: the host.
     case routeCertExpired, routeCertExpiring, routeCertHostMismatch
+    /// A finding a plugin declares, in the plugin's words (`plugin`, already translated by Go);
+    /// namespace and name are its object's.
+    case plugin
 }
 
 /// What the cluster hides behind green nodes: one section per kind of trouble.
@@ -100,13 +105,18 @@ public struct CheckupReport: Decodable, Equatable, Sendable {
     public var alertIssues: [String: String] { alertIssues(gitopsWatched: false) }
 
     /// `alertIssues`, leaving out as well the kinds the GitOps alert already raises
-    /// (`gitopsAlertedKinds`) when that track is watched.
-    public func alertIssues(gitopsWatched: Bool) -> [String: String] {
-        let skipped = gitopsWatched ? dataServiceAlertedKinds.union(gitopsAlertedKinds) : dataServiceAlertedKinds
+    /// (`gitopsAlertedKinds`) when that track is watched, and the plugin findings when the
+    /// plugins' own track (pluginIssuesOf) is watched.
+    public func alertIssues(gitopsWatched: Bool, pluginsWatched: Bool = false) -> [String: String] {
+        var skipped = gitopsWatched ? dataServiceAlertedKinds.union(gitopsAlertedKinds) : dataServiceAlertedKinds
+        if pluginsWatched { skipped.insert(CheckupKind.plugin.rawValue) }
         var issues: [String: String] = [:]
         for section in sections where section.id != CheckupSectionID.events.rawValue {
             for finding in section.findings where finding.severity != .info && !skipped.contains(finding.kindName) {
-                issues["\(section.id)|\(finding.kindName)|\(finding.subject)"] = finding.severity.rawValue
+                let key = "\(section.id)|\(finding.kindName)|\(finding.alertSubject)"
+                // Two plugin findings on one object: the worst one.
+                if issues[key] == CheckupSeverity.critical.rawValue { continue }
+                issues[key] = finding.severity.rawValue
             }
         }
         return issues
@@ -156,6 +166,9 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
     public let count: Int
     /// Unix ms, 0 when unknown.
     public let since: Int64
+    /// Kind `plugin`: the plugin, its finding's words (already translated) and where it leads;
+    /// nil for the other kinds.
+    public let plugin: PluginFindingInfo?
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -171,6 +184,7 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
         limit = try c.field(.limit, 0)
         count = try c.field(.count, 0)
         since = try c.field(.since, 0)
+        plugin = if kindName == CheckupKind.plugin.rawValue { try? PluginFindingInfo(from: decoder) } else { nil }
     }
 
     private enum CodingKeys: String, CodingKey { case kind, severity, namespace, name, node, reason, message, extra, value, limit, count, since }
@@ -180,9 +194,14 @@ public struct CheckupFinding: Decodable, Equatable, Sendable {
     /// "namespace/name", or the name alone for what has no namespace.
     public var subject: String { namespace.isEmpty ? name : "\(namespace)/\(name)" }
 
+    /// What a background alert names: the subject, else (a plugin finding about no object) the
+    /// finding's title.
+    var alertSubject: String { subject.isEmpty ? plugin?.headline ?? "" : subject }
+
     /// Kubernetes' own words about the finding, "" when it has none: the reason where it says
     /// more than the title does, then the message.
     public var detail: String {
+        if let plugin { return plugin.detail }
         let reasonKinds: Set<CheckupKind> = [.podCrashLoop, .podOOMKilled, .podStuckStarting, .jobFailed, .nodeNotReady, .nodePressure,
                                              .externalSecretFailed, .secretStoreNotReady, .prometheusRuleErrors, .ruleGroupErrors,
                                              .crossplaneSyncFailed, .crossplaneProviderUnhealthy, .crossplaneNotReady,
@@ -393,11 +412,13 @@ public let gitopsAlertedKinds: Set<String> = [CheckupKind.sopsDecryptionFailed.r
 /// The checkup findings worth a notification, for a report where a section could not be read:
 /// that section keeps the issues `known` had for it, so they neither clear falsely nor come back
 /// as new once it reads again. With `gitopsWatched`, the kinds the GitOps alert already raises
-/// are left to it.
-public func checkupIssuesWithGaps(_ report: CheckupReport, known: [String: String], gitopsWatched: Bool = false) -> [String: String] {
+/// are left to it; with `pluginsWatched`, the plugin findings to the plugins' track.
+public func checkupIssuesWithGaps(_ report: CheckupReport, known: [String: String], gitopsWatched: Bool = false,
+                                  pluginsWatched: Bool = false) -> [String: String] {
     let unread = report.sections.filter { !$0.error.isEmpty }.map { "\($0.id)|" }
-    var issues = report.alertIssues(gitopsWatched: gitopsWatched)
-    for (key, value) in known where issues[key] == nil && unread.contains(where: key.hasPrefix) {
+    var issues = report.alertIssues(gitopsWatched: gitopsWatched, pluginsWatched: pluginsWatched)
+    let pluginKind = "|\(CheckupKind.plugin.rawValue)|"
+    for (key, value) in known where issues[key] == nil && unread.contains(where: key.hasPrefix) && !(pluginsWatched && key.contains(pluginKind)) {
         issues[key] = value
     }
     return issues

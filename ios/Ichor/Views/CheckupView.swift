@@ -212,8 +212,12 @@ private struct CheckupSectionBody: View {
             Text(verbatim: CheckupText.checkupNothingIn("\(section.checked)")).font(.caption).foregroundStyle(.secondary)
         }
         ForEach(Array(section.findings.enumerated()), id: \.offset) { _, finding in
-            CheckupFindingRow(finding: finding, now: now,
-                              onDelete: finding.kind == .netperfLeftover ? { onDeleteLeftover(finding.name) } : nil)
+            if let plugin = finding.plugin, !plugin.plugin.isEmpty {
+                CheckupPluginFindingRow(finding: finding, plugin: plugin)
+            } else {
+                CheckupFindingRow(finding: finding, now: now,
+                                  onDelete: finding.kind == .netperfLeftover ? { onDeleteLeftover(finding.name) } : nil)
+            }
         }
         if section.truncated > 0 {
             Text(verbatim: CheckupText.checkupTruncated("\(section.truncated)")).font(.caption).foregroundStyle(.secondary)
@@ -302,6 +306,29 @@ private struct CheckupFindingRow: View {
             }
         }
         .padding(.vertical, 2)
+    }
+}
+
+/// A plugin's finding, in its words (translated by Go): its title, detail and the plugin that
+/// raised it; opens the plugin's screen.
+private struct CheckupPluginFindingRow: View {
+    let finding: CheckupFinding
+    let plugin: PluginFindingInfo
+
+    var body: some View {
+        NavigationLink(value: Route.plugin(id: plugin.plugin)) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: finding.severity.symbol).foregroundStyle(finding.severity.color).accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(verbatim: plugin.headline).font(.subheadline.monospaced().weight(.semibold)).lineLimit(2).truncationMode(.middle)
+                    if !plugin.detail.isEmpty {
+                        Text(verbatim: plugin.detail).font(.callout)
+                    }
+                    Text(verbatim: CheckupText.checkupPluginNamed(plugin.pluginLabel)).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .padding(.vertical, 2)
+        }
     }
 }
 

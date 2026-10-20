@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Anchor
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.Lan
@@ -55,6 +56,7 @@ fun sectionLook(id: String): SectionLook? = when (id) {
     CheckupSectionId.CROSSPLANE -> SectionLook(Icons.Outlined.Cloud, R.string.checkup_section_crossplane, R.string.checkup_section_crossplane_hint)
     CheckupSectionId.TAILSCALE -> SectionLook(Icons.Outlined.VpnLock, R.string.checkup_section_tailscale, R.string.checkup_section_tailscale_hint)
     CheckupSectionId.CLUSTER_API -> SectionLook(Icons.Outlined.AccountTree, R.string.cluster_lifecycle_title, R.string.checkup_section_clusterapi_hint)
+    CheckupSectionId.PLUGINS -> SectionLook(Icons.Outlined.Extension, R.string.checkup_section_plugins, R.string.checkup_section_plugins_hint)
     else -> null
 }
 
@@ -180,6 +182,8 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
         CheckupKind.ROUTE_CERT_EXPIRED -> stringResource(R.string.checkup_routeCertExpired, f.reason.ifEmpty { "-" })
         CheckupKind.ROUTE_CERT_EXPIRING -> stringResource(R.string.checkup_routeCertExpiring, f.count.toString(), f.reason.ifEmpty { "-" })
         CheckupKind.ROUTE_CERT_HOST_MISMATCH -> stringResource(R.string.checkup_routeCertHostMismatch, f.reason.ifEmpty { "-" })
+        // The plugin's own words, already translated by Go.
+        CheckupKind.PLUGIN -> f.title.ifEmpty { f.id.ifEmpty { f.kind } }
         else -> f.kind
     }
 }
@@ -286,7 +290,10 @@ private val REASON_KINDS = setOf(
     CheckupKind.SEALED_SECRET_NOT_SYNCED, CheckupKind.SOPS_DECRYPTION_FAILED,
 )
 
-/** Kubernetes' own words about the finding, "" when it has none. */
-val CheckupFinding.detail: String get() = listOf(reason.takeIf { kind in REASON_KINDS }.orEmpty(), message)
-    .filter { it.isNotEmpty() }
-    .joinToString(": ")
+/** Kubernetes' own words about the finding (a plugin's: its detail), "" when it has none. */
+val CheckupFinding.detail: String
+    get() = if (kind == CheckupKind.PLUGIN) {
+        pluginDetail
+    } else {
+        listOf(reason.takeIf { kind in REASON_KINDS }.orEmpty(), message).filter { it.isNotEmpty() }.joinToString(": ")
+    }

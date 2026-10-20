@@ -4147,6 +4147,9 @@
     <string name="checkup_tailscaleConnectorNotReady_plain">Конектор не готовий</string>
     <string name="checkup_tailscaleProxyClassMissing">Вказує ProxyClass, якого не існує</string>
     <string name="checkup_section_clusterapi_hint">Кластери, машини й bare-metal сервери, що застрягли, збійні чи вимкнені</string>
+    <string name="checkup_section_plugins">Плагіни</string>
+    <string name="checkup_section_plugins_hint">Що повідомляють плагіни застосунків кластера, їхніми словами</string>
+    <string name="checkup_plugin_caption">Плагін %1$s</string>
     <string name="checkup_open_cluster_lifecycle">Відкрити життєвий цикл кластерів</string>
     <string name="checkup_capiClusterFailed">Кластер збійний</string>
     <string name="checkup_capiClusterProvisioning">Не підготовлено за %1$s</string>

@@ -121,6 +121,10 @@ fun openAlertsOf(kept: ClusterSnapshot, previous: ClusterSnapshot?, now: Long): 
         val storage = StorageDetail.parse(value)
         add(HistoryAlertEntry("storage:$key", "storage", storageSeverity(value), "${storage.hostname} ${storage.name}".trim()))
     }
+    kept.pluginIssues.forEach { (key, value) ->
+        val issue = PluginIssue.parse(value)
+        add(HistoryAlertEntry(key, "plugin", issue.severity, listOf(issue.pluginName, issue.title).filter { it.isNotEmpty() }.joinToString(": ")))
+    }
     if (kept.certNotAfter > 0) {
         val days = daysUntil(kept.certNotAfter, now)
         if (days <= CERT_WARN_DAYS) add(HistoryAlertEntry("cert", "cert", if (days < 0) DATA_CRITICAL else DATA_WARNING))

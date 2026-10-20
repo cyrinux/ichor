@@ -250,7 +250,8 @@ tour** shows it again.
   certificate requests nobody approved, web address certificates (not cert-manager's) expired,
   expiring or naming other hosts, External Secrets that do not sync, Flux Kustomizations whose
   SOPS decryption fails, Helm releases
-  failed or stuck, and Crossplane: managed resources that cannot sync, unhealthy providers. Every finding says what to change. Read-only; the critical ones can also
+  failed or stuck, and Crossplane: managed resources that cannot sync, unhealthy providers, and
+  the findings each plugin the cluster runs declares, under the plugin's name. Every finding says what to change. Read-only; the critical ones can also
   notify in the background (Settings → Alerts). A pod's log sheet and a workload's sheet show
   the object's Kubernetes events, like the end of `kubectl describe`. See
   [Cluster checkup](#cluster-checkup).
@@ -275,7 +276,10 @@ tour** shows it again.
 - **Tablets and foldables (Android):** on a tablet or an unfolded foldable, the nodes list and
   the Argo CD apps open their node or app side by side with the list.
 - **iPad:** the nodes list and the Argo CD / Flux apps open their node or app side by side with the list.
-- **Background:** alerts and a home-screen widget.
+- **Background:** alerts and a home-screen widget. The findings of the plugins the cluster runs
+  (a kube-green schedule with no wake-up time, an ExternalSecret that does not sync…) notify
+  like the data services' problems, in the app's language, and clear when they go away
+  ([docs/plugins.md](docs/plugins.md#findings)).
 - **Widgets:** the home-screen widget, and on Wear OS a tile and a complication with the health
   of the cluster on screen on the phone (ready count in its colour, "N down", etcd alarms; the
   check's age once it is over an hour old). The phone sends them its last background check
@@ -631,6 +635,10 @@ kubelets asked so far for the volumes. `just probe checkup` prints the same step
   while it scales) and a server waiting to be accepted (five named, then a count) are warnings.
   Each fix line names the `clusterctl` or `kubectl` command; "Open Cluster lifecycle" leads to
   the screen.
+- **Plugins:** the findings of every plugin the cluster runs, under the plugin's name and worded
+  by the plugin; tapping one opens the plugin's screen. A plugin the account may not read is
+  named in the card's error; External Secrets stays in the secrets card. See
+  [docs/plugins.md](docs/plugins.md#findings).
 - **Alerts:** Settings → Alerts → Cluster checkup runs it at every background check (it lists every
   pod and asks each kubelet). A critical finding notifies at once, a warning when seen on two
   checks in a row, a cleared one once; a section that could not be read keeps what it knew.

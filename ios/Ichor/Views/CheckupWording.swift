@@ -37,6 +37,7 @@ extension CheckupSectionID {
         case .crossplane: CheckupText.checkupSectionCrossplane
         case .tailscale: CheckupText.checkupSectionTailscale
         case .clusterapi: CheckupText.checkupSectionClusterAPI
+        case .plugins: CheckupText.checkupSectionPlugins
         }
     }
 
@@ -60,6 +61,7 @@ extension CheckupSectionID {
         case .crossplane: CheckupText.checkupSectionCrossplaneHint
         case .tailscale: CheckupText.checkupSectionTailscaleHint
         case .clusterapi: CheckupText.checkupSectionClusterAPIHint
+        case .plugins: CheckupText.checkupSectionPluginsHint
         }
     }
 
@@ -82,6 +84,7 @@ extension CheckupSectionID {
         case .crossplane: "cloud"
         case .tailscale: "network.badge.shield.half.filled"
         case .clusterapi: "server.rack"
+        case .plugins: "puzzlepiece.extension"
         }
     }
 }
@@ -206,6 +209,8 @@ extension CheckupFinding {
         case .routeCertExpired: return CheckupText.checkupRouteCertExpired(f.reason.isEmpty ? "-" : f.reason)
         case .routeCertExpiring: return CheckupText.checkupRouteCertExpiring("\(f.count)", f.reason.isEmpty ? "-" : f.reason)
         case .routeCertHostMismatch: return CheckupText.checkupRouteCertHostMismatch(f.reason.isEmpty ? "-" : f.reason)
+        // In the plugin's words, already translated by Go.
+        case .plugin: return f.plugin?.headline ?? kindName
         }
     }
 
@@ -301,6 +306,8 @@ extension CheckupFinding {
         case .routeCertExpired: return CheckupText.checkupRouteCertExpiredFix
         case .routeCertExpiring: return CheckupText.checkupRouteCertExpiringFix
         case .routeCertHostMismatch: return CheckupText.checkupRouteCertHostMismatchFix
+        // The plugin's screen says more: the row opens it.
+        case .plugin: return nil
         }
     }
 }

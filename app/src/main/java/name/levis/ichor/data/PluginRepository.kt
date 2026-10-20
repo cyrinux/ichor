@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import name.levis.ichor.model.PluginCatalog
 import name.levis.ichor.model.PluginDetect
+import name.levis.ichor.model.PluginFindingsReport
 import name.levis.ichor.model.PluginTree
 import name.levis.ichor.model.PluginUserItem
 import name.levis.ichor.model.PluginUserList
@@ -37,6 +38,15 @@ class PluginRepository(go: GoCall) : GoRepository(go) {
         go.kube { cfg, ctx, server ->
             TalosJson.decodeFromString(PluginTree.serializer(), Ichorgo.kubePluginData(cfg, ctx, server, pluginId, scope, locale))
         }
+    }
+
+    /**
+     * Every active plugin's findings in one bounded call (10 s), for the background monitor;
+     * their words in [locale] ("" for English). A plugin that cannot be read is in its errors,
+     * the others' findings still stand. Never cached: each check reads afresh.
+     */
+    suspend fun findings(hints: String, locale: String): PluginFindingsReport = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(PluginFindingsReport.serializer(), Ichorgo.kubePluginFindings(cfg, ctx, server, hints, locale))
     }
 
     /** The installed plugins (built-ins, then enabled imported ones) and what each one reads (no cluster call). */

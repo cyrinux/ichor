@@ -84,10 +84,11 @@ import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.share.AddToHomeButton
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.plugins.pluginLocale
 
 /** A checkup lists the cluster's pods and asks every kubelet: loaded on demand, never polled. */
 class CheckupViewModel(private val kube: KubeRepository) : LoadingViewModel<CheckupReport>() {
-    override suspend fun fetch() = kube.checkup()
+    override suspend fun fetch() = kube.checkup(pluginLocale())
 
     /** A checkup on a large cluster takes a while: its steps show while it reads. */
     override val progressReader: suspend () -> ReadProgress = { kube.readProgress(CHECKUP_PROGRESS_OP) }
@@ -124,6 +125,7 @@ fun CheckupScreen(
     onOpenPolicies: () -> Unit,
     onOpenTailscale: () -> Unit,
     onOpenClusterLifecycle: () -> Unit,
+    onOpenPlugin: (pluginId: String) -> Unit,
     vm: CheckupViewModel = viewModel(factory = factory { CheckupViewModel(app.kubeRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -166,12 +168,16 @@ fun CheckupScreen(
         },
     ) { padding ->
         Loaded(state, vm::refresh, Modifier.pageContent(padding), progress = progress, stepLabel = { checkupStepLabel(it) }) { report ->
-            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring, onOpenCapacity, onOpenLoadBalancing, onOpenPolicies, onOpenTailscale, onOpenClusterLifecycle), onDeleteLeftover = { confirmDelete = it })
+            CheckupList(report, CheckupLinks(onOpenRelease, onOpenMonitoring, onOpenCapacity, onOpenLoadBalancing, onOpenPolicies, onOpenTailscale, onOpenClusterLifecycle, onOpenPlugin), onDeleteLeftover = { confirmDelete = it })
         }
     }
 }
 
-/** Where the checkup leads: a Helm release, the Monitoring tab of the Metrics screen, the Capacity, Load balancing, Policies, Tailscale and Cluster lifecycle screens. */
+/**
+ * Where the checkup leads: a Helm release, the Monitoring tab of the Metrics screen, the
+ * Capacity, Load balancing, Policies, Tailscale and Cluster lifecycle screens, and a plugin's
+ * screen (its findings).
+ */
 private class CheckupLinks(
     val onOpenRelease: (namespace: String, name: String) -> Unit,
     val onOpenMonitoring: () -> Unit,
@@ -180,6 +186,7 @@ private class CheckupLinks(
     val onOpenPolicies: () -> Unit,
     val onOpenTailscale: () -> Unit,
     val onOpenClusterLifecycle: () -> Unit,
+    val onOpenPlugin: (pluginId: String) -> Unit,
 )
 
 @Composable
@@ -326,7 +333,12 @@ private fun SectionBody(
         MutedText(stringResource(R.string.checkup_nothing_in, section.checked.toString()))
     }
     section.findings.forEach { f ->
-        FindingCard(f, now, onDelete = if (f.kind == CheckupKind.NETPERF_LEFTOVER) ({ onDeleteLeftover(f.name) }) else null)
+        FindingCard(
+            f,
+            now,
+            onDelete = if (f.kind == CheckupKind.NETPERF_LEFTOVER) ({ onDeleteLeftover(f.name) }) else null,
+            onOpen = if (f.kind == CheckupKind.PLUGIN && f.plugin.isNotEmpty()) ({ links.onOpenPlugin(f.plugin) }) else null,
+        )
     }
     if (section.truncated > 0) MutedText(stringResource(R.string.checkup_truncated, section.truncated.toString()))
     when (section.id) {

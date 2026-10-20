@@ -42,7 +42,7 @@ func brokenCopy(t *testing.T, old, replacement string) (string, int) {
 }
 
 func TestPluginCommandsReadNoConfig(t *testing.T) {
-	for _, name := range []string{"plugin-validate", "plugin-lint", "plugin-render", "plugin-list"} {
+	for _, name := range []string{"plugin-validate", "plugin-lint", "plugin-render", "plugin-findings", "plugin-list"} {
 		if c, ok := lookup(name); !ok || !c.noConfig {
 			t.Errorf("%s: registered %v, noConfig %v", name, ok, c.noConfig)
 		}

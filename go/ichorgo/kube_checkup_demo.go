@@ -6,8 +6,9 @@ import (
 )
 
 // demoCheckup is the demo cluster's checkup: the crash-looping worker of demoPods, and one
-// finding of about every kind, so each section shows what it can say.
-func demoCheckup(now time.Time) checkupReport {
+// finding of about every kind, so each section shows what it can say; the plugins section is
+// the plugins' samples' findings, in locale.
+func demoCheckup(now time.Time, locale string) checkupReport {
 	ago := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
 
 	const gi = float64(1 << 30)
@@ -109,6 +110,7 @@ func demoCheckup(now time.Time) checkupReport {
 			{Kind: findSideroServerOff, Severity: sevCritical, Name: "srv-b2", Extra: "rack2-u02"},
 			{Kind: findCapiMachineStuck, Severity: sevWarning, Namespace: "fleet", Name: "staging-cp-x7k2p", Extra: "staging/Provisioning", Since: ago(95 * time.Minute)},
 		}),
+		demoCheckupPlugins(locale),
 	}
 
 	return checkupReport{Status: checkupVerdict(sections), KubeVersion: "v1.34.1", Sections: sections, Nodes: nodes, Volumes: volumes, Releases: releases}

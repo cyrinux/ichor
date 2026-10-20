@@ -35,7 +35,7 @@ data class HistoryNodeEntry(
 @Serializable
 data class HistoryVolumeEntry(val key: String, val name: String, val node: String, val usedPercent: Double)
 
-/** An issue open after the run; [track] etcd, data, gitops, checkup, am, storage or cert. */
+/** An issue open after the run; [track] etcd, data, gitops, checkup, am, storage, plugin or cert. */
 @Serializable
 data class HistoryAlertEntry(
     val key: String,

@@ -170,6 +170,9 @@ enum CheckupText {
     static var checkupTailscaleProxyClassMissing: String { String(localized: "Names a ProxyClass that does not exist") }
     static var checkupSectionClusterAPI: String { String(localized: "Cluster lifecycle") }
     static var checkupSectionClusterAPIHint: String { String(localized: "Workload clusters, machines and bare-metal servers that are stuck, failed or off") }
+    static var checkupSectionPlugins: String { String(localized: "Plugins") }
+    static var checkupSectionPluginsHint: String { String(localized: "What the plugins of the apps the cluster runs report, in their own words") }
+    static func checkupPluginNamed(_ a: String) -> String { String(localized: "Plugin \(a)") }
     static var checkupOpenClusterLifecycle: String { String(localized: "Open Cluster lifecycle") }
     static var checkupCapiClusterFailed: String { String(localized: "Cluster failed") }
     static func checkupCapiClusterProvisioning(_ a: String) -> String { String(localized: "Not provisioned after \(a)") }

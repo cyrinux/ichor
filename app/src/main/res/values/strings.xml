@@ -3932,6 +3932,9 @@
     <string name="checkup_tailscaleConnectorNotReady_plain">Connector not ready</string>
     <string name="checkup_tailscaleProxyClassMissing">Names a ProxyClass that does not exist</string>
     <string name="checkup_section_clusterapi_hint">Workload clusters, machines and bare-metal servers that are stuck, failed or off</string>
+    <string name="checkup_section_plugins">Plugins</string>
+    <string name="checkup_section_plugins_hint">What the plugins of the apps the cluster runs report, in their own words</string>
+    <string name="checkup_plugin_caption">Plugin %1$s</string>
     <string name="checkup_open_cluster_lifecycle">Open Cluster lifecycle</string>
     <string name="checkup_capiClusterFailed">Cluster failed</string>
     <string name="checkup_capiClusterProvisioning">Not provisioned after %1$s</string>
