@@ -196,7 +196,6 @@ extension DataServiceKind {
         let system = alertKey.split(separator: "|", maxSplits: 1).first.map(String.init) ?? ""
         switch system {
         case "cnpg": self = .cnpg
-        case "percona": self = .percona
         case "certmanager": self = .certManager
         default: self.init(rawValue: system)
         }

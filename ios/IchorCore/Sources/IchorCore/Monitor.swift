@@ -382,15 +382,6 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
             out["cnpg|\(c.label)"] = dataWarning
         }
     }
-    // The operator still initializing is not worth an alert; a member lost or backups failing are.
-    let perconaAlerting: Set<PerconaReason> = [.members, .backupFailed, .backupStale]
-    for c in services.percona?.clusters ?? [] {
-        if c.health == .critical {
-            out["percona|\(c.label)"] = dataCritical
-        } else if c.reasons.contains(where: perconaAlerting.contains) {
-            out["percona|\(c.label)"] = dataWarning
-        }
-    }
     // An issuer not ready alerts on its own, not through each of its certificates.
     let certAlerting: Set<CertReason> = [.expiring, .renewalOverdue, .notReady]
     for c in services.certManager?.certificates ?? [] {
@@ -434,7 +425,7 @@ public func dataSystemTitle(_ key: String) -> String {
     case "garage": "Garage"
     case "dragonfly": "Dragonfly" // an older snapshot's, now a plugin's
     case "mariadb": "MariaDB" // an older snapshot's, now a plugin's
-    case "percona": "Percona XtraDB Cluster"
+    case "percona": "Percona XtraDB Cluster" // an older snapshot's, now a plugin's
     case "certmanager": "cert-manager"
     case "velero": "Velero"
     case "externaldns": "ExternalDNS" // an older snapshot's, now a plugin's

@@ -30,6 +30,8 @@ var pluginNativeSources = map[string]pluginNativeSource{
 	// A MariaDB cluster's latest backup success and failure, over its Backups, PhysicalBackups
 	// and the CronJobs of the scheduled ones (plugin_native_databases.go).
 	"mariadb-backups": readMariaDBBackups,
+	// A Percona XtraDB cluster's latest backup success and failure, over its backup runs.
+	"percona-backups": readPerconaBackups,
 }
 
 // readNativeSource runs the reader source names (native:<id>).

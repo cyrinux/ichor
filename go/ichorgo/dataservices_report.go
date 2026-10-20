@@ -27,7 +27,7 @@ type dsIssue struct {
 func dataServiceSections(ds dataServices) []dsSection {
 	adapters := []func(dataServices) (dsSection, bool){
 		snapshotsSection, backupJobsSection, longhornSection, garageSection,
-		cnpgSection, perconaSection, certManagerSection,
+		cnpgSection, certManagerSection,
 		veleroSection, castAISection,
 	}
 
@@ -279,23 +279,6 @@ func cnpgSection(ds dataServices) (dsSection, bool) {
 	}
 
 	return newDSSection("CloudNativePG", "clusters", s.Error, items), true
-}
-
-func perconaSection(ds dataServices) (dsSection, bool) {
-	s := ds.Percona
-	if s == nil {
-		return dsSection{}, false
-	}
-
-	items := make([]dsIssue, 0, len(s.Clusters))
-	for _, c := range s.Clusters {
-		items = append(items, dsIssue{
-			health: c.Health, key: nsName(c.Namespace, c.Name),
-			detail: details(c.State, strings.Join(c.Reasons, ", "), c.Message, readyOf(c.PXCReady, c.PXCSize, "PXC members ready")),
-		})
-	}
-
-	return newDSSection("Percona XtraDB", "clusters", s.Error, items), true
 }
 
 func certManagerSection(ds dataServices) (dsSection, bool) {

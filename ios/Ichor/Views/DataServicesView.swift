@@ -108,7 +108,6 @@ struct DataServicesView: View {
         case .longhorn: LonghornList(status: services.longhorn!, refresh: refresh)
         case .garage: GarageList(status: services.garage!, refresh: refresh)
         case .cnpg: CnpgList(status: services.cnpg!, refresh: refresh)
-        case .percona: PerconaList(status: services.percona!, refresh: refresh)
         case .certManager: CertificatesList(status: services.certManager!, refresh: refresh)
         case .velero: VeleroList(status: services.velero!, refresh: refresh)
         case .snapshots: SnapshotsList(status: services.snapshots!)
@@ -187,7 +186,6 @@ struct DataServicesView: View {
         case "backups": .backupJobs
         case "longhorn": .longhorn
         case "cnpg": .cnpg
-        case "percona": .percona
         case "certmanager": .certManager
         case "velero": .velero
         case "castai": .castai

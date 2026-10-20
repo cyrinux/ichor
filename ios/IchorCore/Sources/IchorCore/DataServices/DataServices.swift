@@ -8,7 +8,6 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let longhorn: LonghornStatus?
     public let garage: GarageStatus?
     public let cnpg: CnpgStatus?
-    public let percona: PerconaStatus?
     public let certManager: CertManagerStatus?
     public let velero: VeleroStatus?
     public let snapshots: VolumeSnapshots?
@@ -16,13 +15,12 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let castai: CastAIStatus?
 
     public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil,
-                percona: PerconaStatus? = nil, certManager: CertManagerStatus? = nil,
+                certManager: CertManagerStatus? = nil,
                 velero: VeleroStatus? = nil,
                 castai: CastAIStatus? = nil, snapshots: VolumeSnapshots? = nil, backupJobs: BackupJobStatus? = nil) {
         self.longhorn = longhorn
         self.garage = garage
         self.cnpg = cnpg
-        self.percona = percona
         self.certManager = certManager
         self.velero = velero
         self.snapshots = snapshots
@@ -37,8 +35,7 @@ public struct ServicePod: Decodable, Equatable, Identifiable, Sendable {
     /// "" while Pending: not scheduled anywhere.
     public let node: String
     public let phase: String
-    /// The operator's role label (primary/replica), "" when
-    /// unknown or the operator has none (Percona).
+    /// The operator's role label (primary/replica), "" when unknown.
     public let role: String
     public let ready: Bool
 
@@ -86,7 +83,6 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     case longhorn = "longhorn"
     case garage = "garage"
     case cnpg = "cloudnative-pg"
-    case percona = "percona-xtradb"
     case certManager = "cert-manager"
     case velero = "velero"
     case snapshots = "kubernetes-csi"
@@ -102,7 +98,6 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
         case .longhorn: "Longhorn"
         case .garage: "Garage"
         case .cnpg: "CloudNativePG"
-        case .percona: "Percona XtraDB Cluster"
         case .certManager: "cert-manager"
         case .velero: "Velero"
         case .snapshots: "CSI VolumeSnapshots"
@@ -115,7 +110,6 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     public var tabTitle: String {
         switch self {
         case .cnpg: "CNPG"
-        case .percona: "Percona"
         default: title
         }
     }
@@ -132,7 +126,7 @@ public extension DataServiceKind {
         switch self {
         case .certManager: .security
         case .castai: .workloads
-        case .longhorn, .garage, .cnpg, .percona, .velero, .snapshots, .backupJobs: .data
+        case .longhorn, .garage, .cnpg, .velero, .snapshots, .backupJobs: .data
         }
     }
 
@@ -177,7 +171,6 @@ public extension DataServices {
     /// The installed systems, in display order.
     var detected: [DataServiceKind] {
         [longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil,
-         percona != nil ? .percona : nil,
          certManager != nil ? .certManager : nil, velero != nil ? .velero : nil,
          castai != nil ? .castai : nil, snapshots != nil ? .snapshots : nil,
          backupJobs != nil ? .backupJobs : nil].compactMap { $0 }
@@ -196,7 +189,6 @@ public extension DataServices {
     func only(_ families: Set<ServiceFamily>) -> DataServices {
         func keep<T>(_ kind: DataServiceKind, _ value: T?) -> T? { families.contains(kind.family) ? value : nil }
         return DataServices(longhorn: keep(.longhorn, longhorn), garage: keep(.garage, garage), cnpg: keep(.cnpg, cnpg),
-                            percona: keep(.percona, percona),
                             certManager: keep(.certManager, certManager), velero: keep(.velero, velero),
                             castai: keep(.castai, castai), snapshots: keep(.snapshots, snapshots),
                             backupJobs: keep(.backupJobs, backupJobs))
@@ -218,11 +210,6 @@ public extension DataServices {
             return ServiceSummary(total: g.instances.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths))
         case .cnpg:
             guard let p = cnpg else { return nil }
-            if !p.error.isEmpty && p.clusters.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: p.error) }
-            let healths = p.clusters.map(\.health)
-            return ServiceSummary(total: p.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: p.error)
-        case .percona:
-            guard let p = percona else { return nil }
             if !p.error.isEmpty && p.clusters.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: p.error) }
             let healths = p.clusters.map(\.health)
             return ServiceSummary(total: p.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: p.error)
@@ -263,9 +250,6 @@ public extension DataServices {
         }
         for cluster in cnpg?.clusters ?? [] where cluster.health.needsAttention {
             count(cluster.instancePods.filter { !$0.ready }.map(\.node))
-        }
-        for cluster in percona?.clusters ?? [] where cluster.health.needsAttention {
-            count(cluster.pods.filter { !$0.ready }.map(\.node))
         }
         return hits.map { LikelyCause(node: $0.key, problems: $0.value) }
             .sorted { $0.problems != $1.problems ? $0.problems > $1.problems : $0.node < $1.node }

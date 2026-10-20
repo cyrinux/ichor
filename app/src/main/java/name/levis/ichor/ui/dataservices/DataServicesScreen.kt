@@ -307,7 +307,6 @@ private fun NativeTab(kind: DataServiceKind, services: DataServices, actions: Sy
         DataServiceKind.LONGHORN -> LonghornTab(services.longhorn!!, actions.longhorn, garageDetected = services.garage != null, onGarage = onGarage, query = query.orEmpty())
         DataServiceKind.GARAGE -> GarageTab(services.garage!!, actions.garage, onObject)
         DataServiceKind.CNPG -> CnpgTab(services.cnpg!!, actions.cnpg)
-        DataServiceKind.PERCONA -> PerconaTab(services.percona!!)
         DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!, actions.certificates)
         DataServiceKind.VELERO -> VeleroTab(services.velero!!, actions.velero)
         DataServiceKind.SNAPSHOTS -> SnapshotsTab(services.snapshots!!)

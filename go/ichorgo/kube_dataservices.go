@@ -50,7 +50,6 @@ type dataServices struct {
 	Longhorn    *longhornStatus    `json:"longhorn,omitempty"`
 	Garage      *garageStatus      `json:"garage,omitempty"`
 	CNPG        *cnpgStatus        `json:"cnpg,omitempty"`
-	Percona     *perconaStatus     `json:"percona,omitempty"`
 	CertManager *certManagerStatus `json:"certManager,omitempty"`
 	Velero      *veleroStatus      `json:"velero,omitempty"`
 	CastAI      *castAIStatus      `json:"castai,omitempty"`

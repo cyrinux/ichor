@@ -143,8 +143,8 @@ class DataServicesTest {
         assertEquals(ServiceFamily.DATA, DataServiceKind.BACKUP_JOBS.family)
         assertEquals(ServiceFamily.SECURITY, DataServiceKind.CERT_MANAGER.family)
         assertEquals(ServiceFamily.WORKLOADS, DataServiceKind.CASTAI.family)
-        // Seven native systems stay in Data services (storage, databases and backups); Rook Ceph, Dragonfly and MariaDB are plugins.
-        assertEquals(7, DataServiceKind.entries.count { it.family == ServiceFamily.DATA })
+        // Six native systems stay in Data services (storage, databases and backups); Rook Ceph, Dragonfly, MariaDB and Percona are plugins.
+        assertEquals(6, DataServiceKind.entries.count { it.family == ServiceFamily.DATA })
     }
 
     @Test

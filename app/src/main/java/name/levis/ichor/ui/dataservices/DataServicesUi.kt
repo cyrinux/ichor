@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Dns
-import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.SettingsBackupRestore
 import androidx.compose.material.icons.outlined.Storage
@@ -85,7 +84,6 @@ fun DataServiceKind.tabLabel(): String = when (this) {
 val DataServiceKind.tabTitle: String
     get() = when (this) {
         DataServiceKind.CNPG -> "CNPG"
-        DataServiceKind.PERCONA -> "Percona"
         else -> title
     }
 
@@ -94,7 +92,6 @@ internal val DataServiceKind.fallbackIcon: ImageVector
         DataServiceKind.LONGHORN -> Icons.Outlined.Storage
         DataServiceKind.GARAGE -> Icons.Outlined.Cloud
         DataServiceKind.CNPG -> Icons.Outlined.Dns
-        DataServiceKind.PERCONA -> Icons.Outlined.Hub
         DataServiceKind.CERT_MANAGER -> Icons.Outlined.VerifiedUser
         DataServiceKind.VELERO -> Icons.Outlined.SettingsBackupRestore
         DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> Icons.Outlined.SettingsBackupRestore
@@ -138,7 +135,6 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
     val head = when (kind) {
         DataServiceKind.LONGHORN -> pluralStringResource(R.plurals.longhorn_volumes, summary.total, summary.total)
         DataServiceKind.CNPG -> pluralStringResource(R.plurals.cnpg_clusters, summary.total, summary.total)
-        DataServiceKind.PERCONA -> pluralStringResource(R.plurals.percona_clusters, summary.total, summary.total)
         DataServiceKind.CERT_MANAGER -> pluralStringResource(R.plurals.certmanager_certificates, summary.total, summary.total)
         DataServiceKind.VELERO -> pluralStringResource(R.plurals.velero_schedules, summary.total, summary.total)
         DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> stringResource(R.string.backup_items, summary.total)

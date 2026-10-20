@@ -4,7 +4,6 @@ import name.levis.ichor.model.CertReason
 import name.levis.ichor.model.CnpgReason
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.GarageState
-import name.levis.ichor.model.PerconaReason
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.VeleroReason
 
@@ -15,8 +14,6 @@ const val DATA_WARNING = "warning"
 /** Postgres reasons worth waking someone for; a switchover or a missing replica is usually planned. */
 private val CNPG_ALERT_REASONS = setOf(CnpgReason.ARCHIVING, CnpgReason.BACKUP_FAILED, CnpgReason.BACKUP_STALE)
 
-/** Percona reasons worth waking someone for; the operator still initializing is not one. */
-private val PERCONA_ALERT_REASONS = setOf(PerconaReason.MEMBERS, PerconaReason.BACKUP_FAILED, PerconaReason.BACKUP_STALE)
 /** Certificate reasons worth a warning; an issuer not ready alerts on its own. */
 private val CERT_ALERT_REASONS = setOf(CertReason.EXPIRING, CertReason.RENEWAL_OVERDUE, CertReason.NOT_READY)
 private val VELERO_ALERT_REASONS = setOf(VeleroReason.STALE, VeleroReason.PARTIALLY_FAILED, VeleroReason.INVALID)
@@ -44,7 +41,6 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
     out.flag("garage", services.garage?.buckets, { "bucket/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
     out.flag("garage", services.garage?.nodes, { "node/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
     out.flag("cnpg", services.cnpg?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in CNPG_ALERT_REASONS } })
-    out.flag("percona", services.percona?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in PERCONA_ALERT_REASONS } })
     out.flag("certmanager", services.certManager?.certificates, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in CERT_ALERT_REASONS } })
     out.flag("certmanager", services.certManager?.issuers, { it.label }, { false }, { !it.ready })
     out.flag("velero", services.velero?.schedules, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { s -> s.reasonList.any { it in VELERO_ALERT_REASONS } })

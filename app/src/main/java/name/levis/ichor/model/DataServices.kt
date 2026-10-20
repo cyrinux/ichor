@@ -11,7 +11,6 @@ data class DataServices(
     val longhorn: LonghornStatus? = null,
     val garage: GarageStatus? = null,
     val cnpg: CnpgStatus? = null,
-    val percona: PerconaStatus? = null,
     val certManager: CertManagerStatus? = null,
     val velero: VeleroStatus? = null,
     val castai: CastAIStatus? = null,
@@ -43,7 +42,6 @@ enum class DataServiceKind(val catalogId: String) {
     LONGHORN("longhorn"),
     GARAGE("garage"),
     CNPG("cloudnative-pg"),
-    PERCONA("percona-xtradb"),
     CERT_MANAGER("cert-manager"),
     VELERO("velero"),
     CASTAI("castai"),
@@ -57,7 +55,6 @@ val DataServiceKind.title: String
         DataServiceKind.LONGHORN -> "Longhorn"
         DataServiceKind.GARAGE -> "Garage"
         DataServiceKind.CNPG -> "CloudNativePG"
-        DataServiceKind.PERCONA -> "Percona XtraDB Cluster"
         DataServiceKind.CERT_MANAGER -> "cert-manager"
         DataServiceKind.VELERO -> "Velero"
         DataServiceKind.SNAPSHOTS -> "CSI VolumeSnapshots"
@@ -71,7 +68,6 @@ val DataServiceKind.alertSystem: String
         DataServiceKind.LONGHORN -> "longhorn"
         DataServiceKind.GARAGE -> "garage"
         DataServiceKind.CNPG -> "cnpg"
-        DataServiceKind.PERCONA -> "percona"
         DataServiceKind.CERT_MANAGER -> "certmanager"
         DataServiceKind.VELERO -> "velero"
         DataServiceKind.SNAPSHOTS -> "snapshots"
@@ -98,7 +94,6 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.LONGHORN.takeIf { longhorn != null },
         DataServiceKind.GARAGE.takeIf { garage != null },
         DataServiceKind.CNPG.takeIf { cnpg != null },
-        DataServiceKind.PERCONA.takeIf { percona != null },
         DataServiceKind.CERT_MANAGER.takeIf { certManager != null },
         DataServiceKind.VELERO.takeIf { velero != null },
         DataServiceKind.CASTAI.takeIf { castai != null },
@@ -114,8 +109,7 @@ val DataServiceKind.family: ServiceFamily
     get() = when (this) {
         DataServiceKind.CERT_MANAGER -> ServiceFamily.SECURITY
         DataServiceKind.CASTAI -> ServiceFamily.WORKLOADS
-        DataServiceKind.LONGHORN, DataServiceKind.GARAGE, DataServiceKind.CNPG,
-        DataServiceKind.PERCONA, DataServiceKind.VELERO,
+        DataServiceKind.LONGHORN, DataServiceKind.GARAGE, DataServiceKind.CNPG, DataServiceKind.VELERO,
         DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> ServiceFamily.DATA
     }
 
@@ -141,7 +135,6 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.LONGHORN -> longhorn?.summary()
     DataServiceKind.GARAGE -> garage?.summary()
     DataServiceKind.CNPG -> cnpg?.summary()
-    DataServiceKind.PERCONA -> percona?.summary()
     DataServiceKind.CERT_MANAGER -> certManager?.summary()
     DataServiceKind.VELERO -> velero?.summary()
     DataServiceKind.SNAPSHOTS -> snapshots?.summary()
@@ -159,12 +152,6 @@ fun CastAIStatus.summary(): ServiceSummary {
     val healths = recommendations.map { it.serviceHealth }
     val health = ServiceHealth.worst(healths + listOfNotNull(ServiceHealth.WARNING.takeIf { stuck.isNotEmpty() }))
     return ServiceSummary(recommendations.size, healths.count { it.needsAttention }, health, error)
-}
-
-fun PerconaStatus.summary(): ServiceSummary {
-    if (error.isNotEmpty() && clusters.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
-    val healths = clusters.map { it.serviceHealth }
-    return ServiceSummary(clusters.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
 }
 
 fun CertManagerStatus.summary(): ServiceSummary {
@@ -228,9 +215,6 @@ fun DataServices.likelyCauses(downNodes: Set<String> = emptySet()): List<LikelyC
     }
     cnpg?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { c ->
         count(c.instancePods.filter { !it.ready }.map { it.node })
-    }
-    percona?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { c ->
-        count(c.pods.filter { !it.ready }.map { it.node })
     }
 
     return hits.map { (node, n) -> LikelyCause(node, n) }.sortedWith(compareByDescending<LikelyCause> { it.problems }.thenBy { it.node })
