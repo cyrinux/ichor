@@ -2435,6 +2435,10 @@
     <string name="externaldns_check_owner_other">appartient à %1$s</string>
     <string name="externaldns_check_probed">vérifié via %1$s</string>
     <string name="externaldns_check_mismatch_hint">Un nom qui pointe ailleurs peut être du DNS split-horizon à la maison, un changement encore en propagation, ou un autre ExternalDNS qui le possède.</string>
+    <string name="externaldns_check_not_run">Pas encore vérifié</string>
+    <string name="externaldns_check_running">Vérification…</string>
+    <string name="externaldns_check_unverified">Répond, rien à comparer</string>
+    <string name="externaldns_check_unverified_count">%1$d n’ont pas pu être comparés</string>
     <plurals name="externaldns_check_summary">
         <item quantity="one">%1$d nom sur %2$d pointe vers ce cluster</item>
         <item quantity="other">%1$d noms sur %2$d pointent vers ce cluster</item>

@@ -42,6 +42,17 @@ final class DnsCheckTests: XCTestCase {
         XCTAssertEqual(r.results[1].probed, "")
     }
 
+    func testANameWithNoTargetResolvesUnverified() throws {
+        let wire = #"""
+        {"results":[{"dnsName":"status.example.com","status":"unverified","answers":["203.0.113.99"],"owner":"homelab","ownerMatch":true}],
+         "resolver":"system"}
+        """#
+        let r = try TalosJSON.decode(DnsCheckResult.self, from: wire)
+        // It resolves, but nothing to compare with: never a mismatch, and the answers stay shown.
+        XCTAssertEqual(r.results[0].verdict, .unverified)
+        XCTAssertEqual(r.results[0].answers, ["203.0.113.99"])
+    }
+
     func testAStatusFromANewerCoreReadsAsNoVerdict() throws {
         let wire = #"{"results":[{"dnsName":"a.example.com","status":"someday"}],"resolver":"system"}"#
         let r = try TalosJSON.decode(DnsCheckResult.self, from: wire)

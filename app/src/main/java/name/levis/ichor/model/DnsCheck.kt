@@ -28,6 +28,9 @@ enum class DnsCheckStatus(val wire: String) {
     /** It does not resolve at all. */
     MISSING("missing"),
 
+    /** It resolves, but the record has no target to compare the answers with. */
+    UNVERIFIED("unverified"),
+
     /** The resolver could not answer. */
     ERROR("error"),
     ;
