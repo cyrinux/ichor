@@ -57,7 +57,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 @Composable
 fun ExternalDnsTab(status: ExternalDnsStatus, onObject: (KubeObjectRef) -> Unit, actions: ExternalDnsActions) {
     val check by actions.state.collectAsStateWithLifecycle()
-    val verdicts = check?.byName.orEmpty()
+    val verdicts = check?.byRecord.orEmpty()
     LazyColumn(Modifier.fillMaxSize(), contentPadding = CardListPadding) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
         if (status.controllers.isEmpty() && status.records.isEmpty()) item { EmptyText(stringResource(R.string.externaldns_empty)) }
@@ -73,8 +73,8 @@ fun ExternalDnsTab(status: ExternalDnsStatus, onObject: (KubeObjectRef) -> Unit,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
             )
         }
-        cardRows(status.records, key = { "${it.dnsName}/${it.sourceKind}/${it.sourceNamespace}/${it.sourceName}" }) { r ->
-            RecordRow(r, onObject, verdicts[r.dnsName])
+        cardRows(status.records, key = { it.rowKey }) { r ->
+            RecordRow(r, onObject, verdicts[r.rowKey])
         }
     }
 }

@@ -610,49 +610,68 @@ func extDNSWildcardTarget(targets []string) bool {
 	return slices.ContainsFunc(targets, func(t string) bool { return strings.HasPrefix(t, "*") })
 }
 
-// extDNSRecordType names the record a target set makes: A for an IPv4 address, AAAA for
-// IPv6 only, CNAME when the targets are names (a load balancer with a hostname).
-func extDNSRecordType(targets []string) string {
-	v6, address := false, false
+// extDNSTargetGroup is the part of a target set one record carries.
+type extDNSTargetGroup struct {
+	recordType string
+	targets    []string
+}
+
+// extDNSSplitTargets splits a target set the way ExternalDNS publishes it: IPv4 addresses
+// make an A record, IPv6 addresses an AAAA record and names (a load balancer with a
+// hostname) a CNAME, each with only its own targets. An empty set is one A record with no
+// target, so the hostname still shows (noTarget).
+func extDNSSplitTargets(targets []string) []extDNSTargetGroup {
+	var v4, v6, names []string
 
 	for _, t := range targets {
-		if addr := net.ParseIP(t); addr != nil {
-			address = true
-			if addr.To4() == nil {
-				v6 = true
-			}
+		switch addr := net.ParseIP(t); {
+		case addr == nil:
+			names = append(names, t)
+		case addr.To4() != nil:
+			v4 = append(v4, t)
+		default:
+			v6 = append(v6, t)
 		}
 	}
 
-	switch {
-	case !address && len(targets) > 0:
-		return "CNAME"
-	case v6:
-		return "AAAA"
-	default:
-		return "A"
+	var groups []extDNSTargetGroup
+
+	for _, g := range []extDNSTargetGroup{{"A", v4}, {"AAAA", v6}, {"CNAME", names}} {
+		if len(g.targets) > 0 {
+			groups = append(groups, g)
+		}
 	}
+
+	if len(groups) == 0 {
+		return []extDNSTargetGroup{{recordType: "A", targets: targets}}
+	}
+
+	return groups
 }
 
-// extDNSAppend adds one record per hostname, skipping the empty ones and the ones whose
-// target set is a wildcard.
+// extDNSAppend adds the records of each hostname (one per target family, see
+// extDNSSplitTargets), skipping the empty hostnames and the target sets that hold a wildcard.
 func extDNSAppend(out []extDNSRawRecord, hosts, targets []string, ttl int, kind, namespace, name, group, version, resource string) []extDNSRawRecord {
 	if extDNSWildcardTarget(targets) {
 		return out
 	}
+
+	groups := extDNSSplitTargets(targets)
 
 	for _, host := range hosts {
 		if host == "" {
 			continue
 		}
 
-		out = append(out, extDNSRawRecord{
-			dnsName: host, recordType: extDNSRecordType(targets), targets: targets, ttl: ttl,
-			source: externalDNSRecord{
-				SourceKind: kind, SourceNamespace: namespace, SourceName: name,
-				SourceGroup: group, SourceVersion: version, SourceResource: resource,
-			},
-		})
+		for _, g := range groups {
+			out = append(out, extDNSRawRecord{
+				dnsName: host, recordType: g.recordType, targets: g.targets, ttl: ttl,
+				source: externalDNSRecord{
+					SourceKind: kind, SourceNamespace: namespace, SourceName: name,
+					SourceGroup: group, SourceVersion: version, SourceResource: resource,
+				},
+			})
+		}
 	}
 
 	return out
@@ -723,7 +742,7 @@ func extDNSMatch(controllers []externalDNSController, raw []extDNSRawRecord) (re
 	}
 
 	slices.SortFunc(records, byHealthThenKey(func(r externalDNSRecord) (string, string) {
-		return r.Health, r.DNSName + "/" + r.SourceKind + "/" + r.SourceNamespace + "/" + r.SourceName
+		return r.Health, r.DNSName + "/" + r.RecordType + "/" + r.SourceKind + "/" + r.SourceNamespace + "/" + r.SourceName
 	}))
 
 	if len(records) > externalDNSRecordCap {

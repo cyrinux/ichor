@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.model.DnsCheckEntry
 import name.levis.ichor.model.DnsCheckResult
+import name.levis.ichor.model.ExternalDnsRecord
 import name.levis.ichor.model.ExternalDnsStatus
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.uiText
@@ -19,9 +20,15 @@ data class DnsCheckState(
     val running: Boolean = false,
     val result: DnsCheckResult? = null,
     val error: UiText? = null,
+    /** The records the check was sent, in order: the results come back in the same order. */
+    val records: List<ExternalDnsRecord> = emptyList(),
 ) {
-    /** The verdicts by hostname, for the record rows. */
-    val byName: Map<String, DnsCheckEntry> = result?.results.orEmpty().associateBy { it.dnsName }
+    /**
+     * The verdicts by [ExternalDnsRecord.rowKey], paired by position, so the A and AAAA rows
+     * of a dual-stack name each get their own verdict.
+     */
+    val byRecord: Map<String, DnsCheckEntry> =
+        records.zip(result?.results.orEmpty()).associate { (record, entry) -> record.rowKey to entry }
 }
 
 /**
@@ -42,7 +49,7 @@ class ExternalDnsActions(private val scope: CoroutineScope, private val dataServ
         job = scope.launch {
             try {
                 val result = dataServices.dnsCheck(status.records, status.controllers)
-                _state.value = DnsCheckState(result = result)
+                _state.value = DnsCheckState(result = result, records = status.records)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {

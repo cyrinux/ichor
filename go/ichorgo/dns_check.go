@@ -54,13 +54,16 @@ const (
 )
 
 // dnsCheckRequest is one hostname to check, as the apps send it: the record ExternalDNS is
-// asked to publish, plus the controller's owner id and TXT prefix for the ownership check.
+// asked to publish, plus the controller's owner id and TXT prefix and suffix for the
+// ownership check. Fields are only ever added, with a zero default: the JSON is the contract
+// with both apps.
 type dnsCheckRequest struct {
 	DNSName    string   `json:"dnsName"`
 	RecordType string   `json:"recordType"`
 	Targets    []string `json:"targets"`
 	OwnerID    string   `json:"ownerId"`
 	TxtPrefix  string   `json:"txtPrefix"`
+	TxtSuffix  string   `json:"txtSuffix"`
 }
 
 // dnsCheckEntry is one hostname's verdict. OwnerMatch is null when no TXT record was
@@ -424,25 +427,71 @@ func dnsCheckOwner(ctx context.Context, resolver dnsChecker, record dnsCheckRequ
 	return "", nil
 }
 
-// dnsOwnerNames is where the TXT registry record may live: the controller's prefix plus the
-// name, and the type-prefixed default (a- for A, cname- for CNAME).
+// dnsTxtRecordTypeTemplate is the placeholder a --txt-prefix or --txt-suffix may hold, which
+// ExternalDNS replaces with the lower-case record type.
+const dnsTxtRecordTypeTemplate = "%{record_type}"
+
+// dnsOwnerNames is where the TXT registry record of a name may live, most likely first:
+//   - the registry's current format: <prefix><type>-<first label><suffix>.<rest>, the type
+//     token left out when the prefix or suffix carries %{record_type} (replaced by it);
+//   - the format older releases wrote: <prefix><first label><suffix>.<rest>, no type;
+//   - <type>-<prefix><name>, the type ahead of a plain prefix.
+//
+// The type token is the record type in lower case (a-, aaaa-, cname-), so an AAAA record's
+// owner is read at aaaa-<name>, as ExternalDNS writes it.
 func dnsOwnerNames(record dnsCheckRequest) []string {
-	var names []string
-
-	if prefix := strings.TrimSpace(record.TxtPrefix); prefix != "" {
-		names = append(names, prefix+record.DNSName)
+	recordType := strings.ToLower(strings.TrimSpace(record.RecordType))
+	if recordType == "" {
+		recordType = "a"
 	}
 
-	prefix := "a-"
-	if strings.EqualFold(strings.TrimSpace(record.RecordType), "CNAME") {
-		prefix = "cname-"
+	rawPrefix := strings.ToLower(strings.TrimSpace(record.TxtPrefix))
+	rawSuffix := strings.ToLower(strings.TrimSpace(record.TxtSuffix))
+	templated := strings.Contains(rawPrefix, dnsTxtRecordTypeTemplate) || strings.Contains(rawSuffix, dnsTxtRecordTypeTemplate)
+
+	first, rest, dotted := strings.Cut(record.DNSName, ".")
+	affixed := func(prefix, label, suffix string) string {
+		if !dotted {
+			return prefix + label + suffix
+		}
+
+		return prefix + label + suffix + "." + rest
 	}
 
-	if name := prefix + record.DNSName; !slices.Contains(names, name) {
-		names = append(names, name)
+	typeToken := recordType + "-"
+
+	current := affixed(
+		strings.ReplaceAll(rawPrefix, dnsTxtRecordTypeTemplate, recordType),
+		first,
+		strings.ReplaceAll(rawSuffix, dnsTxtRecordTypeTemplate, recordType),
+	)
+	if !templated {
+		current = affixed(rawPrefix, typeToken+first, rawSuffix)
 	}
 
-	return names
+	names := []string{current}
+
+	if rawPrefix != "" || rawSuffix != "" {
+		names = append(names, affixed(
+			strings.ReplaceAll(rawPrefix, dnsTxtRecordTypeTemplate, ""),
+			first,
+			strings.ReplaceAll(rawSuffix, dnsTxtRecordTypeTemplate, ""),
+		))
+	}
+
+	if rawPrefix != "" && !templated {
+		names = append(names, typeToken+rawPrefix+record.DNSName)
+	}
+
+	var out []string
+
+	for _, name := range names {
+		if !slices.Contains(out, name) {
+			out = append(out, name)
+		}
+	}
+
+	return out
 }
 
 // parseExternalDNSOwner reads the owner id out of an ExternalDNS TXT registry value, e.g.

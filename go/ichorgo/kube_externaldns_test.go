@@ -309,7 +309,7 @@ func TestExternalDNSDemo(t *testing.T) {
 		}
 	}
 
-	if out.RecordCount != 6 || len(out.Records) != 6 || out.Truncated {
+	if out.RecordCount != 8 || len(out.Records) != 8 || out.Truncated {
 		t.Errorf("count %d truncated %v", out.RecordCount, out.Truncated)
 	}
 
@@ -324,7 +324,7 @@ func TestExternalDNSDemo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if res.ExternalDNS == nil || res.ExternalDNS.RecordCount != 6 {
+	if res.ExternalDNS == nil || res.ExternalDNS.RecordCount != 8 {
 		t.Errorf("demo data services: %+v", res.ExternalDNS)
 	}
 }
@@ -518,3 +518,45 @@ func TestExternalDNSAnnotationPrefixes(t *testing.T) {
 
 // The demo clock keeps the fixture times stable.
 var _ = time.Now
+
+// A dual-stack load balancer makes an A record with its IPv4 address and an AAAA record with
+// its IPv6 one, as ExternalDNS publishes it, both from the same Service.
+func TestExternalDNSDualStackSplitsRecords(t *testing.T) {
+	var svc serviceListObject
+	if err := json.Unmarshal([]byte(`{
+		"metadata": {"namespace": "demo", "name": "web", "annotations": {"external-dns.alpha.kubernetes.io/hostname": "web.example.com"}},
+		"spec": {"type": "LoadBalancer"},
+		"status": {"loadBalancer": {"ingress": [{"ip": "203.0.113.10"}, {"ip": "2001:db8::10"}, {"hostname": "lb.example.net"}]}}
+	}`), &svc); err != nil {
+		t.Fatal(err)
+	}
+
+	controllers := []externalDNSController{{Name: "external-dns", DomainFilters: []string{"example.com"}}}
+	records, count, _ := extDNSMatch(controllers, extDNSRawRecords(nil, nil, []serviceListObject{svc}, nil, nil, "v1alpha1"))
+
+	if count != 3 || len(records) != 3 {
+		t.Fatalf("count %d, records %+v", count, records)
+	}
+
+	want := []struct {
+		recordType string
+		targets    []string
+	}{{"A", []string{"203.0.113.10"}}, {"AAAA", []string{"2001:db8::10"}}, {"CNAME", []string{"lb.example.net"}}}
+
+	for i, w := range want {
+		r := records[i]
+		if r.DNSName != "web.example.com" || r.RecordType != w.recordType || !slices.Equal(r.Targets, w.targets) ||
+			r.SourceKind != "Service" || r.SourceNamespace != "demo" || r.SourceName != "web" ||
+			r.Controller != "external-dns" || r.Health != healthOK {
+			t.Errorf("record %d = %+v, want %s %v", i, r, w.recordType, w.targets)
+		}
+	}
+}
+
+// A hostname with no target yet stays one A record, flagged noTarget.
+func TestExternalDNSSplitTargetsEmpty(t *testing.T) {
+	groups := extDNSSplitTargets(nil)
+	if len(groups) != 1 || groups[0].recordType != "A" || len(groups[0].targets) != 0 {
+		t.Errorf("groups %+v", groups)
+	}
+}

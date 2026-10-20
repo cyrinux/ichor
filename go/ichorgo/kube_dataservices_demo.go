@@ -459,9 +459,10 @@ func demoGarageBlockReport() garageBlockReport {
 }
 
 // demoExternalDNS is the demo cluster's ExternalDNS: one controller (cloudflare, sync,
-// owner id homelab, example.com only) and six records across the four source kinds, among
-// them a DNSEndpoint whose newer generation is not observed yet, an Ingress without an
-// address to point at and a name outside every domain filter.
+// owner id homelab, example.com only) and eight records across the four source kinds, among
+// them a dual-stack Service (an A and an AAAA record), a DNSEndpoint whose newer generation
+// is not observed yet, an Ingress without an address to point at and a name outside every
+// domain filter.
 func demoExternalDNS(now time.Time) *externalDNSStatus {
 	controller := externalDNSController{
 		Namespace: "external-dns", Name: "external-dns", Ready: true, Replicas: 1, ReadyReplicas: 1,
@@ -471,14 +472,14 @@ func demoExternalDNS(now time.Time) *externalDNSStatus {
 		Health: healthOK, Reasons: []string{},
 	}
 
-	record := func(dnsName string, targets []string, ttl int, kind, namespace, name, group, version, resource, controller string, reasons ...string) externalDNSRecord {
+	record := func(dnsName, recordType string, targets []string, ttl int, kind, namespace, name, group, version, resource, controller string, reasons ...string) externalDNSRecord {
 		health := healthOK
 		if len(reasons) > 0 {
 			health = healthWarning
 		}
 
 		return externalDNSRecord{
-			DNSName: dnsName, RecordType: extDNSRecordType(targets), Targets: targets, TTL: ttl,
+			DNSName: dnsName, RecordType: recordType, Targets: targets, TTL: ttl,
 			SourceKind: kind, SourceNamespace: namespace, SourceName: name,
 			SourceGroup: group, SourceVersion: version, SourceResource: resource,
 			Controller: controller, Health: health, Reasons: reasons,
@@ -486,12 +487,14 @@ func demoExternalDNS(now time.Time) *externalDNSStatus {
 	}
 
 	out := &externalDNSStatus{Version: "v1alpha1", Controllers: []externalDNSController{controller}, Records: []externalDNSRecord{
-		record("app.example.com", []string{"203.0.113.10"}, 300, "Ingress", "demo", "app", "networking.k8s.io", "v1", "ingresses", "external-dns"),
-		record("shop.example.com", []string{"203.0.113.20"}, 60, "Service", "demo", "shop", "", "v1", "services", "external-dns"),
-		record("api.example.com", []string{"203.0.113.30"}, 300, "HTTPRoute", "demo", "api", groupGatewayAPI, "v1", "httproutes", "external-dns"),
-		record("db.example.com", []string{"203.0.113.40"}, 300, "DNSEndpoint", "demo", "db", groupExternalDNS, "v1alpha1", "dnsendpoints", "external-dns", extDNSReasonStale),
-		record("status.example.com", nil, 0, "Ingress", "demo", "status", "networking.k8s.io", "v1", "ingresses", "external-dns", extDNSReasonNoTarget),
-		record("*.example.org", []string{"203.0.113.50"}, 300, "Ingress", "demo", "legacy", "networking.k8s.io", "v1", "ingresses", "", extDNSReasonUnmanaged),
+		record("app.example.com", "A", []string{"203.0.113.10"}, 300, "Ingress", "demo", "app", "networking.k8s.io", "v1", "ingresses", "external-dns"),
+		record("shop.example.com", "A", []string{"203.0.113.20"}, 60, "Service", "demo", "shop", "", "v1", "services", "external-dns"),
+		record("web.example.com", "A", []string{"203.0.113.60"}, 300, "Service", "demo", "web", "", "v1", "services", "external-dns"),
+		record("web.example.com", "AAAA", []string{"2001:db8::60"}, 300, "Service", "demo", "web", "", "v1", "services", "external-dns"),
+		record("api.example.com", "A", []string{"203.0.113.30"}, 300, "HTTPRoute", "demo", "api", groupGatewayAPI, "v1", "httproutes", "external-dns"),
+		record("db.example.com", "A", []string{"203.0.113.40"}, 300, "DNSEndpoint", "demo", "db", groupExternalDNS, "v1alpha1", "dnsendpoints", "external-dns", extDNSReasonStale),
+		record("status.example.com", "A", nil, 0, "Ingress", "demo", "status", "networking.k8s.io", "v1", "ingresses", "external-dns", extDNSReasonNoTarget),
+		record("*.example.org", "A", []string{"203.0.113.50"}, 300, "Ingress", "demo", "legacy", "networking.k8s.io", "v1", "ingresses", "", extDNSReasonUnmanaged),
 	}}
 	out.RecordCount = len(out.Records)
 

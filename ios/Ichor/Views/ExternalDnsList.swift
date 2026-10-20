@@ -13,6 +13,8 @@ struct ExternalDnsList: View {
     @Environment(AppModel.self) private var model
     @State private var running = false
     @State private var result: DnsCheckResult?
+    /// The records the last check was sent, in order: its results pair with them by position.
+    @State private var checkedRecords: [ExternalDnsRecord] = []
     @State private var errorMessage: String?
 
     var body: some View {
@@ -36,7 +38,7 @@ struct ExternalDnsList: View {
             }
             Section {
                 ForEach(status.records) { record in
-                    RecordRow(record: record, verdict: verdicts[record.dnsName])
+                    RecordRow(record: record, verdict: verdicts[record.id])
                 }
             }
         }
@@ -44,9 +46,9 @@ struct ExternalDnsList: View {
         .themedBackground()
     }
 
-    /// The last check's verdicts by hostname, for the record rows.
+    /// The last check's verdicts by record id (name, type and source), for the record rows.
     private var verdicts: [String: DnsCheckEntry] {
-        Dictionary(result?.results.map { ($0.dnsName, $0) } ?? [], uniquingKeysWith: { _, newest in newest })
+        result?.verdicts(for: checkedRecords) ?? [:]
     }
 
     /// The "Check names" button, whether a check ran, what it does, and the last check's summary.
@@ -111,8 +113,10 @@ struct ExternalDnsList: View {
         running = true
         defer { running = false }
         do {
-            result = try await TalosClient.dnsCheck(status.records, controllers: status.controllers,
+            let records = status.records
+            result = try await TalosClient.dnsCheck(records, controllers: status.controllers,
                                                     demo: model.activeSummary?.demo == true)
+            checkedRecords = records
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription

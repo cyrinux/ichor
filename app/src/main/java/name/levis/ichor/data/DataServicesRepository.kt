@@ -195,7 +195,7 @@ class DataServicesRepository(go: GoCall) : GoRepository(go) {
         val byName = controllers.associateBy { it.name }
         val request = records.map { r ->
             val c = byName[r.controller]
-            DnsCheckRequest(r.dnsName, r.recordType, r.targets, c?.ownerId.orEmpty(), c?.txtPrefix.orEmpty())
+            DnsCheckRequest(r.dnsName, r.recordType, r.targets, c?.ownerId.orEmpty(), c?.txtPrefix.orEmpty(), c?.txtSuffix.orEmpty())
         }
         val json = TalosJson.encodeToString(request)
         val out = if (go.configs.config.value?.activeSummary?.isDemo == true) Ichorgo.demoDNSCheck(json) else Ichorgo.dnsCheck(json, 0)

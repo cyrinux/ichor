@@ -78,6 +78,8 @@ data class ExternalDnsRecord(
     val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
     /** "from Ingress demo/app": where the hostname comes from. */
     val sourceLabel: String get() = "$sourceKind/$sourceNamespace/$sourceName"
+    /** One row per name, type and source: a dual-stack name has an A and an AAAA row. */
+    val rowKey: String get() = "$dnsName/$recordType/$sourceKind/$sourceNamespace/$sourceName"
     val reasonList: List<ExternalDnsReason> get() = reasons.mapNotNull(ExternalDnsReason::from)
 }
 

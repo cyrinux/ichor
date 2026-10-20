@@ -4,7 +4,7 @@ import Foundation
 // (see ExternalDns.swift). Mirrors go/ichorgo/dns_check.go.
 
 /// One hostname to check, as the Go core reads it: the record ExternalDNS is asked to publish,
-/// plus the covering controller's owner id and TXT prefix for the ownership check.
+/// plus the covering controller's owner id and TXT prefix and suffix for the ownership check.
 public struct DnsCheckRequest: Codable, Equatable, Sendable {
     public let dnsName: String
     /// A, AAAA or CNAME.
@@ -12,13 +12,15 @@ public struct DnsCheckRequest: Codable, Equatable, Sendable {
     public let targets: [String]
     public let ownerId: String
     public let txtPrefix: String
+    public let txtSuffix: String
 
-    public init(dnsName: String, recordType: String, targets: [String], ownerId: String = "", txtPrefix: String = "") {
+    public init(dnsName: String, recordType: String, targets: [String], ownerId: String = "", txtPrefix: String = "", txtSuffix: String = "") {
         self.dnsName = dnsName
         self.recordType = recordType
         self.targets = targets
         self.ownerId = ownerId
         self.txtPrefix = txtPrefix
+        self.txtSuffix = txtSuffix
     }
 }
 
@@ -88,4 +90,11 @@ public struct DnsCheckResult: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey { case results, resolver }
+
+    /// The verdicts by `ExternalDnsRecord.id` for the records the check was sent, paired by
+    /// position (the results keep the request's order), so the A and AAAA rows of a
+    /// dual-stack name each get their own verdict. Records past the results have none.
+    public func verdicts(for records: [ExternalDnsRecord]) -> [String: DnsCheckEntry] {
+        Dictionary(zip(records, results).map { ($0.id, $1) }, uniquingKeysWith: { _, newest in newest })
+    }
 }
