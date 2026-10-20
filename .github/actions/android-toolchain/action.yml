@@ -6,6 +6,14 @@ description: >
   store by the check job (`save`), the Go cache by its own save step, the Gradle home by every
   job.
 
+# Cache budget: GitHub keeps 10 GB of Actions cache per repository and evicts the least
+# recently used entries beyond it, so pull requests then miss caches at random (`gh cache
+# list` shows what is there). Cached: the Nix store (one nix-Linux-* entry, trimmed by GC and
+# its predecessor purged when the check job saves it), the Go caches (one go-Linux-* and one
+# go-macOS-*, the replaced entry deleted by .github/actions/cache-prune), the Gradle home
+# (setup-gradle's own entries, per job) and the Swift packages (spm-macOS-*). Saves happen on
+# main only; pull requests and tags read main's entries.
+
 inputs:
   save:
     description: Save the Nix store cache when its key missed, on main (the check job only).
@@ -26,13 +34,28 @@ runs:
 
     # /nix/store, keyed on the flake: without it every job downloads the Android SDK and NDK
     # zips from Google and unpacks them (the androidsdk derivation is not in cache.nixos.org).
-    # No prefix fallback on purpose: the action merges a restored store into the fresh one, so
-    # restoring the previous flake's closure and saving both would grow the entry at every
-    # flake.lock bump. A bump costs one cold run on main instead.
+    # A flake.lock bump restores the previous store (prefix fallback) and builds only what
+    # changed. When it saves (check job, main, key missed), the action first garbage-collects
+    # the store down to gc-max-store-size-linux, then deletes the other nix-Linux-* entries
+    # (purge-*; the one it just saved is kept). GC only removes unreachable paths: the next step
+    # makes the dev shell a GC root, so what goes is the previous flake's closure and build-time
+    # leftovers (SDK zips, build inputs), never the toolchain; a store still bigger than the cap
+    # is saved as it is. Bump the v2 to force a trimmed re-save without a flake change.
     - uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7
       with:
-        primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
+        primary-key: nix-${{ runner.os }}-v2-${{ hashFiles('flake.nix', 'flake.lock') }}
+        restore-prefixes-first-match: nix-${{ runner.os }}-
         save: ${{ inputs.save == 'true' && github.ref == 'refs/heads/main' }}
+        gc-max-store-size-linux: 2500M
+        purge: ${{ inputs.save == 'true' && github.ref == 'refs/heads/main' }}
+        purge-prefixes: nix-${{ runner.os }}-
+        purge-created: 0
+        purge-primary-key: never
+
+    # The dev shell build.sh enters (`nix develop`), registered as a GC root for the GC above.
+    - if: inputs.save == 'true' && github.ref == 'refs/heads/main'
+      shell: bash
+      run: nix develop --profile "$RUNNER_TEMP/ichor-dev-shell" --command true
 
     # GRADLE_USER_HOME: dependencies and the local build cache (org.gradle.caching in
     # gradle.properties). Each job writes its own entry on main (the artifacts themselves are
