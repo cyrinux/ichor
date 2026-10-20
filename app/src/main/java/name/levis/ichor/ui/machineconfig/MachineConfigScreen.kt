@@ -101,6 +101,8 @@ fun MachineConfigScreen(
     snippet: SnippetPrefill? = null,
     /** A file of the cluster repository, at a line (the Git comparison's files). */
     onRepoFile: (path: String, line: Int) -> Unit = { _, _ -> },
+    /** The editor of a file of the cluster repository, a quick edit applied (the write-back's review). */
+    onRepoEdit: (path: String, quick: String) -> Unit = { _, _ -> },
     vm: MachineConfigViewModel = viewModel(
         key = "machineconfig-$node",
         factory = factory { MachineConfigViewModel(app.talosRepository, node, hostname, app.configTryManager, app.configMultiManager) },
@@ -145,6 +147,10 @@ fun MachineConfigScreen(
     var confirmingApply by rememberSaveable { mutableStateOf<ConfigApplyMode?>(null) }
     var confirmingMulti by rememberSaveable { mutableStateOf<ConfigApplyMode?>(null) }
     var comparingGit by rememberSaveable { mutableStateOf(false) }
+    // The change written back to the repository: the config it starts from and the one it gives.
+    var proposing by remember { mutableStateOf<Pair<String, String>?>(null) }
+    val hasRepo = remember { app.gitOpsRepository.activeClusterRepo() != null }
+    val proposeEdit = editor.draft?.takeIf { hasRepo }?.let { draft -> { proposing = editor.base to draft } }
 
     SecureWhile(revealed)
 
@@ -278,8 +284,8 @@ fun MachineConfigScreen(
                 onApply = { confirmingMulti = it },
                 modifier = body,
             )
-            run != null -> ConfigTryContent(run, onKeep = vm::keep, onRevert = vm::revertNow, onDone = vm::finishTry, modifier = body)
-            applying != null -> ConfigApplyContent(applying, onDone = vm::finishApply, modifier = body)
+            run != null -> ConfigTryContent(run, onKeep = vm::keep, onRevert = vm::revertNow, onDone = vm::finishTry, modifier = body, onProposeInGit = proposeEdit)
+            applying != null -> ConfigApplyContent(applying, onDone = vm::finishApply, modifier = body, onProposeInGit = proposeEdit)
             review != null -> ConfigReviewContent(
                 review,
                 onRetry = vm::review,
@@ -369,7 +375,27 @@ fun MachineConfigScreen(
                 comparingGit = false
                 vm.editFrom(draft)
             },
+            // The node's live values into Git: from Git's version to the node's.
+            onProposeLive = { gitVersion ->
+                comparingGit = false
+                loaded?.let { proposing = gitVersion to it }
+            },
             onDismiss = { comparingGit = false },
+        )
+    }
+
+    proposing?.let { (base, draft) ->
+        ProposeInGitSheet(
+            app.gitOpsRepository,
+            base = base,
+            draft = draft,
+            hostname = hostname,
+            role = remember(loaded) { loaded?.let(::configRole).orEmpty() },
+            onReview = { path, quick ->
+                proposing = null
+                onRepoEdit(path, quick)
+            },
+            onDismiss = { proposing = null },
         )
     }
 

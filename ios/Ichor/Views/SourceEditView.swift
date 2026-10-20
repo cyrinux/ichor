@@ -192,7 +192,9 @@ struct SourceEditView: View {
         guard let client = model.client else { return }
         state = .loading
         do {
-            let file = try await client.forgeFile(source, path: path, ref: ref, hosts: hosts, demo: demo)
+            // A node file the write-back creates: proposed as a new file (no sha).
+            let creating = quickEdit?.op == .talos && quickEdit?.create == true
+            let file = creating ? GitFile(path: path) : try await client.forgeFile(source, path: path, ref: ref, hosts: hosts, demo: demo)
             missingHost = nil
             guard !file.truncated else {
                 state = .failed(String(localized: "This file is larger than 1 MiB: open it in the browser to read it."))

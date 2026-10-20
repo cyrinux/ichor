@@ -10,6 +10,8 @@ struct GitCompareSheet: View {
     let node: String
     let hostname: String
     let role: String
+    /// The node's config as shown (redacted), for proposing its values into the repository.
+    var live: String?
     let onEditDraft: (String) -> Void
 
     @Environment(AppModel.self) private var model
@@ -123,6 +125,10 @@ struct GitCompareSheet: View {
                 Button("Edit from this diff") {
                     onEditDraft(result.draft)
                     dismiss()
+                }
+                // The node's live values into Git: from Git's version to the node's.
+                if let live {
+                    ProposeInGitButton(base: result.draft, draft: live, hostname: hostname, label: "Propose the node's values in Git")
                 }
             }
         } header: {

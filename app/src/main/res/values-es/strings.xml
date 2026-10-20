@@ -5599,4 +5599,17 @@
     <string name="talos_git_kind_shared">Compartido</string>
     <string name="talos_git_kind_talconfig">talconfig</string>
     <string name="talos_git_kind_secrets">Secretos</string>
+    <string name="talos_writeback_action">Proponer en Git</string>
+    <string name="talos_writeback_action_desc">Escribe este cambio en el archivo del nodo del repositorio del clúster, como pull request.</string>
+    <string name="talos_writeback_title">Proponer en Git</string>
+    <string name="talos_writeback_changes">Valores modificados</string>
+    <string name="talos_writeback_from_to">%1$s → %2$s</string>
+    <string name="talos_writeback_removed">Eliminado en el nodo: elimínelo del repositorio a mano.</string>
+    <string name="talos_writeback_into">Escrito en %1$s</string>
+    <string name="talos_writeback_create">Crea %1$s: el repositorio no tiene archivo para este nodo.</string>
+    <string name="talos_writeback_nothing">Cada valor modificado lo define un parche compartido: edite esos archivos en su lugar.</string>
+    <string name="talos_writeback_review">Revisar la pull request</string>
+    <string name="talos_writeback_secret">Este cambio afecta a un secreto: los secretos nunca se escriben en el repositorio.</string>
+    <string name="talos_writeback_live">Proponer los valores del nodo en Git</string>
+    <string name="talos_writeback_live_desc">Escribe lo que ejecuta el nodo en su archivo del repositorio, como pull request.</string>
 </resources>

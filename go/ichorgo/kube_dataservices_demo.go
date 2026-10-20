@@ -467,7 +467,8 @@ func demoExternalDNS(now time.Time) *externalDNSStatus {
 		Namespace: "external-dns", Name: "external-dns", Ready: true, Replicas: 1, ReadyReplicas: 1,
 		Provider: "cloudflare", Policy: "sync", Registry: "txt", OwnerID: "homelab",
 		DomainFilters: []string{"example.com"}, Sources: []string{"ingress", "service", "gateway-httproute", "crd"},
-		IntervalSeconds: 60, Health: healthOK, Reasons: []string{},
+		IntervalSeconds: 60, ManagedRecordTypes: slices.Clone(extDNSDefaultRecordTypes),
+		Health: healthOK, Reasons: []string{},
 	}
 
 	record := func(dnsName string, targets []string, ttl int, kind, namespace, name, group, version, resource, controller string, reasons ...string) externalDNSRecord {

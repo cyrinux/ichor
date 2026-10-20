@@ -25,7 +25,9 @@ import name.levis.ichor.model.GitProposalDefaults
 import name.levis.ichor.model.GitProposalResult
 import name.levis.ichor.model.GitRepoInfo
 import name.levis.ichor.model.GitRepoSearch
+import name.levis.ichor.model.TalosConfigPatch
 import name.levis.ichor.model.TalosRepoCompare
+import name.levis.ichor.model.TalosWriteBackPlan
 import name.levis.ichor.model.TalosRepoFiles
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
@@ -318,6 +320,26 @@ class GitOpsRepository(
         val pathsJson = TalosJson.encodeToString(ListSerializer(String.serializer()), paths)
         return go.talos { cfg, ctx ->
             TalosJson.decodeFromString(TalosRepoCompare.serializer(), Ichorgo.talosRepoCompare(cfg, ctx, host, repo.repoURL, sha, node, hostname, pathsJson))
+        }
+    }
+
+    /** The patch that turns [base] into [draft] (both redacted configs), its values and whether one is a secret's. Local. */
+    suspend fun talosConfigPatchFrom(base: String, draft: String): TalosConfigPatch = withContext(Dispatchers.Default) {
+        TalosJson.decodeFromString(TalosConfigPatch.serializer(), Ichorgo.talosConfigPatchFrom(base, draft))
+    }
+
+    /**
+     * Where [patch] goes in the active cluster's repository for the node [hostname] of [role]:
+     * its file (or a new one), with the values a shared patch sets left out.
+     */
+    suspend fun talosWriteBackPlan(hostname: String, role: String, patch: String): TalosWriteBackPlan {
+        val repo = activeClusterRepo() ?: throw LocalizedException(UiText.Res(R.string.repo_none))
+        val host = forgeHost(repo.host)
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(
+                TalosWriteBackPlan.serializer(),
+                Ichorgo.talosRepoWriteBackPlan(host, repo.repoURL, repo.branch, repo.talosDir, hostname, role, patch),
+            )
         }
     }
 

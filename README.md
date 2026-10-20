@@ -160,6 +160,15 @@ tour** shows it again.
   diff** opens the editor with Git's version as the draft, to review, try or apply it. A patch
   holding a `${...}` substitution or setting a secret is skipped with the reason; talconfig's
   node fields (installDisk, ipAddress…) are not compared, only its patches.
+- **A kept change is proposed back to the node's file:** after a tried change is kept, or a
+  change applied, **Propose in Git** lists the values it changed and writes them into the node's
+  file of the cluster repository as the smallest patch: a changed value in place (its comments
+  and quoting kept), a new one under its parent, a changed list as a whole. A value one of the
+  shared patches sets is left out with that file named; a node without a file of its own gets
+  `<Talos directory>/nodes/<hostname>.yaml`. The usual review and **Open pull request** follow.
+  From the Git comparison, **Propose the node's values in Git** does the same for what the node
+  runs and Git does not have. Secrets are never written; a talhelper node without a patch file
+  of its own, or a file with `${...}` substitutions, is edited by hand.
 - **Activity log:** every change Ichor made to your clusters (reboots, scaling, syncs,
   rollbacks…) is kept 90 days on the phone, encrypted, with its outcome: ok, partial (a pod sweep where
   some pods could not be deleted) or failed. Optionally
