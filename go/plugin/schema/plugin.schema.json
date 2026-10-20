@@ -165,7 +165,7 @@
           "type": "string"
         },
         "value": {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
@@ -186,7 +186,7 @@
       "properties": {
         "aggregate": {
           "additionalProperties": {
-            "description": "An expression (docs/plugins.md#expressions).",
+            "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
             "type": [
               "string",
               "number",
@@ -221,7 +221,7 @@
         },
         "select": {
           "additionalProperties": {
-            "description": "An expression (docs/plugins.md#expressions).",
+            "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
             "type": [
               "string",
               "number",
@@ -596,7 +596,7 @@
           ]
         },
         "subtitle": {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
@@ -605,7 +605,7 @@
           ]
         },
         "title": {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
@@ -717,7 +717,7 @@
       "description": "Status is a row's colored status.",
       "properties": {
         "text": {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
@@ -739,7 +739,7 @@
       "description": "Title is an expression, or {count, one, other}: \"%d\" in one and other is the count.",
       "oneOf": [
         {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
@@ -752,7 +752,7 @@
           "description": "Title is an expression, or {count, one, other}: \"%d\" in one and other is the count.",
           "properties": {
             "count": {
-              "description": "An expression (docs/plugins.md#expressions).",
+              "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
               "type": [
                 "string",
                 "number",
@@ -776,7 +776,7 @@
       "description": "Trailing is the text at a row's end.",
       "properties": {
         "text": {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
@@ -851,7 +851,7 @@
     "fields": {
       "additionalProperties": {
         "additionalProperties": {
-          "description": "An expression (docs/plugins.md#expressions).",
+          "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions",
           "type": [
             "string",
             "number",
