@@ -222,6 +222,46 @@ class PluginTest {
     }
 
     @Test
+    fun theTreeCarriesItsToolButtons() {
+        val tree = decode(
+            """{"plugin": {"id": "external-dns", "category": "networking"}, "active": true,
+              "tools": [{"id": "checkNames", "label": "Check names", "hint": "The names go to your DNS resolver."}]}""",
+        )
+        assertEquals(listOf(PluginTool("checkNames", "Check names", "The names go to your DNS resolver.")), tree.tools)
+        assertTrue(decode(golden("kube-green-samples.json")).tools.isEmpty())
+    }
+
+    @Test
+    fun aToolResultDecodesWithItsCards() {
+        val result = TalosJson.decodeFromString(
+            PluginToolResult.serializer(),
+            """{"title": "1 of 2 names point at this cluster", "health": "critical", "cards": [
+              {"id": "names", "type": "list", "empty": "No hostnames.", "rows": [
+                {"ref": {"group": "networking.k8s.io", "version": "v1", "resource": "ingresses", "kind": "Ingress", "namespace": "demo-shop", "name": "shop"},
+                 "title": "shop.example.com", "subtitle": "A · Ingress demo-shop/shop", "status": {"tone": "ok", "text": "Resolves here"},
+                 "trailing": {"text": "3 ms"}, "detail": [{"type": "keyValues", "items": [{"label": "Answers", "value": "203.0.113.10", "mono": true}]}]},
+                {"title": "api.example.com", "status": {"tone": "critical", "text": "Not found"}}]},
+              {"id": "other", "type": "list", "rows": []}]}""",
+        )
+        assertEquals("1 of 2 names point at this cluster", result.title)
+        assertEquals(ServiceHealth.CRITICAL, result.serviceHealth)
+        // A card with no rows and no empty text draws nothing.
+        assertEquals(listOf("names"), result.shownCards.map { it.id })
+        val shop = result.cards.first().rows.first()
+        assertEquals("Ingress", shop.ref?.kind)
+        assertEquals(ServiceHealth.OK, shop.serviceHealth)
+        assertTrue(shop.detail.single() is PluginSection.KeyValues)
+        assertEquals(ServiceHealth.CRITICAL, result.cards.first().rows[1].serviceHealth)
+    }
+
+    @Test
+    fun anEmptyToolResultShowsNoCard() {
+        val result = TalosJson.decodeFromString(PluginToolResult.serializer(), """{"title": "", "health": "", "cards": []}""")
+        assertTrue(result.shownCards.isEmpty())
+        assertEquals(ServiceHealth.UNKNOWN, result.serviceHealth)
+    }
+
+    @Test
     fun aGaugeWithoutMaximumHasNoBar() {
         assertNull(PluginSection.Gauge(value = 3.0).fraction)
         assertNull(PluginSection.Gauge(value = 3.0, max = 0.0).fraction)

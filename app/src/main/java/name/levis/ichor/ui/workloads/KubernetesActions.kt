@@ -53,14 +53,13 @@ private fun kubernetesActionIcon(action: KubernetesAction): ImageVector = when (
     KubernetesAction.ARGO_ROLLOUTS -> Icons.Outlined.Upgrade
     KubernetesAction.CLUSTER_LIFECYCLE -> Icons.Outlined.AccountTree
     KubernetesAction.DATA_SERVICES -> Icons.Outlined.Dataset
-    KubernetesAction.EXTERNAL_DNS, KubernetesAction.CERT_MANAGER, KubernetesAction.CASTAI ->
+    KubernetesAction.CERT_MANAGER, KubernetesAction.CASTAI ->
         action.dataServiceKind!!.fallbackIcon
 }
 
 /** The system read with Data services an action opens alone; null for the others. */
 val KubernetesAction.dataServiceKind: DataServiceKind?
     get() = when (this) {
-        KubernetesAction.EXTERNAL_DNS -> DataServiceKind.EXTERNAL_DNS
         KubernetesAction.CERT_MANAGER -> DataServiceKind.CERT_MANAGER
         KubernetesAction.CASTAI -> DataServiceKind.CASTAI
         else -> null
@@ -93,7 +92,7 @@ val kubernetesActionLook = ActionLook<KubernetesAction>(::kubernetesActionIcon) 
             KubernetesAction.CLUSTER_LIFECYCLE -> R.string.cluster_lifecycle_title
             KubernetesAction.DATA_SERVICES -> R.string.data_services_title
             // Named by their product above.
-            KubernetesAction.EXTERNAL_DNS, KubernetesAction.CERT_MANAGER, KubernetesAction.CASTAI -> R.string.data_services_title
+            KubernetesAction.CERT_MANAGER, KubernetesAction.CASTAI -> R.string.data_services_title
         },
     )
 }

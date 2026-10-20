@@ -413,6 +413,14 @@ func TestExternalDNSPluginCheckNames(t *testing.T) {
 		t.Errorf("app %+v", app)
 	}
 
+	// The row opens the object the record comes from through a relation, as the tree's rows do.
+	source := rowItems(app, "relations")["Source"]
+	ref, _ := source["ref"].(map[string]any)
+	if source["value"] != "Ingress demo/app" || ref["kind"] != "Ingress" || ref["resource"] != "ingresses" || ref["group"] != "networking.k8s.io" ||
+		ref["namespace"] != "demo" || ref["name"] != "app" {
+		t.Errorf("app source relation %+v", source)
+	}
+
 	shop := rows["shop.example.com"]
 	if shop.Status.Tone != healthWarning || shop.Status.Text != "Pointe ailleurs: 198.51.100.7" ||
 		rowItems(shop, "keyValues")["Propriétaire"]["value"] != "appartient à other-cluster" || rowSection(shop, "text") == nil {

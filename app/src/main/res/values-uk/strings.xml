@@ -2547,56 +2547,6 @@
         <item quantity="many">%1$d попереджень</item>
         <item quantity="other">%1$d попередження</item>
     </plurals>
-    <string name="externaldns_empty">Немає контролерів чи записів ExternalDNS.</string>
-    <string name="externaldns_provider">Провайдер</string>
-    <string name="externaldns_owner">Ідентифікатор власника</string>
-    <string name="externaldns_domain_filters">Фільтри доменів</string>
-    <string name="externaldns_sources">Джерела</string>
-    <string name="externaldns_interval">Інтервал</string>
-    <string name="externaldns_interval_value">%1$d с</string>
-    <string name="externaldns_txt">Префікс/суфікс TXT</string>
-    <string name="externaldns_annotation_filter">Фільтр анотацій</string>
-    <string name="externaldns_ready">готовий</string>
-    <string name="externaldns_not_ready">не готовий</string>
-    <string name="externaldns_dry_run">dry-run</string>
-    <string name="externaldns_from">з %1$s</string>
-    <string name="externaldns_by">через %1$s</string>
-    <string name="externaldns_reason_not_ready">жодна репліка не готова</string>
-    <string name="externaldns_reason_dry_run">dry-run: нічого не змінює</string>
-    <string name="externaldns_reason_stale">новішу версію ще не спостережено</string>
-    <string name="externaldns_reason_no_target">ще немає адреси, на яку вказувати</string>
-    <string name="externaldns_reason_unmanaged">поза фільтрами доменів усіх контролерів</string>
-    <plurals name="externaldns_records">
-        <item quantity="one">%1$d ім\'я хоста</item>
-        <item quantity="few">%1$d імені хоста</item>
-        <item quantity="many">%1$d імен хостів</item>
-        <item quantity="other">%1$d імені хоста</item>
-    </plurals>
-    <plurals name="externaldns_truncated">
-        <item quantity="one">Показано перші %1$d з %2$d імен хостів.</item>
-        <item quantity="few">Показано перші %1$d з %2$d імен хостів.</item>
-        <item quantity="many">Показано перші %1$d з %2$d імен хостів.</item>
-        <item quantity="other">Показано перші %1$d з %2$d імен хостів.</item>
-    </plurals>
-    <string name="externaldns_check_names">Перевірити імена</string>
-    <string name="externaldns_check_hint">Розпізнає кожне ім\'я хоста з цього телефону та порівнює його з цілями запису. Імена надсилаються до вашого DNS-резолвера.</string>
-    <string name="externaldns_check_match">Розпізнається тут</string>
-    <string name="externaldns_check_mismatch">Вказує в інше місце</string>
-    <string name="externaldns_check_missing">Не знайдено</string>
-    <string name="externaldns_check_error">Не вдалося перевірити</string>
-    <string name="externaldns_check_owner_other">належить %1$s</string>
-    <string name="externaldns_check_probed">перевірено як %1$s</string>
-    <string name="externaldns_check_mismatch_hint">Ім\'я, що вказує в інше місце, може бути split-horizon DNS вдома, зміною, що ще поширюється, або іншим ExternalDNS, який ним володіє.</string>
-    <string name="externaldns_check_not_run">Ще не перевірено</string>
-    <string name="externaldns_check_running">Перевірка…</string>
-    <string name="externaldns_check_unverified">Резолвиться, немає з чим порівняти</string>
-    <string name="externaldns_check_unverified_count">%1$d не вдалося порівняти</string>
-    <plurals name="externaldns_check_summary">
-        <item quantity="one">%1$d з %2$d імені вказує на цей кластер</item>
-        <item quantity="few">%1$d з %2$d імен вказують на цей кластер</item>
-        <item quantity="many">%1$d з %2$d імен вказують на цей кластер</item>
-        <item quantity="other">%1$d з %2$d імен вказують на цей кластер</item>
-    </plurals>
     <string name="kubegreen_wakes">прокидається %1$s</string>
     <string name="kubegreen_until_changed">доки не змінено вручну</string>
     <string name="kubegreen_weekdays">Дні</string>
@@ -5705,6 +5655,9 @@
     <string name="plugin_partial">Прочитано лише перші об’єкти: кількості є мінімальними.</string>
     <string name="plugin_not_detected">Не знайдено в цьому кластері.</string>
     <string name="plugin_empty">Нічого показати.</string>
+    <string name="plugin_tool_running">Виконується %1$s…</string>
+    <string name="plugin_tool_result_empty">Немає результату.</string>
+    <string name="plugin_tool_failed">%1$s не вдалося: %2$s</string>
     <string name="plugin_action_not_allowed">Ваші облікові дані цього не дозволяють.</string>
     <string name="plugin_action_disabled">Зараз недоступно для цього об’єкта.</string>
     <string name="plugin_action_confirm_title">%1$s для %2$s?</string>

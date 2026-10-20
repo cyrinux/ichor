@@ -157,6 +157,7 @@ tools:
       - "Answers"
       - "Targets"
       - "Owner"
+      - "Source"
       - "owned by %s"
       - "A name that points elsewhere may be split-horizon DNS at home, a change still propagating, or another ExternalDNS owning it."
       - "the resolver timed out"

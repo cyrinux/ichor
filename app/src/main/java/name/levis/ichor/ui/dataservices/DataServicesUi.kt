@@ -15,7 +15,6 @@ import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Memory
-import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.SettingsBackupRestore
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.TableChart
@@ -102,7 +101,6 @@ internal val DataServiceKind.fallbackIcon: ImageVector
         DataServiceKind.PERCONA -> Icons.Outlined.Hub
         DataServiceKind.CERT_MANAGER -> Icons.Outlined.VerifiedUser
         DataServiceKind.VELERO -> Icons.Outlined.SettingsBackupRestore
-        DataServiceKind.EXTERNAL_DNS -> Icons.Outlined.Public
         DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> Icons.Outlined.SettingsBackupRestore
         DataServiceKind.CASTAI -> Icons.Outlined.Tune
     }
@@ -149,7 +147,6 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
         DataServiceKind.PERCONA -> pluralStringResource(R.plurals.percona_clusters, summary.total, summary.total)
         DataServiceKind.CERT_MANAGER -> pluralStringResource(R.plurals.certmanager_certificates, summary.total, summary.total)
         DataServiceKind.VELERO -> pluralStringResource(R.plurals.velero_schedules, summary.total, summary.total)
-        DataServiceKind.EXTERNAL_DNS -> pluralStringResource(R.plurals.externaldns_records, summary.total, summary.total)
         DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> stringResource(R.string.backup_items, summary.total)
         DataServiceKind.CASTAI -> {
             val saving = services.castai?.takeIf { it.compared > 0 && it.cpuDeltaMilli != 0L }

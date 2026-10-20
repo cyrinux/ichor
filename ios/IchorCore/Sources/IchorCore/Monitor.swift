@@ -432,10 +432,6 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     for l in services.velero?.locations ?? [] where l.health == .critical {
         out["velero|BackupStorageLocation/\(l.label)"] = dataCritical
     }
-    // A controller that cannot run publishes nothing: critical like a down storage location.
-    for c in services.externalDns?.controllers ?? [] where c.health == .critical {
-        out["externaldns|\(c.label)"] = dataCritical
-    }
     // A recommendation CAST AI cannot apply is critical; a read-only or HPA one was chosen: shown, not alerted.
     for r in services.castai?.recommendations ?? [] where r.health == .critical { out["castai|\(r.label)"] = dataCritical }
     if services.snapshots?.error.isEmpty != false {
@@ -458,7 +454,7 @@ public func dataSystemTitle(_ key: String) -> String {
     case "percona": "Percona XtraDB Cluster"
     case "certmanager": "cert-manager"
     case "velero": "Velero"
-    case "externaldns": "ExternalDNS"
+    case "externaldns": "ExternalDNS" // an older snapshot's, now a plugin's
     case "sealedsecrets": "Sealed Secrets" // an older snapshot's, now a plugin's
     case "ceph": "Rook Ceph"
     case "snapshots": "CSI VolumeSnapshots"

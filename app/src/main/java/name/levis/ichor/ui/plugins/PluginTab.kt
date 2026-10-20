@@ -115,6 +115,9 @@ class PluginTabViewModel(
     val kubeGreen: KubeGreenActions? =
         KubeGreenActions(viewModelScope, dataServices, onChanged = { refresh() }).takeIf { pluginId == KUBE_GREEN_PLUGIN }
 
+    /** The plugin's tool buttons' runs (docs/plugins.md "Tools"). */
+    val tools = PluginToolRuns(viewModelScope, plugins, pluginId)
+
     override fun cached(): TalosRepository.Timed<PluginView>? =
         plugins.cached<PluginTree>(pluginDataKey(pluginId, "", pluginLocale()))?.let { t ->
             TalosRepository.Timed(PluginView(t.value, plugins.cached<PluginCatalog>(PLUGIN_CATALOG)?.value ?: PluginCatalog()), t.at)
@@ -123,6 +126,8 @@ class PluginTabViewModel(
     override val restores get() = plugins.restores
 
     override suspend fun fetch(): PluginView {
+        // A tool's result was about what the screen showed: a new read starts without it.
+        tools.clear()
         val tree = plugins.data(pluginId, "", pluginLocale())
         // Only the kinds of the objects its rows open: the rows show without it.
         val catalog = cancellableCatching { plugins.catalog() }.getOrDefault(PluginCatalog())
@@ -177,7 +182,7 @@ fun PluginTab(
     when (val s = state) {
         UiState.Loading -> LoadingBox(Modifier.fillMaxSize())
         is UiState.Failed -> ErrorBox(s.message, { vm.refresh() }, Modifier.fillMaxSize())
-        is UiState.Loaded -> PluginBody(s.data, onObject, rowExtra, runner)
+        is UiState.Loaded -> PluginBody(s.data, onObject, rowExtra, runner, vm.tools)
     }
 }
 
@@ -211,7 +216,7 @@ fun PluginScreen(pluginId: String, onBack: () -> Unit, onObject: (KubeObjectRef)
             UiState.Loading -> LoadingBox(rest)
             is UiState.Failed -> ErrorBox(s.message, { vm.refresh() }, rest)
             is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = { vm.refresh() }, modifier = rest) {
-                PluginBody(s.data, onObject, rowExtra = { row -> vm.kubeGreen?.let { kubeGreenRowExtra(row, it) } }, runner)
+                PluginBody(s.data, onObject, rowExtra = { row -> vm.kubeGreen?.let { kubeGreenRowExtra(row, it) } }, runner, vm.tools)
             }
         }
     }
@@ -230,10 +235,14 @@ private fun PluginBody(
     onObject: (KubeObjectRef) -> Unit,
     rowExtra: (PluginRow) -> (@Composable () -> Unit)?,
     runner: PluginActionRunner,
+    tools: PluginToolRuns,
 ) {
     val tree = view.tree
+    val toolRun by tools.run.collectAsStateWithLifecycle()
+    val toolCards = remember(toolRun?.result) { toolCardLayouts(toolRun?.result) }
     var expanded by rememberSaveable(tree.plugin.id) { mutableStateOf(setOf<String>()) }
     val open: (PluginRef) -> Unit = { ref -> onObject(ref.objectRef(view.catalog.kindOf(tree.plugin.id, ref))) }
+    val toggle: (String) -> Unit = { k -> expanded = if (k in expanded) expanded - k else expanded + k }
     // Worked out once per tree, not on every recomposition.
     val cards = remember(tree) { tree.cards.filter { it.rows.isNotEmpty() || it.empty.isNotEmpty() }.map(::layoutOf) }
     val errorLines = remember(tree) { tree.errors.map { e -> listOf(e.subject, e.message).filter { it.isNotEmpty() }.joinToString(": ") } }
@@ -249,10 +258,14 @@ private fun PluginBody(
             item(key = "inactive") { EmptyText(stringResource(R.string.plugin_not_detected)) }
             return@LazyColumn
         }
+        if (tree.tools.isNotEmpty()) {
+            pluginTools(tree.tools, toolRun, toolCards, tools::start, expanded, toggle, open, runner)
+            item(key = "tools-end") { Spacer(Modifier.height(12.dp)) }
+        }
         if (cards.isEmpty()) item(key = "empty") { EmptyText(stringResource(R.string.plugin_empty)) }
         cards.forEachIndexed { index, layout ->
             if (index > 0) item(key = "gap:${layout.card.id}") { Spacer(Modifier.height(12.dp)) }
-            pluginCard(layout, expanded, { k -> expanded = if (k in expanded) expanded - k else expanded + k }, open, rowExtra, runner)
+            pluginCard(layout, expanded, toggle, open, rowExtra, runner)
         }
     }
 }
@@ -261,7 +274,7 @@ private fun PluginBody(
  * A card ready to draw: its rows (with their index, for stable keys) in one group, or one group
  * per namespace (its title) when they are objects of several namespaces.
  */
-private class CardLayout(
+internal class CardLayout(
     val card: PluginCard,
     val grouped: Boolean,
     val groups: List<Pair<String, List<IndexedValue<PluginRow>>>>,
@@ -269,17 +282,15 @@ private class CardLayout(
     val keys: List<String>,
 )
 
-private fun layoutOf(card: PluginCard): CardLayout {
+internal fun layoutOf(card: PluginCard): CardLayout {
     val grouped = card.groupsByNamespace()
     val rows = card.rows.withIndex().toList()
     val groups = if (grouped) groupInOrder(rows) { it.value.ref?.namespace.orEmpty() } else listOf("" to rows)
     return CardLayout(card, grouped, groups, pluginRowKeys(card.rows))
 }
 
-private fun PluginRow.expandKey(card: PluginCard, index: Int): String = "${card.id}|${ref?.key ?: "$index:$title"}"
-
 /** A card's rows as one grouped card, or one per namespace when they span several. */
-private fun LazyListScope.pluginCard(
+internal fun LazyListScope.pluginCard(
     layout: CardLayout,
     expanded: Set<String>,
     onToggle: (String) -> Unit,
@@ -297,7 +308,8 @@ private fun LazyListScope.pluginCard(
         if (layout.grouped) cardGroupTitle("group:${card.id}:$namespace", namespace)
         // Keyed by the row's object: its state (an open action dialog) follows it across a reload.
         cardRows(group, key = { "row:${card.id}:${layout.keys[it.index]}" }) { (index, row) ->
-            val key = row.expandKey(card, index)
+            // By its list key: two rows of one object (a name's A and AAAA records) open apart.
+            val key = "${card.id}|${layout.keys[index]}"
             PluginRowContent(
                 row,
                 open = key in expanded,

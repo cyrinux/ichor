@@ -38,7 +38,6 @@ class DataServicesViewModel(private val dataServices: DataServicesRepository) : 
     val velero = VeleroActions(viewModelScope, dataServices, onChanged = { refresh() })
 
     /** The DNS check of the ExternalDNS records; the verdicts stay until the next check. */
-    val externalDns = ExternalDnsActions(viewModelScope, dataServices)
 
     /** Catalog ids from the inventory; "" checks everything (Garage needs a listing of every pod then). */
     private var hints = ""

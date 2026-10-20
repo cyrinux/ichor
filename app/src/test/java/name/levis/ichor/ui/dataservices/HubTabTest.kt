@@ -46,6 +46,6 @@ class HubTabTest {
     @Test
     fun soloShowsThatSystemAloneWhenItRuns() {
         assertEquals(listOf(HubTab.Native(DataServiceKind.CERT_MANAGER)), hubTabs(services, plugins, kube = true, solo = DataServiceKind.CERT_MANAGER))
-        assertEquals(emptyList<HubTab>(), hubTabs(services, plugins, kube = true, solo = DataServiceKind.EXTERNAL_DNS))
+        assertEquals(emptyList<HubTab>(), hubTabs(services, plugins, kube = true, solo = DataServiceKind.GARAGE))
     }
 }

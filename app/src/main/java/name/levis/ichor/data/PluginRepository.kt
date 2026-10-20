@@ -5,6 +5,7 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.model.PluginCatalog
 import name.levis.ichor.model.PluginDetect
 import name.levis.ichor.model.PluginFindingsReport
+import name.levis.ichor.model.PluginToolResult
 import name.levis.ichor.model.PluginTree
 import name.levis.ichor.model.PluginUserItem
 import name.levis.ichor.model.PluginUserList
@@ -62,6 +63,15 @@ class PluginRepository(go: GoCall) : GoRepository(go) {
      */
     suspend fun action(pluginId: String, actionId: String, namespace: String, name: String, paramsJson: String) {
         go.kube { cfg, ctx, server -> Ichorgo.kubePluginAction(cfg, ctx, server, pluginId, actionId, namespace, name, paramsJson) }
+    }
+
+    /**
+     * Runs tool [toolId] of plugin [pluginId] over what it reads in [scope] (a namespace, "" for
+     * all), its words in [locale] ("" for English). Never cached: a tool runs only when tapped.
+     * The demo context runs the tool's canned demo over the samples.
+     */
+    suspend fun tool(pluginId: String, toolId: String, scope: String, locale: String): PluginToolResult = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(PluginToolResult.serializer(), Ichorgo.kubePluginTool(cfg, ctx, server, pluginId, toolId, scope, locale))
     }
 
     /** The plugins the user imported, kept on this phone by the core (no cluster call). */

@@ -141,13 +141,14 @@ func dnsCheckToolResult(c *plugin.Compiled, locale string, items []dnsCheckItem,
 			text += ": " + strings.Join(e.Answers, ", ")
 		}
 
+		ref := &plugin.Ref{Group: it.source.Group, Version: it.source.Version, Resource: it.source.Resource, Kind: it.source.Kind, Namespace: it.source.Namespace, Name: it.source.Name}
 		card.Rows = append(card.Rows, plugin.TreeRow{
-			Ref:      &plugin.Ref{Group: it.source.Group, Version: it.source.Version, Resource: it.source.Resource, Kind: it.source.Kind, Namespace: it.source.Namespace, Name: it.source.Name},
+			Ref:      ref,
 			Title:    e.DNSName,
 			Subtitle: it.req.RecordType + " · " + it.source.Kind + " " + it.source.Namespace + "/" + it.source.Name,
 			Status:   &plugin.TreeStatus{Tone: verdict.tone, Text: text},
 			Trailing: &plugin.TreeTrailing{Text: strconv.FormatInt(e.MS, 10) + " ms"},
-			Detail:   dnsCheckDetail(tr, it, e),
+			Detail:   dnsCheckDetail(tr, it, e, ref),
 		})
 	}
 
@@ -172,9 +173,10 @@ func dnsCheckToolResult(c *plugin.Compiled, locale string, items []dnsCheckItem,
 	return plugin.ToolResult{Title: fmt.Sprintf(title, matched, total), Health: health, Cards: []plugin.TreeCard{card}}
 }
 
-// dnsCheckDetail is a row's detail: the answers, the targets and the TXT owner, and why a
-// name points elsewhere or could not be checked.
-func dnsCheckDetail(tr func(string) string, it dnsCheckItem, e dnsCheckEntry) []plugin.TreeSection {
+// dnsCheckDetail is a row's detail: the answers, the targets and the TXT owner, why a name
+// points elsewhere or could not be checked, and the object the record comes from (ref), as a
+// relation the apps open.
+func dnsCheckDetail(tr func(string) string, it dnsCheckItem, e dnsCheckEntry, ref *plugin.Ref) []plugin.TreeSection {
 	var kv []plugin.TreeItem
 
 	for _, item := range []struct {
@@ -204,6 +206,11 @@ func dnsCheckDetail(tr func(string) string, it dnsCheckItem, e dnsCheckEntry) []
 		out = append(out, plugin.TreeSection{Type: "text", Tone: healthWarning, Text: tr(dnsCheckMismatchHint)})
 	case e.Message != "":
 		out = append(out, plugin.TreeSection{Type: "text", Tone: "unknown", Text: tr(e.Message)})
+	}
+
+	if ref.Resource != "" && ref.Name != "" {
+		label := strings.TrimSpace(ref.Kind + " " + strings.Trim(ref.Namespace+"/"+ref.Name, "/"))
+		out = append(out, plugin.TreeSection{Type: "relations", Items: []plugin.TreeItem{{Label: tr("Source"), Value: label, Ref: ref}}})
 	}
 
 	return out

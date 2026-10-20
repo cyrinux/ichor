@@ -2401,50 +2401,6 @@
         <item quantity="one">%1$d avertissement</item>
         <item quantity="other">%1$d avertissements</item>
     </plurals>
-    <string name="externaldns_empty">Aucun contrôleur ni enregistrement ExternalDNS.</string>
-    <string name="externaldns_provider">Fournisseur</string>
-    <string name="externaldns_owner">ID de propriétaire</string>
-    <string name="externaldns_domain_filters">Filtres de domaine</string>
-    <string name="externaldns_sources">Sources</string>
-    <string name="externaldns_interval">Intervalle</string>
-    <string name="externaldns_interval_value">%1$d s</string>
-    <string name="externaldns_txt">Préfixe/suffixe TXT</string>
-    <string name="externaldns_annotation_filter">Filtre d\'annotation</string>
-    <string name="externaldns_ready">prêt</string>
-    <string name="externaldns_not_ready">pas prêt</string>
-    <string name="externaldns_dry_run">dry-run</string>
-    <string name="externaldns_from">de %1$s</string>
-    <string name="externaldns_by">par %1$s</string>
-    <string name="externaldns_reason_not_ready">aucun réplica prêt</string>
-    <string name="externaldns_reason_dry_run">dry-run : il ne change rien</string>
-    <string name="externaldns_reason_stale">une version plus récente n\'est pas encore observée</string>
-    <string name="externaldns_reason_no_target">aucune adresse à viser pour l\'instant</string>
-    <string name="externaldns_reason_unmanaged">hors des filtres de domaine de tous les contrôleurs</string>
-    <plurals name="externaldns_records">
-        <item quantity="one">%1$d nom d\'hôte</item>
-        <item quantity="other">%1$d noms d\'hôte</item>
-    </plurals>
-    <plurals name="externaldns_truncated">
-        <item quantity="one">Affichage des %1$d premiers des %2$d noms d\'hôte.</item>
-        <item quantity="other">Affichage des %1$d premiers des %2$d noms d\'hôte.</item>
-    </plurals>
-    <string name="externaldns_check_names">Vérifier les noms</string>
-    <string name="externaldns_check_hint">Résout chaque nom d\'hôte depuis ce téléphone et le compare aux cibles de l\'enregistrement. Les noms partent vers votre résolveur DNS.</string>
-    <string name="externaldns_check_match">Résout ici</string>
-    <string name="externaldns_check_mismatch">Pointe ailleurs</string>
-    <string name="externaldns_check_missing">Introuvable</string>
-    <string name="externaldns_check_error">Vérification impossible</string>
-    <string name="externaldns_check_owner_other">appartient à %1$s</string>
-    <string name="externaldns_check_probed">vérifié via %1$s</string>
-    <string name="externaldns_check_mismatch_hint">Un nom qui pointe ailleurs peut être du DNS split-horizon à la maison, un changement encore en propagation, ou un autre ExternalDNS qui le possède.</string>
-    <string name="externaldns_check_not_run">Pas encore vérifié</string>
-    <string name="externaldns_check_running">Vérification…</string>
-    <string name="externaldns_check_unverified">Répond, rien à comparer</string>
-    <string name="externaldns_check_unverified_count">%1$d n’ont pas pu être comparés</string>
-    <plurals name="externaldns_check_summary">
-        <item quantity="one">%1$d nom sur %2$d pointe vers ce cluster</item>
-        <item quantity="other">%1$d noms sur %2$d pointent vers ce cluster</item>
-    </plurals>
     <string name="kubegreen_wakes">se réveille %1$s</string>
     <string name="kubegreen_until_changed">jusqu\'à modification manuelle</string>
     <string name="kubegreen_weekdays">Jours</string>
@@ -5450,6 +5406,9 @@
     <string name="plugin_partial">Seuls les premiers objets ont été lus : les nombres sont des minimums.</string>
     <string name="plugin_not_detected">Introuvable sur ce cluster.</string>
     <string name="plugin_empty">Rien à afficher.</string>
+    <string name="plugin_tool_running">%1$s en cours…</string>
+    <string name="plugin_tool_result_empty">Aucun résultat.</string>
+    <string name="plugin_tool_failed">%1$s a échoué : %2$s</string>
     <string name="plugin_action_not_allowed">Vos identifiants ne le permettent pas.</string>
     <string name="plugin_action_disabled">Indisponible pour cet objet pour le moment.</string>
     <string name="plugin_action_confirm_title">%1$s sur %2$s ?</string>

@@ -93,32 +93,11 @@ type dnsChecker interface {
 	LookupTXT(ctx context.Context, host string) ([]string, error)
 }
 
-// DNSCheck resolves the hostnames ExternalDNS is asked to publish from the phone's own
-// resolver and says whether each one points at the cluster. It needs no kubeconfig: the
-// records come from the app, the answers from the device. A name that does not resolve is
+// dnsCheckWith resolves the hostnames ExternalDNS is asked to publish (recordsJSON) with
+// resolver and says whether each one points at the cluster: a name that does not resolve is
 // missing, one that resolves elsewhere is a mismatch, and a resolver failure is an error,
-// never fatal. Only invalid JSON fails the whole call.
-func DNSCheck(recordsJSON string, timeoutMs int) (out string, err error) {
-	defer maskResult(&out, &err)
-
-	return dnsCheckWith(net.DefaultResolver, recordsJSON, timeoutMs)
-}
-
-// DemoDNSCheck is DNSCheck for the built-in demo: canned verdicts, no resolver, so the
-// button works offline.
-func DemoDNSCheck(recordsJSON string) (out string, err error) {
-	defer maskResult(&out, &err)
-
-	var records []dnsCheckRequest
-	if err := json.Unmarshal([]byte(recordsJSON), &records); err != nil {
-		return "", err
-	}
-
-	return toJSON(dnsCheckResult{Results: demoDNSCheckEntries(records), Resolver: "demo"})
-}
-
-// dnsCheckWith is DNSCheck against an injected resolver, so the verdicts are testable
-// without a network.
+// never fatal. Only invalid JSON fails the whole call. The plugin tool (plugin_tool_dnscheck.go)
+// runs dnsCheckEntries directly; this JSON form keeps the verdicts testable without a network.
 func dnsCheckWith(resolver dnsChecker, recordsJSON string, timeoutMs int) (string, error) {
 	var records []dnsCheckRequest
 	if err := json.Unmarshal([]byte(recordsJSON), &records); err != nil {

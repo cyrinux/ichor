@@ -23,6 +23,8 @@ public struct PluginTree: Decodable, Equatable, Sendable {
     public let cards: [PluginCard]
     public let findings: [PluginFinding]
     public let errors: [PluginError]
+    /// The plugin's tool buttons (KubePluginTool runs one), in id order; empty when it has none.
+    public let tools: [PluginTool]
 
     public var serviceHealth: ServiceHealth { pluginHealth(health) }
 
@@ -32,7 +34,7 @@ public struct PluginTree: Decodable, Equatable, Sendable {
     /// The unreadable parts as lines: "secrets: forbidden".
     public var errorLines: [String] { errors.map(\.line) }
 
-    private enum CodingKeys: String, CodingKey { case plugin, active, detectedVia, apiVersion, health, partial, summary, cards, findings, errors }
+    private enum CodingKeys: String, CodingKey { case plugin, active, detectedVia, apiVersion, health, partial, summary, cards, findings, errors, tools }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -46,6 +48,73 @@ public struct PluginTree: Decodable, Equatable, Sendable {
         cards = try c.field(.cards, [])
         findings = try c.field(.findings, [])
         errors = try c.field(.errors, [])
+        tools = try c.field(.tools, [])
+    }
+}
+
+/// A tool's button: `label` and `hint` are translated by Go.
+public struct PluginTool: Decodable, Equatable, Hashable, Identifiable, Sendable {
+    public let id: String
+    public let label: String
+    public let hint: String
+
+    public init(id: String = "", label: String = "", hint: String = "") {
+        self.id = id
+        self.label = label
+        self.hint = hint
+    }
+
+    private enum CodingKeys: String, CodingKey { case id, label, hint }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.field(.id, "")
+        label = try c.field(.label, "")
+        hint = try c.field(.hint, "")
+    }
+}
+
+/// What a tool returned (KubePluginTool): a `title` toned by `health`, and cards drawn as the tree's are.
+public struct PluginToolResult: Decodable, Equatable, Sendable {
+    public let title: String
+    public let health: String
+    public let cards: [PluginCard]
+
+    public var serviceHealth: ServiceHealth { pluginHealth(health) }
+
+    /// The cards worth drawing: those with rows, or with a text for none.
+    public var shownCards: [PluginCard] { cards.filter { !$0.rows.isEmpty || !$0.empty.isEmpty } }
+
+    private enum CodingKeys: String, CodingKey { case title, health, cards }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        title = try c.field(.title, "")
+        health = try c.field(.health, "")
+        cards = try c.field(.cards, [])
+    }
+}
+
+/// The last tool run of a plugin screen: running while Go works, then its result or its error.
+/// `label` is the tool's button text, for the progress and error lines.
+public struct PluginToolRun: Equatable, Sendable {
+    public let toolID: String
+    public let label: String
+    public let result: PluginToolResult?
+    public let error: String?
+
+    public var running: Bool { result == nil && error == nil }
+
+    public static func started(_ tool: PluginTool) -> PluginToolRun {
+        PluginToolRun(toolID: tool.id, label: tool.label, result: nil, error: nil)
+    }
+
+    public func finished(_ result: PluginToolResult) -> PluginToolRun {
+        PluginToolRun(toolID: toolID, label: label, result: result, error: nil)
+    }
+
+    public func failed(_ message: String) -> PluginToolRun {
+        PluginToolRun(toolID: toolID, label: label, result: nil, error: message)
     }
 }
 
@@ -193,6 +262,10 @@ public struct PluginIndexedRow: Equatable, Sendable {
     /// index when it has no object, or when another row already has that object.
     public let id: String
     public let row: PluginRow
+
+    /// The key of its expanded state, unique within the tree: by its id, so that two rows of
+    /// one object (a name's A and AAAA records) open apart.
+    public func expandKey(card: String) -> String { "\(card)|\(id)" }
 }
 
 /// The rows of one namespace ("" when the card is not grouped).
@@ -292,16 +365,12 @@ public struct PluginRow: Decodable, Equatable, Sendable {
         [showSubtitle ? subtitle : "", health?.message ?? ""].filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
-    /// The key of its expanded state, unique within the tree.
     /// See PluginIndexedRow.id; `taken` are the ids of the rows before it.
     func rowID(index: Int, taken: Set<String>) -> String {
         if let key = ref?.key, !taken.contains(key) { return key }
         return "#\(index)"
     }
 
-    public func expandKey(card: String, index: Int) -> String {
-        "\(card)|\(ref?.key ?? "\(index):\(title)")"
-    }
 }
 
 public struct PluginStatus: Decodable, Equatable, Sendable {

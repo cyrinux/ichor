@@ -199,7 +199,6 @@ final class PluginTests: XCTestCase {
         XCTAssertFalse(row.hasDetail)
         XCTAssertFalse(row.showsDot)
         XCTAssertEqual(row.serviceHealth, .unknown)
-        XCTAssertEqual(row.expandKey(card: "c", index: 2), "c|2:x")
     }
 
     // MARK: - Helpers
@@ -338,6 +337,70 @@ final class PluginTests: XCTestCase {
         XCTAssertEqual(PluginReload(scope: "ctx-a#1", bump: 1).change(from: first), .refresh)
         XCTAssertEqual(PluginReload(scope: "ctx-b#1", bump: 0).change(from: first), .reset)
         XCTAssertEqual(PluginReload(scope: "ctx-a#2", bump: 3).change(from: first), .reset)
+    }
+
+    // MARK: - Tools
+
+    func testTheTreeCarriesItsToolButtons() throws {
+        let tree = try TalosJSON.decode(PluginTree.self, from: #"""
+        {"plugin": {"id": "external-dns", "category": "networking"}, "active": true,
+         "tools": [{"id": "checkNames", "label": "Check names", "hint": "The names go to your DNS resolver."}]}
+        """#)
+        XCTAssertEqual(tree.tools, [PluginTool(id: "checkNames", label: "Check names", hint: "The names go to your DNS resolver.")])
+        // A tree without tools (an older core, or a plugin with none) has no buttons.
+        XCTAssertEqual(try golden("kube-green-samples").tools, [])
+    }
+
+    func testAToolResultDecodesWithItsCards() throws {
+        let result = try TalosJSON.decode(PluginToolResult.self, from: #"""
+        {"title": "1 of 2 names point at this cluster", "health": "critical", "cards": [
+          {"id": "names", "type": "list", "empty": "No hostnames.", "rows": [
+            {"ref": {"group": "networking.k8s.io", "version": "v1", "resource": "ingresses", "kind": "Ingress", "namespace": "demo-shop", "name": "shop"},
+             "title": "shop.example.com", "subtitle": "A · Ingress demo-shop/shop", "status": {"tone": "ok", "text": "Resolves here"},
+             "trailing": {"text": "3 ms"}, "detail": [{"type": "keyValues", "items": [{"label": "Answers", "value": "203.0.113.10", "mono": true}]}]},
+            {"title": "api.example.com", "status": {"tone": "critical", "text": "Not found"}}]},
+          {"id": "other", "type": "list", "rows": []}]}
+        """#)
+        XCTAssertEqual(result.title, "1 of 2 names point at this cluster")
+        XCTAssertEqual(result.serviceHealth, .critical)
+        // A card with no rows and no empty text draws nothing.
+        XCTAssertEqual(result.shownCards.map(\.id), ["names"])
+        let shop = try XCTUnwrap(result.cards.first?.rows.first)
+        XCTAssertEqual(shop.ref?.kind, "Ingress")
+        XCTAssertEqual(shop.serviceHealth, .ok)
+        XCTAssertTrue(shop.hasDetail)
+        XCTAssertEqual(result.cards.first?.rows.last?.serviceHealth, .critical)
+
+        let empty = try TalosJSON.decode(PluginToolResult.self, from: #"{"title": "", "health": "", "cards": []}"#)
+        XCTAssertTrue(empty.shownCards.isEmpty)
+        XCTAssertEqual(empty.serviceHealth, .unknown)
+    }
+
+    func testAToolRunEndsInItsResultOrItsError() throws {
+        let tool = PluginTool(id: "checkNames", label: "Check names")
+        let run = PluginToolRun.started(tool)
+        XCTAssertTrue(run.running)
+        XCTAssertEqual(run.label, "Check names")
+        let result = try TalosJSON.decode(PluginToolResult.self, from: #"{"title": "No hostnames.", "health": "idle"}"#)
+        let done = run.finished(result)
+        XCTAssertFalse(done.running)
+        XCTAssertEqual(done.result?.serviceHealth, .idle)
+        XCTAssertNil(done.error)
+        let failed = run.failed("the resolver timed out")
+        XCTAssertFalse(failed.running)
+        XCTAssertEqual(failed.error, "the resolver timed out")
+        XCTAssertEqual(failed.toolID, "checkNames")
+    }
+
+    func testTwoRowsOfOneObjectExpandApart() throws {
+        let card = try TalosJSON.decode(PluginCard.self, from: #"""
+        {"id": "names", "rows": [
+          {"ref": {"resource": "services", "namespace": "demo-shop", "name": "web"}, "title": "web.example.com", "subtitle": "A"},
+          {"ref": {"resource": "services", "namespace": "demo-shop", "name": "web"}, "title": "web.example.com", "subtitle": "AAAA"},
+          {"title": "x"}]}
+        """#)
+        let keys = card.rowGroups.flatMap(\.rows).map { $0.expandKey(card: card.id) }
+        XCTAssertEqual(keys, ["names|/services/demo-shop/web", "names|#1", "names|#2"])
     }
 }
 
