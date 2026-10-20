@@ -15,14 +15,13 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let velero: VeleroStatus?
     public let externalDns: ExternalDnsStatus?
     public let sealedSecrets: SealedSecretsStatus?
-    public let ceph: CephStatus?
     public let snapshots: VolumeSnapshots?
     public let backupJobs: BackupJobStatus?
     public let castai: CastAIStatus?
 
     public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil, dragonfly: DragonflyStatus? = nil,
                 mariadb: MariaDbStatus? = nil, percona: PerconaStatus? = nil, certManager: CertManagerStatus? = nil,
-                velero: VeleroStatus? = nil, externalDns: ExternalDnsStatus? = nil, sealedSecrets: SealedSecretsStatus? = nil, ceph: CephStatus? = nil,
+                velero: VeleroStatus? = nil, externalDns: ExternalDnsStatus? = nil, sealedSecrets: SealedSecretsStatus? = nil,
                 castai: CastAIStatus? = nil, snapshots: VolumeSnapshots? = nil, backupJobs: BackupJobStatus? = nil) {
         self.longhorn = longhorn
         self.garage = garage
@@ -34,7 +33,6 @@ public struct DataServices: Decodable, Equatable, Sendable {
         self.velero = velero
         self.externalDns = externalDns
         self.sealedSecrets = sealedSecrets
-        self.ceph = ceph
         self.snapshots = snapshots
         self.backupJobs = backupJobs
         self.castai = castai
@@ -103,7 +101,6 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     case velero = "velero"
     case externalDns = "external-dns"
     case sealedSecrets = "sealed-secrets"
-    case ceph = "rook"
     case snapshots = "kubernetes-csi"
     case backupJobs = "backup-cronjobs"
     case castai = "castai"
@@ -124,7 +121,6 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
         case .velero: "Velero"
         case .externalDns: "ExternalDNS"
         case .sealedSecrets: "Sealed Secrets"
-        case .ceph: "Rook Ceph"
         case .snapshots: "CSI VolumeSnapshots"
         case .backupJobs: "Backup CronJobs"
         case .castai: "CAST AI"
@@ -153,7 +149,7 @@ public extension DataServiceKind {
         case .externalDns: .networking
         case .certManager, .sealedSecrets: .security
         case .castai: .workloads
-        case .longhorn, .garage, .cnpg, .dragonfly, .mariadb, .percona, .velero, .ceph, .snapshots, .backupJobs: .data
+        case .longhorn, .garage, .cnpg, .dragonfly, .mariadb, .percona, .velero, .snapshots, .backupJobs: .data
         }
     }
 
@@ -201,7 +197,7 @@ public extension DataServices {
          dragonfly != nil ? .dragonfly : nil, mariadb != nil ? .mariadb : nil, percona != nil ? .percona : nil,
          certManager != nil ? .certManager : nil, velero != nil ? .velero : nil, externalDns != nil ? .externalDns : nil,
          sealedSecrets != nil ? .sealedSecrets : nil,
-         ceph != nil ? .ceph : nil, castai != nil ? .castai : nil, snapshots != nil ? .snapshots : nil,
+         castai != nil ? .castai : nil, snapshots != nil ? .snapshots : nil,
          backupJobs != nil ? .backupJobs : nil].compactMap { $0 }
     }
 
@@ -221,7 +217,7 @@ public extension DataServices {
                             dragonfly: keep(.dragonfly, dragonfly), mariadb: keep(.mariadb, mariadb), percona: keep(.percona, percona),
                             certManager: keep(.certManager, certManager), velero: keep(.velero, velero),
                             externalDns: keep(.externalDns, externalDns), sealedSecrets: keep(.sealedSecrets, sealedSecrets),
-                            ceph: keep(.ceph, ceph), castai: keep(.castai, castai), snapshots: keep(.snapshots, snapshots),
+                            castai: keep(.castai, castai), snapshots: keep(.snapshots, snapshots),
                             backupJobs: keep(.backupJobs, backupJobs))
     }
 
@@ -282,12 +278,6 @@ public extension DataServices {
             if !s.error.isEmpty && s.items.isEmpty && s.keys.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: s.error) }
             let healths = s.items.map(\.health) + (s.reasons.isEmpty ? [] : [s.health])
             return ServiceSummary(total: s.secretCount, attention: s.items.filter(\.health.needsAttention).count + s.reasons.count, health: .worst(healths), error: s.error)
-        case .ceph:
-            guard let c = ceph else { return nil }
-            if !c.error.isEmpty && c.clusters.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: c.error) }
-            // Clusters are the items; a pool that is not ready needs a look as much as a cluster.
-            let healths = c.clusters.map(\.health) + c.pools.map(\.health)
-            return ServiceSummary(total: c.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: c.error)
         case .snapshots: return snapshots?.summary
         case .backupJobs: return backupJobs?.summary
         case .castai:
@@ -323,7 +313,6 @@ public extension DataServices {
         for cluster in percona?.clusters ?? [] where cluster.health.needsAttention {
             count(cluster.pods.filter { !$0.ready }.map(\.node))
         }
-        for cluster in ceph?.clusters ?? [] where cluster.health.needsAttention { count(cluster.notReadyNodes) }
         return hits.map { LikelyCause(node: $0.key, problems: $0.value) }
             .sorted { $0.problems != $1.problems ? $0.problems > $1.problems : $0.node < $1.node }
     }

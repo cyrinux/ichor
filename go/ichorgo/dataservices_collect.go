@@ -105,7 +105,7 @@ func renderDataServiceSection(b *strings.Builder, sec dsSection) {
 			nodes = "; nodes " + strings.Join(issue.nodes, ", ")
 		}
 
-		// A long detail (Ceph's checks) is cut before the nodes: they are the likely cause.
+		// A long detail is cut before the nodes: they are the likely cause.
 		line := head
 		if issue.detail != "" {
 			line += ": " + clipUTF8(issue.detail, max(diagnosisMaxLineLen/3, diagnosisMaxLineLen-len(head)-len(nodes)-len(": …")))

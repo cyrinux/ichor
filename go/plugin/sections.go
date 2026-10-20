@@ -8,8 +8,8 @@ import (
 	"github.com/cyrinux/ichor/go/plugin/expr"
 )
 
-// section renders one primitive of a row's detail; conditions and relations with nothing
-// to show are left out (ok false).
+// section renders one primitive of a row's detail; conditions, relations, badges and text
+// with nothing to show are left out (ok false).
 func (r *renderer) section(where string, s Section, el element) (TreeSection, bool) {
 	out := TreeSection{Type: s.Type}
 
@@ -17,7 +17,12 @@ func (r *renderer) section(where string, s Section, el element) (TreeSection, bo
 	case "keyValues":
 		out.Items = r.keyValues(where, s.Items, el.env)
 	case "badges":
-		out.Items = r.badgeItems(where, s.Items, el.env)
+		badges := r.badgeItems(where, s.Items, el.env)
+		if len(badges) == 0 {
+			return out, false
+		}
+
+		out.Items = badges
 	case "gauge":
 		r.gauge(where, s, el.env, &out)
 	case "conditions":
@@ -38,6 +43,10 @@ func (r *renderer) section(where string, s Section, el element) (TreeSection, bo
 		return r.table(where, s), true
 	case "text":
 		out.Text = r.template(where+".text", s.Text, el.env)
+		if out.Text == "" {
+			return out, false
+		}
+
 		out.Tone = r.tone(where+".tone", s.Tone, el.env, "")
 		out.Mono = s.Mono
 	case "actions":

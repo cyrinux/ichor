@@ -335,9 +335,8 @@ public let dataWarning = "warning"
 /// replica is usually planned and does not alert. An expired certificate (or one not ready a week
 /// before it expires) is critical; one expiring, overdue or not ready, or an issuer not ready, is a
 /// warning. A Velero schedule whose last backup failed or whose storage location is unavailable is
-/// critical, a stale, partially failed or invalid one a warning. A Ceph cluster alerts when
-/// critical, or on HEALTH_WARN, near-full capacity or an OSD down; a pool only when failed. A CAST AI
-/// recommendation alerts only when the autoscaler cannot apply it.
+/// critical, a stale, partially failed or invalid one a warning. A CAST AI recommendation alerts
+/// only when the autoscaler cannot apply it.
 public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     var out: [String: String] = [:]
     for v in services.longhorn?.volumes ?? [] {
@@ -447,17 +446,6 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
             out["sealedsecrets|\(sealed.controller.map { "\($0.namespace)/" } ?? "")sealed-secrets-key"] = dataCritical
         }
     }
-    // A mon down or a reconcile in progress shows in Ceph's health anyway.
-    let cephAlerting: Set<CephReason> = [.healthWarn, .nearFull, .osds]
-    for c in services.ceph?.clusters ?? [] {
-        if c.health == .critical {
-            out["ceph|\(c.label)"] = dataCritical
-        } else if c.reasons.contains(where: cephAlerting.contains) {
-            out["ceph|\(c.label)"] = dataWarning
-        }
-    }
-    // A pool alerts only when Rook reports it failed.
-    for p in services.ceph?.pools ?? [] where p.health == .critical { out["ceph|\(p.kind)/\(p.label)"] = dataCritical }
     // A recommendation CAST AI cannot apply is critical; a read-only or HPA one was chosen: shown, not alerted.
     for r in services.castai?.recommendations ?? [] where r.health == .critical { out["castai|\(r.label)"] = dataCritical }
     if services.snapshots?.error.isEmpty != false {

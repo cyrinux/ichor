@@ -18,7 +18,6 @@ data class DataServices(
     val velero: VeleroStatus? = null,
     val externalDns: ExternalDnsStatus? = null,
     val sealedSecrets: SealedSecretsStatus? = null,
-    val ceph: CephStatus? = null,
     val castai: CastAIStatus? = null,
     val snapshots: VolumeSnapshots? = null,
     val backupJobs: BackupJobStatus? = null,
@@ -55,7 +54,6 @@ enum class DataServiceKind(val catalogId: String) {
     VELERO("velero"),
     EXTERNAL_DNS("external-dns"),
     SEALED_SECRETS("sealed-secrets"),
-    CEPH("rook"),
     CASTAI("castai"),
     SNAPSHOTS("kubernetes-csi"),
     BACKUP_JOBS("backup-cronjobs"),
@@ -74,7 +72,6 @@ val DataServiceKind.title: String
         DataServiceKind.VELERO -> "Velero"
         DataServiceKind.EXTERNAL_DNS -> "ExternalDNS"
         DataServiceKind.SEALED_SECRETS -> "Sealed Secrets"
-        DataServiceKind.CEPH -> "Rook Ceph"
         DataServiceKind.SNAPSHOTS -> "CSI VolumeSnapshots"
         DataServiceKind.BACKUP_JOBS -> "Backup CronJobs"
         DataServiceKind.CASTAI -> "CAST AI"
@@ -93,7 +90,6 @@ val DataServiceKind.alertSystem: String
         DataServiceKind.VELERO -> "velero"
         DataServiceKind.EXTERNAL_DNS -> "externaldns"
         DataServiceKind.SEALED_SECRETS -> "sealedsecrets"
-        DataServiceKind.CEPH -> "ceph"
         DataServiceKind.SNAPSHOTS -> "snapshots"
         DataServiceKind.BACKUP_JOBS -> "backupjobs"
         DataServiceKind.CASTAI -> "castai"
@@ -125,7 +121,6 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.VELERO.takeIf { velero != null },
         DataServiceKind.EXTERNAL_DNS.takeIf { externalDns != null },
         DataServiceKind.SEALED_SECRETS.takeIf { sealedSecrets != null },
-        DataServiceKind.CEPH.takeIf { ceph != null },
         DataServiceKind.CASTAI.takeIf { castai != null },
         DataServiceKind.SNAPSHOTS.takeIf { snapshots != null },
         DataServiceKind.BACKUP_JOBS.takeIf { backupJobs != null },
@@ -141,7 +136,7 @@ val DataServiceKind.family: ServiceFamily
         DataServiceKind.CERT_MANAGER, DataServiceKind.SEALED_SECRETS -> ServiceFamily.SECURITY
         DataServiceKind.CASTAI -> ServiceFamily.WORKLOADS
         DataServiceKind.LONGHORN, DataServiceKind.GARAGE, DataServiceKind.CNPG, DataServiceKind.DRAGONFLY,
-        DataServiceKind.MARIADB, DataServiceKind.PERCONA, DataServiceKind.VELERO, DataServiceKind.CEPH,
+        DataServiceKind.MARIADB, DataServiceKind.PERCONA, DataServiceKind.VELERO,
         DataServiceKind.SNAPSHOTS, DataServiceKind.BACKUP_JOBS -> ServiceFamily.DATA
     }
 
@@ -174,7 +169,6 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.VELERO -> velero?.summary()
     DataServiceKind.EXTERNAL_DNS -> externalDns?.summary()
     DataServiceKind.SEALED_SECRETS -> sealedSecrets?.summary()
-    DataServiceKind.CEPH -> ceph?.summary()
     DataServiceKind.SNAPSHOTS -> snapshots?.summary()
     DataServiceKind.BACKUP_JOBS -> backupJobs?.summary()
     DataServiceKind.CASTAI -> castai?.summary()
@@ -190,13 +184,6 @@ fun CastAIStatus.summary(): ServiceSummary {
     val healths = recommendations.map { it.serviceHealth }
     val health = ServiceHealth.worst(healths + listOfNotNull(ServiceHealth.WARNING.takeIf { stuck.isNotEmpty() }))
     return ServiceSummary(recommendations.size, healths.count { it.needsAttention }, health, error)
-}
-
-/** Ceph clusters are the items; a pool that is not ready needs a look as much as a cluster. */
-fun CephStatus.summary(): ServiceSummary {
-    if (error.isNotEmpty() && clusters.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
-    val healths = clusters.map { it.serviceHealth } + pools.map { it.serviceHealth }
-    return ServiceSummary(clusters.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
 }
 
 fun MariaDbStatus.summary(): ServiceSummary {
@@ -308,7 +295,6 @@ fun DataServices.likelyCauses(downNodes: Set<String> = emptySet()): List<LikelyC
     percona?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { c ->
         count(c.pods.filter { !it.ready }.map { it.node })
     }
-    ceph?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { count(it.notReadyNodes) }
 
     return hits.map { (node, n) -> LikelyCause(node, n) }.sortedWith(compareByDescending<LikelyCause> { it.problems }.thenBy { it.node })
 }
