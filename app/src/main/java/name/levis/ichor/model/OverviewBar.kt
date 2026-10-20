@@ -48,8 +48,9 @@ enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOW
      *  when the cluster runs it (as on the Kubernetes home); last, so the saved bars keep theirs. */
     CROSSPLANE, TAILSCALE, ARGO_ROLLOUTS, CLUSTER_LIFECYCLE,
     /** Data services, and the systems the Kubernetes home files in another family (ExternalDNS,
-     *  cert-manager, Sealed Secrets, CAST AI), each offered when the cluster runs it; last, so the saved bars keep theirs. */
-    DATA_SERVICES, EXTERNAL_DNS, CERT_MANAGER, SEALED_SECRETS, CASTAI;
+     *  cert-manager, CAST AI), each offered when the cluster runs it; last, so the saved bars keep theirs.
+     *  Sealed Secrets is a plugin now: the Security family opens it, and a saved bar drops its entry. */
+    DATA_SERVICES, EXTERNAL_DNS, CERT_MANAGER, CASTAI;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 3)

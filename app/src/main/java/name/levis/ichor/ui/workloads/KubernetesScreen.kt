@@ -211,7 +211,7 @@ fun KubernetesScreen(
                                 KubernetesAction.ARGO_ROLLOUTS -> onArgoRollouts()
                                 KubernetesAction.CLUSTER_LIFECYCLE -> onClusterLifecycle()
                                 KubernetesAction.DATA_SERVICES -> onDataServices(null, false)
-                                KubernetesAction.EXTERNAL_DNS, KubernetesAction.CERT_MANAGER, KubernetesAction.SEALED_SECRETS, KubernetesAction.CASTAI ->
+                                KubernetesAction.EXTERNAL_DNS, KubernetesAction.CERT_MANAGER, KubernetesAction.CASTAI ->
                                     onDataServices(action.dataServiceKind, true)
                             }
                         },
@@ -228,7 +228,7 @@ fun KubernetesScreen(
                                 KubernetesAction.ARGO_ROLLOUTS -> hasRollouts
                                 KubernetesAction.CLUSTER_LIFECYCLE -> hasLifecycle
                                 // Unknown until read, or unreadable: no entry rather than one that fails.
-                                KubernetesAction.EXTERNAL_DNS, KubernetesAction.CERT_MANAGER, KubernetesAction.SEALED_SECRETS, KubernetesAction.CASTAI ->
+                                KubernetesAction.EXTERNAL_DNS, KubernetesAction.CERT_MANAGER, KubernetesAction.CASTAI ->
                                     action.dataServiceKind in detected
                                 else -> true
                             }

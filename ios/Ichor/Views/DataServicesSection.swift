@@ -55,7 +55,6 @@ func dataServiceSummary(_ kind: DataServiceKind, _ services: DataServices) -> St
     case .certManager: head = String(localized: "\(summary.total) certificates")
     case .velero: head = String(localized: "\(summary.total) Velero schedules")
     case .externalDns: head = String(localized: "\(summary.total) hostnames")
-    case .sealedSecrets: head = String(localized: "\(summary.total) SealedSecrets")
     case .snapshots, .backupJobs: head = String(localized: "\(summary.total) backup items")
     case .castai:
         let castai = services.castai
@@ -232,7 +231,6 @@ extension DataServiceKind {
         case .certManager: "checkmark.seal"
         case .velero: "clock.arrow.circlepath"
         case .externalDns: "globe"
-        case .sealedSecrets: "lock"
         case .snapshots, .backupJobs: "clock.arrow.circlepath"
         case .castai: "slider.horizontal.3"
         }

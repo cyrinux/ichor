@@ -2443,36 +2443,6 @@
         <item quantity="one">%1$d nom sur %2$d pointe vers ce cluster</item>
         <item quantity="other">%1$d noms sur %2$d pointent vers ce cluster</item>
     </plurals>
-    <string name="sealedsecrets_empty">Aucun SealedSecret.</string>
-    <string name="sealedsecrets_no_controller">Aucun contrôleur trouvé</string>
-    <string name="sealedsecrets_ready">prêt</string>
-    <string name="sealedsecrets_not_ready">pas prêt</string>
-    <string name="sealedsecrets_replicas">Réplicas</string>
-    <string name="sealedsecrets_keys">Clés de scellement</string>
-    <string name="sealedsecrets_key_created">créée %1$s</string>
-    <string name="sealedsecrets_key_active">active</string>
-    <string name="sealedsecrets_key_compromised">compromise</string>
-    <string name="sealedsecrets_immutable">immuable</string>
-    <string name="sealedsecrets_unsealed">descellé</string>
-    <string name="sealedsecrets_reason_not_synced">échec du descellement : son Secret manque ou est périmé</string>
-    <string name="sealedsecrets_reason_unmanaged">un Secret de ce nom existe et ne lui appartient pas</string>
-    <string name="sealedsecrets_reason_stale">une version plus récente n’est pas encore observée</string>
-    <string name="sealedsecrets_reason_controller_down">le contrôleur ne tourne pas : rien n’est descellé</string>
-    <string name="sealedsecrets_reason_no_keys">aucune clé de scellement active</string>
-    <string name="sealedsecrets_reason_key_compromised">une clé de scellement est marquée compromise</string>
-    <string name="sealedsecrets_reason_key_stale">la clé de scellement la plus récente a plus de 30 jours : le renouvellement est peut-être bloqué</string>
-    <plurals name="sealedsecrets_count">
-        <item quantity="one">%1$d SealedSecret</item>
-        <item quantity="other">%1$d SealedSecrets</item>
-    </plurals>
-    <plurals name="sealedsecrets_item_keys">
-        <item quantity="one">%1$d clé</item>
-        <item quantity="other">%1$d clés</item>
-    </plurals>
-    <plurals name="sealedsecrets_truncated">
-        <item quantity="one">Affichage des %1$d premiers SealedSecrets sur %2$d.</item>
-        <item quantity="other">Affichage des %1$d premiers SealedSecrets sur %2$d.</item>
-    </plurals>
     <string name="kubegreen_wakes">se réveille %1$s</string>
     <string name="kubegreen_until_changed">jusqu\'à modification manuelle</string>
     <string name="kubegreen_weekdays">Jours</string>
@@ -3859,15 +3829,9 @@
     <string name="checkup_csrDenied_fix">L’approbateur les a refusées : son message dit pourquoi.</string>
     <string name="checkup_externalSecretFailed_fix">Le Secret garde sa dernière valeur, ou n’existe pas. Vérifiez les identifiants du store et que la clé distante existe.</string>
     <string name="checkup_secretStoreNotReady_fix">Tous les ExternalSecret qui l’utilisent cessent de se synchroniser. Vérifiez ses identifiants, son adresse et l’état du fournisseur.</string>
-    <string name="checkup_sealedSecretNotSynced">N’a pas pu être descellé</string>
-    <string name="checkup_sealingKeyMissing">Aucune clé de scellement dans %1$s : rien ne peut être descellé</string>
-    <string name="checkup_sealingKeyCompromised">Clé %1$s marquée compromise</string>
     <string name="checkup_sopsDecryptionFailed">Ne peut pas déchiffrer ses secrets SOPS avec la clé %1$s</string>
     <string name="checkup_sopsDecryptionNotConfigured">Contient des fichiers chiffrés par SOPS mais aucun déchiffrement n’est configuré</string>
     <string name="checkup_sopsDecryptionFailedNoKey">Ne peut pas déchiffrer ses secrets SOPS</string>
-    <string name="checkup_sealedSecretNotSynced_fix">Le contrôleur n’a pas pu le déchiffrer en Secret : il a été scellé pour un autre cluster, nom ou namespace, ou avec une clé que le contrôleur n’a plus. Scellez-le de nouveau avec kubeseal et le certificat de ce cluster.</string>
-    <string name="checkup_sealingKeyMissing_fix">Le contrôleur n’a aucune clé pour déchiffrer. Restaurez la sauvegarde de la clé (un Secret avec le label sealedsecrets.bitnami.com/sealed-secrets-key) dans son namespace, puis redémarrez le contrôleur.</string>
-    <string name="checkup_sealingKeyCompromised_fix">Le contrôleur ne scelle plus avec elle, mais ce qu’elle a scellé reste lisible avec elle. Scellez de nouveau ces SealedSecrets avec kubeseal, puis supprimez la clé.</string>
     <string name="checkup_sopsDecryptionFailed_fix">Rien dans cette Kustomization n’est appliqué tant qu’elle ne se déchiffre pas. Vérifiez que le Secret nommé dans spec.decryption.secretRef contient la clé age ou PGP avec laquelle les fichiers ont été chiffrés.</string>
     <string name="checkup_sopsDecryptionFailedNoKey_fix">Rien dans cette Kustomization n’est appliqué tant qu’elle ne se déchiffre pas. Sans secretRef, kustomize-controller déchiffre via un KMS cloud ou Vault : vérifiez que son identité (ou spec.decryption.serviceAccountName) peut utiliser la clé avec laquelle les fichiers ont été chiffrés.</string>
     <string name="checkup_sopsDecryptionNotConfigured_fix">Rien dans cette Kustomization n’est appliqué tant qu’elle contient des Secrets chiffrés. Ajoutez spec.decryption avec le provider sops et un secretRef vers le Secret qui contient la clé age ou PGP, ou un KMS cloud que le contrôleur peut utiliser.</string>

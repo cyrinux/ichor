@@ -182,12 +182,6 @@ enum CheckupText {
     static var checkupSideroServerOff: String { String(localized: "In use but powered off") }
     static var checkupSideroServerUnaccepted: String { String(localized: "Waiting to be accepted") }
     static func checkupSideroServerUnacceptedMore(_ a: String) -> String { String(localized: "\(a) more servers waiting to be accepted") }
-    static var checkupSealedSecretNotSynced: String { String(localized: "Could not be unsealed") }
-    static func checkupSealingKeyMissing(_ a: String) -> String { String(localized: "No sealing key in \(a): nothing can be unsealed") }
-    static func checkupSealingKeyCompromised(_ a: String) -> String { String(localized: "Key \(a) marked compromised") }
-    static var checkupSealedSecretNotSyncedFix: String { String(localized: "The controller could not decrypt it into a Secret: it was sealed for another cluster, name or namespace, or with a key the controller no longer has. Seal it again with kubeseal against this cluster’s certificate.") }
-    static var checkupSealingKeyMissingFix: String { String(localized: "The controller has no key to decrypt with. Restore the key backup (a Secret labelled sealedsecrets.bitnami.com/sealed-secrets-key) into its namespace, then restart the controller.") }
-    static var checkupSealingKeyCompromisedFix: String { String(localized: "The controller no longer seals with it, but what it sealed can still be read with it. Seal those SealedSecrets again with kubeseal, then delete the key.") }
     static func checkupSopsDecryptionFailed(_ a: String) -> String { String(localized: "Cannot decrypt its SOPS secrets with key \(a)") }
     static var checkupSopsDecryptionNotConfigured: String { String(localized: "Holds SOPS-encrypted files but has no decryption configured") }
     static var checkupSopsDecryptionFailedNoKey: String { String(localized: "Cannot decrypt its SOPS secrets") }

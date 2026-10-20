@@ -62,12 +62,11 @@ public enum KubernetesAction: String, BarAction {
     case argoRollouts = "ARGO_ROLLOUTS"
     case clusterLifecycle = "CLUSTER_LIFECYCLE"
     /// Data services, and the systems the Kubernetes home files in another family (ExternalDNS,
-    /// cert-manager, Sealed Secrets, CAST AI), each offered when the cluster runs it; last, so the
-    /// saved bars keep theirs.
+    /// cert-manager, CAST AI), each offered when the cluster runs it; last, so the saved bars keep
+    /// theirs. Sealed Secrets is a plugin now: the Security family opens it, and a saved bar drops its entry.
     case dataServices = "DATA_SERVICES"
     case externalDns = "EXTERNAL_DNS"
     case certManager = "CERT_MANAGER"
-    case sealedSecrets = "SEALED_SECRETS"
     case castai = "CASTAI"
 
     /// The system read with Data services an action opens alone; nil for the others.
@@ -75,7 +74,6 @@ public enum KubernetesAction: String, BarAction {
         switch self {
         case .externalDns: .externalDns
         case .certManager: .certManager
-        case .sealedSecrets: .sealedSecrets
         case .castai: .castai
         default: nil
         }
