@@ -45,6 +45,8 @@ public struct ExternalDnsController: Decodable, Equatable, Identifiable, Sendabl
     /// --interval in seconds, 60 (its default) when unset.
     public let intervalSeconds: Int
     public let annotationFilter: String
+    /// --managed-record-types, upper-cased; A, AAAA, CNAME (its default) when unset.
+    public let managedRecordTypes: [String]
     public let health: ServiceHealth
     /// Known reasons only; values from newer cores are dropped.
     public let reasons: [ExternalDnsReason]
@@ -70,13 +72,15 @@ public struct ExternalDnsController: Decodable, Equatable, Identifiable, Sendabl
         dryRun = try c.field(.dryRun, false)
         intervalSeconds = try c.field(.intervalSeconds, 60)
         annotationFilter = try c.field(.annotationFilter, "")
+        managedRecordTypes = try c.field(.managedRecordTypes, [])
         health = try c.wire(.health)
         reasons = try c.wireList(.reasons)
     }
 
     private enum CodingKeys: String, CodingKey {
         case namespace, name, ready, replicas, readyReplicas, provider, policy, registry, ownerId
-        case txtPrefix, txtSuffix, domainFilters, sources, dryRun, intervalSeconds, annotationFilter, health, reasons
+        case txtPrefix, txtSuffix, domainFilters, sources, dryRun, intervalSeconds, annotationFilter
+        case managedRecordTypes, health, reasons
     }
 }
 

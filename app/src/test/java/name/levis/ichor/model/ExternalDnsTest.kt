@@ -15,7 +15,7 @@ class ExternalDnsTest {
           {"namespace":"external-dns","name":"external-dns","ready":true,"replicas":1,"readyReplicas":1,
            "provider":"cloudflare","policy":"sync","registry":"txt","ownerId":"homelab",
            "domainFilters":["example.com"],"sources":["ingress","service","crd"],"dryRun":false,
-           "intervalSeconds":30,"annotationFilter":"","health":"ok","reasons":[]},
+           "intervalSeconds":30,"annotationFilter":"","managedRecordTypes":["CNAME"],"health":"ok","reasons":[]},
           {"namespace":"dns-2","name":"legacy","ready":false,"replicas":2,"readyReplicas":0,
            "provider":"inmemory","policy":"","registry":"txt","ownerId":"legacy",
            "domainFilters":["example.org"],"sources":["ingress"],"dryRun":true,
@@ -56,9 +56,11 @@ class ExternalDnsTest {
         assertEquals("sync", main.policy)
         assertEquals(listOf("example.com"), main.domainFilters)
         assertEquals(30, main.intervalSeconds)
+        assertEquals(listOf("CNAME"), main.managedRecordTypes)
         assertEquals(ServiceHealth.OK, main.serviceHealth)
         val legacy = e.controllers[1]
         assertEquals(ServiceHealth.CRITICAL, legacy.serviceHealth)
+        assertEquals(emptyList<String>(), legacy.managedRecordTypes)
         assertEquals(listOf(ExternalDnsReason.NOT_READY, ExternalDnsReason.DRY_RUN), legacy.reasonList)
         assertEquals(5, e.recordCount)
         // Problems first: the unmanaged name, then the stale DNSEndpoint, then the ok ones.

@@ -103,10 +103,13 @@ type externalDNSController struct {
 	Sources       []string `json:"sources"`
 	DryRun        bool     `json:"dryRun"`
 	// IntervalSeconds is --interval, 60 (its default) when unset or unparsable.
-	IntervalSeconds  int      `json:"intervalSeconds"`
-	AnnotationFilter string   `json:"annotationFilter"`
-	Health           string   `json:"health"`
-	Reasons          []string `json:"reasons"`
+	IntervalSeconds  int    `json:"intervalSeconds"`
+	AnnotationFilter string `json:"annotationFilter"`
+	// ManagedRecordTypes is --managed-record-types (CSV, repeatable), upper-cased; the
+	// controller's default A, AAAA, CNAME when unset.
+	ManagedRecordTypes []string `json:"managedRecordTypes"`
+	Health             string   `json:"health"`
+	Reasons            []string `json:"reasons"`
 }
 
 // externalDNSRecord is one hostname a controller is asked to publish, where it comes from and
@@ -313,7 +316,8 @@ func newExternalDNSController(d externalDNSDeployment) externalDNSController {
 		DomainFilters:   append([]string{}, args["domain-filter"]...),
 		Sources:         sources,
 		IntervalSeconds: 60, AnnotationFilter: last("annotation-filter"),
-		Health: healthOK, Reasons: []string{},
+		ManagedRecordTypes: extDNSManagedRecordTypes(args["managed-record-types"]),
+		Health:             healthOK, Reasons: []string{},
 	}
 
 	if d.Status.ReadyReplicas >= replicas && replicas > 0 {
@@ -341,6 +345,40 @@ func newExternalDNSController(d externalDNSDeployment) externalDNSController {
 	}
 
 	return c
+}
+
+// extDNSDefaultRecordTypes is what a controller manages without --managed-record-types.
+var extDNSDefaultRecordTypes = []string{"A", "AAAA", "CNAME"}
+
+// extDNSManagedRecordTypes reads every --managed-record-types value (each one a CSV list),
+// upper-cased and without duplicates; the default set when none is given.
+func extDNSManagedRecordTypes(values []string) []string {
+	var out []string
+
+	for _, v := range values {
+		for _, t := range splitCSV(strings.ToUpper(v)) {
+			if !slices.Contains(out, t) {
+				out = append(out, t)
+			}
+		}
+	}
+
+	if len(out) == 0 {
+		return slices.Clone(extDNSDefaultRecordTypes)
+	}
+
+	return out
+}
+
+// extDNSManages tells whether the controller publishes records of this type. A controller
+// read without the field (an older JSON, a hand-built one) manages the default set.
+func extDNSManages(c externalDNSController, recordType string) bool {
+	types := c.ManagedRecordTypes
+	if len(types) == 0 {
+		types = extDNSDefaultRecordTypes
+	}
+
+	return slices.Contains(types, strings.ToUpper(strings.TrimSpace(recordType)))
 }
 
 // extDNSRawRecord is one hostname before the controllers are matched.
@@ -634,8 +672,27 @@ func extDNSFilterCovers(filter, host string) bool {
 	return strings.EqualFold(filter, host) || strings.HasSuffix(strings.ToLower(host), "."+strings.ToLower(filter))
 }
 
-// extDNSMatch fills each record's controller (the first whose domain filters cover it) and
-// health, sorts them worst first and caps the list.
+// extDNSControllerFor is the index of the controller that publishes a record: the first
+// whose domain filters cover the name and whose managed types include the record's (an
+// A-only and a CNAME-only controller on one zone), else the first whose filters cover it,
+// so a type no controller lists does not turn the record unmanaged. -1 when none covers it.
+func extDNSControllerFor(controllers []externalDNSController, dnsName, recordType string) int {
+	covers := func(c externalDNSController) bool {
+		return len(c.DomainFilters) == 0 ||
+			slices.ContainsFunc(c.DomainFilters, func(f string) bool { return extDNSFilterCovers(f, dnsName) })
+	}
+
+	if i := slices.IndexFunc(controllers, func(c externalDNSController) bool {
+		return covers(c) && extDNSManages(c, recordType)
+	}); i >= 0 {
+		return i
+	}
+
+	return slices.IndexFunc(controllers, covers)
+}
+
+// extDNSMatch fills each record's controller (extDNSControllerFor) and health, sorts them
+// worst first and caps the list.
 func extDNSMatch(controllers []externalDNSController, raw []extDNSRawRecord) (records []externalDNSRecord, count int, truncated bool) {
 	count = len(raw)
 
@@ -644,10 +701,7 @@ func extDNSMatch(controllers []externalDNSController, raw []extDNSRawRecord) (re
 		rec.DNSName, rec.RecordType, rec.Targets, rec.TTL = r.dnsName, r.recordType, r.targets, r.ttl
 		rec.Health, rec.Reasons = healthOK, []string{}
 
-		if i := slices.IndexFunc(controllers, func(c externalDNSController) bool {
-			return len(c.DomainFilters) == 0 ||
-				slices.ContainsFunc(c.DomainFilters, func(f string) bool { return extDNSFilterCovers(f, r.dnsName) })
-		}); i >= 0 {
+		if i := extDNSControllerFor(controllers, r.dnsName, r.recordType); i >= 0 {
 			rec.Controller = controllers[i].Name
 		} else {
 			rec.Reasons = append(rec.Reasons, extDNSReasonUnmanaged)
