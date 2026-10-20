@@ -5629,4 +5629,16 @@
     <string name="talos_patch_review">Auf diesem Knoten prüfen</string>
     <string name="talos_patch_same">Der Knoten hat bereits, was dieser Patch setzt.</string>
     <string name="talos_patch_one_node">Nur für diesen Knoten: %1$s</string>
+    <string name="gitops_check_title">Build-Prüfung</string>
+    <string name="gitops_check_running">Die Kustomization wird mit Ihrer Änderung gebaut…</string>
+    <string name="gitops_check_failed">Der Build konnte nicht geprüft werden: %1$s</string>
+    <string name="gitops_check_builds">Baut</string>
+    <string name="gitops_check_valid_yaml">Gültiges YAML</string>
+    <string name="gitops_check_fails">Build schlägt fehl</string>
+    <string name="gitops_check_not_checked">Nicht geprüft</string>
+    <string name="gitops_check_dir">Gebaut aus %1$s</string>
+    <string name="gitops_check_objects">Geänderte Objekte: %1$d · unverändert: %2$d</string>
+    <string name="gitops_check_no_objects">Kein gerendertes Objekt ändert sich.</string>
+    <string name="gitops_check_at">%1$s, Zeile %2$d</string>
+    <string name="gitops_check_already_broken">Schlägt bei diesem Commit bereits fehl</string>
 </resources>

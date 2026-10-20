@@ -5901,4 +5901,16 @@
     <string name="talos_patch_review">Переглянути на цьому вузлі</string>
     <string name="talos_patch_same">Вузол уже має те, що задає цей патч.</string>
     <string name="talos_patch_one_node">Лише для цього вузла: %1$s</string>
+    <string name="gitops_check_title">Перевірка збірки</string>
+    <string name="gitops_check_running">Збирання kustomization з вашою зміною…</string>
+    <string name="gitops_check_failed">Не вдалося перевірити збірку: %1$s</string>
+    <string name="gitops_check_builds">Збирається</string>
+    <string name="gitops_check_valid_yaml">Коректний YAML</string>
+    <string name="gitops_check_fails">Збірка не вдається</string>
+    <string name="gitops_check_not_checked">Не перевірено</string>
+    <string name="gitops_check_dir">Зібрано з %1$s</string>
+    <string name="gitops_check_objects">Змінюються об’єкти: %1$d · без змін: %2$d</string>
+    <string name="gitops_check_no_objects">Жоден згенерований об’єкт не змінюється.</string>
+    <string name="gitops_check_at">%1$s, рядок %2$d</string>
+    <string name="gitops_check_already_broken">Уже не вдається на цьому коміті</string>
 </resources>

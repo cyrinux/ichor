@@ -5638,4 +5638,16 @@
     <string name="talos_patch_review">Revoir sur ce nœud</string>
     <string name="talos_patch_same">Le nœud a déjà ce que fixe ce patch.</string>
     <string name="talos_patch_one_node">Pour ce nœud seulement : %1$s</string>
+    <string name="gitops_check_title">Vérification du build</string>
+    <string name="gitops_check_running">Construction de la kustomization avec votre modification…</string>
+    <string name="gitops_check_failed">Impossible de vérifier le build : %1$s</string>
+    <string name="gitops_check_builds">Se construit</string>
+    <string name="gitops_check_valid_yaml">YAML valide</string>
+    <string name="gitops_check_fails">Le build échoue</string>
+    <string name="gitops_check_not_checked">Non vérifié</string>
+    <string name="gitops_check_dir">Construit depuis %1$s</string>
+    <string name="gitops_check_objects">Objets modifiés : %1$d · inchangés : %2$d</string>
+    <string name="gitops_check_no_objects">Aucun objet rendu ne change.</string>
+    <string name="gitops_check_at">%1$s, ligne %2$d</string>
+    <string name="gitops_check_already_broken">Échoue déjà à ce commit</string>
 </resources>

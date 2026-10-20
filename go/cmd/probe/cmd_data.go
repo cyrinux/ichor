@@ -119,6 +119,15 @@ var dataCommands = []command{
 	{name: "talos-repo-compare", args: "HOSTJSON REPO REF NODE HOSTNAME PATHSJSON", run: func(e env) (string, error) {
 		return ichorgo.TalosRepoCompare(e.cfg, e.context, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), flag.Arg(5), flag.Arg(6))
 	}},
+	{name: "gitops-check", args: "HOSTJSON REPO REF PATH FILE [FLUXSPECJSON]", run: func(env) (string, error) {
+		// The edit of PATH to FILE's content checked on the repository's snapshot. Local.
+		content, err := os.ReadFile(flag.Arg(5))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.GitOpsEditCheck(flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), string(content), flag.Arg(6))
+	}},
 	{name: "git-request", args: "HOSTJSON REPO NUMBER", run: func(env) (string, error) {
 		n, err := strconv.Atoi(flag.Arg(3))
 		if err != nil {

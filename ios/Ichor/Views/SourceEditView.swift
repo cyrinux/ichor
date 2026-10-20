@@ -228,7 +228,11 @@ private struct SourceEditReview: View {
     let onReload: (String) -> Void
     let onDone: () -> Void
 
+    @Environment(AppModel.self) private var model
+    @Environment(GitHostStore.self) private var hosts
     @State private var state: LoadState<FluxDiff> = .loading
+    /// The build check run with the review: the kustomization built with the edit.
+    @State private var check: LoadState<GitOpsEditCheck> = .loading
     @State private var proposing = false
 
     var body: some View {
@@ -254,6 +258,7 @@ private struct SourceEditReview: View {
                         }
                         .font(.caption.monospacedDigit().weight(.semibold))
                     }
+                    EditCheckSection(state: check) { Task { await runCheck() } }
                 } else {
                     Section {
                         Label("Nothing changed yet.", systemImage: "checkmark.circle")
@@ -276,11 +281,17 @@ private struct SourceEditReview: View {
     }
 
     private var continueBar: some View {
-        Button { proposing = true } label: {
-            Text("Continue").frame(maxWidth: .infinity)
+        VStack(spacing: 6) {
+            // The pull request can still be opened: the person decides.
+            if case .loaded(let c, _, _) = check, c.fails {
+                Label("Build fails", systemImage: "xmark.octagon").font(.footnote).foregroundStyle(.statusBad)
+            }
+            Button { proposing = true } label: {
+                Text("Continue").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
         }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
         .padding()
         .background(.bar)
     }
@@ -291,5 +302,18 @@ private struct SourceEditReview: View {
         let path = path
         state = .loading
         state = await .from { try await TalosClient.textDiff(before: before, after: after, name: path) }
+        await runCheck()
+    }
+
+    /// Builds the edit's kustomization on the repository snapshot: whether it still builds and
+    /// which rendered objects change. A Flux app's source is built from its path.
+    private func runCheck() async {
+        guard edited != base.file.content else { return }
+        let flux = app.tool == "flux" && app.kind == "Kustomization" ? GitOpsEditCheck.fluxSpec(path: source.path) : ""
+        check = .loading
+        check = await .from {
+            try await TalosClient.editCheck(source, ref: base.ref, path: path, content: edited, fluxSpec: flux,
+                                       hosts: hosts, demo: model.activeSummary?.demo == true)
+        }
     }
 }
