@@ -132,7 +132,7 @@ var (
 func (g *gen) schema(t reflect.Type) map[string]any {
 	switch t {
 	case exprType:
-		return map[string]any{"type": []string{"string", "number", "boolean", "null"}, "description": "An expression (docs/plugins.md#expressions)."}
+		return map[string]any{"type": []string{"string", "number", "boolean", "null"}, "description": "An expression: https://cyrinux.github.io/ichor/plugins/#expressions"}
 	case templateType:
 		return map[string]any{"type": []string{"string", "null"}, "description": "Text with {{ expression }} holes."}
 	case toneType:
