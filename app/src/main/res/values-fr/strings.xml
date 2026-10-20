@@ -5659,4 +5659,5 @@
     <string name="sops_confirm_title">Commettre un secret en clair ?</string>
     <string name="sops_confirm_text">%1$s serait commis en clair à un chemin que la règle %2$s chiffre. Chiffrez-le d\'abord avec sops sur un ordinateur, sauf si c\'est voulu.</string>
     <string name="sops_what_secret">un Secret Kubernetes</string>
+    <string name="sops_what_talos">des secrets Talos</string>
 </resources>

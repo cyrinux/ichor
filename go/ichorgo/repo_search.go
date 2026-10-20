@@ -129,6 +129,11 @@ func searchRepoFiles(files map[string][]byte, sha, query string, maxHits int) re
 // isSOPSPath tells a SOPS-encrypted file by its name, as .sops.yaml creation rules usually do.
 func isSOPSPath(p string) bool {
 	base := strings.ToLower(p[strings.LastIndex(p, "/")+1:])
+	// The creation rules themselves are clear text.
+	if base == ".sops.yaml" || base == ".sops.yml" {
+		return false
+	}
+
 	for _, ext := range []string{".sops.yaml", ".sops.yml", ".sops.json", ".sops.env", ".enc.yaml", ".enc.yml", ".enc.json"} {
 		if strings.HasSuffix(base, ext) {
 			return true

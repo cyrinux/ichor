@@ -242,8 +242,9 @@ struct SourceFileView: View {
             editBlock = sourceEditBlock(source, demo: demo, hasToken: saved)
             quickTargets = await Self.quickTargets(of: file)
             sops = file.truncated ? nil : (try? await TalosClient.sopsInspect(file.content)).flatMap { $0.encrypted ? $0 : nil }
+            let encrypted = sops != nil
             talosPatch = model.activeIsKube || !allowTry ? nil : await Self.talosPatch(of: file, path: path)
-            state = .loaded(SourceFileText(file: file), at: Date())
+            state = .loaded(SourceFileText(file: file, collapseSops: encrypted), at: Date())
         } catch let missing as GitHostMissing {
             missingHost = missing.host
         } catch {
@@ -317,10 +318,11 @@ struct SourceFileText {
     /// The line-number column's width, for the widest number.
     let gutter: CGFloat
 
-    init(file: GitFile) {
+    /// collapseSops: the file is SOPS-encrypted, its ciphertext tells nothing: each ENC[…] value
+    /// shows as such.
+    init(file: GitFile, collapseSops: Bool = false) {
         self.file = file
-        // SOPS ciphertext tells nothing: each ENC[…] value shows as such.
-        let text = file.content.contains("ENC[") ? collapseSopsValues(file.content) : file.content
+        let text = collapseSops ? collapseSopsValues(file.content) : file.content
         lines = file.truncated ? [] : filterLines(text.replacingOccurrences(of: "\r\n", with: "\n"), query: "")
         gutter = CGFloat(max(2, String(lines.count).count)) * 7
     }

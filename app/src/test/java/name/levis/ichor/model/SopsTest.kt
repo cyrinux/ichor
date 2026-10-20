@@ -20,7 +20,10 @@ class SopsTest {
     @Test
     fun `ciphertext collapses and the secret marker is worded by the app`() {
         assertEquals("password: ENC[…]\nname: web", collapseSopsValues("password: ENC[AES256_GCM,data:abc=,iv:x,tag:y,type:str]\nname: web"))
+        // An ENC[ in ordinary text does not swallow the lines after it.
+        assertEquals("prefix = \"ENC[\"\nnext line ]", collapseSopsValues("prefix = \"ENC[\"\nnext line ]"))
         assertTrue(SopsWarning(warn = true, what = "Secret").isSecret)
+        assertTrue(SopsWarning(warn = true, what = "TalosSecrets").isTalosBundle)
         assertEquals("cluster.secret", SopsWarning(warn = true, what = "cluster.secret").what)
     }
 }

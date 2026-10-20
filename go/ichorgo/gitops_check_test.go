@@ -222,3 +222,15 @@ func TestEditCheckDemo(t *testing.T) {
 		t.Fatalf("demo %+v", c)
 	}
 }
+
+func TestEditCheckBuildPanic(t *testing.T) {
+	b, err := buildBounded(func() buildBoth { panic("boom") })
+	if err != nil || b.afterErr == nil || b.beforeErr != nil {
+		t.Fatalf("panic %+v %v", b, err)
+	}
+
+	// The slot is free again.
+	if _, err := buildBounded(func() buildBoth { return buildBoth{} }); err != nil {
+		t.Fatal(err)
+	}
+}

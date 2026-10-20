@@ -50,11 +50,15 @@ data class SopsRule(
 /** An edit that would commit a clear-text secret ([what]) where [rule] encrypts. */
 @Serializable
 data class SopsWarning(val warn: Boolean = false, val what: String = "", val rule: SopsRule = SopsRule()) {
-    /** [what] is a Kubernetes Secret (the apps word it), else a Talos key shown as is. */
+    /** [what] is a Kubernetes Secret (the apps word it). */
     val isSecret: Boolean get() = what == "Secret"
+
+    /** [what] is a Talos secrets bundle (the apps word it); else a Talos key shown as is. */
+    val isTalosBundle: Boolean get() = what == "TalosSecrets"
 }
 
-private val encValue = Regex("""ENC\[[^\]]*]""")
+// One line at most: an ENC[ in ordinary text must not swallow the lines after it.
+private val encValue = Regex("""ENC\[[^\]\n]*]""")
 
 /** [content] with every SOPS-encrypted value shown as ENC[…]: the ciphertext tells nothing. */
 fun collapseSopsValues(content: String): String = encValue.replace(content, "ENC[…]")

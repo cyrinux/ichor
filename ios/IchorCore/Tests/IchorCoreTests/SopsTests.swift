@@ -17,12 +17,16 @@ final class SopsTests: XCTestCase {
     func testCiphertextCollapsesAndTheWarningDecodes() throws {
         XCTAssertEqual(collapseSopsValues("password: ENC[AES256_GCM,data:abc=,iv:x,tag:y,type:str]\nname: web"), "password: ENC[…]\nname: web")
 
-        let check = try JSONDecoder().decode(GitOpsEditCheck.self, from: Data(#"""
-        {"kind":"kustomize","ok":true,"sops":{"warn":true,"what":"Secret","rule":{"matched":true,"pathRegex":"kubernetes/.*secret.*","recipients":[{"type":"age","id":"age1x"}]}}}
+        // An ENC[ in ordinary text does not swallow the lines after it.
+        XCTAssertEqual(collapseSopsValues("prefix = \"ENC[\"\nnext line ]"), "prefix = \"ENC[\"\nnext line ]")
+
+        let warning = try JSONDecoder().decode(SopsWarning.self, from: Data(#"""
+        {"warn":true,"what":"Secret","rule":{"matched":true,"pathRegex":"kubernetes/.*secret.*","recipients":[{"type":"age","id":"age1x"}]}}
         """#.utf8))
-        XCTAssertEqual(check.sops?.warn, true)
-        XCTAssertEqual(check.sops?.isSecret, true)
-        XCTAssertEqual(check.sops?.rule?.pathRegex, "kubernetes/.*secret.*")
+        XCTAssertTrue(warning.warn)
+        XCTAssertTrue(warning.isSecret)
+        XCTAssertEqual(warning.rule?.pathRegex, "kubernetes/.*secret.*")
+        XCTAssertTrue(try JSONDecoder().decode(SopsWarning.self, from: Data(#"{"warn":true,"what":"TalosSecrets"}"#.utf8)).isTalosBundle)
     }
 
     func testTreeEntriesCarryTheFlag() throws {

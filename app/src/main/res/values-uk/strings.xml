@@ -5922,4 +5922,5 @@
     <string name="sops_confirm_title">Закомітити секрет відкритим текстом?</string>
     <string name="sops_confirm_text">%1$s буде закомічено відкритим текстом за шляхом, який шифрує правило %2$s. Спершу зашифруйте його sops на комп’ютері, якщо це не навмисно.</string>
     <string name="sops_what_secret">Secret Kubernetes</string>
+    <string name="sops_what_talos">секрети Talos</string>
 </resources>

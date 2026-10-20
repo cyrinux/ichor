@@ -5650,4 +5650,5 @@
     <string name="sops_confirm_title">Ein Geheimnis im Klartext committen?</string>
     <string name="sops_confirm_text">%1$s würde im Klartext unter einem Pfad committet, den die Regel %2$s verschlüsselt. Verschlüsseln Sie es zuerst mit sops an einem Computer, außer es ist gewollt.</string>
     <string name="sops_what_secret">ein Kubernetes-Secret</string>
+    <string name="sops_what_talos">Talos-Secrets</string>
 </resources>

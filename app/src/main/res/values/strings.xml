@@ -5664,4 +5664,5 @@
     <string name="sops_confirm_title">Commit a clear-text secret?</string>
     <string name="sops_confirm_text">%1$s would be committed in clear text at a path the rule %2$s encrypts. Encrypt it with sops on a computer first, unless you mean it.</string>
     <string name="sops_what_secret">a Kubernetes Secret</string>
+    <string name="sops_what_talos">Talos secrets</string>
 </resources>

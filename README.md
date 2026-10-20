@@ -168,8 +168,9 @@ tour** shows it again.
   encrypted, how many values are, and any value its own rules say should be encrypted but is in
   clear (a half-encrypted file). The ciphertext shows as `ENC[…]`, and Edit and Quick edit give
   way to editing it with sops on a computer. When an edit would put a Kubernetes Secret or a
-  Talos secret in clear text at a path the repository's `.sops.yaml` encrypts, the review says
-  which rule and keys, and asks once more before the pull request.
+  Talos secret in clear text at a path the repository's `.sops.yaml` (the one at its root, read
+  at the branch the request goes to) encrypts, the review says which rule and keys, and asks
+  once more before the pull request.
 - **Find in repository:** the search in a source browser (an Argo CD or Flux app's source, or
   the cluster repository) lists every line of the whole repository that holds the text, by
   file, and opens the file at that line. It downloads the repository once per commit as one

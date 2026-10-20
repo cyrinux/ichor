@@ -67,10 +67,8 @@ type gitOpsEditCheck struct {
 	Diff      gitOpsDiff `json:"diff"`
 	Unchanged int        `json:"unchanged"`
 	// Broken: the build fails at the commit already, the same way: not the edit's doing.
-	Broken bool `json:"broken"`
-	// Sops warns when the edit would commit a clear-text secret where .sops.yaml encrypts.
-	Sops sopsWarning `json:"sops"`
-	Note string      `json:"note,omitempty"`
+	Broken bool   `json:"broken"`
+	Note   string `json:"note,omitempty"`
 }
 
 // GitOpsEditCheck checks an edit of the file at path (from the repository root) of repoURL at
@@ -105,12 +103,6 @@ func GitOpsEditCheck(hostJSON, repoURL, ref, filePath, content, fluxJSON string)
 
 	res := checkEdit(snap.files, p, content, spec)
 	res.SHA = snap.sha
-	rules, ok := snap.files[".sops.yaml"]
-	if !ok {
-		rules = snap.files[".sops.yml"]
-	}
-
-	res.Sops = sopsEditWarning(string(rules), p, content)
 
 	return toJSON(res)
 }
@@ -311,8 +303,8 @@ func buildBounded(build func() buildBoth) (buildBoth, error) {
 
 		defer func() {
 			if r := recover(); r != nil {
-				err := fmt.Errorf("the build failed: %v", r)
-				b = buildBoth{beforeErr: err, afterErr: err}
+				// The edited build's: the commit's is not known to fail the same way.
+				b = buildBoth{afterErr: fmt.Errorf("the build failed: %v", r)}
 			}
 
 			// Free before answering: the caller may start the next check as soon as it has this one.

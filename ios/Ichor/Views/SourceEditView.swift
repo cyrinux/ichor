@@ -236,10 +236,17 @@ private struct SourceEditReview: View {
     @State private var proposing = false
     /// A clear-text secret where .sops.yaml encrypts: asked once more before the pull request.
     @State private var confirmingSops = false
+    /// The .sops.yaml read at the branch: a quick call of its own, Continue waits for it.
+    @State private var sopsCheck: LoadState<SopsWarning>?
 
     private var sopsWarning: SopsWarning? {
-        if case .loaded(let c, _, _) = check, let w = c.sops, w.warn { return w }
+        if case .loaded(let w, _, _) = sopsCheck, w.warn { return w }
         return nil
+    }
+
+    private var sopsPending: Bool {
+        if case .loading = sopsCheck { return true }
+        return false
     }
 
     var body: some View {
@@ -264,6 +271,9 @@ private struct SourceEditReview: View {
                             Text(verbatim: "−\(counts.removed)").foregroundStyle(.statusBad)
                         }
                         .font(.caption.monospacedDigit().weight(.semibold))
+                    }
+                    if let sopsWarning {
+                        Section { SopsWarningText(warning: sopsWarning) }
                     }
                     EditCheckSection(state: check) { Task { await runCheck() } }
                 } else {
@@ -298,6 +308,7 @@ private struct SourceEditReview: View {
             } label: {
                 Text("Continue").frame(maxWidth: .infinity)
             }
+            .disabled(sopsPending)
             .confirmationDialog("Commit a clear-text secret?", isPresented: $confirmingSops, titleVisibility: .visible) {
                 Button("Continue", role: .destructive) { proposing = true }
                 Button("Cancel", role: .cancel) {}
@@ -319,7 +330,22 @@ private struct SourceEditReview: View {
         let path = path
         state = .loading
         state = await .from { try await TalosClient.textDiff(before: before, after: after, name: path) }
+        async let sops: Void = runSops()
         await runCheck()
+        await sops
+    }
+
+    /// Reads .sops.yaml at the branch: whether the edit commits a clear-text secret where it encrypts.
+    private func runSops() async {
+        guard edited != base.file.content, let client = model.client else {
+            sopsCheck = nil
+            return
+        }
+        sopsCheck = .loading
+        sopsCheck = await .from {
+            try await client.sopsEditWarning(source, ref: base.ref, path: path, content: edited,
+                                             hosts: hosts, demo: model.activeSummary?.demo == true)
+        }
     }
 
     /// Builds the edit's kustomization on the repository snapshot: whether it still builds and

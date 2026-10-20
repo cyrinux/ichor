@@ -34,6 +34,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.EDIT_CHECK_PLAIN
 import name.levis.ichor.model.EditCheckError
 import name.levis.ichor.model.GitOpsEditCheck
+import name.levis.ichor.model.SopsWarning
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
@@ -72,7 +73,6 @@ fun EditCheckSection(check: UiState<GitOpsEditCheck>, onRetry: () -> Unit, modif
 private fun CheckResult(c: GitOpsEditCheck) {
     val colors = LocalStatusColors.current
     val live = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
-    if (c.sops.warn) SopsWarningText(c, live)
     when {
         c.broken -> {
             Status(Icons.Outlined.Info, stringResource(R.string.gitops_check_already_broken), colors.warn, live)
@@ -102,15 +102,22 @@ private fun CheckResult(c: GitOpsEditCheck) {
 
 /** The edit commits a clear-text secret where the repository's .sops.yaml encrypts. */
 @Composable
-private fun SopsWarningText(c: GitOpsEditCheck, modifier: Modifier = Modifier) {
-    val recipients = c.sops.rule.recipients.joinToString { "${it.type} ${it.short}" }
-    val what = if (c.sops.isSecret) stringResource(R.string.sops_what_secret) else c.sops.what
+fun SopsWarningText(w: SopsWarning, modifier: Modifier = Modifier) {
+    val recipients = w.rule.recipients.joinToString { "${it.type} ${it.short}" }
     Text(
-        stringResource(R.string.sops_clear_warning, what, c.sops.rule.pathRegex, recipients.ifEmpty { "-" }),
+        stringResource(R.string.sops_clear_warning, sopsWhat(w), w.rule.pathRegex, recipients.ifEmpty { "-" }),
         color = LocalStatusColors.current.bad,
         style = MaterialTheme.typography.bodyMedium,
-        modifier = modifier,
+        modifier = modifier.semantics { liveRegion = LiveRegionMode.Polite },
     )
+}
+
+/** What a warning names, worded: a Kubernetes Secret, Talos secrets, or the Talos key as is. */
+@Composable
+fun sopsWhat(w: SopsWarning): String = when {
+    w.isSecret -> stringResource(R.string.sops_what_secret)
+    w.isTalosBundle -> stringResource(R.string.sops_what_talos)
+    else -> w.what
 }
 
 @Composable

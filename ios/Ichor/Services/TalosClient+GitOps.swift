@@ -123,6 +123,21 @@ extension TalosClient {
         return try await Self.json { IchorgoGitOpsEditCheck(json, repo, ref, path, content, fluxSpec, $0) }
     }
 
+    /// Whether content, proposed at path of source on ref, would commit a clear-text secret where
+    /// the repository's .sops.yaml (read there; none is no rules) encrypts.
+    func sopsEditWarning(_ source: GitSource, ref: String, path: String, content: String,
+                         hosts: GitHostStore, demo: Bool) async throws -> SopsWarning {
+        var rules = ""
+        for name in [".sops.yaml", ".sops.yml"] {
+            if let file = try? await forgeFile(source, path: name, ref: ref, hosts: hosts, demo: demo) {
+                rules = file.content
+                break
+            }
+        }
+        let sopsYAML = rules
+        return try await Self.json { IchorgoSopsEditWarning(sopsYAML, path, content, $0) }
+    }
+
     /// content's SOPS metadata (who it is encrypted for, its clear keys), never its values (pure).
     static func sopsInspect(_ content: String) async throws -> SopsInfo {
         try await json { IchorgoSopsInspect(content, $0) }

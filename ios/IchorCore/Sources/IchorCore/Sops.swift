@@ -84,9 +84,12 @@ public struct SopsWarning: Decodable, Sendable {
     }
 
     public var isSecret: Bool { what == "Secret" }
+    /// A Talos secrets bundle (the app words it); else what is a Talos key shown as is.
+    public var isTalosBundle: Bool { what == "TalosSecrets" }
 }
 
-/// content with every SOPS-encrypted value shown as ENC[…]: the ciphertext tells nothing.
+/// content with every SOPS-encrypted value shown as ENC[…]: the ciphertext tells nothing. One
+/// line at most: an ENC[ in ordinary text must not swallow the lines after it.
 public func collapseSopsValues(_ content: String) -> String {
-    content.replacingOccurrences(of: #"ENC\[[^\]]*\]"#, with: "ENC[…]", options: .regularExpression)
+    content.replacingOccurrences(of: #"ENC\[[^\]\n]*\]"#, with: "ENC[…]", options: .regularExpression)
 }

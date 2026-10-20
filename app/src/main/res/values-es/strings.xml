@@ -5659,4 +5659,5 @@
     <string name="sops_confirm_title">¿Confirmar un secreto en texto claro?</string>
     <string name="sops_confirm_text">%1$s se confirmaría en texto claro en una ruta que la regla %2$s cifra. Cífrelo antes con sops en un ordenador, salvo que sea intencionado.</string>
     <string name="sops_what_secret">un Secret de Kubernetes</string>
+    <string name="sops_what_talos">secretos de Talos</string>
 </resources>

@@ -46,7 +46,7 @@ func TestSopsInspect(t *testing.T) {
 		t.Fatalf("dotenv %+v", info)
 	}
 
-	binary := `{"data": "` + sopsTestEnc + `", "sops": {"age": [{"recipient": "` + sopsTestAge + `"}]}}`
+	binary := `{"data": "` + sopsTestEnc + `", "sops": {"mac": "x", "age": [{"recipient": "` + sopsTestAge + `"}]}}`
 	if info = inspectSops(binary); !info.Encrypted || info.Format != sopsFormatBinary {
 		t.Fatalf("binary %+v", info)
 	}
@@ -145,5 +145,62 @@ func TestSopsTreeAndDemo(t *testing.T) {
 	info := inspectSops(demoGitForgeFiles["talos/talsecret.sops.yaml"])
 	if !info.Encrypted || len(info.Recipients) != 2 || info.EncryptedKeys != 3 || len(info.ClearKeys) != 0 {
 		t.Errorf("demo %+v", info)
+	}
+}
+
+func TestSopsReviewCases(t *testing.T) {
+	// Comment regexes are not read: no clear key is named rather than false ones.
+	if info := inspectSops("a: clear\n# sops:enc\nb: " + sopsTestEnc + "\n" + sopsTestMeta + "    encrypted_comment_regex: sops:enc\n"); !info.Encrypted || len(info.ClearKeys) != 0 {
+		t.Errorf("comment regex %+v", info)
+	}
+
+	// Number keys are walked like any other.
+	if info := inspectSops("ports:\n    80: " + sopsTestEnc + "\n" + sopsTestMeta); info.EncryptedKeys != 1 || len(info.ClearKeys) != 0 {
+		t.Errorf("number keys %+v", info)
+	}
+
+	// List items keep their parent's key, as SOPS walks them: a regex on digits matches none.
+	if info := inspectSops("hosts:\n    - a\n    - b\n" + sopsTestMeta + "    encrypted_regex: ^[0-9]\n"); len(info.ClearKeys) != 0 {
+		t.Errorf("list indices %+v", info)
+	}
+
+	// A dotenv file's own rules.
+	dotenv := "PUBLIC=hello\nTOKEN=" + sopsTestEnc + "\nsops_encrypted_regex=^TOKEN$\nsops_mac=x\nsops_version=3.10.2\n"
+	if info := inspectSops(dotenv); !info.Encrypted || info.EncryptedKeys != 1 || len(info.ClearKeys) != 0 {
+		t.Errorf("dotenv rules %+v", info)
+	}
+
+	// A values file's own sops: section, a dotenv's sops_enabled: not encrypted.
+	for _, plain := range []string{"sops:\n  enabled: true\nimage: web\n", "sops_enabled=true\nKEY=v\n"} {
+		if info := inspectSops(plain); info.Encrypted {
+			t.Errorf("%q: %+v", plain, info)
+		}
+	}
+
+	// The creation rules are clear text: no lock.
+	if isSOPSPath(".sops.yaml") || isSOPSPath("clusters/lab/.sops.yml") || !isSOPSPath("a/secret.sops.yaml") {
+		t.Error("isSOPSPath and the config file")
+	}
+}
+
+func TestSopsWarningReviewCases(t *testing.T) {
+	path := "kubernetes/apps/web/secret.yaml"
+	secret := "apiVersion: v1\nkind: Secret\nmetadata:\n  name: web\nstringData:\n  password: hunter2\n"
+	list := "apiVersion: v1\nkind: List\nitems:\n  - apiVersion: v1\n    kind: Secret\n    metadata:\n      name: a\n    data:\n      k: dg==\n"
+
+	for _, c := range []struct{ content, want string }{
+		{list, sopsWhatSecret},
+		{secret + "---\n" + secret + sopsTestMeta, sopsWhatSecret},
+		{"apiVersion: v1\nkind: Secret\nmetadata:\n  name: web\ndata: {}\n", ""},
+		{"secrets:\n  bootstraptoken: abc.def\ncerts:\n  etcd:\n    crt: x\n", sopsWhatTalos},
+	} {
+		if w := sopsEditWarning(sopsTestRules, path, c.content); w.What != c.want || w.Warn != (c.want != "") {
+			t.Errorf("%q: %+v, want %q", c.content, w, c.want)
+		}
+	}
+
+	out, err := SopsEditWarning(sopsTestRules, path, secret)
+	if err != nil || !strings.Contains(out, `"warn":true`) {
+		t.Errorf("exported %s %v", out, err)
 	}
 }

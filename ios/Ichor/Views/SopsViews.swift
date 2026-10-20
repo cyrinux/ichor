@@ -52,5 +52,7 @@ struct SopsWarningText: View {
 
 /// What a warning names, worded: a Kubernetes Secret, or the Talos key as is.
 func sopsWhat(_ warning: SopsWarning) -> String {
-    warning.isSecret ? String(localized: "a Kubernetes Secret") : warning.what
+    if warning.isSecret { return String(localized: "a Kubernetes Secret") }
+    if warning.isTalosBundle { return String(localized: "Talos secrets") }
+    return warning.what
 }
