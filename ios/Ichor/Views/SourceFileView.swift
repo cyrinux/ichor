@@ -17,13 +17,17 @@ struct SourceFileView: View {
     /// The line to scroll to and highlight (1-based), nil for the top: the metadata.name of the
     /// resource a diff opened the file for.
     let line: Int?
+    /// False when opened from a node's machine config (Compare with Git): no Try on a node there,
+    /// it would stack a second editor.
+    let allowTry: Bool
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(source: GitSource, path: String, app: GitOpsAppRef, line: Int? = nil) {
+    init(source: GitSource, path: String, app: GitOpsAppRef, line: Int? = nil, allowTry: Bool = true) {
         self.source = source
         self.path = path
         self.app = app
         self.line = line
+        self.allowTry = allowTry
     }
 
     @Environment(AppModel.self) private var model
@@ -231,7 +235,7 @@ struct SourceFileView: View {
             let saved = source.proposalHost.map { hosts.hasToken($0) } ?? false
             editBlock = sourceEditBlock(source, demo: demo, hasToken: saved)
             quickTargets = await Self.quickTargets(of: file)
-            talosPatch = model.activeIsKube ? nil : await Self.talosPatch(of: file, path: path)
+            talosPatch = model.activeIsKube || !allowTry ? nil : await Self.talosPatch(of: file, path: path)
             state = .loaded(SourceFileText(file: file), at: Date())
         } catch let missing as GitHostMissing {
             missingHost = missing.host

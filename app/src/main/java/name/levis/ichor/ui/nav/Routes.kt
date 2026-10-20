@@ -166,8 +166,10 @@ internal object Routes {
     fun repoSource(dir: String = "") = "repo-source?dir=${Uri.encode(dir)}"
 
     /** One file of the active cluster's repository, at the branch head; [line] as in [GITOPS_FILE]. */
-    const val REPO_FILE = "repo-file?path={path}&line={line}"
-    fun repoFile(path: String, line: Int = 0) = "repo-file?path=${Uri.encode(path)}&line=$line"
+    const val REPO_FILE = "repo-file?path={path}&line={line}&noTry={noTry}"
+
+    /** [noTry]: opened from a node's machine config (Compare with Git), so no Try on a node there. */
+    fun repoFile(path: String, line: Int = 0, noTry: Boolean = false) = "repo-file?path=${Uri.encode(path)}&line=$line&noTry=$noTry"
 
     /** The editor of the file [path] of the active cluster's repository; [quick] as in [GITOPS_EDIT]. */
     const val REPO_EDIT = "repo-edit?path={path}&quick={quick}"

@@ -21,9 +21,15 @@ const (
 	talosPatchKindConfig    = "config"    // a whole machine config, with its secrets
 
 	talosLegacyDoc = "v1alpha1"
+	// talosNoteLine caps a loader error kept as a note: its first line, the decoder's dump cut.
+	talosNoteLine = 200
 	// talosOneNode ends the reasons a patch is tried on one node at a time.
 	talosOneNode = ": try it on one node at a time"
 )
+
+// talosLegacyKeys are the top-level keys of a v1alpha1 document: any other one (a Helm values
+// file's) makes a YAML with a cluster: or machine: section something else than a Talos patch.
+var talosLegacyKeys = map[string]bool{"version": true, "debug": true, "persist": true, "machine": true, "cluster": true}
 
 type talosPatchDoc struct {
 	Kind     string `json:"kind"` // v1alpha1 for machine/cluster sections
@@ -103,7 +109,12 @@ func detectTalosPatch(content []byte) talosPatchInfo {
 		info.Note = "holds a ${...} substitution the app does not resolve (talenv)"
 	default:
 		if _, err := configpatcher.LoadPatch(content); err != nil {
-			info.Note = "Talos cannot load it as a patch: " + err.Error()
+			first, _, _ := strings.Cut(err.Error(), "\n")
+			if len(first) > talosNoteLine {
+				first = first[:talosNoteLine] + "…"
+			}
+
+			info.Note = "Talos cannot load it as a patch: " + first
 		} else {
 			info.Tryable = true
 		}
@@ -128,7 +139,7 @@ func allTalosDocs(docs []any) bool {
 
 			switch {
 			case api == talosLegacyDoc && kind != "":
-			case api == "" && kind == "" && (v["machine"] != nil || v["cluster"] != nil):
+			case api == "" && kind == "" && (v["machine"] != nil || v["cluster"] != nil) && onlyLegacyKeys(v):
 			default:
 				return false
 			}
@@ -144,6 +155,16 @@ func allTalosDocs(docs []any) bool {
 	}
 
 	return seen
+}
+
+func onlyLegacyKeys(m map[string]any) bool {
+	for k := range m {
+		if !talosLegacyKeys[k] {
+			return false
+		}
+	}
+
+	return true
 }
 
 func patchDoc(m map[string]any) talosPatchDoc {
@@ -246,6 +267,13 @@ func talosPatchEdits(draftYAML string, patchYAML []byte) (snippetResult, error) 
 		return snippetResult{Reason: "JSON patch operations" + talosOneNode}, nil
 	}
 
+	// A node's own file: replayed on other nodes it would give them all its hostname.
+	for _, doc := range info.Documents {
+		if doc.Hostname != "" {
+			return snippetResult{Reason: "sets the hostname " + doc.Hostname + talosOneNode}, nil
+		}
+	}
+
 	d, err := parseDraftDocs(draftYAML)
 	if err != nil {
 		return snippetResult{}, err
@@ -336,6 +364,12 @@ func leafEdits(doc int, path []string, m map[string]any, skip map[string]bool) (
 		case []any:
 			return nil, "sets the list " + strings.Join(at, ".") + ", which Talos merges by its own rules" + talosOneNode, nil
 		default:
+			// Talos's merge leaves the config as it is for these (an empty key, "", 0): a put
+			// would wipe the section or the value instead.
+			if mergeSkips(v) {
+				continue
+			}
+
 			edit, err := put(doc, at, v)
 			if err != nil {
 				return nil, "", err
@@ -346,4 +380,25 @@ func leafEdits(doc int, path []string, m map[string]any, skip map[string]bool) (
 	}
 
 	return edits, "", nil
+}
+
+// mergeSkips tells a patch value Talos's strategic merge does not apply: null, "" and a zero
+// number (a bool is always merged).
+func mergeSkips(v any) bool {
+	switch n := v.(type) {
+	case nil:
+		return true
+	case string:
+		return n == ""
+	case int:
+		return n == 0
+	case int64:
+		return n == 0
+	case uint64:
+		return n == 0
+	case float64:
+		return n == 0
+	}
+
+	return false
 }

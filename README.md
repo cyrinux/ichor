@@ -150,7 +150,7 @@ tour** shows it again.
   `HostnameConfig`) shows **Try on a node…**: pick the node (the one the patch sets the hostname
   of comes first) and its machine config opens with the patch applied, on the usual review,
   try (it reverts by itself unless kept), apply, staged and reboot. A patch that only sets
-  values can be taken to other nodes from the review; one with lists (Talos replaces some
+  values can be taken to other nodes from the review; one that sets a hostname, with lists (Talos replaces some
   wholesale and appends to others, which the diff shows), `$patch` directives, JSON patch
   operations or a new document is tried node by node. A whole machine config, a patch setting a
   secret or holding a talenv `${...}` cannot be tried and says why. The file in Git is not

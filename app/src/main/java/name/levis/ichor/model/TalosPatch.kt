@@ -38,8 +38,8 @@ data class TalosPatchDraft(val draft: String = "", val same: Boolean = false, va
  */
 data class PatchPrefill(val content: String, val from: String)
 
-/** A file the size of a patch: larger ones are not carried through navigation. */
-const val MAX_PATCH_BYTES = 32 * 1024
+/** A file the size of a patch, in UTF-8 bytes: larger ones are not carried through navigation. */
+const val MAX_PATCH_BYTES = 16 * 1024
 
 /**
  * The node a patch is meant for among [nodes], by the hostname it sets (an FQDN matching its

@@ -105,6 +105,6 @@ public struct PatchRequest: Hashable, Sendable {
         self.from = from
     }
 
-    /// A file the size of a patch: larger ones are not offered.
-    public static let maxBytes = 32 * 1024
+    /// A file the size of a patch, in UTF-8 bytes: larger ones are not offered.
+    public static let maxBytes = 16 * 1024
 }

@@ -253,7 +253,7 @@ class SourceFileViewModel(private val gitOps: GitOpsRepository, private val talo
                 } else {
                     null
                 }
-                val patch = if (talosCluster && !file.truncated && isYamlPath(path) && file.content.length <= MAX_PATCH_BYTES) {
+                val patch = if (talosCluster && !file.truncated && isYamlPath(path) && file.content.toByteArray().size <= MAX_PATCH_BYTES) {
                     cancellableCatching { talos.talosPatchDetect(file.content) }.getOrNull()?.takeIf { it.talos }
                 } else {
                     null

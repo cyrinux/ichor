@@ -18,6 +18,7 @@ func TestTalosPatchDetect(t *testing.T) {
 		{name: "kubernetes", content: "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: x\n"},
 		{name: "crd v1alpha1 group", content: "apiVersion: example.test/v1alpha1\nkind: Thing\n"},
 		{name: "talconfig", content: "clusterName: lab\nnodes:\n  - hostname: cp-1\n"},
+		{name: "helm values", content: "cluster:\n  name: lab\n  id: 1\nkubeProxyReplacement: true\n"},
 		{name: "mixed", content: "machine:\n  type: worker\n---\napiVersion: v1\nkind: Secret\n"},
 		{name: "not yaml", content: "machine: [unclosed\n"},
 		{name: "patch", content: "machine:\n  kubelet:\n    extraArgs:\n      max-pods: \"250\"\n", talos: true, tryable: true, kind: talosPatchKindPatch},
@@ -146,13 +147,16 @@ func TestTalosPatchEditsRefusals(t *testing.T) {
 	draft := "version: v1alpha1\nmachine:\n  type: worker\n---\napiVersion: v1alpha1\nkind: HostnameConfig\nauto: stable\n"
 
 	for patch, want := range map[string]string{
-		"machine:\n  certSANs:\n    - a.example.test\n":                               "the list machine.certSANs",
-		"machine:\n  network:\n    $patch: delete\n":                                  "$patch directive",
-		"- op: remove\n  path: /machine/network\n":                                    "JSON patch",
-		"apiVersion: v1alpha1\nkind: LinkConfig\nname: eth0\nmtu: 9000\n":             "adds a LinkConfig eth0 document",
-		"apiVersion: v1\nkind: ConfigMap\n":                                           "not a Talos patch",
-		"machine:\n  network: {}\n":                                                   "sets nothing",
-		"apiVersion: v1alpha1\nkind: HostnameConfig\nhostname: cp-1\nauto: \"off\"\n": "",
+		"machine:\n  certSANs:\n    - a.example.test\n":                   "the list machine.certSANs",
+		"machine:\n  network:\n    $patch: delete\n":                      "$patch directive",
+		"- op: remove\n  path: /machine/network\n":                        "JSON patch",
+		"apiVersion: v1alpha1\nkind: LinkConfig\nname: eth0\nmtu: 9000\n": "adds a LinkConfig eth0 document",
+		"apiVersion: v1\nkind: ConfigMap\n":                               "not a Talos patch",
+		"machine:\n  network: {}\n":                                       "sets nothing",
+		"apiVersion: v1alpha1\nkind: HostnameConfig\nhostname: cp-1\n":    "sets the hostname cp-1",
+		"machine:\n  network:\n    hostname: cp-1\n":                      "sets the hostname cp-1",
+		"machine:\n  kubelet:\n  install:\n    image: \"\"\n":             "sets nothing",
+		"apiVersion: v1alpha1\nkind: HostnameConfig\nauto: \"off\"\n":     "",
 	} {
 		res, err := talosPatchEdits(draft, []byte(patch))
 		if err != nil {
@@ -160,7 +164,7 @@ func TestTalosPatchEditsRefusals(t *testing.T) {
 		}
 
 		if want == "" {
-			if !res.Fixable || len(res.Edits) != 2 || res.Edits[0].Doc != 1 {
+			if !res.Fixable || len(res.Edits) != 1 || res.Edits[0].Doc != 1 {
 				t.Errorf("%q: %+v", patch, res)
 			}
 

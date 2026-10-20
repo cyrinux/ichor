@@ -148,7 +148,7 @@ internal fun NavGraphBuilder.talosGraph(nav: NavHostController, app: TalosApp, k
             fix = fix,
             snippet = snippet,
             patch = patch,
-            onRepoFile = { path, line -> nav.navigate(Routes.repoFile(path, line)) },
+            onRepoFile = { path, line -> nav.navigate(Routes.repoFile(path, line, noTry = true)) },
             onRepoEdit = { path, quick -> nav.navigate(Routes.repoEdit(path, quick)) },
         )
     }
