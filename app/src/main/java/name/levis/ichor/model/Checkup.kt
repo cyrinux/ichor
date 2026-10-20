@@ -118,12 +118,6 @@ object CheckupKind {
     const val SIDERO_SERVER_OFF = "sideroServerOff"
     /** A Sidero server not accepted (extra: its hostname); name "" with count: that many more. */
     const val SIDERO_SERVER_UNACCEPTED = "sideroServerUnaccepted"
-    /** A SealedSecret the controller could not decrypt (reason, message: its Synced condition's). */
-    const val SEALED_SECRET_NOT_SYNCED = "sealedSecretNotSynced"
-    /** The Sealed Secrets controller has no key: nothing unseals (extra: its namespace). */
-    const val SEALING_KEY_MISSING = "sealingKeyMissing"
-    /** A sealing key the controller keeps out of use (namespace, name: the key's Secret). */
-    const val SEALING_KEY_COMPROMISED = "sealingKeyCompromised"
     /** A Flux Kustomization that cannot decrypt its SOPS files (extra: its decryption secretRef, "" when not configured; reason, message: its Ready condition's). */
     const val SOPS_DECRYPTION_FAILED = "sopsDecryptionFailed"
     /** A certificate a route's host serves (read by TLS handshake) that expired (namespace, name: its Secret; extra: the route; reason: the host). */
@@ -274,13 +268,6 @@ fun CheckupReport.count(level: CheckupSeverity): Int = sections.sumOf { s -> s.f
 val CheckupRelease.inTrouble: Boolean get() = status == "failed" || status.startsWith("pending-")
 
 /**
- * Checkup finding kinds whose problem the data services alert already raises (monitor
- * dataIssuesOf): shown on the checkup screen, never notified a second time. A SealedSecret that
- * failed to unseal and no active sealing key alert from the Sealed Secrets section.
- */
-val DATA_SERVICE_ALERTED_KINDS = setOf(CheckupKind.SEALED_SECRET_NOT_SYNCED, CheckupKind.SEALING_KEY_MISSING)
-
-/**
  * Checkup finding kinds whose problem the GitOps alert already raises when it is on (monitor
  * gitopsIssuesWithGaps): a Kustomization that cannot decrypt its SOPS files is Ready=False, a
  * Flux app the GitOps track notifies about.
@@ -290,8 +277,7 @@ val GITOPS_ALERTED_KINDS = setOf(CheckupKind.SOPS_DECRYPTION_FAILED)
 /**
  * The findings worth a background alert, keyed "section|kind|subject" and valued by severity
  * ("critical" or "warning"): everything but the notes and the events, which only describe, and
- * the kinds the data services already alert on ([DATA_SERVICE_ALERTED_KINDS]), and, when the
- * GitOps apps are watched too ([gitopsWatched]), the kinds that track already alerts on
+ * when the GitOps apps are watched too ([gitopsWatched]), the kinds that track already alerts on
  * ([GITOPS_ALERTED_KINDS]). A plugin finding's subject is [pluginAlertSubject]; with
  * [pluginsWatched] (the plugin findings track reads them on its own, with their words and a
  * link to the plugin) the plugin findings are left to it. An imported plugin's finding alerts
@@ -303,7 +289,6 @@ fun CheckupReport.alertIssues(
     importedPluginsWatched: Boolean = false,
 ): Map<String, String> = buildMap {
     val skipped = buildSet {
-        addAll(DATA_SERVICE_ALERTED_KINDS)
         if (gitopsWatched) addAll(GITOPS_ALERTED_KINDS)
         if (pluginsWatched) add(CheckupKind.PLUGIN)
     }

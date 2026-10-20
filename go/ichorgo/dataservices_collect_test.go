@@ -151,25 +151,34 @@ func TestRenderDataServicesCapsTheList(t *testing.T) {
 }
 
 func TestRenderDataServicesKeepsTheNodesOfALongLine(t *testing.T) {
-	ceph := &cephStatus{Clusters: []cephCluster{{
-		Namespace: "rook-ceph", Name: "rook-ceph", CephHealth: "HEALTH_WARN", Health: healthWarning,
-		Checks: []cephCheck{{Name: "PG_DEGRADED", Message: strings.Repeat("degraded data redundancy ", 20)}}, NotReadyNodes: []string{"worker-2"},
-	}}}
+	volumes := []longhornVolume{{
+		Name: "pvc-7f3a", Health: healthWarning, State: "attached", Robustness: "degraded",
+		ScheduleError: strings.Repeat("replica scheduling failed ", 20), ReplicaNodes: []string{"worker-2"},
+	}}
 
 	var b strings.Builder
-	renderDataServices(&b, &dataServicesState{dataServices: dataServices{Ceph: ceph}})
+	renderDataServices(&b, &dataServicesState{dataServices: dataServices{Longhorn: &longhornStatus{Volumes: volumes}}})
+
+	found := false
 
 	for _, line := range strings.Split(b.String(), "\n") {
-		if strings.Contains(line, "rook-ceph/rook-ceph") && (!strings.HasSuffix(line, "…; nodes worker-2") || len(line) > diagnosisMaxLineLen+8) {
-			t.Errorf("line %q", line)
+		if strings.Contains(line, "pvc-7f3a [warning]") {
+			found = true
+
+			if !strings.HasSuffix(line, "…; nodes worker-2") || len(line) > diagnosisMaxLineLen+8 {
+				t.Errorf("line %q", line)
+			}
 		}
+	}
+
+	if !found {
+		t.Errorf("no volume line:\n%s", b.String())
 	}
 }
 
 func TestRenderDataServicesStatesOutsideTheLists(t *testing.T) {
 	ds := dataServices{
-		SealedSecrets: &sealedSecretsStatus{Health: healthCritical, Reasons: []string{"noKeys"}},
-		Garage:        &garageStatus{Keys: []garageOpKey{{Namespace: "storage", Name: "app-key", Health: healthCritical, Reasons: []string{"notReady"}}}},
+		Garage: &garageStatus{Keys: []garageOpKey{{Namespace: "storage", Name: "app-key", Health: healthCritical, Reasons: []string{"notReady"}}}},
 		Velero: &veleroStatus{Adhoc: []veleroAdhoc{{Namespace: "velero", Health: healthWarning,
 			veleroBackup: veleroBackup{Name: "before-upgrade", Phase: "Failed", FailureReason: "timed out"}}}},
 		ExternalDNS: &externalDNSStatus{Records: []externalDNSRecord{{DNSName: "app.example.org", RecordType: "A", Health: healthWarning,
@@ -182,7 +191,6 @@ func TestRenderDataServicesStatesOutsideTheLists(t *testing.T) {
 	out := b.String()
 
 	for _, want := range []string{
-		"    controller [critical]: noKeys\n",
 		"    GarageKey storage/app-key [critical]: notReady\n",
 		"    backup velero/before-upgrade [warning]: Failed; timed out\n",
 		"    A app.example.org [warning]: noController; Ingress web/app\n",

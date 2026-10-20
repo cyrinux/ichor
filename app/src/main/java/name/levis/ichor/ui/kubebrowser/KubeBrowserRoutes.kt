@@ -110,6 +110,7 @@ object KubeBrowserRoutes {
                 onBack = { nav.popBackStack() },
                 onClaim = links.onObject,
                 onDataService = { nav.navigate(Routes.dataServices(it)) },
+                onPlugin = { nav.navigate(plugin(it)) },
             )
         }
         composable(SERVICES) {

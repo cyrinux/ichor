@@ -131,6 +131,7 @@ final class CastAITests: XCTestCase {
 
     func testHintsIncludeCastAI() throws {
         let inventory = try TalosJSON.decode(ClusterInventory.self, from: #"{"apps":[{"id":"castai","name":"CAST AI"},{"id":"rook","name":"Rook Ceph"}]}"#)
-        XCTAssertEqual(dataServiceHints(inventory), "rook,castai")
+        // Rook Ceph is a plugin now: it detects itself, no hint needed.
+        XCTAssertEqual(dataServiceHints(inventory), "castai")
     }
 }

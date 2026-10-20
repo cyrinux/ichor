@@ -26,9 +26,9 @@ type dsIssue struct {
 // dataServiceSections maps the installed services, in the order of dataServices' fields.
 func dataServiceSections(ds dataServices) []dsSection {
 	adapters := []func(dataServices) (dsSection, bool){
-		sealedSecretsSection, snapshotsSection, backupJobsSection, longhornSection, garageSection,
+		snapshotsSection, backupJobsSection, longhornSection, garageSection,
 		cnpgSection, dragonflySection, mariadbSection, perconaSection, certManagerSection,
-		veleroSection, externalDNSSection, cephSection, castAISection,
+		veleroSection, externalDNSSection, castAISection,
 	}
 
 	var out []dsSection
@@ -97,32 +97,6 @@ func readyOf(ready, total int, what string) string {
 	}
 
 	return fmt.Sprintf("%d/%d %s", ready, total, what)
-}
-
-func sealedSecretsSection(ds dataServices) (dsSection, bool) {
-	s := ds.SealedSecrets
-	if s == nil {
-		return dsSection{}, false
-	}
-
-	items := make([]dsIssue, 0, len(s.Items))
-	for _, it := range s.Items {
-		items = append(items, dsIssue{health: it.Health, key: nsName(it.Namespace, it.Name), detail: details(strings.Join(it.Reasons, ", "), it.Message)})
-	}
-
-	sec := newDSSection("Sealed Secrets", "sealed secrets", s.Error, items)
-
-	if c := s.Controller; c != nil {
-		sec.issues = append(sec.issues, dsIssue{
-			health: c.Health, key: "controller " + nsName(c.Namespace, c.Name),
-			detail: details(strings.Join(c.Reasons, ", "), readyOf(c.ReadyReplicas, c.Replicas, "replicas ready")),
-		})
-	} else if s.Health == healthCritical || s.Health == healthWarning {
-		// No key, no controller, a compromised or stale key: the section's own verdict.
-		sec.issues = append(sec.issues, dsIssue{health: s.Health, key: "controller", detail: strings.Join(s.Reasons, ", ")})
-	}
-
-	return sec, true
 }
 
 func snapshotsSection(ds dataServices) (dsSection, bool) {
@@ -423,42 +397,6 @@ func externalDNSSection(ds dataServices) (dsSection, bool) {
 			health: rec.Health, key: rec.RecordType + " " + rec.DNSName,
 			detail: details(strings.Join(rec.Reasons, ", "), rec.SourceKind+" "+nsName(rec.SourceNamespace, rec.SourceName)),
 		})
-	}
-
-	return sec, true
-}
-
-func cephSection(ds dataServices) (dsSection, bool) {
-	s := ds.Ceph
-	if s == nil {
-		return dsSection{}, false
-	}
-
-	items := make([]dsIssue, 0, len(s.Clusters))
-
-	for _, c := range s.Clusters {
-		checks := make([]string, 0, len(c.Checks))
-		for _, ch := range c.Checks {
-			checks = append(checks, ch.Name+": "+ch.Message)
-		}
-
-		items = append(items, dsIssue{
-			health: c.Health, key: nsName(c.Namespace, c.Name), nodes: c.NotReadyNodes,
-			detail: details(c.CephHealth, c.Phase, strings.Join(c.Reasons, ", "), readyOf(c.OSDsUp, c.OSDsTotal, "OSDs up"),
-				readyOf(c.MonsReady, c.MonsTotal, "mons ready"), c.Message, strings.Join(checks, "; ")),
-		})
-	}
-
-	sec := newDSSection("Rook Ceph", "clusters", s.Error, items)
-
-	for _, p := range s.Pools {
-		sec.issues = append(sec.issues, dsIssue{health: p.Health, key: p.Kind + " " + nsName(p.Namespace, p.Name), detail: details(p.Phase)})
-	}
-
-	for _, o := range s.OSDs {
-		if !o.Ready {
-			sec.issues = append(sec.issues, dsIssue{health: healthWarning, key: "OSD " + o.ID, detail: details(o.Phase, "pod "+o.Pod), nodes: nonEmpty([]string{o.Node})})
-		}
 	}
 
 	return sec, true

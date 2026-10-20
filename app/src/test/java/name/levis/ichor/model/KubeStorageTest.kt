@@ -30,6 +30,18 @@ class KubeStorageTest {
     }
 
     @Test
+    fun aPluginsClaimOpensThePlugin() {
+        val claim = TalosJson.decodeFromString(
+            StorageClaim.serializer(),
+            """{"namespace":"web","name":"uploads","managedBy":"rook","managedName":"Rook Ceph","level":"ok"}""",
+        )
+        assertNull(claim.managedKind)
+        assertEquals("rook", claim.managedPlugin)
+        // A native data service's claim opens that screen, not a plugin.
+        assertNull(storage.claims.first().managedPlugin)
+    }
+
+    @Test
     fun searchesNameClassVolumeAndPods() {
         assertEquals(listOf("data-pg-1"), storage.claims.filteredClaims("PG-1").map { it.name })
         assertEquals(listOf("data-pg-1"), storage.claims.filteredClaims("longhorn").map { it.name })

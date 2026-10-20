@@ -39,16 +39,20 @@ public struct StorageClaim: Decodable, Hashable, Identifiable, Sendable {
     public let terminating: Bool
     /// The data service the volume belongs to, by its catalog id; "" for none.
     public let managedBy: String
+    /// The plugin's name when `managedBy` is a plugin's id (Rook Ceph); "" for a native data service.
+    public let managedName: String
     public let level: StorageLevel
 
     public var id: String { "\(namespace)/\(name)" }
     public var usedFraction: Double { min(max(usedPercent / 100, 0), 1) }
     /// The data service screen that manages this volume; nil for none this version knows.
     public var managedKind: DataServiceKind? { DataServiceKind(rawValue: managedBy) }
+    /// The plugin that shows this volume's system; nil when a data service screen does (or none).
+    public var managedPlugin: String? { managedKind == nil && !managedName.isEmpty ? managedBy : nil }
 
     private enum CodingKeys: String, CodingKey {
         case namespace, name, phase, storageClass, provisioner, volume, reclaimPolicy, accessModes
-        case capacity, used, usedPercent, measured, pods, terminating, managedBy, level
+        case capacity, used, usedPercent, measured, pods, terminating, managedBy, managedName, level
     }
 
     public init(from decoder: Decoder) throws {
@@ -68,6 +72,7 @@ public struct StorageClaim: Decodable, Hashable, Identifiable, Sendable {
         pods = try c.field(.pods, [])
         terminating = try c.field(.terminating, false)
         managedBy = try c.field(.managedBy, "")
+        managedName = try c.field(.managedName, "")
         level = try c.wire(.level)
     }
 }

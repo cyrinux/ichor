@@ -2445,36 +2445,6 @@
         <item quantity="one">%1$d of %2$d name points at this cluster</item>
         <item quantity="other">%1$d of %2$d names point at this cluster</item>
     </plurals>
-    <string name="sealedsecrets_empty">No SealedSecrets.</string>
-    <string name="sealedsecrets_no_controller">No controller found</string>
-    <string name="sealedsecrets_ready">ready</string>
-    <string name="sealedsecrets_not_ready">not ready</string>
-    <string name="sealedsecrets_replicas">Replicas</string>
-    <string name="sealedsecrets_keys">Sealing keys</string>
-    <string name="sealedsecrets_key_created">created %1$s</string>
-    <string name="sealedsecrets_key_active">active</string>
-    <string name="sealedsecrets_key_compromised">compromised</string>
-    <string name="sealedsecrets_immutable">immutable</string>
-    <string name="sealedsecrets_unsealed">unsealed</string>
-    <string name="sealedsecrets_reason_not_synced">failed to unseal: its Secret is missing or outdated</string>
-    <string name="sealedsecrets_reason_unmanaged">a Secret with this name exists that it does not own</string>
-    <string name="sealedsecrets_reason_stale">a newer version is not observed yet</string>
-    <string name="sealedsecrets_reason_controller_down">the controller is not running: nothing gets unsealed</string>
-    <string name="sealedsecrets_reason_no_keys">no active sealing key</string>
-    <string name="sealedsecrets_reason_key_compromised">a sealing key is marked compromised</string>
-    <string name="sealedsecrets_reason_key_stale">the newest sealing key is over 30 days old: key renewal may be stuck</string>
-    <plurals name="sealedsecrets_count">
-        <item quantity="one">%1$d SealedSecret</item>
-        <item quantity="other">%1$d SealedSecrets</item>
-    </plurals>
-    <plurals name="sealedsecrets_item_keys">
-        <item quantity="one">%1$d key</item>
-        <item quantity="other">%1$d keys</item>
-    </plurals>
-    <plurals name="sealedsecrets_truncated">
-        <item quantity="one">Showing the first %1$d of %2$d SealedSecrets.</item>
-        <item quantity="other">Showing the first %1$d of %2$d SealedSecrets.</item>
-    </plurals>
     <string name="kubegreen_wakes">wakes up %1$s</string>
     <string name="kubegreen_until_changed">until changed by hand</string>
     <string name="kubegreen_weekdays">Weekdays</string>
@@ -2548,29 +2518,6 @@
     <string name="crossplane_reason_deleting">Deleting</string>
     <string name="crossplane_reason_paused">Paused</string>
     <string name="crossplane_reason_not_established">Definition not established</string>
-    <string name="ceph_empty">No Ceph clusters.</string>
-    <string name="ceph_external">external</string>
-    <string name="ceph_osds">OSDs %1$d/%2$d up</string>
-    <string name="ceph_mons">mons %1$d/%2$d ready</string>
-    <string name="ceph_capacity">%1$s of %2$s used (%3$s)</string>
-    <string name="ceph_osds_title">OSDs</string>
-    <string name="ceph_pools_title">Pools and stores</string>
-    <string name="ceph_kind_block_pool">block pool</string>
-    <string name="ceph_kind_filesystem">filesystem</string>
-    <string name="ceph_kind_object_store">object store</string>
-    <string name="ceph_reason_health_err">Ceph reports errors</string>
-    <string name="ceph_reason_failure">Rook reports a failure</string>
-    <string name="ceph_reason_full">full</string>
-    <string name="ceph_reason_no_osd">no OSD up</string>
-    <string name="ceph_reason_no_quorum">mon quorum lost</string>
-    <string name="ceph_reason_health_warn">Ceph reports warnings</string>
-    <string name="ceph_reason_near_full">nearly full</string>
-    <string name="ceph_reason_osds">OSDs down</string>
-    <string name="ceph_reason_mons">mons down</string>
-    <plurals name="ceph_clusters">
-        <item quantity="one">%1$d Ceph cluster</item>
-        <item quantity="other">%1$d Ceph clusters</item>
-    </plurals>
     <string name="castai_empty">No CAST AI recommendations.</string>
     <string name="castai_no_match">No workload matches.</string>
     <string name="castai_filter_hint">Filter by namespace or workload</string>
@@ -3885,15 +3832,9 @@
     <string name="checkup_csrDenied_fix">The approver refused them: its message says why.</string>
     <string name="checkup_externalSecretFailed_fix">The Secret keeps its last value, or does not exist. Check the store’s credentials and that the remote key exists.</string>
     <string name="checkup_secretStoreNotReady_fix">Every ExternalSecret using it stops syncing. Check its credentials, its address and the provider’s status.</string>
-    <string name="checkup_sealedSecretNotSynced">Could not be unsealed</string>
-    <string name="checkup_sealingKeyMissing">No sealing key in %1$s: nothing can be unsealed</string>
-    <string name="checkup_sealingKeyCompromised">Key %1$s marked compromised</string>
     <string name="checkup_sopsDecryptionFailed">Cannot decrypt its SOPS secrets with key %1$s</string>
     <string name="checkup_sopsDecryptionNotConfigured">Holds SOPS-encrypted files but has no decryption configured</string>
     <string name="checkup_sopsDecryptionFailedNoKey">Cannot decrypt its SOPS secrets</string>
-    <string name="checkup_sealedSecretNotSynced_fix">The controller could not decrypt it into a Secret: it was sealed for another cluster, name or namespace, or with a key the controller no longer has. Seal it again with kubeseal against this cluster’s certificate.</string>
-    <string name="checkup_sealingKeyMissing_fix">The controller has no key to decrypt with. Restore the key backup (a Secret labelled sealedsecrets.bitnami.com/sealed-secrets-key) into its namespace, then restart the controller.</string>
-    <string name="checkup_sealingKeyCompromised_fix">The controller no longer seals with it, but what it sealed can still be read with it. Seal those SealedSecrets again with kubeseal, then delete the key.</string>
     <string name="checkup_sopsDecryptionFailed_fix">Nothing in this Kustomization is applied until it decrypts. Check that the Secret named in spec.decryption.secretRef holds the age or PGP key the files were encrypted with.</string>
     <string name="checkup_sopsDecryptionFailedNoKey_fix">Nothing in this Kustomization is applied until it decrypts. Without a secretRef, kustomize-controller decrypts through a cloud KMS or Vault: check that its identity (or spec.decryption.serviceAccountName) may use the key the files were encrypted with.</string>
     <string name="checkup_sopsDecryptionNotConfigured_fix">Nothing in this Kustomization is applied while it holds encrypted Secrets. Add spec.decryption with provider sops and a secretRef to the Secret holding the age or PGP key, or a cloud KMS the controller can use.</string>

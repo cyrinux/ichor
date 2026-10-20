@@ -53,7 +53,6 @@ var nativeIntegrationSpecs = []integrationSpec{
 	{ID: "percona-xtradb", Name: "Percona XtraDB Cluster", Website: "https://docs.percona.com/percona-operator-for-mysql/pxc/", Groups: []string{groupPercona}},
 	{ID: "dragonfly", Name: "Dragonfly", Website: "https://www.dragonflydb.io", Groups: []string{groupDragonfly}},
 	{ID: "longhorn", Name: "Longhorn", Website: "https://longhorn.io", Groups: []string{groupLonghorn}},
-	{ID: "rook", Name: "Rook Ceph", Website: "https://rook.io", Groups: []string{groupCeph}},
 	// Garage: the garage-operator's CRDs when it runs, else its pods (the Helm chart).
 	{ID: "garage", Name: "Garage", Website: "https://garagehq.deuxfleurs.fr", Groups: []string{groupGarageOperator}, PodsFallback: true},
 	{ID: "velero", Name: "Velero", Website: "https://velero.io", Groups: []string{groupVelero}},
@@ -83,7 +82,6 @@ var nativeIntegrationSpecs = []integrationSpec{
 	{ID: "thanos", Name: "Thanos", Website: "https://thanos.io", ServiceKind: "thanos"},
 	{ID: "mimir", Name: "Mimir", Website: "https://grafana.com/oss/mimir/", ServiceKind: "mimir"},
 	{ID: "victoriametrics", Name: "VictoriaMetrics", Website: "https://victoriametrics.com", ServiceKind: "victoriametrics"},
-	{ID: "sealed-secrets", Name: "Sealed Secrets", Website: "https://github.com/bitnami/sealed-secrets", Groups: []string{groupSealedSecrets}, Resource: "sealedsecrets"},
 	// KubeVirt VMs, the CDI DataVolumes that fill their disks, Harvester (which runs both) and
 	// the group KubeVirt's start, stop, restart, migrate, pause and unpause live under.
 	{ID: "kubevirt", Name: "KubeVirt", Website: "https://kubevirt.io", Groups: []string{groupKubeVirt, groupCDI, groupHarvester, groupKubeVirtSub}},
@@ -383,11 +381,9 @@ func demoSupportedIntegrations() supportedIntegrations {
 		"percona-xtradb":      ds.Percona != nil,
 		"dragonfly":           ds.Dragonfly != nil,
 		"longhorn":            ds.Longhorn != nil,
-		"rook":                ds.Ceph != nil,
 		"velero":              ds.Velero != nil,
 		"external-dns":        ds.ExternalDNS != nil,
 		"cert-manager":        ds.CertManager != nil,
-		"sealed-secrets":      ds.SealedSecrets != nil,
 		"castai":              ds.CastAI != nil,
 		"cilium":              demoCiliumStatus().Installed,
 		"gateway-api":         true,

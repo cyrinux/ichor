@@ -207,10 +207,9 @@ final class DataServicesTests: XCTestCase {
         XCTAssertEqual(DataServiceKind.backupJobs.family, .data)
         XCTAssertEqual(DataServiceKind.externalDns.family, .networking)
         XCTAssertEqual(DataServiceKind.certManager.family, .security)
-        XCTAssertEqual(DataServiceKind.sealedSecrets.family, .security)
         XCTAssertEqual(DataServiceKind.castai.family, .workloads)
-        // Ten systems stay in Data services: storage, databases and backups.
-        XCTAssertEqual(DataServiceKind.allCases.filter { $0.family == .data }.count, 10)
+        // Nine native systems stay in Data services (storage, databases and backups); Rook Ceph is a plugin.
+        XCTAssertEqual(DataServiceKind.allCases.filter { $0.family == .data }.count, 9)
         XCTAssertTrue(DataServiceKind.certManager.opensAlone)
         XCTAssertFalse(DataServiceKind.velero.opensAlone)
     }

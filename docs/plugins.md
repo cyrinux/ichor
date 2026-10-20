@@ -220,7 +220,7 @@ Loading is strict:
 | `category` | no | string | where the plugin shows on the Kubernetes home: `data-services` (default; a line of the Data services card and a tab of its screen), `networking`, `workloads` or `compute` (a tool in that family), `policies` or `security` (a tool in Security), `gitops` (a tool in Browse) |
 | `screen` | no | string | `native:<route>` opens a native screen from the hub tile |
 | `detect[]` | yes | list | each sets exactly one of `group` (with an optional `resource`, for a shared group), `pods` (a catalog id) or `service`; any match activates the plugin |
-| `resources.<key>` | yes (≥ 1) | map | `group` (`""` for core), `version` (or `preferred`), `resource`, `kind`, `scope` (`Namespaced` or `Cluster`), `list{labelSelector, fieldSelector, limit}`, `watch`, `reveal`, `optional` (forbidden or not served, the resource reads as empty with no error: for a decorative relation), `source: native:<id>`. The key (letters and digits) names the resource everywhere else |
+| `resources.<key>` | yes (≥ 1) | map | `group` (`""` for core), `version` (or `preferred`), `resource`, `kind`, `scope` (`Namespaced` or `Cluster`), `list{labelSelector, fieldSelector, limit, metadataOnly}` (`metadataOnly`: each object's metadata alone, so that a Secret's values never leave the API server), `watch`, `reveal`, `optional` (forbidden or not served, the resource reads as empty with no error: for a decorative relation), `source: native:<id>` (a Go reader selects the objects instead of a list call: `native:sealed-secrets-controller`, the Deployments running the catalog's Sealed Secrets image). The key (letters and digits) names the resource everywhere else |
 | `fields.<resource>.<name>` | no | expression | evaluated per object in file order; a field sees the earlier ones as `fields.<name>`, `conditions`, `now`, and the resources by key for `join(<resource>, <predicate>)`, whose predicate sees `left` (the object) |
 | `health.<resource>[]` | no | rules | `{when, health, reason, message}`. The first rule whose `when` holds wins, and an object no rule matches is `ok`. `health` is `ok`, `idle`, `info`, `warning`, `critical` or `unknown`; `message` is a template |
 | `dataServices.<name>` | no | map | see "Data services" below |
@@ -249,7 +249,7 @@ Loading is strict:
 ### Data services
 
 A data service is one of three forms:
-* `aggregate` alone, over resources: `count(res)`, `count(res, pred)`, `sum(res, expr)`, `min(res, expr)`, `max(res, expr)`, and `worst(res.health)` (or `worst(res, expr)`), with `health` for the data service's own health. It is a map of the aggregates, plus `health`;
+* `aggregate` alone, over resources: `count(res)`, `count(res, pred)`, `sum(res, expr)`, `min(res, expr)`, `max(res, expr)`, and `worst(res.health)` (or `worst(res, expr)`), with `health` for the data service's own health. It is a map of the aggregates, plus `health`. `readable(res)` is false when the resource could not be listed (forbidden, not served, failed; an `optional` one too), so that "none" is told from "none visible": `readable(key) && count(key, …) == 0`;
 * `from` + `groupBy` + `aggregate`: one element per group, sorted by key, where `count()`, `count(pred)`, `sum(expr)`, `min(expr)`, `max(expr)` and `worst(expr)` run over the group's objects and `$.key` is the group's key;
 * `from` + `where` + `select`: one element per kept object, with the selected names; a card row of it still opens its object.
 
@@ -423,17 +423,18 @@ tile below for an active plugin and `null` otherwise. Examples: the goldens in
   | type | payload |
   | -- | -- |
   | `keyValues` | `items[{label, value, tone?, mono?}]` |
-  | `badges` | `items[{label, value?, tone}]`; `on` lights a badge (`ok`, or its `tone`) or dims it (`idle`) |
+  | `badges` | `items[{label, value?, tone}]`; `on` lights a badge (`ok`, or its `tone`) or dims it (`idle`); the section is left out when every badge is hidden |
   | `gauge` | `{label, value, max, unit, tone, text}`; without `text`, the two values in `unit` (`bytes`, `percent` or a word) |
   | `conditions` | `items[{type, status, reason, message, tone, lastTransition}]`; left out when the object has none |
   | `relations` | `items[{label, ref, text?}]`; an absent object is left out, and so is the section when none is left |
   | `table` | `columns[{label}]`, `rows[[cell]]` |
-  | `text` | `{text, tone?, mono?}` |
+  | `text` | `{text, tone?, mono?}`; left out when the text is empty, so `'{{ fields.x ? "words" : "" }}'` shows only when it holds |
   | `actions` | `items[{id, label, enabled, confirm, disabledReason?, allowed?, params[]}]`; `allowed` is the can-I answer (see "Actions") |
 
 * `i18n`: the locale's map (`pt-BR` falls back to `pt`) translates labels, `empty`, the
   summary's `one`/`other`, action labels, templates (health messages, finding texts,
-  `disabledReason`) and a row's `status.text`. Values read from objects are never
+  `disabledReason`), and a row's `status.text` and `text` sections (the quoted words they
+  give: `"Asleep"`). Values read from objects are never
   translated.
 * Reads: each resource is listed page by page with its selectors, at most `list.limit`
   objects (500 by default, up to 5000: raise it in the plugin for a kind that grows large);

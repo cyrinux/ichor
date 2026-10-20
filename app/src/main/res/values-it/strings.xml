@@ -2445,36 +2445,6 @@
         <item quantity="one">%1$d di %2$d nome punta a questo cluster</item>
         <item quantity="other">%1$d di %2$d nomi puntano a questo cluster</item>
     </plurals>
-    <string name="sealedsecrets_empty">Nessun SealedSecret.</string>
-    <string name="sealedsecrets_no_controller">Nessun controller trovato</string>
-    <string name="sealedsecrets_ready">pronto</string>
-    <string name="sealedsecrets_not_ready">non pronto</string>
-    <string name="sealedsecrets_replicas">Repliche</string>
-    <string name="sealedsecrets_keys">Chiavi di sigillatura</string>
-    <string name="sealedsecrets_key_created">creata %1$s</string>
-    <string name="sealedsecrets_key_active">attiva</string>
-    <string name="sealedsecrets_key_compromised">compromessa</string>
-    <string name="sealedsecrets_immutable">immutabile</string>
-    <string name="sealedsecrets_unsealed">dissigillato</string>
-    <string name="sealedsecrets_reason_not_synced">dissigillatura non riuscita: il suo Secret manca o non è aggiornato</string>
-    <string name="sealedsecrets_reason_unmanaged">esiste un Secret con questo nome che non gli appartiene</string>
-    <string name="sealedsecrets_reason_stale">una versione più recente non è ancora stata osservata</string>
-    <string name="sealedsecrets_reason_controller_down">il controller non è in esecuzione: nulla viene dissigillato</string>
-    <string name="sealedsecrets_reason_no_keys">nessuna chiave di sigillatura attiva</string>
-    <string name="sealedsecrets_reason_key_compromised">una chiave di sigillatura è segnata come compromessa</string>
-    <string name="sealedsecrets_reason_key_stale">la chiave di sigillatura più recente ha più di 30 giorni: il rinnovo potrebbe essere bloccato</string>
-    <plurals name="sealedsecrets_count">
-        <item quantity="one">%1$d SealedSecret</item>
-        <item quantity="other">%1$d SealedSecret</item>
-    </plurals>
-    <plurals name="sealedsecrets_item_keys">
-        <item quantity="one">%1$d chiave</item>
-        <item quantity="other">%1$d chiavi</item>
-    </plurals>
-    <plurals name="sealedsecrets_truncated">
-        <item quantity="one">Visualizzati i primi %1$d di %2$d SealedSecret.</item>
-        <item quantity="other">Visualizzati i primi %1$d di %2$d SealedSecret.</item>
-    </plurals>
     <string name="kubegreen_wakes">si sveglia %1$s</string>
     <string name="kubegreen_until_changed">finché non viene modificato a mano</string>
     <string name="kubegreen_weekdays">Giorni</string>
@@ -2547,29 +2517,6 @@
     <string name="crossplane_reason_deleting">Eliminazione</string>
     <string name="crossplane_reason_paused">In pausa</string>
     <string name="crossplane_reason_not_established">Definizione non stabilita</string>
-    <string name="ceph_empty">Nessun cluster Ceph.</string>
-    <string name="ceph_external">esterno</string>
-    <string name="ceph_osds">OSD %1$d/%2$d attivi</string>
-    <string name="ceph_mons">mon %1$d/%2$d pronti</string>
-    <string name="ceph_capacity">%1$s di %2$s usati (%3$s)</string>
-    <string name="ceph_osds_title">OSD</string>
-    <string name="ceph_pools_title">Pool e archivi</string>
-    <string name="ceph_kind_block_pool">pool di blocchi</string>
-    <string name="ceph_kind_filesystem">file system</string>
-    <string name="ceph_kind_object_store">archivio oggetti</string>
-    <string name="ceph_reason_health_err">Ceph segnala errori</string>
-    <string name="ceph_reason_failure">Rook segnala un guasto</string>
-    <string name="ceph_reason_full">pieno</string>
-    <string name="ceph_reason_no_osd">nessun OSD attivo</string>
-    <string name="ceph_reason_no_quorum">quorum dei mon perso</string>
-    <string name="ceph_reason_health_warn">Ceph segnala avvisi</string>
-    <string name="ceph_reason_near_full">quasi pieno</string>
-    <string name="ceph_reason_osds">OSD non attivi</string>
-    <string name="ceph_reason_mons">mon non attivi</string>
-    <plurals name="ceph_clusters">
-        <item quantity="one">%1$d cluster Ceph</item>
-        <item quantity="other">%1$d cluster Ceph</item>
-    </plurals>
     <string name="castai_empty">Nessuna raccomandazione CAST AI.</string>
     <string name="castai_no_match">Nessun carico di lavoro corrisponde.</string>
     <string name="castai_filter_hint">Filtra per namespace o carico di lavoro</string>
@@ -3884,15 +3831,9 @@
     <string name="checkup_csrDenied_fix">L’approvatore le ha rifiutate: il suo messaggio dice perché.</string>
     <string name="checkup_externalSecretFailed_fix">Il Secret mantiene l’ultimo valore, o non esiste. Controlla le credenziali dello store e che la chiave remota esista.</string>
     <string name="checkup_secretStoreNotReady_fix">Ogni ExternalSecret che lo usa smette di sincronizzarsi. Controlla le sue credenziali, il suo indirizzo e lo stato del provider.</string>
-    <string name="checkup_sealedSecretNotSynced">Impossibile da dissigillare</string>
-    <string name="checkup_sealingKeyMissing">Nessuna chiave di sigillo in %1$s: nulla può essere dissigillato</string>
-    <string name="checkup_sealingKeyCompromised">Chiave %1$s segnata come compromessa</string>
     <string name="checkup_sopsDecryptionFailed">Impossibile decifrare i suoi segreti SOPS con la chiave %1$s</string>
     <string name="checkup_sopsDecryptionNotConfigured">Contiene file cifrati con SOPS ma nessuna decifratura è configurata</string>
     <string name="checkup_sopsDecryptionFailedNoKey">Impossibile decifrare i suoi segreti SOPS</string>
-    <string name="checkup_sealedSecretNotSynced_fix">Il controller non è riuscito a decifrarlo in un Secret: è stato sigillato per un altro cluster, nome o namespace, o con una chiave che il controller non ha più. Sigillalo di nuovo con kubeseal e il certificato di questo cluster.</string>
-    <string name="checkup_sealingKeyMissing_fix">Il controller non ha alcuna chiave per decifrare. Ripristina il backup della chiave (un Secret con l’etichetta sealedsecrets.bitnami.com/sealed-secrets-key) nel suo namespace, poi riavvia il controller.</string>
-    <string name="checkup_sealingKeyCompromised_fix">Il controller non sigilla più con essa, ma ciò che ha sigillato è ancora leggibile con essa. Sigilla di nuovo quei SealedSecret con kubeseal, poi elimina la chiave.</string>
     <string name="checkup_sopsDecryptionFailed_fix">Nulla in questa Kustomization viene applicato finché non si decifra. Controlla che il Secret indicato in spec.decryption.secretRef contenga la chiave age o PGP con cui sono stati cifrati i file.</string>
     <string name="checkup_sopsDecryptionFailedNoKey_fix">Nulla in questa Kustomization viene applicato finché non si decifra. Senza secretRef, kustomize-controller decifra tramite un KMS cloud o Vault: controlla che la sua identità (o spec.decryption.serviceAccountName) possa usare la chiave con cui sono stati cifrati i file.</string>
     <string name="checkup_sopsDecryptionNotConfigured_fix">Nulla in questa Kustomization viene applicato finché contiene Secret cifrati. Aggiungi spec.decryption con il provider sops e un secretRef al Secret che contiene la chiave age o PGP, oppure un KMS cloud che il controller può usare.</string>
