@@ -5611,4 +5611,15 @@
     <string name="talos_writeback_secret">Ce changement touche un secret : les secrets ne sont jamais écrits dans le dépôt.</string>
     <string name="talos_writeback_live">Proposer les valeurs du nœud dans Git</string>
     <string name="talos_writeback_live_desc">Écrit ce que le nœud exécute dans son fichier du dépôt, en pull request.</string>
+    <string name="proposals_title">Propositions</string>
+    <string name="proposals_open">Ouverte</string>
+    <string name="proposals_draft">Brouillon</string>
+    <string name="proposals_closed">Fermée</string>
+    <string name="proposals_merged">Fusionnée</string>
+    <string name="proposals_deployed">Déployée</string>
+    <string name="proposals_unknown">Inconnu</string>
+    <string name="proposals_not_deployed">Fusionnée, pas encore déployée.</string>
+    <string name="proposals_other_revision">Fusionnée ; l\'app exécute un autre commit (un plus récent, ou celui-ci n\'est pas encore appliqué).</string>
+    <string name="proposals_reconcile">Réconcilier maintenant</string>
+    <string name="proposals_forget">Oublier cette proposition</string>
 </resources>

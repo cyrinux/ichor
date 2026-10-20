@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import name.levis.ichor.data.KubePermissions
 import name.levis.ichor.data.BackupManager
 import name.levis.ichor.data.ClusterRepoStore
+import name.levis.ichor.data.ProposalsStore
 import name.levis.ichor.data.AiPreferences
 import name.levis.ichor.data.CaptureRepository
 import name.levis.ichor.data.CiliumRepository
@@ -165,7 +166,10 @@ class TalosApp : Application() {
     private val goCall by lazy { GoCall(configRepository, kubeServers, offlineCache, idle = maskSwitcher::awaitIdle) }
     val talosRepository by lazy { TalosRepository(goCall) }
     val kubeRepository by lazy { KubeRepository(goCall) }
-    val gitOpsRepository by lazy { GitOpsRepository(goCall, gitHostStore, clusterRepos) }
+    val gitOpsRepository by lazy { GitOpsRepository(goCall, gitHostStore, clusterRepos, proposals) }
+
+    /** The pull requests opened from the phone, per cluster; no token in them. */
+    val proposals by lazy { ProposalsStore(getSharedPreferences(ProposalsStore.FILE, Context.MODE_PRIVATE)) }
 
     /** The Git repository saved for each cluster (its Talos and Kubernetes config); no token in it. */
     val clusterRepos by lazy { ClusterRepoStore(getSharedPreferences(ClusterRepoStore.FILE, Context.MODE_PRIVATE)) }
@@ -721,6 +725,7 @@ class TalosApp : Application() {
                     launch(Dispatchers.IO) { publicIps.sync(it.summary) }
                     vpnOnly.sync(it.summary)
                     clusterRepos.sync(it.summary)
+                    proposals.sync(it.summary)
                     unwatchedClusters.sync(it.summary)
                     widgetClusters.sync(it.summary)
                     // A removed cluster's snoozes go with it (its snapshot at the next check).

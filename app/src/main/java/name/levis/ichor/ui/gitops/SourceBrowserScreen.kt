@@ -3,6 +3,7 @@ package name.levis.ichor.ui.gitops
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -144,7 +145,15 @@ fun SourceBrowserScreen(
                 } else {
                     Breadcrumb(listing.dir, vm::open)
                     HorizontalDivider()
-                    Listing(src, listing, onDir = vm::open, onFile = onFile, onAddToken = onAddToken, onRetry = vm::refresh)
+                    Listing(
+                        src, listing, onDir = vm::open, onFile = onFile, onAddToken = onAddToken, onRetry = vm::refresh,
+                        // The cluster repository's root lists the pull requests opened from the phone on it.
+                        header = if (target == SourceTarget.Repo && listing.dir.isEmpty()) {
+                            { ProposalsCard(talos.gitOpsRepository, "", "", "", "", refresh = src.revision) }
+                        } else {
+                            null
+                        },
+                    )
                 }
             }
         }
@@ -193,6 +202,7 @@ private fun Listing(
     onFile: (String) -> Unit,
     onAddToken: (() -> Unit)?,
     onRetry: () -> Unit,
+    header: (@Composable () -> Unit)? = null,
 ) {
     val host = listing.missingHost
     if (host != null) {
@@ -206,6 +216,7 @@ private fun Listing(
             EmptyState(Icons.Outlined.FolderOpen, stringResource(R.string.gitops_source_empty))
         } else {
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 4.dp)) {
+                header?.let { h -> item(key = "header") { Box(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { h() } } }
                 items(t.data.entries, key = { it.path }) { entry ->
                     EntryRow(entry) { if (entry.isDir) onDir(entry.path) else onFile(entry.path) }
                 }

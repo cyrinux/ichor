@@ -73,6 +73,10 @@ struct FluxAppView: View {
                 }
             }
             FluxSourceSection(sources: gitSources, app: .flux(kind: app.kind, namespace: app.namespace, name: app.name))
+            // The pull requests opened from the phone for it; a merged one not running yet reconciles with its source from here.
+            ProposalsSection(app: .flux(kind: app.kind, namespace: app.namespace, name: app.name), refresh: app.revision) {
+                act(.reconcileWithSource, on: app)
+            }
             FluxConditionsSection(app: app)
             if !app.unhealthyPods.isEmpty { ArgoPodsSection(pods: app.unhealthyPods, downNodes: downNodes) }
             let children = status.children(of: app)

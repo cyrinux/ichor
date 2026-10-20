@@ -5602,4 +5602,15 @@
     <string name="talos_writeback_secret">Diese Änderung betrifft ein Geheimnis: Geheimnisse werden nie ins Repository geschrieben.</string>
     <string name="talos_writeback_live">Werte des Knotens in Git vorschlagen</string>
     <string name="talos_writeback_live_desc">Schreibt, was der Knoten ausführt, als Pull Request in seine Datei im Repository.</string>
+    <string name="proposals_title">Vorschläge</string>
+    <string name="proposals_open">Offen</string>
+    <string name="proposals_draft">Entwurf</string>
+    <string name="proposals_closed">Geschlossen</string>
+    <string name="proposals_merged">Zusammengeführt</string>
+    <string name="proposals_deployed">Bereitgestellt</string>
+    <string name="proposals_unknown">Unbekannt</string>
+    <string name="proposals_not_deployed">Zusammengeführt, noch nicht bereitgestellt.</string>
+    <string name="proposals_other_revision">Zusammengeführt; die App führt einen anderen Commit aus (einen neueren, oder dieser ist noch nicht angewendet).</string>
+    <string name="proposals_reconcile">Jetzt abgleichen</string>
+    <string name="proposals_forget">Diesen Vorschlag vergessen</string>
 </resources>

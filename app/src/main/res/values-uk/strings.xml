@@ -5874,4 +5874,15 @@
     <string name="talos_writeback_secret">Ця зміна стосується секрету: секрети ніколи не записуються в репозиторій.</string>
     <string name="talos_writeback_live">Запропонувати значення вузла в Git</string>
     <string name="talos_writeback_live_desc">Записує те, що виконує вузол, у його файл репозиторію як pull request.</string>
+    <string name="proposals_title">Пропозиції</string>
+    <string name="proposals_open">Відкрита</string>
+    <string name="proposals_draft">Чернетка</string>
+    <string name="proposals_closed">Закрита</string>
+    <string name="proposals_merged">Злита</string>
+    <string name="proposals_deployed">Розгорнута</string>
+    <string name="proposals_unknown">Невідомо</string>
+    <string name="proposals_not_deployed">Злито, ще не розгорнуто.</string>
+    <string name="proposals_other_revision">Злито; застосунок виконує інший коміт (новіший, або цей ще не застосовано).</string>
+    <string name="proposals_reconcile">Узгодити зараз</string>
+    <string name="proposals_forget">Забути цю пропозицію</string>
 </resources>
