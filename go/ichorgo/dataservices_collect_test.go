@@ -178,8 +178,7 @@ func TestRenderDataServicesKeepsTheNodesOfALongLine(t *testing.T) {
 
 func TestRenderDataServicesStatesOutsideTheLists(t *testing.T) {
 	ds := dataServices{
-		SealedSecrets: &sealedSecretsStatus{Health: healthCritical, Reasons: []string{"noKeys"}},
-		Garage:        &garageStatus{Keys: []garageOpKey{{Namespace: "storage", Name: "app-key", Health: healthCritical, Reasons: []string{"notReady"}}}},
+		Garage: &garageStatus{Keys: []garageOpKey{{Namespace: "storage", Name: "app-key", Health: healthCritical, Reasons: []string{"notReady"}}}},
 		Velero: &veleroStatus{Adhoc: []veleroAdhoc{{Namespace: "velero", Health: healthWarning,
 			veleroBackup: veleroBackup{Name: "before-upgrade", Phase: "Failed", FailureReason: "timed out"}}}},
 		ExternalDNS: &externalDNSStatus{Records: []externalDNSRecord{{DNSName: "app.example.org", RecordType: "A", Health: healthWarning,
@@ -192,7 +191,6 @@ func TestRenderDataServicesStatesOutsideTheLists(t *testing.T) {
 	out := b.String()
 
 	for _, want := range []string{
-		"    controller [critical]: noKeys\n",
 		"    GarageKey storage/app-key [critical]: notReady\n",
 		"    backup velero/before-upgrade [warning]: Failed; timed out\n",
 		"    A app.example.org [warning]: noController; Ingress web/app\n",

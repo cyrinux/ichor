@@ -41,6 +41,18 @@ func aggregationFuncs(r *renderer, group []*object) map[string]expr.Func {
 			}}
 	}
 
+	// readable(res): the resource was listed, so that an empty one means none rather than
+	// none visible (a Secret list the account may not read).
+	out["readable"] = expr.Func{Min: 1, Max: 1, Returns: expr.KindBool,
+		Lazy: func(_ expr.Ctx, args []expr.Arg) (expr.Value, error) {
+			path := args[0].Path()
+			if len(path) != 1 {
+				return nil, errNoResource
+			}
+
+			return r == nil || !r.in.Unread[path[0]], nil
+		}}
+
 	return out
 }
 

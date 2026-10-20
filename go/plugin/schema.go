@@ -96,6 +96,9 @@ type ListOptions struct {
 	FieldSelector string `yaml:"fieldSelector,omitempty" json:"fieldSelector,omitempty"`
 	// Limit is the page size (0 or absent is 500).
 	Limit int `yaml:"limit,omitempty" json:"limit,omitempty" schema:"minimum=0,maximum=5000"`
+	// MetadataOnly reads each object's metadata alone (PartialObjectMetadata): a Secret's
+	// values, or a large spec, never leave the API server.
+	MetadataOnly bool `yaml:"metadataOnly,omitempty" json:"metadataOnly,omitempty"`
 }
 
 // HealthRule sets an object's health when its condition holds.

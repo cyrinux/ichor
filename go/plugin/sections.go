@@ -42,7 +42,8 @@ func (r *renderer) section(where string, s Section, el element) (TreeSection, bo
 	case "table":
 		return r.table(where, s), true
 	case "text":
-		out.Text = r.template(where+".text", s.Text, el.env)
+		// A quoted text the template gives (cond ? "words" : ""), as a row's status text.
+		out.Text = r.tr(r.template(where+".text", s.Text, el.env))
 		if out.Text == "" {
 			return out, false
 		}

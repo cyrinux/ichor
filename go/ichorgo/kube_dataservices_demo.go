@@ -235,7 +235,7 @@ func demoDataServices(now time.Time) dataServices {
 	}
 
 	snapshots := demoVolumeSnapshots(now)
-	return dataServices{SealedSecrets: demoSealedSecrets(now), Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, ExternalDNS: demoExternalDNS(now), CastAI: demoCastAI(now)}
+	return dataServices{Snapshots: &snapshots, BackupJobs: demoBackupJobs(now), Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, ExternalDNS: demoExternalDNS(now), CastAI: demoCastAI(now)}
 }
 
 // demoKubeGreenNamespace is the demo cluster's kube-green state for one namespace: staging is
@@ -472,22 +472,6 @@ func demoExternalDNS(now time.Time) *externalDNSStatus {
 	}}
 	out.RecordCount = len(out.Records)
 
-	return out
-}
-
-// demoSealedSecrets exposes names and status only, just like the live reader.
-func demoSealedSecrets(now time.Time) *sealedSecretsStatus {
-	out := &sealedSecretsStatus{Version: sealedSecretsVersion, Health: healthCritical, Reasons: []string{}, SecretCount: 3,
-		Controller: &sealedSecretsController{Namespace: "kube-system", Name: "sealed-secrets-controller", Ready: true, Replicas: 1, ReadyReplicas: 1, Health: healthOK, Reasons: []string{}},
-		Keys: []sealingKey{
-			{Namespace: "kube-system", Name: "sealed-secrets-key-new", State: "active", CreatedAt: now.Add(-7 * 24 * time.Hour).UnixMilli(), Age: int64(7 * 24 * time.Hour / time.Millisecond)},
-			{Namespace: "kube-system", Name: "sealed-secrets-key-old", State: "active", CreatedAt: now.Add(-21 * 24 * time.Hour).UnixMilli(), Age: int64(21 * 24 * time.Hour / time.Millisecond)},
-			{Namespace: "kube-system", Name: "sealed-secrets-key-rotated", State: sealedKeyCompromised, CreatedAt: now.Add(-30 * 24 * time.Hour).UnixMilli(), Age: int64(30 * 24 * time.Hour / time.Millisecond)},
-		}, Items: []sealedSecret{
-			{Namespace: "shop", Name: "legacy-cert", Keys: []string{"tls.crt", "tls.key"}, KeyCount: 2, Type: "kubernetes.io/tls", Scope: "strict", Reason: "UnsealFailed", Message: "failed to decrypt: no key could decrypt secret", LastTransitionTime: now.Add(-time.Hour).UnixMilli(), ObservedGeneration: 1, Stale: true, Age: now.Add(-24 * time.Hour).UnixMilli(), Health: healthCritical, Reasons: []string{sealedReasonNotSynced, sealedReasonStale}},
-			{Namespace: "shop", Name: "api-token", Keys: []string{"token"}, KeyCount: 1, Type: "Opaque", Scope: "namespace-wide", Synced: true, ObservedGeneration: 1, Age: now.Add(-24 * time.Hour).UnixMilli(), Health: healthOK, Reasons: []string{}},
-			{Namespace: "shop", Name: "database-credentials", Keys: []string{"database", "password", "username"}, KeyCount: 3, Type: "Opaque", Immutable: true, Scope: "strict", Synced: true, ObservedGeneration: 1, Age: now.Add(-24 * time.Hour).UnixMilli(), Health: healthOK, Reasons: []string{}},
-		}}
 	return out
 }
 

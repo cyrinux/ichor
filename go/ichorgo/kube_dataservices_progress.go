@@ -12,21 +12,20 @@ import (
 const (
 	dsProgressOp = "dataservices"
 
-	dsStepAPI           = "api"
-	dsStepPods          = "pods"
-	dsStepSnapshots     = "snapshots"
-	dsStepBackups       = "backups"
-	dsStepLonghorn      = "longhorn"
-	dsStepCNPG          = "cnpg"
-	dsStepDragonfly     = "dragonfly"
-	dsStepMariaDB       = "mariadb"
-	dsStepPercona       = "percona"
-	dsStepCertManager   = "certmanager"
-	dsStepSealedSecrets = "sealedsecrets"
-	dsStepVelero        = "velero"
-	dsStepExternalDNS   = "externaldns"
-	dsStepCastAI        = "castai"
-	dsStepGarage        = "garage"
+	dsStepAPI         = "api"
+	dsStepPods        = "pods"
+	dsStepSnapshots   = "snapshots"
+	dsStepBackups     = "backups"
+	dsStepLonghorn    = "longhorn"
+	dsStepCNPG        = "cnpg"
+	dsStepDragonfly   = "dragonfly"
+	dsStepMariaDB     = "mariadb"
+	dsStepPercona     = "percona"
+	dsStepCertManager = "certmanager"
+	dsStepVelero      = "velero"
+	dsStepExternalDNS = "externaldns"
+	dsStepCastAI      = "castai"
+	dsStepGarage      = "garage"
 )
 
 // dsDemoSteps is the short sequence the demo context plays.
@@ -168,11 +167,6 @@ func dataServiceReaders(ctx context.Context, k *kubeClient, in *dsInput, listPod
 		out.CertManager = readCertManager(ctx, k, groups[groupCertManager], now)
 
 		return sectionFailed(out.CertManager, func(s *certManagerStatus) string { return s.Error })
-	})
-	add(dsStepSealedSecrets, served(groupSealedSecrets), func(out *dataServices) bool {
-		out.SealedSecrets = readSealedSecrets(ctx, k, now)
-
-		return sectionFailed(out.SealedSecrets, func(s *sealedSecretsStatus) string { return s.Error })
 	})
 	add(dsStepVelero, served(groupVelero), func(out *dataServices) bool {
 		out.Velero = readVelero(ctx, k, now)

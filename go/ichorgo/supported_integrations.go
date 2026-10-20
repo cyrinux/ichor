@@ -82,7 +82,6 @@ var nativeIntegrationSpecs = []integrationSpec{
 	{ID: "thanos", Name: "Thanos", Website: "https://thanos.io", ServiceKind: "thanos"},
 	{ID: "mimir", Name: "Mimir", Website: "https://grafana.com/oss/mimir/", ServiceKind: "mimir"},
 	{ID: "victoriametrics", Name: "VictoriaMetrics", Website: "https://victoriametrics.com", ServiceKind: "victoriametrics"},
-	{ID: "sealed-secrets", Name: "Sealed Secrets", Website: "https://github.com/bitnami/sealed-secrets", Groups: []string{groupSealedSecrets}, Resource: "sealedsecrets"},
 	// KubeVirt VMs, the CDI DataVolumes that fill their disks, Harvester (which runs both) and
 	// the group KubeVirt's start, stop, restart, migrate, pause and unpause live under.
 	{ID: "kubevirt", Name: "KubeVirt", Website: "https://kubevirt.io", Groups: []string{groupKubeVirt, groupCDI, groupHarvester, groupKubeVirtSub}},
@@ -385,7 +384,6 @@ func demoSupportedIntegrations() supportedIntegrations {
 		"velero":              ds.Velero != nil,
 		"external-dns":        ds.ExternalDNS != nil,
 		"cert-manager":        ds.CertManager != nil,
-		"sealed-secrets":      ds.SealedSecrets != nil,
 		"castai":              ds.CastAI != nil,
 		"cilium":              demoCiliumStatus().Installed,
 		"gateway-api":         true,

@@ -92,8 +92,6 @@ func demoCheckup(now time.Time, locale string) checkupReport {
 		}),
 		newSection(checkSecrets, 12, []checkupFinding{
 			{Kind: findExternalSecretFailed, Severity: sevWarning, Namespace: "demo", Name: "database-credentials", Extra: "vault", Reason: "SecretSyncedError", Message: "could not get secret data from provider: permission denied"},
-			{Kind: findSealedSecretNotSynced, Severity: sevCritical, Namespace: "shop", Name: "legacy-cert", Reason: "UnsealFailed", Message: "failed to decrypt: no key could decrypt secret"},
-			{Kind: findSealingKeyCompromised, Severity: sevWarning, Namespace: "kube-system", Name: "sealed-secrets-key-rotated", Reason: sealedReasonKeyCompromised},
 			{Kind: findSopsDecryptionFailed, Severity: sevCritical, Namespace: "flux-system", Name: "apps", Extra: "sops-age", Reason: fluxReasonBuildFailed, Message: "error decrypting sources: failed to decrypt: no key could decrypt the data"},
 		}),
 		newSection(checkHelm, len(releases), helmFindings(releases, now)),
