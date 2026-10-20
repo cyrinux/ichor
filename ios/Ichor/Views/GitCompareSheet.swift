@@ -185,7 +185,7 @@ struct RepoFileView: View {
     var body: some View {
         Group {
             if case .loaded(let source, _, _) = state {
-                SourceFileView(source: source, path: path, app: .repository, line: line > 0 ? line : nil)
+                SourceFileView(source: source, path: path, app: .repository, line: line > 0 ? line : nil, allowTry: false)
             } else {
                 LoadStateView(state: state, retry: load) { _ in EmptyView() }
             }

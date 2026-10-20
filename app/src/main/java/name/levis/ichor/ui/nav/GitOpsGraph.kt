@@ -202,10 +202,13 @@ private fun NavGraphBuilder.sourceScreens(
     composable(
         fileRoute,
         arguments = targetArgs + navArgument("path") { type = NavType.StringType; defaultValue = "" } +
-            navArgument("line") { type = NavType.IntType; defaultValue = 0 },
+            navArgument("line") { type = NavType.IntType; defaultValue = 0 } +
+            navArgument("noTry") { type = NavType.BoolType; defaultValue = false },
     ) { entry ->
         val t = target(entry.arguments)
         val path = entry.arguments?.getString("path").orEmpty()
+        // Opened from a node's machine config: trying from there would stack a second editor.
+        val noTry = entry.arguments?.getBoolean("noTry") == true
         SourceFileScreen(
             target = t,
             path = path,
@@ -214,6 +217,7 @@ private fun NavGraphBuilder.sourceScreens(
             onAddToken = onAddToken,
             onEdit = { nav.navigate(sourceEditRoute(t, path)) },
             onQuickEdit = { edit -> nav.navigate(sourceEditRoute(t, path, encodeQuickEdit(edit))) },
+            onTryPatch = if (noTry) null else { node, patch -> nav.navigate(Routes.machineConfig(node.node, node.hostname, patch = patch)) },
         )
     }
     composable(

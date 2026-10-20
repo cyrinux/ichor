@@ -111,6 +111,39 @@ var configCommands = []command{
 
 		return ichorgo.DriftFixEdits(string(file), flag.Arg(2), flag.Arg(3), flag.Arg(4))
 	}},
+	{name: "talos-patch-detect", args: "FILE", run: func(env) (string, error) {
+		// Whether FILE is a Talos patch that can be tried on a node. Local.
+		file, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.TalosPatchDetect(string(file))
+	}},
+	{name: "talos-patch-draft", args: "NODE FILE", run: func(e env) (string, error) {
+		// NODE's config with the patch FILE applied, redacted. Reads the config with its
+		// secrets (os:admin); only a dry run reaches the node.
+		file, err := os.ReadFile(flag.Arg(2))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.TalosPatchDraft(e.cfg, e.context, flag.Arg(1), string(file))
+	}},
+	{name: "talos-patch-edits", args: "DRAFT FILE", run: func(env) (string, error) {
+		// The field edits of DRAFT (a redacted config) that make the patch FILE. Local.
+		draft, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		file, err := os.ReadFile(flag.Arg(2))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.TalosPatchEdits(string(draft), string(file))
+	}},
 	{name: "drift", args: "[BASELINE]", run: func(e env) (string, error) {
 		// The drift of each node against BASELINE (a saved snapshot) or its role's first node.
 		baseline := ""

@@ -26,6 +26,8 @@ import name.levis.ichor.model.ConfigSnippet
 import name.levis.ichor.model.ConfigSnippetList
 import name.levis.ichor.model.DriftFix
 import name.levis.ichor.model.SnippetEdits
+import name.levis.ichor.model.TalosPatchDraft
+import name.levis.ichor.model.TalosPatchInfo
 import name.levis.ichor.model.ConfigPreview
 import name.levis.ichor.model.ConfigSchemaStatus
 import name.levis.ichor.model.ConfigTree
@@ -279,6 +281,24 @@ class TalosRepository(go: GoCall) : GoRepository(go) {
     /** The edits of [draft] that give it the reference's value of a drift difference. Local. */
     suspend fun driftFixEdits(draft: String, fix: DriftFix): SnippetEdits = withContext(Dispatchers.IO) {
         TalosJson.decodeFromString(SnippetEdits.serializer(), Ichorgo.driftFixEdits(draft, fix.key, fix.before, fix.after))
+    }
+
+    /** Whether [content] is a Talos patch that can be tried on a node. Local. */
+    suspend fun talosPatchDetect(content: String): TalosPatchInfo = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(TalosPatchInfo.serializer(), Ichorgo.talosPatchDetect(content))
+    }
+
+    /**
+     * [node]'s config with the patch [content] applied (os:admin: read with its secrets, checked
+     * with a dry run), redacted: the draft the review shows.
+     */
+    suspend fun talosPatchDraft(node: String, content: String): TalosPatchDraft = call { cfg, ctx ->
+        TalosJson.decodeFromString(TalosPatchDraft.serializer(), Ichorgo.talosPatchDraft(cfg, ctx, node, content))
+    }
+
+    /** The field edits of [draft] that make the patch [content], when it only sets values. Local. */
+    suspend fun talosPatchEdits(draft: String, content: String): SnippetEdits = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(SnippetEdits.serializer(), Ichorgo.talosPatchEdits(draft, content))
     }
 
     /**

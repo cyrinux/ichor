@@ -5890,4 +5890,15 @@
     <string name="proposals_other_revision">Злито; застосунок виконує інший коміт (новіший, або цей ще не застосовано).</string>
     <string name="proposals_reconcile">Узгодити зараз</string>
     <string name="proposals_forget">Забути цю пропозицію</string>
+    <string name="talos_patch_title">Патч Talos</string>
+    <string name="talos_patch_hint">Спробуйте на вузлі до злиття: зміна скасується сама, якщо її не зберегти.</string>
+    <string name="talos_patch_try">Спробувати на вузлі…</string>
+    <string name="talos_patch_cannot">Не можна спробувати: %1$s</string>
+    <string name="talos_patch_pick_title">На якому вузлі спробувати?</string>
+    <string name="talos_patch_no_nodes">Жоден вузол цього кластера не відповідає.</string>
+    <string name="talos_patch_other_node">Цей патч для %1$s: інший вузол отримає його налаштування.</string>
+    <string name="talos_patch_pick_hint">Перегляд показує, що зміниться на цьому вузлі. Якщо патч лише задає значення, звідти його можна перенести на інші вузли.</string>
+    <string name="talos_patch_review">Переглянути на цьому вузлі</string>
+    <string name="talos_patch_same">Вузол уже має те, що задає цей патч.</string>
+    <string name="talos_patch_one_node">Лише для цього вузла: %1$s</string>
 </resources>

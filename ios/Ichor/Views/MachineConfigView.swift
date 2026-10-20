@@ -17,12 +17,15 @@ struct MachineConfigView: View {
     /// A snippet to add (a pod's pull problem: the registry mirror): the screen opens a draft
     /// and the snippet's form on it.
     let snippet: SnippetRequest?
+    /// A repository's Talos patch file: the screen opens a draft with it applied, then the review.
+    let patch: PatchRequest?
 
-    init(node: String, hostname: String, fix: DriftFix? = nil, snippet: SnippetRequest? = nil) {
+    init(node: String, hostname: String, fix: DriftFix? = nil, snippet: SnippetRequest? = nil, patch: PatchRequest? = nil) {
         self.node = node
         self.hostname = hostname
         self.fix = fix
         self.snippet = snippet
+        self.patch = patch
     }
 
     @Environment(AppModel.self) private var model
@@ -48,6 +51,7 @@ struct MachineConfigView: View {
     @State private var replayable = true
     @State private var pickingSnippet = false
     @State private var fixApplied = false
+    @State private var patchApplied = false
     /// The snippet the picker opens on, until it closes once.
     @State private var pendingSnippet: SnippetRequest?
     @State private var snippetOpened = false
@@ -97,6 +101,7 @@ struct MachineConfigView: View {
         .task {
             await load()
             await applyFixOnce()
+            await applyPatchOnce()
             await openSnippetOnce()
         }
     }
@@ -118,6 +123,12 @@ struct MachineConfigView: View {
                 Label("Editing a draft: nothing changes on the node until you review and try it.", systemImage: "pencil")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+                // The repository file the draft comes from.
+                if let patch {
+                    Label { Text(verbatim: patch.from).lineLimit(1).truncationMode(.middle) } icon: { Image(systemName: "doc.text") }
+                        .font(.footnote.monospaced())
+                        .foregroundStyle(.secondary)
+                }
             } else {
                 Toggle(isOn: Binding(get: { reveal }, set: { on in Task { await setReveal(on) } })) {
                     Label("Reveal secrets", systemImage: reveal ? "eye" : "eye.slash")
@@ -340,6 +351,40 @@ struct MachineConfigView: View {
             return
         }
         if canReview { reviewing = true }
+    }
+
+    /// Opened with a repository's Talos patch file: a draft with it applied, then the review. A
+    /// patch that only sets values comes in as field edits, which the review can take to other
+    /// nodes too; any other is applied by Talos's own patcher, for this node only, and the
+    /// message says why.
+    private func applyPatchOnce() async {
+        guard let patch, !patchApplied, let client = model.client, loadedYAML != nil else { return }
+        patchApplied = true
+        await startEditing()
+        guard let current = draft else { return }
+        let asEdits = try? await client.talosPatchEdits(current, patch: patch.content)
+        if let asEdits, asEdits.fixable {
+            await applyEdits(asEdits)
+            if canReview { reviewing = true }
+            return
+        }
+        do {
+            let result = try await client.talosPatchDraft(node: node, patch: patch.content)
+            guard draft == current else { return }
+            if result.same {
+                message = String(localized: "The node already has what this patch sets.")
+                return
+            }
+            describing?.cancel()
+            draft = result.draft
+            edits = []
+            replayable = false
+            await describe()
+            if let reason = asEdits?.reason, !reason.isEmpty { message = String(localized: "For this node only: \(reason)") }
+            if canReview { reviewing = true }
+        } catch {
+            message = error.localizedDescription
+        }
     }
 
     /// The edits of a snippet or a fix, in order; a refusal leaves the draft as it was and says why.

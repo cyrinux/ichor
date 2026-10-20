@@ -7,6 +7,7 @@ import name.levis.ichor.model.DriftFix
 import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.NodeOverview
+import name.levis.ichor.model.PatchPrefill
 import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.model.sensitive
 import name.levis.ichor.ui.overview.NodeAction
@@ -165,8 +166,10 @@ internal object Routes {
     fun repoSource(dir: String = "") = "repo-source?dir=${Uri.encode(dir)}"
 
     /** One file of the active cluster's repository, at the branch head; [line] as in [GITOPS_FILE]. */
-    const val REPO_FILE = "repo-file?path={path}&line={line}"
-    fun repoFile(path: String, line: Int = 0) = "repo-file?path=${Uri.encode(path)}&line=$line"
+    const val REPO_FILE = "repo-file?path={path}&line={line}&noTry={noTry}"
+
+    /** [noTry]: opened from a node's machine config (Compare with Git), so no Try on a node there. */
+    fun repoFile(path: String, line: Int = 0, noTry: Boolean = false) = "repo-file?path=${Uri.encode(path)}&line=$line&noTry=$noTry"
 
     /** The editor of the file [path] of the active cluster's repository; [quick] as in [GITOPS_EDIT]. */
     const val REPO_EDIT = "repo-edit?path={path}&quick={quick}"
@@ -175,7 +178,7 @@ internal object Routes {
     const val POD_SHELL = "pod-shell?ctx={ctx}&ns={ns}&pod={pod}&c={c}"
     const val KUBE_NODE_DEBUG = "kube-node-debug?ctx={ctx}&node={node}&ns={ns}"
     const val VM_CONSOLE = "vm-console?ctx={ctx}&ns={ns}&vm={vm}"
-    const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}&fix={fix}&before={before}&after={after}&snippet={snippet}&snippetParams={snippetParams}"
+    const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}&fix={fix}&before={before}&after={after}&snippet={snippet}&snippetParams={snippetParams}&patch={patch}&patchFrom={patchFrom}"
     const val NETWORK = "network?addr={addr}&host={host}"
     const val HARDWARE = "hardware?addr={addr}&host={host}"
     const val IMAGES = "images?addr={addr}&host={host}"
@@ -226,12 +229,14 @@ internal object Routes {
 
     /**
      * [fix]: a drift difference the screen opens a draft for; [snippet]: a snippet it opens a
-     * draft and the picker on (see MachineConfigScreen).
+     * draft and the picker on; [patch]: a repository's Talos patch file it opens a draft with
+     * (see MachineConfigScreen).
      */
-    fun machineConfig(addr: String, host: String, fix: DriftFix? = null, snippet: SnippetPrefill? = null) =
+    fun machineConfig(addr: String, host: String, fix: DriftFix? = null, snippet: SnippetPrefill? = null, patch: PatchPrefill? = null) =
         "machineconfig?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}" +
             fix?.let { "&fix=${Uri.encode(it.key)}&before=${Uri.encode(it.before)}&after=${Uri.encode(it.after)}" }.orEmpty() +
-            snippet?.let { "&snippet=${Uri.encode(it.id)}&snippetParams=${Uri.encode(it.encodedParams())}" }.orEmpty()
+            snippet?.let { "&snippet=${Uri.encode(it.id)}&snippetParams=${Uri.encode(it.encodedParams())}" }.orEmpty() +
+            patch?.let { "&patch=${Uri.encode(it.content)}&patchFrom=${Uri.encode(it.from)}" }.orEmpty()
 
     /** [context]: the cluster (talosconfig context) of the node; blank for the one on screen. */
     fun debug(addr: String, host: String, context: String = "") =

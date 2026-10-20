@@ -23,6 +23,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -58,6 +59,7 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.model.DriftFix
 import name.levis.ichor.model.configRole
+import name.levis.ichor.model.PatchPrefill
 import name.levis.ichor.model.SnippetPrefill
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ConfigApplyMode
@@ -99,6 +101,8 @@ fun MachineConfigScreen(
     fix: DriftFix? = null,
     /** A snippet from another screen: the screen opens a draft and the picker on it, prefilled. */
     snippet: SnippetPrefill? = null,
+    /** A repository's Talos patch file: the screen opens a draft with it applied, then the review. */
+    patch: PatchPrefill? = null,
     /** A file of the cluster repository, at a line (the Git comparison's files). */
     onRepoFile: (path: String, line: Int) -> Unit = { _, _ -> },
     /** The editor of a file of the cluster repository, a quick edit applied (the write-back's review). */
@@ -118,6 +122,13 @@ fun MachineConfigScreen(
         if (fix != null && !fixApplied && state is UiState.Loaded) {
             fixApplied = true
             vm.applyDriftFix(fix)
+        }
+    }
+    var patchApplied by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(state is UiState.Loaded) {
+        if (patch != null && !patchApplied && state is UiState.Loaded) {
+            patchApplied = true
+            vm.applyPatch(patch)
         }
     }
     val snippets by vm.snippets.collectAsStateWithLifecycle()
@@ -224,6 +235,16 @@ fun MachineConfigScreen(
                             ),
                         )
                         Text(hostname, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
+                        // The repository file the draft comes from, while it is reviewed and tried.
+                        if (patch != null && (editor.editing || run != null || applying != null)) {
+                            Text(
+                                patch.from,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 },
                 navigationIcon = {

@@ -5632,4 +5632,15 @@
     <string name="proposals_other_revision">Merged; the app runs another commit (a newer one, or this one is not applied yet).</string>
     <string name="proposals_reconcile">Reconcile now</string>
     <string name="proposals_forget">Forget this proposal</string>
+    <string name="talos_patch_title">Talos patch</string>
+    <string name="talos_patch_hint">Try it on a node before it is merged: it reverts by itself unless you keep it.</string>
+    <string name="talos_patch_try">Try on a node…</string>
+    <string name="talos_patch_cannot">Cannot be tried: %1$s</string>
+    <string name="talos_patch_pick_title">Try on which node?</string>
+    <string name="talos_patch_no_nodes">No node of this cluster answers.</string>
+    <string name="talos_patch_other_node">This patch is for %1$s: another node would get its settings.</string>
+    <string name="talos_patch_pick_hint">The review shows what changes on that node. When the patch only sets values, it can be taken to other nodes from there.</string>
+    <string name="talos_patch_review">Review on this node</string>
+    <string name="talos_patch_same">The node already has what this patch sets.</string>
+    <string name="talos_patch_one_node">For this node only: %1$s</string>
 </resources>
