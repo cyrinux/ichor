@@ -290,7 +290,8 @@ func TestExternalDNSDemo(t *testing.T) {
 
 	if out.Version != "v1alpha1" || len(out.Controllers) != 1 || out.Controllers[0].Provider != "cloudflare" ||
 		out.Controllers[0].Policy != "sync" || out.Controllers[0].OwnerID != "homelab" ||
-		!slices.Equal(out.Controllers[0].DomainFilters, []string{"example.com"}) {
+		!slices.Equal(out.Controllers[0].DomainFilters, []string{"example.com"}) ||
+		!slices.Equal(out.Controllers[0].ManagedRecordTypes, []string{"A", "AAAA", "CNAME"}) {
 		t.Fatalf("controller: %+v", out.Controllers)
 	}
 
@@ -354,6 +355,71 @@ func TestExternalDNSInterval(t *testing.T) {
 	d.Spec.Template.Spec.Containers[0].Args = nil
 	if c := newExternalDNSController(d); c.IntervalSeconds != 60 {
 		t.Errorf("default interval %d", c.IntervalSeconds)
+	}
+}
+
+// --managed-record-types reads as CSV and repeated, upper-cased, the default set when unset.
+func TestExternalDNSManagedRecordTypes(t *testing.T) {
+	tests := []struct {
+		args []string
+		want []string
+	}{
+		{nil, []string{"A", "AAAA", "CNAME"}},
+		{[]string{"--managed-record-types=cname"}, []string{"CNAME"}},
+		{[]string{"--managed-record-types", "A,AAAA"}, []string{"A", "AAAA"}},
+		{[]string{"--managed-record-types=A", "--managed-record-types=TXT, a"}, []string{"A", "TXT"}},
+	}
+
+	for _, tt := range tests {
+		var d externalDNSDeployment
+		d.Metadata.Namespace, d.Metadata.Name = "external-dns", "external-dns"
+		d.Spec.Template.Spec.Containers = append(d.Spec.Template.Spec.Containers, struct {
+			Image string   `json:"image"`
+			Args  []string `json:"args"`
+		}{"registry.k8s.io/external-dns/external-dns:v0.14.0", tt.args})
+
+		if got := newExternalDNSController(d).ManagedRecordTypes; !slices.Equal(got, tt.want) {
+			t.Errorf("args %v: managed types %v, want %v", tt.args, got, tt.want)
+		}
+	}
+}
+
+// With an A-only and a CNAME-only controller on one zone, each record goes to the one that
+// publishes its type; a type neither lists still falls back to the domain-filter match.
+func TestExternalDNSMatchByRecordType(t *testing.T) {
+	controllers := []externalDNSController{
+		{Name: "dns-addresses", DomainFilters: []string{"example.com"}, ManagedRecordTypes: []string{"A", "AAAA"}},
+		{Name: "dns-aliases", DomainFilters: []string{"example.com"}, ManagedRecordTypes: []string{"CNAME"}},
+		{Name: "dns-other", DomainFilters: []string{"example.net"}},
+	}
+
+	raw := []extDNSRawRecord{
+		{dnsName: "app.example.com", recordType: "A", targets: []string{"203.0.113.10"}},
+		{dnsName: "v6.example.com", recordType: "AAAA", targets: []string{"2001:db8::10"}},
+		{dnsName: "www.example.com", recordType: "CNAME", targets: []string{"infra.example.com"}},
+		{dnsName: "mail.example.com", recordType: "MX", targets: []string{"mx.example.com"}},
+		{dnsName: "www.example.net", recordType: "CNAME", targets: []string{"infra.example.com"}},
+	}
+
+	records, _, _ := extDNSMatch(controllers, raw)
+
+	got := map[string]string{}
+	for _, r := range records {
+		got[r.DNSName] = r.Controller
+	}
+
+	want := map[string]string{
+		"app.example.com":  "dns-addresses",
+		"v6.example.com":   "dns-addresses",
+		"www.example.com":  "dns-aliases",
+		"mail.example.com": "dns-addresses",
+		"www.example.net":  "dns-other",
+	}
+
+	for name, controller := range want {
+		if got[name] != controller {
+			t.Errorf("%s by %q, want %q", name, got[name], controller)
+		}
 	}
 }
 
