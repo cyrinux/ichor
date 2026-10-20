@@ -5650,4 +5650,14 @@
     <string name="gitops_check_no_objects">Ningún objeto generado cambia.</string>
     <string name="gitops_check_at">%1$s, línea %2$d</string>
     <string name="gitops_check_already_broken">Ya falla en este commit</string>
+    <string name="sops_encrypted">Cifrado con SOPS</string>
+    <string name="sops_encrypted_values">Valores cifrados: %1$d</string>
+    <string name="sops_last_modified">Último cifrado %1$s</string>
+    <string name="sops_clear_keys">En claro aunque las reglas del archivo las cifran: %1$s</string>
+    <string name="sops_edit_elsewhere">El teléfono nunca lo descifra: edítelo en un ordenador con sops.</string>
+    <string name="sops_clear_warning">Esta ruta la cifra SOPS en este repositorio (regla %2$s, destinatarios %3$s): %1$s se confirmaría en texto claro.</string>
+    <string name="sops_confirm_title">¿Confirmar un secreto en texto claro?</string>
+    <string name="sops_confirm_text">%1$s se confirmaría en texto claro en una ruta que la regla %2$s cifra. Cífrelo antes con sops en un ordenador, salvo que sea intencionado.</string>
+    <string name="sops_what_secret">un Secret de Kubernetes</string>
+    <string name="sops_what_talos">secretos de Talos</string>
 </resources>

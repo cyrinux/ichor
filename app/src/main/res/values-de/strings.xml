@@ -5641,4 +5641,14 @@
     <string name="gitops_check_no_objects">Kein gerendertes Objekt ändert sich.</string>
     <string name="gitops_check_at">%1$s, Zeile %2$d</string>
     <string name="gitops_check_already_broken">Schlägt bei diesem Commit bereits fehl</string>
+    <string name="sops_encrypted">Mit SOPS verschlüsselt</string>
+    <string name="sops_encrypted_values">Verschlüsselte Werte: %1$d</string>
+    <string name="sops_last_modified">Zuletzt verschlüsselt %1$s</string>
+    <string name="sops_clear_keys">Im Klartext, obwohl die Regeln der Datei sie verschlüsseln: %1$s</string>
+    <string name="sops_edit_elsewhere">Das Telefon entschlüsselt sie nie: Bearbeiten Sie sie an einem Computer mit sops.</string>
+    <string name="sops_clear_warning">Dieser Pfad wird in diesem Repository von SOPS verschlüsselt (Regel %2$s, Empfänger %3$s): %1$s würde im Klartext committet.</string>
+    <string name="sops_confirm_title">Ein Geheimnis im Klartext committen?</string>
+    <string name="sops_confirm_text">%1$s würde im Klartext unter einem Pfad committet, den die Regel %2$s verschlüsselt. Verschlüsseln Sie es zuerst mit sops an einem Computer, außer es ist gewollt.</string>
+    <string name="sops_what_secret">ein Kubernetes-Secret</string>
+    <string name="sops_what_talos">Talos-Secrets</string>
 </resources>

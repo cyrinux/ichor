@@ -34,6 +34,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.EDIT_CHECK_PLAIN
 import name.levis.ichor.model.EditCheckError
 import name.levis.ichor.model.GitOpsEditCheck
+import name.levis.ichor.model.SopsWarning
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
@@ -97,6 +98,26 @@ private fun CheckResult(c: GitOpsEditCheck) {
         else -> Status(Icons.Outlined.Info, stringResource(R.string.gitops_check_not_checked), MaterialTheme.colorScheme.onSurfaceVariant, live)
     }
     if (c.note.isNotEmpty()) MutedText(c.note)
+}
+
+/** The edit commits a clear-text secret where the repository's .sops.yaml encrypts. */
+@Composable
+fun SopsWarningText(w: SopsWarning, modifier: Modifier = Modifier) {
+    val recipients = w.rule.recipients.joinToString { "${it.type} ${it.short}" }
+    Text(
+        stringResource(R.string.sops_clear_warning, sopsWhat(w), w.rule.pathRegex, recipients.ifEmpty { "-" }),
+        color = LocalStatusColors.current.bad,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = modifier.semantics { liveRegion = LiveRegionMode.Polite },
+    )
+}
+
+/** What a warning names, worded: a Kubernetes Secret, Talos secrets, or the Talos key as is. */
+@Composable
+fun sopsWhat(w: SopsWarning): String = when {
+    w.isSecret -> stringResource(R.string.sops_what_secret)
+    w.isTalosBundle -> stringResource(R.string.sops_what_talos)
+    else -> w.what
 }
 
 @Composable

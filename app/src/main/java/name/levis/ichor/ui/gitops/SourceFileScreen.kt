@@ -66,6 +66,7 @@ import name.levis.ichor.model.QuickEditTargets
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.PatchPrefill
 import name.levis.ichor.model.SourceReadPath
+import name.levis.ichor.model.collapseSopsValues
 import name.levis.ichor.model.forgeFileUrl
 import name.levis.ichor.model.isYamlPath
 import name.levis.ichor.model.shortRevision
@@ -170,7 +171,8 @@ fun SourceFileScreen(
                 navigationIcon = { BackButton(onBack) },
                 actions = {
                     if (quick != null) QuickEditMenu(quick, onOpen = { vm.quick.open(it) })
-                    if (view != null && !view.file.truncated && onEdit != null) {
+                    // An encrypted file is edited with sops on a computer: Open in browser stays.
+                    if (view != null && !view.file.truncated && onEdit != null && state.sops == null) {
                         TooltipIconButton(Icons.Outlined.Edit, stringResource(R.string.gitops_edit), onClick = onEdit, enabled = state.editBlock == null)
                     }
                     if (view != null && !view.file.truncated) {
@@ -202,11 +204,14 @@ fun SourceFileScreen(
             } else {
                 Column(modifier) {
                     val block = state.editBlock
-                    if (onEdit != null && block != null) EditBlockNote(block, onAddToken)
+                    val sops = state.sops
+                    if (sops != null) SopsCard(sops, Modifier.padding(bottom = 8.dp))
+                    if (onEdit != null && block != null && sops == null) EditBlockNote(block, onAddToken)
                     if (patchInfo != null && onTryPatch != null) {
                         TalosPatchCard(patchInfo, onTry = { pickingNode = true }, modifier = Modifier.padding(bottom = 8.dp))
                     }
-                    SourceLines(s.data.file.content, yaml = isYamlPath(path), line = line, modifier = Modifier.weight(1f))
+                    val content = if (sops != null) collapseSopsValues(s.data.file.content) else s.data.file.content
+                    SourceLines(content, yaml = isYamlPath(path), line = line, modifier = Modifier.weight(1f))
                 }
             }
         }

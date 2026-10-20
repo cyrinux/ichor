@@ -5913,4 +5913,14 @@
     <string name="gitops_check_no_objects">Жоден згенерований об’єкт не змінюється.</string>
     <string name="gitops_check_at">%1$s, рядок %2$d</string>
     <string name="gitops_check_already_broken">Уже не вдається на цьому коміті</string>
+    <string name="sops_encrypted">Зашифровано SOPS</string>
+    <string name="sops_encrypted_values">Зашифровані значення: %1$d</string>
+    <string name="sops_last_modified">Останнє шифрування %1$s</string>
+    <string name="sops_clear_keys">Відкритим текстом, хоча правила файлу їх шифрують: %1$s</string>
+    <string name="sops_edit_elsewhere">Телефон ніколи його не розшифровує: редагуйте його на комп’ютері з sops.</string>
+    <string name="sops_clear_warning">Цей шлях у репозиторії шифрує SOPS (правило %2$s, отримувачі %3$s): %1$s буде закомічено відкритим текстом.</string>
+    <string name="sops_confirm_title">Закомітити секрет відкритим текстом?</string>
+    <string name="sops_confirm_text">%1$s буде закомічено відкритим текстом за шляхом, який шифрує правило %2$s. Спершу зашифруйте його sops на комп’ютері, якщо це не навмисно.</string>
+    <string name="sops_what_secret">Secret Kubernetes</string>
+    <string name="sops_what_talos">секрети Talos</string>
 </resources>

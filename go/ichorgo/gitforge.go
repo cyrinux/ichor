@@ -74,6 +74,8 @@ type gitForgeEntry struct {
 	Path string `json:"path"`
 	Type string `json:"type"` // file or dir
 	Size int64  `json:"size"`
+	// SOPS: a file SOPS encrypts, by its name (*.sops.yaml, *.enc.yaml).
+	SOPS bool `json:"sops,omitempty"`
 }
 
 type gitForgeTree struct {
@@ -171,6 +173,7 @@ func GitForgeTree(hostJSON, repoURL, ref, dir string) (out string, err error) {
 	}
 
 	sortGitForgeEntries(entries)
+	markSOPSEntries(entries)
 
 	return gitForgeJSON(gitForgeTree{Ref: ref, Entries: nonNil(entries)})
 }

@@ -48,6 +48,8 @@ import name.levis.ichor.model.decodeQuickEditTargets
 import name.levis.ichor.model.quickEditJson
 import name.levis.ichor.model.decodeGitRepoInfo
 import name.levis.ichor.model.repoSource
+import name.levis.ichor.model.SopsInfo
+import name.levis.ichor.model.SopsWarning
 import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.gitHostJsonLacksToken
 import name.levis.ichor.model.gitProposalJson
@@ -55,6 +57,7 @@ import name.levis.ichor.model.proposeBlock
 import name.levis.ichor.R
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichorgo.ArgoSyncListener
 import name.levis.ichorgo.FluxReconcileListener
 import name.levis.ichorgo.Ichorgo
@@ -264,6 +267,23 @@ class GitOpsRepository(
         return withContext(Dispatchers.IO) {
             TalosJson.decodeFromString(GitOpsEditCheck.serializer(), Ichorgo.gitOpsEditCheck(host, src.repoURL, ref, path, content, fluxSpec))
         }
+    }
+
+    /**
+     * Whether [content], proposed at [path] of [src] on [ref], would commit a clear-text secret
+     * where the repository's `.sops.yaml` (read there; none is no rules) encrypts.
+     */
+    suspend fun sopsEditWarning(src: GitSource, ref: String, path: String, content: String): SopsWarning {
+        val rules = cancellableCatching { forgeFile(src, ref, ".sops.yaml").content }.getOrNull()
+            ?: cancellableCatching { forgeFile(src, ref, ".sops.yml").content }.getOrNull().orEmpty()
+        return withContext(Dispatchers.Default) {
+            TalosJson.decodeFromString(SopsWarning.serializer(), Ichorgo.sopsEditWarning(rules, path, content))
+        }
+    }
+
+    /** [content]'s SOPS metadata (who it is encrypted for, its clear keys), never its values. Local. */
+    suspend fun sopsInspect(content: String): SopsInfo = withContext(Dispatchers.Default) {
+        TalosJson.decodeFromString(SopsInfo.serializer(), Ichorgo.sopsInspect(content))
     }
 
     /** What [content] offers to quick edits: its workloads' containers and replicas, a kustomization's images. No network. */

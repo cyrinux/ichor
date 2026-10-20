@@ -51,6 +51,8 @@ struct SourceFileView: View {
     /// The node the picker chose: the machine config screen opens once the sheet is gone.
     @State private var pendingTry: PatchTarget?
     @State private var tryTarget: PatchTarget?
+    /// The file is encrypted with SOPS: shown, never edited on the phone.
+    @State private var sops: SopsInfo?
 
     private var demo: Bool { model.activeSummary?.demo == true }
 
@@ -87,7 +89,7 @@ struct SourceFileView: View {
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                if case .loaded(let file, _, _) = state, !file.file.truncated {
+                if case .loaded(let file, _, _) = state, !file.file.truncated, sops == nil {
                     Button {
                         quickEdit = nil
                         editing = true
@@ -96,7 +98,7 @@ struct SourceFileView: View {
                 }
             }
             ToolbarItem(placement: .primaryAction) {
-                if case .loaded(let file, _, _) = state, !file.file.truncated, let quickTargets {
+                if case .loaded(let file, _, _) = state, !file.file.truncated, sops == nil, let quickTargets {
                     quickMenu(quickTargets)
                 }
             }
@@ -145,8 +147,12 @@ struct SourceFileView: View {
             .themedBackground()
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 VStack(spacing: 0) {
-                    if let talosPatch { TalosPatchBar(info: talosPatch) { pickingNode = true } }
-                    if let editBlock { SourceEditBlockBar(block: editBlock) }
+                    if let sops {
+                        SopsBar(info: sops)
+                    } else {
+                        if let talosPatch { TalosPatchBar(info: talosPatch) { pickingNode = true } }
+                        if let editBlock { SourceEditBlockBar(block: editBlock) }
+                    }
                 }
             }
         }
@@ -235,8 +241,10 @@ struct SourceFileView: View {
             let saved = source.proposalHost.map { hosts.hasToken($0) } ?? false
             editBlock = sourceEditBlock(source, demo: demo, hasToken: saved)
             quickTargets = await Self.quickTargets(of: file)
+            sops = file.truncated ? nil : (try? await TalosClient.sopsInspect(file.content)).flatMap { $0.encrypted ? $0 : nil }
+            let encrypted = sops != nil
             talosPatch = model.activeIsKube || !allowTry ? nil : await Self.talosPatch(of: file, path: path)
-            state = .loaded(SourceFileText(file: file), at: Date())
+            state = .loaded(SourceFileText(file: file, collapseSops: encrypted), at: Date())
         } catch let missing as GitHostMissing {
             missingHost = missing.host
         } catch {
@@ -310,9 +318,12 @@ struct SourceFileText {
     /// The line-number column's width, for the widest number.
     let gutter: CGFloat
 
-    init(file: GitFile) {
+    /// collapseSops: the file is SOPS-encrypted, its ciphertext tells nothing: each ENC[…] value
+    /// shows as such.
+    init(file: GitFile, collapseSops: Bool = false) {
         self.file = file
-        lines = file.truncated ? [] : filterLines(file.content.replacingOccurrences(of: "\r\n", with: "\n"), query: "")
+        let text = collapseSops ? collapseSopsValues(file.content) : file.content
+        lines = file.truncated ? [] : filterLines(text.replacingOccurrences(of: "\r\n", with: "\n"), query: "")
         gutter = CGFloat(max(2, String(lines.count).count)) * 7
     }
 }

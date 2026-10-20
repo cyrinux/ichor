@@ -162,6 +162,15 @@ tour** shows it again.
   operations or a new document is tried node by node. A whole machine config, a patch setting a
   secret or holding a talenv `${...}` cannot be tried and says why. The file in Git is not
   changed: merge it on the forge once the try was kept.
+- **SOPS files:** encrypted files are shown, never edited or decrypted on the phone. A
+  `*.sops.yaml` or `*.enc.yaml` file has a lock in the listing; its viewer reads the SOPS
+  metadata only: the keys it is encrypted for (age, PGP, cloud KMS), when it was last
+  encrypted, how many values are, and any value its own rules say should be encrypted but is in
+  clear (a half-encrypted file). The ciphertext shows as `ENC[…]`, and Edit and Quick edit give
+  way to editing it with sops on a computer. When an edit would put a Kubernetes Secret or a
+  Talos secret in clear text at a path the repository's `.sops.yaml` (the one at its root, read
+  at the branch the request goes to) encrypts, the review says which rule and keys, and asks
+  once more before the pull request.
 - **Find in repository:** the search in a source browser (an Argo CD or Flux app's source, or
   the cluster repository) lists every line of the whole repository that holds the text, by
   file, and opens the file at that line. It downloads the repository once per commit as one

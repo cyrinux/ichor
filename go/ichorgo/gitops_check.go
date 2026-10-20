@@ -301,9 +301,19 @@ func buildBounded(build func() buildBoth) (buildBoth, error) {
 	go func() {
 		// Free the slot before handing the result back: a caller that has its result can
 		// start the next check at once and must not find this one still holding it.
-		b := build()
-		<-editCheckBusy
-		done <- b
+		var b buildBoth
+
+		defer func() {
+			if r := recover(); r != nil {
+				// The edited build's: the commit's is not known to fail the same way.
+				b = buildBoth{afterErr: fmt.Errorf("the build failed: %v", r)}
+			}
+
+			<-editCheckBusy
+			done <- b
+		}()
+
+		b = build()
 	}()
 
 	select {
