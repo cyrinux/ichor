@@ -200,3 +200,35 @@ jobs:
           path: |
             app/build/outputs/bundle/play/*.aab
             app/build/outputs/mapping/play/mapping.txt
+
+  # setup-gradle saves a Gradle home entry per job (gradle-home-v2|<os>|<job>[…]) that names the
+  # extracted entries it restores (gradle-dependencies-v2-*, gradle-transforms-v2-*, …), and
+  # never deletes any. Once every job of a main run has saved, this keeps the newest home of
+  # each job and the extracted entries this run restored or wrote (last accessed after the run
+  # started); the rest only a previous run used.
+  gradle-cache-prune:
+    name: Gradle cache prune
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [check, debug, release, play]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        # A failed delete only leaves the entry for LRU eviction: never fail the run on it.
+        run: |
+          started="$(gh api "repos/$GH_REPO/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT" --jq .run_started_at)"
+          gh api --paginate "repos/$GH_REPO/actions/caches?ref=refs/heads/main&key=gradle-&per_page=100" \
+            --jq '.actions_caches[]' |
+            jq -rs --arg started "$started" '
+              (map(select(.key | startswith("gradle-home-")))
+                | group_by(.key | sub("\\].*"; "]"))
+                | map(sort_by(.created_at) | .[:-1][])),
+              map(select((.key | startswith("gradle-home-") | not) and .last_accessed_at < $started))
+              | .[] | "\(.id) \(.key)"' |
+            while read -r id key; do
+              echo "deleting $key"
+              gh cache delete "$id" || echo "::warning::could not delete cache $key"
+            done
