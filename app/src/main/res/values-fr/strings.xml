@@ -5650,4 +5650,13 @@
     <string name="gitops_check_no_objects">Aucun objet rendu ne change.</string>
     <string name="gitops_check_at">%1$s, ligne %2$d</string>
     <string name="gitops_check_already_broken">Échoue déjà à ce commit</string>
+    <string name="sops_encrypted">Chiffré avec SOPS</string>
+    <string name="sops_encrypted_values">Valeurs chiffrées : %1$d</string>
+    <string name="sops_last_modified">Dernier chiffrement %1$s</string>
+    <string name="sops_clear_keys">En clair alors que les règles du fichier les chiffrent : %1$s</string>
+    <string name="sops_edit_elsewhere">Le téléphone ne le déchiffre jamais : modifiez-le sur un ordinateur avec sops.</string>
+    <string name="sops_clear_warning">Ce chemin est chiffré par SOPS dans ce dépôt (règle %2$s, destinataires %3$s) : %1$s serait commis en clair.</string>
+    <string name="sops_confirm_title">Commettre un secret en clair ?</string>
+    <string name="sops_confirm_text">%1$s serait commis en clair à un chemin que la règle %2$s chiffre. Chiffrez-le d\'abord avec sops sur un ordinateur, sauf si c\'est voulu.</string>
+    <string name="sops_what_secret">un Secret Kubernetes</string>
 </resources>

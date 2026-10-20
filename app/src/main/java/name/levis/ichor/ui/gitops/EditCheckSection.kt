@@ -72,6 +72,7 @@ fun EditCheckSection(check: UiState<GitOpsEditCheck>, onRetry: () -> Unit, modif
 private fun CheckResult(c: GitOpsEditCheck) {
     val colors = LocalStatusColors.current
     val live = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+    if (c.sops.warn) SopsWarningText(c, live)
     when {
         c.broken -> {
             Status(Icons.Outlined.Info, stringResource(R.string.gitops_check_already_broken), colors.warn, live)
@@ -97,6 +98,19 @@ private fun CheckResult(c: GitOpsEditCheck) {
         else -> Status(Icons.Outlined.Info, stringResource(R.string.gitops_check_not_checked), MaterialTheme.colorScheme.onSurfaceVariant, live)
     }
     if (c.note.isNotEmpty()) MutedText(c.note)
+}
+
+/** The edit commits a clear-text secret where the repository's .sops.yaml encrypts. */
+@Composable
+private fun SopsWarningText(c: GitOpsEditCheck, modifier: Modifier = Modifier) {
+    val recipients = c.sops.rule.recipients.joinToString { "${it.type} ${it.short}" }
+    val what = if (c.sops.isSecret) stringResource(R.string.sops_what_secret) else c.sops.what
+    Text(
+        stringResource(R.string.sops_clear_warning, what, c.sops.rule.pathRegex, recipients.ifEmpty { "-" }),
+        color = LocalStatusColors.current.bad,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = modifier,
+    )
 }
 
 @Composable

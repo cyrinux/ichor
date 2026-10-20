@@ -139,25 +139,29 @@ public struct GitEntry: Decodable, Hashable, Identifiable, Sendable {
     public let path: String
     public let isDir: Bool
     public let size: Int64
+    /// A file SOPS encrypts, by its name.
+    public let sops: Bool
 
     public var id: String { path }
 
     /// The last part of path.
     public var name: String { path.split(separator: "/").last.map(String.init) ?? path }
 
-    public init(path: String, isDir: Bool, size: Int64 = 0) {
+    public init(path: String, isDir: Bool, size: Int64 = 0, sops: Bool = false) {
         self.path = path
         self.isDir = isDir
         self.size = size
+        self.sops = sops
     }
 
-    enum CodingKeys: String, CodingKey { case path, type, size }
+    enum CodingKeys: String, CodingKey { case path, type, size, sops }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         path = try c.field(.path, "")
         isDir = try c.field(.type, "file") == "dir"
         size = try c.field(.size, Int64(0))
+        sops = try c.field(.sops, false)
     }
 }
 

@@ -31,9 +31,11 @@ public struct GitOpsEditCheck: Decodable, Sendable {
     public let unchanged: Int
     /// The build fails at the commit already, the same way: not the edit's doing.
     public let broken: Bool
+    /// The edit would commit a clear-text secret where .sops.yaml encrypts.
+    public let sops: SopsWarning?
     public let note: String
 
-    private enum CodingKeys: String, CodingKey { case sha, kind, dir, ok, errors, diff, unchanged, broken, note }
+    private enum CodingKeys: String, CodingKey { case sha, kind, dir, ok, errors, diff, unchanged, broken, sops, note }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -45,6 +47,7 @@ public struct GitOpsEditCheck: Decodable, Sendable {
         resources = try c.decodeIfPresent(FluxDiff.self, forKey: .diff)?.resources ?? []
         unchanged = try c.field(.unchanged, 0)
         broken = try c.field(.broken, false)
+        sops = try c.decodeIfPresent(SopsWarning.self, forKey: .sops)
         note = try c.field(.note, "")
     }
 

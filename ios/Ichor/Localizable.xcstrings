@@ -1,6 +1,333 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Encrypted with SOPS" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiffré avec SOPS"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifrado con SOPS"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit SOPS verschlüsselt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifrato con SOPS"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зашифровано SOPS"
+          }
+        }
+      }
+    },
+    "Encrypted values: %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valeurs chiffrées : %lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valores cifrados: %lld"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verschlüsselte Werte: %lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valori cifrati: %lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зашифровані значення: %lld"
+          }
+        }
+      }
+    },
+    "Last encrypted %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dernier chiffrement %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Último cifrado %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuletzt verschlüsselt %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ultima cifratura %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Останнє шифрування %@"
+          }
+        }
+      }
+    },
+    "In clear although the file's rules encrypt them: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En clair alors que les règles du fichier les chiffrent : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En claro aunque las reglas del archivo las cifran: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Klartext, obwohl die Regeln der Datei sie verschlüsseln: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In chiaro anche se le regole del file le cifrano: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкритим текстом, хоча правила файлу їх шифрують: %@"
+          }
+        }
+      }
+    },
+    "The phone never decrypts it: edit it on a computer with sops." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le téléphone ne le déchiffre jamais : modifiez-le sur un ordinateur avec sops."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El teléfono nunca lo descifra: edítelo en un ordenador con sops."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Telefon entschlüsselt sie nie: Bearbeiten Sie sie an einem Computer mit sops."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il telefono non lo decifra mai: modificalo su un computer con sops."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Телефон ніколи його не розшифровує: редагуйте його на комп’ютері з sops."
+          }
+        }
+      }
+    },
+    "This path is encrypted by SOPS in this repository (rule %@, recipients %@): %@ would be committed in clear text." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce chemin est chiffré par SOPS dans ce dépôt (règle %1$@, destinataires %2$@) : %3$@ serait commis en clair."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta ruta la cifra SOPS en este repositorio (regla %1$@, destinatarios %2$@): %3$@ se confirmaría en texto claro."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Pfad wird in diesem Repository von SOPS verschlüsselt (Regel %1$@, Empfänger %2$@): %3$@ würde im Klartext committet."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo percorso è cifrato da SOPS in questo repository (regola %1$@, destinatari %2$@): %3$@ verrebbe salvato in chiaro."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей шлях у репозиторії шифрує SOPS (правило %1$@, отримувачі %2$@): %3$@ буде закомічено відкритим текстом."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This path is encrypted by SOPS in this repository (rule %1$@, recipients %2$@): %3$@ would be committed in clear text."
+          }
+        }
+      }
+    },
+    "a Kubernetes Secret" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "un Secret Kubernetes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "un Secret de Kubernetes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ein Kubernetes-Secret"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "un Secret Kubernetes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret Kubernetes"
+          }
+        }
+      }
+    },
+    "Commit a clear-text secret?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commettre un secret en clair ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Confirmar un secreto en texto claro?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Geheimnis im Klartext committen?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvare un segreto in chiaro?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закомітити секрет відкритим текстом?"
+          }
+        }
+      }
+    },
+    "%@ would be committed in clear text at a path the rule %@ encrypts. Encrypt it with sops on a computer first, unless you mean it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ serait commis en clair à un chemin que la règle %2$@ chiffre. Chiffrez-le d'abord avec sops sur un ordinateur, sauf si c'est voulu."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ se confirmaría en texto claro en una ruta que la regla %2$@ cifra. Cífrelo antes con sops en un ordenador, salvo que sea intencionado."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ würde im Klartext unter einem Pfad committet, den die Regel %2$@ verschlüsselt. Verschlüsseln Sie es zuerst mit sops an einem Computer, außer es ist gewollt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ verrebbe salvato in chiaro in un percorso che la regola %2$@ cifra. Cifralo prima con sops su un computer, a meno che non sia voluto."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ буде закомічено відкритим текстом за шляхом, який шифрує правило %2$@. Спершу зашифруйте його sops на комп’ютері, якщо це не навмисно."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ would be committed in clear text at a path the rule %2$@ encrypts. Encrypt it with sops on a computer first, unless you mean it."
+          }
+        }
+      }
+    },
     "Already fails at this commit" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -123,6 +123,11 @@ extension TalosClient {
         return try await Self.json { IchorgoGitOpsEditCheck(json, repo, ref, path, content, fluxSpec, $0) }
     }
 
+    /// content's SOPS metadata (who it is encrypted for, its clear keys), never its values (pure).
+    static func sopsInspect(_ content: String) async throws -> SopsInfo {
+        try await json { IchorgoSopsInspect(content, $0) }
+    }
+
     /// The unified diff of a file from before to after (one "file" resource), for the review.
     static func textDiff(before: String, after: String, name: String) async throws -> FluxDiff {
         try await json { IchorgoTextDiff(before, after, name, $0) }

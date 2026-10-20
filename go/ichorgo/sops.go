@@ -23,6 +23,8 @@ const (
 	sopsUnencryptedSuffix = "_unencrypted"
 	// sopsMaxClearKeys caps the clear keys named.
 	sopsMaxClearKeys = 20
+	// sopsWhatSecret is a Kubernetes Secret in a sopsWarning: the apps word it.
+	sopsWhatSecret = "Secret"
 )
 
 type sopsRecipient struct {
@@ -52,7 +54,7 @@ type sopsRule struct {
 // sopsWarning is an edit that would commit a clear-text secret where a rule encrypts.
 type sopsWarning struct {
 	Warn bool `json:"warn"`
-	// What names the secret: "a Kubernetes Secret", "cluster.secret".
+	// What names the secret: sopsWhatSecret for a Kubernetes Secret, else the Talos key (cluster.secret).
 	What string   `json:"what,omitempty"`
 	Rule sopsRule `json:"rule"`
 }
@@ -410,7 +412,7 @@ func sopsEditWarning(sopsYAML, path, content string) sopsWarning {
 	for _, d := range docs {
 		m, _ := d.(map[string]any)
 		if m["kind"] == "Secret" && (m["data"] != nil || m["stringData"] != nil) {
-			what = "a Kubernetes Secret"
+			what = sopsWhatSecret
 
 			break
 		}

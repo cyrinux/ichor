@@ -93,6 +93,10 @@ struct SourceBrowserView: View {
                                     Image(systemName: "doc.text").foregroundStyle(.secondary)
                                 }
                                 Spacer(minLength: 8)
+                                if entry.sops {
+                                    Image(systemName: "lock.fill").font(.caption).foregroundStyle(.secondary)
+                                        .accessibilityLabel(Text("Encrypted with SOPS"))
+                                }
                                 Text(verbatim: formatBytes(entry.size)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                             }
                         }

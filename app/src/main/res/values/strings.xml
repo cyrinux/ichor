@@ -5655,4 +5655,13 @@
     <string name="gitops_check_no_objects">No rendered object changes.</string>
     <string name="gitops_check_at">%1$s, line %2$d</string>
     <string name="gitops_check_already_broken">Already fails at this commit</string>
+    <string name="sops_encrypted">Encrypted with SOPS</string>
+    <string name="sops_encrypted_values">Encrypted values: %1$d</string>
+    <string name="sops_last_modified">Last encrypted %1$s</string>
+    <string name="sops_clear_keys">In clear although the file\'s rules encrypt them: %1$s</string>
+    <string name="sops_edit_elsewhere">The phone never decrypts it: edit it on a computer with sops.</string>
+    <string name="sops_clear_warning">This path is encrypted by SOPS in this repository (rule %2$s, recipients %3$s): %1$s would be committed in clear text.</string>
+    <string name="sops_confirm_title">Commit a clear-text secret?</string>
+    <string name="sops_confirm_text">%1$s would be committed in clear text at a path the rule %2$s encrypts. Encrypt it with sops on a computer first, unless you mean it.</string>
+    <string name="sops_what_secret">a Kubernetes Secret</string>
 </resources>

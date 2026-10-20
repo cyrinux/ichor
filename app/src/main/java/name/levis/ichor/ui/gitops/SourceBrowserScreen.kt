@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FolderOpen
@@ -246,6 +247,14 @@ private fun EntryRow(entry: GitEntry, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f).padding(start = 12.dp),
         )
+        if (entry.sops) {
+            Icon(
+                Icons.Outlined.Lock,
+                contentDescription = stringResource(R.string.sops_encrypted),
+                tint = muted,
+                modifier = Modifier.padding(start = 8.dp).size(16.dp),
+            )
+        }
         if (!entry.isDir) MutedText(formatBytes(entry.size), modifier = Modifier.padding(start = 8.dp))
     }
 }

@@ -105,7 +105,7 @@ func TestSopsEditWarning(t *testing.T) {
 	secret := "apiVersion: v1\nkind: Secret\nmetadata:\n  name: web\nstringData:\n  password: hunter2\n"
 
 	w := sopsEditWarning(sopsTestRules, "kubernetes/apps/web/secret.yaml", secret)
-	if !w.Warn || w.What != "a Kubernetes Secret" || w.Rule.PathRegex == "" {
+	if !w.Warn || w.What != sopsWhatSecret || w.Rule.PathRegex == "" {
 		t.Fatalf("secret %+v", w)
 	}
 

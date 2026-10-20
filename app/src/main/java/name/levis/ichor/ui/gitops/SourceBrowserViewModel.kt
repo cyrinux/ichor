@@ -22,6 +22,7 @@ import name.levis.ichor.model.MAX_PATCH_BYTES
 import name.levis.ichor.model.QuickEditTargets
 import name.levis.ichor.model.TalosPatchInfo
 import name.levis.ichor.model.isYamlPath
+import name.levis.ichor.model.SopsInfo
 import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.cleanSourceDir
 import name.levis.ichor.ui.LocalizedException
@@ -209,6 +210,8 @@ data class SourceFileState(
     val quick: QuickEditTargets? = null,
     /** The file is a Talos patch (on a Talos cluster): whether and why it can be tried on a node. */
     val talosPatch: TalosPatchInfo? = null,
+    /** The file is encrypted with SOPS: shown, never edited on the phone. */
+    val sops: SopsInfo? = null,
 )
 
 /**
@@ -258,7 +261,14 @@ class SourceFileViewModel(private val gitOps: GitOpsRepository, private val talo
                 } else {
                     null
                 }
-                SourceFileState(UiState.Loaded(SourceFileView(src, file)), editBlock = block, quick = quick, talosPatch = patch)
+                val sops = if (!file.truncated) cancellableCatching { gitOps.sopsInspect(file.content) }.getOrNull()?.takeIf { it.encrypted } else null
+                SourceFileState(
+                    UiState.Loaded(SourceFileView(src, file)),
+                    editBlock = block,
+                    quick = quick.takeIf { sops == null },
+                    talosPatch = patch.takeIf { sops == null },
+                    sops = sops,
+                )
             } catch (e: CancellationException) {
                 throw e
             } catch (e: GitHostMissing) {

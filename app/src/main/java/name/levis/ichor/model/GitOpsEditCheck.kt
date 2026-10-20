@@ -24,6 +24,8 @@ data class GitOpsEditCheck(
     val unchanged: Int = 0,
     /** The build fails at the commit already, the same way: not the edit's doing. */
     val broken: Boolean = false,
+    /** The edit would commit a clear-text secret where .sops.yaml encrypts. */
+    val sops: SopsWarning = SopsWarning(),
     val note: String = "",
 ) {
     /** The edit breaks the build: what the review warns about. */

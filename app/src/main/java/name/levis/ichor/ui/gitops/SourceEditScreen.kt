@@ -229,6 +229,26 @@ private fun EditReview(
                 }
                 return
             }
+            // A clear-text secret where .sops.yaml encrypts: asked once more before the pull request.
+            val sops = (check as? UiState.Loaded)?.data?.sops?.takeIf { it.warn }
+            var confirmingSops by remember { mutableStateOf(false) }
+            if (confirmingSops && sops != null) {
+                ConfirmDialog(
+                    title = stringResource(R.string.sops_confirm_title),
+                    text = stringResource(
+                        R.string.sops_confirm_text,
+                        if (sops.isSecret) stringResource(R.string.sops_what_secret) else sops.what,
+                        sops.rule.pathRegex,
+                    ),
+                    confirm = stringResource(R.string.gitops_edit_continue),
+                    onConfirm = {
+                        confirmingSops = false
+                        onContinue()
+                    },
+                    onDismiss = { confirmingSops = false },
+                    destructive = true,
+                )
+            }
             Column(modifier.fillMaxSize().imePadding()) {
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)) {
                     notice?.let { MutedText(it.asString(), Modifier.padding(bottom = 8.dp)) }
@@ -242,7 +262,7 @@ private fun EditReview(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     OutlinedButton(onClick = onBack) { Text(stringResource(R.string.kb_back_to_editor)) }
-                    Button(onClick = onContinue) { Text(stringResource(R.string.gitops_edit_continue)) }
+                    Button(onClick = { if (sops != null) confirmingSops = true else onContinue() }) { Text(stringResource(R.string.gitops_edit_continue)) }
                     // The pull request can still be opened: the person decides.
                     if ((check as? UiState.Loaded)?.data?.fails == true) {
                         Text(stringResource(R.string.gitops_check_fails), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.labelLarge)

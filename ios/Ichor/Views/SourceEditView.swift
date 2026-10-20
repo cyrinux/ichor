@@ -234,6 +234,13 @@ private struct SourceEditReview: View {
     /// The build check run with the review: the kustomization built with the edit.
     @State private var check: LoadState<GitOpsEditCheck> = .loading
     @State private var proposing = false
+    /// A clear-text secret where .sops.yaml encrypts: asked once more before the pull request.
+    @State private var confirmingSops = false
+
+    private var sopsWarning: SopsWarning? {
+        if case .loaded(let c, _, _) = check, let w = c.sops, w.warn { return w }
+        return nil
+    }
 
     var body: some View {
         LoadStateView(state: state, retry: load) { diff in
@@ -286,8 +293,18 @@ private struct SourceEditReview: View {
             if case .loaded(let c, _, _) = check, c.fails {
                 Label("Build fails", systemImage: "xmark.octagon").font(.footnote).foregroundStyle(.statusBad)
             }
-            Button { proposing = true } label: {
+            Button {
+                if sopsWarning != nil { confirmingSops = true } else { proposing = true }
+            } label: {
                 Text("Continue").frame(maxWidth: .infinity)
+            }
+            .confirmationDialog("Commit a clear-text secret?", isPresented: $confirmingSops, titleVisibility: .visible) {
+                Button("Continue", role: .destructive) { proposing = true }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                if let w = sopsWarning {
+                    Text("\(sopsWhat(w)) would be committed in clear text at a path the rule \(w.rule?.pathRegex ?? "") encrypts. Encrypt it with sops on a computer first, unless you mean it.")
+                }
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)

@@ -48,6 +48,7 @@ import name.levis.ichor.model.decodeQuickEditTargets
 import name.levis.ichor.model.quickEditJson
 import name.levis.ichor.model.decodeGitRepoInfo
 import name.levis.ichor.model.repoSource
+import name.levis.ichor.model.SopsInfo
 import name.levis.ichor.model.SourceReadPath
 import name.levis.ichor.model.gitHostJsonLacksToken
 import name.levis.ichor.model.gitProposalJson
@@ -264,6 +265,11 @@ class GitOpsRepository(
         return withContext(Dispatchers.IO) {
             TalosJson.decodeFromString(GitOpsEditCheck.serializer(), Ichorgo.gitOpsEditCheck(host, src.repoURL, ref, path, content, fluxSpec))
         }
+    }
+
+    /** [content]'s SOPS metadata (who it is encrypted for, its clear keys), never its values. Local. */
+    suspend fun sopsInspect(content: String): SopsInfo = withContext(Dispatchers.Default) {
+        TalosJson.decodeFromString(SopsInfo.serializer(), Ichorgo.sopsInspect(content))
     }
 
     /** What [content] offers to quick edits: its workloads' containers and replicas, a kustomization's images. No network. */
