@@ -7,72 +7,32 @@ import IchorCore
 /// links to that data service, one of Rook Ceph to its plugin.
 struct KubeStorageView: View {
     @Environment(AppModel.self) private var model
-    @State private var scope = KubeBrowserScope()
-    @State private var state: LoadState<KubeStorage> = .loading
     @State private var query = ""
     @State private var snapshots: VolumeSnapshots?
     @State private var confirmSnapshot: StorageClaim?
     @State private var snapshotBusy = false
     @State private var snapshotResult: String?
 
-    /// What decides the list: the scope, and the cluster, API address and screenshot mode.
-    private struct Trigger: Hashable {
-        let scope: KubeScope
-        let ready: Bool
-        let source: String
-    }
-
     var body: some View {
-        let control = scope.control(model: model)
-        VStack(spacing: 0) {
-            KubeScopeBar(control: control, loaded: loadedNamespaces)
-                .background(.bar)
-            Divider()
-            if !control.ready {
-                ContentUnavailableView {
-                    Label("Namespace", systemImage: "square.dashed")
-                } description: {
-                    Text("Type the namespace to list above.")
-                }
-                .frame(maxHeight: .infinity)
-            } else {
-                LoadStateView(state: state, retry: { await load(control.scope) }) { storage in
-                    list(storage, showNamespace: control.scope.namespace == nil, scope: control.scope)
-                }
-            }
-        }
-        .loadsKubeActionAccess(namespace: control.scope.namespace)
-        .searchable(text: $query, prompt: Text("Search PVCs, classes or pods"))
-        .autocorrectionDisabled()
-        .textInputAutocapitalization(.never)
-        .navigationTitle(Text("Storage"))
-        .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog("Create snapshot", isPresented: Binding(get: { confirmSnapshot != nil }, set: { if !$0 { confirmSnapshot = nil } })) {
-            Button("Create snapshot") {
-                guard let claim = confirmSnapshot, let client = model.client else { return }
+        KubeScopedList(
+            title: Text("Storage"),
+            prompt: Text("Search PVCs, classes or pods"),
+            query: $query,
+            fetch: { (client: TalosClient, scope: KubeScope) async throws -> KubeStorage in
+                let key = kubeNamespacesKey(model)
+                snapshots = nil
                 confirmSnapshot = nil
-                snapshotBusy = true
-                let source = kubeNamespacesKey(model)
-                Task {
-                    do { snapshotResult = try await client.createVolumeSnapshot(namespace: claim.namespace, pvc: claim.name) }
-                    catch { snapshotResult = error.localizedDescription }
-                    snapshotBusy = false
-                    if source == kubeNamespacesKey(model) { await load(scope.control(model: model).scope) }
-                }
-            }
-        } message: {
-            Text("Create a CSI snapshot of \(confirmSnapshot?.id ?? "") using the default class for its driver.")
-        }
-        .alert("Create snapshot", isPresented: Binding(get: { snapshotResult != nil }, set: { if !$0 { snapshotResult = nil } })) {
-            Button("OK") { snapshotResult = nil }
-        } message: { Text(verbatim: snapshotResult ?? "") }
-        .task(id: kubeNamespacesKey(model)) { await scope.loadNamespaces(model: model) }
-        .task(id: Trigger(scope: control.scope, ready: control.ready, source: kubeNamespacesKey(model))) {
-            if control.ready { await load(control.scope) }
+                let snapshotData = try? await client.volumeSnapshots(namespace: scope.namespace ?? "")
+                defer { if key == kubeNamespacesKey(model), !Task.isCancelled { snapshots = snapshotData } }
+                return try await client.storage(namespace: scope.namespace)
+            },
+            namespaces: { value in value.claims.map(\.namespace) }
+        ) { storage, scope, reload in
+            list(storage, showNamespace: scope.namespace == nil, scope: scope, reload: reload)
         }
     }
 
-    private func list(_ storage: KubeStorage, showNamespace: Bool, scope: KubeScope) -> some View {
+    private func list(_ storage: KubeStorage, showNamespace: Bool, scope: KubeScope, reload: @escaping () async -> Void) -> some View {
         let shown = filterStorageClaims(storage.claims, query: query)
         return List {
             if snapshotBusy { ProgressView() }
@@ -109,25 +69,28 @@ struct KubeStorageView: View {
         .emptyOverlay(shown.isEmpty, query: query) {
             ContentUnavailableView("No PVCs.", systemImage: "externaldrive")
         }
-        .refreshable { await load(scope) }
+        .refreshable { await reload() }
         .themedBackground()
-    }
-
-    private var loadedNamespaces: [String] {
-        guard case .loaded(let storage, _, _) = state else { return [] }
-        return Array(Set(storage.claims.map(\.namespace))).sorted()
-    }
-
-    private func load(_ scope: KubeScope) async {
-        guard let client = model.client else { return }
-        let key = kubeNamespacesKey(model)
-        snapshots = nil
-        confirmSnapshot = nil
-        let snapshotData = try? await client.volumeSnapshots(namespace: scope.namespace ?? "")
-        let fetched: LoadState<KubeStorage> = await .from { try await client.storage(namespace: scope.namespace) }
-        guard key == kubeNamespacesKey(model), !Task.isCancelled else { return }
-        state = state.refreshed(with: fetched)
-        snapshots = snapshotData
+        .loadsKubeActionAccess(namespace: scope.namespace)
+        .confirmationDialog("Create snapshot", isPresented: Binding(get: { confirmSnapshot != nil }, set: { if !$0 { confirmSnapshot = nil } })) {
+            Button("Create snapshot") {
+                guard let claim = confirmSnapshot, let client = model.client else { return }
+                confirmSnapshot = nil
+                snapshotBusy = true
+                let source = kubeNamespacesKey(model)
+                Task {
+                    do { snapshotResult = try await client.createVolumeSnapshot(namespace: claim.namespace, pvc: claim.name) }
+                    catch { snapshotResult = error.localizedDescription }
+                    snapshotBusy = false
+                    if source == kubeNamespacesKey(model) { await reload() }
+                }
+            }
+        } message: {
+            Text("Create a CSI snapshot of \(confirmSnapshot?.id ?? "") using the default class for its driver.")
+        }
+        .alert("Create snapshot", isPresented: Binding(get: { snapshotResult != nil }, set: { if !$0 { snapshotResult = nil } })) {
+            Button("OK") { snapshotResult = nil }
+        } message: { Text(verbatim: snapshotResult ?? "") }
     }
 }
 

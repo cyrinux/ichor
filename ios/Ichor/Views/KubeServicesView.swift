@@ -9,48 +9,21 @@ import IchorCore
 struct KubeServicesView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openURL) private var openURL
-    @State private var scope = KubeBrowserScope()
-    @State private var state: LoadState<KubeServices> = .loading
     @State private var query = ""
 
-    /// What decides the list: the scope, and the cluster, API address and screenshot mode.
-    private struct Trigger: Hashable {
-        let scope: KubeScope
-        let ready: Bool
-        let source: String
-    }
-
     var body: some View {
-        let control = scope.control(model: model)
-        VStack(spacing: 0) {
-            KubeScopeBar(control: control, loaded: loadedNamespaces)
-                .background(.bar)
-            Divider()
-            if !control.ready {
-                ContentUnavailableView {
-                    Label("Namespace", systemImage: "square.dashed")
-                } description: {
-                    Text("Type the namespace to list above.")
-                }
-                .frame(maxHeight: .infinity)
-            } else {
-                LoadStateView(state: state, retry: { await load(control.scope) }) { services in
-                    list(services, showNamespace: control.scope.namespace == nil, scope: control.scope)
-                }
-            }
-        }
-        .searchable(text: $query, prompt: Text("Search services, addresses or routes"))
-        .autocorrectionDisabled()
-        .textInputAutocapitalization(.never)
-        .navigationTitle(Text("Services"))
-        .navigationBarTitleDisplayMode(.inline)
-        .task(id: kubeNamespacesKey(model)) { await scope.loadNamespaces(model: model) }
-        .task(id: Trigger(scope: control.scope, ready: control.ready, source: kubeNamespacesKey(model))) {
-            if control.ready { await load(control.scope) }
+        KubeScopedList(
+            title: Text("Services"),
+            prompt: Text("Search services, addresses or routes"),
+            query: $query,
+            fetch: { client, scope in try await client.services(namespace: scope.namespace) },
+            namespaces: { value in value.services.map(\.namespace) }
+        ) { services, scope, reload in
+            list(services, showNamespace: scope.namespace == nil, reload: reload)
         }
     }
 
-    private func list(_ services: KubeServices, showNamespace: Bool, scope: KubeScope) -> some View {
+    private func list(_ services: KubeServices, showNamespace: Bool, reload: @escaping () async -> Void) -> some View {
         let shown = filterServices(services.services, query: query)
         return List {
             if services.partialAccess {
@@ -91,7 +64,7 @@ struct KubeServicesView: View {
         .emptyOverlay(shown.isEmpty, query: query) {
             ContentUnavailableView("No services.", systemImage: "network")
         }
-        .refreshable { await load(scope) }
+        .refreshable { await reload() }
         .themedBackground()
     }
 
@@ -107,19 +80,6 @@ struct KubeServicesView: View {
         case nil:
             Text("A load balancer has no address and no controller was found to give one: install MetalLB, turn on Cilium’s LB IPAM, or use a cloud’s load balancer.")
         }
-    }
-
-    private var loadedNamespaces: [String] {
-        guard case .loaded(let services, _, _) = state else { return [] }
-        return Array(Set(services.services.map(\.namespace))).sorted()
-    }
-
-    private func load(_ scope: KubeScope) async {
-        guard let client = model.client else { return }
-        let key = kubeNamespacesKey(model)
-        let fetched: LoadState<KubeServices> = await .from { try await client.services(namespace: scope.namespace) }
-        guard key == kubeNamespacesKey(model), !Task.isCancelled else { return }
-        state = state.refreshed(with: fetched)
     }
 }
 
