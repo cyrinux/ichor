@@ -14,6 +14,8 @@ struct OverviewNodesSection: View {
     @Binding var path: [Route]
     @Environment(AppModel.self) private var model
     @Environment(\.horizontalSizeClass) private var sizeClass
+    /// The overview's measured width: a half-screen Split View does not split the nodes list.
+    @Environment(\.availableWidth) private var availableWidth
 
     var body: some View {
         Section {
@@ -40,7 +42,7 @@ struct OverviewNodesSection: View {
                     DetectPublicIPsButton(running: model.isDetectingPublicIPs, start: detectIPs)
                 }
                 Text(verbatim: "\(overview.nodes.count)")
-                if isDenseCluster(overview.nodes.count) || ListDetailLayout.isSplit(sizeClass) {
+                if isDenseCluster(overview.nodes.count) || ListDetailLayout.isSplit(sizeClass, width: availableWidth ?? .infinity) {
                     // A section holding hundreds of rows defeats the overview: a screen instead. On
                     // an iPad, also the list beside a node's hub.
                     Button { path.append(.nodes(filter: nil, nodes: overview.nodes.overviewOrder)) } label: {
