@@ -148,6 +148,7 @@ struct LogsView: View {
                 await load()
             }
         }
+        .allowsLandscape()
     }
 
     private func load() async {

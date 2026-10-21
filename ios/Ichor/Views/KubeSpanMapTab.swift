@@ -71,6 +71,7 @@ struct KubeSpanMapTab: View {
                     }
             }
         }
+        .allowsLandscape()
     }
 
     private var names: [String: String] {

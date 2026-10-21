@@ -55,6 +55,7 @@ struct VMConsoleView: View {
         }
         .loadsKubeActionAccess(namespace: namespace)
         .onDisappear { shell.stop() }
+        .allowsLandscape()
     }
 
     /// The console may sit at a logged-in shell: with the app lock on, it asks like a pod's.

@@ -111,6 +111,7 @@ struct FluxDiffView: View {
                     }
                 }
             }
+            .allowsLandscape()
     }
 
     private func content(_ diff: FluxDiff) -> some View {

@@ -104,6 +104,7 @@ struct MachineConfigView: View {
             await applyPatchOnce()
             await openSnippetOnce()
         }
+        .allowsLandscape()
     }
 
     private var header: some View {

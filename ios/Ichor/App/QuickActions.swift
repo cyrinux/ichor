@@ -59,6 +59,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         configuration.delegateClass = QuickActionSceneDelegate.self
         return configuration
     }
+
+    /// iPhone: portrait, except while a wide screen holds landscape (OrientationLock); iPad: all.
+    @MainActor
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+        OrientationLock.shared.mask
+    }
 }
 
 /// A quick action or share link launching the app (cold start) or brought to it while it runs.

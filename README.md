@@ -277,6 +277,8 @@ tour** shows it again.
   in portrait, except logs, shells, charts, YAML, diffs, source files and maps, which rotate to
   landscape and use the width.
 - **iPad:** the nodes list and the Argo CD / Flux apps open their node or app side by side with the list.
+  On an iPhone the app stays in portrait, except logs, shells, charts, YAML, diffs and the
+  KubeSpan map, which rotate to landscape.
 - **Background:** alerts and a home-screen widget. The findings of the plugins the cluster runs
   (a kube-green schedule with no wake-up time, an ExternalSecret that does not sync…) notify
   like the data services' problems, in the app's language, and clear when they go away

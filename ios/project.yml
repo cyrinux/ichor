@@ -133,7 +133,11 @@ targets:
             UTTypeTagSpecification:
               public.filename-extension: [kubeconfig]
         LSSupportsOpeningDocumentsInPlace: false
-        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # The ceiling: the app delegate narrows it to portrait outside the wide screens (Orientation.swift).
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         UISupportedInterfaceOrientations~ipad:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationPortraitUpsideDown
