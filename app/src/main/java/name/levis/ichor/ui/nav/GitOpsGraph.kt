@@ -197,6 +197,7 @@ private fun NavGraphBuilder.sourceScreens(
             onFile = { path -> nav.navigate(sourceFileRoute(t, path)) },
             onAddToken = onAddToken,
             onHit = { path, line -> nav.navigate(sourceFileRoute(t, path, line)) },
+            onEditFile = { path -> nav.navigate(sourceEditRoute(t, path)) },
         )
     }
     composable(
@@ -231,6 +232,8 @@ private fun NavGraphBuilder.sourceScreens(
             onBack = { nav.popBackStack() },
             onAddToken = onAddToken,
             quick = decodeQuickEdit(entry.arguments?.getString("quick")),
+            // Staged: back to the browser, past the file view the editor was opened from.
+            onStaged = { if (!nav.popBackStack(sourceRoute, inclusive = false)) nav.popBackStack() },
         )
     }
 }

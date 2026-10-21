@@ -5521,4 +5521,12 @@
     <string name="sops_confirm_text">%1$s würde im Klartext unter einem Pfad committet, den die Regel %2$s verschlüsselt. Verschlüsseln Sie es zuerst mit sops an einem Computer, außer es ist gewollt.</string>
     <string name="sops_what_secret">ein Kubernetes-Secret</string>
     <string name="sops_what_talos">Talos-Secrets</string>
+    <string name="staged_stage">Vormerken</string>
+    <string name="staged_title">Vorgemerkte Änderungen</string>
+    <string name="staged_chip">Vorgemerkte Änderungen (%1$s)</string>
+    <string name="staged_session_note">Bleiben bis zum Schließen der App. Öffne einen Pull Request für alle.</string>
+    <string name="staged_remove">Aus dem Pull Request entfernen</string>
+    <string name="staged_marker">Vorgemerkt</string>
+    <string name="staged_full">Ein Pull Request enthält höchstens 20 Dateien.</string>
+    <string name="staged_changed_upstream">Diese Datei hat sich auf dem Branch geändert, seit sie vorgemerkt wurde: Sie öffnet sich im aktuellen Stand, ohne die vorgemerkte Änderung.</string>
 </resources>

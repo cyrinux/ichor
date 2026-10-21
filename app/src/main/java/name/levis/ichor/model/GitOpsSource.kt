@@ -4,9 +4,11 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 
 /** Where an Argo CD or Flux app's files are: `GitOpsSource`, one entry per source of the app. */
 @Serializable
@@ -145,10 +147,14 @@ private fun JsonObject.string(key: String): String = (this[key] as? JsonPrimitiv
 /** Whether [path] reads as YAML, for the highlighting of the file view. */
 fun isYamlPath(path: String): Boolean = path.endsWith(".yaml", ignoreCase = true) || path.endsWith(".yml", ignoreCase = true)
 
+/** One file of a pull request with several: its new [content], [fileSha] as for [GitProposal]. */
+data class GitProposalFile(val path: String, val content: String, val fileSha: String)
+
 /**
  * A change of one file proposed as a pull request: `GitForgePropose`'s options without the
  * repository (the source's). [fileSha] is the forge's sha of the file at [baseRef] when it was
- * read: the optimistic lock, "" for a new file.
+ * read: the optimistic lock, "" for a new file. With [files], those files instead ([path],
+ * [content] and [fileSha] left empty): one pull request for all.
  */
 data class GitProposal(
     val path: String,
@@ -160,6 +166,7 @@ data class GitProposal(
     val body: String,
     val branch: String,
     val draft: Boolean = false,
+    val files: List<GitProposalFile> = emptyList(),
 )
 
 /** `GitForgePropose`'s answer: the pull (merge) request opened and its branch. */
@@ -169,6 +176,8 @@ data class GitProposalResult(
     val number: Int = 0,
     val branch: String = "",
     val commit: String = "",
+    /** Every commit made, in order: one per file on GitHub. */
+    val commits: List<String> = emptyList(),
     val forge: String = "",
 )
 
@@ -181,7 +190,7 @@ data class GitProposalDefaults(
     val body: String = "",
 )
 
-/** `GitForgePropose`'s optionsJSON for [p] on the repository [repoURL]: every key, always. */
+/** `GitForgePropose`'s optionsJSON for [p] on the repository [repoURL]: every key, always ("files" only when there are). */
 fun gitProposalJson(repoURL: String, p: GitProposal): String = buildJsonObject {
     put("repoURL", repoURL)
     put("baseRef", p.baseRef)
@@ -193,6 +202,17 @@ fun gitProposalJson(repoURL: String, p: GitProposal): String = buildJsonObject {
     put("title", p.title)
     put("body", p.body)
     put("draft", p.draft)
+    if (p.files.isNotEmpty()) {
+        putJsonArray("files") {
+            p.files.forEach { f ->
+                addJsonObject {
+                    put("path", f.path)
+                    put("content", f.content)
+                    put("fileSha", f.fileSha)
+                }
+            }
+        }
+    }
 }.toString()
 
 private val COMMIT_SHA = Regex("^[0-9a-fA-F]{40}([0-9a-fA-F]{24})?$")

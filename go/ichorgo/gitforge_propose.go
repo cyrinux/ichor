@@ -10,15 +10,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	pathpkg "path"
 	"regexp"
 	"strings"
 	"time"
 )
 
-// A proposed change: one file committed on a new branch and a pull request (GitHub, Gitea)
-// or merge request (GitLab) opened from it, for a human to merge on the forge. Ichor never
-// commits to the tracked branch. Four requests at most, no packfile.
+// A proposed change: one file (or several, gitforge_propose_files.go) committed on a new
+// branch and a pull request (GitHub, Gitea) or merge request (GitLab) opened from it, for a
+// human to merge on the forge. Ichor never commits to the tracked branch. Four requests at
+// most for one file, no packfile.
 
 const (
 	// gitProposeTimeout bounds the whole proposal: four writes and a rollback.
@@ -42,11 +42,13 @@ type gitProposal struct {
 	Content string `json:"content"`
 	// FileSha is GitForgeFile's sha of the file edited; "" creates a new file.
 	FileSha string `json:"fileSha"`
-	Message string `json:"message"`
-	Branch  string `json:"branch"`
-	Title   string `json:"title"`
-	Body    string `json:"body"`
-	Draft   bool   `json:"draft"`
+	// Files replaces Path, Content and FileSha for a proposal with several files.
+	Files   []gitProposalFile `json:"files,omitempty"`
+	Message string            `json:"message"`
+	Branch  string            `json:"branch"`
+	Title   string            `json:"title"`
+	Body    string            `json:"body"`
+	Draft   bool              `json:"draft"`
 }
 
 type gitProposeResult struct {
@@ -54,7 +56,9 @@ type gitProposeResult struct {
 	Number int    `json:"number"`
 	Branch string `json:"branch"`
 	Commit string `json:"commit"`
-	Forge  string `json:"forge"`
+	// Commits are every commit made, in order (one per file on GitHub).
+	Commits []string `json:"commits,omitempty"`
+	Forge   string   `json:"forge"`
 }
 
 // gitRequest is an opened pull or merge request; Commit is its head when the forge tells it.
@@ -66,11 +70,12 @@ type gitRequest struct {
 
 // gitProposer is one forge's writes. branchFrom is what a branch is created from (GitHub
 // needs the base's commit, the others take its name); commitFile returns the new commit
-// ("" when the forge does not tell it).
+// ("" when the forge does not tell it), commitFiles the commits for p.Files.
 type gitProposer interface {
 	branchFrom(ctx context.Context, repo gitRepoRef, baseRef string) (string, error)
 	createBranch(ctx context.Context, repo gitRepoRef, from, branch string) error
 	commitFile(ctx context.Context, repo gitRepoRef, p gitProposal) (string, error)
+	commitFiles(ctx context.Context, repo gitRepoRef, p gitProposal) ([]string, error)
 	openRequest(ctx context.Context, repo gitRepoRef, p gitProposal) (gitRequest, error)
 	deleteBranch(ctx context.Context, repo gitRepoRef, branch string) error
 }
@@ -79,7 +84,8 @@ type gitProposer interface {
 // (GitHub, Gitea) or merge (GitLab) request, with hostJSON's token. optionsJSON is
 // {"repoURL","baseRef","path","content","fileSha","message","branch","title","body","draft"};
 // fileSha is GitForgeFile's sha ("" for a new file), branch defaults to ichor/<title>-<hex>.
-// The answer is {"url","number","branch","commit","forge"}. configYAML and contextName name
+// For several files, "files":[{"path","content","fileSha","delete"}] (1 to 20) replaces
+// path, content and fileSha. The answer is {"url","number","branch","commit","commits","forge"}. configYAML and contextName name
 // the app's cluster, for the audit entry and the demo check only.
 func GitForgePropose(configYAML, contextName, hostJSON, optionsJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -130,7 +136,7 @@ func gitForgePropose(configYAML, contextName, hostJSON, optionsJSON string, targ
 		return gitProposeResult{}, err
 	}
 
-	*target = repo.full() + ":" + p.Path
+	*target = repo.full() + ":" + proposalPaths(p)
 
 	ctx, cancel := context.WithTimeout(context.Background(), gitProposeTimeout)
 	defer cancel()
@@ -159,9 +165,21 @@ func checkGitProposal(hostJSON string, p gitProposal) (gitForgeHost, gitRepoRef,
 	p.BaseRef, p.Path, p.FileSha, p.Branch = baseRef, path, strings.TrimSpace(p.FileSha), strings.TrimSpace(p.Branch)
 	p.Message, p.Title = strings.TrimSpace(p.Message), strings.TrimSpace(p.Title)
 
+	if p.Files != nil {
+		if p.Path != "" || p.Content != "" || p.FileSha != "" {
+			return gitForgeHost{}, gitRepoRef{}, gitProposal{}, errProposalPathAndFiles
+		}
+
+		if p.Files, err = checkProposalFiles(p.Files); err != nil {
+			return gitForgeHost{}, gitRepoRef{}, gitProposal{}, err
+		}
+	} else if p.Path, err = proposalPath(path); err != nil {
+		return gitForgeHost{}, gitRepoRef{}, gitProposal{}, err
+	}
+
 	switch {
-	case path == "" || path == "." || pathpkg.Clean(path) != path:
-		return gitForgeHost{}, gitRepoRef{}, gitProposal{}, fmt.Errorf("%q is not a file path in the repository", p.Path)
+	case p.Files != nil && len(p.Files) == 0:
+		return gitForgeHost{}, gitRepoRef{}, gitProposal{}, errors.New("no file to propose")
 	case len(p.Content) > gitForgeMaxFile:
 		return gitForgeHost{}, gitRepoRef{}, gitProposal{}, fmt.Errorf("%s is over 1 MiB: propose it from a computer", path)
 	case p.Message == "":
@@ -212,8 +230,12 @@ func propose(ctx context.Context, f gitProposer, repo gitRepoRef, p gitProposal)
 }
 
 func commitAndOpen(ctx context.Context, f gitProposer, repo gitRepoRef, p gitProposal) (gitProposeResult, error) {
-	commit, err := f.commitFile(ctx, repo, p)
-	if staleFile(err) {
+	commits, err := commitProposal(ctx, f, repo, p)
+
+	switch {
+	case staleFile(err) && len(p.Files) > 0:
+		return gitProposeResult{}, errStaleFiles(err, p.BaseRef)
+	case staleFile(err):
 		return gitProposeResult{}, fmt.Errorf("the file changed on %s since you opened it: reload and try again", p.BaseRef)
 	}
 
@@ -226,7 +248,12 @@ func commitAndOpen(ctx context.Context, f gitProposer, repo gitRepoRef, p gitPro
 		return gitProposeResult{}, err
 	}
 
-	return gitProposeResult{URL: req.URL, Number: req.Number, Branch: p.Branch, Commit: cmp.Or(commit, req.Commit)}, nil
+	var last string
+	if len(commits) > 0 {
+		last = commits[len(commits)-1]
+	}
+
+	return gitProposeResult{URL: req.URL, Number: req.Number, Branch: p.Branch, Commit: cmp.Or(last, req.Commit), Commits: commits}, nil
 }
 
 // rollbackBranch deletes the proposal's branch, best effort, on its own clock: the

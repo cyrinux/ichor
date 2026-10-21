@@ -5773,4 +5773,12 @@
     <string name="sops_confirm_text">%1$s буде закомічено відкритим текстом за шляхом, який шифрує правило %2$s. Спершу зашифруйте його sops на комп’ютері, якщо це не навмисно.</string>
     <string name="sops_what_secret">Secret Kubernetes</string>
     <string name="sops_what_talos">секрети Talos</string>
+    <string name="staged_stage">Підготувати</string>
+    <string name="staged_title">Підготовлені зміни</string>
+    <string name="staged_chip">Підготовлені зміни (%1$s)</string>
+    <string name="staged_session_note">Зберігаються, доки застосунок не закрито. Відкрийте один pull request для всіх.</string>
+    <string name="staged_remove">Прибрати з pull request</string>
+    <string name="staged_marker">Підготовлено</string>
+    <string name="staged_full">Pull request містить щонайбільше 20 файлів.</string>
+    <string name="staged_changed_upstream">Цей файл змінився на гілці після підготовки: він відкривається як є зараз, без підготовленої зміни.</string>
 </resources>

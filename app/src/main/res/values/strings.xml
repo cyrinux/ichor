@@ -5535,4 +5535,12 @@
     <string name="sops_confirm_text">%1$s would be committed in clear text at a path the rule %2$s encrypts. Encrypt it with sops on a computer first, unless you mean it.</string>
     <string name="sops_what_secret">a Kubernetes Secret</string>
     <string name="sops_what_talos">Talos secrets</string>
+    <string name="staged_stage">Stage</string>
+    <string name="staged_title">Staged changes</string>
+    <string name="staged_chip">Staged changes (%1$s)</string>
+    <string name="staged_session_note">Kept until the app is closed. Open one pull request for all of them.</string>
+    <string name="staged_remove">Remove from the pull request</string>
+    <string name="staged_marker">Staged</string>
+    <string name="staged_full">A pull request holds at most 20 files.</string>
+    <string name="staged_changed_upstream">This file changed on the branch since it was staged: it opens as it is now, without the staged edit.</string>
 </resources>

@@ -5,7 +5,9 @@ import IchorCore
 /// repository and what it follows, a breadcrumb up to the root, then the folders and the files
 /// (a folder opens its own page, a file SourceFileView). Opens at the directory the app
 /// deploys; a Flux artifact holds the whole repository, so the breadcrumb goes up from there.
-/// Without a token for an Argo CD source's Git host, says so with a way to add one.
+/// Without a token for an Argo CD source's Git host, says so with a way to add one. In the
+/// cluster repository, files staged from the editor carry a dot and Staged changes opens them
+/// as one pull request.
 struct SourceBrowserView: View {
     let source: GitSource
     /// The app deploying it, for the defaults of a pull request opened from a file.
@@ -20,7 +22,9 @@ struct SourceBrowserView: View {
 
     @Environment(AppModel.self) private var model
     @Environment(GitHostStore.self) private var hosts
+    @Environment(StagedEdits.self) private var staged
     @State private var dir: String
+    @State private var showingStaged = false
     @State private var state: LoadState<GitTree> = .loading
     /// The directory state shows, so a breadcrumb jump shows the skeleton rather than the old one.
     @State private var loadedDir: String?
@@ -32,6 +36,9 @@ struct SourceBrowserView: View {
     @State private var searchedText = ""
 
     private var demo: Bool { model.activeSummary?.demo == true }
+
+    /// The files staged for one pull request: the cluster repository's only.
+    private var stagedFiles: [StagedFile] { app.isRepository ? staged.of(StagedKey(source: source)) : [] }
 
     var body: some View {
         Group {
@@ -53,6 +60,7 @@ struct SourceBrowserView: View {
         .task(id: dir) { await load() }
         // A token added in Settings (the shortcut below): read again on the way back.
         .onChange(of: hosts.hosts) { _, _ in Task { await load() } }
+        .sheet(isPresented: $showingStaged) { StagedChangesView(source: source) }
         .navigationTitle(app.isRepository ? String(localized: "Repository") : String(localized: "Source"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -66,10 +74,18 @@ struct SourceBrowserView: View {
 
     private func content(_ tree: GitTree) -> some View {
         let entries = tree.sorted
+        let stagedPaths = Set(stagedFiles.map(\.path))
         return List {
             Section {
                 SourceHeader(source: source, sha: tree.sha)
                 breadcrumb
+            }
+            if !stagedPaths.isEmpty {
+                Section {
+                    Button { showingStaged = true } label: {
+                        Label("Staged changes (\(String(stagedPaths.count)))", systemImage: "square.and.pencil")
+                    }
+                }
             }
             // The cluster repository's root lists the pull requests opened from the phone on it.
             if app.isRepository && dir.isEmpty {
@@ -93,6 +109,10 @@ struct SourceBrowserView: View {
                                     Image(systemName: "doc.text").foregroundStyle(.secondary)
                                 }
                                 Spacer(minLength: 8)
+                                if stagedPaths.contains(entry.path) {
+                                    Circle().fill(.tint).frame(width: 8, height: 8)
+                                        .accessibilityLabel(Text("Staged"))
+                                }
                                 if entry.sops {
                                     Image(systemName: "lock.fill").font(.caption).foregroundStyle(.secondary)
                                         .accessibilityLabel(Text("Encrypted with SOPS"))

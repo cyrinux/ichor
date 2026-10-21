@@ -126,6 +126,12 @@ tour** shows it again.
   at the cluster repository's root) shows whether each is open, merged or closed on the forge
   and, once merged, whether the app runs that commit; a merged one not running yet offers
   **Reconcile now**, which syncs or reconciles with the usual follow.
+- **Stage several files and propose them together:** in the cluster repository, Review also
+  offers **Stage**: the edit waits, the file gets a dot in the browser, and **Staged changes**
+  lists the files (lines added and removed), opens one again or removes it, then opens one pull
+  request for all of them (up to 20). GitLab and Gitea take it as one commit, GitHub as one
+  commit per file on the same branch; if one fails, the branch is deleted. Staged files are kept
+  until the app is closed, not saved.
 - **Quick edits:** on a source file, **Quick edit** changes a container's image tag (with the
   running tag as a suggestion) or the replicas, through a kustomization `images:` or `replicas:`
   entry when the file has one. Only that line changes, comments and quoting included, and the
