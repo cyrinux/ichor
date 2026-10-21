@@ -2,7 +2,9 @@ package ichorgo
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"slices"
 	"sort"
 	"strings"
@@ -412,9 +414,11 @@ func recentProblemEvents(ctx context.Context, c *client.Client, nodes []string) 
 	ch := make(chan eventItem)
 	done := make(chan error, 1)
 
+	//lint:ignore SA1019 multi-node proxying, as in Events, until one stream per node
+	nodesCtx := client.WithNodes(ctx, nodes...)
+
 	go func() {
-		//lint:ignore SA1019 multi-node proxying, as in Events, until one stream per node
-		done <- safeCall(func() error { return watchEvents(client.WithNodes(ctx, nodes...), c, diagnosisEventTail, ch) })
+		done <- safeCall(func() error { return watchEvents(nodesCtx, c, client.WithTailEvents(diagnosisEventTail), ch) })
 	}()
 
 	var (
@@ -439,7 +443,8 @@ loop:
 
 			quiet.Reset(diagnosisEventsQuiet)
 		case err := <-done:
-			if err != nil && ctx.Err() == nil {
+			// A clean end (EOF) is the stream finishing early, not a failure.
+			if err != nil && !errors.Is(err, io.EOF) && ctx.Err() == nil {
 				note = "could not read the events: " + friendlyError(err)
 			}
 

@@ -212,4 +212,13 @@ func TestRecentProblemEventsNotes(t *testing.T) {
 	if events != nil || !strings.HasPrefix(note, "could not read the events: ") || !strings.Contains(note, "not authorized") {
 		t.Errorf("failed stream: %v, %q", events, note)
 	}
+
+	// A replay that ends cleanly (EOF) within the window is not a failure: no "EOF" note.
+	f.events = func(_ []string, _ *machineapi.EventsRequest, stream grpc.ServerStreamingServer[machineapi.Event]) error {
+		return sendEvents(stream, talosEvent(t, eventsCP, xidAt(eventsAt, 1), &machineapi.TaskEvent{Task: "startKubelet", Action: machineapi.TaskEvent_STOP}))
+	}
+
+	if events, note := recentProblemEvents(t.Context(), s.client, []string{eventsCP}); events != nil || note != "" {
+		t.Errorf("clean end: %v, %q", events, note)
+	}
 }
