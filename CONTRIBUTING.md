@@ -6,6 +6,7 @@ an issue first so we can agree on the approach before you spend time on it.
 ## Before you open a pull request
 
 - Run `./build.sh check` (gofmt, vet, Go and Kotlin unit tests); CI runs the same.
+- No source file over 800 lines (`just length-check`); split it by domain instead.
 - Keep a pull request to one change, with a commit message saying why, not only what.
 - Don't add dependencies under a copyleft license that would apply to the whole app
   (GPL, AGPL, LGPL for statically linked code); ask in the issue first if unsure.

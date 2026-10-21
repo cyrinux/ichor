@@ -79,6 +79,7 @@ build_inside() {
     python3 "$ROOT/scripts/check-translations.py"
     python3 "$ROOT/scripts/check-ios-strings.py"
     python3 "$ROOT/scripts/check-accessibility.py"
+    python3 "$ROOT/scripts/check-file-length.py"
     python3 "$ROOT/scripts/site-i18n.py" --check
     python3 -m unittest discover -s "$ROOT/scripts" -p 'test_*.py'
     unformatted="$(gofmt -l .)"
