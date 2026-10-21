@@ -175,6 +175,10 @@ func snapshotKey(repo, sha string) string {
 	return hex.EncodeToString(sum[:8]) + "-" + sha
 }
 
+// errRepoTooLarge refuses a snapshot over the unpack bounds: the Talos features then read
+// their directory alone (talos_repo_forge.go).
+var errRepoTooLarge = errors.New("the repository is larger than the app unpacks")
+
 // unpackRepoArchive reads a forge's tar.gz streaming: regular files only, the top directory
 // the forges wrap the tree in stripped, text files up to 1 MiB kept, bounded like a Flux
 // artifact.
@@ -210,7 +214,7 @@ func unpackRepoArchive(data []byte, sha string) (*repoSnapshot, error) {
 
 		total += h.Size
 		if len(snap.sizes) >= fluxArtifactMaxFiles || total > fluxArtifactMaxUnpacked {
-			return nil, fmt.Errorf("the repository is larger than the app unpacks (%d files, %d MiB)", fluxArtifactMaxFiles, fluxArtifactMaxUnpacked>>20)
+			return nil, fmt.Errorf("%w (%d files, %d MiB)", errRepoTooLarge, fluxArtifactMaxFiles, fluxArtifactMaxUnpacked>>20)
 		}
 
 		snap.sizes[rel] = h.Size
