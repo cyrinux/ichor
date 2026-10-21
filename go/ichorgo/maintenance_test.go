@@ -46,6 +46,8 @@ type maintKubeAPI struct {
 	lease   *kubeLease
 	version int
 	cordons []bool // the unschedulable value of each node patch, in order
+	// failAfterCordon answers the pod listing with a 500 once the node was patched.
+	failAfterCordon bool
 }
 
 func (a *maintKubeAPI) cordoned() []bool {
@@ -72,6 +74,8 @@ func (a *maintKubeAPI) handler(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.URL.Path == "/version":
 		answer(http.StatusOK, `{"gitVersion":"v1.34.0"}`)
+	case r.Method == http.MethodGet && r.URL.Path == "/api/v1/pods" && a.failAfterCordon && len(a.cordons) > 0:
+		answer(http.StatusInternalServerError, `{"kind":"Status","reason":"InternalError","message":"etcdserver: request timed out"}`)
 	case r.Method == http.MethodGet && r.URL.Path == "/api/v1/pods":
 		answer(http.StatusOK, `{"items":[`+strings.Join(a.pods, ",")+`]}`)
 	case r.Method == http.MethodGet && r.URL.Path == "/apis/policy/v1/poddisruptionbudgets":
@@ -407,6 +411,12 @@ func TestStartNodeMaintenanceFakeStops(t *testing.T) {
 			wantErr: "maintenance refused: host-192-0-2-12 is booting",
 		},
 		{name: "unknown action", action: "format", wantErr: `unknown maintenance action "format"`},
+		{
+			// A Kubernetes API failure after the cordon still says the node stays cordoned.
+			name: "API failure after the cordon", action: maintenanceNone,
+			setup:   func(_ *fakeTalos, api *maintKubeAPI) { api.failAfterCordon = true },
+			wantErr: "worker-1 stays cordoned", patches: []bool{true},
+		},
 	}
 
 	for _, tt := range tests {

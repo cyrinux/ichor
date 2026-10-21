@@ -450,6 +450,12 @@ func kubeTransportError(err error) string {
 func kubeError(err error) error {
 	var apiErr *kubeAPIError
 	if errors.As(err, &apiErr) {
+		// What an operation wrapped around it ("worker-1 stays cordoned: …") is what the user
+		// needs; errors.As still finds the API error through it.
+		if err != error(apiErr) {
+			return err
+		}
+
 		return apiErr
 	}
 
@@ -458,7 +464,23 @@ func kubeError(err error) error {
 		return signIn
 	}
 
-	return errors.New("Kubernetes API: " + kubeTransportError(err))
+	if isKubeTransportError(err) {
+		return errors.New("Kubernetes API: " + kubeTransportError(err))
+	}
+
+	// An operation's own refusal: not the API's doing.
+	return err
+}
+
+// isKubeTransportError reports whether err comes from reaching the API server (dial, TLS,
+// timeout, cancel) rather than from what an operation decided.
+func isKubeTransportError(err error) bool {
+	var urlErr *url.Error
+
+	var netErr net.Error
+
+	return errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) ||
+		errors.As(err, &urlErr) || errors.As(err, &netErr) || dialFailure(err.Error()) != ""
 }
 
 // kubeList is the shape of a Kubernetes list response.
