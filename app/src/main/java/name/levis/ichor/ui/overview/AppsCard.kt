@@ -25,6 +25,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import name.levis.ichor.R
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.ui.argocd.ArgoTileBadge
@@ -106,7 +107,7 @@ private fun AppsCardFrame(subtitle: String?, attention: Int, onOpen: () -> Unit,
 private fun MoreTile(count: Int) {
     Surface(shape = RoundedCornerShape(TILE * 0.3f), color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.size(TILE)) {
         Box(contentAlignment = Alignment.Center) {
-            Text("+$count", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            Text("+$count", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

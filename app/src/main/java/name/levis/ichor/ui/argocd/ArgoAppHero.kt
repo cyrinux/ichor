@@ -186,7 +186,7 @@ fun ArgoDiffButton(app: ArgoApp, onDiff: () -> Unit) {
     Column {
         OutlinedButton(onClick = onDiff, modifier = Modifier.fillMaxWidth()) {
             Icon(Icons.Outlined.Difference, contentDescription = null, modifier = Modifier.size(18.dp))
-            Text(stringResource(R.string.argo_show_diff), modifier = Modifier.padding(start = 6.dp), maxLines = 1)
+            Text(stringResource(R.string.argo_show_diff), modifier = Modifier.padding(start = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         MutedText(stringResource(if (app.outOfSync) R.string.argo_diff_hint_out_of_sync else R.string.argo_diff_hint))
     }
@@ -223,7 +223,7 @@ fun ArgoActionButtons(busy: Boolean, running: Boolean, onSync: () -> Unit, onRef
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
         Button(onClick = onSync, enabled = !busy && !running, modifier = Modifier.weight(1f)) {
             Icon(Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
-            Text(stringResource(R.string.argo_sync), modifier = Modifier.padding(start = 6.dp), maxLines = 1)
+            Text(stringResource(R.string.argo_sync), modifier = Modifier.padding(start = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         OutlinedButton(onClick = onRefresh, enabled = !busy, modifier = Modifier.weight(1f)) {
             Text(stringResource(R.string.argo_refresh), maxLines = 1, overflow = TextOverflow.Ellipsis)

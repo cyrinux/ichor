@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
@@ -288,7 +289,7 @@ private fun Systems(
                         is HubTab.Native -> t.kind.tabLabel()
                         is HubTab.Plugin -> t.name
                     }
-                    AppTab(selected = t == tab, onClick = { selected = t.id }, text = { Text(label, maxLines = 1) })
+                    AppTab(selected = t == tab, onClick = { selected = t.id }, text = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) })
                 }
             }
         }

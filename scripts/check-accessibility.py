@@ -10,7 +10,10 @@ iOS (ios/Ichor/**/*.swift):
 Android (app/src/main/java/**/*.kt):
 - a fixed .sp below 12 ignores the theme's typography: use MaterialTheme.typography;
 - an IconButton whose icon has contentDescription = null and no other label is read as
-  "button", with nothing saying what it does.
+  "button", with nothing saying what it does;
+- a Text in ui/ with maxLines = 1 and neither overflow nor autoSize cuts its last letters at a
+  large font scale or on a small phone: give it overflow = TextOverflow.Ellipsis, or autoSize
+  for a number (the widgets' Glance Text has no overflow).
 
 Run: python3 scripts/check-accessibility.py
 """
@@ -36,6 +39,8 @@ SP_EXEMPT = re.compile(r"(letterSpacing|minFontSize)\s*=\s*$")
 MIN_SP = 12
 ICON_BUTTON = re.compile(r"\b\w*IconButton\(")
 # A description on the icon or a label on the button itself.
+# Text( and BasicText(, not TextField( nor a wrapper such as MutedText( (no overflow there).
+TEXT_CALL = re.compile(r"(?<![\w.])(Basic)?Text\(")
 ICON_LABEL = re.compile(r"contentDescription\s*=(?!\s*null)|semantics\s*[({]|onClickLabel")
 
 
@@ -120,6 +125,16 @@ def unlabeled_icon_buttons(source: str) -> list[int]:
     return found
 
 
+def single_line_texts_without_overflow(source: str) -> list[int]:
+    """1-based lines of Text calls held to one line with nothing saying how they end."""
+    found = []
+    for m in TEXT_CALL.finditer(source):
+        call = source[m.start() : _closing(source, m.end() - 1, "(", ")")]
+        if re.search(r"\bmaxLines\s*=\s*1\b", call) and "overflow" not in call and "autoSize" not in call:
+            found.append(source.count("\n", 0, m.start()) + 1)
+    return found
+
+
 def main() -> int:
     problems = []
     for path in sorted(IOS_SOURCES.rglob("*.swift")):
@@ -132,6 +147,8 @@ def main() -> int:
         rel = path.relative_to(ROOT)
         problems += [f"{rel}:{n}: text below {MIN_SP}.sp, use MaterialTheme.typography" for n in small_sp(text)]
         problems += [f"{rel}:{n}: IconButton whose icon has no contentDescription" for n in unlabeled_icon_buttons(text)]
+        if "ui" in rel.parts:
+            problems += [f"{rel}:{n}: Text with maxLines = 1 and no overflow" for n in single_line_texts_without_overflow(text)]
     for p in problems:
         print(p, file=sys.stderr)
     return 1 if problems else 0

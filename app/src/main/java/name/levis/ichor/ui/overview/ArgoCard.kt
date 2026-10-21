@@ -152,7 +152,7 @@ fun SyncingLine(app: ArgoApp) {
                     " · " + stringResource(R.string.argo_syncing) + " · " + waveProgress(app),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
             LinearProgressIndicator(progress = { app.operation?.progress ?: 0f }, strokeCap = StrokeCap.Round, modifier = Modifier.fillMaxWidth().padding(top = 4.dp))

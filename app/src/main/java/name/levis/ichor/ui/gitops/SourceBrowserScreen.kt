@@ -116,9 +116,9 @@ fun SourceBrowserScreen(
                 title = {
                     Column {
                         val app = target as? SourceTarget.App
-                        Text(stringResource(if (app != null) R.string.gitops_source_title else R.string.repo_title), maxLines = 1)
+                        Text(stringResource(if (app != null) R.string.gitops_source_title else R.string.repo_title), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         val subtitle = app?.name ?: (source as? UiState.Loaded)?.data?.let { repoLabel(it) }.orEmpty()
-                        Text(subtitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                        Text(subtitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 },
                 navigationIcon = {
