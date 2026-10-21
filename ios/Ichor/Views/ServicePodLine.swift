@@ -6,8 +6,6 @@ extension ServicePod {
         let roleLabel: String? = switch role {
         case "primary": String(localized: "primary")
         case "replica": String(localized: "replica")
-        case "member": String(localized: "member")
-        case "master": String(localized: "master")
         default: role.nonEmpty
         }
         let place: String = if node.isEmpty && phase == "Pending" {

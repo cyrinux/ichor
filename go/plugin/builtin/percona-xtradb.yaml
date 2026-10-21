@@ -1,0 +1,401 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# The Percona Operator for MySQL based on Percona XtraDB Cluster (pxc.percona.com) runs one
+# PerconaXtraDBCluster per database: PXC members behind HAProxy or ProxySQL. Each cluster shows
+# the operator's state, its ready members and proxies (the operator's own counts), its messages,
+# and how its backups went: a backup is a PerconaXtraDBClusterBackup per run, and a cluster's
+# last success and failure are the latest over its runs (source: native:percona-backups, as no
+# expression folds a list). A cluster whose shortest backup schedule went twice its interval
+# without a success is late; a paused cluster is left alone on purpose: idle. The members are
+# the pods labelled app.kubernetes.io/name=percona-xtradb-cluster and component=pxc.
+# go/ichorgo/plugin_percona_test.go holds it to the reader the apps used before.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: percona-xtradb
+name: Percona XtraDB Cluster
+website: https://docs.percona.com/percona-operator-for-mysql/pxc/
+icon: percona-xtradb
+category: data-services
+catalogId: percona-xtradb
+
+detect:
+  - group: pxc.percona.com
+
+resources:
+  cluster:
+    group: pxc.percona.com
+    version: preferred
+    resource: perconaxtradbclusters
+    kind: PerconaXtraDBCluster
+    scope: Namespaced
+  # The PXC members only: proxies and backup jobs carry the instance label too.
+  pod:
+    group: ""
+    version: v1
+    resource: pods
+    kind: Pod
+    scope: Namespaced
+    list: { labelSelector: "app.kubernetes.io/name=percona-xtradb-cluster,app.kubernetes.io/component=pxc" }
+  # One per cluster the backups name: its latest successful and failed run.
+  backupSummary:
+    group: ichor.dev
+    version: v1alpha1
+    resource: perconabackups
+    kind: PerconaXtraDBBackups
+    scope: Namespaced
+    source: native:percona-backups
+
+fields:
+  cluster:
+    # The operator's own word: ready, initializing, paused, stopping, error, unknown.
+    state: $.status.state | default("")
+    paused: '($.spec.pause | default(false)) || fields.state == "paused"'
+    crVersion: $.spec.crVersion | default("")
+    # The status omits a size of 0 and is empty before the operator's first pass.
+    pxcSize: '($.status.pxc.size | default(0)) > 0 ? $.status.pxc.size : ($.spec.pxc.size | default(0))'
+    pxcReady: $.status.pxc.ready | default(0)
+    # The operator refuses HAProxy and ProxySQL both enabled.
+    haproxy: $.spec.haproxy.enabled | default(false)
+    proxysql: '!fields.haproxy && ($.spec.proxysql.enabled | default(false))'
+    proxySize: |
+      fields.haproxy ? (($.status.haproxy.size | default(0)) > 0 ? $.status.haproxy.size : ($.spec.haproxy.size | default(0)))
+        : (fields.proxysql ? (($.status.proxysql.size | default(0)) > 0 ? $.status.proxysql.size : ($.spec.proxysql.size | default(0))) : 0)
+    proxyReady: 'fields.haproxy ? ($.status.haproxy.ready | default(0)) : (fields.proxysql ? ($.status.proxysql.ready | default(0)) : 0)'
+    # Product names stay as they are: "HAProxy 2/2".
+    proxy: |
+      fields.haproxy ? "HAProxy " + string(fields.proxyReady) + "/" + string(fields.proxySize)
+        : (fields.proxysql ? "ProxySQL " + string(fields.proxyReady) + "/" + string(fields.proxySize) : "")
+    messages: $.status.message | default([])
+    pxcMessage: $.status.pxc.message | default("")
+    message: 'join(fields.messages + (fields.pxcMessage != "" && !(fields.pxcMessage in fields.messages) ? [fields.pxcMessage] : []), "; ")'
+    backups: join(backupSummary, $.metadata.namespace == left.metadata.namespace && $.metadata.name == left.metadata.name)
+    lastBackupAt: time(fields.backups.status.lastSuccessTime)
+    lastBackupFailedAt: time(fields.backups.status.lastFailureTime)
+    schedules: $.spec.backup.schedule | default([])
+    scheduleText: join(fields.schedules[*].schedule, ", ")
+    # The shortest schedule's interval, as the reader's cronInterval reads a cron: daily unless
+    # it names weekdays (weekly) or days of the month (monthly); a macro by its name; anything
+    # else counts eight days.
+    dailySchedules: |
+      len(fields.schedules[?(matches(default(@.schedule, ""),
+        "^ *(@daily|@midnight|@hourly|@every +[^ ]+|[^ ]+ +[^ ]+ +[*?] +[^ ]+ +[*?]|[^ ]+ +[^ ]+ +[^ ]+ +[*?] +[^ ]+ +[*?]) *$"))])
+    weeklySchedules: |
+      len(fields.schedules[?(matches(default(@.schedule, ""),
+        "^ *(@weekly|[^ ]+ +[^ ]+ +[^ ]+ +[^ ]+ +([^*? ]|[^ ][^ ]+)|[^ ]+ +[^ ]+ +[^ ]+ +[^ ]+ +[^ ]+ +([^*? ]|[^ ][^ ]+)) *$"))])
+    monthlySchedules: |
+      len(fields.schedules[?(matches(default(@.schedule, ""),
+        "^ *(@monthly|[^ ]+ +[^ ]+ +([^*? ]|[^ ][^ ]+) +[^ ]+ +[*?]|[^ ]+ +[^ ]+ +[^ ]+ +([^*? ]|[^ ][^ ]+) +[^ ]+ +[*?]) *$"))])
+    yearlySchedules: 'len(fields.schedules[?(matches(default(@.schedule, ""), "^ *@(yearly|annually) *$"))])'
+    otherSchedules: len(fields.schedules) - fields.dailySchedules - fields.weeklySchedules - fields.monthlySchedules - fields.yearlySchedules
+    backupInterval: |
+      fields.dailySchedules > 0 ? 86400000 : (fields.weeklySchedules > 0 ? 604800000 : (fields.otherSchedules > 0 ? 691200000
+        : (fields.monthlySchedules > 0 ? 2678400000 : (fields.yearlySchedules > 0 ? 31622400000 : 0))))
+    # A cluster younger than twice the interval is not late yet.
+    backupSince: 'fields.lastBackupAt != 0 ? fields.lastBackupAt : time($.metadata.creationTimestamp)'
+    error: lower(fields.state) == "error"
+    noMember: fields.pxcSize > 0 && fields.pxcReady == 0
+    membersMissing: fields.pxcReady < fields.pxcSize
+    proxyMissing: fields.proxyReady < fields.proxySize
+    # The operator says initializing whenever a pod is not ready: shown when nothing more
+    # precise explains it (the rules' order says so).
+    initializing: lower(fields.state) == "initializing"
+    backupFailed: fields.lastBackupFailedAt > fields.lastBackupAt
+    backupStale: 'fields.backupInterval > 0 && fields.backupSince != 0 && now - fields.backupSince > 2 * fields.backupInterval'
+    # A health rule below holds: warning or critical.
+    needsLook: |
+      !fields.paused && (fields.error || fields.noMember || fields.membersMissing || fields.proxyMissing || fields.initializing
+        || fields.backupFailed || fields.backupStale)
+  pod:
+    instance: $.metadata.labels["app.kubernetes.io/instance"] | default("")
+    ready: '$.status.phase == "Running" && len($.status.containerStatuses) > 0 && len($.status.containerStatuses[?(@.ready != true)]) == 0'
+
+# The first rule that holds is the cluster's reason: the worst one, in the reader's order.
+health:
+  cluster:
+    - { when: fields.paused, health: idle, reason: paused, message: "paused" }
+    - { when: fields.error, health: critical, reason: error, message: "operator error" }
+    - { when: fields.noMember, health: critical, reason: noMember, message: "no member ready" }
+    - { when: fields.membersMissing, health: warning, reason: members, message: "members missing" }
+    - { when: fields.proxyMissing, health: warning, reason: proxy, message: "proxy pods missing" }
+    - { when: fields.initializing, health: warning, reason: initializing, message: "initializing" }
+    - { when: fields.backupFailed, health: warning, reason: backupFailed, message: "last backup failed" }
+    - { when: fields.backupStale, health: warning, reason: backupStale, message: "no recent backup" }
+  pod:
+    - { when: "!fields.ready", health: critical, reason: notReady, message: "Not ready" }
+
+dataServices:
+  summary:
+    aggregate:
+      total: count(cluster)
+    health: worst(cluster.health)
+
+cards:
+  summary:
+    title: { count: dataServices.summary.total, one: "%d Percona cluster", other: "%d Percona clusters" }
+    health: dataServices.summary.health
+  clusters:
+    from: cluster
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No Percona XtraDB clusters."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: 'fields.paused ? "paused" : fields.state'
+      trailing: { text: 'string(fields.pxcReady) + "/" + string(fields.pxcSize)' }
+      detail:
+        - type: gauge
+          label: "Members ready"
+          value: fields.pxcReady
+          max: fields.pxcSize
+          tone: 'fields.paused ? "idle" : (fields.noMember ? "critical" : (fields.membersMissing ? "warning" : "ok"))'
+        # The operator's messages, while the cluster needs a look.
+        - type: text
+          text: '{{ fields.needsLook ? fields.message : "" }}'
+          tone: health
+        - type: keyValues
+          items:
+            - { label: "State", value: fields.state }
+            - { label: "Proxy", value: fields.proxy, tone: 'fields.proxyMissing ? "warning" : ""' }
+            - { label: "CR version", value: fields.crVersion, mono: true }
+            - { label: "Last backup", value: fields.lastBackupAt | relativeTime(), tone: 'fields.backupStale ? "warning" : ""' }
+            - { label: "Last failure", value: fields.lastBackupFailedAt | relativeTime(), tone: 'fields.backupFailed ? "warning" : ""' }
+            - { label: "Schedules", value: fields.scheduleText, mono: true }
+  pods:
+    from: pod
+    sort: [$.metadata.namespace, fields.instance, $.metadata.name]
+    empty: "No Percona XtraDB pods."
+    row:
+      title: $.metadata.name
+      subtitle: '$.metadata.namespace + "/" + fields.instance'
+      status:
+        tone: health
+        text: 'fields.ready ? "Ready" : "Not ready"'
+      trailing: { text: $.spec.nodeName | default("") }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Node", value: $.spec.nodeName | default(""), mono: true }
+            - { label: "Phase", value: $.status.phase | default("") }
+
+# The monitor's former Percona alerts: a cluster when critical, or with members missing or
+# failing or missing backups; the operator still initializing is not one.
+findings:
+  - { id: cluster-critical, from: cluster, when: health == "critical", severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: clusters }
+  - id: cluster-warning
+    from: cluster
+    when: 'health == "warning" && (fields.membersMissing || fields.backupFailed || fields.backupStale)'
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: clusters
+
+# The former demo (a shop cluster with a member missing and a late backup, a healthy one behind
+# ProxySQL, a paused one), plus one cluster per remaining state.
+samples:
+  cluster:
+    - metadata: { name: shop-mysql, namespace: demo-shop, creationTimestamp: now-90d }
+      spec:
+        crVersion: 1.18.0
+        pxc: { size: 3 }
+        haproxy: { enabled: true, size: 2 }
+        backup: { schedule: [{ name: daily-backup, schedule: "0 2 * * *", keep: 7, storageName: s3-garage }] }
+      status: { state: initializing, pxc: { size: 3, ready: 2, status: initializing }, haproxy: { size: 2, ready: 2, status: ready } }
+    - metadata: { name: crm-mysql, namespace: demo-shop, creationTimestamp: now-90d }
+      spec:
+        crVersion: 1.18.0
+        pxc: { size: 3 }
+        proxysql: { enabled: true, size: 2 }
+        backup: { schedule: [{ name: daily-backup, schedule: "0 2 * * *", keep: 7, storageName: s3-garage }] }
+      status: { state: ready, pxc: { size: 3, ready: 3, status: ready }, proxysql: { size: 2, ready: 2, status: ready } }
+    - metadata: { name: legacy-mysql, namespace: demo-shop, creationTimestamp: now-400d }
+      spec: { crVersion: 1.17.0, pause: true, pxc: { size: 1 } }
+      status: { state: paused, pxc: { status: paused } }
+    - metadata: { name: billing-mysql, namespace: demo-lab, creationTimestamp: now-30d }
+      spec: { crVersion: 1.18.0, pxc: { size: 3 }, haproxy: { enabled: true, size: 2 } }
+      status:
+        state: error
+        message: ["PXC: pxc: back-off restarting failed container"]
+        pxc: { size: 3, status: initializing }
+        haproxy: { size: 2, status: initializing }
+    - metadata: { name: search-mysql, namespace: demo-lab, creationTimestamp: now-30d }
+      spec: { crVersion: 1.18.0, pxc: { size: 1 } }
+      status: { state: initializing, pxc: { size: 1, status: initializing } }
+    - metadata: { name: cache-mysql, namespace: demo-lab, creationTimestamp: now-30d }
+      spec: { crVersion: 1.18.0, pxc: { size: 1 }, haproxy: { enabled: true, size: 2 } }
+      status: { state: ready, pxc: { size: 1, ready: 1, status: ready }, haproxy: { size: 2, ready: 1, status: initializing } }
+    - metadata: { name: fresh-mysql, namespace: demo-lab, creationTimestamp: now-2h }
+      spec:
+        crVersion: 1.18.0
+        pxc: { size: 1 }
+        backup: { schedule: [{ name: daily, schedule: "0 2 * * *" }] }
+      status: { state: initializing, pxc: { size: 1, ready: 1, status: ready } }
+    - metadata: { name: wiki-mysql, namespace: demo-lab, creationTimestamp: now-90d }
+      spec:
+        crVersion: 1.18.0
+        pxc: { size: 1 }
+        backup: { schedule: [{ name: daily, schedule: "0 2 * * *" }] }
+      status: { state: ready, pxc: { size: 1, ready: 1, status: ready } }
+    - metadata: { name: reports-mysql, namespace: demo-lab, creationTimestamp: now-90d }
+      spec:
+        crVersion: 1.18.0
+        pxc: { size: 1 }
+        backup: { schedule: [{ name: weekly, schedule: "0 3 * * 0" }, { name: monthly, schedule: "0 4 1 * *" }] }
+      status: { state: ready, pxc: { size: 1, ready: 1, status: ready } }
+  pod:
+    - metadata: { name: shop-mysql-pxc-0, namespace: demo-shop, labels: { app.kubernetes.io/name: percona-xtradb-cluster, app.kubernetes.io/instance: shop-mysql, app.kubernetes.io/component: pxc } }
+      spec: { nodeName: demo-worker-1 }
+      status: { phase: Running, containerStatuses: [{ name: pxc, ready: true }] }
+    - metadata: { name: shop-mysql-pxc-1, namespace: demo-shop, labels: { app.kubernetes.io/name: percona-xtradb-cluster, app.kubernetes.io/instance: shop-mysql, app.kubernetes.io/component: pxc } }
+      spec: { nodeName: demo-worker-2 }
+      status: { phase: Running, containerStatuses: [{ name: pxc, ready: true }] }
+    - metadata: { name: shop-mysql-pxc-2, namespace: demo-shop, labels: { app.kubernetes.io/name: percona-xtradb-cluster, app.kubernetes.io/instance: shop-mysql, app.kubernetes.io/component: pxc } }
+      status: { phase: Pending }
+    - metadata: { name: crm-mysql-pxc-0, namespace: demo-shop, labels: { app.kubernetes.io/name: percona-xtradb-cluster, app.kubernetes.io/instance: crm-mysql, app.kubernetes.io/component: pxc } }
+      spec: { nodeName: demo-worker-1 }
+      status: { phase: Running, containerStatuses: [{ name: pxc, ready: true }] }
+    - metadata: { name: crm-mysql-pxc-1, namespace: demo-shop, labels: { app.kubernetes.io/name: percona-xtradb-cluster, app.kubernetes.io/instance: crm-mysql, app.kubernetes.io/component: pxc } }
+      spec: { nodeName: demo-worker-2 }
+      status: { phase: Running, containerStatuses: [{ name: pxc, ready: true }] }
+    - metadata: { name: crm-mysql-pxc-2, namespace: demo-shop, labels: { app.kubernetes.io/name: percona-xtradb-cluster, app.kubernetes.io/instance: crm-mysql, app.kubernetes.io/component: pxc } }
+      spec: { nodeName: demo-worker-3 }
+      status: { phase: Running, containerStatuses: [{ name: pxc, ready: true }] }
+  backupSummary:
+    - metadata: { name: shop-mysql, namespace: demo-shop }
+      spec: { pxcCluster: shop-mysql }
+      status: { lastSuccessTime: now-4d, backups: 7 }
+    - metadata: { name: crm-mysql, namespace: demo-shop }
+      spec: { pxcCluster: crm-mysql }
+      status: { lastSuccessTime: now-10h, backups: 7 }
+    - metadata: { name: legacy-mysql, namespace: demo-shop }
+      spec: { pxcCluster: legacy-mysql }
+      status: { lastSuccessTime: now-30d, backups: 1 }
+    - metadata: { name: wiki-mysql, namespace: demo-lab }
+      spec: { pxcCluster: wiki-mysql }
+      status: { lastSuccessTime: now-30h, lastFailureTime: now-6h, backups: 3 }
+    - metadata: { name: reports-mysql, namespace: demo-lab }
+      spec: { pxcCluster: reports-mysql }
+      status: { lastSuccessTime: now-20d, backups: 4 }
+
+# The apps' former Percona strings (percona_*, and the cnpg_* ones it shared, in
+# app/src/main/res/values-*/strings.xml).
+i18n:
+  fr:
+    "%d Percona cluster": "%d cluster Percona"
+    "%d Percona clusters": "%d clusters Percona"
+    "No Percona XtraDB clusters.": "Aucun cluster Percona XtraDB."
+    "paused": "en pause"
+    "operator error": "erreur de l’opérateur"
+    "no member ready": "aucun membre prêt"
+    "members missing": "membres manquants"
+    "proxy pods missing": "pods proxy manquants"
+    "initializing": "initialisation"
+    "last backup failed": "dernière sauvegarde échouée"
+    "no recent backup": "pas de sauvegarde récente"
+    "Not ready": "Pas prêt"
+    "Ready": "Prêt"
+    "Members ready": "Membres prêts"
+    "State": "État"
+    "Proxy": "Proxy"
+    "CR version": "Version de la CR"
+    "Last backup": "Dernière sauvegarde"
+    "Last failure": "Dernier échec"
+    "Schedules": "Planifications"
+    "No Percona XtraDB pods.": "Aucun pod Percona XtraDB."
+    "Node": "Nœud"
+    "Phase": "Phase"
+  de:
+    "%d Percona cluster": "%d Percona-Cluster"
+    "%d Percona clusters": "%d Percona-Cluster"
+    "No Percona XtraDB clusters.": "Keine Percona-XtraDB-Cluster."
+    "paused": "pausiert"
+    "operator error": "Operator-Fehler"
+    "no member ready": "kein Mitglied bereit"
+    "members missing": "Mitglieder fehlen"
+    "proxy pods missing": "Proxy-Pods fehlen"
+    "initializing": "wird initialisiert"
+    "last backup failed": "letztes Backup fehlgeschlagen"
+    "no recent backup": "kein aktuelles Backup"
+    "Not ready": "Nicht bereit"
+    "Ready": "Bereit"
+    "Members ready": "Mitglieder bereit"
+    "State": "Status"
+    "Proxy": "Proxy"
+    "CR version": "CR-Version"
+    "Last backup": "Letztes Backup"
+    "Last failure": "Letzter Fehlschlag"
+    "Schedules": "Zeitpläne"
+    "No Percona XtraDB pods.": "Keine Percona-XtraDB-Pods."
+    "Node": "Knoten"
+    "Phase": "Phase"
+  es:
+    "%d Percona cluster": "%d clúster de Percona"
+    "%d Percona clusters": "%d clústeres de Percona"
+    "No Percona XtraDB clusters.": "Sin clústeres de Percona XtraDB."
+    "paused": "en pausa"
+    "operator error": "error del operador"
+    "no member ready": "ningún miembro listo"
+    "members missing": "faltan miembros"
+    "proxy pods missing": "faltan pods de proxy"
+    "initializing": "inicializando"
+    "last backup failed": "falló la última copia"
+    "no recent backup": "sin copia reciente"
+    "Not ready": "No listo"
+    "Ready": "Listo"
+    "Members ready": "Miembros listos"
+    "State": "Estado"
+    "Proxy": "Proxy"
+    "CR version": "Versión de la CR"
+    "Last backup": "Última copia"
+    "Last failure": "Último fallo"
+    "Schedules": "Programaciones"
+    "No Percona XtraDB pods.": "Sin pods de Percona XtraDB."
+    "Node": "Nodo"
+    "Phase": "Fase"
+  it:
+    "%d Percona cluster": "%d cluster Percona"
+    "%d Percona clusters": "%d cluster Percona"
+    "No Percona XtraDB clusters.": "Nessun cluster Percona XtraDB."
+    "paused": "in pausa"
+    "operator error": "errore dell’operatore"
+    "no member ready": "nessun membro pronto"
+    "members missing": "membri mancanti"
+    "proxy pods missing": "pod proxy mancanti"
+    "initializing": "inizializzazione"
+    "last backup failed": "ultimo backup non riuscito"
+    "no recent backup": "nessun backup recente"
+    "Not ready": "Non pronto"
+    "Ready": "Pronto"
+    "Members ready": "Membri pronti"
+    "State": "Stato"
+    "Proxy": "Proxy"
+    "CR version": "Versione della CR"
+    "Last backup": "Ultimo backup"
+    "Last failure": "Ultimo errore"
+    "Schedules": "Pianificazioni"
+    "No Percona XtraDB pods.": "Nessun pod Percona XtraDB."
+    "Node": "Nodo"
+    "Phase": "Fase"
+  uk:
+    "%d Percona cluster": "%d кластер Percona"
+    "%d Percona clusters": "%d кластерів Percona"
+    "No Percona XtraDB clusters.": "Немає кластерів Percona XtraDB."
+    "paused": "призупинено"
+    "operator error": "помилка оператора"
+    "no member ready": "жоден учасник не готовий"
+    "members missing": "бракує учасників"
+    "proxy pods missing": "бракує подів проксі"
+    "initializing": "ініціалізація"
+    "last backup failed": "остання резервна копія не вдалася"
+    "no recent backup": "немає свіжої резервної копії"
+    "Not ready": "Не готово"
+    "Ready": "Готово"
+    "Members ready": "Учасники готові"
+    "State": "Стан"
+    "Proxy": "Проксі"
+    "CR version": "Версія CR"
+    "Last backup": "Остання резервна копія"
+    "Last failure": "Остання помилка"
+    "Schedules": "Розклади"
+    "No Percona XtraDB pods.": "Немає подів Percona XtraDB."
+    "Node": "Вузол"
+    "Phase": "Фаза"

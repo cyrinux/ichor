@@ -382,32 +382,6 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
             out["cnpg|\(c.label)"] = dataWarning
         }
     }
-    for d in services.dragonfly?.instances ?? [] {
-        if d.health == .critical {
-            out["dragonfly|\(d.label)"] = dataCritical
-        } else if d.reasons.contains(.pods) || d.reasons.contains(.masters) {
-            // A rolling update is planned; a replica down or two masters are not.
-            out["dragonfly|\(d.label)"] = dataWarning
-        }
-    }
-    // A replica rolling out or a busy operator is usually planned; a Galera recovery or backups are not.
-    let mariadbAlerting: Set<MariaDbReason> = [.galeraRecovery, .backupFailed, .backupStale]
-    for m in services.mariadb?.clusters ?? [] {
-        if m.health == .critical {
-            out["mariadb|\(m.label)"] = dataCritical
-        } else if m.reasons.contains(where: mariadbAlerting.contains) {
-            out["mariadb|\(m.label)"] = dataWarning
-        }
-    }
-    // The operator still initializing is not worth an alert; a member lost or backups failing are.
-    let perconaAlerting: Set<PerconaReason> = [.members, .backupFailed, .backupStale]
-    for c in services.percona?.clusters ?? [] {
-        if c.health == .critical {
-            out["percona|\(c.label)"] = dataCritical
-        } else if c.reasons.contains(where: perconaAlerting.contains) {
-            out["percona|\(c.label)"] = dataWarning
-        }
-    }
     // An issuer not ready alerts on its own, not through each of its certificates.
     let certAlerting: Set<CertReason> = [.expiring, .renewalOverdue, .notReady]
     for c in services.certManager?.certificates ?? [] {
@@ -449,9 +423,9 @@ public func dataSystemTitle(_ key: String) -> String {
     switch key.split(separator: "|", maxSplits: 1).first.map(String.init) ?? "" {
     case "longhorn": "Longhorn"
     case "garage": "Garage"
-    case "dragonfly": "Dragonfly"
-    case "mariadb": "MariaDB"
-    case "percona": "Percona XtraDB Cluster"
+    case "dragonfly": "Dragonfly" // an older snapshot's, now a plugin's
+    case "mariadb": "MariaDB" // an older snapshot's, now a plugin's
+    case "percona": "Percona XtraDB Cluster" // an older snapshot's, now a plugin's
     case "certmanager": "cert-manager"
     case "velero": "Velero"
     case "externaldns": "ExternalDNS" // an older snapshot's, now a plugin's

@@ -118,7 +118,8 @@ func cephPluginAPI(t *testing.T, clusters string, pods []dsPod) *fakeKubeAPI {
 	return f
 }
 
-// labelsMatch reads the equality selectors the plugins use: "k=v" and "k!=v", comma-separated.
+// labelsMatch reads the selectors the plugins use: "k=v", "k!=v" and "k" (the label is set),
+// comma-separated.
 func labelsMatch(labels map[string]string, selector string) bool {
 	for req := range strings.SplitSeq(selector, ",") {
 		if k, v, ok := strings.Cut(req, "!="); ok {
@@ -129,7 +130,15 @@ func labelsMatch(labels map[string]string, selector string) bool {
 			continue
 		}
 
-		if k, v, ok := strings.Cut(req, "="); ok && labels[k] != v {
+		if k, v, ok := strings.Cut(req, "="); ok {
+			if labels[k] != v {
+				return false
+			}
+
+			continue
+		}
+
+		if _, set := labels[req]; req != "" && !set {
 			return false
 		}
 	}

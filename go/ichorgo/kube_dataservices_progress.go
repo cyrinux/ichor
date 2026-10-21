@@ -18,9 +18,6 @@ const (
 	dsStepBackups     = "backups"
 	dsStepLonghorn    = "longhorn"
 	dsStepCNPG        = "cnpg"
-	dsStepDragonfly   = "dragonfly"
-	dsStepMariaDB     = "mariadb"
-	dsStepPercona     = "percona"
 	dsStepCertManager = "certmanager"
 	dsStepVelero      = "velero"
 	dsStepCastAI      = "castai"
@@ -146,21 +143,6 @@ func dataServiceReaders(ctx context.Context, k *kubeClient, in *dsInput) []dsRea
 		out.CNPG = readCNPGSection(ctx, k, in)
 
 		return sectionFailed(out.CNPG, func(s *cnpgStatus) string { return s.Error })
-	})
-	add(dsStepDragonfly, served(groupDragonfly), func(out *dataServices) bool {
-		out.Dragonfly = readDragonfly(ctx, k, groups[groupDragonfly])
-
-		return sectionFailed(out.Dragonfly, func(s *dragonflyStatus) string { return s.Error })
-	})
-	add(dsStepMariaDB, served(groupMariaDB), func(out *dataServices) bool {
-		out.MariaDB = readMariaDB(ctx, k, groups[groupMariaDB], now)
-
-		return sectionFailed(out.MariaDB, func(s *mariadbStatus) string { return s.Error })
-	})
-	add(dsStepPercona, served(groupPercona), func(out *dataServices) bool {
-		out.Percona = readPercona(ctx, k, groups[groupPercona], now)
-
-		return sectionFailed(out.Percona, func(s *perconaStatus) string { return s.Error })
 	})
 	add(dsStepCertManager, served(groupCertManager), func(out *dataServices) bool {
 		out.CertManager = readCertManager(ctx, k, groups[groupCertManager], now)

@@ -2295,45 +2295,6 @@
     <string name="cnpg_backup_text">CloudNativePG erstellt eine vollständige Basissicherung mit der Methode, für die der Cluster eingerichtet ist (barman-cloud-Plugin, Object Store oder Volume-Snapshot). Sie belastet die Instanz, auf der sie läuft, und belegt Speicher im Backup-Ziel.</string>
     <string name="cnpg_backup_started">Sicherung %1$s angefordert</string>
     <string name="cnpg_backup_failed">%1$s: %2$s</string>
-    <string name="dragonfly_empty">Keine Dragonfly-Instanzen.</string>
-    <string name="dragonfly_role_master">Master</string>
-    <string name="dragonfly_reason_no_ready">kein Pod bereit</string>
-    <string name="dragonfly_reason_no_master">kein Master</string>
-    <string name="dragonfly_reason_masters">mehrere Master</string>
-    <string name="dragonfly_reason_pods">Replikate fehlen</string>
-    <string name="dragonfly_reason_phase">Operator: %1$s</string>
-    <plurals name="dragonfly_instances">
-        <item quantity="one">%1$d Dragonfly-Instanz</item>
-        <item quantity="other">%1$d Dragonfly-Instanzen</item>
-    </plurals>
-    <string name="mariadb_empty">Keine MariaDB-Cluster.</string>
-    <string name="mariadb_role_member">Mitglied</string>
-    <string name="mariadb_suspended">angehalten</string>
-    <string name="mariadb_topology_standalone">eigenständig</string>
-    <string name="mariadb_topology_replication">Replikation</string>
-    <string name="mariadb_reason_no_primary">keine primäre Instanz</string>
-    <string name="mariadb_reason_galera_recovery">Galera-Wiederherstellung läuft</string>
-    <string name="mariadb_last_backup">letztes Backup %1$s</string>
-    <string name="mariadb_last_failure">fehlgeschlagen %1$s</string>
-    <string name="mariadb_schedule">Zeitplan %1$s</string>
-    <plurals name="mariadb_clusters">
-        <item quantity="one">%1$d MariaDB-Cluster</item>
-        <item quantity="other">%1$d MariaDB-Cluster</item>
-    </plurals>
-    <string name="percona_empty">Keine Percona-XtraDB-Cluster.</string>
-    <string name="percona_paused">pausiert</string>
-    <string name="percona_reason_error">Operator-Fehler</string>
-    <string name="percona_reason_no_member">kein Mitglied bereit</string>
-    <string name="percona_reason_members">Mitglieder fehlen</string>
-    <string name="percona_reason_proxy">Proxy-Pods fehlen</string>
-    <string name="percona_reason_initializing">wird initialisiert</string>
-    <string name="percona_last_backup">letztes Backup %1$s</string>
-    <string name="percona_last_failure">letzter Fehlschlag %1$s</string>
-    <string name="percona_schedules">Zeitpläne: %1$s</string>
-    <plurals name="percona_clusters">
-        <item quantity="one">%1$d Percona-Cluster</item>
-        <item quantity="other">%1$d Percona-Cluster</item>
-    </plurals>
     <string name="certmanager_empty">Keine Zertifikate.</string>
     <string name="certmanager_issuers">Aussteller</string>
     <string name="certmanager_expires">läuft %1$s ab</string>

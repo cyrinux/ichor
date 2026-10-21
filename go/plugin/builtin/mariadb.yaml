@@ -1,0 +1,415 @@
+# yaml-language-server: $schema=../schema/plugin.schema.json
+# mariadb-operator (k8s.mariadb.com) runs a MariaDB database per MariaDB object: standalone,
+# with replication or as a Galera cluster. Each cluster counts its ready pods against its
+# replicas (the StatefulSet's pods, labelled app.kubernetes.io/name=mariadb and
+# app.kubernetes.io/instance=<cluster>), names its primary, and says how its backups went.
+# The backups take a Go reader (source: native:mariadb-backups): a cluster's last success and
+# failure are the latest over its Backups, PhysicalBackups and the CronJobs that run its
+# scheduled logical Backups (a Backup's condition keeps its first run's time while runs
+# succeed), which no expression can fold. A suspended cluster is left alone on purpose: idle.
+# go/ichorgo/plugin_mariadb_test.go holds it to the reader the apps used before.
+schemaVersion: ichor.dev/plugin/v1alpha1
+id: mariadb
+name: MariaDB Operator
+website: https://github.com/mariadb-operator/mariadb-operator
+icon: mariadb
+category: data-services
+catalogId: mariadb
+
+detect:
+  - group: k8s.mariadb.com
+
+resources:
+  mariadb:
+    group: k8s.mariadb.com
+    version: preferred
+    resource: mariadbs
+    kind: MariaDB
+    scope: Namespaced
+  # The StatefulSet's pods only: a backup Job's pods carry the operator's labels too.
+  pod:
+    group: ""
+    version: v1
+    resource: pods
+    kind: Pod
+    scope: Namespaced
+    list: { labelSelector: "app.kubernetes.io/name=mariadb,statefulset.kubernetes.io/pod-name" }
+  # One per MariaDB a Backup or PhysicalBackup names: its latest successful and failed run and
+  # its most frequent active schedule.
+  backupSummary:
+    group: ichor.dev
+    version: v1alpha1
+    resource: mariadbbackups
+    kind: MariaDBBackups
+    scope: Namespaced
+    source: native:mariadb-backups
+
+fields:
+  mariadb:
+    suspended: $.spec.suspend | default(false)
+    galera: $.spec.galera.enabled | default(false)
+    replicated: '!fields.galera && ($.spec.replication.enabled | default(false))'
+    replicas: $.spec.replicas | default(1)
+    primary: $.status.currentPrimary | default("")
+    pods: |
+      len(pod[?(@.metadata.namespace == $.metadata.namespace && @.metadata.labels["app.kubernetes.io/instance"] == $.metadata.name)])
+    readyPods: |
+      len(pod[?(@.metadata.namespace == $.metadata.namespace && @.metadata.labels["app.kubernetes.io/instance"] == $.metadata.name
+        && @.status.phase == "Running" && len(@.status.containerStatuses) > 0 && len(@.status.containerStatuses[?(@.ready != true)]) == 0)])
+    primaryReady: |
+      len(pod[?(@.metadata.namespace == $.metadata.namespace && @.metadata.labels["app.kubernetes.io/instance"] == $.metadata.name
+        && @.metadata.name == $.status.currentPrimary
+        && @.status.phase == "Running" && len(@.status.containerStatuses) > 0 && len(@.status.containerStatuses[?(@.ready != true)]) == 0)]) > 0
+    readyStatus: condition("Ready").status | default("")
+    # The operator's own words while it is not ready (switching primary, updating...).
+    message: 'fields.readyStatus != "" && fields.readyStatus != "True" ? (condition("Ready").message | default("")) : ""'
+    recovering: $.status.galeraRecovery != null
+    backups: join(backupSummary, $.metadata.namespace == left.metadata.namespace && $.metadata.name == left.metadata.name)
+    lastBackupAt: time(fields.backups.status.lastSuccessTime)
+    lastBackupFailedAt: time(fields.backups.status.lastFailureTime)
+    backupSchedule: fields.backups.spec.schedule | default("")
+    backupInterval: (fields.backups.spec.intervalSeconds | default(0)) * 1000
+    noReady: fields.replicas > 0 && fields.readyPods == 0
+    noPrimary: fields.replicated && fields.replicas > 0 && !fields.primaryReady
+    podsMissing: fields.readyPods > 0 && fields.readyPods < fields.replicas
+    notReady: fields.readyStatus == "False"
+    backupFailed: fields.lastBackupFailedAt > fields.lastBackupAt
+    # No successful backup for twice the schedule's interval.
+    backupStale: 'fields.backupInterval > 0 && (fields.lastBackupAt == 0 || now - fields.lastBackupAt > 2 * fields.backupInterval)'
+  pod:
+    instance: $.metadata.labels["app.kubernetes.io/instance"] | default("")
+    cluster: join(mariadb, $.metadata.namespace == left.metadata.namespace && $.metadata.name == left.metadata.labels["app.kubernetes.io/instance"])
+    role: |
+      $.metadata.name == (fields.cluster.status.currentPrimary | default("")) ? "primary"
+        : (fields.cluster.spec.galera.enabled ? "member" : (fields.cluster.spec.replication.enabled ? "replica" : ""))
+    # The primary first under its cluster.
+    rank: 'fields.role == "primary" ? 0 : 1'
+    ready: '$.status.phase == "Running" && len($.status.containerStatuses) > 0 && len($.status.containerStatuses[?(@.ready != true)]) == 0'
+
+# The first rule that holds is the cluster's reason: the worst one, in the reader's order.
+health:
+  mariadb:
+    - { when: fields.suspended, health: idle, reason: suspended, message: "suspended" }
+    - { when: fields.noReady, health: critical, reason: noReady, message: "no pod ready" }
+    - { when: fields.noPrimary, health: critical, reason: noPrimary, message: "no primary" }
+    - { when: fields.podsMissing, health: warning, reason: pods, message: "replicas missing" }
+    - { when: fields.recovering, health: warning, reason: galeraRecovery, message: "Galera recovery in progress" }
+    - { when: 'fields.notReady && fields.message != ""', health: warning, reason: notReady, message: "operator: {{ fields.message }}" }
+    - { when: fields.notReady, health: warning, reason: notReady, message: "not ready" }
+    - { when: fields.backupFailed, health: warning, reason: backupFailed, message: "last backup failed" }
+    - { when: fields.backupStale, health: warning, reason: backupStale, message: "no recent backup" }
+  pod:
+    - { when: "!fields.ready", health: critical, reason: notReady, message: "Not ready" }
+
+dataServices:
+  summary:
+    aggregate:
+      total: count(mariadb)
+    health: worst(mariadb.health)
+
+cards:
+  summary:
+    title: { count: dataServices.summary.total, one: "%d MariaDB cluster", other: "%d MariaDB clusters" }
+    health: dataServices.summary.health
+  clusters:
+    from: mariadb
+    sort: [health desc, $.metadata.namespace, $.metadata.name]
+    empty: "No MariaDB clusters."
+    row:
+      title: $.metadata.name
+      subtitle: $.metadata.namespace
+      status:
+        tone: health
+        text: 'fields.suspended ? "suspended" : (fields.galera ? "Galera" : (fields.replicated ? "replication" : "standalone"))'
+      trailing: { text: 'string(fields.readyPods) + "/" + string(fields.replicas)' }
+      detail:
+        - type: gauge
+          label: "Pods ready"
+          value: fields.readyPods
+          max: fields.replicas
+          tone: 'fields.suspended ? "idle" : (fields.noReady ? "critical" : (fields.readyPods < fields.replicas ? "warning" : "ok"))'
+        - type: keyValues
+          items:
+            - { label: "Primary", value: fields.primary, mono: true }
+            - { label: "Last backup", value: fields.lastBackupAt | relativeTime(), tone: 'fields.backupStale ? "warning" : ""' }
+            - { label: "Last failure", value: fields.lastBackupFailedAt | relativeTime(), tone: 'fields.backupFailed ? "warning" : ""' }
+            - { label: "Schedule", value: fields.backupSchedule, mono: true }
+        - type: conditions
+  pods:
+    from: pod
+    sort: [$.metadata.namespace, fields.instance, fields.rank, $.metadata.name]
+    empty: "No MariaDB pods."
+    row:
+      title: $.metadata.name
+      subtitle: '$.metadata.namespace + "/" + fields.instance'
+      status:
+        tone: health
+        text: 'fields.role == "primary" ? "primary" : (fields.role == "replica" ? "replica" : (fields.role == "member" ? "member" : (fields.ready ? "Ready" : "Not ready")))'
+      trailing: { text: $.spec.nodeName | default("") }
+      detail:
+        - type: keyValues
+          items:
+            - { label: "Node", value: $.spec.nodeName | default(""), mono: true }
+            - { label: "Phase", value: $.status.phase | default("") }
+
+# The monitor's former MariaDB alerts: a cluster when critical, or with a Galera recovery or
+# failing or missing backups; a replica rolling out or a busy operator is usually planned.
+findings:
+  - { id: cluster-critical, from: mariadb, when: health == "critical", severity: critical, title: "{{ namespace }}/{{ name }}", detail: "{{ message }}", opens: clusters }
+  - id: cluster-warning
+    from: mariadb
+    when: 'health == "warning" && (fields.recovering || fields.backupFailed || fields.backupStale)'
+    severity: warning
+    title: "{{ namespace }}/{{ name }}"
+    detail: "{{ message }}"
+    opens: clusters
+
+# The former demo (a replicated shop database whose last backup failed, a healthy Galera
+# cluster, a suspended one), plus one cluster per remaining state.
+samples:
+  mariadb:
+    - metadata: { name: shop-db, namespace: demo-shop }
+      spec: { replicas: 2, replication: { enabled: true } }
+      status: { currentPrimary: shop-db-0, conditions: [{ type: Ready, status: "True", reason: StatefulSetReady, message: Running, lastTransitionTime: now-6d }] }
+    - metadata: { name: forum-db, namespace: demo-shop }
+      spec: { replicas: 3, galera: { enabled: true } }
+      status: { currentPrimary: forum-db-1, conditions: [{ type: Ready, status: "True", reason: StatefulSetReady, message: Running, lastTransitionTime: now-12d }] }
+    - metadata: { name: legacy-db, namespace: demo-shop }
+      spec: { suspend: true }
+      status: { currentPrimary: legacy-db-0 }
+    - metadata: { name: wiki-db, namespace: demo-lab }
+      spec: { replicas: 3, galera: { enabled: true } }
+      status:
+        currentPrimary: wiki-db-0
+        galeraRecovery: { state: {} }
+        conditions: [{ type: Ready, status: "False", reason: GaleraNotReady, message: Recovering Galera cluster, lastTransitionTime: now-8m }]
+    - metadata: { name: metrics-db, namespace: demo-lab }
+      spec: { replicas: 2, replication: { enabled: true } }
+      status: { currentPrimary: metrics-db-0, conditions: [{ type: Ready, status: "False", reason: SwitchPrimary, message: Switching primary, lastTransitionTime: now-2m }] }
+    - metadata: { name: search-db, namespace: demo-lab }
+      spec: { replicas: 1 }
+      status: { currentPrimary: search-db-0, conditions: [{ type: Ready, status: "False", reason: StatefulSetNotReady, message: Not ready, lastTransitionTime: now-20m }] }
+    - metadata: { name: audit-db, namespace: demo-lab }
+      spec: { replicas: 1 }
+      status: { currentPrimary: audit-db-0, conditions: [{ type: Ready, status: "False", reason: Updating, message: Updating, lastTransitionTime: now-1m }] }
+    - metadata: { name: queue-db, namespace: demo-lab }
+      spec: { replicas: 1 }
+      status: { currentPrimary: queue-db-0, conditions: [{ type: Ready, status: "False", reason: Pending, lastTransitionTime: now-3m }] }
+    - metadata: { name: reports-db, namespace: demo-lab }
+      spec: { replicas: 1 }
+      status: { currentPrimary: reports-db-0, conditions: [{ type: Ready, status: "True", reason: StatefulSetReady, message: Running, lastTransitionTime: now-40d }] }
+    - metadata: { name: cart-db, namespace: demo-lab }
+      spec: { replicas: 3 }
+      status: { currentPrimary: cart-db-0, conditions: [{ type: Ready, status: "True", reason: StatefulSetReady, message: Running, lastTransitionTime: now-3d }] }
+  pod:
+    - metadata: { name: shop-db-0, namespace: demo-shop, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: shop-db, statefulset.kubernetes.io/pod-name: shop-db-0 } }
+      spec: { nodeName: demo-worker-2 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: shop-db-1, namespace: demo-shop, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: shop-db, statefulset.kubernetes.io/pod-name: shop-db-1 } }
+      spec: { nodeName: demo-worker-3 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: forum-db-0, namespace: demo-shop, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: forum-db, statefulset.kubernetes.io/pod-name: forum-db-0 } }
+      spec: { nodeName: demo-worker-1 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: forum-db-1, namespace: demo-shop, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: forum-db, statefulset.kubernetes.io/pod-name: forum-db-1 } }
+      spec: { nodeName: demo-worker-2 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: forum-db-2, namespace: demo-shop, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: forum-db, statefulset.kubernetes.io/pod-name: forum-db-2 } }
+      spec: { nodeName: demo-worker-3 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: legacy-db-0, namespace: demo-shop, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: legacy-db, statefulset.kubernetes.io/pod-name: legacy-db-0 } }
+      spec: { nodeName: demo-worker-1 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: wiki-db-0, namespace: demo-lab, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: wiki-db, statefulset.kubernetes.io/pod-name: wiki-db-0 } }
+      spec: { nodeName: demo-worker-1 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: wiki-db-1, namespace: demo-lab, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: wiki-db, statefulset.kubernetes.io/pod-name: wiki-db-1 } }
+      spec: { nodeName: demo-worker-2 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: wiki-db-2, namespace: demo-lab, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: wiki-db, statefulset.kubernetes.io/pod-name: wiki-db-2 } }
+      spec: { nodeName: demo-worker-3 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: metrics-db-0, namespace: demo-lab, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: metrics-db, statefulset.kubernetes.io/pod-name: metrics-db-0 } }
+      spec: { nodeName: demo-worker-3 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: false }] }
+    - metadata: { name: metrics-db-1, namespace: demo-lab, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: metrics-db, statefulset.kubernetes.io/pod-name: metrics-db-1 } }
+      spec: { nodeName: demo-worker-1 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: search-db-0, namespace: demo-lab, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: search-db, statefulset.kubernetes.io/pod-name: search-db-0 } }
+      status: { phase: Pending }
+    - metadata: { name: queue-db-0, namespace: demo-lab, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: queue-db, statefulset.kubernetes.io/pod-name: queue-db-0 } }
+      spec: { nodeName: demo-worker-3 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: audit-db-0, namespace: demo-lab, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: audit-db, statefulset.kubernetes.io/pod-name: audit-db-0 } }
+      spec: { nodeName: demo-worker-2 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: reports-db-0, namespace: demo-lab, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: reports-db, statefulset.kubernetes.io/pod-name: reports-db-0 } }
+      spec: { nodeName: demo-worker-2 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: cart-db-0, namespace: demo-lab, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: cart-db, statefulset.kubernetes.io/pod-name: cart-db-0 } }
+      spec: { nodeName: demo-worker-1 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+    - metadata: { name: cart-db-1, namespace: demo-lab, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: cart-db, statefulset.kubernetes.io/pod-name: cart-db-1 } }
+      status: { phase: Pending }
+    - metadata: { name: cart-db-2, namespace: demo-lab, labels: { app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: cart-db, statefulset.kubernetes.io/pod-name: cart-db-2 } }
+      spec: { nodeName: demo-worker-3 }
+      status: { phase: Running, containerStatuses: [{ name: mariadb, ready: true }] }
+  backupSummary:
+    - metadata: { name: shop-db, namespace: demo-shop }
+      spec: { mariaDbRef: { name: shop-db, namespace: demo-shop }, schedule: "0 3 * * *", intervalSeconds: 86400 }
+      status: { lastSuccessTime: now-3d, lastFailureTime: now-20h }
+    - metadata: { name: forum-db, namespace: demo-shop }
+      spec: { mariaDbRef: { name: forum-db, namespace: demo-shop }, schedule: "0 */12 * * *", intervalSeconds: 86400 }
+      status: { lastSuccessTime: now-9h }
+    - metadata: { name: reports-db, namespace: demo-lab }
+      spec: { mariaDbRef: { name: reports-db, namespace: demo-lab }, schedule: "0 4 * * 0", intervalSeconds: 604800 }
+      status: { lastSuccessTime: now-16d }
+
+# The apps' former MariaDB strings (mariadb_*, and the dragonfly_* and cnpg_* ones it shared,
+# in app/src/main/res/values-*/strings.xml).
+i18n:
+  fr:
+    "%d MariaDB cluster": "%d cluster MariaDB"
+    "%d MariaDB clusters": "%d clusters MariaDB"
+    "No MariaDB clusters.": "Aucun cluster MariaDB."
+    "suspended": "suspendu"
+    "no pod ready": "aucun pod prêt"
+    "no primary": "aucun primaire"
+    "replicas missing": "répliques manquantes"
+    "Galera recovery in progress": "récupération Galera en cours"
+    "operator: {{ fields.message }}": "opérateur : {{ fields.message }}"
+    "not ready": "pas prêt"
+    "last backup failed": "dernière sauvegarde échouée"
+    "no recent backup": "pas de sauvegarde récente"
+    "Not ready": "Pas prêt"
+    "Ready": "Prêt"
+    "Galera": "Galera"
+    "replication": "réplication"
+    "standalone": "autonome"
+    "Pods ready": "Pods prêts"
+    "Primary": "Primaire"
+    "Last backup": "Dernière sauvegarde"
+    "Last failure": "Dernier échec"
+    "Schedule": "Planification"
+    "No MariaDB pods.": "Aucun pod MariaDB."
+    "primary": "primaire"
+    "replica": "réplique"
+    "member": "membre"
+    "Node": "Nœud"
+    "Phase": "Phase"
+  de:
+    "%d MariaDB cluster": "%d MariaDB-Cluster"
+    "%d MariaDB clusters": "%d MariaDB-Cluster"
+    "No MariaDB clusters.": "Keine MariaDB-Cluster."
+    "suspended": "angehalten"
+    "no pod ready": "kein Pod bereit"
+    "no primary": "keine primäre Instanz"
+    "replicas missing": "Replikate fehlen"
+    "Galera recovery in progress": "Galera-Wiederherstellung läuft"
+    "operator: {{ fields.message }}": "Operator: {{ fields.message }}"
+    "not ready": "nicht bereit"
+    "last backup failed": "letztes Backup fehlgeschlagen"
+    "no recent backup": "kein aktuelles Backup"
+    "Not ready": "Nicht bereit"
+    "Ready": "Bereit"
+    "Galera": "Galera"
+    "replication": "Replikation"
+    "standalone": "eigenständig"
+    "Pods ready": "Pods bereit"
+    "Primary": "Primär"
+    "Last backup": "Letztes Backup"
+    "Last failure": "Letzter Fehlschlag"
+    "Schedule": "Zeitplan"
+    "No MariaDB pods.": "Keine MariaDB-Pods."
+    "primary": "primär"
+    "replica": "Replikat"
+    "member": "Mitglied"
+    "Node": "Knoten"
+    "Phase": "Phase"
+  es:
+    "%d MariaDB cluster": "%d clúster de MariaDB"
+    "%d MariaDB clusters": "%d clústeres de MariaDB"
+    "No MariaDB clusters.": "Sin clústeres de MariaDB."
+    "suspended": "suspendido"
+    "no pod ready": "ningún pod listo"
+    "no primary": "sin primario"
+    "replicas missing": "faltan réplicas"
+    "Galera recovery in progress": "recuperación de Galera en curso"
+    "operator: {{ fields.message }}": "operador: {{ fields.message }}"
+    "not ready": "no listo"
+    "last backup failed": "falló la última copia"
+    "no recent backup": "sin copia reciente"
+    "Not ready": "No listo"
+    "Ready": "Listo"
+    "Galera": "Galera"
+    "replication": "replicación"
+    "standalone": "independiente"
+    "Pods ready": "Pods listos"
+    "Primary": "Primario"
+    "Last backup": "Última copia"
+    "Last failure": "Último fallo"
+    "Schedule": "Programación"
+    "No MariaDB pods.": "Sin pods de MariaDB."
+    "primary": "primario"
+    "replica": "réplica"
+    "member": "miembro"
+    "Node": "Nodo"
+    "Phase": "Fase"
+  it:
+    "%d MariaDB cluster": "%d cluster MariaDB"
+    "%d MariaDB clusters": "%d cluster MariaDB"
+    "No MariaDB clusters.": "Nessun cluster MariaDB."
+    "suspended": "sospeso"
+    "no pod ready": "nessun pod pronto"
+    "no primary": "nessun primario"
+    "replicas missing": "repliche mancanti"
+    "Galera recovery in progress": "ripristino Galera in corso"
+    "operator: {{ fields.message }}": "operatore: {{ fields.message }}"
+    "not ready": "non pronto"
+    "last backup failed": "ultimo backup non riuscito"
+    "no recent backup": "nessun backup recente"
+    "Not ready": "Non pronto"
+    "Ready": "Pronto"
+    "Galera": "Galera"
+    "replication": "replicazione"
+    "standalone": "autonomo"
+    "Pods ready": "Pod pronti"
+    "Primary": "Primario"
+    "Last backup": "Ultimo backup"
+    "Last failure": "Ultimo errore"
+    "Schedule": "Pianificazione"
+    "No MariaDB pods.": "Nessun pod MariaDB."
+    "primary": "primario"
+    "replica": "replica"
+    "member": "membro"
+    "Node": "Nodo"
+    "Phase": "Fase"
+  uk:
+    "%d MariaDB cluster": "%d кластер MariaDB"
+    "%d MariaDB clusters": "%d кластерів MariaDB"
+    "No MariaDB clusters.": "Немає кластерів MariaDB."
+    "suspended": "призупинено"
+    "no pod ready": "жоден под не готовий"
+    "no primary": "немає первинного"
+    "replicas missing": "бракує реплік"
+    "Galera recovery in progress": "триває відновлення Galera"
+    "operator: {{ fields.message }}": "оператор: {{ fields.message }}"
+    "not ready": "не готовий"
+    "last backup failed": "остання резервна копія не вдалася"
+    "no recent backup": "немає свіжої резервної копії"
+    "Not ready": "Не готово"
+    "Ready": "Готово"
+    "Galera": "Galera"
+    "replication": "реплікація"
+    "standalone": "автономний"
+    "Pods ready": "Поди готові"
+    "Primary": "Первинний"
+    "Last backup": "Остання резервна копія"
+    "Last failure": "Остання помилка"
+    "Schedule": "Розклад"
+    "No MariaDB pods.": "Немає подів MariaDB."
+    "primary": "первинний"
+    "replica": "репліка"
+    "member": "учасник"
+    "Node": "Вузол"
+    "Phase": "Фаза"
