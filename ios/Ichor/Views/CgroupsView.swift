@@ -91,6 +91,7 @@ struct CgroupsView: View {
             guard let client = model.client else { return }
             await monitor.poll(client, node: node)
         }
+        .allowsLandscape()
     }
 }
 
@@ -222,7 +223,7 @@ private struct PressureChart: View {
             .chartXAxis(.hidden)
             .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { AxisGridLine() } }
             .chartXSelection(value: $selection)
-            .frame(height: 120)
+            .chartHeight(120)
             .accessibilityLabel(Text("\(String(localized: "Pressure")) chart"))
         }
         .padding(.vertical, 4)

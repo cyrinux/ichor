@@ -80,6 +80,7 @@ struct DebugShellView: View {
         }
         .task { snippets = (try? await TalosClient.debugSnippets()) ?? [] }
         .onDisappear { shell.stop() }
+        .allowsLandscape()
     }
 
     /// With the app lock on, a privileged shell needs a fresh Face ID / passcode, like reboot.

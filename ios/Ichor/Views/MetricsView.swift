@@ -104,6 +104,7 @@ struct MetricsView: View {
                         discover: { await discover(autoSelect: false) }, test: test, save: setSource)
         }
         .themedBackground()
+        .allowsLandscape()
     }
 
     private func panels(_ source: PromSource) -> some View {
@@ -383,7 +384,7 @@ struct TimeSeriesChart: View {
             } }
             .chartXAxis { AxisMarks(values: .automatic(desiredCount: 3)) { AxisValueLabel(format: .dateTime.hour().minute()) } }
             .chartXSelection(value: $selection)
-            .frame(height: 140)
+            .chartHeight(140)
             .accessibilityLabel(Text("Chart of \(title) over time"))
             ForEach(Array(lines.enumerated()), id: \.offset) { li, line in
                 HStack(spacing: 8) {

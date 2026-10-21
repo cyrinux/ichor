@@ -82,6 +82,7 @@ struct LiveView: View {
             guard let client = model.client else { return }
             await stats.poll(client, node: node)
         }
+        .allowsLandscape()
     }
 
     private var cpuTitle: String {
@@ -152,7 +153,7 @@ private struct LiveChart: View {
             .chartXAxis(.hidden)
             .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { AxisGridLine() } }
             .chartXSelection(value: $selection)
-            .frame(height: 120)
+            .chartHeight(120)
             .accessibilityLabel("\(title) chart")
         }
         .padding(.vertical, 4)

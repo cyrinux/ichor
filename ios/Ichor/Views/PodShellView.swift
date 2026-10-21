@@ -75,6 +75,7 @@ struct PodShellView: View {
         }
         .loadsKubeActionAccess(namespace: namespace)
         .onDisappear { shell.stop() }
+        .allowsLandscape()
     }
 
     /// A shell can read the container's secrets: with the app lock on, it asks like the node's.
