@@ -444,7 +444,6 @@
     <string name="clusters_manage">Gestisci i cluster…</string>
     <string name="clusters_add">Aggiungi un cluster</string>
     <string name="clusters_swipe_hint">Scorri la barra in alto verso sinistra o destra per cambiare cluster.</string>
-    <string name="clusters_remove">Rimuovi %1$s</string>
     <string name="clusters_remove_title">Rimuovere %1$s?</string>
     <string name="clusters_remove_body">La configurazione e la chiave client di questo cluster verranno rimosse da questo dispositivo. Gli altri cluster vengono mantenuti.</string>
     <string name="clusters_color">Colore di %1$s</string>
@@ -2107,10 +2106,7 @@
         <item quantity="one">%1$d riavvio</item>
         <item quantity="other">%1$d riavvii</item>
     </plurals>
-    <string name="evidence_service">Stato del servizio</string>
-    <string name="evidence_link">Collegamento di rete cambiato</string>
     <string name="evidence_unavailable">Dati non disponibili</string>
-    <string name="evidence_recovered">Raccolta dei dati ripristinata</string>
     <string name="evidence_available">Questa sezione può essere nuovamente campionata.</string>
     <string name="evidence_details">Dettagli tecnici</string>
     <string name="evidence_hide_details">Nascondi dettagli tecnici</string>
@@ -2231,7 +2227,6 @@
     <string name="garage_tranquility_confirm">Applica</string>
     <string name="garage_tranquility_done">Tranquillità di risincronizzazione di %1$s impostata a %2$d</string>
     <string name="garage_tranquility_failed">Impossibile cambiare la velocità di risincronizzazione di %1$s: %2$s</string>
-    <string name="garage_operator_title">Operatore Garage</string>
     <string name="garage_operator_clusters">Cluster</string>
     <string name="garage_operator_buckets">Bucket</string>
     <string name="garage_operator_keys">Chiavi</string>
@@ -2417,7 +2412,6 @@
     <string name="crossplane_count_ok">%1$d ok</string>
     <string name="crossplane_managed_count">%1$d di %2$d risorse gestite elencate</string>
     <string name="crossplane_truncated">Elenco lungo: le risorse gestite sane oltre le prime 500 sono omesse; la ricerca guarda solo quelle elencate.</string>
-    <string name="crossplane_package">Pacchetto</string>
     <string name="crossplane_claim_kind">tipo di claim %1$s</string>
     <string name="crossplane_compositions">%1$d composition</string>
     <string name="crossplane_composites_count">%1$d composite</string>
@@ -3833,8 +3827,6 @@
     <string name="rollback_confirm">Ripristina</string>
     <string name="rollback_body">Il nodo si riavvia ora nella versione di Talos precedente all’ultimo aggiornamento, senza svuotare i suoi pod. Per un aggiornamento che parte ma funziona male.</string>
     <string name="rollback_started">Ripristino avviato: %1$s si sta riavviando</string>
-    <string name="checkup_health_menu">Controllo e server API</string>
-    <string name="checkup_reading">Lettura del cluster…</string>
     <!-- Clusters added from a kubeconfig (no Talos API) -->
     <string name="common_kind_kubernetes">Kubernetes</string>
     <string name="common_talos_only">Non disponibile per questo cluster: è stato aggiunto da un kubeconfig, quindi l\'app raggiunge solo la sua API Kubernetes, non Talos.</string>
@@ -4920,7 +4912,6 @@
     <string name="cnpg_promote_unavailable">Questa istanza non può essere promossa nello stato attuale del cluster.</string>
     <string name="cnpg_promote_requested">Promozione a %1$s richiesta</string>
     <string name="cnpg_promote_failed">Impossibile promuovere %1$s: %2$s</string>
-    <string name="cnpg_promote_loading">Lettura anteprima della promozione…</string>
 
     <string name="cnpg_restart_primary">Riavvia primario</string>
     <string name="cnpg_hibernate_action">Iberna cluster</string>
@@ -4939,7 +4930,6 @@
     <string name="longhorn_salvage_replica">%1$s su %2$s · sana: %3$s · errore: %4$s</string>
     <string name="longhorn_salvage_requested">Recupero richiesto</string>
     <string name="longhorn_salvage_failed">Impossibile recuperare il volume: %1$s</string>
-    <string name="longhorn_volume_name">Nome volume</string>
 
     <string name="longhorn_attach">Collega volume</string>
     <string name="longhorn_detach">Scollega volume</string>
@@ -5044,7 +5034,6 @@
     <string name="kpol_not_installed">Kyverno non è installato su questo cluster</string>
     <string name="kpol_not_installed_hint">Kyverno ammette o rifiuta i carichi di lavoro in base a policy e segnala ciò che viola le regole.</string>
     <string name="kpol_empty">Nessuna policy Kyverno</string>
-    <string name="kpol_empty_hint">Kyverno è attivo, ma non è definita alcuna policy.</string>
     <string name="kpol_no_match">Nessuna policy corrisponde a «%1$s»</string>
     <string name="kpol_engine">Motore Kyverno</string>
     <string name="kpol_controller_ready">%1$s: %2$s di %3$s pronti</string>
@@ -5087,7 +5076,6 @@
     <string name="kpol_webhook_fail_gatekeeper">Fail: le richieste vengono rifiutate mentre Gatekeeper è fermo</string>
     <string name="kpol_webhook_ignore_gatekeeper">Ignore: le policy vengono saltate mentre Gatekeeper è fermo</string>
     <string name="kpol_empty_gatekeeper">Nessuna policy Gatekeeper</string>
-    <string name="kpol_empty_hint_gatekeeper">Gatekeeper è attivo, ma non è definita alcuna policy.</string>
     <string name="kpol_warn">Avvisa</string>
     <string name="kpol_mode_warn">Una richiesta che la viola passa, con un avviso</string>
     <string name="kpol_audited">Ultimo audit %1$s</string>
@@ -5130,7 +5118,6 @@
     <string name="velero_restore_reason_all_namespaces">Questo backup contiene tutti i namespace: ripristinarlo li ripristina tutti</string>
     <string name="velero_restore_started">Ripristino %1$s avviato</string>
     <string name="velero_restore_running">ripristino…</string>
-    <string name="velero_restore_validation_errors">Velero ha rifiutato il ripristino: %1$s</string>
     <string name="velero_restore_close">Chiudi</string>
     <string name="velero_restore_items_label">Oggetti</string>
     <string name="velero_restore_volumes_label">Snapshot di volume</string>

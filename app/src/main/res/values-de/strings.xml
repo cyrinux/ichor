@@ -437,7 +437,6 @@
     <string name="clusters_manage">Cluster verwalten…</string>
     <string name="clusters_add">Cluster hinzufügen</string>
     <string name="clusters_swipe_hint">Wische über die obere Leiste nach links oder rechts, um den Cluster zu wechseln.</string>
-    <string name="clusters_remove">%1$s entfernen</string>
     <string name="clusters_remove_title">%1$s entfernen?</string>
     <string name="clusters_remove_body">Die Konfiguration und der Client-Schlüssel dieses Clusters werden von diesem Gerät entfernt. Die anderen Cluster bleiben erhalten.</string>
     <string name="clusters_color">Farbe von %1$s</string>
@@ -2099,10 +2098,7 @@
         <item quantity="one">%1$d Neustart</item>
         <item quantity="other">%1$d Neustarts</item>
     </plurals>
-    <string name="evidence_service">Dienststatus</string>
-    <string name="evidence_link">Netzwerkverbindung geändert</string>
     <string name="evidence_unavailable">Daten nicht verfügbar</string>
-    <string name="evidence_recovered">Datenerfassung wiederhergestellt</string>
     <string name="evidence_available">Dieser Bereich kann wieder erfasst werden.</string>
     <string name="evidence_details">Technische Details</string>
     <string name="evidence_hide_details">Technische Details ausblenden</string>
@@ -2223,7 +2219,6 @@
     <string name="garage_tranquility_confirm">Anwenden</string>
     <string name="garage_tranquility_done">Neusynchronisierungs-Ruhe von %1$s auf %2$d gesetzt</string>
     <string name="garage_tranquility_failed">Geschwindigkeit der Neusynchronisierung von %1$s nicht geändert: %2$s</string>
-    <string name="garage_operator_title">Garage-Operator</string>
     <string name="garage_operator_clusters">Cluster</string>
     <string name="garage_operator_buckets">Buckets</string>
     <string name="garage_operator_keys">Schlüssel</string>
@@ -2409,7 +2404,6 @@
     <string name="crossplane_count_ok">%1$d ok</string>
     <string name="crossplane_managed_count">%1$d von %2$d verwalteten Ressourcen gelistet</string>
     <string name="crossplane_truncated">Lange Liste: gesunde verwaltete Ressourcen über die ersten 500 hinaus fehlen; die Suche sieht nur die gelisteten an.</string>
-    <string name="crossplane_package">Paket</string>
     <string name="crossplane_claim_kind">Claim-Art %1$s</string>
     <string name="crossplane_compositions">%1$d Compositionen</string>
     <string name="crossplane_composites_count">%1$d Composites</string>
@@ -3825,8 +3819,6 @@
     <string name="rollback_confirm">Zurücksetzen</string>
     <string name="rollback_body">Der Node startet jetzt in die Talos-Version vor seinem letzten Upgrade neu, ohne seine Pods zu leeren. Für ein Upgrade, das startet, sich aber falsch verhält.</string>
     <string name="rollback_started">Zurücksetzen gestartet: %1$s startet neu</string>
-    <string name="checkup_health_menu">Check und API-Server</string>
-    <string name="checkup_reading">Cluster wird gelesen…</string>
     <!-- Clusters added from a kubeconfig (no Talos API) -->
     <string name="common_kind_kubernetes">Kubernetes</string>
     <string name="common_talos_only">Für diesen Cluster nicht verfügbar: Er wurde aus einer kubeconfig hinzugefügt, die App erreicht also nur seine Kubernetes-API, nicht Talos.</string>
@@ -4911,7 +4903,6 @@
     <string name="cnpg_promote_unavailable">Diese Instanz kann im aktuellen Clusterzustand nicht hochgestuft werden.</string>
     <string name="cnpg_promote_requested">Hochstufung auf %1$s angefordert</string>
     <string name="cnpg_promote_failed">%1$s konnte nicht hochgestuft werden: %2$s</string>
-    <string name="cnpg_promote_loading">Vorschau der Hochstufung wird geladen…</string>
 
     <string name="cnpg_restart_primary">Primärknoten neu starten</string>
     <string name="cnpg_hibernate_action">Cluster in Ruhezustand versetzen</string>
@@ -4930,7 +4921,6 @@
     <string name="longhorn_salvage_replica">%1$s auf %2$s · gesund: %3$s · Fehler: %4$s</string>
     <string name="longhorn_salvage_requested">Rettung angefordert</string>
     <string name="longhorn_salvage_failed">Volume konnte nicht gerettet werden: %1$s</string>
-    <string name="longhorn_volume_name">Volume-Name</string>
 
     <string name="longhorn_attach">Volume verbinden</string>
     <string name="longhorn_detach">Volume trennen</string>
@@ -5035,7 +5025,6 @@
     <string name="kpol_not_installed">Kyverno ist auf diesem Cluster nicht installiert</string>
     <string name="kpol_not_installed_hint">Kyverno lässt Workloads nach Richtlinien zu oder lehnt sie ab und meldet, was gegen die Regeln verstößt.</string>
     <string name="kpol_empty">Keine Kyverno-Richtlinien</string>
-    <string name="kpol_empty_hint">Kyverno läuft, aber es ist keine Richtlinie definiert.</string>
     <string name="kpol_no_match">Keine Richtlinie passt zu „%1$s“</string>
     <string name="kpol_engine">Kyverno-Engine</string>
     <string name="kpol_controller_ready">%1$s: %2$s von %3$s bereit</string>
@@ -5078,7 +5067,6 @@
     <string name="kpol_webhook_fail_gatekeeper">Fail: Anfragen werden abgelehnt, solange Gatekeeper ausgefallen ist</string>
     <string name="kpol_webhook_ignore_gatekeeper">Ignore: Richtlinien werden übersprungen, solange Gatekeeper ausgefallen ist</string>
     <string name="kpol_empty_gatekeeper">Keine Gatekeeper-Richtlinien</string>
-    <string name="kpol_empty_hint_gatekeeper">Gatekeeper läuft, aber es ist keine Richtlinie definiert.</string>
     <string name="kpol_warn">Warnen</string>
     <string name="kpol_mode_warn">Eine Anfrage, die dagegen verstößt, wird mit einer Warnung durchgelassen</string>
     <string name="kpol_audited">Letzte Prüfung %1$s</string>
@@ -5121,7 +5109,6 @@
     <string name="velero_restore_reason_all_namespaces">Dieses Backup enthält jeden Namespace: die Wiederherstellung stellt sie alle wieder her</string>
     <string name="velero_restore_started">Wiederherstellung %1$s gestartet</string>
     <string name="velero_restore_running">wird wiederhergestellt…</string>
-    <string name="velero_restore_validation_errors">Velero hat die Wiederherstellung abgelehnt: %1$s</string>
     <string name="velero_restore_close">Schließen</string>
     <string name="velero_restore_items_label">Objekte</string>
     <string name="velero_restore_volumes_label">Volume-Snapshots</string>
