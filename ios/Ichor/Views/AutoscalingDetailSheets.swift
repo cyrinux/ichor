@@ -23,55 +23,39 @@ struct AutoscaleSheet: View {
     let row: HpaRow
     let onChanged: () async -> Void
 
-    @Environment(\.dismiss) private var dismiss
     @State private var editingBounds = false
 
     var body: some View {
-        NavigationStack {
-            List {
-                Section { header }
-                Section("Metrics") {
-                    if row.metrics.isEmpty {
-                        Text("No metrics configured.").foregroundStyle(.secondary)
-                    }
-                    ForEach(row.metrics) { metric in
-                        LabeledContent(metric.label) {
-                            Text(verbatim: AutoscaleText.metricValues(metric.current, metric.target)).monospaced()
-                        }
+        AutoscalingSheetShell {
+            Section { header }
+            Section("Metrics") {
+                if row.metrics.isEmpty {
+                    Text("No metrics configured.").foregroundStyle(.secondary)
+                }
+                ForEach(row.metrics) { metric in
+                    LabeledContent(metric.label) {
+                        Text(verbatim: AutoscaleText.metricValues(metric.current, metric.target)).monospaced()
                     }
                 }
-                Section("Conditions") {
-                    condition("Able to scale", row.conditions.ableToScale)
-                    condition("Scaling active", row.conditions.scalingActive)
-                    condition("Scaling limited", row.conditions.scalingLimited)
-                    if !row.conditions.message.isEmpty {
-                        Text(verbatim: row.conditions.message).font(.footnote).foregroundStyle(.secondary)
-                    }
+            }
+            Section("Conditions") {
+                condition("Able to scale", row.conditions.ableToScale)
+                condition("Scaling active", row.conditions.scalingActive)
+                condition("Scaling limited", row.conditions.scalingLimited)
+                if !row.conditions.message.isEmpty {
+                    Text(verbatim: row.conditions.message).font(.footnote).foregroundStyle(.secondary)
                 }
-                boundsSection
-                workloadLink
             }
-            .loadsKubeActionAccess(namespace: row.namespace)
-            .sheet(isPresented: $editingBounds) { HpaBoundsSheet(row: row, onDone: onChanged) }
-            .themedBackground()
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
-            }
+            boundsSection
+            workloadLink
         }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
+        .loadsKubeActionAccess(namespace: row.namespace)
+        .sheet(isPresented: $editingBounds) { HpaBoundsSheet(row: row, onDone: onChanged) }
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                Text(verbatim: row.name).font(.headline.monospaced()).textSelection(.enabled)
-                Spacer()
-                AutoscaleStateBadge(state: row.state)
-            }
-            Text(verbatim: [row.namespace, row.target.label].filter { !$0.isEmpty }.joined(separator: "  ·  "))
-                .font(.subheadline).foregroundStyle(.secondary)
+        AutoscalingSheetHeader(name: row.name, line: [row.namespace, row.target.label].filter { !$0.isEmpty }.joined(separator: "  ·  "),
+                               state: row.state) {
             Text(hpaBoundsText(row.current, row.min, row.max)).font(.callout)
             if row.desired != row.current {
                 Text(AutoscaleText.desired(String(row.desired))).font(.callout).foregroundStyle(.secondary)
@@ -122,7 +106,6 @@ struct ScaledObjectSheet: View {
     let row: ScaledObjectRow
     let onChanged: () async -> Void
 
-    @Environment(\.dismiss) private var dismiss
     @Environment(AppModel.self) private var model
     @State private var pausing = false
     @State private var confirmResume = false
@@ -130,40 +113,31 @@ struct ScaledObjectSheet: View {
     @State private var failure: String?
 
     var body: some View {
-        NavigationStack {
-            List {
-                Section { header }
-                Section("Triggers") {
-                    if row.triggers.isEmpty {
-                        Text("none").foregroundStyle(.secondary)
-                    }
-                    ForEach(row.triggers) { trigger in
-                        Text(verbatim: trigger.label).font(.callout.monospaced())
-                    }
+        AutoscalingSheetShell {
+            Section { header }
+            Section("Triggers") {
+                if row.triggers.isEmpty {
+                    Text("none").foregroundStyle(.secondary)
                 }
-                if !row.hpaName.isEmpty {
-                    Section("The HPA it owns") {
-                        Text(verbatim: row.hpaName).font(.callout.monospaced())
-                    }
+                ForEach(row.triggers) { trigger in
+                    Text(verbatim: trigger.label).font(.callout.monospaced())
                 }
-                pauseSection
-                workloadLink
             }
-            .loadsKubeActionAccess(namespace: row.namespace)
-            .sheet(isPresented: $pausing) { ScaledObjectPauseSheet(row: row, onDone: onChanged) }
-            .confirmationDialog(AutoscaleText.resumeTitle(row.name), isPresented: $confirmResume, titleVisibility: .visible) {
-                Button("Resume scaling") { Task { await resume() } }
-            } message: {
-                Text("KEDA scales the workload on its triggers again.")
+            if !row.hpaName.isEmpty {
+                Section("The HPA it owns") {
+                    Text(verbatim: row.hpaName).font(.callout.monospaced())
+                }
             }
-            .themedBackground()
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
-            }
+            pauseSection
+            workloadLink
         }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
+        .loadsKubeActionAccess(namespace: row.namespace)
+        .sheet(isPresented: $pausing) { ScaledObjectPauseSheet(row: row, onDone: onChanged) }
+        .confirmationDialog(AutoscaleText.resumeTitle(row.name), isPresented: $confirmResume, titleVisibility: .visible) {
+            Button("Resume scaling") { Task { await resume() } }
+        } message: {
+            Text("KEDA scales the workload on its triggers again.")
+        }
     }
 
     /// Pause at a count or hold (a sheet), resume when paused (confirmed), gated on patch.
@@ -205,14 +179,8 @@ struct ScaledObjectSheet: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                Text(verbatim: row.name).font(.headline.monospaced()).textSelection(.enabled)
-                Spacer()
-                AutoscaleStateBadge(state: row.state)
-            }
-            Text(verbatim: [row.namespace, row.target.label].filter { !$0.isEmpty }.joined(separator: "  ·  "))
-                .font(.subheadline).foregroundStyle(.secondary)
+        AutoscalingSheetHeader(name: row.name, line: [row.namespace, row.target.label].filter { !$0.isEmpty }.joined(separator: "  ·  "),
+                               state: row.state) {
             Text(hpaBoundsText(row.current, row.min, row.max)).font(.callout)
             if row.paused {
                 Text(row.pausedReplicas.map { AutoscaleText.pausedAt(String($0)) } ?? "paused")
@@ -244,47 +212,30 @@ struct ScaledObjectSheet: View {
 struct ScaledJobSheet: View {
     let row: ScaledJobRow
 
-    @Environment(\.dismiss) private var dismiss
-
     var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 6) {
-                            Text(verbatim: row.name).font(.headline.monospaced()).textSelection(.enabled)
-                            Spacer()
-                            AutoscaleStateBadge(state: row.state)
-                        }
-                        Text(verbatim: row.namespace).font(.subheadline).foregroundStyle(.secondary)
-                        if row.paused {
-                            Text("paused").font(.callout).foregroundStyle(.purple)
-                        }
-                        if !row.message.isEmpty {
-                            Text(verbatim: row.message).font(.footnote).foregroundStyle(.secondary)
-                        }
+        AutoscalingSheetShell {
+            Section {
+                AutoscalingSheetHeader(name: row.name, line: row.namespace, state: row.state) {
+                    if row.paused {
+                        Text("paused").font(.callout).foregroundStyle(.purple)
                     }
-                }
-                Section("Triggers") {
-                    if row.triggers.isEmpty {
-                        Text("none").foregroundStyle(.secondary)
+                    if !row.message.isEmpty {
+                        Text(verbatim: row.message).font(.footnote).foregroundStyle(.secondary)
                     }
-                    ForEach(row.triggers) { trigger in
-                        Text(verbatim: trigger.label).font(.callout.monospaced())
-                    }
-                }
-                Section {
-                    LabeledContent("Max replicas") { Text(verbatim: String(row.maxReplicaCount)) }
                 }
             }
-            .themedBackground()
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+            Section("Triggers") {
+                if row.triggers.isEmpty {
+                    Text("none").foregroundStyle(.secondary)
+                }
+                ForEach(row.triggers) { trigger in
+                    Text(verbatim: trigger.label).font(.callout.monospaced())
+                }
+            }
+            Section {
+                LabeledContent("Max replicas") { Text(verbatim: String(row.maxReplicaCount)) }
             }
         }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
     }
 }
 
@@ -292,54 +243,37 @@ struct ScaledJobSheet: View {
 struct VpaSheet: View {
     let row: VpaRow
 
-    @Environment(\.dismiss) private var dismiss
-
     var body: some View {
-        NavigationStack {
-            List {
-                Section { header }
-                if !row.recommendationProvided {
-                    Section {
-                        Text("No recommendation yet: the recommender needs history first.").foregroundStyle(.secondary)
-                        if !row.message.isEmpty {
-                            Text(verbatim: row.message).font(.footnote).foregroundStyle(.secondary)
+        AutoscalingSheetShell {
+            Section { header }
+            if !row.recommendationProvided {
+                Section {
+                    Text("No recommendation yet: the recommender needs history first.").foregroundStyle(.secondary)
+                    if !row.message.isEmpty {
+                        Text(verbatim: row.message).font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            if !row.containers.isEmpty {
+                Section("Recommendations") {
+                    ForEach(row.containers) { container in
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(verbatim: container.name).font(.callout.monospaced())
+                            Text(AutoscaleText.cpuChange(vpaChangeText(container.cpuRequest, container.cpuTarget))).font(.callout)
+                            Text(AutoscaleText.memoryChange(vpaChangeText(container.memoryRequest, container.memoryTarget))).font(.callout)
+                            Text(AutoscaleText.bounds(container.cpuLower, container.cpuUpper, container.memoryLower, container.memoryUpper))
+                                .font(.caption).foregroundStyle(.secondary)
                         }
                     }
                 }
-                if !row.containers.isEmpty {
-                    Section("Recommendations") {
-                        ForEach(row.containers) { container in
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(verbatim: container.name).font(.callout.monospaced())
-                                Text(AutoscaleText.cpuChange(vpaChangeText(container.cpuRequest, container.cpuTarget))).font(.callout)
-                                Text(AutoscaleText.memoryChange(vpaChangeText(container.memoryRequest, container.memoryTarget))).font(.callout)
-                                Text(AutoscaleText.bounds(container.cpuLower, container.cpuUpper, container.memoryLower, container.memoryUpper))
-                                    .font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                }
-                workloadLink
             }
-            .themedBackground()
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
-            }
+            workloadLink
         }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                Text(verbatim: row.name).font(.headline.monospaced()).textSelection(.enabled)
-                Spacer()
-                AutoscaleStateBadge(state: row.state)
-            }
-            Text(verbatim: [row.namespace, row.target.label].filter { !$0.isEmpty }.joined(separator: "  ·  "))
-                .font(.subheadline).foregroundStyle(.secondary)
+        AutoscalingSheetHeader(name: row.name, line: [row.namespace, row.target.label].filter { !$0.isEmpty }.joined(separator: "  ·  "),
+                               state: row.state) {
             if !row.updateMode.isEmpty {
                 LabeledContent("Update mode") { Text(verbatim: row.updateMode) }
             }
@@ -363,74 +297,60 @@ struct NodePoolSheet: View {
     let row: NodePoolRow
     let claims: [NodeClaimRow]
 
-    @Environment(\.dismiss) private var dismiss
-
     var body: some View {
-        NavigationStack {
-            List {
-                Section { header }
-                Section("Limits and usage") {
-                    LabeledContent("cpu") { Text(verbatim: AutoscaleText.poolUsage(row.resources.cpu, row.limits.cpu)).monospaced() }
-                    LabeledContent("memory") { Text(verbatim: AutoscaleText.memoryUsage(row.resources.memory, row.limits.memory)).monospaced() }
-                    LabeledContent("nodes") { Text(verbatim: String(row.resources.nodes)) }
+        AutoscalingSheetShell {
+            Section { header }
+            Section("Limits and usage") {
+                LabeledContent("cpu") { Text(verbatim: AutoscaleText.poolUsage(row.resources.cpu, row.limits.cpu)).monospaced() }
+                LabeledContent("memory") { Text(verbatim: AutoscaleText.memoryUsage(row.resources.memory, row.limits.memory)).monospaced() }
+                LabeledContent("nodes") { Text(verbatim: String(row.resources.nodes)) }
+            }
+            Section("Disruption") {
+                if !row.disruption.consolidationPolicy.isEmpty {
+                    LabeledContent("Policy") { Text(verbatim: row.disruption.consolidationPolicy) }
                 }
-                Section("Disruption") {
-                    if !row.disruption.consolidationPolicy.isEmpty {
-                        LabeledContent("Policy") { Text(verbatim: row.disruption.consolidationPolicy) }
-                    }
-                    if !row.disruption.consolidateAfter.isEmpty {
-                        Text(AutoscaleText.consolidateAfter(row.disruption.consolidateAfter)).font(.callout)
-                    }
-                    ForEach(row.disruption.budgets) { budget in
-                        Text(verbatim: budgetLine(budget)).font(.callout.monospaced())
-                    }
+                if !row.disruption.consolidateAfter.isEmpty {
+                    Text(AutoscaleText.consolidateAfter(row.disruption.consolidateAfter)).font(.callout)
                 }
-                Section("Node claims") {
-                    if claims.isEmpty {
-                        Text("none").foregroundStyle(.secondary)
-                    }
-                    ForEach(claims) { claim in
-                        VStack(alignment: .leading, spacing: 3) {
-                            HStack(spacing: 6) {
-                                Text(verbatim: claim.name).font(.callout.monospaced())
-                                Spacer()
-                                NodeClaimBadges(claim: claim)
-                            }
-                            Text(verbatim: [claim.nodeName, claim.instanceType, claim.capacityType]
-                                .filter { !$0.isEmpty }.joined(separator: "  ·  "))
-                                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                            if claim.created > 0 {
-                                Text(Date(timeIntervalSince1970: TimeInterval(claim.created) / 1000), format: .relative(presentation: .named))
-                                    .font(.caption).foregroundStyle(.secondary)
-                            }
-                            if !claim.message.isEmpty {
-                                Text(verbatim: claim.message).font(.caption)
-                            }
+                ForEach(row.disruption.budgets) { budget in
+                    Text(verbatim: budgetLine(budget)).font(.callout.monospaced())
+                }
+            }
+            Section("Node claims") {
+                if claims.isEmpty {
+                    Text("none").foregroundStyle(.secondary)
+                }
+                ForEach(claims) { claim in
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(spacing: 6) {
+                            Text(verbatim: claim.name).font(.callout.monospaced())
+                            Spacer()
+                            NodeClaimBadges(claim: claim)
+                        }
+                        Text(verbatim: [claim.nodeName, claim.instanceType, claim.capacityType]
+                            .filter { !$0.isEmpty }.joined(separator: "  ·  "))
+                            .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        if claim.created > 0 {
+                            Text(Date(timeIntervalSince1970: TimeInterval(claim.created) / 1000), format: .relative(presentation: .named))
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        if !claim.message.isEmpty {
+                            Text(verbatim: claim.message).font(.caption)
                         }
                     }
                 }
             }
-            .themedBackground()
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
-            }
         }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                Text(verbatim: row.name).font(.headline.monospaced()).textSelection(.enabled)
-                Spacer()
-                if row.atLimit {
-                    AutoscaleChip(text: "at limit", color: .statusBad)
-                } else {
-                    AutoscaleStateBadge(state: row.state)
-                }
+        AutoscalingSheetHeader(name: row.name, line: nil) {
+            if row.atLimit {
+                AutoscaleChip(text: "at limit", color: .statusBad)
+            } else {
+                AutoscaleStateBadge(state: row.state)
             }
+        } extra: {
             if !row.capacityTypes.isEmpty {
                 Text(AutoscaleText.capacityTypes(row.capacityTypes.joined(separator: ", ")))
                     .font(.footnote).foregroundStyle(.secondary)

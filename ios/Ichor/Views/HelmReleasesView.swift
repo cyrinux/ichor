@@ -8,48 +8,21 @@ import IchorCore
 /// and history.
 struct HelmReleasesView: View {
     @Environment(AppModel.self) private var model
-    @State private var scope = KubeBrowserScope()
-    @State private var state: LoadState<[HelmReleaseSummary]> = .loading
     @State private var query = ""
 
-    /// What decides the list: the scope, and the cluster, API address and screenshot mode.
-    private struct Trigger: Hashable {
-        let scope: KubeScope
-        let ready: Bool
-        let source: String
-    }
-
     var body: some View {
-        let control = scope.control(model: model)
-        VStack(spacing: 0) {
-            KubeScopeBar(control: control, loaded: loadedNamespaces)
-                .background(.bar)
-            Divider()
-            if !control.ready {
-                ContentUnavailableView {
-                    Label("Namespace", systemImage: "square.dashed")
-                } description: {
-                    Text("Type the namespace to list above.")
-                }
-                .frame(maxHeight: .infinity)
-            } else {
-                LoadStateView(state: state, retry: { await load(control.scope) }) { releases in
-                    list(releases, showNamespace: control.scope.namespace == nil, scope: control.scope)
-                }
-            }
-        }
-        .searchable(text: $query, prompt: Text("Name, namespace or chart"))
-        .autocorrectionDisabled()
-        .textInputAutocapitalization(.never)
-        .navigationTitle(Text("Helm releases"))
-        .navigationBarTitleDisplayMode(.inline)
-        .task(id: kubeNamespacesKey(model)) { await scope.loadNamespaces(model: model) }
-        .task(id: Trigger(scope: control.scope, ready: control.ready, source: kubeNamespacesKey(model))) {
-            if control.ready { await load(control.scope) }
+        KubeScopedList(
+            title: Text("Helm releases"),
+            prompt: Text("Name, namespace or chart"),
+            query: $query,
+            fetch: { client, scope in try await client.helmReleases(namespace: scope.namespace).releases },
+            namespaces: { value in value.map(\.namespace) }
+        ) { releases, scope, reload in
+            list(releases, showNamespace: scope.namespace == nil, reload: reload)
         }
     }
 
-    private func list(_ releases: [HelmReleaseSummary], showNamespace: Bool, scope: KubeScope) -> some View {
+    private func list(_ releases: [HelmReleaseSummary], showNamespace: Bool, reload: @escaping () async -> Void) -> some View {
         let shown = filterHelmReleases(sortHelmReleases(releases), query: query)
         return List {
             ForEach(shown) { release in
@@ -61,21 +34,8 @@ struct HelmReleasesView: View {
         .emptyOverlay(shown.isEmpty, query: query) {
             ContentUnavailableView("No Helm releases", systemImage: "shippingbox")
         }
-        .refreshable { await load(scope) }
+        .refreshable { await reload() }
         .themedBackground()
-    }
-
-    private var loadedNamespaces: [String] {
-        guard case .loaded(let releases, _, _) = state else { return [] }
-        return Array(Set(releases.map(\.namespace))).sorted()
-    }
-
-    private func load(_ scope: KubeScope) async {
-        guard let client = model.client else { return }
-        let key = kubeNamespacesKey(model)
-        let fetched: LoadState<[HelmReleaseSummary]> = await .from { try await client.helmReleases(namespace: scope.namespace).releases }
-        guard key == kubeNamespacesKey(model), !Task.isCancelled else { return }
-        state = state.refreshed(with: fetched)
     }
 }
 
