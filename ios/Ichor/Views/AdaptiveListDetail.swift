@@ -1,3 +1,4 @@
+import IchorCore
 import SwiftUI
 
 /// The list and the picked item's screen side by side on an iPad at full or wide split width;
@@ -9,6 +10,8 @@ enum ListDetailLayout {
     static let listWidth: CGFloat = 360
     /// The narrowest screen split in two: the list column plus a detail column of usable width.
     static let minSplitWidth: CGFloat = 700
+    /// The narrowest overview in two columns (OverviewColumns, tested in IchorCore).
+    static let twoColumnMinWidth = CGFloat(OverviewColumns.twoColumnMinWidth)
 
     /// Side by side only on an iPad's regular width: a large iPhone in landscape and an iPad at
     /// a third of the screen keep the stack.
@@ -40,6 +43,16 @@ extension EnvironmentValues {
         get { self[ListDetailPickerKey.self] }
         set { self[ListDetailPickerKey.self] = newValue }
     }
+
+    /// The width the screen really has, when it measured it (the overview); nil elsewhere.
+    var availableWidth: CGFloat? {
+        get { self[AvailableWidthKey.self] }
+        set { self[AvailableWidthKey.self] = newValue }
+    }
+}
+
+private struct AvailableWidthKey: EnvironmentKey {
+    static let defaultValue: CGFloat? = nil
 }
 
 /// `list` alone, or `list` beside `detail` of the selected item (a placeholder before any pick).
