@@ -65,15 +65,15 @@ runs:
         cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
     # Go modules and build cache (GOMODCACHE and GOCACHE defaults of the Nix shell): a warm
-    # cache turns `gomobile bind` from two minutes into twenty seconds. Keyed on the sources
-    # with go.sum and OS prefixes as fallbacks, so the closest cache is restored.
+    # cache turns `gomobile bind` from two minutes into twenty seconds. Keyed on go.sum, so it is
+    # saved once per dependency change: keyed on the sources, every main push restored the
+    # previous build cache, added its own builds and saved the lot (go-Linux grew to 3 GB in two
+    # days). The build cache goes slowly colder between go.sum changes; the module cache never.
     - id: go
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: |
           ~/go/pkg/mod
           ~/.cache/go-build
-        key: go-${{ runner.os }}-${{ hashFiles('go/go.sum') }}-${{ hashFiles('go/**/*.go') }}
-        restore-keys: |
-          go-${{ runner.os }}-${{ hashFiles('go/go.sum') }}-
-          go-${{ runner.os }}-
+        key: go-${{ runner.os }}-${{ hashFiles('go/go.sum') }}
+        restore-keys: go-${{ runner.os }}-
