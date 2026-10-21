@@ -3,10 +3,12 @@ package name.levis.ichor.ui.dataservices
 import androidx.lifecycle.viewModelScope
 import name.levis.ichor.data.DATA_SERVICES
 import name.levis.ichor.data.INVENTORY
+import name.levis.ichor.data.PLUGIN_CATALOG
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.Inventory
+import name.levis.ichor.model.PluginCatalog
 import name.levis.ichor.model.ReadProgress
 import name.levis.ichor.model.dataServiceHints
 import name.levis.ichor.ui.LoadingViewModel
@@ -56,6 +58,7 @@ class DataServicesViewModel(private val dataServices: DataServicesRepository) : 
         source = null
     }
 
-    /** The hints of the inventory the overview already loaded, if any. */
-    fun inventoryHints(): String = dataServices.cached<Inventory>(INVENTORY)?.value?.dataServiceHints().orEmpty()
+    /** The hints of the inventory (and plugin catalog) the overview already loaded, if any. */
+    fun inventoryHints(): String = dataServices.cached<Inventory>(INVENTORY)?.value
+        ?.dataServiceHints(dataServices.cached<PluginCatalog>(PLUGIN_CATALOG)?.value ?: PluginCatalog()).orEmpty()
 }

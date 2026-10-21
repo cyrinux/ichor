@@ -52,6 +52,7 @@ import kotlinx.coroutines.flow.first
 import name.levis.ichor.util.StartupTrace
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -99,6 +100,7 @@ import name.levis.ichor.model.hasLastKnown
 import name.levis.ichor.model.lacksPublicIps
 import name.levis.ichor.model.health
 import name.levis.ichor.ui.LoadingViewModel
+import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.DataFreshness
@@ -116,6 +118,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.apps.AppsViewModel
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.DataServiceKind
+import name.levis.ichor.model.PluginCatalog
 import name.levis.ichor.model.PluginDetectItem
 import name.levis.ichor.ui.plugins.PluginDetectViewModel
 import name.levis.ichor.model.DataServices
@@ -337,9 +340,13 @@ fun OverviewScreen(
     }
     val apps by appsVm.state.collectAsStateWithLifecycle()
 
-    // Longhorn, Garage, CloudNativePG: only asked (through Kubernetes) when the inventory shows
-    // one of them and the role may use the Kubernetes API; other clusters pay nothing.
-    val dataHints = (apps as? UiState.Loaded)?.data?.dataServiceHints().orEmpty()
+    // The installed plugins (no cluster call, kept once read): those of Data services hint too.
+    val pluginCatalog by produceState(PluginCatalog(), config?.activeContext, invalidations) {
+        value = cancellableCatching { app.pluginRepository.catalog() }.getOrDefault(PluginCatalog())
+    }
+    // Longhorn, Garage, CloudNativePG, a Data services plugin (Rook...): only asked (through Kubernetes)
+    // when the inventory shows one of them and the role may use the Kubernetes API; other clusters pay nothing.
+    val dataHints = (apps as? UiState.Loaded)?.data?.dataServiceHints(pluginCatalog).orEmpty()
         .takeIf { config?.activeSummary?.allows(Feature.WORKLOADS) == true }.orEmpty()
     LaunchedEffect(config?.activeContext, generation, invalidations, dataHints) {
         // Another cluster without hints: forgotten, so coming back loads again instead of showing the old result.

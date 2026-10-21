@@ -10,6 +10,7 @@
       "version": "",
       "resources": [],
       "actions": [],
+      "catalogId": "",
       "user": true,
       "enabled": false,
       "error": "plugin.yaml:8: schemaVersion \"ichor.dev/plugin/v2\" is not supported: this app reads ichor.dev/plugin/v1alpha1",
@@ -52,6 +53,7 @@
           "confirm": "plain"
         }
       ],
+      "catalogId": "kube-green",
       "user": true,
       "enabled": true,
       "error": "",
