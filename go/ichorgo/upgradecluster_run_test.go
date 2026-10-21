@@ -124,6 +124,15 @@ func (k *rollKube) handler(w http.ResponseWriter, r *http.Request) {
 		reply(http.StatusOK, map[string]string{"kind": "Status", "status": "Success"})
 	case key == "GET /api/v1/pods" || key == "GET /apis/policy/v1/poddisruptionbudgets":
 		reply(http.StatusOK, map[string]any{"items": []any{}})
+	case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/v1/nodes/"):
+		// Every node is Ready with a fresh heartbeat: back from its upgrade at once.
+		name := strings.TrimPrefix(r.URL.Path, "/api/v1/nodes/")
+		reply(http.StatusOK, map[string]any{
+			"metadata": map[string]any{"name": name},
+			"status": map[string]any{"conditions": []any{map[string]any{
+				"type": "Ready", "status": "True", "lastHeartbeatTime": time.Now().UTC().Format(time.RFC3339),
+			}}},
+		})
 	case r.Method == http.MethodPatch && strings.HasPrefix(r.URL.Path, "/api/v1/nodes/"):
 		k.patches = append(k.patches, strings.TrimPrefix(r.URL.Path, "/api/v1/nodes/")+" "+string(body))
 		reply(http.StatusOK, map[string]any{})
@@ -575,12 +584,17 @@ func TestStartClusterUpgradeRefusals(t *testing.T) {
 }
 
 // With drain, a node whose upgrade does not drain it (Talos 1.18+) goes through the
-// maintenance upgrade: cordoned and drained, then the checks run again under the lock; a
-// lock that cannot be read stops it there, the node cordoned and not upgraded.
+// maintenance upgrade: cordoned and drained, upgraded, back and uncordoned, with the checks
+// run again under the roll's own lock, which does not refuse the roll.
 func TestStartClusterUpgradeDrained(t *testing.T) {
 	withDataDir(t)
 
-	kube := &rollKube{failLeaseGets: true} // the lock cannot be checked again
+	interval := upgradePollInterval
+	upgradePollInterval = 10 * time.Millisecond
+
+	t.Cleanup(func() { upgradePollInterval = interval })
+
+	kube := &rollKube{}
 	useRollKube(t, kube)
 
 	f, cfg := rollFake(t, "v1.18.0")
@@ -589,21 +603,86 @@ func TestStartClusterUpgradeDrained(t *testing.T) {
 	run := StartClusterUpgrade(cfg, "fake", "", "v1.18.1", true, true, rec)
 
 	events, msg := rec.follow(t, skipSettle(run))
-	// The Kubernetes API error replaces the rest of the message (see kubeError).
-	if !strings.HasPrefix(msg, "cp-2: ") || !strings.Contains(msg, "InternalError") {
+	if msg != "" {
+		t.Fatalf("OnDone = %q", msg)
+	}
+
+	if got := upgradeRequests(f); !slices.Equal(got, []string{"cp-2", "cp-3", "cp-1", "worker-1"}) {
+		t.Fatalf("upgrades = %v", got)
+	}
+
+	// Each node cordoned before its upgrade, uncordoned after it, in the roll's order.
+	lease, _, deletes, _, patches := kube.state()
+	if lease != nil || deletes != 1 {
+		t.Errorf("lease = %+v, deletes %d", lease, deletes)
+	}
+
+	var want []string
+	for _, host := range []string{"cp-2", "cp-3", "cp-1", "worker-1"} {
+		want = append(want, host+" cordon", host+" uncordon")
+	}
+
+	var got []string
+	for _, p := range patches {
+		node, body, _ := strings.Cut(p, " ")
+		got = append(got, node+map[bool]string{true: " cordon", false: " uncordon"}[strings.Contains(body, `"unschedulable":true`)])
+	}
+
+	if !slices.Equal(got, want) {
+		t.Errorf("patches = %v, want %v", got, want)
+	}
+
+	for _, phase := range []string{phaseCordon, phaseDrain} {
+		if !slices.ContainsFunc(events, func(p clusterProgress) bool { return p.Hostname == "cp-2" && p.NodePhase == phase }) {
+			t.Errorf("no %s phase: %+v", phase, events)
+		}
+	}
+}
+
+// The plan read in the middle of a roll: the roll's own lock is free to it, another
+// holder's blocks, and a plan read for nobody in particular sees any holder.
+func TestUpgradeLockForOwnHolder(t *testing.T) {
+	kube := &rollKube{}
+	useRollKube(t, kube)
+
+	_, cfg := rollFake(t, "v1.18.0")
+	target := kubeTarget{cfg, "fake", ""}
+
+	roll := upgradeLockRequest{holder: "ichor/roll", hostname: "cp-2", node: rollCP2, from: "v1.18.0", to: "v1.18.1", run: lockRunCluster, duration: clusterLockDuration}
+	kube.mu.Lock()
+	kube.store(roll.lease(time.Now(), nil))
+	kube.mu.Unlock()
+
+	for _, c := range []struct {
+		own     string
+		blocked bool
+	}{{"ichor/roll", false}, {"ichor/other", true}, {"", true}} {
+		state := readUpgradeLockFor(t.Context(), target, time.Now(), c.own)
+		if state == nil || state.err != "" || (state.held != nil) != c.blocked {
+			t.Errorf("own %q: %+v, want blocked %v", c.own, state, c.blocked)
+		}
+	}
+}
+
+// A lock another run took over refuses the drained node's upgrade: cordoned, not upgraded.
+func TestStartClusterUpgradeDrainedLockTakenOver(t *testing.T) {
+	withDataDir(t)
+
+	kube := &rollKube{stealOn: "PATCH /api/v1/nodes/"} // taken over as the first node is cordoned
+	useRollKube(t, kube)
+
+	f, cfg := rollFake(t, "v1.18.0")
+
+	rec := newRollRecorder()
+	run := StartClusterUpgrade(cfg, "fake", "", "v1.18.1", true, true, rec)
+
+	_, msg := rec.follow(t, skipSettle(run))
+	if !strings.HasPrefix(msg, "cp-2: ") || !strings.Contains(msg, "lock") {
 		t.Fatalf("OnDone = %q", msg)
 	}
 
 	if got := upgradeRequests(f); len(got) != 0 {
 		t.Errorf("upgrades = %v", got)
-	}
-
-	if _, _, _, _, patches := kube.state(); len(patches) != 1 || !strings.HasPrefix(patches[0], "cp-2 ") || !strings.Contains(patches[0], `"unschedulable":true`) {
-		t.Errorf("patches = %v", patches)
-	}
-
-	if !slices.ContainsFunc(events, func(p clusterProgress) bool { return p.Hostname == "cp-2" && p.NodePhase == phaseCordon }) {
-		t.Errorf("the maintenance phases must be reported: %+v", events)
 	}
 }
 
