@@ -400,26 +400,10 @@ func cronJobIcon(label, namespace, name string, images []string) (icon, remote s
 // (os:admin): a Job from its template, owned by the CronJob so its history and cleanup
 // apply. A suspended CronJob can be run; one labelled ichor.levis.name/trigger=false is
 // refused. Returns the new Job's name. kubeServer: see KubePods.
-func KubeTriggerCronJob(configYAML, contextName, kubeServer, namespace, name string) (out string, err error) {
-	defer maskResult(&out, &err)
+func KubeTriggerCronJob(configYAML, contextName, kubeServer, namespace, name string) (string, error) {
+	m := namedMutation{action: "trigger-cronjob", kind: "CronJob", label: "CronJob"}
 
-	contextName = unmaskContext(configYAML, contextName)
-	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
-
-	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "trigger-cronjob", Namespace: namespace, Object: "CronJob/" + name})
-
-	if err := validateKubeName("CronJob", namespace, name); err != nil {
-		return "", err
-	}
-
-	err = kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
-		job, err := triggerCronJob(ctx, k, namespace, name)
-		out = job
-
-		return err
-	})
-
-	return out, err
+	return kubeNamedMutation(kubeTarget{configYAML, contextName, kubeServer}, m, namespace, name, triggerCronJob)
 }
 
 var errCronJobTriggerDisabled = &kubeAPIError{Code: 403, Reason: "Disabled", Message: "manual runs of this CronJob are disabled (" + cronTriggerKey + "=false)"}

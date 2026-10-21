@@ -21,10 +21,7 @@ const (
 	diskHealthUnknown = "unknown"
 )
 
-type clusterStorage struct {
-	Context string        `json:"context"`
-	Nodes   []nodeStorage `json:"nodes"`
-}
+type clusterStorage = nodeReadings[nodeStorage]
 
 type nodeStorage struct {
 	Node     string          `json:"node"`
@@ -58,30 +55,8 @@ type diskCondition struct {
 // instead of failing the call. Disks are empty on Talos older than 1.15 (no SMART API), and
 // volumes are named by mount point before Talos 1.8 (no volume resources). A kubeconfig
 // cluster has no Talos API: the call fails.
-func ClusterStorageHealth(configYAML, contextName string) (out string, err error) {
-	defer maskResult(&out, &err)
-
-	contextName = unmaskContext(configYAML, contextName)
-
-	if isTalosDemoContext(configYAML, contextName) {
-		return demoStorageHealth(configYAML, contextName)
-	}
-
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		name, _, err := resolveContext(configYAML, contextName)
-		if err != nil {
-			return "", err
-		}
-
-		nodes := targetNodes(s.context)
-		result := clusterStorage{Context: name, Nodes: make([]nodeStorage, len(nodes))}
-
-		forEachNode(nodes, func(i int, node string) {
-			result.Nodes[i] = readNodeStorage(ctx, s, node)
-		})
-
-		return toJSON(result)
-	})
+func ClusterStorageHealth(configYAML, contextName string) (string, error) {
+	return readClusterNodes(configYAML, contextName, demoStorageHealth, readNodeStorage)
 }
 
 // readNodeStorage reads one node within nodeTimeout. Only the mounts are required: names,

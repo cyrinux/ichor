@@ -71,6 +71,12 @@ func GitForgeRequest(hostJSON, repoURL string, number int) (out string, err erro
 }
 
 func (g gitHubForge) request(ctx context.Context, repo gitRepoRef, number int) (gitRequestState, error) {
+	return g.c.gitHubStylePullRequest(ctx, repo, number)
+}
+
+// gitHubStylePullRequest reads a pull request from GitHub, or from Gitea which mirrors
+// GitHub's pull-request JSON.
+func (c gitForgeClient) gitHubStylePullRequest(ctx context.Context, repo gitRepoRef, number int) (gitRequestState, error) {
 	var pr struct {
 		State          string `json:"state"`
 		Title          string `json:"title"`
@@ -85,7 +91,7 @@ func (g gitHubForge) request(ctx context.Context, repo gitRepoRef, number int) (
 		} `json:"head"`
 	}
 
-	if _, err := g.c.get(ctx, reposPath(repo)+"/pulls/"+strconv.Itoa(number), nil, &pr); err != nil {
+	if _, err := c.get(ctx, reposPath(repo)+"/pulls/"+strconv.Itoa(number), nil, &pr); err != nil {
 		return gitRequestState{}, err
 	}
 
@@ -125,28 +131,7 @@ func (g gitLabForge) request(ctx context.Context, repo gitRepoRef, number int) (
 }
 
 func (g giteaForge) request(ctx context.Context, repo gitRepoRef, number int) (gitRequestState, error) {
-	var pr struct {
-		State          string `json:"state"`
-		Title          string `json:"title"`
-		HTMLURL        string `json:"html_url"`
-		Merged         bool   `json:"merged"`
-		MergeCommitSHA string `json:"merge_commit_sha"`
-		MergedAt       string `json:"merged_at"`
-		UpdatedAt      string `json:"updated_at"`
-		Draft          bool   `json:"draft"`
-		Head           struct {
-			SHA string `json:"sha"`
-		} `json:"head"`
-	}
-
-	if _, err := g.c.get(ctx, reposPath(repo)+"/pulls/"+strconv.Itoa(number), nil, &pr); err != nil {
-		return gitRequestState{}, err
-	}
-
-	return gitRequestState{
-		State: requestState(pr.State, pr.Merged), Title: pr.Title, URL: pr.HTMLURL, HeadSHA: pr.Head.SHA,
-		MergeSHA: mergedOnly(pr.Merged, pr.MergeCommitSHA), MergedAt: pr.MergedAt, UpdatedAt: pr.UpdatedAt, Draft: pr.Draft,
-	}, nil
+	return g.c.gitHubStylePullRequest(ctx, repo, number)
 }
 
 // requestState is open, merged or closed from a forge's state ("open", GitLab's "opened"

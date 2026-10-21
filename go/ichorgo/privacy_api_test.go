@@ -22,6 +22,10 @@ var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "JoinNodeCon
 // masked, not the terminal.
 var unmaskedListeners = []string{"StartDebugShell", "StartNodeDebug", "StartPodDebug", "StartPodShell", "StartVMConsole"}
 
+// privacyPrologues are internal helpers that unmask the context and mask the result for the
+// exported function delegating to them: each is checked like an exported function.
+var privacyPrologues = []string{"kubeNamedMutation", "readClusterNodes"}
+
 // TestExportedFuncsUsePrivacyHooks checks every exported function of the package: masked
 // context names and nodes coming from the app are unmasked on entry, and results, errors
 // and listener callbacks are masked on exit. A new exported function fails here until it
@@ -43,7 +47,11 @@ func TestExportedFuncsUsePrivacyHooks(t *testing.T) {
 		for _, file := range pkg.Files {
 			for _, decl := range file.Decls {
 				fn, ok := decl.(*ast.FuncDecl)
-				if !ok || fn.Recv != nil || !fn.Name.IsExported() {
+				if !ok || fn.Recv != nil {
+					continue
+				}
+
+				if !fn.Name.IsExported() && !slices.Contains(privacyPrologues, fn.Name.Name) {
 					continue
 				}
 
@@ -73,7 +81,14 @@ func privacyHookProblems(fn *ast.FuncDecl) []string {
 
 	var problems []string
 
+	// Delegating to a privacy prologue unmasks the context and masks the result.
+	delegates := slices.ContainsFunc(calledNames(fn.Body), func(c string) bool { return slices.Contains(privacyPrologues, c) })
+
 	require := func(param string, helpers ...string) {
+		if delegates && param == "contextName" {
+			return
+		}
+
 		if slices.Contains(params, param) && !slices.Contains(helpers, assigned[param]) {
 			problems = append(problems, param+" must be reassigned from "+strings.Join(helpers, " or "))
 		}
@@ -91,6 +106,7 @@ func privacyHookProblems(fn *ast.FuncDecl) []string {
 	results := resultTypes(fn)
 
 	switch {
+	case delegates:
 	case slices.Contains(results, "string") && !slices.Contains(unmaskedResults, name):
 		if !slices.Contains(deferred, "maskResult") {
 			problems = append(problems, "missing defer maskResult(&out, &err)")

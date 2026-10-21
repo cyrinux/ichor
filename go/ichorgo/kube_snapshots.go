@@ -259,19 +259,9 @@ func setSnapshotFreshness(c *snapshotClaim, now time.Time) {
 }
 
 // KubeCreateVolumeSnapshot requests a snapshot using the PVC driver's unique default class.
-func KubeCreateVolumeSnapshot(configYAML, contextName, kubeServer, namespace, pvc string) (out string, err error) {
-	defer maskResult(&out, &err)
-	contextName = unmaskContext(configYAML, contextName)
-	namespace, pvc = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(pvc))
-	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "create-volume-snapshot", Namespace: namespace, Object: "PersistentVolumeClaim/" + pvc})
-	if err := validateKubeName("PVC", namespace, pvc); err != nil {
-		return "", err
-	}
-	err = kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
-		out, err = createVolumeSnapshot(ctx, k, namespace, pvc)
-		return err
-	})
-	return out, err
+func KubeCreateVolumeSnapshot(configYAML, contextName, kubeServer, namespace, pvc string) (string, error) {
+	m := namedMutation{action: "create-volume-snapshot", kind: "PersistentVolumeClaim", label: "PVC", learnedNamespace: true}
+	return kubeNamedMutation(kubeTarget{configYAML, contextName, kubeServer}, m, namespace, pvc, createVolumeSnapshot)
 }
 func createVolumeSnapshot(ctx context.Context, k *kubeClient, namespace, pvc string) (string, error) {
 	groups, err := readAPIGroups(ctx, k)
