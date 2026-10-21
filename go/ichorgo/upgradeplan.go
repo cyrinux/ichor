@@ -107,6 +107,12 @@ func UpgradePlan(configYAML, contextName, kubeServer, node string) (out string, 
 
 // gatherPlan probes the cluster for the plan; a zero kube skips reading the upgrade lock.
 func gatherPlan(ctx context.Context, s *session, node string, kube kubeTarget) upgradePlan {
+	return gatherPlanFor(ctx, s, node, kube, "")
+}
+
+// gatherPlanFor is gatherPlan for the run holding the upgrade lock as own: its own lock
+// does not block it (see readUpgradeLockFor).
+func gatherPlanFor(ctx context.Context, s *session, node string, kube kubeTarget, own string) upgradePlan {
 	nodes := targetNodes(s.context)
 	peers := make([]planPeer, len(nodes))
 
@@ -140,7 +146,7 @@ func gatherPlan(ctx context.Context, s *session, node string, kube kubeTarget) u
 		in.etcd = gatherEtcdHealth(ctx, s.client, via, node, in.target.hostname)
 	}
 
-	in.lock = readUpgradeLock(ctx, kube, time.Now())
+	in.lock = readUpgradeLockFor(ctx, kube, time.Now(), own)
 
 	return computePlan(in)
 }

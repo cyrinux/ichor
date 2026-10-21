@@ -123,7 +123,13 @@ func NodeMaintenancePlan(configYAML, contextName, kubeServer, node string) (out 
 }
 
 func gatherMaintenancePlan(ctx context.Context, s *session, kube kubeTarget, node string) (maintenancePlan, error) {
-	reboot := gatherPlan(ctx, s, node, kube)
+	return gatherMaintenancePlanFor(ctx, s, kube, node, "")
+}
+
+// gatherMaintenancePlanFor is gatherMaintenancePlan for the run holding the upgrade lock as
+// own (a rolling cluster upgrade's drained node): its own lock does not block it.
+func gatherMaintenancePlanFor(ctx context.Context, s *session, kube kubeTarget, node, own string) (maintenancePlan, error) {
+	reboot := gatherPlanFor(ctx, s, node, kube, own)
 
 	plan := maintenancePlan{
 		Node:             node,
