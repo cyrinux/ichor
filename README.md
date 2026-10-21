@@ -285,7 +285,9 @@ tour** shows it again.
   landscape and use the width.
 - **iPad:** the overview shows its cards in two columns on a full or wide window, and the nodes
   list and the Argo CD / Flux apps open their node or app side by side with the list; a narrow
-  Split View or Stage Manager window keeps the iPhone layout.
+  Split View or Stage Manager window keeps the iPhone layout. At full or wide width a sidebar
+  lists your clusters and the current cluster's sections (Alerts, Kubernetes, Argo CD, Flux,
+  data services, activity, search, settings) beside the screen open in the detail column.
   On an iPhone the app stays in portrait, except logs, shells, charts, YAML, diffs and the
   KubeSpan map, which rotate to landscape.
 - **Background:** alerts and a home-screen widget. The findings of the plugins the cluster runs
