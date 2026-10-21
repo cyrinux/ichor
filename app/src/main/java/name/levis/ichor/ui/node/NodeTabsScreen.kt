@@ -52,6 +52,7 @@ import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.LoadingViewModel
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.FeatureGate
@@ -233,6 +234,8 @@ fun NodeTabsScreen(
             // Cgroups (admin configs) and Kubernetes pods (with an API server) may be hidden.
             val tabs = nodeTabs(canCgroups, canKubePods)
             val shownTab = shownNodeTab(tab, tabs)
+            // The live charts use the width: that tab rotates on a phone.
+            if (shownTab == 2) AllowLandscape()
             NodeUptime(node, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             PrimaryScrollableTabRow(selectedTabIndex = tabs.indexOf(shownTab), edgePadding = 0.dp) {
                 AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.node_tab_services)) })

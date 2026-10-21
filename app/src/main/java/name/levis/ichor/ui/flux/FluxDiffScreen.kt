@@ -43,6 +43,7 @@ import name.levis.ichor.model.isFindableChange
 import name.levis.ichor.model.shortFluxRevision
 import name.levis.ichor.model.shortRevisions
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.Loaded
@@ -78,6 +79,7 @@ fun FluxDiffScreen(
     onAddToken: (() -> Unit)? = null,
     focus: String = "",
 ) {
+    AllowLandscape()
     val context = LocalContext.current
     val talos = context.applicationContext as TalosApp
     val vm: FluxDiffViewModel = viewModel(key = tool.name, factory = factory { FluxDiffViewModel(talos.gitOpsRepository, tool) })

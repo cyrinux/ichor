@@ -71,6 +71,7 @@ import name.levis.ichor.model.forgeFileUrl
 import name.levis.ichor.model.isYamlPath
 import name.levis.ichor.model.shortRevision
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.EmptyState
 import name.levis.ichor.ui.components.ErrorBox
@@ -78,7 +79,6 @@ import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.copyToClipboard
-import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.kubebrowser.YamlColors
 import name.levis.ichor.ui.kubebrowser.highlightYamlLine
@@ -106,6 +106,7 @@ fun SourceFileScreen(
     /** A Talos patch file tried on the node picked: the machine config screen opens with it. */
     onTryPatch: ((node: NodeOverview, patch: PatchPrefill) -> Unit)? = null,
 ) {
+    AllowLandscape()
     val context = LocalContext.current
     val web = rememberGitWebUrl()
     val talos = context.applicationContext as TalosApp
@@ -191,7 +192,8 @@ fun SourceFileScreen(
             )
         },
     ) { padding ->
-        val modifier = Modifier.pageContent(padding)
+        // The whole width (a source file is read sideways too), not a readable column.
+        val modifier = Modifier.padding(padding)
         val host = state.missingHost
         if (host != null) GitHostMissingBox(host, "", onAddToken, modifier) else when (val s = state.file) {
             UiState.Loading -> LoadingBox(modifier)

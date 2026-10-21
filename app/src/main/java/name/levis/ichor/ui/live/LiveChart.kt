@@ -39,6 +39,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlin.math.max
+import name.levis.ichor.ui.components.rememberChartHeight
 import name.levis.ichor.ui.components.MutedText
 
 /** One line of a chart. Text never uses the series color; the legend dot carries identity. */
@@ -105,7 +106,7 @@ fun LiveChart(
                 Canvas(
                     Modifier
                         .fillMaxWidth()
-                        .height(120.dp)
+                        .height(rememberChartHeight(120.dp))
                         .semantics { contentDescription = chartDescription }
                         .pointerInput(count) {
                             detectTapGestures { offset -> selected = indexAt(offset.x, size.width.toFloat(), count, maxPoints) }

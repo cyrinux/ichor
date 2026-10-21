@@ -71,6 +71,7 @@ import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.node.HostnameConfirmDialog
@@ -113,6 +114,7 @@ fun MachineConfigScreen(
     ),
     metaVm: MetaKeysViewModel = viewModel(key = "meta-$node", factory = factory { MetaKeysViewModel(app.talosRepository, node) }),
 ) {
+    AllowLandscape()
     val state by vm.state.collectAsStateWithLifecycle()
     val revealed by vm.revealed.collectAsStateWithLifecycle()
     val editor by vm.editor.collectAsStateWithLifecycle()

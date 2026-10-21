@@ -5,6 +5,7 @@ import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.PrimaryTabRow
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -83,6 +84,8 @@ fun KubeSpanScreen(
     diagVm: KubeSpanDiagViewModel = viewModel(factory = factory { KubeSpanDiagViewModel(app.talosRepository) }),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
+    // The map uses the width: that tab rotates on a phone, the peer list does not.
+    if (tab == MAP_TAB) AllowLandscape()
     val state by vm.state.collectAsStateWithLifecycle()
     val mapState by mapVm.state.collectAsStateWithLifecycle()
     LaunchedEffect(tab) {
