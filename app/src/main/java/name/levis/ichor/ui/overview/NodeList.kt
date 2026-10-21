@@ -7,12 +7,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +53,7 @@ import name.levis.ichor.model.nodesAnswered
 import name.levis.ichor.model.talosUpdateOffer
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.rememberTwoPanes
 import name.levis.ichor.ui.components.VersionFooter
 import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.history.SinceLastLookedCard
@@ -153,23 +157,27 @@ internal fun NodeList(
             TourAnchor.DegradedNode.takeIf { !isDenseCluster(overview.nodes.size) && nodeGroups.firstDegraded() != null },
         )
     }
-    LazyColumn(
-        state = listState,
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.fillMaxSize().tourScrollable(listState, tourReachable),
-    ) {
-        outage?.let { item { LastKnownBanner(it, onRetry) } }
-        if (certificate?.isDemo == true) item {
+    // Two columns on a tablet or an unfolded foldable; crossing the width keeps the first card shown.
+    val twoColumns = rememberTwoPanes()
+    val gridState = rememberLazyStaggeredGridState()
+    var shownTwoColumns by rememberSaveable { mutableStateOf(twoColumns) }
+    LaunchedEffect(twoColumns) {
+        if (twoColumns == shownTwoColumns) return@LaunchedEffect
+        if (twoColumns) gridState.scrollToItem(listState.firstVisibleItemIndex) else listState.scrollToItem(gridState.firstVisibleItemIndex)
+        shownTwoColumns = twoColumns
+    }
+    val content: OverviewItems.() -> Unit = {
+        outage?.let { item(fullLine = true) { LastKnownBanner(it, onRetry) } }
+        if (certificate?.isDemo == true) item(fullLine = true) {
             Card(Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.demo_notice), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
             }
         }
-        if (BuildConfig.SELF_UPDATE) item { UpdateBanner(onClick = nav.onSettings) } else item { StoreUpdateBanner() }
-        if (BuildConfig.DONATIONS || BuildConfig.FEATURE_FUNDING) item { SupportCard(nav.onFunding) }
-        certificate?.let { item { CertificateBanner(it, nav.onIssueConfig) } }
-        if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
-        fingerprint?.takeIf { it.isNotBlank() }?.let { item(key = "since") { SinceLastLookedCard(it) } }
+        if (BuildConfig.SELF_UPDATE) item(fullLine = true) { UpdateBanner(onClick = nav.onSettings) } else item(fullLine = true) { StoreUpdateBanner() }
+        if (BuildConfig.DONATIONS || BuildConfig.FEATURE_FUNDING) item(fullLine = true) { SupportCard(nav.onFunding) }
+        certificate?.let { item(fullLine = true) { CertificateBanner(it, nav.onIssueConfig) } }
+        if (discovered > 0) item(fullLine = true) { DiscoveredNodesBanner(discovered, onDiscovered) }
+        fingerprint?.takeIf { it.isNotBlank() }?.let { item(key = "since", fullLine = true) { SinceLastLookedCard(it) } }
         // The cards, as arranged; a long press on one opens the arrangement.
         layout.visible.forEach { card ->
             overviewCard(
@@ -211,12 +219,29 @@ internal fun NodeList(
                 else -> true
             }
         }
-        if (layout.visible.none(shows)) item(key = "all-hidden") {
+        if (layout.visible.none(shows)) item(key = "all-hidden", fullLine = true) {
             Card(onClick = onCustomize, modifier = Modifier.fillMaxWidth()) {
                 MutedText(stringResource(R.string.overview_edit_all_hidden), modifier = Modifier.padding(16.dp))
             }
         }
-        item(key = "version") { VersionFooter(onClick = nav.onChangelog) }
+        item(key = "version", fullLine = true) { VersionFooter(onClick = nav.onChangelog) }
+    }
+    if (twoColumns) {
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(2),
+            state = gridState,
+            contentPadding = PaddingValues(16.dp),
+            verticalItemSpacing = 10.dp,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.fillMaxSize(),
+        ) { overviewItems().content() }
+    } else {
+        LazyColumn(
+            state = listState,
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.fillMaxSize().tourScrollable(listState, tourReachable),
+        ) { overviewItems().content() }
     }
 }
 
@@ -232,7 +257,7 @@ private class OverviewCardContext(
  * One card of the overview, when the cluster has something for it. [summary] and [nodes] draw the
  * two that need the list's own state, with the modifier that opens the arrangement.
  */
-private fun LazyListScope.overviewCard(
+private fun OverviewItems.overviewCard(
     card: OverviewCard,
     on: OverviewCardContext,
     talosUpdate: TalosUpdateOffer?,
@@ -270,7 +295,7 @@ private fun LazyListScope.overviewCard(
                 )
             }
         }
-        OverviewCard.SUMMARY -> item(key = card.name) { summary(Modifier.longPressToCustomize(onCustomize)) }
+        OverviewCard.SUMMARY -> item(key = card.name, fullLine = spansBothColumns(card)) { summary(Modifier.longPressToCustomize(onCustomize)) }
         OverviewCard.APPS -> item(key = card.name) {
             val argoData = (cards.argo as? UiState.Loaded)?.data
             val inventory = (cards.apps as? UiState.Loaded)?.data

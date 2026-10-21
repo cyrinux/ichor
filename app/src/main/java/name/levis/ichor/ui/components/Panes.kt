@@ -19,6 +19,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
  */
 const val TwoPanesMinWidthDp = 840
 
+/** The widest the two-column overview gets on a large tablet, centred like [ReadableWidth]. */
+const val WideReadableWidthDp = 1200
+
 /** Whether a window [widthDp] wide shows a list and its detail side by side. */
 fun twoPanes(widthDp: Int): Boolean = widthDp >= TwoPanesMinWidthDp
 
