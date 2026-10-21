@@ -58,6 +58,7 @@ import name.levis.ichor.model.LogSource
 import name.levis.ichor.model.LogTail
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.support
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.rememberNodeFeatures
@@ -180,6 +181,7 @@ fun LogsScreen(
         factory = factory { LogFollowViewModel(app.talosRepository, node, source) },
     ),
 ) {
+    AllowLandscape()
     val canFollow = rememberNodeFeatures(node).support(TalosFeature.LOG_FOLLOW).supported
     val state by vm.state.collectAsStateWithLifecycle()
     val followState by followVm.state.collectAsStateWithLifecycle()

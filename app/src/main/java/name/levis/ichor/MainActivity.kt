@@ -43,6 +43,7 @@ import name.levis.ichor.monitor.AlertActionToken
 import name.levis.ichor.ui.DeepLink
 import name.levis.ichor.ui.Navigation
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.startOrientation
 import name.levis.ichor.ui.debug.DebugShellService
 import name.levis.ichor.ui.importconfig.ConfigUnreadableScreen
 import name.levis.ichor.ui.share.OpenLink
@@ -88,6 +89,13 @@ class MainActivity : FragmentActivity() {
             window.isNavigationBarContrastEnforced = false
         }
         super.onCreate(savedInstanceState)
+        // Phones hold portrait (before the first frame, so nothing flashes); the wide screens
+        // unlock rotation while shown (AllowLandscape). Tablets and foldables always rotate.
+        requestedOrientation = startOrientation(
+            resources.configuration.smallestScreenWidthDp,
+            requestedOrientation,
+            restoring = savedInstanceState != null,
+        )
         val app = application as TalosApp
 
         // With the lock on, keep cluster data out of the recents thumbnail and screenshots,

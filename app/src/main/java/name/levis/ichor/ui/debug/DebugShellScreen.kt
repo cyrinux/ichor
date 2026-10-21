@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.debug
 
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.model.KubeAction
@@ -79,6 +80,7 @@ fun DebugShellScreen(
         factory = factory { DebugShellViewModel(app.debugShells, key, hostname) },
     ),
 ) {
+    AllowLandscape()
     val state by vm.state.collectAsStateWithLifecycle()
     var showSnippets by rememberSaveable { mutableStateOf(false) }
 

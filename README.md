@@ -273,7 +273,9 @@ tour** shows it again.
   then `nsenter`. Off by default (Settings → Kubernetes → Node debug shell), behind the app lock,
   recorded in the activity log, and the pod is deleted when the shell ends.
 - **Tablets and foldables (Android):** on a tablet or an unfolded foldable, the nodes list and
-  the Argo CD apps open their node or app side by side with the list.
+  the Argo CD apps open their node or app side by side with the list. On a phone the app stays
+  in portrait, except logs, shells, charts, YAML, diffs, source files and maps, which rotate to
+  landscape and use the width.
 - **iPad:** the nodes list and the Argo CD / Flux apps open their node or app side by side with the list.
 - **Background:** alerts and a home-screen widget. The findings of the plugins the cluster runs
   (a kube-green schedule with no wake-up time, an ExternalSecret that does not sync…) notify

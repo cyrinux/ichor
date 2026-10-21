@@ -59,6 +59,7 @@ import name.levis.ichor.model.PromLink
 import name.levis.ichor.model.PromPanel
 import name.levis.ichor.model.isPromRefused
 import name.levis.ichor.model.legend
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.LoadingBox
@@ -88,6 +89,7 @@ fun MetricsScreen(
     /** [METRICS_TAB_MONITORING] to open on Monitoring (from the checkup). */
     initialTab: Int = METRICS_TAB_PANELS,
 ) {
+    AllowLandscape()
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()

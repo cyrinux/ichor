@@ -40,6 +40,7 @@ import name.levis.ichor.ui.theme.LocalChartColors
 import name.levis.ichor.util.formatTime
 import java.text.DateFormat
 import kotlin.math.max
+import name.levis.ichor.ui.components.rememberChartHeight
 import kotlin.math.min
 
 /** One line: [values] aligned on the chart's times, null for a gap. */
@@ -78,7 +79,7 @@ fun TimeSeriesChart(
             Canvas(
                 Modifier
                     .fillMaxWidth()
-                    .height(140.dp)
+                    .height(rememberChartHeight(140.dp))
                     .semantics { contentDescription = description }
                     .pointerInput(count) { detectTapGestures { selected = indexAt(it.x, size.width.toFloat(), count) } }
                     .pointerInput(count) {

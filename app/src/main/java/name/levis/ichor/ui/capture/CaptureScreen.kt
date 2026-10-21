@@ -46,6 +46,7 @@ import name.levis.ichor.model.formatElapsed
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.AllowLandscape
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.EmptyText
@@ -54,7 +55,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import name.levis.ichor.ui.components.TooltipIconButton
-import name.levis.ichor.ui.components.pageContent
+import name.levis.ichor.ui.components.readableWidth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +80,7 @@ fun CaptureScreen(
         factory = factory { CaptureLinksViewModel(app.talosRepository, node) },
     ),
 ) {
+    AllowLandscape()
     val context = LocalContext.current
     val captures = (context.applicationContext as TalosApp).captureRepository
     val links by linksVm.state.collectAsStateWithLifecycle()
@@ -128,8 +130,9 @@ fun CaptureScreen(
         },
         bottomBar = { session?.let { s -> CaptureBar(s, onStop = vm::stop) } },
     ) { padding ->
-        Column(Modifier.pageContent(padding).fillMaxSize()) {
-            val s = session
+        val s = session
+        // The packets use the whole width (read sideways too); the setup form stays a readable column.
+        Column(Modifier.padding(padding).then(if (s == null) Modifier.readableWidth() else Modifier).fillMaxSize()) {
             if (s == null) {
                 CaptureSetup(links, options, filterError, filterChecking, onChange = vm::update, onStart = vm::start, peers = peers)
             } else {
