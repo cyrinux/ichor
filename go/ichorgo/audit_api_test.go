@@ -27,7 +27,11 @@ var auditedEntryPoints = []string{
 }
 
 // mutationPrimitives are the internal helpers only a change to a cluster goes through.
-var mutationPrimitives = []string{"kubeMutate", "kubeMutationError", "nodeAction"}
+var mutationPrimitives = []string{"kubeMutate", "kubeMutationError", "nodeAction", "kubeNamedMutation"}
+
+// auditedPrologues are internal helpers that record the audit entry for the exported function
+// calling them: each must itself defer recordAction after maskResult.
+var auditedPrologues = []string{"kubeNamedMutation"}
 
 // TestMutatingEntryPointsRecordThemselves checks every exported function that changes a
 // cluster records an audit entry: a deferred recordAction after maskErr/maskResult (so it
@@ -50,7 +54,21 @@ func TestMutatingEntryPointsRecordThemselves(t *testing.T) {
 		for _, file := range pkg.Files {
 			for _, decl := range file.Decls {
 				fn, ok := decl.(*ast.FuncDecl)
-				if !ok || fn.Recv != nil || !fn.Name.IsExported() {
+				if !ok || fn.Recv != nil {
+					continue
+				}
+
+				if slices.Contains(auditedPrologues, fn.Name.Name) {
+					found = append(found, fn.Name.Name)
+
+					if problem := auditProblem(fn, nil); problem != "" {
+						t.Errorf("%s: %s", fn.Name.Name, problem)
+					}
+
+					continue
+				}
+
+				if !fn.Name.IsExported() {
 					continue
 				}
 
@@ -95,7 +113,7 @@ func auditProblem(fn *ast.FuncDecl, calls []string) string {
 		return ""
 	}
 
-	if slices.Contains(calls, "recordedRun") {
+	if slices.Contains(calls, "recordedRun") || slices.ContainsFunc(auditedPrologues, func(p string) bool { return slices.Contains(calls, p) }) {
 		return ""
 	}
 

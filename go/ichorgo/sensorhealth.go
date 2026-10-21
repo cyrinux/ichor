@@ -11,10 +11,7 @@ import (
 // The background monitor's view of the sensors: one number per node (its hottest sensor) and
 // whether it is throttled, read for every node in one call like ClusterStorageHealth.
 
-type clusterSensors struct {
-	Context string             `json:"context"`
-	Nodes   []nodeSensorHealth `json:"nodes"`
-}
+type clusterSensors = nodeReadings[nodeSensorHealth]
 
 type nodeSensorHealth struct {
 	Node     string `json:"node"`
@@ -29,30 +26,8 @@ type nodeSensorHealth struct {
 // temperature sensor (with the sensor's crit and max) and whether its cores are throttled:
 // what the temperature alert of the background monitor needs (os:reader). A node that does
 // not answer is reported with an error instead of failing the call.
-func ClusterSensorHealth(configYAML, contextName string) (out string, err error) {
-	defer maskResult(&out, &err)
-
-	contextName = unmaskContext(configYAML, contextName)
-
-	if isTalosDemoContext(configYAML, contextName) {
-		return demoSensorHealth(configYAML, contextName)
-	}
-
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		name, _, err := resolveContext(configYAML, contextName)
-		if err != nil {
-			return "", err
-		}
-
-		nodes := targetNodes(s.context)
-		result := clusterSensors{Context: name, Nodes: make([]nodeSensorHealth, len(nodes))}
-
-		forEachNode(nodes, func(i int, node string) {
-			result.Nodes[i] = readNodeSensorHealth(ctx, s, node)
-		})
-
-		return toJSON(result)
-	})
+func ClusterSensorHealth(configYAML, contextName string) (string, error) {
+	return readClusterNodes(configYAML, contextName, demoSensorHealth, readNodeSensorHealth)
 }
 
 // readNodeSensorHealth reads one node within nodeTimeout. Only the hwmon listing is required:

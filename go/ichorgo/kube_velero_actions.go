@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -56,26 +55,12 @@ type veleroScheduleRaw struct {
 // `velero backup create --from-schedule`: a Backup named <schedule>-<UTC time> with the
 // schedule's template. Refused for a paused schedule, one that failed validation, or one
 // with a backup running. Returns the new Backup's name. kubeServer: see KubePods.
-func KubeVeleroBackupNow(configYAML, contextName, kubeServer, namespace, schedule string) (out string, err error) {
-	defer maskResult(&out, &err)
+func KubeVeleroBackupNow(configYAML, contextName, kubeServer, namespace, schedule string) (string, error) {
+	m := namedMutation{action: "velero-backup-now", kind: "Schedule", label: "schedule"}
 
-	contextName = unmaskContext(configYAML, contextName)
-	namespace, schedule = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(schedule))
-
-	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "velero-backup-now", Namespace: namespace, Object: "Schedule/" + schedule})
-
-	if err := validateKubeName("schedule", namespace, schedule); err != nil {
-		return "", err
-	}
-
-	err = kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
-		name, err := backupVeleroSchedule(ctx, k, namespace, schedule, time.Now())
-		out = name
-
-		return err
+	return kubeNamedMutation(kubeTarget{configYAML, contextName, kubeServer}, m, namespace, schedule, func(ctx context.Context, k *kubeClient, namespace, schedule string) (string, error) {
+		return backupVeleroSchedule(ctx, k, namespace, schedule, time.Now())
 	})
-
-	return out, err
 }
 
 func veleroNamespacePath(namespace string) string {
@@ -235,26 +220,10 @@ func (r veleroDeleteRequestObject) pending() bool {
 // data from its storage location and the Backup itself. Refused while the backup runs or
 // another deletion of it is pending. Returns the request's name; a deletion that fails shows
 // its errors on the next KubeVeleroBackups. kubeServer: see KubePods.
-func KubeVeleroDeleteBackup(configYAML, contextName, kubeServer, namespace, backup string) (out string, err error) {
-	defer maskResult(&out, &err)
+func KubeVeleroDeleteBackup(configYAML, contextName, kubeServer, namespace, backup string) (string, error) {
+	m := namedMutation{action: "velero-delete-backup", kind: "Backup", label: "backup"}
 
-	contextName = unmaskContext(configYAML, contextName)
-	namespace, backup = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(backup))
-
-	defer recordAction(&err, configYAML, contextName, auditAction{Server: kubeServer, Action: "velero-delete-backup", Namespace: namespace, Object: "Backup/" + backup})
-
-	if err := validateKubeName("backup", namespace, backup); err != nil {
-		return "", err
-	}
-
-	err = kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
-		name, err := deleteVeleroBackup(ctx, k, namespace, backup)
-		out = name
-
-		return err
-	})
-
-	return out, err
+	return kubeNamedMutation(kubeTarget{configYAML, contextName, kubeServer}, m, namespace, backup, deleteVeleroBackup)
 }
 
 func deleteVeleroBackup(ctx context.Context, k *kubeClient, namespace, backup string) (string, error) {

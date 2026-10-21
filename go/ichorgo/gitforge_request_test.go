@@ -95,3 +95,32 @@ func TestGitForgeRequestDemo(t *testing.T) {
 		t.Errorf("demo %+v %+v", open, merged)
 	}
 }
+
+// GitHub and Gitea share one pull-request reader: the same answer reads the same on both.
+func TestGitForgeRequestGitHubStyle(t *testing.T) {
+	const pr = `{"state":"closed","merged":true,"draft":false,"title":"Pin the chart",
+		"html_url":"https://forge.example.org/example-org/cluster-config/pulls/12","merge_commit_sha":"m3rg3",
+		"merged_at":"2026-10-19T09:00:00Z","updated_at":"2026-10-19T09:01:00Z","head":{"sha":"h3ad"}}`
+
+	srv := gitServer(t, map[string]func(w http.ResponseWriter, r *http.Request){
+		"/api/v3/repos/example-org/cluster-config/pulls/12": jsonAnswer(pr),
+		"/api/v1/repos/example-org/cluster-config/pulls/12": jsonAnswer(pr),
+	})
+
+	want := gitRequestState{
+		State: gitRequestMerged, Title: "Pin the chart", URL: "https://forge.example.org/example-org/cluster-config/pulls/12",
+		HeadSHA: "h3ad", MergeSHA: "m3rg3", MergedAt: "2026-10-19T09:00:00Z", UpdatedAt: "2026-10-19T09:01:00Z",
+	}
+
+	for _, tc := range []struct{ kind, api string }{
+		{"github", srv.URL + "/api/v3"},
+		{"gitea", srv.URL},
+	} {
+		t.Run(tc.kind, func(t *testing.T) {
+			got := requestOf(t)(GitForgeRequest(gitHostJSON(tc.kind, tc.api), srv.URL+"/example-org/cluster-config", 12))
+			if got != want {
+				t.Errorf("got %+v, want %+v", got, want)
+			}
+		})
+	}
+}
