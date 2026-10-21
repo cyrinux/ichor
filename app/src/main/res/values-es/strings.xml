@@ -444,7 +444,6 @@
     <string name="clusters_manage">Gestionar clústeres…</string>
     <string name="clusters_add">Añadir un clúster</string>
     <string name="clusters_swipe_hint">Desliza la barra superior a la izquierda o a la derecha para cambiar de clúster.</string>
-    <string name="clusters_remove">Quitar %1$s</string>
     <string name="clusters_remove_title">¿Quitar %1$s?</string>
     <string name="clusters_remove_body">La configuración y la clave de cliente de este clúster se eliminarán de este dispositivo. Los demás clústeres se conservan.</string>
     <string name="clusters_color">Color de %1$s</string>
@@ -2107,10 +2106,7 @@
         <item quantity="one">%1$d reinicio</item>
         <item quantity="other">%1$d reinicios</item>
     </plurals>
-    <string name="evidence_service">Estado del servicio</string>
-    <string name="evidence_link">Enlace de red cambiado</string>
     <string name="evidence_unavailable">Datos no disponibles</string>
-    <string name="evidence_recovered">Recopilación de datos restablecida</string>
     <string name="evidence_available">Esta sección puede volver a muestrearse.</string>
     <string name="evidence_details">Detalles técnicos</string>
     <string name="evidence_hide_details">Ocultar detalles técnicos</string>
@@ -2231,7 +2227,6 @@
     <string name="garage_tranquility_confirm">Aplicar</string>
     <string name="garage_tranquility_done">Tranquilidad de resincronización de %1$s fijada en %2$d</string>
     <string name="garage_tranquility_failed">No se pudo cambiar la velocidad de resincronización de %1$s: %2$s</string>
-    <string name="garage_operator_title">Operador de Garage</string>
     <string name="garage_operator_clusters">Clústeres</string>
     <string name="garage_operator_buckets">Cubos</string>
     <string name="garage_operator_keys">Claves</string>
@@ -2417,7 +2412,6 @@
     <string name="crossplane_count_ok">%1$d ok</string>
     <string name="crossplane_managed_count">%1$d de %2$d recursos gestionados listados</string>
     <string name="crossplane_truncated">Lista larga: los recursos gestionados sanos pasados de los primeros 500 se omiten; la búsqueda solo mira los listados.</string>
-    <string name="crossplane_package">Paquete</string>
     <string name="crossplane_claim_kind">tipo de claim %1$s</string>
     <string name="crossplane_compositions">%1$d composiciones</string>
     <string name="crossplane_composites_count">%1$d composites</string>
@@ -3833,8 +3827,6 @@
     <string name="rollback_confirm">Revertir</string>
     <string name="rollback_body">El nodo se reinicia ahora en la versión de Talos anterior a su última actualización, sin vaciar sus pods. Para una actualización que arranca pero funciona mal.</string>
     <string name="rollback_started">Reversión iniciada: %1$s se está reiniciando</string>
-    <string name="checkup_health_menu">Chequeo y servidor de la API</string>
-    <string name="checkup_reading">Leyendo el clúster…</string>
     <!-- Clusters added from a kubeconfig (no Talos API) -->
     <string name="common_kind_kubernetes">Kubernetes</string>
     <string name="common_talos_only">No disponible para este clúster: se añadió desde un kubeconfig, así que la app solo llega a su API de Kubernetes, no a Talos.</string>
@@ -4920,7 +4912,6 @@
     <string name="cnpg_promote_unavailable">Esta instancia no puede promoverse en el estado actual del clúster.</string>
     <string name="cnpg_promote_requested">Promoción a %1$s solicitada</string>
     <string name="cnpg_promote_failed">No se pudo promover %1$s: %2$s</string>
-    <string name="cnpg_promote_loading">Leyendo vista previa de promoción…</string>
 
     <string name="cnpg_restart_primary">Reiniciar primario</string>
     <string name="cnpg_hibernate_action">Hibernar clúster</string>
@@ -4939,7 +4930,6 @@
     <string name="longhorn_salvage_replica">%1$s en %2$s · sano: %3$s · fallo: %4$s</string>
     <string name="longhorn_salvage_requested">Recuperación solicitada</string>
     <string name="longhorn_salvage_failed">No se pudo recuperar el volumen: %1$s</string>
-    <string name="longhorn_volume_name">Nombre del volumen</string>
 
     <string name="longhorn_attach">Conectar volumen</string>
     <string name="longhorn_detach">Desconectar volumen</string>
@@ -5044,7 +5034,6 @@
     <string name="kpol_not_installed">Kyverno no está instalado en este clúster</string>
     <string name="kpol_not_installed_hint">Kyverno admite o rechaza cargas de trabajo según políticas e informa de lo que incumple las reglas.</string>
     <string name="kpol_empty">No hay políticas de Kyverno</string>
-    <string name="kpol_empty_hint">Kyverno está en marcha, pero no hay ninguna política definida.</string>
     <string name="kpol_no_match">Ninguna política coincide con «%1$s»</string>
     <string name="kpol_engine">Motor de Kyverno</string>
     <string name="kpol_controller_ready">%1$s: %2$s de %3$s listos</string>
@@ -5087,7 +5076,6 @@
     <string name="kpol_webhook_fail_gatekeeper">Fail: las solicitudes se rechazan mientras Gatekeeper está caído</string>
     <string name="kpol_webhook_ignore_gatekeeper">Ignore: las políticas se omiten mientras Gatekeeper está caído</string>
     <string name="kpol_empty_gatekeeper">No hay políticas de Gatekeeper</string>
-    <string name="kpol_empty_hint_gatekeeper">Gatekeeper está en marcha, pero no hay ninguna política definida.</string>
     <string name="kpol_warn">Avisar</string>
     <string name="kpol_mode_warn">Una solicitud que la incumple pasa, con una advertencia</string>
     <string name="kpol_audited">Última auditoría %1$s</string>
@@ -5130,7 +5118,6 @@
     <string name="velero_restore_reason_all_namespaces">Esta copia contiene todos los espacios de nombres: al restaurarla se restauran todos</string>
     <string name="velero_restore_started">Restauración %1$s iniciada</string>
     <string name="velero_restore_running">restaurando…</string>
-    <string name="velero_restore_validation_errors">Velero rechazó la restauración: %1$s</string>
     <string name="velero_restore_close">Cerrar</string>
     <string name="velero_restore_items_label">Objetos</string>
     <string name="velero_restore_volumes_label">Instantáneas de volumen</string>

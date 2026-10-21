@@ -1718,7 +1718,8 @@ just i18n-check   # also part of `just check` and the iOS CI build
 ```
 
 It fails on a missing translation, or when placeholders (`%1$s`, `%@`, `%lld`) differ from
-English.
+English. It also fails on an Android key that no code or resource reads: delete it in all six
+files.
 
 ## Support the project
 

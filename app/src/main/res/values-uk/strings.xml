@@ -491,7 +491,6 @@
     <string name="clusters_manage">Керувати кластерами…</string>
     <string name="clusters_add">Додати кластер</string>
     <string name="clusters_swipe_hint">Проведіть по верхній панелі ліворуч або праворуч, щоб змінити кластер.</string>
-    <string name="clusters_remove">Вилучити %1$s</string>
     <string name="clusters_remove_title">Вилучити %1$s?</string>
     <string name="clusters_remove_body">Конфігурацію та клієнтський ключ цього кластера буде вилучено з цього пристрою. Інші кластери залишаться.</string>
     <string name="clusters_color">Колір %1$s</string>
@@ -2235,10 +2234,7 @@
         <item quantity="many">%1$d перезапусків</item>
         <item quantity="other">%1$d перезапуску</item>
     </plurals>
-    <string name="evidence_service">Стан служби</string>
-    <string name="evidence_link">Мережеве з’єднання змінилося</string>
     <string name="evidence_unavailable">Дані недоступні</string>
-    <string name="evidence_recovered">Збір даних відновлено</string>
     <string name="evidence_available">Цей розділ знову доступний для збору даних.</string>
     <string name="evidence_details">Технічні подробиці</string>
     <string name="evidence_hide_details">Приховати технічні подробиці</string>
@@ -2361,7 +2357,6 @@
     <string name="garage_tranquility_confirm">Застосувати</string>
     <string name="garage_tranquility_done">Спокій ресинхронізації %1$s встановлено на %2$d</string>
     <string name="garage_tranquility_failed">Не вдалося змінити швидкість ресинхронізації %1$s: %2$s</string>
-    <string name="garage_operator_title">Оператор Garage</string>
     <string name="garage_operator_clusters">Кластери</string>
     <string name="garage_operator_buckets">Кошики</string>
     <string name="garage_operator_keys">Ключі</string>
@@ -2557,7 +2552,6 @@
     <string name="crossplane_count_ok">%1$d ok</string>
     <string name="crossplane_managed_count">Показано %1$d з %2$d керованих ресурсів</string>
     <string name="crossplane_truncated">Довгий список: здорові керовані ресурси після перших 500 пропущено; пошук охоплює лише показані.</string>
-    <string name="crossplane_package">Пакет</string>
     <string name="crossplane_claim_kind">вид claim %1$s</string>
     <string name="crossplane_compositions">%1$d композицій</string>
     <string name="crossplane_composites_count">%1$d composites</string>
@@ -4029,8 +4023,6 @@
     <string name="rollback_confirm">Відкотити</string>
     <string name="rollback_body">Вузол зараз перезавантажиться у версію Talos, що була до останнього оновлення, без виселення подів. Для оновлення, яке завантажується, але працює неправильно.</string>
     <string name="rollback_started">Відкат розпочато: %1$s перезавантажується</string>
-    <string name="checkup_health_menu">Перевірка та сервер API</string>
-    <string name="checkup_reading">Читання кластера…</string>
     <!-- Clusters added from a kubeconfig (no Talos API) -->
     <string name="common_kind_kubernetes">Kubernetes</string>
     <string name="common_talos_only">Недоступно для цього кластера: його додано з kubeconfig, тож застосунок бачить лише його Kubernetes API, а не Talos.</string>
@@ -5151,7 +5143,6 @@
     <string name="cnpg_promote_unavailable">Цей екземпляр неможливо підвищити в поточному стані кластера.</string>
     <string name="cnpg_promote_requested">Запитано підвищення до %1$s</string>
     <string name="cnpg_promote_failed">Не вдалося підвищити %1$s: %2$s</string>
-    <string name="cnpg_promote_loading">Завантаження попереднього перегляду підвищення…</string>
 
     <string name="cnpg_restart_primary">Перезапустити основний екземпляр</string>
     <string name="cnpg_hibernate_action">Приспати кластер</string>
@@ -5170,7 +5161,6 @@
     <string name="longhorn_salvage_replica">%1$s на %2$s · справна: %3$s · збій: %4$s</string>
     <string name="longhorn_salvage_requested">Запитано відновлення</string>
     <string name="longhorn_salvage_failed">Не вдалося відновити том: %1$s</string>
-    <string name="longhorn_volume_name">Назва тому</string>
 
     <string name="longhorn_attach">Приєднати том</string>
     <string name="longhorn_detach">Від’єднати том</string>
@@ -5275,7 +5265,6 @@
     <string name="kpol_not_installed">Kyverno не встановлено в цьому кластері</string>
     <string name="kpol_not_installed_hint">Kyverno допускає або відхиляє робочі навантаження за політиками й повідомляє, що порушує правила.</string>
     <string name="kpol_empty">Немає політик Kyverno</string>
-    <string name="kpol_empty_hint">Kyverno працює, але жодної політики не визначено.</string>
     <string name="kpol_no_match">Жодна політика не відповідає «%1$s»</string>
     <string name="kpol_engine">Рушій Kyverno</string>
     <string name="kpol_controller_ready">%1$s: готово %2$s з %3$s</string>
@@ -5318,7 +5307,6 @@
     <string name="kpol_webhook_fail_gatekeeper">Fail: запити відхиляються, поки Gatekeeper не працює</string>
     <string name="kpol_webhook_ignore_gatekeeper">Ignore: політики пропускаються, поки Gatekeeper не працює</string>
     <string name="kpol_empty_gatekeeper">Немає політик Gatekeeper</string>
-    <string name="kpol_empty_hint_gatekeeper">Gatekeeper працює, але жодної політики не визначено.</string>
     <string name="kpol_warn">Попередити</string>
     <string name="kpol_mode_warn">Запит, що її порушує, пропускається з попередженням</string>
     <string name="kpol_audited">Останній аудит %1$s</string>
@@ -5361,7 +5349,6 @@
     <string name="velero_restore_reason_all_namespaces">Ця копія містить усі простори імен: відновлення відновить їх усі</string>
     <string name="velero_restore_started">Відновлення %1$s розпочато</string>
     <string name="velero_restore_running">відновлення…</string>
-    <string name="velero_restore_validation_errors">Velero відмовив у відновленні: %1$s</string>
     <string name="velero_restore_close">Закрити</string>
     <string name="velero_restore_items_label">Об\'єкти</string>
     <string name="velero_restore_volumes_label">Знімки томів</string>
