@@ -1,4 +1,4 @@
-package ichorgo
+package httpx
 
 import (
 	"crypto/tls"
@@ -15,7 +15,7 @@ import (
 )
 
 func TestNewHTTPClientDefaults(t *testing.T) {
-	c := newHTTPClient(httpClientOpts{})
+	c := New(Opts{})
 
 	tr, ok := c.Transport.(*http.Transport)
 	if !ok {
@@ -30,14 +30,14 @@ func TestNewHTTPClientDefaults(t *testing.T) {
 		t.Errorf("TLS setup %+v", tr.TLSClientConfig)
 	}
 
-	if tr.TLSHandshakeTimeout != httpHandshakeTimeout || tr.IdleConnTimeout != httpIdleTimeout || c.Timeout != 0 {
+	if tr.TLSHandshakeTimeout != handshakeTimeout || tr.IdleConnTimeout != idleTimeout || c.Timeout != 0 {
 		t.Errorf("timeouts: handshake %s, idle %s, request %s", tr.TLSHandshakeTimeout, tr.IdleConnTimeout, c.Timeout)
 	}
 }
 
 func TestNewHTTPClientOptions(t *testing.T) {
-	cfg := baseTLS(nil, true)
-	c := newHTTPClient(httpClientOpts{tls: cfg, timeout: time.Second, dialTimeout: 3 * time.Second, idleTimeout: time.Minute})
+	cfg := BaseTLS(nil, true)
+	c := New(Opts{TLS: cfg, Timeout: time.Second, DialTimeout: 3 * time.Second, IdleTimeout: time.Minute})
 	tr := c.Transport.(*http.Transport)
 
 	if tr.TLSClientConfig == cfg {
@@ -74,7 +74,7 @@ func redirectServer(t *testing.T, target func(srv *httptest.Server) string) *htt
 
 func testClient(srv *httptest.Server, follow bool) *http.Client {
 	roots := srv.Client().Transport.(*http.Transport).TLSClientConfig.RootCAs
-	return newHTTPClient(httpClientOpts{tls: baseTLS(roots, false), timeout: 5 * time.Second, followRedirects: follow})
+	return New(Opts{TLS: BaseTLS(roots, false), Timeout: 5 * time.Second, FollowRedirects: follow})
 }
 
 func get(t *testing.T, c *http.Client, url string) (*http.Response, error) {
@@ -123,20 +123,33 @@ func TestNewHTTPClientRefusesPlainHTTPRedirects(t *testing.T) {
 	srv := redirectServer(t, func(*httptest.Server) string { return "http://127.0.0.1:1/to" })
 
 	_, err := get(t, testClient(srv, true), srv.URL+"/from")
-	if !errors.Is(err, errInsecureRedirect) {
-		t.Errorf("err %v, want %v", err, errInsecureRedirect)
+	if !errors.Is(err, ErrInsecureRedirect) {
+		t.Errorf("err %v, want %v", err, ErrInsecureRedirect)
 	}
 }
 
+// scannedDirs are the packages whose outbound clients must all come from New and BaseTLS.
+var scannedDirs = []string{"../../ichorgo", "../../gitforge"}
+
 // TestOutboundClientsUseTheHelper fails on any http.Client, http.Transport or tls.Config built
-// outside httpclient.go, and on the default client or transport, whose redirect, proxy and TLS
-// settings are not the package's.
+// in scannedDirs, and on the default client or transport, whose redirect, proxy and TLS
+// settings are not the core's.
 func TestOutboundClientsUseTheHelper(t *testing.T) {
 	fset := token.NewFileSet()
 
-	names, err := filepath.Glob("*.go")
-	if err != nil {
-		t.Fatal(err)
+	var names []string
+
+	for _, dir := range scannedDirs {
+		found, err := filepath.Glob(filepath.Join(dir, "*.go"))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(found) == 0 {
+			t.Fatalf("no Go file in %s", dir)
+		}
+
+		names = append(names, found...)
 	}
 
 	literals := map[string]bool{"http.Client": true, "http.Transport": true, "tls.Config": true}
@@ -148,7 +161,7 @@ func TestOutboundClientsUseTheHelper(t *testing.T) {
 	files := 0
 
 	for _, name := range names {
-		if strings.HasSuffix(name, "_test.go") || name == "httpclient.go" {
+		if strings.HasSuffix(name, "_test.go") {
 			continue
 		}
 
@@ -163,11 +176,11 @@ func TestOutboundClientsUseTheHelper(t *testing.T) {
 			switch n := n.(type) {
 			case *ast.CompositeLit:
 				if what := selectorName(n.Type); literals[what] {
-					t.Errorf("%s: a %s literal, use newHTTPClient / baseTLS", fset.Position(n.Pos()), what)
+					t.Errorf("%s: a %s literal, use httpx.New / httpx.BaseTLS", fset.Position(n.Pos()), what)
 				}
 			case *ast.SelectorExpr:
 				if what := selectorName(n); uses[what] {
-					t.Errorf("%s: %s, use newHTTPClient", fset.Position(n.Pos()), what)
+					t.Errorf("%s: %s, use httpx.New", fset.Position(n.Pos()), what)
 				}
 			}
 

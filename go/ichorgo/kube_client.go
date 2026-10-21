@@ -14,6 +14,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 const (
@@ -220,7 +222,7 @@ func kubeServerCandidates(server *url.URL, talosEndpoints []string) []*url.URL {
 
 func newKubeClient(base *url.URL, creds *kubeCredentials) *kubeClient {
 	// The API server does not redirect: the client never sends the credentials anywhere else.
-	httpc := newHTTPClient(httpClientOpts{tls: creds.tls, dialTimeout: kubeProbeTimeout, idleTimeout: sessionIdle})
+	httpc := httpx.New(httpx.Opts{TLS: creds.tls, DialTimeout: kubeProbeTimeout, IdleTimeout: sessionIdle})
 
 	return &kubeClient{base: base, http: httpc, token: creds.token, tokens: creds.tokens, tls: creds.tls.Clone(), namespace: creds.namespace}
 }

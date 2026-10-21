@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/cosi-project/runtime/pkg/safe"
+	"github.com/cyrinux/ichor/go/internal/httpx"
 	"github.com/siderolabs/talos/pkg/machinery/client"
 	"github.com/siderolabs/talos/pkg/machinery/resources/runtime"
 )
@@ -166,7 +167,7 @@ func fetchOfficialExtensions(version string) ([]string, error) {
 
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := newHTTPClient(httpClientOpts{followRedirects: true}).Do(req)
+	resp, err := httpx.New(httpx.Opts{FollowRedirects: true}).Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("could not check extensions: %s", friendlyError(err))
 	}

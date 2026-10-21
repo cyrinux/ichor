@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/cyrinux/ichor/go/internal/httpx"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -73,7 +74,7 @@ func parseKubeconfig(data string) (*kubeCredentials, error) {
 		}
 	}
 
-	creds := &kubeCredentials{tls: baseTLS(nil, false), namespace: ctx.Namespace}
+	creds := &kubeCredentials{tls: httpx.BaseTLS(nil, false), namespace: ctx.Namespace}
 
 	found := false
 

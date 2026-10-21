@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // A repository's whole tree at one ref, as the forge's tar.gz archive: one request where a
@@ -197,4 +199,4 @@ func (c gitForgeClient) followArchive(ctx context.Context, from, loc string, pri
 }
 
 // gitForgeArchiveHTTP downloads archives: longer than an API call, never following a redirect.
-var gitForgeArchiveHTTP = newHTTPClient(httpClientOpts{timeout: gitSnapshotTimeout})
+var gitForgeArchiveHTTP = httpx.New(httpx.Opts{Timeout: gitSnapshotTimeout})

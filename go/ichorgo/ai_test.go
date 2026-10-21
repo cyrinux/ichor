@@ -10,6 +10,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 const testAPIKey = "sk-test-0123456789"
@@ -44,7 +46,7 @@ func fakeProvider(t *testing.T, status int, contentType, response string) (*http
 	// Keys are only sent over https, so the fakes speak TLS with their own certificate.
 	was := aiHTTPClient
 	aiHTTPClient = srv.Client()
-	aiHTTPClient.CheckRedirect = refuseRedirect
+	aiHTTPClient.CheckRedirect = httpx.RefuseRedirect
 
 	t.Cleanup(func() { aiHTTPClient = was })
 

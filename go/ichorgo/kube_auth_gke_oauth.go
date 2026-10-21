@@ -6,6 +6,8 @@ import (
 	"errors"
 	"net/url"
 	"strings"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // GKE with the organisation's own OAuth client: a Desktop app client (consent screen
@@ -32,7 +34,7 @@ var (
 	// gcpIssuer is Google's OpenID issuer, overridable in tests.
 	gcpIssuer = func() string { return "https://accounts.google.com" }
 	// gcpOAuthTLS is the TLS setup for Google's sign-in, overridable in tests.
-	gcpOAuthTLS = func() *tls.Config { return baseTLS(nil, false) }
+	gcpOAuthTLS = func() *tls.Config { return httpx.BaseTLS(nil, false) }
 )
 
 // googleOAuthMethod is the browser sign-in with the OAuth client state holds.

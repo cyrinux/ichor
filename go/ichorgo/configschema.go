@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/cyrinux/ichor/go/internal/httpx"
 )
 
 // The Talos machine config JSON schema describes every field (type, allowed values,
@@ -87,7 +89,7 @@ func newSchemaStore(dir func() string, url func(string) string, client *http.Cli
 	return &schemaStore{loaded: map[string]*configSchema{}, failed: map[string]schemaFailure{}, dir: dir, url: url, client: client}
 }
 
-var configSchemas = newSchemaStore(dataDir, func(version string) string { return fmt.Sprintf(configSchemaURL, version) }, newHTTPClient(httpClientOpts{followRedirects: true}))
+var configSchemas = newSchemaStore(dataDir, func(version string) string { return fmt.Sprintf(configSchemaURL, version) }, httpx.New(httpx.Opts{FollowRedirects: true}))
 
 type schemaStatus struct {
 	Version   string `json:"version"`
