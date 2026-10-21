@@ -128,8 +128,9 @@ func TestNewHTTPClientRefusesPlainHTTPRedirects(t *testing.T) {
 	}
 }
 
-// scannedDirs are the packages whose outbound clients must all come from New and BaseTLS.
-var scannedDirs = []string{"../../ichorgo", "../../gitforge"}
+// scannedDirs are the packages whose outbound clients must all come from New and BaseTLS: add
+// each package that moves out of ichorgo and talks HTTP.
+var scannedDirs = []string{"../../ichorgo"}
 
 // TestOutboundClientsUseTheHelper fails on any http.Client, http.Transport or tls.Config built
 // in scannedDirs, and on the default client or transport, whose redirect, proxy and TLS

@@ -1,7 +1,7 @@
 // Package httpx builds every outbound HTTP client of the Go core: one TLS floor, one redirect
 // policy and no proxy taken from the environment, which a phone has no use for. Every
 // http.Client comes from New and every TLS setup starts from BaseTLS (httpx_test.go fails on
-// any other in go/ichorgo and go/gitforge).
+// any other in go/ichorgo).
 package httpx
 
 import (
