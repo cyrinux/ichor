@@ -6,7 +6,6 @@ struct OverviewView: View {
     @Binding var path: [Route]
 
     @Environment(AppModel.self) private var model
-    @Environment(SupportPrompt.self) private var support
     @Environment(AISettings.self) private var ai
     @State private var state: LoadState<ClusterOverview> = .loading
     /// `state` is only what the last background check saw (a seed), until the cluster answers.
@@ -63,158 +62,16 @@ struct OverviewView: View {
     @State private var tourShowsSwitcher = false
 
     var body: some View {
-        Group {
-            // A talosconfig generated before the cluster had addresses: nothing to load yet.
-            if let context = model.activeSummary, context.needsEndpoint {
-                NoEndpointsView(context: context).themedBackground()
-            } else {
-                LoadStateView(state: state, retry: load, fromMonitor: fromMonitor) { overview in
-                    // No node answered (VPN off, another network): one notice instead of a list of red
-                    // nodes, unless they are known from before (then the list, under a banner).
-                    if let outage = overview.outage, !showNodesAnyway, !overview.showsLastKnown {
-                        ClusterUnreachableView(
-                            outage: outage,
-                            endpoints: model.activeSummary?.endpoints ?? [],
-                            retry: load,
-                            showNodes: { showNodesAnyway = true }
-                        )
-                        .themedBackground()
-                    } else {
-                        List {
-                            if let outage = overview.outage, overview.showsLastKnown {
-                                Section { LastKnownBanner(outage: outage, retry: load) }
-                            }
-                            if model.activeSummary?.demo == true {
-                                Section {
-                                    Text("Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.")
-                                        .font(.callout).foregroundStyle(.secondary)
-                                }
-                            }
-                            if tourActive, tourShowsSwitcher {
-                                Section { DemoTourSwitcherTip() }
-                            }
-                            HistorySinceSection(look: look)
-                            if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
-                                Section { CertExpiryBanner(notAfter: ctx.certNotAfter) }
-                            }
-                            if !discovered.isEmpty {
-                                Section { DiscoveredNodesBanner(count: discovered.count) { showDiscovered = true } }
-                            }
-                            if support.visible { Section { SupportCard(prompt: support) } }
-                            // The sections as arranged (Customize overview, in the ⋯ menu).
-                            ForEach(layout.visible) { card in section(card, overview: overview) }
-                            // The Talos update section alone, with no release to offer, leaves the list as empty
-                            // (the Pinned one too, without pins).
-                            if layout.visible.allSatisfy({ $0 == .talosUpdate && !offersTalosUpdate || $0 == .pinned && pins.isEmpty }) {
-                                Section {
-                                    Button { customizing = true } label: {
-                                        Text("Every card is hidden. Tap to choose the ones to show.").foregroundStyle(.secondary)
-                                    }
-                                }
-                            }
-                        }
-                        .refreshable {
-                            await load()
-                            // Sites rarely change: the map is only asked again on a pull.
-                            if let client = model.client, outage == nil {
-                                await TopologyStore.shared.load(with: client, key: model.topologyKey, force: true)
-                            }
-                        }
-                        .themedBackground()
-                    }
-                }
-            }
-        }
+        content
         .navigationTitle(model.activeLabel)
         // Shown by the title once it is inline (scrolled); the bar below is always there.
-        .toolbarTitleMenu {
-            // A submenu: with many clusters, the actions below stay in reach without a scroll.
-            if (model.summary?.contexts.count ?? 0) > 1 {
-                Menu {
-                    ForEach(model.summary?.contexts ?? []) { context in
-                        Button { model.activeContext = context.name } label: {
-                            if context.name == model.activeContext {
-                                Label(model.labels.of(context), systemImage: "checkmark")
-                            } else {
-                                Text(model.labels.of(context))
-                            }
-                        }
-                    }
-                } label: {
-                    Label("Switch cluster", systemImage: "arrow.left.arrow.right")
-                }
-            }
-            Button { path.append(.clusters) } label: { Label("Manage clusters…", systemImage: "square.stack.3d.up") }
-            if model.allows(.upgrade) {
-                Button { path.append(.clusterUpgrade(version: "")) } label: {
-                    Label("Upgrade cluster…", systemImage: "arrow.up.circle")
-                }
-                Button { path.append(.k8sUpgrade) } label: {
-                    Label("Upgrade Kubernetes…", systemImage: "shippingbox")
-                }
-            }
-            if let context = model.activeSummary, !context.isKube, !context.omni {
-                Button { path.append(.joinNode) } label: {
-                    Label("Add a node…", systemImage: "plus.circle")
-                }
-            }
-            if model.activeSummary != nil {
-                Button { sharingIncident = true } label: {
-                    Label("Share incident summary…", systemImage: "square.and.arrow.up")
-                }
-            }
-            ShareLinkButton(target: .screen(.cluster))
-        }
+        .toolbarTitleMenu { OverviewTitleMenu(path: $path, shareIncident: { sharingIncident = true }) }
         .safeAreaInset(edge: .top, spacing: 0) {
             if (model.summary?.contexts.count ?? 0) > 1 {
                 ClusterBar { path.append(.clusters) }
             }
         }
-        .toolbar {
-            if model.privacyMask {
-                ToolbarItem(placement: .topBarLeading) {
-                    // A small icon rather than a label, so it stays out of the way in screenshots.
-                    Image(systemName: "eye.slash")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .accessibilityLabel(Text("Screenshot mode"))
-                }
-            }
-            ToolbarItemGroup(placement: .primaryAction) {
-                // Buttons with labels, not NavigationLinks with images: on a phone the ones that
-                // don't fit fold into the system's "…" menu, where a link does nothing and an image
-                // shows no title.
-                // Optional: only once turned on in the settings.
-                if ai.enabled {
-                    Button { path.append(Route.diagnosis(note: "")) } label: { Label("AI diagnosis", systemImage: "sparkles") }
-                }
-                // As arranged: the bar's icons, the rest behind ⋯ (with the arrangement itself).
-                ForEach(barIcons) { action in
-                    Button { path.append(route(action)) } label: {
-                        Label { action.title } icon: { Image(systemName: action.systemImage) }
-                    }
-                    .disabled(!enabled(action))
-                    .demoTourTip(action == .settings ? .settings : .actions,
-                                 active: tourActive && (action == .settings || action == tourActionsAnchor))
-                }
-                Menu {
-                    let menu = bar.menu.filter(offered)
-                    ForEach(menu) { action in
-                        Button { path.append(route(action)) } label: {
-                            Label { action.title } icon: { Image(systemName: action.systemImage) }
-                        }
-                        .disabled(!enabled(action))
-                    }
-                    if !menu.isEmpty { Divider() }
-                    Button { customizing = true } label: { Label("Customize overview", systemImage: "pencil") }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                }
-                .accessibilityLabel(Text("More"))
-                // Settings sits in this menu unless it was made an icon.
-                .demoTourTip(.settings, active: tourActive && !barIcons.contains(.settings))
-            }
-        }
+        .toolbar { overviewToolbar }
         .sheet(isPresented: $customizing) { OverviewEditorSheet(OverviewCard.self, OverviewAction.self, title: "Customize overview", absent: absentCards) }
         .sheet(isPresented: $sharingIncident) {
             if let context = model.activeSummary {
@@ -334,6 +191,108 @@ struct OverviewView: View {
         }
     }
 
+    /// The nodes and cards, or why there are none: no endpoint yet, or no node answering.
+    private var content: some View {
+        Group {
+            // A talosconfig generated before the cluster had addresses: nothing to load yet.
+            if let context = model.activeSummary, context.needsEndpoint {
+                NoEndpointsView(context: context).themedBackground()
+            } else {
+                LoadStateView(state: state, retry: load, fromMonitor: fromMonitor) { overview in
+                    // No node answered (VPN off, another network): one notice instead of a list of red
+                    // nodes, unless they are known from before (then the list, under a banner).
+                    if let outage = overview.outage, !showNodesAnyway, !overview.showsLastKnown {
+                        ClusterUnreachableView(
+                            outage: outage,
+                            endpoints: model.activeSummary?.endpoints ?? [],
+                            retry: load,
+                            showNodes: { showNodesAnyway = true }
+                        )
+                        .themedBackground()
+                    } else {
+                        List {
+                            OverviewBannerSections(
+                                lastKnownOutage: overview.showsLastKnown ? overview.outage : nil,
+                                retry: load,
+                                showsSwitcherTip: tourActive && tourShowsSwitcher,
+                                look: look,
+                                discovered: discovered.count,
+                                showDiscovered: { showDiscovered = true }
+                            )
+                            // The sections as arranged (Customize overview, in the ⋯ menu).
+                            ForEach(layout.visible) { card in section(card, overview: overview) }
+                            // The Talos update section alone, with no release to offer, leaves the list as empty
+                            // (the Pinned one too, without pins).
+                            if layout.visible.allSatisfy({ $0 == .talosUpdate && !offersTalosUpdate || $0 == .pinned && pins.isEmpty }) {
+                                Section {
+                                    Button { customizing = true } label: {
+                                        Text("Every card is hidden. Tap to choose the ones to show.").foregroundStyle(.secondary)
+                                    }
+                                }
+                            }
+                        }
+                        .refreshable {
+                            await load()
+                            // Sites rarely change: the map is only asked again on a pull.
+                            if let client = model.client, outage == nil {
+                                await TopologyStore.shared.load(with: client, key: model.topologyKey, force: true)
+                            }
+                        }
+                        .themedBackground()
+                    }
+                }
+            }
+        }
+    }
+
+    /// The screenshot-mode sign, AI diagnosis, the bar's icons as arranged and the ⋯ menu.
+    @ToolbarContentBuilder
+    private var overviewToolbar: some ToolbarContent {
+        if model.privacyMask {
+            ToolbarItem(placement: .topBarLeading) {
+                // A small icon rather than a label, so it stays out of the way in screenshots.
+                Image(systemName: "eye.slash")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel(Text("Screenshot mode"))
+            }
+        }
+        ToolbarItemGroup(placement: .primaryAction) {
+            // Buttons with labels, not NavigationLinks with images: on a phone the ones that
+            // don't fit fold into the system's "…" menu, where a link does nothing and an image
+            // shows no title.
+            // Optional: only once turned on in the settings.
+            if ai.enabled {
+                Button { path.append(Route.diagnosis(note: "")) } label: { Label("AI diagnosis", systemImage: "sparkles") }
+            }
+            // As arranged: the bar's icons, the rest behind ⋯ (with the arrangement itself).
+            ForEach(barIcons) { action in
+                Button { path.append(route(action)) } label: {
+                    Label { action.title } icon: { Image(systemName: action.systemImage) }
+                }
+                .disabled(!enabled(action))
+                .demoTourTip(action == .settings ? .settings : .actions,
+                             active: tourActive && (action == .settings || action == tourActionsAnchor))
+            }
+            Menu {
+                let menu = bar.menu.filter(offered)
+                ForEach(menu) { action in
+                    Button { path.append(route(action)) } label: {
+                        Label { action.title } icon: { Image(systemName: action.systemImage) }
+                    }
+                    .disabled(!enabled(action))
+                }
+                if !menu.isEmpty { Divider() }
+                Button { customizing = true } label: { Label("Customize overview", systemImage: "pencil") }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            }
+            .accessibilityLabel(Text("More"))
+            // Settings sits in this menu unless it was made an icon.
+            .demoTourTip(.settings, active: tourActive && !barIcons.contains(.settings))
+        }
+    }
+
     /// One of the overview's arranged sections; those that report on something the cluster does
     /// not have stay out (Android's OverviewCard.whenDetected).
     @ViewBuilder
@@ -388,55 +347,14 @@ struct OverviewView: View {
                 FluxSection(state: flux, app: inventoryApps[fluxCatalogID], downNodes: overview.downHostnames)
             }
         case .nodes:
-            nodesSection(overview)
+            OverviewNodesSection(overview: overview, expanded: $nodesExpanded, tourActive: tourActive,
+                                 tourNode: tourActive ? tourDegradedNode(overview)?.node : nil,
+                                 canDetectIPs: canDetectIPs(overview), detectIPs: { confirmDetectIPs = true }, path: $path)
         case .timeDrift:
             // Re-checked with every overview refresh (the load time is the task id).
             TimeDriftSection(hostnames: hostnames, refreshID: loadedAt)
         case .alerts:
             if let alerts { AlertsSection(state: alerts) }
-        }
-    }
-
-    private func nodesSection(_ overview: ClusterOverview) -> some View {
-        Section {
-            // In the map's order, site by site, once the cluster map is loaded.
-            let groups = groupNodes(overview.nodes, by: TopologyStore.shared.topology(for: model.topologyKey))
-            let version = overview.nodes.sharedVersion
-            if isDenseCluster(overview.nodes.count) {
-                // Too many for a chip each: counts, dots, and the problems capped.
-                DenseNodes(groups: groups, path: $path)
-            } else {
-                ForEach(groups) { group in
-                    // Site headers only when there is more than one: a single site says nothing.
-                    if groups.count > 1 { SiteHeader(title: group.title) }
-                    NodeGroupRows(nodes: group.nodes, expanded: nodesExpanded, sharedVersion: version,
-                                  tourNode: tourActive ? tourDegradedNode(overview)?.node : nil, path: $path)
-                }
-            }
-        } header: {
-            HStack {
-                Text("Nodes")
-                    .demoTourTip(.nodes, active: tourActive)
-                Spacer()
-                if model.isDetectingPublicIPs || canDetectIPs(overview) {
-                    DetectPublicIPsButton(running: model.isDetectingPublicIPs) { confirmDetectIPs = true }
-                }
-                Text(verbatim: "\(overview.nodes.count)")
-                if isDenseCluster(overview.nodes.count) || ListDetailLayout.isSplit(sizeClass) {
-                    // A section holding hundreds of rows defeats the overview: a screen instead. On
-                    // an iPad, also the list beside a node's hub.
-                    Button { path.append(.nodes(filter: nil, nodes: overview.nodes.overviewOrder)) } label: {
-                        Image(systemName: "chevron.right")
-                    }
-                    .accessibilityLabel(Text("Show all nodes"))
-                }
-                if !isDenseCluster(overview.nodes.count) {
-                    Button { withAnimation { nodesExpanded.toggle() } } label: {
-                        Image(systemName: nodesExpanded ? "chevron.up" : "chevron.down")
-                    }
-                    .accessibilityLabel(nodesExpanded ? Text("Show less") : Text("Show all"))
-                }
-            }
         }
     }
 
@@ -845,79 +763,5 @@ struct OverviewView: View {
         let discovery = try? await client.discoverNodes()
         guard id == loadID else { return }
         discovered = discovery?.offer(dismissed: model.dismissedNodes(of: model.activeContext)) ?? []
-    }
-}
-
-/// The client certificate expires within certWarnDays (or has expired): renew it (os:admin;
-/// other roles get the role notice there).
-private struct CertExpiryBanner: View {
-    let notAfter: Int64
-
-    var body: some View {
-        let days = daysUntil(notAfter)
-        NavigationLink(value: Route.issueConfig(renew: true)) {
-            Label {
-                Text(days < 0
-                     ? String(localized: "The client certificate expired \(-days) days ago.")
-                     : String(localized: "The client certificate expires in \(days) days. Generate a new talosconfig."))
-            } icon: {
-                Image(systemName: "exclamationmark.triangle.fill")
-            }
-            .foregroundStyle(days < 0 ? Color.red : Color.orange)
-        }
-    }
-}
-
-/// One site's nodes in the overview's nodes section. Collapsed (the default): a chip per node,
-/// one with a problem tinted in its status colour so it stands out without growing the card;
-/// expanded: a full row per node with the details.
-private struct NodeGroupRows: View {
-    let nodes: [NodeOverview]
-    let expanded: Bool
-    let sharedVersion: String?
-    /// The node the demo tour's coach mark points at (its address), if any.
-    var tourNode: String?
-    @Binding var path: [Route]
-
-    var body: some View {
-        if expanded {
-            ForEach(nodes) { node in
-                NodeListRow(node: node, sharedVersion: sharedVersion, path: $path)
-                    .demoTourTip(.degradedNode, active: node.node == tourNode)
-            }
-        } else {
-            ChipFlow(spacing: 8) {
-                ForEach(nodes) { node in
-                    NodeChip(node: node) { path.append(.node(node.ref)) }
-                        .contextMenu { NodeMenu(node: node, path: $path) }
-                        .demoTourTip(.degradedNode, active: node.node == tourNode)
-                }
-            }
-            .buttonStyle(.borderless)
-            .padding(.vertical, 4)
-        }
-    }
-}
-
-/// A node in the collapsed nodes section: its status dot and hostname, the whole chip tinted
-/// when it has a problem since no row spells it out; tap opens it.
-private struct NodeChip: View {
-    let node: NodeOverview
-    let open: () -> Void
-
-    var body: some View {
-        let status = node.status
-        let calm = status == .ready
-        Button(action: open) {
-            HStack(spacing: 6) {
-                Circle().fill(status.color).frame(width: 8, height: 8)
-                Text(verbatim: node.hostname).font(.subheadline).lineLimit(1)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(calm ? Color.secondary.opacity(0.12) : status.color.opacity(0.16), in: Capsule())
-        }
-        .foregroundStyle(calm ? Color.primary : status.color)
-        .accessibilityLabel(Text(verbatim: "\(node.hostname), \(status.label)"))
     }
 }
