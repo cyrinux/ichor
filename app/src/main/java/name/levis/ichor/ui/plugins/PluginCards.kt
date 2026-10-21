@@ -138,7 +138,7 @@ fun PluginRowContent(
             }
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 row.status?.takeIf { it.text.isNotEmpty() }?.let { ToneLabel(it.text, pluginToneColor(it.tone)) }
-                row.trailing?.takeIf { it.text.isNotEmpty() }?.let { Text(it.text, style = MaterialTheme.typography.labelSmall, color = muted, maxLines = 1) }
+                row.trailing?.takeIf { it.text.isNotEmpty() }?.let { Text(it.text, style = MaterialTheme.typography.labelSmall, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
             if (expandable) {
                 Spacer(Modifier.size(4.dp))

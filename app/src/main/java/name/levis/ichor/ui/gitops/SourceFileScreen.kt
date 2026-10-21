@@ -306,7 +306,7 @@ private fun SourceLines(text: String, yaml: Boolean, line: Int? = null, modifier
                         if (yaml) remember(text, colors) { highlightYamlLine(text, colors) } else AnnotatedString(text),
                         style = style,
                         softWrap = false,
-                        maxLines = 1,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis,
                         modifier = if (index + 1 == target) Modifier.fillMaxWidth().background(highlight) else Modifier,
                     )
                 }

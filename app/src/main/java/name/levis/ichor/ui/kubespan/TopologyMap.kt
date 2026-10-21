@@ -190,7 +190,7 @@ private fun SpeedPill(speed: String, onClick: () -> Unit, modifier: Modifier = M
         Text(
             speed,
             style = MaterialTheme.typography.labelSmall,
-            maxLines = 1,
+            maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
         )
     }

@@ -154,8 +154,8 @@ private fun Stats(app: InventoryApp) {
 private fun StatTile(value: String, label: String, modifier: Modifier) {
     Surface(modifier, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-            Text(value, style = MaterialTheme.typography.titleMedium, maxLines = 1)
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            Text(value, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

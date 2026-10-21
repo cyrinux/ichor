@@ -78,7 +78,7 @@ fun DiffChangeBadge(change: DiffChange, count: Int? = null) {
         if (count == null) change.label() else "${change.label()} $count",
         style = MaterialTheme.typography.labelSmall,
         color = color,
-        maxLines = 1,
+        maxLines = 1, overflow = TextOverflow.Ellipsis,
         modifier = Modifier
             .background(color.copy(alpha = 0.14f), RoundedCornerShape(6.dp))
             .padding(horizontal = 6.dp, vertical = 2.dp),

@@ -125,7 +125,7 @@ fun ArgoRolloutStepBar(rollout: ArgoRollout, modifier: Modifier = Modifier) {
                 Box(Modifier.weight(1f).height(height).background(color, RoundedCornerShape(3.dp)))
             }
         }
-        Text(weight, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+        Text(weight, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

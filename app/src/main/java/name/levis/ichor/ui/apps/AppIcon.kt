@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.CustomIcon
@@ -110,7 +111,7 @@ private fun Monogram(app: InventoryApp, size: Dp) {
     val foreground = if (dark) Color.hsl(hue, 0.70f, 0.86f) else Color.hsl(hue, 0.60f, 0.26f)
     val fontSize = with(LocalDensity.current) { (size * TEXT_RATIO).toSp() }
     Box(Modifier.fillMaxSize().background(background), contentAlignment = Alignment.Center) {
-        Text(monogram(app.name), color = foreground, fontSize = fontSize, fontWeight = FontWeight.SemiBold, maxLines = 1)
+        Text(monogram(app.name), color = foreground, fontSize = fontSize, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.components
 
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,6 +53,8 @@ fun MeterRow(label: String, fraction: Float, value: String, modifier: Modifier =
             style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
+            // A number: it shrinks on a narrow phone or a large font rather than lose a digit.
+            autoSize = TextAutoSize.StepBased(minFontSize = 9.sp, maxFontSize = MaterialTheme.typography.bodySmall.fontSize),
             modifier = Modifier.weight(0.15f),
         )
     }

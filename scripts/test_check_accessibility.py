@@ -94,5 +94,27 @@ IconButton(onClick = {
         self.assertEqual(check.unlabeled_icon_buttons(src), [5])
 
 
+
+class SingleLineTextTest(unittest.TestCase):
+    def test_single_line_without_overflow(self):
+        src = """Text(name, maxLines = 1)
+Text(
+    name,
+    style = MaterialTheme.typography.bodySmall,
+    maxLines = 1,
+)
+Text(name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+Text(name, maxLines = 12)
+"""
+        self.assertEqual(check.single_line_texts_without_overflow(src), [1, 2])
+
+    def test_other_calls_are_not_texts(self):
+        src = """OutlinedTextField(value, onChange, maxLines = 1)
+MutedText(name, maxLines = 1)
+BasicText(name, maxLines = 1)
+Text(value, maxLines = 1, autoSize = TextAutoSize.StepBased())
+"""
+        self.assertEqual(check.single_line_texts_without_overflow(src), [3])
+
 if __name__ == "__main__":
     unittest.main()

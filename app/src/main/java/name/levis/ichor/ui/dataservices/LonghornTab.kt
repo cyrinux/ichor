@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
 import name.levis.ichor.model.LonghornAction
@@ -166,7 +167,7 @@ private fun VolumeFilterRow(selected: VolumeFilter, onSelect: (VolumeFilter) -> 
                 selected = selected == value,
                 onClick = { onSelect(value) },
                 shape = SegmentedButtonDefaults.itemShape(i, options.size),
-            ) { Text(label, maxLines = 1) }
+            ) { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
     }
 }
