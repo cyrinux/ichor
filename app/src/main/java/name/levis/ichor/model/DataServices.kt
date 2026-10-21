@@ -82,10 +82,13 @@ val DataServiceKind.alertSystem: String
 fun dataServiceKindOf(alertSystem: String): DataServiceKind? =
     DataServiceKind.entries.firstOrNull { it.alertSystem == alertSystem }
 
-/** The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs. */
-fun Inventory.dataServiceHints(): String {
+/**
+ * The catalog ids among the inventory's apps, for KubeDataServices and the Data services plugins:
+ * the native systems', then those of [plugins]' Data services plugins (rook, mariadb...); "" when none runs.
+ */
+fun Inventory.dataServiceHints(plugins: PluginCatalog = PluginCatalog()): String {
     val ids = apps.map { it.id }.toSet()
-    return DataServiceKind.entries.map { it.catalogId }.filter { it in ids }.joinToString(",")
+    return (DataServiceKind.entries.map { it.catalogId } + plugins.dataServiceCatalogIds).distinct().filter { it in ids }.joinToString(",")
 }
 
 /** The installed systems, in display order. */

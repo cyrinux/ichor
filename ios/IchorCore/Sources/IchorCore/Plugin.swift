@@ -710,23 +710,34 @@ public struct PluginCatalog: Decodable, Equatable, Sendable {
 
     /// The built-in plugins: the app's own, read-only in Settings.
     public var builtins: [PluginCatalogItem] { items.filter { !$0.user } }
+
+    /// The app catalog ids of the Data services plugins (rook, mariadb...), for the inventory hints.
+    public var dataServiceCatalogIDs: [String] {
+        items.filter { $0.category == pluginCategoryDataServices }.map(\.catalogID).filter { !$0.isEmpty }
+    }
 }
 
 public struct PluginCatalogItem: Decodable, Equatable, Sendable {
     public let id: String
     public let name: String
     public let category: String
+    /// The app catalog id the inventory shows when the product runs; "" for none.
+    public let catalogID: String
     public let resources: [PluginCatalogResource]
     /// Imported by the user (PluginUserImport), not a built-in.
     public let user: Bool
 
-    private enum CodingKeys: String, CodingKey { case id, name, category, resources, user }
+    private enum CodingKeys: String, CodingKey {
+        case id, name, category, resources, user
+        case catalogID = "catalogId"
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.field(.id, "")
         name = try c.field(.name, "")
         category = try c.field(.category, "")
+        catalogID = try c.field(.catalogID, "")
         resources = try c.field(.resources, [])
         user = try c.field(.user, false)
     }

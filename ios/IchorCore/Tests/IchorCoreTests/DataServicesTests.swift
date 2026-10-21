@@ -96,6 +96,28 @@ final class DataServicesTests: XCTestCase {
         XCTAssertEqual(dataServiceHints(other), "")
     }
 
+    func testHintsIncludeTheDataServicesPlugins() throws {
+        let catalog = try TalosJSON.decode(PluginCatalog.self, from: #"""
+        {"items":[{"id":"rook-ceph","category":"data-services","catalogId":"rook"},
+        {"id":"mariadb","category":"data-services","catalogId":"mariadb"},
+        {"id":"external-dns","category":"networking","catalogId":"external-dns"},
+        {"id":"no-pods","category":"data-services"}]}
+        """#)
+        XCTAssertEqual(catalog.dataServiceCatalogIDs, ["rook", "mariadb"])
+        func inventory(_ ids: [String]) throws -> ClusterInventory {
+            let apps = ids.map { #"{"id":"\#($0)","name":"\#($0)"}"# }.joined(separator: ",")
+            return try TalosJSON.decode(ClusterInventory.self, from: #"{"apps":[\#(apps)]}"#)
+        }
+        // A cluster whose only data service is a plugin: hinted, so the overview reads Data services.
+        XCTAssertEqual(dataServiceHints(try inventory(["rook", "nginx"]), plugins: catalog), "rook")
+        XCTAssertEqual(dataServiceHints(try inventory(["mariadb"]), plugins: catalog), "mariadb")
+        XCTAssertEqual(dataServiceHints(try inventory(["rook", "longhorn"]), plugins: catalog), "longhorn,rook")
+        // Without the catalog (not read yet), only the native systems count.
+        XCTAssertEqual(dataServiceHints(try inventory(["rook"])), "")
+        // A plugin of another category, or no data service at all: none.
+        XCTAssertEqual(dataServiceHints(try inventory(["external-dns", "nginx"]), plugins: catalog), "")
+    }
+
     func testLikelyCausePointsToTheNodeThatIsDown() throws {
         let s = try services
         // node-3 is not ready for Longhorn: the faulted volume, the Garage cluster missing a node

@@ -29,6 +29,9 @@ struct OverviewView: View {
     /// The active CRD plugins of Data services (kube-green...), asked with the same hints; their
     /// lines join the card. Empty until they answer, or when they cannot be asked.
     @State private var dataPlugins: [PluginDetectItem] = []
+    /// The installed plugins (no cluster call, see PluginCatalogCache): those of Data services
+    /// (Rook, MariaDB...) hint the card too.
+    @State private var pluginCatalog = PluginCatalog()
     /// Argo CD: only asked when the inventory shows it and the role may use the Kubernetes API.
     @State private var argo: LoadState<ArgoStatus>?
     /// Flux: likewise, only when the inventory shows it.
@@ -771,11 +774,15 @@ struct OverviewView: View {
         flux = (flux ?? .loading).refreshed(with: loaded)
     }
 
-    /// Only for clusters whose inventory shows Longhorn, Garage, CloudNativePG or another data service, and roles
-    /// that may use the Kubernetes API: others make no Kubernetes call. A failed refresh keeps what was
-    /// shown (with its error noted).
+    /// Only for clusters whose inventory shows Longhorn, Garage, CloudNativePG or another data service
+    /// (a Data services plugin's app among them), and roles that may use the Kubernetes API: others make
+    /// no Kubernetes call. A failed refresh keeps what was shown (with its error noted).
     private func loadDataServices(with client: TalosClient, id: String, inventory apps: ClusterInventory) async {
-        let hints = dataServiceHints(apps)
+        var catalog = PluginCatalog()
+        if model.allows(.workloads) { catalog = await PluginCatalogCache.load(with: client) }
+        guard id == loadID else { return }
+        pluginCatalog = catalog
+        let hints = dataServiceHints(apps, plugins: catalog)
         guard model.allows(.workloads), !hints.isEmpty else {
             dataServices = nil
             dataPlugins = []
@@ -821,7 +828,7 @@ struct OverviewView: View {
         guard case .loaded(let apps, _, _) = inventory else { return known }
         let kubernetes = model.allows(.workloads)
         var absent: Set<OverviewCard> = known
-        if !kubernetes || dataServiceHints(apps).isEmpty { absent.insert(.dataServices) }
+        if !kubernetes || dataServiceHints(apps, plugins: pluginCatalog).isEmpty { absent.insert(.dataServices) }
         if !kubernetes || !argoCDHinted(apps) { absent.insert(.argoCD) }
         if !kubernetes || !fluxHinted(apps) { absent.insert(.flux) }
         return absent

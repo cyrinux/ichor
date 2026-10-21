@@ -24,6 +24,8 @@ type pluginCatalogItem struct {
 	Version   string                  `json:"version"`
 	Resources []pluginCatalogResource `json:"resources"`
 	Actions   []pluginCatalogAction   `json:"actions"`
+	// CatalogID is the app catalog id the inventory shows when the product runs ("" for none).
+	CatalogID string `json:"catalogId"`
 	// User is an imported plugin (PluginUserImport), not a built-in.
 	User bool `json:"user"`
 }
@@ -51,7 +53,7 @@ type pluginCatalogAction struct {
 }
 
 // PluginCatalog lists the installed plugins, the built-ins then the enabled user plugins:
-// {"items":[{id,name,icon,website,category,screen,version,resources:[…],actions:[…],user}]}.
+// {"items":[{id,name,icon,website,category,screen,version,resources:[…],actions:[…],catalogId,user}]}.
 func PluginCatalog() (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -78,7 +80,7 @@ func pluginCatalogItemOf(c *plugin.Compiled) pluginCatalogItem {
 	p := c.Plugin
 	item := pluginCatalogItem{
 		ID: p.ID, Name: p.Name, Icon: p.Icon, Website: p.Website,
-		Category: orDefault(p.Category, "data-services"), Screen: p.Screen, Version: p.SchemaVersion,
+		Category: orDefault(p.Category, "data-services"), Screen: p.Screen, Version: p.SchemaVersion, CatalogID: p.CatalogID,
 		Resources: []pluginCatalogResource{}, Actions: []pluginCatalogAction{},
 	}
 

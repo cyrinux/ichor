@@ -134,10 +134,13 @@ public extension DataServiceKind {
     var opensAlone: Bool { family != .data }
 }
 
-/// The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs.
-public func dataServiceHints(_ inventory: ClusterInventory) -> String {
+/// The catalog ids among the inventory's apps, for KubeDataServices and the Data services plugins:
+/// the native systems', then those of `plugins`' Data services plugins (rook, mariadb...); "" when none runs.
+public func dataServiceHints(_ inventory: ClusterInventory, plugins: PluginCatalog = PluginCatalog()) -> String {
     let ids = Set(inventory.apps.map(\.id))
-    return DataServiceKind.allCases.map(\.catalogID).filter(ids.contains).joined(separator: ",")
+    var seen: Set<String> = []
+    let candidates = DataServiceKind.allCases.map(\.catalogID) + plugins.dataServiceCatalogIDs
+    return candidates.filter { ids.contains($0) && seen.insert($0).inserted }.joined(separator: ",")
 }
 
 /// One system at a glance: items, how many need attention, the worst health, the error if unreadable.

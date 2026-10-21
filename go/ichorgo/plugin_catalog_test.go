@@ -97,7 +97,7 @@ func TestPluginCatalog(t *testing.T) {
 		`"resources":[{"group":"kube-green.com","version":"v1alpha1","resource":"sleepinfos","kind":"SleepInfo","reveal":false},` +
 		`{"group":"","version":"v1","resource":"secrets","kind":"Secret","reveal":false}],` +
 		`"actions":[{"id":"wakeNow","label":"Wake up now","verb":"mergePatch","rbac":["patch"],"rbacResource":"sleepinfos","confirm":"plain"}],` +
-		`"user":false}]}`
+		`"catalogId":"kube-green","user":false}]}`
 	if got != want {
 		t.Fatalf("catalog\n got %s\nwant %s", got, want)
 	}

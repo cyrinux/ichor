@@ -326,6 +326,10 @@ data class PluginCatalog(val items: List<PluginCatalogItem> = emptyList()) {
 
     /** The built-in plugins: the app's own, read-only in Settings. */
     val builtins: List<PluginCatalogItem> get() = items.filterNot { it.user }
+
+    /** The app catalog ids of the Data services plugins (rook, mariadb...), for the inventory hints. */
+    val dataServiceCatalogIds: List<String>
+        get() = items.filter { it.category == PLUGIN_CATEGORY_DATA_SERVICES }.map { it.catalogId }.filter { it.isNotEmpty() }
 }
 
 @Serializable
@@ -333,6 +337,8 @@ data class PluginCatalogItem(
     val id: String = "",
     val name: String = "",
     val category: String = "",
+    /** The app catalog id the inventory shows when the product runs; "" for none. */
+    val catalogId: String = "",
     val website: String = "",
     val version: String = "",
     val resources: List<PluginCatalogResource> = emptyList(),
