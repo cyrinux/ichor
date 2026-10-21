@@ -89,19 +89,22 @@ type talosRepoCompare struct {
 // "note"}. A node file sets the node's hostname (machine.network.hostname, a HostnameConfig
 // document) or is named after it; a shared file is any other Talos patch that is not another
 // node's; with a talconfig.yaml that lists the node, its patches in talhelper's order instead;
-// secrets files (SOPS, keys) are listed but never applied. kind says which, why the rule.
+// secrets files (SOPS, keys) are listed but never applied. kind says which, why the rule. A
+// repository too large for a snapshot has talosDir alone read through the forge (refused
+// when talosDir is blank), which note says.
 func TalosRepoFiles(hostJSON, repoURL, ref, talosDir, hostname, role string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	hostname = privacy.unmaskNode(hostname)
 
-	snap, _, err := loadRepoSnapshot(hostJSON, repoURL, ref)
+	repo, err := readTalosRepo(hostJSON, repoURL, ref, talosDirReader(talosDir))
 	if err != nil {
 		return "", err
 	}
 
-	found := findTalosRepoFiles(snap.files, talosDir, hostname, role)
-	found.SHA = snap.sha
+	found := findTalosRepoFiles(repo.files, talosDir, hostname, role)
+	found.SHA = repo.sha
+	found.Note = strings.TrimSpace(repo.note + " " + found.Note)
 
 	return toJSON(found)
 }
@@ -112,8 +115,9 @@ func TalosRepoFiles(hostJSON, repoURL, ref, talosDir, hostname, role string) (ou
 // "needsReboot","skipped":[{"path","why"}],"draft"}. The config is read with its secrets
 // (os:admin) and redacted before anything leaves Go; a patch that does not load, still holds
 // a ${...} placeholder or sets a secret is skipped. The node checks the patched config with an
-// ApplyConfiguration dry run, which also says whether applying it needs a reboot. Refused in
-// privacy mode.
+// ApplyConfiguration dry run, which also says whether applying it needs a reboot. On a
+// repository too large for a snapshot, only the chosen files are read from the forge. Refused
+// in privacy mode.
 func TalosRepoCompare(configYAML, contextName, hostJSON, repoURL, ref, node, hostname, patchPathsJSON string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -128,7 +132,7 @@ func TalosRepoCompare(configYAML, contextName, hostJSON, repoURL, ref, node, hos
 		return "", errTalosRepoNoFiles
 	}
 
-	snap, _, err := loadRepoSnapshot(hostJSON, repoURL, ref)
+	snap, err := readTalosRepo(hostJSON, repoURL, ref, talosPathsReader(paths))
 	if err != nil {
 		return "", err
 	}
