@@ -5525,4 +5525,6 @@
     <string name="staged_marker">Preparato</string>
     <string name="staged_full">Una pull request contiene al massimo 20 file.</string>
     <string name="staged_changed_upstream">Questo file è cambiato sul branch da quando è stato preparato: si apre com\'è ora, senza la modifica preparata.</string>
+    <string name="talos_writeback_node">Proponi in Git per %1$s</string>
+    <string name="talos_writeback_multi_desc">Scrivi la modifica nel file di ogni nodo del repository del cluster: una pull request per nodo.</string>
 </resources>

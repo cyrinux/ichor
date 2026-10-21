@@ -5768,4 +5768,6 @@
     <string name="staged_marker">Підготовлено</string>
     <string name="staged_full">Pull request містить щонайбільше 20 файлів.</string>
     <string name="staged_changed_upstream">Цей файл змінився на гілці після підготовки: він відкривається як є зараз, без підготовленої зміни.</string>
+    <string name="talos_writeback_node">Запропонувати в Git для %1$s</string>
+    <string name="talos_writeback_multi_desc">Запишіть зміну у файл кожного вузла в репозиторії кластера: один pull request на вузол.</string>
 </resources>

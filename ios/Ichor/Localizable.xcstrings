@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Propose in Git for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proposer dans Git pour %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proponer en Git para %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Git vorschlagen für %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proponi in Git per %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запропонувати в Git для %@"
+          }
+        }
+      }
+    },
+    "Write the change into each node's file of the cluster repository: one pull request per node." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Écrivez la modification dans le fichier de chaque nœud du dépôt du cluster : une pull request par nœud."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escribe el cambio en el archivo de cada nodo del repositorio del clúster: una pull request por nodo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schreibe die Änderung in die Datei jedes Nodes im Cluster-Repository: ein Pull Request pro Node."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scrivi la modifica nel file di ogni nodo del repository del cluster: una pull request per nodo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запишіть зміну у файл кожного вузла в репозиторії кластера: один pull request на вузол."
+          }
+        }
+      }
+    },
     "This file changed on the branch since it was staged: it opens as it is now, without the staged edit." : {
       "extractionState" : "manual",
       "localizations" : {

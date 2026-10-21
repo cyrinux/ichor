@@ -5525,4 +5525,6 @@
     <string name="staged_marker">Preparado</string>
     <string name="staged_full">Una pull request lleva como máximo 20 archivos.</string>
     <string name="staged_changed_upstream">Este archivo cambió en la rama desde que se preparó: se abre tal como está, sin el cambio preparado.</string>
+    <string name="talos_writeback_node">Proponer en Git para %1$s</string>
+    <string name="talos_writeback_multi_desc">Escribe el cambio en el archivo de cada nodo del repositorio del clúster: una pull request por nodo.</string>
 </resources>
