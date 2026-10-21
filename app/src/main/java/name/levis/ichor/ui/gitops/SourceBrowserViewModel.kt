@@ -13,6 +13,7 @@ import name.levis.ichor.R
 import name.levis.ichor.data.GitHostMissing
 import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.data.MachineConfigRepository
+import name.levis.ichor.data.StagedEdits
 import name.levis.ichor.model.GitFile
 import name.levis.ichor.model.GitRepoSearch
 import name.levis.ichor.model.GitSource
@@ -76,9 +77,12 @@ internal suspend fun GitOpsRepository.sourceOf(target: SourceTarget): GitSource 
 /**
  * The source browser: the app's source read once per [load] key (the context and config
  * generation), then one directory at a time. The directories walked are kept, so back goes up
- * the way the user came down before leaving the screen.
+ * the way the user came down before leaving the screen. The cluster repository's files staged
+ * for one pull request are [staged]'s.
  */
-class SourceBrowserViewModel(private val gitOps: GitOpsRepository) : ViewModel() {
+class SourceBrowserViewModel(private val gitOps: GitOpsRepository, stagedEdits: StagedEdits? = null) : ViewModel() {
+    /** The Staged changes sheet, null when nothing can be staged. */
+    val staged: StagedChanges? = stagedEdits?.let { StagedChanges(gitOps, it, viewModelScope) }
     private val _source = MutableStateFlow<UiState<GitSource>>(UiState.Loading)
     val source: StateFlow<UiState<GitSource>> = _source.asStateFlow()
     private val _listing = MutableStateFlow(SourceListing())
@@ -158,6 +162,7 @@ class SourceBrowserViewModel(private val gitOps: GitOpsRepository) : ViewModel()
         sourceJob = viewModelScope.launch {
             try {
                 val src = gitOps.sourceOf(t)
+                if (t == SourceTarget.Repo) staged?.attach(src)
                 _source.value = UiState.Loaded(src)
                 if (src.readPath != SourceReadPath.NONE) list(cleanSourceDir(startDir ?: src.path))
             } catch (e: CancellationException) {

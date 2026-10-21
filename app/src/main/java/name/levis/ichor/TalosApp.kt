@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import name.levis.ichor.data.KubePermissions
 import name.levis.ichor.data.BackupManager
 import name.levis.ichor.data.ClusterRepoStore
+import name.levis.ichor.data.StagedEdits
 import name.levis.ichor.data.ProposalsStore
 import name.levis.ichor.data.AiPreferences
 import name.levis.ichor.data.CaptureRepository
@@ -171,6 +172,9 @@ class TalosApp : Application() {
 
     /** The pull requests opened from the phone, per cluster; no token in them. */
     val proposals by lazy { ProposalsStore(getSharedPreferences(ProposalsStore.FILE, Context.MODE_PRIVATE)) }
+
+    /** Edits staged in the repository browser for one pull request: this session only. */
+    val stagedEdits by lazy { StagedEdits() }
 
     /** The Git repository saved for each cluster (its Talos and Kubernetes config); no token in it. */
     val clusterRepos by lazy { ClusterRepoStore(getSharedPreferences(ClusterRepoStore.FILE, Context.MODE_PRIVATE)) }

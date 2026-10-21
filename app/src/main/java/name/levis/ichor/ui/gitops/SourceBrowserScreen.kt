@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.gitops
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
 import androidx.compose.material.icons.outlined.Lock
@@ -38,6 +40,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.stagedKeyOf
 import name.levis.ichor.model.GitEntry
 import name.levis.ichor.model.GitSource
 import name.levis.ichor.model.GitTree
@@ -69,7 +74,9 @@ import name.levis.ichor.util.formatBytes
  * repository, the followed ref and the commit, a breadcrumb up to the repository root, then the
  * directory's folders and files. Opens at [startDir] (null: the source's own path). Flux reads
  * the source-controller's artifact; Argo CD reads the Git host with its saved token, and without
- * one says so with a shortcut to Settings ([onAddToken]).
+ * one says so with a shortcut to Settings ([onAddToken]). In the cluster repository, files staged
+ * from the editor carry a dot and a chip opens them as one pull request ([onEditFile] opens one
+ * again in the editor).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,13 +88,16 @@ fun SourceBrowserScreen(
     onAddToken: (() -> Unit)?,
     /** A Find in repository hit: the file at that line. */
     onHit: (String, Int) -> Unit = { path, _ -> onFile(path) },
+    /** A staged file opened again in the editor. */
+    onEditFile: (String) -> Unit = onFile,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
-    val vm: SourceBrowserViewModel = viewModel(factory = factory { SourceBrowserViewModel(talos.gitOpsRepository) })
+    val vm: SourceBrowserViewModel = viewModel(factory = factory { SourceBrowserViewModel(talos.gitOpsRepository, talos.stagedEdits) })
     val source by vm.source.collectAsStateWithLifecycle()
     val listing by vm.listing.collectAsStateWithLifecycle()
     val trail by vm.trail.collectAsStateWithLifecycle()
     val search by vm.search.collectAsStateWithLifecycle()
+    val allStaged by talos.stagedEdits.files.collectAsStateWithLifecycle()
     val config by talos.configRepository.config.collectAsStateWithLifecycle()
     val generation by talos.configRepository.generation.collectAsStateWithLifecycle()
     LaunchedEffect(config?.activeContext, generation) { vm.load(target, startDir, config?.activeContext to generation) }
@@ -137,7 +147,12 @@ fun SourceBrowserScreen(
                 ?: ErrorBox(s.message, vm::refresh, modifier)
             is UiState.Loaded -> Column(modifier.fillMaxSize()) {
                 val src = s.data
+                val stagedFiles = if (target == SourceTarget.Repo) allStaged[stagedKeyOf(src)].orEmpty() else emptyList()
                 SourceHeader(src, (listing.tree as? UiState.Loaded)?.data)
+                vm.staged?.let { staged ->
+                    if (stagedFiles.isNotEmpty()) StagedChip(stagedFiles.size, staged::open, Modifier.padding(horizontal = 16.dp))
+                    StagedSheets(staged, src.tracked, onEdit = onEditFile)
+                }
                 if (src.readPath == SourceReadPath.NONE) {
                     NotBrowsable(src)
                 } else if (search.open) {
@@ -148,6 +163,7 @@ fun SourceBrowserScreen(
                     HorizontalDivider()
                     Listing(
                         src, listing, onDir = vm::open, onFile = onFile, onAddToken = onAddToken, onRetry = vm::refresh,
+                        staged = stagedFiles.map { it.path }.toSet(),
                         // The cluster repository's root lists the pull requests opened from the phone on it.
                         header = if (target == SourceTarget.Repo && listing.dir.isEmpty()) {
                             { ProposalsCard(talos.gitOpsRepository, "", "", "", "", refresh = src.revision) }
@@ -204,6 +220,7 @@ private fun Listing(
     onAddToken: (() -> Unit)?,
     onRetry: () -> Unit,
     header: (@Composable () -> Unit)? = null,
+    staged: Set<String> = emptySet(),
 ) {
     val host = listing.missingHost
     if (host != null) {
@@ -219,7 +236,7 @@ private fun Listing(
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 4.dp)) {
                 header?.let { h -> item(key = "header") { Box(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { h() } } }
                 items(t.data.entries, key = { it.path }) { entry ->
-                    EntryRow(entry) { if (entry.isDir) onDir(entry.path) else onFile(entry.path) }
+                    EntryRow(entry, staged = entry.path in staged) { if (entry.isDir) onDir(entry.path) else onFile(entry.path) }
                 }
             }
         }
@@ -227,7 +244,7 @@ private fun Listing(
 }
 
 @Composable
-private fun EntryRow(entry: GitEntry, onClick: () -> Unit) {
+private fun EntryRow(entry: GitEntry, staged: Boolean = false, onClick: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
@@ -247,6 +264,10 @@ private fun EntryRow(entry: GitEntry, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f).padding(start = 12.dp),
         )
+        if (staged) {
+            val label = stringResource(R.string.staged_marker)
+            Box(Modifier.padding(start = 8.dp).size(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape).semantics { contentDescription = label })
+        }
         if (entry.sops) {
             Icon(
                 Icons.Outlined.Lock,
@@ -271,5 +292,33 @@ private fun NotBrowsable(src: GitSource) {
     }
     EmptyState(Icons.Outlined.FolderOpen, text) {
         if (src.webURL.isNotEmpty()) OpenInBrowserButton { openUrl(context, web(src.webURL)) }
+    }
+}
+
+/** The Staged changes sheet, then the pull request sheet for all the files (the source follows [tracked]). */
+@Composable
+private fun StagedSheets(staged: StagedChanges, tracked: String, onEdit: (String) -> Unit) {
+    val state by staged.state.collectAsStateWithLifecycle()
+    val form = state.form
+    when {
+        form != null && state.formOpen -> ProposeSheet(
+            form = form,
+            tracked = tracked,
+            reloading = false,
+            onChange = staged::changeForm,
+            onPropose = staged::propose,
+            onReload = {},
+            onDismiss = staged::closeForm,
+        )
+        state.open -> StagedChangesSheet(
+            state,
+            onEdit = { path ->
+                staged.close()
+                onEdit(path)
+            },
+            onRemove = staged::remove,
+            onPropose = staged::openForm,
+            onDismiss = staged::close,
+        )
     }
 }

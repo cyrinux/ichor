@@ -1,8 +1,11 @@
 package name.levis.ichor.ui.gitops
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
@@ -70,13 +73,22 @@ import name.levis.ichor.ui.theme.LocalStatusColors
  * with it: the YAML editor (schema help for a Kubernetes manifest), Review (the text diff),
  * Continue (the pull request sheet), then the request's link. Back with unsaved changes asks
  * before discarding them. A [quick] edit (from the file's Quick edit) is applied to the file as
- * read and opens on its review, the pull request titled after it.
+ * read and opens on its review, the pull request titled after it. In the cluster repository the
+ * review also offers Stage: the draft waits with other files for one pull request, and
+ * [onStaged] goes back to the browser.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SourceEditScreen(target: SourceTarget, path: String, onBack: () -> Unit, onAddToken: (() -> Unit)?, quick: QuickEdit? = null) {
+fun SourceEditScreen(
+    target: SourceTarget,
+    path: String,
+    onBack: () -> Unit,
+    onAddToken: (() -> Unit)?,
+    quick: QuickEdit? = null,
+    onStaged: () -> Unit = onBack,
+) {
     val talos = LocalContext.current.applicationContext as TalosApp
-    val vm: SourceEditViewModel = viewModel(factory = factory { SourceEditViewModel(talos.gitOpsRepository, talos.kubeBrowser) })
+    val vm: SourceEditViewModel = viewModel(factory = factory { SourceEditViewModel(talos.gitOpsRepository, talos.kubeBrowser, talos.stagedEdits) })
     val state by vm.state.collectAsStateWithLifecycle()
     val help by vm.help.collectAsStateWithLifecycle()
     val config by talos.configRepository.config.collectAsStateWithLifecycle()
@@ -171,6 +183,11 @@ fun SourceEditScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
                             check = e.check,
                             onRetryCheck = vm::check,
                             sopsCheck = e.sops,
+                            onStage = if (e.stageable) {
+                                { if (vm.stage()) onStaged() else Toast.makeText(talos, R.string.staged_full, Toast.LENGTH_SHORT).show() }
+                            } else {
+                                null
+                            },
                         )
                         else -> Column(modifier) {
                             // A quick edit that did not apply to the branch's file says why.
@@ -199,7 +216,11 @@ fun SourceEditScreen(target: SourceTarget, path: String, onBack: () -> Unit, onA
     }
 }
 
-/** What the draft changes, as a unified diff; Continue opens the pull request sheet. */
+/**
+ * What the draft changes, as a unified diff; Continue opens the pull request sheet, [onStage]
+ * (when offered) keeps the draft for a pull request with other files.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun EditReview(
     review: UiState<FluxDiff>,
@@ -211,6 +232,7 @@ private fun EditReview(
     check: UiState<GitOpsEditCheck>? = null,
     onRetryCheck: () -> Unit = {},
     sopsCheck: UiState<SopsWarning>? = null,
+    onStage: (() -> Unit)? = null,
 ) {
     when (review) {
         UiState.Loading -> Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -234,19 +256,28 @@ private fun EditReview(
             }
             // A clear-text secret where .sops.yaml encrypts: asked once more before the pull request.
             val sops = (sopsCheck as? UiState.Loaded)?.data?.takeIf { it.warn }
-            var confirmingSops by remember { mutableStateOf(false) }
-            if (confirmingSops && sops != null) {
+            // What waits for the confirmation: true for Stage, false for Continue.
+            var confirmingSops by remember { mutableStateOf<Boolean?>(null) }
+            val staging = confirmingSops
+            if (staging != null && sops != null) {
                 ConfirmDialog(
                     title = stringResource(R.string.sops_confirm_title),
                     text = stringResource(R.string.sops_confirm_text, sopsWhat(sops), sops.rule.pathRegex),
-                    confirm = stringResource(R.string.gitops_edit_continue),
+                    confirm = stringResource(if (staging) R.string.staged_stage else R.string.gitops_edit_continue),
                     onConfirm = {
-                        confirmingSops = false
-                        onContinue()
+                        confirmingSops = null
+                        if (staging) onStage?.invoke() else onContinue()
                     },
-                    onDismiss = { confirmingSops = false },
+                    onDismiss = { confirmingSops = null },
                     destructive = true,
                 )
+            }
+            val guarded = { stage: Boolean ->
+                when {
+                    sops != null -> confirmingSops = stage
+                    stage -> onStage?.invoke()
+                    else -> onContinue()
+                }
             }
             Column(modifier.fillMaxSize().imePadding()) {
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)) {
@@ -256,14 +287,20 @@ private fun EditReview(
                     sops?.let { SopsWarningText(it, Modifier.padding(top = 16.dp)) }
                     check?.let { EditCheckSection(it, onRetry = onRetryCheck, modifier = Modifier.padding(top = 16.dp)) }
                 }
-                Row(
+                FlowRow(
                     Modifier.padding(16.dp).navigationBarsPadding(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    itemVerticalAlignment = Alignment.CenterVertically,
                 ) {
                     OutlinedButton(onClick = onBack) { Text(stringResource(R.string.kb_back_to_editor)) }
-                    // Waits for the .sops.yaml read (a quick one), never for the build.
-                    Button(onClick = { if (sops != null) confirmingSops = true else onContinue() }, enabled = sopsCheck != UiState.Loading) {
+                    // Both wait for the .sops.yaml read (a quick one), never for the build.
+                    if (onStage != null) {
+                        OutlinedButton(onClick = { guarded(true) }, enabled = sopsCheck != UiState.Loading) {
+                            Text(stringResource(R.string.staged_stage))
+                        }
+                    }
+                    Button(onClick = { guarded(false) }, enabled = sopsCheck != UiState.Loading) {
                         Text(stringResource(R.string.gitops_edit_continue))
                     }
                     // The pull request can still be opened: the person decides.

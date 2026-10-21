@@ -5530,4 +5530,12 @@
     <string name="sops_confirm_text">%1$s se confirmaría en texto claro en una ruta que la regla %2$s cifra. Cífrelo antes con sops en un ordenador, salvo que sea intencionado.</string>
     <string name="sops_what_secret">un Secret de Kubernetes</string>
     <string name="sops_what_talos">secretos de Talos</string>
+    <string name="staged_stage">Preparar</string>
+    <string name="staged_title">Cambios preparados</string>
+    <string name="staged_chip">Cambios preparados (%1$s)</string>
+    <string name="staged_session_note">Se guardan hasta cerrar la app. Abre una sola pull request para todos.</string>
+    <string name="staged_remove">Quitar de la pull request</string>
+    <string name="staged_marker">Preparado</string>
+    <string name="staged_full">Una pull request lleva como máximo 20 archivos.</string>
+    <string name="staged_changed_upstream">Este archivo cambió en la rama desde que se preparó: se abre tal como está, sin el cambio preparado.</string>
 </resources>

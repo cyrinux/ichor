@@ -120,8 +120,22 @@ public struct GitProposalDefaults: Decodable, Equatable, Sendable {
     }
 }
 
+/// One file of a pull request with several: its new content, fileSha as for GitProposal.
+public struct GitProposalFile: Codable, Equatable, Sendable {
+    public let path: String
+    public let content: String
+    public let fileSha: String
+
+    public init(path: String, content: String, fileSha: String) {
+        self.path = path
+        self.content = content
+        self.fileSha = fileSha
+    }
+}
+
 /// One file committed on a new branch from baseRef, and the request opened from it
-/// (GitForgePropose's options).
+/// (GitForgePropose's options). With files, those files instead (path, content and fileSha
+/// left empty): one pull request for all.
 public struct GitProposal: Codable, Equatable, Sendable {
     public let repoURL: String
     public let baseRef: String
@@ -135,9 +149,11 @@ public struct GitProposal: Codable, Equatable, Sendable {
     public let title: String
     public let body: String
     public let draft: Bool
+    /// Sent only when there are: the Go core refuses an empty list.
+    public let files: [GitProposalFile]
 
     public init(repoURL: String, baseRef: String, path: String, content: String, fileSha: String, message: String,
-                branch: String, title: String, body: String, draft: Bool) {
+                branch: String, title: String, body: String, draft: Bool, files: [GitProposalFile] = []) {
         self.repoURL = repoURL
         self.baseRef = baseRef
         self.path = path
@@ -148,6 +164,39 @@ public struct GitProposal: Codable, Equatable, Sendable {
         self.title = title
         self.body = body
         self.draft = draft
+        self.files = files
+    }
+
+    enum CodingKeys: String, CodingKey { case repoURL, baseRef, path, content, fileSha, message, branch, title, body, draft, files }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        repoURL = try c.field(.repoURL, "")
+        baseRef = try c.field(.baseRef, "")
+        path = try c.field(.path, "")
+        content = try c.field(.content, "")
+        fileSha = try c.field(.fileSha, "")
+        message = try c.field(.message, "")
+        branch = try c.field(.branch, "")
+        title = try c.field(.title, "")
+        body = try c.field(.body, "")
+        draft = try c.field(.draft, false)
+        files = try c.field(.files, [])
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(repoURL, forKey: .repoURL)
+        try c.encode(baseRef, forKey: .baseRef)
+        try c.encode(path, forKey: .path)
+        try c.encode(content, forKey: .content)
+        try c.encode(fileSha, forKey: .fileSha)
+        try c.encode(message, forKey: .message)
+        try c.encode(branch, forKey: .branch)
+        try c.encode(title, forKey: .title)
+        try c.encode(body, forKey: .body)
+        try c.encode(draft, forKey: .draft)
+        if !files.isEmpty { try c.encode(files, forKey: .files) }
     }
 
     /// The JSON GitForgePropose takes.
@@ -160,18 +209,21 @@ public struct GitProposalResult: Codable, Equatable, Sendable {
     public let number: Int
     public let branch: String
     public let commit: String
+    /// Every commit made, in order: one per file on GitHub.
+    public let commits: [String]
     /// "github", "gitlab" or "gitea".
     public let forge: String
 
-    public init(url: String, number: Int, branch: String, commit: String = "", forge: String = "") {
+    public init(url: String, number: Int, branch: String, commit: String = "", commits: [String] = [], forge: String = "") {
         self.url = url
         self.number = number
         self.branch = branch
         self.commit = commit
+        self.commits = commits
         self.forge = forge
     }
 
-    enum CodingKeys: String, CodingKey { case url, number, branch, commit, forge }
+    enum CodingKeys: String, CodingKey { case url, number, branch, commit, commits, forge }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -179,6 +231,7 @@ public struct GitProposalResult: Codable, Equatable, Sendable {
         number = try c.field(.number, 0)
         branch = try c.field(.branch, "")
         commit = try c.field(.commit, "")
+        commits = try c.field(.commits, [])
         forge = try c.field(.forge, "")
     }
 }

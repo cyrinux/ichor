@@ -15,7 +15,9 @@ struct SourceEditBase {
 /// tracked branch is never pushed to. Always through the Git host with its token, also for a
 /// Flux source read from its artifact. The draft lives here, never in a route.
 /// A quick edit (an image tag, the replicas) is applied to the file as read here, at the
-/// branch, and opens straight at the review with its own title.
+/// branch, and opens straight at the review with its own title. In the cluster repository the
+/// review also offers Stage: the draft waits with other files for one pull request (the
+/// browser's Staged changes), and a staged file opens again on its staged draft.
 struct SourceEditView: View {
     let source: GitSource
     let path: String
@@ -35,8 +37,11 @@ struct SourceEditView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppModel.self) private var model
     @Environment(GitHostStore.self) private var hosts
+    @Environment(StagedEdits.self) private var staged
     @State private var state: LoadState<SourceEditBase> = .loading
     @State private var draft = ""
+    /// Stage refused: the pull request already holds the most files it can.
+    @State private var stageFull = false
     /// The caret in the draft (UTF-16), for the schema help.
     @State private var cursor = 0
     @State private var help: KubeSchemaHelpRequest?
@@ -98,7 +103,8 @@ struct SourceEditView: View {
                 if let base {
                     SourceEditReview(source: source, path: path, app: app, base: base, edited: draft, target: target,
                                      defaultTitle: quickTitle, notice: quickTitle == nil ? nil : quickSkipped,
-                                     onReload: reload(at:), onDone: { dismiss() })
+                                     onReload: reload(at:), onDone: { dismiss() },
+                                     onStage: stageable(base) ? { stage(base) } as (() -> Void)? : nil)
                 }
             }
             .sheet(item: $help) { request in
@@ -119,6 +125,9 @@ struct SourceEditView: View {
                 Text("Your edits to this file are lost.")
             }
             .alert(quickFailure ?? "", isPresented: $quickFailure.isPresent()) {
+                Button("OK") {}
+            }
+            .alert("A pull request holds at most 20 files.", isPresented: $stageFull) {
                 Button("OK") {}
             }
         }
@@ -155,9 +164,43 @@ struct SourceEditView: View {
     }
 
     /// The first read: at the branch the app follows, else at what it follows (a tag, a commit).
+    /// A staged file opens on its staged draft while the branch still has the text it was staged
+    /// from; changed there since, it opens as it is now and is unstaged.
     private func load() async {
+        let key = StagedKey(source: source)
+        if app.isRepository, quickEdit == nil, let kept = staged.of(key).first(where: { $0.path == path }) {
+            // A new file staged: nothing on the branch to compare with.
+            if !kept.fileSha.isEmpty { await read(at: key.baseRef) }
+            if kept.fileSha.isEmpty || base?.file.sha == kept.fileSha {
+                draft = kept.draft
+                manifestType = sourceManifestType(kept.original)
+                state = .loaded(SourceEditBase(file: GitFile(path: path, sha: kept.fileSha, content: kept.original), ref: key.baseRef), at: Date())
+            } else if base != nil {
+                staged.remove(key, path: path)
+                quickFailure = String(localized: "This file changed on the branch since it was staged: it opens as it is now, without the staged edit.")
+            }
+            return
+        }
         await read(at: proposalBaseRef(for: source) ?? source.ref)
         await applyQuickEdit()
+    }
+
+    /// Whether the draft can wait for a pull request with other files: the cluster repository's,
+    /// read at the branch the staged files go to.
+    private func stageable(_ base: SourceEditBase) -> Bool {
+        app.isRepository && base.ref == StagedKey(source: source).baseRef
+    }
+
+    /// Stages the draft and closes the editor; the browser lists it under Staged changes.
+    private func stage(_ base: SourceEditBase) {
+        let key = StagedKey(source: source)
+        guard staged.canStage(key, path: path) else {
+            stageFull = true
+            return
+        }
+        staged.stage(key, StagedFile(path: path, original: base.file.content, fileSha: base.file.sha, draft: draft))
+        announce(String(localized: "Staged"))
+        dismiss()
     }
 
     /// The quick edit on the file as read at the branch, then the review; once.
@@ -227,6 +270,8 @@ private struct SourceEditReview: View {
     var notice: String?
     let onReload: (String) -> Void
     let onDone: () -> Void
+    /// Keeps the edit for a pull request with other files; nil when it cannot.
+    var onStage: (() -> Void)?
 
     @Environment(AppModel.self) private var model
     @Environment(GitHostStore.self) private var hosts
@@ -236,6 +281,8 @@ private struct SourceEditReview: View {
     @State private var proposing = false
     /// A clear-text secret where .sops.yaml encrypts: asked once more before the pull request.
     @State private var confirmingSops = false
+    /// What the confirmation goes on to: Stage, else Continue.
+    @State private var confirmingStage = false
     /// The .sops.yaml read at the branch: a quick call of its own, Continue waits for it.
     @State private var sopsCheck: LoadState<SopsWarning>?
 
@@ -303,14 +350,30 @@ private struct SourceEditReview: View {
             if case .loaded(let c, _, _) = check, c.fails {
                 Label("Build fails", systemImage: "xmark.octagon").font(.footnote).foregroundStyle(.statusBad)
             }
+            if let onStage {
+                Button {
+                    confirmingStage = true
+                    if sopsWarning != nil { confirmingSops = true } else { onStage() }
+                } label: {
+                    Text("Stage").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .disabled(sopsPending)
+            }
             Button {
+                confirmingStage = false
                 if sopsWarning != nil { confirmingSops = true } else { proposing = true }
             } label: {
                 Text("Continue").frame(maxWidth: .infinity)
             }
             .disabled(sopsPending)
             .confirmationDialog("Commit a clear-text secret?", isPresented: $confirmingSops, titleVisibility: .visible) {
-                Button("Continue", role: .destructive) { proposing = true }
+                if confirmingStage, let onStage {
+                    Button("Stage", role: .destructive) { onStage() }
+                } else {
+                    Button("Continue", role: .destructive) { proposing = true }
+                }
                 Button("Cancel", role: .cancel) {}
             } message: {
                 if let w = sopsWarning {

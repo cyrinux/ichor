@@ -13,6 +13,9 @@ import name.levis.ichor.R
 import name.levis.ichor.data.GitHostMissing
 import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.data.KubeBrowserRepository
+import name.levis.ichor.data.StagedEdits
+import name.levis.ichor.data.StagedFile
+import name.levis.ichor.data.stagedKeyOf
 import name.levis.ichor.model.DEFAULT_PROPOSAL_BASE
 import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.GitOpsEditCheck
@@ -88,6 +91,8 @@ data class SourceEdit(
     val reloading: Boolean = false,
     val quick: QuickDraft? = null,
     val notice: UiText? = null,
+    /** Whether the draft can be staged for a pull request with other files (the cluster repository's). */
+    val stageable: Boolean = false,
 ) {
     val changed: Boolean get() = draft != original
 }
@@ -102,9 +107,14 @@ data class SourceEditState(val edit: UiState<SourceEdit> = UiState.Loading, val 
  * Edits one file of an app's source and proposes it as a pull request: the file is read through
  * the forge at the branch the request goes to (the deployed commit when the app does not follow
  * a branch), reviewed as a text diff, then committed on a new branch by the Go core. The draft
- * lives here, never in the route.
+ * lives here, never in the route. In the cluster repository a reviewed draft can be [stage]d
+ * instead, for one pull request with other files; a staged file opens on its staged draft.
  */
-class SourceEditViewModel(private val gitOps: GitOpsRepository, private val browser: KubeBrowserRepository) : ViewModel() {
+class SourceEditViewModel(
+    private val gitOps: GitOpsRepository,
+    private val browser: KubeBrowserRepository,
+    private val staged: StagedEdits? = null,
+) : ViewModel() {
     private val _state = MutableStateFlow(SourceEditState())
     val state: StateFlow<SourceEditState> = _state.asStateFlow()
     private val _help = MutableStateFlow<SchemaHelp?>(null)
@@ -156,8 +166,22 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
         val readRef = proposalBaseRef(src.tracked) ?: src.ref
         // A node file the write-back creates: proposed as a new file (no sha).
         val creating = quick.let { it?.op == QuickEdit.OP_TALOS && it.create }
-        val file = if (creating) GitFile(path = path) else gitOps.forgeFile(src, readRef, path)
+        val stageable = t == SourceTarget.Repo && staged != null
+        // A staged file is edited again from its staged draft while the branch still has the text
+        // it was staged from; changed there since, it opens as it is now and is unstaged.
+        val staging = staged?.takeIf { stageable && quick == null }
+        val key = stagedKeyOf(src)
+        val stagedFile = staging?.of(key)?.firstOrNull { it.path == path }
+        val file = when {
+            // A new file staged: nothing on the branch to compare with.
+            stagedFile != null && stagedFile.fileSha.isEmpty() -> GitFile(path = path)
+            creating -> GitFile(path = path)
+            else -> gitOps.forgeFile(src, readRef, path)
+        }
         if (file.truncated) throw LocalizedException(UiText.Res(R.string.gitops_source_truncated))
+        val kept = stagedFile?.takeIf { it.fileSha == file.sha }
+        val dropped = stagedFile != null && kept == null
+        if (dropped) staging?.remove(key, path)
         val defaults = cancellableCatching {
             when (t) {
                 is SourceTarget.App -> gitOps.proposalDefaults(t.tool, t.kind, t.namespace, t.name, path)
@@ -170,9 +194,11 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
             readRef = readRef,
             original = file.content,
             fileSha = file.sha,
-            draft = file.content,
+            draft = kept?.draft ?: file.content,
             manifest = manifestType(path, file.content),
             defaults = defaults,
+            stageable = stageable,
+            notice = if (dropped) UiText.Res(R.string.staged_changed_upstream) else null,
         )
         val q = quick
         return SourceEditState(UiState.Loaded(if (q != null) withQuickEdit(edit, q) else edit))
@@ -272,6 +298,20 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
         updateEdit { it.copy(form = form, formOpen = true) }
     }
 
+    /**
+     * Stages the reviewed draft for a pull request with other files of the repository; false
+     * when it cannot be (no change, or the pull request is full).
+     */
+    fun stage(): Boolean {
+        val edit = current ?: return false
+        val store = staged ?: return false
+        if (!edit.stageable || !edit.changed) return false
+        val key = stagedKeyOf(edit.source)
+        if (!store.canStage(key, edit.path)) return false
+        store.stage(key, StagedFile(edit.path, edit.original, edit.fileSha, edit.draft))
+        return true
+    }
+
     fun closeForm() = updateEdit { if (it.form?.sending == true || it.reloading) it else it.copy(formOpen = false) }
 
     fun changeForm(transform: (ProposeForm) -> ProposeForm) = updateEdit { e ->
@@ -310,6 +350,8 @@ class SourceEditViewModel(private val gitOps: GitOpsRepository, private val brow
             outcome.fold(
                 onSuccess = { result ->
                     target?.let { t -> gitOps.rememberProposal(proposalRecord(t, edit, form.title, result)) }
+                    // Proposed on its own: no longer waiting with the staged files.
+                    if (edit.stageable) staged?.remove(stagedKeyOf(edit.source), edit.path)
                     updateEdit { it.copy(formOpen = false, review = null, result = result, original = it.draft) }
                 },
                 onFailure = { e ->
