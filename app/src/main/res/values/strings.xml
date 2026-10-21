@@ -1311,6 +1311,8 @@
     <string name="hardware_product">Product</string>
     <string name="hardware_version">Version</string>
     <string name="hardware_serial">Serial number</string>
+    <string name="hardware_find_parts">Find spare parts</string>
+    <string name="hardware_find_parts_hint">Opens the Ichor site with this part\'s model and serial number, then the vendor\'s page or a web search</string>
     <string name="hardware_sku">SKU</string>
     <string name="hardware_bios">BIOS</string>
     <string name="hardware_cores_threads">%1$d cores / %2$d threads</string>

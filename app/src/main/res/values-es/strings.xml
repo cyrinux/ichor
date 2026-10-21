@@ -1312,6 +1312,8 @@
     <string name="hardware_product">Producto</string>
     <string name="hardware_version">Versión</string>
     <string name="hardware_serial">Número de serie</string>
+    <string name="hardware_find_parts">Buscar piezas de repuesto</string>
+    <string name="hardware_find_parts_hint">Abre el sitio de Ichor con el modelo y el número de serie de esta pieza, luego la página del fabricante o una búsqueda web</string>
     <string name="hardware_sku">SKU</string>
     <string name="hardware_bios">BIOS</string>
     <string name="hardware_cores_threads">%1$d núcleos / %2$d hilos</string>
