@@ -1395,6 +1395,8 @@
     <string name="hardware_product">Продукт</string>
     <string name="hardware_version">Версія</string>
     <string name="hardware_serial">Серійний номер</string>
+    <string name="hardware_find_parts">Знайти запчастини</string>
+    <string name="hardware_find_parts_hint">Відкриває сайт Ichor із моделлю та серійним номером цієї деталі, далі сторінку виробника або пошук в інтернеті</string>
     <string name="hardware_sku">SKU</string>
     <string name="hardware_bios">BIOS</string>
     <string name="hardware_cores_threads">Ядер: %1$d / потоків: %2$d</string>

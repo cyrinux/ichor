@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Find spare parts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersatzteile finden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar piezas de repuesto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trouver des pièces de rechange"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trova ricambi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знайти запчастини"
+          }
+        }
+      }
+    },
+    "Opens the Ichor site with this part's model and serial number, then the vendor's page or a web search" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet die Ichor-Website mit Modell und Seriennummer dieses Teils, dann die Seite des Herstellers oder eine Websuche"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre el sitio de Ichor con el modelo y el número de serie de esta pieza, luego la página del fabricante o una búsqueda web"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre le site d'Ichor avec le modèle et le numéro de série de cette pièce, puis la page du fabricant ou une recherche web"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apre il sito di Ichor con il modello e il numero di serie di questo componente, poi la pagina del produttore o una ricerca web"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває сайт Ichor із моделлю та серійним номером цієї деталі, далі сторінку виробника або пошук в інтернеті"
+          }
+        }
+      }
+    },
     "Propose in Git for %@" : {
       "extractionState" : "manual",
       "localizations" : {

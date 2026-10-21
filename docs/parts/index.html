@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spare parts</title>
+<!-- Opened by the app's "Find spare parts" button: https://cyrinux.github.io/ichor/parts/#v=1&k=disk&vendor=…&m=…&p=…&s=…
+     Everything after # stays in the browser (never sent to the server). This page requests
+     nothing but its icon; the vendor or the search engine sees the part only when a button
+     here is tapped. The vendor keys must match go/ichorgo/parts.go (a Go test checks it). -->
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="../brand/ichor.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #E9EEF2;
+    --surface: #F6F8FA;
+    --ink: #14243B;
+    --ink-2: #51627A;
+    --line: #C9D3DD;
+    --accent: #FF7A45;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101823;
+      --surface: #16212F;
+      --ink: #E4EAF1;
+      --ink-2: #9AABC0;
+      --line: #2A3A4E;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 1.0625rem/1.6 system-ui, sans-serif;
+  }
+  main {
+    width: min(32rem, calc(100% - 2rem));
+    margin: 1.5rem 1rem;
+    padding: 2rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+  }
+  header { text-align: center; }
+  img { width: 56px; height: 56px; }
+  h1 { font-size: 1.4rem; font-weight: 600; margin: .75rem 0 1rem; }
+  p { color: var(--ink-2); margin: .5rem 0; }
+  a { color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+  dl { margin: 0 0 1rem; }
+  .row { display: flex; align-items: center; gap: .75rem; padding: .6rem 0; border-top: 1px solid var(--line); }
+  .row div { flex: 1; min-width: 0; }
+  dt { font-size: .85rem; color: var(--ink-2); }
+  dd { margin: 0; overflow-wrap: anywhere; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .copy {
+    flex: none;
+    padding: .35rem .8rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: .9rem;
+    cursor: pointer;
+  }
+  .actions { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; margin-top: 1rem; }
+  .button {
+    display: inline-block;
+    padding: .65rem 1.25rem;
+    border-radius: 999px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--accent);
+  }
+  .primary { background: var(--accent); color: #14243B; }
+  .note { font-size: .9rem; text-align: center; }
+  [hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="../brand/ichor.svg" alt="">
+    <h1 id="title">Spare parts</h1>
+  </header>
+  <div id="part" hidden>
+    <dl>
+      <div class="row" id="row-m"><div><dt>Manufacturer</dt><dd id="m"></dd></div><button class="copy" data-copy="m">Copy</button></div>
+      <div class="row" id="row-p"><div><dt>Model / part number</dt><dd id="p"></dd></div><button class="copy" data-copy="p">Copy</button></div>
+      <div class="row" id="row-s"><div><dt>Serial number</dt><dd class="mono" id="s"></dd></div><button class="copy" data-copy="s">Copy</button></div>
+    </dl>
+    <div class="actions">
+      <a class="button primary" id="vendor" target="_blank" rel="noopener noreferrer" hidden>Vendor support</a>
+      <a class="button" id="search" target="_blank" rel="noopener noreferrer">Search the web</a>
+    </div>
+    <p class="note" id="paste" hidden>Paste the serial number there.</p>
+    <p class="note" id="norma" hidden>This vendor has no serial lookup: its page explains how to get a replacement.</p>
+  </div>
+  <p id="invalid" hidden>This link is incomplete: open it again from the app.</p>
+  <p class="note">Ichor sent nothing anywhere: these details stay in your browser until you tap a button.</p>
+</main>
+<script>
+  (function () {
+    // Each vendor's support or warranty page; serialInPath when the page takes the serial in
+    // its address. Keys match go/ichorgo/parts.go. Checked by hand on the dates noted.
+    var VENDORS = {
+      "dell": { name: "Dell", url: "https://www.dell.com/support/home/en-us/product-support/servicetag/{serial}/overview", serialInPath: true, fallback: "https://www.dell.com/support/home/en-us" }, // 2026-10-19
+      "lenovo": { name: "Lenovo", url: "https://pcsupport.lenovo.com/warranty-lookup" },
+      "hpe": { name: "HPE", url: "https://support.hpe.com/connect/s/" },
+      "supermicro": { name: "Supermicro", url: "https://www.supermicro.com/en/support/rma", noLookup: true },
+      "fujitsu": { name: "Fujitsu", url: "https://support.ts.fujitsu.com/" },
+      "asus": { name: "ASUS", url: "https://www.asus.com/support/warranty-status-inquiry/" },
+      "intel": { name: "Intel", url: "https://www.intel.com/content/www/us/en/support/contact-support.html" },
+      "gigabyte": { name: "Gigabyte", url: "https://www.gigabyte.com/Support/Warranty" },
+      "msi": { name: "MSI", url: "https://www.msi.com/support/warranty" },
+      "raspberrypi": { name: "Raspberry Pi", url: "https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-revision-codes", noLookup: true },
+      "seagate": { name: "Seagate", url: "https://www.seagate.com/support/warranty-and-replacements/" },
+      "wd": { name: "Western Digital", url: "https://support-en.wd.com/app/warrantystatusweb" },
+      "samsung": { name: "Samsung", url: "https://www.samsung.com/support/warranty/" },
+      "kingston": { name: "Kingston", url: "https://www.kingston.com/en/support/technical/warranty" },
+      "crucial": { name: "Crucial", url: "https://www.crucial.com/support/warranty-check" },
+      "toshiba": { name: "Toshiba", url: "https://www.toshiba-storage.com/support/" },
+      "hgst": { name: "HGST (Western Digital)", url: "https://support-en.wd.com/app/warrantystatusweb" },
+      "skhynix": { name: "SK hynix", url: "https://ssd.skhynix.com/support/" }
+    };
+    var TITLES = {
+      system: "Spare parts for this server",
+      memory: "Spare parts for this memory module",
+      disk: "Spare parts for this disk"
+    };
+    var $ = function (id) { return document.getElementById(id); };
+
+    var raw = location.hash.slice(1);
+    var params = new URLSearchParams(raw);
+    var kind = params.get("k");
+    var valid = raw.length <= 2048 && /^[A-Za-z0-9._~%&=+-]*$/.test(raw) &&
+      params.get("v") === "1" && Object.prototype.hasOwnProperty.call(TITLES, kind);
+    if (!valid) {
+      $("invalid").hidden = false;
+      return;
+    }
+    var field = function (k) { return (params.get(k) || "").trim().slice(0, 128); };
+    var values = { m: field("m"), p: field("p"), s: field("s") };
+    if (!values.p && !values.s) {
+      $("invalid").hidden = false;
+      return;
+    }
+
+    $("title").textContent = TITLES[kind];
+    ["m", "p", "s"].forEach(function (k) {
+      $(k).textContent = values[k];
+      $("row-" + k).hidden = !values[k];
+    });
+    $("part").hidden = false;
+
+    var words = {
+      system: [values.m, values.p, "spare parts"],
+      memory: [values.p || values.m, "memory module"],
+      disk: [values.p || values.m, "replacement"]
+    }[kind].filter(Boolean).join(" ");
+    $("search").href = "https://duckduckgo.com/?q=" + encodeURIComponent(words || values.s);
+
+    var vendor = Object.prototype.hasOwnProperty.call(VENDORS, params.get("vendor")) ? VENDORS[params.get("vendor")] : null;
+    if (vendor) {
+      var deep = vendor.serialInPath && values.s;
+      $("vendor").href = deep ? vendor.url.replace("{serial}", encodeURIComponent(values.s)) : (vendor.fallback || vendor.url);
+      $("vendor").textContent = vendor.name + " support";
+      $("vendor").hidden = false;
+      $("norma").hidden = !vendor.noLookup;
+      $("paste").hidden = deep || vendor.noLookup || !values.s;
+    }
+
+    document.querySelectorAll(".copy").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var text = values[button.dataset.copy];
+        var done = function () { button.textContent = "Copied"; setTimeout(function () { button.textContent = "Copy"; }, 1500); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, function () { select(button.dataset.copy); });
+        } else {
+          select(button.dataset.copy);
+        }
+      });
+    });
+    function select(id) {
+      var range = document.createRange();
+      range.selectNodeContents($(id));
+      var selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  })();
+</script>
+</body>
+</html>

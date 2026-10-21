@@ -149,6 +149,12 @@
         An Argo CD app may also link its own icon in its <code>ichor.levis.name/icon</code>
         annotation: with the setting on, it is downloaded from that address, whose server sees your
         IP address. An icon written inline in the annotation is never downloaded.</li>
+      <li><strong>Spare parts lookup, only when you tap it.</strong> The <em>Find spare parts</em>
+        button on a node's hardware screen opens a page of this site in your browser with the
+        part's manufacturer, model and serial number after the <code>#</code> of the address,
+        which browsers never send to the server: GitHub Pages sees only the page's address and
+        your IP. The page sends nothing; the vendor's site or the search engine sees the serial
+        only when you tap their button there.</li>
       <li><strong>AI diagnosis, only if you turn it on.</strong> It is off by default. When you
         tap <em>Ask</em>, a report of the cluster state (node readiness, services, resource
         usage, etcd status, recent events and the last lines of unhealthy services' logs) is
