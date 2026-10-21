@@ -78,7 +78,7 @@ fun TalosRolloutDialog(
         // Asked again while a member is unhealthy: it recovers without any node changing in the overview.
         while (true) {
             value = try {
-                app.talosRepository.etcd().health()
+                app.etcdRepository.etcd().health()
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {

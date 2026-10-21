@@ -75,7 +75,7 @@ private fun JoinSummary(request: JoinRequest, onJoin: (JoinRequest) -> Unit) {
     var confirm by remember { mutableStateOf(false) }
     var replacing by remember(request.hostname) { mutableStateOf(false) }
     LaunchedEffect(request.role) {
-        warnings = runCatching { app.talosRepository.nodeJoinWarnings(request.role) }.getOrDefault(emptyList())
+        warnings = runCatching { app.nodeLifecycleRepository.nodeJoinWarnings(request.role) }.getOrDefault(emptyList())
     }
 
     fun authenticated(action: () -> Unit) {

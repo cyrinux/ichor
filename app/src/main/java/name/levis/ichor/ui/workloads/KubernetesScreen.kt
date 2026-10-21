@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.workloads
 
+import name.levis.ichor.setKubeServer
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize

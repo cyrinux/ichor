@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.EtcdRepository
 import name.levis.ichor.model.EtcdMemberPlan
 import name.levis.ichor.model.EtcdMemberRef
 import name.levis.ichor.model.FeatureSupport
@@ -69,7 +69,7 @@ sealed interface MemberActionState {
 val MemberActionState.busy: Boolean get() = this is MemberActionState.Planning || this is MemberActionState.Running
 
 /** `talosctl etcd forfeit-leadership` and `etcd remove-member` (os:admin), one at a time. */
-class EtcdMemberActionsViewModel(private val talos: TalosRepository) : ViewModel() {
+class EtcdMemberActionsViewModel(private val etcd: EtcdRepository) : ViewModel() {
     private val _state = MutableStateFlow<MemberActionState>(MemberActionState.Idle)
     val state: StateFlow<MemberActionState> = _state.asStateFlow()
     private var job: Job? = null
@@ -80,7 +80,7 @@ class EtcdMemberActionsViewModel(private val talos: TalosRepository) : ViewModel
         _state.value = MemberActionState.Planning(member)
         job = viewModelScope.launch {
             _state.value = attempt {
-                val plan = talos.etcdMemberPlan(member.id)
+                val plan = etcd.etcdMemberPlan(member.id)
                 // The plan may come back without the name the screen already knows.
                 MemberActionState.Planned(if (plan.member.id.isEmpty()) plan.copy(member = member) else plan)
             }
@@ -93,7 +93,7 @@ class EtcdMemberActionsViewModel(private val talos: TalosRepository) : ViewModel
         job = viewModelScope.launch {
             _state.value = attempt {
                 // No new leader in the answer: the node was not the leader, nothing changed.
-                if (talos.etcdForfeitLeadership(node).member.isEmpty()) {
+                if (etcd.etcdForfeitLeadership(node).member.isEmpty()) {
                     MemberActionState.Done(UiText.Res(R.string.etcd_forfeit_not_leader, hostname), changed = false)
                 } else {
                     MemberActionState.Done(UiText.Res(R.string.etcd_forfeit_done, hostname))
@@ -108,7 +108,7 @@ class EtcdMemberActionsViewModel(private val talos: TalosRepository) : ViewModel
         _state.value = MemberActionState.Running(UiText.Res(R.string.etcd_remove_running, member.confirmToken))
         job = viewModelScope.launch {
             _state.value = attempt {
-                talos.etcdRemoveMember(viaNode, member.id)
+                etcd.etcdRemoveMember(viaNode, member.id)
                 MemberActionState.Done(UiText.Res(R.string.etcd_remove_done, member.confirmToken))
             }
         }

@@ -8,6 +8,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.AlertmanagerRepository
 import name.levis.ichor.data.DataServicesRepository
+import name.levis.ichor.data.EtcdRepository
 import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.data.GoCall
 import name.levis.ichor.data.KubeRepository
@@ -35,6 +36,7 @@ private class PinnedReads(app: TalosApp, context: String) {
     // Nothing kept offline: what a background check reads is not what a screen shows.
     private val go = GoCall(app.configRepository, app.kubeServers, offline = null, pinned = context, idle = app.maskSwitcher::awaitIdle)
     val talos = TalosRepository(go)
+    val etcd = EtcdRepository(go)
     val kube = KubeRepository(go)
     val gitops = GitOpsRepository(go)
     val data = DataServicesRepository(go)
@@ -79,7 +81,7 @@ suspend fun readCluster(app: TalosApp, context: ContextSummary, prev: ClusterSna
     } else {
         null
     }
-    val etcd = if (kube) null else runCatching { reads.talos.etcd() }.getOrNull()
+    val etcd = if (kube) null else runCatching { reads.etcd.etcd() }.getOrNull()
     val name = context.name
     val fingerprint = context.fingerprint
 

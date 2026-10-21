@@ -55,7 +55,7 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.EtcdRecoverEvent
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.EtcdRepository
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.EtcdRecoverPhase
 import name.levis.ichor.model.EtcdRecoverProgress
@@ -98,7 +98,7 @@ data class EtcdRecoverState(
  * etcd recovery from a snapshot file. The picked file is copied as it is into the app cache
  * (an encrypted one stays encrypted: Go decrypts it while uploading) and deleted afterwards.
  */
-class EtcdRecoverViewModel(private val talos: TalosRepository, private val app: TalosApp) : ViewModel() {
+class EtcdRecoverViewModel(private val etcd: EtcdRepository, private val app: TalosApp) : ViewModel() {
     private val _state = MutableStateFlow(EtcdRecoverState())
     val state: StateFlow<EtcdRecoverState> = _state.asStateFlow()
     private var job: Job? = null
@@ -119,7 +119,7 @@ class EtcdRecoverViewModel(private val talos: TalosRepository, private val app: 
                         ?: error(app.getString(R.string.etcd_recover_open_failed))
                     displayName(uri)
                 }
-                val info = talos.snapshotInspect(file.path)
+                val info = etcd.snapshotInspect(file.path)
                 _state.value = EtcdRecoverState(picked = PickedSnapshot(file.path, name, info))
             } catch (e: CancellationException) {
                 throw e
@@ -142,7 +142,7 @@ class EtcdRecoverViewModel(private val talos: TalosRepository, private val app: 
         _state.update { it.copy(running = true) }
         job = viewModelScope.launch {
             try {
-                talos.etcdRecover(node, picked.path, identity, passphrase, skipHashCheck).collect { event ->
+                etcd.etcdRecover(node, picked.path, identity, passphrase, skipHashCheck).collect { event ->
                     when (event) {
                         is EtcdRecoverEvent.Progress -> _state.update { it.copy(events = it.events + event.progress) }
                         is EtcdRecoverEvent.Done -> _state.update { it.copy(error = event.error) }

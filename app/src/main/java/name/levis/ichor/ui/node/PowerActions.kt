@@ -23,7 +23,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.ui.components.ToggleRow
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.UiText
@@ -74,7 +74,7 @@ sealed interface PowerState {
     data class Failed(val message: UiText) : PowerState
 }
 
-class PowerViewModel(private val talos: TalosRepository, private val node: String) : ViewModel() {
+class PowerViewModel(private val lifecycle: NodeLifecycleRepository, private val node: String) : ViewModel() {
     private val _state = MutableStateFlow<PowerState>(PowerState.Idle)
     val state: StateFlow<PowerState> = _state.asStateFlow()
 
@@ -84,8 +84,8 @@ class PowerViewModel(private val talos: TalosRepository, private val node: Strin
         viewModelScope.launch {
             _state.value = runCatching {
                 when (request.action) {
-                    PowerAction.REBOOT -> talos.reboot(node, request.rebootMode.cli)
-                    PowerAction.SHUTDOWN -> talos.shutdown(node, request.forceShutdown)
+                    PowerAction.REBOOT -> lifecycle.reboot(node, request.rebootMode.cli)
+                    PowerAction.SHUTDOWN -> lifecycle.shutdown(node, request.forceShutdown)
                 }
             }.fold(
                 onSuccess = { PowerState.Done(request) },

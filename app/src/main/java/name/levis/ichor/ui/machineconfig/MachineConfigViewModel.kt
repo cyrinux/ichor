@@ -16,6 +16,7 @@ import name.levis.ichor.R
 import name.levis.ichor.data.ConfigTryManager
 import name.levis.ichor.data.ConfigMultiManager
 import name.levis.ichor.data.OVERVIEW
+import name.levis.ichor.data.MachineConfigRepository
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.MultiApplyRun
@@ -99,6 +100,7 @@ private const val DESCRIBE_DEBOUNCE_MS = 400L
  */
 class MachineConfigViewModel(
     private val talos: TalosRepository,
+    private val machineConfigs: MachineConfigRepository,
     private val node: String,
     private val hostname: String,
     /** Runs the try app-wide: its countdown and Keep outlive this screen. */
@@ -148,7 +150,7 @@ class MachineConfigViewModel(
         }
         // The schema is downloaded once per Talos version; the tree shows without it meanwhile.
         viewModelScope.launch {
-            val status = runCatching { talos.machineConfigSchema(node) }.getOrNull() ?: return@launch
+            val status = runCatching { machineConfigs.machineConfigSchema(node) }.getOrNull() ?: return@launch
             schemaVersion = status.version
             if (status.available) currentText()?.let { describe(it) }
         }
@@ -158,7 +160,7 @@ class MachineConfigViewModel(
     override suspend fun fetch(): String {
         val edit = editWhenLoaded
         editWhenLoaded = false
-        val yaml = talos.machineConfig(node, _revealed.value)
+        val yaml = machineConfigs.machineConfig(node, _revealed.value)
         // A draft only ever starts from the redacted config.
         val draft = yaml.takeIf { edit && !_revealed.value }
         _editor.update { ConfigEditorState(base = draft.orEmpty(), draft = draft) }
@@ -226,7 +228,7 @@ class MachineConfigViewModel(
         _editor.update { it.copy(busy = true) }
         applying = viewModelScope.launch {
             try {
-                val edited = talos.machineConfigEdit(draft, edit)
+                val edited = machineConfigs.machineConfigEdit(draft, edit)
                 // Only when the draft is still the one that was edited (not discarded meanwhile).
                 if (_editor.value.draft == draft) {
                     _editor.update { it.copy(draft = edited, treeStale = true, edits = it.edits + edit) }
@@ -244,11 +246,11 @@ class MachineConfigViewModel(
 
     fun loadSnippets() {
         if (_snippets.value is UiState.Loaded) return
-        viewModelScope.launch { _snippets.value = uiStateOf { talos.configSnippets() } }
+        viewModelScope.launch { _snippets.value = uiStateOf { machineConfigs.configSnippets() } }
     }
 
     /** Snippet [id] with [params], as edits of the draft; the change shows in the tree, then the review. */
-    fun applySnippet(id: String, params: Map<String, String>) = applyEdits { draft -> talos.configSnippetEdits(draft, id, params) }
+    fun applySnippet(id: String, params: Map<String, String>) = applyEdits { draft -> machineConfigs.configSnippetEdits(draft, id, params) }
 
     /**
      * Opens a draft that gives this node the reference's value of a drift difference, then asks
@@ -257,7 +259,7 @@ class MachineConfigViewModel(
     fun applyDriftFix(fix: DriftFix) {
         if (!_editor.value.editing) startEditing()
         if (!_editor.value.editing) return
-        applyEdits(then = ::review) { draft -> talos.driftFixEdits(draft, fix) }
+        applyEdits(then = ::review) { draft -> machineConfigs.driftFixEdits(draft, fix) }
     }
 
     /**
@@ -276,14 +278,14 @@ class MachineConfigViewModel(
         if (_editor.value.busy) return
         _editor.update { it.copy(busy = true) }
         applying = viewModelScope.launch {
-            val edits = cancellableCatching { talos.talosPatchEdits(draft, patch.content) }.getOrNull()
+            val edits = cancellableCatching { machineConfigs.talosPatchEdits(draft, patch.content) }.getOrNull()
             if (edits?.fixable == true) {
                 _editor.update { it.copy(busy = false) }
                 applyEdits(then = ::review) { edits }
                 return@launch
             }
             try {
-                val result = talos.talosPatchDraft(node, patch.content)
+                val result = machineConfigs.talosPatchDraft(node, patch.content)
                 if (_editor.value.draft != draft) return@launch // discarded meanwhile
                 if (result.same) {
                     _messages.tryEmit(UiText.Res(R.string.talos_patch_same))
@@ -319,7 +321,7 @@ class MachineConfigViewModel(
                     return@launch
                 }
                 var edited = draft
-                for (edit in result.edits) edited = talos.machineConfigEdit(edited, edit)
+                for (edit in result.edits) edited = machineConfigs.machineConfigEdit(edited, edit)
                 if (_editor.value.draft != draft) return@launch // discarded meanwhile
                 _editor.update { it.copy(draft = edited, treeStale = true, edits = it.edits + result.edits) }
                 if (result.staged) _messages.tryEmit(UiText.Res(R.string.snippet_staged_note))
@@ -342,7 +344,7 @@ class MachineConfigViewModel(
         reviewing?.cancel()
         _editor.update { it.copy(review = UiState.Loading) }
         reviewing = viewModelScope.launch {
-            val preview = uiStateOf { talos.machineConfigPreview(node, editor.base, draft) }
+            val preview = uiStateOf { machineConfigs.machineConfigPreview(node, editor.base, draft) }
             // The diff shown must be the one of the draft that a try would send.
             _editor.update { if (it.review != null && it.draft == draft) it.copy(review = preview) else it }
         }
@@ -377,7 +379,7 @@ class MachineConfigViewModel(
         _editor.update { it.copy(apply = ConfigApplyState.Running(mode)) }
         trying = viewModelScope.launch {
             try {
-                talos.applyMachineConfig(node, editor.base, draft, mode).collect { event ->
+                machineConfigs.applyMachineConfig(node, editor.base, draft, mode).collect { event ->
                     _editor.update { state -> state.copy(apply = state.apply?.after(event)) }
                 }
                 // The run always ends with how it ended; without it, nothing can be said.
@@ -437,7 +439,7 @@ class MachineConfigViewModel(
         updateMulti { it.copy(picking = false, preview = UiState.Loading) }
         multiJob?.cancel()
         multiJob = viewModelScope.launch {
-            val preview = uiStateOf { talos.machineConfigMultiPreview(nodes, editor.edits) }
+            val preview = uiStateOf { machineConfigs.machineConfigMultiPreview(nodes, editor.edits) }
             updateMulti { if (it.preview != null) it.copy(preview = preview) else it }
         }
     }
@@ -511,7 +513,7 @@ class MachineConfigViewModel(
     private suspend fun describe(text: String) {
         val revealed = _revealed.value
         val tree = try {
-            talos.machineConfigDescribe(text, schemaVersion)
+            machineConfigs.machineConfigDescribe(text, schemaVersion)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {

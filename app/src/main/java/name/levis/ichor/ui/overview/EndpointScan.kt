@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.setClusterEndpoints
+import name.levis.ichor.addFoundEndpoints
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -210,7 +212,7 @@ fun EndpointTools(
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val scanVm: EndpointScanViewModel = viewModel(
-        factory = factory { EndpointScanViewModel(app.talosRepository::findEndpoints, app::addFoundEndpoints) },
+        factory = factory { EndpointScanViewModel(app.nodeLifecycleRepository::findEndpoints, app::addFoundEndpoints) },
     )
     val contexts = config.summary.contexts
     val labelOf = { name: String -> contexts.firstOrNull { it.name == name }?.let(labels::of) ?: name }
@@ -219,7 +221,7 @@ fun EndpointTools(
         EndpointsDialog(
             context = context,
             label = labels.of(context),
-            onProbe = { app.talosRepository.probeEndpoint(context.name, it) },
+            onProbe = { app.nodeLifecycleRepository.probeEndpoint(context.name, it) },
             onSave = { app.setClusterEndpoints(context.name, it) },
             onScan = {
                 onEdit(null)

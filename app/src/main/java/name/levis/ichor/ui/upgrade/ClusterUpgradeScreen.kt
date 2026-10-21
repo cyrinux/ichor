@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.data.UpgradeManager
@@ -54,7 +54,7 @@ import name.levis.ichor.ui.uiText
 
 /** The version picked and its plan; releases come from the network and may be missing offline. */
 class ClusterUpgradeViewModel(
-    private val talos: TalosRepository,
+    private val lifecycle: NodeLifecycleRepository,
     private val upgrades: UpgradeManager,
     initialVersion: String,
 ) : ViewModel() {
@@ -85,7 +85,7 @@ class ClusterUpgradeViewModel(
         val version = _version.value.ifEmpty { return }
         planning?.cancel()
         _plan.value = UiState.Loading
-        planning = viewModelScope.launch { _plan.value = uiStateOf { talos.clusterUpgradePlan(version) } }
+        planning = viewModelScope.launch { _plan.value = uiStateOf { lifecycle.clusterUpgradePlan(version) } }
     }
 }
 
@@ -101,7 +101,7 @@ fun ClusterUpgradeScreen(
     onBack: () -> Unit,
     vm: ClusterUpgradeViewModel = viewModel(
         key = "cluster-upgrade",
-        factory = factory { ClusterUpgradeViewModel(app.talosRepository, app.upgradeManager, initialVersion) },
+        factory = factory { ClusterUpgradeViewModel(app.nodeLifecycleRepository, app.upgradeManager, initialVersion) },
     ),
 ) {
     val context = LocalContext.current

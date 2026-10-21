@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.JoinConfigPreview
 import name.levis.ichor.model.NodeOverview
@@ -63,7 +64,7 @@ data class JoinConfigForm(
 }
 
 /** Step 2 of adding a node: a member's config made the new node's, previewed with its secrets hidden. */
-class JoinConfigViewModel(private val talos: TalosRepository) : ViewModel() {
+class JoinConfigViewModel(private val talos: TalosRepository, private val lifecycle: NodeLifecycleRepository) : ViewModel() {
     private val _members = MutableStateFlow<UiState<List<NodeOverview>>>(UiState.Loading)
     val members: StateFlow<UiState<List<NodeOverview>>> = _members.asStateFlow()
     private val _form = MutableStateFlow(JoinConfigForm())
@@ -100,7 +101,7 @@ class JoinConfigViewModel(private val talos: TalosRepository) : ViewModel() {
         previewing?.cancel()
         _preview.value = UiState.Loading
         previewing = viewModelScope.launch {
-            _preview.value = uiStateOf { talos.joinNodeConfigPreview(form.template, form.role, form.hostname, form.disk, form.address) }
+            _preview.value = uiStateOf { lifecycle.joinNodeConfigPreview(form.template, form.role, form.hostname, form.disk, form.address) }
         }
     }
 

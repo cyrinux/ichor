@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.settings
 
+import name.levis.ichor.setPrivacyMask
+import name.levis.ichor.setAuditEvents
+import name.levis.ichor.setOfflineCache
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth

@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.JoinRequest
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.MaintenanceInspection
 import name.levis.ichor.model.installDisks
@@ -65,7 +65,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiStateOf
 
 /** Step 1 of adding a node: the typed address and what the node in maintenance mode answered. */
-class JoinNodeViewModel(private val talos: TalosRepository) : ViewModel() {
+class JoinNodeViewModel(private val lifecycle: NodeLifecycleRepository) : ViewModel() {
     private val _address = MutableStateFlow("")
     val address: StateFlow<String> = _address.asStateFlow()
     private val _inspection = MutableStateFlow<UiState<MaintenanceInspection>?>(null)
@@ -85,7 +85,7 @@ class JoinNodeViewModel(private val talos: TalosRepository) : ViewModel() {
         val address = joinAddress(_address.value).ifEmpty { return }
         inspecting?.cancel()
         _inspection.value = UiState.Loading
-        inspecting = viewModelScope.launch { _inspection.value = uiStateOf { talos.maintenanceNodeInspect(address) } }
+        inspecting = viewModelScope.launch { _inspection.value = uiStateOf { lifecycle.maintenanceNodeInspect(address) } }
     }
 }
 
@@ -99,8 +99,8 @@ class JoinNodeViewModel(private val talos: TalosRepository) : ViewModel() {
 fun JoinNodeScreen(
     onBack: () -> Unit,
     onOpenNode: (address: String, hostname: String, role: String) -> Unit,
-    vm: JoinNodeViewModel = viewModel(key = "join-node", factory = factory { JoinNodeViewModel(app.talosRepository) }),
-    configVm: JoinConfigViewModel = viewModel(key = "join-config", factory = factory { JoinConfigViewModel(app.talosRepository) }),
+    vm: JoinNodeViewModel = viewModel(key = "join-node", factory = factory { JoinNodeViewModel(app.nodeLifecycleRepository) }),
+    configVm: JoinConfigViewModel = viewModel(key = "join-config", factory = factory { JoinConfigViewModel(app.talosRepository, app.nodeLifecycleRepository) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()

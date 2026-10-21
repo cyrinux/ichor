@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.model.DiscoveredNode
 import name.levis.ichor.model.NodeDiscovery
 import name.levis.ichor.model.toOffer
@@ -42,7 +42,7 @@ import name.levis.ichor.ui.components.MutedText
  * Cluster members the talosconfig context does not target (cluster discovery), offered to
  * add. Best effort: discovery off, or a node not answering, offers nothing.
  */
-class NodeDiscoveryViewModel(private val talos: TalosRepository) : ViewModel() {
+class NodeDiscoveryViewModel(private val lifecycle: NodeLifecycleRepository) : ViewModel() {
     private val _offer = MutableStateFlow<List<DiscoveredNode>>(emptyList())
     val offer: StateFlow<List<DiscoveredNode>> = _offer.asStateFlow()
 
@@ -53,7 +53,7 @@ class NodeDiscoveryViewModel(private val talos: TalosRepository) : ViewModel() {
 
     suspend fun discover() {
         val discovery = try {
-            talos.discoverNodes()
+            lifecycle.discoverNodes()
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {

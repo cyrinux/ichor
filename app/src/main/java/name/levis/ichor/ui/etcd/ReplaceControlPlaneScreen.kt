@@ -85,7 +85,7 @@ fun ReplaceControlPlaneScreen(
     hostname: String,
     onBack: () -> Unit,
     onOpenConfig: (addr: String, host: String) -> Unit,
-    vm: ReplaceControlPlaneViewModel = viewModel(factory = factory { ReplaceControlPlaneViewModel(app.talosRepository, memberId, node) }),
+    vm: ReplaceControlPlaneViewModel = viewModel(factory = factory { ReplaceControlPlaneViewModel(app.nodeLifecycleRepository, memberId, node) }),
 ) {
     val context = LocalContext.current
     val talosApp = context.applicationContext as TalosApp
@@ -94,7 +94,7 @@ fun ReplaceControlPlaneScreen(
     val join by vm.join.collectAsStateWithLifecycle()
     val plan = (state as? UiState.Loaded)?.data
     val resetNode = plan?.member?.node?.ifBlank { null } ?: node
-    val reset: ResetViewModel = viewModel(key = "reset-$resetNode", factory = factory { ResetViewModel(app.talosRepository, resetNode) })
+    val reset: ResetViewModel = viewModel(key = "reset-$resetNode", factory = factory { ResetViewModel(app.nodeLifecycleRepository, resetNode) })
     val resetState by reset.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }

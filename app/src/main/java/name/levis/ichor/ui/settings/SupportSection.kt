@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.settings
 
+import name.levis.ichor.setStartupTrace
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth

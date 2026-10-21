@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.model.CpReplacePlan
 import name.levis.ichor.model.membersBeforeJoin
 import name.levis.ichor.ui.UiState
@@ -38,7 +38,7 @@ sealed interface CpJoinState {
  * reset of the old node goes through the node's own ResetViewModel.
  */
 class ReplaceControlPlaneViewModel(
-    private val talos: TalosRepository,
+    private val lifecycle: NodeLifecycleRepository,
     private val memberId: String,
     node: String,
 ) : ViewModel() {
@@ -60,7 +60,7 @@ class ReplaceControlPlaneViewModel(
         val previous = (_plan.value as? UiState.Loaded)?.data
         _plan.value = previous?.let { UiState.Loaded(it, refreshing = true) } ?: UiState.Loading
         viewModelScope.launch {
-            val next = uiStateOf { talos.controlPlaneReplacePlan(memberId, node) }
+            val next = uiStateOf { lifecycle.controlPlaneReplacePlan(memberId, node) }
             (next as? UiState.Loaded)?.data?.let { p ->
                 if (p.member.node.isNotBlank()) node = p.member.node
                 // A plan read while etcd did not answer counts no member: not a baseline.
@@ -76,7 +76,7 @@ class ReplaceControlPlaneViewModel(
         _remove.value = CpRemoveState.Running
         viewModelScope.launch {
             _remove.value = try {
-                talos.controlPlaneReplaceRemove(memberId)
+                lifecycle.controlPlaneReplaceRemove(memberId)
                 CpRemoveState.Idle
             } catch (e: CancellationException) {
                 throw e
@@ -103,7 +103,7 @@ class ReplaceControlPlaneViewModel(
         waitJob = viewModelScope.launch {
             while (isActive) {
                 val result = try {
-                    talos.controlPlaneReplaceWait(before, WAIT_SLICE_SECONDS)
+                    lifecycle.controlPlaneReplaceWait(before, WAIT_SLICE_SECONDS)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Throwable) {

@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.model.NodeResetPlan
 import name.levis.ichor.model.ResetRequest
 import name.levis.ichor.model.ResetWipe
@@ -53,7 +53,7 @@ sealed interface ResetState {
 }
 
 /** The reset plan of [node] and the reset itself (`talosctl reset`). */
-class ResetViewModel(private val talos: TalosRepository, private val node: String) : ViewModel() {
+class ResetViewModel(private val lifecycle: NodeLifecycleRepository, private val node: String) : ViewModel() {
     private val _plan = MutableStateFlow<UiState<NodeResetPlan>>(UiState.Loading)
     val plan: StateFlow<UiState<NodeResetPlan>> = _plan.asStateFlow()
     private val _state = MutableStateFlow<ResetState>(ResetState.Idle)
@@ -61,14 +61,14 @@ class ResetViewModel(private val talos: TalosRepository, private val node: Strin
 
     fun loadPlan() {
         _plan.value = UiState.Loading
-        viewModelScope.launch { _plan.value = uiStateOf { talos.resetPlan(node) } }
+        viewModelScope.launch { _plan.value = uiStateOf { lifecycle.resetPlan(node) } }
     }
 
     fun run(request: ResetRequest) {
         if (_state.value is ResetState.Running) return
         _state.value = ResetState.Running
         viewModelScope.launch {
-            _state.value = runCatching { talos.reset(node, request) }.fold(
+            _state.value = runCatching { lifecycle.reset(node, request) }.fold(
                 onSuccess = { ResetState.Done },
                 onFailure = { ResetState.Failed(it.uiText()) },
             )

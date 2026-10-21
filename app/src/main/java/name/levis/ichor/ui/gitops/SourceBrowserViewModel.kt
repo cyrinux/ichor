@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.GitHostMissing
 import name.levis.ichor.data.GitOpsRepository
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.MachineConfigRepository
 import name.levis.ichor.model.GitFile
 import name.levis.ichor.model.GitRepoSearch
 import name.levis.ichor.model.GitSource
@@ -218,7 +218,7 @@ data class SourceFileState(
  * One file of an app's source, read once per [load] key, again on refresh; its quick edits
  * through [quick].
  */
-class SourceFileViewModel(private val gitOps: GitOpsRepository, private val talos: TalosRepository) : ViewModel() {
+class SourceFileViewModel(private val gitOps: GitOpsRepository, private val machineConfigs: MachineConfigRepository) : ViewModel() {
     private val _state = MutableStateFlow(SourceFileState())
     val state: StateFlow<SourceFileState> = _state.asStateFlow()
 
@@ -257,7 +257,7 @@ class SourceFileViewModel(private val gitOps: GitOpsRepository, private val talo
                     null
                 }
                 val patch = if (talosCluster && !file.truncated && isYamlPath(path) && file.content.toByteArray().size <= MAX_PATCH_BYTES) {
-                    cancellableCatching { talos.talosPatchDetect(file.content) }.getOrNull()?.takeIf { it.talos }
+                    cancellableCatching { machineConfigs.talosPatchDetect(file.content) }.getOrNull()?.takeIf { it.talos }
                 } else {
                     null
                 }

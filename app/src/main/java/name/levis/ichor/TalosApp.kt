@@ -43,6 +43,9 @@ import name.levis.ichor.data.NetPerfManager
 import name.levis.ichor.data.RolloutManager
 import name.levis.ichor.data.MaintenanceManager
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.EtcdRepository
+import name.levis.ichor.data.MachineConfigRepository
+import name.levis.ichor.data.NodeLifecycleRepository
 import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.data.GitOpsRepository
 import name.levis.ichor.data.GitHostStore
@@ -75,9 +78,7 @@ import name.levis.ichor.monitor.toOverviewSeed
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.data.realFingerprint
-import name.levis.ichor.monitor.clusterFingerprints
 import name.levis.ichor.monitor.canPostNotifications
-import name.levis.ichor.monitor.cancelPostedAlerts
 import name.levis.ichor.monitor.syncMonitoring
 import name.levis.ichor.security.AppLock
 import name.levis.ichor.security.SecurityKeyPrompts
@@ -121,11 +122,8 @@ import name.levis.ichor.data.AlertmanagerRepository
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.data.VpnRequiredException
 import name.levis.ichor.data.activeSummary
-import name.levis.ichor.model.ContextSummary
-import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.heldBackForVpn
 import name.levis.ichor.model.signInKeys
-import name.levis.ichor.model.signsOutOnRemoval
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.shortcuts.ClusterShortcuts
 import name.levis.ichor.shortcuts.ShortcutSpec
@@ -165,6 +163,9 @@ class TalosApp : Application() {
     /** The Go core's credentials and the results cache, shared by the repositories below. */
     private val goCall by lazy { GoCall(configRepository, kubeServers, offlineCache, idle = maskSwitcher::awaitIdle) }
     val talosRepository by lazy { TalosRepository(goCall) }
+    val etcdRepository by lazy { EtcdRepository(goCall) }
+    val machineConfigRepository by lazy { MachineConfigRepository(goCall) }
+    val nodeLifecycleRepository by lazy { NodeLifecycleRepository(goCall) }
     val kubeRepository by lazy { KubeRepository(goCall) }
     val gitOpsRepository by lazy { GitOpsRepository(goCall, gitHostStore, clusterRepos, proposals) }
 
@@ -202,7 +203,7 @@ class TalosApp : Application() {
     val alertmanagerRepository by lazy { AlertmanagerRepository(goCall) }
 
     /** Last known cluster data on disk, only while "Keep last known state" is on (Settings → Privacy). */
-    private val offlineCache by lazy {
+    internal val offlineCache by lazy {
         OfflineCache(
             java.io.File(noBackupFilesDir, "offline"),
             KeystoreSealer("ichor-offline"),
@@ -250,29 +251,29 @@ class TalosApp : Application() {
         UpgradeManager(configRepository, kubeServers, onStarted = { OperationService.start(this, OperationKind.UPGRADE) }, onFinished = talosRepository::forgetFeatures)
     }
     /** The followed node maintenance; OperationService keeps the app alive while it runs. */
-    val maintenanceManager by lazy { MaintenanceManager(talosRepository, onStarted = { OperationService.start(this, OperationKind.MAINTENANCE) }) }
+    val maintenanceManager by lazy { MaintenanceManager(nodeLifecycleRepository, onStarted = { OperationService.start(this, OperationKind.MAINTENANCE) }) }
     /** The followed node join; OperationService keeps the app alive while it runs. */
     val joinManager by lazy {
         JoinManager(
-            talosRepository,
+            nodeLifecycleRepository,
             configRepository,
             text = { id, args -> AppLocale.wrap(this).getString(id, *args.toTypedArray()) },
             onStarted = { OperationService.start(this, OperationKind.JOIN) },
         )
     }
     /** The followed machine config try; OperationService keeps its countdown going off screen. */
-    val configTryManager by lazy { ConfigTryManager(talosRepository::tryMachineConfig, onStarted = { OperationService.start(this, OperationKind.CONFIG_TRY) }) }
+    val configTryManager by lazy { ConfigTryManager(machineConfigRepository::tryMachineConfig, onStarted = { OperationService.start(this, OperationKind.CONFIG_TRY) }) }
     /** The followed multi-node config apply; OperationService keeps the app alive while it runs. */
     val configMultiManager by lazy {
-        ConfigMultiManager(talosRepository::applyMachineConfigMulti, onStarted = { OperationService.start(this, OperationKind.CONFIG_MULTI) })
+        ConfigMultiManager(machineConfigRepository::applyMachineConfigMulti, onStarted = { OperationService.start(this, OperationKind.CONFIG_MULTI) })
     }
     /** The followed rolling cluster upgrade; OperationService keeps the app alive while it runs. */
     val clusterUpgradeManager by lazy {
-        ClusterUpgradeManager(talosRepository::startClusterUpgrade, onStarted = { OperationService.start(this, OperationKind.CLUSTER_UPGRADE) })
+        ClusterUpgradeManager(nodeLifecycleRepository::startClusterUpgrade, onStarted = { OperationService.start(this, OperationKind.CLUSTER_UPGRADE) })
     }
     /** The followed Kubernetes upgrade; OperationService keeps the app alive while it runs. */
     val k8sUpgradeManager by lazy {
-        K8sUpgradeManager(talosRepository::startK8sUpgrade, onStarted = { OperationService.start(this, OperationKind.K8S_UPGRADE) })
+        K8sUpgradeManager(nodeLifecycleRepository::startK8sUpgrade, onStarted = { OperationService.start(this, OperationKind.K8S_UPGRADE) })
     }
     /** The followed image pull; OperationService keeps the app alive while it runs. */
     val imagePullManager by lazy { ImagePullManager(talosRepository, onStarted = { OperationService.start(this, OperationKind.IMAGE_PULL) }) }
@@ -418,7 +419,7 @@ class TalosApp : Application() {
             configRepository, uiPreferences, clusterColors, clusterNames, vpnOnly, kubeServers, kubeAccess, kubeAuthStore, wakeOnLan, monitorStore,
             pinStore, gitHostStore, aiPreferences, clusterRepos,
             lockMode = { BackupLockMode.of(appLock.enabled.value, appLock.securityKeys.value != null) },
-            setPrivacyMask = ::setPrivacyMask,
+            setPrivacyMask = this::setPrivacyMask,
             notificationsAllowed = { canPostNotifications(this) },
             onRestored = {
                 talosRepository.invalidate()
@@ -430,79 +431,6 @@ class TalosApp : Application() {
     /** Re-evaluates whether background monitoring should run (alerts on or widget placed). */
     fun launchSync(runNow: Boolean = false) {
         ProcessLifecycleOwner.get().lifecycleScope.launch { syncMonitoring(this@TalosApp, runNow) }
-    }
-
-    /** Shows another cluster (a context of the stored config); the widget and the alerts follow it. */
-    fun selectCluster(name: String) {
-        if (name == configRepository.config.value?.activeContext) return
-        configRepository.selectContext(name)
-        forgetShownCluster()
-    }
-
-    /** Gives the cluster [fingerprint] the name [name] (blank: its context name again); the widget follows. */
-    fun renameCluster(fingerprint: String, name: String) {
-        clusterNames.set(fingerprint, name)
-        ProcessLifecycleOwner.get().lifecycleScope.launch {
-            ClusterWidget().updateAll(this@TalosApp)
-            syncWear()
-        }
-    }
-
-    /**
-     * Sets whether the cluster [fingerprint] is reached over a VPN only. When it is the one
-     * on screen it reloads: with the VPN off, the screens say to connect it instead.
-     */
-    fun setVpnOnly(fingerprint: String, vpnOnly: Boolean) {
-        this.vpnOnly.set(fingerprint, vpnOnly)
-        if (fingerprint == configRepository.config.value?.activeSummary?.fingerprint) talosRepository.invalidate()
-    }
-
-    /**
-     * Sets whether the background monitor checks the cluster of [context] (all its contexts):
-     * a cluster left out drops its snapshot and alerts at the next check.
-     */
-    fun setWatched(context: ContextSummary, watched: Boolean) {
-        val summary = configRepository.config.value?.summary ?: return
-        clusterFingerprints(summary, context).forEach { unwatchedClusters.set(it, !watched) }
-        launchSync(runNow = true)
-    }
-
-    /**
-     * Sets the Kubernetes API address of the cluster [fingerprint] ([server] checked by
-     * Ichorgo.normalizeKubeServer, blank for the kubeconfig's); its cached results go.
-     */
-    fun setKubeServer(fingerprint: String, server: String) {
-        kubeServers.set(fingerprint, server)
-        if (fingerprint == configRepository.config.value?.activeSummary?.fingerprint) talosRepository.invalidate()
-    }
-
-    /**
-     * Sets the Kubernetes access of the Talos cluster [fingerprint]: the kubeconfig cluster
-     * [kubeFingerprint], or null for the Talos admin kubeconfig. Its Kubernetes screens reload.
-     */
-    fun setKubeAccess(fingerprint: String, kubeFingerprint: String?) {
-        kubeAccess.set(fingerprint, kubeFingerprint)
-        configRepository.relink()
-        if (fingerprint == configRepository.config.value?.activeSummary?.fingerprint) talosRepository.invalidate()
-    }
-
-    /**
-     * Brings the app back over the browser a sign-in finished in. The task comes to the front
-     * as it was (no new screen); Android may refuse it while the app is in the background.
-     */
-    fun bringToFront() {
-        val intent = android.content.Intent(this, MainActivity::class.java).addFlags(
-            android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
-                android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
-                android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP,
-        )
-        runCatching { startActivity(intent) }
-    }
-
-    /** A kubeconfig cluster was signed in or out: what was loaded without (or with) it goes. */
-    fun signInChanged() {
-        talosRepository.invalidate()
-        launchSync(runNow = true)
     }
 
     /** Throws [VpnRequiredException] instead of trying a VPN-only cluster while no VPN is up. */
@@ -525,49 +453,11 @@ class TalosApp : Application() {
         }
     }
 
-    /** Removes a cluster from the stored config; false when it was the last one (nothing is stored anymore). */
-    /** Adds discovered [nodes] to the cluster [name]'s talosconfig context; screens and monitoring follow. */
-    suspend fun addClusterNodes(name: String, nodes: List<String>) {
-        configRepository.addNodes(name, nodes)
-        talosRepository.invalidate()
-        launchSync(runNow = true)
-    }
-
-    /** Replaces the endpoints of the cluster [name]'s talosconfig context; screens and monitoring follow. */
-    suspend fun setClusterEndpoints(name: String, endpoints: List<String>) {
-        configRepository.setEndpoints(name, endpoints)
-        talosRepository.invalidate()
-        launchSync(runNow = true)
-    }
-
-    /**
-     * Adds the endpoints a network search found to the contexts each one answered for. Once a
-     * cluster answers again, node discovery offers the members it still misses.
-     */
-    suspend fun addFoundEndpoints(matches: List<EndpointMatch>) {
-        configRepository.addEndpoints(matches)
-        talosRepository.invalidate()
-        launchSync(runNow = true)
-    }
-
-    suspend fun removeCluster(name: String): Boolean {
-        val stored = configRepository.config.value
-        // Its sign-in goes with it, the token the core holds in memory too (unless another
-        // Omni cluster of the same identity still uses it).
-        if (stored != null && signsOutOnRemoval(stored.summary.contexts, name)) {
-            runCatching { kubeAuthRepository.signOut(name) }
-        }
-        val wasShown = name == stored?.activeContext
-        val remains = configRepository.removeContext(name)
-        if (wasShown) forgetShownCluster() else launchSync(runNow = true)
-        return remains
-    }
-
     /**
      * Another cluster is on screen: the widgets that follow it show its own snapshot (each
      * cluster keeps one), and a check runs.
      */
-    private fun forgetShownCluster() {
+    internal fun forgetShownCluster() {
         ProcessLifecycleOwner.get().lifecycleScope.launch {
             ClusterWidget().updateAll(this@TalosApp)
             syncWear()
@@ -611,42 +501,7 @@ class TalosApp : Application() {
     /** True while screenshot mode switches: the root navigation covers every screen. */
     val maskTransition: StateFlow<Boolean> get() = maskSwitcher.transition
 
-    /**
-     * Turns screenshot mode on or off. Everything fetched under the previous setting is
-     * dropped (in-memory results, the monitor snapshot behind the widget) and refetched,
-     * so no real name or address lingers on screen or on the home screen.
-     */
-    fun setPrivacyMask(mask: PrivacyMask) {
-        if (mask == uiPreferences.privacyMask.value) return
-        ProcessLifecycleOwner.get().lifecycleScope.launch {
-            if (!maskSwitcher.switch(mask)) return@launch
-            // What was posted with real names goes; a running operation is shown again masked.
-            if (mask.enabled) cancelNamedNotifications()
-            ClusterWidget().updateAll(this@TalosApp)
-            syncWear()
-            syncMonitoring(this@TalosApp, runNow = true)
-        }
-    }
-
-    private fun cancelNamedNotifications() {
-        cancelPostedAlerts(this)
-        val manager = androidx.core.app.NotificationManagerCompat.from(this)
-        name.levis.ichor.ui.operations.OperationKind.entries.forEach { manager.cancel(it.resultId) }
-    }
-
     private fun applyPrivacyMask(mask: PrivacyMask) = Ichorgo.setPrivacyMask(mask.enabled, mask.words)
-
-    /** Turns the Kubernetes Events on changed objects on or off, in Go and in the saved settings. */
-    fun setAuditEvents(enabled: Boolean) {
-        uiPreferences.setAuditEvents(enabled)
-        Ichorgo.setAuditEvents(enabled)
-    }
-
-    /** Turns the startup timing in logcat on or off (always on in a debug build). */
-    fun setStartupTrace(enabled: Boolean) {
-        uiPreferences.setStartupTrace(enabled)
-        StartupTrace.setEnabled(BuildConfig.DEBUG || enabled)
-    }
 
     /**
      * The key the Go core encrypts what it remembers with, created once and kept encrypted by
@@ -657,18 +512,6 @@ class TalosApp : Application() {
         val store = SecureStore(java.io.File(noBackupFilesDir, "core-key.enc"), "ichor-core-key")
         runCatching { store.read() }.getOrNull()?.takeIf { it.size == CORE_KEY_SIZE }?.let { return it }
         return runCatching { ByteArray(CORE_KEY_SIZE).also { java.security.SecureRandom().nextBytes(it); store.write(it) } }.getOrNull()
-    }
-
-    /**
-     * Turns "Keep last known state" on or off. Off deletes everything kept and its key; on
-     * starts with what the screens fetch next.
-     */
-    fun setOfflineCache(enabled: Boolean) {
-        if (enabled == uiPreferences.offlineCache.value) return
-        uiPreferences.setOfflineCache(enabled)
-        ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.IO) {
-            if (enabled) talosRepository.restoreOffline() else offlineCache.clear()
-        }
     }
 
     /**

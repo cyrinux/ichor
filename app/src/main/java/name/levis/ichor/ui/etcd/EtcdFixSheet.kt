@@ -39,7 +39,7 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.EtcdFixEvent
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.EtcdRepository
 import name.levis.ichor.model.EtcdFixMember
 import name.levis.ichor.model.EtcdFixPhase
 import name.levis.ichor.model.EtcdFixProgress
@@ -80,7 +80,7 @@ data class EtcdFixState(
  * The one-tap NOSPACE fix. Go writes the snapshot into the app cache (it needs a real path);
  * it is copied to the document the user picked once the run ends, and the cache copy deleted.
  */
-class EtcdFixViewModel(private val talos: TalosRepository, private val app: TalosApp) : ViewModel() {
+class EtcdFixViewModel(private val etcd: EtcdRepository, private val app: TalosApp) : ViewModel() {
     private val _state = MutableStateFlow(EtcdFixState())
     val state: StateFlow<EtcdFixState> = _state.asStateFlow()
     private var job: Job? = null
@@ -102,7 +102,7 @@ class EtcdFixViewModel(private val talos: TalosRepository, private val app: Talo
                 }
                 val dest = if (snapshot != null) temp.path else ""
                 val encryption = snapshot?.encryption ?: SnapshotEncryption.None
-                talos.etcdNospaceFix(snapshot?.target?.node.orEmpty(), dest, encryption).collect { event ->
+                etcd.etcdNospaceFix(snapshot?.target?.node.orEmpty(), dest, encryption).collect { event ->
                     when (event) {
                         is EtcdFixEvent.Progress -> _state.update { it.copy(events = it.events + event.progress) }
                         is EtcdFixEvent.Done -> _state.update { it.copy(error = event.error) }
@@ -198,7 +198,7 @@ fun rememberEtcdFixFlow(vm: EtcdFixViewModel, contextName: String, fingerprint: 
         SnapshotEncryptionDialog(
             hostname = target.hostname,
             savedKeys = savedKeys[fingerprint].orEmpty(),
-            checkKeys = app.talosRepository::checkSnapshotRecipients,
+            checkKeys = app.etcdRepository::checkSnapshotRecipients,
             onConfirm = { encryption ->
                 protecting = null
                 if (encryption is SnapshotEncryption.Keys) app.snapshotKeys.set(fingerprint, encryption.recipients)
