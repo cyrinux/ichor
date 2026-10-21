@@ -2598,6 +2598,10 @@
     <string name="netperf_latency_values">p50 %1$s · p90 %2$s · p99 %3$s</string>
     <string name="netperf_round_trips">%1$s round trips/s</string>
     <string name="common_more_info">More information</string>
+    <string name="custom_icon_hint">Custom icon</string>
+    <string name="common_documentation">Documentation</string>
+    <string name="cronjobs_icon_hint">Give a CronJob its own icon with the ichor.levis.name/icon label or annotation, set to a Dashboard Icons name such as postgresql. The ichor.levis.name/title and ichor.levis.name/description annotations set its name and a line of description.\n\nkubectl label cronjob db-backup ichor.levis.name/icon=postgresql\n\nWithout one, Ichor picks the icon of the app its image belongs to, else a clock.</string>
+    <string name="argo_icon_hint">An app Ichor does not recognise can bring its own logo with the ichor.levis.name/icon annotation: a Dashboard Icons name, an https link to a PNG or WebP (downloaded only when icon downloads are on) or the image itself, inline in base64. A label holds a Dashboard Icons name only.\n\nkubectl -n argocd annotate application my-site ichor.levis.name/icon=grafana</string>
     <string name="netperf_hint_nodes_title">Client and server</string>
     <string name="netperf_hint_nodes">The server node runs netserver and waits. The client node runs netperf, which connects to it and sends: throughput is measured from the client to the server.\n\nSwap the two nodes to measure the other direction. Choosing the same node twice measures its own network stack, not a link.</string>
     <string name="netperf_hint_paths_title">Network paths</string>

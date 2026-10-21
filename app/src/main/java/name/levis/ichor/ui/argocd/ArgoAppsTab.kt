@@ -55,6 +55,8 @@ import name.levis.ichor.model.filtered
 import name.levis.ichor.model.grouped
 import name.levis.ichor.model.sortedApps
 import name.levis.ichor.model.syncAllCandidates
+import name.levis.ichor.ui.components.ARGOCD_DOCS_URL
+import name.levis.ichor.ui.components.CustomIconHint
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.TooltipIconButton
@@ -151,6 +153,9 @@ fun ArgoAppsTab(
                 }
                 HorizontalDivider()
             }
+        }
+        if (apps.isNotEmpty()) item(key = "icon-hint") {
+            CustomIconHint(stringResource(R.string.argo_icon_hint), ARGOCD_DOCS_URL, Modifier.padding(top = 8.dp))
         }
     }
 }

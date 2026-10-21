@@ -2597,6 +2597,10 @@
     <string name="netperf_latency_values">p50 %1$s · p90 %2$s · p99 %3$s</string>
     <string name="netperf_round_trips">%1$s allers-retours/s</string>
     <string name="common_more_info">Plus d’informations</string>
+    <string name="custom_icon_hint">Icône personnalisée</string>
+    <string name="common_documentation">Documentation</string>
+    <string name="cronjobs_icon_hint">Donnez à un CronJob sa propre icône avec le label ou l’annotation ichor.levis.name/icon, au nom d’une icône Dashboard Icons comme postgresql. Les annotations ichor.levis.name/title et ichor.levis.name/description lui donnent un nom et une ligne de description.\n\nkubectl label cronjob db-backup ichor.levis.name/icon=postgresql\n\nSans elle, Ichor reprend l’icône de l’application à laquelle appartient son image, sinon une horloge.</string>
+    <string name="argo_icon_hint">Une application qu’Ichor ne reconnaît pas peut apporter son propre logo avec l’annotation ichor.levis.name/icon : un nom Dashboard Icons, un lien https vers un PNG ou un WebP (téléchargé seulement si les téléchargements d’icônes sont activés) ou l’image elle-même, en base64. Un label ne contient qu’un nom Dashboard Icons.\n\nkubectl -n argocd annotate application my-site ichor.levis.name/icon=grafana</string>
     <string name="netperf_hint_nodes_title">Client et serveur</string>
     <string name="netperf_hint_nodes">Le nœud serveur lance netserver et attend. Le nœud client lance netperf, qui s’y connecte et envoie : le débit est mesuré du client vers le serveur.\n\nInversez les deux nœuds pour mesurer l’autre sens. Choisir deux fois le même nœud mesure sa propre pile réseau, pas un lien.</string>
     <string name="netperf_hint_paths_title">Chemins réseau</string>
