@@ -6,6 +6,10 @@ import IchorCore
 struct MultiNodeReviewSheet: View {
     let node: String
     let edits: [ConfigEdit]
+    /// This node's config before and after the edits: what Propose in Git writes into each
+    /// node's file once the run is over.
+    var base = ""
+    var draft = ""
     /// The run is over and changed nodes: this node's config is to be read again.
     let onFinished: () -> Void
 
@@ -65,7 +69,8 @@ struct MultiNodeReviewSheet: View {
             }
         }
         .fullScreenCover(item: $applying, onDismiss: runClosed) { mode in
-            MultiApplyView(nodes: changing.map(\.node), edits: edits, mode: mode) { didFail in
+            MultiApplyView(nodes: changing.map(\.node), edits: edits, mode: mode, base: base, draft: draft,
+                           roles: Dictionary((candidates.value ?? []).map { ($0.node, $0.role) }, uniquingKeysWith: { a, _ in a })) { didFail in
                 if didFail { failed = true }
             }
         }
@@ -193,11 +198,18 @@ struct MultiNodeReviewSheet: View {
 }
 
 /// A multi-node apply: every node's state as it goes, then how it ended. The rollout is
-/// ConfigMultiJob's: it borrows background time, and a notification asks to come back.
+/// ConfigMultiJob's: it borrows background time, and a notification asks to come back. Once it
+/// is over, each node that took the change offers Propose in Git (when the cluster has a
+/// repository): the same edits, written into that node's own file.
 struct MultiApplyView: View {
     let nodes: [String]
     let edits: [ConfigEdit]
     let mode: ConfigApplyMode
+    /// This node's config before and after the edits; empty offers no Propose in Git.
+    var base = ""
+    var draft = ""
+    /// Each node's role by node, for its file's plan.
+    var roles: [String: String] = [:]
     let onOutcome: (_ failed: Bool) -> Void
 
     @Environment(AppModel.self) private var model
@@ -205,6 +217,8 @@ struct MultiApplyView: View {
     @State private var started = false
     /// Refused before starting (another rollout runs, or no client).
     @State private var refused: String?
+    /// The node whose file the change is being written into.
+    @State private var proposingFor: MultiConfigNodeState?
 
     private var job: ConfigMultiJob { ConfigMultiJob.shared }
     private var progress: MultiConfigProgress? { job.progress }
@@ -220,6 +234,10 @@ struct MultiApplyView: View {
                 }
                 Section {
                     ForEach(progress?.nodes ?? []) { n in row(n) }
+                } footer: {
+                    if (progress?.nodes ?? []).contains(where: proposable) {
+                        Text("Write the change into each node's file of the cluster repository: one pull request per node.")
+                    }
                 }
                 if let outcome {
                     Section {
@@ -242,10 +260,21 @@ struct MultiApplyView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .interactiveDismissDisabled(outcome == nil)
+        .sheet(item: $proposingFor) { n in
+            if let repo = model.activeClusterRepo {
+                ProposeInGitSheet(repo: repo, base: base, draft: draft, hostname: n.hostname, role: roles[n.node])
+            }
+        }
         .task { start() }
         .onChange(of: job.isActive) { _, active in
             if !active, case .some(let error) = job.outcome { onOutcome(error != nil) }
         }
+    }
+
+    /// Whether n's file can be given the change: the run is over, n took it, and its file is
+    /// found by hostname.
+    private func proposable(_ n: MultiConfigNodeState) -> Bool {
+        outcome != nil && n.nodeState == .done && !n.hostname.isEmpty && !draft.isEmpty && model.activeClusterRepo != nil
     }
 
     private func row(_ n: MultiConfigNodeState) -> some View {
@@ -261,6 +290,12 @@ struct MultiApplyView: View {
                 Text(verbatim: n.name)
                 Text(verbatim: [stateText(n.nodeState), detail].filter { !$0.isEmpty }.joined(separator: " · "))
                     .font(.caption).foregroundStyle(.secondary)
+            }
+            if proposable(n) {
+                Spacer(minLength: 8)
+                Button("Propose in Git") { proposingFor = n }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel(Text("Propose in Git for \(n.name)"))
             }
         }
         .accessibilityElement(children: .combine)

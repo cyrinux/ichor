@@ -74,7 +74,7 @@ struct ConfigReviewView: View {
             }
         }
         .sheet(isPresented: $otherNodes) {
-            MultiNodeReviewSheet(node: node, edits: edits) {
+            MultiNodeReviewSheet(node: node, edits: edits, base: base, draft: draft) {
                 otherNodes = false
                 onFinished()
             }

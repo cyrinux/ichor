@@ -40,6 +40,8 @@ struct ProposeInGitSheet: View {
     let base: String
     let draft: String
     let hostname: String
+    /// The node's role, for talconfig.yaml's matching; nil reads it from base (the same node's).
+    var role: String?
 
     @Environment(AppModel.self) private var model
     @Environment(GitHostStore.self) private var hosts
@@ -108,7 +110,7 @@ struct ProposeInGitSheet: View {
                 state = .failed(String(localized: "This change touches a secret: secrets are never written to the repository."))
                 return
             }
-            let plan = try await TalosClient.talosWriteBackPlan(repo, hostname: hostname, role: configRole(base), patch: patch.patch,
+            let plan = try await TalosClient.talosWriteBackPlan(repo, hostname: hostname, role: role ?? configRole(base), patch: patch.patch,
                                                                 hosts: hosts, demo: demo)
             state = .loaded(WriteBackPlanned(patch: patch, plan: plan), at: Date())
         } catch {

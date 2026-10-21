@@ -58,6 +58,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.model.DriftFix
+import name.levis.ichor.model.MultiConfigNodeState
 import name.levis.ichor.model.configRole
 import name.levis.ichor.model.PatchPrefill
 import name.levis.ichor.model.SnippetPrefill
@@ -160,10 +161,9 @@ fun MachineConfigScreen(
     var confirmingApply by rememberSaveable { mutableStateOf<ConfigApplyMode?>(null) }
     var confirmingMulti by rememberSaveable { mutableStateOf<ConfigApplyMode?>(null) }
     var comparingGit by rememberSaveable { mutableStateOf(false) }
-    // The change written back to the repository: the config it starts from and the one it gives.
-    var proposing by remember { mutableStateOf<Pair<String, String>?>(null) }
+    // The change written back to the repository: the config it starts from, the one it gives, and the node's file it goes to.
+    var proposing by remember { mutableStateOf<ProposeTarget?>(null) }
     val hasRepo = remember { app.gitOpsRepository.activeClusterRepo() != null }
-    val proposeEdit = editor.draft?.takeIf { hasRepo }?.let { draft -> { proposing = editor.base to draft } }
 
     SecureWhile(revealed)
 
@@ -217,6 +217,15 @@ fun MachineConfigScreen(
     val loaded = (state as? UiState.Loaded)?.data
     val shown = remember(loaded, query) { loaded?.let { matchingLines(it, query) } }
     val browsing = run == null && applying == null && review == null && multi == null
+    val ownRole = remember(loaded) { loaded?.let(::configRole).orEmpty() }
+    val proposeEdit = editor.draft?.takeIf { hasRepo }?.let { draft -> { proposing = ProposeTarget(editor.base, draft, hostname, ownRole) } }
+    // After a multi-node run: the same edits (this node's base and draft) into each node's own file.
+    val proposeForNode = editor.draft?.takeIf { hasRepo }?.let { draft ->
+        { n: MultiConfigNodeState ->
+            val role = (multi?.candidates as? UiState.Loaded)?.data?.firstOrNull { it.node == n.node }?.role
+            proposing = ProposeTarget(editor.base, draft, n.hostname, role ?: ownRole)
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -300,7 +309,7 @@ fun MachineConfigScreen(
     ) { padding ->
         val body = Modifier.padding(padding).fillMaxSize()
         when {
-            multi?.run != null -> MultiApplyContent(multi.run, onDone = vm::finishMulti, modifier = body)
+            multi?.run != null -> MultiApplyContent(multi.run, onDone = vm::finishMulti, modifier = body, onProposeInGit = proposeForNode)
             multi?.preview != null -> MultiNodeReviewContent(
                 multi.preview,
                 onRetry = vm::previewMulti,
@@ -401,19 +410,19 @@ fun MachineConfigScreen(
             // The node's live values into Git: from Git's version to the node's.
             onProposeLive = { gitVersion ->
                 comparingGit = false
-                loaded?.let { proposing = gitVersion to it }
+                loaded?.let { proposing = ProposeTarget(gitVersion, it, hostname, ownRole) }
             },
             onDismiss = { comparingGit = false },
         )
     }
 
-    proposing?.let { (base, draft) ->
+    proposing?.let { target ->
         ProposeInGitSheet(
             app.gitOpsRepository,
-            base = base,
-            draft = draft,
-            hostname = hostname,
-            role = remember(loaded) { loaded?.let(::configRole).orEmpty() },
+            base = target.base,
+            draft = target.draft,
+            hostname = target.hostname,
+            role = target.role,
             onReview = { path, quick ->
                 proposing = null
                 onRepoEdit(path, quick)
@@ -568,6 +577,9 @@ private fun RevealedBanner() {
         )
     }
 }
+
+/** A change written back to the repository: from [base] to [draft], into the file of the node [hostname] of [role]. */
+private data class ProposeTarget(val base: String, val draft: String, val hostname: String, val role: String)
 
 private fun copy(context: Context, text: String, sensitive: Boolean) =
     copyToClipboard(context, context.getString(R.string.machine_config_title), text, sensitive)

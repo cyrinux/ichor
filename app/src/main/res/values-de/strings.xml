@@ -5529,4 +5529,6 @@
     <string name="staged_marker">Vorgemerkt</string>
     <string name="staged_full">Ein Pull Request enthält höchstens 20 Dateien.</string>
     <string name="staged_changed_upstream">Diese Datei hat sich auf dem Branch geändert, seit sie vorgemerkt wurde: Sie öffnet sich im aktuellen Stand, ohne die vorgemerkte Änderung.</string>
+    <string name="talos_writeback_node">In Git vorschlagen für %1$s</string>
+    <string name="talos_writeback_multi_desc">Schreibe die Änderung in die Datei jedes Nodes im Cluster-Repository: ein Pull Request pro Node.</string>
 </resources>
