@@ -30,7 +30,7 @@
       shellFor = system:
         let pkgs = import nixpkgs { inherit system; config = nixpkgsConfig; };
         in pkgs.mkShell {
-          packages = [ pkgs.jdk17 pkgs.gradle_9 pkgs.go pkgs.go-tools ] # go-tools: staticcheck
+          packages = [ pkgs.jdk17 pkgs.gradle_9 pkgs.go_1_27 (pkgs.go-tools.override { buildGoModule = pkgs.buildGo127Module; }) ] # go-tools: staticcheck, built with the same Go
             # Native cross-compiler for cgo on aarch64 hosts (matches NDK r29's clang 21).
             ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isAarch64 [ pkgs.llvmPackages_21.clang-unwrapped pkgs.lld_21 ];
 
